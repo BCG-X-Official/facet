@@ -1,0 +1,10 @@
+name: yield-engine
+channels:
+  - conda-forge
+dependencies:
+  - python = 3.6
+  - pytest = 4.4.*
+  - pandas = 0.24.*
+  - shap = 0.28.*
+  - lightgbm = 2.2.*
+  - scikit-learn = 0.20.*
