@@ -1,10 +1,11 @@
 import pandas as pd
 import numpy as np
+from typing import Generator, Tuple
 
 
 def get_train_test_splits(
     input_dataset: pd.DataFrame, test_ratio: float = 0.2, num_folds: int = 50
-):
+) -> Generator[Tuple[pd.DataFrame, pd.DataFrame], None, None]:
     num_samples = len(input_dataset)
     num_test_samples_per_fold = int(num_samples * test_ratio)
 
