@@ -1,0 +1,3 @@
+- inputfile:
+    date_column_name : Date
+    yield_column_name : Yield
