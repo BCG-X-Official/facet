@@ -9,3 +9,4 @@ dependencies:
   - lightgbm = 2.2.*
   - scikit-learn = 0.20.*
   - pyyaml = 5.1.*
+  - black = 19.3

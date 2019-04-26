@@ -5,16 +5,20 @@ import pytest
 @pytest.fixture
 def data_file_path():
     import tests.testdata
+
     data_folder_path = os.path.dirname(tests.testdata.__file__)
 
     # Note: this file is not included within the git repository!
-    testdata_file_path = os.path.join(data_folder_path, "master_table_clean_anon_144.csv")
+    testdata_file_path = os.path.join(
+        data_folder_path, "master_table_clean_anon_144.csv"
+    )
 
     return testdata_file_path
 
 
 def test_load_raw_data(data_file_path):
     from yieldengine.loading import dataloader
+
     dataloader.load_raw_data(input_path=data_file_path)
 
 
