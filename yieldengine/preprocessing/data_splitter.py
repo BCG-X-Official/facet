@@ -3,7 +3,7 @@ import numpy as np
 from typing import Generator, Tuple
 
 
-class Datasplitter:
+class DataSplitter:
     """
     Class to generate various CV folds of train and test datasets using circular bootstrapping.
 
