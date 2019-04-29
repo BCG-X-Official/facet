@@ -25,38 +25,38 @@ def test_dataframe():
 
 
 def test_datasplitter_init(test_dataframe: pd.DataFrame):
-    from yieldengine.preprocessing.datasplitter import Datasplitter
+    from yieldengine.preprocessing.data_splitter import DataSplitter
 
     # check erroneous inputs
     #   - test_ratio = 0
     with pytest.raises(expected_exception=ValueError):
-        Datasplitter(num_samples=100, test_ratio=0.0)
+        DataSplitter(num_samples=100, test_ratio=0.0)
 
     #   - test_ratio < 0
     with pytest.raises(expected_exception=ValueError):
-        Datasplitter(num_samples=100, test_ratio=-0.1)
+        DataSplitter(num_samples=100, test_ratio=-0.1)
 
     #   - test_ratio > 1
     with pytest.raises(expected_exception=ValueError):
-        Datasplitter(num_samples=100, test_ratio=1.00001)
+        DataSplitter(num_samples=100, test_ratio=1.00001)
 
     #   - 0 samples per fold
     with pytest.raises(expected_exception=ValueError):
-        Datasplitter(num_samples=len(test_dataframe), test_ratio=0.00001)
+        DataSplitter(num_samples=len(test_dataframe), test_ratio=0.00001)
 
     #   - (0 samples)
     with pytest.raises(expected_exception=ValueError):
-        Datasplitter(num_samples=0)
+        DataSplitter(num_samples=0)
 
     #   - (#samples not specified)
     with pytest.raises(expected_exception=ValueError):
-        Datasplitter()
+        DataSplitter()
 
 
 def test_get_train_test_splits_as_dataframe(test_dataframe: pd.DataFrame):
-    from yieldengine.preprocessing.datasplitter import Datasplitter
+    from yieldengine.preprocessing.data_splitter import DataSplitter
 
-    my_ds = Datasplitter(num_samples=len(test_dataframe), test_ratio=0.2, num_folds=50)
+    my_ds = DataSplitter(num_samples=len(test_dataframe), test_ratio=0.2, num_folds=50)
 
     list_of_train_test_splits = list(
         my_ds.get_train_test_splits_as_dataframes(input_dataset=test_dataframe)
@@ -95,11 +95,11 @@ def test_get_train_test_splits_as_dataframe(test_dataframe: pd.DataFrame):
 
 
 def test_get_train_test_splits_as_indices():
-    from yieldengine.preprocessing.datasplitter import Datasplitter
+    from yieldengine.preprocessing.data_splitter import DataSplitter
 
     test_folds = 200
 
-    my_ds = Datasplitter(num_samples=123456, test_ratio=0.2, num_folds=test_folds)
+    my_ds = DataSplitter(num_samples=123456, test_ratio=0.2, num_folds=test_folds)
 
     list_of_train_test_splits = list(my_ds.get_train_test_splits_as_indices())
 
@@ -140,13 +140,13 @@ def test_datasplitter_with_sk_learn():
 
     from sklearn import svm, datasets, tree
     from sklearn.model_selection import GridSearchCV
-    from yieldengine.preprocessing.datasplitter import Datasplitter
+    from yieldengine.preprocessing.data_splitter import DataSplitter
 
     # load example data
     iris = datasets.load_iris()
 
     # define a yield-engine Datasplitter:
-    my_ds = Datasplitter(num_samples=len(iris.data), test_ratio=0.2, num_folds=50)
+    my_ds = DataSplitter(num_samples=len(iris.data), test_ratio=0.2, num_folds=50)
 
     # define parameters and model
     parameters = {"kernel": ("linear", "rbf"), "C": [1, 10]}
