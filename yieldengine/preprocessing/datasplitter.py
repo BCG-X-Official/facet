@@ -9,11 +9,6 @@ def get_train_test_splits(
     """
     Function to generate various folds of train and test datasets using circular bootstrapping.
 
-    .. figure::  _static/images/test-train-splits.png
-        :align:   center
-
-        Circular bootstrapping visualized
-
     :param input_dataset: A pd.DataFrame object containing all data to split.
     :param test_ratio: Ratio determining the size of the test set (default=0.2).
     :param num_folds: Number of folds to generate (default=50).
