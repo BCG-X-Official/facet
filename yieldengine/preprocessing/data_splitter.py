@@ -90,7 +90,7 @@ class DataSplitter:
 
         :param input_dataset: A pd.DataFrame object containing all data to split.
         :return: A generator of tuples of kind (pd.DataFrame, pd.DataFrame). If you need a list, simply \
-        call :code:`list(datasplitter.get_train_test_splits(...))`
+        call :code:`list(datasplitter.get_train_test_splits_as_dataframes(...))`
         """
         if not type(input_dataset) == pd.DataFrame:
             raise ValueError("Expected a pandas.DataFrame as input_dataset")
