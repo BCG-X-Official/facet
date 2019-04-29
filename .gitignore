@@ -105,3 +105,4 @@ venv.bak/
 
 # IntelliJ Idea/Pycharm
 .idea
+**/.DS_Store
