@@ -27,7 +27,7 @@ author = 'Joerg Schneider'
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = [
+extensions = ['sphinx.ext.autodoc'
 ]
 
 # Add any paths that contain templates here, relative to this directory.
