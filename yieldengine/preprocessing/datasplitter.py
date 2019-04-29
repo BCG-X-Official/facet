@@ -7,11 +7,18 @@ def get_train_test_splits(
     input_dataset: pd.DataFrame, test_ratio: float = 0.2, num_folds: int = 50
 ) -> Generator[Tuple[pd.DataFrame, pd.DataFrame], None, None]:
     """
+    Function to generate various folds of train and test datasets using circular bootstrapping.
 
-    :param input_dataset:
-    :param test_ratio:
-    :param num_folds:
-    :return:
+    .. figure::  _static/images/test-train-splits.png
+        :align:   center
+
+        Circular bootstrapping visualized
+
+    :param input_dataset: A pd.DataFrame object containing all data to split.
+    :param test_ratio: Ratio determining the size of the test set (default=0.2).
+    :param num_folds: Number of folds to generate (default=50).
+    :return: A generator of num_folds many tuples of kind (pd.DataFrame, pd.DataFrame). If you need a list, simply \
+    call :code:`list(datasplitter.get_train_test_splits(...))`
     """
     if not type(input_dataset) == pd.DataFrame:
         raise ValueError("Expected a pandas.DataFrame as input_dataset")
