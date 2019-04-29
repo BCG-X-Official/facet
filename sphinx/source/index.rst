@@ -3,12 +3,18 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to yield-engine's documentation!
+yield-engine Documentation
 ========================================
 
+This is the documentation page of BCGs *yieldengine* library,
+which is hosted at `GitHub <https://git.sourceai.io/schneider-joerg/yield-engine/>`_.
+
 .. toctree::
-   :maxdepth: 2
-   :caption: Contents:
+   :titlesonly:
+   :maxdepth: 1
+   :caption: Contents
+
+   API reference of yieldengine <yieldengine>
 
 
 
