@@ -41,6 +41,15 @@ def test_get_train_test_splits(test_dataframe: pd.DataFrame):
 
     # check all generated folds
     for train_set, test_set in list_of_train_test_splits:
+        # assert the correct datatype (pd.DataFrame) is returned
+        assert (
+            type(test_set) == pd.DataFrame
+        ), "test_set should be of type pd.DataFrame!"
+
+        assert (
+            type(train_set) == pd.DataFrame
+        ), "train_set should be of type pd.DataFrame!"
+
         # assert test/train are mutually exclusive
         assert (
             len(
