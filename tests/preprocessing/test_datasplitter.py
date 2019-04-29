@@ -39,8 +39,9 @@ def test_get_train_test_splits(test_dataframe: pd.DataFrame):
     for train_set, test_set in list_of_train_test_splits:
         assert 0.19 < float(len(test_set) / len(test_dataframe) < 0.21)
 
-    # assert test/train are mutually exclusive
+    # check all generated folds
     for train_set, test_set in list_of_train_test_splits:
+        # assert test/train are mutually exclusive
         assert (
             len(
                 train_set.merge(
@@ -49,3 +50,42 @@ def test_get_train_test_splits(test_dataframe: pd.DataFrame):
             )
             == 0
         )
+        # assert test/train add up back to the complete dataset
+        combined = pd.concat([train_set, test_set], axis=0).sort_index()
+        assert test_dataframe.equals(combined)
+
+    # check erroneous inputs
+    #   - test_ratio = 0
+    with pytest.raises(expected_exception=ValueError):
+        list(
+            datasplitter.get_train_test_splits(
+                input_dataset=test_dataframe, test_ratio=0.0
+            )
+        )
+    #   - test_ratio < 0
+    with pytest.raises(expected_exception=ValueError):
+        list(
+            datasplitter.get_train_test_splits(
+                input_dataset=test_dataframe, test_ratio=-0.1
+            )
+        )
+
+    #   - test_ratio > 1
+    with pytest.raises(expected_exception=ValueError):
+        list(
+            datasplitter.get_train_test_splits(
+                input_dataset=test_dataframe, test_ratio=1.00001
+            )
+        )
+
+    #   - 0 samples per fold
+    with pytest.raises(expected_exception=ValueError):
+        list(
+            datasplitter.get_train_test_splits(
+                input_dataset=test_dataframe, test_ratio=0.00001
+            )
+        )
+
+    #   - empty input dataframe (0 samples)
+    with pytest.raises(expected_exception=ValueError):
+        list(datasplitter.get_train_test_splits(input_dataset=pd.DataFrame()))
