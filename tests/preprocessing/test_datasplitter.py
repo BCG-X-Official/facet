@@ -94,7 +94,7 @@ def test_get_train_test_splits_as_dataframe(test_dataframe: pd.DataFrame):
         assert test_dataframe.equals(combined)
 
 
-def test_get_train_test_splits_as_indices(test_dataframe: pd.DataFrame):
+def test_get_train_test_splits_as_indices():
     from yieldengine.preprocessing.datasplitter import Datasplitter
 
     test_folds = 200
@@ -129,3 +129,33 @@ def test_get_train_test_splits_as_indices(test_dataframe: pd.DataFrame):
     assert num_different_folds >= (
         test_folds - randomly_same_allowed_threshold
     ), "There are too many equal folds!"
+
+def test_datasplitter_with_sk_learn():
+    # filter out warnings triggerd by sk-learn/numpy
+    import warnings
+    warnings.filterwarnings("ignore", message="numpy.dtype size changed")
+    warnings.filterwarnings("ignore", message="numpy.ufunc size changed")
+
+    from sklearn import svm, datasets,tree
+    from sklearn.model_selection import GridSearchCV
+    from yieldengine.preprocessing.datasplitter import Datasplitter
+
+    # load example data
+    iris = datasets.load_iris()
+
+    # define a yield-engine Datasplitter:
+    my_ds = Datasplitter(num_samples=len(iris.data), test_ratio=0.5, num_folds=50)
+
+    # define parameters and model
+    parameters = {'kernel': ('linear', 'rbf'), 'C': [1, 10]}
+    svc = svm.SVC(gamma="scale")
+
+    # use the defined my_ds Datasplitter within GridSearchCV:
+    clf = GridSearchCV(svc, parameters, cv=my_ds.get_train_test_splits_as_indices())
+    clf.fit(iris.data, iris.target)
+
+    # define new paramters and a different model
+    # use the defined my_ds Datasplitter again within GridSeachCV:
+    parameters = {'criterion': ('gini', 'entropy'), 'max_features': ["sqrt", "auto", "log2"]}
+    cl2 = GridSearchCV(tree.DecisionTreeClassifier(),  parameters, cv=my_ds.get_train_test_splits_as_indices())
+    cl2.fit(iris.data, iris.target)
