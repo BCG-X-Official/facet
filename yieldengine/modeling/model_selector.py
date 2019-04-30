@@ -6,10 +6,10 @@ from typing import List
 
 
 class ModelSelector:
-    def __init__(self, gridsearchcv_list: List[GridSearchCV]):
+    def __init__(self, gridsearchcv_list: List[GridSearchCV]) -> None:
         pass
 
-    def train_models(self, dataset: pd.DataFrame, target_col_name: str):
+    def train_models(self, dataset: pd.DataFrame, target_col_name: str) -> None:
         # calls .fit() on each element of self.__gridsearchcv_list
         # needs to convert dataset.drop(columns=target_col_name) and dataset[target_col_name]to numpy array
         pass

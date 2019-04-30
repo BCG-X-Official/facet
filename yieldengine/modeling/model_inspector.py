@@ -10,7 +10,7 @@ class ModelInspector:
         models: List[RegressorMixin],
         dataset: pd.DataFrame,
         datasplitter: CircularCrossValidator,
-    ):
+    ) -> None:
         pass
 
     def get_feature_importance_by_gain(self) -> pd.DataFrame:
