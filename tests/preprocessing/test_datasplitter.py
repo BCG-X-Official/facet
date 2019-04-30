@@ -98,37 +98,53 @@ def test_get_train_test_splits_as_indices():
     from yieldengine.preprocessing.data_splitter import DataSplitter
 
     test_folds = 200
+    for use_bootstrapping in (False, True):
 
-    my_ds = DataSplitter(num_samples=123456, test_ratio=0.2, num_folds=test_folds)
+        my_ds = DataSplitter(
+            num_samples=123456,
+            test_ratio=0.2,
+            num_folds=test_folds,
+            use_bootstrapping=use_bootstrapping,
+        )
 
-    list_of_train_test_splits = list(my_ds.get_train_test_splits_as_indices())
+        list_of_train_test_splits = list(my_ds.get_train_test_splits_as_indices())
 
-    list_of_train_test_splits_2 = list(my_ds.get_train_test_splits_as_indices())
+        # assert we get right amount of folds
+        assert len(list_of_train_test_splits) == test_folds
 
-    assert len(list_of_train_test_splits) == len(
-        list_of_train_test_splits_2
-    ), "The number of folds should be stable!"
+        # check correct ratio of test/train
+        for train_set, test_set in list_of_train_test_splits:
+            assert 0.19 < float(len(test_set) / (len(test_set) + len(train_set)) < 0.21)
 
-    for f1, f2 in zip(list_of_train_test_splits, list_of_train_test_splits_2):
-        assert np.array_equal(f1[0], f2[0]), "Fold indices should be stable!"
-        assert np.array_equal(f1[1], f2[1]), "Fold indices should be stable!"
+        list_of_train_test_splits_2 = list(my_ds.get_train_test_splits_as_indices())
 
-    # now test the opposite: resample() should change fold indices on the next call of get_train_test_splits...
-    my_ds.resample()
+        assert len(list_of_train_test_splits) == len(
+            list_of_train_test_splits_2
+        ), "The number of folds should be stable!"
 
-    list_of_train_test_splits_3 = list(my_ds.get_train_test_splits_as_indices())
+        for f1, f2 in zip(list_of_train_test_splits, list_of_train_test_splits_2):
+            assert np.array_equal(f1[0], f2[0]), "Fold indices should be stable!"
+            assert np.array_equal(f1[1], f2[1]), "Fold indices should be stable!"
 
-    # due to randomness, we need to check this with a threshold
-    # we allow 2 folds to be randomly the same
-    randomly_same_allowed_threshold = 2
-    num_different_folds = 0
-    for f1, f2 in zip(list_of_train_test_splits, list_of_train_test_splits_3):
-        if not np.array_equal(f1[0], f2[0]) and not np.array_equal(f1[1], f2[1]):
-            num_different_folds = num_different_folds + 1
+        if use_bootstrapping:
+            # now test: resample() should change fold indices on the next call of get_train_test_splits...
+            my_ds.resample()
 
-    assert num_different_folds >= (
-        test_folds - randomly_same_allowed_threshold
-    ), "There are too many equal folds!"
+            list_of_train_test_splits_3 = list(my_ds.get_train_test_splits_as_indices())
+
+            # due to randomness, we need to check this with a threshold
+            # we allow 2 folds to be randomly the same
+            randomly_same_allowed_threshold = 2
+            num_different_folds = 0
+            for f1, f2 in zip(list_of_train_test_splits, list_of_train_test_splits_3):
+                if not np.array_equal(f1[0], f2[0]) and not np.array_equal(
+                    f1[1], f2[1]
+                ):
+                    num_different_folds = num_different_folds + 1
+
+            assert num_different_folds >= (
+                test_folds - randomly_same_allowed_threshold
+            ), "There are too many equal folds!"
 
 
 def test_datasplitter_with_sk_learn():
@@ -169,11 +185,7 @@ def test_datasplitter_with_sk_learn():
         "criterion": ("gini", "entropy"),
         "max_features": ["sqrt", "auto", "log2"],
     }
-    cl2 = GridSearchCV(
-        tree.DecisionTreeClassifier(),
-        parameters,
-        cv=my_ds,
-    )
+    cl2 = GridSearchCV(tree.DecisionTreeClassifier(), parameters, cv=my_ds)
     cl2.fit(iris.data, iris.target)
 
     assert cl2.best_score_ > 0.85, "Expected a minimum score of 0.85"
