@@ -1,15 +1,14 @@
 import pandas as pd
-from sklearn.base import RegressorMixin
-from typing import List
+from sklearn.base import BaseEstimator
 from yieldengine.preprocessing.cross_validation import CircularCrossValidator
 
 
 class ModelInspector:
     def __init__(
         self,
-        models: List[RegressorMixin],
+        model: BaseEstimator,
         dataset: pd.DataFrame,
-        datasplitter: CircularCrossValidator,
+        cv: CircularCrossValidator,
     ) -> None:
         pass
 
@@ -31,7 +30,7 @@ class ModelInspector:
         pass
 
     def get_shap_value_matrix(self) -> pd.DataFrame:
-        # for all models=model, test-sets=X
+        # for model:
         #   explainer = shap.TreeExplainer(model)
         #   shap_values = explainer.shap_values(X)
 
