@@ -8,6 +8,7 @@ def load_raw_data(input_path: str) -> pd.DataFrame:
         filepath_or_buffer=input_path,
         delimiter=inputfile_config["delimiter"],
         header=inputfile_config["header"],
+        decimal=inputfile_config["decimal"]
     )
 
 
