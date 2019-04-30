@@ -36,6 +36,7 @@ class DataSplitter(BaseCrossValidator):
         :param test_ratio:  Ratio determining the size of the test set (default=0.2).
         :param num_folds:   Number of folds to generate (default=50).
         :param use_bootstrapping: Whether to bootstrap samples (default=False)
+        :return: None
         """
 
         super().__init__()
@@ -61,6 +62,11 @@ class DataSplitter(BaseCrossValidator):
             )
 
     def __define_splits(self) -> None:
+        """
+        Function that defines splits, i.e. start-sample-index for each fold
+
+        :return: None
+        """
         if self.__use_bootstrapping:
             self.__test_splits_start_samples = np.random.randint(
                 0, self.__num_samples - 1, self.__num_folds
@@ -80,7 +86,8 @@ class DataSplitter(BaseCrossValidator):
     def resample(self) -> None:
         """
         Draws completely new random start samples and will hence yield completely new folds from then on
-        :return:
+
+        :return: None
         """
         if self.__use_bootstrapping:
             self.__define_splits()
@@ -138,7 +145,7 @@ class DataSplitter(BaseCrossValidator):
     ) -> Generator[np.array, None, None]:
         """
         Implementation of method in BaseCrossValidator - yields iterable of indices of all test-sets
-        
+
         :param X: not used in this implementation, which is solely based on num_samples, num_folds, test_ratio
         :param y: not used in this implementation, which is solely based on num_samples, num_folds, test_ratio
         :param groups: not used in this implementation, which is solely based on num_samples, num_folds, test_ratio
