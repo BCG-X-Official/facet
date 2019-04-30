@@ -153,7 +153,7 @@ def test_datasplitter_with_sk_learn():
     svc = svm.SVC(gamma="scale")
 
     # use the defined my_ds Datasplitter within GridSearchCV:
-    clf = GridSearchCV(svc, parameters, cv=my_ds.get_train_test_splits_as_indices())
+    clf = GridSearchCV(svc, parameters, cv=my_ds)
     clf.fit(iris.data, iris.target)
 
     # test if the number of received folds is correct:
@@ -172,7 +172,7 @@ def test_datasplitter_with_sk_learn():
     cl2 = GridSearchCV(
         tree.DecisionTreeClassifier(),
         parameters,
-        cv=my_ds.get_train_test_splits_as_indices(),
+        cv=my_ds,
     )
     cl2.fit(iris.data, iris.target)
 

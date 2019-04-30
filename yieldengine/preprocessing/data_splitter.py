@@ -1,9 +1,10 @@
 import pandas as pd
 import numpy as np
 from typing import Generator, Tuple
+from sklearn.model_selection import BaseCrossValidator
 
 
-class DataSplitter:
+class DataSplitter(BaseCrossValidator):
     """
     Class to generate various CV folds of train and test datasets using circular bootstrapping.
 
@@ -13,8 +14,6 @@ class DataSplitter:
     and `reference <https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.GridSearchCV.html>`_
 
     Unless you call :code:`resample()`, **this class will keep drawn folds stable**
-
-    todo: Evaluate if this should implement https://scikit-learn.org/stable/glossary.html#term-cv-splitter
 
     :param num_samples: Number of samples of the input dataset - needed to give deterministic folds on multiple\
      call of get_train_test_splits_as_indices
@@ -32,6 +31,7 @@ class DataSplitter:
         :param num_folds:   Number of folds to generate (default=50).
         """
 
+        super().__init__()
         self.__test_ratio = test_ratio
         self.__num_folds = num_folds
         self.__num_samples = num_samples
@@ -99,3 +99,10 @@ class DataSplitter:
             yield (
                 (input_dataset.iloc[train_indices], input_dataset.iloc[test_indices])
             )
+
+    def _iter_test_indices(self, X=None, y=None, groups=None):
+        for (train_indices, test_indices) in self.get_train_test_splits_as_indices():
+            yield test_indices
+
+    def get_n_splits(self, X=None, y=None, groups=None):
+        return self.__num_folds
