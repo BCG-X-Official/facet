@@ -15,7 +15,7 @@ help:
 
 # js: adapted to do apidoc, generate html and move into the docs folder
 html: 
-	sphinx-apidoc -o "$(SOURCEDIR)" ./../yieldengine
+	sphinx-apidoc -o "$(SOURCEDIR)" -f ./../yieldengine
 	@$(SPHINXBUILD) -M $@ "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
 	rm -rf ./../docs/*
 	mv "$(BUILDDIR)"/html/* ./../docs/
