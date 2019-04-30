@@ -4,11 +4,11 @@ from typing import Generator, Tuple
 from sklearn.model_selection import BaseCrossValidator
 
 
-class DataSplitter(BaseCrossValidator):
+class CircularCrossValidator(BaseCrossValidator):
     """
-    Class to generate various CV folds of train and test datasets using circular bootstrapping.
+    Class to generate various CV folds of train and test datasets using circular out-of-sample splits.
 
-    Compatible with scikit-learn's GridSearchCV object, if you set :code:`cv=datasplitter`
+    Compatible with scikit-learn's GridSearchCV object, if you set :code:`cv=circular_cross_validator`
 
     See scikit-learn's `code <https://github.com/scikit-learn/scikit-learn/blob/7b136e9/sklearn/model_selection/_search.py#L961>`_
     and `reference <https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.GridSearchCV.html>`_
@@ -105,7 +105,7 @@ class DataSplitter(BaseCrossValidator):
         Meant to be used as "cv" parameter i.e. for scikit-learn's GridSearchCV
 
         :return: A generator of tuples of kind (ndarray, ndarray). If you need a list, simply \
-        call :code:`list(datasplitter.get_train_test_splits_as_indices(...))`
+        call :code:`list(circular_cross_validator.get_train_test_splits_as_indices(...))`
         """
 
         # ensure splits have been defined:
@@ -130,7 +130,7 @@ class DataSplitter(BaseCrossValidator):
 
         :param input_dataset: A pd.DataFrame object containing all data to split.
         :return: A generator of tuples of kind (pd.DataFrame, pd.DataFrame). If you need a list, simply \
-        call :code:`list(datasplitter.get_train_test_splits_as_dataframes(...))`
+        call :code:`list(circular_cross_validator.get_train_test_splits_as_dataframes(...))`
         """
         if not type(input_dataset) == pd.DataFrame:
             raise ValueError("Expected a pandas.DataFrame as input_dataset")
