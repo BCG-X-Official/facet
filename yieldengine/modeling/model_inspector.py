@@ -1,7 +1,7 @@
 import pandas as pd
 from sklearn.base import RegressorMixin
 from typing import List
-from yieldengine.preprocessing.data_splitter import DataSplitter
+from yieldengine.preprocessing.cross_validation import CircularCrossValidator
 
 
 class ModelInspector:
@@ -9,7 +9,7 @@ class ModelInspector:
         self,
         models: List[RegressorMixin],
         dataset: pd.DataFrame,
-        datasplitter: DataSplitter,
+        datasplitter: CircularCrossValidator,
     ):
         pass
 
