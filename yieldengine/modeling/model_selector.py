@@ -54,7 +54,7 @@ class ModelSelector:
 
         self.__pipeline.fit(sample.feature_data, sample.target_data)
 
-    def get_best_models(self) -> List[GridSearchCV]:
+    def rank_models(self) -> List[GridSearchCV]:
         l = self.__searchers.copy()
 
         # always sort best_score_ in descending fashion, since gridsearchcv flips the sign of its score value when
@@ -66,7 +66,7 @@ class ModelSelector:
         return "\n".join(
             [
                 f" Rank {i + 1}: {m.estimator.__class__}, Score: {-1 * m.best_score_}, Params: {m.best_params_}"
-                for i, m in enumerate(self.get_best_models())
+                for i, m in enumerate(self.rank_models())
                 if i < limit
             ]
         )
