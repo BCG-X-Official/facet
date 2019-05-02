@@ -20,4 +20,5 @@ def test_sample():
         filepath_or_buffer=testdata_file_path,
         delimiter=inputfile_config["delimiter"],
         header=inputfile_config["header"],
+        decimal=inputfile_config["decimal"],
     )
