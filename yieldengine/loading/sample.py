@@ -1,5 +1,6 @@
 import pandas as pd
 from typing import List
+import numpy as np
 
 
 class Sample:
@@ -83,5 +84,17 @@ class Sample:
     def features(self, features: List[str]) -> None:
         self.__validate_features(features=features)
         self.__features = features
+        self.__feature_data = self.__sample[self.__features]
+
+    @property
+    def numerical_features(self) -> List[str]:
+        return list(self.__feature_data.select_dtypes(np.number).columns)
+
+    @property
+    def categorical_features(self) -> List[str]:
+        return list(self.__feature_data.select_dtypes(np.object).columns)
+
+    def __len__(self):
+        return len(self.__sample)
 
     # todo: undecided, if we want to allow the setting of "target" - tendency to not allow and have it immutable

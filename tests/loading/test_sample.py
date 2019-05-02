@@ -74,3 +74,15 @@ def test_sample(test_sample_data):
     # property of s.target should not be mutable
     with pytest.raises(AttributeError):
         s.target = "error"
+
+    # test numerical features
+    assert "Step4 Fermentation Sensor Data Phase2 Pressure Val04 (mbar)" in s.numerical_features
+
+    # test categorical features
+    assert "Step4 RawMat Internal Compound01 QC (id)" in s.categorical_features
+
+    # assert feature completeness
+    assert len(set(s.numerical_features).union(set(s.categorical_features)).difference(s.features)) == 0
+
+    # test length
+    assert len(s) == len(test_sample_data)
