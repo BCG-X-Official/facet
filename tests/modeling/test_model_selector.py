@@ -101,7 +101,7 @@ def test_model_selector(test_sample_data):
     ms.train_models(sample=sample)
 
     # when done, get ranking
-    ranked_models = ms.get_best_models()
+    ranked_models = ms.rank_models()
     # check types
     assert type(ranked_models) == list
     assert type(ranked_models[0]) == GridSearchCV
