@@ -272,8 +272,12 @@ Finally, use yield-engine's `ModelSelector <./../yieldengine.modeling.html#yield
     # instantiate the model selector
     ms = ModelSelector(searchers=searchers, preprocessing=pre_pipeline)
     
-    # run train_models
-    ms.train_models(sample=sample)
+    # retrieve a pipeline
+    complete_pipeline = ms.construct_pipeline()
+
+    # train the models
+    complete_pipeline.fit(sample.feature_data, sample.target_data)
+
 
 Print the summary:
 

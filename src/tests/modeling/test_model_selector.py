@@ -89,8 +89,11 @@ def test_model_selector(test_sample_data):
     # instantiate the model selector
     ms = ModelSelector(searchers=searchers, preprocessing=pre_pipeline)
 
-    # run train_models
-    ms.train_models(sample=sample)
+    # retrieve a pipeline
+    complete_pipeline = ms.construct_pipeline()
+
+    # train the models
+    complete_pipeline.fit(sample.feature_data, sample.target_data)
 
     # when done, get ranking
     ranked_models = ms.rank_models()
