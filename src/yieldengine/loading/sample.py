@@ -6,14 +6,16 @@ import numpy as np
 class Sample:
     """
     Utility class to wrap a Pandas DataFrame in order to easily access its
-        - feature (a DataFrame without the target column) or target (a Series) column(s)
+
+        - features (a DataFrame without the target column) or target (a Series) column(s)
         - feature columns by type: numerical or categorical
 
     via object properties.
 
-    Further, the features property can be changed.
+    The features property is allowed to be changed after initialization, the target is not.
 
     An added benefit is through several checks:
+
         - features & target columns need to be defined explicitly at Sample().__init__() time
         - target column is not allowed as part of the features
 
@@ -64,32 +66,68 @@ class Sample:
 
     @property
     def target(self) -> str:
+        """
+        Property of Sample that returns the name of the target column.
+
+        :return: str
+        """
         return self.__target
 
     @property
     def features(self) -> List[str]:
+        """
+        Property of Sample that returns the list of feature column names.
+
+        :return: List[str]
+        """
         return self.__features
 
     @property
     def target_data(self) -> pd.Series:
+        """
+        Property of Sample that returns a pd.Series of the target column.
+
+        :return: pd.Series
+        """
         return self.__target_data
 
     @property
     def feature_data(self) -> pd.DataFrame:
+        """
+        Property of Sample that returns a DataFrame selected on its feature columns.
+
+        :return: pd.DataFrame
+        """
         return self.__feature_data
 
     @features.setter
     def features(self, features: List[str]) -> None:
+        """
+        Setter of Sample.features - allows to set a new list of features.
+
+        :param features: the new list of feature columns
+        :return: None
+        """
         self.__validate_features(features=features)
         self.__features = features
         self.__feature_data = self.__sample[self.__features]
 
     @property
     def numerical_features(self) -> List[str]:
+        """
+        Property of Sample that returns a list of all numerical features.
+
+        :return: List[str]
+        """
         return list(self.__feature_data.select_dtypes(np.number).columns)
 
     @property
     def categorical_features(self) -> List[str]:
+        """
+        Property of Sample that returns a list of all categorical features.
+
+        :return: List[str]
+        """
         return list(self.__feature_data.select_dtypes(np.object).columns)
 
     def __len__(self):
