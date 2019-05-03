@@ -25,7 +25,10 @@ def test_model_selector(test_sample_data):
         axis=1, how="all"
     )
 
-    sample = Sample(sample=test_sample_data, target="Yield")
+    feature_columns = list(test_sample_data.columns)
+    feature_columns.remove("Yield")
+
+    sample = Sample(sample=test_sample_data, target="Yield", features=feature_columns)
 
     # define the circular cross validator with just 5 folds (to speed up testing)
     circular_cv = CircularCrossValidator(
@@ -53,44 +56,33 @@ def test_model_selector(test_sample_data):
     # define all grid-searchers, keep in this list:
     searchers = []
 
-    models = [
-        LGBMRegressor(),
-        AdaBoostRegressor(),
-        RandomForestRegressor(),
-        DecisionTreeRegressor(),
-        ExtraTreeRegressor(),
-        SVR(),
-        LinearRegression(),
+    models_and_parameters = [
+        (
+            LGBMRegressor(),
+            {
+                "max_depth": (5, 10),
+                "min_split_gain": (0.1, 0.2),
+                "num_leaves": (50, 100, 200),
+            },
+        ),
+        (AdaBoostRegressor(), {"n_estimators": (50, 80)}),
+        (RandomForestRegressor(), {"n_estimators": (50, 80)}),
+        (
+            DecisionTreeRegressor(),
+            {"max_depth": (0.5, 1.0), "max_features": (0.5, 1.0)},
+        ),
+        (ExtraTreeRegressor(), {"max_depth": (5, 10, 12)}),
+        (SVR(), {"gamma": (0.5, 1), "C": (50, 100)}),
+        (LinearRegression(), {"normalize": (False, True)}),
     ]
 
-    params = [
-        # lgbm
-        {
-            "max_depth": (5, 10),
-            "min_split_gain": (0.1, 0.2),
-            "num_leaves": (50, 100, 200),
-        },
-        # adaboost
-        {"n_estimators": (50, 80)},
-        # random forest
-        {"n_estimators": (50, 80)},
-        # decisiontree
-        {"max_depth": (0.5, 1.0), "max_features": (0.5, 1.0)},
-        # extratree
-        {"max_depth": (5, 10, 12)},
-        # svr
-        {"gamma": (0.5, 1), "C": (50, 100)},
-        # linear reg
-        {"normalize": (False, True)},
-    ]
-
-    for model, params in zip(models, params):
+    for model, parameters in models_and_parameters:
         search = GridSearchCV(
             estimator=model,
             cv=circular_cv.get_train_test_splits_as_indices(),
-            param_grid=params,
+            param_grid=parameters,
             scoring=make_scorer(mean_squared_error, greater_is_better=False),
-            n_jobs=4,
+            n_jobs=-1,
         )
         searchers.append(search)
 
