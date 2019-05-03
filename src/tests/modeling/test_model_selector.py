@@ -135,6 +135,12 @@ def test_model_selector(test_sample_data):
 
 
 def test_model_selector_no_preprocessing():
+    # filter out warnings triggerd by sk-learn/numpy
+    import warnings
+
+    warnings.filterwarnings("ignore", message="numpy.dtype size changed")
+    warnings.filterwarnings("ignore", message="numpy.ufunc size changed")
+    warnings.filterwarnings("ignore", message="You are accessing a training score")
     from sklearn import datasets, svm
 
     # load example data
