@@ -4,39 +4,39 @@ import numpy as np
 
 
 class Sample:
+    """
+    Utility class to wrap a Pandas DataFrame in order to easily access its
+
+        - features (a DataFrame without the target column) or target (a Series) column(s)
+        - feature columns by type: numerical or categorical
+
+    via object properties.
+
+    The features property is allowed to be changed after initialization, the target is not.
+
+    An added benefit is through several checks:
+
+        - features & target columns need to be defined explicitly at Sample().__init__() time
+        - target column is not allowed as part of the features
+
+    """
     def __init__(
         self, sample: pd.DataFrame, features: List[str] = None, target: str = None
     ) -> None:
+        """
+        Construct a Sample object.
+        :param sample: a Pandas DataFrame
+        :param features: list of column names that constitute as feature variables
+        :param target: string of column name that constitutes as the target variable
+        """
         if sample is None or not (type(sample) == pd.DataFrame):
             raise ValueError("Expected 'sample' to be a pd.DataFrame")
 
-        if features is None and target is None:
-            raise ValueError("Either one of features, target need to be specified")
+        if features is None or target is None:
+            raise ValueError("Both features and target need to be specified")
 
-        if features is None:
-            # in this case, target must be defined - use it to define features
-            self.__target = target
-            self.__features = [c for c in list(sample.columns) if c != target]
-        else:
-            self.__features = features
-
-        if target is None:
-            # in this case, features must be defined - use it to define target
-
-            # get a list of all columns not in features...
-            target_candidates = [c for c in list(sample.columns) if c not in features]
-
-            # more than 1? we only expect to have one target variable - here it is unclear which it is
-            if len(target_candidates) > 1:
-                raise ValueError(
-                    "'target' variable not defined, but given list 'features' "
-                    "leaves more than one column out -> can't infer a single target column"
-                )
-            # only 1? set it
-            self.__target = target_candidates[0]
-        else:
-            self.__target = target
-
+        self.__features = features
+        self.__target = target
         self.__sample = sample
 
         # finally check values of target & features against sample
@@ -66,32 +66,68 @@ class Sample:
 
     @property
     def target(self) -> str:
+        """
+        Property of Sample that returns the name of the target column.
+
+        :return: str
+        """
         return self.__target
 
     @property
     def features(self) -> List[str]:
+        """
+        Property of Sample that returns the list of feature column names.
+
+        :return: List[str]
+        """
         return self.__features
 
     @property
     def target_data(self) -> pd.Series:
+        """
+        Property of Sample that returns a pd.Series of the target column.
+
+        :return: pd.Series
+        """
         return self.__target_data
 
     @property
     def feature_data(self) -> pd.DataFrame:
+        """
+        Property of Sample that returns a DataFrame selected on its feature columns.
+
+        :return: pd.DataFrame
+        """
         return self.__feature_data
 
     @features.setter
     def features(self, features: List[str]) -> None:
+        """
+        Setter of Sample.features - allows to set a new list of features.
+
+        :param features: the new list of feature columns
+        :return: None
+        """
         self.__validate_features(features=features)
         self.__features = features
         self.__feature_data = self.__sample[self.__features]
 
     @property
     def numerical_features(self) -> List[str]:
+        """
+        Property of Sample that returns a list of all numerical features.
+
+        :return: List[str]
+        """
         return list(self.__feature_data.select_dtypes(np.number).columns)
 
     @property
     def categorical_features(self) -> List[str]:
+        """
+        Property of Sample that returns a list of all categorical features.
+
+        :return: List[str]
+        """
         return list(self.__feature_data.select_dtypes(np.object).columns)
 
     def __len__(self):
