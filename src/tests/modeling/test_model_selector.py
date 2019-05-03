@@ -4,6 +4,7 @@ from yieldengine.preprocessing.cross_validation import CircularCrossValidator
 from yieldengine.modeling.model_selector import ModelSelector
 from sklearn.pipeline import Pipeline
 import numpy as np
+import pandas as pd
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.impute import SimpleImputer
 from sklearn.compose import ColumnTransformer
@@ -110,3 +111,48 @@ def test_model_selector(test_sample_data):
     # print summary:
     print("Ranked models:")
     print(ms.summary_string())
+
+    # get ranked model-instances:
+    ranked_model_instances = ms.rank_model_instances(n_best_ranked=3)
+
+    # check data structure
+    assert type(ranked_model_instances) == list
+    assert type(ranked_model_instances[0]) == dict
+    assert {"score", "estimator", "params"} == ranked_model_instances[0].keys()
+
+    # check sorting
+    assert (
+        ranked_model_instances[0]["score"]
+        >= ranked_model_instances[1]["score"]
+        >= ranked_model_instances[2]["score"]
+    )
+
+    # test transform():
+    assert complete_pipeline.transform(sample.feature_data).shape == (
+        len(sample),
+        len(searchers),
+    )
+
+
+def test_model_selector_no_preprocessing():
+    from sklearn import datasets, svm
+
+    # load example data
+    iris = datasets.load_iris()
+
+    # define a yield-engine circular CV:
+    my_cv = CircularCrossValidator(
+        num_samples=len(iris.data), test_ratio=0.21, num_folds=50
+    )
+
+    # define parameters and model
+    parameters = {"kernel": ("linear", "rbf"), "C": [1, 10]}
+    svc = svm.SVC(gamma="scale")
+
+    # use the defined my_cv circular CV within GridSearchCV:
+    clf = GridSearchCV(svc, parameters, cv=my_cv)
+
+    ms = ModelSelector(searchers=[clf])
+    p = ms.construct_pipeline()
+    p.fit(iris.data, iris.target)
+    print(pd.DataFrame(ms.rank_model_instances()).head())
