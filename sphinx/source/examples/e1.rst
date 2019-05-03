@@ -183,6 +183,7 @@ Some very basic clean up specific to this data file:
 Use the utility class `Sample <./../yieldengine.loading.html#yieldengine.loading.sample.Sample>`_ with this data set:
 
 .. code:: ipython3
+
     feature_columns = list(data_file.columns)
     feature_columns.remove("Yield")
 
