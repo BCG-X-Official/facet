@@ -1,15 +1,11 @@
 import pandas as pd
 from sklearn.base import BaseEstimator
-from yieldengine.preprocessing.cross_validation import CircularCrossValidator
+
+from yieldengine.loading.sample import Sample
 
 
 class ModelInspector:
-    def __init__(
-        self,
-        model: BaseEstimator,
-        dataset: pd.DataFrame,
-        cv: CircularCrossValidator,
-    ) -> None:
+    def __init__(self, model: BaseEstimator, sample: Sample) -> None:
         pass
 
     def get_feature_importance_by_gain(self) -> pd.DataFrame:
