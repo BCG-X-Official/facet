@@ -4,6 +4,7 @@ from yieldengine.preprocessing.cross_validation import CircularCrossValidator
 from yieldengine.modeling.model_selector import ModelSelector
 from sklearn.pipeline import Pipeline
 import numpy as np
+import pandas as pd
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.impute import SimpleImputer
 from sklearn.compose import ColumnTransformer
@@ -79,7 +80,7 @@ def test_model_selector(test_sample_data):
     for model, parameters in models_and_parameters:
         search = GridSearchCV(
             estimator=model,
-            cv=circular_cv.get_train_test_splits_as_indices(),
+            cv=circular_cv,
             param_grid=parameters,
             scoring=make_scorer(mean_squared_error, greater_is_better=False),
             n_jobs=-1,
@@ -89,8 +90,11 @@ def test_model_selector(test_sample_data):
     # instantiate the model selector
     ms = ModelSelector(searchers=searchers, preprocessing=pre_pipeline)
 
-    # run train_models
-    ms.train_models(sample=sample)
+    # retrieve a pipeline
+    complete_pipeline = ms.construct_pipeline()
+
+    # train the models
+    complete_pipeline.fit(sample.feature_data, sample.target_data)
 
     # when done, get ranking
     ranked_models = ms.rank_models()
@@ -107,3 +111,54 @@ def test_model_selector(test_sample_data):
     # print summary:
     print("Ranked models:")
     print(ms.summary_string())
+
+    # get ranked model-instances:
+    ranked_model_instances = ms.rank_model_instances(n_best_ranked=3)
+
+    # check data structure
+    assert type(ranked_model_instances) == list
+    assert type(ranked_model_instances[0]) == dict
+    assert {"score", "estimator", "params"} == ranked_model_instances[0].keys()
+
+    # check sorting
+    assert (
+        ranked_model_instances[0]["score"]
+        >= ranked_model_instances[1]["score"]
+        >= ranked_model_instances[2]["score"]
+    )
+
+    # test transform():
+    assert complete_pipeline.transform(sample.feature_data).shape == (
+        len(sample),
+        len(searchers),
+    )
+
+
+def test_model_selector_no_preprocessing():
+    # filter out warnings triggerd by sk-learn/numpy
+    import warnings
+
+    warnings.filterwarnings("ignore", message="numpy.dtype size changed")
+    warnings.filterwarnings("ignore", message="numpy.ufunc size changed")
+    warnings.filterwarnings("ignore", message="You are accessing a training score")
+    from sklearn import datasets, svm
+
+    # load example data
+    iris = datasets.load_iris()
+
+    # define a yield-engine circular CV:
+    my_cv = CircularCrossValidator(
+        num_samples=len(iris.data), test_ratio=0.21, num_folds=50
+    )
+
+    # define parameters and model
+    parameters = {"kernel": ("linear", "rbf"), "C": [1, 10]}
+    svc = svm.SVC(gamma="scale")
+
+    # use the defined my_cv circular CV within GridSearchCV:
+    clf = GridSearchCV(svc, parameters, cv=my_cv)
+
+    ms = ModelSelector(searchers=[clf])
+    p = ms.construct_pipeline()
+    p.fit(iris.data, iris.target)
+    print(pd.DataFrame(ms.rank_model_instances()).head())
