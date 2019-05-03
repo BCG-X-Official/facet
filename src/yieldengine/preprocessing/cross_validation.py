@@ -62,20 +62,16 @@ class CircularCrossValidator(BaseCrossValidator):
                 "The number of test samples per fold is 0 - increase ratio or size of input dataset"
             )
 
+        self.__step_across_folds = max(int(self.__num_samples / self.__num_folds), 1)
+
         # warn the user, if more folds are requested than uniquely available:
-        if (
-            not self.__use_bootstrapping
-            and self.__num_samples % self.__num_test_samples_per_fold == 0
-            and self.__num_samples / self.__num_test_samples_per_fold < self.__num_folds
-        ):
-            max_possible_unique_folds = int(
-                self.__num_samples / self.__num_test_samples_per_fold
-            )
+        max_possible_unique_folds = int(self.__num_samples / self.__step_across_folds)
+
+        if not self.__use_bootstrapping and self.__num_folds > self.__num_samples:
+
             warnings.warn(
-                f"Fold-size remainderless divisor of sample-size! "
                 f"{max_possible_unique_folds} unique folds are possible, {self.__num_folds} requested"
-                f"-> you will get {self.__num_folds-max_possible_unique_folds}  duplicate folds. "
-                f"Consider slightly adjusting test_ratio "
+                f"-> you will get {self.__num_folds-max_possible_unique_folds}  duplicate fold(s). "
             )
 
     def __define_splits(self) -> None:
@@ -92,8 +88,8 @@ class CircularCrossValidator(BaseCrossValidator):
             self.__test_splits_start_samples = np.mod(
                 np.arange(
                     0,
-                    self.__num_folds * self.__num_test_samples_per_fold,
-                    self.__num_test_samples_per_fold,
+                    self.__num_folds * self.__step_across_folds,
+                    self.__step_across_folds,
                 ),
                 self.__num_samples,
             )
