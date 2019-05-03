@@ -50,7 +50,7 @@ def test_get_train_test_splits_as_dataframe(test_sample):
 
     # test checking of correct data type
     with pytest.raises(expected_exception=ValueError):
-        list(my_ds.get_train_test_splits_as_dataframes(input_dataset=np.arange(0,10)))
+        list(my_ds.get_train_test_splits_as_dataframes(input_dataset=np.arange(0, 10)))
 
     list_of_train_test_splits = list(
         my_ds.get_train_test_splits_as_dataframes(input_dataset=test_sample)
