@@ -145,7 +145,7 @@ class CircularCrossValidator(BaseCrossValidator):
         :return: A generator of tuples of kind (pd.DataFrame, pd.DataFrame). If you need a list, simply \
         call :code:`list(circular_cross_validator.get_train_test_splits_as_dataframes(...))`
         """
-        if not type(input_dataset) == pd.DataFrame:
+        if input_dataset is None or not type(input_dataset) == pd.DataFrame:
             raise ValueError("Expected a pandas.DataFrame as input_dataset")
 
         for (train_indices, test_indices) in self.get_train_test_splits_as_indices():
