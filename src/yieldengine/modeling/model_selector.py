@@ -2,7 +2,6 @@ from sklearn.base import TransformerMixin
 from sklearn.model_selection import GridSearchCV
 from sklearn.pipeline import Pipeline, FeatureUnion
 from typing import List
-from yieldengine.loading.sample import Sample
 import pandas as pd
 
 # note: unfortunately, sklearn does not expose "BaseSearchCV" from within model_selection, which is the superclass
@@ -16,7 +15,14 @@ class ModelSelector:
         self.__preprocessing = preprocessing
         self.__pipeline = None
 
-    def train_models(self, sample: Sample) -> None:
+    def construct_pipeline(self) -> Pipeline:
+        """
+        Constructs and returns a scikit-learn Pipeline for all given searchers, using the (optional) given
+        preprocessing step
+
+        :return: Pipeline
+        """
+
         class ModelTransformer(TransformerMixin):
             def __init__(self, model):
                 self.model = model
@@ -52,7 +58,7 @@ class ModelSelector:
             # if pre-processing pipeline was not given, create a minimal Pipeline with just the estimators
             self.__pipeline = Pipeline([est_feature_union])
 
-        self.__pipeline.fit(sample.feature_data, sample.target_data)
+        return self.__pipeline
 
     def rank_models(self) -> List[GridSearchCV]:
         l = self.__searchers.copy()
