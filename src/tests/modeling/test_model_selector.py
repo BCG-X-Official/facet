@@ -79,7 +79,7 @@ def test_model_selector(test_sample_data):
     for model, parameters in models_and_parameters:
         search = GridSearchCV(
             estimator=model,
-            cv=circular_cv.get_train_test_splits_as_indices(),
+            cv=circular_cv,
             param_grid=parameters,
             scoring=make_scorer(mean_squared_error, greater_is_better=False),
             n_jobs=-1,
