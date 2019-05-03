@@ -18,36 +18,31 @@ def test_sample_init(test_sample_data):
     with pytest.raises(ValueError):
         Sample(sample=test_sample_data)
 
+    # store list of feature columns:
+    f_columns = list(test_sample_data.columns)
+    f_columns.remove("Yield")
+
     # 2.1 invalid feature column specified
     with pytest.raises(ValueError):
-        f_columns = list(test_sample_data.columns)
-        f_columns.remove("Yield")
-        f_columns.append("doesnt_exist")
-        Sample(sample=test_sample_data, features=f_columns)
+        f_columns_false = f_columns.copy()
+        f_columns_false.append("doesnt_exist")
+        Sample(sample=test_sample_data, features=f_columns_false, target="Yield")
 
     # 2.2 invalid target column specified
     with pytest.raises(ValueError):
-        Sample(sample=test_sample_data, target="doesnt_exist")
+        Sample(sample=test_sample_data, target="doesnt_exist", features=f_columns)
 
-    # 3. inconclusive target variable
+    # 3. column is target and also feature
     with pytest.raises(ValueError):
-        f_columns = list(test_sample_data.columns)
-        f_columns.remove("Yield")
-        f_columns.remove("Date")
-        # no either one of Yield | Date could be the target...
-        Sample(sample=test_sample_data, features=f_columns)
+        f_columns_false = f_columns.copy()
+        f_columns_false.append("Yield")
 
-    # 4. column is target and also feature
-    with pytest.raises(ValueError):
-        Sample(
-            sample=test_sample_data,
-            features=list(test_sample_data.columns),
-            target="Yield",
-        )
+        Sample(sample=test_sample_data, features=f_columns_false, target="Yield")
 
 
 def test_sample(test_sample_data):
-    s = Sample(sample=test_sample_data, target="Yield")
+    feature_columns = list(test_sample_data.drop(columns="Yield").columns)
+    s = Sample(sample=test_sample_data, target="Yield", features=feature_columns)
 
     assert s.target == "Yield"
     assert "Yield" not in s.features
@@ -76,13 +71,23 @@ def test_sample(test_sample_data):
         s.target = "error"
 
     # test numerical features
-    assert "Step4 Fermentation Sensor Data Phase2 Pressure Val04 (mbar)" in s.numerical_features
+    assert (
+        "Step4 Fermentation Sensor Data Phase2 Pressure Val04 (mbar)"
+        in s.numerical_features
+    )
 
     # test categorical features
     assert "Step4 RawMat Internal Compound01 QC (id)" in s.categorical_features
 
     # assert feature completeness
-    assert len(set(s.numerical_features).union(set(s.categorical_features)).difference(s.features)) == 0
+    assert (
+        len(
+            set(s.numerical_features)
+            .union(set(s.categorical_features))
+            .difference(s.features)
+        )
+        == 0
+    )
 
     # test length
     assert len(s) == len(test_sample_data)
