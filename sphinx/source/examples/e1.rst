@@ -183,10 +183,11 @@ Some very basic clean up specific to this data file:
 Use the utility class `Sample <./../yieldengine.loading.html#yieldengine.loading.sample.Sample>`_ with this data set:
 
 .. code:: ipython3
-    feature_columns = list(test_sample_data.columns)
+
+    feature_columns = list(data_file.columns)
     feature_columns.remove("Yield")
 
-    sample = Sample(sample=test_sample_data, target="Yield", features=feature_columns)
+    sample = Sample(sample=data_file, target="Yield", features=feature_columns)
 
 Use the yield-engine `CircularCrossValidator <./../yieldengine.preprocessing.html#yieldengine.preprocessing.cross_validation.CircularCrossValidator>`_:
 
@@ -258,7 +259,7 @@ for each, which in turn leverages the `CircularCrossValidator <./../yieldengine.
     for model, parameters in models_and_parameters:
         search = GridSearchCV(
             estimator=model,
-            cv=circular_cv.get_train_test_splits_as_indices(),
+            cv=circular_cv,
             param_grid=parameters,
             scoring=make_scorer(mean_squared_error, greater_is_better=False),
             n_jobs=-1,
@@ -272,8 +273,12 @@ Finally, use yield-engine's `ModelSelector <./../yieldengine.modeling.html#yield
     # instantiate the model selector
     ms = ModelSelector(searchers=searchers, preprocessing=pre_pipeline)
     
-    # run train_models
-    ms.train_models(sample=sample)
+    # retrieve a pipeline
+    complete_pipeline = ms.construct_pipeline()
+
+    # train the models
+    complete_pipeline.fit(sample.feature_data, sample.target_data)
+
 
 Print the summary:
 
