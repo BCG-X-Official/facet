@@ -15,9 +15,17 @@ help:
 
 # js: adapted to do apidoc, generate html and move into the docs folder
 html: 
+	# generate apidoc using docstrings
 	sphinx-apidoc -o "$(SOURCEDIR)" -f ./../src/yieldengine
+	# remove modules.rst - we never use it, since there is only the one module "yieldengine"
+	# (and thereby, we get rid of Sphinx's warning that it is never included in a toctree)
+
+	rm "$(SOURCEDIR)"/modules.rst
+	# run the Sphinx build for html
 	@$(SPHINXBUILD) -M $@ "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
+	# clean up potentially pre-existing files in /docs
 	rm -rf ./../docs/*
+	# move the last build into /docs
 	mv "$(BUILDDIR)"/html/* ./../docs/
 # Catch-all target: route all unknown targets to Sphinx using the new
 # "make mode" option.  $(O) is meant as a shortcut for $(SPHINXOPTS).
