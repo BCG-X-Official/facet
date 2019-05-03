@@ -4,9 +4,29 @@ import numpy as np
 
 
 class Sample:
+    """
+    Utility class to wrap a Pandas DataFrame in order to easily access its
+        - feature (a DataFrame without the target column) or target (a Series) column(s)
+        - feature columns by type: numerical or categorical
+
+    via object properties.
+
+    Further, the features property can be changed.
+
+    An added benefit is through several checks:
+        - features & target columns need to be defined explicitly at Sample().__init__() time
+        - target column is not allowed as part of the features
+
+    """
     def __init__(
         self, sample: pd.DataFrame, features: List[str] = None, target: str = None
     ) -> None:
+        """
+        Construct a Sample object.
+        :param sample: a Pandas DataFrame
+        :param features: list of column names that constitute as feature variables
+        :param target: string of column name that constitutes as the target variable
+        """
         if sample is None or not (type(sample) == pd.DataFrame):
             raise ValueError("Expected 'sample' to be a pd.DataFrame")
 
