@@ -5,6 +5,7 @@ import numpy as np
 # note: below is needed as a fixture
 from tests.shared_fixtures import test_sample
 
+
 def test_circular_cv_init(test_sample):
     # filter out warnings triggerd by sk-learn/numpy
     import warnings
@@ -46,6 +47,10 @@ def test_get_train_test_splits_as_dataframe(test_sample):
     my_ds = CircularCrossValidator(
         num_samples=len(test_sample), test_ratio=0.2, num_folds=50
     )
+
+    # test checking of correct data type
+    with pytest.raises(expected_exception=ValueError):
+        list(my_ds.get_train_test_splits_as_dataframes(input_dataset=np.arange(0, 10)))
 
     list_of_train_test_splits = list(
         my_ds.get_train_test_splits_as_dataframes(input_dataset=test_sample)
@@ -134,6 +139,10 @@ def test_get_train_test_splits_as_indices():
             assert num_different_folds >= (
                 test_folds - randomly_same_allowed_threshold
             ), "There are too many equal folds!"
+        else:
+            # resample() should raise an exception
+            with pytest.raises(NotImplementedError):
+                my_cv.resample()
 
 
 def test_circular_cv_with_sk_learn():
@@ -184,7 +193,7 @@ def test_duplicate_fold_warning(test_sample):
     from yieldengine.preprocessing.cross_validation import CircularCrossValidator
 
     with pytest.warns(expected_warning=UserWarning):
-        # the 6th fold will be a duplicate, hence we expect a warning:
+        # the 101th fold will be a duplicate, hence we expect a warning:
         my_cs = CircularCrossValidator(
-            num_samples=100, test_ratio=0.2, num_folds=6, use_bootstrapping=False
+            num_samples=100, test_ratio=0.2, num_folds=101, use_bootstrapping=False
         )
