@@ -267,7 +267,7 @@ for each, which in turn leverages the `CircularCrossValidator <./../yieldengine.
     for model, params in zip(models, params):
         search = GridSearchCV(
             estimator=model,
-            cv=circular_cv.get_train_test_splits_as_indices(),
+            cv=circular_cv,
             param_grid=params,
             scoring=make_scorer(mean_squared_error, greater_is_better=False),
             n_jobs=4,
