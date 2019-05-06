@@ -1,8 +1,8 @@
-import pytest
-import pandas as pd
 import numpy as np
+import pandas as pd
+import pytest
 
-# note: below is needed as a fixture
+# noinspection PyUnresolvedReferences
 from tests.shared_fixtures import batch_table
 
 
