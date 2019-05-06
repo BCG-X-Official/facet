@@ -3,10 +3,10 @@ import pandas as pd
 import numpy as np
 
 # note: below is needed as a fixture
-from tests.shared_fixtures import test_sample
+from tests.shared_fixtures import batch_table
 
 
-def test_circular_cv_init(test_sample):
+def test_circular_cv_init(batch_table):
     # filter out warnings triggerd by sk-learn/numpy
     import warnings
 
@@ -30,7 +30,7 @@ def test_circular_cv_init(test_sample):
 
     #   - 0 samples per fold
     with pytest.raises(expected_exception=ValueError):
-        CircularCrossValidator(num_samples=len(test_sample), test_ratio=0.00001)
+        CircularCrossValidator(num_samples=len(batch_table), test_ratio=0.00001)
 
     #   - (0 samples)
     with pytest.raises(expected_exception=ValueError):
@@ -41,11 +41,11 @@ def test_circular_cv_init(test_sample):
         CircularCrossValidator()
 
 
-def test_get_train_test_splits_as_dataframe(test_sample):
+def test_get_train_test_splits_as_dataframe(batch_table):
     from yieldengine.modeling.validation import CircularCrossValidator
 
     my_ds = CircularCrossValidator(
-        num_samples=len(test_sample), test_ratio=0.2, num_folds=50
+        num_samples=len(batch_table), test_ratio=0.2, num_folds=50
     )
 
     # test checking of correct data type
@@ -53,7 +53,7 @@ def test_get_train_test_splits_as_dataframe(test_sample):
         list(my_ds.get_train_test_splits_as_dataframes(input_dataset=np.arange(0, 10)))
 
     list_of_train_test_splits = list(
-        my_ds.get_train_test_splits_as_dataframes(input_dataset=test_sample)
+        my_ds.get_train_test_splits_as_dataframes(input_dataset=batch_table)
     )
 
     # assert we get 50 folds
@@ -61,7 +61,7 @@ def test_get_train_test_splits_as_dataframe(test_sample):
 
     # check correct ratio of test/train
     for train_set, test_set in list_of_train_test_splits:
-        assert 0.19 < float(len(test_set) / len(test_sample) < 0.21)
+        assert 0.19 < float(len(test_set) / len(batch_table) < 0.21)
 
     # check all generated folds
     for train_set, test_set in list_of_train_test_splits:
@@ -85,7 +85,7 @@ def test_get_train_test_splits_as_dataframe(test_sample):
         )
         # assert test/train add up back to the complete dataset
         combined = pd.concat([train_set, test_set], axis=0).sort_index()
-        assert test_sample.equals(combined)
+        assert batch_table.equals(combined)
 
 
 def test_get_train_test_splits_as_indices():
@@ -189,7 +189,7 @@ def test_circular_cv_with_sk_learn():
     assert cl2.best_score_ > 0.85, "Expected a minimum score of 0.85"
 
 
-def test_duplicate_fold_warning(test_sample):
+def test_duplicate_fold_warning(batch_table):
     from yieldengine.modeling.validation import CircularCrossValidator
 
     with pytest.warns(expected_warning=UserWarning):
