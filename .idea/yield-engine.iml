@@ -4,11 +4,14 @@
     <content url="file://$MODULE_DIR$">
       <sourceFolder url="file://$MODULE_DIR$/src" isTestSource="false" />
     </content>
-    <orderEntry type="jdk" jdkName="Python 3.6 (201904_yield-engine)" jdkType="Python SDK" />
+    <orderEntry type="jdk" jdkName="yield-engine" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
   </component>
   <component name="PackageRequirementsSettings">
     <option name="requirementsPath" value="" />
+  </component>
+  <component name="PyDocumentationSettings">
+    <option name="renderExternalDocumentation" value="true" />
   </component>
   <component name="TestRunnerService">
     <option name="projectConfiguration" value="pytest" />
