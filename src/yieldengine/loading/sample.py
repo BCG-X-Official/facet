@@ -23,13 +23,15 @@ class Sample:
     """
 
     def __init__(
-        self, sample: pd.DataFrame, features: List[str] = None, target: str = None
+        self, sample: pd.DataFrame, target: str = None, features: List[str] = None
     ) -> None:
         """
         Construct a Sample object.
+
         :param sample: a Pandas DataFrame
-        :param features: list of column names that constitute as feature variables
         :param target: string of column name that constitutes as the target variable
+        :param features: list of column names that constitute as feature variables or \
+        None, in which case all non-target columns are features
         """
         if sample is None or not (type(sample) == pd.DataFrame):
             raise ValueError("Expected 'sample' to be a pd.DataFrame")
