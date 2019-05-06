@@ -6,7 +6,7 @@ Model = namedtuple("Model", "name estimator parameters")
 
 
 class ModelZoo:
-    def __init__(self):
+    def __init__(self) -> None:
         self.__models = []
 
     def add_model(
