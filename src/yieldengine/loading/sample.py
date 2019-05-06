@@ -1,6 +1,7 @@
-import pandas as pd
-from typing import List
+from typing import *
+
 import numpy as np
+import pandas as pd
 
 
 class Sample:
@@ -12,7 +13,8 @@ class Sample:
 
     via object properties.
 
-    The features property is allowed to be changed after initialization, the target is not.
+    Neither the features nor the target property is allowed to be changed after
+    initialization.
 
     An added benefit is through several checks:
 
@@ -20,117 +22,119 @@ class Sample:
         - target column is not allowed as part of the features
 
     """
+
+    __slots__ = [
+        "__observations",
+        "__target_name",
+        "__features_names",
+        "__target_sr",
+        "__feature_df",
+    ]
+
     def __init__(
-        self, sample: pd.DataFrame, features: List[str] = None, target: str = None
+        self,
+        observations: pd.DataFrame,
+        target_name: str,
+        feature_names: Iterable[str] = None,
     ) -> None:
         """
         Construct a Sample object.
-        :param sample: a Pandas DataFrame
-        :param features: list of column names that constitute as feature variables
-        :param target: string of column name that constitutes as the target variable
+
+        :param observations: a Pandas DataFrame
+        :param target_name: string of column name that constitutes as the target variable
+        :param feature_names: iterable of column names that constitute as feature
+        variables or \
+        None, in which case all non-target columns are features
         """
-        if sample is None or not (type(sample) == pd.DataFrame):
-            raise ValueError("Expected 'sample' to be a pd.DataFrame")
+        if observations is None or not isinstance(observations, pd.DataFrame):
+            raise ValueError("sample is not a DataFrame")
 
-        if features is None or target is None:
-            raise ValueError("Both features and target need to be specified")
+        self.__observations = observations
 
-        self.__features = features
-        self.__target = target
-        self.__sample = sample
+        if target_name is None or not isinstance(target_name, str):
+            raise ValueError("target is not a string")
 
-        # finally check values of target & features against sample
-        self.__validate_features(self.__features)
-        self.__validate_target(self.__target)
-
-        self.__target_data = self.__sample[self.__target]
-        self.__feature_data = self.__sample[self.__features]
-
-    def __validate_features(self, features: List[str]) -> None:
-        if not set(features).issubset(self.__sample.columns):
-            missing_columns = set(features).difference(self.__sample.columns)
+        if target_name not in self.__observations.columns:
             raise ValueError(
-                f"Some given features are not in the sample: {missing_columns}"
-            )
-        # assure target column is not part of features:
-        if self.__target in features:
-            raise ValueError(
-                f"The target column {self.__target} is also part of features"
+                f"target '{target_name}' is not a column in the observations table"
             )
 
-    def __validate_target(self, target: str) -> None:
-        if target not in self.__sample.columns:
+        self.__target_name = target_name
+
+        if feature_names is None:
+            feature_names_set = {
+                c for c in observations.columns if c != self.__target_name
+            }
+        else:
+            feature_names_set: Set[str] = set(feature_names)
+
+        if not set(feature_names_set).issubset(observations.columns):
+            missing_columns = feature_names_set.difference(observations.columns)
             raise ValueError(
-                f"The given/assumed target variable {target} is not in the sample"
+                "observations table is missing columns for some features: "
+                f"{missing_columns}"
+            )
+        # ensure target column is not part of features:
+        if self.__target_name in feature_names_set:
+            raise ValueError(
+                f"features includes the target column {self.__target_name}"
             )
 
-    @property
-    def target(self) -> str:
-        """
-        Property of Sample that returns the name of the target column.
-
-        :return: str
-        """
-        return self.__target
+        self.__features_names = feature_names_set
+        self.__target_sr: pd.Series = self.__observations.loc[:, self.__target_name]
+        self.__feature_df: pd.DataFrame = self.__observations.loc[
+            :, self.__features_names
+        ]
 
     @property
-    def features(self) -> List[str]:
+    def target_name(self) -> str:
         """
-        Property of Sample that returns the list of feature column names.
-
-        :return: List[str]
+        :return: name of the target column
         """
-        return self.__features
+        return self.__target_name
 
     @property
-    def target_data(self) -> pd.Series:
+    def feature_names(self) -> Collection[str]:
+        """
+        :return: list of feature column names
+        """
+        return self.__features_names
+
+    @property
+    def target(self) -> pd.Series:
         """
         Property of Sample that returns a pd.Series of the target column.
 
         :return: pd.Series
         """
-        return self.__target_data
+        return self.__target_sr
 
     @property
-    def feature_data(self) -> pd.DataFrame:
+    def features(self) -> pd.DataFrame:
         """
         Property of Sample that returns a DataFrame selected on its feature columns.
 
         :return: pd.DataFrame
         """
-        return self.__feature_data
-
-    @features.setter
-    def features(self, features: List[str]) -> None:
-        """
-        Setter of Sample.features - allows to set a new list of features.
-
-        :param features: the new list of feature columns
-        :return: None
-        """
-        self.__validate_features(features=features)
-        self.__features = features
-        self.__feature_data = self.__sample[self.__features]
+        return self.__feature_df
 
     @property
-    def numerical_features(self) -> List[str]:
+    def features_numerical(self) -> List[str]:
         """
         Property of Sample that returns a list of all numerical features.
 
         :return: List[str]
         """
-        return list(self.__feature_data.select_dtypes(np.number).columns)
+        return list(self.__feature_df.select_dtypes(np.number).columns)
 
     @property
-    def categorical_features(self) -> List[str]:
+    def features_categorical(self) -> List[str]:
         """
         Property of Sample that returns a list of all categorical features.
 
         :return: List[str]
         """
-        return list(self.__feature_data.select_dtypes(np.object).columns)
+        return list(self.__feature_df.select_dtypes(np.object).columns)
 
     def __len__(self):
-        return len(self.__sample)
-
-    # todo: undecided, if we want to allow the setting of "target" - tendency to not allow and have it immutable
+        return len(self.__observations)
