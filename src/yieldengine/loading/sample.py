@@ -42,7 +42,8 @@ class Sample:
 
         :param observations: a Pandas DataFrame
         :param target_name: string of column name that constitutes as the target variable
-        :param feature_names_set: list of column names that constitute as feature variables or \
+        :param feature_names: iterable of column names that constitute as feature
+        variables or \
         None, in which case all non-target columns are features
         """
         if observations is None or not isinstance(observations, pd.DataFrame):
