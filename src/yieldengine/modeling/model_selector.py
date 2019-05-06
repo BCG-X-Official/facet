@@ -3,6 +3,7 @@ from sklearn.model_selection import GridSearchCV
 from sklearn.pipeline import Pipeline, FeatureUnion
 from typing import List
 import pandas as pd
+from yieldengine.modeling.model_zoo import ModelZoo, Model
 
 # note: unfortunately, sklearn does not expose "BaseSearchCV" from within model_selection, which is the superclass
 
@@ -16,9 +17,7 @@ class ModelSelector:
     `Example: Loading, Preprocessing, Circular CV, Model Selection  <./examples/e1.html>`_
     """
 
-    def __init__(
-        self, searchers: List[GridSearchCV], preprocessing: Pipeline = None
-    ) -> None:
+    def __init__(self, models: ModelZoo, preprocessing: Pipeline = None) -> None:
         """
         Constructs a ModelSelector
 
@@ -26,9 +25,26 @@ class ModelSelector:
         :param preprocessing: a scikit-learn Pipeline that should be used as a preprocessor
         :return None
         """
-        self.__searchers = searchers
+        self.__model_zoo = models
+        self.__searchers = None
         self.__preprocessing = preprocessing
         self.__pipeline = None
+
+    def construct_searchers(self, cv=None, scoring=None) -> List[GridSearchCV]:
+        searchers = []
+
+        for model in self.__model_zoo.models:
+            search = GridSearchCV(
+                estimator=model.estimator,
+                cv=cv,
+                param_grid=model.parameters,
+                scoring=scoring,
+                n_jobs=-1,
+            )
+            searchers.append(search)
+
+        self.__searchers = searchers
+        return self.__searchers
 
     def construct_pipeline(self) -> Pipeline:
         """
