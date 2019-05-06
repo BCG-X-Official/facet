@@ -1,3 +1,5 @@
+from typing import List
+
 from tests.shared_fixtures import test_sample as test_sample_data
 from yieldengine.loading.sample import Sample
 from yieldengine.preprocessing.cross_validation import CircularCrossValidator
@@ -58,36 +60,54 @@ def test_model_selector(test_sample_data):
     model_zoo = (
         ModelZoo()
         .add_model(
-            "lgbm",
-            LGBMRegressor(),
-            {
+            name="lgbm",
+            estimator=LGBMRegressor(),
+            parameters={
                 "max_depth": (5, 10),
                 "min_split_gain": (0.1, 0.2),
                 "num_leaves": (50, 100, 200),
             },
         )
-        .add_model("ada", AdaBoostRegressor(), {"n_estimators": (50, 80)})
-        .add_model("rf", RandomForestRegressor(), {"n_estimators": (50, 80)})
         .add_model(
-            "dt",
-            DecisionTreeRegressor(),
-            {"max_depth": (0.5, 1.0), "max_features": (0.5, 1.0)},
+            name="ada",
+            estimator=AdaBoostRegressor(),
+            parameters={"n_estimators": (50, 80)},
         )
-        .add_model("et", ExtraTreeRegressor(), {"max_depth": (5, 10, 12)})
-        .add_model("svr", SVR(), {"gamma": (0.5, 1), "C": (50, 100)})
-        .add_model("lr", LinearRegression(), {"normalize": (False, True)})
+        .add_model(
+            name="rf",
+            estimator=RandomForestRegressor(),
+            parameters={"n_estimators": (50, 80)},
+        )
+        .add_model(
+            name="dt",
+            estimator=DecisionTreeRegressor(),
+            parameters={"max_depth": (0.5, 1.0), "max_features": (0.5, 1.0)},
+        )
+        .add_model(
+            name="et",
+            estimator=ExtraTreeRegressor(),
+            parameters={"max_depth": (5, 10, 12)},
+        )
+        .add_model(
+            name="svr", estimator=SVR(), parameters={"gamma": (0.5, 1), "C": (50, 100)}
+        )
+        .add_model(
+            name="lr",
+            estimator=LinearRegression(),
+            parameters={"normalize": (False, True)},
+        )
     )
 
     # instantiate the model selector
     ms = ModelSelector(models=model_zoo, preprocessing=pre_pipeline)
 
     # set up grid searchers
-    searchers = ms.construct_searchers(
+    searchers: List[GridSearchCV] = ms.construct_searchers(
         cv=circular_cv, scoring=make_scorer(mean_squared_error, greater_is_better=False)
     )
 
     # retrieve a pipeline
-    complete_pipeline = ms.construct_pipeline()
+    complete_pipeline: Pipeline = ms.construct_pipeline()
 
     # train the models
     complete_pipeline.fit(sample.feature_data, sample.target_data)
