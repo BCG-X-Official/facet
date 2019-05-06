@@ -45,8 +45,8 @@ class ModelPipeline:
         self.__model_zoo = models
         self.__preprocessing = preprocessing
         self.__pipeline = None
-        self.__cv = None
-        self.__scoring = None
+        self.__cv = cv
+        self.__scoring = scoring
 
         self.__construct_searchers()
         self.__construct_pipeline()
