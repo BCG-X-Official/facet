@@ -16,7 +16,7 @@ class ModelZoo:
         self.__models = list()
 
     def add_model(
-        self, name: str, estimator: BaseEstimator, parameters: Dict
+        self, name: str, estimator: BaseEstimator, parameters: Dict[str, Any]
     ) -> "ModelZoo":
         m = Model(name=name, estimator=estimator, parameters=parameters)
         self.__models.append(m)
