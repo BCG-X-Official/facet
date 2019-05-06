@@ -89,14 +89,14 @@ class Sample:
     @property
     def target_name(self) -> str:
         """
-        :returns name of the target column
+        :return: name of the target column
         """
         return self.__target_name
 
     @property
     def feature_names(self) -> Collection[str]:
         """
-        :returns list of feature column names
+        :return: list of feature column names
         """
         return self.__features_names
 
