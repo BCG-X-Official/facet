@@ -60,6 +60,7 @@ class ModelPipeline:
                 cv=self.__cv,
                 param_grid=model.parameters,
                 scoring=self.__scoring,
+                return_train_score=True,
                 n_jobs=-1,
             )
             searchers.append(search)
