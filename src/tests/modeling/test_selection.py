@@ -15,8 +15,9 @@ from sklearn.svm import SVR
 from sklearn.tree import DecisionTreeRegressor, ExtraTreeRegressor
 
 from yieldengine.loading.sample import Sample
-from yieldengine.modeling.selection import ModelSelector, ModelZoo
+from yieldengine.modeling.selection import ModelSelector, ModelZoo, ModelPipeline
 from yieldengine.modeling.validation import CircularCrossValidator
+
 # noinspection PyUnresolvedReferences
 from tests.shared_fixtures import test_sample as test_sample_data
 
@@ -99,19 +100,18 @@ def test_model_selector(test_sample_data):
         )
     )
 
-    # instantiate the model selector
-    ms = ModelSelector(models=model_zoo, preprocessing=pre_pipeline)
-
-    # set up grid searchers
-    searchers: List[GridSearchCV] = ms.construct_searchers(
-        cv=circular_cv, scoring=make_scorer(mean_squared_error, greater_is_better=False)
+    mp: ModelPipeline = ModelPipeline(
+        models=model_zoo,
+        preprocessing=pre_pipeline,
+        cv=circular_cv,
+        scoring=make_scorer(mean_squared_error, greater_is_better=False),
     )
 
-    # retrieve a pipeline
-    complete_pipeline: Pipeline = ms.construct_pipeline()
-
     # train the models
-    complete_pipeline.fit(sample.feature_data, sample.target_data)
+    mp.pipeline.fit(sample.feature_data, sample.target_data)
+
+    # instantiate the model selector
+    ms: ModelSelector = ModelSelector(model_pipeline=mp)
 
     # when done, get ranking
     ranked_models = ms.rank_models()
@@ -145,9 +145,9 @@ def test_model_selector(test_sample_data):
     )
 
     # test transform():
-    assert complete_pipeline.transform(sample.feature_data).shape == (
+    assert mp.pipeline.transform(sample.feature_data).shape == (
         len(sample),
-        len(searchers),
+        len(mp.searchers),
     )
 
 
@@ -173,8 +173,13 @@ def test_model_selector_no_preprocessing():
         "svc", svm.SVC(gamma="scale"), {"kernel": ("linear", "rbf"), "C": [1, 10]}
     )
 
-    ms = ModelSelector(models)
-    ms.construct_searchers(cv=my_cv)
-    p = ms.construct_pipeline()
-    p.fit(iris.data, iris.target)
+    mp: ModelPipeline = ModelPipeline(models=models, cv=my_cv)
+
+    # train the models
+    mp.pipeline.fit(iris.data, iris.target)
+
+    # instantiate the model selector
+    ms: ModelSelector = ModelSelector(model_pipeline=mp)
+    ms = ModelSelector(mp)
+
     print(pd.DataFrame(ms.rank_model_instances()).head())
