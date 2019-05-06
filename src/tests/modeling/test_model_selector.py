@@ -2,6 +2,7 @@ from tests.shared_fixtures import test_sample as test_sample_data
 from yieldengine.loading.sample import Sample
 from yieldengine.preprocessing.cross_validation import CircularCrossValidator
 from yieldengine.modeling.model_selector import ModelSelector
+from yieldengine.modeling.model_zoo import Model, ModelZoo
 from sklearn.pipeline import Pipeline
 import numpy as np
 import pandas as pd
@@ -54,41 +55,36 @@ def test_model_selector(test_sample_data):
     # run fit_transform once to assure it works:
     pre_pipeline.fit_transform(sample.feature_data)
 
-    # define all grid-searchers, keep in this list:
-    searchers = []
-
-    models_and_parameters = [
-        (
+    model_zoo = (
+        ModelZoo()
+        .add_model(
+            "lgbm",
             LGBMRegressor(),
             {
                 "max_depth": (5, 10),
                 "min_split_gain": (0.1, 0.2),
                 "num_leaves": (50, 100, 200),
             },
-        ),
-        (AdaBoostRegressor(), {"n_estimators": (50, 80)}),
-        (RandomForestRegressor(), {"n_estimators": (50, 80)}),
-        (
+        )
+        .add_model("ada", AdaBoostRegressor(), {"n_estimators": (50, 80)})
+        .add_model("rf", RandomForestRegressor(), {"n_estimators": (50, 80)})
+        .add_model(
+            "dt",
             DecisionTreeRegressor(),
             {"max_depth": (0.5, 1.0), "max_features": (0.5, 1.0)},
-        ),
-        (ExtraTreeRegressor(), {"max_depth": (5, 10, 12)}),
-        (SVR(), {"gamma": (0.5, 1), "C": (50, 100)}),
-        (LinearRegression(), {"normalize": (False, True)}),
-    ]
-
-    for model, parameters in models_and_parameters:
-        search = GridSearchCV(
-            estimator=model,
-            cv=circular_cv,
-            param_grid=parameters,
-            scoring=make_scorer(mean_squared_error, greater_is_better=False),
-            n_jobs=-1,
         )
-        searchers.append(search)
+        .add_model("et", ExtraTreeRegressor(), {"max_depth": (5, 10, 12)})
+        .add_model("svr", SVR(), {"gamma": (0.5, 1), "C": (50, 100)})
+        .add_model("lr", LinearRegression(), {"normalize": (False, True)})
+    )
 
     # instantiate the model selector
-    ms = ModelSelector(searchers=searchers, preprocessing=pre_pipeline)
+    ms = ModelSelector(models=model_zoo, preprocessing=pre_pipeline)
+
+    # set up grid searchers
+    searchers = ms.construct_searchers(
+        cv=circular_cv, scoring=make_scorer(mean_squared_error, greater_is_better=False)
+    )
 
     # retrieve a pipeline
     complete_pipeline = ms.construct_pipeline()
@@ -152,13 +148,12 @@ def test_model_selector_no_preprocessing():
     )
 
     # define parameters and model
-    parameters = {"kernel": ("linear", "rbf"), "C": [1, 10]}
-    svc = svm.SVC(gamma="scale")
+    models = ModelZoo().add_model(
+        "svc", svm.SVC(gamma="scale"), {"kernel": ("linear", "rbf"), "C": [1, 10]}
+    )
 
-    # use the defined my_cv circular CV within GridSearchCV:
-    clf = GridSearchCV(svc, parameters, cv=my_cv)
-
-    ms = ModelSelector(searchers=[clf])
+    ms = ModelSelector(models)
+    ms.construct_searchers(cv=my_cv)
     p = ms.construct_pipeline()
     p.fit(iris.data, iris.target)
     print(pd.DataFrame(ms.rank_model_instances()).head())
