@@ -1,13 +1,19 @@
 from collections import namedtuple
 from sklearn.base import BaseEstimator
-from typing import Dict, List
+from typing import *
 
-Model = namedtuple("Model", "name estimator parameters")
+
+class Model(NamedTuple):
+    name: str
+    estimator: BaseEstimator
+    parameters: Dict[str, Any]
 
 
 class ModelZoo:
+    __slots__ = ["__models"]
+
     def __init__(self) -> None:
-        self.__models = []
+        self.__models = list()
 
     def add_model(
         self, name: str, estimator: BaseEstimator, parameters: Dict
