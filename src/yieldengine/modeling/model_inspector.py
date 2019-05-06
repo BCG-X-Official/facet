@@ -1,6 +1,6 @@
 import pandas as pd
 from sklearn.base import BaseEstimator
-from yieldengine.preprocessing.cross_validation import CircularCrossValidator
+from yieldengine.modeling.validation import CircularCrossValidator
 
 
 class ModelInspector:
