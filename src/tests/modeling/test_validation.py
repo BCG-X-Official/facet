@@ -35,32 +35,29 @@ def test_get_train_test_splits_as_indices():
     test_folds = 200
     test_X = np.arange(0, 1000, 1)
 
-    for use_bootstrapping in (False, True):
+    my_cv = CircularCrossValidator(test_ratio=0.2, num_folds=test_folds)
 
-        my_cv = CircularCrossValidator(
-            test_ratio=0.2, num_folds=test_folds, use_bootstrapping=use_bootstrapping
-        )
+    list_of_test_splits = list(
+        my_cv._iter_test_indices(test_X)
+    )
 
-        list_of_test_splits = list(
-            my_cv._iter_test_indices(test_X))
+    # assert we get right amount of folds
+    assert len(list_of_test_splits) == test_folds
 
-        # assert we get right amount of folds
-        assert len(list_of_test_splits) == test_folds
+    # check correct ratio of test/train
+    for test_set in list_of_test_splits:
+        assert 0.19 < float(len(test_set) / len(test_X) < 0.21)
 
-        # check correct ratio of test/train
-        for test_set in list_of_test_splits:
-            assert 0.19 < float(len(test_set) / len(test_X) < 0.21)
+    list_of_test_splits_2 = list(
+        my_cv._iter_test_indices(test_X)
+    )
 
-        list_of_test_splits_2 = list(
-            my_cv._iter_test_indices(test_X)
-        )
+    assert len(list_of_test_splits) == len(
+        list_of_test_splits_2
+    ), "The number of folds should be stable!"
 
-        assert len(list_of_test_splits) == len(
-            list_of_test_splits_2
-        ), "The number of folds should be stable!"
-
-        for f1, f2 in zip(list_of_test_splits, list_of_test_splits_2):
-            assert np.array_equal(f1, f2), "Fold indices should be stable!"
+    for f1, f2 in zip(list_of_test_splits, list_of_test_splits_2):
+        assert np.array_equal(f1, f2), "Fold indices should be stable!"
 
 
 def test_circular_cv_with_sk_learn():
