@@ -13,7 +13,7 @@ def test_circular_cv_init(test_sample):
     warnings.filterwarnings("ignore", message="numpy.dtype size changed")
     warnings.filterwarnings("ignore", message="numpy.ufunc size changed")
 
-    from yieldengine.preprocessing.cross_validation import CircularCrossValidator
+    from yieldengine.modeling.validation import CircularCrossValidator
 
     # check erroneous inputs
     #   - test_ratio = 0
@@ -42,7 +42,7 @@ def test_circular_cv_init(test_sample):
 
 
 def test_get_train_test_splits_as_dataframe(test_sample):
-    from yieldengine.preprocessing.cross_validation import CircularCrossValidator
+    from yieldengine.modeling.validation import CircularCrossValidator
 
     my_ds = CircularCrossValidator(
         num_samples=len(test_sample), test_ratio=0.2, num_folds=50
@@ -89,7 +89,7 @@ def test_get_train_test_splits_as_dataframe(test_sample):
 
 
 def test_get_train_test_splits_as_indices():
-    from yieldengine.preprocessing.cross_validation import CircularCrossValidator
+    from yieldengine.modeling.validation import CircularCrossValidator
 
     test_folds = 200
     for use_bootstrapping in (False, True):
@@ -154,7 +154,7 @@ def test_circular_cv_with_sk_learn():
 
     from sklearn import svm, datasets, tree
     from sklearn.model_selection import GridSearchCV
-    from yieldengine.preprocessing.cross_validation import CircularCrossValidator
+    from yieldengine.modeling.validation import CircularCrossValidator
 
     # load example data
     iris = datasets.load_iris()
@@ -190,7 +190,7 @@ def test_circular_cv_with_sk_learn():
 
 
 def test_duplicate_fold_warning(test_sample):
-    from yieldengine.preprocessing.cross_validation import CircularCrossValidator
+    from yieldengine.modeling.validation import CircularCrossValidator
 
     with pytest.warns(expected_warning=UserWarning):
         # the 101th fold will be a duplicate, hence we expect a warning:
