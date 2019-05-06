@@ -12,7 +12,8 @@ class Sample:
 
     via object properties.
 
-    The features property is allowed to be changed after initialization, the target is not.
+    Neither the features nor the target property is allowed to be changed after
+    initialization.
 
     An added benefit is through several checks:
 
@@ -20,6 +21,7 @@ class Sample:
         - target column is not allowed as part of the features
 
     """
+
     def __init__(
         self, sample: pd.DataFrame, features: List[str] = None, target: str = None
     ) -> None:
@@ -32,11 +34,16 @@ class Sample:
         if sample is None or not (type(sample) == pd.DataFrame):
             raise ValueError("Expected 'sample' to be a pd.DataFrame")
 
-        if features is None or target is None:
-            raise ValueError("Both features and target need to be specified")
+        if target is None:
+            raise ValueError("Target needs to be specified")
 
-        self.__features = features
         self.__target = target
+
+        if features is None:
+            self.__features = [c for c in list(sample.columns) if c != self.__target]
+        else:
+            self.__features = features
+
         self.__sample = sample
 
         # finally check values of target & features against sample
@@ -100,18 +107,6 @@ class Sample:
         """
         return self.__feature_data
 
-    @features.setter
-    def features(self, features: List[str]) -> None:
-        """
-        Setter of Sample.features - allows to set a new list of features.
-
-        :param features: the new list of feature columns
-        :return: None
-        """
-        self.__validate_features(features=features)
-        self.__features = features
-        self.__feature_data = self.__sample[self.__features]
-
     @property
     def numerical_features(self) -> List[str]:
         """
@@ -132,5 +127,3 @@ class Sample:
 
     def __len__(self):
         return len(self.__sample)
-
-    # todo: undecided, if we want to allow the setting of "target" - tendency to not allow and have it immutable

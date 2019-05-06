@@ -41,30 +41,33 @@ def test_sample_init(test_sample_data):
 
 
 def test_sample(test_sample_data):
+    # define various assertions we want to test:
+    def run_assertions(s: Sample):
+        assert s.target == "Yield"
+        assert "Yield" not in s.features
+        assert len(s.features) == len(test_sample_data.columns) - 1
+
+        assert type(s.target_data) == pd.Series
+        assert type(s.feature_data) == pd.DataFrame
+
+        assert len(s.target_data) == len(s.feature_data)
+
+    # test explicit setting of both target & features
     feature_columns = list(test_sample_data.drop(columns="Yield").columns)
     s = Sample(sample=test_sample_data, target="Yield", features=feature_columns)
 
-    assert s.target == "Yield"
-    assert "Yield" not in s.features
-    assert len(s.features) == len(test_sample_data.columns) - 1
+    # run the checks on s:
+    run_assertions(s)
 
-    assert type(s.target_data) == pd.Series
-    assert type(s.feature_data) == pd.DataFrame
+    # test implicit setting of features by only giving the target
+    s2 = Sample(sample=test_sample_data, target="Yield")
 
-    assert len(s.target_data) == len(s.feature_data)
+    # run the checks on s2:
+    run_assertions(s2)
 
-    # features property should be settable
-    len_before = len(s.features)
-    f = s.features[:-2]
-    s.features = f
-    assert len(s.features) == len(f) == (len_before - 2)
-
-    # features property needs to also check parameters
-    with pytest.raises(ValueError):
-        f_old = s.features
-        s.features = ["does_not_exist"]
-        # ensure it stayed the same
-        assert s.features == f_old
+    # property of s.features should not be mutable
+    with pytest.raises(AttributeError):
+        s.features = "error"
 
     # property of s.target should not be mutable
     with pytest.raises(AttributeError):
