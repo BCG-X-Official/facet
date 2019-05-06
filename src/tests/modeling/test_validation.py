@@ -1,6 +1,9 @@
 import numpy as np
-import pandas as pd
 import pytest
+from sklearn import svm, datasets, tree
+from sklearn.model_selection import GridSearchCV
+from yieldengine.modeling.validation import CircularCrossValidator
+import warnings
 
 # noinspection PyUnresolvedReferences
 from tests.shared_fixtures import batch_table
@@ -8,12 +11,10 @@ from tests.shared_fixtures import batch_table
 
 def test_circular_cv_init(batch_table):
     # filter out warnings triggerd by sk-learn/numpy
-    import warnings
 
     warnings.filterwarnings("ignore", message="numpy.dtype size changed")
     warnings.filterwarnings("ignore", message="numpy.ufunc size changed")
 
-    from yieldengine.modeling.validation import CircularCrossValidator
 
     # check erroneous inputs
     #   - test_ratio = 0
@@ -29,56 +30,10 @@ def test_circular_cv_init(batch_table):
         CircularCrossValidator(test_ratio=1.00001)
 
 
-def test_get_train_test_splits_as_dataframe(batch_table):
-    from yieldengine.modeling.validation import CircularCrossValidator
-
-    my_ds = CircularCrossValidator(test_ratio=0.2, num_folds=50)
-
-    # test checking of correct data type
-    with pytest.raises(expected_exception=ValueError):
-        list(my_ds.get_train_test_splits_as_dataframes(input_dataset=np.arange(0, 10)))
-
-    list_of_train_test_splits = list(
-        my_ds.get_train_test_splits_as_dataframes(input_dataset=batch_table)
-    )
-
-    # assert we get 50 folds
-    assert len(list_of_train_test_splits) == 50
-
-    # check correct ratio of test/train
-    for train_set, test_set in list_of_train_test_splits:
-        assert 0.19 < float(len(test_set) / len(batch_table) < 0.21)
-
-    # check all generated folds
-    for train_set, test_set in list_of_train_test_splits:
-        # assert the correct datatype (pd.DataFrame) is returned
-        assert (
-            type(test_set) == pd.DataFrame
-        ), "test_set should be of type pd.DataFrame!"
-
-        assert (
-            type(train_set) == pd.DataFrame
-        ), "train_set should be of type pd.DataFrame!"
-
-        # assert test/train are mutually exclusive
-        assert (
-            len(
-                train_set.merge(
-                    right=test_set, how="inner", left_index=True, right_index=True
-                )
-            )
-            == 0
-        )
-        # assert test/train add up back to the complete dataset
-        combined = pd.concat([train_set, test_set], axis=0).sort_index()
-        assert batch_table.equals(combined)
-
-
 def test_get_train_test_splits_as_indices():
-    from yieldengine.modeling.validation import CircularCrossValidator
 
     test_folds = 200
-    n_samples = 1000
+    test_X = np.arange(0, 1000, 1)
 
     for use_bootstrapping in (False, True):
 
@@ -86,39 +41,34 @@ def test_get_train_test_splits_as_indices():
             test_ratio=0.2, num_folds=test_folds, use_bootstrapping=use_bootstrapping
         )
 
-        list_of_train_test_splits = list(
-            my_cv._generate_train_test_splits_as_indices(n_samples))
+        list_of_test_splits = list(
+            my_cv._iter_test_indices(test_X))
 
         # assert we get right amount of folds
-        assert len(list_of_train_test_splits) == test_folds
+        assert len(list_of_test_splits) == test_folds
 
         # check correct ratio of test/train
-        for train_set, test_set in list_of_train_test_splits:
-            assert 0.19 < float(len(test_set) / (len(test_set) + len(train_set)) < 0.21)
+        for test_set in list_of_test_splits:
+            assert 0.19 < float(len(test_set) / len(test_X) < 0.21)
 
-        list_of_train_test_splits_2 = list(
-            my_cv._generate_train_test_splits_as_indices(n_samples)
+        list_of_test_splits_2 = list(
+            my_cv._iter_test_indices(test_X)
         )
 
-        assert len(list_of_train_test_splits) == len(
-            list_of_train_test_splits_2
+        assert len(list_of_test_splits) == len(
+            list_of_test_splits_2
         ), "The number of folds should be stable!"
 
-        for f1, f2 in zip(list_of_train_test_splits, list_of_train_test_splits_2):
-            assert np.array_equal(f1[0], f2[0]), "Fold indices should be stable!"
-            assert np.array_equal(f1[1], f2[1]), "Fold indices should be stable!"
+        for f1, f2 in zip(list_of_test_splits, list_of_test_splits_2):
+            assert np.array_equal(f1, f2), "Fold indices should be stable!"
 
 
 def test_circular_cv_with_sk_learn():
     # filter out warnings triggerd by sk-learn/numpy
-    import warnings
 
     warnings.filterwarnings("ignore", message="numpy.dtype size changed")
     warnings.filterwarnings("ignore", message="numpy.ufunc size changed")
 
-    from sklearn import svm, datasets, tree
-    from sklearn.model_selection import GridSearchCV
-    from yieldengine.modeling.validation import CircularCrossValidator
 
     # load example data
     iris = datasets.load_iris()

@@ -1,11 +1,7 @@
 from typing import *
 
 import numpy as np
-import pandas as pd
 from sklearn.model_selection import BaseCrossValidator
-
-from yieldengine import deprecated
-
 
 class CircularCrossValidator(BaseCrossValidator):
     """
@@ -16,18 +12,18 @@ class CircularCrossValidator(BaseCrossValidator):
     See scikit-learn's `code <https://github.com/scikit-learn/scikit-learn/blob/7b136e9/sklearn/model_selection/_search.py#L961>`_
     and `reference <https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.GridSearchCV.html>`_
 
-    Unless you call :code:`resample()`, **this class will keep drawn folds stable, even if use_bootstrapping = True**
-
-    :param num_samples: Number of samples of the input dataset - needed to give deterministic folds on multiple\
-     call of get_train_test_splits_as_indices
     :param test_ratio:  Ratio determining the size of the test set (default=0.2).
     :param num_folds:   Number of folds to generate (default=50).
     :param use_bootstrapping: Whether to bootstrap samples (default=False)
 
     """
 
-    def __init__(self, test_ratio: float = 0.2, num_folds: int = 50,
-                 use_bootstrapping: bool = False) -> None:
+    def __init__(
+        self,
+        test_ratio: float = 0.2,
+        num_folds: int = 50,
+        use_bootstrapping: bool = False,
+    ) -> None:
         """
         :param test_ratio:  Ratio determining the size of the test set (default=0.2).
         :param num_folds:   Number of folds to generate (default=50).
@@ -61,64 +57,13 @@ class CircularCrossValidator(BaseCrossValidator):
         else:
             step = n_samples / self.__num_folds
             self.__test_splits_start_samples = [
-                int(fold * step)
-                for fold in range(self.__num_folds)
+                int(fold * step) for fold in range(self.__num_folds)
             ]
 
         self.__splits_defined = True
 
-    def _generate_train_test_splits_as_indices(
-            self, n_samples
-    ) -> Generator[Tuple[np.array, np.array], None, None]:
-        """
-        Retrieves all generated folds of (train, test) pairs as tuples of arrays with the indices
-
-        Meant to be used as "cv" parameter i.e. for scikit-learn's GridSearchCV
-
-        :return: A generator of tuples of kind (ndarray, ndarray). If you need a list, simply \
-        call :code:`list(circular_cross_validator.get_train_test_splits_as_indices(...))`
-        """
-
-        # ensure splits have been defined:
-        if not self.__splits_defined:
-            self.__define_splits(n_samples)
-
-        data_indices = np.arange(n_samples)
-
-        n_test_samples = max(1, int(n_samples * self._test_ratio))
-
-        for fold_test_start_sample in self.__test_splits_start_samples:
-            data_indices_rolled = np.roll(data_indices, fold_test_start_sample)
-            test_indices = data_indices_rolled[0: n_test_samples]
-            train_indices = data_indices_rolled[n_test_samples:]
-            # conform to scikit-learn, expecting " - An iterable yielding (train, test) splits as arrays of indices."
-            # see: https://github.com/scikit-learn/scikit-learn/blob/7b136e9/sklearn/model_selection/_search.py#L961
-            yield (train_indices, test_indices)
-
-    @deprecated("to be moved to separate class")
-    def get_train_test_splits_as_dataframes(
-            self, input_dataset: pd.DataFrame
-    ) -> Generator[Tuple[pd.DataFrame, pd.DataFrame], None, None]:
-        """
-        Retrieves all generated folds of (train, test) pairs as tuples of dataframes
-
-        :param input_dataset: A pd.DataFrame object containing all data to split.
-        :return: A generator of tuples of kind (pd.DataFrame, pd.DataFrame). If you need a list, simply \
-        call :code:`list(circular_cross_validator.get_train_test_splits_as_dataframes(...))`
-        """
-        if input_dataset is None or not type(input_dataset) == pd.DataFrame:
-            raise ValueError("Expected a pandas.DataFrame as input_dataset")
-
-        for (
-                train_indices,
-                test_indices,
-        ) in self._generate_train_test_splits_as_indices(len(input_dataset)):
-            yield (
-                (input_dataset.iloc[train_indices], input_dataset.iloc[test_indices])
-            )
-
     def _iter_test_indices(
-            self, X=None, y=None, groups=None
+        self, X=None, y=None, groups=None
     ) -> Generator[np.array, None, None]:
         """
         Implementation of method in BaseCrossValidator - yields iterable of indices of all test-sets
@@ -128,11 +73,18 @@ class CircularCrossValidator(BaseCrossValidator):
         :param groups: not used in this implementation, which is solely based on num_samples, num_folds, test_ratio
         :return: Iterable (Generator of np.arrays) of all test-sets
         """
+        n_samples = len(X)
 
-        for (
-                train_indices,
-                test_indices,
-        ) in self._generate_train_test_splits_as_indices(len(X)):
+        if not self.__splits_defined:
+            self.__define_splits(n_samples)
+
+        data_indices = np.arange(n_samples)
+
+        n_test_samples = max(1, int(n_samples * self._test_ratio))
+
+        for fold_test_start_sample in self.__test_splits_start_samples:
+            data_indices_rolled = np.roll(data_indices, fold_test_start_sample)
+            test_indices = data_indices_rolled[0:n_test_samples]
             yield test_indices
 
     def get_n_splits(self, X=None, y=None, groups=None) -> int:
