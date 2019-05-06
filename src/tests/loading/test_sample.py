@@ -1,4 +1,4 @@
-from tests.shared_fixtures import test_sample as test_sample_data
+from tests.shared_fixtures import batch_table as test_sample_data
 from yieldengine.loading.sample import Sample
 import pytest
 import pandas as pd

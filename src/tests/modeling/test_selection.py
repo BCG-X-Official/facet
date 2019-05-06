@@ -19,7 +19,7 @@ from yieldengine.modeling.selection import ModelSelector, ModelZoo, ModelPipelin
 from yieldengine.modeling.validation import CircularCrossValidator
 
 # noinspection PyUnresolvedReferences
-from tests.shared_fixtures import test_sample as test_sample_data
+from tests.shared_fixtures import batch_table as test_sample_data
 
 
 def test_model_selector(test_sample_data):
