@@ -18,35 +18,21 @@ def test_circular_cv_init(batch_table):
     # check erroneous inputs
     #   - test_ratio = 0
     with pytest.raises(expected_exception=ValueError):
-        CircularCrossValidator(num_samples=100, test_ratio=0.0)
+        CircularCrossValidator(test_ratio=0.0)
 
     #   - test_ratio < 0
     with pytest.raises(expected_exception=ValueError):
-        CircularCrossValidator(num_samples=100, test_ratio=-0.1)
+        CircularCrossValidator(test_ratio=-0.0001)
 
     #   - test_ratio > 1
     with pytest.raises(expected_exception=ValueError):
-        CircularCrossValidator(num_samples=100, test_ratio=1.00001)
-
-    #   - 0 samples per fold
-    with pytest.raises(expected_exception=ValueError):
-        CircularCrossValidator(num_samples=len(batch_table), test_ratio=0.00001)
-
-    #   - (0 samples)
-    with pytest.raises(expected_exception=ValueError):
-        CircularCrossValidator(num_samples=0)
-
-    #   - (#samples not specified)
-    with pytest.raises(expected_exception=ValueError):
-        CircularCrossValidator()
+        CircularCrossValidator(test_ratio=1.00001)
 
 
 def test_get_train_test_splits_as_dataframe(batch_table):
     from yieldengine.modeling.validation import CircularCrossValidator
 
-    my_ds = CircularCrossValidator(
-        num_samples=len(batch_table), test_ratio=0.2, num_folds=50
-    )
+    my_ds = CircularCrossValidator(test_ratio=0.2, num_folds=50)
 
     # test checking of correct data type
     with pytest.raises(expected_exception=ValueError):
@@ -92,16 +78,16 @@ def test_get_train_test_splits_as_indices():
     from yieldengine.modeling.validation import CircularCrossValidator
 
     test_folds = 200
+    n_samples = 1000
+
     for use_bootstrapping in (False, True):
 
         my_cv = CircularCrossValidator(
-            num_samples=123456,
-            test_ratio=0.2,
-            num_folds=test_folds,
-            use_bootstrapping=use_bootstrapping,
+            test_ratio=0.2, num_folds=test_folds, use_bootstrapping=use_bootstrapping
         )
 
-        list_of_train_test_splits = list(my_cv.get_train_test_splits_as_indices())
+        list_of_train_test_splits = list(
+            my_cv._generate_train_test_splits_as_indices(n_samples))
 
         # assert we get right amount of folds
         assert len(list_of_train_test_splits) == test_folds
@@ -110,7 +96,9 @@ def test_get_train_test_splits_as_indices():
         for train_set, test_set in list_of_train_test_splits:
             assert 0.19 < float(len(test_set) / (len(test_set) + len(train_set)) < 0.21)
 
-        list_of_train_test_splits_2 = list(my_cv.get_train_test_splits_as_indices())
+        list_of_train_test_splits_2 = list(
+            my_cv._generate_train_test_splits_as_indices(n_samples)
+        )
 
         assert len(list_of_train_test_splits) == len(
             list_of_train_test_splits_2
@@ -119,30 +107,6 @@ def test_get_train_test_splits_as_indices():
         for f1, f2 in zip(list_of_train_test_splits, list_of_train_test_splits_2):
             assert np.array_equal(f1[0], f2[0]), "Fold indices should be stable!"
             assert np.array_equal(f1[1], f2[1]), "Fold indices should be stable!"
-
-        if use_bootstrapping:
-            # now test: resample() should change fold indices on the next call of get_train_test_splits...
-            my_cv.resample()
-
-            list_of_train_test_splits_3 = list(my_cv.get_train_test_splits_as_indices())
-
-            # due to randomness, we need to check this with a threshold
-            # we allow 2 folds to be randomly the same
-            randomly_same_allowed_threshold = 2
-            num_different_folds = 0
-            for f1, f2 in zip(list_of_train_test_splits, list_of_train_test_splits_3):
-                if not np.array_equal(f1[0], f2[0]) and not np.array_equal(
-                    f1[1], f2[1]
-                ):
-                    num_different_folds = num_different_folds + 1
-
-            assert num_different_folds >= (
-                test_folds - randomly_same_allowed_threshold
-            ), "There are too many equal folds!"
-        else:
-            # resample() should raise an exception
-            with pytest.raises(NotImplementedError):
-                my_cv.resample()
 
 
 def test_circular_cv_with_sk_learn():
@@ -160,9 +124,7 @@ def test_circular_cv_with_sk_learn():
     iris = datasets.load_iris()
 
     # define a yield-engine circular CV:
-    my_cv = CircularCrossValidator(
-        num_samples=len(iris.data), test_ratio=0.21, num_folds=50
-    )
+    my_cv = CircularCrossValidator(test_ratio=0.21, num_folds=50)
 
     # define parameters and model
     parameters = {"kernel": ("linear", "rbf"), "C": [1, 10]}
@@ -187,13 +149,3 @@ def test_circular_cv_with_sk_learn():
     cl2.fit(iris.data, iris.target)
 
     assert cl2.best_score_ > 0.85, "Expected a minimum score of 0.85"
-
-
-def test_duplicate_fold_warning(batch_table):
-    from yieldengine.modeling.validation import CircularCrossValidator
-
-    with pytest.warns(expected_warning=UserWarning):
-        # the 101th fold will be a duplicate, hence we expect a warning:
-        my_cs = CircularCrossValidator(
-            num_samples=100, test_ratio=0.2, num_folds=101, use_bootstrapping=False
-        )
