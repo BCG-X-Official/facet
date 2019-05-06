@@ -1,11 +1,34 @@
 from sklearn.base import TransformerMixin
 from sklearn.model_selection import GridSearchCV
 from sklearn.pipeline import Pipeline, FeatureUnion
-from typing import List
 import pandas as pd
-from yieldengine.modeling.model_zoo import ModelZoo, Model
+from typing import *
 
-# note: unfortunately, sklearn does not expose "BaseSearchCV" from within model_selection, which is the superclass
+from sklearn.base import BaseEstimator
+
+
+class Model(NamedTuple):
+    name: str
+    estimator: BaseEstimator
+    parameters: Dict[str, Any]
+
+
+class ModelZoo:
+    __slots__ = ["__models"]
+
+    def __init__(self) -> None:
+        self.__models = list()
+
+    def add_model(
+        self, name: str, estimator: BaseEstimator, parameters: Dict[str, Any]
+    ) -> "ModelZoo":
+        m = Model(name=name, estimator=estimator, parameters=parameters)
+        self.__models.append(m)
+        return self
+
+    @property
+    def models(self) -> List[Model]:
+        return self.__models
 
 
 class ModelSelector:
