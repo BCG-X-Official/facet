@@ -32,9 +32,7 @@ def test_model_selector(test_sample_data):
     sample = Sample(observations=test_sample_data, target_name="Yield")
 
     # define the circular cross validator with just 5 folds (to speed up testing)
-    circular_cv = CircularCrossValidator(
-        num_samples=len(sample), test_ratio=0.20, num_folds=5
-    )
+    circular_cv = CircularCrossValidator(test_ratio=0.20, num_folds=5)
 
     # define a ColumnTransformer to pre-process:
     preprocessor = ColumnTransformer(
@@ -159,9 +157,7 @@ def test_model_selector_no_preprocessing():
     iris = datasets.load_iris()
 
     # define a yield-engine circular CV:
-    my_cv = CircularCrossValidator(
-        num_samples=len(iris.data), test_ratio=0.21, num_folds=50
-    )
+    my_cv = CircularCrossValidator(test_ratio=0.21, num_folds=50)
 
     # define parameters and model
     models = ModelZoo().add_model(
