@@ -1,6 +1,6 @@
-from collections import namedtuple
-from sklearn.base import BaseEstimator
 from typing import *
+
+from sklearn.base import BaseEstimator
 
 
 class Model(NamedTuple):

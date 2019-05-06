@@ -1,23 +1,23 @@
 from typing import List
 
-from tests.shared_fixtures import test_sample as test_sample_data
-from yieldengine.loading.sample import Sample
-from yieldengine.preprocessing.cross_validation import CircularCrossValidator
-from yieldengine.modeling.model_selector import ModelSelector
-from yieldengine.modeling.model_zoo import Model, ModelZoo
-from sklearn.pipeline import Pipeline
 import numpy as np
 import pandas as pd
-from sklearn.preprocessing import OneHotEncoder
-from sklearn.impute import SimpleImputer
-from sklearn.compose import ColumnTransformer
 from lightgbm.sklearn import LGBMRegressor
-from sklearn.tree import DecisionTreeRegressor, ExtraTreeRegressor
+from sklearn.compose import ColumnTransformer
 from sklearn.ensemble import AdaBoostRegressor, RandomForestRegressor
-from sklearn.svm import SVR
+from sklearn.impute import SimpleImputer
 from sklearn.linear_model import LinearRegression
-from sklearn.model_selection import GridSearchCV
 from sklearn.metrics import make_scorer, mean_squared_error
+from sklearn.model_selection import GridSearchCV
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import OneHotEncoder
+from sklearn.svm import SVR
+from sklearn.tree import DecisionTreeRegressor, ExtraTreeRegressor
+
+from yieldengine.loading.sample import Sample
+from yieldengine.modeling.model_selector import ModelSelector
+from yieldengine.modeling.model_zoo import ModelZoo
+from yieldengine.preprocessing.cross_validation import CircularCrossValidator
 
 
 def test_model_selector(test_sample_data):
