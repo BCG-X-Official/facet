@@ -13,23 +13,23 @@ from sklearn.svm import SVR
 from sklearn.tree import DecisionTreeRegressor, ExtraTreeRegressor
 
 # noinspection PyUnresolvedReferences
-from tests.shared_fixtures import batch_table as test_sample_data
+from tests.shared_fixtures import batch_table
 from yieldengine.loading.sample import Sample
 from yieldengine.modeling.selection import ModelPipeline, ModelSelector, ModelZoo
 from yieldengine.modeling.validation import CircularCrossValidator
 
 
-def test_model_selector(test_sample_data):
+def test_model_selector(batch_table):
 
     # drop columns that should not take part in modeling
-    test_sample_data = test_sample_data.drop(columns=["Date", "Batch Id"])
+    batch_table = batch_table.drop(columns=["Date", "Batch Id"])
 
     # replace values of +/- infinite with n/a, then drop all n/a columns:
-    test_sample_data = test_sample_data.replace([np.inf, -np.inf], np.nan).dropna(
+    batch_table = batch_table.replace([np.inf, -np.inf], np.nan).dropna(
         axis=1, how="all"
     )
 
-    sample = Sample(observations=test_sample_data, target_name="Yield")
+    sample = Sample(observations=batch_table, target_name="Yield")
 
     # define the circular cross validator with just 5 folds (to speed up testing)
     circular_cv = CircularCrossValidator(test_ratio=0.20, num_folds=5)
@@ -171,6 +171,5 @@ def test_model_selector_no_preprocessing():
 
     # instantiate the model selector
     ms: ModelSelector = ModelSelector(model_pipeline=mp)
-    ms = ModelSelector(mp)
 
     print(pd.DataFrame(ms.rank_model_instances()).head())
