@@ -15,9 +15,10 @@ from sklearn.svm import SVR
 from sklearn.tree import DecisionTreeRegressor, ExtraTreeRegressor
 
 from yieldengine.loading.sample import Sample
-from yieldengine.modeling.model_selector import ModelSelector
-from yieldengine.modeling.model_zoo import ModelZoo
-from yieldengine.preprocessing.cross_validation import CircularCrossValidator
+from yieldengine.modeling.selection import ModelSelector, ModelZoo
+from yieldengine.modeling.validation import CircularCrossValidator
+# noinspection PyUnresolvedReferences
+from tests.shared_fixtures import test_sample as test_sample_data
 
 
 def test_model_selector(test_sample_data):
