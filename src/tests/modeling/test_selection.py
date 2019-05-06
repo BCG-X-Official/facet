@@ -1,5 +1,3 @@
-from typing import List
-
 import numpy as np
 import pandas as pd
 from lightgbm.sklearn import LGBMRegressor
@@ -14,15 +12,15 @@ from sklearn.preprocessing import OneHotEncoder
 from sklearn.svm import SVR
 from sklearn.tree import DecisionTreeRegressor, ExtraTreeRegressor
 
-from yieldengine.loading.sample import Sample
-from yieldengine.modeling.selection import ModelSelector, ModelZoo, ModelPipeline
-from yieldengine.modeling.validation import CircularCrossValidator
-
 # noinspection PyUnresolvedReferences
 from tests.shared_fixtures import batch_table as test_sample_data
+from yieldengine.loading.sample import Sample
+from yieldengine.modeling.selection import ModelPipeline, ModelSelector, ModelZoo
+from yieldengine.modeling.validation import CircularCrossValidator
 
 
 def test_model_selector(test_sample_data):
+
     # drop columns that should not take part in modeling
     test_sample_data = test_sample_data.drop(columns=["Date", "Batch Id"])
 
@@ -31,10 +29,7 @@ def test_model_selector(test_sample_data):
         axis=1, how="all"
     )
 
-    feature_columns = list(test_sample_data.columns)
-    feature_columns.remove("Yield")
-
-    sample = Sample(sample=test_sample_data, target="Yield", features=feature_columns)
+    sample = Sample(observations=test_sample_data, target_name="Yield")
 
     # define the circular cross validator with just 5 folds (to speed up testing)
     circular_cv = CircularCrossValidator(
@@ -44,11 +39,11 @@ def test_model_selector(test_sample_data):
     # define a ColumnTransformer to pre-process:
     preprocessor = ColumnTransformer(
         [
-            ("numerical", SimpleImputer(strategy="mean"), sample.numerical_features),
+            ("numerical", SimpleImputer(strategy="mean"), sample.features_numerical),
             (
                 "categorical",
                 OneHotEncoder(sparse=False, handle_unknown="ignore"),
-                sample.categorical_features,
+                sample.features_categorical,
             ),
         ]
     )
@@ -57,7 +52,7 @@ def test_model_selector(test_sample_data):
     pre_pipeline = Pipeline([("prep", preprocessor)])
 
     # run fit_transform once to assure it works:
-    pre_pipeline.fit_transform(sample.feature_data)
+    pre_pipeline.fit_transform(sample.features)
 
     model_zoo = (
         ModelZoo()
@@ -108,7 +103,7 @@ def test_model_selector(test_sample_data):
     )
 
     # train the models
-    mp.pipeline.fit(sample.feature_data, sample.target_data)
+    mp.pipeline.fit(sample.features, sample.target)
 
     # instantiate the model selector
     ms: ModelSelector = ModelSelector(model_pipeline=mp)
@@ -145,7 +140,7 @@ def test_model_selector(test_sample_data):
     )
 
     # test transform():
-    assert mp.pipeline.transform(sample.feature_data).shape == (
+    assert mp.pipeline.transform(sample.features).shape == (
         len(sample),
         len(mp.searchers),
     )
