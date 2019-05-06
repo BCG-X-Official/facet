@@ -31,16 +31,10 @@ class ModelZoo:
         return self.__models
 
 
-class ModelSelector:
-    """
-    Class that helps in training, validating and ranking multiple scikit-learn models
-    (i.e. various regressor implementations), that depend all on the same (or none) pre-processing pipeline
-
-    For an example, please see:
-    `Example: Loading, Preprocessing, Circular CV, Model Selection  <./examples/e1.html>`_
-    """
-
-    def __init__(self, models: ModelZoo, preprocessing: Pipeline = None) -> None:
+class ModelPipeline:
+    def __init__(
+        self, models: ModelZoo, preprocessing: Pipeline = None, cv=None, scoring=None
+    ) -> None:
         """
         Constructs a ModelSelector
 
@@ -49,27 +43,30 @@ class ModelSelector:
         :return None
         """
         self.__model_zoo = models
-        self.__searchers = None
         self.__preprocessing = preprocessing
         self.__pipeline = None
+        self.__cv = None
+        self.__scoring = None
 
-    def construct_searchers(self, cv=None, scoring=None) -> List[GridSearchCV]:
+        self.__construct_searchers()
+        self.__construct_pipeline()
+
+    def __construct_searchers(self) -> None:
         searchers = []
 
         for model in self.__model_zoo.models:
             search = GridSearchCV(
                 estimator=model.estimator,
-                cv=cv,
+                cv=self.__cv,
                 param_grid=model.parameters,
-                scoring=scoring,
+                scoring=self.__scoring,
                 n_jobs=-1,
             )
             searchers.append(search)
 
         self.__searchers = searchers
-        return self.__searchers
 
-    def construct_pipeline(self) -> Pipeline:
+    def __construct_pipeline(self) -> None:
         """
         Constructs and returns a single scikit-learn Pipeline, comprising of all given searchers and using the
         (if supplied) preprocessing step.
@@ -119,7 +116,40 @@ class ModelSelector:
             # if pre-processing pipeline was not given, create a minimal Pipeline with just the estimators
             self.__pipeline = Pipeline([est_feature_union])
 
+
+    @property
+    def pipeline(self):
         return self.__pipeline
+
+    @property
+    def searchers(self):
+        return self.__searchers
+
+    @property
+    def model_zoo(self):
+        return self.__model_zoo
+
+
+class ModelSelector:
+    """
+    Class that helps in training, validating and ranking multiple scikit-learn models
+    (i.e. various regressor implementations), that depend all on the same (or none) pre-processing pipeline
+
+    For an example, please see:
+    `Example: Loading, Preprocessing, Circular CV, Model Selection  <./examples/e1.html>`_
+    """
+
+    def __init__(self, model_pipeline:ModelPipeline) -> None:
+        """
+        Constructs a ModelSelector
+
+        :param searchers: a list of scikit-learn GridSearchCV objects (not fitted)
+        :param preprocessing: a scikit-learn Pipeline that should be used as a preprocessor
+        :return None
+        """
+        self.__model_zoo = model_pipeline.model_zoo
+        self.__searchers = model_pipeline.searchers
+
 
     def rank_models(self) -> List[GridSearchCV]:
         """
