@@ -99,6 +99,7 @@ class ModelRanker:
     :param scoring: a scorer to use when doing CV within GridSearch
 
     """
+
     def __init__(
         self, zoo: ModelZoo, preprocessing: Pipeline = None, cv=None, scoring=None
     ) -> None:
@@ -123,13 +124,16 @@ class ModelRanker:
                 scoring=scoring,
                 return_train_score=False,
                 n_jobs=-1,
+                refit=False,
             )
             searchers.append(search)
 
         return searchers
 
     @staticmethod
-    def __construct_pipeline(preprocessing, searchers) -> Pipeline:
+    def __construct_pipeline(
+        preprocessing: Pipeline, estimators: List[BaseEstimator]
+    ) -> Pipeline:
 
         # helper class to view a model (Estimator/GridSearchCV) as a Transformer:
         class ModelTransformer(TransformerMixin):
@@ -143,13 +147,14 @@ class ModelRanker:
             def transform(self, X, **transform_params):
                 return pd.DataFrame(self.model.predict(X))
 
-        # generate a list of (name, obj) tuples for all estimators (=GridSearchCV objs.)
+        # generate a list of (name, obj) tuples for all estimators (or GridSearchCV
+        # objs.)
         #   name: simply e0, e1, e2, ...
-        #   obj: the GridSearchCV wrapped in a ModelTransformer() object, to be
-        #        feature union compliant
+        #   obj: the Estimator/GridSearchCV wrapped in a ModelTransformer() object,
+        #   to be feature union compliant
         estimator_steps = [
-            (f"e{i}", ModelTransformer(grid_search))
-            for i, grid_search in enumerate(searchers)
+            (f"e{i}", ModelTransformer(estimator))
+            for i, estimator in enumerate(estimators)
         ]
 
         # with the above created list of ModelTransformers, create FeatureUnion()
@@ -168,19 +173,36 @@ class ModelRanker:
             return Pipeline([est_feature_union])
 
     def run(
-        self, sample: Sample, ranking_scorer: Callable = Scoring.default_ranking_scorer
+        self,
+        sample: Sample,
+        ranking_scorer: Callable = Scoring.default_ranking_scorer,
+        refit=True,
     ) -> "ModelRanking":
         """
         Execute the pipeline with the given sample and return the ranking.
 
         :param sample: sample to fit pipeline to
         :param ranking_scorer: scoring function used for ranking across models
+        :param refit: whether to refit estimators on whole dataset
 
         :return the created model ranking of type :code:`ModelRanking`
 
         """
         self.pipeline.fit(X=sample.features, y=sample.target)
-        return ModelRanking(ranker=self, ranking_scorer=ranking_scorer)
+
+        model_ranking = ModelRanking(ranker=self, ranking_scorer=ranking_scorer)
+
+        if refit:
+            # we build a new pipeline that fits all estimators (that have their params
+            # already set), without CV and without GridSearching:
+            refit_pipeline = self.__construct_pipeline(
+                preprocessing=self.__preprocessing,
+                estimators=[m.estimator for m in model_ranking],
+            )
+            # call fit on the new pipeline:
+            refit_pipeline.fit(X=sample.features, y=sample.target)
+
+        return model_ranking
 
     @property
     def pipeline(self):
@@ -294,3 +316,6 @@ class ModelRanking:
 
     def __str__(self):
         return self.summary_string()
+
+    def __iter__(self):
+        return iter(self.__ranking)
