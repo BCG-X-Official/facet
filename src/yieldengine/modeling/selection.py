@@ -27,37 +27,16 @@ class ModelZoo:
     Class to register models (of type: BaseEstimator) and parameter grids.
     """
 
-    __slots__ = ["__models"]
+    __slots__ = ["_models"]
 
-    def __init__(self) -> None:
-        """
-        Initializes an empty model zoo.
-        """
-        self.__models = list()
+    def __init__(self, models: Iterable[Model]) -> None:
+        self._models = list(models)
 
-    def add_model(
-        self, estimator: BaseEstimator, parameter_grid: Dict[str, Any]
-    ) -> "ModelZoo":
-        """
-        Add another model into this model zoo. Supports chaining.
+    def models(self) -> Iterable[Model]:
+        return iter(self._models)
 
-        :param estimator: an estimator to add into the zoo
-        :param parameter_grid: a parameter grid for the given estimator
-
-        :return: the expanded model zoo
-        """
-        m = Model(estimator=estimator, parameter_grid=parameter_grid)
-        self.__models.append(m)
-        return self
-
-    @property
-    def models(self) -> List[Model]:
-        """
-        Property of ModelZoo
-
-        :return: a list of :code:`yieldengine.modeling.selection.Model` instances
-        """
-        return self.__models
+    def __len__(self) -> int:
+        return len(self._models)
 
 
 class Scoring:
@@ -72,7 +51,7 @@ class Scoring:
         given by :code:`GridSearchCV.cv_results_`.
 
         Its output is used for ranking globally across the model zoo.
-        
+
         :param mean_test_score: the mean test score across all folds for a (estimator,\
         parameters) combination
         :param std_test_score: the standard deviation of test scores across all folds \
@@ -116,7 +95,7 @@ class ModelRanker:
     def __construct_searchers(zoo: ModelZoo, cv, scoring) -> List[GridSearchCV]:
         searchers = list()
 
-        for model in zoo.models:
+        for model in zoo.models():
             search = GridSearchCV(
                 estimator=model.estimator,
                 cv=cv,
@@ -137,14 +116,14 @@ class ModelRanker:
 
         # helper class to view a model (Estimator/GridSearchCV) as a Transformer:
         class ModelTransformer(TransformerMixin):
-            def __init__(self, model):
+            def __init__(self, model) -> None:
                 self.model = model
 
-            def fit(self, *args, **kwargs):
+            def fit(self, *args, **kwargs) -> "ModelTransformer":
                 self.model.fit(*args, **kwargs)
                 return self
 
-            def transform(self, X, **transform_params):
+            def transform(self, X, **transform_params) -> pd.DataFrame:
                 return pd.DataFrame(self.model.predict(X))
 
         # generate a list of (name, obj) tuples for all estimators (or GridSearchCV
@@ -205,7 +184,7 @@ class ModelRanker:
         return model_ranking
 
     @property
-    def pipeline(self):
+    def pipeline(self) -> Pipeline:
         """
         Property of ModelRanker
 
@@ -213,14 +192,12 @@ class ModelRanker:
         """
         return self.__pipeline
 
-    @property
-    def searchers(self):
-        """
-        Property of ModelRanker
+    def searchers(self) -> Iterable[GridSearchCV]:
+        return iter(self.__searchers)
 
-        :return: the constructed GridSearchCV instances
-        """
-        return self.__searchers
+    @property
+    def model_zoo(self) -> ModelZoo:
+        return self.__model_zoo
 
 
 class ModelRanking:
@@ -253,7 +230,7 @@ class ModelRanking:
         # consolidate results of all searchers into "results"
         results = list()
 
-        for search in ranker.searchers:
+        for search in ranker.searchers():
             search_results = [
                 (
                     # note: we have to copy the estimator, to ensure it will actually
@@ -314,8 +291,8 @@ class ModelRanking:
     def __len__(self) -> int:
         return len(self.__ranking)
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.summary_string()
 
-    def __iter__(self):
+    def __iter__(self) -> Iterable[RankedModel]:
         return iter(self.__ranking)
