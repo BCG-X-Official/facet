@@ -12,7 +12,7 @@ BEST_MODEL_RANK = 0
 
 class Model(NamedTuple):
     estimator: BaseEstimator
-    parameters: Dict[str, Any]
+    parameter_grid: Dict[str, Any]
 
 
 class RankedModel(NamedTuple):
@@ -36,17 +36,17 @@ class ModelZoo:
         self.__models = list()
 
     def add_model(
-        self, estimator: BaseEstimator, parameters: Dict[str, Any]
+        self, estimator: BaseEstimator, parameter_grid: Dict[str, Any]
     ) -> "ModelZoo":
         """
         Add another model into this model zoo. Supports chaining.
 
         :param estimator: an estimator to add into the zoo
-        :param parameters: a parameter grid for the given estimator
+        :param parameter_grid: a parameter grid for the given estimator
 
         :return: the expanded model zoo
         """
-        m = Model(estimator=estimator, parameters=parameters)
+        m = Model(estimator=estimator, parameter_grid=parameter_grid)
         self.__models.append(m)
         return self
 
@@ -119,7 +119,7 @@ class ModelRanker:
             search = GridSearchCV(
                 estimator=model.estimator,
                 cv=cv,
-                param_grid=model.parameters,
+                param_grid=model.parameter_grid,
                 scoring=scoring,
                 return_train_score=False,
                 n_jobs=-1,
