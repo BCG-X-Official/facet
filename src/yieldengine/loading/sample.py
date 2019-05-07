@@ -136,5 +136,5 @@ class Sample:
         """
         return list(self.__feature_df.select_dtypes(np.object).columns)
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.__observations)

@@ -21,21 +21,16 @@ class Searcher(NamedTuple):
 
 
 class ModelZoo:
-    __slots__ = ["__models"]
+    __slots__ = ["_models"]
 
-    def __init__(self) -> None:
-        self.__models = list()
+    def __init__(self, models: Iterable[Model]) -> None:
+        self._models = list(models)
 
-    def add_model(
-        self, name: str, estimator: BaseEstimator, parameters: Dict[str, Any]
-    ) -> "ModelZoo":
-        m = Model(name=name, estimator=estimator, parameters=parameters)
-        self.__models.append(m)
-        return self
+    def models(self) -> Iterable[Model]:
+        return iter(self._models)
 
-    @property
-    def models(self) -> List[Model]:
-        return self.__models
+    def __len__(self) -> int:
+        return len(self._models)
 
 
 class ModelPipeline:
@@ -45,7 +40,6 @@ class ModelPipeline:
         """
         Constructs a ModelSelector
 
-        :param searchers: a list of scikit-learn GridSearchCV objects (not fitted)
         :param preprocessing: a scikit-learn Pipeline that should be used as a preprocessor
         :return None
         """
@@ -62,7 +56,7 @@ class ModelPipeline:
     def __construct_searchers(zoo: ModelZoo, cv, scoring) -> List[Searcher]:
         searchers = list()
 
-        for model in zoo.models:
+        for model in zoo.models():
             search = GridSearchCV(
                 estimator=model.estimator,
                 cv=cv,
@@ -92,14 +86,14 @@ class ModelPipeline:
         """
 
         class ModelTransformer(TransformerMixin):
-            def __init__(self, model):
+            def __init__(self, model) -> None:
                 self.model = model
 
-            def fit(self, *args, **kwargs):
+            def fit(self, *args, **kwargs) -> "ModelTransformer":
                 self.model.fit(*args, **kwargs)
                 return self
 
-            def transform(self, X, **transform_params):
+            def transform(self, X, **transform_params) -> pd.DataFrame:
                 return pd.DataFrame(self.model.predict(X))
 
         # generate a list of (name, obj) tuples for all given estimators (=GridSearchCV objs.):
@@ -132,15 +126,14 @@ class ModelPipeline:
         self.pipeline.fit(X=sample.features, y=sample.target)
 
     @property
-    def pipeline(self):
+    def pipeline(self) -> Pipeline:
         return self.__pipeline
 
-    @property
-    def searchers(self):
-        return self.__searchers
+    def searchers(self) -> Iterable[Searcher]:
+        return iter(self.__searchers)
 
     @property
-    def model_zoo(self):
+    def model_zoo(self) -> ModelZoo:
         return self.__model_zoo
 
 
@@ -152,6 +145,15 @@ class ModelRanker:
     For an example, please see:
     `Example: Loading, Preprocessing, Circular CV, Model Selection  <./examples/e1.html>`_
     """
+
+    # field names for Pandas results table
+    F_MODEL_NAME = "model_name"
+    F_ESTIMATOR = "estimator"
+    F_ESTIMATOR_PARAMETERS = "params"
+    F_FIT_TIME_MEAN = "mean_fit_time"
+    F_TEST_SCORE_MEAN = "mean_test_score"
+    F_TEST_SCORE_STD = "std_test_score"
+    F_RANKING_SCORE = "final_score"
 
     def __init__(self, model_pipeline: ModelPipeline) -> None:
         """
@@ -165,36 +167,38 @@ class ModelRanker:
     def rank_models(self) -> pd.DataFrame:
         all_cv_results = None
 
-        for model, search in self.__model_pipeline.searchers:
+        for model, search in self.__model_pipeline.searchers():
             if all_cv_results is None:
                 all_cv_results = pd.DataFrame(search.cv_results_)
-                all_cv_results["estimator"] = model.estimator
-                all_cv_results["model_name"] = model.name
+                all_cv_results[self.F_ESTIMATOR] = model.estimator
+                all_cv_results[self.F_MODEL_NAME] = model.name
             else:
                 new_cv_results = pd.DataFrame(search.cv_results_)
-                new_cv_results["estimator"] = model.estimator
-                new_cv_results["model_name"] = model.name
+                new_cv_results[self.F_ESTIMATOR] = model.estimator
+                new_cv_results[self.F_MODEL_NAME] = model.name
 
                 all_cv_results = all_cv_results.append(new_cv_results, sort=False)
 
-        all_cv_results["final_score"] = (
-            all_cv_results["mean_test_score"] - 2 * all_cv_results["std_test_score"]
+        F_RANKING_SCORE = "final_score"
+        all_cv_results[self.F_RANKING_SCORE] = (
+            all_cv_results[self.F_TEST_SCORE_MEAN]
+            - 2 * all_cv_results[self.F_TEST_SCORE_STD]
         )
 
         all_cv_results = all_cv_results[
             [
-                "model_name",
-                "estimator",
-                "params",
-                "mean_test_score",
-                "std_test_score",
-                "final_score",
-                "mean_fit_time",
+                self.F_MODEL_NAME,
+                self.F_ESTIMATOR,
+                self.F_ESTIMATOR_PARAMETERS,
+                self.F_TEST_SCORE_MEAN,
+                self.F_TEST_SCORE_STD,
+                self.F_RANKING_SCORE,
+                self.F_FIT_TIME_MEAN,
             ]
         ]
 
         all_cv_results = all_cv_results.sort_values(
-            by="final_score", ascending=False
+            by=F_RANKING_SCORE, ascending=False
         ).reset_index(drop=True)
 
         return all_cv_results
@@ -209,9 +213,9 @@ class ModelRanker:
         """
         return "\n".join(
             [
-                f" Rank {i + 1}: {m.model_name}, "
-                f"Score: {-1 * m.final_score}, Params: {m.params}"
-                for i, m in self.rank_models().iterrows()
-                if i < limit
+                f"Rank {i + 1}: {m[self.F_MODEL_NAME]}, "
+                f"Score: {-m[self.F_RANKING_SCORE]}, "
+                f"Params: {m[self.F_ESTIMATOR_PARAMETERS]}"
+                for i, m in self.rank_models().head(limit).iterrows()
             ]
         )
