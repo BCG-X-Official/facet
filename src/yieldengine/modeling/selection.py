@@ -160,10 +160,9 @@ class ModelRanker:
         """
         self.pipeline.fit(X=sample.features, y=sample.target)
 
-        if ranking_scorer is None:
-            ranking_scorer = self.default_ranking_scorer
-
-        model_ranking = ModelRanking(ranker=self, ranking_scorer=ranking_scorer)
+        model_ranking = self.rank_models(
+            searchers=self.__searchers, ranking_scorer=ranking_scorer
+        )
 
         if refit:
             # we build a new pipeline that fits all estimators (that have their params
@@ -177,50 +176,25 @@ class ModelRanker:
 
         return model_ranking
 
-    @property
-    def pipeline(self) -> Pipeline:
-        """
-        Property of ModelRanker
-
-        :return: the complete scikit-learn pipeline
-        """
-        return self.__pipeline
-
-    def searchers(self) -> Iterable[GridSearchCV]:
-        return iter(self.__searchers)
-
-    @property
-    def model_zoo(self) -> ModelZoo:
-        return self.__model_zoo
-
-
-class ModelRanking:
-    """
-    Turns the output of a ModelRanker into a ranked list of model instances, which we
-    denote as the combination of (estimator, parameters). Each of these are captured
-    using the `RankedModel` class.
-
-    """
-
-    def __init__(self, ranker: ModelRanker, ranking_scorer: Callable = None):
-        """
-        Turn the output of a ModelRanker into a ModelRanking
-
-        :param ranker: a ModelRanker that was executed
-        :param ranking_scorer: (optional) a custom scoring function to score across the
-        model zoo. The default is :code:`Scoring.default_ranking_scorer`
-        """
-        self.__ranking = self.__construct_ranking(ranker, ranking_scorer)
-
     @staticmethod
-    def __construct_ranking(
-        ranker: ModelRanker, ranking_scorer: Callable
-    ) -> List[RankedModel]:
+    def rank_models(
+        searchers: List[GridSearchCV], ranking_scorer: Callable
+    ) -> "ModelRanking":
+        """
+
+        :param searchers: GridSearchCV instances across which to rank
+        :param ranking_scorer: (optional) a custom scoring function to score across the
+        model zoo. The default is :code:`ModelRanker.default_ranking_scorer`
+        :return: an instance of ModelRanking that wraps the results
+        """
+
+        if ranking_scorer is None:
+            ranking_scorer = ModelRanker.default_ranking_scorer
 
         # consolidate results of all searchers into "results"
         results = list()
 
-        for search in ranker.searchers():
+        for search in searchers:
             search_results = [
                 (
                     # note: we have to copy the estimator, to ensure it will actually
@@ -249,7 +223,38 @@ class ModelRanking:
             for i, r in enumerate(results)
         ]
 
-        return ranking
+        return ModelRanking(ranking=ranking)
+
+    @property
+    def pipeline(self) -> Pipeline:
+        """
+        Property of ModelRanker
+
+        :return: the complete scikit-learn pipeline
+        """
+        return self.__pipeline
+
+    def searchers(self) -> Iterable[GridSearchCV]:
+        return iter(self.__searchers)
+
+    @property
+    def model_zoo(self) -> ModelZoo:
+        return self.__model_zoo
+
+
+class ModelRanking:
+    """
+    Utility class that wraps a list of RankedModel
+
+    """
+
+    def __init__(self, ranking: List[RankedModel]):
+        """
+        Utility class that wraps a list of RankedModel
+
+        :param ranking: the list of RankedModel instances this ranking is based on
+        """
+        self.__ranking = ranking
 
     def get_rank(self, rank: int = BEST_MODEL_RANK) -> RankedModel:
         """
