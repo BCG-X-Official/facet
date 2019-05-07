@@ -11,3 +11,6 @@ dependencies:
   - pyyaml = 5.1.*
   - black = 19.3
   - pytest-cov = 2.6.*
+  - pip = 19.1
+  - pip:
+      - pre_commit == 1.16.*
