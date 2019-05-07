@@ -64,26 +64,26 @@ def test_model_ranker(batch_table):
         ModelZoo()
         .add_model(
             estimator=LGBMRegressor(),
-            parameters={
+            parameter_grid={
                 "max_depth": (5, 10),
                 "min_split_gain": (0.1, 0.2),
                 "num_leaves": (50, 100, 200),
             },
         )
-        .add_model(estimator=AdaBoostRegressor(), parameters={"n_estimators": (50, 80)})
+        .add_model(estimator=AdaBoostRegressor(), parameter_grid={"n_estimators": (50, 80)})
         .add_model(
-            estimator=RandomForestRegressor(), parameters={"n_estimators": (50, 80)}
+            estimator=RandomForestRegressor(), parameter_grid={"n_estimators": (50, 80)}
         )
         .add_model(
             estimator=DecisionTreeRegressor(),
-            parameters={"max_depth": (0.5, 1.0), "max_features": (0.5, 1.0)},
+            parameter_grid={"max_depth": (0.5, 1.0), "max_features": (0.5, 1.0)},
         )
         .add_model(
-            estimator=ExtraTreeRegressor(), parameters={"max_depth": (5, 10, 12)}
+            estimator=ExtraTreeRegressor(), parameter_grid={"max_depth": (5, 10, 12)}
         )
-        .add_model(estimator=SVR(), parameters={"gamma": (0.5, 1), "C": (50, 100)})
+        .add_model(estimator=SVR(), parameter_grid={"gamma": (0.5, 1), "C": (50, 100)})
         .add_model(
-            estimator=LinearRegression(), parameters={"normalize": (False, True)}
+            estimator=LinearRegression(), parameter_grid={"normalize": (False, True)}
         )
     )
 
