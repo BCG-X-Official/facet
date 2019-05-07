@@ -6,11 +6,18 @@ from typing import *
 
 from sklearn.base import BaseEstimator
 
+from yieldengine.loading.sample import Sample
+
 
 class Model(NamedTuple):
     name: str
     estimator: BaseEstimator
     parameters: Dict[str, Any]
+
+
+class Searcher(NamedTuple):
+    model: Model
+    grid_search: GridSearchCV
 
 
 class ModelZoo:
@@ -33,7 +40,7 @@ class ModelZoo:
 
 class ModelPipeline:
     def __init__(
-        self, models: ModelZoo, preprocessing: Pipeline = None, cv=None, scoring=None
+        self, zoo: ModelZoo, preprocessing: Pipeline = None, cv=None, scoring=None
     ) -> None:
         """
         Constructs a ModelSelector
@@ -42,32 +49,34 @@ class ModelPipeline:
         :param preprocessing: a scikit-learn Pipeline that should be used as a preprocessor
         :return None
         """
-        self.__model_zoo = models
+        self.__model_zoo = zoo
         self.__preprocessing = preprocessing
         self.__pipeline = None
         self.__cv = cv
         self.__scoring = scoring
 
-        self.__construct_searchers()
-        self.__construct_pipeline()
+        self.__searchers = searchers = self.__construct_searchers(zoo, cv, scoring)
+        self.__pipeline = self.__construct_pipeline(preprocessing, searchers)
 
-    def __construct_searchers(self) -> None:
-        searchers = []
+    @staticmethod
+    def __construct_searchers(zoo: ModelZoo, cv, scoring) -> List[Searcher]:
+        searchers = list()
 
-        for model in self.__model_zoo.models:
+        for model in zoo.models:
             search = GridSearchCV(
                 estimator=model.estimator,
-                cv=self.__cv,
+                cv=cv,
                 param_grid=model.parameters,
-                scoring=self.__scoring,
-                return_train_score=True,
+                scoring=scoring,
+                return_train_score=False,
                 n_jobs=-1,
             )
-            searchers.append((model, search))
+            searchers.append(Searcher(model, search))
 
-        self.__searchers = searchers
+        return searchers
 
-    def __construct_pipeline(self) -> None:
+    @staticmethod
+    def __construct_pipeline(preprocessing, searchers) -> Pipeline:
         """
         Constructs and returns a single scikit-learn Pipeline, comprising of all given searchers and using the
         (if supplied) preprocessing step.
@@ -97,8 +106,8 @@ class ModelPipeline:
         #   name: simply e0, e1, e2, ...
         #   obj: the GridSearchCV wrapped in a ModelTransformer() object, to be feature union compliant
         estimator_steps = [
-            (f"e_{model.name}", ModelTransformer(gridsearch))
-            for i, (model, gridsearch) in enumerate(self.__searchers)
+            (f"e_{model.name}", ModelTransformer(grid_search))
+            for model, grid_search in searchers
         ]
 
         # with the above created list of ModelTransformers, create FeatureUnion()
@@ -109,13 +118,18 @@ class ModelPipeline:
         )
 
         # if pre-processing pipeline was given, insert it into the pipeline:
-        if self.__preprocessing is not None:
-            self.__pipeline = Pipeline(
-                [("preprocessing", self.__preprocessing), est_feature_union]
-            )
+        if preprocessing is not None:
+            return Pipeline([("preprocessing", preprocessing), est_feature_union])
         else:
             # if pre-processing pipeline was not given, create a minimal Pipeline with just the estimators
-            self.__pipeline = Pipeline([est_feature_union])
+            return Pipeline([est_feature_union])
+
+    def run(self, sample: Sample) -> None:
+        """
+        Execute the pipeline with the given sample
+        :param sample: sample to fit pipeline to
+        """
+        self.pipeline.fit(X=sample.features, y=sample.target)
 
     @property
     def pipeline(self):
@@ -130,7 +144,7 @@ class ModelPipeline:
         return self.__model_zoo
 
 
-class ModelSelector:
+class ModelRanker:
     """
     Class that helps in training, validating and ranking multiple scikit-learn models
     (i.e. various regressor implementations), that depend all on the same (or none) pre-processing pipeline

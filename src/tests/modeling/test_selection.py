@@ -15,7 +15,7 @@ from sklearn.tree import DecisionTreeRegressor, ExtraTreeRegressor
 # noinspection PyUnresolvedReferences
 from tests.shared_fixtures import batch_table
 from yieldengine.loading.sample import Sample
-from yieldengine.modeling.selection import ModelPipeline, ModelSelector, ModelZoo
+from yieldengine.modeling.selection import ModelPipeline, ModelRanker, ModelZoo
 from yieldengine.modeling.validation import CircularCrossValidator
 
 
@@ -94,7 +94,7 @@ def test_model_selector(batch_table):
     )
 
     mp: ModelPipeline = ModelPipeline(
-        models=model_zoo,
+        zoo=model_zoo,
         preprocessing=pre_pipeline,
         cv=circular_cv,
         scoring=make_scorer(mean_squared_error, greater_is_better=False),
@@ -104,7 +104,7 @@ def test_model_selector(batch_table):
     mp.pipeline.fit(sample.features, sample.target)
 
     # instantiate the model selector
-    ms: ModelSelector = ModelSelector(model_pipeline=mp)
+    ms: ModelRanker = ModelRanker(model_pipeline=mp)
 
     # when done, get ranking
     ranked_models = ms.rank_models()
@@ -164,12 +164,12 @@ def test_model_selector_no_preprocessing():
         "svc", svm.SVC(gamma="scale"), {"kernel": ("linear", "rbf"), "C": [1, 10]}
     )
 
-    mp: ModelPipeline = ModelPipeline(models=models, cv=my_cv)
+    mp: ModelPipeline = ModelPipeline(zoo=models, cv=my_cv)
 
     # train the models
     mp.pipeline.fit(iris.data, iris.target)
 
     # instantiate the model selector
-    ms: ModelSelector = ModelSelector(model_pipeline=mp)
+    ms: ModelRanker = ModelRanker(model_pipeline=mp)
 
     print(pd.DataFrame(ms.rank_model_instances()).head())
