@@ -131,6 +131,37 @@ def test_model_ranker(
     print(model_ranking)
 
 
+def test_model_ranker_refit(
+    batch_table: pd.DataFrame, sample: Sample, preprocessing_pipeline
+):
+
+    # to test refit, we use only linear regression, to simply check "coef"
+    model_zoo = ModelZoo().add_model(
+        estimator=LinearRegression(), parameter_grid={"normalize": (False, True)}
+    )
+
+    # define the circular cross validator with just 5 folds (to speed up testing)
+    circular_cv = CircularCrossValidator(test_ratio=0.20, num_folds=5)
+
+    # define a model ranker
+    model_ranker: ModelRanker = ModelRanker(
+        zoo=model_zoo,
+        preprocessing=preprocessing_pipeline,
+        cv=circular_cv,
+        scoring=make_scorer(mean_squared_error, greater_is_better=False),
+    )
+
+    # run the ModelRanker to retrieve a ranking, using refit=True
+    model_ranking: ModelRanking = model_ranker.run(sample=sample, refit=True)
+
+    # check we have models fitted differently:
+    # 1. fetch the coefficients:
+    coefs = [m.estimator.coef_ for m in model_ranking]
+
+    # 2. assert coefficients are different:
+    assert not np.array_equal(coefs[0], coefs[1])
+
+
 def test_model_ranker_no_preprocessing():
     warnings.filterwarnings("ignore", message="numpy.dtype size changed")
     warnings.filterwarnings("ignore", message="numpy.ufunc size changed")
