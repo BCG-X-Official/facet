@@ -1,26 +1,32 @@
-from sklearn.base import TransformerMixin
-from sklearn.model_selection import GridSearchCV
-from sklearn.pipeline import Pipeline, FeatureUnion
-import pandas as pd
+from copy import deepcopy
 from typing import *
 
-from sklearn.base import BaseEstimator
-
+import pandas as pd
+from sklearn.base import BaseEstimator, TransformerMixin
+from sklearn.model_selection import GridSearchCV
+from sklearn.pipeline import FeatureUnion, Pipeline
 from yieldengine.loading.sample import Sample
+
+BEST_MODEL_RANK = 0
 
 
 class Model(NamedTuple):
-    name: str
+    estimator: BaseEstimator
+    parameter_grid: Dict[str, Any]
+
+
+class RankedModel(NamedTuple):
     estimator: BaseEstimator
     parameters: Dict[str, Any]
-
-
-class Searcher(NamedTuple):
-    model: Model
-    grid_search: GridSearchCV
+    score: float
+    rank: int
 
 
 class ModelZoo:
+    """
+    Class to register models (of type: BaseEstimator) and parameter grids.
+    """
+
     __slots__ = ["_models"]
 
     def __init__(self, models: Iterable[Model]) -> None:
@@ -33,16 +39,49 @@ class ModelZoo:
         return len(self._models)
 
 
-class ModelPipeline:
+class Scoring:
+    """
+    Class for scoring related logic.
+    """
+
+    @staticmethod
+    def default_ranking_scorer(mean_test_score, std_test_score) -> float:
+        """
+        The default scoring function to evaluate on top of GridSearchCV test scores,
+        given by :code:`GridSearchCV.cv_results_`.
+
+        Its output is used for ranking globally across the model zoo.
+
+        :param mean_test_score: the mean test score across all folds for a (estimator,\
+        parameters) combination
+        :param std_test_score: the standard deviation of test scores across all folds \
+        for a (estimator, parameters) combination
+
+        :return: final score for a (estimator, parameters) combination
+        """
+        return mean_test_score - 2 * std_test_score
+
+
+class ModelRanker:
+    """
+    Turns a model zoo along with
+
+        - a (optional) pre-processing pipeline
+        - a cross-validation instance
+        - a scoring function
+    into a scikit-learn pipeline.
+
+    :param zoo: a model zoo
+    :param preprocessing: a scikit-learn Pipeline that should be used as a \
+    preprocessor (optional)
+    :param cv: a cross validation object (i.e. CircularCrossValidator)
+    :param scoring: a scorer to use when doing CV within GridSearch
+
+    """
+
     def __init__(
         self, zoo: ModelZoo, preprocessing: Pipeline = None, cv=None, scoring=None
     ) -> None:
-        """
-        Constructs a ModelSelector
-
-        :param preprocessing: a scikit-learn Pipeline that should be used as a preprocessor
-        :return None
-        """
         self.__model_zoo = zoo
         self.__preprocessing = preprocessing
         self.__pipeline = None
@@ -53,38 +92,29 @@ class ModelPipeline:
         self.__pipeline = self.__construct_pipeline(preprocessing, searchers)
 
     @staticmethod
-    def __construct_searchers(zoo: ModelZoo, cv, scoring) -> List[Searcher]:
+    def __construct_searchers(zoo: ModelZoo, cv, scoring) -> List[GridSearchCV]:
         searchers = list()
 
         for model in zoo.models():
             search = GridSearchCV(
                 estimator=model.estimator,
                 cv=cv,
-                param_grid=model.parameters,
+                param_grid=model.parameter_grid,
                 scoring=scoring,
                 return_train_score=False,
                 n_jobs=-1,
+                refit=False,
             )
-            searchers.append(Searcher(model, search))
+            searchers.append(search)
 
         return searchers
 
     @staticmethod
-    def __construct_pipeline(preprocessing, searchers) -> Pipeline:
-        """
-        Constructs and returns a single scikit-learn Pipeline, comprising of all given searchers and using the
-        (if supplied) preprocessing step.
+    def __construct_pipeline(
+        preprocessing: Pipeline, estimators: List[BaseEstimator]
+    ) -> Pipeline:
 
-        All given :code:`searchers` will be included into the pipeline as a parallel step leveraging
-        :code:`FeatureUnion`. This means, calling :code:`fit(X, y)` on it will run all gridsearchers, which you then
-        can inspect using :code:`model_selector.rank_models()`, :code:`model_selector.rank_model_instances()` etc.
-
-        Running :code:`transform(X)` on the pipeline will yield a (#samples X #searchers) shaped numpy array
-        with predictions that each model made.
-
-        :return: Pipeline
-        """
-
+        # helper class to view a model (Estimator/GridSearchCV) as a Transformer:
         class ModelTransformer(TransformerMixin):
             def __init__(self, model) -> None:
                 self.model = model
@@ -96,12 +126,14 @@ class ModelPipeline:
             def transform(self, X, **transform_params) -> pd.DataFrame:
                 return pd.DataFrame(self.model.predict(X))
 
-        # generate a list of (name, obj) tuples for all given estimators (=GridSearchCV objs.):
+        # generate a list of (name, obj) tuples for all estimators (or GridSearchCV
+        # objs.)
         #   name: simply e0, e1, e2, ...
-        #   obj: the GridSearchCV wrapped in a ModelTransformer() object, to be feature union compliant
+        #   obj: the Estimator/GridSearchCV wrapped in a ModelTransformer() object,
+        #   to be feature union compliant
         estimator_steps = [
-            (f"e_{model.name}", ModelTransformer(grid_search))
-            for model, grid_search in searchers
+            (f"e{i}", ModelTransformer(estimator))
+            for i, estimator in enumerate(estimators)
         ]
 
         # with the above created list of ModelTransformers, create FeatureUnion()
@@ -115,21 +147,52 @@ class ModelPipeline:
         if preprocessing is not None:
             return Pipeline([("preprocessing", preprocessing), est_feature_union])
         else:
-            # if pre-processing pipeline was not given, create a minimal Pipeline with just the estimators
+            # if pre-processing pipeline was not given, create a minimal Pipeline
+            # with just the estimators
             return Pipeline([est_feature_union])
 
-    def run(self, sample: Sample) -> None:
+    def run(
+        self,
+        sample: Sample,
+        ranking_scorer: Callable = Scoring.default_ranking_scorer,
+        refit=True,
+    ) -> "ModelRanking":
         """
-        Execute the pipeline with the given sample
+        Execute the pipeline with the given sample and return the ranking.
+
         :param sample: sample to fit pipeline to
+        :param ranking_scorer: scoring function used for ranking across models
+        :param refit: whether to refit estimators on whole dataset
+
+        :return the created model ranking of type :code:`ModelRanking`
+
         """
         self.pipeline.fit(X=sample.features, y=sample.target)
 
+        model_ranking = ModelRanking(ranker=self, ranking_scorer=ranking_scorer)
+
+        if refit:
+            # we build a new pipeline that fits all estimators (that have their params
+            # already set), without CV and without GridSearching:
+            refit_pipeline = self.__construct_pipeline(
+                preprocessing=self.__preprocessing,
+                estimators=[m.estimator for m in model_ranking],
+            )
+            # call fit on the new pipeline:
+            refit_pipeline.fit(X=sample.features, y=sample.target)
+
+        return model_ranking
+
     @property
     def pipeline(self) -> Pipeline:
+        """
+        Property of ModelRanker
+
+        :return: the complete scikit-learn pipeline
+        """
         return self.__pipeline
 
-    def searchers(self) -> Iterable[Searcher]:
+    def searchers(self) -> Iterable[GridSearchCV]:
         return iter(self.__searchers)
 
     @property
@@ -137,75 +200,80 @@ class ModelPipeline:
         return self.__model_zoo
 
 
-class ModelRanker:
+class ModelRanking:
     """
-    Class that helps in training, validating and ranking multiple scikit-learn models
-    (i.e. various regressor implementations), that depend all on the same (or none) pre-processing pipeline
+    Turns the output of a ModelRanker into a ranked list of model instances, which we
+    denote as the combination of (estimator, parameters). Each of these are captured
+    using the `RankedModel` class.
 
-    For an example, please see:
-    `Example: Loading, Preprocessing, Circular CV, Model Selection  <./examples/e1.html>`_
     """
 
-    # field names for Pandas results table
-    F_MODEL_NAME = "model_name"
-    F_ESTIMATOR = "estimator"
-    F_ESTIMATOR_PARAMETERS = "params"
-    F_FIT_TIME_MEAN = "mean_fit_time"
-    F_TEST_SCORE_MEAN = "mean_test_score"
-    F_TEST_SCORE_STD = "std_test_score"
-    F_RANKING_SCORE = "final_score"
-
-    def __init__(self, model_pipeline: ModelPipeline) -> None:
+    def __init__(
+        self,
+        ranker: ModelRanker,
+        ranking_scorer: Callable = Scoring.default_ranking_scorer,
+    ):
         """
-        Constructs a ModelSelector
+        Turn the output of a ModelRanker into a ModelRanking
 
-        :param model_pipeline:
-        :return None
+        :param ranker: a ModelRanker that was executed
+        :param ranking_scorer: (optional) a custom scoring function to score across the
+        model zoo. The default is :code:`Scoring.default_ranking_scorer`
         """
-        self.__model_pipeline = model_pipeline
+        self.__ranking = self.__construct_ranking(ranker, ranking_scorer)
 
-    def rank_models(self) -> pd.DataFrame:
-        all_cv_results = None
+    @staticmethod
+    def __construct_ranking(
+        ranker: ModelRanker, ranking_scorer: Callable
+    ) -> List[RankedModel]:
 
-        for model, search in self.__model_pipeline.searchers():
-            if all_cv_results is None:
-                all_cv_results = pd.DataFrame(search.cv_results_)
-                all_cv_results[self.F_ESTIMATOR] = model.estimator
-                all_cv_results[self.F_MODEL_NAME] = model.name
-            else:
-                new_cv_results = pd.DataFrame(search.cv_results_)
-                new_cv_results[self.F_ESTIMATOR] = model.estimator
-                new_cv_results[self.F_MODEL_NAME] = model.name
+        # consolidate results of all searchers into "results"
+        results = list()
 
-                all_cv_results = all_cv_results.append(new_cv_results, sort=False)
-
-        F_RANKING_SCORE = "final_score"
-        all_cv_results[self.F_RANKING_SCORE] = (
-            all_cv_results[self.F_TEST_SCORE_MEAN]
-            - 2 * all_cv_results[self.F_TEST_SCORE_STD]
-        )
-
-        all_cv_results = all_cv_results[
-            [
-                self.F_MODEL_NAME,
-                self.F_ESTIMATOR,
-                self.F_ESTIMATOR_PARAMETERS,
-                self.F_TEST_SCORE_MEAN,
-                self.F_TEST_SCORE_STD,
-                self.F_RANKING_SCORE,
-                self.F_FIT_TIME_MEAN,
+        for search in ranker.searchers():
+            search_results = [
+                (
+                    # note: we have to copy the estimator, to ensure it will actually
+                    # retain the parameters we set for each row in separate objects..
+                    deepcopy(search.estimator.set_params(**params)),
+                    params,
+                    # compute the final score using function defined above:
+                    ranking_scorer(mean_test_score, std_test_score),
+                )
+                # we read and iterate over these 3 attributes from cv_results_:
+                for (params, mean_test_score, std_test_score) in zip(
+                    search.cv_results_["params"],
+                    search.cv_results_["mean_test_score"],
+                    search.cv_results_["std_test_score"],
+                )
             ]
+
+            results.extend(search_results)
+
+        # sort the results list by value at index 2 -> computed final score
+        results.sort(key=lambda r: r[2] * -1)
+
+        # create ranking by assigning rank values and creating "RankedModel" types
+        ranking = [
+            RankedModel(estimator=r[0], parameters=r[1], score=r[2], rank=i)
+            for i, r in enumerate(results)
         ]
 
-        all_cv_results = all_cv_results.sort_values(
-            by=F_RANKING_SCORE, ascending=False
-        ).reset_index(drop=True)
+        return ranking
 
-        return all_cv_results
+    def get_rank(self, rank: int = BEST_MODEL_RANK) -> RankedModel:
+        """
+        Returns the model instance at a given rank.
+
+        :param rank: the rank of the model to get
+        
+        :return: a RankedModel instance
+        """
+        return self.__ranking[rank]
 
     def summary_string(self, limit: int = 25) -> str:
         """
-        Generates a summary string of the best models, ranked by :code:`rank_modls()`
+        Generates a summary string of the best model instances
 
         :param limit: How many ranks to max. output
 
@@ -213,9 +281,18 @@ class ModelRanker:
         """
         return "\n".join(
             [
-                f"Rank {i + 1}: {m[self.F_MODEL_NAME]}, "
-                f"Score: {-m[self.F_RANKING_SCORE]}, "
-                f"Params: {m[self.F_ESTIMATOR_PARAMETERS]}"
-                for i, m in self.rank_models().head(limit).iterrows()
+                f" Rank {mr.rank + 1}: {mr.estimator.__class__}, "
+                f"Score: {mr.score}, Params: {mr.parameters}"
+                for mr in self.__ranking
+                if mr.rank < limit
             ]
         )
+
+    def __len__(self) -> int:
+        return len(self.__ranking)
+
+    def __str__(self) -> str:
+        return self.summary_string()
+
+    def __iter__(self) -> Iterable[RankedModel]:
+        return iter(self.__ranking)
