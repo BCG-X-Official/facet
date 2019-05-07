@@ -1,9 +1,10 @@
 import pandas as pd
-import yieldengine.core
+
+import tests
 
 
 def load_raw_data(input_path: str) -> pd.DataFrame:
-    inputfile_config = yieldengine.core.get_global_config(section="inputfile")
+    inputfile_config = tests.read_test_config(section="inputfile")
     return pd.read_csv(
         filepath_or_buffer=input_path,
         delimiter=inputfile_config["delimiter"],
@@ -13,7 +14,7 @@ def load_raw_data(input_path: str) -> pd.DataFrame:
 
 
 def validate_raw_data(input_data_df: pd.DataFrame) -> None:
-    inputfile_config = yieldengine.core.get_global_config(section="inputfile")
+    inputfile_config = tests.read_test_config(section="inputfile")
 
     date_column_name = inputfile_config["date_column_name"]
     yield_column_name = inputfile_config["yield_column_name"]

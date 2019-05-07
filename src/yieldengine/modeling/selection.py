@@ -6,11 +6,18 @@ from typing import *
 
 from sklearn.base import BaseEstimator
 
+from yieldengine.loading.sample import Sample
+
 
 class Model(NamedTuple):
     name: str
     estimator: BaseEstimator
     parameters: Dict[str, Any]
+
+
+class Searcher(NamedTuple):
+    model: Model
+    grid_search: GridSearchCV
 
 
 class ModelZoo:
@@ -33,7 +40,7 @@ class ModelZoo:
 
 class ModelPipeline:
     def __init__(
-        self, models: ModelZoo, preprocessing: Pipeline = None, cv=None, scoring=None
+        self, zoo: ModelZoo, preprocessing: Pipeline = None, cv=None, scoring=None
     ) -> None:
         """
         Constructs a ModelSelector
@@ -42,31 +49,34 @@ class ModelPipeline:
         :param preprocessing: a scikit-learn Pipeline that should be used as a preprocessor
         :return None
         """
-        self.__model_zoo = models
+        self.__model_zoo = zoo
         self.__preprocessing = preprocessing
         self.__pipeline = None
-        self.__cv = None
-        self.__scoring = None
+        self.__cv = cv
+        self.__scoring = scoring
 
-        self.__construct_searchers()
-        self.__construct_pipeline()
+        self.__searchers = searchers = self.__construct_searchers(zoo, cv, scoring)
+        self.__pipeline = self.__construct_pipeline(preprocessing, searchers)
 
-    def __construct_searchers(self) -> None:
-        searchers = []
+    @staticmethod
+    def __construct_searchers(zoo: ModelZoo, cv, scoring) -> List[Searcher]:
+        searchers = list()
 
-        for model in self.__model_zoo.models:
+        for model in zoo.models:
             search = GridSearchCV(
                 estimator=model.estimator,
-                cv=self.__cv,
+                cv=cv,
                 param_grid=model.parameters,
-                scoring=self.__scoring,
+                scoring=scoring,
+                return_train_score=False,
                 n_jobs=-1,
             )
-            searchers.append(search)
+            searchers.append(Searcher(model, search))
 
-        self.__searchers = searchers
+        return searchers
 
-    def __construct_pipeline(self) -> None:
+    @staticmethod
+    def __construct_pipeline(preprocessing, searchers) -> Pipeline:
         """
         Constructs and returns a single scikit-learn Pipeline, comprising of all given searchers and using the
         (if supplied) preprocessing step.
@@ -96,8 +106,8 @@ class ModelPipeline:
         #   name: simply e0, e1, e2, ...
         #   obj: the GridSearchCV wrapped in a ModelTransformer() object, to be feature union compliant
         estimator_steps = [
-            (f"e{i}", ModelTransformer(estimator))
-            for i, estimator in enumerate(self.__searchers)
+            (f"e_{model.name}", ModelTransformer(grid_search))
+            for model, grid_search in searchers
         ]
 
         # with the above created list of ModelTransformers, create FeatureUnion()
@@ -108,14 +118,18 @@ class ModelPipeline:
         )
 
         # if pre-processing pipeline was given, insert it into the pipeline:
-        if self.__preprocessing is not None:
-            self.__pipeline = Pipeline(
-                [("preprocessing", self.__preprocessing), est_feature_union]
-            )
+        if preprocessing is not None:
+            return Pipeline([("preprocessing", preprocessing), est_feature_union])
         else:
             # if pre-processing pipeline was not given, create a minimal Pipeline with just the estimators
-            self.__pipeline = Pipeline([est_feature_union])
+            return Pipeline([est_feature_union])
 
+    def run(self, sample: Sample) -> None:
+        """
+        Execute the pipeline with the given sample
+        :param sample: sample to fit pipeline to
+        """
+        self.pipeline.fit(X=sample.features, y=sample.target)
 
     @property
     def pipeline(self):
@@ -130,7 +144,7 @@ class ModelPipeline:
         return self.__model_zoo
 
 
-class ModelSelector:
+class ModelRanker:
     """
     Class that helps in training, validating and ranking multiple scikit-learn models
     (i.e. various regressor implementations), that depend all on the same (or none) pre-processing pipeline
@@ -139,75 +153,51 @@ class ModelSelector:
     `Example: Loading, Preprocessing, Circular CV, Model Selection  <./examples/e1.html>`_
     """
 
-    def __init__(self, model_pipeline:ModelPipeline) -> None:
+    def __init__(self, model_pipeline: ModelPipeline) -> None:
         """
         Constructs a ModelSelector
 
-        :param searchers: a list of scikit-learn GridSearchCV objects (not fitted)
-        :param preprocessing: a scikit-learn Pipeline that should be used as a preprocessor
+        :param model_pipeline:
         :return None
         """
-        self.__model_zoo = model_pipeline.model_zoo
-        self.__searchers = model_pipeline.searchers
+        self.__model_pipeline = model_pipeline
 
+    def rank_models(self) -> pd.DataFrame:
+        all_cv_results = None
 
-    def rank_models(self) -> List[GridSearchCV]:
-        """
-        Ranks models associated with this ModelSelector - i.e. the searchers.
+        for model, search in self.__model_pipeline.searchers:
+            if all_cv_results is None:
+                all_cv_results = pd.DataFrame(search.cv_results_)
+                all_cv_results["estimator"] = model.estimator
+                all_cv_results["model_name"] = model.name
+            else:
+                new_cv_results = pd.DataFrame(search.cv_results_)
+                new_cv_results["estimator"] = model.estimator
+                new_cv_results["model_name"] = model.name
 
-        This is done by looking at :code:`best_score_` of each searcher and sorting by this value in descending fashion.
+                all_cv_results = all_cv_results.append(new_cv_results, sort=False)
 
-        **Note:** In case you have defined your own scorer for a searcher,
-        ensure you have defined :code:`greater_is_better` correctly.
+        all_cv_results["final_score"] = (
+            all_cv_results["mean_test_score"] - 2 * all_cv_results["std_test_score"]
+        )
 
-        :return: List[GridSearchCV] (in descending order from best score to worst score)
-        """
-        l = self.__searchers.copy()
-
-        # always sort best_score_ in descending fashion, since gridsearchcv flips the sign of its score value when
-        # the applied scoring method has defined :code:greater_is_better=False)
-        l.sort(key=lambda x: x.best_score_ * -1)
-        return l
-
-    def rank_model_instances(self, n_best_ranked=3) -> List[dict]:
-        """
-        Ranks model instances associated with this ModelSelector - i.e. individual (estimator, parameter) pairs
-
-        This means we look at all searchers, get the :code:`n_best_ranked` model instances for each of them (including ties)
-        and then finally do a complete rank using their mean_test_score.
-
-        A list of dictionaries with keys (estimator, score, params) is returned. If you need a DataFrame, simply do a
-        pd.DataFrame(..) on it.
-
-        :param n_best_ranked: Defines how many best model instances to return per individual model we grid serched. \
-        This looks at the :code:`rank_test_score` value of scikit-learn's :code:`GridSearchCV.cv_results_` object. \
-        It might retrieve tied pairs of (estimator, parameters) for completeness.
-
-        :return: List[dict]
-
-        """
-        ranked_model_instances = []
-
-        for s in self.__searchers:
-            all_model_instances = pd.DataFrame(s.cv_results_)
-            best_model_instances = all_model_instances[
-                all_model_instances["rank_test_score"] <= n_best_ranked
+        all_cv_results = all_cv_results[
+            [
+                "model_name",
+                "estimator",
+                "params",
+                "mean_test_score",
+                "std_test_score",
+                "final_score",
+                "mean_fit_time",
             ]
+        ]
 
-            best_model_instances_list = best_model_instances[
-                ["mean_test_score", "params"]
-            ].values.tolist()
+        all_cv_results = all_cv_results.sort_values(
+            by="final_score", ascending=False
+        ).reset_index(drop=True)
 
-            results_for_s = [
-                {"estimator": s.estimator, "score": i[0], "params": i[1]}
-                for i in best_model_instances_list
-            ]
-
-            ranked_model_instances.extend(results_for_s)
-
-        ranked_model_instances.sort(key=lambda x: x["score"] * -1)
-
-        return ranked_model_instances
+        return all_cv_results
 
     def summary_string(self, limit: int = 25) -> str:
         """
@@ -219,8 +209,9 @@ class ModelSelector:
         """
         return "\n".join(
             [
-                f" Rank {i + 1}: {m.estimator.__class__}, Score: {-1 * m.best_score_}, Params: {m.best_params_}"
-                for i, m in enumerate(self.rank_models())
+                f" Rank {i + 1}: {m.model_name}, "
+                f"Score: {-1 * m.final_score}, Params: {m.params}"
+                for i, m in self.rank_models().iterrows()
                 if i < limit
             ]
         )
