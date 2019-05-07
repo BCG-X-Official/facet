@@ -1,14 +1,12 @@
 import pandas as pd
 from sklearn.base import BaseEstimator
+from yieldengine.loading.sample import Sample
 from yieldengine.modeling.validation import CircularCrossValidator
 
 
 class ModelInspector:
     def __init__(
-        self,
-        model: BaseEstimator,
-        dataset: pd.DataFrame,
-        cv: CircularCrossValidator,
+        self, model: BaseEstimator, observations: Sample, cv: CircularCrossValidator
     ) -> None:
         pass
 
