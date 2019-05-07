@@ -23,45 +23,50 @@ from yieldengine.modeling.selection import (
     ModelRanking,
     ModelZoo,
     RankedModel,
+    Model,
 )
 from yieldengine.modeling.validation import CircularCrossValidator
 import pytest
 
 
 @pytest.fixture
-def model_zoo():
-    return (
-        ModelZoo()
-        .add_model(
-            estimator=LGBMRegressor(),
-            parameter_grid={
-                "max_depth": (5, 10),
-                "min_split_gain": (0.1, 0.2),
-                "num_leaves": (50, 100, 200),
-            },
-        )
-        .add_model(
-            estimator=AdaBoostRegressor(), parameter_grid={"n_estimators": (50, 80)}
-        )
-        .add_model(
-            estimator=RandomForestRegressor(), parameter_grid={"n_estimators": (50, 80)}
-        )
-        .add_model(
-            estimator=DecisionTreeRegressor(),
-            parameter_grid={"max_depth": (0.5, 1.0), "max_features": (0.5, 1.0)},
-        )
-        .add_model(
-            estimator=ExtraTreeRegressor(), parameter_grid={"max_depth": (5, 10, 12)}
-        )
-        .add_model(estimator=SVR(), parameter_grid={"gamma": (0.5, 1), "C": (50, 100)})
-        .add_model(
-            estimator=LinearRegression(), parameter_grid={"normalize": (False, True)}
-        )
+def model_zoo() -> ModelZoo:
+    return ModelZoo(
+        [
+            Model(
+                estimator=LGBMRegressor(),
+                parameter_grid={
+                    "max_depth": (5, 10),
+                    "min_split_gain": (0.1, 0.2),
+                    "num_leaves": (50, 100, 200),
+                },
+            ),
+            Model(
+                estimator=AdaBoostRegressor(), parameter_grid={"n_estimators": (50, 80)}
+            ),
+            Model(
+                estimator=RandomForestRegressor(),
+                parameter_grid={"n_estimators": (50, 80)},
+            ),
+            Model(
+                estimator=DecisionTreeRegressor(),
+                parameter_grid={"max_depth": (0.5, 1.0), "max_features": (0.5, 1.0)},
+            ),
+            Model(
+                estimator=ExtraTreeRegressor(),
+                parameter_grid={"max_depth": (5, 10, 12)},
+            ),
+            Model(estimator=SVR(), parameter_grid={"gamma": (0.5, 1), "C": (50, 100)}),
+            Model(
+                estimator=LinearRegression(),
+                parameter_grid={"normalize": (False, True)},
+            ),
+        ]
     )
 
 
 @pytest.fixture
-def sample(batch_table: pd.DataFrame):
+def sample(batch_table: pd.DataFrame) -> Sample:
     # drop columns that should not take part in modeling
     batch_table = batch_table.drop(columns=["Date", "Batch Id"])
 
@@ -75,7 +80,7 @@ def sample(batch_table: pd.DataFrame):
 
 
 @pytest.fixture
-def preprocessing_pipeline(sample: Sample):
+def preprocessing_pipeline(sample: Sample) -> Pipeline:
     # define a ColumnTransformer to pre-process:
     preprocessor = ColumnTransformer(
         [
@@ -97,7 +102,7 @@ def test_model_ranker(
     model_zoo: ModelZoo,
     sample: Sample,
     preprocessing_pipeline,
-):
+) -> None:
 
     # define the circular cross validator with just 5 folds (to speed up testing)
     circular_cv = CircularCrossValidator(test_ratio=0.20, num_folds=5)
@@ -133,11 +138,16 @@ def test_model_ranker(
 
 def test_model_ranker_refit(
     batch_table: pd.DataFrame, sample: Sample, preprocessing_pipeline
-):
+) -> None:
 
     # to test refit, we use only linear regression, to simply check "coef"
-    model_zoo = ModelZoo().add_model(
-        estimator=LinearRegression(), parameter_grid={"normalize": (False, True)}
+    model_zoo = ModelZoo(
+        [
+            Model(
+                estimator=LinearRegression(),
+                parameter_grid={"normalize": (False, True)},
+            )
+        ]
     )
 
     # define the circular cross validator with just 5 folds (to speed up testing)
@@ -162,7 +172,7 @@ def test_model_ranker_refit(
     assert not np.array_equal(coefs[0], coefs[1])
 
 
-def test_model_ranker_no_preprocessing():
+def test_model_ranker_no_preprocessing() -> None:
     warnings.filterwarnings("ignore", message="numpy.dtype size changed")
     warnings.filterwarnings("ignore", message="numpy.ufunc size changed")
     warnings.filterwarnings("ignore", message="You are accessing a training score")
@@ -171,8 +181,13 @@ def test_model_ranker_no_preprocessing():
     my_cv = CircularCrossValidator(test_ratio=0.21, num_folds=50)
 
     # define parameters and model
-    models = ModelZoo().add_model(
-        SVC(gamma="scale"), {"kernel": ("linear", "rbf"), "C": [1, 10]}
+    models = ModelZoo(
+        [
+            Model(
+                estimator=SVC(gamma="scale"),
+                parameter_grid={"kernel": ("linear", "rbf"), "C": [1, 10]},
+            )
+        ]
     )
 
     model_ranker: ModelRanker = ModelRanker(zoo=models, cv=my_cv)

@@ -7,7 +7,7 @@ from yieldengine.loading.sample import Sample
 
 
 # checks various erroneous inputs
-def test_sample_init(test_sample_data):
+def test_sample_init(test_sample_data: pd.DataFrame) -> None:
     # 1. sample parameter
     # 1.1 None
     with pytest.raises(ValueError):
@@ -58,7 +58,7 @@ def test_sample_init(test_sample_data):
         )
 
 
-def test_sample(test_sample_data):
+def test_sample(test_sample_data: pd.DataFrame) -> None:
     # define various assertions we want to test:
     def run_assertions(s: Sample):
         assert s.target_name == "Yield"
