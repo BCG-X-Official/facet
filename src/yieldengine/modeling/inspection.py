@@ -39,7 +39,7 @@ class ModelInspector:
 
         pass
 
-    def get_feature_dependences(self) -> pd.DataFrame:
+    def get_feature_dependencies(self) -> pd.DataFrame:
         # use get_shap_value_matrix()
         # find correlations
         # return as DataFrame
