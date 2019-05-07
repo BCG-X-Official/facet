@@ -15,11 +15,11 @@ from sklearn.tree import DecisionTreeRegressor, ExtraTreeRegressor
 # noinspection PyUnresolvedReferences
 from tests.shared_fixtures import batch_table
 from yieldengine.loading.sample import Sample
-from yieldengine.modeling.selection import ModelPipeline, ModelRanker, ModelZoo
+from yieldengine.modeling.selection import ModelPipeline, ModelRanker, ModelZoo, Model
 from yieldengine.modeling.validation import CircularCrossValidator
 
 
-def test_model_selector(batch_table):
+def test_model_selector(batch_table: pd.DataFrame) -> None:
 
     # drop columns that should not take part in modeling
     batch_table = batch_table.drop(columns=["Date", "Batch Id"])
@@ -52,45 +52,48 @@ def test_model_selector(batch_table):
     # run fit_transform once to assure it works:
     pre_pipeline.fit_transform(sample.features)
 
-    model_zoo = (
-        ModelZoo()
-        .add_model(
-            name="lgbm",
-            estimator=LGBMRegressor(),
-            parameters={
-                "max_depth": (5, 10),
-                "min_split_gain": (0.1, 0.2),
-                "num_leaves": (50, 100, 200),
-            },
-        )
-        .add_model(
-            name="ada",
-            estimator=AdaBoostRegressor(),
-            parameters={"n_estimators": (50, 80)},
-        )
-        .add_model(
-            name="rf",
-            estimator=RandomForestRegressor(),
-            parameters={"n_estimators": (50, 80)},
-        )
-        .add_model(
-            name="dt",
-            estimator=DecisionTreeRegressor(),
-            parameters={"max_depth": (0.5, 1.0), "max_features": (0.5, 1.0)},
-        )
-        .add_model(
-            name="et",
-            estimator=ExtraTreeRegressor(),
-            parameters={"max_depth": (5, 10, 12)},
-        )
-        .add_model(
-            name="svr", estimator=SVR(), parameters={"gamma": (0.5, 1), "C": (50, 100)}
-        )
-        .add_model(
-            name="lr",
-            estimator=LinearRegression(),
-            parameters={"normalize": (False, True)},
-        )
+    model_zoo = ModelZoo(
+        [
+            Model(
+                name="lgbm",
+                estimator=LGBMRegressor(),
+                parameters={
+                    "max_depth": (5, 10),
+                    "min_split_gain": (0.1, 0.2),
+                    "num_leaves": (50, 100, 200),
+                },
+            ),
+            Model(
+                name="ada",
+                estimator=AdaBoostRegressor(),
+                parameters={"n_estimators": (50, 80)},
+            ),
+            Model(
+                name="rf",
+                estimator=RandomForestRegressor(),
+                parameters={"n_estimators": (50, 80)},
+            ),
+            Model(
+                name="dt",
+                estimator=DecisionTreeRegressor(),
+                parameters={"max_depth": (0.5, 1.0), "max_features": (0.5, 1.0)},
+            ),
+            Model(
+                name="et",
+                estimator=ExtraTreeRegressor(),
+                parameters={"max_depth": (5, 10, 12)},
+            ),
+            Model(
+                name="svr",
+                estimator=SVR(),
+                parameters={"gamma": (0.5, 1), "C": (50, 100)},
+            ),
+            Model(
+                name="lr",
+                estimator=LinearRegression(),
+                parameters={"normalize": (False, True)},
+            ),
+        ]
     )
 
     mp: ModelPipeline = ModelPipeline(
@@ -140,11 +143,11 @@ def test_model_selector(batch_table):
     # test transform():
     assert mp.pipeline.transform(sample.features).shape == (
         len(sample),
-        len(mp.searchers),
+        len(list(mp.searchers())),
     )
 
 
-def test_model_selector_no_preprocessing():
+def test_model_selector_no_preprocessing() -> None:
     # filter out warnings triggerd by sk-learn/numpy
     import warnings
 
@@ -160,8 +163,14 @@ def test_model_selector_no_preprocessing():
     my_cv = CircularCrossValidator(test_ratio=0.21, num_folds=50)
 
     # define parameters and model
-    models = ModelZoo().add_model(
-        "svc", svm.SVC(gamma="scale"), {"kernel": ("linear", "rbf"), "C": [1, 10]}
+    models = ModelZoo(
+        [
+            Model(
+                name="svc",
+                estimator=svm.SVC(gamma="scale"),
+                parameters={"kernel": ("linear", "rbf"), "C": [1, 10]},
+            )
+        ]
     )
 
     mp: ModelPipeline = ModelPipeline(zoo=models, cv=my_cv)
