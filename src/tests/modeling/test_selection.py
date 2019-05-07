@@ -25,42 +25,12 @@ from yieldengine.modeling.selection import (
     RankedModel,
 )
 from yieldengine.modeling.validation import CircularCrossValidator
+import pytest
 
 
-def test_model_ranker(batch_table):
-
-    # drop columns that should not take part in modeling
-    batch_table = batch_table.drop(columns=["Date", "Batch Id"])
-
-    # replace values of +/- infinite with n/a, then drop all n/a columns:
-    batch_table = batch_table.replace([np.inf, -np.inf], np.nan).dropna(
-        axis=1, how="all"
-    )
-
-    sample = Sample(observations=batch_table, target_name="Yield")
-
-    # define the circular cross validator with just 5 folds (to speed up testing)
-    circular_cv = CircularCrossValidator(test_ratio=0.20, num_folds=5)
-
-    # define a ColumnTransformer to pre-process:
-    preprocessor = ColumnTransformer(
-        [
-            ("numerical", SimpleImputer(strategy="mean"), sample.features_numerical),
-            (
-                "categorical",
-                OneHotEncoder(sparse=False, handle_unknown="ignore"),
-                sample.features_categorical,
-            ),
-        ]
-    )
-
-    # define a sklearn Pipeline, containing the preprocessor defined above:
-    pre_pipeline = Pipeline([("prep", preprocessor)])
-
-    # run fit_transform once to assure it works:
-    pre_pipeline.fit_transform(sample.features)
-
-    model_zoo = (
+@pytest.fixture
+def model_zoo():
+    return (
         ModelZoo()
         .add_model(
             estimator=LGBMRegressor(),
@@ -70,7 +40,9 @@ def test_model_ranker(batch_table):
                 "num_leaves": (50, 100, 200),
             },
         )
-        .add_model(estimator=AdaBoostRegressor(), parameter_grid={"n_estimators": (50, 80)})
+        .add_model(
+            estimator=AdaBoostRegressor(), parameter_grid={"n_estimators": (50, 80)}
+        )
         .add_model(
             estimator=RandomForestRegressor(), parameter_grid={"n_estimators": (50, 80)}
         )
@@ -87,9 +59,52 @@ def test_model_ranker(batch_table):
         )
     )
 
+
+@pytest.fixture
+def sample(batch_table: pd.DataFrame):
+    # drop columns that should not take part in modeling
+    batch_table = batch_table.drop(columns=["Date", "Batch Id"])
+
+    # replace values of +/- infinite with n/a, then drop all n/a columns:
+    batch_table = batch_table.replace([np.inf, -np.inf], np.nan).dropna(
+        axis=1, how="all"
+    )
+
+    sample = Sample(observations=batch_table, target_name="Yield")
+    return sample
+
+
+@pytest.fixture
+def preprocessing_pipeline(sample: Sample):
+    # define a ColumnTransformer to pre-process:
+    preprocessor = ColumnTransformer(
+        [
+            ("numerical", SimpleImputer(strategy="mean"), sample.features_numerical),
+            (
+                "categorical",
+                OneHotEncoder(sparse=False, handle_unknown="ignore"),
+                sample.features_categorical,
+            ),
+        ]
+    )
+
+    # define a sklearn Pipeline, containing the preprocessor defined above:
+    return Pipeline([("prep", preprocessor)])
+
+
+def test_model_ranker(
+    batch_table: pd.DataFrame,
+    model_zoo: ModelZoo,
+    sample: Sample,
+    preprocessing_pipeline,
+):
+
+    # define the circular cross validator with just 5 folds (to speed up testing)
+    circular_cv = CircularCrossValidator(test_ratio=0.20, num_folds=5)
+
     model_ranker: ModelRanker = ModelRanker(
         zoo=model_zoo,
-        preprocessing=pre_pipeline,
+        preprocessing=preprocessing_pipeline,
         cv=circular_cv,
         scoring=make_scorer(mean_squared_error, greater_is_better=False),
     )
@@ -110,7 +125,7 @@ def test_model_ranker(batch_table):
 
     # check if parameters set for estimators actually match expected:
     for r in range(0, len(model_ranking)):
-        m : RankedModel = model_ranking.get_rank(r)
+        m: RankedModel = model_ranking.get_rank(r)
         assert set(m.parameters).issubset(m.estimator.get_params())
 
     print(model_ranking)
