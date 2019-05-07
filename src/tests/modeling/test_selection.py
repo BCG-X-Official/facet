@@ -52,45 +52,48 @@ def test_model_selector(batch_table: pd.DataFrame) -> None:
     # run fit_transform once to assure it works:
     pre_pipeline.fit_transform(sample.features)
 
-    model_zoo = (
-        ModelZoo()
-        .add_model(
-            name="lgbm",
-            estimator=LGBMRegressor(),
-            parameters={
-                "max_depth": (5, 10),
-                "min_split_gain": (0.1, 0.2),
-                "num_leaves": (50, 100, 200),
-            },
-        )
-        .add_model(
-            name="ada",
-            estimator=AdaBoostRegressor(),
-            parameters={"n_estimators": (50, 80)},
-        )
-        .add_model(
-            name="rf",
-            estimator=RandomForestRegressor(),
-            parameters={"n_estimators": (50, 80)},
-        )
-        .add_model(
-            name="dt",
-            estimator=DecisionTreeRegressor(),
-            parameters={"max_depth": (0.5, 1.0), "max_features": (0.5, 1.0)},
-        )
-        .add_model(
-            name="et",
-            estimator=ExtraTreeRegressor(),
-            parameters={"max_depth": (5, 10, 12)},
-        )
-        .add_model(
-            name="svr", estimator=SVR(), parameters={"gamma": (0.5, 1), "C": (50, 100)}
-        )
-        .add_model(
-            name="lr",
-            estimator=LinearRegression(),
-            parameters={"normalize": (False, True)},
-        )
+    model_zoo = ModelZoo(
+        [
+            Model(
+                name="lgbm",
+                estimator=LGBMRegressor(),
+                parameters={
+                    "max_depth": (5, 10),
+                    "min_split_gain": (0.1, 0.2),
+                    "num_leaves": (50, 100, 200),
+                },
+            ),
+            Model(
+                name="ada",
+                estimator=AdaBoostRegressor(),
+                parameters={"n_estimators": (50, 80)},
+            ),
+            Model(
+                name="rf",
+                estimator=RandomForestRegressor(),
+                parameters={"n_estimators": (50, 80)},
+            ),
+            Model(
+                name="dt",
+                estimator=DecisionTreeRegressor(),
+                parameters={"max_depth": (0.5, 1.0), "max_features": (0.5, 1.0)},
+            ),
+            Model(
+                name="et",
+                estimator=ExtraTreeRegressor(),
+                parameters={"max_depth": (5, 10, 12)},
+            ),
+            Model(
+                name="svr",
+                estimator=SVR(),
+                parameters={"gamma": (0.5, 1), "C": (50, 100)},
+            ),
+            Model(
+                name="lr",
+                estimator=LinearRegression(),
+                parameters={"normalize": (False, True)},
+            ),
+        ]
     )
 
     mp: ModelPipeline = ModelPipeline(
@@ -160,8 +163,14 @@ def test_model_selector_no_preprocessing() -> None:
     my_cv = CircularCrossValidator(test_ratio=0.21, num_folds=50)
 
     # define parameters and model
-    models = ModelZoo().add_model(
-        "svc", svm.SVC(gamma="scale"), {"kernel": ("linear", "rbf"), "C": [1, 10]}
+    models = ModelZoo(
+        [
+            Model(
+                name="svc",
+                estimator=svm.SVC(gamma="scale"),
+                parameters={"kernel": ("linear", "rbf"), "C": [1, 10]},
+            )
+        ]
     )
 
     mp: ModelPipeline = ModelPipeline(zoo=models, cv=my_cv)
