@@ -15,11 +15,11 @@ from sklearn.tree import DecisionTreeRegressor, ExtraTreeRegressor
 # noinspection PyUnresolvedReferences
 from tests.shared_fixtures import batch_table
 from yieldengine.loading.sample import Sample
-from yieldengine.modeling.selection import ModelPipeline, ModelRanker, ModelZoo
+from yieldengine.modeling.selection import ModelPipeline, ModelRanker, ModelZoo, Model
 from yieldengine.modeling.validation import CircularCrossValidator
 
 
-def test_model_selector(batch_table):
+def test_model_selector(batch_table: pd.DataFrame) -> None:
 
     # drop columns that should not take part in modeling
     batch_table = batch_table.drop(columns=["Date", "Batch Id"])
@@ -140,11 +140,11 @@ def test_model_selector(batch_table):
     # test transform():
     assert mp.pipeline.transform(sample.features).shape == (
         len(sample),
-        len(mp.searchers),
+        len(list(mp.searchers())),
     )
 
 
-def test_model_selector_no_preprocessing():
+def test_model_selector_no_preprocessing() -> None:
     # filter out warnings triggerd by sk-learn/numpy
     import warnings
 

@@ -5,11 +5,11 @@ from tests.paths import TEST_DATA_CSV
 from yieldengine.loading import dataloader
 
 
-def test_load_raw_data():
+def test_load_raw_data() -> None:
     dataloader.load_raw_data(input_path=TEST_DATA_CSV)
 
 
-def test_validate_raw_data():
+def test_validate_raw_data() -> None:
     raw_data_df = dataloader.load_raw_data(input_path=TEST_DATA_CSV)
     dataloader.validate_raw_data(input_data_df=raw_data_df)
 
