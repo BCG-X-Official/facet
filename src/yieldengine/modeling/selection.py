@@ -39,29 +39,6 @@ class ModelZoo:
         return len(self._models)
 
 
-class Scoring:
-    """
-    Class for scoring related logic.
-    """
-
-    @staticmethod
-    def default_ranking_scorer(mean_test_score, std_test_score) -> float:
-        """
-        The default scoring function to evaluate on top of GridSearchCV test scores,
-        given by :code:`GridSearchCV.cv_results_`.
-
-        Its output is used for ranking globally across the model zoo.
-
-        :param mean_test_score: the mean test score across all folds for a (estimator,\
-        parameters) combination
-        :param std_test_score: the standard deviation of test scores across all folds \
-        for a (estimator, parameters) combination
-
-        :return: final score for a (estimator, parameters) combination
-        """
-        return mean_test_score - 2 * std_test_score
-
-
 class ModelRanker:
     """
     Turns a model zoo along with
@@ -151,11 +128,25 @@ class ModelRanker:
             # with just the estimators
             return Pipeline([est_feature_union])
 
+    @staticmethod
+    def default_ranking_scorer(mean_test_score, std_test_score) -> float:
+        """
+        The default scoring function to evaluate on top of GridSearchCV test scores,
+        given by :code:`GridSearchCV.cv_results_`.
+
+        Its output is used for ranking globally across the model zoo.
+
+        :param mean_test_score: the mean test score across all folds for a (estimator,\
+        parameters) combination
+        :param std_test_score: the standard deviation of test scores across all folds \
+        for a (estimator, parameters) combination
+
+        :return: final score for a (estimator, parameters) combination
+        """
+        return mean_test_score - 2 * std_test_score
+
     def run(
-        self,
-        sample: Sample,
-        ranking_scorer: Callable = Scoring.default_ranking_scorer,
-        refit=True,
+        self, sample: Sample, ranking_scorer: Callable = None, refit=True
     ) -> "ModelRanking":
         """
         Execute the pipeline with the given sample and return the ranking.
@@ -168,6 +159,9 @@ class ModelRanker:
 
         """
         self.pipeline.fit(X=sample.features, y=sample.target)
+
+        if ranking_scorer is None:
+            ranking_scorer = self.default_ranking_scorer
 
         model_ranking = ModelRanking(ranker=self, ranking_scorer=ranking_scorer)
 
@@ -208,11 +202,7 @@ class ModelRanking:
 
     """
 
-    def __init__(
-        self,
-        ranker: ModelRanker,
-        ranking_scorer: Callable = Scoring.default_ranking_scorer,
-    ):
+    def __init__(self, ranker: ModelRanker, ranking_scorer: Callable = None):
         """
         Turn the output of a ModelRanker into a ModelRanking
 
