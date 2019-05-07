@@ -28,8 +28,8 @@ class ModelPredictor:
     def foldwise_fit_predict(
         self, observations: Sample
     ) -> Generator[Tuple[Pipeline, pd.Series]]:
-        # 1. wrap self._estimator in a Pipeline if preprocessing is not None
-        # 2. get folds splits across observations using self.cv
+        # 1. wrap self._estimator in a Pipeline if self._preprocessing is not None
+        # 2. get fold splits across observations using self._cv
         # 3. for each split
         #       - fit Pipeline on X of train set
         #       - predict y for test set
