@@ -1,5 +1,3 @@
-from typing import List
-
 import numpy as np
 import pandas as pd
 from lightgbm.sklearn import LGBMRegressor
@@ -14,41 +12,36 @@ from sklearn.preprocessing import OneHotEncoder
 from sklearn.svm import SVR
 from sklearn.tree import DecisionTreeRegressor, ExtraTreeRegressor
 
+# noinspection PyUnresolvedReferences
+from tests.shared_fixtures import batch_table
 from yieldengine.loading.sample import Sample
-from yieldengine.modeling.selection import ModelSelector, ModelZoo, ModelPipeline
+from yieldengine.modeling.selection import ModelPipeline, ModelRanker, ModelZoo
 from yieldengine.modeling.validation import CircularCrossValidator
 
-# noinspection PyUnresolvedReferences
-from tests.shared_fixtures import test_sample as test_sample_data
 
+def test_model_selector(batch_table):
 
-def test_model_selector(test_sample_data):
     # drop columns that should not take part in modeling
-    test_sample_data = test_sample_data.drop(columns=["Date", "Batch Id"])
+    batch_table = batch_table.drop(columns=["Date", "Batch Id"])
 
     # replace values of +/- infinite with n/a, then drop all n/a columns:
-    test_sample_data = test_sample_data.replace([np.inf, -np.inf], np.nan).dropna(
+    batch_table = batch_table.replace([np.inf, -np.inf], np.nan).dropna(
         axis=1, how="all"
     )
 
-    feature_columns = list(test_sample_data.columns)
-    feature_columns.remove("Yield")
-
-    sample = Sample(sample=test_sample_data, target="Yield", features=feature_columns)
+    sample = Sample(observations=batch_table, target_name="Yield")
 
     # define the circular cross validator with just 5 folds (to speed up testing)
-    circular_cv = CircularCrossValidator(
-        num_samples=len(sample), test_ratio=0.20, num_folds=5
-    )
+    circular_cv = CircularCrossValidator(test_ratio=0.20, num_folds=5)
 
     # define a ColumnTransformer to pre-process:
     preprocessor = ColumnTransformer(
         [
-            ("numerical", SimpleImputer(strategy="mean"), sample.numerical_features),
+            ("numerical", SimpleImputer(strategy="mean"), sample.features_numerical),
             (
                 "categorical",
                 OneHotEncoder(sparse=False, handle_unknown="ignore"),
-                sample.categorical_features,
+                sample.features_categorical,
             ),
         ]
     )
@@ -57,7 +50,7 @@ def test_model_selector(test_sample_data):
     pre_pipeline = Pipeline([("prep", preprocessor)])
 
     # run fit_transform once to assure it works:
-    pre_pipeline.fit_transform(sample.feature_data)
+    pre_pipeline.fit_transform(sample.features)
 
     model_zoo = (
         ModelZoo()
@@ -101,17 +94,17 @@ def test_model_selector(test_sample_data):
     )
 
     mp: ModelPipeline = ModelPipeline(
-        models=model_zoo,
+        zoo=model_zoo,
         preprocessing=pre_pipeline,
         cv=circular_cv,
         scoring=make_scorer(mean_squared_error, greater_is_better=False),
     )
 
     # train the models
-    mp.pipeline.fit(sample.feature_data, sample.target_data)
+    mp.pipeline.fit(sample.features, sample.target)
 
     # instantiate the model selector
-    ms: ModelSelector = ModelSelector(model_pipeline=mp)
+    ms: ModelRanker = ModelRanker(model_pipeline=mp)
 
     # when done, get ranking
     ranked_models = ms.rank_models()
@@ -145,7 +138,7 @@ def test_model_selector(test_sample_data):
     )
 
     # test transform():
-    assert mp.pipeline.transform(sample.feature_data).shape == (
+    assert mp.pipeline.transform(sample.features).shape == (
         len(sample),
         len(mp.searchers),
     )
@@ -164,22 +157,19 @@ def test_model_selector_no_preprocessing():
     iris = datasets.load_iris()
 
     # define a yield-engine circular CV:
-    my_cv = CircularCrossValidator(
-        num_samples=len(iris.data), test_ratio=0.21, num_folds=50
-    )
+    my_cv = CircularCrossValidator(test_ratio=0.21, num_folds=50)
 
     # define parameters and model
     models = ModelZoo().add_model(
         "svc", svm.SVC(gamma="scale"), {"kernel": ("linear", "rbf"), "C": [1, 10]}
     )
 
-    mp: ModelPipeline = ModelPipeline(models=models, cv=my_cv)
+    mp: ModelPipeline = ModelPipeline(zoo=models, cv=my_cv)
 
     # train the models
     mp.pipeline.fit(iris.data, iris.target)
 
     # instantiate the model selector
-    ms: ModelSelector = ModelSelector(model_pipeline=mp)
-    ms = ModelSelector(mp)
+    ms: ModelRanker = ModelRanker(model_pipeline=mp)
 
     print(pd.DataFrame(ms.rank_model_instances()).head())
