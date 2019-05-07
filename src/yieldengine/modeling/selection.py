@@ -21,21 +21,16 @@ class Searcher(NamedTuple):
 
 
 class ModelZoo:
-    __slots__ = ["__models"]
+    __slots__ = ["_models"]
 
-    def __init__(self) -> None:
-        self.__models = list()
+    def __init__(self, models: Iterable[Model]) -> None:
+        self._models = list(models)
 
-    def add_model(
-        self, name: str, estimator: BaseEstimator, parameters: Dict[str, Any]
-    ) -> "ModelZoo":
-        m = Model(name=name, estimator=estimator, parameters=parameters)
-        self.__models.append(m)
-        return self
+    def models(self) -> Iterable[Model]:
+        return iter(self._models)
 
-    @property
-    def models(self) -> List[Model]:
-        return self.__models
+    def __len__(self) -> int:
+        return len(self._models)
 
 
 class ModelPipeline:
@@ -61,7 +56,7 @@ class ModelPipeline:
     def __construct_searchers(zoo: ModelZoo, cv, scoring) -> List[Searcher]:
         searchers = list()
 
-        for model in zoo.models:
+        for model in zoo.models():
             search = GridSearchCV(
                 estimator=model.estimator,
                 cv=cv,
