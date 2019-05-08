@@ -1,3 +1,4 @@
+from copy import copy
 from typing import *
 
 import numpy as np
@@ -68,7 +69,7 @@ class Sample:
         else:
             feature_names_set: Set[str] = set(feature_names)
 
-        if not set(feature_names_set).issubset(observations.columns):
+        if not feature_names_set.issubset(observations.columns):
             missing_columns = feature_names_set.difference(observations.columns)
             raise ValueError(
                 "observations table is missing columns for some features: "
@@ -142,6 +143,16 @@ class Sample:
         :return: List[str]
         """
         return list(self.__feature_df.select_dtypes(np.object).columns)
+
+    def select_observations(self, indices: Iterable[int]) -> "Sample":
+        """
+        :param indices: indices to select in the original sample
+        :return: copy of this sample, containing only the observations at the given
+        indices
+        """
+        subsample = copy(self)
+        subsample.__observations = self.__observations.iloc[indices, :]
+        return subsample
 
     def __len__(self) -> int:
         return len(self.__observations)
