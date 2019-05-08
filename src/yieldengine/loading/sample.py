@@ -24,13 +24,7 @@ class Sample:
 
     """
 
-    __slots__ = [
-        "_observations",
-        "_target_name",
-        "_features_names",
-        "_target_sr",
-        "_feature_df",
-    ]
+    __slots__ = ["_observations", "_target_name", "_features_names"]
 
     def __init__(
         self,
@@ -80,8 +74,6 @@ class Sample:
             raise ValueError(f"features includes the target column {self._target_name}")
 
         self._features_names = feature_names_set
-        self._target_sr: pd.Series = self._observations.loc[:, self._target_name]
-        self._feature_df: pd.DataFrame = self._observations.loc[:, self._features_names]
 
     @property
     def target_name(self) -> str:
@@ -102,7 +94,7 @@ class Sample:
         """
         :return: index of all observations in this sample
         """
-        return self._target_sr.index
+        return self.target.index
 
     @property
     def target(self) -> pd.Series:
@@ -111,7 +103,7 @@ class Sample:
 
         :return: pd.Series
         """
-        return self._target_sr
+        return self._observations.loc[:, self._target_name]
 
     @property
     def features(self) -> pd.DataFrame:
@@ -120,7 +112,7 @@ class Sample:
 
         :return: pd.DataFrame
         """
-        return self._feature_df
+        return self._observations.loc[:, self._features_names]
 
     @property
     def features_numerical(self) -> List[str]:
@@ -129,7 +121,7 @@ class Sample:
 
         :return: List[str]
         """
-        return list(self._feature_df.select_dtypes(np.number).columns)
+        return list(self.features.select_dtypes(np.number).columns)
 
     @property
     def features_categorical(self) -> List[str]:
@@ -138,7 +130,7 @@ class Sample:
 
         :return: List[str]
         """
-        return list(self._feature_df.select_dtypes(np.object).columns)
+        return list(self.features.select_dtypes(np.object).columns)
 
     def select_observations(self, indices: Iterable[int]) -> "Sample":
         """
