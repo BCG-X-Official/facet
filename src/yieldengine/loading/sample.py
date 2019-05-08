@@ -101,6 +101,13 @@ class Sample:
         return self.__features_names
 
     @property
+    def index(self) -> pd.Index:
+        """
+        :return: index of all observations in this sample
+        """
+        return self.__target_sr.index
+
+    @property
     def target(self) -> pd.Series:
         """
         Property of Sample that returns a pd.Series of the target column.
