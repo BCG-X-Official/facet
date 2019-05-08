@@ -202,7 +202,7 @@ def test_model_ranker_no_preprocessing() -> None:
 
     model_ranking: ModelRanking = model_ranker.run(test_sample)
 
-    print(model_ranking.summary_string())
+    print(model_ranking.summary_report())
 
     assert (
         model_ranking.get_rank(BEST_MODEL_RANK).score >= 0.8

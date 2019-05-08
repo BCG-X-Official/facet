@@ -266,7 +266,7 @@ class ModelRanking:
         """
         return self.__ranking[rank]
 
-    def summary_string(self, limit: int = 25) -> str:
+    def summary_report(self, limit: int = 25) -> str:
         """
         Generates a summary string of the best model instances
 
@@ -274,12 +274,26 @@ class ModelRanking:
 
         :return: str
         """
+
+        rows = [
+            (
+                ranked_model.rank,
+                ranked_model.estimator.__class__.__name__,
+                ranked_model.score,
+                ranked_model.parameters,
+            )
+            for ranked_model in self.__ranking[:limit]
+        ]
+
+        name_width = max([len(row[1]) for row in rows])
+
         return "\n".join(
             [
-                f" Rank {mr.rank + 1}: {mr.estimator.__class__}, "
-                f"Score: {mr.score}, Params: {mr.parameters}"
-                for mr in self.__ranking
-                if mr.rank < limit
+                f" Rank {row[0]:2d}:'"
+                f"{row[1]:{name_width}s}, "
+                f"Score: {row[2]:.2e}, "
+                f"Params: {row[3]}"
+                for row in rows
             ]
         )
 
@@ -287,7 +301,7 @@ class ModelRanking:
         return len(self.__ranking)
 
     def __str__(self) -> str:
-        return self.summary_string()
+        return self.summary_report()
 
     def __iter__(self) -> Iterable[RankedModel]:
         return iter(self.__ranking)
