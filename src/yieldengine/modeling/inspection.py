@@ -10,9 +10,9 @@ from yieldengine.loading.sample import Sample
 
 
 class ModelInspector:
-    __slots__ = ["__pipeline", "__cv", "__sample", "__shap_explainer"]
+    __slots__ = ["_pipeline", "_cv", "_sample", "_shap_explainer"]
 
-    __estimators_by_fold: Dict[int, BaseEstimator]
+    _estimators_by_fold: Dict[int, BaseEstimator]
 
     F_OBSERVATION_ID = "observation"
     F_FOLD_START = "fold_start"
@@ -25,12 +25,12 @@ class ModelInspector:
             ModelInspector._extract_estimator_from_pipeline(pipeline), BaseEstimator
         ):
             raise ValueError("arg pipeline does not end with estimator")
-        self.__pipeline = pipeline
-        self.__cv = cv
-        self.__sample = sample
+        self._pipeline = pipeline
+        self._cv = cv
+        self._sample = sample
 
         # init the Shap explainer:
-        # self.__shap_explainer = shap.TreeExplainer(estimator) or other (is Shap
+        # self._shap_explainer = shap.TreeExplainer(estimator) or other (is Shap
         # able to
         # determine the best explainer based on model type?)
 
@@ -40,15 +40,15 @@ class ModelInspector:
 
     @property
     def pipeline(self) -> Pipeline:
-        return self.__pipeline
+        return self._pipeline
 
     @property
     def cv(self) -> BaseCrossValidator:
-        return self.__cv
+        return self._cv
 
     @property
     def sample(self) -> Sample:
-        return self.__sample
+        return self._sample
 
     def predictions_for_all_samples(self) -> pd.DataFrame:
         """
@@ -77,7 +77,7 @@ class ModelInspector:
             train_sample = self.sample.select_observations(indices=train_indices)
             test_sample = self.sample.select_observations(indices=train_indices)
             fold = test_indices[0]
-            self.__estimators_by_fold[fold] = clone(
+            self._estimators_by_fold[fold] = clone(
                 self._extract_estimator_from_pipeline(
                     self.pipeline.fit(train_sample.features, train_sample.target)
                 )
@@ -102,10 +102,10 @@ class ModelInspector:
         :return: the estimator that was used to predict the dependent vartiable of
         the test fold
         """
-        if self.__estimators_by_fold is None:
+        if self._estimators_by_fold is None:
             self.predictions_for_all_samples()
 
-        return self.__estimators_by_fold[fold]
+        return self._estimators_by_fold[fold]
 
     def shap_value_matrix(self) -> pd.DataFrame:
         pass
