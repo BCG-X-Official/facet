@@ -77,11 +77,11 @@ class ModelInspector:
             train_sample = self.sample.select_observations(indices=train_indices)
             test_sample = self.sample.select_observations(indices=train_indices)
             fold = test_indices[0]
-            self._estimators_by_fold[fold] = clone(
-                self._extract_estimator_from_pipeline(
-                    self.pipeline.fit(train_sample.features, train_sample.target)
-                )
+
+            self._estimators_by_fold[fold] = self._extract_estimator_from_pipeline(
+                clone(self.pipeline).fit(train_sample.features, train_sample.target)
             )
+
             return pd.DataFrame(
                 data={
                     self.F_FOLD_START: fold,
