@@ -49,11 +49,11 @@ class ModelInspector:
 
     def predictions_for_all_samples(self) -> pd.DataFrame:
         """
-        For each fold of this Predictor's CV, fit the estimator and predict all values
-        in the test set. The result is a data frame with one row per prediction, and
-        columns F_OBSERVATION_ID (the index of the observation in the sample),
+        For each fold of this Predictor's CV, fit the estimator and predict all
+        values in the test set. The result is a data frame with one row per
+        prediction, indexed by the observations in the sample, and with columns
         F_FOLD_START (the numerical index of the start of the test set in the current
-        fold),  F_PREDICTION (the predicted value for the given observation and fold)
+        fold), F_PREDICTION (the predicted value for the given observation and fold)
 
         Note that there can be multiple prediction rows per observation if the test
         folds overlap.
@@ -80,11 +80,8 @@ class ModelInspector:
                 )
             )
             return pd.DataFrame(
-                data={
-                    self.F_OBSERVATION_ID: test_sample.index,
-                    self.F_FOLD_START: fold,
-                    self.F_PREDICTION: self.pipeline,
-                }
+                data={self.F_FOLD_START: fold, self.F_PREDICTION: self.pipeline},
+                index=test_sample.index,
             )
 
         return pd.concat(
