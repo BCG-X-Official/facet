@@ -1,6 +1,7 @@
 from typing import *
 
 import pandas as pd
+import numpy as np
 from sklearn.base import BaseEstimator, clone
 from sklearn.model_selection import BaseCrossValidator
 from sklearn.pipeline import Pipeline
@@ -69,7 +70,7 @@ class ModelInspector:
         #       - predict y for test set
 
         def predict(
-            train_indices: Sequence[int], test_indices: Sequence[int]
+            train_indices: np.ndarray, test_indices: np.ndarray
         ) -> pd.DataFrame:
             train_sample = self.sample.select_observations(indices=train_indices)
             test_sample = self.sample.select_observations(indices=train_indices)
