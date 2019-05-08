@@ -1,5 +1,7 @@
+from typing import *
+
 import pandas as pd
-from sklearn.base import BaseEstimator
+from sklearn.base import BaseEstimator, clone
 from sklearn.model_selection import BaseCrossValidator
 from sklearn.pipeline import Pipeline
 
@@ -8,6 +10,8 @@ from yieldengine.loading.sample import Sample
 
 class ModelInspector:
     __slots__ = ["__pipeline", "__cv", "__sample", "__shap_explainer"]
+
+    __estimators_by_fold: Dict[int, BaseEstimator]
 
     F_OBSERVATION_ID = "observation"
     F_FOLD_START = "fold_start"
@@ -43,10 +47,6 @@ class ModelInspector:
     def sample(self) -> Sample:
         return self.__sample
 
-    @property
-    def estimator(self) -> BaseEstimator:
-        return self._get_estimator(self.pipeline)
-
     def predictions_for_all_samples(self) -> pd.DataFrame:
         """
         For each fold of this Predictor's CV, fit the estimator and predict all values
@@ -67,7 +67,34 @@ class ModelInspector:
         #       - clone the estimator using function sklearn.base.clone()
         #       - fit the estimator on the X and y of train set
         #       - predict y for test set
-        pass
+
+        def predict(
+            train_indices: Sequence[int], test_indices: Sequence[int]
+        ) -> pd.DataFrame:
+            train_sample = self.sample.select_observations(indices=train_indices)
+            test_sample = self.sample.select_observations(indices=train_indices)
+            fold = test_indices[0]
+            self.__estimators_by_fold[fold] = clone(
+                self._get_estimator(
+                    self.pipeline.fit(train_sample.features, train_sample.target)
+                )
+            )
+            return pd.DataFrame(
+                data={
+                    self.F_OBSERVATION_ID: test_sample.index,
+                    self.F_FOLD_START: fold,
+                    self.F_PREDICTION: self.pipeline,
+                }
+            )
+
+        return pd.concat(
+            [
+                predict(train_indices, test_indices)
+                for train_indices, test_indices in self.cv.split(
+                    self.sample.features, self.sample.target
+                )
+            ]
+        )
 
     def get_estimator(self, fold: int) -> BaseEstimator:
         """
@@ -75,7 +102,10 @@ class ModelInspector:
         :return: the estimator that was used to predict the dependent vartiable of
         the test fold
         """
-        pass
+        if self.__estimators_by_fold is None:
+            self.predictions_for_all_samples()
+
+        return self.__estimators_by_fold[fold]
 
     def shap_value_matrix(self) -> pd.DataFrame:
         pass
