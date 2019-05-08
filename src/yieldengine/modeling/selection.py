@@ -56,6 +56,10 @@ class ModelRanker:
 
     """
 
+    F_PARAMETERS = "params"
+    F_MEAN_TEST_SCORE = "mean_test_score"
+    F_SD_TEST_SCORE = "std_test_score"
+
     def __init__(
         self, zoo: ModelZoo, preprocessing: Pipeline = None, cv=None, scoring=None
     ) -> None:
@@ -206,9 +210,9 @@ class ModelRanker:
                 )
                 # we read and iterate over these 3 attributes from cv_results_:
                 for (params, mean_test_score, std_test_score) in zip(
-                    search.cv_results_["params"],
-                    search.cv_results_["mean_test_score"],
-                    search.cv_results_["std_test_score"],
+                    search.cv_results_[ModelRanker.F_PARAMETERS],
+                    search.cv_results_[ModelRanker.F_MEAN_TEST_SCORE],
+                    search.cv_results_[ModelRanker.F_SD_TEST_SCORE],
                 )
             ]
 
