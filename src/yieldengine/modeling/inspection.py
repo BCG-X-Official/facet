@@ -14,7 +14,6 @@ class ModelInspector:
 
     _estimators_by_fold: Dict[int, BaseEstimator]
 
-    F_OBSERVATION_ID = "observation"
     F_FOLD_START = "fold_start"
     F_PREDICTION = "prediction"
 
