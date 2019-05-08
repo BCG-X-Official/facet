@@ -21,7 +21,9 @@ class ModelInspector:
     def __init__(
         self, pipeline: Pipeline, cv: BaseCrossValidator, sample: Sample
     ) -> None:
-        if not isinstance(ModelInspector._get_estimator(pipeline), BaseEstimator):
+        if not isinstance(
+            ModelInspector._extract_estimator_from_pipeline(pipeline), BaseEstimator
+        ):
             raise ValueError("arg pipeline does not end with estimator")
         self.__pipeline = pipeline
         self.__cv = cv
@@ -33,7 +35,7 @@ class ModelInspector:
         # determine the best explainer based on model type?)
 
     @staticmethod
-    def _get_estimator(pipeline: Pipeline) -> BaseEstimator:
+    def _extract_estimator_from_pipeline(pipeline: Pipeline) -> BaseEstimator:
         return pipeline.steps[-1][1]
 
     @property
@@ -76,7 +78,7 @@ class ModelInspector:
             test_sample = self.sample.select_observations(indices=train_indices)
             fold = test_indices[0]
             self.__estimators_by_fold[fold] = clone(
-                self._get_estimator(
+                self._extract_estimator_from_pipeline(
                     self.pipeline.fit(train_sample.features, train_sample.target)
                 )
             )
