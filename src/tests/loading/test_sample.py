@@ -108,3 +108,7 @@ def test_sample(test_sample_data: pd.DataFrame) -> None:
 
     # test length
     assert len(s) == len(test_sample_data)
+
+    # test select_observations
+    sub = s2.select_observations(indices=[0, 1, 2, 3])
+    assert len(sub) == 4
