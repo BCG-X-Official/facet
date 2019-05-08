@@ -83,7 +83,10 @@ class ModelInspector:
                 )
             )
             return pd.DataFrame(
-                data={self.F_FOLD_START: fold, self.F_PREDICTION: self.pipeline},
+                data={
+                    self.F_FOLD_START: fold,
+                    self.F_PREDICTION: self.pipeline.predict(X=test_sample.features),
+                },
                 index=test_sample.index,
             )
 
