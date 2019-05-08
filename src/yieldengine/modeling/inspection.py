@@ -10,9 +10,13 @@ from yieldengine.loading.sample import Sample
 
 
 class ModelInspector:
-    __slots__ = ["_pipeline", "_cv", "_sample", "_shap_explainer"]
-
-    _estimators_by_fold: Dict[int, BaseEstimator]
+    __slots__ = [
+        "_pipeline",
+        "_cv",
+        "_sample",
+        "_shap_explainer",
+        "_estimators_by_fold",
+    ]
 
     F_FOLD_START = "fold_start"
     F_PREDICTION = "prediction"
@@ -27,6 +31,7 @@ class ModelInspector:
         self._pipeline = pipeline
         self._cv = cv
         self._sample = sample
+        self._estimators_by_fold: Dict[int, BaseEstimator] = {}
 
         # init the Shap explainer:
         # self._shap_explainer = shap.TreeExplainer(estimator) or other (is Shap
@@ -74,7 +79,7 @@ class ModelInspector:
             train_indices: np.ndarray, test_indices: np.ndarray
         ) -> pd.DataFrame:
             train_sample = self.sample.select_observations(indices=train_indices)
-            test_sample = self.sample.select_observations(indices=train_indices)
+            test_sample = self.sample.select_observations(indices=test_indices)
             fold = test_indices[0]
 
             self._estimators_by_fold[fold] = self._extract_estimator_from_pipeline(
@@ -104,7 +109,7 @@ class ModelInspector:
         :return: the estimator that was used to predict the dependent vartiable of
         the test fold
         """
-        if self._estimators_by_fold is None:
+        if len(self._estimators_by_fold) == 0:
             self.predictions_for_all_samples()
 
         return self._estimators_by_fold[fold]
