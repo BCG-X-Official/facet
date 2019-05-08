@@ -128,7 +128,7 @@ class ModelRanker:
 
         # generate a list of (name, obj) tuples for all estimators (or GridSearchCV
         # objs.)
-        #   name: simply e0, e1, e2, ...
+        #   name: e0, e1, e2, ...
         #   obj: the Estimator/GridSearchCV wrapped in a ModelTransformer() object,
         #   to be feature union compliant
         estimator_steps = [
