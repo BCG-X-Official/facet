@@ -25,11 +25,11 @@ class Sample:
     """
 
     __slots__ = [
-        "__observations",
-        "__target_name",
-        "__features_names",
-        "__target_sr",
-        "__feature_df",
+        "_observations",
+        "_target_name",
+        "_features_names",
+        "_target_sr",
+        "_feature_df",
     ]
 
     def __init__(
@@ -50,21 +50,21 @@ class Sample:
         if observations is None or not isinstance(observations, pd.DataFrame):
             raise ValueError("sample is not a DataFrame")
 
-        self.__observations = observations
+        self._observations = observations
 
         if target_name is None or not isinstance(target_name, str):
             raise ValueError("target is not a string")
 
-        if target_name not in self.__observations.columns:
+        if target_name not in self._observations.columns:
             raise ValueError(
                 f"target '{target_name}' is not a column in the observations table"
             )
 
-        self.__target_name = target_name
+        self._target_name = target_name
 
         if feature_names is None:
             feature_names_set = {
-                c for c in observations.columns if c != self.__target_name
+                c for c in observations.columns if c != self._target_name
             }
         else:
             feature_names_set: Set[str] = set(feature_names)
@@ -76,37 +76,33 @@ class Sample:
                 f"{missing_columns}"
             )
         # ensure target column is not part of features:
-        if self.__target_name in feature_names_set:
-            raise ValueError(
-                f"features includes the target column {self.__target_name}"
-            )
+        if self._target_name in feature_names_set:
+            raise ValueError(f"features includes the target column {self._target_name}")
 
-        self.__features_names = feature_names_set
-        self.__target_sr: pd.Series = self.__observations.loc[:, self.__target_name]
-        self.__feature_df: pd.DataFrame = self.__observations.loc[
-            :, self.__features_names
-        ]
+        self._features_names = feature_names_set
+        self._target_sr: pd.Series = self._observations.loc[:, self._target_name]
+        self._feature_df: pd.DataFrame = self._observations.loc[:, self._features_names]
 
     @property
     def target_name(self) -> str:
         """
         :return: name of the target column
         """
-        return self.__target_name
+        return self._target_name
 
     @property
     def feature_names(self) -> Collection[str]:
         """
         :return: list of feature column names
         """
-        return self.__features_names
+        return self._features_names
 
     @property
     def index(self) -> pd.Index:
         """
         :return: index of all observations in this sample
         """
-        return self.__target_sr.index
+        return self._target_sr.index
 
     @property
     def target(self) -> pd.Series:
@@ -115,7 +111,7 @@ class Sample:
 
         :return: pd.Series
         """
-        return self.__target_sr
+        return self._target_sr
 
     @property
     def features(self) -> pd.DataFrame:
@@ -124,7 +120,7 @@ class Sample:
 
         :return: pd.DataFrame
         """
-        return self.__feature_df
+        return self._feature_df
 
     @property
     def features_numerical(self) -> List[str]:
@@ -133,7 +129,7 @@ class Sample:
 
         :return: List[str]
         """
-        return list(self.__feature_df.select_dtypes(np.number).columns)
+        return list(self._feature_df.select_dtypes(np.number).columns)
 
     @property
     def features_categorical(self) -> List[str]:
@@ -142,7 +138,7 @@ class Sample:
 
         :return: List[str]
         """
-        return list(self.__feature_df.select_dtypes(np.object).columns)
+        return list(self._feature_df.select_dtypes(np.object).columns)
 
     def select_observations(self, indices: Iterable[int]) -> "Sample":
         """
@@ -151,8 +147,8 @@ class Sample:
         indices
         """
         subsample = copy(self)
-        subsample.__observations = self.__observations.iloc[indices, :]
+        subsample._observations = self._observations.iloc[indices, :]
         return subsample
 
     def __len__(self) -> int:
-        return len(self.__observations)
+        return len(self._observations)
