@@ -20,7 +20,7 @@ class ModelPipelineFactory(ABC):
         raise NotImplementedError("call to abstract make_pipeline()")
 
 
-class PreprocessedModelPipelineFactory(ModelPipelineFactory):
+class PreprocessingModelPipelineFactory(ModelPipelineFactory):
     def __init__(self, preprocessing: Pipeline):
         super().__init__()
         self._preprocessing = preprocessing
