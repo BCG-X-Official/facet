@@ -88,19 +88,21 @@ def test_sample(test_sample_data: pd.DataFrame) -> None:
     run_assertions(s2)
 
     # test numerical features
+    features_numerical = s.features_by_type(dtype=s.DTYPE_NUMERICAL)
     assert (
         "Step4 Fermentation Sensor Data Phase2 Pressure Val04 (mbar)"
-        in s.features_numerical
+        in features_numerical
     )
 
     # test categorical features
-    assert "Step4 RawMat Internal Compound01 QC (id)" in s.features_categorical
+    features_non_numerical = s.features_by_type(dtype=s.DTYPE_OBJECT)
+    assert "Step4 RawMat Internal Compound01 QC (id)" in features_non_numerical
 
     # assert feature completeness
     assert (
         len(
-            set(s.features_numerical)
-            .union(set(s.features_categorical))
+            set(features_numerical)
+            .union(set(features_non_numerical))
             .difference(s.feature_names)
         )
         == 0
