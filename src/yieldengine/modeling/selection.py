@@ -1,11 +1,15 @@
 from copy import deepcopy
 from typing import *
 
-import pandas as pd
-from sklearn.base import BaseEstimator, TransformerMixin
+from sklearn.base import BaseEstimator
 from sklearn.model_selection import GridSearchCV
-from sklearn.pipeline import FeatureUnion, Pipeline
+from sklearn.pipeline import Pipeline
+
 from yieldengine.loading.sample import Sample
+from yieldengine.modeling.factory import (
+    ModelPipelineFactory,
+    PreprocessingModelPipelineFactory,
+)
 
 BEST_MODEL_RANK = 0
 
@@ -49,8 +53,8 @@ class ModelRanker:
     into a scikit-learn pipeline.
 
     :param zoo: a model zoo
-    :param preprocessing: a scikit-learn Pipeline that should be used as a \
-    preprocessor (optional)
+    :param preprocessing_step: a scikit-learn Pipeline step that should be used as a \
+    preprocessor
     :param cv: a cross validation object (i.e. CircularCrossValidator)
     :param scoring: a scorer to use when doing CV within GridSearch
 
@@ -61,16 +65,30 @@ class ModelRanker:
     F_SD_TEST_SCORE = "std_test_score"
 
     def __init__(
-        self, zoo: ModelZoo, preprocessing: Pipeline = None, cv=None, scoring=None
+        self,
+        zoo: ModelZoo,
+        preprocessing_step: Tuple[str, BaseEstimator] = None,
+        cv=None,
+        scoring=None,
     ) -> None:
         self.__model_zoo = zoo
-        self.__preprocessing = preprocessing
+        self.__preprocessing_step = preprocessing_step
         self.__pipeline = None
         self.__cv = cv
         self.__scoring = scoring
 
         self.__searchers = searchers = self.__construct_searchers(zoo, cv, scoring)
-        self.__pipeline = self.__construct_pipeline(preprocessing, searchers)
+
+        if preprocessing_step is not None:
+            self.__model_pipeline_factory = PreprocessingModelPipelineFactory(
+                preprocessing_step=preprocessing_step
+            )
+        else:
+            self.__model_pipeline_factory = ModelPipelineFactory()
+
+        self.__pipeline = self.__model_pipeline_factory.make_pipeline(
+            estimators=searchers
+        )
 
     @staticmethod
     def __construct_searchers(zoo: ModelZoo, cv, scoring) -> List[GridSearchCV]:
@@ -89,48 +107,6 @@ class ModelRanker:
             searchers.append(search)
 
         return searchers
-
-    @staticmethod
-    def __construct_pipeline(
-        preprocessing: Pipeline, estimators: List[BaseEstimator]
-    ) -> Pipeline:
-
-        # helper class to view a model (Estimator/GridSearchCV) as a Transformer:
-        class ModelTransformer(TransformerMixin):
-            def __init__(self, model) -> None:
-                self.model = model
-
-            def fit(self, *args, **kwargs) -> "ModelTransformer":
-                self.model.fit(*args, **kwargs)
-                return self
-
-            def transform(self, X, **transform_params) -> pd.DataFrame:
-                return pd.DataFrame(self.model.predict(X))
-
-        # generate a list of (name, obj) tuples for all estimators (or GridSearchCV
-        # objs.)
-        #   name: e0, e1, e2, ...
-        #   obj: the Estimator/GridSearchCV wrapped in a ModelTransformer() object,
-        #   to be feature union compliant
-        estimator_steps = [
-            (f"e{i}", ModelTransformer(estimator))
-            for i, estimator in enumerate(estimators)
-        ]
-
-        # with the above created list of ModelTransformers, create FeatureUnion()
-        # benefit: can be evaluated in parallel and pre-processing is shared
-        est_feature_union = (
-            "estimators",
-            FeatureUnion(transformer_list=estimator_steps),
-        )
-
-        # if pre-processing pipeline was given, insert it into the pipeline:
-        if preprocessing is not None:
-            return Pipeline([("preprocessing", preprocessing), est_feature_union])
-        else:
-            # if pre-processing pipeline was not given, create a minimal Pipeline
-            # with just the estimators
-            return Pipeline([est_feature_union])
 
     @staticmethod
     def default_ranking_scorer(mean_test_score, std_test_score) -> float:
@@ -171,9 +147,8 @@ class ModelRanker:
         if refit:
             # we build a new pipeline that fits all estimators (that have their params
             # already set), without CV and without GridSearching:
-            refit_pipeline = self.__construct_pipeline(
-                preprocessing=self.__preprocessing,
-                estimators=[m.estimator for m in model_ranking],
+            refit_pipeline = self.__model_pipeline_factory.make_pipeline(
+                estimators=[m.estimator for m in model_ranking]
             )
             # call fit on the new pipeline:
             refit_pipeline.fit(X=sample.features, y=sample.target)
