@@ -1,15 +1,17 @@
 import warnings
+from typing import *
 
 import numpy as np
 import pandas as pd
+import pytest
 from lightgbm.sklearn import LGBMRegressor
 from sklearn import datasets
+from sklearn.base import BaseEstimator
 from sklearn.compose import ColumnTransformer
 from sklearn.ensemble import AdaBoostRegressor, RandomForestRegressor
 from sklearn.impute import SimpleImputer
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import make_scorer, mean_squared_error
-from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.svm import SVC, SVR
 from sklearn.tree import DecisionTreeRegressor, ExtraTreeRegressor
@@ -19,14 +21,13 @@ from tests.shared_fixtures import batch_table
 from yieldengine.loading.sample import Sample
 from yieldengine.modeling.selection import (
     BEST_MODEL_RANK,
+    Model,
     ModelRanker,
     ModelRanking,
     ModelZoo,
     RankedModel,
-    Model,
 )
 from yieldengine.modeling.validation import CircularCrossValidator
-import pytest
 
 
 @pytest.fixture
@@ -80,7 +81,7 @@ def sample(batch_table: pd.DataFrame) -> Sample:
 
 
 @pytest.fixture
-def preprocessing_pipeline(sample: Sample) -> Pipeline:
+def preprocessing_step(sample: Sample) -> Tuple[str, BaseEstimator]:
     # define a ColumnTransformer to pre-process:
     preprocessor = ColumnTransformer(
         [
@@ -93,15 +94,12 @@ def preprocessing_pipeline(sample: Sample) -> Pipeline:
         ]
     )
 
-    # define a sklearn Pipeline, containing the preprocessor defined above:
-    return Pipeline([("prep", preprocessor)])
+    # define a sklearn Pipeline step, containing the preprocessor defined above:
+    return "prep", preprocessor
 
 
 def test_model_ranker(
-    batch_table: pd.DataFrame,
-    model_zoo: ModelZoo,
-    sample: Sample,
-    preprocessing_pipeline,
+    batch_table: pd.DataFrame, model_zoo: ModelZoo, sample: Sample, preprocessing_step
 ) -> None:
 
     # define the circular cross validator with just 5 folds (to speed up testing)
@@ -109,7 +107,7 @@ def test_model_ranker(
 
     model_ranker: ModelRanker = ModelRanker(
         zoo=model_zoo,
-        preprocessing=preprocessing_pipeline,
+        preprocessing_step=preprocessing_step,
         cv=circular_cv,
         scoring=make_scorer(mean_squared_error, greater_is_better=False),
     )
@@ -137,7 +135,7 @@ def test_model_ranker(
 
 
 def test_model_ranker_refit(
-    batch_table: pd.DataFrame, sample: Sample, preprocessing_pipeline
+    batch_table: pd.DataFrame, sample: Sample, preprocessing_step
 ) -> None:
 
     # to test refit, we use only linear regression, to simply check "coef"
@@ -156,7 +154,7 @@ def test_model_ranker_refit(
     # define a model ranker
     model_ranker: ModelRanker = ModelRanker(
         zoo=model_zoo,
-        preprocessing=preprocessing_pipeline,
+        preprocessing_step=preprocessing_step,
         cv=circular_cv,
         scoring=make_scorer(mean_squared_error, greater_is_better=False),
     )
