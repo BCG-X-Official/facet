@@ -260,7 +260,7 @@ class ModelRanking:
         """
         self.__ranking = ranking
 
-    def get_rank(self, rank: int = BEST_MODEL_RANK) -> RankedModel:
+    def model(self, rank: int = BEST_MODEL_RANK) -> RankedModel:
         """
         Returns the model instance at a given rank.
 
@@ -270,7 +270,7 @@ class ModelRanking:
         """
         return self.__ranking[rank]
 
-    def summary_report(self, limit: int = 25) -> str:
+    def summary_report(self, limit: int = 10) -> str:
         """
         Generates a summary string of the best model instances
 
