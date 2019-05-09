@@ -1,26 +1,72 @@
+import warnings
+
 import numpy as np
 import pandas as pd
 from lightgbm.sklearn import LGBMRegressor
+from sklearn import datasets
 from sklearn.compose import ColumnTransformer
 from sklearn.ensemble import AdaBoostRegressor, RandomForestRegressor
 from sklearn.impute import SimpleImputer
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import make_scorer, mean_squared_error
-from sklearn.model_selection import GridSearchCV
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder
-from sklearn.svm import SVR
+from sklearn.svm import SVC, SVR
 from sklearn.tree import DecisionTreeRegressor, ExtraTreeRegressor
 
 # noinspection PyUnresolvedReferences
 from tests.shared_fixtures import batch_table
 from yieldengine.loading.sample import Sample
-from yieldengine.modeling.selection import ModelPipeline, ModelRanker, ModelZoo, Model
+from yieldengine.modeling.selection import (
+    BEST_MODEL_RANK,
+    ModelRanker,
+    ModelRanking,
+    ModelZoo,
+    RankedModel,
+    Model,
+)
 from yieldengine.modeling.validation import CircularCrossValidator
+import pytest
 
 
-def test_model_selector(batch_table: pd.DataFrame) -> None:
+@pytest.fixture
+def model_zoo() -> ModelZoo:
+    return ModelZoo(
+        [
+            Model(
+                estimator=LGBMRegressor(),
+                parameter_grid={
+                    "max_depth": (5, 10),
+                    "min_split_gain": (0.1, 0.2),
+                    "num_leaves": (50, 100, 200),
+                },
+            ),
+            Model(
+                estimator=AdaBoostRegressor(), parameter_grid={"n_estimators": (50, 80)}
+            ),
+            Model(
+                estimator=RandomForestRegressor(),
+                parameter_grid={"n_estimators": (50, 80)},
+            ),
+            Model(
+                estimator=DecisionTreeRegressor(),
+                parameter_grid={"max_depth": (0.5, 1.0), "max_features": (0.5, 1.0)},
+            ),
+            Model(
+                estimator=ExtraTreeRegressor(),
+                parameter_grid={"max_depth": (5, 10, 12)},
+            ),
+            Model(estimator=SVR(), parameter_grid={"gamma": (0.5, 1), "C": (50, 100)}),
+            Model(
+                estimator=LinearRegression(),
+                parameter_grid={"normalize": (False, True)},
+            ),
+        ]
+    )
 
+
+@pytest.fixture
+def sample(batch_table: pd.DataFrame) -> Sample:
     # drop columns that should not take part in modeling
     batch_table = batch_table.drop(columns=["Date", "Batch Id"])
 
@@ -30,10 +76,11 @@ def test_model_selector(batch_table: pd.DataFrame) -> None:
     )
 
     sample = Sample(observations=batch_table, target_name="Yield")
+    return sample
 
-    # define the circular cross validator with just 5 folds (to speed up testing)
-    circular_cv = CircularCrossValidator(test_ratio=0.20, num_folds=5)
 
+@pytest.fixture
+def preprocessing_pipeline(sample: Sample) -> Pipeline:
     # define a ColumnTransformer to pre-process:
     preprocessor = ColumnTransformer(
         [
@@ -47,117 +94,88 @@ def test_model_selector(batch_table: pd.DataFrame) -> None:
     )
 
     # define a sklearn Pipeline, containing the preprocessor defined above:
-    pre_pipeline = Pipeline([("prep", preprocessor)])
+    return Pipeline([("prep", preprocessor)])
 
-    # run fit_transform once to assure it works:
-    pre_pipeline.fit_transform(sample.features)
 
-    model_zoo = ModelZoo(
-        [
-            Model(
-                name="lgbm",
-                estimator=LGBMRegressor(),
-                parameters={
-                    "max_depth": (5, 10),
-                    "min_split_gain": (0.1, 0.2),
-                    "num_leaves": (50, 100, 200),
-                },
-            ),
-            Model(
-                name="ada",
-                estimator=AdaBoostRegressor(),
-                parameters={"n_estimators": (50, 80)},
-            ),
-            Model(
-                name="rf",
-                estimator=RandomForestRegressor(),
-                parameters={"n_estimators": (50, 80)},
-            ),
-            Model(
-                name="dt",
-                estimator=DecisionTreeRegressor(),
-                parameters={"max_depth": (0.5, 1.0), "max_features": (0.5, 1.0)},
-            ),
-            Model(
-                name="et",
-                estimator=ExtraTreeRegressor(),
-                parameters={"max_depth": (5, 10, 12)},
-            ),
-            Model(
-                name="svr",
-                estimator=SVR(),
-                parameters={"gamma": (0.5, 1), "C": (50, 100)},
-            ),
-            Model(
-                name="lr",
-                estimator=LinearRegression(),
-                parameters={"normalize": (False, True)},
-            ),
-        ]
-    )
+def test_model_ranker(
+    batch_table: pd.DataFrame,
+    model_zoo: ModelZoo,
+    sample: Sample,
+    preprocessing_pipeline,
+) -> None:
 
-    mp: ModelPipeline = ModelPipeline(
+    # define the circular cross validator with just 5 folds (to speed up testing)
+    circular_cv = CircularCrossValidator(test_ratio=0.20, num_folds=5)
+
+    model_ranker: ModelRanker = ModelRanker(
         zoo=model_zoo,
-        preprocessing=pre_pipeline,
+        preprocessing=preprocessing_pipeline,
         cv=circular_cv,
         scoring=make_scorer(mean_squared_error, greater_is_better=False),
     )
 
-    # train the models
-    mp.pipeline.fit(sample.features, sample.target)
+    # run the ModelRanker to retrieve a ranking
+    model_ranking: ModelRanking = model_ranker.run(sample=sample)
 
-    # instantiate the model selector
-    ms: ModelRanker = ModelRanker(model_pipeline=mp)
-
-    # when done, get ranking
-    ranked_models = ms.rank_models()
-    # check types
-    assert type(ranked_models) == list
-    assert type(ranked_models[0]) == GridSearchCV
-    # check sorting
+    assert len(model_ranking) > 0
+    assert isinstance(model_ranking.get_rank(BEST_MODEL_RANK), RankedModel)
     assert (
-        ranked_models[0].best_score_
-        >= ranked_models[1].best_score_
-        >= ranked_models[2].best_score_
+        model_ranking.get_rank(0).score
+        >= model_ranking.get_rank(1).score
+        >= model_ranking.get_rank(2).score
+        >= model_ranking.get_rank(3).score
+        >= model_ranking.get_rank(4).score
+        >= model_ranking.get_rank(len(model_ranking) - 1).score
     )
 
-    # print summary:
-    print("Ranked models:")
-    print(ms.summary_string())
+    # check if parameters set for estimators actually match expected:
+    for r in range(0, len(model_ranking)):
+        m: RankedModel = model_ranking.get_rank(r)
+        assert set(m.parameters).issubset(m.estimator.get_params())
 
-    # get ranked model-instances:
-    ranked_model_instances = ms.rank_model_instances(n_best_ranked=3)
+    print(model_ranking)
 
-    # check data structure
-    assert type(ranked_model_instances) == list
-    assert type(ranked_model_instances[0]) == dict
-    assert {"score", "estimator", "params"} == ranked_model_instances[0].keys()
 
-    # check sorting
-    assert (
-        ranked_model_instances[0]["score"]
-        >= ranked_model_instances[1]["score"]
-        >= ranked_model_instances[2]["score"]
+def test_model_ranker_refit(
+    batch_table: pd.DataFrame, sample: Sample, preprocessing_pipeline
+) -> None:
+
+    # to test refit, we use only linear regression, to simply check "coef"
+    model_zoo = ModelZoo(
+        [
+            Model(
+                estimator=LinearRegression(),
+                parameter_grid={"normalize": (False, True)},
+            )
+        ]
     )
 
-    # test transform():
-    assert mp.pipeline.transform(sample.features).shape == (
-        len(sample),
-        len(list(mp.searchers())),
+    # define the circular cross validator with just 5 folds (to speed up testing)
+    circular_cv = CircularCrossValidator(test_ratio=0.20, num_folds=5)
+
+    # define a model ranker
+    model_ranker: ModelRanker = ModelRanker(
+        zoo=model_zoo,
+        preprocessing=preprocessing_pipeline,
+        cv=circular_cv,
+        scoring=make_scorer(mean_squared_error, greater_is_better=False),
     )
 
+    # run the ModelRanker to retrieve a ranking, using refit=True
+    model_ranking: ModelRanking = model_ranker.run(sample=sample, refit=True)
 
-def test_model_selector_no_preprocessing() -> None:
-    # filter out warnings triggerd by sk-learn/numpy
-    import warnings
+    # check we have models fitted differently:
+    # 1. fetch the coefficients:
+    coefs = [m.estimator.coef_ for m in model_ranking]
 
+    # 2. assert coefficients are different:
+    assert not np.array_equal(coefs[0], coefs[1])
+
+
+def test_model_ranker_no_preprocessing() -> None:
     warnings.filterwarnings("ignore", message="numpy.dtype size changed")
     warnings.filterwarnings("ignore", message="numpy.ufunc size changed")
     warnings.filterwarnings("ignore", message="You are accessing a training score")
-    from sklearn import datasets, svm
-
-    # load example data
-    iris = datasets.load_iris()
 
     # define a yield-engine circular CV:
     my_cv = CircularCrossValidator(test_ratio=0.21, num_folds=50)
@@ -166,19 +184,26 @@ def test_model_selector_no_preprocessing() -> None:
     models = ModelZoo(
         [
             Model(
-                name="svc",
-                estimator=svm.SVC(gamma="scale"),
-                parameters={"kernel": ("linear", "rbf"), "C": [1, 10]},
+                estimator=SVC(gamma="scale"),
+                parameter_grid={"kernel": ("linear", "rbf"), "C": [1, 10]},
             )
         ]
     )
 
-    mp: ModelPipeline = ModelPipeline(zoo=models, cv=my_cv)
+    model_ranker: ModelRanker = ModelRanker(zoo=models, cv=my_cv)
 
-    # train the models
-    mp.pipeline.fit(iris.data, iris.target)
+    #  load sklearn test-data and convert to pd
+    iris = datasets.load_iris()
+    test_data = pd.DataFrame(
+        data=np.c_[iris["data"], iris["target"]],
+        columns=iris["feature_names"] + ["target"],
+    )
+    test_sample: Sample = Sample(observations=test_data, target_name="target")
 
-    # instantiate the model selector
-    ms: ModelRanker = ModelRanker(model_pipeline=mp)
+    model_ranking: ModelRanking = model_ranker.run(test_sample)
 
-    print(pd.DataFrame(ms.rank_model_instances()).head())
+    print(model_ranking.summary_report())
+
+    assert (
+        model_ranking.get_rank(BEST_MODEL_RANK).score >= 0.8
+    ), "Expected a performance of at least 0.8"
