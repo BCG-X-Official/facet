@@ -19,7 +19,6 @@ from yieldengine.modeling.factory import (
     SimplePreprocessingPipelineFactory,
 )
 from yieldengine.modeling.selection import (
-    BEST_MODEL_RANK,
     Model,
     ModelRanker,
     ModelRanking,
@@ -112,7 +111,9 @@ def test_model_ranker(
     model_ranking: ModelRanking = model_ranker.run(sample=sample)
 
     assert len(model_ranking) > 0
-    assert isinstance(model_ranking.model(rank=BEST_MODEL_RANK), RankedModel)
+    assert isinstance(
+        model_ranking.model(rank=ModelRanking.BEST_MODEL_RANK), RankedModel
+    )
     assert (
         model_ranking.model(rank=0).score
         >= model_ranking.model(rank=1).score
@@ -163,5 +164,5 @@ def test_model_ranker_no_preprocessing() -> None:
     log.info(f"\n{model_ranking.summary_report()}")
 
     assert (
-        model_ranking.model(BEST_MODEL_RANK).score >= 0.8
+        model_ranking.model(ModelRanking.BEST_MODEL_RANK).score >= 0.8
     ), "Expected a performance of at least 0.8"
