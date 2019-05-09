@@ -3,12 +3,13 @@ from typing import *
 
 import numpy as np
 import pandas as pd
+from shap import KernelExplainer, TreeExplainer
+from shap.explainers.explainer import Explainer
 from sklearn.base import BaseEstimator, clone
 from sklearn.model_selection import BaseCrossValidator
 
 from yieldengine.loading.sample import Sample
 from yieldengine.modeling.factory import ModelPipelineFactory
-from shap import TreeExplainer, KernelExplainer
 
 log = logging.getLogger(__name__)
 
@@ -39,12 +40,10 @@ class ModelInspector:
         self._cv = cv
         self._sample = sample
         self._estimators_by_fold: Dict[int, BaseEstimator] = {}
-        self._shap_explainer_by_fold: Dict[
-            int, Union[TreeExplainer, KernelExplainer]
-        ] = {}
+        self._shap_explainer_by_fold: Dict[int, Explainer] = {}
 
     @staticmethod
-    def _get_shap_explainer(estimator: BaseEstimator, data: pd.DataFrame):
+    def _make_shap_explainer(estimator: BaseEstimator, data: pd.DataFrame) -> Explainer:
 
         # NOTE:
         # unfortunately, there is no convenient function in shap to determine the best
@@ -58,16 +57,11 @@ class ModelInspector:
         try:
             return TreeExplainer(model=estimator, data=data)
         except Exception as e:
-            log.warning(f"failed instantiating shap.TreeExplainer:{e:s}")
-            log.warning("attempting shap.KernelExplainer as fallback...")
-            try:
-                return KernelExplainer(model=estimator, data=data)
-            except Exception as e:
-                raise TypeError(
-                    f"{estimator.__class__} seems unsupported by "
-                    "shap.TreeExplainer and shap.KernelExplainer \n"
-                    f"Exception from Shap: {e:s}"
-                )
+            log.debug(
+                f"failed to instantiate shap.TreeExplainer:{e:s},"
+                "using shap.KernelExplainer as fallback"
+            )
+            return KernelExplainer(model=estimator, data=data)
 
     @property
     def cv(self) -> BaseCrossValidator:
@@ -126,7 +120,7 @@ class ModelInspector:
             ]
         )
 
-    def get_estimator(self, fold: int) -> BaseEstimator:
+    def estimator(self, fold: int) -> BaseEstimator:
         """
         :param fold: start index of test fold
         :return: the estimator that was used to predict the dependent vartiable of
@@ -138,13 +132,10 @@ class ModelInspector:
         return self._estimators_by_fold[fold]
 
     def shap_value_matrix(self) -> pd.DataFrame:
-        pass
-
         # 1.) Run the predictor with the sample; get resulting predictions DF
-
         # 2.) Loop over predictions, explain each  & build resulting SHAP matrix
-
         # 3.) Group SHAP matrix by observation ID and aggregate SHAP values using mean()
+        pass
 
     def feature_dependencies(self) -> pd.DataFrame:
         # calculate shap_value_matrix()
