@@ -2,7 +2,7 @@ import warnings
 
 import numpy as np
 import pandas as pd
-from lightgbm.sklearn import LGBMRegressor
+import pytest
 from sklearn import datasets
 from sklearn.compose import ColumnTransformer
 from sklearn.ensemble import AdaBoostRegressor, RandomForestRegressor
@@ -19,18 +19,20 @@ from tests.shared_fixtures import batch_table
 from yieldengine.loading.sample import Sample
 from yieldengine.modeling.selection import (
     BEST_MODEL_RANK,
+    Model,
     ModelRanker,
     ModelRanking,
     ModelZoo,
     RankedModel,
-    Model,
 )
 from yieldengine.modeling.validation import CircularCrossValidator
-import pytest
+import logging
+
+log = logging.getLogger(__name__)
 
 
 @pytest.fixture
-def model_zoo() -> ModelZoo:
+def model_zoo(LGBMRegressor) -> ModelZoo:
     return ModelZoo(
         [
             Model(
@@ -137,7 +139,7 @@ def test_model_ranker(
         m: RankedModel = model_ranking.model(r)
         assert set(m.parameters).issubset(m.estimator.get_params())
 
-    print(model_ranking)
+    log.info(f"\n{model_ranking}")
 
 
 def test_model_ranker_refit(
@@ -207,7 +209,7 @@ def test_model_ranker_no_preprocessing() -> None:
 
     model_ranking: ModelRanking = model_ranker.run(test_sample)
 
-    print(model_ranking.summary_report())
+    log.info(f"\n{model_ranking.summary_report()}")
 
     assert (
         model_ranking.model(BEST_MODEL_RANK).score >= 0.8
