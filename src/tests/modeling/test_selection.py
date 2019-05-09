@@ -118,19 +118,19 @@ def test_model_ranker(
     model_ranking: ModelRanking = model_ranker.run(sample=sample)
 
     assert len(model_ranking) > 0
-    assert isinstance(model_ranking.get_rank(BEST_MODEL_RANK), RankedModel)
+    assert isinstance(model_ranking.model(rank=BEST_MODEL_RANK), RankedModel)
     assert (
-        model_ranking.get_rank(0).score
-        >= model_ranking.get_rank(1).score
-        >= model_ranking.get_rank(2).score
-        >= model_ranking.get_rank(3).score
-        >= model_ranking.get_rank(4).score
-        >= model_ranking.get_rank(len(model_ranking) - 1).score
+        model_ranking.model(rank=0).score
+        >= model_ranking.model(rank=1).score
+        >= model_ranking.model(rank=2).score
+        >= model_ranking.model(rank=3).score
+        >= model_ranking.model(rank=4).score
+        >= model_ranking.model(rank=len(model_ranking) - 1).score
     )
 
     # check if parameters set for estimators actually match expected:
     for r in range(0, len(model_ranking)):
-        m: RankedModel = model_ranking.get_rank(r)
+        m: RankedModel = model_ranking.model(r)
         assert set(m.parameters).issubset(m.estimator.get_params())
 
     print(model_ranking)
@@ -166,6 +166,7 @@ def test_model_ranker_refit(
 
     # check we have models fitted differently:
     # 1. fetch the coefficients:
+    # noinspection PyUnresolvedReferences
     coefs = [m.estimator.coef_ for m in model_ranking]
 
     # 2. assert coefficients are different:
@@ -205,5 +206,5 @@ def test_model_ranker_no_preprocessing() -> None:
     print(model_ranking.summary_report())
 
     assert (
-        model_ranking.get_rank(BEST_MODEL_RANK).score >= 0.8
+        model_ranking.model(BEST_MODEL_RANK).score >= 0.8
     ), "Expected a performance of at least 0.8"
