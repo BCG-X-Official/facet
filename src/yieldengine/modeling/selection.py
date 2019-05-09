@@ -268,10 +268,10 @@ class ModelRanking:
 
         return "\n".join(
             [
-                f" Rank {row[0]:2d}:'"
-                f"{row[1]:{name_width}s}, "
-                f"Score: {row[2]:.2e}, "
-                f"Params: {row[3]}"
+                f" Rank {row[0]:2d}: "
+                f"{row[1]:>{name_width}s}, "
+                f"Score={row[2]:.2e}, "
+                f"Params={row[3]}"
                 for row in rows
             ]
         )
