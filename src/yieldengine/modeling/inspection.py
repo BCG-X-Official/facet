@@ -1,17 +1,18 @@
 from typing import *
 
-import pandas as pd
 import numpy as np
+import pandas as pd
 from sklearn.base import BaseEstimator, clone
 from sklearn.model_selection import BaseCrossValidator
-from sklearn.pipeline import Pipeline
 
 from yieldengine.loading.sample import Sample
+from yieldengine.modeling.factory import ModelPipelineFactory
 
 
 class ModelInspector:
     __slots__ = [
-        "_pipeline",
+        "_estimator",
+        "_pipeline_factory",
         "_cv",
         "_sample",
         "_shap_explainer",
@@ -22,13 +23,15 @@ class ModelInspector:
     F_PREDICTION = "prediction"
 
     def __init__(
-        self, pipeline: Pipeline, cv: BaseCrossValidator, sample: Sample
+        self,
+        estimator: BaseEstimator,
+        pipeline_factory: ModelPipelineFactory,
+        cv: BaseCrossValidator,
+        sample: Sample,
     ) -> None:
-        if not isinstance(
-            ModelInspector._extract_estimator_from_pipeline(pipeline), BaseEstimator
-        ):
-            raise ValueError("arg pipeline does not end with estimator")
-        self._pipeline = pipeline
+
+        self._estimator = estimator
+        self._pipeline_factory = pipeline_factory
         self._cv = cv
         self._sample = sample
         self._estimators_by_fold: Dict[int, BaseEstimator] = {}
@@ -37,14 +40,6 @@ class ModelInspector:
         # self._shap_explainer = shap.TreeExplainer(estimator) or other (is Shap
         # able to
         # determine the best explainer based on model type?)
-
-    @staticmethod
-    def _extract_estimator_from_pipeline(pipeline: Pipeline) -> BaseEstimator:
-        return pipeline.steps[-1][1]
-
-    @property
-    def pipeline(self) -> Pipeline:
-        return self._pipeline
 
     @property
     def cv(self) -> BaseCrossValidator:
@@ -82,14 +77,14 @@ class ModelInspector:
             test_sample = self.sample.select_observations(indices=test_indices)
             fold = test_indices[0]
 
-            self._estimators_by_fold[fold] = self._extract_estimator_from_pipeline(
-                clone(self.pipeline).fit(train_sample.features, train_sample.target)
-            )
+            self._estimators_by_fold[fold] = estimator = clone(self._estimator)
 
             return pd.DataFrame(
                 data={
                     self.F_FOLD_START: fold,
-                    self.F_PREDICTION: self.pipeline.predict(X=test_sample.features),
+                    self.F_PREDICTION: self._pipeline_factory.make_pipeline(estimator)
+                    .fit(X=train_sample.features, y=train_sample.target)
+                    .predict(X=test_sample.features),
                 },
                 index=test_sample.index,
             )
