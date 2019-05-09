@@ -53,8 +53,8 @@ class ModelRanker:
     into a scikit-learn pipeline.
 
     :param zoo: a model zoo
-    :param preprocessing_step: a scikit-learn Pipeline step that should be used as a \
-    preprocessor
+    :param preprocessing_transformer: a scikit-learn transformer to be used
+    as preprocessor
     :param cv: a cross validation object (i.e. CircularCrossValidator)
     :param scoring: a scorer to use when doing CV within GridSearch
 
@@ -67,31 +67,31 @@ class ModelRanker:
     def __init__(
         self,
         zoo: ModelZoo,
-        preprocessing_step: Tuple[str, BaseEstimator] = None,
+        preprocessing_transformer: BaseEstimator = None,
         cv=None,
         scoring=None,
     ) -> None:
-        self.__model_zoo = zoo
-        self.__preprocessing_step = preprocessing_step
-        self.__pipeline = None
-        self.__cv = cv
-        self.__scoring = scoring
+        self._model_zoo = zoo
+        self._preprocessing_transformer = preprocessing_transformer
+        self._pipeline = None
+        self._cv = cv
+        self._scoring = scoring
 
-        self.__searchers = searchers = self.__construct_searchers(zoo, cv, scoring)
+        self._searchers = searchers = self._construct_searchers(zoo, cv, scoring)
 
-        if preprocessing_step is not None:
-            self.__model_pipeline_factory = PreprocessingModelPipelineFactory(
-                preprocessing_step=preprocessing_step
+        if preprocessing_transformer is not None:
+            self._model_pipeline_factory = PreprocessingModelPipelineFactory(
+                preprocessing_transformer=preprocessing_transformer
             )
         else:
-            self.__model_pipeline_factory = ModelPipelineFactory()
+            self._model_pipeline_factory = ModelPipelineFactory()
 
-        self.__pipeline = self.__model_pipeline_factory.make_pipeline(
+        self._pipeline = self._model_pipeline_factory.make_pipeline(
             estimators=searchers
         )
 
     @staticmethod
-    def __construct_searchers(zoo: ModelZoo, cv, scoring) -> List[GridSearchCV]:
+    def _construct_searchers(zoo: ModelZoo, cv, scoring) -> List[GridSearchCV]:
         searchers = list()
 
         for model in zoo.models():
@@ -141,13 +141,13 @@ class ModelRanker:
         self.pipeline.fit(X=sample.features, y=sample.target)
 
         model_ranking = self.rank_models(
-            searchers=self.__searchers, ranking_scorer=ranking_scorer
+            searchers=self._searchers, ranking_scorer=ranking_scorer
         )
 
         if refit:
             # we build a new pipeline that fits all estimators (that have their params
             # already set), without CV and without GridSearching:
-            refit_pipeline = self.__model_pipeline_factory.make_pipeline(
+            refit_pipeline = self._model_pipeline_factory.make_pipeline(
                 estimators=[m.estimator for m in model_ranking]
             )
             # call fit on the new pipeline:
@@ -211,14 +211,14 @@ class ModelRanker:
 
         :return: the complete scikit-learn pipeline
         """
-        return self.__pipeline
+        return self._pipeline
 
     def searchers(self) -> Iterable[GridSearchCV]:
-        return iter(self.__searchers)
+        return iter(self._searchers)
 
     @property
     def model_zoo(self) -> ModelZoo:
-        return self.__model_zoo
+        return self._model_zoo
 
 
 class ModelRanking:

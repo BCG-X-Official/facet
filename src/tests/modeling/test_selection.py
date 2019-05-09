@@ -1,5 +1,5 @@
+import logging
 import warnings
-from typing import *
 
 import numpy as np
 import pandas as pd
@@ -27,7 +27,6 @@ from yieldengine.modeling.selection import (
     RankedModel,
 )
 from yieldengine.modeling.validation import CircularCrossValidator
-import logging
 
 log = logging.getLogger(__name__)
 
@@ -83,7 +82,7 @@ def sample(batch_table: pd.DataFrame) -> Sample:
 
 
 @pytest.fixture
-def preprocessing_step(sample: Sample) -> Tuple[str, BaseEstimator]:
+def preprocessing_transformer(sample: Sample) -> BaseEstimator:
     # define a ColumnTransformer to pre-process:
     preprocessor = ColumnTransformer(
         [
@@ -101,11 +100,14 @@ def preprocessing_step(sample: Sample) -> Tuple[str, BaseEstimator]:
     )
 
     # define a sklearn Pipeline step, containing the preprocessor defined above:
-    return "prep", preprocessor
+    return preprocessor
 
 
 def test_model_ranker(
-    batch_table: pd.DataFrame, model_zoo: ModelZoo, sample: Sample, preprocessing_step
+    batch_table: pd.DataFrame,
+    model_zoo: ModelZoo,
+    sample: Sample,
+    preprocessing_transformer: BaseEstimator,
 ) -> None:
 
     # define the circular cross validator with just 5 folds (to speed up testing)
@@ -113,7 +115,7 @@ def test_model_ranker(
 
     model_ranker: ModelRanker = ModelRanker(
         zoo=model_zoo,
-        preprocessing_step=preprocessing_step,
+        preprocessing_transformer=preprocessing_transformer,
         cv=circular_cv,
         scoring=make_scorer(mean_squared_error, greater_is_better=False),
     )
@@ -141,7 +143,7 @@ def test_model_ranker(
 
 
 def test_model_ranker_refit(
-    batch_table: pd.DataFrame, sample: Sample, preprocessing_step
+    batch_table: pd.DataFrame, sample: Sample, preprocessing_transformer: BaseEstimator
 ) -> None:
 
     # to test refit, we use only linear regression, to simply check "coef"
@@ -160,7 +162,7 @@ def test_model_ranker_refit(
     # define a model ranker
     model_ranker: ModelRanker = ModelRanker(
         zoo=model_zoo,
-        preprocessing_step=preprocessing_step,
+        preprocessing_transformer=preprocessing_transformer,
         cv=circular_cv,
         scoring=make_scorer(mean_squared_error, greater_is_better=False),
     )

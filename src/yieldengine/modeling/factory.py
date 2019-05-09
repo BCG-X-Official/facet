@@ -14,6 +14,26 @@ class ModelPipelineFactory:
     def __init__(self) -> None:
         super().__init__()
 
+    def make_pipeline(
+        self, estimators: Union[BaseEstimator, Iterable[BaseEstimator]]
+    ) -> Pipeline:
+        return Pipeline([self._make_estimator_step(estimators=estimators)])
+
+    class ModelTransformer(TransformerMixin):
+        """ helper class to view a model (Estimator/GridSearchCV) as a Transformer """
+
+        def __init__(self, model) -> None:
+            self.model = model
+
+        def fit(
+            self, *args, **kwargs
+        ) -> "PreprocessingModelPipelineFactory.ModelTransformer":
+            self.model.fit(*args, **kwargs)
+            return self
+
+        def transform(self, X, **transform_params) -> pd.DataFrame:
+            return pd.DataFrame(self.model.predict(X))
+
     def _make_estimator_step(
         self, estimators: Union[BaseEstimator, Iterable[BaseEstimator]]
     ) -> Tuple[str, BaseEstimator]:
@@ -36,57 +56,42 @@ class ModelPipelineFactory:
                 FeatureUnion(transformer_list=estimator_steps),
             )
 
-    def make_pipeline(
-        self, estimators: Union[BaseEstimator, Iterable[BaseEstimator]]
-    ) -> Pipeline:
-        return Pipeline([self._make_estimator_step(estimators=estimators)])
-
-    class ModelTransformer(TransformerMixin):
-        """ helper class to view a model (Estimator/GridSearchCV) as a Transformer """
-
-        def __init__(self, model) -> None:
-            self.model = model
-
-        def fit(
-            self, *args, **kwargs
-        ) -> "PreprocessingModelPipelineFactory.ModelTransformer":
-            self.model.fit(*args, **kwargs)
-            return self
-
-        def transform(self, X, **transform_params) -> pd.DataFrame:
-            return pd.DataFrame(self.model.predict(X))
-
 
 class PreprocessingModelPipelineFactory(ModelPipelineFactory):
-    __slots__ = ["_preprocessing", "_memory"]
+    __slots__ = ["_preprocessing_transformer", "_memory"]
+
+    STEP_PREPROCESSING = "preprocessing"
 
     def __init__(
         self,
-        preprocessing_step: Tuple[str, BaseEstimator],
+        preprocessing_transformer: BaseEstimator,
         memory: Union[str, object] = None,
     ):
         super().__init__()
         # noinspection PyUnresolvedReferences
-        if not hasattr(preprocessing_step[1], "transform") or not isinstance(
-            preprocessing_step[1].transform, Callable
+        if not hasattr(preprocessing_transformer, "transform") or not isinstance(
+            preprocessing_transformer.transform, Callable
         ):
             raise ValueError(
                 "attribute preprocessing_step needs to implement "
                 "function transform()"
             )
-        self._preprocessing = preprocessing_step
+        self._preprocessing_transformer = preprocessing_transformer
         self._memory = memory
 
     @property
-    def preprocessing_step(self) -> Tuple[str, BaseEstimator]:
-        return self._preprocessing
+    def preprocessing_transformer(self) -> BaseEstimator:
+        return self._preprocessing_transformer
 
     def make_pipeline(
         self, estimators: Union[BaseEstimator, Iterable[BaseEstimator]]
     ) -> Pipeline:
         return Pipeline(
             steps=[
-                self.preprocessing_step,
+                (
+                    PreprocessingModelPipelineFactory.STEP_PREPROCESSING,
+                    self.preprocessing_transformer,
+                ),
                 super()._make_estimator_step(estimators=estimators),
             ],
             memory=self._memory,
@@ -94,6 +99,10 @@ class PreprocessingModelPipelineFactory(ModelPipelineFactory):
 
 
 class SimplePreprocessingPipelineFactory(PreprocessingModelPipelineFactory):
+    """
+    A preprocessing pipeline that implements mean imputation and one-hot encoding
+    """
+
     def __init__(
         self,
         mean_impute: Iterable[str] = None,
@@ -124,5 +133,5 @@ class SimplePreprocessingPipelineFactory(PreprocessingModelPipelineFactory):
             )
 
         super().__init__(
-            preprocessing_step=ColumnTransformer(transformations), memory=memory
+            preprocessing_transformer=ColumnTransformer(transformations), memory=memory
         )
