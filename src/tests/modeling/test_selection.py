@@ -11,6 +11,8 @@ from sklearn.metrics import make_scorer, mean_squared_error
 from sklearn.svm import SVC, SVR
 from sklearn.tree import DecisionTreeRegressor, ExtraTreeRegressor
 
+from lightgbm.sklearn import LGBMRegressor
+
 # noinspection PyUnresolvedReferences
 from tests.shared_fixtures import batch_table
 from yieldengine.loading.sample import Sample
@@ -31,7 +33,7 @@ log = logging.getLogger(__name__)
 
 
 @pytest.fixture
-def model_zoo(LGBMRegressor) -> ModelZoo:
+def model_zoo() -> ModelZoo:
     return ModelZoo(
         [
             Model(
