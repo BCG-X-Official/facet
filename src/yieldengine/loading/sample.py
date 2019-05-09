@@ -116,11 +116,13 @@ class Sample:
         """
         return self._observations.loc[:, self._features_names]
 
-    def features_by_type(self, dtype: Union[type, str]) -> Iterable[str]:
+    def features_by_type(
+        self, dtype: Union[type, str, Sequence[Union[type, str]]]
+    ) -> Iterable[str]:
         """
-        :param dtype: dtype for filtering features. See DTYPE_* constants for common
-        type selectors
-        :return: list of all numerical features
+        :param dtype: dtype, or sequence of dtypes, for filtering features. See DTYPE_*
+        constants for common type selectors
+        :return: list of columns for filtered features
         """
         return self.features.select_dtypes(dtype).columns
 
