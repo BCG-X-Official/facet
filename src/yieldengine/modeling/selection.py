@@ -1,11 +1,12 @@
 from copy import deepcopy
 from typing import *
 
-import pandas as pd
-from sklearn.base import BaseEstimator, TransformerMixin
+from sklearn.base import BaseEstimator
 from sklearn.model_selection import GridSearchCV
-from sklearn.pipeline import FeatureUnion, Pipeline
+from sklearn.pipeline import Pipeline
+
 from yieldengine.loading.sample import Sample
+from yieldengine.modeling.factory import ModelPipelineFactory
 
 BEST_MODEL_RANK = 0
 
@@ -49,8 +50,7 @@ class ModelRanker:
     into a scikit-learn pipeline.
 
     :param zoo: a model zoo
-    :param preprocessing: a scikit-learn Pipeline that should be used as a \
-    preprocessor (optional)
+    :param pipeline_factory: a pipeline factory, e.g., to insert a preprocessor
     :param cv: a cross validation object (i.e. CircularCrossValidator)
     :param scoring: a scorer to use when doing CV within GridSearch
 
@@ -61,19 +61,24 @@ class ModelRanker:
     F_SD_TEST_SCORE = "std_test_score"
 
     def __init__(
-        self, zoo: ModelZoo, preprocessing: Pipeline = None, cv=None, scoring=None
+        self,
+        zoo: ModelZoo,
+        pipeline_factory: ModelPipelineFactory = None,
+        cv=None,
+        scoring=None,
     ) -> None:
-        self.__model_zoo = zoo
-        self.__preprocessing = preprocessing
-        self.__pipeline = None
-        self.__cv = cv
-        self.__scoring = scoring
+        self._model_zoo = zoo
+        self._pipeline = None
+        self._cv = cv
+        self._scoring = scoring
 
-        self.__searchers = searchers = self.__construct_searchers(zoo, cv, scoring)
-        self.__pipeline = self.__construct_pipeline(preprocessing, searchers)
+        self._searchers = searchers = self._construct_searchers(zoo, cv, scoring)
+        self._pipeline = (
+            ModelPipelineFactory() if pipeline_factory is None else pipeline_factory
+        ).make_pipeline(estimators=searchers)
 
     @staticmethod
-    def __construct_searchers(zoo: ModelZoo, cv, scoring) -> List[GridSearchCV]:
+    def _construct_searchers(zoo: ModelZoo, cv, scoring) -> List[GridSearchCV]:
         searchers = list()
 
         for model in zoo.models():
@@ -89,48 +94,6 @@ class ModelRanker:
             searchers.append(search)
 
         return searchers
-
-    @staticmethod
-    def __construct_pipeline(
-        preprocessing: Pipeline, estimators: List[BaseEstimator]
-    ) -> Pipeline:
-
-        # helper class to view a model (Estimator/GridSearchCV) as a Transformer:
-        class ModelTransformer(TransformerMixin):
-            def __init__(self, model) -> None:
-                self.model = model
-
-            def fit(self, *args, **kwargs) -> "ModelTransformer":
-                self.model.fit(*args, **kwargs)
-                return self
-
-            def transform(self, X, **transform_params) -> pd.DataFrame:
-                return pd.DataFrame(self.model.predict(X))
-
-        # generate a list of (name, obj) tuples for all estimators (or GridSearchCV
-        # objs.)
-        #   name: e0, e1, e2, ...
-        #   obj: the Estimator/GridSearchCV wrapped in a ModelTransformer() object,
-        #   to be feature union compliant
-        estimator_steps = [
-            (f"e{i}", ModelTransformer(estimator))
-            for i, estimator in enumerate(estimators)
-        ]
-
-        # with the above created list of ModelTransformers, create FeatureUnion()
-        # benefit: can be evaluated in parallel and pre-processing is shared
-        est_feature_union = (
-            "estimators",
-            FeatureUnion(transformer_list=estimator_steps),
-        )
-
-        # if pre-processing pipeline was given, insert it into the pipeline:
-        if preprocessing is not None:
-            return Pipeline([("preprocessing", preprocessing), est_feature_union])
-        else:
-            # if pre-processing pipeline was not given, create a minimal Pipeline
-            # with just the estimators
-            return Pipeline([est_feature_union])
 
     @staticmethod
     def default_ranking_scorer(mean_test_score, std_test_score) -> float:
@@ -149,15 +112,12 @@ class ModelRanker:
         """
         return mean_test_score - 2 * std_test_score
 
-    def run(
-        self, sample: Sample, ranking_scorer: Callable = None, refit=True
-    ) -> "ModelRanking":
+    def run(self, sample: Sample, ranking_scorer: Callable = None) -> "ModelRanking":
         """
         Execute the pipeline with the given sample and return the ranking.
 
         :param sample: sample to fit pipeline to
         :param ranking_scorer: scoring function used for ranking across models
-        :param refit: whether to refit estimators on whole dataset
 
         :return the created model ranking of type :code:`ModelRanking`
 
@@ -165,18 +125,8 @@ class ModelRanker:
         self.pipeline.fit(X=sample.features, y=sample.target)
 
         model_ranking = self.rank_models(
-            searchers=self.__searchers, ranking_scorer=ranking_scorer
+            searchers=self._searchers, ranking_scorer=ranking_scorer
         )
-
-        if refit:
-            # we build a new pipeline that fits all estimators (that have their params
-            # already set), without CV and without GridSearching:
-            refit_pipeline = self.__construct_pipeline(
-                preprocessing=self.__preprocessing,
-                estimators=[m.estimator for m in model_ranking],
-            )
-            # call fit on the new pipeline:
-            refit_pipeline.fit(X=sample.features, y=sample.target)
 
         return model_ranking
 
@@ -236,14 +186,14 @@ class ModelRanker:
 
         :return: the complete scikit-learn pipeline
         """
-        return self.__pipeline
+        return self._pipeline
 
     def searchers(self) -> Iterable[GridSearchCV]:
-        return iter(self.__searchers)
+        return iter(self._searchers)
 
     @property
     def model_zoo(self) -> ModelZoo:
-        return self.__model_zoo
+        return self._model_zoo
 
 
 class ModelRanking:
@@ -293,10 +243,10 @@ class ModelRanking:
 
         return "\n".join(
             [
-                f" Rank {row[0]:2d}:'"
-                f"{row[1]:{name_width}s}, "
-                f"Score: {row[2]:.2e}, "
-                f"Params: {row[3]}"
+                f" Rank {row[0]:2d}: "
+                f"{row[1]:>{name_width}s}, "
+                f"Score={row[2]:.2e}, "
+                f"Params={row[3]}"
                 for row in rows
             ]
         )

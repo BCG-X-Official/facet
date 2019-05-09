@@ -4,10 +4,10 @@ import numpy as np
 import pandas as pd
 from lightgbm.sklearn import LGBMClassifier
 from sklearn import datasets
-from sklearn.pipeline import make_pipeline
 from sklearn.svm import SVC
 
 from yieldengine.loading.sample import Sample
+from yieldengine.modeling.factory import ModelPipelineFactory
 from yieldengine.modeling.inspection import ModelInspector
 from yieldengine.modeling.selection import (
     BEST_MODEL_RANK,
@@ -49,7 +49,11 @@ def test_model_inspection() -> None:
         ]
     )
 
-    model_ranker: ModelRanker = ModelRanker(zoo=models, cv=test_cv)
+    pipeline_factory = ModelPipelineFactory()
+
+    model_ranker: ModelRanker = ModelRanker(
+        zoo=models, pipeline_factory=pipeline_factory, cv=test_cv
+    )
 
     #  load sklearn test-data and convert to pd
     iris = datasets.load_iris()
@@ -61,11 +65,14 @@ def test_model_inspection() -> None:
 
     model_ranking: ModelRanking = model_ranker.run(test_sample)
 
-    ranked_model: RankedModel = model_ranking.get_rank(BEST_MODEL_RANK)
+    ranked_model: RankedModel = model_ranking.model(BEST_MODEL_RANK)
 
-    pipeline = make_pipeline(ranked_model.estimator)
-
-    mi = ModelInspector(pipeline=pipeline, cv=test_cv, sample=test_sample)
+    mi = ModelInspector(
+        estimator=ranked_model.estimator,
+        pipeline_factory=pipeline_factory,
+        cv=test_cv,
+        sample=test_sample,
+    )
 
     predictions_df: pd.DataFrame = mi.predictions_for_all_samples()
 
