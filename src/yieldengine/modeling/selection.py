@@ -6,10 +6,7 @@ from sklearn.model_selection import GridSearchCV
 from sklearn.pipeline import Pipeline
 
 from yieldengine.loading.sample import Sample
-from yieldengine.modeling.factory import (
-    ModelPipelineFactory,
-    PreprocessingModelPipelineFactory,
-)
+from yieldengine.modeling.factory import ModelPipelineFactory
 
 BEST_MODEL_RANK = 0
 
@@ -53,8 +50,7 @@ class ModelRanker:
     into a scikit-learn pipeline.
 
     :param zoo: a model zoo
-    :param preprocessing_transformer: a scikit-learn transformer to be used
-    as preprocessor
+    :param pipeline_factory: a pipeline factory, e.g., to insert a preprocessor
     :param cv: a cross validation object (i.e. CircularCrossValidator)
     :param scoring: a scorer to use when doing CV within GridSearch
 
@@ -67,28 +63,19 @@ class ModelRanker:
     def __init__(
         self,
         zoo: ModelZoo,
-        preprocessing_transformer: BaseEstimator = None,
+        pipeline_factory: ModelPipelineFactory = None,
         cv=None,
         scoring=None,
     ) -> None:
         self._model_zoo = zoo
-        self._preprocessing_transformer = preprocessing_transformer
         self._pipeline = None
         self._cv = cv
         self._scoring = scoring
 
         self._searchers = searchers = self._construct_searchers(zoo, cv, scoring)
-
-        if preprocessing_transformer is not None:
-            self._model_pipeline_factory = PreprocessingModelPipelineFactory(
-                preprocessing_transformer=preprocessing_transformer
-            )
-        else:
-            self._model_pipeline_factory = ModelPipelineFactory()
-
-        self._pipeline = self._model_pipeline_factory.make_pipeline(
-            estimators=searchers
-        )
+        self._pipeline = (
+            ModelPipelineFactory() if pipeline_factory is None else pipeline_factory
+        ).make_pipeline(estimators=searchers)
 
     @staticmethod
     def _construct_searchers(zoo: ModelZoo, cv, scoring) -> List[GridSearchCV]:
@@ -125,15 +112,12 @@ class ModelRanker:
         """
         return mean_test_score - 2 * std_test_score
 
-    def run(
-        self, sample: Sample, ranking_scorer: Callable = None, refit=True
-    ) -> "ModelRanking":
+    def run(self, sample: Sample, ranking_scorer: Callable = None) -> "ModelRanking":
         """
         Execute the pipeline with the given sample and return the ranking.
 
         :param sample: sample to fit pipeline to
         :param ranking_scorer: scoring function used for ranking across models
-        :param refit: whether to refit estimators on whole dataset
 
         :return the created model ranking of type :code:`ModelRanking`
 
@@ -143,15 +127,6 @@ class ModelRanker:
         model_ranking = self.rank_models(
             searchers=self._searchers, ranking_scorer=ranking_scorer
         )
-
-        if refit:
-            # we build a new pipeline that fits all estimators (that have their params
-            # already set), without CV and without GridSearching:
-            refit_pipeline = self._model_pipeline_factory.make_pipeline(
-                estimators=[m.estimator for m in model_ranking]
-            )
-            # call fit on the new pipeline:
-            refit_pipeline.fit(X=sample.features, y=sample.target)
 
         return model_ranking
 
