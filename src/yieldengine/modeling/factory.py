@@ -16,11 +16,9 @@ class ModelPipelineFactory:
 
     def _make_estimator_step(
         self, estimators: Union[BaseEstimator, Iterable[BaseEstimator]]
-    ) -> BaseEstimator:
+    ) -> Tuple[str, BaseEstimator]:
         if isinstance(estimators, BaseEstimator):
-            # use sklearn.pipeline.make_pipeline to build a trivial pipeline
-            # containing only the given estimator
-            return estimators
+            return ModelPipelineFactory.STEP_ESTIMATORS, estimators
         else:
             # generate a list of (name, obj) tuples for all estimators
             #   name: e0, e1, e2, ...
@@ -33,19 +31,15 @@ class ModelPipelineFactory:
 
             # with the above created list of ModelTransformers, create FeatureUnion()
             # benefit: can be evaluated in parallel and pre-processing is shared
-            return FeatureUnion(transformer_list=estimator_steps)
+            return (
+                ModelPipelineFactory.STEP_ESTIMATORS,
+                FeatureUnion(transformer_list=estimator_steps),
+            )
 
     def make_pipeline(
         self, estimators: Union[BaseEstimator, Iterable[BaseEstimator]]
     ) -> Pipeline:
-        return Pipeline(
-            [
-                (
-                    ModelPipelineFactory.STEP_ESTIMATORS,
-                    self._make_estimator_step(estimators=estimators),
-                )
-            ]
-        )
+        return Pipeline([self._make_estimator_step(estimators=estimators)])
 
     class ModelTransformer(TransformerMixin):
         """ helper class to view a model (Estimator/GridSearchCV) as a Transformer """
@@ -66,11 +60,15 @@ class ModelPipelineFactory:
 class PreprocessingModelPipelineFactory(ModelPipelineFactory):
     __slots__ = ["_preprocessing", "_memory"]
 
-    def __init__(self, preprocessing_step: BaseEstimator, memory: bool = True):
+    def __init__(
+        self,
+        preprocessing_step: Tuple[str, BaseEstimator],
+        memory: Union[str, object] = None,
+    ):
         super().__init__()
         # noinspection PyUnresolvedReferences
-        if not hasattr(preprocessing_step, "transform") or not isinstance(
-            preprocessing_step.transform, Callable
+        if not hasattr(preprocessing_step[1], "transform") or not isinstance(
+            preprocessing_step[1].transform, Callable
         ):
             raise ValueError(
                 "attribute preprocessing_step needs to implement "
@@ -80,22 +78,18 @@ class PreprocessingModelPipelineFactory(ModelPipelineFactory):
         self._memory = memory
 
     @property
-    def preprocessing_step(self) -> BaseEstimator:
+    def preprocessing_step(self) -> Tuple[str, BaseEstimator]:
         return self._preprocessing
-
-    @property
-    def memory(self) -> bool:
-        return self._memory
 
     def make_pipeline(
         self, estimators: Union[BaseEstimator, Iterable[BaseEstimator]]
     ) -> Pipeline:
         return Pipeline(
-            [
+            steps=[
                 self.preprocessing_step,
                 super()._make_estimator_step(estimators=estimators),
             ],
-            memory=f"preprocessing<{id(self)}>" if self.memory else None,
+            memory=self._memory,
         )
 
 
@@ -104,12 +98,13 @@ class SimplePreprocessingPipelineFactory(PreprocessingModelPipelineFactory):
         self,
         mean_impute: Iterable[str] = None,
         one_hot_encode: Iterable[str] = None,
-        memory: bool = True,
+        memory: Union[str, object] = None,
     ):
         """
 
         :param mean_impute: list of columns to impute or None
         :param one_hot_encode: list of (categorical) columns to encode or None
+        :param memory: string or object to be passed to the Pipeline's memory parameter
         """
 
         transformations: List[Tuple[str, TransformerMixin, Iterable[str]]] = list()
