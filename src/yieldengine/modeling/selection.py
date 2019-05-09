@@ -1,14 +1,11 @@
-from copy import deepcopy
 from typing import *
 
-from sklearn.base import BaseEstimator
-from sklearn.model_selection import GridSearchCV
+from sklearn.base import BaseEstimator, clone
+from sklearn.model_selection import BaseCrossValidator, GridSearchCV
 from sklearn.pipeline import Pipeline
 
 from yieldengine.loading.sample import Sample
 from yieldengine.modeling.factory import ModelPipelineFactory
-
-BEST_MODEL_RANK = 0
 
 
 class Model(NamedTuple):
@@ -53,8 +50,9 @@ class ModelRanker:
     :param pipeline_factory: a pipeline factory, e.g., to insert a preprocessor
     :param cv: a cross validation object (i.e. CircularCrossValidator)
     :param scoring: a scorer to use when doing CV within GridSearch
-
     """
+
+    __slots__ = ["_model_zoo", "_scoring", "_cv", "_searchers", "_pipeline"]
 
     F_PARAMETERS = "params"
     F_MEAN_TEST_SCORE = "mean_test_score"
@@ -64,25 +62,16 @@ class ModelRanker:
         self,
         zoo: ModelZoo,
         pipeline_factory: ModelPipelineFactory = None,
-        cv=None,
+        cv: BaseCrossValidator = None,
         scoring=None,
     ) -> None:
         self._model_zoo = zoo
-        self._pipeline = None
         self._cv = cv
         self._scoring = scoring
 
-        self._searchers = searchers = self._construct_searchers(zoo, cv, scoring)
-        self._pipeline = (
-            ModelPipelineFactory() if pipeline_factory is None else pipeline_factory
-        ).make_pipeline(estimators=searchers)
-
-    @staticmethod
-    def _construct_searchers(zoo: ModelZoo, cv, scoring) -> List[GridSearchCV]:
-        searchers = list()
-
-        for model in zoo.models():
-            search = GridSearchCV(
+        # construct searchers
+        self._searchers = searchers = [
+            GridSearchCV(
                 estimator=model.estimator,
                 cv=cv,
                 param_grid=model.parameter_grid,
@@ -91,12 +80,15 @@ class ModelRanker:
                 n_jobs=-1,
                 refit=False,
             )
-            searchers.append(search)
+            for model in zoo.models()
+        ]
 
-        return searchers
+        self._pipeline = (
+            ModelPipelineFactory() if pipeline_factory is None else pipeline_factory
+        ).make_pipeline(estimators=searchers)
 
     @staticmethod
-    def default_ranking_scorer(mean_test_score, std_test_score) -> float:
+    def default_ranking_scorer(mean_test_score: float, std_test_score: float) -> float:
         """
         The default scoring function to evaluate on top of GridSearchCV test scores,
         given by :code:`GridSearchCV.cv_results_`.
@@ -112,72 +104,54 @@ class ModelRanker:
         """
         return mean_test_score - 2 * std_test_score
 
-    def run(self, sample: Sample, ranking_scorer: Callable = None) -> "ModelRanking":
+    def run(
+        self, sample: Sample, ranking_scorer: Callable[[float, float], float] = None
+    ) -> "ModelRanking":
         """
         Execute the pipeline with the given sample and return the ranking.
 
         :param sample: sample to fit pipeline to
-        :param ranking_scorer: scoring function used for ranking across models
+        :param ranking_scorer: scoring function used for ranking across models,
+        taking mean and standard deviation of the ranking scores and returning the
+        overall ranking score (default: ModelRanking.default_ranking_scorer)
 
         :return the created model ranking of type :code:`ModelRanking`
 
         """
         self.pipeline.fit(X=sample.features, y=sample.target)
 
-        model_ranking = self.rank_models(
-            searchers=self._searchers, ranking_scorer=ranking_scorer
-        )
-
-        return model_ranking
-
-    @staticmethod
-    def rank_models(
-        searchers: List[GridSearchCV], ranking_scorer: Callable
-    ) -> "ModelRanking":
-        """
-
-        :param searchers: GridSearchCV instances across which to rank
-        :param ranking_scorer: (optional) a custom scoring function to score across the
-        model zoo. The default is :code:`ModelRanker.default_ranking_scorer`
-        :return: an instance of ModelRanking that wraps the results
-        """
-
         if ranking_scorer is None:
             ranking_scorer = ModelRanker.default_ranking_scorer
 
         # consolidate results of all searchers into "results"
-        results = list()
-
-        for search in searchers:
-            search_results = [
-                (
-                    # note: we have to copy the estimator, to ensure it will actually
-                    # retain the parameters we set for each row in separate objects..
-                    deepcopy(search.estimator.set_params(**params)),
-                    params,
-                    # compute the final score using function defined above:
-                    ranking_scorer(mean_test_score, std_test_score),
-                )
-                # we read and iterate over these 3 attributes from cv_results_:
-                for (params, mean_test_score, std_test_score) in zip(
-                    search.cv_results_[ModelRanker.F_PARAMETERS],
-                    search.cv_results_[ModelRanker.F_MEAN_TEST_SCORE],
-                    search.cv_results_[ModelRanker.F_SD_TEST_SCORE],
-                )
-            ]
-
-            results.extend(search_results)
-
-        # sort the results list by value at index 2 -> computed final score
-        results.sort(key=lambda r: r[2] * -1)
-
-        # create ranking by assigning rank values and creating "RankedModel" types
-        ranking = [
-            RankedModel(estimator=r[0], parameters=r[1], score=r[2], rank=i)
-            for i, r in enumerate(results)
+        search_results = [
+            (
+                # note: we have to copy the estimator, to ensure it will actually
+                # retain the parameters we set for each row in separate objects..
+                clone(search.estimator).set_params(**params),
+                params,
+                # compute the final score using function defined above:
+                ranking_scorer(mean_test_score, std_test_score),
+            )
+            for search in self._searchers
+            # we read and iterate over these 3 attributes from cv_results_:
+            for (params, mean_test_score, std_test_score) in zip(
+                search.cv_results_[ModelRanker.F_PARAMETERS],
+                search.cv_results_[ModelRanker.F_MEAN_TEST_SCORE],
+                search.cv_results_[ModelRanker.F_SD_TEST_SCORE],
+            )
         ]
 
-        return ModelRanking(ranking=ranking)
+        # sort the results list by value at index 2 -> computed final score
+        search_results.sort(key=lambda r: -r[2])
+
+        # create ranking by assigning rank values and creating "RankedModel" types
+        return ModelRanking(
+            ranking=[
+                RankedModel(estimator=r[0], parameters=r[1], score=r[2], rank=i)
+                for i, r in enumerate(search_results)
+            ]
+        )
 
     @property
     def pipeline(self) -> Pipeline:
@@ -197,9 +171,10 @@ class ModelRanker:
 
 
 class ModelRanking:
+    BEST_MODEL_RANK = 0
+
     """
     Utility class that wraps a list of RankedModel
-
     """
 
     def __init__(self, ranking: List[RankedModel]):
@@ -210,7 +185,7 @@ class ModelRanking:
         """
         self.__ranking = ranking
 
-    def model(self, rank: int = BEST_MODEL_RANK) -> RankedModel:
+    def model(self, rank: int) -> RankedModel:
         """
         Returns the model instance at a given rank.
 
