@@ -9,20 +9,25 @@ class Sample:
     """
     Utility class to wrap a Pandas DataFrame in order to easily access its
 
-        - features (a DataFrame without the target column) or target (a Series) column(s)
-        - feature columns by type: numerical or categorical
+        - features as a dataframe
+        - target as a series
+        - feature columns by type, e.g., numbers or objects
 
     via object properties.
 
-    Neither the features nor the target property is allowed to be changed after
-    initialization.
-
     An added benefit is through several checks:
 
-        - features & target columns need to be defined explicitly at Sample().__init__() time
+        - features & target columns need to be defined explicitly
         - target column is not allowed as part of the features
 
     """
+
+    DTYPE_NUMERICAL = np.number
+    DTYPE_OBJECT = object
+    DTYPE_DATETIME = np.datetime64
+    DTYPE_TIMEDELTA = np.timedelta64
+    DTYPE_CATEGORICAL = "category"
+    DTYPE_DATETIME_TZ = "datetimetz"
 
     __slots__ = ["_observations", "_target_name", "_features_names"]
 
@@ -36,7 +41,8 @@ class Sample:
         Construct a Sample object.
 
         :param observations: a Pandas DataFrame
-        :param target_name: string of column name that constitutes as the target variable
+        :param target_name: string of column name that constitutes as the target
+        variable
         :param feature_names: iterable of column names that constitute as feature
         variables or \
         None, in which case all non-target columns are features
@@ -99,38 +105,24 @@ class Sample:
     @property
     def target(self) -> pd.Series:
         """
-        Property of Sample that returns a pd.Series of the target column.
-
-        :return: pd.Series
+        :return: the target column as a series
         """
         return self._observations.loc[:, self._target_name]
 
     @property
     def features(self) -> pd.DataFrame:
         """
-        Property of Sample that returns a DataFrame selected on its feature columns.
-
-        :return: pd.DataFrame
+        :return: all feature columns as a data frame
         """
         return self._observations.loc[:, self._features_names]
 
-    @property
-    def features_numerical(self) -> List[str]:
+    def features_by_type(self, dtype: Union[type, str]) -> Iterable[str]:
         """
-        Property of Sample that returns a list of all numerical features.
-
-        :return: List[str]
+        :param dtype: dtype for filtering features. See DTYPE_* constants for common
+        type selectors
+        :return: list of all numerical features
         """
-        return list(self.features.select_dtypes(np.number).columns)
-
-    @property
-    def features_categorical(self) -> List[str]:
-        """
-        Property of Sample that returns a list of all categorical features.
-
-        :return: List[str]
-        """
-        return list(self.features.select_dtypes(np.object).columns)
+        return self.features.select_dtypes(dtype).columns
 
     def select_observations(self, indices: Iterable[int]) -> "Sample":
         """

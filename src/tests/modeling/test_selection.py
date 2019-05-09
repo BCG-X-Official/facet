@@ -85,11 +85,15 @@ def preprocessing_step(sample: Sample) -> Tuple[str, BaseEstimator]:
     # define a ColumnTransformer to pre-process:
     preprocessor = ColumnTransformer(
         [
-            ("numerical", SimpleImputer(strategy="mean"), sample.features_numerical),
+            (
+                "numerical",
+                SimpleImputer(strategy="mean"),
+                sample.features_by_type(dtype=sample.DTYPE_NUMERICAL),
+            ),
             (
                 "categorical",
                 OneHotEncoder(sparse=False, handle_unknown="ignore"),
-                sample.features_categorical,
+                sample.features_by_type(dtype=sample.DTYPE_OBJECT),
             ),
         ]
     )
