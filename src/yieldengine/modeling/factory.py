@@ -5,7 +5,7 @@ from sklearn.pipeline import Pipeline
 from typing import *
 
 
-class ModelFactory(ABC):
+class ModelPipelineFactory(ABC):
     def __init__(self):
         pass
 
@@ -20,7 +20,7 @@ class ModelFactory(ABC):
         raise NotImplementedError("call to abstract make_pipeline()")
 
 
-class PreprocessedModelFactory(ModelFactory):
+class PreprocessedModelPipelineFactory(ModelPipelineFactory):
     def __init__(self, preprocessing: Pipeline):
         super().__init__()
         self._preprocessing = preprocessing
