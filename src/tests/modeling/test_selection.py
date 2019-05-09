@@ -5,19 +5,19 @@ import numpy as np
 import pandas as pd
 import pytest
 from sklearn import datasets
-from sklearn.base import BaseEstimator
-from sklearn.compose import ColumnTransformer
 from sklearn.ensemble import AdaBoostRegressor, RandomForestRegressor
-from sklearn.impute import SimpleImputer
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import make_scorer, mean_squared_error
-from sklearn.preprocessing import OneHotEncoder
 from sklearn.svm import SVC, SVR
 from sklearn.tree import DecisionTreeRegressor, ExtraTreeRegressor
 
 # noinspection PyUnresolvedReferences
 from tests.shared_fixtures import batch_table
 from yieldengine.loading.sample import Sample
+from yieldengine.modeling.factory import (
+    ModelPipelineFactory,
+    SimplePreprocessingPipelineFactory,
+)
 from yieldengine.modeling.selection import (
     BEST_MODEL_RANK,
     Model,
@@ -82,32 +82,20 @@ def sample(batch_table: pd.DataFrame) -> Sample:
 
 
 @pytest.fixture
-def preprocessing_transformer(sample: Sample) -> BaseEstimator:
+def preprocessing_pipeline_factory(sample: Sample) -> ModelPipelineFactory:
     # define a ColumnTransformer to pre-process:
-    preprocessor = ColumnTransformer(
-        [
-            (
-                "numerical",
-                SimpleImputer(strategy="mean"),
-                sample.features_by_type(dtype=sample.DTYPE_NUMERICAL),
-            ),
-            (
-                "categorical",
-                OneHotEncoder(sparse=False, handle_unknown="ignore"),
-                sample.features_by_type(dtype=sample.DTYPE_OBJECT),
-            ),
-        ]
-    )
-
     # define a sklearn Pipeline step, containing the preprocessor defined above:
-    return preprocessor
+    return SimplePreprocessingPipelineFactory(
+        mean_impute=sample.features_by_type(dtype=sample.DTYPE_NUMERICAL),
+        one_hot_encode=sample.features_by_type(dtype=sample.DTYPE_OBJECT),
+    )
 
 
 def test_model_ranker(
     batch_table: pd.DataFrame,
     model_zoo: ModelZoo,
     sample: Sample,
-    preprocessing_transformer: BaseEstimator,
+    preprocessing_pipeline_factory: ModelPipelineFactory,
 ) -> None:
 
     # define the circular cross validator with just 5 folds (to speed up testing)
@@ -115,7 +103,7 @@ def test_model_ranker(
 
     model_ranker: ModelRanker = ModelRanker(
         zoo=model_zoo,
-        preprocessing_transformer=preprocessing_transformer,
+        pipeline_factory=preprocessing_pipeline_factory,
         cv=circular_cv,
         scoring=make_scorer(mean_squared_error, greater_is_better=False),
     )
@@ -140,43 +128,6 @@ def test_model_ranker(
         assert set(m.parameters).issubset(m.estimator.get_params())
 
     log.info(f"\n{model_ranking}")
-
-
-def test_model_ranker_refit(
-    batch_table: pd.DataFrame, sample: Sample, preprocessing_transformer: BaseEstimator
-) -> None:
-
-    # to test refit, we use only linear regression, to simply check "coef"
-    model_zoo = ModelZoo(
-        [
-            Model(
-                estimator=LinearRegression(),
-                parameter_grid={"normalize": (False, True)},
-            )
-        ]
-    )
-
-    # define the circular cross validator with just 5 folds (to speed up testing)
-    circular_cv = CircularCrossValidator(test_ratio=0.20, num_folds=5)
-
-    # define a model ranker
-    model_ranker: ModelRanker = ModelRanker(
-        zoo=model_zoo,
-        preprocessing_transformer=preprocessing_transformer,
-        cv=circular_cv,
-        scoring=make_scorer(mean_squared_error, greater_is_better=False),
-    )
-
-    # run the ModelRanker to retrieve a ranking, using refit=True
-    model_ranking: ModelRanking = model_ranker.run(sample=sample, refit=True)
-
-    # check we have models fitted differently:
-    # 1. fetch the coefficients:
-    # noinspection PyUnresolvedReferences
-    coefs = [m.estimator.coef_ for m in model_ranking]
-
-    # 2. assert coefficients are different:
-    assert not np.array_equal(coefs[0], coefs[1])
 
 
 def test_model_ranker_no_preprocessing() -> None:
