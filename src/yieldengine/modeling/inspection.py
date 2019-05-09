@@ -1,3 +1,4 @@
+import logging
 from typing import *
 
 import numpy as np
@@ -7,6 +8,9 @@ from sklearn.model_selection import BaseCrossValidator
 
 from yieldengine.loading.sample import Sample
 from yieldengine.modeling.factory import ModelPipelineFactory
+from shap import TreeExplainer, KernelExplainer
+
+log = logging.getLogger(__name__)
 
 
 class ModelInspector:
@@ -15,7 +19,7 @@ class ModelInspector:
         "_pipeline_factory",
         "_cv",
         "_sample",
-        "_shap_explainer",
+        "_shap_explainer_by_fold",
         "_estimators_by_fold",
     ]
 
@@ -35,11 +39,35 @@ class ModelInspector:
         self._cv = cv
         self._sample = sample
         self._estimators_by_fold: Dict[int, BaseEstimator] = {}
+        self._shap_explainer_by_fold: Dict[
+            int, Union[TreeExplainer, KernelExplainer]
+        ] = {}
 
-        # init the Shap explainer:
-        # self._shap_explainer = shap.TreeExplainer(estimator) or other (is Shap
-        # able to
-        # determine the best explainer based on model type?)
+    @staticmethod
+    def _get_shap_explainer(estimator: BaseEstimator, data: pd.DataFrame):
+
+        # NOTE:
+        # unfortunately, there is no convenient function in shap to determine the best
+        # explainer method. hence we use this try/except approach.
+
+        # further there is no consistent "Modeltype X is unsupported" exception raised,
+        # which is why we need to always assume the error resulted from this cause -
+        # we should not attempt to filter the exception type or message given that it is
+        # currently inconsistent
+
+        try:
+            return TreeExplainer(model=estimator, data=data)
+        except Exception as e:
+            log.warning(f"failed instantiating shap.TreeExplainer:{e:s}")
+            log.warning("attempting shap.KernelExplainer as fallback...")
+            try:
+                return KernelExplainer(model=estimator, data=data)
+            except Exception as e:
+                raise TypeError(
+                    f"{estimator.__class__} seems unsupported by "
+                    "shap.TreeExplainer and shap.KernelExplainer \n"
+                    f"Exception from Shap: {e:s}"
+                )
 
     @property
     def cv(self) -> BaseCrossValidator:
