@@ -21,10 +21,15 @@ class ModelPipelineFactory(ABC):
 
 
 class SimpleModelPipelineFactory(ModelPipelineFactory):
-    def __init__(self, impute: bool, encode_categorical: bool):
+    def __init__(self, impute: Iterable[str] = None, encode: Iterable[str] = None):
+        """
+
+        :param impute: list of columns to impute or None
+        :param encode: list of (categorical) columns to encode or None
+        """
         super().__init__()
         self._impute = impute
-        self._encode_categorical = encode_categorical
+        self._encode = encode
 
     def make_pipeline(self, estimator: BaseEstimator) -> Pipeline:
         pass
