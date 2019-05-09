@@ -10,7 +10,6 @@ from yieldengine.loading.sample import Sample
 from yieldengine.modeling.factory import ModelPipelineFactory
 from yieldengine.modeling.inspection import ModelInspector
 from yieldengine.modeling.selection import (
-    BEST_MODEL_RANK,
     Model,
     ModelRanker,
     ModelRanking,
@@ -65,7 +64,7 @@ def test_model_inspection() -> None:
 
     model_ranking: ModelRanking = model_ranker.run(test_sample)
 
-    ranked_model: RankedModel = model_ranking.model(BEST_MODEL_RANK)
+    ranked_model: RankedModel = model_ranking.model(rank=ModelRanking.BEST_MODEL_RANK)
 
     mi = ModelInspector(
         estimator=ranked_model.estimator,
