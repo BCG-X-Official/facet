@@ -61,7 +61,7 @@ def test_model_inspection() -> None:
 
     model_ranking: ModelRanking = model_ranker.run(test_sample)
 
-    ranked_model: RankedModel = model_ranking.get_rank(BEST_MODEL_RANK)
+    ranked_model: RankedModel = model_ranking.model(BEST_MODEL_RANK)
 
     pipeline = make_pipeline(ranked_model.estimator)
 
