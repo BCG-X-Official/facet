@@ -39,29 +39,6 @@ class ModelZoo:
         return len(self._models)
 
 
-class Scoring:
-    """
-    Class for scoring related logic.
-    """
-
-    @staticmethod
-    def default_ranking_scorer(mean_test_score, std_test_score) -> float:
-        """
-        The default scoring function to evaluate on top of GridSearchCV test scores,
-        given by :code:`GridSearchCV.cv_results_`.
-
-        Its output is used for ranking globally across the model zoo.
-
-        :param mean_test_score: the mean test score across all folds for a (estimator,\
-        parameters) combination
-        :param std_test_score: the standard deviation of test scores across all folds \
-        for a (estimator, parameters) combination
-
-        :return: final score for a (estimator, parameters) combination
-        """
-        return mean_test_score - 2 * std_test_score
-
-
 class ModelRanker:
     """
     Turns a model zoo along with
@@ -78,6 +55,10 @@ class ModelRanker:
     :param scoring: a scorer to use when doing CV within GridSearch
 
     """
+
+    F_PARAMETERS = "params"
+    F_MEAN_TEST_SCORE = "mean_test_score"
+    F_SD_TEST_SCORE = "std_test_score"
 
     def __init__(
         self, zoo: ModelZoo, preprocessing: Pipeline = None, cv=None, scoring=None
@@ -151,11 +132,25 @@ class ModelRanker:
             # with just the estimators
             return Pipeline([est_feature_union])
 
+    @staticmethod
+    def default_ranking_scorer(mean_test_score, std_test_score) -> float:
+        """
+        The default scoring function to evaluate on top of GridSearchCV test scores,
+        given by :code:`GridSearchCV.cv_results_`.
+
+        Its output is used for ranking globally across the model zoo.
+
+        :param mean_test_score: the mean test score across all folds for a (estimator,\
+        parameters) combination
+        :param std_test_score: the standard deviation of test scores across all folds \
+        for a (estimator, parameters) combination
+
+        :return: final score for a (estimator, parameters) combination
+        """
+        return mean_test_score - 2 * std_test_score
+
     def run(
-        self,
-        sample: Sample,
-        ranking_scorer: Callable = Scoring.default_ranking_scorer,
-        refit=True,
+        self, sample: Sample, ranking_scorer: Callable = None, refit=True
     ) -> "ModelRanking":
         """
         Execute the pipeline with the given sample and return the ranking.
@@ -169,7 +164,9 @@ class ModelRanker:
         """
         self.pipeline.fit(X=sample.features, y=sample.target)
 
-        model_ranking = ModelRanking(ranker=self, ranking_scorer=ranking_scorer)
+        model_ranking = self.rank_models(
+            searchers=self.__searchers, ranking_scorer=ranking_scorer
+        )
 
         if refit:
             # we build a new pipeline that fits all estimators (that have their params
@@ -182,6 +179,55 @@ class ModelRanker:
             refit_pipeline.fit(X=sample.features, y=sample.target)
 
         return model_ranking
+
+    @staticmethod
+    def rank_models(
+        searchers: List[GridSearchCV], ranking_scorer: Callable
+    ) -> "ModelRanking":
+        """
+
+        :param searchers: GridSearchCV instances across which to rank
+        :param ranking_scorer: (optional) a custom scoring function to score across the
+        model zoo. The default is :code:`ModelRanker.default_ranking_scorer`
+        :return: an instance of ModelRanking that wraps the results
+        """
+
+        if ranking_scorer is None:
+            ranking_scorer = ModelRanker.default_ranking_scorer
+
+        # consolidate results of all searchers into "results"
+        results = list()
+
+        for search in searchers:
+            search_results = [
+                (
+                    # note: we have to copy the estimator, to ensure it will actually
+                    # retain the parameters we set for each row in separate objects..
+                    deepcopy(search.estimator.set_params(**params)),
+                    params,
+                    # compute the final score using function defined above:
+                    ranking_scorer(mean_test_score, std_test_score),
+                )
+                # we read and iterate over these 3 attributes from cv_results_:
+                for (params, mean_test_score, std_test_score) in zip(
+                    search.cv_results_[ModelRanker.F_PARAMETERS],
+                    search.cv_results_[ModelRanker.F_MEAN_TEST_SCORE],
+                    search.cv_results_[ModelRanker.F_SD_TEST_SCORE],
+                )
+            ]
+
+            results.extend(search_results)
+
+        # sort the results list by value at index 2 -> computed final score
+        results.sort(key=lambda r: r[2] * -1)
+
+        # create ranking by assigning rank values and creating "RankedModel" types
+        ranking = [
+            RankedModel(estimator=r[0], parameters=r[1], score=r[2], rank=i)
+            for i, r in enumerate(results)
+        ]
+
+        return ModelRanking(ranking=ranking)
 
     @property
     def pipeline(self) -> Pipeline:
@@ -202,64 +248,17 @@ class ModelRanker:
 
 class ModelRanking:
     """
-    Turns the output of a ModelRanker into a ranked list of model instances, which we
-    denote as the combination of (estimator, parameters). Each of these are captured
-    using the `RankedModel` class.
+    Utility class that wraps a list of RankedModel
 
     """
 
-    def __init__(
-        self,
-        ranker: ModelRanker,
-        ranking_scorer: Callable = Scoring.default_ranking_scorer,
-    ):
+    def __init__(self, ranking: List[RankedModel]):
         """
-        Turn the output of a ModelRanker into a ModelRanking
+        Utility class that wraps a list of RankedModel
 
-        :param ranker: a ModelRanker that was executed
-        :param ranking_scorer: (optional) a custom scoring function to score across the
-        model zoo. The default is :code:`Scoring.default_ranking_scorer`
+        :param ranking: the list of RankedModel instances this ranking is based on
         """
-        self.__ranking = self.__construct_ranking(ranker, ranking_scorer)
-
-    @staticmethod
-    def __construct_ranking(
-        ranker: ModelRanker, ranking_scorer: Callable
-    ) -> List[RankedModel]:
-
-        # consolidate results of all searchers into "results"
-        results = list()
-
-        for search in ranker.searchers():
-            search_results = [
-                (
-                    # note: we have to copy the estimator, to ensure it will actually
-                    # retain the parameters we set for each row in separate objects..
-                    deepcopy(search.estimator.set_params(**params)),
-                    params,
-                    # compute the final score using function defined above:
-                    ranking_scorer(mean_test_score, std_test_score),
-                )
-                # we read and iterate over these 3 attributes from cv_results_:
-                for (params, mean_test_score, std_test_score) in zip(
-                    search.cv_results_["params"],
-                    search.cv_results_["mean_test_score"],
-                    search.cv_results_["std_test_score"],
-                )
-            ]
-
-            results.extend(search_results)
-
-        # sort the results list by value at index 2 -> computed final score
-        results.sort(key=lambda r: r[2] * -1)
-
-        # create ranking by assigning rank values and creating "RankedModel" types
-        ranking = [
-            RankedModel(estimator=r[0], parameters=r[1], score=r[2], rank=i)
-            for i, r in enumerate(results)
-        ]
-
-        return ranking
+        self.__ranking = ranking
 
     def get_rank(self, rank: int = BEST_MODEL_RANK) -> RankedModel:
         """
@@ -271,7 +270,7 @@ class ModelRanking:
         """
         return self.__ranking[rank]
 
-    def summary_string(self, limit: int = 25) -> str:
+    def summary_report(self, limit: int = 25) -> str:
         """
         Generates a summary string of the best model instances
 
@@ -279,12 +278,26 @@ class ModelRanking:
 
         :return: str
         """
+
+        rows = [
+            (
+                ranked_model.rank,
+                ranked_model.estimator.__class__.__name__,
+                ranked_model.score,
+                ranked_model.parameters,
+            )
+            for ranked_model in self.__ranking[:limit]
+        ]
+
+        name_width = max([len(row[1]) for row in rows])
+
         return "\n".join(
             [
-                f" Rank {mr.rank + 1}: {mr.estimator.__class__}, "
-                f"Score: {mr.score}, Params: {mr.parameters}"
-                for mr in self.__ranking
-                if mr.rank < limit
+                f" Rank {row[0]:2d}:'"
+                f"{row[1]:{name_width}s}, "
+                f"Score: {row[2]:.2e}, "
+                f"Params: {row[3]}"
+                for row in rows
             ]
         )
 
@@ -292,7 +305,7 @@ class ModelRanking:
         return len(self.__ranking)
 
     def __str__(self) -> str:
-        return self.summary_string()
+        return self.summary_report()
 
     def __iter__(self) -> Iterable[RankedModel]:
         return iter(self.__ranking)
