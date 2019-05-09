@@ -4,7 +4,6 @@ from typing import *
 import numpy as np
 import pandas as pd
 import pytest
-from lightgbm.sklearn import LGBMRegressor
 from sklearn import datasets
 from sklearn.base import BaseEstimator
 from sklearn.compose import ColumnTransformer
@@ -28,10 +27,13 @@ from yieldengine.modeling.selection import (
     RankedModel,
 )
 from yieldengine.modeling.validation import CircularCrossValidator
+import logging
+
+log = logging.getLogger(__name__)
 
 
 @pytest.fixture
-def model_zoo() -> ModelZoo:
+def model_zoo(LGBMRegressor) -> ModelZoo:
     return ModelZoo(
         [
             Model(
@@ -135,7 +137,7 @@ def test_model_ranker(
         m: RankedModel = model_ranking.model(r)
         assert set(m.parameters).issubset(m.estimator.get_params())
 
-    print(model_ranking)
+    log.info(f"\n{model_ranking}")
 
 
 def test_model_ranker_refit(
@@ -205,7 +207,7 @@ def test_model_ranker_no_preprocessing() -> None:
 
     model_ranking: ModelRanking = model_ranker.run(test_sample)
 
-    print(model_ranking.summary_report())
+    log.info(f"\n{model_ranking.summary_report()}")
 
     assert (
         model_ranking.model(BEST_MODEL_RANK).score >= 0.8
