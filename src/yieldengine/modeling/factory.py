@@ -20,6 +20,21 @@ class ModelPipelineFactory(ABC):
         raise NotImplementedError("call to abstract make_pipeline()")
 
 
+class SimpleModelPipelineFactory(ModelPipelineFactory):
+    def __init__(self, impute: bool, encode_categorical: bool):
+        super().__init__()
+        self._impute = impute
+        self._encode_categorical = encode_categorical
+
+    def make_pipeline(self, estimator: BaseEstimator) -> Pipeline:
+        pass
+
+    def make_multi_estimator_pipeline(
+        self, estimators: Iterable[BaseEstimator]
+    ) -> Pipeline:
+        pass
+
+
 class PreprocessingModelPipelineFactory(ModelPipelineFactory):
     def __init__(self, preprocessing: Pipeline):
         super().__init__()
