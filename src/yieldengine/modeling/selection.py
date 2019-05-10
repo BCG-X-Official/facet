@@ -16,8 +16,9 @@ class Model(NamedTuple):
 class RankedModel(NamedTuple):
     estimator: BaseEstimator
     parameters: Dict[str, Any]
-    score: float
-    rank: int
+    test_score_mean: float
+    test_score_std: float
+    ranking_score: float
 
 
 class ModelRanker:
@@ -108,32 +109,28 @@ class ModelRanker:
 
         # consolidate results of all searchers into "results"
         search_results = [
-            (
+            RankedModel(
                 # note: we have to copy the estimator, to ensure it will actually
                 # retain the parameters we set for each row in separate objects..
-                clone(search.estimator).set_params(**params),
-                params,
+                estimator=clone(search.estimator).set_params(**params),
+                parameters=params,
+                test_score_mean=test_score_mean,
+                test_score_std=test_score_std,
                 # compute the final score using function defined above:
-                ranking_scorer(mean_test_score, std_test_score),
+                ranking_score=ranking_scorer(test_score_mean, test_score_std),
             )
             for search in self._searchers
             # we read and iterate over these 3 attributes from cv_results_:
-            for (params, mean_test_score, std_test_score) in zip(
+            for params, test_score_mean, test_score_std in zip(
                 search.cv_results_[ModelRanker.F_PARAMETERS],
                 search.cv_results_[ModelRanker.F_MEAN_TEST_SCORE],
                 search.cv_results_[ModelRanker.F_SD_TEST_SCORE],
             )
         ]
 
-        # sort the results list by value at index 2 -> computed final score
-        search_results.sort(key=lambda r: -r[2])
-
         # create ranking by assigning rank values and creating "RankedModel" types
         return ModelRanking(
-            ranking=[
-                RankedModel(estimator=r[0], parameters=r[1], score=r[2], rank=i)
-                for i, r in enumerate(search_results)
-            ]
+            ranking=sorted(search_results, key=lambda result: -result.ranking_score)
         )
 
     @property
@@ -188,12 +185,12 @@ class ModelRanking:
 
         rows = [
             (
-                ranked_model.rank,
+                rank + 1,
                 ranked_model.estimator.__class__.__name__,
-                ranked_model.score,
+                ranked_model.ranking_score,
                 ranked_model.parameters,
             )
-            for ranked_model in self.__ranking[:limit]
+            for rank, ranked_model in enumerate(self.__ranking[:limit])
         ]
 
         name_width = max([len(row[1]) for row in rows])
