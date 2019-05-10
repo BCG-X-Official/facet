@@ -9,13 +9,7 @@ from sklearn.svm import SVC
 from yieldengine.loading.sample import Sample
 from yieldengine.modeling.factory import ModelPipelineFactory
 from yieldengine.modeling.inspection import ModelInspector
-from yieldengine.modeling.selection import (
-    Model,
-    ModelRanker,
-    ModelRanking,
-    ModelZoo,
-    RankedModel,
-)
+from yieldengine.modeling.selection import Model, ModelRanker, ModelRanking, RankedModel
 from yieldengine.modeling.validation import CircularCrossValidator
 
 
@@ -31,27 +25,25 @@ def test_model_inspection() -> None:
     test_cv = CircularCrossValidator(test_ratio=TEST_RATIO, num_folds=N_FOLDS)
 
     # define parameters and models
-    models = ModelZoo(
-        [
-            Model(
-                estimator=SVC(gamma="scale"),
-                parameter_grid={"kernel": ("linear", "rbf"), "C": [1, 10]},
-            ),
-            Model(
-                estimator=LGBMClassifier(),
-                parameter_grid={
-                    "max_depth": (1, 2, 5),
-                    "min_split_gain": (0.1, 0.2, 0.5),
-                    "num_leaves": (2, 3),
-                },
-            ),
-        ]
-    )
+    models = [
+        Model(
+            estimator=SVC(gamma="scale"),
+            parameter_grid={"kernel": ("linear", "rbf"), "C": [1, 10]},
+        ),
+        Model(
+            estimator=LGBMClassifier(),
+            parameter_grid={
+                "max_depth": (1, 2, 5),
+                "min_split_gain": (0.1, 0.2, 0.5),
+                "num_leaves": (2, 3),
+            },
+        ),
+    ]
 
     pipeline_factory = ModelPipelineFactory()
 
     model_ranker: ModelRanker = ModelRanker(
-        zoo=models, pipeline_factory=pipeline_factory, cv=test_cv
+        models=models, pipeline_factory=pipeline_factory, cv=test_cv
     )
 
     #  load sklearn test-data and convert to pd
