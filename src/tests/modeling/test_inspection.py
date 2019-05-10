@@ -4,13 +4,14 @@ import numpy as np
 import pandas as pd
 from lightgbm.sklearn import LGBMClassifier
 from sklearn import datasets
+from sklearn.model_selection import ShuffleSplit
 from sklearn.svm import SVC
+from sklearn.utils import Bunch
 
 from yieldengine.loading.sample import Sample
 from yieldengine.modeling.factory import ModelPipelineFactory
 from yieldengine.modeling.inspection import ModelInspector
-from yieldengine.modeling.selection import Model, ModelRanker, ModelRanking, RankedModel
-from yieldengine.modeling.validation import CircularCrossValidator
+from yieldengine.modeling.selection import Model, ModelRanker, ModelRanking, ScoredModel
 
 
 def test_model_inspection() -> None:
@@ -20,9 +21,10 @@ def test_model_inspection() -> None:
 
     N_FOLDS = 5
     TEST_RATIO = 0.2
+    IRIS_TARGET = "target"
 
     # define a yield-engine circular CV:
-    test_cv = CircularCrossValidator(test_ratio=TEST_RATIO, num_folds=N_FOLDS)
+    test_cv = ShuffleSplit(n_splits=N_FOLDS, test_size=TEST_RATIO, random_state=42)
 
     # define parameters and models
     models = [
@@ -43,20 +45,22 @@ def test_model_inspection() -> None:
     pipeline_factory = ModelPipelineFactory()
 
     model_ranker: ModelRanker = ModelRanker(
-        models=models, pipeline_factory=pipeline_factory, cv=test_cv
+        models=models,
+        pipeline_factory=pipeline_factory,
+        cv=test_cv,
+        scoring="f1_weighted",
     )
 
     #  load sklearn test-data and convert to pd
-    iris = datasets.load_iris()
+    iris: Bunch = datasets.load_iris()
     test_data = pd.DataFrame(
-        data=np.c_[iris["data"], iris["target"]],
-        columns=iris["feature_names"] + ["target"],
+        data=np.c_[iris.data, iris.target], columns=[*iris.feature_names, IRIS_TARGET]
     )
-    test_sample: Sample = Sample(observations=test_data, target_name="target")
+    test_sample: Sample = Sample(observations=test_data, target_name=IRIS_TARGET)
 
     model_ranking: ModelRanking = model_ranker.run(test_sample)
 
-    ranked_model: RankedModel = model_ranking.model(rank=ModelRanking.BEST_MODEL_RANK)
+    ranked_model: ScoredModel = model_ranking.model(rank=ModelRanking.BEST_MODEL_RANK)
 
     mi = ModelInspector(
         estimator=ranked_model.estimator,
