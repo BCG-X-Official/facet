@@ -13,7 +13,7 @@ class Model(NamedTuple):
     parameter_grid: Dict[str, Any]
 
 
-class RankedModel(NamedTuple):
+class ScoredModel(NamedTuple):
     estimator: BaseEstimator
     parameters: Dict[str, Any]
     test_score_mean: float
@@ -108,8 +108,8 @@ class ModelRanker:
             ranking_scorer = ModelRanker.default_ranking_scorer
 
         # consolidate results of all searchers into "results"
-        search_results = [
-            RankedModel(
+        scored_models = [
+            ScoredModel(
                 # note: we have to copy the estimator, to ensure it will actually
                 # retain the parameters we set for each row in separate objects..
                 estimator=clone(search.estimator).set_params(**params),
@@ -130,7 +130,9 @@ class ModelRanker:
 
         # create ranking by assigning rank values and creating "RankedModel" types
         return ModelRanking(
-            ranking=sorted(search_results, key=lambda result: -result.ranking_score)
+            ranking=sorted(
+                scored_models, key=lambda model: model.ranking_score, reverse=True
+            )
         )
 
     @property
@@ -156,7 +158,7 @@ class ModelRanking:
     Utility class that wraps a list of RankedModel
     """
 
-    def __init__(self, ranking: List[RankedModel]):
+    def __init__(self, ranking: List[ScoredModel]):
         """
         Utility class that wraps a list of RankedModel
 
@@ -164,7 +166,7 @@ class ModelRanking:
         """
         self.__ranking = ranking
 
-    def model(self, rank: int) -> RankedModel:
+    def model(self, rank: int) -> ScoredModel:
         """
         Returns the model instance at a given rank.
 
@@ -183,25 +185,22 @@ class ModelRanking:
         :return: str
         """
 
-        rows = [
-            (
-                rank + 1,
-                ranked_model.estimator.__class__.__name__,
-                ranked_model.ranking_score,
-                ranked_model.parameters,
-            )
-            for rank, ranked_model in enumerate(self.__ranking[:limit])
-        ]
+        ranking = self.__ranking[:limit]
 
-        name_width = max([len(row[1]) for row in rows])
+        def _model_name(ranked_model: ScoredModel) -> str:
+            return ranked_model.estimator.__class__.__name__
+
+        name_width = max([len(_model_name(ranked_model)) for ranked_model in ranking])
 
         return "\n".join(
             [
-                f" Rank {row[0]:2d}: "
-                f"{row[1]:>{name_width}s}, "
-                f"Score={row[2]:.2e}, "
-                f"Params={row[3]}"
-                for row in rows
+                f" Rank {rank + 1:2d}: "
+                f"{_model_name(ranked_model):>{name_width}s}, "
+                f"Score={ranked_model.ranking_score:.2e}, "
+                f"Test mean={ranked_model.test_score_mean:.2e}"
+                f"Test std={ranked_model.test_score_std:.2e}"
+                f"Params={ranked_model.parameters}"
+                for rank, ranked_model in enumerate(ranking)
             ]
         )
 
@@ -211,5 +210,5 @@ class ModelRanking:
     def __str__(self) -> str:
         return self.summary_report()
 
-    def __iter__(self) -> Iterable[RankedModel]:
+    def __iter__(self) -> Iterable[ScoredModel]:
         return iter(self.__ranking)
