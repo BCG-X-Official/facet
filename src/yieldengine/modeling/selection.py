@@ -5,7 +5,7 @@ from sklearn.model_selection import BaseCrossValidator, GridSearchCV
 from sklearn.pipeline import Pipeline
 
 from yieldengine.loading.sample import Sample
-from yieldengine.modeling.factory import ModelPipelineFactory
+from yieldengine.modeling.factory import PreprocessingFactory
 
 
 class Model(NamedTuple):
@@ -31,12 +31,19 @@ class ModelRanker:
     into a scikit-learn pipeline.
 
     :param models: list of model grids to be ranked
-    :param pipeline_factory: a pipeline factory, e.g., to insert a preprocessor
+    :param preprocessing_factory: a preprocessor
     :param cv: a cross validation object (i.e. CircularCrossValidator)
     :param scoring: a scorer to use when doing CV within GridSearch
     """
 
-    __slots__ = ["_models", "_scoring", "_cv", "_searchers", "_pipeline"]
+    __slots__ = [
+        "_models",
+        "_scoring",
+        "_cv",
+        "_searchers",
+        "_pipeline",
+        "_preprocessing_factory",
+    ]
 
     F_PARAMETERS = "params"
     F_MEAN_TEST_SCORE = "mean_test_score"
@@ -45,16 +52,17 @@ class ModelRanker:
     def __init__(
         self,
         models: Iterable[Model],
-        pipeline_factory: ModelPipelineFactory = None,
+        preprocessing_factory: PreprocessingFactory = None,
         cv: BaseCrossValidator = None,
         scoring=None,
     ) -> None:
         self._models = list(models)
         self._cv = cv
         self._scoring = scoring
+        self._preprocessing_factory = preprocessing_factory
 
         # construct searchers
-        self._searchers = searchers = [
+        self._searchers = [
             GridSearchCV(
                 estimator=model.estimator,
                 cv=cv,
@@ -66,10 +74,6 @@ class ModelRanker:
             )
             for model in self._models
         ]
-
-        self._pipeline = (
-            ModelPipelineFactory() if pipeline_factory is None else pipeline_factory
-        ).make_pipeline(estimators=searchers)
 
     @staticmethod
     def default_ranking_scorer(mean_test_score: float, std_test_score: float) -> float:
@@ -102,7 +106,11 @@ class ModelRanker:
         :return the created model ranking of type :code:`ModelRanking`
 
         """
-        self.pipeline.fit(X=sample.features, y=sample.target)
+        if self._preprocessing_factory is not None:
+            sample = self._preprocessing_factory.preprocess(sample=sample)
+
+        for searcher in self._searchers:
+            searcher.fit(X=sample.features, y=sample.target)
 
         if ranking_scorer is None:
             ranking_scorer = ModelRanker.default_ranking_scorer

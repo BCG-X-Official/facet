@@ -14,10 +14,7 @@ from sklearn.tree import DecisionTreeRegressor, ExtraTreeRegressor
 from tests import read_test_config
 from tests.paths import TEST_DATA_CSV
 from yieldengine.loading.sample import Sample
-from yieldengine.modeling.factory import (
-    ModelPipelineFactory,
-    SimplePreprocessingPipelineFactory,
-)
+from yieldengine.modeling.factory import SimplePreprocessingFactory
 from yieldengine.modeling.selection import Model
 
 logging.basicConfig(level=logging.INFO)
@@ -95,10 +92,8 @@ def sample(batch_table: pd.DataFrame) -> Sample:
 
 
 @pytest.fixture
-def preprocessing_pipeline_factory(sample: Sample) -> ModelPipelineFactory:
-    # define a ColumnTransformer to pre-process:
-    # define a sklearn Pipeline step, containing the preprocessor defined above:
-    return SimplePreprocessingPipelineFactory(
-        impute_mean=sample.features_by_type(dtype=sample.DTYPE_NUMERICAL),
-        one_hot_encode=sample.features_by_type(dtype=sample.DTYPE_OBJECT),
+def preprocessing_factory(sample: Sample) -> SimplePreprocessingFactory:
+    return SimplePreprocessingFactory(
+        impute_mean=sample.features_by_type(dtype=Sample.DTYPE_NUMERICAL),
+        one_hot_encode=sample.features_by_type(dtype=Sample.DTYPE_OBJECT),
     )

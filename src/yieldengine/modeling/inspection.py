@@ -5,15 +5,10 @@ import numpy as np
 import pandas as pd
 from shap.explainers.explainer import Explainer
 from sklearn.base import BaseEstimator, clone
-from sklearn.compose import ColumnTransformer
 from sklearn.model_selection import BaseCrossValidator
-from sklearn.preprocessing import OneHotEncoder
 
 from yieldengine.loading.sample import Sample
-from yieldengine.modeling.factory import (
-    ModelPipelineFactory,
-    PreprocessingModelPipelineFactory,
-)
+from yieldengine.modeling.factory import PreprocessingFactory
 from shap import TreeExplainer, KernelExplainer
 
 log = logging.getLogger(__name__)
@@ -22,9 +17,10 @@ log = logging.getLogger(__name__)
 class ModelInspector:
     __slots__ = [
         "_estimator",
-        "_pipeline_factory",
+        "_preprocessing_factory",
         "_cv",
         "_sample",
+        "_sample_preprocessed",
         "_shap_explainer_by_fold",
         "_estimators_by_fold",
     ]
@@ -35,15 +31,16 @@ class ModelInspector:
     def __init__(
         self,
         estimator: BaseEstimator,
-        pipeline_factory: ModelPipelineFactory,
+        preprocessing_factory: PreprocessingFactory,
         cv: BaseCrossValidator,
         sample: Sample,
     ) -> None:
 
         self._estimator = estimator
-        self._pipeline_factory = pipeline_factory
+        self._preprocessing_factory = preprocessing_factory
         self._cv = cv
         self._sample = sample
+        self._sample_preprocessed: Sample = None
         self._estimators_by_fold: Dict[int, BaseEstimator] = {}
         self._shap_explainer_by_fold: Dict[
             int, Union[TreeExplainer, KernelExplainer]
@@ -61,8 +58,11 @@ class ModelInspector:
         # we should not attempt to filter the exception type or message given that it is
         # currently inconsistent
 
+        # todo: instead create factory for shap explainers
         try:
-            return TreeExplainer(model=estimator, data=data)
+            return TreeExplainer(
+                model=estimator, data=data, feature_dependence="independent"
+            )
         except Exception as e:
             log.debug(
                 f"failed to instantiate shap.TreeExplainer:{str(e)},"
@@ -79,6 +79,12 @@ class ModelInspector:
     @property
     def sample(self) -> Sample:
         return self._sample
+
+    def _preprocess_sample(self):
+        if self._preprocessing_factory is not None:
+            self._sample_preprocessed = self._preprocessing_factory.preprocess(
+                sample=self._sample
+            )
 
     def predictions_for_all_samples(self) -> pd.DataFrame:
         """
@@ -101,11 +107,17 @@ class ModelInspector:
         #       - fit the estimator on the X and y of train set
         #       - predict y for test set
 
+        self._preprocess_sample()
+
         def predict(
             train_indices: np.ndarray, test_indices: np.ndarray
         ) -> pd.DataFrame:
-            train_sample = self.sample.select_observations(indices=train_indices)
-            test_sample = self.sample.select_observations(indices=test_indices)
+            train_sample = self._sample_preprocessed.select_observations(
+                indices=train_indices
+            )
+            test_sample = self._sample_preprocessed.select_observations(
+                indices=test_indices
+            )
             fold = test_indices[0]
 
             self._estimators_by_fold[fold] = estimator = clone(self._estimator)
@@ -113,9 +125,9 @@ class ModelInspector:
             return pd.DataFrame(
                 data={
                     self.F_FOLD_START: fold,
-                    self.F_PREDICTION: self._pipeline_factory.make_pipeline(estimator)
-                    .fit(X=train_sample.features, y=train_sample.target)
-                    .predict(X=test_sample.features),
+                    self.F_PREDICTION: estimator.fit(
+                        X=train_sample.features, y=train_sample.target
+                    ).predict(X=test_sample.features),
                 },
                 index=test_sample.index,
             )
@@ -124,7 +136,7 @@ class ModelInspector:
             [
                 predict(train_indices, test_indices)
                 for train_indices, test_indices in self.cv.split(
-                    self.sample.features, self.sample.target
+                    self._sample_preprocessed.features, self._sample_preprocessed.target
                 )
             ]
         )
@@ -140,61 +152,6 @@ class ModelInspector:
 
         return self._estimators_by_fold[fold]
 
-    def _feature_names(self, X: pd.DataFrame) -> Collection[str]:
-        # if there is no preprocessing, we expect unchanged feature names
-        if not isinstance(self._pipeline_factory, PreprocessingModelPipelineFactory):
-            return self.sample.feature_names
-
-        def extract_encoded_feature_names(
-            encoder: OneHotEncoder, X: pd.DataFrame
-        ) -> Collection[str]:
-            encoder.fit(X=X)
-            return encoder.get_feature_names()
-
-        feature_names = []
-        # if there is preprocessing, we have to check if transformations altered
-        # feature columns and get appropriate names
-        main_transformer = self._pipeline_factory.preprocessing_transformer
-
-        # if we found a column transformer, we can get transformed feature names
-        # in correct order from it
-        if isinstance(main_transformer, ColumnTransformer):
-            # annotate the type:
-            main_transformer: ColumnTransformer = main_transformer
-
-            for sub_transformer in main_transformer.transformers:
-                # sub_transformer is a tuple with 3 elements we can deconstruct.
-                #   1. transformer name (str),
-                #   2. the transformer object (BaseEstimator),
-                #   3. the column names (collection[str])
-                t_name, t_obj, t_col_names = sub_transformer
-
-                # is this sub_transformer a OneHot encoder?
-                # todo: expand this to other transformers that change features
-                if isinstance(t_obj, OneHotEncoder):
-                    # annotate the type
-                    t_obj: OneHotEncoder = t_obj
-                    feature_names.extend(
-                        extract_encoded_feature_names(encoder=t_obj, X=X)
-                    )
-                else:
-                    # any other transformer? take original column names
-                    feature_names.extend(t_col_names)
-
-        elif isinstance(main_transformer, OneHotEncoder):
-            main_transformer: OneHotEncoder = main_transformer
-            feature_names.extend(
-                extract_encoded_feature_names(encoder=main_transformer, X=X)
-            )
-        else:
-            feature_names = self.sample.feature_names
-            log.warning(
-                msg="Unkown preprocessing transformer type:"
-                f"{main_transformer.__class__}, using original feature names"
-            )
-
-        return feature_names
-
     def shap_value_matrix(self) -> pd.DataFrame:
         predictions = self.predictions_for_all_samples()
 
@@ -205,23 +162,22 @@ class ModelInspector:
                 predictions[self.F_FOLD_START] == fold, :
             ].index
 
-            fold_x = self.sample.select_observations(indices=fold_indices).features
-
-            estimator_pipeline = self._pipeline_factory.make_pipeline(
-                estimators=estimator
-            )
+            fold_x = self._sample_preprocessed.select_observations(
+                indices=fold_indices
+            ).features
 
             explainer = ModelInspector._make_shap_explainer(
-                estimator=estimator_pipeline, data=fold_x
+                estimator=estimator, data=fold_x
             )
             self._shap_explainer_by_fold[fold] = explainer
 
-            shap_matrix = explainer.shap_values(fold_x.values)
+            shap_matrix = explainer.shap_values(fold_x)
 
-            fold_shap_values = pd.DataFrame(data=shap_matrix, index=fold_indices)
-
-            # set correct column names...
-            fold_shap_values.columns = self._feature_names(X=fold_x)
+            fold_shap_values = pd.DataFrame(
+                data=shap_matrix,
+                index=fold_indices,
+                columns=self._sample_preprocessed.feature_names,
+            )
 
             shap_value_dfs.append(fold_shap_values)
 
