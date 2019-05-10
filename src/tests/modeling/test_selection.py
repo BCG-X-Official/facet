@@ -103,12 +103,12 @@ def test_model_ranker(
         model_ranking.model(rank=ModelRanking.BEST_MODEL_RANK), RankedModel
     )
     assert (
-        model_ranking.model(rank=0).score
-        >= model_ranking.model(rank=1).score
-        >= model_ranking.model(rank=2).score
-        >= model_ranking.model(rank=3).score
-        >= model_ranking.model(rank=4).score
-        >= model_ranking.model(rank=len(model_ranking) - 1).score
+        model_ranking.model(rank=0).ranking_score
+        >= model_ranking.model(rank=1).ranking_score
+        >= model_ranking.model(rank=2).ranking_score
+        >= model_ranking.model(rank=3).ranking_score
+        >= model_ranking.model(rank=4).ranking_score
+        >= model_ranking.model(rank=len(model_ranking) - 1).ranking_score
     )
 
     # check if parameters set for estimators actually match expected:
@@ -150,5 +150,5 @@ def test_model_ranker_no_preprocessing() -> None:
     log.info(f"\n{model_ranking.summary_report()}")
 
     assert (
-        model_ranking.model(ModelRanking.BEST_MODEL_RANK).score >= 0.8
+        model_ranking.model(ModelRanking.BEST_MODEL_RANK).ranking_score >= 0.8
     ), "Expected a performance of at least 0.8"
