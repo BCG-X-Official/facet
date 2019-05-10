@@ -1,5 +1,5 @@
 import warnings
-
+import logging
 import numpy as np
 import pandas as pd
 from lightgbm.sklearn import LGBMRegressor
@@ -9,9 +9,12 @@ from sklearn.svm import SVR
 from sklearn.utils import Bunch
 
 from yieldengine.loading.sample import Sample
-from yieldengine.modeling.factory import ModelPipelineFactory
+from yieldengine.modeling.factory import SimplePreprocessingFactory
 from yieldengine.modeling.inspection import ModelInspector
 from yieldengine.modeling.selection import Model, ModelRanker, ModelRanking
+from yieldengine.modeling.validation import CircularCrossValidator
+
+log = logging.getLogger(__name__)
 
 
 def test_model_inspection() -> None:
@@ -42,15 +45,6 @@ def test_model_inspection() -> None:
         ),
     ]
 
-    pipeline_factory = ModelPipelineFactory()
-
-    model_ranker: ModelRanker = ModelRanker(
-        models=models,
-        pipeline_factory=pipeline_factory,
-        cv=test_cv,
-        scoring="neg_mean_squared_error",
-    )
-
     #  load sklearn test-data and convert to pd
     boston: Bunch = datasets.load_boston()
 
@@ -62,6 +56,18 @@ def test_model_inspection() -> None:
 
     test_sample: Sample = Sample(observations=test_data, target_name=BOSTON_TARGET)
 
+    preprocessing_factory = SimplePreprocessingFactory(
+        impute_mean=test_sample.features_by_type(dtype=Sample.DTYPE_NUMERICAL),
+        one_hot_encode=test_sample.features_by_type(dtype=Sample.DTYPE_OBJECT),
+    )
+
+    model_ranker: ModelRanker = ModelRanker(
+        models=models,
+        preprocessing_factory=preprocessing_factory,
+        cv=test_cv,
+        scoring="neg_mean_squared_error",
+    )
+
     model_ranking: ModelRanking = model_ranker.run(test_sample)
 
     # consider: model_with_type(...) function for ModelRanking
@@ -72,7 +78,7 @@ def test_model_inspection() -> None:
 
         mi = ModelInspector(
             estimator=ranked_model.estimator,
-            pipeline_factory=pipeline_factory,
+            preprocessing_factory=preprocessing_factory,
             cv=test_cv,
             sample=test_sample,
         )
@@ -102,5 +108,38 @@ def test_model_inspection() -> None:
         assert len(shap_matrix) == len(predictions_df.index.unique())
 
 
-def test_model_inspection_with_encoding():
-    pass
+def test_model_inspection_with_encoding(
+    batch_table: pd.DataFrame,
+    regressor_grids,
+    sample: Sample,
+    preprocessing_factory: SimplePreprocessingFactory,
+) -> None:
+
+    # define the circular cross validator with just 5 folds (to speed up testing)
+    circular_cv = CircularCrossValidator(test_ratio=0.20, num_folds=5)
+
+    model_ranker: ModelRanker = ModelRanker(
+        models=regressor_grids,
+        preprocessing_factory=preprocessing_factory,
+        cv=circular_cv,
+        scoring="r2",
+    )
+
+    # run the ModelRanker to retrieve a ranking
+    model_ranking: ModelRanking = model_ranker.run(sample=sample)
+
+    log.info(model_ranking)
+
+    # consider: model_with_type(...) function for ModelRanking
+    # best_svr = [m for m in model_ranking if isinstance(m.estimator, SVR)][0]
+    best_lgbm = [m for m in model_ranking if isinstance(m.estimator, LGBMRegressor)][0]
+    for model in [best_lgbm]:
+        mi = ModelInspector(
+            estimator=model.estimator,
+            preprocessing_factory=preprocessing_factory,
+            cv=circular_cv,
+            sample=sample,
+        )
+
+        shap_matrix = mi.shap_value_matrix()
+        print(shap_matrix.head())
