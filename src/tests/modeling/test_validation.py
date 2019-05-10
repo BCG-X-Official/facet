@@ -1,12 +1,11 @@
-import numpy as np
-import pytest
-from sklearn import svm, datasets, tree
-from sklearn.model_selection import GridSearchCV
-from yieldengine.modeling.validation import CircularCrossValidator
 import warnings
 
-# noinspection PyUnresolvedReferences
-from tests.shared_fixtures import batch_table
+import numpy as np
+import pytest
+from sklearn import datasets, svm, tree
+from sklearn.model_selection import GridSearchCV
+
+from yieldengine.modeling.validation import CircularCrossValidator
 
 
 def test_circular_cv_init(batch_table):
@@ -14,7 +13,6 @@ def test_circular_cv_init(batch_table):
 
     warnings.filterwarnings("ignore", message="numpy.dtype size changed")
     warnings.filterwarnings("ignore", message="numpy.ufunc size changed")
-
 
     # check erroneous inputs
     #   - test_ratio = 0
@@ -37,9 +35,7 @@ def test_get_train_test_splits_as_indices():
 
     my_cv = CircularCrossValidator(test_ratio=0.2, num_folds=test_folds)
 
-    list_of_test_splits = list(
-        my_cv._iter_test_indices(test_X)
-    )
+    list_of_test_splits = list(my_cv._iter_test_indices(test_X))
 
     # assert we get right amount of folds
     assert len(list_of_test_splits) == test_folds
@@ -48,9 +44,7 @@ def test_get_train_test_splits_as_indices():
     for test_set in list_of_test_splits:
         assert 0.19 < float(len(test_set) / len(test_X) < 0.21)
 
-    list_of_test_splits_2 = list(
-        my_cv._iter_test_indices(test_X)
-    )
+    list_of_test_splits_2 = list(my_cv._iter_test_indices(test_X))
 
     assert len(list_of_test_splits) == len(
         list_of_test_splits_2
@@ -65,7 +59,6 @@ def test_circular_cv_with_sk_learn():
 
     warnings.filterwarnings("ignore", message="numpy.dtype size changed")
     warnings.filterwarnings("ignore", message="numpy.ufunc size changed")
-
 
     # load example data
     iris = datasets.load_iris()

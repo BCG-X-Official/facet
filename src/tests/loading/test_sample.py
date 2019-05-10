@@ -1,13 +1,11 @@
 import pandas as pd
 import pytest
 
-# noinspection PyUnresolvedReferences
-from tests.shared_fixtures import batch_table as test_sample_data
 from yieldengine.loading.sample import Sample
 
 
 # checks various erroneous inputs
-def test_sample_init(test_sample_data: pd.DataFrame) -> None:
+def test_sample_init(batch_table: pd.DataFrame) -> None:
     # 1. sample parameter
     # 1.1 None
     with pytest.raises(ValueError):
@@ -22,10 +20,10 @@ def test_sample_init(test_sample_data: pd.DataFrame) -> None:
     # 2. no features and no target specified
     with pytest.raises(ValueError):
         # noinspection PyTypeChecker
-        Sample(observations=test_sample_data, target_name=None)
+        Sample(observations=batch_table, target_name=None)
 
     # store list of feature columns:
-    f_columns = list(test_sample_data.columns)
+    f_columns = list(batch_table.columns)
     f_columns.remove("Yield")
 
     # 2.1 invalid feature column specified
@@ -33,15 +31,13 @@ def test_sample_init(test_sample_data: pd.DataFrame) -> None:
         f_columns_false = f_columns.copy()
         f_columns_false.append("doesnt_exist")
         Sample(
-            observations=test_sample_data,
-            feature_names=f_columns_false,
-            target_name="Yield",
+            observations=batch_table, feature_names=f_columns_false, target_name="Yield"
         )
 
     # 2.2 invalid target column specified
     with pytest.raises(ValueError):
         Sample(
-            observations=test_sample_data,
+            observations=batch_table,
             target_name="doesnt_exist",
             feature_names=f_columns,
         )
@@ -52,18 +48,16 @@ def test_sample_init(test_sample_data: pd.DataFrame) -> None:
         f_columns_false.append("Yield")
 
         Sample(
-            observations=test_sample_data,
-            feature_names=f_columns_false,
-            target_name="Yield",
+            observations=batch_table, feature_names=f_columns_false, target_name="Yield"
         )
 
 
-def test_sample(test_sample_data: pd.DataFrame) -> None:
+def test_sample(batch_table: pd.DataFrame) -> None:
     # define various assertions we want to test:
     def run_assertions(s: Sample):
         assert s.target_name == "Yield"
         assert "Yield" not in s.feature_names
-        assert len(s.feature_names) == len(test_sample_data.columns) - 1
+        assert len(s.feature_names) == len(batch_table.columns) - 1
 
         assert type(s.target) == pd.Series
         assert type(s.features) == pd.DataFrame
@@ -71,18 +65,16 @@ def test_sample(test_sample_data: pd.DataFrame) -> None:
         assert len(s.target) == len(s.features)
 
     # test explicit setting of both target & features
-    feature_columns = list(test_sample_data.drop(columns="Yield").columns)
+    feature_columns = list(batch_table.drop(columns="Yield").columns)
     s = Sample(
-        observations=test_sample_data,
-        target_name="Yield",
-        feature_names=feature_columns,
+        observations=batch_table, target_name="Yield", feature_names=feature_columns
     )
 
     # run the checks on s:
     run_assertions(s)
 
     # test implicit setting of features by only giving the target
-    s2 = Sample(observations=test_sample_data, target_name="Yield")
+    s2 = Sample(observations=batch_table, target_name="Yield")
 
     # run the checks on s2:
     run_assertions(s2)
@@ -109,7 +101,7 @@ def test_sample(test_sample_data: pd.DataFrame) -> None:
     )
 
     # test length
-    assert len(s) == len(test_sample_data)
+    assert len(s) == len(batch_table)
 
     # test select_observations
     sub = s2.select_observations(indices=[0, 1, 2, 3])
