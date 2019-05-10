@@ -207,8 +207,12 @@ class ModelInspector:
 
             fold_x = self.sample.select_observations(indices=fold_indices).features
 
+            estimator_pipeline = self._pipeline_factory.make_pipeline(
+                estimators=estimator
+            )
+
             explainer = ModelInspector._make_shap_explainer(
-                estimator=estimator, data=fold_x
+                estimator=estimator_pipeline, data=fold_x
             )
             self._shap_explainer_by_fold[fold] = explainer
 
