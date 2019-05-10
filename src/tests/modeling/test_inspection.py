@@ -2,16 +2,16 @@ import warnings
 
 import numpy as np
 import pandas as pd
-from lightgbm.sklearn import LGBMClassifier
+from lightgbm.sklearn import LGBMRegressor
 from sklearn import datasets
 from sklearn.model_selection import ShuffleSplit
-from sklearn.svm import SVC
+from sklearn.svm import SVR
 from sklearn.utils import Bunch
 
 from yieldengine.loading.sample import Sample
 from yieldengine.modeling.factory import ModelPipelineFactory
 from yieldengine.modeling.inspection import ModelInspector
-from yieldengine.modeling.selection import Model, ModelRanker, ModelRanking, ScoredModel
+from yieldengine.modeling.selection import Model, ModelRanker, ModelRanking
 
 
 def test_model_inspection() -> None:
@@ -21,7 +21,7 @@ def test_model_inspection() -> None:
 
     N_FOLDS = 5
     TEST_RATIO = 0.2
-    IRIS_TARGET = "target"
+    BOSTON_TARGET = "target"
 
     # define a yield-engine circular CV:
     test_cv = ShuffleSplit(n_splits=N_FOLDS, test_size=TEST_RATIO, random_state=42)
@@ -29,11 +29,11 @@ def test_model_inspection() -> None:
     # define parameters and models
     models = [
         Model(
-            estimator=SVC(gamma="scale"),
+            estimator=SVR(gamma="scale"),
             parameter_grid={"kernel": ("linear", "rbf"), "C": [1, 10]},
         ),
         Model(
-            estimator=LGBMClassifier(),
+            estimator=LGBMRegressor(),
             parameter_grid={
                 "max_depth": (1, 2, 5),
                 "min_split_gain": (0.1, 0.2, 0.5),
@@ -48,34 +48,59 @@ def test_model_inspection() -> None:
         models=models,
         pipeline_factory=pipeline_factory,
         cv=test_cv,
-        scoring="f1_weighted",
+        scoring="neg_mean_squared_error",
     )
 
     #  load sklearn test-data and convert to pd
-    iris: Bunch = datasets.load_iris()
+    boston: Bunch = datasets.load_boston()
+
+    # use first 100 rows only, since KernelExplainer is very slow...
     test_data = pd.DataFrame(
-        data=np.c_[iris.data, iris.target], columns=[*iris.feature_names, IRIS_TARGET]
-    )
-    test_sample: Sample = Sample(observations=test_data, target_name=IRIS_TARGET)
+        data=np.c_[boston.data, boston.target],
+        columns=[*boston.feature_names, BOSTON_TARGET],
+    ).loc[:100,]
+
+    test_sample: Sample = Sample(observations=test_data, target_name=BOSTON_TARGET)
 
     model_ranking: ModelRanking = model_ranker.run(test_sample)
 
-    ranked_model: ScoredModel = model_ranking.model(rank=ModelRanking.BEST_MODEL_RANK)
+    # consider: model_with_type(...) function for ModelRanking
+    best_svr = [m for m in model_ranking if isinstance(m.estimator, SVR)][0]
+    best_lgbm = [m for m in model_ranking if isinstance(m.estimator, LGBMRegressor)][0]
 
-    mi = ModelInspector(
-        estimator=ranked_model.estimator,
-        pipeline_factory=pipeline_factory,
-        cv=test_cv,
-        sample=test_sample,
-    )
+    for ranked_model in best_svr, best_lgbm:
 
-    predictions_df: pd.DataFrame = mi.predictions_for_all_samples()
+        mi = ModelInspector(
+            estimator=ranked_model.estimator,
+            pipeline_factory=pipeline_factory,
+            cv=test_cv,
+            sample=test_sample,
+        )
 
-    assert ModelInspector.F_FOLD_START in predictions_df.columns
-    assert ModelInspector.F_PREDICTION in predictions_df.columns
+        # test predictions_for_all_samples
+        predictions_df: pd.DataFrame = mi.predictions_for_all_samples()
 
-    # check number of fold-starts
-    assert len(predictions_df[ModelInspector.F_FOLD_START].unique()) == N_FOLDS
+        assert ModelInspector.F_FOLD_START in predictions_df.columns
+        assert ModelInspector.F_PREDICTION in predictions_df.columns
 
-    # check correct number of rows
-    assert len(predictions_df) == (len(test_sample) * TEST_RATIO * N_FOLDS)
+        # check number of fold-starts
+        assert len(predictions_df[ModelInspector.F_FOLD_START].unique()) == N_FOLDS
+
+        # check correct number of rows
+        ALLOWED_VARIANCE = 0.01
+        assert (
+            (len(test_sample) * (TEST_RATIO - ALLOWED_VARIANCE) * N_FOLDS)
+            <= len(predictions_df)
+            <= (len(test_sample) * (TEST_RATIO + ALLOWED_VARIANCE) * N_FOLDS)
+        )
+
+        # make and check shap value matrix
+        shap_matrix = mi.shap_value_matrix()
+
+        # the length of rows in shap_matrix should be equal to the unique observation
+        # indices we have had in the predictions_df
+        assert len(shap_matrix) == len(predictions_df.index.unique())
+
+
+def test_model_inspection_with_encoding():
+    pass
