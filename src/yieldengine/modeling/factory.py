@@ -105,22 +105,22 @@ class SimplePreprocessingPipelineFactory(PreprocessingModelPipelineFactory):
 
     def __init__(
         self,
-        mean_impute: Iterable[str] = None,
+        impute_mean: Iterable[str] = None,
         one_hot_encode: Iterable[str] = None,
         memory: Union[str, object] = None,
     ):
         """
 
-        :param mean_impute: list of columns to impute or None
+        :param impute_mean: list of columns to impute or None
         :param one_hot_encode: list of (categorical) columns to encode or None
         :param memory: string or object to be passed to the Pipeline's memory parameter
         """
 
         transformations: List[Tuple[str, TransformerMixin, Iterable[str]]] = list()
 
-        if mean_impute is not None:
+        if impute_mean is not None:
             transformations.append(
-                ("impute", SimpleImputer(strategy="mean"), mean_impute)
+                ("impute", SimpleImputer(strategy="mean"), impute_mean)
             )
 
         if one_hot_encode is not None:
