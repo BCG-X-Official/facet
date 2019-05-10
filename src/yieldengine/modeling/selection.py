@@ -20,23 +20,6 @@ class RankedModel(NamedTuple):
     rank: int
 
 
-class ModelZoo:
-    """
-    Class to register models (of type: BaseEstimator) and parameter grids.
-    """
-
-    __slots__ = ["_models"]
-
-    def __init__(self, models: Iterable[Model]) -> None:
-        self._models = list(models)
-
-    def models(self) -> Iterable[Model]:
-        return iter(self._models)
-
-    def __len__(self) -> int:
-        return len(self._models)
-
-
 class ModelRanker:
     """
     Turns a model zoo along with
@@ -46,13 +29,13 @@ class ModelRanker:
         - a scoring function
     into a scikit-learn pipeline.
 
-    :param zoo: a model zoo
+    :param models: list of model grids to be ranked
     :param pipeline_factory: a pipeline factory, e.g., to insert a preprocessor
     :param cv: a cross validation object (i.e. CircularCrossValidator)
     :param scoring: a scorer to use when doing CV within GridSearch
     """
 
-    __slots__ = ["_model_zoo", "_scoring", "_cv", "_searchers", "_pipeline"]
+    __slots__ = ["_models", "_scoring", "_cv", "_searchers", "_pipeline"]
 
     F_PARAMETERS = "params"
     F_MEAN_TEST_SCORE = "mean_test_score"
@@ -60,12 +43,12 @@ class ModelRanker:
 
     def __init__(
         self,
-        zoo: ModelZoo,
+        models: Iterable[Model],
         pipeline_factory: ModelPipelineFactory = None,
         cv: BaseCrossValidator = None,
         scoring=None,
     ) -> None:
-        self._model_zoo = zoo
+        self._models = list(models)
         self._cv = cv
         self._scoring = scoring
 
@@ -80,7 +63,7 @@ class ModelRanker:
                 n_jobs=-1,
                 refit=False,
             )
-            for model in zoo.models()
+            for model in self._models
         ]
 
         self._pipeline = (
@@ -165,9 +148,8 @@ class ModelRanker:
     def searchers(self) -> Iterable[GridSearchCV]:
         return iter(self._searchers)
 
-    @property
-    def model_zoo(self) -> ModelZoo:
-        return self._model_zoo
+    def models(self) -> Iterable[Model]:
+        return iter(self._models)
 
 
 class ModelRanking:
