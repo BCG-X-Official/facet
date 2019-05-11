@@ -1,5 +1,6 @@
-import warnings
 import logging
+import warnings
+
 import numpy as np
 import pandas as pd
 from lightgbm.sklearn import LGBMRegressor
@@ -9,10 +10,10 @@ from sklearn.svm import SVR
 from sklearn.utils import Bunch
 
 from yieldengine.loading.sample import Sample
-from yieldengine.modeling.factory import SimplePreprocessingFactory
 from yieldengine.modeling.inspection import ModelInspector
 from yieldengine.modeling.selection import Model, ModelRanker, ModelRanking
 from yieldengine.modeling.validation import CircularCrossValidator
+from yieldengine.preprocessing import SimpleSamplePreprocessor
 
 log = logging.getLogger(__name__)
 
@@ -56,7 +57,7 @@ def test_model_inspection() -> None:
 
     test_sample: Sample = Sample(observations=test_data, target_name=BOSTON_TARGET)
 
-    preprocessing_factory = SimplePreprocessingFactory(
+    preprocessing_factory = SimpleSamplePreprocessor(
         impute_mean=test_sample.features_by_type(dtype=Sample.DTYPE_NUMERICAL),
         one_hot_encode=test_sample.features_by_type(dtype=Sample.DTYPE_OBJECT),
     )
@@ -77,8 +78,8 @@ def test_model_inspection() -> None:
     for ranked_model in best_svr, best_lgbm:
 
         mi = ModelInspector(
+            preprocessor=preprocessing_factory,
             estimator=ranked_model.estimator,
-            preprocessing_factory=preprocessing_factory,
             cv=test_cv,
             sample=test_sample,
         )
@@ -112,7 +113,7 @@ def test_model_inspection_with_encoding(
     batch_table: pd.DataFrame,
     regressor_grids,
     sample: Sample,
-    preprocessing_factory: SimplePreprocessingFactory,
+    preprocessing_factory: SimpleSamplePreprocessor,
 ) -> None:
 
     # define the circular cross validator with just 5 folds (to speed up testing)
@@ -135,8 +136,8 @@ def test_model_inspection_with_encoding(
     best_lgbm = [m for m in model_ranking if isinstance(m.estimator, LGBMRegressor)][0]
     for model in [best_lgbm]:
         mi = ModelInspector(
+            preprocessor=preprocessing_factory,
             estimator=model.estimator,
-            preprocessing_factory=preprocessing_factory,
             cv=circular_cv,
             sample=sample,
         )

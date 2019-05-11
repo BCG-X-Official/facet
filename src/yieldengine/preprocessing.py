@@ -10,7 +10,7 @@ from sklearn.preprocessing import OneHotEncoder
 from yieldengine.loading.sample import Sample
 
 
-class PreprocessingFactory(ABC):
+class SamplePreprocessor(ABC):
 
     __slots__ = ["_preprocessing_transformer"]
 
@@ -18,7 +18,7 @@ class PreprocessingFactory(ABC):
         self._preprocessing_transformer = preprocessing_transformer
 
     @abstractmethod
-    def preprocess(self, sample: Sample) -> Sample:
+    def process(self, sample: Sample) -> Sample:
         pass
 
     @property
@@ -26,7 +26,7 @@ class PreprocessingFactory(ABC):
         return self._preprocessing_transformer
 
 
-class SimplePreprocessingFactory(PreprocessingFactory):
+class SimpleSamplePreprocessor(SamplePreprocessor):
 
     STEP_IMPUTE = "impute"
     STEP_ONE_HOT_ENCODE = "one-hot-encode"
@@ -45,7 +45,7 @@ class SimplePreprocessingFactory(PreprocessingFactory):
         if impute_mean is not None and sum(1 for col in impute_mean) > 0:
             transformations.append(
                 (
-                    SimplePreprocessingFactory.STEP_IMPUTE,
+                    SimpleSamplePreprocessor.STEP_IMPUTE,
                     SimpleImputer(strategy="mean"),
                     impute_mean,
                 )
@@ -54,7 +54,7 @@ class SimplePreprocessingFactory(PreprocessingFactory):
         if one_hot_encode is not None and sum(1 for col in one_hot_encode) > 0:
             transformations.append(
                 (
-                    SimplePreprocessingFactory.STEP_ONE_HOT_ENCODE,
+                    SimpleSamplePreprocessor.STEP_ONE_HOT_ENCODE,
                     OneHotEncoder(sparse=False, handle_unknown="ignore"),
                     one_hot_encode,
                 )
@@ -62,7 +62,7 @@ class SimplePreprocessingFactory(PreprocessingFactory):
 
         super().__init__(preprocessing_transformer=ColumnTransformer(transformations))
 
-    def preprocess(self, sample: Sample) -> Any:
+    def process(self, sample: Sample) -> Any:
 
         features = sample.features
 
@@ -88,7 +88,7 @@ class SimplePreprocessingFactory(PreprocessingFactory):
             t_name, t_obj, t_col_names = sub_transformer
 
             # is this sub_transformer the OneHotEncoder?
-            if t_name == SimplePreprocessingFactory.STEP_ONE_HOT_ENCODE:
+            if t_name == SimpleSamplePreprocessor.STEP_ONE_HOT_ENCODE:
                 # annotate the type
                 t_obj: OneHotEncoder = t_obj
                 # fit the transformer
@@ -97,7 +97,7 @@ class SimplePreprocessingFactory(PreprocessingFactory):
                 feature_names.extend(
                     t_obj.get_feature_names(input_features=t_col_names)
                 )
-            elif t_name == SimplePreprocessingFactory.STEP_IMPUTE:
+            elif t_name == SimpleSamplePreprocessor.STEP_IMPUTE:
                 # this is the SimpleImputer:
                 # col_names are all original column names given to this transformer,
                 # but minus those columns that are all N/A - (imputer drops those!)
