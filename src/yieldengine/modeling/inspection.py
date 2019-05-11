@@ -3,13 +3,13 @@ from typing import *
 
 import numpy as np
 import pandas as pd
+from shap import KernelExplainer, TreeExplainer
 from shap.explainers.explainer import Explainer
 from sklearn.base import BaseEstimator, clone
 from sklearn.model_selection import BaseCrossValidator
 
 from yieldengine.loading.sample import Sample
-from yieldengine.modeling.factory import PreprocessingFactory
-from shap import TreeExplainer, KernelExplainer
+from yieldengine.preprocessing import SamplePreprocessor
 
 log = logging.getLogger(__name__)
 
@@ -17,7 +17,7 @@ log = logging.getLogger(__name__)
 class ModelInspector:
     __slots__ = [
         "_estimator",
-        "_preprocessing_factory",
+        "_preprocessor",
         "_cv",
         "_sample",
         "_sample_preprocessed",
@@ -30,21 +30,19 @@ class ModelInspector:
 
     def __init__(
         self,
+        preprocessor: SamplePreprocessor,
         estimator: BaseEstimator,
-        preprocessing_factory: PreprocessingFactory,
         cv: BaseCrossValidator,
         sample: Sample,
     ) -> None:
 
         self._estimator = estimator
-        self._preprocessing_factory = preprocessing_factory
+        self._preprocessor = preprocessor
         self._cv = cv
         self._sample = sample
-        self._sample_preprocessed: Sample = None
+        self._sample_preprocessed: Union[Sample, None] = None
         self._estimators_by_fold: Dict[int, BaseEstimator] = {}
-        self._shap_explainer_by_fold: Dict[
-            int, Union[TreeExplainer, KernelExplainer]
-        ] = {}
+        self._shap_explainer_by_fold: Dict[int, Explainer] = {}
 
     @staticmethod
     def _make_shap_explainer(estimator: BaseEstimator, data: pd.DataFrame) -> Explainer:
@@ -70,6 +68,7 @@ class ModelInspector:
             )
             # when using KernelExplainer, shap expects "model" to be a callable that
             # predicts
+            # noinspection PyUnresolvedReferences
             return KernelExplainer(model=estimator.predict, data=data)
 
     @property
@@ -80,11 +79,9 @@ class ModelInspector:
     def sample(self) -> Sample:
         return self._sample
 
-    def _preprocess_sample(self):
-        if self._preprocessing_factory is not None:
-            self._sample_preprocessed = self._preprocessing_factory.preprocess(
-                sample=self._sample
-            )
+    def _preprocess_sample(self) -> None:
+        if self._sample_preprocessed is None:
+            self._sample_preprocessed = self._preprocessor.process(sample=self._sample)
 
     def predictions_for_all_samples(self) -> pd.DataFrame:
         """

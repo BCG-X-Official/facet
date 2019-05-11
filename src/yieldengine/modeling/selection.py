@@ -5,7 +5,7 @@ from sklearn.model_selection import BaseCrossValidator, GridSearchCV
 from sklearn.pipeline import Pipeline
 
 from yieldengine.loading.sample import Sample
-from yieldengine.modeling.factory import PreprocessingFactory
+from yieldengine.preprocessing import SamplePreprocessor
 
 
 class Model(NamedTuple):
@@ -52,7 +52,7 @@ class ModelRanker:
     def __init__(
         self,
         models: Iterable[Model],
-        preprocessing_factory: PreprocessingFactory = None,
+        preprocessing_factory: SamplePreprocessor = None,
         cv: BaseCrossValidator = None,
         scoring=None,
     ) -> None:
@@ -107,7 +107,7 @@ class ModelRanker:
 
         """
         if self._preprocessing_factory is not None:
-            sample = self._preprocessing_factory.preprocess(sample=sample)
+            sample = self._preprocessing_factory.process(sample=sample)
 
         for searcher in self._searchers:
             searcher.fit(X=sample.features, y=sample.target)
