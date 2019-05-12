@@ -41,8 +41,7 @@ class ModelInspector:
         self._cv = cv
         self._sample = sample
         self._sample_preprocessed: Union[Sample, None] = None
-        self._estimators_by_fold: Dict[int, BaseEstimator] = {}
-        self._shap_explainer_by_fold: Dict[int, Explainer] = {}
+        self._estimators_by_fold: Union[Dict[int, BaseEstimator], None] = None
 
     @staticmethod
     def _make_shap_explainer(estimator: BaseEstimator, data: pd.DataFrame) -> Explainer:
@@ -79,9 +78,11 @@ class ModelInspector:
     def sample(self) -> Sample:
         return self._sample
 
-    def _preprocess_sample(self) -> None:
+    @property
+    def sample_preprocessed(self) -> Sample:
         if self._sample_preprocessed is None:
             self._sample_preprocessed = self._preprocessor.process(sample=self._sample)
+        return self._sample_preprocessed
 
     def predictions_for_all_samples(self) -> pd.DataFrame:
         """
@@ -104,17 +105,16 @@ class ModelInspector:
         #       - fit the estimator on the X and y of train set
         #       - predict y for test set
 
-        self._preprocess_sample()
+        self._estimators_by_fold: Dict[int, BaseEstimator] = {}
+        sample_preprocessed = self.sample_preprocessed
 
         def predict(
             train_indices: np.ndarray, test_indices: np.ndarray
         ) -> pd.DataFrame:
-            train_sample = self._sample_preprocessed.select_observations(
+            train_sample = sample_preprocessed.select_observations(
                 indices=train_indices
             )
-            test_sample = self._sample_preprocessed.select_observations(
-                indices=test_indices
-            )
+            test_sample = sample_preprocessed.select_observations(indices=test_indices)
             fold = test_indices[0]
 
             self._estimators_by_fold[fold] = estimator = clone(self._estimator)
@@ -133,7 +133,7 @@ class ModelInspector:
             [
                 predict(train_indices, test_indices)
                 for train_indices, test_indices in self.cv.split(
-                    self._sample_preprocessed.features, self._sample_preprocessed.target
+                    sample_preprocessed.features, sample_preprocessed.target
                 )
             ]
         )
@@ -144,44 +144,44 @@ class ModelInspector:
         :return: the estimator that was used to predict the dependent vartiable of
         the test fold
         """
-        if len(self._estimators_by_fold) == 0:
+        if self._estimators_by_fold is None:
             self.predictions_for_all_samples()
-
         return self._estimators_by_fold[fold]
 
     def shap_value_matrix(self) -> pd.DataFrame:
         predictions = self.predictions_for_all_samples()
+        sample_preprocessed = self.sample_preprocessed
 
-        shap_value_dfs = []
-
-        for fold, estimator in self._estimators_by_fold.items():
-            fold_indices = predictions.loc[
+        def shap_matrix_for_fold(estimator: BaseEstimator, fold: int) -> pd.DataFrame:
+            observation_indices_in_fold = predictions.loc[
                 predictions[self.F_FOLD_START] == fold, :
             ].index
 
-            fold_x = self._sample_preprocessed.select_observations(
-                indices=fold_indices
+            fold_x = sample_preprocessed.select_observations(
+                indices=observation_indices_in_fold
             ).features
 
-            explainer = ModelInspector._make_shap_explainer(
+            shap_matrix = ModelInspector._make_shap_explainer(
                 estimator=estimator, data=fold_x
-            )
-            self._shap_explainer_by_fold[fold] = explainer
+            ).shap_values(fold_x)
 
-            shap_matrix = explainer.shap_values(fold_x)
-
-            fold_shap_values = pd.DataFrame(
+            return pd.DataFrame(
                 data=shap_matrix,
-                index=fold_indices,
-                columns=self._sample_preprocessed.feature_names,
+                index=observation_indices_in_fold,
+                columns=sample_preprocessed.feature_names,
             )
 
-            shap_value_dfs.append(fold_shap_values)
+        shap_value_dfs = [
+            shap_matrix_for_fold(estimator, fold)
+            for fold, estimator in self._estimators_by_fold.items()
+        ]
 
         # Group SHAP matrix by observation ID and aggregate SHAP values using mean()
-        concatenated = pd.concat(objs=shap_value_dfs)
-        aggregated = concatenated.groupby(by=concatenated.index).agg("mean")
-        return aggregated
+        return (
+            pd.concat(objs=shap_value_dfs)
+            .groupby(by=pd.concat(objs=shap_value_dfs).index)
+            .mean()
+        )
 
     def feature_dependencies(self) -> pd.DataFrame:
         # calculate shap_value_matrix()
