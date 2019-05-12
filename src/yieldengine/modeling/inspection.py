@@ -149,7 +149,7 @@ class ModelInspector:
             self.predictions_for_all_samples()
         return self._estimators_by_fold[fold]
 
-    def shap_value_matrix(self) -> pd.DataFrame:
+    def shap_matrix(self) -> pd.DataFrame:
         predictions_by_observation_and_fold = self.predictions_for_all_samples().set_index(
             self.F_FOLD_ID, append=True
         )
@@ -189,13 +189,13 @@ class ModelInspector:
         )
 
     def feature_dependencies(self) -> pd.DataFrame:
-        # calculate shap_value_matrix()
+        # calculate shap_matrix()
         # find correlations
         # return as DataFrame
         pass
 
     def clustered_feature_importance(self) -> pd.DataFrame:
-        # calculate shap_value_matrix()
+        # calculate shap_matrix()
         # run hierarchichal clustering
         # return clustering result as DataFrame
         pass
