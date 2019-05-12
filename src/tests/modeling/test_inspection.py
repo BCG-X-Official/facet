@@ -87,11 +87,11 @@ def test_model_inspection() -> None:
         # test predictions_for_all_samples
         predictions_df: pd.DataFrame = mi.predictions_for_all_samples()
 
-        assert ModelInspector.F_FOLD_START in predictions_df.columns
+        assert ModelInspector.F_FOLD_ID in predictions_df.columns
         assert ModelInspector.F_PREDICTION in predictions_df.columns
 
         # check number of fold-starts
-        assert len(predictions_df[ModelInspector.F_FOLD_START].unique()) == N_FOLDS
+        assert predictions_df[ModelInspector.F_FOLD_ID].nunique() == N_FOLDS
 
         # check correct number of rows
         ALLOWED_VARIANCE = 0.01
