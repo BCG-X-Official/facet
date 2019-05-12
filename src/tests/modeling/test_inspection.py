@@ -102,7 +102,7 @@ def test_model_inspection() -> None:
         )
 
         # make and check shap value matrix
-        shap_matrix = mi.shap_value_matrix()
+        shap_matrix = mi.shap_matrix()
 
         # the length of rows in shap_matrix should be equal to the unique observation
         # indices we have had in the predictions_df
@@ -142,5 +142,5 @@ def test_model_inspection_with_encoding(
             sample=sample,
         )
 
-        shap_matrix = mi.shap_value_matrix()
+        shap_matrix = mi.shap_matrix()
         print(shap_matrix.head())
