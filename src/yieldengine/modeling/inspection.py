@@ -25,7 +25,7 @@ class ModelInspector:
         "_estimators_by_fold",
     ]
 
-    F_FOLD_START = "fold_start"
+    F_FOLD_ID = "fold_start"
     F_PREDICTION = "prediction"
 
     def __init__(
@@ -109,19 +109,18 @@ class ModelInspector:
         sample_preprocessed = self.sample_preprocessed
 
         def predict(
-            train_indices: np.ndarray, test_indices: np.ndarray
+            fold_id: int, train_indices: np.ndarray, test_indices: np.ndarray
         ) -> pd.DataFrame:
             train_sample = sample_preprocessed.select_observations(
                 indices=train_indices
             )
             test_sample = sample_preprocessed.select_observations(indices=test_indices)
-            fold = test_indices[0]
 
-            self._estimators_by_fold[fold] = estimator = clone(self._estimator)
+            self._estimators_by_fold[fold_id] = estimator = clone(self._estimator)
 
             return pd.DataFrame(
                 data={
-                    self.F_FOLD_START: fold,
+                    self.F_FOLD_ID: fold_id,
                     self.F_PREDICTION: estimator.fit(
                         X=train_sample.features, y=train_sample.target
                     ).predict(X=test_sample.features),
@@ -131,9 +130,11 @@ class ModelInspector:
 
         return pd.concat(
             [
-                predict(train_indices, test_indices)
-                for train_indices, test_indices in self.cv.split(
-                    sample_preprocessed.features, sample_preprocessed.target
+                predict(fold_id, train_indices, test_indices)
+                for fold_id, (train_indices, test_indices) in enumerate(
+                    self.cv.split(
+                        sample_preprocessed.features, sample_preprocessed.target
+                    )
                 )
             ]
         )
@@ -154,7 +155,7 @@ class ModelInspector:
 
         def shap_matrix_for_fold(estimator: BaseEstimator, fold: int) -> pd.DataFrame:
             observation_indices_in_fold = predictions.loc[
-                predictions[self.F_FOLD_START] == fold, :
+                predictions[self.F_FOLD_ID] == fold, :
             ].index
 
             fold_x = sample_preprocessed.select_observations(
