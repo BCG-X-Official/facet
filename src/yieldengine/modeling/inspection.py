@@ -156,7 +156,7 @@ class ModelInspector:
         sample_preprocessed = self.sample_preprocessed
 
         def shap_matrix_for_fold(
-            estimator: BaseEstimator, fold_id: int
+            fold_id: int, estimator: BaseEstimator
         ) -> pd.DataFrame:
             observation_indices_in_fold = predictions_by_observation_and_fold.xs(
                 key=fold_id, level=self.F_FOLD_ID
@@ -177,7 +177,7 @@ class ModelInspector:
             )
 
         shap_value_dfs = [
-            shap_matrix_for_fold(estimator, fold_id)
+            shap_matrix_for_fold(fold_id, estimator)
             for fold_id, estimator in self._estimators_by_fold.items()
         ]
 
