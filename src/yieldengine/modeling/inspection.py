@@ -150,13 +150,17 @@ class ModelInspector:
         return self._estimators_by_fold[fold]
 
     def shap_value_matrix(self) -> pd.DataFrame:
-        predictions = self.predictions_for_all_samples()
+        predictions_by_observation_and_fold = self.predictions_for_all_samples().set_index(
+            self.F_FOLD_ID, append=True
+        )
         sample_preprocessed = self.sample_preprocessed
 
-        def shap_matrix_for_fold(estimator: BaseEstimator, fold: int) -> pd.DataFrame:
-            observation_indices_in_fold = predictions.loc[
-                predictions[self.F_FOLD_ID] == fold, :
-            ].index
+        def shap_matrix_for_fold(
+            estimator: BaseEstimator, fold_id: int
+        ) -> pd.DataFrame:
+            observation_indices_in_fold = predictions_by_observation_and_fold.xs(
+                key=fold_id, level=self.F_FOLD_ID
+            ).index
 
             fold_x = sample_preprocessed.select_observations(
                 indices=observation_indices_in_fold
@@ -173,8 +177,8 @@ class ModelInspector:
             )
 
         shap_value_dfs = [
-            shap_matrix_for_fold(estimator, fold)
-            for fold, estimator in self._estimators_by_fold.items()
+            shap_matrix_for_fold(estimator, fold_id)
+            for fold_id, estimator in self._estimators_by_fold.items()
         ]
 
         # Group SHAP matrix by observation ID and aggregate SHAP values using mean()
