@@ -26,6 +26,7 @@ def test_model_inspection() -> None:
     N_FOLDS = 5
     TEST_RATIO = 0.2
     BOSTON_TARGET = "target"
+    N_CLUSTERS = 10
 
     # define a yield-engine circular CV:
     test_cv = ShuffleSplit(n_splits=N_FOLDS, test_size=TEST_RATIO, random_state=42)
@@ -106,6 +107,31 @@ def test_model_inspection() -> None:
         # indices we have had in the predictions_df
         assert len(shap_matrix) == len(predictions_df.index.unique())
 
+        # correlated shap matrix: feature dependencies
+        corr_matrix: pd.DataFrame = mi.feature_dependencies()
+
+        # check number of rows
+        assert len(corr_matrix) == len(test_sample.feature_names)
+        assert len(corr_matrix.columns) == len(test_sample.feature_names)
+
+        # check correlation values
+        for c in corr_matrix.columns:
+            assert (
+                -1.0
+                <= corr_matrix.fillna(0).loc[:, c].min()
+                <= corr_matrix.fillna(0).loc[:, c].max()
+                <= 1.0
+            )
+
+        clustered_corr_matrix: pd.DataFrame = mi.clustered_feature_dependencies(
+            n_clusters=N_CLUSTERS
+        )
+
+        assert (
+            clustered_corr_matrix.loc[:, ModelInspector.F_CLUSTER_LABEL].nunique()
+            == N_CLUSTERS
+        )
+
 
 def test_model_inspection_with_encoding(
     batch_table: pd.DataFrame, regressor_grids, sample: Sample, preprocessor
@@ -135,3 +161,9 @@ def test_model_inspection_with_encoding(
 
         shap_matrix = mi.shap_matrix()
         print(shap_matrix.head())
+
+        # correlated shap matrix: feature dependencies
+        corr_matrix: pd.DataFrame = mi.feature_dependencies()
+
+        # cluster feature importances
+        clustered_corr_matrix: pd.DataFrame = mi.clustered_feature_dependencies()
