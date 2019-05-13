@@ -13,7 +13,7 @@ from sklearn.tree import DecisionTreeRegressor, ExtraTreeRegressor
 
 from tests import read_test_config
 from tests.paths import TEST_DATA_CSV
-from yieldengine.loading.sample import Sample
+from yieldengine import Sample
 from yieldengine.model.selection import Model
 from yieldengine.preprocessing import SimpleSamplePreprocessor
 
