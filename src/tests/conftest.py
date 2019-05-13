@@ -38,7 +38,7 @@ def batch_table() -> pd.DataFrame:
 
 
 @pytest.fixture
-def regressor_grids() -> List[Model]:
+def regressor_grids(preprocessor: SimpleSamplePreprocessor) -> List[Model]:
     RANDOM_STATE = {"random_state": [42]}
     return [
         Model(
@@ -49,14 +49,17 @@ def regressor_grids() -> List[Model]:
                 "num_leaves": [50, 100, 200],
                 **RANDOM_STATE,
             },
+            preprocessor=preprocessor,
         ),
         Model(
             estimator=AdaBoostRegressor(),
             parameter_grid={"n_estimators": [50, 80], **RANDOM_STATE},
+            preprocessor=preprocessor,
         ),
         Model(
             estimator=RandomForestRegressor(),
             parameter_grid={"n_estimators": [50, 80], **RANDOM_STATE},
+            preprocessor=preprocessor,
         ),
         Model(
             estimator=DecisionTreeRegressor(),
@@ -65,14 +68,22 @@ def regressor_grids() -> List[Model]:
                 "max_features": [0.5, 1.0],
                 **RANDOM_STATE,
             },
+            preprocessor=preprocessor,
         ),
         Model(
             estimator=ExtraTreeRegressor(),
             parameter_grid={"max_depth": [5, 10, 12], **RANDOM_STATE},
+            preprocessor=preprocessor,
         ),
-        Model(estimator=SVR(), parameter_grid={"gamma": [0.5, 1], "C": [50, 100]}),
         Model(
-            estimator=LinearRegression(), parameter_grid={"normalize": [False, True]}
+            estimator=SVR(),
+            parameter_grid={"gamma": [0.5, 1], "C": [50, 100]},
+            preprocessor=preprocessor,
+        ),
+        Model(
+            estimator=LinearRegression(),
+            parameter_grid={"normalize": [False, True]},
+            preprocessor=preprocessor,
         ),
     ]
 
