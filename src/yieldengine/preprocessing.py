@@ -32,7 +32,7 @@ class SimpleSamplePreprocessor(SamplePreprocessor):
     STEP_ONE_HOT_ENCODE = "one-hot-encode"
 
     def __init__(
-        self, impute_mean: Iterable[str] = None, one_hot_encode: Iterable[str] = None
+        self, impute_mean: Sequence[str] = None, one_hot_encode: Sequence[str] = None
     ):
         """
 
@@ -42,7 +42,7 @@ class SimpleSamplePreprocessor(SamplePreprocessor):
 
         transformations: List[Tuple[str, TransformerMixin, Iterable[str]]] = list()
 
-        if impute_mean is not None and sum(1 for col in impute_mean) > 0:
+        if impute_mean is not None and len(impute_mean) > 0:
             transformations.append(
                 (
                     SimpleSamplePreprocessor.STEP_IMPUTE,
