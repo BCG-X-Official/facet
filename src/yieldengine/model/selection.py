@@ -1,5 +1,6 @@
 from typing import *
 
+import numpy as np
 from sklearn.base import BaseEstimator, clone
 from sklearn.model_selection import BaseCrossValidator, GridSearchCV
 
@@ -9,7 +10,7 @@ from yieldengine.preprocessing import SamplePreprocessor
 
 class Model(NamedTuple):
     estimator: BaseEstimator
-    parameter_grid: Dict[str, Any]
+    parameter_grid: Dict[str, Union[Sequence[Any], np.ndarray]]
     preprocessor: Union[None, SamplePreprocessor]
 
 
@@ -180,14 +181,22 @@ class ModelRanking:
 
         name_width = max([len(_model_name(ranked_model)) for ranked_model in ranking])
 
+        def parameters(params: Dict[str, Iterable[Any]]) -> str:
+            return "\n    ".join(
+                [
+                    f"{param_name}={param_value}"
+                    for param_name, param_value in params.items()
+                ]
+            )
+
         return "\n".join(
             [
                 f" Rank {rank + 1:2d}: "
                 f"{_model_name(ranked_model):>{name_width}s}, "
-                f"Score={ranked_model.ranking_score:.2e}, "
-                f"Test mean={ranked_model.test_score_mean:.2e}"
-                f"Test std={ranked_model.test_score_std:.2e}"
-                f"Params={ranked_model.parameters}"
+                f"Score={ranked_model.ranking_score:+.2e}, "
+                f"Test mean={ranked_model.test_score_mean:+.2e}, "
+                f"Test std={ranked_model.test_score_std:+.2e}"
+                f"\n    {parameters(ranked_model.parameters)}"
                 for rank, ranked_model in enumerate(ranking)
             ]
         )
