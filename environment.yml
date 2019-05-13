@@ -12,5 +12,6 @@ dependencies:
   - black = 19.3
   - pytest-cov = 2.6.*
   - pip = 19.1
+  - xlrd = 1.2.0
   - pip:
       - pre_commit == 1.16.*
