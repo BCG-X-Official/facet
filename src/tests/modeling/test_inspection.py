@@ -160,7 +160,6 @@ def test_model_inspection_with_encoding(
         )
 
         shap_matrix = mi.shap_matrix()
-        print(shap_matrix.head())
 
         # correlated shap matrix: feature dependencies
         corr_matrix: pd.DataFrame = mi.feature_dependencies()
