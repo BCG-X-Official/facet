@@ -20,10 +20,7 @@ def test_model_ranker(
     circular_cv = CircularCrossValidator(test_ratio=0.20, num_folds=5)
 
     model_ranker: ModelRanker = ModelRanker(
-        models=regressor_grids,
-        preprocessing_factory=preprocessor,
-        cv=circular_cv,
-        scoring="r2",
+        models=regressor_grids, cv=circular_cv, scoring="r2"
     )
 
     # run the ModelRanker to retrieve a ranking
@@ -63,6 +60,7 @@ def test_model_ranker_no_preprocessing() -> None:
         Model(
             estimator=SVC(gamma="scale"),
             parameter_grid={"kernel": ("linear", "rbf"), "C": [1, 10]},
+            preprocessor=None,
         )
     ]
 
