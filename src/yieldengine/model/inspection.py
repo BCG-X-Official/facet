@@ -29,7 +29,7 @@ class ModelInspector:
 
     F_FOLD_ID = "fold_start"
     F_PREDICTION = "prediction"
-    F_FEATURE_1 = "feature_1"
+    F_FEATURE = "feature"
     F_CLUSTER_LABEL = "cluster_label"
 
     def __init__(
@@ -195,35 +195,69 @@ class ModelInspector:
         if self._shap_correlation_matrix is not None:
             return self._shap_correlation_matrix
 
-        data = []
         shap_matrix = self.shap_matrix()
 
-        for c1 in shap_matrix.columns:
+        # collect row-wise in this list in order to convert to pd.DF later
+        data = []
+
+        # construct an correlation matrix that looks like this:
+        #
+        #                    F1         F2         F3         FN
+        # feature
+        # F1                  1       corr       corr       corr
+        # F2               corr          1       corr       corr
+        # F3               corr       corr          1       corr
+        # FN               corr       corr       corr          1
+        #
+        for column1 in shap_matrix.columns:
             row = {
-                # pearsonr() returns a tuple of (r, p-value) -> retrieve only r using[0]
-                c2: pearsonr(x=shap_matrix.loc[:, c1], y=shap_matrix.loc[:, c2])[0]
-                for c2 in shap_matrix.columns
+                column2: 0
+                # for features, for which across all predictions their shap-
+                # value is 0, the correlation does not exist, can not be computed
+                # and will yield a na (due division by zero)!
+                # hence set a correlation of 0 -> "no correlation"
+                if (
+                    (shap_matrix.loc[:, column1].unique() == 0).all()
+                    or (shap_matrix.loc[:, column2].unique() == 0).all()
+                )
+                # pearsonr() returns a tuple of (r, p-value)
+                #   -> retrieve only "r" correlation coefficient using[0]
+                else pearsonr(
+                    x=shap_matrix.loc[:, column1], y=shap_matrix.loc[:, column2]
+                )[0]
+                # iterate over all feature columns in the shap matrix
+                for column2 in shap_matrix.columns
             }
-            row[ModelInspector.F_FEATURE_1] = c1
+
+            # set the index column for this row to the feature column name
+            row[ModelInspector.F_FEATURE] = column1
+
+            # append this row
             data.append(row)
 
+        # create a data frame and set the index to "F_FEATURE_1"
         self._shap_correlation_matrix = pd.DataFrame(data).set_index(
-            keys=ModelInspector.F_FEATURE_1
+            keys=ModelInspector.F_FEATURE
         )
 
         return self._shap_correlation_matrix
 
     def clustered_feature_dependencies(self, n_clusters: int = 10) -> pd.DataFrame:
+        # set up the clustering estimator
         clustering = AgglomerativeClustering(
             linkage="single", affinity="precomputed", n_clusters=n_clusters
         )
+
+        # retrieve feature_dependencies - already in the correct shape
         feature_dependencies = self.feature_dependencies()
 
-        # todo: analyse+handle NaN columns better...
+        # fit the clustering algorithm using the feature_dependencies as a
+        # distance matrix
         cluster_labels: np.ndarray = clustering.fit_predict(
-            X=feature_dependencies.fillna(0).values
+            X=feature_dependencies.values
         )
 
+        # return a data frame with the cluster labels added as a series
         feature_dependencies[ModelInspector.F_CLUSTER_LABEL] = cluster_labels
 
         return feature_dependencies
