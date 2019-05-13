@@ -242,7 +242,9 @@ class ModelInspector:
 
         return self._shap_correlation_matrix
 
-    def clustered_feature_dependencies(self, n_clusters: int = 10) -> pd.DataFrame:
+    def clustered_feature_dependencies(
+        self, n_clusters: int = 10, remove_all_zero: bool = True
+    ) -> pd.DataFrame:
         # set up the clustering estimator
         clustering = AgglomerativeClustering(
             linkage="single", affinity="precomputed", n_clusters=n_clusters
@@ -251,10 +253,27 @@ class ModelInspector:
         # retrieve feature_dependencies - already in the correct shape
         feature_dependencies = self.feature_dependencies()
 
+        if remove_all_zero:
+            to_drop = set()
+
+            for column in feature_dependencies.columns:
+                if (feature_dependencies.loc[:, column].unique() == 0).all():
+                    to_drop.add(column)
+
+            feature_dependencies = feature_dependencies.drop(labels=to_drop, axis=1)
+            feature_dependencies = feature_dependencies.drop(labels=to_drop, axis=0)
+
+            log.info(f"removed {len(to_drop)} features with all-zero correlation")
+
         # fit the clustering algorithm using the feature_dependencies as a
         # distance matrix
+        # todo: double check if the shift is needed
+        # we shift the [-1, 1] correlation coefficient by -1 into [-2, 0],
+        # and take the absolute.
+        # this means, r = -1 gets a distance of 2 and r = 1 a distance of 0, and so on
+        # and then fit the clustering algorithm:
         cluster_labels: np.ndarray = clustering.fit_predict(
-            X=feature_dependencies.values
+            X=np.abs(feature_dependencies.values - 1)
         )
 
         # return a data frame with the cluster labels added as a series
