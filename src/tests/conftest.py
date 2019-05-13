@@ -14,7 +14,7 @@ from sklearn.tree import DecisionTreeRegressor, ExtraTreeRegressor
 from tests import read_test_config
 from tests.paths import TEST_DATA_CSV
 from yieldengine.loading.sample import Sample
-from yieldengine.modeling.selection import Model
+from yieldengine.model.selection import Model
 from yieldengine.preprocessing import SimpleSamplePreprocessor
 
 logging.basicConfig(level=logging.INFO)
@@ -90,7 +90,7 @@ def regressor_grids(preprocessor: SimpleSamplePreprocessor) -> List[Model]:
 
 @pytest.fixture
 def sample(batch_table: pd.DataFrame) -> Sample:
-    # drop columns that should not take part in modeling
+    # drop columns that should not take part in model
     batch_table = batch_table.drop(columns=["Date", "Batch Id"])
 
     # replace values of +/- infinite with n/a, then drop all n/a columns:

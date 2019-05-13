@@ -7,8 +7,8 @@ from sklearn import datasets
 from sklearn.svm import SVC
 
 from yieldengine.loading.sample import Sample
-from yieldengine.modeling.selection import Model, ModelRanker, ModelRanking, ScoredModel
-from yieldengine.modeling.validation import CircularCrossValidator
+from yieldengine.model.selection import Model, ModelRanker, ModelRanking, ScoredModel
+from yieldengine.model.validation import CircularCrossValidator
 
 log = logging.getLogger(__name__)
 
