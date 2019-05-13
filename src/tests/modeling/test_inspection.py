@@ -9,7 +9,7 @@ from sklearn.model_selection import ShuffleSplit
 from sklearn.svm import SVR
 from sklearn.utils import Bunch
 
-from yieldengine.loading.sample import Sample
+from yieldengine import Sample
 from yieldengine.model.inspection import ModelInspector
 from yieldengine.model.selection import Model, ModelRanker, ModelRanking
 from yieldengine.model.validation import CircularCrossValidator

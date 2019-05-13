@@ -1,7 +1,7 @@
 import pandas as pd
 import pytest
 
-from yieldengine.loading.sample import Sample
+from yieldengine import Sample
 
 
 # checks various erroneous inputs
