@@ -2,7 +2,8 @@ from typing import *
 
 from sklearn.base import BaseEstimator, clone
 from sklearn.model_selection import BaseCrossValidator, GridSearchCV
-from yieldengine.loading.sample import Sample
+
+from yieldengine import Sample
 from yieldengine.preprocessing import SamplePreprocessor
 
 

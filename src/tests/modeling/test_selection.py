@@ -6,7 +6,7 @@ import pandas as pd
 from sklearn import datasets
 from sklearn.svm import SVC
 
-from yieldengine.loading.sample import Sample
+from yieldengine import Sample
 from yieldengine.model.selection import Model, ModelRanker, ModelRanking, ScoredModel
 from yieldengine.model.validation import CircularCrossValidator
 
