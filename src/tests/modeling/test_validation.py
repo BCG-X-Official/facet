@@ -5,7 +5,7 @@ import pytest
 from sklearn import datasets, svm, tree
 from sklearn.model_selection import GridSearchCV
 
-from yieldengine.modeling.validation import CircularCrossValidator
+from yieldengine.model.validation import CircularCrossValidator
 
 
 def test_circular_cv_init(batch_table):
