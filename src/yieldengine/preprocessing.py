@@ -71,7 +71,9 @@ class SimpleSamplePreprocessor(SamplePreprocessor):
         feature_names = self._post_transform_feature_names(observations=sample)
 
         # convert to a DF
-        new_observations = pd.DataFrame(data=transformed_x, columns=feature_names)
+        new_observations = pd.DataFrame(
+            index=features.index, data=transformed_x, columns=feature_names
+        )
 
         new_observations.loc[:, sample.target_name] = sample.target
 
