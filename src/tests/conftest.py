@@ -92,7 +92,7 @@ def sample(batch_table: pd.DataFrame) -> Sample:
 
 
 @pytest.fixture
-def preprocessing_factory(sample: Sample) -> SimpleSamplePreprocessor:
+def preprocessor(sample: Sample) -> SimpleSamplePreprocessor:
     return SimpleSamplePreprocessor(
         impute_mean=sample.features_by_type(dtype=Sample.DTYPE_NUMERICAL),
         one_hot_encode=sample.features_by_type(dtype=Sample.DTYPE_OBJECT),
