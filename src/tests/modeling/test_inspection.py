@@ -10,9 +10,9 @@ from sklearn.svm import SVR
 from sklearn.utils import Bunch
 
 from yieldengine.loading.sample import Sample
-from yieldengine.modeling.inspection import ModelInspector
-from yieldengine.modeling.selection import Model, ModelRanker, ModelRanking
-from yieldengine.modeling.validation import CircularCrossValidator
+from yieldengine.model.inspection import ModelInspector
+from yieldengine.model.selection import Model, ModelRanker, ModelRanking
+from yieldengine.model.validation import CircularCrossValidator
 from yieldengine.preprocessing import SimpleSamplePreprocessor
 
 log = logging.getLogger(__name__)
