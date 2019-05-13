@@ -9,23 +9,19 @@ from sklearn.svm import SVC
 from yieldengine.loading.sample import Sample
 from yieldengine.modeling.selection import Model, ModelRanker, ModelRanking, ScoredModel
 from yieldengine.modeling.validation import CircularCrossValidator
-from yieldengine.preprocessing import SamplePreprocessor
 
 log = logging.getLogger(__name__)
 
 
 def test_model_ranker(
-    batch_table: pd.DataFrame,
-    regressor_grids,
-    sample: Sample,
-    preprocessing_factory: SamplePreprocessor,
+    batch_table: pd.DataFrame, regressor_grids, sample: Sample, preprocessor
 ) -> None:
     # define the circular cross validator with just 5 folds (to speed up testing)
     circular_cv = CircularCrossValidator(test_ratio=0.20, num_folds=5)
 
     model_ranker: ModelRanker = ModelRanker(
         models=regressor_grids,
-        preprocessing_factory=preprocessing_factory,
+        preprocessing_factory=preprocessor,
         cv=circular_cv,
         scoring="r2",
     )

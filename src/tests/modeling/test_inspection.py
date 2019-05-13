@@ -57,21 +57,21 @@ def test_model_inspection() -> None:
 
     test_sample: Sample = Sample(observations=test_data, target_name=BOSTON_TARGET)
 
-    preprocessing_factory = SimpleSamplePreprocessor(
+    preprocessor = SimpleSamplePreprocessor(
         impute_mean=test_sample.features_by_type(dtype=Sample.DTYPE_NUMERICAL),
         one_hot_encode=test_sample.features_by_type(dtype=Sample.DTYPE_OBJECT),
     )
 
     model_ranker: ModelRanker = ModelRanker(
         models=models,
-        preprocessing_factory=preprocessing_factory,
+        preprocessing_factory=preprocessor,
         cv=test_cv,
         scoring="neg_mean_squared_error",
     )
 
     model_ranking: ModelRanking = model_ranker.run(test_sample)
 
-    preprocessed_sample = preprocessing_factory.process(sample=test_sample)
+    preprocessed_sample = preprocessor.process(sample=test_sample)
 
     # consider: model_with_type(...) function for ModelRanking
     best_svr = [m for m in model_ranking if isinstance(m.estimator, SVR)][0]
@@ -109,10 +109,7 @@ def test_model_inspection() -> None:
 
 
 def test_model_inspection_with_encoding(
-    batch_table: pd.DataFrame,
-    regressor_grids,
-    sample: Sample,
-    preprocessing_factory: SimpleSamplePreprocessor,
+    batch_table: pd.DataFrame, regressor_grids, sample: Sample, preprocessor
 ) -> None:
 
     # define the circular cross validator with just 5 folds (to speed up testing)
@@ -120,7 +117,7 @@ def test_model_inspection_with_encoding(
 
     model_ranker: ModelRanker = ModelRanker(
         models=regressor_grids,
-        preprocessing_factory=preprocessing_factory,
+        preprocessing_factory=preprocessor,
         cv=circular_cv,
         scoring="r2",
     )
@@ -130,7 +127,7 @@ def test_model_inspection_with_encoding(
 
     log.info(model_ranking)
 
-    preprocessed_sample = preprocessing_factory.process(sample=sample)
+    preprocessed_sample = preprocessor.process(sample=sample)
 
     # consider: model_with_type(...) function for ModelRanking
     # best_svr = [m for m in model_ranking if isinstance(m.estimator, SVR)][0]
