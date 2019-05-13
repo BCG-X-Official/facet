@@ -9,6 +9,8 @@ from sklearn.base import BaseEstimator, clone
 from sklearn.model_selection import BaseCrossValidator
 
 from yieldengine.loading.sample import Sample
+from scipy.stats import pearsonr
+from sklearn.cluster import AgglomerativeClustering
 
 log = logging.getLogger(__name__)
 
@@ -22,10 +24,13 @@ class ModelInspector:
         "_estimators_by_fold",
         "_predictions_for_all_samples",
         "_shap_matrix",
+        "_shap_correlation_matrix",
     ]
 
     F_FOLD_ID = "fold_start"
     F_PREDICTION = "prediction"
+    F_FEATURE_1 = "feature_1"
+    F_CLUSTER_LABEL = "cluster_label"
 
     def __init__(
         self, estimator: BaseEstimator, cv: BaseCrossValidator, sample: Sample
@@ -37,6 +42,7 @@ class ModelInspector:
         self._estimators_by_fold: Union[Dict[int, BaseEstimator], None] = None
         self._predictions_for_all_samples: Union[pd.DataFrame, None] = None
         self._shap_matrix: Union[pd.DataFrame, None] = None
+        self._shap_correlation_matrix: Union[pd.DataFrame, None] = None
 
     @staticmethod
     def _make_shap_explainer(estimator: BaseEstimator, data: pd.DataFrame) -> Explainer:
@@ -186,13 +192,38 @@ class ModelInspector:
         return self._shap_matrix
 
     def feature_dependencies(self) -> pd.DataFrame:
-        # calculate shap_matrix()
-        # find correlations
-        # return as DataFrame
-        pass
+        if self._shap_correlation_matrix is not None:
+            return self._shap_correlation_matrix
 
-    def clustered_feature_importance(self) -> pd.DataFrame:
-        # calculate shap_matrix()
-        # run hierarchichal clustering
-        # return clustering result as DataFrame
-        pass
+        data = []
+        shap_matrix = self.shap_matrix()
+
+        for c1 in shap_matrix.columns:
+            row = {
+                # pearsonr() returns a tuple of (r, p-value) -> retrieve only r using[0]
+                c2: pearsonr(x=shap_matrix.loc[:, c1], y=shap_matrix.loc[:, c2])[0]
+                for c2 in shap_matrix.columns
+            }
+            row[ModelInspector.F_FEATURE_1] = c1
+            data.append(row)
+
+        self._shap_correlation_matrix = pd.DataFrame(data).set_index(
+            keys=ModelInspector.F_FEATURE_1
+        )
+
+        return self._shap_correlation_matrix
+
+    def clustered_feature_dependencies(self, n_clusters: int = 10) -> pd.DataFrame:
+        clustering = AgglomerativeClustering(
+            linkage="single", affinity="precomputed", n_clusters=n_clusters
+        )
+        feature_dependencies = self.feature_dependencies()
+
+        # todo: analyse+handle NaN columns better...
+        cluster_labels: np.ndarray = clustering.fit_predict(
+            X=feature_dependencies.fillna(0).values
+        )
+
+        feature_dependencies[ModelInspector.F_CLUSTER_LABEL] = cluster_labels
+
+        return feature_dependencies
