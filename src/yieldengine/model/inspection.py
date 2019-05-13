@@ -3,14 +3,14 @@ from typing import *
 
 import numpy as np
 import pandas as pd
+from scipy.stats import pearsonr
 from shap import KernelExplainer, TreeExplainer
 from shap.explainers.explainer import Explainer
 from sklearn.base import BaseEstimator, clone
+from sklearn.cluster import AgglomerativeClustering
 from sklearn.model_selection import BaseCrossValidator
 
-from yieldengine.loading.sample import Sample
-from scipy.stats import pearsonr
-from sklearn.cluster import AgglomerativeClustering
+from yieldengine import Sample
 
 log = logging.getLogger(__name__)
 

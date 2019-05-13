@@ -7,7 +7,7 @@ from sklearn.compose import ColumnTransformer
 from sklearn.impute import SimpleImputer
 from sklearn.preprocessing import OneHotEncoder
 
-from yieldengine.loading.sample import Sample
+from yieldengine import Sample
 
 
 class SamplePreprocessor(ABC):
