@@ -11,34 +11,26 @@ from yieldengine import Sample
 
 
 class SamplePreprocessor(ABC):
-
-    __slots__ = ["_preprocessing_transformer"]
-
-    def __init__(self, preprocessing_transformer: ColumnTransformer):
-        self._preprocessing_transformer = preprocessing_transformer
-
     @abstractmethod
     def process(self, sample: Sample) -> Sample:
         pass
 
-    @property
-    def preprocessing_transformer(self) -> ColumnTransformer:
-        return self._preprocessing_transformer
-
 
 class SimpleSamplePreprocessor(SamplePreprocessor):
+    """
+    :param impute_mean: list of columns to impute or None
+    :param one_hot_encode: list of (categorical) columns to encode or None
+    """
 
     STEP_IMPUTE = "impute"
     STEP_ONE_HOT_ENCODE = "one-hot-encode"
 
+    __slots__ = ["_preprocessing_transformer"]
+
     def __init__(
         self, impute_mean: Sequence[str] = None, one_hot_encode: Sequence[str] = None
     ):
-        """
-
-        :param impute_mean: list of columns to impute or None
-        :param one_hot_encode: list of (categorical) columns to encode or None
-        """
+        super().__init__()
 
         transformations: List[Tuple[str, TransformerMixin, Iterable[str]]] = list()
 
@@ -60,13 +52,13 @@ class SimpleSamplePreprocessor(SamplePreprocessor):
                 )
             )
 
-        super().__init__(preprocessing_transformer=ColumnTransformer(transformations))
+        self._preprocessing_transformer = ColumnTransformer(transformations)
 
-    def process(self, sample: Sample) -> Any:
+    def process(self, sample: Sample) -> Sample:
 
         features = sample.features
 
-        transformed_x = self.preprocessing_transformer.fit_transform(X=features)
+        transformed_x = self._preprocessing_transformer.fit_transform(X=features)
 
         feature_names = self._post_transform_feature_names(observations=sample)
 
@@ -82,7 +74,7 @@ class SimpleSamplePreprocessor(SamplePreprocessor):
 
     def _post_transform_feature_names(self, observations: Sample) -> List[str]:
         feature_names = []
-        for sub_transformer in self.preprocessing_transformer.transformers:
+        for sub_transformer in self._preprocessing_transformer.transformers:
             # sub_transformer is a tuple with 3 elements we can deconstruct.
             #   1. transformer name (str),
             #   2. the transformer object (BaseEstimator),
@@ -111,3 +103,40 @@ class SimpleSamplePreprocessor(SamplePreprocessor):
                 feature_names.extend(col_names)
 
         return feature_names
+
+
+class PandasSamplePreprocessor(SamplePreprocessor):
+    """
+    :param impute_mean: list of columns to impute or None
+    :param one_hot_encode: list of (categorical) columns to encode or None
+    """
+
+    __slots__ = ["_impute_mean", "_one_hot_encode"]
+
+    def __init__(
+        self, impute_mean: Iterable[str] = None, one_hot_encode: Sequence[str] = None
+    ):
+        super().__init__()
+
+        self._impute_mean = None if impute_mean is None else list(impute_mean)
+        self._one_hot_encode = None if one_hot_encode is None else list(one_hot_encode)
+
+    def process(self, sample: Sample) -> Sample:
+        features = sample.features
+
+        if self._impute_mean is not None and len(self._impute_mean) != 0:
+            original_columns = features.loc[:, self._impute_mean].dropna(
+                axis=1, how="all"
+            )
+            features.loc[:, self._impute_mean] = original_columns.fillna(
+                value=original_columns.mean()
+            )
+
+        if self._one_hot_encode is not None and len(self._one_hot_encode) != 0:
+            features = pd.get_dummies(data=features, columns=self._one_hot_encode)
+
+        target = sample.target
+
+        return Sample(
+            pd.concat(objs=[features, target], axis=1), target_name=target.name
+        )
