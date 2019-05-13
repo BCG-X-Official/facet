@@ -9,7 +9,6 @@ from sklearn.base import BaseEstimator, clone
 from sklearn.model_selection import BaseCrossValidator
 
 from yieldengine.loading.sample import Sample
-from yieldengine.preprocessing import SamplePreprocessor
 
 log = logging.getLogger(__name__)
 
@@ -17,10 +16,8 @@ log = logging.getLogger(__name__)
 class ModelInspector:
     __slots__ = [
         "_estimator",
-        "_preprocessor",
         "_cv",
         "_sample",
-        "_sample_preprocessed",
         "_shap_explainer_by_fold",
         "_estimators_by_fold",
         "_predictions_for_all_samples",
@@ -31,18 +28,12 @@ class ModelInspector:
     F_PREDICTION = "prediction"
 
     def __init__(
-        self,
-        preprocessor: SamplePreprocessor,
-        estimator: BaseEstimator,
-        cv: BaseCrossValidator,
-        sample: Sample,
+        self, estimator: BaseEstimator, cv: BaseCrossValidator, sample: Sample
     ) -> None:
 
         self._estimator = estimator
-        self._preprocessor = preprocessor
         self._cv = cv
         self._sample = sample
-        self._sample_preprocessed: Union[Sample, None] = None
         self._estimators_by_fold: Union[Dict[int, BaseEstimator], None] = None
         self._predictions_for_all_samples: Union[pd.DataFrame, None] = None
         self._shap_matrix: Union[pd.DataFrame, None] = None
@@ -82,12 +73,6 @@ class ModelInspector:
     def sample(self) -> Sample:
         return self._sample
 
-    @property
-    def sample_preprocessed(self) -> Sample:
-        if self._sample_preprocessed is None:
-            self._sample_preprocessed = self._preprocessor.process(sample=self._sample)
-        return self._sample_preprocessed
-
     def estimator(self, fold: int) -> BaseEstimator:
         """
         :param fold: start index of test fold
@@ -123,15 +108,14 @@ class ModelInspector:
             return self._predictions_for_all_samples
 
         self._estimators_by_fold: Dict[int, BaseEstimator] = {}
-        sample_preprocessed = self.sample_preprocessed
+
+        sample = self.sample
 
         def predict(
             fold_id: int, train_indices: np.ndarray, test_indices: np.ndarray
         ) -> pd.DataFrame:
-            train_sample = sample_preprocessed.select_observations(
-                indices=train_indices
-            )
-            test_sample = sample_preprocessed.select_observations(indices=test_indices)
+            train_sample = sample.select_observations(indices=train_indices)
+            test_sample = sample.select_observations(indices=test_indices)
 
             self._estimators_by_fold[fold_id] = estimator = clone(self._estimator)
 
@@ -149,9 +133,7 @@ class ModelInspector:
             [
                 predict(fold_id, train_indices, test_indices)
                 for fold_id, (train_indices, test_indices) in enumerate(
-                    self.cv.split(
-                        sample_preprocessed.features, sample_preprocessed.target
-                    )
+                    self.cv.split(sample.features, sample.target)
                 )
             ]
         )
@@ -162,10 +144,11 @@ class ModelInspector:
         if self._shap_matrix is not None:
             return self._shap_matrix
 
+        sample = self.sample
+
         predictions_by_observation_and_fold = self.predictions_for_all_samples().set_index(
             self.F_FOLD_ID, append=True
         )
-        sample_preprocessed = self.sample_preprocessed
 
         def shap_matrix_for_fold(
             fold_id: int, estimator: BaseEstimator
@@ -174,7 +157,7 @@ class ModelInspector:
                 key=fold_id, level=self.F_FOLD_ID
             ).index
 
-            fold_x = sample_preprocessed.select_observations(
+            fold_x = sample.select_observations(
                 indices=observation_indices_in_fold
             ).features
 
@@ -185,7 +168,7 @@ class ModelInspector:
             return pd.DataFrame(
                 data=shap_matrix,
                 index=observation_indices_in_fold,
-                columns=sample_preprocessed.feature_names,
+                columns=sample.feature_names,
             )
 
         shap_value_dfs = [
