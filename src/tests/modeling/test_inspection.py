@@ -71,6 +71,8 @@ def test_model_inspection() -> None:
 
     model_ranking: ModelRanking = model_ranker.run(test_sample)
 
+    preprocessed_sample = preprocessing_factory.process(sample=test_sample)
+
     # consider: model_with_type(...) function for ModelRanking
     best_svr = [m for m in model_ranking if isinstance(m.estimator, SVR)][0]
     best_lgbm = [m for m in model_ranking if isinstance(m.estimator, LGBMRegressor)][0]
@@ -78,10 +80,7 @@ def test_model_inspection() -> None:
     for ranked_model in best_svr, best_lgbm:
 
         mi = ModelInspector(
-            preprocessor=preprocessing_factory,
-            estimator=ranked_model.estimator,
-            cv=test_cv,
-            sample=test_sample,
+            estimator=ranked_model.estimator, cv=test_cv, sample=preprocessed_sample
         )
 
         # test predictions_for_all_samples
@@ -131,15 +130,14 @@ def test_model_inspection_with_encoding(
 
     log.info(model_ranking)
 
+    preprocessed_sample = preprocessing_factory.process(sample=sample)
+
     # consider: model_with_type(...) function for ModelRanking
     # best_svr = [m for m in model_ranking if isinstance(m.estimator, SVR)][0]
     best_lgbm = [m for m in model_ranking if isinstance(m.estimator, LGBMRegressor)][0]
     for model in [best_lgbm]:
         mi = ModelInspector(
-            preprocessor=preprocessing_factory,
-            estimator=model.estimator,
-            cv=circular_cv,
-            sample=sample,
+            estimator=model.estimator, cv=circular_cv, sample=preprocessed_sample
         )
 
         shap_matrix = mi.shap_matrix()
