@@ -23,6 +23,8 @@ class ModelInspector:
         "_sample_preprocessed",
         "_shap_explainer_by_fold",
         "_estimators_by_fold",
+        "_predictions_for_all_samples",
+        "_shap_matrix",
     ]
 
     F_FOLD_ID = "fold_start"
@@ -42,6 +44,8 @@ class ModelInspector:
         self._sample = sample
         self._sample_preprocessed: Union[Sample, None] = None
         self._estimators_by_fold: Union[Dict[int, BaseEstimator], None] = None
+        self._predictions_for_all_samples: Union[pd.DataFrame, None] = None
+        self._shap_matrix: Union[pd.DataFrame, None] = None
 
     @staticmethod
     def _make_shap_explainer(estimator: BaseEstimator, data: pd.DataFrame) -> Explainer:
@@ -84,6 +88,16 @@ class ModelInspector:
             self._sample_preprocessed = self._preprocessor.process(sample=self._sample)
         return self._sample_preprocessed
 
+    def estimator(self, fold: int) -> BaseEstimator:
+        """
+        :param fold: start index of test fold
+        :return: the estimator that was used to predict the dependent variable of
+        the test fold
+        """
+        if self._estimators_by_fold is None:
+            self.predictions_for_all_samples()
+        return self._estimators_by_fold[fold]
+
     def predictions_for_all_samples(self) -> pd.DataFrame:
         """
         For each fold of this Predictor's CV, fit the estimator and predict all
@@ -104,6 +118,9 @@ class ModelInspector:
         #       - clone the estimator using function sklearn.base.clone()
         #       - fit the estimator on the X and y of train set
         #       - predict y for test set
+
+        if self._predictions_for_all_samples is not None:
+            return self._predictions_for_all_samples
 
         self._estimators_by_fold: Dict[int, BaseEstimator] = {}
         sample_preprocessed = self.sample_preprocessed
@@ -128,7 +145,7 @@ class ModelInspector:
                 index=test_sample.index,
             )
 
-        return pd.concat(
+        self._predictions_for_all_samples = pd.concat(
             [
                 predict(fold_id, train_indices, test_indices)
                 for fold_id, (train_indices, test_indices) in enumerate(
@@ -139,17 +156,12 @@ class ModelInspector:
             ]
         )
 
-    def estimator(self, fold: int) -> BaseEstimator:
-        """
-        :param fold: start index of test fold
-        :return: the estimator that was used to predict the dependent vartiable of
-        the test fold
-        """
-        if self._estimators_by_fold is None:
-            self.predictions_for_all_samples()
-        return self._estimators_by_fold[fold]
+        return self._predictions_for_all_samples
 
     def shap_matrix(self) -> pd.DataFrame:
+        if self._shap_matrix is not None:
+            return self._shap_matrix
+
         predictions_by_observation_and_fold = self.predictions_for_all_samples().set_index(
             self.F_FOLD_ID, append=True
         )
@@ -182,11 +194,13 @@ class ModelInspector:
         ]
 
         # Group SHAP matrix by observation ID and aggregate SHAP values using mean()
-        return (
+        self._shap_matrix = (
             pd.concat(objs=shap_value_dfs)
             .groupby(by=pd.concat(objs=shap_value_dfs).index)
             .mean()
         )
+
+        return self._shap_matrix
 
     def feature_dependencies(self) -> pd.DataFrame:
         # calculate shap_matrix()
