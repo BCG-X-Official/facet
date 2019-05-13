@@ -50,7 +50,7 @@ class ModelRanker:
         self._scoring = scoring
 
         # construct searchers
-        self._searchers: Tuple[GridSearchCV, Model] = [
+        self._searchers: List[Tuple[GridSearchCV, Model]] = [
             (
                 GridSearchCV(
                     estimator=model.estimator,
