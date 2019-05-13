@@ -2,8 +2,6 @@ from typing import *
 
 from sklearn.base import BaseEstimator, clone
 from sklearn.model_selection import BaseCrossValidator, GridSearchCV
-from sklearn.pipeline import Pipeline
-
 from yieldengine.loading.sample import Sample
 from yieldengine.preprocessing import SamplePreprocessor
 
@@ -11,6 +9,7 @@ from yieldengine.preprocessing import SamplePreprocessor
 class Model(NamedTuple):
     estimator: BaseEstimator
     parameter_grid: Dict[str, Any]
+    preprocessor: Union[None, SamplePreprocessor]
 
 
 class ScoredModel(NamedTuple):
@@ -19,6 +18,7 @@ class ScoredModel(NamedTuple):
     test_score_mean: float
     test_score_std: float
     ranking_score: float
+    preprocessor: Union[None, SamplePreprocessor]
 
 
 class ModelRanker:
@@ -31,46 +31,36 @@ class ModelRanker:
     into a scikit-learn pipeline.
 
     :param models: list of model grids to be ranked
-    :param preprocessing_factory: a preprocessor
     :param cv: a cross validation object (i.e. CircularCrossValidator)
     :param scoring: a scorer to use when doing CV within GridSearch
     """
 
-    __slots__ = [
-        "_models",
-        "_scoring",
-        "_cv",
-        "_searchers",
-        "_pipeline",
-        "_preprocessing_factory",
-    ]
+    __slots__ = ["_models", "_scoring", "_cv", "_searchers", "_pipeline"]
 
     F_PARAMETERS = "params"
     F_MEAN_TEST_SCORE = "mean_test_score"
     F_SD_TEST_SCORE = "std_test_score"
 
     def __init__(
-        self,
-        models: Iterable[Model],
-        preprocessing_factory: SamplePreprocessor = None,
-        cv: BaseCrossValidator = None,
-        scoring=None,
+        self, models: Iterable[Model], cv: BaseCrossValidator = None, scoring=None
     ) -> None:
         self._models = list(models)
         self._cv = cv
         self._scoring = scoring
-        self._preprocessing_factory = preprocessing_factory
 
         # construct searchers
-        self._searchers = [
-            GridSearchCV(
-                estimator=model.estimator,
-                cv=cv,
-                param_grid=model.parameter_grid,
-                scoring=scoring,
-                return_train_score=False,
-                n_jobs=-1,
-                refit=False,
+        self._searchers: Tuple[GridSearchCV, Model] = [
+            (
+                GridSearchCV(
+                    estimator=model.estimator,
+                    cv=cv,
+                    param_grid=model.parameter_grid,
+                    scoring=scoring,
+                    return_train_score=False,
+                    n_jobs=-1,
+                    refit=False,
+                ),
+                model,
             )
             for model in self._models
         ]
@@ -106,11 +96,14 @@ class ModelRanker:
         :return the created model ranking of type :code:`ModelRanking`
 
         """
-        if self._preprocessing_factory is not None:
-            sample = self._preprocessing_factory.process(sample=sample)
 
-        for searcher in self._searchers:
-            searcher.fit(X=sample.features, y=sample.target)
+        for searcher, model in self._searchers:
+            if model.preprocessor is not None:
+                sample_preprocessed = model.preprocessor.process(sample=sample)
+            else:
+                sample_preprocessed = sample
+
+            searcher.fit(X=sample_preprocessed.features, y=sample_preprocessed.target)
 
         if ranking_scorer is None:
             ranking_scorer = ModelRanker.default_ranking_scorer
@@ -126,8 +119,9 @@ class ModelRanker:
                 test_score_std=test_score_std,
                 # compute the final score using function defined above:
                 ranking_score=ranking_scorer(test_score_mean, test_score_std),
+                preprocessor=model.preprocessor,
             )
-            for search in self._searchers
+            for search, model in self._searchers
             # we read and iterate over these 3 attributes from cv_results_:
             for params, test_score_mean, test_score_std in zip(
                 search.cv_results_[ModelRanker.F_PARAMETERS],
@@ -142,21 +136,6 @@ class ModelRanker:
                 scored_models, key=lambda model: model.ranking_score, reverse=True
             )
         )
-
-    @property
-    def pipeline(self) -> Pipeline:
-        """
-        Property of ModelRanker
-
-        :return: the complete scikit-learn pipeline
-        """
-        return self._pipeline
-
-    def searchers(self) -> Iterable[GridSearchCV]:
-        return iter(self._searchers)
-
-    def models(self) -> Iterable[Model]:
-        return iter(self._models)
 
 
 class ModelRanking:
