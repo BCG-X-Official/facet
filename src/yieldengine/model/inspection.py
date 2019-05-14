@@ -259,7 +259,11 @@ class ModelInspector:
 
         # Plot the corresponding dendrogram
         pyplot.figure(num=None, figsize=figsize, dpi=120, facecolor="w", edgecolor="k")
-        dendrogram(Z=linkage_matrix, labels=clustered_feature_dependencies.index.values)
+        dendrogram(
+            Z=linkage_matrix,
+            labels=clustered_feature_dependencies.index.values,
+            orientation="left",
+        )
         pyplot.title("Hierarchical Clustering: Correlated Feature Dependence")
         pyplot.show()
 
@@ -280,6 +284,8 @@ class ModelInspector:
 
         linkage_matrix = linkage(y=compressed, method="single")
         pyplot.figure(num=None, figsize=figsize, facecolor="w", edgecolor="k")
-        dendrogram(linkage_matrix, labels=feature_dependencies.index.values)
+        dendrogram(
+            linkage_matrix, labels=feature_dependencies.index.values, orientation="left"
+        )
         pyplot.title("Hierarchical Clustering: Correlated Feature Dependence")
         pyplot.show()
