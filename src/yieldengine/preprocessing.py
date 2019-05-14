@@ -1,3 +1,4 @@
+import logging
 from abc import ABC, abstractmethod
 from typing import *
 
@@ -8,6 +9,8 @@ from sklearn.impute import SimpleImputer
 from sklearn.preprocessing import OneHotEncoder
 
 from yieldengine import Sample
+
+log = logging.getLogger(__name__)
 
 
 class SamplePreprocessor(ABC):
@@ -118,13 +121,15 @@ class PandasSamplePreprocessor(SamplePreprocessor):
         self,
         max_na_ratio: float = 1.0,
         impute_mean: Iterable[str] = None,
-        one_hot_encode: Sequence[str] = None,
+        one_hot_encode: Iterable[str] = None,
     ):
         super().__init__()
 
         self._max_na_ratio = max_na_ratio
-        self._impute_mean = None if impute_mean is None else list(impute_mean)
-        self._one_hot_encode = None if one_hot_encode is None else list(one_hot_encode)
+        self._impute_mean: Set[str] = None if impute_mean is None else set(impute_mean)
+        self._one_hot_encode: Set[str] = None if one_hot_encode is None else set(
+            one_hot_encode
+        )
 
     def process(self, sample: Sample) -> Sample:
         features = sample.features
@@ -133,15 +138,18 @@ class PandasSamplePreprocessor(SamplePreprocessor):
             features = features.loc[:, features.isna().mean() <= self._max_na_ratio]
 
         if self._impute_mean is not None and len(self._impute_mean) != 0:
-            original_columns = features.loc[:, self._impute_mean].dropna(
-                axis=1, how="all"
-            )
-            features.loc[:, self._impute_mean] = original_columns.fillna(
-                value=original_columns.mean()
-            )
+            columns_to_impute = [
+                column for column in features.columns if column in self._impute_mean
+            ]
+            original_columns = features.loc[:, columns_to_impute]
+            filled_columns = original_columns.fillna(value=original_columns.mean())
+            features = features.drop(columns=columns_to_impute).join(filled_columns)
 
         if self._one_hot_encode is not None and len(self._one_hot_encode) != 0:
-            features = pd.get_dummies(data=features, columns=self._one_hot_encode)
+            columns_to_encode = [
+                column for column in features.columns if column in self._one_hot_encode
+            ]
+            features = pd.get_dummies(data=features, columns=columns_to_encode)
 
         target = sample.target
 
