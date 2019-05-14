@@ -13,7 +13,7 @@ from yieldengine import Sample
 from yieldengine.model.inspection import ModelInspector
 from yieldengine.model.selection import Model, ModelRanker, ModelRanking
 from yieldengine.model.validation import CircularCrossValidator
-from yieldengine.preprocessing import SimpleSamplePreprocessor
+from yieldengine.preprocessing import PandasSamplePreprocessor
 
 log = logging.getLogger(__name__)
 
@@ -59,9 +59,9 @@ def test_model_inspection() -> None:
 
     test_sample: Sample = Sample(observations=test_data, target_name=BOSTON_TARGET)
 
-    preprocessor = SimpleSamplePreprocessor(
-        impute_mean=test_sample.features_by_type(dtype=Sample.DTYPE_NUMERICAL),
-        one_hot_encode=test_sample.features_by_type(dtype=Sample.DTYPE_OBJECT),
+    preprocessor = PandasSamplePreprocessor(
+        impute_mean=test_sample.features_by_type(dtype=Sample.DTYPE_NUMERICAL).columns,
+        one_hot_encode=test_sample.features_by_type(dtype=Sample.DTYPE_OBJECT).columns,
     )
 
     model_ranker: ModelRanker = ModelRanker(
