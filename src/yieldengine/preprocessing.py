@@ -107,6 +107,7 @@ class SimpleSamplePreprocessor(SamplePreprocessor):
 
 class PandasSamplePreprocessor(SamplePreprocessor):
     """
+    :param max_na_ratio: drop columns with a higher percentage of n/a values than indicated here (default: 1.0)
     :param impute_mean: list of columns to impute or None
     :param one_hot_encode: list of (categorical) columns to encode or None
     """
@@ -114,15 +115,22 @@ class PandasSamplePreprocessor(SamplePreprocessor):
     __slots__ = ["_impute_mean", "_one_hot_encode"]
 
     def __init__(
-        self, impute_mean: Iterable[str] = None, one_hot_encode: Sequence[str] = None
+        self,
+        max_na_ratio: float = 1.0,
+        impute_mean: Iterable[str] = None,
+        one_hot_encode: Sequence[str] = None,
     ):
         super().__init__()
 
+        self._max_na_ratio = max_na_ratio
         self._impute_mean = None if impute_mean is None else list(impute_mean)
         self._one_hot_encode = None if one_hot_encode is None else list(one_hot_encode)
 
     def process(self, sample: Sample) -> Sample:
         features = sample.features
+
+        if self._max_na_ratio < 1.0:
+            features = features.loc[:, features.isna().mean() <= self._max_na_ratio]
 
         if self._impute_mean is not None and len(self._impute_mean) != 0:
             original_columns = features.loc[:, self._impute_mean].dropna(
