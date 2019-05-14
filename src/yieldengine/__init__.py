@@ -144,13 +144,13 @@ class Sample:
 
     def features_by_type(
         self, dtype: Union[type, str, Sequence[Union[type, str]]]
-    ) -> Iterable[str]:
+    ) -> Sequence[str]:
         """
         :param dtype: dtype, or sequence of dtypes, for filtering features. See DTYPE_*
         constants for common type selectors
         :return: list of columns for filtered features
         """
-        return self.features.select_dtypes(dtype).columns
+        return list(self.features.select_dtypes(dtype).columns)
 
     def select_observations(self, indices: Iterable[int]) -> "Sample":
         """
