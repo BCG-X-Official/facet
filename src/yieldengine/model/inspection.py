@@ -270,7 +270,7 @@ class ModelInspector:
     # second, experimental version using scipy natively. this gives accurate distances
     # WIP!
     def plot_feature_dendrogram_scipy(
-        self, figsize: Tuple[int, int] = (20, 20), remove_all_na: bool = True
+        self, figsize: Tuple[int, int] = (20, 30), remove_all_na: bool = True
     ) -> None:
 
         feature_dependencies = self.feature_dependencies()
@@ -285,7 +285,14 @@ class ModelInspector:
         linkage_matrix = linkage(y=compressed, method="single")
         pyplot.figure(num=None, figsize=figsize, facecolor="w", edgecolor="k")
         dendrogram(
-            linkage_matrix, labels=feature_dependencies.index.values, orientation="left"
+            linkage_matrix,
+            labels=feature_dependencies.index.values,
+            orientation="left",
+            distance_sort=True,
+            leaf_font_size=16,
         )
+        pyplot.axvline(x=0.5, ymin=0, ymax=1, linestyle="--", color="#000000")
+        pyplot.axvline(x=0.25, ymin=0, ymax=1, linestyle="--", color="#000000")
         pyplot.title("Hierarchical Clustering: Correlated Feature Dependence")
+
         pyplot.show()
