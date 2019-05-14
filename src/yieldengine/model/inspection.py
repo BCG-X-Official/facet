@@ -266,14 +266,11 @@ class ModelInspector:
             log.info(f"removed {len(to_drop)} features with all-zero correlation")
 
         # fit the clustering algorithm using the feature_dependencies as a
-        # distance matrix
-        # todo: double check if the shift is needed
-        # we shift the [-1, 1] correlation coefficient by -1 into [-2, 0],
-        # and take the absolute.
-        # this means, r = -1 gets a distance of 2 and r = 1 a distance of 0, and so on
+        # distance matrix:
+        # map the [-1,1] correlation values into [0,1]
         # and then fit the clustering algorithm:
         cluster_labels: np.ndarray = clustering.fit_predict(
-            X=np.abs(feature_dependencies.values - 1)
+            X=1 - np.abs(feature_dependencies.values)
         )
 
         # return a data frame with the cluster labels added as a series
