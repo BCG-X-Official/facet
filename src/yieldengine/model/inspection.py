@@ -9,6 +9,9 @@ from shap.explainers.explainer import Explainer
 from sklearn.base import BaseEstimator, clone
 from sklearn.cluster import AgglomerativeClustering
 from sklearn.model_selection import BaseCrossValidator
+from scipy.cluster.hierarchy import dendrogram
+from matplotlib import pyplot
+
 
 from yieldengine import Sample
 
@@ -289,8 +292,33 @@ class ModelInspector:
 
         return clustering_estimator, clustered_feature_dependencies
 
-    def plot_feature_dendrogramm(self):
+    def plot_feature_dendrogramm(self, figsize: Tuple[int, int] = (20, 20)):
         clustering_estimator, clustered_feature_dependencies = (
             self.run_clustering_on_feature_correlations()
         )
-        pass
+        # NOTE: based on:
+        #  https://github.com/scikit-learn/scikit-learn/blob/
+        # 70cf4a676caa2d2dad2e3f6e4478d64bcb0506f7/examples/
+        # cluster/plot_hierarchical_clustering_dendrogram.py
+
+        # Children of hierarchical clustering
+        children = clustering_estimator.children_
+
+        # Distances between each pair of children
+        # Since we don't have this information, we can use a uniform one for plotting
+        # Todo: we have distances - adapt code to factor them in
+        distance = np.arange(children.shape[0])
+
+        # The number of observations contained in each cluster level
+        no_of_observations = np.arange(2, children.shape[0] + 2)
+
+        # Create linkage matrix and then plot the dendrogram
+        linkage_matrix = np.column_stack(
+            [children, distance, no_of_observations]
+        ).astype(float)
+
+        # Plot the corresponding dendrogram
+        pyplot.figure(num=None, figsize=figsize, dpi=120, facecolor="w", edgecolor="k")
+        dendrogram(Z=linkage_matrix, labels=clustered_feature_dependencies.index.values)
+        pyplot.title("Hierarchical Clustering: Correlated Feature Dependence")
+        pyplot.show()
