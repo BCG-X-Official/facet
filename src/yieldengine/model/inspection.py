@@ -239,8 +239,13 @@ class ModelInspector:
             data.append(row)
 
         # create a data frame and set the index to "F_FEATURE_1"
-        self._shap_correlation_matrix = pd.DataFrame(data).set_index(
+        shap_correlation_matrix = pd.DataFrame(data).set_index(
             keys=ModelInspector.F_FEATURE
+        )
+
+        # ensure matrix is symmetrical, by indexing columns the same as rows
+        self._shap_correlation_matrix = shap_correlation_matrix.reindex(
+            shap_correlation_matrix.index, axis=1
         )
 
         return self._shap_correlation_matrix
