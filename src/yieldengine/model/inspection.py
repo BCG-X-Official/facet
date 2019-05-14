@@ -9,8 +9,9 @@ from shap.explainers.explainer import Explainer
 from sklearn.base import BaseEstimator, clone
 from sklearn.cluster import AgglomerativeClustering
 from sklearn.model_selection import BaseCrossValidator
-from scipy.cluster.hierarchy import dendrogram
+from scipy.cluster.hierarchy import dendrogram, linkage
 from matplotlib import pyplot
+from scipy.spatial.distance import squareform
 
 
 from yieldengine import Sample
@@ -297,7 +298,7 @@ class ModelInspector:
 
         return clustering_estimator, clustered_feature_dependencies
 
-    def plot_feature_dendrogramm(self, figsize: Tuple[int, int] = (20, 20)):
+    def plot_feature_dendrogramm(self, figsize: Tuple[int, int] = (20, 20)) -> None:
         clustering_estimator, clustered_feature_dependencies = (
             self.run_clustering_on_feature_correlations()
         )
@@ -325,5 +326,26 @@ class ModelInspector:
         # Plot the corresponding dendrogram
         pyplot.figure(num=None, figsize=figsize, dpi=120, facecolor="w", edgecolor="k")
         dendrogram(Z=linkage_matrix, labels=clustered_feature_dependencies.index.values)
+        pyplot.title("Hierarchical Clustering: Correlated Feature Dependence")
+        pyplot.show()
+
+    # second, experimental version using scipy natively. this gives accurate distances
+    # WIP!
+    def plot_feature_dendrogram_scipy(
+        self, figsize: Tuple[int, int] = (20, 20), remove_all_zero: bool = True
+    ) -> None:
+
+        feature_dependencies = self.feature_dependencies()
+
+        if remove_all_zero:
+            feature_dependencies = ModelInspector._remove_all_zero_correlations(
+                feature_dependencies=feature_dependencies
+            )
+
+        compressed = squareform(1 - np.abs(feature_dependencies.values))
+
+        linkage_matrix = linkage(y=compressed, method="single")
+        pyplot.figure(num=None, figsize=figsize, facecolor="w", edgecolor="k")
+        dendrogram(linkage_matrix, labels=feature_dependencies.index.values)
         pyplot.title("Hierarchical Clustering: Correlated Feature Dependence")
         pyplot.show()
