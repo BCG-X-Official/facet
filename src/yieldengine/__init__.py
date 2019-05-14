@@ -55,7 +55,7 @@ class Sample:
     DTYPE_CATEGORICAL = "category"
     DTYPE_DATETIME_TZ = "datetimetz"
 
-    __slots__ = ["_observations", "_target_name", "_features_names"]
+    __slots__ = ["_observations", "_target_name", "_feature_names"]
 
     def __init__(
         self,
@@ -105,7 +105,7 @@ class Sample:
         if self._target_name in feature_names_set:
             raise ValueError(f"features includes the target column {self._target_name}")
 
-        self._features_names = feature_names_set
+        self._feature_names = feature_names_set
 
     @property
     def target_name(self) -> str:
@@ -119,7 +119,7 @@ class Sample:
         """
         :return: list of feature column names
         """
-        return self._features_names
+        return self._feature_names
 
     @property
     def index(self) -> pd.Index:
@@ -140,26 +140,41 @@ class Sample:
         """
         :return: all feature columns as a data frame
         """
-        return self._observations.loc[:, self._features_names]
+        return self._observations.loc[:, self._feature_names]
 
     def features_by_type(
         self, dtype: Union[type, str, Sequence[Union[type, str]]]
-    ) -> Sequence[str]:
+    ) -> pd.DataFrame:
         """
         :param dtype: dtype, or sequence of dtypes, for filtering features. See DTYPE_*
         constants for common type selectors
         :return: list of columns for filtered features
         """
-        return list(self.features.select_dtypes(dtype).columns)
+        return self.features.select_dtypes(dtype)
 
     def select_observations(self, indices: Iterable[int]) -> "Sample":
         """
-        :param indices: indices to select in the original sample
+        :param indices: numerical indices of observations to select
         :return: copy of this sample, containing only the observations at the given
         indices
         """
         subsample = copy(self)
         subsample._observations = self._observations.iloc[indices, :]
+        return subsample
+
+    def select_features(self, features: Iterable[str]) -> "Sample":
+        subsample = copy(self)
+        features = list(features)
+        feature_set = set(features)
+        if not feature_set.issubset(self._feature_names):
+            raise ValueError(
+                "arg features is not a subset of the features in this sample"
+            )
+        subsample._observations = self._observations.loc[
+            :, [*features, subsample.target_name]
+        ]
+        subsample._feature_names = features
+
         return subsample
 
     def __len__(self) -> int:
