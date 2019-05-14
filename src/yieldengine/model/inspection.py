@@ -3,7 +3,6 @@ from typing import *
 
 import numpy as np
 import pandas as pd
-from scipy.stats import pearsonr
 from shap import KernelExplainer, TreeExplainer
 from shap.explainers.explainer import Explainer
 from sklearn.base import BaseEstimator, clone
@@ -199,85 +198,20 @@ class ModelInspector:
         if self._shap_correlation_matrix is not None:
             return self._shap_correlation_matrix
 
-        shap_matrix = self.shap_matrix()
-
-        # collect row-wise in this list in order to convert to pd.DF later
-        data = []
-
-        # construct an correlation matrix that looks like this:
-        #
-        #                    F1         F2         F3         FN
-        # feature
-        # F1                  1       corr       corr       corr
-        # F2               corr          1       corr       corr
-        # F3               corr       corr          1       corr
-        # FN               corr       corr       corr          1
-        #
-        for column1 in shap_matrix.columns:
-            row = {
-                column2: 0
-                # for features, for which across all predictions their shap-
-                # value is 0, the correlation does not exist, can not be computed
-                # and will yield a na (due division by zero)!
-                # hence set a correlation of 0 -> "no correlation"
-                if (
-                    (shap_matrix.loc[:, column1].unique() == 0).all()
-                    or (shap_matrix.loc[:, column2].unique() == 0).all()
-                )
-                # pearsonr() returns a tuple of (r, p-value)
-                #   -> retrieve only "r" correlation coefficient using[0]
-                else pearsonr(
-                    x=shap_matrix.loc[:, column1], y=shap_matrix.loc[:, column2]
-                )[0]
-                # iterate over all feature columns in the shap matrix
-                for column2 in shap_matrix.columns
-            }
-
-            # set the index column for this row to the feature column name
-            row[ModelInspector.F_FEATURE] = column1
-
-            # append this row
-            data.append(row)
-
-        # create a data frame and set the index to "F_FEATURE_1"
-        shap_correlation_matrix = pd.DataFrame(data).set_index(
-            keys=ModelInspector.F_FEATURE
-        )
-
-        # ensure matrix is symmetrical, by indexing columns the same as rows
-        self._shap_correlation_matrix = shap_correlation_matrix.reindex(
-            shap_correlation_matrix.index, axis=1
-        )
+        self._shap_correlation_matrix = self.shap_matrix().corr(method="pearson")
 
         return self._shap_correlation_matrix
 
-    @staticmethod
-    def _remove_all_zero_correlations(
-        feature_dependencies: pd.DataFrame
-    ) -> pd.DataFrame:
-
-        to_drop = set()
-        for column in feature_dependencies.columns:
-            if (feature_dependencies.loc[:, column].unique() == 0).all():
-                to_drop.add(column)
-
-        feature_dependencies = feature_dependencies.drop(labels=to_drop, axis=1)
-        feature_dependencies = feature_dependencies.drop(labels=to_drop, axis=0)
-
-        log.info(f"removed {len(to_drop)} features with all-zero correlation")
-
-        return feature_dependencies
-
     def run_clustering_on_feature_correlations(
-        self, remove_all_zero: bool = True
+        self, remove_all_na: bool = True
     ) -> Tuple[AgglomerativeClustering, pd.DataFrame]:
 
         feature_dependencies = self.feature_dependencies()
 
-        if remove_all_zero:
-            feature_dependencies = ModelInspector._remove_all_zero_correlations(
-                feature_dependencies=feature_dependencies
-            )
+        if remove_all_na:
+            feature_dependencies = feature_dependencies.dropna(
+                axis=1, how="all"
+            ).dropna(axis=0, how="all")
 
         # set up the clustering estimator
         clustering_estimator = AgglomerativeClustering(
@@ -332,15 +266,15 @@ class ModelInspector:
     # second, experimental version using scipy natively. this gives accurate distances
     # WIP!
     def plot_feature_dendrogram_scipy(
-        self, figsize: Tuple[int, int] = (20, 20), remove_all_zero: bool = True
+        self, figsize: Tuple[int, int] = (20, 20), remove_all_na: bool = True
     ) -> None:
 
         feature_dependencies = self.feature_dependencies()
 
-        if remove_all_zero:
-            feature_dependencies = ModelInspector._remove_all_zero_correlations(
-                feature_dependencies=feature_dependencies
-            )
+        if remove_all_na:
+            feature_dependencies = feature_dependencies.dropna(
+                axis=1, how="all"
+            ).dropna(axis=0, how="all")
 
         compressed = squareform(1 - np.abs(feature_dependencies.values))
 
