@@ -26,7 +26,6 @@ def test_model_inspection() -> None:
     N_FOLDS = 5
     TEST_RATIO = 0.2
     BOSTON_TARGET = "target"
-    N_CLUSTERS = 10
 
     # define a yield-engine circular CV:
     test_cv = ShuffleSplit(n_splits=N_FOLDS, test_size=TEST_RATIO, random_state=42)
@@ -123,14 +122,7 @@ def test_model_inspection() -> None:
                 <= 1.0
             )
 
-        clustered_corr_matrix: pd.DataFrame = mi.clustered_feature_dependencies(
-            n_clusters=N_CLUSTERS
-        )
-
-        assert (
-            clustered_corr_matrix.loc[:, ModelInspector.F_CLUSTER_LABEL].nunique()
-            == N_CLUSTERS
-        )
+        estimator, clustered_corr_matrix = mi.run_clustering_on_feature_correlations()
 
 
 def test_model_inspection_with_encoding(
@@ -165,4 +157,4 @@ def test_model_inspection_with_encoding(
         corr_matrix: pd.DataFrame = mi.feature_dependencies()
 
         # cluster feature importances
-        clustered_corr_matrix: pd.DataFrame = mi.clustered_feature_dependencies()
+        estimator, clustered_corr_matrix = mi.run_clustering_on_feature_correlations()

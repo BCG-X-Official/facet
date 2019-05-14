@@ -242,38 +242,55 @@ class ModelInspector:
 
         return self._shap_correlation_matrix
 
-    def clustered_feature_dependencies(
-        self, n_clusters: int = 10, remove_all_zero: bool = True
+    @staticmethod
+    def _remove_all_zero_correlations(
+        feature_dependencies: pd.DataFrame
     ) -> pd.DataFrame:
-        # set up the clustering estimator
-        clustering = AgglomerativeClustering(
-            linkage="single", affinity="precomputed", n_clusters=n_clusters
-        )
 
-        # retrieve feature_dependencies - already in the correct shape
+        to_drop = set()
+        for column in feature_dependencies.columns:
+            if (feature_dependencies.loc[:, column].unique() == 0).all():
+                to_drop.add(column)
+
+        feature_dependencies = feature_dependencies.drop(labels=to_drop, axis=1)
+        feature_dependencies = feature_dependencies.drop(labels=to_drop, axis=0)
+
+        log.info(f"removed {len(to_drop)} features with all-zero correlation")
+
+        return feature_dependencies
+
+    def run_clustering_on_feature_correlations(
+        self, remove_all_zero: bool = True
+    ) -> Tuple[AgglomerativeClustering, pd.DataFrame]:
+
         feature_dependencies = self.feature_dependencies()
 
         if remove_all_zero:
-            to_drop = set()
+            feature_dependencies = ModelInspector._remove_all_zero_correlations(
+                feature_dependencies=feature_dependencies
+            )
 
-            for column in feature_dependencies.columns:
-                if (feature_dependencies.loc[:, column].unique() == 0).all():
-                    to_drop.add(column)
-
-            feature_dependencies = feature_dependencies.drop(labels=to_drop, axis=1)
-            feature_dependencies = feature_dependencies.drop(labels=to_drop, axis=0)
-
-            log.info(f"removed {len(to_drop)} features with all-zero correlation")
+        # set up the clustering estimator
+        clustering_estimator = AgglomerativeClustering(
+            linkage="single", affinity="precomputed", compute_full_tree=True
+        )
 
         # fit the clustering algorithm using the feature_dependencies as a
         # distance matrix:
         # map the [-1,1] correlation values into [0,1]
         # and then fit the clustering algorithm:
-        cluster_labels: np.ndarray = clustering.fit_predict(
-            X=1 - np.abs(feature_dependencies.values)
-        )
+        clustering_estimator.fit(X=1 - np.abs(feature_dependencies.values))
 
         # return a data frame with the cluster labels added as a series
-        feature_dependencies[ModelInspector.F_CLUSTER_LABEL] = cluster_labels
+        clustered_feature_dependencies = feature_dependencies
+        clustered_feature_dependencies[
+            ModelInspector.F_CLUSTER_LABEL
+        ] = clustering_estimator.labels_
 
-        return feature_dependencies
+        return clustering_estimator, clustered_feature_dependencies
+
+    def plot_feature_dendrogramm(self):
+        clustering_estimator, clustered_feature_dependencies = (
+            self.run_clustering_on_feature_correlations()
+        )
+        pass
