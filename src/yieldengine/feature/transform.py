@@ -14,10 +14,8 @@ from yieldengine import Sample
 
 log = logging.getLogger(__name__)
 
-Transformer = BaseEstimator and TransformerMixin
 
-
-class DataFrameTransformer(ABC, Transformer):
+class DataFrameTransformer(ABC, BaseEstimator, TransformerMixin):
     """
     Wraps around an sklearn transformer and ensures that the X and y objects passed
     and returned are pandas data frames with valid column names
@@ -38,15 +36,17 @@ class DataFrameTransformer(ABC, Transformer):
         pass
 
     @property
-    def base_transformer(self) -> Transformer:
+    def base_transformer(self) -> (BaseEstimator, TransformerMixin):
         return self._base_transformer
 
     def is_fitted(self) -> bool:
         return self._original_columns is not None
 
-    def _ensure_fitted(self) -> None:
-        if not self.is_fitted():
+    @property
+    def input_columns(self) -> pd.Index:
+        if self._original_columns is None:
             raise RuntimeError("transformer not fitted")
+        return self._original_columns
 
     @property
     @abstractmethod
@@ -99,8 +99,6 @@ class DataFrameTransformer(ABC, Transformer):
     # noinspection PyPep8Naming
     def transform(self, X: pd.DataFrame) -> pd.DataFrame:
         self._check_parameter_types(X, None)
-
-        self._ensure_fitted()
 
         # noinspection PyUnresolvedReferences
         transformed = self.base_transformer.transform(X)
@@ -171,8 +169,6 @@ class ColumnTransformerDF(DataFrameTransformer):
 
     @property
     def columns(self) -> pd.Index:
-        self._ensure_fitted()
-
         column_transformer: ColumnTransformer = self.base_transformer
 
         # construct the index from the columns in the fitted transformers
@@ -198,11 +194,9 @@ class SimpleImputerDF(DataFrameTransformer):
 
     @property
     def columns(self) -> pd.Index:
-        self._ensure_fitted()
-
         imputer: SimpleImputer = super().base_transformer
 
-        return self._original_columns.delete(np.argwhere(np.isnan(imputer.statistics_)))
+        return self.input_columns.delete(np.argwhere(np.isnan(imputer.statistics_)))
 
 
 class OneHotEncoderDF(DataFrameTransformer):
@@ -225,16 +219,8 @@ class OneHotEncoderDF(DataFrameTransformer):
 
     @property
     def columns(self) -> pd.Index:
-        self._ensure_fitted()
-
         encoder: OneHotEncoder = self.base_transformer
 
-        return pd.Index(
-            [
-                f"{feature}={category}"
-                for feature, categories in zip(
-                    self._original_columns, encoder.categories_
-                )
-                for category in categories
-            ]
-        )
+        encoder.get_feature_names()
+
+        return pd.Index(encoder.get_feature_names(self.input_columns))
