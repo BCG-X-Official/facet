@@ -1,4 +1,3 @@
-from abc import ABC
 from typing import *
 
 from sklearn.base import BaseEstimator
@@ -17,12 +16,12 @@ class TransformationStep(NamedTuple):
     transformer: DataFrameTransformer
 
 
-class ModelPipeline(ABC):
+class ModelPipeline:
     """
-    Abstract yield-engine model pipeline
+    Yield-engine model pipeline
     """
 
-    __slots__ = ["_transformers", "_estimator", "_pipeline"]
+    __slots__ = ["_transformers", "_estimator", "_pipeline", "_last_transformation"]
 
     STEP_MODEL = "model"
 
