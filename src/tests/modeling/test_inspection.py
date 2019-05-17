@@ -13,7 +13,7 @@ from yieldengine import Sample
 from yieldengine.model.inspection import ModelInspector
 from yieldengine.model.selection import Model, ModelRanker, ModelRanking
 from yieldengine.model.validation import CircularCrossValidator
-from yieldengine.preprocessing import PandasSamplePreprocessor
+from yieldengine.pipeline import make_simple_transformer_step, ModelPipeline
 
 log = logging.getLogger(__name__)
 
@@ -59,18 +59,11 @@ def test_model_inspection() -> None:
 
     test_sample: Sample = Sample(observations=test_data, target_name=BOSTON_TARGET)
 
-    preprocessor = PandasSamplePreprocessor(
-        impute_mean=test_sample.features_by_type(dtype=Sample.DTYPE_NUMERICAL).columns,
-        one_hot_encode=test_sample.features_by_type(dtype=Sample.DTYPE_OBJECT).columns,
-    )
-
     model_ranker: ModelRanker = ModelRanker(
         models=models, cv=test_cv, scoring="neg_mean_squared_error"
     )
 
     model_ranking: ModelRanking = model_ranker.run(test_sample)
-
-    preprocessed_sample = preprocessor.process(sample=test_sample)
 
     # consider: model_with_type(...) function for ModelRanking
     best_svr = [m for m in model_ranking if isinstance(m.estimator, SVR)][0]
@@ -78,9 +71,21 @@ def test_model_inspection() -> None:
 
     for ranked_model in best_svr, best_lgbm:
 
-        mi = ModelInspector(
-            estimator=ranked_model.estimator, cv=test_cv, sample=preprocessed_sample
+        model_pipeline = ModelPipeline(
+            preprocessing=[
+                make_simple_transformer_step(
+                    impute_mean=test_sample.features_by_type(
+                        dtype=Sample.DTYPE_NUMERICAL
+                    ).columns,
+                    one_hot_encode=test_sample.features_by_type(
+                        dtype=Sample.DTYPE_OBJECT
+                    ).columns,
+                )
+            ],
+            estimator=ranked_model.estimator,
         )
+
+        mi = ModelInspector(pipeline=model_pipeline, cv=test_cv, sample=test_sample)
 
         # test predictions_for_all_samples
         predictions_df: pd.DataFrame = mi.predictions_for_all_samples()
@@ -126,7 +131,7 @@ def test_model_inspection() -> None:
 
 
 def test_model_inspection_with_encoding(
-    batch_table: pd.DataFrame, regressor_grids, sample: Sample, preprocessor
+    batch_table: pd.DataFrame, regressor_grids, sample: Sample, transformer_step
 ) -> None:
 
     # define the circular cross validator with just 5 folds (to speed up testing)
@@ -141,15 +146,14 @@ def test_model_inspection_with_encoding(
 
     log.info(model_ranking)
 
-    preprocessed_sample = preprocessor.process(sample=sample)
-
     # consider: model_with_type(...) function for ModelRanking
     # best_svr = [m for m in model_ranking if isinstance(m.estimator, SVR)][0]
     best_lgbm = [m for m in model_ranking if isinstance(m.estimator, LGBMRegressor)][0]
     for model in [best_lgbm]:
-        mi = ModelInspector(
-            estimator=model.estimator, cv=circular_cv, sample=preprocessed_sample
+        model_pipeline = ModelPipeline(
+            preprocessing=[transformer_step], estimator=model.estimator
         )
+        mi = ModelInspector(pipeline=model_pipeline, cv=circular_cv, sample=sample)
 
         shap_matrix = mi.shap_matrix()
 

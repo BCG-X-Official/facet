@@ -1,5 +1,6 @@
 from typing import *
 
+from sklearn import clone
 from sklearn.base import BaseEstimator
 from sklearn.pipeline import Pipeline
 
@@ -16,44 +17,76 @@ class TransformationStep(NamedTuple):
     transformer: DataFrameTransformer
 
 
-class ModelPipeline:
+class ModelPipeline(Pipeline):
     """
     Yield-engine model pipeline
     """
 
-    __slots__ = ["_transformers", "_estimator", "_pipeline", "_last_transformation"]
+    __slots__ = ["_preprocessing"]
 
     STEP_MODEL = "model"
+    STEP_PREPROCESSING = "preprocessor"
 
     def __init__(
-        self, preprocessing: Iterable[TransformationStep], estimator: BaseEstimator
+        self,
+        preprocessing: Union[Iterable[TransformationStep], None],
+        estimator: BaseEstimator,
     ) -> None:
-        preprocessing = list(preprocessing)
-        self._estimator = estimator
-        self._pipeline = Pipeline(
-            [preprocessing, (ModelPipeline.STEP_MODEL, estimator)]
-        )
 
-        self._last_transformation = (
-            preprocessing[-1] if len(preprocessing) > 0 else None
+        if preprocessing is None or isinstance(preprocessing, TransformationStep):
+            raise ValueError("expected an Iterable[TransformationStep]")
+
+        self._preprocessing = preprocessing
+
+        preprocessing = list(preprocessing)
+
+        super().__init__(
+            [
+                (ModelPipeline.STEP_PREPROCESSING, Pipeline(preprocessing)),
+                (ModelPipeline.STEP_MODEL, estimator),
+            ]
         )
 
     @property
-    def pipeline(self) -> Pipeline:
-        return self._pipeline
+    def preprocessing_pipeline(self) -> Pipeline:
+        return self.named_steps[ModelPipeline.STEP_PREPROCESSING]
+
+    @property
+    def last_preprocessing(self) -> DataFrameTransformer:
+        return self.preprocessing_pipeline.steps[-1][1]
 
     @property
     def estimator(self) -> BaseEstimator:
-        return self._estimator
+        return self.named_steps[ModelPipeline.STEP_MODEL]
+
+    def copy(self) -> "ModelPipeline":
+
+        preprocessing = None
+
+        if self._preprocessing is not None:
+            if isinstance(self._preprocessing, ColumnTransformerDF):
+                preprocessing = clone(self._preprocessing)
+            else:
+                preprocessing = [
+                    TransformationStep(name=t.name, transformer=clone(t.transformer))
+                    for t in self._preprocessing
+                ]
+
+        return ModelPipeline(
+            preprocessing=preprocessing, estimator=clone(self.estimator)
+        )
+
+    def has_transformations(self) -> bool:
+        return ModelPipeline.STEP_PREPROCESSING in self.named_steps
 
 
 STEP_IMPUTE = "impute"
 STEP_ONE_HOT_ENCODE = "one-hot-encode"
 
 
-def make_transformation_steps(
+def make_simple_transformer_step(
     impute_mean: Sequence[str] = None, one_hot_encode: Sequence[str] = None
-) -> DataFrameTransformer:
+) -> TransformationStep:
 
     column_transforms = []
 
@@ -71,4 +104,6 @@ def make_transformation_steps(
             )
         )
 
-    return ColumnTransformerDF(transformers=column_transforms)
+    return TransformationStep(
+        name="t1", transformer=ColumnTransformerDF(transformers=column_transforms)
+    )
