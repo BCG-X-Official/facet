@@ -2,9 +2,7 @@ from abc import ABC
 from typing import *
 
 from sklearn.base import BaseEstimator
-from sklearn.impute import SimpleImputer
 from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import OneHotEncoder
 
 from yieldengine.feature.transform import (
     ColumnTransformerDF,
@@ -61,15 +59,17 @@ def make_transformation_steps(
     column_transforms = []
 
     if impute_mean is not None and len(impute_mean) > 0:
-        imputer = SimpleImputer(strategy="mean")
         column_transforms.append(
-            (STEP_IMPUTE, SimpleImputerDF(imputer=imputer), impute_mean)
+            (STEP_IMPUTE, SimpleImputerDF(strategy="mean"), impute_mean)
         )
 
     if one_hot_encode is not None and len(one_hot_encode) > 0:
-        encoder = OneHotEncoder(sparse=False, handle_unknown="ignore")
         column_transforms.append(
-            (STEP_ONE_HOT_ENCODE, OneHotEncoderDF(encoder=encoder), one_hot_encode)
+            (
+                STEP_ONE_HOT_ENCODE,
+                OneHotEncoderDF(sparse=False, handle_unknown="ignore"),
+                one_hot_encode,
+            )
         )
 
     return ColumnTransformerDF(transformers=column_transforms)
