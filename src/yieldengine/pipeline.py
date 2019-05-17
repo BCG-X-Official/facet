@@ -1,27 +1,22 @@
 from abc import ABC
-from sklearn.pipeline import Pipeline
-from yieldengine.feature.transform import (
-    DataFrameTransformer,
-    SimpleImputerDF,
-    OneHotEncoderDF,
-)
-from yieldengine.model.selection import Model
 from typing import *
+
 from sklearn.base import BaseEstimator
-from sklearn.compose import ColumnTransformer
 from sklearn.impute import SimpleImputer
+from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder
+
+from yieldengine.feature.transform import (
+    ColumnTransformerDF,
+    DataFrameTransformer,
+    OneHotEncoderDF,
+    SimpleImputerDF,
+)
 
 
 class TransformationStep(NamedTuple):
     name: str
     transformer: DataFrameTransformer
-    columns: Sequence[str]
-
-    def column_transformer_step(
-        self
-    ) -> Tuple[str, DataFrameTransformer, Sequence[str]]:
-        return (self.name, self.transformer, self.columns)
 
 
 class ModelPipeline(ABC):
@@ -29,33 +24,21 @@ class ModelPipeline(ABC):
     Abstract yield-engine model pipeline
     """
 
-    __slots__ = ["_estimator", "_pipeline"]
+    __slots__ = ["_transformers", "_estimator", "_pipeline"]
 
-    STEP_PREPROCESSING = "preprocess"
     STEP_MODEL = "model"
 
     def __init__(
-        self, transformations: Sequence[TransformationStep], estimator: BaseEstimator
+        self, preprocessing: Iterable[TransformationStep], estimator: BaseEstimator
     ) -> None:
+        preprocessing = list(preprocessing)
         self._estimator = estimator
-        self._pipeline = self._make_pipeline(
-            transformations=transformations, estimator=estimator
+        self._pipeline = Pipeline(
+            [preprocessing, (ModelPipeline.STEP_MODEL, estimator)]
         )
 
-    def _make_pipeline(
-        self, transformations: Sequence[TransformationStep], estimator: BaseEstimator
-    ) -> Pipeline:
-
-        column_transformer = ColumnTransformer(
-            [step.column_transformer_step() for step in transformations]
-        )
-
-        return Pipeline(
-            [
-                (ModelPipeline.STEP_PREPROCESSING, column_transformer),
-                ModelPipeline.STEP_MODEL,
-                estimator,
-            ]
+        self._last_transformation = (
+            preprocessing[-1] if len(preprocessing) > 0 else None
         )
 
     @property
@@ -67,37 +50,26 @@ class ModelPipeline(ABC):
         return self._estimator
 
 
-class SimpleModelPipeline(ModelPipeline):
-    STEP_IMPUTE = "impute"
-    STEP_ONE_HOT_ENCODE = "one-hot-encode"
+STEP_IMPUTE = "impute"
+STEP_ONE_HOT_ENCODE = "one-hot-encode"
 
-    def __init__(
-        self,
-        model: Model,
-        impute_mean: Sequence[str] = None,
-        one_hot_encode: Sequence[str] = None,
-    ) -> None:
 
-        transformers = []
+def make_transformation_steps(
+    impute_mean: Sequence[str] = None, one_hot_encode: Sequence[str] = None
+) -> DataFrameTransformer:
 
-        if impute_mean is not None and len(impute_mean) > 0:
-            imputer = SimpleImputer(strategy="mean")
-            transformers.append(
-                TransformationStep(
-                    name=SimpleModelPipeline.STEP_IMPUTE,
-                    transformer=SimpleImputerDF(imputer=imputer),
-                    columns=impute_mean,
-                )
-            )
+    column_transforms = []
 
-        if one_hot_encode is not None and sum(1 for col in one_hot_encode) > 0:
-            encoder = OneHotEncoder(sparse=False, handle_unknown="ignore")
-            transformers.append(
-                TransformationStep(
-                    name=SimpleModelPipeline.STEP_ONE_HOT_ENCODE,
-                    transformer=OneHotEncoderDF(encoder=encoder),
-                    columns=one_hot_encode,
-                )
-            )
+    if impute_mean is not None and len(impute_mean) > 0:
+        imputer = SimpleImputer(strategy="mean")
+        column_transforms.append(
+            (STEP_IMPUTE, SimpleImputerDF(imputer=imputer), impute_mean)
+        )
 
-        super().__init__(transformations=transformers, estimator=model.estimator)
+    if one_hot_encode is not None and len(one_hot_encode) > 0:
+        encoder = OneHotEncoder(sparse=False, handle_unknown="ignore")
+        column_transforms.append(
+            (STEP_ONE_HOT_ENCODE, OneHotEncoderDF(encoder=encoder), one_hot_encode)
+        )
+
+    return ColumnTransformerDF(transformers=column_transforms)
