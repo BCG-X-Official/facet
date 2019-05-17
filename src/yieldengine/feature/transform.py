@@ -44,7 +44,7 @@ class DataFrameTransformer(ABC, Transformer):
     def is_fitted(self) -> bool:
         return self._original_columns is not None
 
-    def _assert_fitted(self) -> None:
+    def _ensure_fitted(self) -> None:
         if not self.is_fitted():
             raise RuntimeError("transformer not fitted")
 
@@ -100,7 +100,7 @@ class DataFrameTransformer(ABC, Transformer):
     def transform(self, X: pd.DataFrame) -> pd.DataFrame:
         self._check_parameter_types(X, None)
 
-        self._assert_fitted()
+        self._ensure_fitted()
 
         # noinspection PyUnresolvedReferences
         transformed = self.base_transformer.transform(X)
@@ -171,7 +171,7 @@ class ColumnTransformerDF(DataFrameTransformer):
 
     @property
     def columns(self) -> pd.Index:
-        self._assert_fitted()
+        self._ensure_fitted()
 
         column_transformer: ColumnTransformer = self.base_transformer
 
@@ -198,7 +198,7 @@ class SimpleImputerDF(DataFrameTransformer):
 
     @property
     def columns(self) -> pd.Index:
-        self._assert_fitted()
+        self._ensure_fitted()
 
         imputer: SimpleImputer = super().base_transformer
 
@@ -225,6 +225,8 @@ class OneHotEncoderDF(DataFrameTransformer):
 
     @property
     def columns(self) -> pd.Index:
+        self._ensure_fitted()
+
         encoder: OneHotEncoder = self.base_transformer
 
         return pd.Index(
