@@ -14,9 +14,8 @@ from sklearn.tree import DecisionTreeRegressor, ExtraTreeRegressor
 from tests import read_test_config
 from tests.paths import TEST_DATA_CSV
 from yieldengine import Sample
-from yieldengine.feature.transform import DataFrameTransformer
 from yieldengine.model.selection import Model
-from yieldengine.pipeline import make_transformation_steps
+from yieldengine.pipeline import make_simple_transformer_step, TransformationStep
 from yieldengine.preprocessing import PandasSamplePreprocessor, SimpleSamplePreprocessor
 
 logging.basicConfig(level=logging.INFO)
@@ -113,9 +112,9 @@ def preprocessor(sample: Sample) -> PandasSamplePreprocessor:
 
 
 @pytest.fixture
-def df_transformer(sample: Sample) -> DataFrameTransformer:
+def transformer_step(sample: Sample) -> TransformationStep:
 
-    return make_transformation_steps(
+    return make_simple_transformer_step(
         impute_mean=sample.features_by_type(Sample.DTYPE_NUMERICAL).columns,
         one_hot_encode=sample.features_by_type(Sample.DTYPE_OBJECT).columns,
     )

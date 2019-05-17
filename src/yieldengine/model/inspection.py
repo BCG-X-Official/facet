@@ -3,31 +3,32 @@ from typing import *
 
 import numpy as np
 import pandas as pd
+from matplotlib import pyplot
+from scipy.cluster.hierarchy import dendrogram, linkage
+from scipy.spatial.distance import squareform
 from shap import KernelExplainer, TreeExplainer
 from shap.explainers.explainer import Explainer
-from sklearn.base import BaseEstimator, clone
+from sklearn.base import BaseEstimator
 from sklearn.cluster import AgglomerativeClustering
 from sklearn.model_selection import BaseCrossValidator
-from scipy.cluster.hierarchy import dendrogram, linkage
-from matplotlib import pyplot
-from scipy.spatial.distance import squareform
-
+from sklearn.pipeline import Pipeline
 
 from yieldengine import Sample
+from yieldengine.pipeline import ModelPipeline
 
 log = logging.getLogger(__name__)
 
 
 class ModelInspector:
     __slots__ = [
-        "_estimator",
+        "_pipeline",
         "_cv",
         "_sample",
         "_shap_explainer_by_fold",
-        "_estimators_by_fold",
         "_predictions_for_all_samples",
         "_shap_matrix",
         "_shap_correlation_matrix",
+        "_pipeline_by_fold",
     ]
 
     F_FOLD_ID = "fold_start"
@@ -36,13 +37,13 @@ class ModelInspector:
     F_CLUSTER_LABEL = "cluster_label"
 
     def __init__(
-        self, estimator: BaseEstimator, cv: BaseCrossValidator, sample: Sample
+        self, pipeline: ModelPipeline, cv: BaseCrossValidator, sample: Sample
     ) -> None:
 
-        self._estimator = estimator
+        self._pipeline = pipeline
         self._cv = cv
         self._sample = sample
-        self._estimators_by_fold: Union[Dict[int, BaseEstimator], None] = None
+        self._pipeline_by_fold: Union[Dict[int, ModelPipeline], None] = None
         self._predictions_for_all_samples: Union[pd.DataFrame, None] = None
         self._shap_matrix: Union[pd.DataFrame, None] = None
         self._shap_correlation_matrix: Union[pd.DataFrame, None] = None
@@ -88,9 +89,9 @@ class ModelInspector:
         :return: the estimator that was used to predict the dependent variable of
         the test fold
         """
-        if self._estimators_by_fold is None:
+        if self._pipeline_by_fold is None:
             self.predictions_for_all_samples()
-        return self._estimators_by_fold[fold]
+        return self._pipeline_by_fold[fold].estimator
 
     def predictions_for_all_samples(self) -> pd.DataFrame:
         """
@@ -116,7 +117,7 @@ class ModelInspector:
         if self._predictions_for_all_samples is not None:
             return self._predictions_for_all_samples
 
-        self._estimators_by_fold: Dict[int, BaseEstimator] = {}
+        self._pipeline_by_fold: Dict[int, Pipeline] = {}
 
         sample = self.sample
 
@@ -126,14 +127,14 @@ class ModelInspector:
             train_sample = sample.select_observations(indices=train_indices)
             test_sample = sample.select_observations(indices=test_indices)
 
-            self._estimators_by_fold[fold_id] = estimator = clone(self._estimator)
+            self._pipeline_by_fold[fold_id] = pipeline = self._pipeline.copy()
+
+            pipeline.fit(X=train_sample.features, y=train_sample.target)
 
             return pd.DataFrame(
                 data={
                     self.F_FOLD_ID: fold_id,
-                    self.F_PREDICTION: estimator.fit(
-                        X=train_sample.features, y=train_sample.target
-                    ).predict(X=test_sample.features),
+                    self.F_PREDICTION: pipeline.predict(X=test_sample.features),
                 },
                 index=test_sample.index,
             )
@@ -160,8 +161,9 @@ class ModelInspector:
         )
 
         def shap_matrix_for_fold(
-            fold_id: int, estimator: BaseEstimator
+            fold_id: int, fold_pipeline: ModelPipeline
         ) -> pd.DataFrame:
+
             observation_indices_in_fold = predictions_by_observation_and_fold.xs(
                 key=fold_id, level=self.F_FOLD_ID
             ).index
@@ -170,19 +172,26 @@ class ModelInspector:
                 indices=observation_indices_in_fold
             ).features
 
+            if fold_pipeline.has_transformations():
+                fold_preprocessor = fold_pipeline.preprocessing_pipeline
+                fold_x = fold_preprocessor.transform(X=fold_x)
+                column_names = fold_pipeline.last_preprocessing.columns
+            else:
+                column_names = self.sample.feature_names
+
             shap_matrix = ModelInspector._make_shap_explainer(
-                estimator=estimator, data=fold_x
+                estimator=fold_pipeline.estimator, data=fold_x
             ).shap_values(fold_x)
 
             return pd.DataFrame(
                 data=shap_matrix,
                 index=observation_indices_in_fold,
-                columns=sample.feature_names,
+                columns=column_names,
             )
 
         shap_value_dfs = [
-            shap_matrix_for_fold(fold_id, estimator)
-            for fold_id, estimator in self._estimators_by_fold.items()
+            shap_matrix_for_fold(fold_id, pipeline)
+            for fold_id, pipeline in self._pipeline_by_fold.items()
         ]
 
         # Group SHAP matrix by observation ID and aggregate SHAP values using mean()
