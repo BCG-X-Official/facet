@@ -64,13 +64,10 @@ class ModelPipeline(Pipeline):
         preprocessing = None
 
         if self._preprocessing is not None:
-            if isinstance(self._preprocessing, ColumnTransformerDF):
-                preprocessing = clone(self._preprocessing)
-            else:
-                preprocessing = [
-                    TransformationStep(name=t.name, transformer=clone(t.transformer))
-                    for t in self._preprocessing
-                ]
+            preprocessing = [
+                TransformationStep(name=t.name, transformer=clone(t.transformer))
+                for t in self._preprocessing
+            ]
 
         return ModelPipeline(
             preprocessing=preprocessing, estimator=clone(self.estimator)
