@@ -15,8 +15,11 @@ from tests import read_test_config
 from tests.paths import TEST_DATA_CSV
 from yieldengine import Sample
 from yieldengine.model.selection import Model
-from yieldengine.pipeline import make_simple_transformer_step, TransformationStep
-from yieldengine.preprocessing import PandasSamplePreprocessor, SimpleSamplePreprocessor
+from yieldengine.pipeline import (
+    make_simple_transformer_step,
+    ModelPipeline,
+    TransformationStep,
+)
 
 logging.basicConfig(level=logging.INFO)
 
@@ -39,52 +42,69 @@ def batch_table() -> pd.DataFrame:
 
 
 @pytest.fixture
-def regressor_grids(preprocessor: SimpleSamplePreprocessor) -> List[Model]:
-    RANDOM_STATE = {"random_state": [42]}
+def regressor_grids(transformer_step: TransformationStep) -> List[Model]:
+    RANDOM_STATE = {f"{ModelPipeline.STEP_MODEL}__random_state": [42]}
     return [
         Model(
-            estimator=LGBMRegressor(),
+            pipeline=ModelPipeline(
+                preprocessing=[transformer_step], estimator=LGBMRegressor()
+            ),
             parameter_grid={
-                "max_depth": [5, 10],
-                "min_split_gain": [0.1, 0.2],
-                "num_leaves": [50, 100, 200],
+                f"{ModelPipeline.STEP_MODEL}__max_depth": [5, 10],
+                f"{ModelPipeline.STEP_MODEL}__min_split_gain": [0.1, 0.2],
+                f"{ModelPipeline.STEP_MODEL}__num_leaves": [50, 100, 200],
                 **RANDOM_STATE,
             },
-            preprocessor=preprocessor,
         ),
         Model(
-            estimator=AdaBoostRegressor(),
-            parameter_grid={"n_estimators": [50, 80], **RANDOM_STATE},
-            preprocessor=preprocessor,
-        ),
-        Model(
-            estimator=RandomForestRegressor(),
-            parameter_grid={"n_estimators": [50, 80], **RANDOM_STATE},
-            preprocessor=preprocessor,
-        ),
-        Model(
-            estimator=DecisionTreeRegressor(),
+            pipeline=ModelPipeline(
+                preprocessing=[transformer_step], estimator=AdaBoostRegressor()
+            ),
             parameter_grid={
-                "max_depth": [0.5, 1.0],
-                "max_features": [0.5, 1.0],
+                f"{ModelPipeline.STEP_MODEL}__n_estimators": [50, 80],
                 **RANDOM_STATE,
             },
-            preprocessor=preprocessor,
         ),
         Model(
-            estimator=ExtraTreeRegressor(),
-            parameter_grid={"max_depth": [5, 10, 12], **RANDOM_STATE},
-            preprocessor=preprocessor,
+            pipeline=ModelPipeline(
+                preprocessing=[transformer_step], estimator=RandomForestRegressor()
+            ),
+            parameter_grid={
+                f"{ModelPipeline.STEP_MODEL}__n_estimators": [50, 80],
+                **RANDOM_STATE,
+            },
         ),
         Model(
-            estimator=SVR(),
-            parameter_grid={"gamma": [0.5, 1], "C": [50, 100]},
-            preprocessor=preprocessor,
+            pipeline=ModelPipeline(
+                preprocessing=[transformer_step], estimator=DecisionTreeRegressor()
+            ),
+            parameter_grid={
+                f"{ModelPipeline.STEP_MODEL}__max_depth": [0.5, 1.0],
+                f"{ModelPipeline.STEP_MODEL}__max_features": [0.5, 1.0],
+                **RANDOM_STATE,
+            },
         ),
         Model(
-            estimator=LinearRegression(),
-            parameter_grid={"normalize": [False, True]},
-            preprocessor=preprocessor,
+            pipeline=ModelPipeline(
+                preprocessing=[transformer_step], estimator=ExtraTreeRegressor()
+            ),
+            parameter_grid={
+                f"{ModelPipeline.STEP_MODEL}__max_depth": [5, 10, 12],
+                **RANDOM_STATE,
+            },
+        ),
+        Model(
+            pipeline=ModelPipeline(preprocessing=[transformer_step], estimator=SVR()),
+            parameter_grid={
+                f"{ModelPipeline.STEP_MODEL}__gamma": [0.5, 1],
+                f"{ModelPipeline.STEP_MODEL}__C": [50, 100],
+            },
+        ),
+        Model(
+            pipeline=ModelPipeline(
+                preprocessing=[transformer_step], estimator=LinearRegression()
+            ),
+            parameter_grid={f"{ModelPipeline.STEP_MODEL}__normalize": [False, True]},
         ),
     ]
 
@@ -101,14 +121,6 @@ def sample(batch_table: pd.DataFrame) -> Sample:
 
     sample = Sample(observations=batch_table, target_name="Yield")
     return sample
-
-
-@pytest.fixture
-def preprocessor(sample: Sample) -> PandasSamplePreprocessor:
-    return PandasSamplePreprocessor(
-        impute_mean=sample.features_by_type(dtype=Sample.DTYPE_NUMERICAL).columns,
-        one_hot_encode=sample.features_by_type(dtype=Sample.DTYPE_OBJECT).columns,
-    )
 
 
 @pytest.fixture
