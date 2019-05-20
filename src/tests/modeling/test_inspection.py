@@ -13,7 +13,7 @@ from yieldengine import Sample
 from yieldengine.model.inspection import ModelInspector
 from yieldengine.model.selection import Model, ModelRanker, ModelRanking
 from yieldengine.model.validation import CircularCrossValidator
-from yieldengine.pipeline import make_simple_transformer_step, ModelPipeline
+from yieldengine.pipeline import ModelPipeline
 
 log = logging.getLogger(__name__)
 
@@ -33,18 +33,19 @@ def test_model_inspection() -> None:
     # define parameters and models
     models = [
         Model(
-            estimator=SVR(gamma="scale"),
-            parameter_grid={"kernel": ("linear", "rbf"), "C": [1, 10]},
-            preprocessor=None,
+            pipeline=ModelPipeline(estimator=SVR(gamma="scale"), preprocessing=None),
+            parameter_grid={
+                f"{ModelPipeline.STEP_MODEL}__kernel": ("linear", "rbf"),
+                f"{ModelPipeline.STEP_MODEL}__C": [1, 10],
+            },
         ),
         Model(
-            estimator=LGBMRegressor(),
+            pipeline=ModelPipeline(estimator=LGBMRegressor(), preprocessing=None),
             parameter_grid={
-                "max_depth": (1, 2, 5),
-                "min_split_gain": (0.1, 0.2, 0.5),
-                "num_leaves": (2, 3),
+                f"{ModelPipeline.STEP_MODEL}__max_depth": (1, 2, 5),
+                f"{ModelPipeline.STEP_MODEL}__min_split_gain": (0.1, 0.2, 0.5),
+                f"{ModelPipeline.STEP_MODEL}__num_leaves": (2, 3),
             },
-            preprocessor=None,
         ),
     ]
 
@@ -66,26 +67,16 @@ def test_model_inspection() -> None:
     model_ranking: ModelRanking = model_ranker.run(test_sample)
 
     # consider: model_with_type(...) function for ModelRanking
-    best_svr = [m for m in model_ranking if isinstance(m.estimator, SVR)][0]
-    best_lgbm = [m for m in model_ranking if isinstance(m.estimator, LGBMRegressor)][0]
+    best_svr = [m for m in model_ranking if isinstance(m.pipeline.estimator, SVR)][0]
+    best_lgbm = [
+        m for m in model_ranking if isinstance(m.pipeline.estimator, LGBMRegressor)
+    ][0]
 
     for ranked_model in best_svr, best_lgbm:
 
-        model_pipeline = ModelPipeline(
-            preprocessing=[
-                make_simple_transformer_step(
-                    impute_mean=test_sample.features_by_type(
-                        dtype=Sample.DTYPE_NUMERICAL
-                    ).columns,
-                    one_hot_encode=test_sample.features_by_type(
-                        dtype=Sample.DTYPE_OBJECT
-                    ).columns,
-                )
-            ],
-            estimator=ranked_model.estimator,
+        mi = ModelInspector(
+            pipeline=ranked_model.pipeline, cv=test_cv, sample=test_sample
         )
-
-        mi = ModelInspector(pipeline=model_pipeline, cv=test_cv, sample=test_sample)
 
         # test predictions_for_all_samples
         predictions_df: pd.DataFrame = mi.predictions_for_all_samples()
@@ -148,12 +139,11 @@ def test_model_inspection_with_encoding(
 
     # consider: model_with_type(...) function for ModelRanking
     # best_svr = [m for m in model_ranking if isinstance(m.estimator, SVR)][0]
-    best_lgbm = [m for m in model_ranking if isinstance(m.estimator, LGBMRegressor)][0]
+    best_lgbm = [
+        m for m in model_ranking if isinstance(m.pipeline.estimator, LGBMRegressor)
+    ][0]
     for model in [best_lgbm]:
-        model_pipeline = ModelPipeline(
-            preprocessing=[transformer_step], estimator=model.estimator
-        )
-        mi = ModelInspector(pipeline=model_pipeline, cv=circular_cv, sample=sample)
+        mi = ModelInspector(pipeline=model.pipeline, cv=circular_cv, sample=sample)
 
         shap_matrix = mi.shap_matrix()
 

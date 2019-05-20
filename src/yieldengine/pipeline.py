@@ -33,19 +33,24 @@ class ModelPipeline(Pipeline):
         estimator: BaseEstimator,
     ) -> None:
 
-        if preprocessing is None or isinstance(preprocessing, TransformationStep):
-            raise ValueError("expected an Iterable[TransformationStep]")
-
         self._preprocessing = preprocessing
 
-        preprocessing = list(preprocessing)
+        if preprocessing is None:
+            super().__init__([(ModelPipeline.STEP_MODEL, estimator)])
+        else:
+            preprocessing = list(preprocessing)
 
-        super().__init__(
-            [
-                (ModelPipeline.STEP_PREPROCESSING, Pipeline(preprocessing)),
-                (ModelPipeline.STEP_MODEL, estimator),
-            ]
-        )
+            if len(list(preprocessing)) == 0 or not isinstance(
+                preprocessing[0], TransformationStep
+            ):
+                raise ValueError("expected an Iterable[TransformationStep]")
+
+            super().__init__(
+                [
+                    (ModelPipeline.STEP_PREPROCESSING, Pipeline(preprocessing)),
+                    (ModelPipeline.STEP_MODEL, estimator),
+                ]
+            )
 
     @property
     def preprocessing_pipeline(self) -> Pipeline:

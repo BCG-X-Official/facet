@@ -1,26 +1,23 @@
 from typing import *
 
 import numpy as np
-from sklearn.base import BaseEstimator, clone
 from sklearn.model_selection import BaseCrossValidator, GridSearchCV
 
 from yieldengine import Sample
-from yieldengine.preprocessing import SamplePreprocessor
+from yieldengine.pipeline import ModelPipeline
 
 
 class Model(NamedTuple):
-    estimator: BaseEstimator
+    pipeline: ModelPipeline
     parameter_grid: Dict[str, Union[Sequence[Any], np.ndarray]]
-    preprocessor: Union[None, SamplePreprocessor]
 
 
 class ScoredModel(NamedTuple):
-    estimator: BaseEstimator
+    pipeline: ModelPipeline
     parameters: Dict[str, Any]
     test_score_mean: float
     test_score_std: float
     ranking_score: float
-    preprocessor: Union[None, SamplePreprocessor]
 
 
 class ModelRanker:
@@ -54,7 +51,7 @@ class ModelRanker:
         self._searchers: List[Tuple[GridSearchCV, Model]] = [
             (
                 GridSearchCV(
-                    estimator=model.estimator,
+                    estimator=model.pipeline,
                     cv=cv,
                     param_grid=model.parameter_grid,
                     scoring=scoring,
@@ -99,13 +96,8 @@ class ModelRanker:
 
         """
 
-        for searcher, model in self._searchers:
-            if model.preprocessor is not None:
-                sample_preprocessed = model.preprocessor.process(sample=sample)
-            else:
-                sample_preprocessed = sample
-
-            searcher.fit(X=sample_preprocessed.features, y=sample_preprocessed.target)
+        for searcher, _ in self._searchers:
+            searcher.fit(X=sample.features, y=sample.target)
 
         if ranking_scorer is None:
             ranking_scorer = ModelRanker.default_ranking_scorer
@@ -115,13 +107,12 @@ class ModelRanker:
             ScoredModel(
                 # note: we have to copy the estimator, to ensure it will actually
                 # retain the parameters we set for each row in separate objects..
-                estimator=clone(search.estimator).set_params(**params),
+                pipeline=model.pipeline.copy(),
                 parameters=params,
                 test_score_mean=test_score_mean,
                 test_score_std=test_score_std,
                 # compute the final score using function defined above:
                 ranking_score=ranking_scorer(test_score_mean, test_score_std),
-                preprocessor=model.preprocessor,
             )
             for search, model in self._searchers
             # we read and iterate over these 3 attributes from cv_results_:
@@ -177,7 +168,7 @@ class ModelRanking:
         ranking = self.__ranking[:limit]
 
         def _model_name(ranked_model: ScoredModel) -> str:
-            return ranked_model.estimator.__class__.__name__
+            return ranked_model.pipeline.estimator.__class__.__name__
 
         name_width = max([len(_model_name(ranked_model)) for ranked_model in ranking])
 

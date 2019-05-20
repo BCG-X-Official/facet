@@ -9,12 +9,13 @@ from sklearn.svm import SVC
 from yieldengine import Sample
 from yieldengine.model.selection import Model, ModelRanker, ModelRanking, ScoredModel
 from yieldengine.model.validation import CircularCrossValidator
+from yieldengine.pipeline import ModelPipeline
 
 log = logging.getLogger(__name__)
 
 
 def test_model_ranker(
-    batch_table: pd.DataFrame, regressor_grids, sample: Sample, preprocessor
+    batch_table: pd.DataFrame, regressor_grids, sample: Sample
 ) -> None:
     # define the circular cross validator with just 5 folds (to speed up testing)
     circular_cv = CircularCrossValidator(test_ratio=0.20, num_folds=5)
@@ -42,7 +43,7 @@ def test_model_ranker(
     # check if parameters set for estimators actually match expected:
     for r in range(0, len(model_ranking)):
         m: ScoredModel = model_ranking.model(r)
-        assert set(m.parameters).issubset(m.estimator.get_params())
+        assert set(m.parameters).issubset(m.pipeline.get_params())
 
     log.info(f"\n{model_ranking}")
 
@@ -58,9 +59,11 @@ def test_model_ranker_no_preprocessing() -> None:
     # define parameters and model
     models = [
         Model(
-            estimator=SVC(gamma="scale"),
-            parameter_grid={"kernel": ("linear", "rbf"), "C": [1, 10]},
-            preprocessor=None,
+            pipeline=ModelPipeline(estimator=SVC(gamma="scale"), preprocessing=None),
+            parameter_grid={
+                f"{ModelPipeline.STEP_MODEL}__kernel": ("linear", "rbf"),
+                f"{ModelPipeline.STEP_MODEL}__C": [1, 10],
+            },
         )
     ]
 
