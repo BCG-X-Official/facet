@@ -50,23 +50,6 @@ class ModelRanker:
         self._cv = cv
         self._scoring = scoring
 
-        # construct searchers
-        self._searchers: List[Tuple[GridSearchCV, Model]] = [
-            (
-                GridSearchCV(
-                    estimator=model.pipeline.pipeline,
-                    cv=cv,
-                    param_grid=model.parameter_grid,
-                    scoring=scoring,
-                    return_train_score=False,
-                    n_jobs=6,
-                    refit=False,
-                ),
-                model,
-            )
-            for model in self._models
-        ]
-
     @staticmethod
     def default_ranking_scorer(mean_test_score: float, std_test_score: float) -> float:
         """
@@ -85,7 +68,11 @@ class ModelRanker:
         return mean_test_score - 2 * std_test_score
 
     def run(
-        self, sample: Sample, ranking_scorer: Callable[[float, float], float] = None
+        self,
+        sample: Sample,
+        ranking_scorer: Callable[[float, float], float] = None,
+        n_jobs: Optional[int] = None,
+        pre_dispatch="2*n_jobs",
     ) -> "ModelRanking":
         """
         Execute the pipeline with the given sample and return the ranking.
@@ -94,12 +81,32 @@ class ModelRanker:
         :param ranking_scorer: scoring function used for ranking across models,
         taking mean and standard deviation of the ranking scores and returning the
         overall ranking score (default: ModelRanking.default_ranking_scorer)
+        :param n_jobs: number of threads to use (default: one)
+        :param pre_dispatch: maximum number of the data to make (default: 2*n_jobs)
 
         :return the created model ranking of type :code:`ModelRanking`
 
         """
 
-        for searcher, _ in self._searchers:
+        # construct searchers
+        searchers: List[Tuple[GridSearchCV, Model]] = [
+            (
+                GridSearchCV(
+                    estimator=model.pipeline.pipeline,
+                    cv=self._cv,
+                    param_grid=model.parameter_grid,
+                    scoring=self._scoring,
+                    return_train_score=False,
+                    n_jobs=n_jobs,
+                    pre_dispatch=pre_dispatch,
+                    refit=False,
+                ),
+                model,
+            )
+            for model in self._models
+        ]
+
+        for searcher, _ in searchers:
             searcher.fit(X=sample.features, y=sample.target)
 
         if ranking_scorer is None:
@@ -115,7 +122,7 @@ class ModelRanker:
                 # compute the final score using function defined above:
                 ranking_score=ranking_scorer(test_score_mean, test_score_std),
             )
-            for search, model in self._searchers
+            for search, model in searchers
             # we read and iterate over these 3 attributes from cv_results_:
             for params, test_score_mean, test_score_std in zip(
                 search.cv_results_[ModelRanker.F_PARAMETERS],

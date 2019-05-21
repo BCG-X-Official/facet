@@ -15,7 +15,7 @@ log = logging.getLogger(__name__)
 
 
 def test_model_ranker(
-    batch_table: pd.DataFrame, regressor_grids, sample: Sample
+    batch_table: pd.DataFrame, regressor_grids, sample: Sample, available_cpus: int
 ) -> None:
     # define the circular cross validator with just 5 folds (to speed up testing)
     circular_cv = CircularCrossValidator(test_ratio=0.20, num_folds=5)
@@ -25,7 +25,7 @@ def test_model_ranker(
     )
 
     # run the ModelRanker to retrieve a ranking
-    model_ranking: ModelRanking = model_ranker.run(sample=sample)
+    model_ranking: ModelRanking = model_ranker.run(sample=sample, n_jobs=available_cpus)
 
     assert len(model_ranking) > 0
     assert isinstance(
@@ -48,7 +48,7 @@ def test_model_ranker(
     log.info(f"\n{model_ranking}")
 
 
-def test_model_ranker_no_preprocessing() -> None:
+def test_model_ranker_no_preprocessing(available_cpus: int) -> None:
     warnings.filterwarnings("ignore", message="numpy.dtype size changed")
     warnings.filterwarnings("ignore", message="numpy.ufunc size changed")
     warnings.filterwarnings("ignore", message="You are accessing a training score")
@@ -77,7 +77,7 @@ def test_model_ranker_no_preprocessing() -> None:
     )
     test_sample: Sample = Sample(observations=test_data, target_name="target")
 
-    model_ranking: ModelRanking = model_ranker.run(test_sample)
+    model_ranking: ModelRanking = model_ranker.run(test_sample, n_jobs=available_cpus)
 
     log.info(f"\n{model_ranking.summary_report()}")
 

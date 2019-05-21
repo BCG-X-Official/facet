@@ -2,6 +2,7 @@ import logging
 import warnings
 from typing import *
 
+import joblib
 import numpy as np
 import pandas as pd
 import pytest
@@ -26,6 +27,12 @@ logging.basicConfig(level=logging.INFO)
 warnings.filterwarnings(
     "ignore", message=r"Starting from version 2", category=UserWarning
 )
+
+
+@pytest.fixture
+def available_cpus() -> int:
+    cpu_count = joblib.cpu_count()
+    return max(1, cpu_count - 2, cpu_count * 3 // 4)
 
 
 @pytest.fixture
