@@ -10,8 +10,6 @@ from sklearn.compose import ColumnTransformer
 from sklearn.impute import SimpleImputer
 from sklearn.preprocessing import OneHotEncoder
 
-from yieldengine import Sample
-
 log = logging.getLogger(__name__)
 
 
@@ -43,14 +41,14 @@ class DataFrameTransformer(ABC, BaseEstimator, TransformerMixin):
         return self._original_columns is not None
 
     @property
-    def input_columns(self) -> pd.Index:
+    def columns_in(self) -> pd.Index:
         if self._original_columns is None:
             raise RuntimeError("transformer not fitted")
         return self._original_columns
 
     @property
     @abstractmethod
-    def columns(self) -> pd.Index:
+    def columns_out(self) -> pd.Index:
         """
         :returns column labels for arrays returned by the fitted transformer
         """
@@ -103,7 +101,7 @@ class DataFrameTransformer(ABC, BaseEstimator, TransformerMixin):
         # noinspection PyUnresolvedReferences
         transformed = self.base_transformer.transform(X)
 
-        return pd.DataFrame(data=transformed, index=X.index, columns=self.columns)
+        return pd.DataFrame(data=transformed, index=X.index, columns=self.columns_out)
 
     # noinspection PyPep8Naming
     def fit_transform(
@@ -115,15 +113,16 @@ class DataFrameTransformer(ABC, BaseEstimator, TransformerMixin):
 
         self._post_fit(X, y, **fit_params)
 
-        return pd.DataFrame(data=transformed, index=X.index, columns=self.columns)
+        return pd.DataFrame(data=transformed, index=X.index, columns=self.columns_out)
 
-    def fit_transform_sample(self, sample: Sample, **fit_params) -> Sample:
-        result = self.fit_transform(X=sample.features, y=sample.target, **fit_params)
-        return Sample(
-            observations=result.join(sample.target),
-            target_name=sample.target_name,
-            feature_names=result.columns,
-        )
+    # noinspection PyPep8Naming
+    def inverse_transform(self, X: pd.DataFrame) -> pd.DataFrame:
+        self._check_parameter_types(X, None)
+
+        # noinspection PyUnresolvedReferences
+        transformed = self.base_transformer.inverse_transform(X)
+
+        return pd.DataFrame(data=transformed, index=X.index, columns=self.columns_in)
 
     # noinspection PyPep8Naming
     @staticmethod
@@ -168,14 +167,14 @@ class ColumnTransformerDF(DataFrameTransformer):
         return ColumnTransformer
 
     @property
-    def columns(self) -> pd.Index:
+    def columns_out(self) -> pd.Index:
         column_transformer: ColumnTransformer = self.base_transformer
 
         # construct the index from the columns in the fitted transformers
         return pd.Index(
             chain(
                 *[
-                    df_transformer.columns
+                    df_transformer.columns_out
                     for _, df_transformer, _ in column_transformer.transformers_
                 ]
             )
@@ -193,10 +192,10 @@ class SimpleImputerDF(DataFrameTransformer):
         return SimpleImputer
 
     @property
-    def columns(self) -> pd.Index:
+    def columns_out(self) -> pd.Index:
         imputer: SimpleImputer = super().base_transformer
 
-        return self.input_columns.delete(np.argwhere(np.isnan(imputer.statistics_)))
+        return self.columns_in.delete(np.argwhere(np.isnan(imputer.statistics_)))
 
 
 class OneHotEncoderDF(DataFrameTransformer):
@@ -218,9 +217,9 @@ class OneHotEncoderDF(DataFrameTransformer):
         return OneHotEncoder
 
     @property
-    def columns(self) -> pd.Index:
+    def columns_out(self) -> pd.Index:
         encoder: OneHotEncoder = self.base_transformer
 
         encoder.get_feature_names()
 
-        return pd.Index(encoder.get_feature_names(self.input_columns))
+        return pd.Index(encoder.get_feature_names(self.columns_in))

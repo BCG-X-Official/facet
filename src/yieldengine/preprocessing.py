@@ -101,7 +101,7 @@ class SimpleSamplePreprocessor(SamplePreprocessor):
                 col_names = (
                     observations.features.loc[:, t_col_names]
                     .dropna(axis=1, how="all")
-                    .columns
+                    .columns_out
                 )
                 feature_names.extend(col_names)
 

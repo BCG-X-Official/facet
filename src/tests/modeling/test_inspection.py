@@ -1,5 +1,6 @@
 import logging
 import warnings
+from typing import *
 
 import numpy as np
 import pandas as pd
@@ -10,6 +11,7 @@ from sklearn.svm import SVR
 from sklearn.utils import Bunch
 
 from yieldengine import Sample
+from yieldengine.feature.transform import DataFrameTransformer
 from yieldengine.model.inspection import ModelInspector
 from yieldengine.model.selection import Model, ModelRanker, ModelRanking
 from yieldengine.model.validation import CircularCrossValidator
@@ -73,9 +75,8 @@ def test_model_inspection() -> None:
     ][0]
 
     for ranked_model in best_svr, best_lgbm:
-
         mi = ModelInspector(
-            pipeline=ranked_model.pipeline, cv=test_cv, sample=test_sample
+            pipeline=ranked_model.pipeline.pipeline, cv=test_cv, sample=test_sample
         )
 
         # test predictions_for_all_samples
@@ -122,7 +123,10 @@ def test_model_inspection() -> None:
 
 
 def test_model_inspection_with_encoding(
-    batch_table: pd.DataFrame, regressor_grids, sample: Sample, transformer_step
+    batch_table: pd.DataFrame,
+    regressor_grids: Iterable[Model],
+    sample: Sample,
+    transformer_step: Tuple[str, DataFrameTransformer],
 ) -> None:
 
     # define the circular cross validator with just 5 folds (to speed up testing)
@@ -143,7 +147,9 @@ def test_model_inspection_with_encoding(
         m for m in model_ranking if isinstance(m.pipeline.estimator, LGBMRegressor)
     ][0]
     for model in [best_lgbm]:
-        mi = ModelInspector(pipeline=model.pipeline, cv=circular_cv, sample=sample)
+        mi = ModelInspector(
+            pipeline=model.pipeline.pipeline, cv=circular_cv, sample=sample
+        )
 
         shap_matrix = mi.shap_matrix()
 
