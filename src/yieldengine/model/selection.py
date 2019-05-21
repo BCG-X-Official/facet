@@ -1,7 +1,7 @@
 from typing import *
 
-import numpy as np
 from sklearn.model_selection import BaseCrossValidator, GridSearchCV
+from sklearn.model_selection._split import BaseShuffleSplit
 
 from yieldengine import Sample
 from yieldengine.pipeline import ModelPipeline
@@ -9,7 +9,7 @@ from yieldengine.pipeline import ModelPipeline
 
 class Model(NamedTuple):
     pipeline: ModelPipeline
-    parameter_grid: Dict[str, Union[Sequence[Any], np.ndarray]]
+    parameter_grid: Dict[str, Sequence[Any]]
 
 
 class ScoredModel(NamedTuple):
@@ -41,7 +41,10 @@ class ModelRanker:
     F_SD_TEST_SCORE = "std_test_score"
 
     def __init__(
-        self, models: Iterable[Model], cv: BaseCrossValidator = None, scoring=None
+        self,
+        models: Iterable[Model],
+        cv: Union[BaseCrossValidator, BaseShuffleSplit] = None,
+        scoring=None,
     ) -> None:
         self._models = list(models)
         self._cv = cv
@@ -51,12 +54,12 @@ class ModelRanker:
         self._searchers: List[Tuple[GridSearchCV, Model]] = [
             (
                 GridSearchCV(
-                    estimator=model.pipeline,
+                    estimator=model.pipeline.pipeline,
                     cv=cv,
                     param_grid=model.parameter_grid,
                     scoring=scoring,
                     return_train_score=False,
-                    n_jobs=-1,
+                    # n_jobs=-1,
                     refit=False,
                 ),
                 model,
@@ -105,9 +108,7 @@ class ModelRanker:
         # consolidate results of all searchers into "results"
         scored_models = [
             ScoredModel(
-                # note: we have to copy the estimator, to ensure it will actually
-                # retain the parameters we set for each row in separate objects..
-                pipeline=model.pipeline.copy(),
+                pipeline=model.pipeline,
                 parameters=params,
                 test_score_mean=test_score_mean,
                 test_score_std=test_score_std,

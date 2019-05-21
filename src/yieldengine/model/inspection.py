@@ -8,13 +8,14 @@ from scipy.cluster.hierarchy import dendrogram, linkage
 from scipy.spatial.distance import squareform
 from shap import KernelExplainer, TreeExplainer
 from shap.explainers.explainer import Explainer
-from sklearn.base import BaseEstimator
+from sklearn.base import BaseEstimator, clone
 from sklearn.cluster import AgglomerativeClustering
 from sklearn.model_selection import BaseCrossValidator
+from sklearn.model_selection._split import BaseShuffleSplit
 from sklearn.pipeline import Pipeline
 
 from yieldengine import Sample
-from yieldengine.pipeline import ModelPipeline
+from yieldengine.model.pipeline import PipelineDF
 
 log = logging.getLogger(__name__)
 
@@ -31,22 +32,25 @@ class ModelInspector:
         "_pipeline_by_fold",
     ]
 
-    F_FOLD_ID = "fold_start"
+    F_FOLD_ID = "fold_id"
     F_PREDICTION = "prediction"
     F_FEATURE = "feature"
     F_CLUSTER_LABEL = "cluster_label"
 
     def __init__(
-        self, pipeline: ModelPipeline, cv: BaseCrossValidator, sample: Sample
+        self,
+        pipeline: PipelineDF,
+        cv: Union[BaseCrossValidator, BaseShuffleSplit],
+        sample: Sample,
     ) -> None:
 
         self._pipeline = pipeline
         self._cv = cv
         self._sample = sample
-        self._pipeline_by_fold: Union[Dict[int, ModelPipeline], None] = None
-        self._predictions_for_all_samples: Union[pd.DataFrame, None] = None
-        self._shap_matrix: Union[pd.DataFrame, None] = None
-        self._shap_correlation_matrix: Union[pd.DataFrame, None] = None
+        self._pipeline_by_fold: Optional[Dict[int, PipelineDF]] = None
+        self._predictions_for_all_samples: Optional[pd.DataFrame] = None
+        self._shap_matrix: Optional[pd.DataFrame] = None
+        self._shap_correlation_matrix: Optional[pd.DataFrame] = None
 
     @staticmethod
     def _make_shap_explainer(estimator: BaseEstimator, data: pd.DataFrame) -> Explainer:
@@ -91,7 +95,7 @@ class ModelInspector:
         """
         if self._pipeline_by_fold is None:
             self.predictions_for_all_samples()
-        return self._pipeline_by_fold[fold].estimator
+        return self._pipeline_by_fold[fold].steps[-1][1]
 
     def predictions_for_all_samples(self) -> pd.DataFrame:
         """
@@ -127,7 +131,7 @@ class ModelInspector:
             train_sample = sample.select_observations(indices=train_indices)
             test_sample = sample.select_observations(indices=test_indices)
 
-            self._pipeline_by_fold[fold_id] = pipeline = self._pipeline.copy()
+            self._pipeline_by_fold[fold_id] = pipeline = clone(self._pipeline)
 
             pipeline.fit(X=train_sample.features, y=train_sample.target)
 
@@ -161,7 +165,7 @@ class ModelInspector:
         )
 
         def shap_matrix_for_fold(
-            fold_id: int, fold_pipeline: ModelPipeline
+            fold_id: int, fold_pipeline: PipelineDF
         ) -> pd.DataFrame:
 
             observation_indices_in_fold = predictions_by_observation_and_fold.xs(
@@ -172,21 +176,21 @@ class ModelInspector:
                 indices=observation_indices_in_fold
             ).features
 
-            if fold_pipeline.has_transformations():
-                fold_preprocessor = fold_pipeline.preprocessing_pipeline
-                fold_x = fold_preprocessor.transform(X=fold_x)
-                column_names = fold_pipeline.last_preprocessing.columns
+            estimator = fold_pipeline.steps[-1][1]
+
+            if len(fold_pipeline) > 1:
+                data_transformed = fold_pipeline[:-1].transform(fold_x)
             else:
-                column_names = self.sample.feature_names
+                data_transformed = fold_x
 
             shap_matrix = ModelInspector._make_shap_explainer(
-                estimator=fold_pipeline.estimator, data=fold_x
-            ).shap_values(fold_x)
+                estimator=estimator, data=data_transformed
+            ).shap_values(data_transformed)
 
             return pd.DataFrame(
                 data=shap_matrix,
                 index=observation_indices_in_fold,
-                columns=column_names,
+                columns=fold_pipeline.columns_out,
             )
 
         shap_value_dfs = [
