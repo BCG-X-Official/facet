@@ -21,8 +21,6 @@ class DataFrameTransformer(ABC, BaseEstimator, TransformerMixin):
     :param base_transformer the sklearn transformer to be wrapped
     """
 
-    __slots__ = ["_base_transformer", "_original_columns"]
-
     def __init__(self, **kwargs) -> None:
         super().__init__()
         self._base_transformer = type(self).base_transformer_class()(**kwargs)
@@ -134,8 +132,6 @@ class DataFrameTransformer(ABC, BaseEstimator, TransformerMixin):
 
 
 class ColumnTransformerDF(DataFrameTransformer):
-    __slots__ = ["_columnTransformer"]
-
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
         # noinspection PyTypeChecker
@@ -182,8 +178,6 @@ class ColumnTransformerDF(DataFrameTransformer):
 
 
 class SimpleImputerDF(DataFrameTransformer):
-    __slots__ = []
-
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
 
