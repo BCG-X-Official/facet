@@ -2,17 +2,18 @@ name: yield-engine
 channels:
   - conda-forge
 dependencies:
-  - python = 3.6
-  - pytest = 4.4.*
-  - pluggy = 0.11.*
-  - pandas = 0.24.*
-  - shap = 0.28.*
-  - lightgbm = 2.2.*
-  - scikit-learn = 0.21.*
-  - pyyaml = 5.1.*
   - black = 19.3
-  - pytest-cov = 2.6.*
+  - joblib = 0.13.*
+  - lightgbm = 2.2.*
+  - pandas = 0.24.*
   - pip = 19.1
+  - pluggy = 0.11.*
+  - pytest = 4.4.*
+  - pytest-cov = 2.6.*
+  - python = 3.6
+  - pyyaml = 5.1.*
+  - scikit-learn = 0.21.*
+  - shap = 0.28.*
   - xlrd = 1.2.0
   - pip:
       - pre_commit == 1.16.*
