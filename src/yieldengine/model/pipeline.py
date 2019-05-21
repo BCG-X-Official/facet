@@ -95,7 +95,7 @@ class PipelineDF(DataFrameTransformer):
         return len(self.base_transformer.steps)
 
     def __getitem__(self, ind: Union[slice, int, str]) -> DataFrameTransformer:
-        """Returns a sub-pipeline or a single esimtator in the pipeline
+        """Returns a sub-pipeline or a single estimator in the pipeline
 
         Indexing with an integer will return an estimator; using a slice
         returns another Pipeline instance which copies a slice of this
@@ -104,8 +104,14 @@ class PipelineDF(DataFrameTransformer):
         However, replacing a value in `step` will not affect a copy.
         """
 
-        item = self.base_transformer[ind]
         if isinstance(ind, slice):
-            return self.__class__(item)
+            base_pipeline: Pipeline = self.base_transformer
+            if ind.step not in (1, None):
+                raise ValueError("Pipeline slicing only supports a step of 1")
+            return self.__class__(
+                steps=base_pipeline.steps[ind],
+                memory=base_pipeline.memory,
+                verbose=base_pipeline.verbose,
+            )
         else:
-            return item
+            return self.base_transformer[ind]
