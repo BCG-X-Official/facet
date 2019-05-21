@@ -1,8 +1,7 @@
+import collections
 from typing import *
 
-from sklearn import clone
-from sklearn.base import BaseEstimator
-from sklearn.pipeline import Pipeline
+from sklearn.base import BaseEstimator, clone
 
 from yieldengine.feature.transform import (
     ColumnTransformerDF,
@@ -10,76 +9,60 @@ from yieldengine.feature.transform import (
     OneHotEncoderDF,
     SimpleImputerDF,
 )
+from yieldengine.model.pipeline import PipelineDF
+
+TransformationStep = Tuple[str, DataFrameTransformer]
 
 
-class TransformationStep(NamedTuple):
-    name: str
-    transformer: DataFrameTransformer
-
-
-class ModelPipeline(Pipeline):
+class ModelPipeline:
     """
-    Yield-engine model pipeline
+    A model configuration can make a pipeline for a specif
     """
 
-    __slots__ = ["_preprocessing"]
+    __slots__ = ["_pipeline"]
 
-    STEP_MODEL = "model"
-    STEP_PREPROCESSING = "preprocessor"
+    STEP_MODEL = "estimator"
 
     def __init__(
         self,
-        preprocessing: Union[Iterable[TransformationStep], None],
+        preprocessing: Optional[Sequence[TransformationStep]],
         estimator: BaseEstimator,
     ) -> None:
-
-        self._preprocessing = preprocessing
+        super().__init__()
 
         if preprocessing is None:
-            super().__init__([(ModelPipeline.STEP_MODEL, estimator)])
+            preprocessing = []
+        elif isinstance(preprocessing, collections.abc.Sequence):
+            for step in preprocessing:
+                if not (
+                    isinstance(step, tuple)
+                    and len(step) == 2
+                    and isinstance(step[0], str)
+                    and isinstance(step[1], DataFrameTransformer)
+                ):
+                    raise ValueError(
+                        "arg preprocessing must only contain instances of "
+                        "[str, DataFrameTransformer] pairs"
+                    )
         else:
-            preprocessing = list(preprocessing)
-
-            if len(list(preprocessing)) == 0 or not isinstance(
-                preprocessing[0], TransformationStep
-            ):
-                raise ValueError("expected an Iterable[TransformationStep]")
-
-            super().__init__(
-                [
-                    (ModelPipeline.STEP_PREPROCESSING, Pipeline(preprocessing)),
-                    (ModelPipeline.STEP_MODEL, estimator),
-                ]
+            raise ValueError(
+                "arg preprocessing must be a sequence of make_pipeline transformation steps"
             )
 
-    @property
-    def preprocessing_pipeline(self) -> Pipeline:
-        return self.named_steps[ModelPipeline.STEP_PREPROCESSING]
+        self._pipeline = PipelineDF(
+            steps=[*preprocessing, (ModelPipeline.STEP_MODEL, estimator)]
+        )
 
     @property
-    def last_preprocessing(self) -> DataFrameTransformer:
-        return self.preprocessing_pipeline.steps[-1][1]
+    def pipeline(self) -> PipelineDF:
+        return self._pipeline
+
+    def make_pipeline(self) -> PipelineDF:
+        return clone(self._pipeline)
 
     @property
     def estimator(self) -> BaseEstimator:
-        return self.named_steps[ModelPipeline.STEP_MODEL]
-
-    def copy(self) -> "ModelPipeline":
-
-        preprocessing = None
-
-        if self._preprocessing is not None:
-            preprocessing = [
-                TransformationStep(name=t.name, transformer=clone(t.transformer))
-                for t in self._preprocessing
-            ]
-
-        return ModelPipeline(
-            preprocessing=preprocessing, estimator=clone(self.estimator)
-        )
-
-    def has_transformations(self) -> bool:
-        return ModelPipeline.STEP_PREPROCESSING in self.named_steps
+        return self._pipeline.steps[-1][1]
 
 
 STEP_IMPUTE = "impute"
@@ -87,14 +70,14 @@ STEP_ONE_HOT_ENCODE = "one-hot-encode"
 
 
 def make_simple_transformer_step(
-    impute_mean: Sequence[str] = None, one_hot_encode: Sequence[str] = None
-) -> TransformationStep:
+    impute_median: Sequence[str] = None, one_hot_encode: Sequence[str] = None
+) -> Tuple[str, DataFrameTransformer]:
 
     column_transforms = []
 
-    if impute_mean is not None and len(impute_mean) > 0:
+    if impute_median is not None and len(impute_median) > 0:
         column_transforms.append(
-            (STEP_IMPUTE, SimpleImputerDF(strategy="mean"), impute_mean)
+            (STEP_IMPUTE, SimpleImputerDF(strategy="median"), impute_median)
         )
 
     if one_hot_encode is not None and len(one_hot_encode) > 0:
@@ -106,6 +89,4 @@ def make_simple_transformer_step(
             )
         )
 
-    return TransformationStep(
-        name="t1", transformer=ColumnTransformerDF(transformers=column_transforms)
-    )
+    return "t1", ColumnTransformerDF(transformers=column_transforms)

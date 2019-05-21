@@ -127,6 +127,6 @@ def sample(batch_table: pd.DataFrame) -> Sample:
 def transformer_step(sample: Sample) -> TransformationStep:
 
     return make_simple_transformer_step(
-        impute_mean=sample.features_by_type(Sample.DTYPE_NUMERICAL).columns,
+        impute_median=sample.features_by_type(Sample.DTYPE_NUMERICAL).columns,
         one_hot_encode=sample.features_by_type(Sample.DTYPE_OBJECT).columns,
     )
