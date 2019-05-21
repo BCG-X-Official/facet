@@ -20,7 +20,7 @@ from yieldengine.pipeline import ModelPipeline
 log = logging.getLogger(__name__)
 
 
-def test_model_inspection() -> None:
+def test_model_inspection(available_cpus: int) -> None:
     warnings.filterwarnings("ignore", message="numpy.dtype size changed")
     warnings.filterwarnings("ignore", message="numpy.ufunc size changed")
     warnings.filterwarnings("ignore", message="You are accessing a training score")
@@ -66,7 +66,7 @@ def test_model_inspection() -> None:
         models=models, cv=test_cv, scoring="neg_mean_squared_error"
     )
 
-    model_ranking: ModelRanking = model_ranker.run(test_sample)
+    model_ranking: ModelRanking = model_ranker.run(test_sample, n_jobs=available_cpus)
 
     # consider: model_with_type(...) function for ModelRanking
     best_svr = [m for m in model_ranking if isinstance(m.pipeline.estimator, SVR)][0]
@@ -127,6 +127,7 @@ def test_model_inspection_with_encoding(
     regressor_grids: Iterable[Model],
     sample: Sample,
     transformer_step: Tuple[str, DataFrameTransformer],
+    available_cpus: int,
 ) -> None:
 
     # define the circular cross validator with just 5 folds (to speed up testing)
@@ -137,7 +138,7 @@ def test_model_inspection_with_encoding(
     )
 
     # run the ModelRanker to retrieve a ranking
-    model_ranking: ModelRanking = model_ranker.run(sample=sample)
+    model_ranking: ModelRanking = model_ranker.run(sample=sample, n_jobs=available_cpus)
 
     log.info(model_ranking)
 
