@@ -4,10 +4,11 @@ channels:
 dependencies:
   - python = 3.6
   - pytest = 4.4.*
+  - pluggy = 0.11.*
   - pandas = 0.24.*
   - shap = 0.28.*
   - lightgbm = 2.2.*
-  - scikit-learn = 0.20.*
+  - scikit-learn = 0.21.*
   - pyyaml = 5.1.*
   - black = 19.3
   - pytest-cov = 2.6.*
