@@ -59,7 +59,7 @@ class ModelRanker:
                     param_grid=model.parameter_grid,
                     scoring=scoring,
                     return_train_score=False,
-                    # n_jobs=-1,
+                    n_jobs=6,
                     refit=False,
                 ),
                 model,
