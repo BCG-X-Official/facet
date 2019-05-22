@@ -1,8 +1,8 @@
 import pytest
 
 import tests
+from tests.loading import dataloader
 from tests.paths import TEST_DATA_CSV
-from yieldengine.loading import dataloader
 
 
 def test_load_raw_data() -> None:

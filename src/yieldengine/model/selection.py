@@ -1,20 +1,62 @@
+from itertools import chain
 from typing import *
 
 from sklearn.model_selection import BaseCrossValidator, GridSearchCV
-from sklearn.model_selection._split import BaseShuffleSplit
 
 from yieldengine import Sample
-from yieldengine.pipeline import ModelPipeline
+from yieldengine.model import Model
 
 
-class Model(NamedTuple):
-    pipeline: ModelPipeline
-    parameter_grid: Dict[str, Sequence[Any]]
+class ModelGrid:
+    def __init__(
+        self,
+        model: Model,
+        estimator_parameters: Dict[str, Any],
+        preprocessing_parameters: Optional[Dict[str, Any]] = None,
+    ) -> None:
+        self._model = model
+        self._estimator_parameters = estimator_parameters
+        self._preprocessing_parameters = preprocessing_parameters
+
+        def _prefix_parameter_names(
+            parameters: Dict[str, Any], prefix: str
+        ) -> List[Tuple[str, Any]]:
+            return [
+                (f"{prefix}__{param}", value) for param, value in parameters.items()
+            ]
+
+        grid_parameters: Iterable[Tuple[str, Any]] = _prefix_parameter_names(
+            parameters=estimator_parameters, prefix=Model.STEP_ESTIMATOR
+        )
+        if preprocessing_parameters is not None:
+            grid_parameters = chain(
+                grid_parameters,
+                _prefix_parameter_names(
+                    parameters=preprocessing_parameters, prefix=Model.STEP_PREPROCESSING
+                ),
+            )
+
+        self._grid = dict(grid_parameters)
+
+    @property
+    def model(self) -> Model:
+        return self._model
+
+    @property
+    def estimator_parameters(self) -> Dict[str, Any]:
+        return self._estimator_parameters
+
+    @property
+    def preprocessing_parameters(self) -> Optional[Dict[str, Any]]:
+        return self._preprocessing_parameters
+
+    @property
+    def parameters(self) -> Dict[str, Any]:
+        return self._grid
 
 
-class ScoredModel(NamedTuple):
-    pipeline: ModelPipeline
-    parameters: Dict[str, Any]
+class ModelEvaluation(NamedTuple):
+    model: Model
     test_score_mean: float
     test_score_std: float
     ranking_score: float
@@ -29,12 +71,12 @@ class ModelRanker:
         - a scoring function
     into a scikit-learn pipeline.
 
-    :param models: list of model grids to be ranked
+    :param grids: list of model grids to be ranked
     :param cv: a cross validation object (i.e. CircularCrossValidator)
     :param scoring: a scorer to use when doing CV within GridSearch
     """
 
-    __slots__ = ["_models", "_scoring", "_cv", "_searchers", "_pipeline"]
+    __slots__ = ["_grids", "_scoring", "_cv", "_searchers", "_pipeline"]
 
     F_PARAMETERS = "params"
     F_MEAN_TEST_SCORE = "mean_test_score"
@@ -42,11 +84,11 @@ class ModelRanker:
 
     def __init__(
         self,
-        models: Iterable[Model],
-        cv: Union[BaseCrossValidator, BaseShuffleSplit] = None,
+        grids: Iterable[ModelGrid],
+        cv: Optional[BaseCrossValidator] = None,
         scoring=None,
     ) -> None:
-        self._models = list(models)
+        self._grids = list(grids)
         self._cv = cv
         self._scoring = scoring
 
@@ -73,7 +115,7 @@ class ModelRanker:
         ranking_scorer: Callable[[float, float], float] = None,
         n_jobs: Optional[int] = None,
         pre_dispatch="2*n_jobs",
-    ) -> "ModelRanking":
+    ) -> Sequence[ModelEvaluation]:
         """
         Execute the pipeline with the given sample and return the ranking.
 
@@ -82,28 +124,28 @@ class ModelRanker:
         taking mean and standard deviation of the ranking scores and returning the
         overall ranking score (default: ModelRanking.default_ranking_scorer)
         :param n_jobs: number of threads to use (default: one)
-        :param pre_dispatch: maximum number of the data to make (default: 2*n_jobs)
+        :param pre_dispatch: maximum number of the data to make (default: `"2*n_jobs"`)
 
         :return the created model ranking of type :code:`ModelRanking`
 
         """
 
         # construct searchers
-        searchers: List[Tuple[GridSearchCV, Model]] = [
+        searchers: List[Tuple[GridSearchCV, ModelGrid]] = [
             (
                 GridSearchCV(
-                    estimator=model.pipeline.pipeline,
+                    estimator=grid.model.pipeline(),
                     cv=self._cv,
-                    param_grid=model.parameter_grid,
+                    param_grid=grid.parameters,
                     scoring=self._scoring,
                     return_train_score=False,
                     n_jobs=n_jobs,
                     pre_dispatch=pre_dispatch,
                     refit=False,
                 ),
-                model,
+                grid,
             )
-            for model in self._models
+            for grid in self._grids
         ]
 
         for searcher, _ in searchers:
@@ -113,16 +155,15 @@ class ModelRanker:
             ranking_scorer = ModelRanker.default_ranking_scorer
 
         # consolidate results of all searchers into "results"
-        scored_models = [
-            ScoredModel(
-                pipeline=model.pipeline,
-                parameters=params,
+        scorings = [
+            ModelEvaluation(
+                model=grid.model.clone(parameters=params),
                 test_score_mean=test_score_mean,
                 test_score_std=test_score_std,
                 # compute the final score using function defined above:
                 ranking_score=ranking_scorer(test_score_mean, test_score_std),
             )
-            for search, model in searchers
+            for search, grid in searchers
             # we read and iterate over these 3 attributes from cv_results_:
             for params, test_score_mean, test_score_std in zip(
                 search.cv_results_[ModelRanker.F_PARAMETERS],
@@ -132,79 +173,43 @@ class ModelRanker:
         ]
 
         # create ranking by assigning rank values and creating "RankedModel" types
-        return ModelRanking(
-            ranking=sorted(
-                scored_models, key=lambda model: model.ranking_score, reverse=True
-            )
-        )
+        return sorted(scorings, key=lambda scoring: scoring.ranking_score, reverse=True)
 
 
-class ModelRanking:
-    BEST_MODEL_RANK = 0
-
+def summary_report(ranking: Sequence[ModelEvaluation]) -> str:
     """
-    Utility class that wraps a list of RankedModel
+    :return: a summary string of the model ranking
     """
 
-    def __init__(self, ranking: List[ScoredModel]):
-        """
-        Utility class that wraps a list of RankedModel
+    def _model_name(ranked_model: ModelEvaluation) -> str:
+        return ranked_model.model.estimator.__class__.__name__
 
-        :param ranking: the list of RankedModel instances this ranking is based on
-        """
-        self.__ranking = ranking
+    name_width = max([len(_model_name(ranked_model)) for ranked_model in ranking])
 
-    def model(self, rank: int) -> ScoredModel:
-        """
-        Returns the model instance at a given rank.
-
-        :param rank: the rank of the model to get
-        
-        :return: a RankedModel instance
-        """
-        return self.__ranking[rank]
-
-    def summary_report(self, limit: int = 10) -> str:
-        """
-        Generates a summary string of the best model instances
-
-        :param limit: How many ranks to max. output
-
-        :return: str
-        """
-
-        ranking = self.__ranking[:limit]
-
-        def _model_name(ranked_model: ScoredModel) -> str:
-            return ranked_model.pipeline.estimator.__class__.__name__
-
-        name_width = max([len(_model_name(ranked_model)) for ranked_model in ranking])
-
-        def parameters(params: Dict[str, Iterable[Any]]) -> str:
-            return "\n    ".join(
-                [
-                    f"{param_name}={param_value}"
-                    for param_name, param_value in params.items()
-                ]
-            )
-
-        return "\n".join(
+    def parameters(params: Dict[str, Iterable[Any]]) -> str:
+        return "\n    ".join(
             [
-                f" Rank {rank + 1:2d}: "
-                f"{_model_name(ranked_model):>{name_width}s}, "
-                f"Score={ranked_model.ranking_score:+.2e}, "
-                f"Test mean={ranked_model.test_score_mean:+.2e}, "
-                f"Test std={ranked_model.test_score_std:+.2e}"
-                f"\n    {parameters(ranked_model.parameters)}"
-                for rank, ranked_model in enumerate(ranking)
+                f"{param_name}={param_value}"
+                for param_name, param_value in params.items()
             ]
         )
 
-    def __len__(self) -> int:
-        return len(self.__ranking)
-
-    def __str__(self) -> str:
-        return self.summary_report()
-
-    def __iter__(self) -> Iterable[ScoredModel]:
-        return iter(self.__ranking)
+    return "\n".join(
+        [
+            f"Rank {rank + 1:2d}: "
+            f"{_model_name(ranked_model):>{name_width}s}, "
+            f"Score={ranked_model.ranking_score:+.2e}, "
+            f"Test mean={ranked_model.test_score_mean:+.2e}, "
+            f"Test std={ranked_model.test_score_std:+.2e}"
+            "\nEstimator parameters:"
+            f"\n    {parameters(ranked_model.model.estimator.get_params())}"
+            + (
+                ""
+                if ranked_model.model.preprocessing is None
+                else "\nPreprocessing parameters:"
+                f"\n    {parameters(ranked_model.model.preprocessing.get_params())}"
+            )
+            + "\n"
+            for rank, ranked_model in enumerate(ranking)
+        ]
+    )
