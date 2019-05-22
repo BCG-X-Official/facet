@@ -13,7 +13,12 @@ from sklearn.preprocessing import OneHotEncoder
 log = logging.getLogger(__name__)
 
 
-class DataFrameTransformer(ABC, BaseEstimator, TransformerMixin):
+_BaseTransformer = TypeVar("_BaseTransformer", BaseEstimator, TransformerMixin)
+
+
+class DataFrameTransformer(
+    ABC, BaseEstimator, TransformerMixin, Generic[_BaseTransformer]
+):
     """
     Wraps around an sklearn transformer and ensures that the X and y objects passed
     and returned are pandas data frames with valid column names
@@ -32,7 +37,7 @@ class DataFrameTransformer(ABC, BaseEstimator, TransformerMixin):
         pass
 
     @property
-    def base_transformer(self) -> (BaseEstimator, TransformerMixin):
+    def base_transformer(self) -> _BaseTransformer:
         return self._base_transformer
 
     def is_fitted(self) -> bool:
@@ -131,11 +136,11 @@ class DataFrameTransformer(ABC, BaseEstimator, TransformerMixin):
             raise TypeError("arg y must be a Series")
 
 
-class ColumnTransformerDF(DataFrameTransformer):
+class ColumnTransformerDF(DataFrameTransformer[ColumnTransformer]):
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
         # noinspection PyTypeChecker
-        column_transformer: ColumnTransformer = self.base_transformer
+        column_transformer = self.base_transformer
 
         if column_transformer.remainder != "drop":
             raise ValueError(
@@ -164,7 +169,7 @@ class ColumnTransformerDF(DataFrameTransformer):
 
     @property
     def columns_out(self) -> pd.Index:
-        column_transformer: ColumnTransformer = self.base_transformer
+        column_transformer = self.base_transformer
 
         # construct the index from the columns in the fitted transformers
         return pd.Index(
@@ -177,7 +182,7 @@ class ColumnTransformerDF(DataFrameTransformer):
         )
 
 
-class SimpleImputerDF(DataFrameTransformer):
+class SimpleImputerDF(DataFrameTransformer[SimpleImputer]):
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
 
@@ -187,19 +192,19 @@ class SimpleImputerDF(DataFrameTransformer):
 
     @property
     def columns_out(self) -> pd.Index:
-        imputer: SimpleImputer = super().base_transformer
+        imputer = self.base_transformer
 
         return self.columns_in.delete(np.argwhere(np.isnan(imputer.statistics_)))
 
 
-class OneHotEncoderDF(DataFrameTransformer):
+class OneHotEncoderDF(DataFrameTransformer[OneHotEncoder]):
     """
     A one-hot encoder that returns a DataFrame with correct row and column indices
     """
 
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
-        encoder: OneHotEncoder = self.base_transformer
+        encoder = self.base_transformer
 
         if encoder.sparse:
             raise ValueError(
@@ -212,8 +217,5 @@ class OneHotEncoderDF(DataFrameTransformer):
 
     @property
     def columns_out(self) -> pd.Index:
-        encoder: OneHotEncoder = self.base_transformer
-
-        encoder.get_feature_names()
-
+        encoder = self.base_transformer
         return pd.Index(encoder.get_feature_names(self.columns_in))
