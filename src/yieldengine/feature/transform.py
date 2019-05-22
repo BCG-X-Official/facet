@@ -8,12 +8,14 @@ import pandas as pd
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.compose import ColumnTransformer
 from sklearn.impute import SimpleImputer
-from sklearn.preprocessing import OneHotEncoder
+from sklearn.preprocessing import OneHotEncoder, OrdinalEncoder
 
 log = logging.getLogger(__name__)
 
 
-_BaseTransformer = TypeVar("_BaseTransformer", BaseEstimator, TransformerMixin)
+_BaseTransformer = TypeVar(
+    "_BaseTransformer", bound=Union[BaseEstimator, TransformerMixin]
+)
 
 
 class DataFrameTransformer(
@@ -27,13 +29,14 @@ class DataFrameTransformer(
     """
 
     def __init__(self, **kwargs) -> None:
-        super().__init__()
-        self._base_transformer = type(self).base_transformer_class()(**kwargs)
+        super(BaseEstimator).__init__()
+        super(TransformerMixin).__init__()
+        self._base_transformer = type(self)._make_base_transformer(**kwargs)
         self._original_columns = None
 
     @classmethod
     @abstractmethod
-    def base_transformer_class(cls) -> type:
+    def _make_base_transformer(cls, **kwargs) -> _BaseTransformer:
         pass
 
     @property
@@ -164,8 +167,8 @@ class ColumnTransformerDF(DataFrameTransformer[ColumnTransformer]):
         self._columnTransformer = column_transformer
 
     @classmethod
-    def base_transformer_class(cls) -> type:
-        return ColumnTransformer
+    def _make_base_transformer(cls, **kwargs) -> ColumnTransformer:
+        return ColumnTransformer(**kwargs)
 
     @property
     def columns_out(self) -> pd.Index:
@@ -187,8 +190,8 @@ class SimpleImputerDF(DataFrameTransformer[SimpleImputer]):
         super().__init__(**kwargs)
 
     @classmethod
-    def base_transformer_class(cls) -> type:
-        return SimpleImputer
+    def _make_base_transformer(cls, **kwargs) -> SimpleImputer:
+        return SimpleImputer(**kwargs)
 
     @property
     def columns_out(self) -> pd.Index:
@@ -212,8 +215,8 @@ class OneHotEncoderDF(DataFrameTransformer[OneHotEncoder]):
             )
 
     @classmethod
-    def base_transformer_class(cls) -> type:
-        return OneHotEncoder
+    def _make_base_transformer(cls, **kwargs) -> OneHotEncoder:
+        return OneHotEncoder(**kwargs)
 
     @property
     def columns_out(self) -> pd.Index:
