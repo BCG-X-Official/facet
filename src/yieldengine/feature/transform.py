@@ -139,6 +139,17 @@ class DataFrameTransformer(
             raise TypeError("arg y must be a Series")
 
 
+class ConstantColumnTransformer(
+    DataFrameTransformer[_BaseTransformer], Generic[_BaseTransformer]
+):
+    def __init__(self, **kwargs) -> None:
+        super().__init__(**kwargs)
+
+    @property
+    def columns_out(self) -> pd.Index:
+        return self.columns_in
+
+
 class ColumnTransformerDF(DataFrameTransformer[ColumnTransformer]):
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
@@ -222,3 +233,12 @@ class OneHotEncoderDF(DataFrameTransformer[OneHotEncoder]):
     def columns_out(self) -> pd.Index:
         encoder = self.base_transformer
         return pd.Index(encoder.get_feature_names(self.columns_in))
+
+
+class OrdinalEncoderDF(ConstantColumnTransformer[OrdinalEncoder]):
+    def __init__(self, **kwargs) -> None:
+        super().__init__(**kwargs)
+
+    @classmethod
+    def _make_base_transformer(cls, **kwargs) -> OrdinalEncoder:
+        return OrdinalEncoder(**kwargs)
