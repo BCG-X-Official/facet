@@ -19,7 +19,9 @@ class PipelineDF(DataFrameTransformer):
 
     def _validate_steps(self) -> None:
         for name, transformer in self._transform_steps():
-            if not isinstance(transformer, DataFrameTransformer):
+            if transformer is not None and not isinstance(
+                transformer, DataFrameTransformer
+            ):
                 raise ValueError(
                     f"expected all transformers to implement DataFrameTransformer, but "
                     f"step '{name}' is a {type(transformer).__name__}"
