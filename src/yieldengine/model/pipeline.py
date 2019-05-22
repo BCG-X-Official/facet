@@ -46,8 +46,8 @@ class PipelineDF(DataFrameTransformer[Pipeline]):
         return transform_steps
 
     @classmethod
-    def base_transformer_class(cls) -> type:
-        return Pipeline
+    def _make_base_transformer(cls, **kwargs) -> Pipeline:
+        return Pipeline(**kwargs)
 
     @property
     def columns_out(self) -> pd.Index:
