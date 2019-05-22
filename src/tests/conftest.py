@@ -13,16 +13,18 @@ from sklearn.svm import SVR
 from sklearn.tree import DecisionTreeRegressor, ExtraTreeRegressor
 
 from tests import read_test_config
+from tests.model import make_simple_transformer
 from tests.paths import TEST_DATA_CSV
 from yieldengine import Sample
-from yieldengine.model.selection import Model
-from yieldengine.pipeline import (
-    make_simple_transformer_step,
-    ModelPipeline,
-    TransformationStep,
-)
+from yieldengine.feature.transform import DataFrameTransformer
+from yieldengine.model import Model
+from yieldengine.model.selection import ModelGrid
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG)
+log = logging.getLogger(__name__)
+
+# disable SHAP debugging messages
+logging.getLogger("shap").setLevel(logging.WARNING)
 
 warnings.filterwarnings(
     "ignore", message=r"Starting from version 2", category=UserWarning
@@ -49,69 +51,55 @@ def batch_table() -> pd.DataFrame:
 
 
 @pytest.fixture
-def regressor_grids(transformer_step: TransformationStep) -> List[Model]:
-    RANDOM_STATE = {f"{ModelPipeline.STEP_MODEL}__random_state": [42]}
+def regressor_grids(simple_preprocessor) -> List[ModelGrid]:
+    RANDOM_STATE = {f"random_state": [42]}
     return [
-        Model(
-            pipeline=ModelPipeline(
-                preprocessing=[transformer_step], estimator=LGBMRegressor()
-            ),
-            parameter_grid={
-                f"{ModelPipeline.STEP_MODEL}__max_depth": [5, 10],
-                f"{ModelPipeline.STEP_MODEL}__min_split_gain": [0.1, 0.2],
-                f"{ModelPipeline.STEP_MODEL}__num_leaves": [50, 100, 200],
+        ModelGrid(
+            model=Model(preprocessing=simple_preprocessor, estimator=LGBMRegressor()),
+            estimator_parameters={
+                "max_depth": [5, 10],
+                "min_split_gain": [0.1, 0.2],
+                "num_leaves": [50, 100, 200],
                 **RANDOM_STATE,
             },
         ),
-        Model(
-            pipeline=ModelPipeline(
-                preprocessing=[transformer_step], estimator=AdaBoostRegressor()
+        ModelGrid(
+            model=Model(
+                preprocessing=simple_preprocessor, estimator=AdaBoostRegressor()
             ),
-            parameter_grid={
-                f"{ModelPipeline.STEP_MODEL}__n_estimators": [50, 80],
+            estimator_parameters={"n_estimators": [50, 80], **RANDOM_STATE},
+        ),
+        ModelGrid(
+            model=Model(
+                preprocessing=simple_preprocessor, estimator=RandomForestRegressor()
+            ),
+            estimator_parameters={"n_estimators": [50, 80], **RANDOM_STATE},
+        ),
+        ModelGrid(
+            model=Model(
+                preprocessing=simple_preprocessor, estimator=DecisionTreeRegressor()
+            ),
+            estimator_parameters={
+                "max_depth": [0.5, 1.0],
+                "max_features": [0.5, 1.0],
                 **RANDOM_STATE,
             },
         ),
-        Model(
-            pipeline=ModelPipeline(
-                preprocessing=[transformer_step], estimator=RandomForestRegressor()
+        ModelGrid(
+            model=Model(
+                preprocessing=simple_preprocessor, estimator=ExtraTreeRegressor()
             ),
-            parameter_grid={
-                f"{ModelPipeline.STEP_MODEL}__n_estimators": [50, 80],
-                **RANDOM_STATE,
-            },
+            estimator_parameters={"max_depth": [5, 10, 12], **RANDOM_STATE},
         ),
-        Model(
-            pipeline=ModelPipeline(
-                preprocessing=[transformer_step], estimator=DecisionTreeRegressor()
+        ModelGrid(
+            model=Model(preprocessing=simple_preprocessor, estimator=SVR()),
+            estimator_parameters={"gamma": [0.5, 1], "C": [50, 100]},
+        ),
+        ModelGrid(
+            model=Model(
+                preprocessing=simple_preprocessor, estimator=LinearRegression()
             ),
-            parameter_grid={
-                f"{ModelPipeline.STEP_MODEL}__max_depth": [0.5, 1.0],
-                f"{ModelPipeline.STEP_MODEL}__max_features": [0.5, 1.0],
-                **RANDOM_STATE,
-            },
-        ),
-        Model(
-            pipeline=ModelPipeline(
-                preprocessing=[transformer_step], estimator=ExtraTreeRegressor()
-            ),
-            parameter_grid={
-                f"{ModelPipeline.STEP_MODEL}__max_depth": [5, 10, 12],
-                **RANDOM_STATE,
-            },
-        ),
-        Model(
-            pipeline=ModelPipeline(preprocessing=[transformer_step], estimator=SVR()),
-            parameter_grid={
-                f"{ModelPipeline.STEP_MODEL}__gamma": [0.5, 1],
-                f"{ModelPipeline.STEP_MODEL}__C": [50, 100],
-            },
-        ),
-        Model(
-            pipeline=ModelPipeline(
-                preprocessing=[transformer_step], estimator=LinearRegression()
-            ),
-            parameter_grid={f"{ModelPipeline.STEP_MODEL}__normalize": [False, True]},
+            estimator_parameters={"normalize": [False, True]},
         ),
     ]
 
@@ -131,9 +119,8 @@ def sample(batch_table: pd.DataFrame) -> Sample:
 
 
 @pytest.fixture
-def transformer_step(sample: Sample) -> TransformationStep:
-
-    return make_simple_transformer_step(
-        impute_median=sample.features_by_type(Sample.DTYPE_NUMERICAL).columns,
-        one_hot_encode=sample.features_by_type(Sample.DTYPE_OBJECT).columns,
+def simple_preprocessor(sample: Sample) -> DataFrameTransformer:
+    return make_simple_transformer(
+        impute_median_columns=sample.features_by_type(Sample.DTYPE_NUMERICAL).columns,
+        one_hot_encode_columns=sample.features_by_type(Sample.DTYPE_OBJECT).columns,
     )
