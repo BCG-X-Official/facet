@@ -12,7 +12,7 @@ from yieldengine.feature.transform import DataFrameTransformer
 log = logging.getLogger(__name__)
 
 
-class PipelineDF(DataFrameTransformer):
+class PipelineDF(DataFrameTransformer[Pipeline]):
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
         self._validate_steps()
@@ -28,7 +28,7 @@ class PipelineDF(DataFrameTransformer):
                 )
 
     def _transform_steps(self) -> List[Tuple[str, DataFrameTransformer]]:
-        pipeline: Pipeline = self.base_transformer
+        pipeline = self.base_transformer
 
         steps = pipeline.steps
 
@@ -107,7 +107,7 @@ class PipelineDF(DataFrameTransformer):
         """
 
         if isinstance(ind, slice):
-            base_pipeline: Pipeline = self.base_transformer
+            base_pipeline = self.base_transformer
             if ind.step not in (1, None):
                 raise ValueError("Pipeline slicing only supports a step of 1")
             return self.__class__(
