@@ -1,5 +1,6 @@
 import logging
 import warnings
+from typing import *
 
 import numpy as np
 import pandas as pd
@@ -7,9 +8,14 @@ from sklearn import datasets
 from sklearn.svm import SVC
 
 from yieldengine import Sample
-from yieldengine.model.selection import Model, ModelRanker, ModelRanking, ScoredModel
+from yieldengine.model import Model
+from yieldengine.model.selection import (
+    ModelEvaluation,
+    ModelGrid,
+    ModelRanker,
+    summary_report,
+)
 from yieldengine.model.validation import CircularCrossValidator
-from yieldengine.pipeline import ModelPipeline
 
 log = logging.getLogger(__name__)
 
@@ -21,31 +27,32 @@ def test_model_ranker(
     circular_cv = CircularCrossValidator(test_ratio=0.20, num_folds=5)
 
     model_ranker: ModelRanker = ModelRanker(
-        models=regressor_grids, cv=circular_cv, scoring="r2"
+        grids=regressor_grids, cv=circular_cv, scoring="r2"
     )
 
     # run the ModelRanker to retrieve a ranking
-    model_ranking: ModelRanking = model_ranker.run(sample=sample, n_jobs=available_cpus)
+    model_ranking: Sequence[ModelEvaluation] = model_ranker.run(
+        sample=sample, n_jobs=available_cpus
+    )
 
     assert len(model_ranking) > 0
-    assert isinstance(
-        model_ranking.model(rank=ModelRanking.BEST_MODEL_RANK), ScoredModel
-    )
+    assert isinstance(model_ranking[0], ModelEvaluation)
     assert (
-        model_ranking.model(rank=0).ranking_score
-        >= model_ranking.model(rank=1).ranking_score
-        >= model_ranking.model(rank=2).ranking_score
-        >= model_ranking.model(rank=3).ranking_score
-        >= model_ranking.model(rank=4).ranking_score
-        >= model_ranking.model(rank=len(model_ranking) - 1).ranking_score
+        model_ranking[0].ranking_score
+        >= model_ranking[1].ranking_score
+        >= model_ranking[2].ranking_score
+        >= model_ranking[3].ranking_score
+        >= model_ranking[4].ranking_score
+        >= model_ranking[-1].ranking_score
     )
 
     # check if parameters set for estimators actually match expected:
-    for r in range(0, len(model_ranking)):
-        m: ScoredModel = model_ranking.model(r)
-        assert set(m.parameters).issubset(m.pipeline.pipeline.get_params())
+    for scoring in model_ranking:
+        assert set(scoring.model.pipeline().get_params()).issubset(
+            scoring.model.pipeline().get_params()
+        )
 
-    log.info(f"\n{model_ranking}")
+    log.debug(f"\n{model_ranking}")
 
 
 def test_model_ranker_no_preprocessing(available_cpus: int) -> None:
@@ -58,16 +65,13 @@ def test_model_ranker_no_preprocessing(available_cpus: int) -> None:
 
     # define parameters and model
     models = [
-        Model(
-            pipeline=ModelPipeline(estimator=SVC(gamma="scale"), preprocessing=None),
-            parameter_grid={
-                f"{ModelPipeline.STEP_MODEL}__kernel": ("linear", "rbf"),
-                f"{ModelPipeline.STEP_MODEL}__C": [1, 10],
-            },
+        ModelGrid(
+            model=Model(estimator=SVC(gamma="scale"), preprocessing=None),
+            estimator_parameters={"kernel": ("linear", "rbf"), "C": [1, 10]},
         )
     ]
 
-    model_ranker: ModelRanker = ModelRanker(models=models, cv=cv)
+    model_ranker: ModelRanker = ModelRanker(grids=models, cv=cv)
 
     #  load sklearn test-data and convert to pd
     iris = datasets.load_iris()
@@ -77,10 +81,12 @@ def test_model_ranker_no_preprocessing(available_cpus: int) -> None:
     )
     test_sample: Sample = Sample(observations=test_data, target_name="target")
 
-    model_ranking: ModelRanking = model_ranker.run(test_sample, n_jobs=available_cpus)
+    model_ranking: Sequence[ModelEvaluation] = model_ranker.run(
+        test_sample, n_jobs=available_cpus
+    )
 
-    log.info(f"\n{model_ranking.summary_report()}")
+    log.debug(f"\n{summary_report(model_ranking[:10])}")
 
     assert (
-        model_ranking.model(ModelRanking.BEST_MODEL_RANK).ranking_score >= 0.8
-    ), "Expected a performance of at least 0.8"
+        model_ranking[0].ranking_score >= 0.8
+    ), "expected a best performance of at least 0.8"
