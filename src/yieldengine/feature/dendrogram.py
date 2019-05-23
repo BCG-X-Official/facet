@@ -11,11 +11,17 @@ class DendrogramDrawer:
         # run _draw_dendrogram
         pass
 
-    def _draw_dendrogram(self, node: LinkageNode, y: int, width: int) -> int:
+    def _draw_dendrogram(self, node: LinkageNode, y: int) -> int:
         # returns height
+        if self._linkage.is_leaf(node):
+            self._draw_link_leg(node=node, y=y)
+        else:
+            pass
         pass
 
-    def _draw_link_leg(self, node: LinkageNode, y: int, width: int) -> int:
+    def _draw_link_leg(self, node: LinkageNode, y: int) -> int:
+        # get colour by DendrogramDrawer.color(node)
+        # draw coloured line from x=[0,node.link_distance] on y=y
         # returns height
         pass
 
