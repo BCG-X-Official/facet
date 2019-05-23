@@ -27,7 +27,7 @@ class ModelInspector:
         "_shap_explainer_by_fold",
         "_predictions_for_all_samples",
         "_shap_matrix",
-        "_shap_correlation_matrix",
+        "_feature_dependency_matrix",
         "_model_by_fold",
     ]
 
@@ -44,7 +44,7 @@ class ModelInspector:
         self._model_by_fold: Optional[Dict[int, Model]] = None
         self._predictions_for_all_samples: Optional[pd.DataFrame] = None
         self._shap_matrix: Optional[pd.DataFrame] = None
-        self._shap_correlation_matrix: Optional[pd.DataFrame] = None
+        self._feature_dependency_matrix: Optional[pd.DataFrame] = None
 
     @staticmethod
     def _make_shap_explainer(estimator: BaseEstimator, data: pd.DataFrame) -> Explainer:
@@ -201,24 +201,19 @@ class ModelInspector:
 
         return self._shap_matrix
 
-    def feature_dependencies(self) -> pd.DataFrame:
-        if self._shap_correlation_matrix is not None:
-            return self._shap_correlation_matrix
+    def feature_dependency_matrix(self) -> pd.DataFrame:
+        if self._feature_dependency_matrix is not None:
+            return self._feature_dependency_matrix
 
-        self._shap_correlation_matrix = self.shap_matrix().corr(method="pearson")
+        self._feature_dependency_matrix = (
+            self.shap_matrix().corr(method="pearson").fillna(value=0)
+        )
 
-        return self._shap_correlation_matrix
+        return self._feature_dependency_matrix
 
-    def run_clustering_on_feature_correlations(
-        self, remove_all_na: bool = True
-    ) -> Tuple[AgglomerativeClustering, pd.DataFrame]:
+    def cluster_dependent_features(self) -> AgglomerativeClustering:
 
-        feature_dependencies = self.feature_dependencies()
-
-        if remove_all_na:
-            feature_dependencies = feature_dependencies.dropna(
-                axis=1, how="all"
-            ).dropna(axis=0, how="all")
+        feature_dependencies = self.feature_dependency_matrix()
 
         # set up the clustering estimator
         clustering_estimator = AgglomerativeClustering(
@@ -227,22 +222,14 @@ class ModelInspector:
 
         # fit the clustering algorithm using the feature_dependencies as a
         # distance matrix:
-        # map the [-1,1] correlation values into [0,1]
+        # convert correlation values into distances (1 = most distant)
         # and then fit the clustering algorithm:
         clustering_estimator.fit(X=1 - np.abs(feature_dependencies.values))
 
-        # return a data frame with the cluster labels added as a series
-        clustered_feature_dependencies = feature_dependencies
-        clustered_feature_dependencies[
-            ModelInspector.F_CLUSTER_LABEL
-        ] = clustering_estimator.labels_
-
-        return clustering_estimator, clustered_feature_dependencies
+        return clustering_estimator
 
     def plot_feature_dendrogramm(self, figsize: Tuple[int, int] = (20, 20)) -> None:
-        clustering_estimator, clustered_feature_dependencies = (
-            self.run_clustering_on_feature_correlations()
-        )
+        clustering_estimator = self.cluster_dependent_features()
         # NOTE: based on:
         #  https://github.com/scikit-learn/scikit-learn/blob/
         # 70cf4a676caa2d2dad2e3f6e4478d64bcb0506f7/examples/
@@ -268,7 +255,7 @@ class ModelInspector:
         pyplot.figure(num=None, figsize=figsize, dpi=120, facecolor="w", edgecolor="k")
         dendrogram(
             Z=linkage_matrix,
-            labels=clustered_feature_dependencies.index.values,
+            labels=self.feature_dependency_matrix().index.values,
             orientation="left",
         )
         pyplot.title("Hierarchical Clustering: Correlated Feature Dependence")
@@ -280,7 +267,7 @@ class ModelInspector:
         self, figsize: Tuple[int, int] = (20, 30), remove_all_na: bool = True
     ) -> None:
 
-        feature_dependencies = self.feature_dependencies()
+        feature_dependencies = self.feature_dependency_matrix()
 
         if remove_all_na:
             feature_dependencies = feature_dependencies.dropna(

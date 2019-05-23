@@ -115,7 +115,7 @@ def test_model_inspection(available_cpus: int) -> None:
         assert len(shap_matrix) == len(predictions_df.index.unique())
 
         # correlated shap matrix: feature dependencies
-        corr_matrix: pd.DataFrame = mi.feature_dependencies()
+        corr_matrix: pd.DataFrame = mi.feature_dependency_matrix()
 
         # check number of rows
         assert len(corr_matrix) == len(test_sample.feature_names)
@@ -130,7 +130,7 @@ def test_model_inspection(available_cpus: int) -> None:
                 <= 1.0
             )
 
-        estimator, clustered_corr_matrix = mi.run_clustering_on_feature_correlations()
+        estimator = mi.cluster_dependent_features()
 
 
 def test_model_inspection_with_encoding(
@@ -168,7 +168,7 @@ def test_model_inspection_with_encoding(
         shap_matrix = mi.shap_matrix()
 
         # correlated shap matrix: feature dependencies
-        corr_matrix: pd.DataFrame = mi.feature_dependencies()
+        corr_matrix: pd.DataFrame = mi.feature_dependency_matrix()
 
         # cluster feature importances
-        estimator, clustered_corr_matrix = mi.run_clustering_on_feature_correlations()
+        estimator = mi.cluster_dependent_features()
