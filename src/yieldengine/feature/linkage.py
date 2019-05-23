@@ -105,9 +105,12 @@ class LinkageTree:
                 ],
             )
 
-    def children(self, node: LinkageNode) -> Optional[Tuple[LinkageNode, LinkageNode]]:
+    def children(self, node: LinkageNode) -> Optional[Tuple[Node, Node]]:
         if node.is_leaf:
             return None
         else:
             node_linkage = self._linkage_for_node(node.index)
-            return node_linkage[[LinkageTree.F_CHILD_LEFT, LinkageTree.F_CHILD_RIGHT]]
+            ix_c1, ix_c2 = node_linkage[
+                [LinkageTree.F_CHILD_LEFT, LinkageTree.F_CHILD_RIGHT]
+            ].astype(int)
+            return self.node(ix_c1), self.node(ix_c2)
