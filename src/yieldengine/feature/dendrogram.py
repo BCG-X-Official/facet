@@ -66,7 +66,8 @@ class DendrogramDrawer:
             raise TypeError(f"unknown node type: {type(node)}")
 
     def _draw_leaf_label(self, y: int, label: str) -> int:
-        pass
+        # return default value for testing purpose
+        return 20
 
     def _draw_link_leg(
         self, x1_relative: float, x2_relative: float, y: int, weight: float
@@ -74,7 +75,7 @@ class DendrogramDrawer:
         # get colour by DendrogramDrawer.color(node)
         # draw coloured line from x=[0,node.link_distance] on y=y
         # returns height
-        pass
+        return y
 
     def _draw_link_connector(
         self,
