@@ -110,4 +110,4 @@ class LinkageTree:
             return None
         else:
             node_linkage = self._linkage_for_node(node.index)
-            return node_linkage[LinkageTree.F_CHILD_LEFT, LinkageTree.F_CHILD_RIGHT]
+            return node_linkage[[LinkageTree.F_CHILD_LEFT, LinkageTree.F_CHILD_RIGHT]]
