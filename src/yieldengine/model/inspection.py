@@ -202,12 +202,13 @@ class ModelInspector:
         return self._shap_matrix
 
     def feature_dependency_matrix(self) -> pd.DataFrame:
-        if self._feature_dependency_matrix is not None:
-            return self._feature_dependency_matrix
+        if self._feature_dependency_matrix is None:
+            shap_matrix = self.shap_matrix()
 
-        self._feature_dependency_matrix = (
-            self.shap_matrix().corr(method="pearson").fillna(value=0)
-        )
+            # exclude features with zero Shapley importance
+            shap_matrix = shap_matrix.loc[:, shap_matrix.sum() > 0]
+
+            self._feature_dependency_matrix = shap_matrix.corr(method="pearson")
 
         return self._feature_dependency_matrix
 
@@ -264,15 +265,10 @@ class ModelInspector:
     # second, experimental version using scipy natively. this gives accurate distances
     # WIP!
     def plot_feature_dendrogram_scipy(
-        self, figsize: Tuple[int, int] = (20, 30), remove_all_na: bool = True
+        self, figsize: Tuple[int, int] = (20, 30)
     ) -> None:
 
         feature_dependencies = self.feature_dependency_matrix()
-
-        if remove_all_na:
-            feature_dependencies = feature_dependencies.dropna(
-                axis=1, how="all"
-            ).dropna(axis=0, how="all")
 
         compressed = squareform(1 - np.abs(feature_dependencies.values))
 
