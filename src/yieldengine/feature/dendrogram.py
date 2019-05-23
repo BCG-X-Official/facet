@@ -53,17 +53,11 @@ class DendrogramDrawer:
             )
 
             self._draw_link_connector(
-                x_relative=node.children_distance,
-                y1=y + info_left.height // 2,
-                y2=y + info_left.height + info_right.height // 2,
-                weight=info.weight,
-            )
-
-            self._draw_link_leg(
                 x1_relative=node.children_distance,
                 x2_relative=width_relative,
-                y=y + info.height // 2,
-                weight=info.weight,
+                y=y,
+                info_left=info_left,
+                info_right=info_right,
             )
 
             return info
@@ -83,8 +77,20 @@ class DendrogramDrawer:
         pass
 
     def _draw_link_connector(
-        self, x_relative: float, y1: int, y2: int, weight: float
+        self,
+        x1_relative: float,
+        x2_relative: float,
+        y: int,
+        info_left: _SubtreeInfo,
+        info_right: _SubtreeInfo,
     ) -> None:
+
+        self._draw_link_leg(
+            x1_relative=x1_relative,
+            x2_relative=x2_relative,
+            y=int((y + info_left.height + info_right.weight) / 2),
+            weight=info_left.weight + info_right.weight,
+        )
         pass
 
     @staticmethod
