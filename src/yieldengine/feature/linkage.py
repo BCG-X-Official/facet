@@ -4,12 +4,16 @@ import numpy as np
 
 
 class LinkageTree:
-    def __init__(self, linkage_matrix: np.ndarray) -> None:
+    def __init__(self, linkage_matrix: np.ndarray, leaf_labels: Sequence[str]) -> None:
         self._linkage_matrix = linkage_matrix
+        self._leaf_labels = leaf_labels
 
     def root(self) -> "LinkageNode":
         return LinkageNode(
-            index=len(self._linkage_matrix) * 2 - 1, label="", importance=1.0
+            index=len(self._linkage_matrix) * 2 - 1,
+            label="",
+            importance=1.0,
+            link_distance=self._linkage_matrix[-1][2],
         )
 
     def direct_children(self, node: "LinkageNode") -> Optional[Iterable["LinkageNode"]]:
@@ -41,8 +45,11 @@ class LinkageTree:
 
 
 class LinkageNode:
-    def __init__(self, index: int, importance: float, label: str) -> None:
+    def __init__(
+        self, index: int, link_distance: Optional[float], importance: float, label: str
+    ) -> None:
         self._index = index
+        self._link_distance = link_distance
         self._importance = importance
         self._label = label
         pass
@@ -58,3 +65,7 @@ class LinkageNode:
     @property
     def label(self) -> str:
         return self._label
+
+    @property
+    def link_distance(self) -> float:
+        return self._link_distance
