@@ -191,6 +191,7 @@ class ColumnTransformerDF(DataFrameTransformer[ColumnTransformer]):
                 *[
                     df_transformer.columns_out
                     for _, df_transformer, _ in column_transformer.transformers_
+                    if df_transformer != "drop"
                 ]
             )
         )
