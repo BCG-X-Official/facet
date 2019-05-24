@@ -16,11 +16,33 @@ class Node(ABC):
 
     @property
     @abstractmethod
+    def children_distance(self) -> float:
+        pass
+
+    @property
+    @abstractmethod
+    def weight(self) -> float:
+        pass
+
+    @property
+    @abstractmethod
+    def label(self) -> str:
+        pass
+
+    @property
+    @abstractmethod
     def is_leaf(self) -> bool:
         pass
 
+    def _type_error(self, property_name: str) -> TypeError:
+        return TypeError(f"{property_name} is not defined for a {type(self).__name__}")
+
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}_{self.index}"
+
 
 class LinkageNode(Node):
+
     __slots__ = ["_children_distance"]
 
     def __init__(self, index: int, children_distance: Optional[float]) -> None:
@@ -32,29 +54,47 @@ class LinkageNode(Node):
         return self._children_distance
 
     @property
+    def weight(self) -> float:
+        raise self._type_error("weight")
+
+    @property
+    def label(self) -> str:
+        raise self._type_error("label")
+
+    @property
     def is_leaf(self) -> bool:
         return False
+
+    def __repr__(self) -> str:
+        return f"{super().__repr__()}[dist={self.children_distance * 100:.0f}%]"
 
 
 class LeafNode(Node):
     __slots__ = ["_weight", "_label"]
 
-    def __init__(self, index: int, weight: float, label: str) -> None:
+    def __init__(self, index: int, label: str, weight: float) -> None:
         super().__init__(index=index)
-        self._weight = weight
         self._label = label
+        self._weight = weight
 
     @property
-    def weight(self) -> float:
-        return self._weight
+    def children_distance(self) -> float:
+        raise self._type_error("children_distance")
 
     @property
     def label(self) -> str:
         return self._label
 
     @property
+    def weight(self) -> float:
+        return self._weight
+
+    @property
     def is_leaf(self) -> bool:
         return True
+
+    def __repr__(self) -> str:
+        return f"{super().__repr__()}[label={self.label}, weight={self.weight}]"
 
 
 class LinkageTree:
@@ -77,6 +117,17 @@ class LinkageTree:
         #    <distance between children>,
         #    <number of descendant nodes, from direct children down to leaf nodes>
         # )
+
+        def _validate_leafs(var: Sequence[Any], var_name: str):
+            if len(var) != len(scipy_linkage_matrix) + 1:
+                raise ValueError(
+                    f"expected {len(scipy_linkage_matrix) + 1} values "
+                    f"for arg {var_name}"
+                )
+
+        _validate_leafs(leaf_labels, "leaf_labels")
+        _validate_leafs(leaf_weights, "leaf_weights")
+
         self._linkage_matrix = scipy_linkage_matrix
         self._leaf_labels = leaf_labels
         self._leaf_weights = leaf_weights
@@ -87,15 +138,16 @@ class LinkageTree:
             children_distance=self._linkage_matrix[-1][LinkageTree.F_CHILDREN_DISTANCE],
         )
 
-    def _linkage_for_node(self, index: int):
-        return self._linkage_matrix[index - len(self._linkage_matrix)]
+    @property
+    def n_leaves(self) -> int:
+        return len(self._leaf_labels)
 
     def node(self, index: int) -> Node:
-        if index < len(self._linkage_matrix):
+        if index < self.n_leaves:
             return LeafNode(
                 index=index,
-                weight=self._leaf_weights[index],
                 label=self._leaf_labels[index],
+                weight=self._leaf_weights[index],
             )
         else:
             return LinkageNode(
@@ -105,7 +157,7 @@ class LinkageTree:
                 ],
             )
 
-    def children(self, node: LinkageNode) -> Optional[Tuple[Node, Node]]:
+    def children(self, node: Node) -> Optional[Tuple[Node, Node]]:
         if node.is_leaf:
             return None
         else:
@@ -114,3 +166,6 @@ class LinkageTree:
                 [LinkageTree.F_CHILD_LEFT, LinkageTree.F_CHILD_RIGHT]
             ].astype(int)
             return self.node(ix_c1), self.node(ix_c2)
+
+    def _linkage_for_node(self, index: int):
+        return self._linkage_matrix[index - self.n_leaves]
