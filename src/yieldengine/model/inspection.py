@@ -194,7 +194,7 @@ class ModelInspector:
 
         # Group SHAP matrix by observation ID and aggregate SHAP values using mean()
         self._shap_matrix = (
-            pd.concat(objs=shap_value_dfs)
+            pd.concat(objs=shap_value_dfs, sort=True)
             .groupby(by=pd.concat(objs=shap_value_dfs).index, sort=True)
             .mean()
         )
