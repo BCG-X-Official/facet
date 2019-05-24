@@ -3,49 +3,48 @@ from typing import *
 
 import numpy as np
 import pandas as pd
+from matplotlib import pyplot
+from scipy.cluster.hierarchy import dendrogram, linkage
+from scipy.spatial.distance import squareform
 from shap import KernelExplainer, TreeExplainer
 from shap.explainers.explainer import Explainer
-from sklearn.base import BaseEstimator, clone
+from sklearn.base import BaseEstimator
 from sklearn.cluster import AgglomerativeClustering
 from sklearn.model_selection import BaseCrossValidator
-from scipy.cluster.hierarchy import dendrogram, linkage
-from matplotlib import pyplot
-from scipy.spatial.distance import squareform
-
+from sklearn.pipeline import Pipeline
 
 from yieldengine import Sample
+from yieldengine.model import Model
 
 log = logging.getLogger(__name__)
 
 
 class ModelInspector:
     __slots__ = [
-        "_estimator",
+        "_model",
         "_cv",
         "_sample",
         "_shap_explainer_by_fold",
-        "_estimators_by_fold",
         "_predictions_for_all_samples",
         "_shap_matrix",
-        "_shap_correlation_matrix",
+        "_feature_dependency_matrix",
+        "_model_by_fold",
     ]
 
-    F_FOLD_ID = "fold_start"
+    F_FOLD_ID = "fold_id"
     F_PREDICTION = "prediction"
     F_FEATURE = "feature"
     F_CLUSTER_LABEL = "cluster_label"
 
-    def __init__(
-        self, estimator: BaseEstimator, cv: BaseCrossValidator, sample: Sample
-    ) -> None:
+    def __init__(self, model: Model, cv: BaseCrossValidator, sample: Sample) -> None:
 
-        self._estimator = estimator
+        self._model = model
         self._cv = cv
         self._sample = sample
-        self._estimators_by_fold: Union[Dict[int, BaseEstimator], None] = None
-        self._predictions_for_all_samples: Union[pd.DataFrame, None] = None
-        self._shap_matrix: Union[pd.DataFrame, None] = None
-        self._shap_correlation_matrix: Union[pd.DataFrame, None] = None
+        self._model_by_fold: Optional[Dict[int, Model]] = None
+        self._predictions_for_all_samples: Optional[pd.DataFrame] = None
+        self._shap_matrix: Optional[pd.DataFrame] = None
+        self._feature_dependency_matrix: Optional[pd.DataFrame] = None
 
     @staticmethod
     def _make_shap_explainer(estimator: BaseEstimator, data: pd.DataFrame) -> Explainer:
@@ -88,9 +87,9 @@ class ModelInspector:
         :return: the estimator that was used to predict the dependent variable of
         the test fold
         """
-        if self._estimators_by_fold is None:
+        if self._model_by_fold is None:
             self.predictions_for_all_samples()
-        return self._estimators_by_fold[fold]
+        return self._model_by_fold[fold].estimator
 
     def predictions_for_all_samples(self) -> pd.DataFrame:
         """
@@ -116,7 +115,7 @@ class ModelInspector:
         if self._predictions_for_all_samples is not None:
             return self._predictions_for_all_samples
 
-        self._estimators_by_fold: Dict[int, BaseEstimator] = {}
+        self._model_by_fold: Dict[int, Pipeline] = {}
 
         sample = self.sample
 
@@ -126,14 +125,16 @@ class ModelInspector:
             train_sample = sample.select_observations(indices=train_indices)
             test_sample = sample.select_observations(indices=test_indices)
 
-            self._estimators_by_fold[fold_id] = estimator = clone(self._estimator)
+            self._model_by_fold[fold_id] = model = self._model.clone()
+
+            pipeline = model.pipeline()
+
+            pipeline.fit(X=train_sample.features, y=train_sample.target)
 
             return pd.DataFrame(
                 data={
                     self.F_FOLD_ID: fold_id,
-                    self.F_PREDICTION: estimator.fit(
-                        X=train_sample.features, y=train_sample.target
-                    ).predict(X=test_sample.features),
+                    self.F_PREDICTION: pipeline.predict(X=test_sample.features),
                 },
                 index=test_sample.index,
             )
@@ -159,9 +160,8 @@ class ModelInspector:
             self.F_FOLD_ID, append=True
         )
 
-        def shap_matrix_for_fold(
-            fold_id: int, estimator: BaseEstimator
-        ) -> pd.DataFrame:
+        def shap_matrix_for_fold(fold_id: int, fold_model: Model) -> pd.DataFrame:
+
             observation_indices_in_fold = predictions_by_observation_and_fold.xs(
                 key=fold_id, level=self.F_FOLD_ID
             ).index
@@ -170,48 +170,51 @@ class ModelInspector:
                 indices=observation_indices_in_fold
             ).features
 
+            estimator = fold_model.estimator
+
+            if fold_model.preprocessing is not None:
+                data_transformed = fold_model.preprocessing.transform(fold_x)
+            else:
+                data_transformed = fold_x
+
             shap_matrix = ModelInspector._make_shap_explainer(
-                estimator=estimator, data=fold_x
-            ).shap_values(fold_x)
+                estimator=estimator, data=data_transformed
+            ).shap_values(data_transformed)
 
             return pd.DataFrame(
                 data=shap_matrix,
                 index=observation_indices_in_fold,
-                columns=sample.feature_names,
+                columns=data_transformed.columns,
             )
 
         shap_value_dfs = [
-            shap_matrix_for_fold(fold_id, estimator)
-            for fold_id, estimator in self._estimators_by_fold.items()
+            shap_matrix_for_fold(fold_id, model)
+            for fold_id, model in self._model_by_fold.items()
         ]
 
         # Group SHAP matrix by observation ID and aggregate SHAP values using mean()
         self._shap_matrix = (
             pd.concat(objs=shap_value_dfs)
-            .groupby(by=pd.concat(objs=shap_value_dfs).index)
+            .groupby(by=pd.concat(objs=shap_value_dfs).index, sort=True)
             .mean()
         )
 
         return self._shap_matrix
 
-    def feature_dependencies(self) -> pd.DataFrame:
-        if self._shap_correlation_matrix is not None:
-            return self._shap_correlation_matrix
+    def feature_dependency_matrix(self) -> pd.DataFrame:
+        if self._feature_dependency_matrix is None:
+            shap_matrix = self.shap_matrix()
 
-        self._shap_correlation_matrix = self.shap_matrix().corr(method="pearson")
+            # exclude features with zero Shapley importance
+            shap_matrix = shap_matrix.loc[:, shap_matrix.sum() > 0]
 
-        return self._shap_correlation_matrix
+            self._feature_dependency_matrix = shap_matrix.corr(method="pearson")
 
-    def run_clustering_on_feature_correlations(
-        self, remove_all_na: bool = True
-    ) -> Tuple[AgglomerativeClustering, pd.DataFrame]:
+        return self._feature_dependency_matrix
 
-        feature_dependencies = self.feature_dependencies()
+    def cluster_dependent_features(self) -> AgglomerativeClustering:
 
-        if remove_all_na:
-            feature_dependencies = feature_dependencies.dropna(
-                axis=1, how="all"
-            ).dropna(axis=0, how="all")
+        feature_dependencies = self.feature_dependency_matrix()
 
         # set up the clustering estimator
         clustering_estimator = AgglomerativeClustering(
@@ -220,22 +223,14 @@ class ModelInspector:
 
         # fit the clustering algorithm using the feature_dependencies as a
         # distance matrix:
-        # map the [-1,1] correlation values into [0,1]
+        # convert correlation values into distances (1 = most distant)
         # and then fit the clustering algorithm:
         clustering_estimator.fit(X=1 - np.abs(feature_dependencies.values))
 
-        # return a data frame with the cluster labels added as a series
-        clustered_feature_dependencies = feature_dependencies
-        clustered_feature_dependencies[
-            ModelInspector.F_CLUSTER_LABEL
-        ] = clustering_estimator.labels_
-
-        return clustering_estimator, clustered_feature_dependencies
+        return clustering_estimator
 
     def plot_feature_dendrogramm(self, figsize: Tuple[int, int] = (20, 20)) -> None:
-        clustering_estimator, clustered_feature_dependencies = (
-            self.run_clustering_on_feature_correlations()
-        )
+        clustering_estimator = self.cluster_dependent_features()
         # NOTE: based on:
         #  https://github.com/scikit-learn/scikit-learn/blob/
         # 70cf4a676caa2d2dad2e3f6e4478d64bcb0506f7/examples/
@@ -261,7 +256,7 @@ class ModelInspector:
         pyplot.figure(num=None, figsize=figsize, dpi=120, facecolor="w", edgecolor="k")
         dendrogram(
             Z=linkage_matrix,
-            labels=clustered_feature_dependencies.index.values,
+            labels=self.feature_dependency_matrix().index.values,
             orientation="left",
         )
         pyplot.title("Hierarchical Clustering: Correlated Feature Dependence")
@@ -270,15 +265,10 @@ class ModelInspector:
     # second, experimental version using scipy natively. this gives accurate distances
     # WIP!
     def plot_feature_dendrogram_scipy(
-        self, figsize: Tuple[int, int] = (20, 30), remove_all_na: bool = True
+        self, figsize: Tuple[int, int] = (20, 30)
     ) -> None:
 
-        feature_dependencies = self.feature_dependencies()
-
-        if remove_all_na:
-            feature_dependencies = feature_dependencies.dropna(
-                axis=1, how="all"
-            ).dropna(axis=0, how="all")
+        feature_dependencies = self.feature_dependency_matrix()
 
         compressed = squareform(1 - np.abs(feature_dependencies.values))
 

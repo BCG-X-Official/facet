@@ -1,6 +1,7 @@
 import warnings
 
 import numpy as np
+import pandas as pd
 import pytest
 from sklearn import datasets, svm, tree
 from sklearn.model_selection import GridSearchCV
@@ -8,8 +9,8 @@ from sklearn.model_selection import GridSearchCV
 from yieldengine.model.validation import CircularCrossValidator
 
 
-def test_circular_cv_init(batch_table):
-    # filter out warnings triggerd by sk-learn/numpy
+def test_circular_cv_init(batch_table: pd.DataFrame) -> None:
+    # filter out warnings triggered by sk-learn/numpy
 
     warnings.filterwarnings("ignore", message="numpy.dtype size changed")
     warnings.filterwarnings("ignore", message="numpy.ufunc size changed")
@@ -28,7 +29,7 @@ def test_circular_cv_init(batch_table):
         CircularCrossValidator(test_ratio=1.00001)
 
 
-def test_get_train_test_splits_as_indices():
+def test_get_train_test_splits_as_indices() -> None:
 
     test_folds = 200
     test_X = np.arange(0, 1000, 1)
@@ -54,7 +55,7 @@ def test_get_train_test_splits_as_indices():
         assert np.array_equal(f1, f2), "Fold indices should be stable!"
 
 
-def test_circular_cv_with_sk_learn():
+def test_circular_cv_with_sk_learn() -> None:
     # filter out warnings triggerd by sk-learn/numpy
 
     warnings.filterwarnings("ignore", message="numpy.dtype size changed")
