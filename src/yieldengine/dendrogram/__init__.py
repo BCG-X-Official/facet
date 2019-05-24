@@ -39,11 +39,6 @@ class DendrogramStyle(ABC):
     ) -> None:
         pass
 
-    @abstractmethod
-    def color(node: Node) -> str:
-        # map node.importance to hex-string
-        pass
-
 
 class DendrogramDrawer:
     __slots__ = ["_title", "_linkage_tree", "_style"]
