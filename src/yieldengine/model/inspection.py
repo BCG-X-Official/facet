@@ -194,12 +194,20 @@ class ModelInspector:
 
         # Group SHAP matrix by observation ID and aggregate SHAP values using mean()
         self._shap_matrix = (
-            pd.concat(objs=shap_value_dfs)
+            pd.concat(objs=shap_value_dfs, sort=True)
             .groupby(by=pd.concat(objs=shap_value_dfs).index, sort=True)
             .mean()
         )
 
         return self._shap_matrix
+
+    def feature_importances(self) -> pd.Series:
+        """
+        :returns feature importances as their mean absolute SHAP contributions,
+        normalised to a total 100%
+        """
+        feature_importances: pd.Series = self.shap_matrix().abs().mean()
+        return feature_importances / feature_importances.sum()
 
     def feature_dependency_matrix(self) -> pd.DataFrame:
         if self._feature_dependency_matrix is None:
