@@ -9,11 +9,11 @@ from scipy.spatial.distance import squareform
 from shap import KernelExplainer, TreeExplainer
 from shap.explainers.explainer import Explainer
 from sklearn.base import BaseEstimator
-from sklearn.cluster import AgglomerativeClustering
 from sklearn.model_selection import BaseCrossValidator
 from sklearn.pipeline import Pipeline
 
-from yieldengine import Sample
+from yieldengine import deprecated, Sample
+from yieldengine.dendrogram import LinkageTree
 from yieldengine.model import Model
 
 log = logging.getLogger(__name__)
@@ -220,58 +220,33 @@ class ModelInspector:
 
         return self._feature_dependency_matrix
 
-    def cluster_dependent_features(self) -> AgglomerativeClustering:
+    def cluster_dependent_features(self) -> LinkageTree:
+        # convert shap correlations to distances (1 = most distant)
+        feature_distance_matrix = 1 - self.feature_dependency_matrix().abs()
 
-        feature_dependencies = self.feature_dependency_matrix()
+        # compress the distance matrix (required by scipy)
+        compressed_distance_vector = squareform(feature_distance_matrix)
 
-        # set up the clustering estimator
-        clustering_estimator = AgglomerativeClustering(
-            linkage="single", affinity="precomputed", compute_full_tree=True
+        # calculate the linkage matrix
+        linkage_matrix = linkage(y=compressed_distance_vector, method="single")
+
+        # feature labels and weights will be used as the leaves of the linkage tree
+        feature_importances = self.feature_importances()
+
+        # select only the features that appear in the distance matrix, and in the
+        # correct order
+        feature_importances = feature_importances.loc[
+            feature_importances.index.intersection(feature_distance_matrix.index)
+        ]
+
+        # build and return the linkage tree
+        return LinkageTree(
+            scipy_linkage_matrix=linkage_matrix,
+            leaf_labels=feature_importances.index,
+            leaf_weights=feature_importances.values,
         )
 
-        # fit the clustering algorithm using the feature_dependencies as a
-        # distance matrix:
-        # convert correlation values into distances (1 = most distant)
-        # and then fit the clustering algorithm:
-        clustering_estimator.fit(X=1 - np.abs(feature_dependencies.values))
-
-        return clustering_estimator
-
-    def plot_feature_dendrogramm(self, figsize: Tuple[int, int] = (20, 20)) -> None:
-        clustering_estimator = self.cluster_dependent_features()
-        # NOTE: based on:
-        #  https://github.com/scikit-learn/scikit-learn/blob/
-        # 70cf4a676caa2d2dad2e3f6e4478d64bcb0506f7/examples/
-        # cluster/plot_hierarchical_clustering_dendrogram.py
-
-        # Children of hierarchical clustering
-        children = clustering_estimator.children_
-
-        # Distances between each pair of children
-        # Since we don't have this information, we can use a uniform one for plotting
-        # Todo: we have distances - adapt code to factor them in
-        distance = np.arange(children.shape[0])
-
-        # The number of observations contained in each cluster level
-        no_of_observations = np.arange(2, children.shape[0] + 2)
-
-        # Create linkage matrix and then plot the dendrogram
-        linkage_matrix = np.column_stack(
-            [children, distance, no_of_observations]
-        ).astype(float)
-
-        # Plot the corresponding dendrogram
-        pyplot.figure(num=None, figsize=figsize, dpi=120, facecolor="w", edgecolor="k")
-        dendrogram(
-            Z=linkage_matrix,
-            labels=self.feature_dependency_matrix().index.values,
-            orientation="left",
-        )
-        pyplot.title("Hierarchical Clustering: Correlated Feature Dependence")
-        pyplot.show()
-
-    # second, experimental version using scipy natively. this gives accurate distances
-    # WIP!
+    @deprecated("experimental version using scipy natively")
     def plot_feature_dendrogram_scipy(
         self, figsize: Tuple[int, int] = (20, 30)
     ) -> None:
