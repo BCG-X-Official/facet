@@ -2,6 +2,7 @@ import logging
 import warnings
 from typing import *
 
+import joblib
 import numpy as np
 import pandas as pd
 import pytest
@@ -12,16 +13,28 @@ from sklearn.svm import SVR
 from sklearn.tree import DecisionTreeRegressor, ExtraTreeRegressor
 
 from tests import read_test_config
+from tests.model import make_simple_transformer
 from tests.paths import TEST_DATA_CSV
 from yieldengine import Sample
-from yieldengine.model.selection import Model
-from yieldengine.preprocessing import PandasSamplePreprocessor, SimpleSamplePreprocessor
+from yieldengine.feature.transform import DataFrameTransformer
+from yieldengine.model import Model
+from yieldengine.model.selection import ModelGrid
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG)
+log = logging.getLogger(__name__)
+
+# disable SHAP debugging messages
+logging.getLogger("shap").setLevel(logging.WARNING)
 
 warnings.filterwarnings(
     "ignore", message=r"Starting from version 2", category=UserWarning
 )
+
+
+@pytest.fixture
+def available_cpus() -> int:
+    cpu_count = joblib.cpu_count()
+    return max(1, cpu_count - 2, cpu_count * 3 // 4)
 
 
 @pytest.fixture
@@ -38,52 +51,55 @@ def batch_table() -> pd.DataFrame:
 
 
 @pytest.fixture
-def regressor_grids(preprocessor: SimpleSamplePreprocessor) -> List[Model]:
-    RANDOM_STATE = {"random_state": [42]}
+def regressor_grids(simple_preprocessor) -> List[ModelGrid]:
+    RANDOM_STATE = {f"random_state": [42]}
     return [
-        Model(
-            estimator=LGBMRegressor(),
-            parameter_grid={
+        ModelGrid(
+            model=Model(preprocessing=simple_preprocessor, estimator=LGBMRegressor()),
+            estimator_parameters={
                 "max_depth": [5, 10],
                 "min_split_gain": [0.1, 0.2],
                 "num_leaves": [50, 100, 200],
                 **RANDOM_STATE,
             },
-            preprocessor=preprocessor,
         ),
-        Model(
-            estimator=AdaBoostRegressor(),
-            parameter_grid={"n_estimators": [50, 80], **RANDOM_STATE},
-            preprocessor=preprocessor,
+        ModelGrid(
+            model=Model(
+                preprocessing=simple_preprocessor, estimator=AdaBoostRegressor()
+            ),
+            estimator_parameters={"n_estimators": [50, 80], **RANDOM_STATE},
         ),
-        Model(
-            estimator=RandomForestRegressor(),
-            parameter_grid={"n_estimators": [50, 80], **RANDOM_STATE},
-            preprocessor=preprocessor,
+        ModelGrid(
+            model=Model(
+                preprocessing=simple_preprocessor, estimator=RandomForestRegressor()
+            ),
+            estimator_parameters={"n_estimators": [50, 80], **RANDOM_STATE},
         ),
-        Model(
-            estimator=DecisionTreeRegressor(),
-            parameter_grid={
+        ModelGrid(
+            model=Model(
+                preprocessing=simple_preprocessor, estimator=DecisionTreeRegressor()
+            ),
+            estimator_parameters={
                 "max_depth": [0.5, 1.0],
                 "max_features": [0.5, 1.0],
                 **RANDOM_STATE,
             },
-            preprocessor=preprocessor,
         ),
-        Model(
-            estimator=ExtraTreeRegressor(),
-            parameter_grid={"max_depth": [5, 10, 12], **RANDOM_STATE},
-            preprocessor=preprocessor,
+        ModelGrid(
+            model=Model(
+                preprocessing=simple_preprocessor, estimator=ExtraTreeRegressor()
+            ),
+            estimator_parameters={"max_depth": [5, 10, 12], **RANDOM_STATE},
         ),
-        Model(
-            estimator=SVR(),
-            parameter_grid={"gamma": [0.5, 1], "C": [50, 100]},
-            preprocessor=preprocessor,
+        ModelGrid(
+            model=Model(preprocessing=simple_preprocessor, estimator=SVR()),
+            estimator_parameters={"gamma": [0.5, 1], "C": [50, 100]},
         ),
-        Model(
-            estimator=LinearRegression(),
-            parameter_grid={"normalize": [False, True]},
-            preprocessor=preprocessor,
+        ModelGrid(
+            model=Model(
+                preprocessing=simple_preprocessor, estimator=LinearRegression()
+            ),
+            estimator_parameters={"normalize": [False, True]},
         ),
     ]
 
@@ -103,8 +119,8 @@ def sample(batch_table: pd.DataFrame) -> Sample:
 
 
 @pytest.fixture
-def preprocessor(sample: Sample) -> PandasSamplePreprocessor:
-    return PandasSamplePreprocessor(
-        impute_mean=sample.features_by_type(dtype=Sample.DTYPE_NUMERICAL).columns,
-        one_hot_encode=sample.features_by_type(dtype=Sample.DTYPE_OBJECT).columns,
+def simple_preprocessor(sample: Sample) -> DataFrameTransformer:
+    return make_simple_transformer(
+        impute_median_columns=sample.features_by_type(Sample.DTYPE_NUMERICAL).columns,
+        one_hot_encode_columns=sample.features_by_type(Sample.DTYPE_OBJECT).columns,
     )

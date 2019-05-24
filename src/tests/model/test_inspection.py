@@ -1,50 +1,58 @@
 import logging
 import warnings
+from typing import *
 
 import numpy as np
 import pandas as pd
 from lightgbm.sklearn import LGBMRegressor
 from sklearn import datasets
-from sklearn.model_selection import ShuffleSplit
+from sklearn.model_selection import BaseCrossValidator, ShuffleSplit
 from sklearn.svm import SVR
 from sklearn.utils import Bunch
 
 from yieldengine import Sample
+from yieldengine.feature.transform import DataFrameTransformer
+from yieldengine.model import Model
 from yieldengine.model.inspection import ModelInspector
-from yieldengine.model.selection import Model, ModelRanker, ModelRanking
+from yieldengine.model.selection import (
+    ModelEvaluation,
+    ModelGrid,
+    ModelRanker,
+    summary_report,
+)
 from yieldengine.model.validation import CircularCrossValidator
-from yieldengine.preprocessing import PandasSamplePreprocessor
 
 log = logging.getLogger(__name__)
 
+N_FOLDS = 5
+TEST_RATIO = 0.2
+BOSTON_TARGET = "target"
 
-def test_model_inspection() -> None:
+
+def test_model_inspection(available_cpus: int) -> None:
     warnings.filterwarnings("ignore", message="numpy.dtype size changed")
     warnings.filterwarnings("ignore", message="numpy.ufunc size changed")
     warnings.filterwarnings("ignore", message="You are accessing a training score")
 
-    N_FOLDS = 5
-    TEST_RATIO = 0.2
-    BOSTON_TARGET = "target"
-
-    # define a yield-engine circular CV:
-    test_cv = ShuffleSplit(n_splits=N_FOLDS, test_size=TEST_RATIO, random_state=42)
+    # define a CV:
+    # noinspection PyTypeChecker
+    test_cv: BaseCrossValidator = ShuffleSplit(
+        n_splits=N_FOLDS, test_size=TEST_RATIO, random_state=42
+    )
 
     # define parameters and models
     models = [
-        Model(
-            estimator=SVR(gamma="scale"),
-            parameter_grid={"kernel": ("linear", "rbf"), "C": [1, 10]},
-            preprocessor=None,
+        ModelGrid(
+            model=Model(estimator=SVR(gamma="scale"), preprocessing=None),
+            estimator_parameters={"kernel": ("linear", "rbf"), "C": [1, 10]},
         ),
-        Model(
-            estimator=LGBMRegressor(),
-            parameter_grid={
+        ModelGrid(
+            model=Model(estimator=LGBMRegressor(), preprocessing=None),
+            estimator_parameters={
                 "max_depth": (1, 2, 5),
                 "min_split_gain": (0.1, 0.2, 0.5),
                 "num_leaves": (2, 3),
             },
-            preprocessor=None,
         ),
     ]
 
@@ -59,27 +67,27 @@ def test_model_inspection() -> None:
 
     test_sample: Sample = Sample(observations=test_data, target_name=BOSTON_TARGET)
 
-    preprocessor = PandasSamplePreprocessor(
-        impute_mean=test_sample.features_by_type(dtype=Sample.DTYPE_NUMERICAL).columns,
-        one_hot_encode=test_sample.features_by_type(dtype=Sample.DTYPE_OBJECT).columns,
-    )
-
     model_ranker: ModelRanker = ModelRanker(
-        models=models, cv=test_cv, scoring="neg_mean_squared_error"
+        grids=models, cv=test_cv, scoring="neg_mean_squared_error"
     )
 
-    model_ranking: ModelRanking = model_ranker.run(test_sample)
+    model_ranking: Sequence[ModelEvaluation] = model_ranker.run(
+        test_sample, n_jobs=available_cpus
+    )
 
-    preprocessed_sample = preprocessor.process(sample=test_sample)
+    log.debug(f"\n{summary_report(model_ranking[:10])}")
 
     # consider: model_with_type(...) function for ModelRanking
-    best_svr = [m for m in model_ranking if isinstance(m.estimator, SVR)][0]
-    best_lgbm = [m for m in model_ranking if isinstance(m.estimator, LGBMRegressor)][0]
+    best_svr = [m for m in model_ranking if isinstance(m.model.estimator, SVR)][0]
+    best_lgbm = [
+        model_evaluation
+        for model_evaluation in model_ranking
+        if isinstance(model_evaluation.model.estimator, LGBMRegressor)
+    ][0]
 
-    for ranked_model in best_svr, best_lgbm:
-
+    for model_evaluation in best_svr, best_lgbm:
         mi = ModelInspector(
-            estimator=ranked_model.estimator, cv=test_cv, sample=preprocessed_sample
+            model=model_evaluation.model, cv=test_cv, sample=test_sample
         )
 
         # test predictions_for_all_samples
@@ -107,7 +115,7 @@ def test_model_inspection() -> None:
         assert len(shap_matrix) == len(predictions_df.index.unique())
 
         # correlated shap matrix: feature dependencies
-        corr_matrix: pd.DataFrame = mi.feature_dependencies()
+        corr_matrix: pd.DataFrame = mi.feature_dependency_matrix()
 
         # check number of rows
         assert len(corr_matrix) == len(test_sample.feature_names)
@@ -122,39 +130,45 @@ def test_model_inspection() -> None:
                 <= 1.0
             )
 
-        estimator, clustered_corr_matrix = mi.run_clustering_on_feature_correlations()
+        estimator = mi.cluster_dependent_features()
 
 
 def test_model_inspection_with_encoding(
-    batch_table: pd.DataFrame, regressor_grids, sample: Sample, preprocessor
+    batch_table: pd.DataFrame,
+    regressor_grids: Iterable[ModelGrid],
+    sample: Sample,
+    simple_preprocessor: DataFrameTransformer,
+    available_cpus: int,
 ) -> None:
 
     # define the circular cross validator with just 5 folds (to speed up testing)
     circular_cv = CircularCrossValidator(test_ratio=0.20, num_folds=5)
 
     model_ranker: ModelRanker = ModelRanker(
-        models=regressor_grids, cv=circular_cv, scoring="r2"
+        grids=regressor_grids, cv=circular_cv, scoring="r2"
     )
 
     # run the ModelRanker to retrieve a ranking
-    model_ranking: ModelRanking = model_ranker.run(sample=sample)
+    model_ranking: Sequence[ModelEvaluation] = model_ranker.run(
+        sample=sample, n_jobs=available_cpus
+    )
 
-    log.info(model_ranking)
-
-    preprocessed_sample = preprocessor.process(sample=sample)
+    log.debug(f"\n{summary_report(model_ranking[:10])}")
 
     # consider: model_with_type(...) function for ModelRanking
     # best_svr = [m for m in model_ranking if isinstance(m.estimator, SVR)][0]
-    best_lgbm = [m for m in model_ranking if isinstance(m.estimator, LGBMRegressor)][0]
-    for model in [best_lgbm]:
-        mi = ModelInspector(
-            estimator=model.estimator, cv=circular_cv, sample=preprocessed_sample
-        )
+    best_lgbm = [
+        model_evaluation
+        for model_evaluation in model_ranking
+        if isinstance(model_evaluation.model.estimator, LGBMRegressor)
+    ][0]
+    for model_evaluation in [best_lgbm]:
+        mi = ModelInspector(model=model_evaluation.model, cv=circular_cv, sample=sample)
 
         shap_matrix = mi.shap_matrix()
 
         # correlated shap matrix: feature dependencies
-        corr_matrix: pd.DataFrame = mi.feature_dependencies()
+        corr_matrix: pd.DataFrame = mi.feature_dependency_matrix()
 
         # cluster feature importances
-        estimator, clustered_corr_matrix = mi.run_clustering_on_feature_correlations()
+        estimator = mi.cluster_dependent_features()
