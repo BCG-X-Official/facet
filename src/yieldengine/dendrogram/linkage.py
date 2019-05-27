@@ -134,7 +134,7 @@ class LinkageTree:
 
     def root(self) -> LinkageNode:
         return LinkageNode(
-            index=len(self._linkage_matrix) * 2 - 1,
+            index=len(self._linkage_matrix) * 2,
             children_distance=self._linkage_matrix[-1][LinkageTree.F_CHILDREN_DISTANCE],
         )
 
