@@ -88,15 +88,13 @@ class DataFrameTransformer(
     def _post_fit(
         self, X: pd.DataFrame, y: Optional[pd.Series] = None, **fit_params
     ) -> None:
-        log.debug(f"pre-fit: {self}")
         self._original_columns = X.columns
 
     # noinspection PyPep8Naming
     def fit(self, X: pd.DataFrame, y: Optional[pd.Series] = None, **fit_params) -> None:
         self._check_parameter_types(X, y)
 
-        # noinspection PyUnresolvedReferences
-        self.base_transformer.fit(X, y, **fit_params)
+        self._base_fit(X, y, **fit_params)
 
         self._post_fit(X, y, **fit_params)
 
@@ -104,8 +102,7 @@ class DataFrameTransformer(
     def transform(self, X: pd.DataFrame) -> pd.DataFrame:
         self._check_parameter_types(X, None)
 
-        # noinspection PyUnresolvedReferences
-        transformed = self.base_transformer.transform(X)
+        transformed = self._base_transform(X)
 
         return pd.DataFrame(data=transformed, index=X.index, columns=self.columns_out)
 
@@ -115,7 +112,7 @@ class DataFrameTransformer(
     ) -> pd.DataFrame:
         self._check_parameter_types(X, y)
 
-        transformed = self.base_transformer.fit_transform(X, y, **fit_params)
+        transformed = self._base_fit_transform(X, y, **fit_params)
 
         self._post_fit(X, y, **fit_params)
 
@@ -125,10 +122,30 @@ class DataFrameTransformer(
     def inverse_transform(self, X: pd.DataFrame) -> pd.DataFrame:
         self._check_parameter_types(X, None)
 
-        # noinspection PyUnresolvedReferences
-        transformed = self.base_transformer.inverse_transform(X)
+        transformed = self._base_inverse_transform(X)
 
         return pd.DataFrame(data=transformed, index=X.index, columns=self.columns_in)
+
+    # noinspection PyPep8Naming
+    def _base_fit(self, X: pd.DataFrame, y: Optional[pd.Series], **fit_params):
+        # noinspection PyUnresolvedReferences
+        self.base_transformer.fit(X, y, **fit_params)
+
+    # noinspection PyPep8Naming
+    def _base_transform(self, X: pd.DataFrame) -> np.ndarray:
+        # noinspection PyUnresolvedReferences
+        return self.base_transformer.transform(X)
+
+    # noinspection PyPep8Naming
+    def _base_fit_transform(
+        self, X: pd.DataFrame, y: Optional[pd.Series], **fit_params
+    ) -> np.ndarray:
+        return self.base_transformer.fit_transform(X, y, **fit_params)
+
+    # noinspection PyPep8Naming
+    def _base_inverse_transform(self, X: pd.DataFrame) -> np.ndarray:
+        # noinspection PyUnresolvedReferences
+        return self.base_transformer.inverse_transform(X)
 
     # noinspection PyPep8Naming
     @staticmethod
@@ -137,6 +154,36 @@ class DataFrameTransformer(
             raise TypeError("arg X must be a DataFrame")
         if y is not None and not isinstance(y, pd.Series):
             raise TypeError("arg y must be a Series")
+
+
+class NumpyOnlyTransformer(
+    DataFrameTransformer[_BaseTransformer], Generic[_BaseTransformer]
+):
+    """
+    Special case of DataFrameTransformer where the base transformer does not accept
+    data frames, but only numpy ndarrays
+    """
+
+    # noinspection PyPep8Naming
+    def _base_fit(self, X: pd.DataFrame, y: Optional[pd.Series], **fit_params):
+        # noinspection PyUnresolvedReferences
+        self.base_transformer.fit(X.values, y.values, **fit_params)
+
+    # noinspection PyPep8Naming
+    def _base_transform(self, X: pd.DataFrame) -> np.ndarray:
+        # noinspection PyUnresolvedReferences
+        return self.base_transformer.transform(X.values)
+
+    # noinspection PyPep8Naming
+    def _base_fit_transform(
+        self, X: pd.DataFrame, y: Optional[pd.Series], **fit_params
+    ) -> np.ndarray:
+        return self.base_transformer.fit_transform(X.values, y.values, **fit_params)
+
+    # noinspection PyPep8Naming
+    def _base_inverse_transform(self, X: pd.DataFrame) -> np.ndarray:
+        # noinspection PyUnresolvedReferences
+        return self.base_transformer.inverse_transform(X.values)
 
 
 class ConstantColumnTransformer(
