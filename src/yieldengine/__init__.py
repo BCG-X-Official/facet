@@ -162,18 +162,18 @@ class Sample:
         subsample._observations = self._observations.iloc[indices, :]
         return subsample
 
-    def select_features(self, features: Iterable[str]) -> "Sample":
+    def select_features(self, feature_names: Iterable[str]) -> "Sample":
         subsample = copy(self)
-        features = list(features)
-        feature_set = set(features)
+        feature_names = list(feature_names)
+        feature_set = set(feature_names)
         if not feature_set.issubset(self._feature_names):
             raise ValueError(
                 "arg features is not a subset of the features in this sample"
             )
         subsample._observations = self._observations.loc[
-            :, [*features, subsample.target_name]
+            :, [*feature_names, subsample.target_name]
         ]
-        subsample._feature_names = features
+        subsample._feature_names = feature_set
 
         return subsample
 
