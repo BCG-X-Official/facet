@@ -49,13 +49,31 @@ class PipelineDF(DataFrameTransformer[Pipeline]):
     def _make_base_transformer(cls, **kwargs) -> Pipeline:
         return Pipeline(**kwargs)
 
-    @property
-    def columns_out(self) -> pd.Index:
+    def _get_columns_out(self) -> pd.Index:
         transform_steps = self._transform_steps()
         if len(transform_steps) == 0:
             return self.columns_in
         else:
             return transform_steps[-1][1].columns_out
+
+    def _get_columns_original(self) -> pd.Series:
+        col_mappings = [
+            df_transformer.columns_original
+            for _, df_transformer in self._transform_steps()
+        ]
+
+        _columns_original = col_mappings[-1].values
+
+        for sub_mapping in col_mappings[:-1:-1]:
+            # join the original columns of my current transformer on the out columns in
+            # the preceding transformer, then repeat
+            _columns_original = sub_mapping.loc[_columns_original].values
+
+        return pd.Series(
+            index=col_mappings[-1].index,
+            data=_columns_original,
+            name=DataFrameTransformer.F_COLUMN_ORIGINAL,
+        )
 
     @property
     def steps(self) -> Sequence[Tuple[str, Union[DataFrameTransformer, BaseEstimator]]]:

@@ -1,5 +1,6 @@
 import logging
 from abc import ABC, abstractmethod
+from functools import reduce
 from itertools import chain
 from typing import *
 
@@ -11,7 +12,6 @@ from sklearn.impute import SimpleImputer
 from sklearn.preprocessing import OneHotEncoder, OrdinalEncoder
 
 log = logging.getLogger(__name__)
-
 
 _BaseTransformer = TypeVar(
     "_BaseTransformer", bound=Union[BaseEstimator, TransformerMixin]
@@ -28,11 +28,16 @@ class DataFrameTransformer(
     :param base_transformer the sklearn transformer to be wrapped
     """
 
+    F_COLUMN = "column"
+    F_COLUMN_ORIGINAL = "column_original"
+
     def __init__(self, **kwargs) -> None:
         super(BaseEstimator).__init__()
         super(TransformerMixin).__init__()
         self._base_transformer = type(self)._make_base_transformer(**kwargs)
-        self._original_columns = None
+        self._columns_in = None
+        self._columns_out = None
+        self._columns_original = None
 
     @classmethod
     @abstractmethod
@@ -44,19 +49,38 @@ class DataFrameTransformer(
         return self._base_transformer
 
     def is_fitted(self) -> bool:
-        return self._original_columns is not None
+        return self._columns_in is not None
 
     @property
     def columns_in(self) -> pd.Index:
-        if self._original_columns is None:
+        if self._columns_in is None:
             raise RuntimeError("transformer not fitted")
-        return self._original_columns
+        return self._columns_in
 
     @property
-    @abstractmethod
     def columns_out(self) -> pd.Index:
+        if self._columns_out is None:
+            raise RuntimeError("transformer not fitted")
+        return self._columns_out
+
+    @property
+    def columns_original(self) -> pd.Series:
+        if self._columns_original is None:
+            raise RuntimeError("transformer not fitted")
+        return self._columns_original
+
+    @abstractmethod
+    def _get_columns_out(self) -> pd.Index:
         """
         :returns column labels for arrays returned by the fitted transformer
+        """
+        pass
+
+    @abstractmethod
+    def _get_columns_original(self) -> pd.Series:
+        """
+        :return: a mapping from this transformer's output columns to the original
+        columns as a series
         """
         pass
 
@@ -88,7 +112,9 @@ class DataFrameTransformer(
     def _post_fit(
         self, X: pd.DataFrame, y: Optional[pd.Series] = None, **fit_params
     ) -> None:
-        self._original_columns = X.columns
+        self._columns_in = X.columns.rename(DataFrameTransformer.F_COLUMN)
+        self._columns_out = self._get_columns_out()
+        self._columns_original = self._get_columns_original()
 
     # noinspection PyPep8Naming
     def fit(self, X: pd.DataFrame, y: Optional[pd.Series] = None, **fit_params) -> None:
@@ -186,14 +212,21 @@ class NumpyOnlyTransformer(
         return self.base_transformer.inverse_transform(X.values)
 
 
-class ConstantColumnTransformer(
+class ColumnPreservingTransformer(
     DataFrameTransformer[_BaseTransformer], Generic[_BaseTransformer]
 ):
-    def __init__(self, **kwargs) -> None:
-        super().__init__(**kwargs)
+    def _get_columns_original(self) -> pd.Series:
+        return pd.Series(
+            index=self.columns_out,
+            data=self.columns_out.values,
+            name=DataFrameTransformer.F_COLUMN_ORIGINAL,
+        )
 
-    @property
-    def columns_out(self) -> pd.Index:
+
+class ConstantColumnTransformer(
+    ColumnPreservingTransformer[_BaseTransformer], Generic[_BaseTransformer]
+):
+    def _get_columns_out(self) -> pd.Index:
         return self.columns_in
 
 
@@ -228,23 +261,42 @@ class ColumnTransformerDF(DataFrameTransformer[ColumnTransformer]):
     def _make_base_transformer(cls, **kwargs) -> ColumnTransformer:
         return ColumnTransformer(**kwargs)
 
-    @property
-    def columns_out(self) -> pd.Index:
-        column_transformer = self.base_transformer
-
+    def _get_columns_out(self) -> pd.Index:
         # construct the index from the columns in the fitted transformers
         return pd.Index(
-            chain(
+            data=chain(
                 *[
                     df_transformer.columns_out
-                    for _, df_transformer, _ in column_transformer.transformers_
-                    if df_transformer != "drop"
+                    for df_transformer in self._inner_transformers()
                 ]
-            )
+            ),
+            name=DataFrameTransformer.F_COLUMN,
+        )
+
+    def _get_columns_original(self) -> pd.Series:
+        """
+        :return: a list of the original features from which the output of this
+        transformer is derived. The list is aligned with the columns returned by
+        method :meth" `output columns` and this has the same length
+        """
+
+        return reduce(
+            lambda x, y: x.append(y),
+            (
+                df_transformer.columns_original
+                for df_transformer in self._inner_transformers()
+            ),
+        )
+
+    def _inner_transformers(self) -> Iterable[DataFrameTransformer]:
+        return (
+            df_transformer
+            for _, df_transformer, _ in self.base_transformer.transformers_
+            if df_transformer != "drop"
         )
 
 
-class SimpleImputerDF(DataFrameTransformer[SimpleImputer]):
+class SimpleImputerDF(ColumnPreservingTransformer[SimpleImputer]):
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
 
@@ -252,11 +304,10 @@ class SimpleImputerDF(DataFrameTransformer[SimpleImputer]):
     def _make_base_transformer(cls, **kwargs) -> SimpleImputer:
         return SimpleImputer(**kwargs)
 
-    @property
-    def columns_out(self) -> pd.Index:
-        imputer = self.base_transformer
-
-        return self.columns_in.delete(np.argwhere(np.isnan(imputer.statistics_)))
+    def _get_columns_out(self) -> pd.Index:
+        return self.columns_in.delete(
+            np.argwhere(np.isnan(self.base_transformer.statistics_))
+        )
 
 
 class OneHotEncoderDF(DataFrameTransformer[OneHotEncoder]):
@@ -266,9 +317,7 @@ class OneHotEncoderDF(DataFrameTransformer[OneHotEncoder]):
 
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
-        encoder = self.base_transformer
-
-        if encoder.sparse:
+        if self.base_transformer.sparse:
             raise ValueError(
                 "sparse matrices not supported; set OneHotEncoder.sparse to False"
             )
@@ -277,10 +326,25 @@ class OneHotEncoderDF(DataFrameTransformer[OneHotEncoder]):
     def _make_base_transformer(cls, **kwargs) -> OneHotEncoder:
         return OneHotEncoder(**kwargs)
 
-    @property
-    def columns_out(self) -> pd.Index:
+    def _get_columns_out(self) -> pd.Index:
         encoder = self.base_transformer
-        return pd.Index(encoder.get_feature_names(self.columns_in))
+        return pd.Index(
+            encoder.get_feature_names(self.columns_in),
+            name=DataFrameTransformer.F_COLUMN,
+        )
+
+    def _get_columns_original(self) -> pd.Series:
+        return pd.Series(
+            index=self.columns_out,
+            data=[
+                column_original
+                for column_original, category in zip(
+                    self.columns_in, self.base_transformer.categories_
+                )
+                for _ in category
+            ],
+            name=DataFrameTransformer.F_COLUMN_ORIGINAL,
+        )
 
 
 class OrdinalEncoderDF(ConstantColumnTransformer[OrdinalEncoder]):
