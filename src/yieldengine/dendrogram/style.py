@@ -4,7 +4,6 @@ from typing import *
 
 from matplotlib import cm
 from matplotlib.axes import Axes
-from matplotlib.ticker import ScalarFormatter
 
 from yieldengine.dendrogram import DendrogramStyle
 
@@ -16,19 +15,9 @@ RgbaColor = Tuple[float, float, float, float]
 class MatplotStyle(DendrogramStyle):
     __slots__ = ["_ax", "_cm", "_min_weight"]
 
-    def __init__(
-        self, ax: Axes, min_weight: float = 0.001, log_scale: bool = True
-    ) -> None:
+    def __init__(self, ax: Axes, min_weight: float = 0.01) -> None:
         super().__init__()
         self._ax = ax
-        if log_scale:
-            ax.set_xscale("log")
-        else:
-            ax.set_xscale("linear")
-
-        scalar_formatter = ScalarFormatter()
-        ax.xaxis.set_major_formatter(scalar_formatter)
-        ax.xaxis.set_minor_formatter(scalar_formatter)
 
         ax.ticklabel_format(axis="x", scilimits=(-3, 3))
         self._cm = cm.get_cmap(name="plasma", lut=256)
