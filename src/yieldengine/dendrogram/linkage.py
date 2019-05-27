@@ -107,8 +107,8 @@ class LinkageTree:
     def __init__(
         self,
         scipy_linkage_matrix: np.ndarray,
-        leaf_labels: Sequence[str],
-        leaf_weights: Sequence[float],
+        leaf_labels: Iterable[str],
+        leaf_weights: Iterable[float],
     ) -> None:
         # one row of the linkage matrix is a quadruple:
         # (
@@ -125,12 +125,12 @@ class LinkageTree:
                     f"for arg {var_name}"
                 )
 
-        _validate_leafs(leaf_labels, "leaf_labels")
-        _validate_leafs(leaf_weights, "leaf_weights")
-
         self._linkage_matrix = scipy_linkage_matrix
-        self._leaf_labels = leaf_labels
-        self._leaf_weights = leaf_weights
+        self._leaf_labels = list(leaf_labels)
+        self._leaf_weights = list(leaf_weights)
+
+        _validate_leafs(self._leaf_labels, "leaf_labels")
+        _validate_leafs(self._leaf_weights, "leaf_weights")
 
     def root(self) -> LinkageNode:
         return LinkageNode(
