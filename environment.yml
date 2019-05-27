@@ -17,3 +17,4 @@ dependencies:
   - xlrd = 1.2.0
   - pip:
       - pre_commit == 1.16.*
+      - boruta == 0.3
