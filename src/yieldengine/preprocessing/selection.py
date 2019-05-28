@@ -1,10 +1,7 @@
 import pandas as pd
 from boruta import BorutaPy
 
-from yieldengine.feature.transform import (
-    ColumnPreservingTransformer,
-    NumpyOnlyTransformer,
-)
+from yieldengine.transform import ColumnPreservingTransformer, NumpyOnlyTransformer
 
 
 class BorutaDF(NumpyOnlyTransformer[BorutaPy], ColumnPreservingTransformer[BorutaPy]):

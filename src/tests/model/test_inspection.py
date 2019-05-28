@@ -11,7 +11,6 @@ from sklearn.svm import SVR
 from sklearn.utils import Bunch
 
 from yieldengine import Sample
-from yieldengine.feature.transform import DataFrameTransformer
 from yieldengine.model import Model
 from yieldengine.model.inspection import ModelInspector
 from yieldengine.model.selection import (
@@ -21,6 +20,7 @@ from yieldengine.model.selection import (
     summary_report,
 )
 from yieldengine.model.validation import CircularCrossValidator
+from yieldengine.transform import DataFrameTransformer
 
 log = logging.getLogger(__name__)
 

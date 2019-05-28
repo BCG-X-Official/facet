@@ -6,6 +6,8 @@ dependencies:
   - joblib = 0.13.*
   - lightgbm = 2.2.*
   - pandas = 0.24.*
+  - numpy = 1.16.*
+  - matplotlib = 3.0.*
   - pip = 19.1
   - pluggy = 0.11.*
   - pytest = 4.4.*
@@ -13,8 +15,10 @@ dependencies:
   - python = 3.6
   - pyyaml = 5.1.*
   - scikit-learn = 0.21.*
+  - scipy = 1.2.*
   - shap = 0.28.*
   - xlrd = 1.2.0
+  - yaml = 0.1.*
   - pip:
       - pre_commit == 1.16.*
       - boruta == 0.3
