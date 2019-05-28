@@ -50,27 +50,33 @@ class PipelineDF(DataFrameTransformer[Pipeline]):
         return Pipeline(**kwargs)
 
     def _get_columns_out(self) -> pd.Index:
-        transform_steps = self._transform_steps()
-        if len(transform_steps) == 0:
-            return self.columns_in
-        else:
-            return transform_steps[-1][1].columns_out
+        # iterate backwards through transformers to get output columns of last one
+        for _, df_transformer in self._transform_steps()[::-1]:
+            if df_transformer is not None:
+                return df_transformer.columns_out
+
+        return self.columns_in
 
     def _get_columns_original(self) -> pd.Series:
         col_mappings = [
             df_transformer.columns_original
             for _, df_transformer in self._transform_steps()
+            if df_transformer is not None
         ]
 
-        _columns_original = col_mappings[-1].values
+        if len(col_mappings) == 0:
+            _columns_original = _columns_out = self.columns_in
+        else:
+            _columns_original = col_mappings[-1].values
+            _columns_out = col_mappings[-1].index
 
-        for sub_mapping in col_mappings[:-1:-1]:
-            # join the original columns of my current transformer on the out columns in
-            # the preceding transformer, then repeat
-            _columns_original = sub_mapping.loc[_columns_original].values
+            for sub_mapping in col_mappings[:-1:-1]:
+                # join the original columns of my current transformer on the out columns
+                # in the preceding transformer, then repeat
+                _columns_original = sub_mapping.loc[_columns_original].values
 
         return pd.Series(
-            index=col_mappings[-1].index,
+            index=_columns_out,
             data=_columns_original,
             name=DataFrameTransformer.F_COLUMN_ORIGINAL,
         )
