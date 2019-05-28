@@ -2,7 +2,6 @@
 ### Python template
 # Byte-compiled / optimized / DLL files
 __pycache__/
-*.py[cod]
 *$py.class
 
 # C extensions
@@ -161,7 +160,6 @@ fabric.properties
 ## Core latex/pdflatex auxiliary files:
 *.aux
 *.lof
-*.log
 *.lot
 *.fls
 *.out
@@ -392,8 +390,6 @@ TSWLatexianTemp*
 # KBibTeX
 *~[0-9]*
 
-# auto folder when using emacs and auctex
-./auto/*
 *.el
 
 # expex forward references with \gathertags
@@ -402,6 +398,10 @@ TSWLatexianTemp*
 # standalone packages
 *.sta
 
-# generated if using elsarticle.cls
-*.spl
 .DS_Store
+
+#
+# project specific
+#
+/tmp
+!/tmp/readme.md
