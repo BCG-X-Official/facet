@@ -1,11 +1,9 @@
 from typing import Sequence
 
-from yieldengine.feature.transform import (
-    ColumnTransformerDF,
-    DataFrameTransformer,
-    OneHotEncoderDF,
-    SimpleImputerDF,
-)
+from yieldengine.preprocessing import OneHotEncoderDF
+from yieldengine.preprocessing.impute import SimpleImputerDF
+from yieldengine.transform import DataFrameTransformer
+from yieldengine.transform.compose import ColumnTransformerDF
 
 STEP_IMPUTE = "impute"
 STEP_ONE_HOT_ENCODE = "one-hot-encode"
