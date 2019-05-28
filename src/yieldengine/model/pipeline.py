@@ -7,7 +7,7 @@ import pandas as pd
 from sklearn.base import BaseEstimator
 from sklearn.pipeline import Pipeline
 
-from yieldengine.feature.transform import DataFrameTransformer
+from yieldengine.transform import DataFrameTransformer
 
 log = logging.getLogger(__name__)
 
