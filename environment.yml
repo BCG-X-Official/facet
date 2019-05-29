@@ -17,7 +17,7 @@ dependencies:
   - scikit-learn = 0.21.*
   - scipy = 1.2.*
   - shap = 0.28.*
-  - xlrd = 1.2.0
+  - xlrd = 1.2.*
   - yaml = 0.1.*
   - pip:
       - pre_commit == 1.16.*
