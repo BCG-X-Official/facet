@@ -8,6 +8,8 @@ import numpy as np
 import pandas as pd
 from sklearn.base import BaseEstimator, TransformerMixin
 
+from yieldengine import Sample
+
 log = logging.getLogger(__name__)
 
 _BaseTransformer = TypeVar(
@@ -148,6 +150,14 @@ class DataFrameTransformer(
         transformed = self._base_inverse_transform(X)
 
         return pd.DataFrame(data=transformed, index=X.index, columns=self.columns_in)
+
+    def fit_transform_sample(self, sample: Sample) -> Sample:
+        return Sample(
+            observations=pd.concat(
+                objs=[self.fit_transform(sample.features), sample.target], axis=1
+            ),
+            target_name=sample.target_name,
+        )
 
     # noinspection PyPep8Naming
     def _base_fit(self, X: pd.DataFrame, y: Optional[pd.Series], **fit_params):
