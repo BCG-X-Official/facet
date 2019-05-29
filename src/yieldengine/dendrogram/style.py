@@ -4,12 +4,20 @@ from typing import *
 
 from matplotlib import cm
 from matplotlib.axes import Axes
+from matplotlib.colorbar import make_axes, ColorbarBase
+from matplotlib.colors import LogNorm
+from matplotlib.ticker import Formatter
 
 from yieldengine.dendrogram import DendrogramStyle
 
 log = logging.getLogger(__name__)
 
 RgbaColor = Tuple[float, float, float, float]
+
+
+class _PercentageFormatter(Formatter):
+    def __call__(self, x, pos=None):
+        return f"{x * 100.0:.0f}%"
 
 
 class MatplotStyle(DendrogramStyle):
@@ -19,9 +27,25 @@ class MatplotStyle(DendrogramStyle):
         super().__init__()
         self._ax = ax
 
-        ax.ticklabel_format(axis="x", scilimits=(-3, 3))
-        self._cm = cm.get_cmap(name="plasma", lut=256)
+        if min_weight > 1.0 or min_weight <= 0.0:
+            raise ValueError("arg min_weight must be > 0.0 and <= 1.0")
+
         self._min_weight = min_weight
+
+        ax.ticklabel_format(axis="x", scilimits=(-3, 3))
+
+        cax, _ = make_axes(ax)
+        self._cm = cm.get_cmap(name="plasma", lut=256)
+        self._cb = ColorbarBase(
+            cax,
+            cmap=self._cm,
+            norm=LogNorm(min_weight, 1),
+            label="feature importance",
+            orientation="vertical",
+        )
+
+        cax.yaxis.set_minor_formatter(_PercentageFormatter())
+        cax.yaxis.set_major_formatter(_PercentageFormatter())
 
     def draw_title(self, title: str) -> None:
         self._ax.set_title(label=title)
@@ -78,6 +102,10 @@ class LineStyle(MatplotStyle):
 
 
 class FeatMapStyle(MatplotStyle):
+    def __init__(self, ax: Axes, min_weight: float = 0.01) -> None:
+        super().__init__(ax=ax, min_weight=min_weight)
+        ax.margins(0, 0)
+
     def draw_link_leg(
         self, bottom: float, top: float, first_leaf: int, n_leaves: int, weight: float
     ) -> None:
