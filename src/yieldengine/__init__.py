@@ -152,14 +152,35 @@ class Sample:
         """
         return self.features.select_dtypes(dtype)
 
-    def select_observations(self, indices: Iterable[int]) -> "Sample":
+    def select_observations(
+        self,
+        numbers: Optional[Iterable[int]] = None,
+        ids: Optional[Iterable[Any]] = None,
+    ) -> "Sample":
         """
-        :param indices: numerical indices of observations to select
+        Select observations either by numerical indices (`iloc`) or index items (`loc`)
+        :param numbers: numerical indices of observations to select (optional)
+        :param ids: indices of observations to select (optional)
         :return: copy of this sample, containing only the observations at the given
         indices
         """
+        if numbers is None:
+            if ids is None:
+                raise ValueError(
+                    "need to specify either numbers or ids to select observations by"
+                )
+        elif ids is not None:
+            raise ValueError(
+                "need to specify only one of either numbers or ids to select observations by"
+            )
+
         subsample = copy(self)
-        subsample._observations = self._observations.iloc[indices, :]
+
+        if numbers is not None:
+            subsample._observations = self._observations.iloc[numbers, :]
+        else:
+            subsample._observations = self._observations.loc[ids, :]
+
         return subsample
 
     def select_features(self, feature_names: Iterable[str]) -> "Sample":
