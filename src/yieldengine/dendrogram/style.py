@@ -2,6 +2,7 @@ import logging
 import math
 from typing import *
 
+import matplotlib.text as mt
 from matplotlib import cm
 from matplotlib.axes import Axes
 from matplotlib.colorbar import make_axes, ColorbarBase
@@ -22,6 +23,8 @@ class _PercentageFormatter(Formatter):
 
 class MatplotStyle(DendrogramStyle):
     __slots__ = ["_ax", "_cm", "_min_weight"]
+
+    _PERCENTAGE_FORMATTER = _PercentageFormatter()
 
     def __init__(self, ax: Axes, min_weight: float = 0.01) -> None:
         super().__init__()
@@ -44,8 +47,8 @@ class MatplotStyle(DendrogramStyle):
             orientation="vertical",
         )
 
-        cax.yaxis.set_minor_formatter(_PercentageFormatter())
-        cax.yaxis.set_major_formatter(_PercentageFormatter())
+        cax.yaxis.set_minor_formatter(MatplotStyle._PERCENTAGE_FORMATTER)
+        cax.yaxis.set_major_formatter(MatplotStyle._PERCENTAGE_FORMATTER)
 
     def draw_title(self, title: str) -> None:
         self._ax.set_title(label=title)
@@ -130,13 +133,35 @@ class FeatMapStyle(MatplotStyle):
         )
 
     def _draw_hbar(self, x: float, y: float, w: float, h: float, weight: float) -> None:
+        fill_color = self.color(weight)
+
         self._ax.barh(
             y=[y - 0.5],
             width=[w],
             height=[h],
             left=[x],
             align="edge",
-            color=self.color(weight),
+            color=fill_color,
             edgecolor="white",
             linewidth=1,
         )
+
+        label = f"{weight * 100:.2g}%" if weight < 1 else f"{weight * 100:.3g}%"
+        fig = self._ax.figure
+        (x0, _), (x1, _) = self._ax.transData.inverted().transform(
+            mt.Text(0, 0, label, figure=fig).get_window_extent(
+                fig.canvas.get_renderer()
+            )
+        )
+
+        if abs(x1 - x0) <= w:
+            fill_luminance = sum(fill_color[:3]) / 3
+            text_color = "white" if fill_luminance < 0.5 else "black"
+            self._ax.text(
+                x + w / 2,
+                y + (h - 1) / 2,
+                label,
+                ha="center",
+                va="center",
+                color=text_color,
+            )
