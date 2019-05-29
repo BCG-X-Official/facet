@@ -198,9 +198,9 @@ def summary_report(ranking: Sequence[ModelEvaluation]) -> str:
         [
             f"Rank {rank + 1:2d}: "
             f"{_model_name(ranked_model):>{name_width}s}, "
-            f"Score={ranked_model.ranking_score:+.2e}, "
-            f"Test mean={ranked_model.test_score_mean:+.2e}, "
-            f"Test std={ranked_model.test_score_std:+.2e}"
+            f"Score={ranked_model.ranking_score:9.3g}, "
+            f"Test mean={ranked_model.test_score_mean:9.3g}, "
+            f"Test std={ranked_model.test_score_std:9.3g}"
             "\nEstimator parameters:"
             f"\n    {parameters(ranked_model.model.estimator.get_params())}"
             + (
