@@ -207,7 +207,7 @@ class ModelInspector:
         normalised to a total 100%
         """
         feature_importances: pd.Series = self.shap_matrix().abs().mean()
-        return feature_importances / feature_importances.sum()
+        return (feature_importances / feature_importances.sum()).sort_values(ascending=False)
 
     def feature_dependency_matrix(self) -> pd.DataFrame:
         if self._feature_dependency_matrix is None:
