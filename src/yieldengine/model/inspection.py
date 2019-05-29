@@ -214,7 +214,8 @@ class ModelInspector:
             shap_matrix = self.shap_matrix()
 
             # exclude features with zero Shapley importance
-            shap_matrix = shap_matrix.loc[:, shap_matrix.sum() > 0]
+            # noinspection PyUnresolvedReferences
+            shap_matrix = shap_matrix.loc[:, (shap_matrix != 0.0).any()]
 
             self._feature_dependency_matrix = shap_matrix.corr(method="pearson")
 
