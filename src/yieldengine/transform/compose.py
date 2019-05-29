@@ -24,12 +24,12 @@ class ColumnTransformerDF(DataFrameTransformer[ColumnTransformer]):
             )
 
         if not (
-            all(
-                [
-                    isinstance(transformer, DataFrameTransformer)
-                    for _, transformer, _ in column_transformer.transformers
-                ]
-            )
+                all(
+                    [
+                        isinstance(transformer, DataFrameTransformer)
+                        for _, transformer, _ in column_transformer.transformers
+                    ]
+                )
         ):
             raise ValueError(
                 "arg column_transformer must only contain instances of "
@@ -72,6 +72,6 @@ class ColumnTransformerDF(DataFrameTransformer[ColumnTransformer]):
     def _inner_transformers(self) -> Iterable[DataFrameTransformer]:
         return (
             df_transformer
-            for _, df_transformer, _ in self.base_transformer.transformers_
+            for _, df_transformer, columns in self.base_transformer.transformers_ if len(columns) > 0
             if df_transformer != "drop"
         )
