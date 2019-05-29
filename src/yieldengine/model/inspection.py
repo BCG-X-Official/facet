@@ -122,8 +122,8 @@ class ModelInspector:
         def predict(
             fold_id: int, train_indices: np.ndarray, test_indices: np.ndarray
         ) -> pd.DataFrame:
-            train_sample = sample.select_observations(indices=train_indices)
-            test_sample = sample.select_observations(indices=test_indices)
+            train_sample = sample.select_observations(numbers=train_indices)
+            test_sample = sample.select_observations(numbers=test_indices)
 
             self._model_by_fold[fold_id] = model = self._model.clone()
 
@@ -167,7 +167,7 @@ class ModelInspector:
             ).index
 
             fold_x = sample.select_observations(
-                indices=observation_indices_in_fold
+                ids=observation_indices_in_fold
             ).features
 
             estimator = fold_model.estimator
