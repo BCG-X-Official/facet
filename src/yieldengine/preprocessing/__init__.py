@@ -25,9 +25,8 @@ class OneHotEncoderDF(DataFrameTransformer[OneHotEncoder]):
         return OneHotEncoder(**kwargs)
 
     def _get_columns_out(self) -> pd.Index:
-        encoder = self.base_transformer
         return pd.Index(
-            encoder.get_feature_names(self.columns_in),
+            self.base_transformer.get_feature_names(self.columns_in),
             name=DataFrameTransformer.F_COLUMN,
         )
 
