@@ -187,17 +187,16 @@ class ModelInspector:
                 columns=data_transformed.columns,
             )
 
-        shap_value_dfs = [
-            shap_matrix_for_fold(fold_id, model)
-            for fold_id, model in self._model_by_fold.items()
-        ]
+        shap_values_df = pd.concat(
+            objs=[
+                shap_matrix_for_fold(fold_id, model)
+                for fold_id, model in self._model_by_fold.items()
+            ],
+            sort=True,
+        ).fillna(0.0)
 
         # Group SHAP matrix by observation ID and aggregate SHAP values using mean()
-        self._shap_matrix = (
-            pd.concat(objs=shap_value_dfs, sort=True)
-            .groupby(by=pd.concat(objs=shap_value_dfs).index, sort=True)
-            .mean()
-        )
+        self._shap_matrix = shap_values_df.groupby(by=shap_values_df.index).mean()
 
         return self._shap_matrix
 
@@ -207,7 +206,9 @@ class ModelInspector:
         normalised to a total 100%
         """
         feature_importances: pd.Series = self.shap_matrix().abs().mean()
-        return (feature_importances / feature_importances.sum()).sort_values(ascending=False)
+        return (feature_importances / feature_importances.sum()).sort_values(
+            ascending=False
+        )
 
     def feature_dependency_matrix(self) -> pd.DataFrame:
         if self._feature_dependency_matrix is None:
