@@ -18,6 +18,11 @@ class SimpleImputerDF(ColumnPreservingTransformer[SimpleImputer]):
         return SimpleImputer(**kwargs)
 
     def _get_columns_out(self) -> pd.Index:
-        return self.columns_in.delete(
-            np.argwhere(np.isnan(self.base_transformer.statistics_))
-        )
+        stats = self.base_transformer.statistics_
+        if issubclass(stats.dtype.type, float):
+            nan_mask = np.isnan(stats)
+        else:
+            nan_mask = [
+                x is None or (isinstance(x, float) and np.isnan(x)) for x in stats
+            ]
+        return self.columns_in.delete(np.argwhere(nan_mask))
