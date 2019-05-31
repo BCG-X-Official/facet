@@ -67,13 +67,16 @@ class PipelineDF(DataFrameTransformer[Pipeline]):
         if len(col_mappings) == 0:
             _columns_original = _columns_out = self.columns_in
         else:
-            _columns_original = col_mappings[-1].values
             _columns_out = col_mappings[-1].index
+            _columns_original = col_mappings[-1].values
 
-            for sub_mapping in col_mappings[:-1:-1]:
+            # iterate backwards starting from the penultimate item
+            for preceding_out_to_original_mapping in col_mappings[-2::-1]:
                 # join the original columns of my current transformer on the out columns
                 # in the preceding transformer, then repeat
-                _columns_original = sub_mapping.loc[_columns_original].values
+                _columns_original = preceding_out_to_original_mapping.loc[
+                    _columns_original
+                ].values
 
         return pd.Series(
             index=_columns_out,
