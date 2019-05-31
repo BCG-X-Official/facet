@@ -1,7 +1,7 @@
 # coding=utf-8
 
 import logging
-from abc import ABC, abstractmethod
+from abc import ABC, abstractmethod, ABCMeta
 from typing import *
 
 import numpy as np
@@ -52,21 +52,26 @@ class DataFrameTransformer(
 
     @property
     def columns_in(self) -> pd.Index:
-        if self._columns_in is None:
-            raise RuntimeError("transformer not fitted")
+        self._ensure_fitted()
         return self._columns_in
 
     @property
     def columns_out(self) -> pd.Index:
+        self._ensure_fitted()
         if self._columns_out is None:
-            raise RuntimeError("transformer not fitted")
+            self._columns_out = self._get_columns_out()
         return self._columns_out
 
     @property
     def columns_original(self) -> pd.Series:
+        self._ensure_fitted()
         if self._columns_original is None:
-            raise RuntimeError("transformer not fitted")
+            self._columns_original = self._get_columns_original()
         return self._columns_original
+
+    def _ensure_fitted(self):
+        if not self.is_fitted():
+            raise RuntimeError("transformer not fitted")
 
     @abstractmethod
     def _get_columns_out(self) -> pd.Index:
@@ -112,8 +117,19 @@ class DataFrameTransformer(
         self, X: pd.DataFrame, y: Optional[pd.Series] = None, **fit_params
     ) -> None:
         self._columns_in = X.columns.rename(DataFrameTransformer.F_COLUMN)
-        self._columns_out = self._get_columns_out()
-        self._columns_original = self._get_columns_original()
+        self._columns_out = None
+        self._columns_original = None
+
+    def _transformed_to_df(
+        self,
+        transformed: Union[pd.DataFrame, np.ndarray],
+        index: pd.Index,
+        columns: pd.Index,
+    ):
+        if isinstance(transformed, pd.DataFrame):
+            return transformed
+        else:
+            return pd.DataFrame(data=transformed, index=index, columns=columns)
 
     # noinspection PyPep8Naming
     def fit(self, X: pd.DataFrame, y: Optional[pd.Series] = None, **fit_params) -> None:
@@ -129,7 +145,9 @@ class DataFrameTransformer(
 
         transformed = self._base_transform(X)
 
-        return pd.DataFrame(data=transformed, index=X.index, columns=self.columns_out)
+        return self._transformed_to_df(
+            transformed=transformed, index=X.index, columns=self.columns_out
+        )
 
     # noinspection PyPep8Naming
     def fit_transform(
@@ -141,7 +159,9 @@ class DataFrameTransformer(
 
         self._post_fit(X, y, **fit_params)
 
-        return pd.DataFrame(data=transformed, index=X.index, columns=self.columns_out)
+        return self._transformed_to_df(
+            transformed=transformed, index=X.index, columns=self.columns_out
+        )
 
     # noinspection PyPep8Naming
     def inverse_transform(self, X: pd.DataFrame) -> pd.DataFrame:
@@ -149,7 +169,9 @@ class DataFrameTransformer(
 
         transformed = self._base_inverse_transform(X)
 
-        return pd.DataFrame(data=transformed, index=X.index, columns=self.columns_in)
+        return self._transformed_to_df(
+            transformed=transformed, index=X.index, columns=self.columns_in
+        )
 
     def fit_transform_sample(self, sample: Sample) -> Sample:
         return Sample(
@@ -190,7 +212,7 @@ class DataFrameTransformer(
 
 
 class NumpyOnlyTransformer(
-    DataFrameTransformer[_BaseTransformer], Generic[_BaseTransformer]
+    DataFrameTransformer[_BaseTransformer], Generic[_BaseTransformer], metaclass=ABCMeta
 ):
     """
     Special case of DataFrameTransformer where the base transformer does not accept
@@ -220,8 +242,12 @@ class NumpyOnlyTransformer(
 
 
 class ColumnPreservingTransformer(
-    DataFrameTransformer[_BaseTransformer], Generic[_BaseTransformer]
+    DataFrameTransformer[_BaseTransformer], Generic[_BaseTransformer], metaclass=ABCMeta
 ):
+    """
+    All output columns of a ColumnPreservingTransformer have the same names as their associated input columns
+    """
+
     def _get_columns_original(self) -> pd.Series:
         return pd.Series(
             index=self.columns_out,
@@ -231,7 +257,13 @@ class ColumnPreservingTransformer(
 
 
 class ConstantColumnTransformer(
-    ColumnPreservingTransformer[_BaseTransformer], Generic[_BaseTransformer]
+    ColumnPreservingTransformer[_BaseTransformer],
+    Generic[_BaseTransformer],
+    metaclass=ABCMeta,
 ):
+    """
+    A ConstantColumnTransformer does not add, remove, or rename any of the input columns
+    """
+
     def _get_columns_out(self) -> pd.Index:
         return self.columns_in
