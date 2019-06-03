@@ -5,9 +5,9 @@ import numpy as np
 
 
 class Node(ABC):
+    __slots__ = ["_index"]
+
     def __init__(self, index: int) -> None:
-        if type(self) == Node:
-            raise TypeError("cannot instantiate abstract class Node")
         self._index = index
 
     @property
@@ -38,11 +38,10 @@ class Node(ABC):
         return TypeError(f"{property_name} is not defined for a {type(self).__name__}")
 
     def __repr__(self) -> str:
-        return f"{self.__class__.__name__}_{self.index}"
+        return f"{self.__class__.__name__}_{self._index}"
 
 
 class LinkageNode(Node):
-
     __slots__ = ["_children_distance"]
 
     def __init__(self, index: int, children_distance: Optional[float]) -> None:
@@ -98,7 +97,6 @@ class LeafNode(Node):
 
 
 class LinkageTree:
-
     F_CHILD_LEFT = 0
     F_CHILD_RIGHT = 1
     F_CHILDREN_DISTANCE = 2
@@ -118,54 +116,60 @@ class LinkageTree:
         #    <number of descendant nodes, from direct children down to leaf nodes>
         # )
 
+        n_branches = len(scipy_linkage_matrix)
+        n_leaves = n_branches + 1
+
         def _validate_leafs(var: Sequence[Any], var_name: str):
-            if len(var) != len(scipy_linkage_matrix) + 1:
+            if len(var) != n_branches + 1:
                 raise ValueError(
-                    f"expected {len(scipy_linkage_matrix) + 1} values "
-                    f"for arg {var_name}"
+                    f"expected {n_branches + 1} values " f"for arg {var_name}"
                 )
 
         self._linkage_matrix = scipy_linkage_matrix
-        self._leaf_labels = list(leaf_labels)
-        self._leaf_weights = list(leaf_weights)
 
-        _validate_leafs(self._leaf_labels, "leaf_labels")
-        _validate_leafs(self._leaf_weights, "leaf_weights")
+        leaf_labels = list(leaf_labels)
+        leaf_weights = list(leaf_weights)
 
-    def root(self) -> LinkageNode:
-        return LinkageNode(
-            index=len(self._linkage_matrix) * 2,
-            children_distance=self._linkage_matrix[-1][LinkageTree.F_CHILDREN_DISTANCE],
-        )
+        _validate_leafs(leaf_labels, "leaf_labels")
+        _validate_leafs(leaf_weights, "leaf_weights")
+
+        self._nodes = [
+            *[
+                LeafNode(index=index, label=label, weight=weight)
+                for index, (label, weight) in enumerate(zip(leaf_labels, leaf_weights))
+            ],
+            *[
+                LinkageNode(
+                    index=index + n_leaves,
+                    children_distance=scipy_linkage_matrix[index][
+                        LinkageTree.F_CHILDREN_DISTANCE
+                    ],
+                )
+                for index in range(n_branches)
+            ],
+        ]
 
     @property
-    def n_leaves(self) -> int:
-        return len(self._leaf_labels)
-
-    def node(self, index: int) -> Node:
-        if index < self.n_leaves:
-            return LeafNode(
-                index=index,
-                label=self._leaf_labels[index],
-                weight=self._leaf_weights[index],
-            )
-        else:
-            return LinkageNode(
-                index=index,
-                children_distance=self._linkage_for_node(index)[
-                    LinkageTree.F_CHILDREN_DISTANCE
-                ],
-            )
+    def root(self) -> Node:
+        return self._nodes[-1]
 
     def children(self, node: Node) -> Optional[Tuple[Node, Node]]:
         if node.is_leaf:
             return None
         else:
-            node_linkage = self._linkage_for_node(node.index)
+            # noinspection PyProtectedMember
+            node_linkage = self._linkage_matrix[node._index - self.n_leaves]
             ix_c1, ix_c2 = node_linkage[
                 [LinkageTree.F_CHILD_LEFT, LinkageTree.F_CHILD_RIGHT]
             ].astype(int)
-            return self.node(ix_c1), self.node(ix_c2)
+            return self._nodes[ix_c1], self._nodes[ix_c2]
 
-    def _linkage_for_node(self, index: int):
-        return self._linkage_matrix[index - self.n_leaves]
+    @property
+    def n_leaves(self) -> int:
+        return len(self) - len(self._linkage_matrix)
+
+    def __len__(self) -> int:
+        return len(self._nodes)
+
+    def __getitem__(self, item: int) -> Node:
+        return self._nodes[item]
