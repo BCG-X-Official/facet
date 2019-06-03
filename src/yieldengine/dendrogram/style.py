@@ -147,11 +147,7 @@ class FeatMapStyle(MatplotStyle):
         )
 
         weight_percent = weight * 100
-        label = (
-            f"{weight_percent :.2g}%"
-            if round(weight_percent, 1) < 100
-            else f"{weight_percent :.3g}%"
-        )
+        label = f"{weight_percent :1000.3g}%"
         fig = self._ax.figure
         (x0, _), (x1, _) = self._ax.transData.inverted().transform(
             mt.Text(0, 0, label, figure=fig).get_window_extent(
