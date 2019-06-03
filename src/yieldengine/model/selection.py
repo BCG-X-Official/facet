@@ -1,3 +1,4 @@
+import re
 from itertools import chain
 from typing import *
 
@@ -6,13 +7,15 @@ from sklearn.model_selection import BaseCrossValidator, GridSearchCV
 from yieldengine import Sample
 from yieldengine.model import Model
 
+ParameterGrid = Dict[str, List[Any]]
+
 
 class ModelGrid:
     def __init__(
         self,
         model: Model,
-        estimator_parameters: Dict[str, Any],
-        preprocessing_parameters: Optional[Dict[str, Any]] = None,
+        estimator_parameters: ParameterGrid,
+        preprocessing_parameters: Optional[ParameterGrid] = None,
     ) -> None:
         self._model = model
         self._estimator_parameters = estimator_parameters
@@ -43,22 +46,24 @@ class ModelGrid:
         return self._model
 
     @property
-    def estimator_parameters(self) -> Dict[str, Any]:
+    def estimator_parameters(self) -> ParameterGrid:
         return self._estimator_parameters
 
     @property
-    def preprocessing_parameters(self) -> Optional[Dict[str, Any]]:
+    def preprocessing_parameters(self) -> Optional[ParameterGrid]:
         return self._preprocessing_parameters
 
     @property
-    def parameters(self) -> Dict[str, Any]:
+    def parameters(self) -> ParameterGrid:
         return self._grid
 
 
 class ModelEvaluation(NamedTuple):
     model: Model
+    parameters: Dict[str, Any]
     test_score_mean: float
     test_score_std: float
+    test_scores: Tuple[float]
     ranking_score: float
 
 
@@ -154,21 +159,57 @@ class ModelRanker:
         if ranking_scorer is None:
             ranking_scorer = ModelRanker.default_ranking_scorer
 
+        #
         # consolidate results of all searchers into "results"
+        #
+
+        def _fold_scores(
+            cv_results: Mapping[str, Sequence[float]]
+        ) -> Iterator[Tuple[float]]:
+            """
+            helper function;  for each model in the grid returns a tuple of test scores across all folds.
+            The length of the tuple is equal to the number of folds that were tested
+            The test scores are sorted in the order the folds were tested
+            :param cv_results: the GridSearchCV object's results dictionary
+            :return: the list of fold/test score tuples per scored model
+            """
+            # the splits are stored in the cv_results using keys 'split0...' thru 'split<nn>...'
+            # match these dictionary keys in cv_results; ignore all other keys
+            fold_key_matches: List[Tuple[str, Match]] = [
+                (key, re.fullmatch(pattern=r"split(\d+)_test_score", string=key))
+                for key in cv_results.keys()
+            ]
+
+            # extract the integer indices from the matched results keys
+            # create tuples (index, key)
+            fold_keys_sorted: List[Tuple[int, str]] = sorted(
+                (
+                    (int(match.group(1)), key)
+                    for key, match in fold_key_matches
+                    if match is not None
+                )
+            )
+
+            # return the list of fold/test score tuples (need to pivot the array of arrays)
+            return zip(*[cv_results[key] for _, key in fold_keys_sorted])
+
         scorings = [
             ModelEvaluation(
                 model=grid.model.clone(parameters=params),
+                parameters=params,
                 test_score_mean=test_score_mean,
                 test_score_std=test_score_std,
+                test_scores=test_scores,
                 # compute the final score using function defined above:
                 ranking_score=ranking_scorer(test_score_mean, test_score_std),
             )
-            for search, grid in searchers
+            for searcher, grid in searchers
             # we read and iterate over these 3 attributes from cv_results_:
-            for params, test_score_mean, test_score_std in zip(
-                search.cv_results_[ModelRanker.F_PARAMETERS],
-                search.cv_results_[ModelRanker.F_MEAN_TEST_SCORE],
-                search.cv_results_[ModelRanker.F_SD_TEST_SCORE],
+            for params, test_score_mean, test_score_std, test_scores in zip(
+                searcher.cv_results_[ModelRanker.F_PARAMETERS],
+                searcher.cv_results_[ModelRanker.F_MEAN_TEST_SCORE],
+                searcher.cv_results_[ModelRanker.F_SD_TEST_SCORE],
+                _fold_scores(searcher.cv_results_),
             )
         ]
 
@@ -181,35 +222,28 @@ def summary_report(ranking: Sequence[ModelEvaluation]) -> str:
     :return: a summary string of the model ranking
     """
 
-    def _model_name(ranked_model: ModelEvaluation) -> str:
-        return ranked_model.model.estimator.__class__.__name__
+    def _model_name(evaluation: ModelEvaluation) -> str:
+        return evaluation.model.estimator.__class__.__name__
 
-    name_width = max([len(_model_name(ranked_model)) for ranked_model in ranking])
-
-    def parameters(params: Dict[str, Iterable[Any]]) -> str:
-        return "\n    ".join(
+    def _parameters(params: Dict[str, Iterable[Any]]) -> str:
+        return ",".join(
             [
                 f"{param_name}={param_value}"
                 for param_name, param_value in params.items()
             ]
         )
 
+    name_width = max([len(_model_name(ranked_model)) for ranked_model in ranking])
+
     return "\n".join(
         [
             f"Rank {rank + 1:2d}: "
-            f"{_model_name(ranked_model):>{name_width}s}, "
-            f"Score={ranked_model.ranking_score:9.3g}, "
-            f"Test mean={ranked_model.test_score_mean:9.3g}, "
-            f"Test std={ranked_model.test_score_std:9.3g}"
-            "\nEstimator parameters:"
-            f"\n    {parameters(ranked_model.model.estimator.get_params())}"
-            + (
-                ""
-                if ranked_model.model.preprocessing is None
-                else "\nPreprocessing parameters:"
-                f"\n    {parameters(ranked_model.model.preprocessing.get_params())}"
-            )
-            + "\n"
-            for rank, ranked_model in enumerate(ranking)
+            f"{_model_name(evaluation):>{name_width}s}, "
+            f"Score={evaluation.ranking_score:9.3g}, "
+            f"Test mean={evaluation.test_score_mean:9.3g}, "
+            f"Test std={evaluation.test_score_std:9.3g}, "
+            f"Parameters={{{_parameters(evaluation.parameters)}}}"
+            "\n"
+            for rank, evaluation in enumerate(ranking)
         ]
     )
