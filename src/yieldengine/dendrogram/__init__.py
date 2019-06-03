@@ -50,7 +50,7 @@ class DendrogramDrawer:
 
     def draw(self) -> None:
         self._style.draw_title(self._title)
-        tree_info = self._draw(node=self._linkage_tree.root(), y=0, width_relative=1.0)
+        tree_info = self._draw(node=self._linkage_tree.root, y=0, width_relative=1.0)
         self._style.draw_leaf_labels(tree_info.labels)
 
     def _draw(self, node: Node, y: int, width_relative: float) -> _SubtreeInfo:
