@@ -49,14 +49,6 @@ class PipelineDF(DataFrameTransformer[Pipeline]):
     def _make_base_transformer(cls, **kwargs) -> Pipeline:
         return Pipeline(**kwargs)
 
-    def _get_columns_out(self) -> pd.Index:
-        # iterate backwards through transformers to get output columns of last one
-        for _, df_transformer in self._transform_steps()[::-1]:
-            if df_transformer is not None:
-                return df_transformer.columns_out
-
-        return self.columns_in
-
     def _get_columns_original(self) -> pd.Series:
         col_mappings = [
             df_transformer.columns_original
@@ -78,11 +70,7 @@ class PipelineDF(DataFrameTransformer[Pipeline]):
                     _columns_original
                 ].values
 
-        return pd.Series(
-            index=_columns_out,
-            data=_columns_original,
-            name=DataFrameTransformer.F_COLUMN_ORIGINAL,
-        )
+        return pd.Series(index=_columns_out, data=_columns_original)
 
     @property
     def steps(self) -> Sequence[Tuple[str, Union[DataFrameTransformer, BaseEstimator]]]:
@@ -153,6 +141,7 @@ class PipelineDF(DataFrameTransformer[Pipeline]):
             base_pipeline = self.base_transformer
             if ind.step not in (1, None):
                 raise ValueError("Pipeline slicing only supports a step of 1")
+            # noinspection PyTypeChecker
             return self.__class__(
                 steps=base_pipeline.steps[ind],
                 memory=base_pipeline.memory,

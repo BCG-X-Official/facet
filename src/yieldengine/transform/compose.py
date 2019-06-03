@@ -1,6 +1,5 @@
 import logging
 from functools import reduce
-from itertools import chain
 from typing import *
 
 import pandas as pd
@@ -24,12 +23,12 @@ class ColumnTransformerDF(DataFrameTransformer[ColumnTransformer]):
             )
 
         if not (
-                all(
-                    [
-                        isinstance(transformer, DataFrameTransformer)
-                        for _, transformer, _ in column_transformer.transformers
-                    ]
-                )
+            all(
+                [
+                    isinstance(transformer, DataFrameTransformer)
+                    for _, transformer, _ in column_transformer.transformers
+                ]
+            )
         ):
             raise ValueError(
                 "arg column_transformer must only contain instances of "
@@ -41,18 +40,6 @@ class ColumnTransformerDF(DataFrameTransformer[ColumnTransformer]):
     @classmethod
     def _make_base_transformer(cls, **kwargs) -> ColumnTransformer:
         return ColumnTransformer(**kwargs)
-
-    def _get_columns_out(self) -> pd.Index:
-        # construct the index from the columns in the fitted transformers
-        return pd.Index(
-            data=chain(
-                *[
-                    df_transformer.columns_out
-                    for df_transformer in self._inner_transformers()
-                ]
-            ),
-            name=DataFrameTransformer.F_COLUMN,
-        )
 
     def _get_columns_original(self) -> pd.Series:
         """
@@ -72,6 +59,7 @@ class ColumnTransformerDF(DataFrameTransformer[ColumnTransformer]):
     def _inner_transformers(self) -> Iterable[DataFrameTransformer]:
         return (
             df_transformer
-            for _, df_transformer, columns in self.base_transformer.transformers_ if len(columns) > 0
+            for _, df_transformer, columns in self.base_transformer.transformers_
+            if len(columns) > 0
             if df_transformer != "drop"
         )
