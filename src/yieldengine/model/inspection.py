@@ -14,7 +14,7 @@ from sklearn.pipeline import Pipeline
 
 from yieldengine import deprecated, Sample
 from yieldengine.dendrogram import LinkageTree
-from yieldengine.model import Model
+from yieldengine.model import Model, PipelineDF
 
 log = logging.getLogger(__name__)
 
@@ -91,6 +91,16 @@ class ModelInspector:
             self.predictions_for_all_samples()
         return self._model_by_fold[fold].estimator
 
+    def pipeline(self, fold: int) -> PipelineDF:
+        """
+        :param fold: start index of test fold
+        :return: the pipeline that was used to predict the dependent variable of
+        the test fold
+        """
+        if self._model_by_fold is None:
+            self.predictions_for_all_samples()
+        return self._model_by_fold[fold].pipeline()
+
     def predictions_for_all_samples(self) -> pd.DataFrame:
         """
         For each fold of this Predictor's CV, fit the estimator and predict all
@@ -149,6 +159,13 @@ class ModelInspector:
         )
 
         return self._predictions_for_all_samples
+
+    def predictions_for_fold(self, fold_id: int) -> pd.Series:
+        all_predictions = self.predictions_for_all_samples()
+        return all_predictions.loc[
+            all_predictions[ModelInspector.F_FOLD_ID] == fold_id,
+            ModelInspector.F_PREDICTION,
+        ]
 
     def shap_matrix(self) -> pd.DataFrame:
         if self._shap_matrix is not None:
