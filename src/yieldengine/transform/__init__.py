@@ -57,28 +57,22 @@ class DataFrameTransformer(
 
     @property
     def columns_out(self) -> pd.Index:
-        self._ensure_fitted()
-        if self._columns_out is None:
-            self._columns_out = self._get_columns_out()
-        return self._columns_out
+        return self.columns_original.index
 
     @property
     def columns_original(self) -> pd.Series:
         self._ensure_fitted()
         if self._columns_original is None:
-            self._columns_original = self._get_columns_original()
+            self._columns_original = (
+                self._get_columns_original()
+                .rename(DataFrameTransformer.F_COLUMN_ORIGINAL)
+                .rename_axis(index=DataFrameTransformer.F_COLUMN)
+            )
         return self._columns_original
 
     def _ensure_fitted(self):
         if not self.is_fitted():
             raise RuntimeError("transformer not fitted")
-
-    @abstractmethod
-    def _get_columns_out(self) -> pd.Index:
-        """
-        :returns column labels for arrays returned by the fitted transformer
-        """
-        pass
 
     @abstractmethod
     def _get_columns_original(self) -> pd.Series:
@@ -248,12 +242,16 @@ class ColumnPreservingTransformer(
     All output columns of a ColumnPreservingTransformer have the same names as their associated input columns
     """
 
+    @abstractmethod
+    def _get_columns_out(self) -> pd.Index:
+        """
+        :returns column labels for arrays returned by the fitted transformer
+        """
+        pass
+
     def _get_columns_original(self) -> pd.Series:
-        return pd.Series(
-            index=self.columns_out,
-            data=self.columns_out.values,
-            name=DataFrameTransformer.F_COLUMN_ORIGINAL,
-        )
+        columns_out = self._get_columns_out()
+        return pd.Series(index=columns_out, data=columns_out.values)
 
 
 class ConstantColumnTransformer(
