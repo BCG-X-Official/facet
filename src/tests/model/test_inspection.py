@@ -118,8 +118,8 @@ def test_model_inspection(available_cpus: int) -> None:
         corr_matrix: pd.DataFrame = mi.feature_dependency_matrix()
 
         # check number of rows
-        assert len(corr_matrix) == len(test_sample.feature_names)
-        assert len(corr_matrix.columns) == len(test_sample.feature_names)
+        assert len(corr_matrix) == len(test_sample.feature_names) - 1
+        assert len(corr_matrix.columns) == len(test_sample.feature_names) - 1
 
         # check correlation values
         for c in corr_matrix.columns:
