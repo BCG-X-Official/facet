@@ -33,6 +33,7 @@ class ModelInspector:
 
     F_FOLD_ID = "fold_id"
     F_PREDICTION = "prediction"
+    F_TARGET = "target"
     F_FEATURE = "feature"
     F_CLUSTER_LABEL = "cluster_label"
 
@@ -106,8 +107,9 @@ class ModelInspector:
         For each fold of this Predictor's CV, fit the estimator and predict all
         values in the test set. The result is a data frame with one row per
         prediction, indexed by the observations in the sample, and with columns
-        F_FOLD_START (the numerical index of the start of the test set in the current
-        fold), F_PREDICTION (the predicted value for the given observation and fold)
+        F_FOLD_ID (the numerical index of the start of the test set in the current
+        fold), F_PREDICTION (the predicted value for the given observation and fold),
+        and F_TARGET (the actual target)
 
         Note that there can be multiple prediction rows per observation if the test
         folds overlap.
@@ -143,8 +145,10 @@ class ModelInspector:
 
             return pd.DataFrame(
                 data={
-                    self.F_FOLD_ID: fold_id,
-                    self.F_PREDICTION: pipeline.predict(X=test_sample.features),
+                    ModelInspector.F_FOLD_ID: fold_id,
+                    ModelInspector.F_PREDICTION: pipeline.predict(
+                        X=test_sample.features
+                    ),
                 },
                 index=test_sample.index,
             )
@@ -156,7 +160,7 @@ class ModelInspector:
                     self.cv.split(sample.features, sample.target)
                 )
             ]
-        )
+        ).join(sample.target.rename(ModelInspector.F_TARGET))
 
         return self._predictions_for_all_samples
 
