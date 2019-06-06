@@ -24,15 +24,9 @@ class OneHotEncoderDF(DataFrameTransformer[OneHotEncoder]):
     def _make_base_transformer(cls, **kwargs) -> OneHotEncoder:
         return OneHotEncoder(**kwargs)
 
-    def _get_columns_out(self) -> pd.Index:
-        return pd.Index(
-            self.base_transformer.get_feature_names(self.columns_in),
-            name=DataFrameTransformer.F_COLUMN,
-        )
-
     def _get_columns_original(self) -> pd.Series:
         return pd.Series(
-            index=self.columns_out,
+            index=pd.Index(self.base_transformer.get_feature_names(self.columns_in)),
             data=[
                 column_original
                 for column_original, category in zip(
@@ -40,7 +34,6 @@ class OneHotEncoderDF(DataFrameTransformer[OneHotEncoder]):
                 )
                 for _ in category
             ],
-            name=DataFrameTransformer.F_COLUMN_ORIGINAL,
         )
 
 
