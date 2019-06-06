@@ -16,6 +16,10 @@ log = logging.getLogger(__name__)
 RgbaColor = Tuple[float, float, float, float]
 
 
+_COLOR_BLACK = "black"
+_COLOR_WHITE = "white"
+
+
 class _PercentageFormatter(Formatter):
     def __call__(self, x, pos=None):
         return f"{x * 100.0:.0f}%"
@@ -108,6 +112,9 @@ class FeatMapStyle(MatplotStyle):
     def __init__(self, ax: Axes, min_weight: float = 0.01) -> None:
         super().__init__(ax=ax, min_weight=min_weight)
         ax.margins(0, 0)
+        ax.set_xlim(0, 1)
+        self._figure = ax.figure
+        self._renderer = ax.figure.canvas.get_renderer()
 
     def draw_link_leg(
         self, bottom: float, top: float, first_leaf: int, n_leaves: int, weight: float
@@ -142,7 +149,7 @@ class FeatMapStyle(MatplotStyle):
             left=[x],
             align="edge",
             color=fill_color,
-            edgecolor="white",
+            edgecolor=_COLOR_WHITE,
             linewidth=1,
         )
 
@@ -152,16 +159,14 @@ class FeatMapStyle(MatplotStyle):
             if round(weight_percent, 1) < 100
             else f"{weight_percent:.3g}%"
         )
-        fig = self._ax.figure
+        fig = self._figure
         (x0, _), (x1, _) = self._ax.transData.inverted().transform(
-            mt.Text(0, 0, label, figure=fig).get_window_extent(
-                fig.canvas.get_renderer()
-            )
+            mt.Text(0, 0, label, figure=fig).get_window_extent(self._renderer)
         )
 
         if abs(x1 - x0) <= w:
             fill_luminance = sum(fill_color[:3]) / 3
-            text_color = "white" if fill_luminance < 0.5 else "black"
+            text_color = _COLOR_WHITE if fill_luminance < 0.5 else _COLOR_BLACK
             self._ax.text(
                 x + w / 2,
                 y + (h - 1) / 2,
