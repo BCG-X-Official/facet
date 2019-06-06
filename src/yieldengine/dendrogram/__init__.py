@@ -2,6 +2,8 @@ import logging
 from abc import ABC, abstractmethod
 from typing import *
 
+import numpy as np
+
 from yieldengine.dendrogram.linkage import LinkageTree, Node
 
 log = logging.getLogger(__name__)
@@ -41,12 +43,28 @@ class DendrogramStyle(ABC):
 
 
 class DendrogramDrawer:
-    __slots__ = ["_title", "_linkage_tree", "_style"]
+    __slots__ = ["_title", "_linkage_tree", "_style", "_node_weight"]
 
-    def __init__(self, title: str, linkage: LinkageTree, style: DendrogramStyle):
+    def __init__(self, title: str, linkage_tree: LinkageTree, style: DendrogramStyle):
         self._title = title
-        self._linkage_tree = linkage
+        self._linkage_tree = linkage_tree
         self._style = style
+        self._node_weight = node_weight = np.zeros(len(linkage_tree), float)
+
+        def calculate_weights(n: Node) -> (float, int):
+            if n.is_leaf:
+                weight = n.weight
+                n_leaves = 1
+            else:
+                l, r = linkage_tree.children(n)
+                lw, ln = calculate_weights(l)
+                rw, rn = calculate_weights(r)
+                weight = lw + rw
+                n_leaves = ln + rn
+            node_weight[n.index] = weight / n_leaves
+            return weight, n_leaves
+
+        calculate_weights(linkage_tree.root)
 
     def draw(self) -> None:
         self._style.draw_title(self._title)
@@ -67,6 +85,12 @@ class DendrogramDrawer:
 
         else:
             child_left, child_right = self._linkage_tree.children(node=node)
+            if (
+                self._node_weight[child_left.index]
+                > self._node_weight[child_right.index]
+            ):
+                child_left, child_right = child_right, child_left
+
             info_left = self._draw(
                 node=child_left, y=y, width_relative=node.children_distance
             )
