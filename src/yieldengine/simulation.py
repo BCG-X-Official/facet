@@ -2,9 +2,7 @@ from typing import *
 
 import numpy as np
 import pandas as pd
-from sklearn.model_selection import BaseCrossValidator
 
-from yieldengine import Sample
 from yieldengine.model.inspection import ModelInspector
 
 
@@ -14,11 +12,9 @@ class UnivariateSimulation:
     F_PARAMETER_VALUE = "parameter_value"
     F_RELATIVE_YIELD_CHANGE = "relative_yield_change"
 
-    def __init__(
-        self, cv: BaseCrossValidator, sample: Sample, inspector: ModelInspector
-    ):
-        self._sample = sample
-        self._cv = cv
+    def __init__(self, inspector: ModelInspector):
+        self._sample = inspector.sample
+        self._cv = inspector.cv
         self._inspector = inspector
 
     def simulate_yield_change(
