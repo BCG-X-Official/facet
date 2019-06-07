@@ -212,7 +212,7 @@ class Sample:
             times_observed[
                 times_observed / sum(times_observed) >= min_relative_frequency
             ]
-            .index[limit_observations]
+            .index[:limit_observations]
             .to_numpy()
         )
 
