@@ -1,10 +1,10 @@
+import copy
 from typing import *
 
 import numpy as np
 import pandas as pd
 from sklearn.base import BaseEstimator
 from sklearn.model_selection import BaseCrossValidator
-from sklearn.pipeline import Pipeline
 
 from yieldengine import Sample
 from yieldengine.model import Model, PipelineDF
@@ -68,9 +68,28 @@ class PredictorCV:
             self.predictions_for_all_samples()
         return self._model_by_fold[fold].estimator
 
+    def _is_fitted(self) -> bool:
+        return self._model_by_fold is not None
+
+    def _fit(self) -> None:
+        self._model_by_fold: Dict[int, Model] = {}
+
+        sample = self.sample
+
+        for fold_id, (train_indices, _) in enumerate(
+            self.cv.split(sample.features, sample.target)
+        ):
+            train_sample = sample.select_observations(numbers=train_indices)
+
+            self._model_by_fold[fold_id] = model = self._model.clone()
+
+            pipeline = model.pipeline()
+
+            pipeline.fit(X=train_sample.features, y=train_sample.target)
+
     def predictions_for_all_samples(self) -> pd.DataFrame:
         """
-        For each fold of this Predictor's CV, fit the estimator and predict all
+        For each fold of this Predictor's CV, predict all
         values in the test set. The result is a data frame with one row per
         prediction, indexed by the observations in the sample, and with columns
         F_FOLD_ID (the numerical index of the start of the test set in the current
@@ -83,31 +102,18 @@ class PredictorCV:
         :return: the data frame with the predictions per observation and test fold
         """
 
-        # 1. execute the preprocessing pipeline on the sample
-        # 2. get fold splits across the preprocessed observations using self._cv
-        # 3. for each split
-        #       - clone the estimator using function sklearn.base.clone()
-        #       - fit the estimator on the X and y of train set
-        #       - predict y for test set
-
         if self._predictions_for_all_samples is not None:
             return self._predictions_for_all_samples
 
-        self._model_by_fold: Dict[int, Pipeline] = {}
+        if not self._is_fitted():
+            self._fit()
 
         sample = self.sample
 
-        def predict(
-            fold_id: int, train_indices: np.ndarray, test_indices: np.ndarray
-        ) -> pd.DataFrame:
-            train_sample = sample.select_observations(numbers=train_indices)
+        def predict(fold_id: int, test_indices: np.ndarray) -> pd.DataFrame:
             test_sample = sample.select_observations(numbers=test_indices)
 
-            self._model_by_fold[fold_id] = model = self._model.clone()
-
-            pipeline = model.pipeline()
-
-            pipeline.fit(X=train_sample.features, y=train_sample.target)
+            pipeline = self.pipeline(fold=fold_id)
 
             return pd.DataFrame(
                 data={
@@ -119,11 +125,16 @@ class PredictorCV:
 
         self._predictions_for_all_samples = pd.concat(
             [
-                predict(fold_id, train_indices, test_indices)
-                for fold_id, (train_indices, test_indices) in enumerate(
+                predict(fold_id, test_indices=test_indices)
+                for fold_id, (_, test_indices) in enumerate(
                     self.cv.split(sample.features, sample.target)
                 )
             ]
         ).join(sample.target.rename(PredictorCV.F_TARGET))
 
         return self._predictions_for_all_samples
+
+    def copy_with_sample(self, sample: Sample):
+        copied_predictor = copy.copy(self)
+        copied_predictor._sample = sample
+        return copied_predictor
