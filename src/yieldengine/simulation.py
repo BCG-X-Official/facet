@@ -3,38 +3,43 @@ from typing import *
 import numpy as np
 import pandas as pd
 
-from yieldengine.model.inspection import ModelInspector
+from yieldengine.model.prediction import PredictorCV
 
 
 class UnivariateSimulation:
+    __slots__ = ["_predictor"]
 
     F_FOLD_ID = "fold_id"
     F_PARAMETER_VALUE = "parameter_value"
     F_RELATIVE_YIELD_CHANGE = "relative_yield_change"
 
-    def __init__(self, inspector: ModelInspector):
-        self._sample = inspector.sample
-        self._cv = inspector.cv
-        self._inspector = inspector
+    def __init__(self, predictor: PredictorCV):
+        self._predictor = predictor
+
+    @property
+    def predictor(self) -> PredictorCV:
+        return self.predictor
 
     def simulate_yield_change(
         self, parameterized_feature: str, parameter_values: np.ndarray
     ) -> pd.DataFrame:
-        if parameterized_feature not in self._sample.feature_names:
+        if parameterized_feature not in self.predictor.sample.feature_names:
             raise ValueError(f"Feature '{parameterized_feature}' not in sample")
 
         results = []
 
         for fold_id, (train_indices, test_indices) in enumerate(
-            self._cv.split(self._sample.features, self._sample.target)
+            self.predictor.cv.split(
+                self.predictor.sample.features, self.predictor.sample.target
+            )
         ):
             for parameter_value in parameter_values:
-                pipeline = self._inspector.pipeline(fold_id)
-                predictions_for_fold: np.ndarray = self._inspector.predictions_for_fold(
+                pipeline = self.predictor.pipeline(fold_id)
+                predictions_for_fold: np.ndarray = self.predictor.predictions_for_fold(
                     fold_id=fold_id
                 )
 
-                test_data_features = self._sample.select_observations(
+                test_data_features = self.predictor.sample.select_observations(
                     numbers=test_indices
                 ).features.copy()
 
