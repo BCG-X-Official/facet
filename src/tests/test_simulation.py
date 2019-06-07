@@ -39,7 +39,7 @@ def test_univariate_simulation(
 
     mi = ModelInspector(model=model_ranking[0].model, cv=circular_cv, sample=sample)
 
-    sim = UnivariateSimulation(cv=circular_cv, sample=sample, inspector=mi)
+    sim = UnivariateSimulation(inspector=mi)
 
     res = sim.simulate_yield_change(
         parameterized_feature="Step4-6 RawMat Vendor Compound08 Purity (#)",
