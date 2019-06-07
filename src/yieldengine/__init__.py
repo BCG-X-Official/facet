@@ -198,5 +198,15 @@ class Sample:
 
         return subsample
 
+    def observed_feature_values(
+        self, feature_name: str, interpolate: bool = True
+    ) -> np.ndarray:
+        observed = self._observations.loc[:, feature_name].unique()
+
+        if not interpolate:
+            return observed
+        else:
+            pass
+
     def __len__(self) -> int:
         return len(self._observations)
