@@ -13,6 +13,7 @@ from sklearn.utils import Bunch
 from yieldengine import Sample
 from yieldengine.model import Model
 from yieldengine.model.inspection import ModelInspector
+from yieldengine.model.prediction import PredictorCV
 from yieldengine.model.selection import (
     ModelEvaluation,
     ModelGrid,
@@ -86,18 +87,16 @@ def test_model_inspection(available_cpus: int) -> None:
     ][0]
 
     for model_evaluation in best_svr, best_lgbm:
-        mi = ModelInspector(
-            model=model_evaluation.model, cv=test_cv, sample=test_sample
-        )
+        mp = PredictorCV(model=model_evaluation.model, cv=test_cv, sample=test_sample)
 
         # test predictions_for_all_samples
-        predictions_df: pd.DataFrame = mi.predictions_for_all_samples()
+        predictions_df: pd.DataFrame = mp.predictions_for_all_samples()
 
-        assert ModelInspector.F_FOLD_ID in predictions_df.columns
-        assert ModelInspector.F_PREDICTION in predictions_df.columns
+        assert PredictorCV.F_FOLD_ID in predictions_df.columns
+        assert PredictorCV.F_PREDICTION in predictions_df.columns
 
         # check number of fold-starts
-        assert predictions_df[ModelInspector.F_FOLD_ID].nunique() == N_FOLDS
+        assert predictions_df[PredictorCV.F_FOLD_ID].nunique() == N_FOLDS
 
         # check correct number of rows
         ALLOWED_VARIANCE = 0.01
@@ -107,6 +106,7 @@ def test_model_inspection(available_cpus: int) -> None:
             <= (len(test_sample) * (TEST_RATIO + ALLOWED_VARIANCE) * N_FOLDS)
         )
 
+        mi = ModelInspector(predictor=mp)
         # make and check shap value matrix
         shap_matrix = mi.shap_matrix()
 
@@ -130,7 +130,7 @@ def test_model_inspection(available_cpus: int) -> None:
                 <= 1.0
             )
 
-        estimator = mi.cluster_dependent_features()
+        linkage_tree = mi.cluster_dependent_features()
 
 
 def test_model_inspection_with_encoding(
@@ -163,7 +163,8 @@ def test_model_inspection_with_encoding(
         if isinstance(model_evaluation.model.estimator, LGBMRegressor)
     ][0]
     for model_evaluation in [best_lgbm]:
-        mi = ModelInspector(model=model_evaluation.model, cv=circular_cv, sample=sample)
+        mp = PredictorCV(model=model_evaluation.model, cv=circular_cv, sample=sample)
+        mi = ModelInspector(predictor=mp)
 
         shap_matrix = mi.shap_matrix()
 
@@ -171,4 +172,4 @@ def test_model_inspection_with_encoding(
         corr_matrix: pd.DataFrame = mi.feature_dependency_matrix()
 
         # cluster feature importances
-        estimator = mi.cluster_dependent_features()
+        linkage_tree = mi.cluster_dependent_features()
