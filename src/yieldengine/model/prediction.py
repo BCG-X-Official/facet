@@ -5,7 +5,6 @@ import numpy as np
 import pandas as pd
 from sklearn.base import BaseEstimator
 from sklearn.model_selection import BaseCrossValidator
-from sklearn.pipeline import Pipeline
 
 from yieldengine import Sample
 from yieldengine.model import Model, PipelineDF
@@ -73,7 +72,7 @@ class PredictorCV:
         return self._model_by_fold is not None
 
     def _fit(self) -> None:
-        self._model_by_fold: Dict[int, Pipeline] = {}
+        self._model_by_fold: Dict[int, Model] = {}
 
         sample = self.sample
 
