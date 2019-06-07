@@ -4,7 +4,7 @@ from typing import *
 import pandas as pd
 
 from yieldengine import Sample
-from yieldengine.model.inspection import ModelInspector
+from yieldengine.model.prediction import PredictorCV
 from yieldengine.model.selection import ModelEvaluation, ModelGrid, ModelRanker
 from yieldengine.model.validation import CircularCrossValidator
 from yieldengine.simulation import UnivariateSimulation
@@ -36,9 +36,9 @@ def test_univariate_simulation(
         sample=sample, n_jobs=available_cpus
     )
 
-    mi = ModelInspector(model=model_ranking[0].model, cv=circular_cv, sample=sample)
+    mp = PredictorCV(model=model_ranking[0].model, cv=circular_cv, sample=sample)
 
-    sim = UnivariateSimulation(inspector=mi)
+    sim = UnivariateSimulation(predictor=mp)
 
     parameterized_feature = "Step4-6 RawMat Vendor Compound08 Purity (#)"
 
