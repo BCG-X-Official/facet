@@ -3,6 +3,7 @@ from typing import *
 import numpy as np
 import pandas as pd
 
+from yieldengine import Sample
 from yieldengine.model.prediction import PredictorCV
 
 
@@ -28,30 +29,37 @@ class UnivariateSimulation:
 
         results = []
 
-        for fold_id, (train_indices, test_indices) in enumerate(
-            self.predictor.cv.split(
-                self.predictor.sample.features, self.predictor.sample.target
+        for parameter_value in parameter_values:
+            sample_df = self.predictor.sample.observations.copy()
+            sample_df.loc[:, parameterized_feature] = parameter_value
+
+            synthetic_sample = Sample(
+                observations=sample_df, target_name=self.predictor.sample.target_name
             )
-        ):
-            for parameter_value in parameter_values:
-                pipeline = self.predictor.pipeline(fold_id)
-                predictions_for_fold: np.ndarray = self.predictor.predictions_for_fold(
-                    fold_id=fold_id
-                )
 
-                test_data_features = self.predictor.sample.select_observations(
-                    numbers=test_indices
-                ).features.copy()
+            predictor_for_syn_sample = self.predictor.copy_with_sample(
+                sample=synthetic_sample
+            )
 
-                test_data_features.loc[:, parameterized_feature] = parameter_value
+            hist_sample_predictions = self.predictor.predictions_for_all_samples()
+            syn_sample_predictions = (
+                predictor_for_syn_sample.predictions_for_all_samples()
+            )
 
-                predictions_simulated: np.ndarray = pipeline.predict(
-                    X=test_data_features
-                )
+            for fold_id in self.predictor.fold_ids:
+                predictions_for_fold_hist: np.ndarray = hist_sample_predictions.loc[
+                    hist_sample_predictions[PredictorCV.F_FOLD_ID] == fold_id,
+                    PredictorCV.F_PREDICTION,
+                ]
+
+                predictions_for_fold_syn: np.ndarray = syn_sample_predictions.loc[
+                    syn_sample_predictions[PredictorCV.F_FOLD_ID] == fold_id,
+                    PredictorCV.F_PREDICTION,
+                ]
 
                 relative_yield_change = (
-                    predictions_simulated.mean(axis=0)
-                    / predictions_for_fold.mean(axis=0)
+                    predictions_for_fold_syn.mean(axis=0)
+                    / predictions_for_fold_hist.mean(axis=0)
                 ) - 1
 
                 results.append(
