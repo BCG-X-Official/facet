@@ -29,6 +29,8 @@ class UnivariateSimulation:
 
         results = []
 
+        self.predictor.fit()
+
         for parameter_value in parameter_values:
             sample_df = self.predictor.sample.observations.copy()
             sample_df.loc[:, parameterized_feature] = parameter_value
@@ -41,21 +43,16 @@ class UnivariateSimulation:
                 sample=synthetic_sample
             )
 
-            hist_sample_predictions = self.predictor.predictions_for_all_samples()
-            syn_sample_predictions = (
-                predictor_for_syn_sample.predictions_for_all_samples()
-            )
+            predictor_for_syn_sample.fit()
 
             for fold_id in self.predictor.fold_ids:
-                predictions_for_fold_hist: np.ndarray = hist_sample_predictions.loc[
-                    hist_sample_predictions[PredictorCV.F_FOLD_ID] == fold_id,
-                    PredictorCV.F_PREDICTION,
-                ]
+                predictions_for_fold_hist: np.ndarray = self.predictor.predictions_for_fold(
+                    fold_id=fold_id
+                )
 
-                predictions_for_fold_syn: np.ndarray = syn_sample_predictions.loc[
-                    syn_sample_predictions[PredictorCV.F_FOLD_ID] == fold_id,
-                    PredictorCV.F_PREDICTION,
-                ]
+                predictions_for_fold_syn: np.ndarray = predictor_for_syn_sample.predictions_for_fold(
+                    fold_id=fold_id
+                )
 
                 relative_yield_change = (
                     predictions_for_fold_syn.mean(axis=0)
