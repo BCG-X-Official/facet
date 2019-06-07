@@ -141,4 +141,5 @@ class PredictorCV:
     def copy_with_sample(self, sample: Sample):
         copied_predictor = copy.copy(self)
         copied_predictor._sample = sample
+        copied_predictor._predictions_for_all_samples = None
         return copied_predictor
