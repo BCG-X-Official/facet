@@ -75,7 +75,10 @@ class PredictorCV:
     def _is_fitted(self) -> bool:
         return self._model_by_fold is not None
 
-    def _fit(self) -> None:
+    def fit(self) -> None:
+        if self._is_fitted():
+            return
+
         self._model_by_fold: Dict[int, Model] = {}
 
         sample = self.sample
@@ -110,7 +113,7 @@ class PredictorCV:
             return self._predictions_for_all_samples
 
         if not self._is_fitted():
-            self._fit()
+            self.fit()
 
         sample = self.sample
 
