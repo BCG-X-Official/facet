@@ -18,7 +18,7 @@ class UnivariateSimulation:
 
     @property
     def predictor(self) -> PredictorCV:
-        return self.predictor
+        return self._predictor
 
     def simulate_yield_change(
         self, parameterized_feature: str, parameter_values: np.ndarray
