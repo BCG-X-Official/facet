@@ -199,9 +199,14 @@ class Sample:
         return subsample
 
     def observed_feature_values(
-        self, feature_name: str, interpolate: bool = True
+        self,
+        feature_name: str,
+        min_relative_frequency: float = 0.05,
+        interpolate: bool = False,
     ) -> np.ndarray:
         observed = self._observations.loc[:, feature_name].unique()
+
+        # todo: implement min_relative_frequency
 
         if not interpolate:
             return observed
