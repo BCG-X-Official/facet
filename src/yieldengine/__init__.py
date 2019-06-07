@@ -208,13 +208,22 @@ class Sample:
         times_observed = self._observations.loc[:, feature_name].value_counts()
 
         observed_filtered = times_observed[
-            times_observed / sum(times_observed) > min_relative_frequency
+            times_observed / sum(times_observed) >= min_relative_frequency
         ].index.to_numpy()
 
         if not interpolate:
             return observed_filtered
         else:
-            pass
+            if (
+                feature_name
+                in self._observations.select_dtypes(
+                    exclude=[Sample.DTYPE_CATEGORICAL, Sample.DTYPE_OBJECT]
+                ).columns
+            ):
+                # todo: implement interpolation
+                pass
+            else:
+                raise TypeError("Can not interpolate object/categorical datatype")
 
     def __len__(self) -> int:
         return len(self._observations)
