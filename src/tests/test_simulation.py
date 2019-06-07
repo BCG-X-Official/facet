@@ -1,7 +1,6 @@
 import logging
 from typing import *
 
-import numpy as np
 import pandas as pd
 
 from yieldengine import Sample
@@ -41,9 +40,13 @@ def test_univariate_simulation(
 
     sim = UnivariateSimulation(inspector=mi)
 
+    parameterized_feature = "Step4-6 RawMat Vendor Compound08 Purity (#)"
+
     res = sim.simulate_yield_change(
-        parameterized_feature="Step4-6 RawMat Vendor Compound08 Purity (#)",
-        parameter_values=np.asarray([32.0, 24.0, 30.0, 31.0, 28]),
+        parameterized_feature=parameterized_feature,
+        parameter_values=sample.observed_feature_values(
+            feature_name=parameterized_feature, interpolate=False
+        ),
     )
 
     log.debug(res)
