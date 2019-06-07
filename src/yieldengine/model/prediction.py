@@ -42,6 +42,10 @@ class PredictorCV:
     def model_by_fold(self) -> Optional[Dict[int, Model]]:
         return self._model_by_fold
 
+    @property
+    def fold_ids(self) -> Optional[Set[int]]:
+        return set() if self.model_by_fold is None else self.model_by_fold.keys()
+
     def pipeline(self, fold: int) -> PipelineDF:
         """
         :param fold: start index of test fold
