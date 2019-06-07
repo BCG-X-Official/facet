@@ -204,12 +204,15 @@ class Sample:
         min_relative_frequency: float = 0.05,
         interpolate: bool = False,
     ) -> np.ndarray:
-        observed = self._observations.loc[:, feature_name].unique()
 
-        # todo: implement min_relative_frequency
+        times_observed = self._observations.loc[:, feature_name].value_counts()
+
+        observed_filtered = times_observed[
+            times_observed / sum(times_observed) > min_relative_frequency
+        ].index.to_numpy()
 
         if not interpolate:
-            return observed
+            return observed_filtered
         else:
             pass
 
