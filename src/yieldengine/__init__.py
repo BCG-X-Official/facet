@@ -201,14 +201,29 @@ class Sample:
     def observed_feature_values(
         self,
         feature_name: str,
-        min_relative_frequency: float = 0.05,
+        min_relative_frequency: float = 0.10,
         limit_observations: int = 20,
     ) -> np.ndarray:
+        """
+        Get an array of observed values for a particular feature
 
+        :param feature_name: name of the feature
+        :param min_relative_frequency: the relative frequency with which a particular
+        feature value has to occur within the sample, for it to be selected. Not used
+        for non-discrete features or features with high variability (when no single
+        feature value occurs more than "min_relative_frequency" times)
+        :param limit_observations: how many observation-values to return at max.
+        :return: a 1D numpy array with the selected feature values
+        """
+
+        # get the series of the feature and drop NAs
         feature_series = self._observations.loc[:, feature_name].dropna()
 
+        # get value counts
         times_observed = feature_series.value_counts()
 
+        # get relative frequency for each feature value and filter using
+        # min_relative_frequency, then limit using limit_observations
         observed_filtered = (
             times_observed[
                 times_observed / sum(times_observed) >= min_relative_frequency
@@ -217,16 +232,36 @@ class Sample:
             .to_numpy()
         )
 
-        if len(observed_filtered) == 0 or not np.all(
-            feature_series == feature_series.astype(int)
+        # feature is categorical or object? -> always only use frequency based approach
+        if (
+            feature_name
+            in self._observations.select_dtypes(
+                [Sample.DTYPE_OBJECT, Sample.DTYPE_CATEGORICAL]
+            ).columns
         ):
+            return observed_filtered
+
+        # feature is numeric and either
+        #  a) feature is non-discrete/non-int datatype
+        #  b) above approach did not return any feature values (i.e. because of too
+        #  much variation even in an all integer feature)
+        # --> go with approach below
+        if len(observed_filtered) == 0 or (
+            # not all values of the series convert well to int datatype without changes
+            not np.all(feature_series == feature_series.astype(int))
+        ):
+            # get a sorted array of all unique values for the feature
             unique_values = np.asarray(sorted(feature_series.unique()))
+            # are there more unique-values than allowed by the passed limit?
             if len(unique_values) > limit_observations:
+                # use np.linspace to spread out array indices evenly within bounds
                 value_samples = np.linspace(
                     0, len(unique_values) - 1, limit_observations
                 ).astype(int)
+                # return "sampled" feature values out of all unique feature values
                 return unique_values[value_samples]
             else:
+                # return all unique values, since they are within limit bound
                 return unique_values
         else:
             return observed_filtered
