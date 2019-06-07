@@ -9,43 +9,34 @@ from scipy.spatial.distance import squareform
 from shap import KernelExplainer, TreeExplainer
 from shap.explainers.explainer import Explainer
 from sklearn.base import BaseEstimator
-from sklearn.model_selection import BaseCrossValidator
-from sklearn.pipeline import Pipeline
 
-from yieldengine import deprecated, Sample
+from yieldengine import deprecated
 from yieldengine.dendrogram import LinkageTree
 from yieldengine.model import Model
+from yieldengine.model.prediction import PredictorCV
 
 log = logging.getLogger(__name__)
 
 
 class ModelInspector:
     __slots__ = [
-        "_model",
-        "_cv",
-        "_sample",
         "_shap_explainer_by_fold",
-        "_predictions_for_all_samples",
         "_shap_matrix",
         "_feature_dependency_matrix",
-        "_model_by_fold",
+        "_predictor",
     ]
 
-    F_FOLD_ID = "fold_id"
-    F_PREDICTION = "prediction"
-    F_TARGET = "target"
     F_FEATURE = "feature"
-    F_CLUSTER_LABEL = "cluster_label"
 
-    def __init__(self, model: Model, cv: BaseCrossValidator, sample: Sample) -> None:
+    def __init__(self, predictor: PredictorCV) -> None:
 
-        self._model = model
-        self._cv = cv
-        self._sample = sample
-        self._model_by_fold: Optional[Dict[int, Model]] = None
-        self._predictions_for_all_samples: Optional[pd.DataFrame] = None
         self._shap_matrix: Optional[pd.DataFrame] = None
         self._feature_dependency_matrix: Optional[pd.DataFrame] = None
+        self._predictor = predictor
+
+    @property
+    def predictor(self) -> PredictorCV:
+        return self._predictor
 
     @staticmethod
     def _make_shap_explainer(estimator: BaseEstimator, data: pd.DataFrame) -> Explainer:
@@ -74,100 +65,20 @@ class ModelInspector:
             # noinspection PyUnresolvedReferences
             return KernelExplainer(model=estimator.predict, data=data)
 
-    @property
-    def cv(self) -> BaseCrossValidator:
-        return self._cv
-
-    @property
-    def sample(self) -> Sample:
-        return self._sample
-
-    def estimator(self, fold: int) -> BaseEstimator:
-        """
-        :param fold: start index of test fold
-        :return: the estimator that was used to predict the dependent variable of
-        the test fold
-        """
-        if self._model_by_fold is None:
-            self.predictions_for_all_samples()
-        return self._model_by_fold[fold].estimator
-
-    def predictions_for_all_samples(self) -> pd.DataFrame:
-        """
-        For each fold of this Predictor's CV, fit the estimator and predict all
-        values in the test set. The result is a data frame with one row per
-        prediction, indexed by the observations in the sample, and with columns
-        F_FOLD_ID (the numerical index of the start of the test set in the current
-        fold), F_PREDICTION (the predicted value for the given observation and fold),
-        and F_TARGET (the actual target)
-
-        Note that there can be multiple prediction rows per observation if the test
-        folds overlap.
-
-        :return: the data frame with the predictions per observation and test fold
-        """
-
-        # 1. execute the preprocessing pipeline on the sample
-        # 2. get fold splits across the preprocessed observations using self._cv
-        # 3. for each split
-        #       - clone the estimator using function sklearn.base.clone()
-        #       - fit the estimator on the X and y of train set
-        #       - predict y for test set
-
-        if self._predictions_for_all_samples is not None:
-            return self._predictions_for_all_samples
-
-        self._model_by_fold: Dict[int, Pipeline] = {}
-
-        sample = self.sample
-
-        def predict(
-            fold_id: int, train_indices: np.ndarray, test_indices: np.ndarray
-        ) -> pd.DataFrame:
-            train_sample = sample.select_observations(numbers=train_indices)
-            test_sample = sample.select_observations(numbers=test_indices)
-
-            self._model_by_fold[fold_id] = model = self._model.clone()
-
-            pipeline = model.pipeline()
-
-            pipeline.fit(X=train_sample.features, y=train_sample.target)
-
-            return pd.DataFrame(
-                data={
-                    ModelInspector.F_FOLD_ID: fold_id,
-                    ModelInspector.F_PREDICTION: pipeline.predict(
-                        X=test_sample.features
-                    ),
-                },
-                index=test_sample.index,
-            )
-
-        self._predictions_for_all_samples = pd.concat(
-            [
-                predict(fold_id, train_indices, test_indices)
-                for fold_id, (train_indices, test_indices) in enumerate(
-                    self.cv.split(sample.features, sample.target)
-                )
-            ]
-        ).join(sample.target.rename(ModelInspector.F_TARGET))
-
-        return self._predictions_for_all_samples
-
     def shap_matrix(self) -> pd.DataFrame:
         if self._shap_matrix is not None:
             return self._shap_matrix
 
-        sample = self.sample
+        sample = self.predictor.sample
 
-        predictions_by_observation_and_fold = self.predictions_for_all_samples().set_index(
-            self.F_FOLD_ID, append=True
+        predictions_by_observation_and_fold = self.predictor.predictions_for_all_samples().set_index(
+            PredictorCV.F_FOLD_ID, append=True
         )
 
         def shap_matrix_for_fold(fold_id: int, fold_model: Model) -> pd.DataFrame:
 
             observation_indices_in_fold = predictions_by_observation_and_fold.xs(
-                key=fold_id, level=self.F_FOLD_ID
+                key=fold_id, level=PredictorCV.F_FOLD_ID
             ).index
 
             fold_x = sample.select_observations(
@@ -194,7 +105,7 @@ class ModelInspector:
         shap_values_df = pd.concat(
             objs=[
                 shap_matrix_for_fold(fold_id, model)
-                for fold_id, model in self._model_by_fold.items()
+                for fold_id, model in self.predictor.model_by_fold.items()
             ],
             sort=True,
         ).fillna(0.0)
