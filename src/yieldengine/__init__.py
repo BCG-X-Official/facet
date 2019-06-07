@@ -201,7 +201,7 @@ class Sample:
     def observed_feature_values(
         self,
         feature_name: str,
-        min_relative_frequency: float = 0.10,
+        min_relative_frequency: float = 0.05,
         limit_observations: int = 20,
     ) -> np.ndarray:
         """
