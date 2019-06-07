@@ -202,14 +202,19 @@ class Sample:
         self,
         feature_name: str,
         min_relative_frequency: float = 0.05,
+        limit_observations: int = 20,
         interpolate: bool = False,
     ) -> np.ndarray:
 
         times_observed = self._observations.loc[:, feature_name].value_counts()
 
-        observed_filtered = times_observed[
-            times_observed / sum(times_observed) >= min_relative_frequency
-        ].index.to_numpy()
+        observed_filtered = (
+            times_observed[
+                times_observed / sum(times_observed) >= min_relative_frequency
+            ]
+            .index[limit_observations]
+            .to_numpy()
+        )
 
         if not interpolate:
             return observed_filtered
