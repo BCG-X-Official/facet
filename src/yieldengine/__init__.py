@@ -203,10 +203,11 @@ class Sample:
         feature_name: str,
         min_relative_frequency: float = 0.05,
         limit_observations: int = 20,
-        interpolate: bool = False,
     ) -> np.ndarray:
 
-        times_observed = self._observations.loc[:, feature_name].value_counts()
+        feature_series = self._observations.loc[:, feature_name].dropna()
+
+        times_observed = feature_series.value_counts()
 
         observed_filtered = (
             times_observed[
@@ -216,19 +217,19 @@ class Sample:
             .to_numpy()
         )
 
-        if not interpolate:
-            return observed_filtered
-        else:
-            if (
-                feature_name
-                in self._observations.select_dtypes(
-                    exclude=[Sample.DTYPE_CATEGORICAL, Sample.DTYPE_OBJECT]
-                ).columns
-            ):
-                # todo: implement interpolation
-                pass
+        if len(observed_filtered) == 0 or not np.all(
+            feature_series == feature_series.astype(int)
+        ):
+            unique_values = np.asarray(sorted(feature_series.unique()))
+            if len(unique_values) > limit_observations:
+                value_samples = np.linspace(
+                    0, len(unique_values) - 1, limit_observations
+                ).astype(int)
+                return unique_values[value_samples]
             else:
-                raise TypeError("Can not interpolate object/categorical datatype")
+                return unique_values
+        else:
+            return observed_filtered
 
     def __len__(self) -> int:
         return len(self._observations)
