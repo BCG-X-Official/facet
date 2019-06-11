@@ -1,7 +1,7 @@
 import logging
 
 import pandas as pd
-from sklearn.preprocessing import OneHotEncoder, OrdinalEncoder
+from sklearn.preprocessing import FunctionTransformer, OneHotEncoder, OrdinalEncoder
 
 from yieldengine.transform import ConstantColumnTransformer, DataFrameTransformer
 
@@ -44,3 +44,12 @@ class OrdinalEncoderDF(ConstantColumnTransformer[OrdinalEncoder]):
     @classmethod
     def _make_base_transformer(cls, **kwargs) -> OrdinalEncoder:
         return OrdinalEncoder(**kwargs)
+
+
+class FunctionTransformerDF(ConstantColumnTransformer[FunctionTransformer]):
+    def __init__(self, **kwargs) -> None:
+        super().__init__(**kwargs)
+
+    @classmethod
+    def _make_base_transformer(cls, **kwargs) -> FunctionTransformer:
+        return FunctionTransformer(**kwargs)
