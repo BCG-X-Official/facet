@@ -266,6 +266,9 @@ class Sample:
         else:
             return observed_filtered
 
+    # Note: importing "DataFrameTranformer" in this module creates a
+    # cycle...hence, use a quoted type-hint and ignore the inspection:
+    # noinspection PyUnresolvedReferences
     def transformed(self, transformer: "DataFrameTransformer") -> "Sample":
         return transformer.fit_transform_sample(sample=self)
 
