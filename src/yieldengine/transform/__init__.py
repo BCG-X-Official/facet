@@ -1,14 +1,12 @@
 # coding=utf-8
 
 import logging
-from abc import ABC, abstractmethod, ABCMeta
+from abc import ABC, ABCMeta, abstractmethod
 from typing import *
 
 import numpy as np
 import pandas as pd
 from sklearn.base import BaseEstimator, TransformerMixin
-
-from yieldengine import Sample
 
 log = logging.getLogger(__name__)
 
