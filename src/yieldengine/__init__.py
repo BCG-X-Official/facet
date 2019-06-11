@@ -142,10 +142,6 @@ class Sample:
         """
         return self._observations.loc[:, self._feature_names]
 
-    @property
-    def observations(self) -> pd.DataFrame:
-        return self._observations
-
     def features_by_type(
         self, dtype: Union[type, str, Sequence[Union[type, str]]]
     ) -> pd.DataFrame:
