@@ -3,8 +3,8 @@ from typing import *
 import numpy as np
 import pandas as pd
 
-from yieldengine import Sample
 from yieldengine.model.prediction import PredictorCV
+from yieldengine.preprocessing import FunctionTransformerDF
 
 
 class UnivariateSimulation:
@@ -32,11 +32,13 @@ class UnivariateSimulation:
         self.predictor.fit()
 
         for parameter_value in parameter_values:
-            sample_df = self.predictor.sample.observations.copy()
-            sample_df.loc[:, parameterized_feature] = parameter_value
+            simul_transformer = UnivariateSimulation.make_column_replacing_transformer(
+                parameterized_feature=parameterized_feature,
+                parameter_value=parameter_value,
+            )
 
-            synthetic_sample = Sample(
-                observations=sample_df, target_name=self.predictor.sample.target_name
+            synthetic_sample = simul_transformer.fit_transform_sample(
+                self.predictor.sample
             )
 
             predictor_for_syn_sample = self.predictor.copy_with_sample(
@@ -72,7 +74,7 @@ class UnivariateSimulation:
     @staticmethod
     def aggregate_simulated_yield_change(
         foldwise_results: pd.DataFrame, percentiles: List[int]
-    ):
+    ) -> pd.DataFrame:
         def percentile(n: int):
             def percentile_(x: float):
                 return np.percentile(x, n)
@@ -85,3 +87,13 @@ class UnivariateSimulation:
             .groupby(by=UnivariateSimulation.F_PARAMETER_VALUE)
             .agg([percentile(p) for p in percentiles])
         )
+
+    @staticmethod
+    def make_column_replacing_transformer(
+        parameterized_feature: str, parameter_value
+    ) -> FunctionTransformerDF:
+        def transform(x: pd.DataFrame) -> pd.DataFrame:
+            x[parameterized_feature] = parameter_value
+            return x
+
+        return FunctionTransformerDF(func=transform, validate=False)
