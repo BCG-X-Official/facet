@@ -5,8 +5,6 @@ from typing import *
 import numpy as np
 import pandas as pd
 
-from yieldengine.transform import DataFrameTransformer
-
 log = logging.getLogger(__name__)
 
 
@@ -272,7 +270,7 @@ class Sample:
         else:
             return observed_filtered
 
-    def transformed(self, transformer: DataFrameTransformer) -> "Sample":
+    def transformed(self, transformer: "DataFrameTransformer") -> "Sample":
         return transformer.fit_transform_sample(sample=self)
 
     def __len__(self) -> int:
