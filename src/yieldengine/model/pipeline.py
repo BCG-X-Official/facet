@@ -7,12 +7,13 @@ import pandas as pd
 from sklearn.base import BaseEstimator
 from sklearn.pipeline import Pipeline
 
+from yieldengine.df import DataFramePredictor
 from yieldengine.transform import DataFrameTransformer
 
 log = logging.getLogger(__name__)
 
 
-class PipelineDF(DataFrameTransformer[Pipeline]):
+class PipelineDF(DataFrameTransformer[Pipeline], DataFramePredictor[Pipeline]):
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
         self._validate_steps()
@@ -75,51 +76,6 @@ class PipelineDF(DataFrameTransformer[Pipeline]):
     @property
     def steps(self) -> Sequence[Tuple[str, Union[DataFrameTransformer, BaseEstimator]]]:
         return self.base_transformer.steps
-
-    # noinspection PyPep8Naming
-    def predict(self, X: pd.DataFrame, **predict_params):
-        self._check_parameter_types(X, None)
-
-        return self.base_transformer.predict(X, **predict_params)
-
-    # noinspection PyPep8Naming
-    def fit_predict(self, X: pd.DataFrame, y: pd.Series, **fit_params):
-        self._check_parameter_types(X, y)
-
-        result = self.base_transformer.fit_predict(X, y, **fit_params)
-
-        self._post_fit(X, y, **fit_params)
-
-        return result
-
-    # noinspection PyPep8Naming
-    def predict_proba(self, X: pd.DataFrame):
-        self._check_parameter_types(X, None)
-
-        return self.base_transformer.predict_proba(X)
-
-    # noinspection PyPep8Naming
-    def decision_function(self, X: pd.DataFrame):
-        self._check_parameter_types(X, None)
-
-        return self.base_transformer.decision_function(X)
-
-    # noinspection PyPep8Naming
-    def predict_log_proba(self, X: pd.DataFrame):
-        self._check_parameter_types(X, None)
-
-        return self.base_transformer.predict_log_proba(X)
-
-    # noinspection PyPep8Naming
-    def score(
-        self,
-        X: pd.DataFrame,
-        y: Optional[pd.Series] = None,
-        sample_weight: Optional[Any] = None,
-    ):
-        self._check_parameter_types(X, None)
-
-        return self.base_transformer.score(X, y, sample_weight)
 
     def __len__(self) -> int:
         """
