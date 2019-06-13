@@ -1,24 +1,26 @@
 # coding=utf-8
 
 import logging
-from abc import ABC, abstractmethod, ABCMeta
+from abc import ABCMeta, abstractmethod
 from typing import *
 
 import numpy as np
 import pandas as pd
-from sklearn.base import BaseEstimator, TransformerMixin
+from sklearn.base import TransformerMixin
 
 from yieldengine import Sample
+from yieldengine.df import DataFrameEstimator
 
 log = logging.getLogger(__name__)
 
-_BaseTransformer = TypeVar(
-    "_BaseTransformer", bound=Union[BaseEstimator, TransformerMixin]
-)
+_BaseTransformer = TypeVar("_BaseTransformer", bound=TransformerMixin)
 
 
 class DataFrameTransformer(
-    ABC, BaseEstimator, TransformerMixin, Generic[_BaseTransformer]
+    DataFrameEstimator[_BaseTransformer],
+    TransformerMixin,
+    Generic[_BaseTransformer],
+    metaclass=ABCMeta,
 ):
     """
     Wraps around an sklearn transformer and ensures that the X and y objects passed
@@ -27,16 +29,12 @@ class DataFrameTransformer(
     :param base_transformer the sklearn transformer to be wrapped
     """
 
-    F_COLUMN = "column"
-    F_COLUMN_ORIGINAL = "column_original"
-
     def __init__(self, **kwargs) -> None:
-        super(BaseEstimator).__init__()
-        super(TransformerMixin).__init__()
-        self._base_transformer = type(self)._make_base_transformer(**kwargs)
-        self._columns_in = None
-        self._columns_out = None
-        self._columns_original = None
+        super().__init__(**kwargs)
+
+    @classmethod
+    def _make_base_estimator(cls, **kwargs) -> _BaseTransformer:
+        return cls._make_base_transformer(**kwargs)
 
     @classmethod
     @abstractmethod
@@ -45,74 +43,7 @@ class DataFrameTransformer(
 
     @property
     def base_transformer(self) -> _BaseTransformer:
-        return self._base_transformer
-
-    def is_fitted(self) -> bool:
-        return self._columns_in is not None
-
-    @property
-    def columns_in(self) -> pd.Index:
-        self._ensure_fitted()
-        return self._columns_in
-
-    @property
-    def columns_out(self) -> pd.Index:
-        return self.columns_original.index
-
-    @property
-    def columns_original(self) -> pd.Series:
-        self._ensure_fitted()
-        if self._columns_original is None:
-            self._columns_original = (
-                self._get_columns_original()
-                .rename(DataFrameTransformer.F_COLUMN_ORIGINAL)
-                .rename_axis(index=DataFrameTransformer.F_COLUMN)
-            )
-        return self._columns_original
-
-    def _ensure_fitted(self):
-        if not self.is_fitted():
-            raise RuntimeError("transformer not fitted")
-
-    @abstractmethod
-    def _get_columns_original(self) -> pd.Series:
-        """
-        :return: a mapping from this transformer's output columns to the original
-        columns as a series
-        """
-        pass
-
-    def get_params(self, deep=True) -> Dict[str, Any]:
-        """
-        Get parameters for this estimator.
-
-        :param deep If True, will return the parameters for this estimator and
-        contained subobjects that are estimators
-
-        :returns params Parameter names mapped to their values
-        """
-        # noinspection PyUnresolvedReferences
-        return self.base_transformer.get_params(deep=deep)
-
-    def set_params(self, **kwargs) -> "DataFrameTransformer":
-        """
-        Set the parameters of this estimator.
-
-        Valid parameter keys can be listed with ``get_params()``.
-
-        :returns self
-        """
-        # noinspection PyUnresolvedReferences
-        self.base_transformer.set_params(**kwargs)
-        return self
-
-    # noinspection PyPep8Naming,PyUnusedLocal
-    def _post_fit(
-        self, X: pd.DataFrame, y: Optional[pd.Series] = None, **fit_params
-    ) -> None:
-        self._columns_in = X.columns.rename(DataFrameTransformer.F_COLUMN)
-        self._columns_out = None
-        self._columns_original = None
+        return self.base_estimator
 
     def _transformed_to_df(
         self,
@@ -196,14 +127,6 @@ class DataFrameTransformer(
         # noinspection PyUnresolvedReferences
         return self.base_transformer.inverse_transform(X)
 
-    # noinspection PyPep8Naming
-    @staticmethod
-    def _check_parameter_types(X: pd.DataFrame, y: Optional[pd.Series]) -> None:
-        if not isinstance(X, pd.DataFrame):
-            raise TypeError("arg X must be a DataFrame")
-        if y is not None and not isinstance(y, pd.Series):
-            raise TypeError("arg y must be a Series")
-
 
 class NumpyOnlyTransformer(
     DataFrameTransformer[_BaseTransformer], Generic[_BaseTransformer], metaclass=ABCMeta
@@ -239,7 +162,8 @@ class ColumnPreservingTransformer(
     DataFrameTransformer[_BaseTransformer], Generic[_BaseTransformer], metaclass=ABCMeta
 ):
     """
-    All output columns of a ColumnPreservingTransformer have the same names as their associated input columns
+    All output columns of a ColumnPreservingTransformer have the same names as their
+    associated input columns
     """
 
     @abstractmethod
