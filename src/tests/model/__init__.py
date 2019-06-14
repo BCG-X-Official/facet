@@ -1,8 +1,8 @@
 from typing import Sequence
 
 from yieldengine.df.transform import DataFrameTransformer
-from yieldengine.preprocessing import OneHotEncoderDF
 from yieldengine.preprocessing.compose import ColumnTransformerDF
+from yieldengine.preprocessing.encode import OneHotEncoderDF
 from yieldengine.preprocessing.impute import SimpleImputerDF
 
 STEP_IMPUTE = "impute"
