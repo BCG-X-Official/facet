@@ -6,14 +6,16 @@ from typing import *
 
 import numpy as np
 import pandas as pd
-from sklearn.base import TransformerMixin
+from sklearn.base import BaseEstimator, TransformerMixin
 
 from yieldengine import Sample
 from yieldengine.df import DataFrameEstimator
 
 log = logging.getLogger(__name__)
 
-_BaseTransformer = TypeVar("_BaseTransformer", bound=TransformerMixin)
+_BaseTransformer = TypeVar(
+    "_BaseTransformer", bound=Union[BaseEstimator, TransformerMixin]
+)
 
 
 class DataFrameTransformer(
@@ -29,32 +31,16 @@ class DataFrameTransformer(
     :param base_transformer the sklearn transformer to be wrapped
     """
 
+    F_COLUMN_ORIGINAL = "column_original"
+
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
-
-    @classmethod
-    def _make_base_estimator(cls, **kwargs) -> _BaseTransformer:
-        return cls._make_base_transformer(**kwargs)
-
-    @classmethod
-    @abstractmethod
-    def _make_base_transformer(cls, **kwargs) -> _BaseTransformer:
-        pass
+        self._columns_out = None
+        self._columns_original = None
 
     @property
     def base_transformer(self) -> _BaseTransformer:
         return self.base_estimator
-
-    def _transformed_to_df(
-        self,
-        transformed: Union[pd.DataFrame, np.ndarray],
-        index: pd.Index,
-        columns: pd.Index,
-    ):
-        if isinstance(transformed, pd.DataFrame):
-            return transformed
-        else:
-            return pd.DataFrame(data=transformed, index=index, columns=columns)
 
     # noinspection PyPep8Naming
     def fit(self, X: pd.DataFrame, y: Optional[pd.Series] = None, **fit_params) -> None:
@@ -105,6 +91,57 @@ class DataFrameTransformer(
             ),
             target_name=sample.target_name,
         )
+
+    @property
+    def columns_original(self) -> pd.Series:
+        self._ensure_fitted()
+        if self._columns_original is None:
+            self._columns_original = (
+                self._get_columns_original()
+                .rename(self.F_COLUMN_ORIGINAL)
+                .rename_axis(index=self.F_COLUMN)
+            )
+        return self._columns_original
+
+    @property
+    def columns_out(self) -> pd.Index:
+        return self.columns_original.index
+
+    @classmethod
+    def _make_base_estimator(cls, **kwargs) -> _BaseTransformer:
+        return cls._make_base_transformer(**kwargs)
+
+    @classmethod
+    @abstractmethod
+    def _make_base_transformer(cls, **kwargs) -> _BaseTransformer:
+        pass
+
+    @abstractmethod
+    def _get_columns_original(self) -> pd.Series:
+        """
+        :return: a mapping from this transformer's output columns to the original
+        columns as a series
+        """
+        pass
+
+    # noinspection PyPep8Naming,PyUnusedLocal
+    def _post_fit(
+        self, X: pd.DataFrame, y: Optional[pd.Series] = None, **fit_params
+    ) -> None:
+        super()._post_fit(X=X, y=y, **fit_params)
+        self._columns_out = None
+        self._columns_original = None
+
+    def _transformed_to_df(
+        self,
+        transformed: Union[pd.DataFrame, np.ndarray],
+        index: pd.Index,
+        columns: pd.Index,
+    ):
+        if isinstance(transformed, pd.DataFrame):
+            return transformed
+        else:
+            return pd.DataFrame(data=transformed, index=index, columns=columns)
 
     # noinspection PyPep8Naming
     def _base_fit(self, X: pd.DataFrame, y: Optional[pd.Series], **fit_params):

@@ -7,8 +7,8 @@ import pandas as pd
 from sklearn.base import BaseEstimator
 from sklearn.pipeline import Pipeline
 
-from yieldengine.df import DataFramePredictor
-from yieldengine.transform import DataFrameTransformer
+from yieldengine.df.predict import DataFramePredictor
+from yieldengine.df.transform import DataFrameTransformer
 
 log = logging.getLogger(__name__)
 

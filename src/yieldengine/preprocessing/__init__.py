@@ -3,7 +3,7 @@ import logging
 import pandas as pd
 from sklearn.preprocessing import OneHotEncoder, OrdinalEncoder
 
-from yieldengine.transform import ConstantColumnTransformer, DataFrameTransformer
+from yieldengine.df.transform import ConstantColumnTransformer, DataFrameTransformer
 
 log = logging.getLogger(__name__)
 
