@@ -7,7 +7,7 @@ from sklearn.base import BaseEstimator
 from sklearn.model_selection import BaseCrossValidator
 
 from yieldengine import Sample
-from yieldengine.model import Model, PipelineDF
+from yieldengine.model import Model
 
 
 class PredictorCV:
@@ -46,15 +46,15 @@ class PredictorCV:
     def fold_ids(self) -> Optional[Set[int]]:
         return set() if self.model_by_fold is None else self.model_by_fold.keys()
 
-    def pipeline(self, fold: int) -> PipelineDF:
+    def model(self, fold_id: int) -> Model:
         """
-        :param fold: start index of test fold
-        :return: the pipeline that was used to predict the dependent variable of
+        :param fold_id: start index of test fold
+        :return: the model that was used to predict the dependent variable of
         the test fold
         """
         if self._model_by_fold is None:
             self.predictions_for_all_samples()
-        return self._model_by_fold[fold].pipeline()
+        return self._model_by_fold[fold_id]
 
     def predictions_for_fold(self, fold_id: int) -> pd.Series:
         all_predictions = self.predictions_for_all_samples()
@@ -120,7 +120,7 @@ class PredictorCV:
         def predict(fold_id: int, test_indices: np.ndarray) -> pd.DataFrame:
             test_sample = sample.select_observations(numbers=test_indices)
 
-            pipeline = self.pipeline(fold=fold_id)
+            pipeline = self.model(fold_id=fold_id).pipeline()
 
             return pd.DataFrame(
                 data={
