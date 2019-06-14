@@ -9,6 +9,8 @@ from yieldengine.df.transform import DataFrameTransformer
 
 log = logging.getLogger(__name__)
 
+__all__ = ["ColumnTransformerDF"]
+
 
 class ColumnTransformerDF(DataFrameTransformer[ColumnTransformer]):
     def __init__(self, **kwargs) -> None:

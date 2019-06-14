@@ -3,6 +3,8 @@ from boruta import BorutaPy
 
 from yieldengine.df.transform import ColumnPreservingTransformer, NumpyOnlyTransformer
 
+__all__ = ["BorutaDF"]
+
 
 class BorutaDF(NumpyOnlyTransformer[BorutaPy], ColumnPreservingTransformer[BorutaPy]):
     def __init__(
