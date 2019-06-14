@@ -1,12 +1,12 @@
 import pandas as pd
 from boruta import BorutaPy
 
-from yieldengine.df.transform import ColumnPreservingTransformer, NumpyOnlyTransformer
+from yieldengine.df.transform import ColumnPreservingTransformer, NDArrayTransformerDF
 
 __all__ = ["BorutaDF"]
 
 
-class BorutaDF(NumpyOnlyTransformer[BorutaPy], ColumnPreservingTransformer[BorutaPy]):
+class BorutaDF(NDArrayTransformerDF[BorutaPy], ColumnPreservingTransformer[BorutaPy]):
     def __init__(
         self,
         estimator,
