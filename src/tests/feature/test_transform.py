@@ -1,5 +1,5 @@
 from yieldengine import Sample
-from yieldengine.transform import DataFrameTransformer
+from yieldengine.df.transform import DataFrameTransformer
 
 
 def test_column_transformer_df(
