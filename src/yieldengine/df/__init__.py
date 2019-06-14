@@ -2,12 +2,18 @@ import logging
 from abc import ABC, abstractmethod
 from typing import *
 
+import numpy as np
 import pandas as pd
 from sklearn.base import BaseEstimator
 
 log = logging.getLogger(__name__)
 
 _BaseEstimator = TypeVar("_BaseEstimator", bound=BaseEstimator)
+# noinspection PyShadowingBuiltins
+_T = TypeVar("_T")
+
+ListLike = Union[np.ndarray, pd.Series, Sequence[_T]]
+MatrixLike = Union[np.ndarray, pd.DataFrame, Sequence[Sequence[_T]]]
 
 
 class DataFrameEstimator(ABC, BaseEstimator, Generic[_BaseEstimator]):
@@ -25,6 +31,9 @@ class DataFrameEstimator(ABC, BaseEstimator, Generic[_BaseEstimator]):
 
     @property
     def base_estimator(self) -> _BaseEstimator:
+        """
+        :return: the estimator underlying this DataFrameEstimator
+        """
         return self._base_estimator
 
     def get_params(self, deep=True) -> Dict[str, Any]:
@@ -51,23 +60,37 @@ class DataFrameEstimator(ABC, BaseEstimator, Generic[_BaseEstimator]):
         self._base_estimator.set_params(**kwargs)
         return self
 
+    # noinspection PyPep8Naming
+    def fit(self, X: pd.DataFrame, y: Optional[pd.Series] = None, **fit_params) -> None:
+        self._check_parameter_types(X, y)
+
+        self._base_fit(X, y, **fit_params)
+
+        self._post_fit(X, y, **fit_params)
+
+    @property
     def is_fitted(self) -> bool:
         return self._columns_in is not None
 
+    @property
+    def columns_in(self) -> pd.Index:
+        self._ensure_fitted()
+        return self._columns_in
+
     def _ensure_fitted(self) -> None:
-        if not self.is_fitted():
+        if not self.is_fitted:
             raise RuntimeError("transformer not fitted")
+
+    # noinspection PyPep8Naming
+    def _base_fit(self, X: pd.DataFrame, y: Optional[pd.Series], **fit_params) -> None:
+        # noinspection PyUnresolvedReferences
+        self.base_transformer.fit(X, y, **fit_params)
 
     # noinspection PyPep8Naming,PyUnusedLocal
     def _post_fit(
         self, X: pd.DataFrame, y: Optional[pd.Series] = None, **fit_params
     ) -> None:
         self._columns_in = X.columns.rename(self.F_COLUMN)
-
-    @property
-    def columns_in(self) -> pd.Index:
-        self._ensure_fitted()
-        return self._columns_in
 
     # noinspection PyPep8Naming
     @staticmethod
