@@ -8,6 +8,8 @@ from yieldengine.df.transform import ColumnPreservingTransformer, DataFrameTrans
 
 log = logging.getLogger(__name__)
 
+__all__ = ["SimpleImputerDF", "MissingIndicatorDF"]
+
 
 class SimpleImputerDF(ColumnPreservingTransformer[SimpleImputer]):
     def __init__(self, **kwargs) -> None:
