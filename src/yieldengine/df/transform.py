@@ -19,10 +19,7 @@ _BaseTransformer = TypeVar(
 
 
 class DataFrameTransformer(
-    Generic[_BaseTransformer],
-    DataFrameEstimator[_BaseTransformer],
-    TransformerMixin,
-    metaclass=ABCMeta,
+    DataFrameEstimator[_BaseTransformer], TransformerMixin, metaclass=ABCMeta
 ):
     """
     Wraps around an sklearn transformer and ensures that the X and y objects passed
@@ -41,14 +38,6 @@ class DataFrameTransformer(
     @property
     def base_transformer(self) -> _BaseTransformer:
         return self.base_estimator
-
-    # noinspection PyPep8Naming
-    def fit(self, X: pd.DataFrame, y: Optional[pd.Series] = None, **fit_params) -> None:
-        self._check_parameter_types(X, y)
-
-        self._base_fit(X, y, **fit_params)
-
-        self._post_fit(X, y, **fit_params)
 
     # noinspection PyPep8Naming
     def transform(self, X: pd.DataFrame) -> pd.DataFrame:
@@ -144,11 +133,6 @@ class DataFrameTransformer(
             return pd.DataFrame(data=transformed, index=index, columns=columns)
 
     # noinspection PyPep8Naming
-    def _base_fit(self, X: pd.DataFrame, y: Optional[pd.Series], **fit_params):
-        # noinspection PyUnresolvedReferences
-        self.base_transformer.fit(X, y, **fit_params)
-
-    # noinspection PyPep8Naming
     def _base_transform(self, X: pd.DataFrame) -> np.ndarray:
         # noinspection PyUnresolvedReferences
         return self.base_transformer.transform(X)
@@ -165,7 +149,7 @@ class DataFrameTransformer(
         return self.base_transformer.inverse_transform(X)
 
 
-class NumpyOnlyTransformer(
+class NDArrayTransformerDF(
     DataFrameTransformer[_BaseTransformer], Generic[_BaseTransformer], metaclass=ABCMeta
 ):
     """
@@ -174,7 +158,7 @@ class NumpyOnlyTransformer(
     """
 
     # noinspection PyPep8Naming
-    def _base_fit(self, X: pd.DataFrame, y: Optional[pd.Series], **fit_params):
+    def _base_fit(self, X: pd.DataFrame, y: Optional[pd.Series], **fit_params) -> None:
         # noinspection PyUnresolvedReferences
         self.base_transformer.fit(X.values, y.values, **fit_params)
 
