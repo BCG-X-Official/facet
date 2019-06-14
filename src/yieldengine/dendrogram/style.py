@@ -5,7 +5,7 @@ from typing import *
 import matplotlib.text as mt
 from matplotlib import cm
 from matplotlib.axes import Axes
-from matplotlib.colorbar import make_axes, ColorbarBase
+from matplotlib.colorbar import ColorbarBase, make_axes
 from matplotlib.colors import LogNorm
 from matplotlib.ticker import Formatter
 
@@ -21,7 +21,7 @@ _COLOR_WHITE = "white"
 
 
 class _PercentageFormatter(Formatter):
-    def __call__(self, x, pos=None):
+    def __call__(self, x, pos=None) -> str:
         return f"{x * 100.0:.0f}%"
 
 

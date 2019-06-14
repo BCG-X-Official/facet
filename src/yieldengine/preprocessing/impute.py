@@ -36,7 +36,7 @@ class MissingIndicatorDF(DataFrameTransformer[MissingIndicator]):
         sparse="auto",
         error_on_new=True,
         **kwargs,
-    ):
+    ) -> None:
         super().__init__(
             missing_values=missing_values,
             features=features,

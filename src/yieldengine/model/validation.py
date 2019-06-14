@@ -58,7 +58,7 @@ class CircularCrossValidator(BaseCrossValidator):
 
     # noinspection PyPep8Naming
     @staticmethod
-    def _n_samples(X=None, y=None):
+    def _n_samples(X=None, y=None) -> int:
         if X is not None:
             if y is not None and len(X) != len(y):
                 raise ValueError("X and y must be the same length")
