@@ -4,11 +4,11 @@ from typing import *
 import pandas as pd
 
 from yieldengine import Sample
+from yieldengine.df.transform import DataFrameTransformer
 from yieldengine.model.prediction import PredictorCV
 from yieldengine.model.selection import ModelEvaluation, ModelGrid, ModelRanker
 from yieldengine.model.validation import CircularCrossValidator
 from yieldengine.simulation import UnivariateSimulation
-from yieldengine.transform import DataFrameTransformer
 
 log = logging.getLogger(__name__)
 

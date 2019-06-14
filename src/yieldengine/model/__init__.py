@@ -1,10 +1,10 @@
-from typing import Any, Dict, Optional
+from typing import *
 
 from sklearn import clone
 from sklearn.base import BaseEstimator
 
+from yieldengine.df.transform import DataFrameTransformer
 from yieldengine.model.pipeline import PipelineDF
-from yieldengine.transform import DataFrameTransformer
 
 
 class Model:
@@ -57,7 +57,8 @@ class Model:
         if preprocessing is not None:
             preprocessing = clone(preprocessing)
 
-        new_model = self.__class__(estimator=estimator, preprocessing=preprocessing)
+        my_class: Type[Model] = self.__class__
+        new_model: Model = my_class(estimator=estimator, preprocessing=preprocessing)
 
         # to set the parameters, we need to wrap the preprocessor and estimator in a
         # pipeline object

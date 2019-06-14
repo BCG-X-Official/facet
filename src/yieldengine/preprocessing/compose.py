@@ -5,9 +5,11 @@ from typing import *
 import pandas as pd
 from sklearn.compose import ColumnTransformer
 
-from yieldengine.transform import DataFrameTransformer
+from yieldengine.df.transform import DataFrameTransformer
 
 log = logging.getLogger(__name__)
+
+__all__ = ["ColumnTransformerDF"]
 
 
 class ColumnTransformerDF(DataFrameTransformer[ColumnTransformer]):
