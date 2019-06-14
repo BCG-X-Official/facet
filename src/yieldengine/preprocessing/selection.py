@@ -1,7 +1,9 @@
 import pandas as pd
 from boruta import BorutaPy
 
-from yieldengine.transform import ColumnPreservingTransformer, NumpyOnlyTransformer
+from yieldengine.df.transform import ColumnPreservingTransformer, NumpyOnlyTransformer
+
+__all__ = ["BorutaDF"]
 
 
 class BorutaDF(NumpyOnlyTransformer[BorutaPy], ColumnPreservingTransformer[BorutaPy]):
@@ -16,7 +18,7 @@ class BorutaDF(NumpyOnlyTransformer[BorutaPy], ColumnPreservingTransformer[Borut
         random_state=None,
         verbose=0,
         **kwargs
-    ):
+    ) -> None:
         super().__init__(
             estimator=estimator,
             n_estimators=n_estimators,

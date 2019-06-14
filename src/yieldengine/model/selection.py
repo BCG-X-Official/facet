@@ -9,7 +9,7 @@ from sklearn.model_selection import BaseCrossValidator, GridSearchCV
 from yieldengine import Sample
 from yieldengine.model import Model
 
-ParameterGrid = Dict[str, List[Any]]
+ParameterGrid = Dict[str, Sequence[Any]]
 
 
 class ModelGrid:
@@ -67,7 +67,7 @@ class ModelScoring:
     def mean(self) -> float:
         return self.fold_scores.mean()
 
-    def std(self):
+    def std(self) -> float:
         return self.fold_scores.std()
 
 
