@@ -19,9 +19,9 @@ _BaseTransformer = TypeVar(
 
 
 class DataFrameTransformer(
+    Generic[_BaseTransformer],
     DataFrameEstimator[_BaseTransformer],
     TransformerMixin,
-    Generic[_BaseTransformer],
     metaclass=ABCMeta,
 ):
     """
