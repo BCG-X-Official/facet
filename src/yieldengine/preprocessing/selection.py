@@ -16,7 +16,7 @@ class BorutaDF(NumpyOnlyTransformer[BorutaPy], ColumnPreservingTransformer[Borut
         random_state=None,
         verbose=0,
         **kwargs
-    ):
+    ) -> None:
         super().__init__(
             estimator=estimator,
             n_estimators=n_estimators,
