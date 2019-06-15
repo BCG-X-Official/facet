@@ -44,8 +44,8 @@ def test_univariate_simulation(
 
     res = sim.simulate_yield_change(
         parameterized_feature=parameterized_feature,
-        parameter_values=sample.observed_feature_values(
-            feature_name=parameterized_feature
+        parameter_values=UnivariateSimulation.observed_feature_values(
+            sample=sample, feature_name=parameterized_feature
         ),
     )
 
