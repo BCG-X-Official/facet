@@ -25,7 +25,7 @@ from yieldengine.model.validation import CircularCrossValidator
 
 log = logging.getLogger(__name__)
 
-N_FOLDS = 5
+N_SPLITS = 5
 TEST_RATIO = 0.2
 BOSTON_TARGET = "target"
 
@@ -38,7 +38,7 @@ def test_model_inspection(available_cpus: int) -> None:
     # define a CV:
     # noinspection PyTypeChecker
     test_cv: BaseCrossValidator = ShuffleSplit(
-        n_splits=N_FOLDS, test_size=TEST_RATIO, random_state=42
+        n_splits=N_SPLITS, test_size=TEST_RATIO, random_state=42
     )
 
     # define parameters and models
@@ -92,18 +92,18 @@ def test_model_inspection(available_cpus: int) -> None:
         # test predictions_for_all_samples
         predictions_df: pd.DataFrame = mp.predictions_for_all_samples()
 
-        assert PredictorCV.F_FOLD_ID in predictions_df.columns
+        assert PredictorCV.F_SPLIT_ID in predictions_df.columns
         assert PredictorCV.F_PREDICTION in predictions_df.columns
 
-        # check number of fold-starts
-        assert predictions_df[PredictorCV.F_FOLD_ID].nunique() == N_FOLDS
+        # check number of split starts
+        assert predictions_df[PredictorCV.F_SPLIT_ID].nunique() == N_SPLITS
 
         # check correct number of rows
         ALLOWED_VARIANCE = 0.01
         assert (
-            (len(test_sample) * (TEST_RATIO - ALLOWED_VARIANCE) * N_FOLDS)
+            (len(test_sample) * (TEST_RATIO - ALLOWED_VARIANCE) * N_SPLITS)
             <= len(predictions_df)
-            <= (len(test_sample) * (TEST_RATIO + ALLOWED_VARIANCE) * N_FOLDS)
+            <= (len(test_sample) * (TEST_RATIO + ALLOWED_VARIANCE) * N_SPLITS)
         )
 
         mi = ModelInspector(predictor=mp)
@@ -141,8 +141,8 @@ def test_model_inspection_with_encoding(
     available_cpus: int,
 ) -> None:
 
-    # define the circular cross validator with just 5 folds (to speed up testing)
-    circular_cv = CircularCrossValidator(test_ratio=0.20, num_folds=5)
+    # define the circular cross validator with just 5 splits (to speed up testing)
+    circular_cv = CircularCrossValidator(test_ratio=0.20, num_splits=5)
 
     model_ranker: ModelRanker = ModelRanker(
         grids=regressor_grids, cv=circular_cv, scoring="r2"

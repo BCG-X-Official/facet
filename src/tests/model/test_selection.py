@@ -23,8 +23,8 @@ log = logging.getLogger(__name__)
 def test_model_ranker(
     batch_table: pd.DataFrame, regressor_grids, sample: Sample, available_cpus: int
 ) -> None:
-    # define the circular cross validator with just 5 folds (to speed up testing)
-    circular_cv = CircularCrossValidator(test_ratio=0.20, num_folds=5)
+    # define the circular cross validator with just 5 splits (to speed up testing)
+    circular_cv = CircularCrossValidator(test_ratio=0.20, num_splits=5)
 
     model_ranker: ModelRanker = ModelRanker(
         grids=regressor_grids, cv=circular_cv, scoring="r2"
@@ -61,7 +61,7 @@ def test_model_ranker_no_preprocessing(available_cpus: int) -> None:
     warnings.filterwarnings("ignore", message="You are accessing a training score")
 
     # define a yield-engine circular CV:
-    cv = CircularCrossValidator(test_ratio=0.21, num_folds=50)
+    cv = CircularCrossValidator(test_ratio=0.21, num_splits=50)
 
     # define parameters and model
     models = [

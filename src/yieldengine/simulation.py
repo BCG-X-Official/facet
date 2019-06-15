@@ -10,7 +10,7 @@ from yieldengine.preprocessing import FunctionTransformerDF
 class UnivariateSimulation:
     __slots__ = ["_predictor"]
 
-    F_FOLD_ID = "fold_id"
+    F_SPLIT_ID = "split_id"
     F_PARAMETER_VALUE = "parameter_value"
     F_RELATIVE_YIELD_CHANGE = "relative_yield_change"
 
@@ -47,23 +47,23 @@ class UnivariateSimulation:
 
             predictor_for_syn_sample.fit()
 
-            for fold_id in self.predictor.fold_ids:
-                predictions_for_fold_hist: np.ndarray = self.predictor.predictions_for_fold(
-                    fold_id=fold_id
+            for split_id in self.predictor.split_ids:
+                predictions_for_split_hist: pd.Series = (
+                    self.predictor.predictions_for_split(split_id=split_id)
                 )
 
-                predictions_for_fold_syn: np.ndarray = predictor_for_syn_sample.predictions_for_fold(
-                    fold_id=fold_id
+                predictions_for_split_syn: pd.Series = (
+                    predictor_for_syn_sample.predictions_for_split(split_id=split_id)
                 )
 
                 relative_yield_change = (
-                    predictions_for_fold_syn.mean(axis=0)
-                    / predictions_for_fold_hist.mean(axis=0)
+                    predictions_for_split_syn.mean(axis=0)
+                    / predictions_for_split_hist.mean(axis=0)
                 ) - 1
 
                 results.append(
                     {
-                        UnivariateSimulation.F_FOLD_ID: fold_id,
+                        UnivariateSimulation.F_SPLIT_ID: split_id,
                         UnivariateSimulation.F_PARAMETER_VALUE: parameter_value,
                         UnivariateSimulation.F_RELATIVE_YIELD_CHANGE: relative_yield_change,
                     }
@@ -73,7 +73,7 @@ class UnivariateSimulation:
 
     @staticmethod
     def aggregate_simulated_yield_change(
-        foldwise_results: pd.DataFrame, percentiles: List[int]
+        results_per_split: pd.DataFrame, percentiles: List[int]
     ) -> pd.DataFrame:
         def percentile(n: int):
             def percentile_(x: float):
@@ -83,7 +83,7 @@ class UnivariateSimulation:
             return percentile_
 
         return (
-            foldwise_results.drop(columns=UnivariateSimulation.F_FOLD_ID)
+            results_per_split.drop(columns=UnivariateSimulation.F_SPLIT_ID)
             .groupby(by=UnivariateSimulation.F_PARAMETER_VALUE)
             .agg([percentile(p) for p in percentiles])
         )

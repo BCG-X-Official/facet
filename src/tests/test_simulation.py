@@ -12,7 +12,7 @@ from yieldengine.simulation import UnivariateSimulation
 
 log = logging.getLogger(__name__)
 
-N_FOLDS = 5
+N_SPLITS = 5
 TEST_RATIO = 0.2
 
 
@@ -24,8 +24,8 @@ def test_univariate_simulation(
     available_cpus: int,
 ) -> None:
 
-    # define the circular cross validator with just 5 folds (to speed up testing)
-    circular_cv = CircularCrossValidator(test_ratio=TEST_RATIO, num_folds=N_FOLDS)
+    # define the circular cross validator with just 5 splits (to speed up testing)
+    circular_cv = CircularCrossValidator(test_ratio=TEST_RATIO, num_splits=N_SPLITS)
 
     model_ranker: ModelRanker = ModelRanker(
         grids=regressor_grids, cv=circular_cv, scoring="r2"
@@ -52,6 +52,6 @@ def test_univariate_simulation(
     log.debug(res)
     log.debug(
         UnivariateSimulation.aggregate_simulated_yield_change(
-            foldwise_results=res, percentiles=[10, 50, 90]
+            results_per_split=res, percentiles=[10, 50, 90]
         )
     )
