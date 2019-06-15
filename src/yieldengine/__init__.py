@@ -2,7 +2,6 @@ import logging
 from copy import copy
 from typing import *
 
-import numpy as np
 import pandas as pd
 
 log = logging.getLogger(__name__)
@@ -48,10 +47,10 @@ class Sample:
 
     """
 
-    DTYPE_NUMERICAL = np.number
+    DTYPE_NUMERICAL = pd.np.number
     DTYPE_OBJECT = object
-    DTYPE_DATETIME = np.datetime64
-    DTYPE_TIMEDELTA = np.timedelta64
+    DTYPE_DATETIME = pd.np.datetime64
+    DTYPE_TIMEDELTA = pd.np.timedelta64
     DTYPE_CATEGORICAL = "category"
     DTYPE_DATETIME_TZ = "datetimetz"
 
