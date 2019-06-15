@@ -61,14 +61,14 @@ class ModelGrid:
 
 
 class ModelScoring:
-    def __init__(self, fold_scores: Iterable[float]):
-        self.fold_scores = np.array(fold_scores)
+    def __init__(self, split_scores: Iterable[float]):
+        self.split_scores = np.array(split_scores)
 
     def mean(self) -> float:
-        return self.fold_scores.mean()
+        return self.split_scores.mean()
 
     def std(self) -> float:
-        return self.fold_scores.std()
+        return self.split_scores.std()
 
 
 class ModelEvaluation(NamedTuple):
@@ -140,7 +140,7 @@ class ModelRanker:
 
         :param sample: sample to fit pipeline to
         :param ranking_scorer: scoring function used for ranking across models,
-        taking mean and standard deviation of the ranking scores_for_fold and returning the
+        taking mean and standard deviation of the ranking scores_for_split and returning the
         overall ranking score (default: ModelRanking.default_ranking_scorer)
         :param ranking_metric: the scoring to be used for model ranking, given as a name to be used to look up the right
                ModelScoring object in the ModelEvaluation.scoring dictionary (default: 'test_score').
@@ -183,17 +183,17 @@ class ModelRanker:
             cv_results: Mapping[str, Sequence[float]]
         ) -> List[Dict[str, ModelScoring]]:
             """
-            helper function;  for each model in the grid returns a tuple of test scores_for_fold across all folds.
-            The length of the tuple is equal to the number of folds that were tested
-            The test scores_for_fold are sorted in the order the folds were tested
+            helper function;  for each model in the grid returns a tuple of test scores_for_split across all splits.
+            The length of the tuple is equal to the number of splits that were tested
+            The test scores_for_split are sorted in the order the splits were tested
             :param cv_results: the GridSearchCV object's results dictionary
             :return: a list of test scores per scored model; each list entry maps score types to a list of scores per
-                     fold
+                     split
             """
 
             # the splits are stored in the cv_results using keys 'split0...' thru 'split<nn>...'
             # match these dictionary keys in cv_results; ignore all other keys
-            matches_for_fold_x_metric: List[Tuple[str, Match]] = [
+            matches_for_split_x_metric: List[Tuple[str, Match]] = [
                 (
                     key,
                     re.fullmatch(
@@ -204,44 +204,44 @@ class ModelRanker:
             ]
 
             # extract the integer indices from the matched results keys
-            # create tuples (metric, fold_index, scores_per_model_for_fold), e.g., ('test_r2', 0, [0.34, 0.23, ...])
-            metric_x_fold_index_x_scores_per_model: List[
+            # create tuples (metric, split_index, scores_per_model_for_split), e.g., ('test_r2', 0, [0.34, 0.23, ...])
+            metric_x_split_index_x_scores_per_model: List[
                 Tuple[str, int, Sequence[float]]
             ] = sorted(
                 (
                     (match.group(2), int(match.group(1)), cv_results[key])
-                    for key, match in matches_for_fold_x_metric
+                    for key, match in matches_for_split_x_metric
                     if match is not None
                 ),
                 key=lambda x: x[
                     1
-                ],  # sort by fold_id so we can later collect scores in the correct sequence
+                ],  # sort by split_id so we can later collect scores in the correct sequence
             )
 
             # Group results per model, result is a list where each item contains the scoring for one model.
-            # Each scoring is a dictionary, mapping each metric to a list of scores for the different folds.
+            # Each scoring is a dictionary, mapping each metric to a list of scores for the different splits.
             n_models = len(cv_results[ModelRanker.F_PARAMETERS])
 
-            scores_per_model_per_metric_per_fold: List[Dict[str, List[float]]] = [
+            scores_per_model_per_metric_per_split: List[Dict[str, List[float]]] = [
                 defaultdict(list) for _ in range(n_models)
             ]
 
             for (
                 metric,
-                fold_ix,
-                fold_score_per_model,
-            ) in metric_x_fold_index_x_scores_per_model:
-                for model_ix, fold_score in enumerate(fold_score_per_model):
-                    scores_per_model_per_metric_per_fold[model_ix][metric].append(
-                        fold_score
+                split_ix,
+                split_score_per_model,
+            ) in metric_x_split_index_x_scores_per_model:
+                for model_ix, split_score in enumerate(split_score_per_model):
+                    scores_per_model_per_metric_per_split[model_ix][metric].append(
+                        split_score
                     )
 
             return [
                 {
-                    metric: ModelScoring(fold_scores=scores_per_fold)
-                    for metric, scores_per_fold in scores_per_metric_per_fold.items()
+                    metric: ModelScoring(split_scores=scores_per_split)
+                    for metric, scores_per_split in scores_per_metric_per_split.items()
                 }
-                for scores_per_metric_per_fold in scores_per_model_per_metric_per_fold
+                for scores_per_metric_per_split in scores_per_model_per_metric_per_split
             ]
 
         scorings = [

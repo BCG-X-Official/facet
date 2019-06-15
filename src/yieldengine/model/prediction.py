@@ -16,10 +16,10 @@ class PredictorCV:
         "_cv",
         "_sample",
         "_predictions_for_all_samples",
-        "_model_by_fold",
+        "_model_by_split",
     ]
 
-    F_FOLD_ID = "fold_id"
+    F_SPLIT_ID = "split_id"
     F_PREDICTION = "prediction"
     F_TARGET = "target"
 
@@ -27,7 +27,7 @@ class PredictorCV:
         self._model = model
         self._cv = cv
         self._sample = sample
-        self._model_by_fold: Optional[Dict[int, Model]] = None
+        self._model_by_split: Optional[Dict[int, Model]] = None
         self._predictions_for_all_samples: Optional[pd.DataFrame] = None
 
     @property
@@ -39,56 +39,57 @@ class PredictorCV:
         return self._sample
 
     @property
-    def model_by_fold(self) -> Optional[Dict[int, Model]]:
-        return self._model_by_fold
+    def model_by_split(self) -> Optional[Dict[int, Model]]:
+        return self._model_by_split
 
     @property
-    def fold_ids(self) -> Optional[Set[int]]:
-        return set() if self.model_by_fold is None else self.model_by_fold.keys()
+    def split_ids(self) -> Optional[Set[int]]:
+        return set() if self.model_by_split is None else self.model_by_split.keys()
 
-    def model(self, fold_id: int) -> Model:
+    def model(self, split_id: int) -> Model:
         """
-        :param fold_id: start index of test fold
+        :param split_id: start index of test split
         :return: the model that was used to predict the dependent variable of
-        the test fold
+        the test split
         """
-        if self._model_by_fold is None:
+        if self._model_by_split is None:
             self.predictions_for_all_samples()
-        return self._model_by_fold[fold_id]
+        return self._model_by_split[split_id]
 
-    def predictions_for_fold(self, fold_id: int) -> pd.Series:
+    def predictions_for_split(self, split_id: int) -> pd.Series:
         all_predictions = self.predictions_for_all_samples()
         return all_predictions.loc[
-            all_predictions[PredictorCV.F_FOLD_ID] == fold_id, PredictorCV.F_PREDICTION
+            all_predictions[PredictorCV.F_SPLIT_ID] == split_id,
+            PredictorCV.F_PREDICTION,
         ]
 
-    def estimator(self, fold: int) -> BaseEstimator:
+    def estimator(self, split: int) -> BaseEstimator:
         """
-        :param fold: start index of test fold
+        :param split: start index of test split
         :return: the estimator that was used to predict the dependent variable of
-        the test fold
+        the test split
         """
-        if self._model_by_fold is None:
+        if self._model_by_split is None:
             self.predictions_for_all_samples()
-        return self._model_by_fold[fold].estimator
+        return self._model_by_split[split].estimator
 
     def _is_fitted(self) -> bool:
-        return self._model_by_fold is not None
+        return self._model_by_split is not None
 
     def fit(self) -> None:
         if self._is_fitted():
             return
 
-        self._model_by_fold: Dict[int, Model] = {}
+        self._model_by_split: Dict[int, Model] = {}
 
         sample = self.sample
 
-        for fold_id, (train_indices, _) in enumerate(
+        for split_id, (train_indices, _) in enumerate(
             self.cv.split(sample.features, sample.target)
         ):
             train_sample = sample.select_observations(numbers=train_indices)
 
-            self._model_by_fold[fold_id] = model = self._model.clone()
+            self._model_by_split[split_id] = model = self._model.clone()
 
             pipeline = model.pipeline()
 
@@ -96,17 +97,17 @@ class PredictorCV:
 
     def predictions_for_all_samples(self) -> pd.DataFrame:
         """
-        For each fold of this Predictor's CV, predict all
+        For each split of this Predictor's CV, predict all
         values in the test set. The result is a data frame with one row per
         prediction, indexed by the observations in the sample, and with columns
-        F_FOLD_ID (the numerical index of the start of the test set in the current
-        fold), F_PREDICTION (the predicted value for the given observation and fold),
+        F_SPLIT_ID (the numerical index of the start of the test set in the current
+        split), F_PREDICTION (the predicted value for the given observation and split),
         and F_TARGET (the actual target)
 
         Note that there can be multiple prediction rows per observation if the test
-        folds overlap.
+        splits overlap.
 
-        :return: the data frame with the predictions per observation and test fold
+        :return: the data frame with the predictions per observation and test split
         """
 
         if self._predictions_for_all_samples is not None:
@@ -117,14 +118,14 @@ class PredictorCV:
 
         sample = self.sample
 
-        def predict(fold_id: int, test_indices: np.ndarray) -> pd.DataFrame:
+        def predict(split_id: int, test_indices: np.ndarray) -> pd.DataFrame:
             test_sample = sample.select_observations(numbers=test_indices)
 
-            pipeline = self.model(fold_id=fold_id).pipeline()
+            pipeline = self.model(split_id=split_id).pipeline()
 
             return pd.DataFrame(
                 data={
-                    PredictorCV.F_FOLD_ID: fold_id,
+                    PredictorCV.F_SPLIT_ID: split_id,
                     PredictorCV.F_PREDICTION: pipeline.predict(X=test_sample.features),
                 },
                 index=test_sample.index,
@@ -132,8 +133,8 @@ class PredictorCV:
 
         self._predictions_for_all_samples = pd.concat(
             [
-                predict(fold_id, test_indices=test_indices)
-                for fold_id, (_, test_indices) in enumerate(
+                predict(split_id, test_indices=test_indices)
+                for split_id, (_, test_indices) in enumerate(
                     self.cv.split(sample.features, sample.target)
                 )
             ]

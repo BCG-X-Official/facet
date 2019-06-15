@@ -20,7 +20,7 @@ log = logging.getLogger(__name__)
 
 class ModelInspector:
     __slots__ = [
-        "_shap_explainer_by_fold",
+        "_shap_explainer_by_split",
         "_shap_matrix",
         "_feature_dependency_matrix",
         "_predictor",
@@ -71,26 +71,26 @@ class ModelInspector:
 
         sample = self.predictor.sample
 
-        predictions_by_observation_and_fold = self.predictor.predictions_for_all_samples().set_index(
-            PredictorCV.F_FOLD_ID, append=True
+        predictions_by_observation_and_split = self.predictor.predictions_for_all_samples().set_index(
+            PredictorCV.F_SPLIT_ID, append=True
         )
 
-        def shap_matrix_for_fold(fold_id: int, fold_model: Model) -> pd.DataFrame:
+        def shap_matrix_for_split(split_id: int, split_model: Model) -> pd.DataFrame:
 
-            observation_indices_in_fold = predictions_by_observation_and_fold.xs(
-                key=fold_id, level=PredictorCV.F_FOLD_ID
+            observation_indices_in_split = predictions_by_observation_and_split.xs(
+                key=split_id, level=PredictorCV.F_SPLIT_ID
             ).index
 
-            fold_x = sample.select_observations(
-                ids=observation_indices_in_fold
+            split_x = sample.select_observations(
+                ids=observation_indices_in_split
             ).features
 
-            estimator = fold_model.estimator
+            estimator = split_model.estimator
 
-            if fold_model.preprocessing is not None:
-                data_transformed = fold_model.preprocessing.transform(fold_x)
+            if split_model.preprocessing is not None:
+                data_transformed = split_model.preprocessing.transform(split_x)
             else:
-                data_transformed = fold_x
+                data_transformed = split_x
 
             shap_matrix = ModelInspector._make_shap_explainer(
                 estimator=estimator, data=data_transformed
@@ -98,14 +98,14 @@ class ModelInspector:
 
             return pd.DataFrame(
                 data=shap_matrix,
-                index=observation_indices_in_fold,
+                index=observation_indices_in_split,
                 columns=data_transformed.columns,
             )
 
         shap_values_df = pd.concat(
             objs=[
-                shap_matrix_for_fold(fold_id, model)
-                for fold_id, model in self.predictor.model_by_fold.items()
+                shap_matrix_for_split(split_id, model)
+                for split_id, model in self.predictor.model_by_split.items()
             ],
             sort=True,
         ).fillna(0.0)
