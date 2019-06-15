@@ -61,15 +61,21 @@ class UnivariateSimulation:
                     / predictions_for_split_hist.mean(axis=0)
                 ) - 1
 
-                results.append(
-                    {
-                        UnivariateSimulation.F_SPLIT_ID: split_id,
-                        UnivariateSimulation.F_PARAMETER_VALUE: parameter_value,
-                        UnivariateSimulation.F_RELATIVE_YIELD_CHANGE: relative_yield_change,
-                    }
+                relative_yield_change_ = (
+                    split_id,
+                    parameter_value,
+                    relative_yield_change,
                 )
+                results.append(relative_yield_change_)
 
-        return pd.DataFrame(results)
+        return pd.DataFrame(
+            results,
+            columns=[
+                UnivariateSimulation.F_SPLIT_ID,
+                UnivariateSimulation.F_PARAMETER_VALUE,
+                UnivariateSimulation.F_RELATIVE_YIELD_CHANGE,
+            ],
+        )
 
     @staticmethod
     def aggregate_simulated_yield_change(
