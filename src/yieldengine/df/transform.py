@@ -210,3 +210,23 @@ class ConstantColumnTransformer(
 
     def _get_columns_out(self) -> pd.Index:
         return self.columns_in
+
+
+# Decorator to easily create ConstantColumnTransformers, example:
+#     @makeConstantColumnTransformer(source_transformer=MinMaxScaler)
+#     class MinMaxScalerDF(ConstantColumnTransformer[MinMaxScaler]):
+#       def _make_base_transformer(self)->_BaseTransformer:
+#         pass
+def makeConstantColumnTransformer(source_transformer: type) -> Callable:
+    def decorate(class_in: type) -> type:
+        def _make_base_transformer(**kwargs) -> source_transformer:
+            return source_transformer(**kwargs)
+
+        def __init__(self, **kwargs) -> None:
+            ConstantColumnTransformer[source_transformer].__init__(self, **kwargs)
+
+        class_in.__init__ = __init__
+        class_in._make_base_transformer = _make_base_transformer
+        return class_in
+
+    return decorate
