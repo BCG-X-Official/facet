@@ -7,17 +7,18 @@ from sklearn.preprocessing import MinMaxScaler
 from yieldengine import Sample
 from yieldengine.df.transform import (
     _BaseTransformer,
+    constant_column_transformer,
     ConstantColumnTransformer,
-    makeConstantColumnTransformer,
 )
 
 log = logging.getLogger(__name__)
 
 
 def test_make_constant_column_transformer(sample: Sample) -> None:
-    @makeConstantColumnTransformer(source_transformer=MinMaxScaler)
+    @constant_column_transformer(source_transformer=MinMaxScaler)
     class MinMaxScalerDF(ConstantColumnTransformer[MinMaxScaler]):
-        def _make_base_transformer(self) -> _BaseTransformer:
+        @classmethod
+        def _make_base_transformer(cls, **kwargs) -> _BaseTransformer:
             pass
 
     scaler = MinMaxScalerDF()
