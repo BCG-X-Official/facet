@@ -8,7 +8,7 @@ from sklearn.preprocessing import (
     StandardScaler,
 )
 
-from yieldengine.df.sklearn import (
+from yieldengine.preprocessing import (
     MaxAbsScalerDF,
     MinMaxScalerDF,
     RobustScalerDF,
