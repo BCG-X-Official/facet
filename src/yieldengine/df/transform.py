@@ -213,11 +213,8 @@ class ConstantColumnTransformer(
 
 
 # Decorator to easily create ConstantColumnTransformers, example:
-#     @makeConstantColumnTransformer(source_transformer=MinMaxScaler)
-#     class MinMaxScalerDF(ConstantColumnTransformer[MinMaxScaler]):
-#       def _make_base_transformer(self)->_BaseTransformer:
-#         pass
-def makeConstantColumnTransformer(source_transformer: type) -> Callable:
+# see: src/tests/transform/test_constant_column_transformer
+def constant_column_transformer(source_transformer: type) -> Callable:
     def decorate(class_in: type) -> type:
         def _make_base_transformer(**kwargs) -> source_transformer:
             return source_transformer(**kwargs)
