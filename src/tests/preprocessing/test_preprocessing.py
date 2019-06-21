@@ -56,6 +56,8 @@ def test_various(test_data: pd.DataFrame) -> None:
         )
         transformed_df = df_col_t.fit_transform(X=test_data)
 
+        assert isinstance(transformed_df, pd.DataFrame)
+
         non_df_col_t = ColumnTransformer(transformers=[("t", non_df_t, ["c0"])])
 
         transformed_non_df = non_df_col_t.fit_transform(X=test_data)
