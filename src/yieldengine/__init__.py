@@ -88,10 +88,12 @@ class Sample:
         self._target_name = target_name
 
         if feature_names is None:
-            feature_names_set = {
+            feature_names_list = [
                 c for c in observations.columns if c != self._target_name
-            }
+            ]
+            feature_names_set = set(feature_names_list)
         else:
+            feature_names_list = list(feature_names)
             feature_names_set: Set[str] = set(feature_names)
 
         if not feature_names_set.issubset(observations.columns):
@@ -104,7 +106,7 @@ class Sample:
         if self._target_name in feature_names_set:
             raise ValueError(f"features includes the target column {self._target_name}")
 
-        self._feature_names = feature_names_set
+        self._feature_names = feature_names_list
 
     @property
     def target_name(self) -> str:
@@ -182,7 +184,7 @@ class Sample:
 
         return subsample
 
-    def select_features(self, feature_names: Iterable[str]) -> "Sample":
+    def select_features(self, feature_names: Sequence[str]) -> "Sample":
         subsample = copy(self)
         feature_names = list(feature_names)
         feature_set = set(feature_names)
@@ -193,7 +195,7 @@ class Sample:
         subsample._observations = self._observations.loc[
             :, [*feature_names, subsample.target_name]
         ]
-        subsample._feature_names = feature_set
+        subsample._feature_names = feature_names
 
         return subsample
 
