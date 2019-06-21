@@ -53,7 +53,7 @@ class ModelInspector:
         # todo: instead create factory for shap explainers
         try:
             return TreeExplainer(
-                model=estimator, data=data, feature_dependence="independent"
+                model=estimator#, data=data, feature_dependence="independent"
             )
         except Exception as e:
             log.debug(
