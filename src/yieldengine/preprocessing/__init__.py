@@ -4,6 +4,9 @@ from sklearn.preprocessing import (
     FunctionTransformer,
     MaxAbsScaler,
     MinMaxScaler,
+    Normalizer,
+    PowerTransformer,
+    QuantileTransformer,
     RobustScaler,
     StandardScaler,
 )
@@ -40,6 +43,27 @@ class MaxAbsScalerDF(ConstantColumnTransformer[MaxAbsScaler]):
 
 @constant_column_transformer(source_transformer=RobustScaler)
 class RobustScalerDF(ConstantColumnTransformer[RobustScaler]):
+    @classmethod
+    def _make_base_transformer(cls, **kwargs) -> _BaseTransformer:
+        pass
+
+
+@constant_column_transformer(source_transformer=PowerTransformer)
+class PowerTransformerDF(ConstantColumnTransformer[PowerTransformer]):
+    @classmethod
+    def _make_base_transformer(cls, **kwargs) -> _BaseTransformer:
+        pass
+
+
+@constant_column_transformer(source_transformer=QuantileTransformer)
+class QuantileTransformerDF(ConstantColumnTransformer[QuantileTransformer]):
+    @classmethod
+    def _make_base_transformer(cls, **kwargs) -> _BaseTransformer:
+        pass
+
+
+@constant_column_transformer(source_transformer=Normalizer)
+class NormalizerDF(ConstantColumnTransformer[Normalizer]):
     @classmethod
     def _make_base_transformer(cls, **kwargs) -> _BaseTransformer:
         pass
