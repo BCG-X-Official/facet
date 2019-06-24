@@ -52,9 +52,7 @@ class ModelInspector:
 
         # todo: instead create factory for shap explainers
         try:
-            return TreeExplainer(
-                model=estimator#, data=data, feature_dependence="independent"
-            )
+            return TreeExplainer(model=estimator)
         except Exception as e:
             log.debug(
                 f"failed to instantiate shap.TreeExplainer:{str(e)},"
