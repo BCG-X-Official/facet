@@ -17,6 +17,8 @@ from yieldengine.model.prediction import PredictorCV
 
 log = logging.getLogger(__name__)
 
+V_SHAP_DEFAULT_DEPENDENCE = "tree_path_dependent"
+
 
 class ModelInspector:
     __slots__ = [
@@ -24,22 +26,29 @@ class ModelInspector:
         "_shap_matrix",
         "_feature_dependency_matrix",
         "_predictor",
+        "_shap_feature_dependence",
     ]
 
     F_FEATURE = "feature"
 
-    def __init__(self, predictor: PredictorCV) -> None:
+    def __init__(
+        self,
+        predictor: PredictorCV,
+        shap_feature_dependence: str = V_SHAP_DEFAULT_DEPENDENCE,
+    ) -> None:
 
         self._shap_matrix: Optional[pd.DataFrame] = None
         self._feature_dependency_matrix: Optional[pd.DataFrame] = None
         self._predictor = predictor
+        self._shap_feature_dependence = shap_feature_dependence
 
     @property
     def predictor(self) -> PredictorCV:
         return self._predictor
 
-    @staticmethod
-    def _make_shap_explainer(estimator: BaseEstimator, data: pd.DataFrame) -> Explainer:
+    def _make_shap_explainer(
+        self, estimator: BaseEstimator, data: pd.DataFrame
+    ) -> Explainer:
 
         # NOTE:
         # unfortunately, there is no convenient function in shap to determine the best
@@ -50,10 +59,16 @@ class ModelInspector:
         # we should not attempt to filter the exception type or message given that it is
         # currently inconsistent
 
-        # todo: instead create factory for shap explainers
         try:
+            if self._shap_feature_dependence != V_SHAP_DEFAULT_DEPENDENCE:
+                shap_data = data
+            else:
+                shap_data = None
+
             return TreeExplainer(
-                model=estimator, data=data, feature_dependence="independent"
+                model=estimator,
+                data=shap_data,
+                feature_dependence=self._shap_feature_dependence,
             )
         except Exception as e:
             log.debug(
@@ -92,7 +107,7 @@ class ModelInspector:
             else:
                 data_transformed = split_x
 
-            shap_matrix = ModelInspector._make_shap_explainer(
+            shap_matrix = self._make_shap_explainer(
                 estimator=estimator, data=data_transformed
             ).shap_values(data_transformed)
 
