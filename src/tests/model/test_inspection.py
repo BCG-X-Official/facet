@@ -173,3 +173,7 @@ def test_model_inspection_with_encoding(
 
         # cluster feature importances
         linkage_tree = mi.cluster_dependent_features()
+
+        # additionally try the ModelInspector with a different feature dependence:
+        mi2 = ModelInspector(predictor=mp, shap_feature_dependence="independent")
+        mi2.shap_matrix()
