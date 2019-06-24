@@ -212,18 +212,17 @@ class ConstantColumnTransformer(
         return self.columns_in
 
 
-# Decorator to easily create ConstantColumnTransformers, example:
-# see: src/tests/transform/test_constant_column_transformer
-def constant_column_transformer(source_transformer: type) -> Callable:
-    def decorate(class_in: type) -> type:
-        def _make_base_transformer(**kwargs) -> source_transformer:
-            return source_transformer(**kwargs)
+def make_constant_column_transformer_class(
+    source_transformer: type, class_name: str
+) -> type:
+    def _make_base_transformer(**kwargs) -> source_transformer:
+        return source_transformer(**kwargs)
 
-        def __init__(self, **kwargs) -> None:
-            ConstantColumnTransformer[source_transformer].__init__(self, **kwargs)
+    def __init__(self, **kwargs) -> None:
+        ConstantColumnTransformer[source_transformer].__init__(self, **kwargs)
 
-        class_in.__init__ = __init__
-        class_in._make_base_transformer = _make_base_transformer
-        return class_in
-
-    return decorate
+    return type(
+        class_name,
+        (ConstantColumnTransformer[source_transformer],),
+        {"__init__": __init__, "_make_base_transformer": _make_base_transformer},
+    )
