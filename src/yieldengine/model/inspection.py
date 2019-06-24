@@ -51,6 +51,11 @@ class ModelInspector:
         # currently inconsistent
 
         # todo: instead create factory for shap explainers
+        print('before treeexplainer')
+        return TreeExplainer(
+            model=estimator, data=data, feature_dependence="independent"
+        )
+        print('instantiate tree explainer')
         try:
             return TreeExplainer(
                 model=estimator, data=data, feature_dependence="independent"
