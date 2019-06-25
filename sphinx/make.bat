@@ -1,5 +1,12 @@
 @ECHO OFF
 
+del /q /s bar\*
+set DIRFOO=foo
+set DIRBAR=bar
+rem for %%i in (%DIRFOO%\*) do move "%%i" bar\
+rem for /d %%i in (foo\*) do move "%%i" bar\
+
+
 pushd %~dp0
 
 REM Command file for Sphinx documentation
@@ -34,6 +41,8 @@ REM generate apidoc using docstrings
 sphinx-apidoc -o %SOURCEDIR% -f ./../src/yieldengine
 REM run the sphinx build for html
 %SPHINXBUILD% -M %1 %SOURCEDIR% %BUILDDIR% %SPHINXOPTS%
+REM clean up potentially pre-existing files in /docs
+del /q /s ..\docs\*
 goto end
 
 :help
