@@ -17,7 +17,11 @@ from yieldengine.df.transform import DataFrameTransformer
 class Model:
     """
     A model can create a pipeline for a preprocessing transformer (optional; possibly a
-    pipeline itself) and an estimator
+    pipeline itself) and an estimator.
+
+    :param BaseEstimator estimator: the base estimator used in the pipeline
+    :param preprocessing: the preprocessing step in the pipeline (None or \
+    `DataFrameTransformer`)
     """
 
     __slots__ = ["_pipeline", "_preprocessing", "_estimator"]
