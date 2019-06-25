@@ -1,3 +1,5 @@
+# coding=utf-8
+"""Class with CV splitters compliant with scikit-learn API."""
 from typing import *
 
 import numpy as np
@@ -16,7 +18,6 @@ class CircularCrossValidator(BaseCrossValidator):
 
     :param test_ratio:  Ratio determining the size of the test set (default=0.2).
     :param num_splits:   Number of splits to generate (default=50).
-
     """
 
     __slots__ = ["_test_ratio", "_num_splits", "_use_bootstrapping"]
