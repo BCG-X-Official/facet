@@ -4,6 +4,7 @@ from typing import *
 import pandas as pd
 from sklearn.preprocessing import (
     FunctionTransformer,
+    KernelCenterer,
     MaxAbsScaler,
     MinMaxScaler,
     Normalizer,
@@ -39,6 +40,10 @@ RobustScalerDF = make_constant_column_transformer_class(source_transformer=Robus
 
 StandardScalerDF = make_constant_column_transformer_class(
     source_transformer=StandardScaler
+)
+
+KernelCentererDF = make_constant_column_transformer_class(
+    source_transformer=KernelCenterer
 )
 
 
