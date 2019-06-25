@@ -212,7 +212,7 @@ class NDArrayTransformerDF(
 class ColumnPreservingTransformer(
     DataFrameTransformer[_BaseTransformer], Generic[_BaseTransformer], metaclass=ABCMeta
 ):
-    """Abstract base class for a `DataFrameTransformer.
+    """Abstract base class for a `DataFrameTransformer`.
 
     All output columns of a ColumnPreservingTransformer have the same names as their
     associated input columns.
@@ -235,7 +235,7 @@ class ConstantColumnTransformer(
     Generic[_BaseTransformer],
     metaclass=ABCMeta,
 ):
-    """Abstract base class for a `DataFrameTransformer.
+    """Abstract base class for a `DataFrameTransformer`.
 
     A ConstantColumnTransformer does not add, remove, or rename any of the input columns
     """

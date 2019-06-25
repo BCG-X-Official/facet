@@ -46,7 +46,7 @@ class DataFrameEstimator(ABC, BaseEstimator, Generic[_BaseEstimator]):
         """
         Get parameters for this estimator.
 
-        :param deep: If True, will return the parameters for this estimator and
+        :param deep: If True, will return the parameters for this estimator and \
         contained sub-objects that are estimators
 
         :return: params Parameter names mapped to their values
