@@ -11,6 +11,7 @@ set SOURCEDIR=source
 set BUILDDIR=build
 
 if "%1" == "" goto help
+if "%1" == "html" goto html
 
 %SPHINXBUILD% >NUL 2>NUL
 if errorlevel 9009 (
@@ -25,6 +26,13 @@ if errorlevel 9009 (
 	exit /b 1
 )
 
+%SPHINXBUILD% -M %1 %SOURCEDIR% %BUILDDIR% %SPHINXOPTS%
+goto end
+
+:html
+REM generate apidoc using docstrings
+sphinx-apidoc -o %SOURCEDIR% -f ./../src/yieldengine
+REM run the sphinx build for html
 %SPHINXBUILD% -M %1 %SOURCEDIR% %BUILDDIR% %SPHINXOPTS%
 goto end
 
