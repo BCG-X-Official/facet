@@ -49,7 +49,7 @@ class PredictorCV:
     def model(self, split_id: int) -> Model:
         """
         :param split_id: start index of test split
-        :return: the model that was used to predict the dependent variable of
+        :return: the model that was used to predict the dependent variable of \
         the test split
         """
         if self._model_by_split is None:
@@ -66,7 +66,7 @@ class PredictorCV:
     def estimator(self, split: int) -> BaseEstimator:
         """
         :param split: start index of test split
-        :return: the estimator that was used to predict the dependent variable of
+        :return: the estimator that was used to predict the dependent variable of \
         the test split
         """
         if self._model_by_split is None:

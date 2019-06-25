@@ -82,9 +82,9 @@ class ModelRanker:
     """
     Turns a model zoo along with
 
-        - a (optional) pre-processing pipeline
+        - an (optional) pre-processing pipeline
         - a cross-validation instance
-        - a scoring function
+        - a scoring function \
     into a scikit-learn pipeline.
 
     :param grids: list of model grids to be ranked
@@ -139,11 +139,13 @@ class ModelRanker:
         Execute the pipeline with the given sample and return the ranking.
 
         :param sample: sample to fit pipeline to
-        :param ranking_scorer: scoring function used for ranking across models,
-        taking mean and standard deviation of the ranking scores_for_split and returning the
-        overall ranking score (default: ModelRanking.default_ranking_scorer)
-        :param ranking_metric: the scoring to be used for model ranking, given as a name to be used to look up the right
-               ModelScoring object in the ModelEvaluation.scoring dictionary (default: 'test_score').
+        :param ranking_scorer: scoring function used for ranking across models, \
+        taking mean and standard deviation of the ranking scores_for_split and \
+        returning the overall ranking score (default: \
+        ModelRanking.default_ranking_scorer)
+        :param ranking_metric: the scoring to be used for model ranking, \
+        given as a name to be used to look up the right ModelScoring object in the \
+        ModelEvaluation.scoring dictionary (default: 'test_score').
         :param n_jobs: number of threads to use (default: one)
         :param pre_dispatch: maximum number of the data to make (default: `"2*n_jobs"`)
 
