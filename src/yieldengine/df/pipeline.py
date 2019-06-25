@@ -81,6 +81,10 @@ class PipelineDF(DataFrameTransformer[Pipeline], DataFramePredictor[Pipeline]):
 
     @property
     def steps(self) -> Sequence[Tuple[str, Union[DataFrameTransformer, BaseEstimator]]]:
+        """
+        The `steps` attribute of the underlying `Pipeline`.
+        List of (name, transform) tuples (implementing fit/transform).
+        """
         return self.base_transformer.steps
 
     def __len__(self) -> int:
