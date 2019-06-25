@@ -156,7 +156,8 @@ class UnivariateSimulation:
             not np.all(feature_sr == feature_sr.astype(int))
         ):
             # get a sorted array of all unique values for the feature
-            unique_values_sorted: np.ndarray = feature_sr.unique().sort()
+            unique_values_sorted: np.ndarray = feature_sr.copy().unique()
+            unique_values_sorted.sort()
             # are there more unique-values than allowed by the passed limit?
             if len(unique_values_sorted) > limit_observations:
                 # use np.linspace to spread out array indices evenly within bounds
