@@ -31,7 +31,7 @@ class DataFramePredictor(DataFrameEstimator[_BasePredictor], metaclass=ABCMeta):
         Returns prediction as a `pd.Series`.
 
         :param X: the dataframe of features
-        :param predict_params: additional arguments passed to the the `predict` method
+        :param predict_params: additional arguments passed to the the `predict` method \
         of the base estimator
         :return: the `pd.Series` of predictions
         """
@@ -109,7 +109,7 @@ class DataFramePredictor(DataFrameEstimator[_BasePredictor], metaclass=ABCMeta):
         Returns the score of the base estimator.
 
         :param X: dataframe of the features, shape = (n_samples, n_features)
-        :param y: series of the true targets, shape = (n_samples) or (n_samples,
+        :param y: series of the true targets, shape = (n_samples) or (n_samples, \
         n_outputs)
         :param sample_weight:  array-like, sample weights, shape = (n_sample)
         :return: the score of the model
