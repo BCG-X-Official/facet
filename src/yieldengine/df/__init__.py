@@ -17,6 +17,9 @@ MatrixLike = Union[np.ndarray, pd.DataFrame, Sequence[Sequence[_T]]]
 
 
 class DataFrameEstimator(ABC, BaseEstimator, Generic[_BaseEstimator]):
+    """
+    Abstract base class that is a wrapper around the scikit-learn `BaseEstimator` class.
+    """
     F_COLUMN = "column"
 
     def __init__(self, **kwargs) -> None:
@@ -32,6 +35,8 @@ class DataFrameEstimator(ABC, BaseEstimator, Generic[_BaseEstimator]):
     @property
     def base_estimator(self) -> _BaseEstimator:
         """
+        Returns the base scikit-learn estimator.
+
         :return: the estimator underlying this DataFrameEstimator
         """
         return self._base_estimator
@@ -40,10 +45,10 @@ class DataFrameEstimator(ABC, BaseEstimator, Generic[_BaseEstimator]):
         """
         Get parameters for this estimator.
 
-        :param deep If True, will return the parameters for this estimator and
+        :param deep: If True, will return the parameters for this estimator and
         contained sub-objects that are estimators
 
-        :returns params Parameter names mapped to their values
+        :return: params Parameter names mapped to their values
         """
         # noinspection PyUnresolvedReferences
         return self._base_estimator.get_params(deep=deep)
@@ -62,6 +67,12 @@ class DataFrameEstimator(ABC, BaseEstimator, Generic[_BaseEstimator]):
 
     # noinspection PyPep8Naming
     def fit(self, X: pd.DataFrame, y: Optional[pd.Series] = None, **fit_params) -> None:
+        """
+        Fit the base estimator.
+
+        :param X: dataframe to fit the estimator
+        :param y: pandas series
+        """
         self._check_parameter_types(X, y)
 
         self._base_fit(X, y, **fit_params)
@@ -70,10 +81,12 @@ class DataFrameEstimator(ABC, BaseEstimator, Generic[_BaseEstimator]):
 
     @property
     def is_fitted(self) -> bool:
+        """True if the base estimator is fitted, else false"""
         return self._columns_in is not None
 
     @property
     def columns_in(self) -> pd.Index:
+        """The index of the input columns"""
         self._ensure_fitted()
         return self._columns_in
 
