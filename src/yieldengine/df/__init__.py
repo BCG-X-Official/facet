@@ -20,6 +20,8 @@ MatrixLike = Union[np.ndarray, pd.DataFrame, Sequence[Sequence[_T]]]
 class DataFrameEstimator(ABC, BaseEstimator, Generic[_BaseEstimator]):
     """
     Abstract base class that is a wrapper around the scikit-learn `BaseEstimator` class.
+
+    :param `**kwargs`: the arguments passed to the base estimator
     """
     F_COLUMN = "column"
 
