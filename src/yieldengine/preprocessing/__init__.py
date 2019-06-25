@@ -8,6 +8,7 @@ from sklearn.preprocessing import (
     MaxAbsScaler,
     MinMaxScaler,
     Normalizer,
+    PolynomialFeatures,
     PowerTransformer,
     QuantileTransformer,
     RobustScaler,
@@ -77,3 +78,18 @@ class FunctionTransformerDF(ColumnPreservingTransformer[FunctionTransformer]):
     @classmethod
     def _make_base_transformer(cls, **kwargs) -> FunctionTransformer:
         return FunctionTransformer(**kwargs)
+
+
+class PolynomialFeaturesDF(ColumnPreservingTransformer[PolynomialFeatures]):
+    def _get_columns_out(self) -> pd.Index:
+        return pd.Index(
+            data=self.base_transformer.get_feature_names(input_features=self.columns_in)
+        )
+
+    def __init__(self, **kwargs) -> None:
+
+        super().__init__(**kwargs)
+
+    @classmethod
+    def _make_base_transformer(cls, **kwargs) -> PolynomialFeatures:
+        return PolynomialFeatures(**kwargs)
