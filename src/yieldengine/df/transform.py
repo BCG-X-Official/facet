@@ -1,4 +1,5 @@
 # coding=utf-8
+"""Base classes with wrapper around sklearn transformers."""
 
 import logging
 from abc import ABCMeta, abstractmethod
@@ -25,7 +26,7 @@ class DataFrameTransformer(
     Wraps around an sklearn transformer and ensures that the X and y objects passed
     and returned are pandas data frames with valid column names
 
-    :param base_transformer the sklearn transformer to be wrapped
+    :param: base_transformer the sklearn transformer to be wrapped
     """
 
     F_COLUMN_ORIGINAL = "column_original"
@@ -37,10 +38,16 @@ class DataFrameTransformer(
 
     @property
     def base_transformer(self) -> _BaseTransformer:
+        """The base sklean transformer"""
         return self.base_estimator
 
     # noinspection PyPep8Naming
     def transform(self, X: pd.DataFrame) -> pd.DataFrame:
+        """Calls the transform method of the base transformer `self.base_transformer`.
+
+        :param X: dataframe to transform
+        :return: transformed dataframe
+        """
         self._check_parameter_types(X, None)
 
         transformed = self._base_transform(X)
@@ -53,6 +60,14 @@ class DataFrameTransformer(
     def fit_transform(
         self, X: pd.DataFrame, y: Optional[pd.Series] = None, **fit_params
     ) -> pd.DataFrame:
+        """Calls the fit_transform method of the base transformer
+        `self.base_transformer`.
+
+        :param X: dataframe to transform
+        :param y: series of training targets
+        :param fit_params: parameters passed to the fit method of the base transformer
+        :return: dataframe of transformed sample
+        """
         self._check_parameter_types(X, y)
 
         transformed = self._base_fit_transform(X, y, **fit_params)
@@ -65,6 +80,13 @@ class DataFrameTransformer(
 
     # noinspection PyPep8Naming
     def inverse_transform(self, X: pd.DataFrame) -> pd.DataFrame:
+        """Apply inverse transformations in reverse order on the base tranformer.
+
+        All estimators in the pipeline must support ``inverse_transform``.
+        :param X: dataframe of samples
+        :return: dataframe of inversed samples
+        """
+
         self._check_parameter_types(X, None)
 
         transformed = self._base_inverse_transform(X)
@@ -74,6 +96,11 @@ class DataFrameTransformer(
         )
 
     def fit_transform_sample(self, sample: Sample) -> Sample:
+        """
+        Fit and transform with input and output being a `Sample` object.
+        :param sample: `Sample` object used as input
+        :return: transformed `Sample` object
+        """
         return Sample(
             observations=pd.concat(
                 objs=[self.fit_transform(sample.features), sample.target], axis=1
@@ -83,6 +110,8 @@ class DataFrameTransformer(
 
     @property
     def columns_original(self) -> pd.Series:
+        """Series with index the name of the output columns and with values the
+        original name of the column"""
         self._ensure_fitted()
         if self._columns_original is None:
             self._columns_original = (
@@ -94,6 +123,7 @@ class DataFrameTransformer(
 
     @property
     def columns_out(self) -> pd.Index:
+        """The `pd.Index` of name of the output columns"""
         return self.columns_original.index
 
     @classmethod
@@ -182,9 +212,10 @@ class NDArrayTransformerDF(
 class ColumnPreservingTransformer(
     DataFrameTransformer[_BaseTransformer], Generic[_BaseTransformer], metaclass=ABCMeta
 ):
-    """
+    """Abstract base class for a `DataFrameTransformer.
+
     All output columns of a ColumnPreservingTransformer have the same names as their
-    associated input columns
+    associated input columns.
     """
 
     @abstractmethod
@@ -204,7 +235,8 @@ class ConstantColumnTransformer(
     Generic[_BaseTransformer],
     metaclass=ABCMeta,
 ):
-    """
+    """Abstract base class for a `DataFrameTransformer.
+
     A ConstantColumnTransformer does not add, remove, or rename any of the input columns
     """
 
