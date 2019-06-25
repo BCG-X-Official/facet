@@ -85,7 +85,7 @@ class CircularCrossValidator(BaseCrossValidator):
         n_samples = self._n_samples(X, y)
 
         data_indices = np.arange(n_samples)
-        n_test_samples = max(1, int(n_samples * self._test_ratio))
+        n_test_samples = max(1, int(np.ceil(n_samples * self._test_ratio)))
 
         for split_test_start_sample in self._test_split_starts(n_samples):
             data_indices_rolled = np.roll(data_indices, split_test_start_sample)
