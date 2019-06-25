@@ -1,3 +1,6 @@
+# coding=utf-8
+"""Classes to define model with hyperparameters grid and classes to analyse
+analyse and report the scores of these models."""
 import re
 from collections import defaultdict
 from itertools import chain
@@ -13,6 +16,16 @@ ParameterGrid = Dict[str, Sequence[Any]]
 
 
 class ModelGrid:
+    """
+    Class containing information about a model and a grid of hyperparmeters both for \
+    the preprocessing and the estimator steps.
+
+    :param Model model: underlying `Model`
+    :param ParameterGrid estimatro_parameters: dict of the hyperparameter grid for \
+    the estimator
+    :param preprocessing_parameters: dictionary of the hyperparameter grid for \
+    the preprocessing step of the model (can be None)
+    """
     def __init__(
         self,
         model: Model,
@@ -45,33 +58,45 @@ class ModelGrid:
 
     @property
     def model(self) -> Model:
+        """The underlying `Model`"""
         return self._model
 
     @property
     def estimator_parameters(self) -> ParameterGrid:
+        """The dictionary of parameters for the estimator."""
         return self._estimator_parameters
 
     @property
     def preprocessing_parameters(self) -> Optional[ParameterGrid]:
+        """The dictionary of parameters for the preprocessor."""
         return self._preprocessing_parameters
 
     @property
     def parameters(self) -> ParameterGrid:
+        """Dict of the parameter grid of the estimator."""
         return self._grid
 
 
 class ModelScoring:
+    """"
+    Class for statistics of a cross validated model.
+
+    :param split_scores: iterable of the scores of the splits
+    """
     def __init__(self, split_scores: Iterable[float]):
         self.split_scores = np.array(split_scores)
 
     def mean(self) -> float:
+        """Mean of the scores of the splits."""
         return self.split_scores.mean()
 
     def std(self) -> float:
+        """Standard deviation of the split scores."""
         return self.split_scores.std()
 
 
 class ModelEvaluation(NamedTuple):
+    """Class with attributes model, parameters, scoring and ranking_score."""
     model: Model
     parameters: Mapping[str, Any]
     scoring: Mapping[str, ModelScoring]
