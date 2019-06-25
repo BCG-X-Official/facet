@@ -19,6 +19,8 @@ log = logging.getLogger(__name__)
 class PipelineDF(DataFrameTransformer[Pipeline], DataFramePredictor[Pipeline]):
     """
     Wrapper class around `sklearn.pipeline.Pipeline` that returns dataframes.
+
+    :param `**kwargs`: the arguments passed to `DataFrameTransformer` in `__init__`
     """
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
@@ -117,7 +119,7 @@ class PipelineDF(DataFrameTransformer[Pipeline], DataFramePredictor[Pipeline]):
             return self.base_transformer[ind]
 
     @property
-    def named_steps(self):
+    def named_steps(self) -> Dict:
         """
         Read-only attribute to access any step parameter by user given name.
         Keys are step names and values are steps parameters.

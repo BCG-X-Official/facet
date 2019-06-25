@@ -19,6 +19,8 @@ _BasePredictor = TypeVar("_BasePredictor", bound=Union[RegressorMixin, Classifie
 class DataFramePredictor(DataFrameEstimator[_BasePredictor], metaclass=ABCMeta):
     """
     Wrapper around scikit-learn regressor and classifiers that preserves dataframes.
+
+    :param `**kwargs`: arguments passed to `DataFrameEstimator` in `__init__`
     """
     F_PREDICTION = "prediction"
 
