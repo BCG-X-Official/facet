@@ -145,9 +145,10 @@ class Sample:
         self, dtype: Union[type, str, Sequence[Union[type, str]]]
     ) -> pd.DataFrame:
         """
+        Return a subdataframe with columns filtered according to their type
         :param dtype: dtype, or sequence of dtypes, for filtering features. See DTYPE_*
         constants for common type selectors
-        :return: list of columns for filtered features
+        :return: dataframe of the selected features
         """
         return self.features.select_dtypes(dtype)
 
@@ -183,6 +184,12 @@ class Sample:
         return subsample
 
     def select_features(self, feature_names: Iterable[str]) -> "Sample":
+        """
+        Return a Sample object with filtered feature columns
+        :param feature_names: feature names to filter on
+        :return: copy of this sample, containing only the features in the given
+        feature_names
+        """
         subsample = copy(self)
         feature_names = list(feature_names)
         feature_set = set(feature_names)
