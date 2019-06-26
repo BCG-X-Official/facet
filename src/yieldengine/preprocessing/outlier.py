@@ -4,14 +4,16 @@ from typing import Optional
 import numpy as np
 import pandas as pd
 from sklearn.base import BaseEstimator, TransformerMixin
+from pandas.api.types import is_numeric_dtype
 
+from yieldengine.df.transform import DataFrameTransformer, ConstantColumnTransformer
 
 log = logging.getLogger(__name__)
 
-__all__ = ["TukeyOutlierRemoverDF"]
+__all__ = ["TukeyOutlierRemover", "TukeyOutlierRemoverDF"]
 
 
-class TukeyOutlierRemoverDF(BaseEstimator, TransformerMixin):
+class TukeyOutlierRemover(BaseEstimator, TransformerMixin):
     """
     Remove outliers according to Tukey's method, respective to the interquartile \
     range (IQR)
@@ -27,6 +29,8 @@ class TukeyOutlierRemoverDF(BaseEstimator, TransformerMixin):
         :param y:
         :return:
         """
+        if not all(X.apply(is_numeric_dtype)):
+            raise ValueError("Non numerical dtype in X.")
         q1 = X.quantile(q=.25)
         q3 = X.quantile(q=.75)
         iqr = q3 - q1
@@ -35,7 +39,21 @@ class TukeyOutlierRemoverDF(BaseEstimator, TransformerMixin):
         return self
 
     def transform(self, X:pd.DataFrame) -> pd.DataFrame:
+        if not all(X.apply(is_numeric_dtype)):
+            raise ValueError("Non numerical dtype in X.")
         # define a boolean mask of the outliers
         mask = (X < self.low) | (X > self.high)
-        X_return = X.where(cond=~mask, other=np.nan)
+        X_return = np.where(~mask, X, np.nan)
         return X_return
+
+
+class TukeyOutlierRemoverDF(ConstantColumnTransformer[TukeyOutlierRemover]):
+    """
+    Remove outliers according to Tukey's method.
+    """
+    def __init__(self, **kwargs) -> None:
+        super().__init__(**kwargs)
+
+    @classmethod
+    def _make_base_transformer(cls, **kwargs) -> TukeyOutlierRemover:
+        return TukeyOutlierRemover(**kwargs)
