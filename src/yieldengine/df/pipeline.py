@@ -1,4 +1,7 @@
 # coding=utf-8
+"""Base classes for wrapper around pipeline returning pandas objects and keeping
+track of the column names."""
+
 
 import logging
 from typing import *
@@ -14,6 +17,11 @@ log = logging.getLogger(__name__)
 
 
 class PipelineDF(DataFrameTransformer[Pipeline], DataFramePredictor[Pipeline]):
+    """
+    Wrapper class around `sklearn.pipeline.Pipeline` that returns dataframes.
+
+    :param `**kwargs`: the arguments passed to `DataFrameTransformer` in `__init__`
+    """
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
         self._validate_steps()
@@ -75,6 +83,10 @@ class PipelineDF(DataFrameTransformer[Pipeline], DataFramePredictor[Pipeline]):
 
     @property
     def steps(self) -> Sequence[Tuple[str, Union[DataFrameTransformer, BaseEstimator]]]:
+        """
+        The `steps` attribute of the underlying `Pipeline`.
+        List of (name, transform) tuples (implementing fit/transform).
+        """
         return self.base_transformer.steps
 
     def __len__(self) -> int:
@@ -105,3 +117,11 @@ class PipelineDF(DataFrameTransformer[Pipeline], DataFramePredictor[Pipeline]):
             )
         else:
             return self.base_transformer[ind]
+
+    @property
+    def named_steps(self) -> Dict:
+        """
+        Read-only attribute to access any step parameter by user given name.
+        Keys are step names and values are steps parameters.
+        """
+        return self.base_transformer.named_steps
