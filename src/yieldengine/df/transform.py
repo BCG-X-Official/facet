@@ -24,7 +24,9 @@ class DataFrameTransformer(
 ):
     """
     Wraps around an sklearn transformer and ensures that the X and y objects passed
-    and returned are pandas data frames with valid column names
+    and returned are pandas data frames with valid column names.
+
+    Implementations must define `_make_base_transformer` and `_get_columns_original`.
 
     :param: base_transformer the sklearn transformer to be wrapped
     """
@@ -215,7 +217,8 @@ class ColumnPreservingTransformer(
     """Abstract base class for a `DataFrameTransformer`.
 
     All output columns of a ColumnPreservingTransformer have the same names as their
-    associated input columns.
+    associated input columns. Implementations must define `_make_base_transformer` \
+    and `_get_columns_out`.
     """
 
     @abstractmethod
@@ -237,7 +240,8 @@ class ConstantColumnTransformer(
 ):
     """Abstract base class for a `DataFrameTransformer`.
 
-    A ConstantColumnTransformer does not add, remove, or rename any of the input columns
+    A ConstantColumnTransformer does not add, remove, or rename any of the input
+    columns. Implementations must define `_make_base_transformer`.
     """
 
     def _get_columns_out(self) -> pd.Index:
