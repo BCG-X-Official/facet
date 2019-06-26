@@ -118,7 +118,7 @@ class ModelInspector:
             else:
                 data_transformed = split_x
 
-            shap_matrix = ModelInspector._make_shap_explainer(
+            shap_matrix = self._make_shap_explainer(
                 estimator=estimator, data=data_transformed
             ).shap_values(data_transformed)
 
