@@ -1,3 +1,7 @@
+# coding=utf-8
+"""Module with the `PredictorCV class which gather information from a model, its
+cross validation and the sample used."""
+
 import copy
 from typing import *
 
@@ -11,6 +15,14 @@ from yieldengine.model import Model
 
 
 class PredictorCV:
+    """
+    Class containing the information of a model that has been fitted with some \
+    cross-validation.
+
+    :param Model model: the underlying model
+    :param BaseCrossValidator cv: underlying cross validator
+    :param Sample sample: the `Sample` object used to fit the model.
+    """
     __slots__ = [
         "_model",
         "_cv",
@@ -32,24 +44,31 @@ class PredictorCV:
 
     @property
     def cv(self) -> BaseCrossValidator:
+        """The underlying `BaseCrossValidator`"""
         return self._cv
 
     @property
     def sample(self) -> Sample:
+        """The underlying `Sample`"""
         return self._sample
 
     @property
     def model_by_split(self) -> Optional[Dict[int, Model]]:
+        """
+        When self is fitted, dictionary whit keys the split indexes (as int) and \
+        values a clone of the fitted model for this split. `None` when not fitted.
+        """
         return self._model_by_split
 
     @property
     def split_ids(self) -> Optional[Set[int]]:
+        """The set of split ids when self is fitted, None otherwrise."""
         return set() if self.model_by_split is None else self.model_by_split.keys()
 
     def model(self, split_id: int) -> Model:
         """
         :param split_id: start index of test split
-        :return: the model that was used to predict the dependent variable of
+        :return: the model that was used to predict the dependent variable of \
         the test split
         """
         if self._model_by_split is None:
@@ -66,7 +85,7 @@ class PredictorCV:
     def estimator(self, split: int) -> BaseEstimator:
         """
         :param split: start index of test split
-        :return: the estimator that was used to predict the dependent variable of
+        :return: the estimator that was used to predict the dependent variable of \
         the test split
         """
         if self._model_by_split is None:
@@ -77,6 +96,7 @@ class PredictorCV:
         return self._model_by_split is not None
 
     def fit(self) -> None:
+        """Fits the predictor."""
         if self._is_fitted():
             return
 
@@ -143,6 +163,12 @@ class PredictorCV:
         return self._predictions_for_all_samples
 
     def copy_with_sample(self, sample: Sample):
+        """
+        Copies the predictor whith some new `Sample`.
+
+        :param sample: the `Sample` used for the copy
+        :return: the copy of self
+        """
         copied_predictor = copy.copy(self)
         copied_predictor._sample = sample
         copied_predictor._predictions_for_all_samples = None

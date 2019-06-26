@@ -117,9 +117,9 @@ class UnivariateSimulation:
         Get an array of observed values for a particular feature
 
         :param feature_name: name of the feature
-        :param min_relative_frequency: the relative frequency with which a particular
-        feature value has to occur within the sample, for it to be selected. Not used
-        for non-discrete features or features with high variability (when no single
+        :param min_relative_frequency: the relative frequency with which a particular \
+        feature value has to occur within the sample, for it to be selected. Not used \
+        for non-discrete features or features with high variability (when no single \
         feature value occurs more than "min_relative_frequency" times)
         :param limit_observations: how many observation-values to return at max.
         :return: a 1D numpy array with the selected feature values
@@ -156,7 +156,8 @@ class UnivariateSimulation:
             not np.all(feature_sr == feature_sr.astype(int))
         ):
             # get a sorted array of all unique values for the feature
-            unique_values_sorted: np.ndarray = feature_sr.unique().sort()
+            unique_values_sorted: np.ndarray = feature_sr.copy().unique()
+            unique_values_sorted.sort()
             # are there more unique-values than allowed by the passed limit?
             if len(unique_values_sorted) > limit_observations:
                 # use np.linspace to spread out array indices evenly within bounds
