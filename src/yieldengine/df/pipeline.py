@@ -85,13 +85,13 @@ class PipelineDF(DataFrameTransformer[Pipeline], DataFramePredictor[Pipeline]):
     def steps(self) -> Sequence[Tuple[str, Union[DataFrameTransformer, BaseEstimator]]]:
         """
         The `steps` attribute of the underlying `Pipeline`.
-        List of (name, transform) tuples (implementing fit/transform).
+        :return: List of (name, transform) tuples (implementing fit/transform).
         """
         return self.base_transformer.steps
 
     def __len__(self) -> int:
         """
-        @returns the length of the Pipeline
+        :return: the length of the Pipeline
         """
         return len(self.base_transformer.steps)
 
@@ -119,9 +119,9 @@ class PipelineDF(DataFrameTransformer[Pipeline], DataFramePredictor[Pipeline]):
             return self.base_transformer[ind]
 
     @property
-    def named_steps(self) -> Dict:
+    def named_steps(self) -> Mapping[str, DataFrameTransformer]:
         """
-        Read-only attribute to access any step parameter by user given name.
-        Keys are step names and values are steps parameters.
+        :return: mapping of step names to the data frame transformers representing
+        the steps
         """
         return self.base_transformer.named_steps
