@@ -22,7 +22,7 @@ class TukeyOutlierRemover(BaseEstimator, TransformerMixin):
     def __init__(self, iqr_threshold: float):
         self.iqr_threshold = iqr_threshold
 
-    def fit(self, X: pd.DataFrame, y=Optional[pd.Series]) -> None:
+    def fit(self, X: pd.DataFrame, y=Optional[pd.Series]) -> "TukeyOutlierRemover":
         """
 
         :param X:
