@@ -95,7 +95,7 @@ class CircularCrossValidator(BaseCrossValidator):
         data_indices = np.arange(n_samples)
 
         for test_start, test_end in self._test_split_bounds(n_samples):
-            data_indices_rolled = np.roll(data_indices, test_start)
+            data_indices_rolled = np.roll(data_indices, - test_start)
             test_indices = data_indices_rolled[: test_end - test_start]
             yield test_indices
 
