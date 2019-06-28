@@ -112,7 +112,7 @@ class ModelInspector:
 
     def feature_importances(self) -> pd.Series:
         """
-        :returns: feature importances as their mean absolute SHAP contributions, \
+        :return: feature importances as their mean absolute SHAP contributions, \
         normalised to a total 100%
         """
         feature_importances: pd.Series = self.shap_matrix().abs().mean()
