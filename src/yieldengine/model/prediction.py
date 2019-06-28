@@ -5,6 +5,7 @@ import numpy as np
 import pandas as pd
 from sklearn.base import BaseEstimator
 from sklearn.model_selection import BaseCrossValidator
+from joblib import Parallel, delayed
 
 from yieldengine import Sample
 from yieldengine.model import Model
@@ -17,18 +18,21 @@ class PredictorCV:
         "_sample",
         "_predictions_for_all_samples",
         "_model_by_split",
+        "_n_jobs"
     ]
 
     F_SPLIT_ID = "split_id"
     F_PREDICTION = "prediction"
     F_TARGET = "target"
 
-    def __init__(self, model: Model, cv: BaseCrossValidator, sample: Sample) -> None:
+    def __init__(self, model: Model, cv: BaseCrossValidator, sample: Sample,
+                 n_jobs: int = 1) -> None:
         self._model = model
         self._cv = cv
         self._sample = sample
         self._model_by_split: Optional[Dict[int, Model]] = None
         self._predictions_for_all_samples: Optional[pd.DataFrame] = None
+        self._n_jobs = n_jobs
 
     @property
     def cv(self) -> BaseCrossValidator:
@@ -45,6 +49,10 @@ class PredictorCV:
     @property
     def split_ids(self) -> Optional[Set[int]]:
         return set() if self.model_by_split is None else self.model_by_split.keys()
+
+    @property
+    def n_jobs(self) -> int:
+        return self._n_jobs
 
     def model(self, split_id: int) -> Model:
         """
@@ -131,14 +139,33 @@ class PredictorCV:
                 index=test_sample.index,
             )
 
-        self._predictions_for_all_samples = pd.concat(
-            [
-                predict(split_id, test_indices=test_indices)
-                for split_id, (_, test_indices) in enumerate(
+        def _get_predictions_for_all_samples():
+            # set_loky_pickler('pickle')
+            parallel = Parallel(n_jobs=self.n_jobs, verbose=51)
+            args = [
+                (split_id, test_indices) for split_id, (_, test_indices) in enumerate(
                     self.cv.split(sample.features, sample.target)
                 )
             ]
-        ).join(sample.target.rename(PredictorCV.F_TARGET))
+            dfs_predict = parallel(delayed(predict)(
+                split_id, test_indices=test_indices)
+                for split_id, test_indices in args)
+
+            predictions = pd.concat(dfs_predict).join(
+                sample.target.rename(PredictorCV.F_TARGET)
+            )
+            return predictions
+
+        # self._predictions_for_all_samples = pd.concat(
+        #     [
+        #         predict(split_id, test_indices=test_indices)
+        #         for split_id, (_, test_indices) in enumerate(
+        #             self.cv.split(sample.features, sample.target)
+        #         )
+        #     ]
+        # ).join(sample.target.rename(PredictorCV.F_TARGET))
+
+        self._predictions_for_all_samples = _get_predictions_for_all_samples()
 
         return self._predictions_for_all_samples
 
