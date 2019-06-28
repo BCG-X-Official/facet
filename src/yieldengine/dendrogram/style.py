@@ -1,3 +1,5 @@
+"""Module that defines various dendogram styles."""
+
 import logging
 import math
 from typing import *
@@ -21,11 +23,19 @@ _COLOR_WHITE = "white"
 
 
 class _PercentageFormatter(Formatter):
+    """Class to format percentage."""
     def __call__(self, x, pos=None) -> str:
         return f"{x * 100.0:.0f}%"
 
 
 class MatplotStyle(DendrogramStyle):
+    """Matplotlib style for dendogram.
+
+    Plot a color bar, the axes and the x-ticks.
+
+    :param ax: matplotlib `Axes` to draw on
+    :param min_weight: the min weight in the colorbar
+    """
     __slots__ = ["_ax", "_cm", "_min_weight"]
 
     _PERCENTAGE_FORMATTER = _PercentageFormatter()
@@ -55,14 +65,20 @@ class MatplotStyle(DendrogramStyle):
         cax.yaxis.set_major_formatter(MatplotStyle._PERCENTAGE_FORMATTER)
 
     def draw_title(self, title: str) -> None:
+        """Draw the title."""
         self._ax.set_title(label=title)
 
     def draw_leaf_labels(self, labels: Sequence[str]) -> None:
+        """Draw the ticks and their labels on the dendogram (on the y-axis)."""
         y_axis = self._ax.yaxis
         y_axis.set_ticks(ticks=range(len(labels)))
         y_axis.set_ticklabels(ticklabels=labels)
 
-    def color(self, weight) -> RgbaColor:
+    def color(self, weight: float) -> RgbaColor:
+        """Return the color associated to the weight based on matplotlib colormap.
+
+        :param weight: the weight
+        """
         return self._cm(
             0
             if weight <= self._min_weight
@@ -71,9 +87,20 @@ class MatplotStyle(DendrogramStyle):
 
 
 class LineStyle(MatplotStyle):
+    """Line style. This is the classical dendogram representation, with some colors
+    on the branches."""
     def draw_link_leg(
         self, bottom: float, top: float, first_leaf: int, n_leaves: int, weight: float
     ) -> None:
+        """Draw a horizontal link in the dendogram (between a node and one of its \
+        children.
+
+        :param bottom: the x coordinate of the child node
+        :param top: the x coordinate of the parent node
+        :param first_leaf: the index of the first leaf in the tree
+        :param n_leaves: the number of leaves in the tree
+        :param weight: the weight of the child node
+        """
         line_y = first_leaf + (n_leaves - 1) / 2
         self._draw_line(x1=bottom, x2=top, y1=line_y, y2=line_y, weight=weight)
 
@@ -86,6 +113,14 @@ class LineStyle(MatplotStyle):
         n_leaves_right,
         weight: float,
     ) -> None:
+        """Draw a vertical link in the dendogram (between a two sibling nodes) and \
+        the outgoing vertical line.
+
+        :param bottom: the x coordinate of the parent node of the siblings
+        :param top: not used
+        :param first_leaf: the index of the first leaf in the tree
+        :param n_leaves: the number of leaves in the tree
+        :param weight: the weight of the parent node"""
         self._draw_line(
             x1=bottom,
             x2=bottom,
@@ -109,6 +144,11 @@ class LineStyle(MatplotStyle):
 
 
 class FeatMapStyle(MatplotStyle):
+    """Plot dendogram with a heat map style.
+
+    :param ax: a matplotlib `Axes`
+    :min_weight: the min weight in the color bar
+    """
     def __init__(self, ax: Axes, min_weight: float = 0.01) -> None:
         super().__init__(ax=ax, min_weight=min_weight)
         ax.margins(0, 0)
@@ -119,6 +159,14 @@ class FeatMapStyle(MatplotStyle):
     def draw_link_leg(
         self, bottom: float, top: float, first_leaf: int, n_leaves: int, weight: float
     ) -> None:
+        """Draw a link of the dendogram as a box.
+
+        :param bottom: x lower value of the drawn box
+        :param top: x upper value of the drawn box
+        :param first_leaf: index of the first leaf in the linkage tree
+        :param n_leaves: num of leaves in the linkage tree
+        :param weight: weight of the leaf
+        """
         line_y = first_leaf + (n_leaves - 1) / 2
         self._draw_hbar(x=bottom, w=top - bottom, y=line_y, h=1, weight=weight)
 
@@ -131,6 +179,14 @@ class FeatMapStyle(MatplotStyle):
         n_leaves_right,
         weight: float,
     ) -> None:
+        """Draw a link between a node and its two children as a box.
+
+        :param bottom: x lower value of the drawn box
+        :param top: x upper value of the drawn box
+        :param first_leaf: index of the first leaf in the linkage tree
+        :param n_leaves: num of leaves in the linkage tree
+        :param weight: weight of the parent node
+        """
         self._draw_hbar(
             x=bottom,
             w=top - bottom,
@@ -140,6 +196,14 @@ class FeatMapStyle(MatplotStyle):
         )
 
     def _draw_hbar(self, x: float, y: float, w: float, h: float, weight: float) -> None:
+        """Draw a box.
+
+        :param x: left x position of the box
+        :param y: top vertical position of the box
+        :param w: the width of the box
+        :param h: the heigth of the box
+        :param weight: the weight used to compute the color of the box
+        """
         fill_color = self.color(weight)
 
         self._ax.barh(
