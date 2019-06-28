@@ -1,3 +1,4 @@
+"""This module allows to draw dendograms with different styles."""
 import logging
 from abc import ABC, abstractmethod
 from typing import *
@@ -15,6 +16,12 @@ class _SubtreeInfo(NamedTuple):
 
 
 class DendrogramStyle(ABC):
+    """
+    Abstract method for dendogram styles.
+
+    Implementations must define `draw_leaf_labels`, `draw_title`, `draw_link_leg` \
+    and `draw_link_connector`.
+    """
     @abstractmethod
     def draw_leaf_labels(self, labels: Sequence[str]) -> None:
         pass
@@ -27,6 +34,7 @@ class DendrogramStyle(ABC):
     def draw_link_leg(
         self, bottom: float, top: float, first_leaf: int, n_leaves: int, weight: float
     ) -> int:
+        """Draw a leaf."""
         pass
 
     @abstractmethod
@@ -39,10 +47,17 @@ class DendrogramStyle(ABC):
         n_leaves_right,
         weight: float,
     ) -> None:
+        """Draw a non leaf node."""
         pass
 
 
 class DendrogramDrawer:
+    """Class to draw a `LinkageTree`.
+
+    :param title: the title of the plot
+    :param linkage_tree: the `LinkageTree` to draw
+    :param style: the `DendogramStyle` used to draw
+    """
     __slots__ = ["_title", "_linkage_tree", "_style", "_node_weight"]
 
     def __init__(self, title: str, linkage_tree: LinkageTree, style: DendrogramStyle):
@@ -67,11 +82,18 @@ class DendrogramDrawer:
         calculate_weights(linkage_tree.root)
 
     def draw(self) -> None:
+        """Draw the linkage tree with the `style`."""
         self._style.draw_title(self._title)
         tree_info = self._draw(node=self._linkage_tree.root, y=0, width_relative=1.0)
         self._style.draw_leaf_labels(tree_info.labels)
 
     def _draw(self, node: Node, y: int, width_relative: float) -> _SubtreeInfo:
+        """Draw recursively the part of the dendogram for a node and its children.
+
+        :param node: the node to be drawn
+        :param y: the vertical height of the node
+        :param width_relative: the relative y vertical height used by the node
+        """
         if node.is_leaf:
             self._style.draw_link_leg(
                 bottom=0.0,
