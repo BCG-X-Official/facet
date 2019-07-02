@@ -48,11 +48,11 @@ class OneHotEncoderDF(DataFrameTransformer[OneHotEncoder]):
 
 
 OrdinalEncoderDF = make_constant_column_transformer_class(
-    source_transformer=OrdinalEncoder
+    base_transformer=OrdinalEncoder
 )
 
-LabelEncoderDF = make_constant_column_transformer_class(source_transformer=LabelEncoder)
+LabelEncoderDF = make_constant_column_transformer_class(base_transformer=LabelEncoder)
 
 LabelBinarizerDF = make_constant_column_transformer_class(
-    source_transformer=LabelBinarizer
+    base_transformer=LabelBinarizer
 )

@@ -23,28 +23,28 @@ from yieldengine.df.transform import (
 log = logging.getLogger(__name__)
 
 
-MaxAbsScalerDF = make_constant_column_transformer_class(source_transformer=MaxAbsScaler)
+MaxAbsScalerDF = make_constant_column_transformer_class(base_transformer=MaxAbsScaler)
 
-MinMaxScalerDF = make_constant_column_transformer_class(source_transformer=MinMaxScaler)
+MinMaxScalerDF = make_constant_column_transformer_class(base_transformer=MinMaxScaler)
 
-NormalizerDF = make_constant_column_transformer_class(source_transformer=Normalizer)
+NormalizerDF = make_constant_column_transformer_class(base_transformer=Normalizer)
 
 PowerTransformerDF = make_constant_column_transformer_class(
-    source_transformer=PowerTransformer
+    base_transformer=PowerTransformer
 )
 
 QuantileTransformerDF = make_constant_column_transformer_class(
-    source_transformer=QuantileTransformer
+    base_transformer=QuantileTransformer
 )
 
-RobustScalerDF = make_constant_column_transformer_class(source_transformer=RobustScaler)
+RobustScalerDF = make_constant_column_transformer_class(base_transformer=RobustScaler)
 
 StandardScalerDF = make_constant_column_transformer_class(
-    source_transformer=StandardScaler
+    base_transformer=StandardScaler
 )
 
 KernelCentererDF = make_constant_column_transformer_class(
-    source_transformer=KernelCenterer
+    base_transformer=KernelCenterer
 )
 
 
