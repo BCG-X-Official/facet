@@ -212,15 +212,15 @@ class ConstantColumnTransformer(
         return self.columns_in
 
 
-def make_constant_column_transformer_class(source_transformer: type) -> type:
-    def _make_base_transformer(**kwargs) -> source_transformer:
-        return source_transformer(**kwargs)
+def make_constant_column_transformer_class(base_transformer: type) -> type:
+    def _make_base_transformer(**kwargs) -> base_transformer:
+        return base_transformer(**kwargs)
 
     def __init__(self, **kwargs) -> None:
-        ConstantColumnTransformer[source_transformer].__init__(self, **kwargs)
+        ConstantColumnTransformer[base_transformer].__init__(self, **kwargs)
 
     return type(
-        source_transformer.__name__ + "DF",
-        (ConstantColumnTransformer[source_transformer],),
+        base_transformer.__name__ + "DF",
+        (ConstantColumnTransformer[base_transformer],),
         {"__init__": __init__, "_make_base_transformer": _make_base_transformer},
     )
