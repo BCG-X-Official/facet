@@ -26,6 +26,14 @@ class UnivariateSimulation:
     def simulate_yield_change(
         self, parameterized_feature: str, parameter_values: np.ndarray
     ) -> pd.DataFrame:
+        """
+        Run a simulation on a feature.
+
+        :param parameterized_feature: name of the feature to use in the simulation
+        :param parameter_values: values to use in the simulation
+        :return: dataframe with three columns: `split_id`, `parameter_value` and
+        `relative_yield_change`.
+        """
         if parameterized_feature not in self.predictor.sample.feature_names:
             raise ValueError(f"Feature '{parameterized_feature}' not in sample")
 
