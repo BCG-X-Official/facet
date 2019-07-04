@@ -1,3 +1,8 @@
+"""
+This module defines wrappers around sklearn classes ```SimpleImputer``` and
+```MissingIndicator```.
+"""
+
 import logging
 
 import numpy as np
@@ -12,6 +17,8 @@ __all__ = ["SimpleImputerDF", "MissingIndicatorDF"]
 
 
 class SimpleImputerDF(ColumnPreservingTransformer[SimpleImputer]):
+    """Wrapper around sklearn ```SimpleImputer``` that returns a DataFrame
+    with correct row and column indices."""
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
 
@@ -31,6 +38,8 @@ class SimpleImputerDF(ColumnPreservingTransformer[SimpleImputer]):
 
 
 class MissingIndicatorDF(DataFrameTransformer[MissingIndicator]):
+    """Wrapper around sklearn ```MissingIndicator``` that returns a DataFrame
+    with correct row and column indices."""
     def __init__(
         self,
         missing_values=np.nan,
