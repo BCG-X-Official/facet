@@ -1,3 +1,7 @@
+"""
+This module defines a transformers to remove outliers.
+"""
+
 import logging
 from typing import Optional
 
@@ -15,7 +19,8 @@ __all__ = ["TukeyOutlierRemover", "TukeyOutlierRemoverDF"]
 
 class TukeyOutlierRemover(BaseEstimator, TransformerMixin):
     """
-    Remove outliers according to Tukey's method, respective to the interquartile \
+    Transformer to remove outliers according to Tukey's method, respective to the
+    interquartile \
     range (IQR)
     """
 
@@ -24,10 +29,11 @@ class TukeyOutlierRemover(BaseEstimator, TransformerMixin):
 
     def fit(self, X: pd.DataFrame, y=Optional[pd.Series]) -> "TukeyOutlierRemover":
         """
+        Fit the transformer on X.
 
-        :param X:
-        :param y:
-        :return:
+        :param X: input dataframe
+        :param y: optional, target series
+        :return: self, the fitted tranformer
         """
         if not all(X.apply(is_numeric_dtype)):
             raise ValueError("Non numerical dtype in X.")
@@ -38,7 +44,13 @@ class TukeyOutlierRemover(BaseEstimator, TransformerMixin):
         self.high = q3 + self.iqr_threshold *iqr
         return self
 
-    def transform(self, X:pd.DataFrame) -> pd.DataFrame:
+    def transform(self, X: pd.DataFrame) -> pd.DataFrame:
+        """
+        Replace outliers by nan.
+
+        :param X: dataframe to tranform
+        :return: transformed dataframe where outliers have been replaced by nan
+        """
         if not all(X.apply(is_numeric_dtype)):
             raise ValueError("Non numerical dtype in X.")
         # define a boolean mask of the outliers
