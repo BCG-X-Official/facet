@@ -1,3 +1,7 @@
+"""
+This module defines wrappers around the sklearn ```ColumnTransformer```.
+"""
+
 import logging
 from functools import reduce
 from typing import *
