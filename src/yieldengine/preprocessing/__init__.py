@@ -1,3 +1,9 @@
+"""
+This module contains wrapper classes around sklearn preprocessing classes (
+OneHotEncoder, Imputer, ...) that return dataframes with the correct row and column
+names.
+"""
+
 import logging
 
 from sklearn.preprocessing import FunctionTransformer

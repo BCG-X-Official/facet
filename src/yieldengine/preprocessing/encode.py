@@ -1,3 +1,8 @@
+"""
+This module defines wrappers around sklearn classes ```OneHotEncoder``` and
+```OrdinalEncoder```.
+"""
+
 import logging
 
 import pandas as pd
@@ -27,6 +32,10 @@ class OneHotEncoderDF(DataFrameTransformer[OneHotEncoder]):
         return OneHotEncoder(**kwargs)
 
     def _get_columns_original(self) -> pd.Series:
+        """
+        :return: a mapping from this transformer's output columns to the original
+        columns as a series
+        """
         return pd.Series(
             index=pd.Index(self.base_transformer.get_feature_names(self.columns_in)),
             data=[
@@ -40,6 +49,8 @@ class OneHotEncoderDF(DataFrameTransformer[OneHotEncoder]):
 
 
 class OrdinalEncoderDF(ConstantColumnTransformer[OrdinalEncoder]):
+    """Wrapper around sklearn ```OrdinalEncoder``` that returns a DataFrame
+    with correct row and column indices."""
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
 
