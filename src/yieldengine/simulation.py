@@ -29,6 +29,11 @@ class UnivariateSimulation:
         """
         Run a simulation on a feature.
 
+        For each combination of split_id and parameter_value the uplift (in % as a
+        number between 0 and 1) of the target is computed. It is the uplift between
+        predictions on the sample where the `parametrized_feature` is set to the
+        given value, compared to the predictions on the original sample.
+
         :param parameterized_feature: name of the feature to use in the simulation
         :param parameter_values: values to use in the simulation
         :return: dataframe with three columns: `split_id`, `parameter_value` and
@@ -91,6 +96,18 @@ class UnivariateSimulation:
     def aggregate_simulated_yield_change(
         results_per_split: pd.DataFrame, percentiles: List[int]
     ) -> pd.DataFrame:
+        """
+        Aggregate the upflift values computed by `simulate_yield_changes`.
+
+        For each parameter value, the percentile of uplift values (in the
+        `relative_yield_change` column) are computed.
+
+        :param results_per_split: dataframe with columns `split_id`, `parameter_value`\
+         and `relative_yield_change`.
+        :param percentiles: the list of percentiles
+        :return: dataframe with columns percentile_<p> where p goes through the list
+        `percentiles` and whose index is given by the parameter values.
+        """
         def percentile(n: int):
             def percentile_(x: float):
                 return np.percentile(x, n)
@@ -108,6 +125,12 @@ class UnivariateSimulation:
     def make_column_replacing_transformer(
         parameterized_feature: str, parameter_value
     ) -> FunctionTransformerDF:
+        """
+
+        :param parameterized_feature:
+        :param parameter_value:
+        :return:
+        """
         def transform(x: pd.DataFrame) -> pd.DataFrame:
             x[parameterized_feature] = parameter_value
             return x
