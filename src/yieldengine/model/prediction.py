@@ -76,6 +76,9 @@ class PredictorCV:
         return self._model_by_split[split_id]
 
     def predictions_for_split(self, split_id: int) -> pd.Series:
+        """Return the predictions for a given split.
+
+        :return: Series of precictions for the split_id"""
         all_predictions = self.predictions_for_all_samples()
         return all_predictions.loc[
             all_predictions[PredictorCV.F_SPLIT_ID] == split_id,
@@ -164,7 +167,7 @@ class PredictorCV:
 
     def copy_with_sample(self, sample: Sample):
         """
-        Copies the predictor whith some new `Sample`.
+        Copies the predictor with some new `Sample`.
 
         :param sample: the `Sample` used for the copy
         :return: the copy of self
