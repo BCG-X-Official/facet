@@ -217,8 +217,8 @@ class ColumnPreservingTransformer(
     """Abstract base class for a `DataFrameTransformer`.
 
     All output columns of a ColumnPreservingTransformer have the same names as their
-    associated input columns. Implementations must define `_make_base_transformer` \
-    and `_get_columns_out`.
+    associated input columns. It could be however that some columns are removed.
+    Implementations must define `_make_base_transformer` and `_get_columns_out`.
     """
 
     @abstractmethod
