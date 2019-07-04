@@ -65,18 +65,31 @@ class ContinuousValuePartitioning(ValuePartitioning[np.float]):
         self._first_partition = math.floor((lower_bound + step / 2) / step) * step
         self._last_partition = math.ceil((upper_bound - step / 2) / step) * step
 
-    def partitions(self) -> Iterable[ValueType]:
-        return range(
-            start=self._first_partition,
-            stop=self._last_partition + self._step / 2,
-            step=self._step,
-        )
+        self._values = values
+
+    def partitions(self) -> Sequence[ValueType]:
+        return [
+            self._first_partition + idx * self._step
+            for idx in range(0, self.n_partitions())
+        ]
 
     def frequencies(self) -> Iterable[int]:
-        pass
+        partitions = self.partitions()
+        frequencies = []
+
+        for idx, p_left in enumerate(partitions):
+            if idx == self.n_partitions() - 1:
+                frequencies.append(sum([1 for val in self._values if val >= p_left]))
+            else:
+                p_right = partitions[idx + 1]
+                frequencies.append(
+                    sum([1 for val in self._values if val >= p_left and val < p_right])
+                )
+
+        return frequencies
 
     def n_partitions(self) -> int:
-        return int((self._first_partition - self._last_partition) / self._step) + 1
+        return int((self._last_partition - self._first_partition) / self._step) + 1
 
 
 def observed_categorical_feature_values(
