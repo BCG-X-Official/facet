@@ -1,5 +1,5 @@
 """
-This module defines a transformers to remove outliers.
+This module defines transformers to remove outliers.
 """
 
 import logging
@@ -20,8 +20,9 @@ __all__ = ["TukeyOutlierRemover", "TukeyOutlierRemoverDF"]
 class TukeyOutlierRemover(BaseEstimator, TransformerMixin):
     """
     Transformer to remove outliers according to Tukey's method, respective to the
-    interquartile \
-    range (IQR)
+    interquartile range (IQR).
+
+    This transformer only accepts dataframes.
     """
 
     def __init__(self, iqr_threshold: float):
