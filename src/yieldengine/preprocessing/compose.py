@@ -13,6 +13,8 @@ __all__ = ["ColumnTransformerDF"]
 
 
 class ColumnTransformerDF(DataFrameTransformer[ColumnTransformer]):
+    """Wrapper around sklearn ```ColumnTransformer``` that returns a DataFrame
+    with correct row and column indices."""
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
         # noinspection PyTypeChecker
