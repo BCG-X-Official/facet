@@ -10,7 +10,7 @@ import pandas as pd
 from sklearn.base import BaseEstimator, TransformerMixin
 from pandas.api.types import is_numeric_dtype
 
-from yieldengine.df.transform import DataFrameTransformer, ConstantColumnTransformer
+from yieldengine.df.transform import ConstantColumnTransformer
 
 log = logging.getLogger(__name__)
 
@@ -27,6 +27,8 @@ class TukeyOutlierRemover(BaseEstimator, TransformerMixin):
 
     def __init__(self, iqr_threshold: float):
         self.iqr_threshold = iqr_threshold
+        self.low = pd.Series()
+        self.high = pd.Series()
 
     def fit(self, X: pd.DataFrame, y=Optional[pd.Series]) -> "TukeyOutlierRemover":
         """
@@ -40,9 +42,9 @@ class TukeyOutlierRemover(BaseEstimator, TransformerMixin):
             raise ValueError("Non numerical dtype in X.")
         q1 = X.quantile(q=.25)
         q3 = X.quantile(q=.75)
-        iqr = q3 - q1
-        self.low = q1 - self.iqr_threshold * iqr
-        self.high = q3 + self.iqr_threshold *iqr
+        iqr: pd.Series = q3 - q1
+        self.low = q1 - iqr * self.iqr_threshold
+        self.high = q3 + self.iqr_threshold * iqr
         return self
 
     def transform(self, X: pd.DataFrame) -> pd.DataFrame:
@@ -57,7 +59,7 @@ class TukeyOutlierRemover(BaseEstimator, TransformerMixin):
         # define a boolean mask of the outliers
         mask = (X < self.low) | (X > self.high)
         X_return = np.where(~mask, X, np.nan)
-        return X_return
+        return pd.DataFrame(X_return)
 
 
 class TukeyOutlierRemoverDF(ConstantColumnTransformer[TukeyOutlierRemover]):
