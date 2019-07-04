@@ -1,3 +1,6 @@
+"""
+This module defines a wrapper around the `BorutaPy` class.
+"""
 import pandas as pd
 from boruta import BorutaPy
 
@@ -7,6 +10,11 @@ __all__ = ["BorutaDF"]
 
 
 class BorutaDF(NDArrayTransformerDF[BorutaPy], ColumnPreservingTransformer[BorutaPy]):
+    """
+    Wrapper around ```BorutaPy``` that returns a DataFrame with correct row and column
+    indices.
+    """
+
     def __init__(
         self,
         estimator,
