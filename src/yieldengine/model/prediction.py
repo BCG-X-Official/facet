@@ -1,6 +1,6 @@
 import copy
 from typing import *
-
+import logging
 import numpy as np
 import pandas as pd
 from sklearn.base import BaseEstimator
@@ -10,6 +10,7 @@ from joblib import Parallel, delayed
 from yieldengine import Sample
 from yieldengine.model import Model
 
+log = logging.getLogger(__name__)
 
 class PredictorCV:
     __slots__ = [
@@ -18,7 +19,8 @@ class PredictorCV:
         "_sample",
         "_predictions_for_all_samples",
         "_model_by_split",
-        "_n_jobs"
+        "_n_jobs",
+        "_verbose"
     ]
 
     F_SPLIT_ID = "split_id"
@@ -26,13 +28,14 @@ class PredictorCV:
     F_TARGET = "target"
 
     def __init__(self, model: Model, cv: BaseCrossValidator, sample: Sample,
-                 n_jobs: int = 1) -> None:
+                 n_jobs: int = 1, verbose: int = 0) -> None:
         self._model = model
         self._cv = cv
         self._sample = sample
         self._model_by_split: Optional[Dict[int, Model]] = None
         self._predictions_for_all_samples: Optional[pd.DataFrame] = None
         self._n_jobs = n_jobs
+        self._verbose = verbose
 
     @property
     def cv(self) -> BaseCrossValidator:
@@ -91,17 +94,28 @@ class PredictorCV:
         self._model_by_split: Dict[int, Model] = {}
 
         sample = self.sample
+        args = []
+        split_ids = []
 
         for split_id, (train_indices, _) in enumerate(
             self.cv.split(sample.features, sample.target)
         ):
             train_sample = sample.select_observations(numbers=train_indices)
+            model = self._model.clone()
+            args.append(
+                (model, train_sample)
+            )
+            split_ids.append(split_id)
 
-            self._model_by_split[split_id] = model = self._model.clone()
+        parallel = Parallel(n_jobs=self.n_jobs, verbose=self._verbose)
 
-            pipeline = model.pipeline()
+        models = parallel(delayed(fit_split)(model, train_sample)
+            for model, train_sample in args)
 
-            pipeline.fit(X=train_sample.features, y=train_sample.target)
+        for split_id, model in zip(split_ids, models):
+            self._model_by_split[split_id] = model
+        log.info("Finished to fit PredictorCV.")
+
 
     def predictions_for_all_samples(self) -> pd.DataFrame:
         """
@@ -126,44 +140,27 @@ class PredictorCV:
 
         sample = self.sample
 
-        def predict(split_id: int, test_indices: np.ndarray) -> pd.DataFrame:
-            test_sample = sample.select_observations(numbers=test_indices)
-
-            pipeline = self.model(split_id=split_id).pipeline()
-
-            return pd.DataFrame(
-                data={
-                    PredictorCV.F_SPLIT_ID: split_id,
-                    PredictorCV.F_PREDICTION: pipeline.predict(X=test_sample.features),
-                },
-                index=test_sample.index,
-            )
 
         def _get_predictions_for_all_samples():
-            # set_loky_pickler('pickle')
-            parallel = Parallel(n_jobs=self.n_jobs, verbose=51)
+            parallel = Parallel(n_jobs=self.n_jobs, verbose=self._verbose)
             args = [
-                (split_id, test_indices) for split_id, (_, test_indices) in enumerate(
+                (split_id,
+                 sample.select_observations(numbers=test_indices),
+                 self.model(split_id=split_id))
+                 for split_id, (_, test_indices) in enumerate(
                     self.cv.split(sample.features, sample.target)
                 )
             ]
             dfs_predict = parallel(delayed(predict)(
-                split_id, test_indices=test_indices)
-                for split_id, test_indices in args)
+                split_id=split_id,
+                test_sample=test_sample,
+                test_model=test_model)
+                for split_id, test_sample, test_model in args)
 
             predictions = pd.concat(dfs_predict).join(
                 sample.target.rename(PredictorCV.F_TARGET)
             )
             return predictions
-
-        # self._predictions_for_all_samples = pd.concat(
-        #     [
-        #         predict(split_id, test_indices=test_indices)
-        #         for split_id, (_, test_indices) in enumerate(
-        #             self.cv.split(sample.features, sample.target)
-        #         )
-        #     ]
-        # ).join(sample.target.rename(PredictorCV.F_TARGET))
 
         self._predictions_for_all_samples = _get_predictions_for_all_samples()
 
@@ -174,3 +171,35 @@ class PredictorCV:
         copied_predictor._sample = sample
         copied_predictor._predictions_for_all_samples = None
         return copied_predictor
+
+
+def predict(split_id: int, test_sample, test_model) -> pd.DataFrame:
+    """
+    Compute predictions for a given split.
+
+    :param split_id: the split id
+    :param test_sample: the `Sample` of the split test set
+    :param test_model: the fitted model for the split
+    :return: dataframe with columns `split_id` and `prediction`.
+    """
+    pipeline = test_model.pipeline()
+    return pd.DataFrame(
+        data={
+            PredictorCV.F_SPLIT_ID: split_id,
+            PredictorCV.F_PREDICTION: pipeline.predict(X=test_sample.features),
+        },
+        index=test_sample.index,
+    )
+
+
+def fit_split(model: Model, train_sample: Sample):
+    """
+    Fit a model using a sample.
+
+    :param model:  the `Model` to fit
+    :param train_sample: `Sample` to fit on
+    :return: the fitted `Model`
+    """
+    pipeline = model.pipeline()
+    pipeline.fit(X=train_sample.features, y=train_sample.target)
+    return model
