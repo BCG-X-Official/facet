@@ -1,10 +1,82 @@
+import math
+from abc import ABC, abstractmethod
+from typing import *
+
 import numpy as np
 import pandas as pd
 
 from yieldengine import Sample
+from yieldengine.df import ListLike
 
 DEFAULT_MIN_RELATIVE_FREQUENCY = 0.05
 DEFAULT_LIMIT_OBSERVATIONS = 20
+
+ValueType = TypeVar("ValueType")
+
+
+class ValuePartitioning(ABC, Generic[ValueType]):
+    """
+    A partitioning of a set of observed values, for use in visualizations and
+    "virtual experiment" simulations
+    """
+
+    @abstractmethod
+    def partitions(self) -> Iterable[ValueType]:
+        """
+        :return: for each partition, return a central value representing the partition
+        """
+        pass
+
+    @abstractmethod
+    def frequencies(self) -> Iterable[int]:
+        """
+        :return: for each partition, the number of observed values that fall within
+        the partition
+        """
+
+    @abstractmethod
+    def n_partitions(self) -> int:
+        pass
+
+
+class ContinuousValuePartitioning(ValuePartitioning[np.float]):
+    def __init__(
+        self,
+        values: ListLike[np.float],
+        max_partitions: int = 20,
+        lower_bound: Optional[np.float] = None,
+        upper_bound: Optional[np.float] = None,
+    ) -> None:
+        super().__init__()
+        if lower_bound is None:
+            lower_bound = np.min(values)
+        if upper_bound is None:
+            upper_bound = np.max(values)
+        if upper_bound < lower_bound:
+            raise ValueError("arg lower_bound > arg upper_bound")
+
+        # calculate the step count based on the maximum number of partitions,
+        # rounded to the next-largest rounded value ending in 1, 2, or 5
+        step = ceil_step((upper_bound - lower_bound) / max_partitions)
+        self._step = step
+
+        # calculate centre values of the first and last partition;
+        # both are rounded to multiples of the step size
+        self._first_partition = math.floor((lower_bound + step / 2) / step) * step
+        self._last_partition = math.ceil((upper_bound - step / 2) / step) * step
+
+    def partitions(self) -> Iterable[ValueType]:
+        return range(
+            start=self._first_partition,
+            stop=self._last_partition + self._step / 2,
+            step=self._step,
+        )
+
+    def frequencies(self) -> Iterable[int]:
+        pass
+
+    def n_partitions(self) -> int:
+        return int((self._first_partition - self._last_partition) / self._step) + 1
 
 
 def observed_categorical_feature_values(
@@ -153,3 +225,15 @@ def _select_feature(sample: Sample, feature_name: str) -> pd.Series:
     # get the series of the feature and drop NAs
     # todo: should we <always> drop-na??
     return sample.features.loc[:, feature_name].dropna()
+
+
+def ceil_step(step: float):
+    """
+    :param step: the step size to round by
+    :return: the nearest step size in the series
+             (..., 0.1, 0.2, 0.5, 1, 2, 5, 10, 20, 50, ...)
+    """
+    if step <= 0:
+        raise ValueError("arg step must be positive")
+
+    return min(10 ** math.ceil(math.log10(step * m)) / m for m in [1, 2, 5])
