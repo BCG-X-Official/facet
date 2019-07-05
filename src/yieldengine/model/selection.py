@@ -155,7 +155,7 @@ class ModelRanker:
         searchers: List[Tuple[GridSearchCV, ModelGrid]] = [
             (
                 GridSearchCV(
-                    estimator=grid.model.pipeline(),
+                    estimator=grid.model.pipeline,
                     cv=self._cv,
                     param_grid=grid.parameters,
                     scoring=self._scoring,
