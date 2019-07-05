@@ -38,6 +38,10 @@ class ValuePartitioning(ABC, Generic[ValueType]):
     def n_partitions(self) -> int:
         pass
 
+    @abstractmethod
+    def partition_width(self) -> ValueType:
+        pass
+
 
 class ContinuousValuePartitioning(ValuePartitioning[np.float]):
     def __init__(
@@ -68,28 +72,26 @@ class ContinuousValuePartitioning(ValuePartitioning[np.float]):
         self._values = values
 
     def partitions(self) -> Sequence[ValueType]:
-        return [
-            self._first_partition + idx * self._step
-            for idx in range(0, self.n_partitions())
-        ]
+        return [idx * self._step for idx in range(0, self.n_partitions())]
 
     def frequencies(self) -> Iterable[int]:
-        partitions = self.partitions()
         frequencies = []
 
-        for idx, p_left in enumerate(partitions):
-            if idx == self.n_partitions() - 1:
-                frequencies.append(sum([1 for val in self._values if val >= p_left]))
-            else:
-                p_right = partitions[idx + 1]
-                frequencies.append(
-                    sum([1 for val in self._values if val >= p_left and val < p_right])
-                )
+        for p_center in self.partitions():
+            p_l_bound = p_center - self.partition_width() / 2
+            p_r_bound = p_center + self.partition_width() / 2
+
+            frequencies.append(
+                sum([1 for val in self._values if val >= p_l_bound and val < p_r_bound])
+            )
 
         return frequencies
 
     def n_partitions(self) -> int:
         return int((self._last_partition - self._first_partition) / self._step) + 1
+
+    def partition_width(self) -> ValueType:
+        return self._step
 
 
 def observed_categorical_feature_values(
