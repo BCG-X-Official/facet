@@ -90,7 +90,9 @@ class RangePartitioning(
 
     def partitions(self) -> Iterable[NumericType]:
         step = self._step
-        return (idx * step for idx in range(0, self.n_partitions))
+        return (
+            self._first_partition + (idx * step) for idx in range(0, self.n_partitions)
+        )
 
     def frequencies(self) -> Iterable[int]:
         return self._frequencies
