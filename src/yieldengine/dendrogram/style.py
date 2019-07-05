@@ -1,9 +1,9 @@
-"""Module that defines various dendogram styles."""
+"""Module that defines various dendrogram styles."""
 
 import logging
-import math
 from typing import *
 
+import math
 import matplotlib.text as mt
 from matplotlib import cm
 from matplotlib.axes import Axes
@@ -74,13 +74,13 @@ class MatplotStyle(DendrogramStyle):
         self._ax.set_title(label=title)
 
     def draw_leaf_labels(self, labels: Sequence[str]) -> None:
-        """Draw leaf labels on the dendogram."""
+        """Draw leaf labels on the dendrogram."""
         y_axis = self._ax.yaxis
         y_axis.set_ticks(ticks=range(len(labels)))
         y_axis.set_ticklabels(ticklabels=labels)
 
     def color(self, weight: float) -> RgbaColor:
-        """Return the color associated to the feature weight (= importance)
+        """Return the color associated to the feature weight (= importance).
 
         :param weight: the weight
         :return: the color as a RGBA tuple
@@ -93,13 +93,16 @@ class MatplotStyle(DendrogramStyle):
 
 
 class LineStyle(MatplotStyle):
-    """The classical dendogram style, as a coloured tree diagram."""
+    """The classical dendrogram style, as a coloured tree diagram."""
 
     def draw_link_leg(
         self, bottom: float, top: float, first_leaf: int, n_leaves: int, weight: float
     ) -> None:
-        """Draw a horizontal link in the dendogram (between a node and one of its \
+        """Draw a horizontal link in the dendrogram (between a node and one of its \
         children.
+
+        See :func:`~yieldengine.dendrogram.DendrogramStyle.draw_link_leg` for the
+        documentation of the abstract method.
 
         :param bottom: the x coordinate of the child node
         :param top: the x coordinate of the parent node
@@ -119,15 +122,19 @@ class LineStyle(MatplotStyle):
         n_leaves_right: int,
         weight: float,
     ) -> None:
-        """Draw a vertical link in the dendogram (between a two sibling nodes) and \
+        """Draw a vertical link in the dendrogram (between a two sibling nodes) and \
         the outgoing vertical line.
 
-        :param bottom: the x coordinate of the parent node of the siblings
-        :param top: not used
+        See :func:`~yieldengine.dendrogram.DendrogramStyle.draw_link_connector` for the
+        documentation of the abstract method.
+
+        :param bottom: the x coordinate of the child node
+        :param top: the x coordinate of the parent node
         :param first_leaf: the index of the first leaf in the tree
-        :param n_leaves_left: the number of leaves in the left sub-tree
-        :param n_leaves_right: the number of leaves in the right sub-tree
-        :param weight: the weight of the parent node"""
+        :param n_leaves_lefts: the number of leaves in the left subtree
+        :param n_leaves_right: the number of leaves in the right subtree
+        :param weight: the weight of the parent node
+        """
         self._draw_line(
             x1=bottom,
             x2=bottom,
@@ -151,10 +158,10 @@ class LineStyle(MatplotStyle):
 
 
 class FeatMapStyle(MatplotStyle):
-    """Plot dendogram with a heat map style.
+    """Plot dendrogram with a heat map style.
 
     :param ax: a matplotlib `Axes`
-    :min_weight: the min weight in the color bar
+    :param min_weight: the min weight in the color bar
     """
 
     def __init__(self, ax: Axes, min_weight: float = 0.01) -> None:
@@ -167,13 +174,16 @@ class FeatMapStyle(MatplotStyle):
     def draw_link_leg(
         self, bottom: float, top: float, first_leaf: int, n_leaves: int, weight: float
     ) -> None:
-        """Draw a link of the dendogram as a box.
+        """Draw a horizontal box in the dendrogram for a leaf.
 
-        :param bottom: x lower value of the drawn box
-        :param top: x upper value of the drawn box
-        :param first_leaf: index of the first leaf in the linkage tree
-        :param n_leaves: num of leaves in the linkage tree
-        :param weight: weight of the leaf
+        See :func:`~yieldengine.dendrogram.DendrogramStyle.draw_link_leg` for the
+        documentation of the abstract method.
+
+        :param bottom: the x coordinate of the child node
+        :param top: the x coordinate of the parent node
+        :param first_leaf: the index of the first leaf in the tree
+        :param n_leaves: the number of leaves in the tree
+        :param weight: the weight of the child node
         """
         line_y = first_leaf + (n_leaves - 1) / 2
         self._draw_hbar(x=bottom, w=top - bottom, y=line_y, h=1, weight=weight)
@@ -184,10 +194,13 @@ class FeatMapStyle(MatplotStyle):
         top: float,
         first_leaf: int,
         n_leaves_left: int,
-        n_leaves_right:int,
+        n_leaves_right: int,
         weight: float,
     ) -> None:
         """Draw a link between a node and its two children as a box.
+
+        See :func:`~yieldengine.dendrogram.DendrogramStyle.draw_link_connector` for the
+        documentation of the abstract method.
 
         :param bottom: x lower value of the drawn box
         :param top: x upper value of the drawn box
