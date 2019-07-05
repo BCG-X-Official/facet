@@ -1,5 +1,5 @@
 import math
-from abc import ABC, abstractmethod
+from abc import ABC, ABCMeta, abstractmethod
 from typing import *
 
 import numpy as np
@@ -8,10 +8,13 @@ import pandas as pd
 from yieldengine import Sample
 from yieldengine.df import ListLike
 
+DEFAULT_MAX_PARTITIONS = 20
+
 DEFAULT_MIN_RELATIVE_FREQUENCY = 0.05
 DEFAULT_LIMIT_OBSERVATIONS = 20
 
 ValueType = TypeVar("ValueType")
+NumericType = TypeVar("NumericType", bound=Union[int, float])
 
 
 class ValuePartitioning(ABC, Generic[ValueType]):
@@ -39,12 +42,18 @@ class ValuePartitioning(ABC, Generic[ValueType]):
     def n_partitions(self) -> int:
         pass
 
-    @staticmethod
-    def set_bounds(
-        lower_bound: Optional[ValueType],
-        upper_bound: Optional[ValueType],
-        values: ListLike[ValueType],
-    ) -> Tuple[ValueType, ValueType]:
+
+class RangePartitioning(
+    ValuePartitioning[NumericType], Generic[NumericType], metaclass=ABCMeta
+):
+    def __init__(
+        self,
+        values: ListLike[NumericType],
+        max_partitions: int,
+        lower_bound: Optional[NumericType],
+        upper_bound: Optional[NumericType],
+    ) -> None:
+        super().__init__()
 
         if lower_bound is None:
             lower_bound = np.min(values)
@@ -53,26 +62,9 @@ class ValuePartitioning(ABC, Generic[ValueType]):
         if upper_bound < lower_bound:
             raise ValueError("arg lower_bound > arg upper_bound")
 
-        return lower_bound, upper_bound
-
-
-class ContinuousValuePartitioning(ValuePartitioning[float]):
-    def __init__(
-        self,
-        values: ListLike[float],
-        max_partitions: int = 20,
-        lower_bound: Optional[float] = None,
-        upper_bound: Optional[float] = None,
-    ) -> None:
-        super().__init__()
-
-        lower_bound, upper_bound = ContinuousValuePartitioning.set_bounds(
-            lower_bound, upper_bound, values
-        )
-
         # calculate the step count based on the maximum number of partitions,
         # rounded to the next-largest rounded value ending in 1, 2, or 5
-        self._step = step = ceil_step((upper_bound - lower_bound) / max_partitions)
+        self._step = step = self._step_size(lower_bound, upper_bound, max_partitions)
 
         # calculate centre values of the first and last partition;
         # both are rounded to multiples of the step size
@@ -97,7 +89,7 @@ class ContinuousValuePartitioning(ValuePartitioning[float]):
 
         self._frequencies = _frequencies()
 
-    def partitions(self) -> Sequence[np.float]:
+    def partitions(self) -> Sequence[NumericType]:
         return [idx * self._step for idx in range(0, self.n_partitions)]
 
     def frequencies(self) -> Iterable[int]:
@@ -108,60 +100,29 @@ class ContinuousValuePartitioning(ValuePartitioning[float]):
         return self._n_partitions
 
     @property
-    def partition_width(self) -> float:
+    def partition_width(self) -> NumericType:
         return self._step
 
+    @staticmethod
+    @abstractmethod
+    def _step_size(
+        lower_bound: NumericType, upper_bound: NumericType, max_partitions: int
+    ) -> NumericType:
+        pass
 
-class DiscreteValuePartitioning(ValuePartitioning[np.int]):
-    def __init__(
-        self,
-        values: ListLike[np.int],
-        max_partitions: int = 20,
-        lower_bound: Optional[np.int] = None,
-        upper_bound: Optional[np.int] = None,
-    ) -> None:
-        super().__init__()
 
-        lower_bound, upper_bound = DiscreteValuePartitioning.set_bounds(
-            lower_bound, upper_bound, values
-        )
+class ContinuousValuePartitioning(RangePartitioning[float]):
+    @staticmethod
+    def _step_size(
+        lower_bound: float, upper_bound: float, max_partitions: int
+    ) -> float:
+        return ceil_step((upper_bound - lower_bound) / max_partitions)
 
-        # calculate the step count based on the maximum number of partitions,
-        # rounded to the next-largest rounded value ending in 1, 2, or 5
-        step = int(ceil_step((upper_bound - lower_bound) / (max_partitions - 1)))
-        self._step = step
 
-        # calculate centre values of the first and last partition;
-        # both are rounded to multiples of the step size
-        self._first_partition = int(math.floor((lower_bound + step / 2) / step) * step)
-        self._last_partition = int(math.ceil((upper_bound - step / 2) / step) * step)
-
-        self._values = values
-
-    def partitions(self) -> Sequence[np.int]:
-        return [idx * self._step for idx in range(0, self.n_partitions())]
-
-    def frequencies(self) -> Iterable[int]:
-        frequencies = []
-
-        for p_center in self.partitions():
-            p_l_bound = math.floor(p_center - self.partition_width() / 2)
-            p_r_bound = math.ceil(p_center + self.partition_width() / 2)
-
-            frequencies.append(
-                sum([1 for val in self._values if val >= p_l_bound and val < p_r_bound])
-            )
-
-        return frequencies
-
-    def n_partitions(self) -> int:
-        return (
-            int(math.ceil((self._last_partition - self._first_partition) / self._step))
-            + 1
-        )
-
-    def partition_width(self) -> np.int:
-        return self._step
+class DiscreteValuePartitioning(RangePartitioning[int]):
+    @staticmethod
+    def _step_size(lower_bound: int, upper_bound: int, max_partitions: int) -> int:
+        return max(1, int(ceil_step((upper_bound - lower_bound) / max_partitions)))
 
 
 def observed_categorical_feature_values(
