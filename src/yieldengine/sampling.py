@@ -49,9 +49,9 @@ class RangePartitioning(
     def __init__(
         self,
         values: ListLike[NumericType],
-        max_partitions: int,
-        lower_bound: Optional[NumericType],
-        upper_bound: Optional[NumericType],
+        max_partitions: int = DEFAULT_MAX_PARTITIONS,
+        lower_bound: Optional[NumericType] = None,
+        upper_bound: Optional[NumericType] = None,
     ) -> None:
         super().__init__()
 
