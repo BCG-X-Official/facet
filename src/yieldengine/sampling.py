@@ -116,13 +116,15 @@ class ContinuousValuePartitioning(RangePartitioning[float]):
     def _step_size(
         lower_bound: float, upper_bound: float, max_partitions: int
     ) -> float:
-        return ceil_step((upper_bound - lower_bound) / max_partitions)
+        return ceil_step((upper_bound - lower_bound) / (max_partitions - 1))
 
 
 class DiscreteValuePartitioning(RangePartitioning[int]):
     @staticmethod
     def _step_size(lower_bound: int, upper_bound: int, max_partitions: int) -> int:
-        return max(1, int(ceil_step((upper_bound - lower_bound) / max_partitions)))
+        return max(
+            1, int(ceil_step((upper_bound - lower_bound) / (max_partitions - 1)))
+        )
 
 
 def observed_categorical_feature_values(
