@@ -1,4 +1,4 @@
-"""This modules defines a `LinkageTree` class used for the drawing of dendograms."""
+"""This modules defines a `LinkageTree` class used for the drawing of dendrograms."""
 
 from abc import ABC, abstractmethod
 from typing import *
@@ -12,6 +12,7 @@ class Node(ABC):
 
     Implementations must define `children_distance`, `weight`, `label`, `is_leaf`.
     """
+
     __slots__ = ["_index"]
 
     def __init__(self, index: int) -> None:
@@ -55,6 +56,7 @@ class LinkageNode(Node):
 
     :param children_distance: distance from the node to its children
     """
+
     __slots__ = ["_children_distance"]
 
     def __init__(self, index: int, children_distance: Optional[float]) -> None:
@@ -91,6 +93,7 @@ class LeafNode(Node):
     :param label: the leaf label
     :param weight: the leaf weight
     """
+
     __slots__ = ["_weight", "_label"]
 
     def __init__(self, index: int, label: str, weight: float) -> None:
@@ -129,6 +132,7 @@ class LinkageTree:
     :param leaf_labels: labels of the leaves
     :param leaf_weights: importance of the leaves
     """
+
     F_CHILD_LEFT = 0
     F_CHILD_RIGHT = 1
     F_CHILDREN_DISTANCE = 2
