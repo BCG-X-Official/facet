@@ -34,22 +34,19 @@ class ValuePartitioning(ABC, Generic[ValueType]):
         the partition
         """
 
+    @property
     @abstractmethod
     def n_partitions(self) -> int:
         pass
 
-    @abstractmethod
-    def partition_width(self) -> ValueType:
-        pass
 
-
-class ContinuousValuePartitioning(ValuePartitioning[np.float]):
+class ContinuousValuePartitioning(ValuePartitioning[float]):
     def __init__(
         self,
-        values: ListLike[np.float],
+        values: ListLike[float],
         max_partitions: int = 20,
-        lower_bound: Optional[np.float] = None,
-        upper_bound: Optional[np.float] = None,
+        lower_bound: Optional[float] = None,
+        upper_bound: Optional[float] = None,
     ) -> None:
         super().__init__()
         if lower_bound is None:
@@ -61,36 +58,43 @@ class ContinuousValuePartitioning(ValuePartitioning[np.float]):
 
         # calculate the step count based on the maximum number of partitions,
         # rounded to the next-largest rounded value ending in 1, 2, or 5
-        step = ceil_step((upper_bound - lower_bound) / max_partitions)
-        self._step = step
+        self._step = step = ceil_step((upper_bound - lower_bound) / max_partitions)
 
         # calculate centre values of the first and last partition;
         # both are rounded to multiples of the step size
-        self._first_partition = math.floor((lower_bound + step / 2) / step) * step
+        self._first_partition = first_partition = (
+            math.floor((lower_bound + step / 2) / step) * step
+        )
         self._last_partition = math.ceil((upper_bound - step / 2) / step) * step
+        self._n_partitions = n_partitions = (
+            int(round((self._last_partition - self._first_partition) / self._step)) + 1
+        )
 
-        self._values = values
+        def _frequencies() -> List[int]:
+            partition_indices = [
+                int(round(value - first_partition) / step) for value in values
+            ]
+            frequencies = [0] * n_partitions
+            for idx in partition_indices:
+                if 0 <= idx < n_partitions:
+                    frequencies[idx] += 1
+
+            return frequencies
+
+        self._frequencies = _frequencies()
 
     def partitions(self) -> Sequence[ValueType]:
-        return [idx * self._step for idx in range(0, self.n_partitions())]
+        return [idx * self._step for idx in range(0, self.n_partitions)]
 
     def frequencies(self) -> Iterable[int]:
-        frequencies = []
+        return self._frequencies
 
-        for p_center in self.partitions():
-            p_l_bound = p_center - self.partition_width() / 2
-            p_r_bound = p_center + self.partition_width() / 2
-
-            frequencies.append(
-                sum([1 for val in self._values if val >= p_l_bound and val < p_r_bound])
-            )
-
-        return frequencies
-
+    @property
     def n_partitions(self) -> int:
-        return int((self._last_partition - self._first_partition) / self._step) + 1
+        return self._n_partitions
 
-    def partition_width(self) -> ValueType:
+    @property
+    def partition_width(self) -> np.float:
         return self._step
 
 
