@@ -34,14 +34,16 @@ class Model:
 
         self._estimator = estimator
         self._preprocessing = preprocessing
-
-    def pipeline(self) -> PipelineDF:
-        return PipelineDF(
+        self._pipeline = PipelineDF(
             steps=[
                 (Model.STEP_PREPROCESSING, self.preprocessing),
                 (Model.STEP_ESTIMATOR, self.estimator),
             ]
         )
+
+    @property
+    def pipeline(self) -> PipelineDF:
+        return self._pipeline
 
     @property
     def preprocessing(self) -> DataFrameTransformer:
@@ -63,6 +65,6 @@ class Model:
         # to set the parameters, we need to wrap the preprocessor and estimator in a
         # pipeline object
         if parameters is not None:
-            new_model.pipeline().set_params(**parameters)
+            new_model.pipeline.set_params(**parameters)
 
         return new_model
