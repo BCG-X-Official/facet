@@ -8,7 +8,7 @@ from yieldengine.df.transform import DataFrameTransformer
 from yieldengine.model.prediction import PredictorCV
 from yieldengine.model.selection import ModelEvaluation, ModelGrid, ModelRanker
 from yieldengine.model.validation import CircularCrossValidator
-from yieldengine.sampling import observed_categorical_feature_values
+from yieldengine.partition import ContinuousRangePartitioning
 from yieldengine.simulation import UnivariateSimulation
 
 log = logging.getLogger(__name__)
@@ -45,9 +45,9 @@ def test_univariate_simulation(
 
     res = sim.simulate_yield_change(
         parameterized_feature=parameterized_feature,
-        parameter_values=observed_categorical_feature_values(
-            sample=sample, feature_name=parameterized_feature
-        ),
+        parameter_values=ContinuousRangePartitioning(
+            values=sample.features.loc[:, parameterized_feature]
+        ).partitions(),
     )
 
     log.debug(res)

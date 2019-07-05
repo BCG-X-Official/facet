@@ -1,9 +1,9 @@
 import numpy as np
 
-from yieldengine.sampling import (
-    ContinuousValuePartitioning,
+from yieldengine.partition import (
+    ContinuousRangePartitioning,
     DEFAULT_MAX_PARTITIONS,
-    DiscreteValuePartitioning,
+    IntegerRangePartitioning,
 )
 
 
@@ -12,12 +12,13 @@ def test_discrete_partitioning() -> None:
         values = np.random.randint(
             low=0, high=1000, size=max(int(np.random.rand() * 1000), 2)
         )
-        dvp = DiscreteValuePartitioning(
+        dvp = IntegerRangePartitioning(
             values=values, max_partitions=DEFAULT_MAX_PARTITIONS
         )
         # test correct number of partitions
         assert dvp.n_partitions <= DEFAULT_MAX_PARTITIONS
-        assert dvp.n_partitions == len(dvp.partitions())
+        partitions = list(dvp.partitions())
+        assert dvp.n_partitions == len(partitions)
 
 
 def test_continouus_partitioning() -> None:
@@ -28,9 +29,10 @@ def test_continouus_partitioning() -> None:
             )
             * np.random.rand()
         )
-        cvp = ContinuousValuePartitioning(
+        cvp = ContinuousRangePartitioning(
             values=values, max_partitions=DEFAULT_MAX_PARTITIONS
         )
         # test correct number of partitions
         assert cvp.n_partitions <= DEFAULT_MAX_PARTITIONS
-        assert cvp.n_partitions == len(cvp.partitions())
+        partitions = list(cvp.partitions())
+        assert cvp.n_partitions == len(partitions)
