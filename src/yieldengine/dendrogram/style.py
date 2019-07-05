@@ -1,6 +1,7 @@
 """Module that defines various dendrogram styles."""
 
 import logging
+from abc import ABC
 from typing import *
 
 import math
@@ -29,10 +30,10 @@ class _PercentageFormatter(Formatter):
         return f"{x * 100.0:.0f}%"
 
 
-class MatplotStyle(DendrogramStyle):
+class MatplotStyle(DendrogramStyle, ABC):
     """Base Matplotlib style for dendrogram.
 
-    Provides basic support for plotting a color legend for feature importances,
+    Provides basic support for plotting a color legend for feature importance,
     and providing the `Axes` object for plotting the actual dendrogram including
     tick marks for the feature distance axis.
 
@@ -131,7 +132,7 @@ class LineStyle(MatplotStyle):
         :param bottom: the x coordinate of the child node
         :param top: the x coordinate of the parent node
         :param first_leaf: the index of the first leaf in the tree
-        :param n_leaves_lefts: the number of leaves in the left subtree
+        :param n_leaves_left: the number of leaves in the left subtree
         :param n_leaves_right: the number of leaves in the right subtree
         :param weight: the weight of the parent node
         """
@@ -223,7 +224,7 @@ class FeatMapStyle(MatplotStyle):
         :param x: left x position of the box
         :param y: top vertical position of the box
         :param w: the width of the box
-        :param h: the heigth of the box
+        :param h: the height of the box
         :param weight: the weight used to compute the color of the box
         """
         fill_color = self.color(weight)

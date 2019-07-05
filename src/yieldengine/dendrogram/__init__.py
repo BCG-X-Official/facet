@@ -43,8 +43,7 @@ class DendrogramStyle(ABC):
         :param bottom: the clustering level (i.e. similarity) of the child nodes
         :param top: the clustering level (i.e. similarity) of the parent node
         :param first_leaf: the index of the first leaf in the tree
-        :param n_leaves_left: the number of leaves in the left sub-tree
-        :param n_leaves_right: the number of leaves in the right sub-tree
+        :param n_leaves: number of leaves under consideration, always set to 1
         :param weight: the weight of the parent node
         """
         pass
@@ -88,6 +87,12 @@ class DendrogramDrawer:
         self._node_weight = node_weight = np.zeros(len(linkage_tree), float)
 
         def calculate_weights(n: Node) -> (float, int):
+            """
+            Calculate the weight of a node and number of leaves under it.
+
+            :param n: the node
+            :return: tuple (weight, n_leaves)
+            """
             if n.is_leaf:
                 weight = n.weight
                 n_leaves = 1
