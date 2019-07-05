@@ -22,6 +22,7 @@ class DendrogramStyle(ABC):
     Implementations must define `draw_leaf_labels`, `draw_title`, `draw_link_leg` \
     and `draw_link_connector`.
     """
+
     @abstractmethod
     def draw_leaf_labels(self, labels: Sequence[str]) -> None:
         """Render the labels for all leaves"""
@@ -29,13 +30,23 @@ class DendrogramStyle(ABC):
 
     @abstractmethod
     def draw_title(self, title: str):
+        """Draw the title of the dendrogram."""
         pass
 
     @abstractmethod
     def draw_link_leg(
         self, bottom: float, top: float, first_leaf: int, n_leaves: int, weight: float
-    ) -> int:
-        """Draw a leaf"""
+    ) -> None:
+        """
+        Draw a leaf.
+
+        :param bottom: the clustering level (i.e. similarity) of the child nodes
+        :param top: the clustering level (i.e. similarity) of the parent node
+        :param first_leaf: the index of the first leaf in the tree
+        :param n_leaves_left: the number of leaves in the left sub-tree
+        :param n_leaves_right: the number of leaves in the right sub-tree
+        :param weight: the weight of the parent node
+        """
         pass
 
     @abstractmethod
@@ -45,10 +56,18 @@ class DendrogramStyle(ABC):
         top: float,
         first_leaf: int,
         n_leaves_left: int,
-        n_leaves_right:int,
+        n_leaves_right: int,
         weight: float,
     ) -> None:
-        """Draw a transversal connector between two child nodes and one parent node"""
+        """Draw a connector between two child nodes and their parent node.
+
+        :param bottom: the clustering level (i.e. similarity) of the child nodes
+        :param top: the clustering level (i.e. similarity) of the parent node
+        :param first_leaf: the index of the first leaf in the tree
+        :param n_leaves_left: the number of leaves in the left sub-tree
+        :param n_leaves_right: the number of leaves in the right sub-tree
+        :param weight: the weight of the parent node
+        """
         pass
 
 
@@ -59,6 +78,7 @@ class DendrogramDrawer:
     :param linkage_tree: the `LinkageTree` to draw
     :param style: the `DendrogramStyle` used to draw
     """
+
     __slots__ = ["_title", "_linkage_tree", "_style", "_node_weight"]
 
     def __init__(self, title: str, linkage_tree: LinkageTree, style: DendrogramStyle):
@@ -95,6 +115,7 @@ class DendrogramDrawer:
         :param node: the node to be drawn
         :param y: the vertical height of the node
         :param width_relative: the relative y vertical height used by the node
+        :return info: `_SubtreeInfo` which contains weights and labels
         """
         if node.is_leaf:
             self._style.draw_link_leg(
