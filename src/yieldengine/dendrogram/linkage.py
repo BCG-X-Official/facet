@@ -26,16 +26,19 @@ class Node(ABC):
     @property
     @abstractmethod
     def children_distance(self) -> float:
+        """Distance from the node to its children."""
         pass
 
     @property
     @abstractmethod
     def weight(self) -> float:
+        """Weight of the node."""
         pass
 
     @property
     @abstractmethod
     def label(self) -> str:
+        """Label of the node."""
         pass
 
     @property
@@ -80,6 +83,7 @@ class LinkageNode(Node):
 
     @property
     def is_leaf(self) -> bool:
+        """true if the node is a leaf, False otherwise."""
         return False
 
     def __repr__(self) -> str:
@@ -118,6 +122,7 @@ class LeafNode(Node):
 
     @property
     def is_leaf(self) -> bool:
+        """True."""
         return True
 
     def __repr__(self) -> str:
