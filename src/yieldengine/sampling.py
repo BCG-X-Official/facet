@@ -15,6 +15,7 @@ DEFAULT_LIMIT_OBSERVATIONS = 20
 
 ValueType = TypeVar("ValueType")
 NumericType = TypeVar("NumericType", bound=Union[int, float])
+CategoryType = TypeVar("CategoryType", bound=Union[str, object])
 
 
 class ValuePartitioning(ABC, Generic[ValueType]):
@@ -127,7 +128,30 @@ class DiscreteValuePartitioning(RangePartitioning[int]):
         )
 
 
-def observed_categorical_feature_values(
+class CategoricalPartitioning(ValuePartitioning[CategoryType]):
+    def __init__(
+        self,
+        values: ListLike[CategoryType],
+        max_partitions: int = DEFAULT_MAX_PARTITIONS,
+    ) -> None:
+        super().__init__()
+
+        value_counts = pd.Series(data=values).value_counts(ascending=False)
+        self._frequencies = value_counts.values[:max_partitions]
+        self._partitions = value_counts.index.values[:max_partitions]
+
+    def partitions(self) -> Iterable[CategoryType]:
+        return self._partitions
+
+    def frequencies(self) -> Iterable[int]:
+        return self._frequencies
+
+    @property
+    def n_partitions(self) -> int:
+        return len(self._partitions)
+
+
+def observed_categorical_feature_valuxes(
     sample: Sample,
     feature_name: str,
     min_relative_frequency: float = DEFAULT_MIN_RELATIVE_FREQUENCY,
