@@ -12,7 +12,7 @@ class UnivariateSimulation:
 
     F_SPLIT_ID = "split_id"
     F_PARAMETER_VALUE = "parameter_value"
-    F_RELATIVE_YIELD_CHANGE = "relative_yield_change"
+    F_RELATIVE_TARGET_CHANGE = "relative_target_change"
 
     def __init__(self, predictor: PredictorCV):
         self._predictor = predictor
@@ -21,20 +21,19 @@ class UnivariateSimulation:
     def predictor(self) -> PredictorCV:
         return self._predictor
 
-    def simulate_yield_change(
-        self, parameterized_feature: str, parameter_values: Iterable[Any]
+    def simulate_feature(
+        self, feature_name: str, feature_values: Iterable[Any]
     ) -> pd.DataFrame:
-        if parameterized_feature not in self.predictor.sample.feature_names:
-            raise ValueError(f"Feature '{parameterized_feature}' not in sample")
+        if feature_name not in self.predictor.sample.feature_names:
+            raise ValueError(f"Feature '{feature_name}' not in sample")
 
         results = []
 
         self.predictor.fit()
 
-        for parameter_value in parameter_values:
+        for value in feature_values:
             simul_transformer = UnivariateSimulation.make_column_replacing_transformer(
-                parameterized_feature=parameterized_feature,
-                parameter_value=parameter_value,
+                feature_name=feature_name, feature_value=value
             )
 
             synthetic_sample = simul_transformer.fit_transform_sample(
@@ -56,29 +55,25 @@ class UnivariateSimulation:
                     predictor_for_syn_sample.predictions_for_split(split_id=split_id)
                 )
 
-                relative_yield_change = (
+                relative_target_change = (
                     predictions_for_split_syn.mean(axis=0)
                     / predictions_for_split_hist.mean(axis=0)
                 ) - 1
 
-                relative_yield_change_ = (
-                    split_id,
-                    parameter_value,
-                    relative_yield_change,
-                )
-                results.append(relative_yield_change_)
+                relative_target_change_ = (split_id, value, relative_target_change)
+                results.append(relative_target_change_)
 
         return pd.DataFrame(
             results,
             columns=[
                 UnivariateSimulation.F_SPLIT_ID,
                 UnivariateSimulation.F_PARAMETER_VALUE,
-                UnivariateSimulation.F_RELATIVE_YIELD_CHANGE,
+                UnivariateSimulation.F_RELATIVE_TARGET_CHANGE,
             ],
         )
 
     @staticmethod
-    def aggregate_simulated_yield_change(
+    def aggregate_simulation_results(
         results_per_split: pd.DataFrame, percentiles: List[int]
     ) -> pd.DataFrame:
         def percentile(n: int):
@@ -96,10 +91,10 @@ class UnivariateSimulation:
 
     @staticmethod
     def make_column_replacing_transformer(
-        parameterized_feature: str, parameter_value
+        feature_name: str, feature_value
     ) -> FunctionTransformerDF:
         def transform(x: pd.DataFrame) -> pd.DataFrame:
-            x[parameterized_feature] = parameter_value
+            x[feature_name] = feature_value
             return x
 
         return FunctionTransformerDF(func=transform, validate=False)
