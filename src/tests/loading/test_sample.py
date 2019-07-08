@@ -1,5 +1,6 @@
 import pandas as pd
 import pytest
+from joblib import delayed, Parallel
 
 from yieldengine import Sample
 
@@ -106,3 +107,13 @@ def test_sample(batch_table: pd.DataFrame) -> None:
     # test select_observations
     sub = s2.select_observations(numbers=[0, 1, 2, 3])
     assert len(sub) == 4
+
+    # test that s.features is a deterministic operation that does not depend on the
+    # global python environment variable PYTHONHASHSEED
+    parallel = Parallel(n_jobs=-3)
+
+    def get_column(sample: Sample):
+        return list(sample.features.columns)
+
+    columns1, columns2 = parallel(delayed(get_column)(sample) for sample in [s, s])
+    assert columns1 == columns2
