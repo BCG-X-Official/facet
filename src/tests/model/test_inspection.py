@@ -121,7 +121,7 @@ def test_model_inspection(available_cpus: int) -> None:
 
         # correlated shap matrix: feature dependencies
         corr_matrix: pd.DataFrame = mi.feature_dependency_matrix()
-
+        log.info(corr_matrix)
         # check number of rows
         assert len(corr_matrix) == len(test_sample.feature_names) - 1
         assert len(corr_matrix.columns) == len(test_sample.feature_names) - 1
