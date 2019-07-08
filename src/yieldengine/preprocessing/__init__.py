@@ -23,28 +23,34 @@ from yieldengine.df.transform import (
 log = logging.getLogger(__name__)
 
 
-MaxAbsScalerDF = make_constant_column_transformer_class(base_transformer=MaxAbsScaler)
+MaxAbsScalerDF = make_constant_column_transformer_class(
+    base_transformer_type=MaxAbsScaler
+)
 
-MinMaxScalerDF = make_constant_column_transformer_class(base_transformer=MinMaxScaler)
+MinMaxScalerDF = make_constant_column_transformer_class(
+    base_transformer_type=MinMaxScaler
+)
 
-NormalizerDF = make_constant_column_transformer_class(base_transformer=Normalizer)
+NormalizerDF = make_constant_column_transformer_class(base_transformer_type=Normalizer)
 
 PowerTransformerDF = make_constant_column_transformer_class(
-    base_transformer=PowerTransformer
+    base_transformer_type=PowerTransformer
 )
 
 QuantileTransformerDF = make_constant_column_transformer_class(
-    base_transformer=QuantileTransformer
+    base_transformer_type=QuantileTransformer
 )
 
-RobustScalerDF = make_constant_column_transformer_class(base_transformer=RobustScaler)
+RobustScalerDF = make_constant_column_transformer_class(
+    base_transformer_type=RobustScaler
+)
 
 StandardScalerDF = make_constant_column_transformer_class(
-    base_transformer=StandardScaler
+    base_transformer_type=StandardScaler
 )
 
 KernelCentererDF = make_constant_column_transformer_class(
-    base_transformer=KernelCenterer
+    base_transformer_type=KernelCenterer
 )
 
 
@@ -85,10 +91,6 @@ class PolynomialFeaturesDF(ColumnPreservingTransformer[PolynomialFeatures]):
         return pd.Index(
             data=self.base_transformer.get_feature_names(input_features=self.columns_in)
         )
-
-    def __init__(self, **kwargs) -> None:
-
-        super().__init__(**kwargs)
 
     @classmethod
     def _make_base_transformer(cls, **kwargs) -> PolynomialFeatures:
