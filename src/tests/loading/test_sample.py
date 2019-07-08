@@ -18,7 +18,7 @@ def test_sample_init(batch_table: pd.DataFrame) -> None:
         Sample(observations=[], target_name="target")
 
     # 2. no features and no target specified
-    with pytest.raises(ValueError):
+    with pytest.raises(KeyError):
         # noinspection PyTypeChecker
         Sample(observations=batch_table, target_name=None)
 
@@ -27,7 +27,7 @@ def test_sample_init(batch_table: pd.DataFrame) -> None:
     f_columns.remove("Yield")
 
     # 2.1 invalid feature column specified
-    with pytest.raises(ValueError):
+    with pytest.raises(KeyError):
         f_columns_false = f_columns.copy()
         f_columns_false.append("doesnt_exist")
         Sample(
@@ -35,7 +35,7 @@ def test_sample_init(batch_table: pd.DataFrame) -> None:
         )
 
     # 2.2 invalid target column specified
-    with pytest.raises(ValueError):
+    with pytest.raises(KeyError):
         Sample(
             observations=batch_table,
             target_name="doesnt_exist",
@@ -43,7 +43,7 @@ def test_sample_init(batch_table: pd.DataFrame) -> None:
         )
 
     # 3. column is target and also feature
-    with pytest.raises(ValueError):
+    with pytest.raises(KeyError):
         f_columns_false = f_columns.copy()
         f_columns_false.append("Yield")
 
