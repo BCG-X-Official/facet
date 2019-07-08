@@ -1,59 +1,43 @@
 import logging
 from typing import Optional
 
-import numpy as np
 import pandas as pd
 from sklearn.base import BaseEstimator, TransformerMixin
-from pandas.api.types import is_numeric_dtype
 
-from yieldengine.df.transform import DataFrameTransformer, ConstantColumnTransformer
+from yieldengine.df.transform import ConstantColumnTransformer
 
 log = logging.getLogger(__name__)
 
-__all__ = ["TukeyOutlierRemover", "TukeyOutlierRemoverDF"]
+__all__ = ["OutlierRemover", "OutlierRemoverDF"]
 
 
-class TukeyOutlierRemover(BaseEstimator, TransformerMixin):
+class OutlierRemover(BaseEstimator, TransformerMixin):
     """
-    Remove outliers according to Tukey's method, respective to the interquartile \
-    range (IQR)
+    Remove outliers according to Tukey's method, respective to a multiple of the \
+    inter-quartile range (IQR)
     """
 
-    def __init__(self, iqr_threshold: float):
-        self.iqr_threshold = iqr_threshold
+    def __init__(self, iqr_multiple: float):
+        if iqr_multiple < 0.0:
+            raise ValueError("arg iqr_multiple must not be negative")
+        self.iqr_multiple = iqr_multiple
+        self.threshold_low_ = None
+        self.threshold_high_ = None
 
-    def fit(self, X: pd.DataFrame, y=Optional[pd.Series]) -> None:
-        """
+    # noinspection PyPep8Naming
+    def fit(self, X: pd.DataFrame, y: Optional[pd.Series]) -> None:
+        q1: pd.Series = X.quantile(q=0.25)
+        q3: pd.Series = X.quantile(q=0.75)
+        threshold_iqr: pd.Series = (q3 - q1) * self.iqr_multiple
+        self.threshold_low_ = q1 - threshold_iqr
+        self.threshold_high_ = q3 + threshold_iqr
 
-        :param X:
-        :param y:
-        :return:
-        """
-        if not all(X.apply(is_numeric_dtype)):
-            raise ValueError("Non numerical dtype in X.")
-        q1 = X.quantile(q=.25)
-        q3 = X.quantile(q=.75)
-        iqr = q3 - q1
-        self.low = q1 - self.iqr_threshold * iqr
-        self.high = q3 + self.iqr_threshold *iqr
-        return self
-
-    def transform(self, X:pd.DataFrame) -> pd.DataFrame:
-        if not all(X.apply(is_numeric_dtype)):
-            raise ValueError("Non numerical dtype in X.")
-        # define a boolean mask of the outliers
-        mask = (X < self.low) | (X > self.high)
-        X_return = np.where(~mask, X, np.nan)
-        return X_return
+    # noinspection PyPep8Naming
+    def transform(self, X: pd.DataFrame) -> pd.DataFrame:
+        return X.where(cond=((X < self.threshold_low_) | (X > self.threshold_high_)))
 
 
-class TukeyOutlierRemoverDF(ConstantColumnTransformer[TukeyOutlierRemover]):
-    """
-    Remove outliers according to Tukey's method.
-    """
-    def __init__(self, **kwargs) -> None:
-        super().__init__(**kwargs)
-
+class OutlierRemoverDF(ConstantColumnTransformer[OutlierRemover]):
     @classmethod
-    def _make_base_transformer(cls, **kwargs) -> TukeyOutlierRemover:
-        return TukeyOutlierRemover(**kwargs)
+    def _make_base_transformer(cls, **kwargs) -> OutlierRemover:
+        return OutlierRemover(**kwargs)
