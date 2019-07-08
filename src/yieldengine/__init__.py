@@ -126,7 +126,7 @@ class Sample:
         return self._target_name
 
     @property
-    def feature_names(self) -> Collection[str]:
+    def feature_names(self) -> ListLike[str]:
         """
         :return: list of feature column names
         """
@@ -151,7 +151,7 @@ class Sample:
         """
         :return: all feature columns as a data frame
         """
-        return self._observations.loc[:, sorted(self._feature_names)]
+        return self._observations.loc[:, self._feature_names]
 
     def features_by_type(
         self, dtype: Union[type, str, Sequence[Union[type, str]]]
