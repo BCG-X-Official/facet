@@ -110,11 +110,7 @@ class PredictorCV:
             model = self._model.clone()
             args.append((model, train_sample, split_id))
 
-        parallel = Parallel(
-            n_jobs=self.n_jobs,
-            # n_jobs=1,
-            verbose=self._verbose,
-        )
+        parallel = Parallel(n_jobs=self.n_jobs, verbose=self._verbose)
 
         models = parallel(
             delayed(_fit_model_for_split)(_model, train_sample, split_id)
