@@ -6,7 +6,8 @@ import numpy as np
 import pandas as pd
 from sklearn.base import ClassifierMixin, RegressorMixin
 
-from yieldengine.df import DataFrameEstimator, ListLike, MatrixLike
+from yieldengine import ListLike, MatrixLike
+from yieldengine.df import DataFrameEstimator
 
 log = logging.getLogger(__name__)
 
