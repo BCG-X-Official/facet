@@ -43,16 +43,16 @@ def test_univariate_simulation(
 
     parameterized_feature = "Step4-6 RawMat Vendor Compound08 Purity (#)"
 
-    res = sim.simulate_yield_change(
-        parameterized_feature=parameterized_feature,
-        parameter_values=ContinuousRangePartitioning(
+    res = sim.simulate_feature(
+        feature_name=parameterized_feature,
+        feature_values=ContinuousRangePartitioning(
             values=sample.features.loc[:, parameterized_feature]
         ).partitions(),
     )
 
     log.debug(res)
     log.debug(
-        UnivariateSimulation.aggregate_simulated_yield_change(
+        UnivariateSimulation.aggregate_simulation_results(
             results_per_split=res, percentiles=[10, 50, 90]
         )
     )
