@@ -246,3 +246,17 @@ class ConstantColumnTransformer(
 
     def _get_columns_out(self) -> pd.Index:
         return self.columns_in
+
+
+def make_constant_column_transformer_class(base_transformer: type) -> type:
+    def _make_base_transformer(**kwargs) -> base_transformer:
+        return base_transformer(**kwargs)
+
+    def __init__(self, **kwargs) -> None:
+        ConstantColumnTransformer[base_transformer].__init__(self, **kwargs)
+
+    return type(
+        base_transformer.__name__ + "DF",
+        (ConstantColumnTransformer[base_transformer],),
+        {"__init__": __init__, "_make_base_transformer": _make_base_transformer},
+    )
