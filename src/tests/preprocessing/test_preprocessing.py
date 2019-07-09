@@ -111,6 +111,4 @@ def test_outlier_remover(df_outlier: pd.DataFrame) -> None:
             "c3": [0, 1, 2, 3, np.nan],
         }
     )
-    print(df_transformed)
-    print(df_transformed_expected)
     assert_frame_equal(df_transformed, df_transformed_expected)
