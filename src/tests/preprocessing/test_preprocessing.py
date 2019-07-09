@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 import pytest
+from pandas.util.testing import assert_frame_equal
 from sklearn.compose import ColumnTransformer
 from sklearn.preprocessing import (
     MaxAbsScaler,
@@ -22,6 +23,7 @@ from yieldengine.preprocessing import (
     StandardScalerDF,
 )
 from yieldengine.preprocessing.compose import ColumnTransformerDF
+from yieldengine.preprocessing.outlier import OutlierRemoverDF
 
 
 @pytest.fixture
@@ -84,3 +86,31 @@ def test_normalizer_df() -> None:
     assert np.array_equal(transformed_non_df, transformed_df.values)
     # check columns are preserved:
     assert np.all(transformed_df.columns == ["a", "b", "c", "d"])
+
+
+@pytest.fixture
+def df_outlier() -> pd.DataFrame:
+    return pd.DataFrame(
+        data={
+            "c0": [0, 1, 2, 3, 4],
+            "c1": [-1, 0, 0, 0, 1],
+            "c2": [-10, 0, 1, 2, 3],
+            "c3": [0, 1, 2, 3, 10],
+        }
+    )
+
+
+def test_outlier_remover(df_outlier: pd.DataFrame) -> None:
+    outlier_remover = OutlierRemoverDF(iqr_multiple=2)
+    df_transformed = outlier_remover.fit_transform(df_outlier)
+    df_transformed_expected = pd.DataFrame(
+        data={
+            "c0": [0, 1, 2, 3, 4],
+            "c1": [np.nan, 0, 0, 0, np.nan],
+            "c2": [np.nan, 0, 1, 2, 3],
+            "c3": [0, 1, 2, 3, np.nan],
+        }
+    )
+    print(df_transformed)
+    print(df_transformed_expected)
+    assert_frame_equal(df_transformed, df_transformed_expected)

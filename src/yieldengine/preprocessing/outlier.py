@@ -34,4 +34,4 @@ class OutlierRemoverDF(BaseEstimator, TransformerMixin):
 
     # noinspection PyPep8Naming
     def transform(self, X: pd.DataFrame) -> pd.DataFrame:
-        return X.where(cond=((X > self.threshold_low_) | (X < self.threshold_high_)))
+        return X.where(cond=~((X < self.threshold_low_) | (X > self.threshold_high_)))
