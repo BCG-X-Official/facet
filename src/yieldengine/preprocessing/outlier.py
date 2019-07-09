@@ -24,13 +24,14 @@ class OutlierRemoverDF(BaseEstimator, TransformerMixin):
         self.threshold_high_ = None
 
     # noinspection PyPep8Naming
-    def fit(self, X: pd.DataFrame, y: Optional[pd.Series]) -> None:
+    def fit(self, X: pd.DataFrame, y: Optional[pd.Series] = None) -> None:
         q1: pd.Series = X.quantile(q=0.25)
         q3: pd.Series = X.quantile(q=0.75)
         threshold_iqr: pd.Series = (q3 - q1) * self.iqr_multiple
         self.threshold_low_ = q1 - threshold_iqr
         self.threshold_high_ = q3 + threshold_iqr
+        return self
 
     # noinspection PyPep8Naming
     def transform(self, X: pd.DataFrame) -> pd.DataFrame:
-        return X.where(cond=((X < self.threshold_low_) | (X > self.threshold_high_)))
+        return X.where(cond=((X > self.threshold_low_) | (X < self.threshold_high_)))
