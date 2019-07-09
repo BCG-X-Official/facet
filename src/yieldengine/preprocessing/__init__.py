@@ -16,20 +16,55 @@ from sklearn.preprocessing import (
 
 from yieldengine.df.transform import (
     ColumnPreservingTransformer,
-    make_constant_column_transformer_type,
+    constant_column_transformer,
 )
 
 log = logging.getLogger(__name__)
 
-MaxAbsScalerDF = make_constant_column_transformer_type(MaxAbsScaler)
-MinMaxScalerDF = make_constant_column_transformer_type(MinMaxScaler)
-NormalizerDF = make_constant_column_transformer_type(Normalizer)
-PowerTransformerDF = make_constant_column_transformer_type(PowerTransformer)
-QuantileTransformerDF = make_constant_column_transformer_type(QuantileTransformer)
-RobustScalerDF = make_constant_column_transformer_type(RobustScaler)
-StandardScalerDF = make_constant_column_transformer_type(StandardScaler)
-KernelCentererDF = make_constant_column_transformer_type(KernelCenterer)
-FunctionTransformerDF = make_constant_column_transformer_type(FunctionTransformer)
+
+@constant_column_transformer
+class MaxAbsScalerDF(MaxAbsScaler):
+    pass
+
+
+@constant_column_transformer
+class MinMaxScalerDF(MinMaxScaler):
+    pass
+
+
+@constant_column_transformer
+class NormalizerDF(Normalizer):
+    pass
+
+
+@constant_column_transformer
+class PowerTransformerDF(PowerTransformer):
+    pass
+
+
+@constant_column_transformer
+class QuantileTransformerDF(QuantileTransformer):
+    pass
+
+
+@constant_column_transformer
+class RobustScalerDF(RobustScaler):
+    pass
+
+
+@constant_column_transformer
+class StandardScalerDF(StandardScaler):
+    pass
+
+
+@constant_column_transformer
+class KernelCentererDF(KernelCenterer):
+    pass
+
+
+@constant_column_transformer
+class FunctionTransformerDF(FunctionTransformer):
+    pass
 
 
 class PolynomialFeaturesDF(ColumnPreservingTransformer[PolynomialFeatures]):
