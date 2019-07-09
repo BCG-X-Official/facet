@@ -118,8 +118,10 @@ class DendrogramDrawer:
         children.
 
         :param node: the node to be drawn
-        :param y: the vertical height of the node
-        :param width_relative: the relative y vertical height used by the node
+        :param y: the value determining the position of the node with respect to the
+          leaves of the tree
+        :param width_relative: float between 0 and 1, the relative height in the tree of the node: the root
+          has maximal width_relative 1
         :return info: `_SubtreeInfo` which contains weights and labels
         """
         if node.is_leaf:
