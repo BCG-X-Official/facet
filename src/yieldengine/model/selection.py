@@ -21,11 +21,12 @@ class ModelGrid:
     the preprocessing and the estimator steps.
 
     :param Model model: underlying `Model`
-    :param ParameterGrid estimatro_parameters: dict of the hyperparameter grid for \
+    :param ParameterGrid estimator_parameters: dict of the hyperparameter grid for \
     the estimator
     :param preprocessing_parameters: dictionary of the hyperparameter grid for \
     the preprocessing step of the model (can be None)
     """
+
     def __init__(
         self,
         model: Model,
@@ -83,6 +84,7 @@ class ModelScoring:
 
     :param split_scores: iterable of the scores of the splits
     """
+
     def __init__(self, split_scores: Iterable[float]):
         self.split_scores = np.array(split_scores)
 
@@ -97,6 +99,7 @@ class ModelScoring:
 
 class ModelEvaluation(NamedTuple):
     """Class with attributes model, parameters, scoring and ranking_score."""
+
     model: Model
     parameters: Mapping[str, Any]
     scoring: Mapping[str, ModelScoring]
@@ -182,7 +185,7 @@ class ModelRanker:
         searchers: List[Tuple[GridSearchCV, ModelGrid]] = [
             (
                 GridSearchCV(
-                    estimator=grid.model.pipeline(),
+                    estimator=grid.model.pipeline,
                     cv=self._cv,
                     param_grid=grid.parameters,
                     scoring=self._scoring,
