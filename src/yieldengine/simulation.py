@@ -101,12 +101,10 @@ class UnivariateSimulation:
     def make_column_replacing_transformer(
         parameterized_feature: str, parameter_value: Any, columns_out: pd.Index
     ) -> FunctionTransformerDF:
-        def transform(x: pd.DataFrame) -> pd.DataFrame:
-            x[parameterized_feature] = parameter_value
-            return x
-
+        # noinspection PyPep8Naming
         return FunctionTransformerDF(
-            func=transform, validate=False, columns_out=columns_out
+            func=lambda X: X.assign(**{parameterized_feature: parameter_value}),
+            validate=False,
         )
 
     @staticmethod
