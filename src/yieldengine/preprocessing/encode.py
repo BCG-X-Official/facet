@@ -6,13 +6,18 @@ This module defines wrappers around sklearn classes ```OneHotEncoder``` and
 import logging
 
 import pandas as pd
-from sklearn.preprocessing import OneHotEncoder, OrdinalEncoder
+from sklearn.preprocessing import (
+    LabelBinarizer,
+    LabelEncoder,
+    OneHotEncoder,
+    OrdinalEncoder,
+)
 
-from yieldengine.df.transform import ConstantColumnTransformer, DataFrameTransformer
+from yieldengine.df.transform import constant_column_transformer, DataFrameTransformer
 
 log = logging.getLogger(__name__)
 
-__all__ = ["OneHotEncoderDF", "OrdinalEncoderDF"]
+__all__ = ["OneHotEncoderDF", "OrdinalEncoderDF", "LabelEncoderDF", "LabelBinarizerDF"]
 
 
 class OneHotEncoderDF(DataFrameTransformer[OneHotEncoder]):
@@ -48,12 +53,19 @@ class OneHotEncoderDF(DataFrameTransformer[OneHotEncoder]):
         )
 
 
-class OrdinalEncoderDF(ConstantColumnTransformer[OrdinalEncoder]):
+@constant_column_transformer
+class OrdinalEncoderDF(OrdinalEncoder):
     """Wrapper around sklearn ```OrdinalEncoder``` that returns a DataFrame
     with correct row and column indices."""
-    def __init__(self, **kwargs) -> None:
-        super().__init__(**kwargs)
 
-    @classmethod
-    def _make_base_transformer(cls, **kwargs) -> OrdinalEncoder:
-        return OrdinalEncoder(**kwargs)
+    pass
+
+
+@constant_column_transformer
+class LabelEncoderDF(LabelEncoder):
+    pass
+
+
+@constant_column_transformer
+class LabelBinarizerDF(LabelBinarizer):
+    pass

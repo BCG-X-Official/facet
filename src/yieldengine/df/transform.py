@@ -3,6 +3,7 @@
 
 import logging
 from abc import ABCMeta, abstractmethod
+from types import new_class
 from typing import *
 
 import numpy as np
@@ -246,3 +247,22 @@ class ConstantColumnTransformer(
 
     def _get_columns_out(self) -> pd.Index:
         return self.columns_in
+
+
+def constant_column_transformer(
+    cls: Type[_BaseTransformer]
+) -> Type[ConstantColumnTransformer[_BaseTransformer]]:
+    def _init_class_namespace(namespace: Dict[str, Any]) -> None:
+        # noinspection PyProtectedMember
+        namespace[
+            ConstantColumnTransformer._make_base_transformer.__name__
+        ] = lambda **kwargs: cls(**kwargs)
+
+    return cast(
+        Type[ConstantColumnTransformer[_BaseTransformer]],
+        new_class(
+            name=cls.__name__,
+            bases=(ConstantColumnTransformer,),
+            exec_body=_init_class_namespace,
+        ),
+    )
