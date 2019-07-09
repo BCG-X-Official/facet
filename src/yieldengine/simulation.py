@@ -50,6 +50,7 @@ class UnivariateSimulation:
             simul_transformer = UnivariateSimulation.make_column_replacing_transformer(
                 parameterized_feature=parameterized_feature,
                 parameter_value=parameter_value,
+                columns_out=self.predictor.sample.features.columns,
             )
 
             synthetic_sample = simul_transformer.fit_transform_sample(
@@ -108,6 +109,7 @@ class UnivariateSimulation:
         :return: dataframe with columns percentile_<p> where p goes through the list
         `percentiles` and whose index is given by the parameter values.
         """
+
         def percentile(n: int):
             def percentile_(x: float):
                 return np.percentile(x, n)
@@ -123,19 +125,13 @@ class UnivariateSimulation:
 
     @staticmethod
     def make_column_replacing_transformer(
-        parameterized_feature: str, parameter_value
+        parameterized_feature: str, parameter_value: Any, columns_out: pd.Index
     ) -> FunctionTransformerDF:
-        """
-
-        :param parameterized_feature:
-        :param parameter_value:
-        :return:
-        """
-        def transform(x: pd.DataFrame) -> pd.DataFrame:
-            x[parameterized_feature] = parameter_value
-            return x
-
-        return FunctionTransformerDF(func=transform, validate=False)
+        # noinspection PyPep8Naming
+        return FunctionTransformerDF(
+            func=lambda X: X.assign(**{parameterized_feature: parameter_value}),
+            validate=False,
+        )
 
     @staticmethod
     def observed_feature_values(
