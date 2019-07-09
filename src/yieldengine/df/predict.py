@@ -9,7 +9,8 @@ import numpy as np
 import pandas as pd
 from sklearn.base import ClassifierMixin, RegressorMixin
 
-from yieldengine.df import DataFrameEstimator, ListLike, MatrixLike
+from yieldengine import ListLike, MatrixLike
+from yieldengine.df import DataFrameEstimator
 
 log = logging.getLogger(__name__)
 
@@ -22,6 +23,7 @@ class DataFramePredictor(DataFrameEstimator[_BasePredictor], metaclass=ABCMeta):
 
     :param `**kwargs`: arguments passed to `DataFrameEstimator` in `__init__`
     """
+
     F_PREDICTION = "prediction"
 
     def __init__(self, **kwargs) -> None:

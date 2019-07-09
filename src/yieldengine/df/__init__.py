@@ -3,18 +3,12 @@ import logging
 from abc import ABC, abstractmethod
 from typing import *
 
-import numpy as np
 import pandas as pd
 from sklearn.base import BaseEstimator
 
 log = logging.getLogger(__name__)
 
 _BaseEstimator = TypeVar("_BaseEstimator", bound=BaseEstimator)
-# noinspection PyShadowingBuiltins
-_T = TypeVar("_T")
-
-ListLike = Union[np.ndarray, pd.Series, Sequence[_T]]
-MatrixLike = Union[np.ndarray, pd.DataFrame, Sequence[Sequence[_T]]]
 
 
 class DataFrameEstimator(ABC, BaseEstimator, Generic[_BaseEstimator]):
@@ -23,6 +17,7 @@ class DataFrameEstimator(ABC, BaseEstimator, Generic[_BaseEstimator]):
 
     :param `**kwargs`: the arguments passed to the base estimator
     """
+
     F_COLUMN = "column"
 
     def __init__(self, **kwargs) -> None:
