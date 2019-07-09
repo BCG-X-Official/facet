@@ -8,10 +8,7 @@ from sklearn.preprocessing import (
     OrdinalEncoder,
 )
 
-from yieldengine.df.transform import (
-    DataFrameTransformer,
-    make_constant_column_transformer_type,
-)
+from yieldengine.df.transform import constant_column_transformer, DataFrameTransformer
 
 log = logging.getLogger(__name__)
 
@@ -47,6 +44,16 @@ class OneHotEncoderDF(DataFrameTransformer[OneHotEncoder]):
         )
 
 
-OrdinalEncoderDF = make_constant_column_transformer_type(OrdinalEncoder)
-LabelEncoderDF = make_constant_column_transformer_type(LabelEncoder)
-LabelBinarizerDF = make_constant_column_transformer_type(LabelBinarizer)
+@constant_column_transformer
+class OrdinalEncoderDF(OrdinalEncoder):
+    pass
+
+
+@constant_column_transformer
+class LabelEncoderDF(LabelEncoder):
+    pass
+
+
+@constant_column_transformer
+class LabelBinarizerDF(LabelBinarizer):
+    pass

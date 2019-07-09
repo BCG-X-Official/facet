@@ -213,18 +213,19 @@ class ConstantColumnTransformer(
         return self.columns_in
 
 
-def make_constant_column_transformer_type(
-    base_transformer_type: Type[_BaseTransformer]
+def constant_column_transformer(
+    cls: Type[_BaseTransformer]
 ) -> Type[ConstantColumnTransformer[_BaseTransformer]]:
     def _init_class_namespace(namespace: Dict[str, Any]) -> None:
+        # noinspection PyProtectedMember
         namespace[
             ConstantColumnTransformer._make_base_transformer.__name__
-        ] = lambda **kwargs: base_transformer_type(**kwargs)
+        ] = lambda **kwargs: cls(**kwargs)
 
     return cast(
         Type[ConstantColumnTransformer[_BaseTransformer]],
         new_class(
-            name=f"{base_transformer_type.__name__}DF",
+            name=cls.__name__,
             bases=(ConstantColumnTransformer,),
             exec_body=_init_class_namespace,
         ),
