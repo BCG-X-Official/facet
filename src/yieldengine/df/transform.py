@@ -213,7 +213,7 @@ class ConstantColumnTransformer(
         return self.columns_in
 
 
-def make_constant_column_transformer_class(
+def make_constant_column_transformer_type(
     base_transformer_type: Type[_BaseTransformer]
 ) -> Type[ConstantColumnTransformer[_BaseTransformer]]:
     def _init_class_namespace(namespace: Dict[str, Any]) -> None:
