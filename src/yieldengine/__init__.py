@@ -1,7 +1,6 @@
 import logging
 from copy import copy
 from typing import *
-from typing import Sequence, TypeVar, Union
 
 import numpy as np
 import pandas as pd
@@ -157,9 +156,10 @@ class Sample:
         self, dtype: Union[type, str, Sequence[Union[type, str]]]
     ) -> pd.DataFrame:
         """
+        Return a dataframe with columns for all features matching the given type
         :param dtype: dtype, or sequence of dtypes, for filtering features. See DTYPE_*
         constants for common type selectors
-        :return: list of columns for filtered features
+        :return: dataframe of the selected features
         """
         return self.features.select_dtypes(dtype)
 
@@ -195,6 +195,11 @@ class Sample:
         return subsample
 
     def select_features(self, feature_names: ListLike[str]) -> "Sample":
+        """
+        Return a Sample object which only includes the given features
+        :param feature_names: names of features to be selected
+        :return: copy of this sample, containing only the features with the given names
+        """
         subsample = copy(self)
         if not set(feature_names).issubset(self._feature_names):
             raise ValueError(
