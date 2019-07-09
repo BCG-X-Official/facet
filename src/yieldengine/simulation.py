@@ -118,9 +118,9 @@ class UnivariateSimulation:
         Get an array of observed values for a particular feature
 
         :param feature_name: name of the feature
-        :param min_relative_frequency: the relative frequency with which a particular
-        feature value has to occur within the sample, for it to be selected. Not used
-        for non-discrete features or features with high variability (when no single
+        :param min_relative_frequency: the relative frequency with which a particular \
+        feature value has to occur within the sample, for it to be selected. Not used \
+        for non-discrete features or features with high variability (when no single \
         feature value occurs more than "min_relative_frequency" times)
         :param limit_observations: how many observation-values to return at max.
         :return: a 1D numpy array with the selected feature values
