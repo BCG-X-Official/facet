@@ -4,14 +4,13 @@ from typing import Optional
 import pandas as pd
 from sklearn.base import BaseEstimator, TransformerMixin
 
-from yieldengine.df.transform import ConstantColumnTransformer
+from yieldengine.df.transform import constant_column_transformer
 
 log = logging.getLogger(__name__)
 
-__all__ = ["OutlierRemover", "OutlierRemoverDF"]
 
-
-class OutlierRemover(BaseEstimator, TransformerMixin):
+@constant_column_transformer
+class OutlierRemoverDF(BaseEstimator, TransformerMixin):
     """
     Remove outliers according to Tukey's method, respective to a multiple of the \
     inter-quartile range (IQR)
@@ -35,9 +34,3 @@ class OutlierRemover(BaseEstimator, TransformerMixin):
     # noinspection PyPep8Naming
     def transform(self, X: pd.DataFrame) -> pd.DataFrame:
         return X.where(cond=((X < self.threshold_low_) | (X > self.threshold_high_)))
-
-
-class OutlierRemoverDF(ConstantColumnTransformer[OutlierRemover]):
-    @classmethod
-    def _make_base_transformer(cls, **kwargs) -> OutlierRemover:
-        return OutlierRemover(**kwargs)
