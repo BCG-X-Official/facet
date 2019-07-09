@@ -4,12 +4,12 @@ from typing import Optional
 import pandas as pd
 from sklearn.base import BaseEstimator, TransformerMixin
 
-from yieldengine.df.transform import constant_column_transformer
+from yieldengine.df.transform import df_transformer
 
 log = logging.getLogger(__name__)
 
 
-@constant_column_transformer
+@df_transformer
 class OutlierRemoverDF(BaseEstimator, TransformerMixin):
     """
     Remove outliers according to Tukey's method, respective to a multiple of the \
