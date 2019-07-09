@@ -1,5 +1,4 @@
 import logging
-from typing import *
 
 import pandas as pd
 from sklearn.preprocessing import (
@@ -17,67 +16,55 @@ from sklearn.preprocessing import (
 
 from yieldengine.df.transform import (
     ColumnPreservingTransformer,
-    make_constant_column_transformer_class,
+    constant_column_transformer,
 )
 
 log = logging.getLogger(__name__)
 
 
-MaxAbsScalerDF = make_constant_column_transformer_class(base_transformer=MaxAbsScaler)
-
-MinMaxScalerDF = make_constant_column_transformer_class(base_transformer=MinMaxScaler)
-
-NormalizerDF = make_constant_column_transformer_class(base_transformer=Normalizer)
-
-PowerTransformerDF = make_constant_column_transformer_class(
-    base_transformer=PowerTransformer
-)
-
-QuantileTransformerDF = make_constant_column_transformer_class(
-    base_transformer=QuantileTransformer
-)
-
-RobustScalerDF = make_constant_column_transformer_class(base_transformer=RobustScaler)
-
-StandardScalerDF = make_constant_column_transformer_class(
-    base_transformer=StandardScaler
-)
-
-KernelCentererDF = make_constant_column_transformer_class(
-    base_transformer=KernelCenterer
-)
+@constant_column_transformer
+class MaxAbsScalerDF(MaxAbsScaler):
+    pass
 
 
-class FunctionTransformerDF(ColumnPreservingTransformer[FunctionTransformer]):
-    def _get_columns_out(self) -> pd.Index:
-        if isinstance(self._columns_out_provided, Callable):
-            return self._columns_out_provided()
-        else:
-            # ignore error, type is already checked correctly in constructor:
-            # noinspection PyTypeChecker
-            return self._columns_out_provided
+@constant_column_transformer
+class MinMaxScalerDF(MinMaxScaler):
+    pass
 
-    def __init__(
-        self, columns_out: Union[pd.Index, Callable[[None], pd.Index]], **kwargs
-    ) -> None:
 
-        if columns_out is None:
-            raise ValueError("'columns_out' is required")
+@constant_column_transformer
+class NormalizerDF(Normalizer):
+    pass
 
-        if not isinstance(columns_out, pd.Index) and not isinstance(
-            columns_out, Callable
-        ):
-            raise TypeError(
-                "'columns_out' must be pandas.Index or callable->pandas.Index"
-            )
 
-        self._columns_out_provided = columns_out
+@constant_column_transformer
+class PowerTransformerDF(PowerTransformer):
+    pass
 
-        super().__init__(**kwargs)
 
-    @classmethod
-    def _make_base_transformer(cls, **kwargs) -> FunctionTransformer:
-        return FunctionTransformer(**kwargs)
+@constant_column_transformer
+class QuantileTransformerDF(QuantileTransformer):
+    pass
+
+
+@constant_column_transformer
+class RobustScalerDF(RobustScaler):
+    pass
+
+
+@constant_column_transformer
+class StandardScalerDF(StandardScaler):
+    pass
+
+
+@constant_column_transformer
+class KernelCentererDF(KernelCenterer):
+    pass
+
+
+@constant_column_transformer
+class FunctionTransformerDF(FunctionTransformer):
+    pass
 
 
 class PolynomialFeaturesDF(ColumnPreservingTransformer[PolynomialFeatures]):
@@ -85,10 +72,6 @@ class PolynomialFeaturesDF(ColumnPreservingTransformer[PolynomialFeatures]):
         return pd.Index(
             data=self.base_transformer.get_feature_names(input_features=self.columns_in)
         )
-
-    def __init__(self, **kwargs) -> None:
-
-        super().__init__(**kwargs)
 
     @classmethod
     def _make_base_transformer(cls, **kwargs) -> PolynomialFeatures:
