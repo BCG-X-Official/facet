@@ -2,9 +2,15 @@ import logging
 from copy import copy
 from typing import *
 
+import numpy as np
 import pandas as pd
 
 log = logging.getLogger(__name__)
+
+# noinspection PyShadowingBuiltins
+_T = TypeVar("_T")
+ListLike = Union[np.ndarray, pd.Series, Sequence[_T]]
+MatrixLike = Union[np.ndarray, pd.DataFrame, Sequence[Sequence[_T]]]
 
 
 def deprecated(message: str):
@@ -60,7 +66,7 @@ class Sample:
         self,
         observations: pd.DataFrame,
         target_name: str,
-        feature_names: Iterable[str] = None,
+        feature_names: ListLike[str] = None,
     ) -> None:
         """
         Construct a Sample object.
@@ -78,33 +84,38 @@ class Sample:
         self._observations = observations
 
         if target_name is None or not isinstance(target_name, str):
-            raise ValueError("target is not a string")
+            raise KeyError("target is not a string")
 
         if target_name not in self._observations.columns:
-            raise ValueError(
+            raise KeyError(
                 f"target '{target_name}' is not a column in the observations table"
             )
 
         self._target_name = target_name
 
         if feature_names is None:
-            feature_names_set = {
-                c for c in observations.columns if c != self._target_name
-            }
+            feature_names = observations.columns.drop(labels=self._target_name)
         else:
-            feature_names_set: Set[str] = set(feature_names)
+            # check if all provided feature names actually exist in the observations df
+            missing_columns = [
+                name
+                for name in feature_names
+                if not observations.columns.contains(key=name)
+            ]
+            if len(missing_columns) > 0:
+                missing_columns_list = '", "'.join(missing_columns)
+                raise KeyError(
+                    "observations table is missing columns for features "
+                    f'"{missing_columns_list}"'
+                )
 
-        if not feature_names_set.issubset(observations.columns):
-            missing_columns = feature_names_set.difference(observations.columns)
-            raise ValueError(
-                "observations table is missing columns for some features: "
-                f"{missing_columns}"
-            )
-        # ensure target column is not part of features:
-        if self._target_name in feature_names_set:
-            raise ValueError(f"features includes the target column {self._target_name}")
+            # ensure target column is not part of features:
+            if self._target_name in feature_names:
+                raise KeyError(
+                    f"features include the target column {self._target_name}"
+                )
 
-        self._feature_names = feature_names_set
+        self._feature_names = feature_names
 
     @property
     def target_name(self) -> str:
@@ -114,7 +125,7 @@ class Sample:
         return self._target_name
 
     @property
-    def feature_names(self) -> Collection[str]:
+    def feature_names(self) -> ListLike[str]:
         """
         :return: list of feature column names
         """
@@ -145,9 +156,10 @@ class Sample:
         self, dtype: Union[type, str, Sequence[Union[type, str]]]
     ) -> pd.DataFrame:
         """
+        Return a dataframe with columns for all features matching the given type
         :param dtype: dtype, or sequence of dtypes, for filtering features. See DTYPE_*
         constants for common type selectors
-        :return: list of columns for filtered features
+        :return: dataframe of the selected features
         """
         return self.features.select_dtypes(dtype)
 
@@ -182,18 +194,21 @@ class Sample:
 
         return subsample
 
-    def select_features(self, feature_names: Iterable[str]) -> "Sample":
+    def select_features(self, feature_names: ListLike[str]) -> "Sample":
+        """
+        Return a Sample object which only includes the given features
+        :param feature_names: names of features to be selected
+        :return: copy of this sample, containing only the features with the given names
+        """
         subsample = copy(self)
-        feature_names = list(feature_names)
-        feature_set = set(feature_names)
-        if not feature_set.issubset(self._feature_names):
+        if not set(feature_names).issubset(self._feature_names):
             raise ValueError(
                 "arg features is not a subset of the features in this sample"
             )
+        subsample._feature_names = feature_names
         subsample._observations = self._observations.loc[
-            :, [*feature_names, subsample.target_name]
+            :, [*feature_names, self._target_name]
         ]
-        subsample._feature_names = feature_set
 
         return subsample
 

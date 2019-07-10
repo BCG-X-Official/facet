@@ -1,22 +1,23 @@
+# coding=utf-8
 import logging
 from abc import ABC, abstractmethod
 from typing import *
 
-import numpy as np
 import pandas as pd
 from sklearn.base import BaseEstimator
 
 log = logging.getLogger(__name__)
 
 _BaseEstimator = TypeVar("_BaseEstimator", bound=BaseEstimator)
-# noinspection PyShadowingBuiltins
-_T = TypeVar("_T")
-
-ListLike = Union[np.ndarray, pd.Series, Sequence[_T]]
-MatrixLike = Union[np.ndarray, pd.DataFrame, Sequence[Sequence[_T]]]
 
 
 class DataFrameEstimator(ABC, BaseEstimator, Generic[_BaseEstimator]):
+    """
+    Abstract base class that is a wrapper around the scikit-learn `BaseEstimator` class.
+
+    :param `**kwargs`: the arguments passed to the base estimator
+    """
+
     F_COLUMN = "column"
 
     def __init__(self, **kwargs) -> None:
@@ -32,6 +33,8 @@ class DataFrameEstimator(ABC, BaseEstimator, Generic[_BaseEstimator]):
     @property
     def base_estimator(self) -> _BaseEstimator:
         """
+        Returns the base scikit-learn estimator.
+
         :return: the estimator underlying this DataFrameEstimator
         """
         return self._base_estimator
@@ -40,10 +43,10 @@ class DataFrameEstimator(ABC, BaseEstimator, Generic[_BaseEstimator]):
         """
         Get parameters for this estimator.
 
-        :param deep If True, will return the parameters for this estimator and
+        :param deep: If True, will return the parameters for this estimator and \
         contained sub-objects that are estimators
 
-        :returns params Parameter names mapped to their values
+        :return: params Parameter names mapped to their values
         """
         # noinspection PyUnresolvedReferences
         return self._base_estimator.get_params(deep=deep)
@@ -61,19 +64,31 @@ class DataFrameEstimator(ABC, BaseEstimator, Generic[_BaseEstimator]):
         return self
 
     # noinspection PyPep8Naming
-    def fit(self, X: pd.DataFrame, y: Optional[pd.Series] = None, **fit_params) -> None:
+    def fit(
+        self, X: pd.DataFrame, y: Optional[pd.Series] = None, **fit_params
+    ) -> "DataFrameEstimator[_BaseEstimator]":
+        """
+        Fit the base estimator.
+
+        :param X: dataframe to fit the estimator
+        :param y: pandas series
+        """
         self._check_parameter_types(X, y)
 
         self._base_fit(X, y, **fit_params)
 
         self._post_fit(X, y, **fit_params)
 
+        return self
+
     @property
     def is_fitted(self) -> bool:
+        """True if the base estimator is fitted, else false"""
         return self._columns_in is not None
 
     @property
     def columns_in(self) -> pd.Index:
+        """The index of the input columns"""
         self._ensure_fitted()
         return self._columns_in
 
@@ -82,9 +97,11 @@ class DataFrameEstimator(ABC, BaseEstimator, Generic[_BaseEstimator]):
             raise RuntimeError("transformer not fitted")
 
     # noinspection PyPep8Naming
-    def _base_fit(self, X: pd.DataFrame, y: Optional[pd.Series], **fit_params) -> None:
+    def _base_fit(
+        self, X: pd.DataFrame, y: Optional[pd.Series], **fit_params
+    ) -> _BaseEstimator:
         # noinspection PyUnresolvedReferences
-        self.base_transformer.fit(X, y, **fit_params)
+        return self.base_transformer.fit(X, y, **fit_params)
 
     # noinspection PyPep8Naming,PyUnusedLocal
     def _post_fit(
