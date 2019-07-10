@@ -22,6 +22,7 @@ class PipelineDF(DataFrameTransformer[Pipeline], DataFramePredictor[Pipeline]):
 
     :param `**kwargs`: the arguments passed to `DataFrameTransformer` in `__init__`
     """
+
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
         self._validate_steps()
@@ -85,7 +86,8 @@ class PipelineDF(DataFrameTransformer[Pipeline], DataFramePredictor[Pipeline]):
     def steps(self) -> Sequence[Tuple[str, Union[DataFrameTransformer, BaseEstimator]]]:
         """
         The `steps` attribute of the underlying `Pipeline`.
-        :return: List of (name, transform) tuples (implementing fit/transform).
+
+        List of (name, transformer) tuples (transformers implement fit/transform).
         """
         return self.base_transformer.steps
 
@@ -96,7 +98,7 @@ class PipelineDF(DataFrameTransformer[Pipeline], DataFramePredictor[Pipeline]):
         return len(self.base_transformer.steps)
 
     def __getitem__(self, ind: Union[slice, int, str]) -> DataFrameTransformer:
-        """Returns a sub-pipeline or a single estimator in the pipeline
+        """Return a sub-pipeline or a single estimator in the pipeline
 
         Indexing with an integer will return an estimator; using a slice
         returns another Pipeline instance which copies a slice of this
@@ -121,7 +123,6 @@ class PipelineDF(DataFrameTransformer[Pipeline], DataFramePredictor[Pipeline]):
     @property
     def named_steps(self) -> Mapping[str, DataFrameTransformer]:
         """
-        :return: mapping of step names to the data frame transformers representing
-        the steps
+        Mapping of step names to the data frame transformers representing the steps.
         """
         return self.base_transformer.named_steps
