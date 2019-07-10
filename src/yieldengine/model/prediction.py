@@ -159,10 +159,8 @@ class ModelFitCV:
 
             sample = self.sample
 
-            parallel = self._parrallel()
-
-            predictions_per_split: Iterable[pd.DataFrame] = parallel(
-                delayed(self._predictions_for_split)(
+            predictions_per_split: Iterable[pd.DataFrame] = [
+                self._predictions_for_split(
                     split_id=split_id,
                     test_model=self.fitted_model(split_id=split_id),
                     test_sample=sample.select_observations(numbers=test_indices),
@@ -170,8 +168,7 @@ class ModelFitCV:
                 for split_id, (_, test_indices) in enumerate(
                     self.cv.split(sample.features, sample.target)
                 )
-            )
-
+            ]
             self._predictions_for_all_samples = (
                 pd.concat(predictions_per_split)
                 .join(sample.target.rename(ModelFitCV.F_TARGET))
@@ -225,43 +222,3 @@ class ModelFitCV:
         """
         model.pipeline.fit(X=train_sample.features, y=train_sample.target)
         return model
-
-
-#
-# we move all parallelisable code outside of the ModelFitCV class as this brings a
-# major performance benefit under Windows
-#
-
-
-# def _predictions_for_split(
-#     split_id: int, test_model: Model, test_sample: Sample
-# ) -> pd.DataFrame:
-#     """
-#     Compute predictions for a given split.
-#
-#     :param split_id: the split id
-#     :param test_model: the fitted model for the split
-#     :param test_sample: the `Sample` of the split test set
-#     :return: dataframe with columns `split_id` and `prediction`.
-#     """
-#     return pd.DataFrame(
-#         data={
-#             ModelFitCV.F_SPLIT_ID: split_id,
-#             ModelFitCV.F_PREDICTION: test_model.pipeline.predict(
-#                 X=test_sample.features
-#             ),
-#         },
-#         index=test_sample.index,
-#     )
-#
-#
-# def _fit_model_for_split(model: Model, train_sample: Sample) -> Model:
-#     """
-#     Fit a model using a sample.
-#
-#     :param model:  the `Model` to fit
-#     :param train_sample: `Sample` to fit on
-#     :return: tuple of the the split_id and the fitted `Model`
-#     """
-#     model.pipeline.fit(X=train_sample.features, y=train_sample.target)
-#     return model
