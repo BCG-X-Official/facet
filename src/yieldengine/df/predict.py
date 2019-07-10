@@ -1,5 +1,6 @@
 # coding=utf-8
-"""Base classes for wrapper around regressor and classifier returning pandas objects."""
+"""Base classes for wrapper around regressors and classifiers returning pandas
+objects."""
 
 import logging
 from abc import ABCMeta
@@ -19,7 +20,7 @@ _BasePredictor = TypeVar("_BasePredictor", bound=Union[RegressorMixin, Classifie
 
 class DataFramePredictor(DataFrameEstimator[_BasePredictor], metaclass=ABCMeta):
     """
-    Wrapper around scikit-learn regressor and classifiers that preserves dataframes.
+    Wrapper around sklearn regressor and classifiers that preserves dataframes.
 
     :param `**kwargs`: arguments passed to `DataFrameEstimator` in `__init__`
     """
@@ -32,10 +33,10 @@ class DataFramePredictor(DataFrameEstimator[_BasePredictor], metaclass=ABCMeta):
     # noinspection PyPep8Naming
     def predict(self, X: pd.DataFrame, **predict_params) -> pd.Series:
         """
-        Returns prediction as a `pd.Series`.
+        Return the predictions as a `pd.Series`.
 
         :param X: the dataframe of features
-        :param predict_params: additional arguments passed to the the `predict` method \
+        :param predict_params: additional arguments passed to the `predict` method \
         of the base estimator
         :return: the `pd.Series` of predictions
         """
@@ -46,7 +47,7 @@ class DataFramePredictor(DataFrameEstimator[_BasePredictor], metaclass=ABCMeta):
     # noinspection PyPep8Naming
     def fit_predict(self, X: pd.DataFrame, y: pd.Series, **fit_params) -> pd.Series:
         """
-        Fit and predict.
+        Fit and return the predictions.
         :param X: the dataframe of features
         :param y: the series of target used to train the model
         :param fit_params: additional arguments passed to the the `predict` method
@@ -69,7 +70,7 @@ class DataFramePredictor(DataFrameEstimator[_BasePredictor], metaclass=ABCMeta):
         Probability estimates.
 
         :param X: dataframe of features
-        :return: the series of probabiliy estimates
+        :return: the series of probability estimates
         """
         self._check_parameter_types(X, None)
 
@@ -90,7 +91,8 @@ class DataFramePredictor(DataFrameEstimator[_BasePredictor], metaclass=ABCMeta):
     # noinspection PyPep8Naming
     def decision_function(self, X: pd.DataFrame) -> pd.DataFrame:
         """
-        Evaluates the decision function for the samples in X.
+        Evaluate the decision function for the samples in X.
+
         :param X: dataframe of features
         :return: dataframe of the decision functions of the sample for each class
         """
@@ -110,7 +112,7 @@ class DataFramePredictor(DataFrameEstimator[_BasePredictor], metaclass=ABCMeta):
         sample_weight: Optional[Any] = None,
     ) -> float:
         """
-        Returns the score of the base estimator.
+        Return the score of the base estimator.
 
         :param X: dataframe of the features, shape = (n_samples, n_features)
         :param y: series of the true targets, shape = (n_samples) or (n_samples, \
