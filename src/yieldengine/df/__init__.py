@@ -1,4 +1,8 @@
 # coding=utf-8
+"""This package defines wrappers around various sklearn `BaseEstimator` that
+nicely handle dataframes as input and output.
+"""
+
 import logging
 from abc import ABC, abstractmethod
 from typing import *
@@ -13,7 +17,7 @@ _BaseEstimator = TypeVar("_BaseEstimator", bound=BaseEstimator)
 
 class DataFrameEstimator(ABC, BaseEstimator, Generic[_BaseEstimator]):
     """
-    Abstract base class that is a wrapper around the scikit-learn `BaseEstimator` class.
+    Abstract base class that is a wrapper around the sklearn `BaseEstimator` class.
 
     :param `**kwargs`: the arguments passed to the base estimator
     """
@@ -33,9 +37,9 @@ class DataFrameEstimator(ABC, BaseEstimator, Generic[_BaseEstimator]):
     @property
     def base_estimator(self) -> _BaseEstimator:
         """
-        Returns the base scikit-learn estimator.
+        Return the base sklearn `BaseEstimator`.
 
-        :return: the estimator underlying this DataFrameEstimator
+        :return: the estimator underlying self
         """
         return self._base_estimator
 
@@ -43,10 +47,10 @@ class DataFrameEstimator(ABC, BaseEstimator, Generic[_BaseEstimator]):
         """
         Get parameters for this estimator.
 
-        :param deep: If True, will return the parameters for this estimator and \
+        :param deep: If True, return the parameters for this estimator and \
         contained sub-objects that are estimators
 
-        :return: params Parameter names mapped to their values
+        :return: mapping of the parameter names to their values
         """
         # noinspection PyUnresolvedReferences
         return self._base_estimator.get_params(deep=deep)
