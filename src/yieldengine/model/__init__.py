@@ -1,3 +1,8 @@
+"""
+This package defines a :class:`~Model` model class and other classes to inspect the
+model and add cross validation support.
+"""
+
 from typing import *
 
 from sklearn import clone
@@ -47,14 +52,19 @@ class Model:
 
     @property
     def pipeline(self) -> PipelineDF:
+        """The underlying pipeline of the model.
+
+        It has two steps: ``preprocessing`` and ``estimator``."""
         return self._pipeline
 
     @property
     def preprocessing(self) -> DataFrameTransformer:
+        """The ``preprocessing`` step of the pipeline."""
         return self._preprocessing
 
     @property
     def estimator(self) -> BaseEstimator:
+        """The ``estimator`` step of the pipeline."""
         return self._estimator
 
     def clone(self, parameters: Optional[Dict[str, Any]] = None) -> "Model":
