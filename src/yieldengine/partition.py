@@ -6,7 +6,7 @@ from typing import *
 import numpy as np
 import pandas as pd
 
-from yieldengine.df import ListLike
+from yieldengine import ListLike
 
 log = logging.getLogger(__name__)
 
