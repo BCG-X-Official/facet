@@ -50,7 +50,7 @@ class ModelFitCV:
         cv: BaseCrossValidator,
         sample: Sample,
         n_jobs: int = 1,
-        shared_memory=True,
+        shared_memory: bool = True,
         verbose: int = 0,
     ) -> None:
         self._model = model
@@ -59,8 +59,8 @@ class ModelFitCV:
         self._model_by_split: Optional[List[Model]] = None
         self._predictions_for_all_samples: Optional[pd.DataFrame] = None
         self._n_jobs = n_jobs
-        self._verbose = verbose
         self._shared_memory = shared_memory
+        self._verbose = verbose
 
     @property
     def model(self) -> Model:
@@ -113,9 +113,7 @@ class ModelFitCV:
         model = self.model
         sample = self.sample
 
-        parallel = self._parrallel()
-
-        self._model_by_split: List[Model] = parallel(
+        self._model_by_split: List[Model] = self._parrallel()(
             delayed(_fit_model_for_split)(
                 model.clone(), sample.select_observations(numbers=train_indices)
             )
