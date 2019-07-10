@@ -14,55 +14,52 @@ from sklearn.preprocessing import (
     StandardScaler,
 )
 
-from yieldengine.df.transform import (
-    ColumnPreservingTransformer,
-    constant_column_transformer,
-)
+from yieldengine.df.transform import ColumnPreservingTransformer, df_transformer
 
 log = logging.getLogger(__name__)
 
 
-@constant_column_transformer
+@df_transformer
 class MaxAbsScalerDF(MaxAbsScaler):
     pass
 
 
-@constant_column_transformer
+@df_transformer
 class MinMaxScalerDF(MinMaxScaler):
     pass
 
 
-@constant_column_transformer
+@df_transformer
 class NormalizerDF(Normalizer):
     pass
 
 
-@constant_column_transformer
+@df_transformer
 class PowerTransformerDF(PowerTransformer):
     pass
 
 
-@constant_column_transformer
+@df_transformer
 class QuantileTransformerDF(QuantileTransformer):
     pass
 
 
-@constant_column_transformer
+@df_transformer
 class RobustScalerDF(RobustScaler):
     pass
 
 
-@constant_column_transformer
+@df_transformer
 class StandardScalerDF(StandardScaler):
     pass
 
 
-@constant_column_transformer
+@df_transformer
 class KernelCentererDF(KernelCenterer):
     pass
 
 
-@constant_column_transformer
+@df_transformer
 class FunctionTransformerDF(FunctionTransformer):
     pass
 

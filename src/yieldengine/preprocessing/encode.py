@@ -13,7 +13,7 @@ from sklearn.preprocessing import (
     OrdinalEncoder,
 )
 
-from yieldengine.df.transform import constant_column_transformer, DataFrameTransformer
+from yieldengine.df.transform import DataFrameTransformer, df_transformer
 
 log = logging.getLogger(__name__)
 
@@ -53,7 +53,7 @@ class OneHotEncoderDF(DataFrameTransformer[OneHotEncoder]):
         )
 
 
-@constant_column_transformer
+@df_transformer
 class OrdinalEncoderDF(OrdinalEncoder):
     """Wrapper around sklearn ```OrdinalEncoder``` that returns a DataFrame
     with correct row and column indices."""
@@ -61,11 +61,11 @@ class OrdinalEncoderDF(OrdinalEncoder):
     pass
 
 
-@constant_column_transformer
+@df_transformer
 class LabelEncoderDF(LabelEncoder):
     pass
 
 
-@constant_column_transformer
+@df_transformer
 class LabelBinarizerDF(LabelBinarizer):
     pass
