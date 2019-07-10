@@ -2,7 +2,7 @@
 """Base classes with wrapper around sklearn transformers."""
 
 import logging
-from abc import ABCMeta, abstractmethod
+from abc import ABC, abstractmethod
 from types import new_class
 from typing import *
 
@@ -20,9 +20,7 @@ _BaseTransformer = TypeVar(
 )
 
 
-class DataFrameTransformer(
-    DataFrameEstimator[_BaseTransformer], TransformerMixin, metaclass=ABCMeta
-):
+class DataFrameTransformer(DataFrameEstimator[_BaseTransformer], TransformerMixin, ABC):
     """
     Wraps around an sklearn transformer and ensures that the X and y objects passed
     and returned are pandas data frames with valid column names.
@@ -154,11 +152,9 @@ class DataFrameTransformer(
         self._columns_out = None
         self._columns_original = None
 
+    @staticmethod
     def _transformed_to_df(
-        self,
-        transformed: Union[pd.DataFrame, np.ndarray],
-        index: pd.Index,
-        columns: pd.Index,
+        transformed: Union[pd.DataFrame, np.ndarray], index: pd.Index, columns: pd.Index
     ):
         if isinstance(transformed, pd.DataFrame):
             return transformed
@@ -183,7 +179,7 @@ class DataFrameTransformer(
 
 
 class NDArrayTransformerDF(
-    DataFrameTransformer[_BaseTransformer], Generic[_BaseTransformer], metaclass=ABCMeta
+    DataFrameTransformer[_BaseTransformer], Generic[_BaseTransformer], ABC
 ):
     """
     Special case of DataFrameTransformer where the base transformer does not accept
@@ -213,7 +209,7 @@ class NDArrayTransformerDF(
 
 
 class ColumnPreservingTransformer(
-    DataFrameTransformer[_BaseTransformer], Generic[_BaseTransformer], metaclass=ABCMeta
+    DataFrameTransformer[_BaseTransformer], Generic[_BaseTransformer], ABC
 ):
     """Abstract base class for a `DataFrameTransformer`.
 
@@ -235,9 +231,7 @@ class ColumnPreservingTransformer(
 
 
 class ConstantColumnTransformer(
-    ColumnPreservingTransformer[_BaseTransformer],
-    Generic[_BaseTransformer],
-    metaclass=ABCMeta,
+    ColumnPreservingTransformer[_BaseTransformer], Generic[_BaseTransformer], ABC
 ):
     """Abstract base class for a `DataFrameTransformer`.
 
@@ -249,20 +243,50 @@ class ConstantColumnTransformer(
         return self.columns_in
 
 
-def constant_column_transformer(
-    cls: Type[_BaseTransformer]
-) -> Type[ConstantColumnTransformer[_BaseTransformer]]:
+def df_transformer(
+    cls: Type[_BaseTransformer] = None,
+    *,
+    df_transformer_type: Type[
+        DataFrameTransformer[_BaseTransformer]
+    ] = ConstantColumnTransformer,
+) -> Union[
+    Callable[[Type[_BaseTransformer]], Type[DataFrameTransformer[_BaseTransformer]]],
+    Type[DataFrameTransformer[_BaseTransformer]],
+]:
+    """
+    Class decorator wrapping an sklearn transformer in a `DataFrameTransformer`
+    :param cls: the transformer class to wrap
+    :param df_transformer_type: optional parameter indicating the \
+                                `DataFrameTransformer` class to be used for wrapping; \
+                                defaults to `ConstantColumnTransformer`
+    :return: the resulting `DataFrameTransformer` with `cls` as the base \
+             transformer
+    """
+
     def _init_class_namespace(namespace: Dict[str, Any]) -> None:
         # noinspection PyProtectedMember
         namespace[
-            ConstantColumnTransformer._make_base_transformer.__name__
+            df_transformer_type._make_base_transformer.__name__
         ] = lambda **kwargs: cls(**kwargs)
 
-    return cast(
-        Type[ConstantColumnTransformer[_BaseTransformer]],
-        new_class(
-            name=cls.__name__,
-            bases=(ConstantColumnTransformer,),
-            exec_body=_init_class_namespace,
-        ),
-    )
+    def _decorate(
+        cls: Type[_BaseTransformer]
+    ) -> Type[DataFrameTransformer[_BaseTransformer]]:
+        return cast(
+            Type[DataFrameTransformer[_BaseTransformer]],
+            new_class(
+                name=cls.__name__,
+                bases=(df_transformer_type,),
+                exec_body=_init_class_namespace,
+            ),
+        )
+
+    if not issubclass(df_transformer_type, DataFrameTransformer):
+        raise ValueError(
+            f"arg df_transformer_type not a "
+            f"{DataFrameTransformer.__name__} class: {df_transformer_type}"
+        )
+    if cls is None:
+        return _decorate
+    else:
+        return _decorate(cls)
