@@ -22,7 +22,6 @@ class PipelineDF(DataFrameTransformer[Pipeline], DataFramePredictor[Pipeline]):
 
     :param `**kwargs`: the arguments passed to `DataFrameTransformer` in `__init__`
     """
-
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
         self._validate_steps()

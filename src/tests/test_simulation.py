@@ -37,7 +37,12 @@ def test_univariate_simulation(
         sample=sample, n_jobs=available_cpus
     )
 
-    mp = PredictorCV(model=model_ranking[0].model, cv=circular_cv, sample=sample)
+    mp = PredictorCV(
+        model=model_ranking[0].model,
+        cv=circular_cv,
+        sample=sample,
+        n_jobs=available_cpus,
+    )
 
     sim = UnivariateSimulation(predictor=mp)
 
