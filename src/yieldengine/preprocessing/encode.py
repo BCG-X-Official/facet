@@ -1,13 +1,18 @@
 import logging
 
 import pandas as pd
-from sklearn.preprocessing import OneHotEncoder, OrdinalEncoder
+from sklearn.preprocessing import (
+    LabelBinarizer,
+    LabelEncoder,
+    OneHotEncoder,
+    OrdinalEncoder,
+)
 
-from yieldengine.df.transform import ConstantColumnTransformer, DataFrameTransformer
+from yieldengine.df.transform import DataFrameTransformer, df_transformer
 
 log = logging.getLogger(__name__)
 
-__all__ = ["OneHotEncoderDF", "OrdinalEncoderDF"]
+__all__ = ["OneHotEncoderDF", "OrdinalEncoderDF", "LabelEncoderDF", "LabelBinarizerDF"]
 
 
 class OneHotEncoderDF(DataFrameTransformer[OneHotEncoder]):
@@ -39,10 +44,16 @@ class OneHotEncoderDF(DataFrameTransformer[OneHotEncoder]):
         )
 
 
-class OrdinalEncoderDF(ConstantColumnTransformer[OrdinalEncoder]):
-    def __init__(self, **kwargs) -> None:
-        super().__init__(**kwargs)
+@df_transformer
+class OrdinalEncoderDF(OrdinalEncoder):
+    pass
 
-    @classmethod
-    def _make_base_transformer(cls, **kwargs) -> OrdinalEncoder:
-        return OrdinalEncoder(**kwargs)
+
+@df_transformer
+class LabelEncoderDF(LabelEncoder):
+    pass
+
+
+@df_transformer
+class LabelBinarizerDF(LabelBinarizer):
+    pass

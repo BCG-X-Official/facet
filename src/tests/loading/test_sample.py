@@ -1,5 +1,6 @@
 import pandas as pd
 import pytest
+from joblib import delayed, Parallel
 
 from yieldengine import Sample
 
@@ -18,7 +19,7 @@ def test_sample_init(batch_table: pd.DataFrame) -> None:
         Sample(observations=[], target_name="target")
 
     # 2. no features and no target specified
-    with pytest.raises(ValueError):
+    with pytest.raises(KeyError):
         # noinspection PyTypeChecker
         Sample(observations=batch_table, target_name=None)
 
@@ -27,7 +28,7 @@ def test_sample_init(batch_table: pd.DataFrame) -> None:
     f_columns.remove("Yield")
 
     # 2.1 invalid feature column specified
-    with pytest.raises(ValueError):
+    with pytest.raises(KeyError):
         f_columns_false = f_columns.copy()
         f_columns_false.append("doesnt_exist")
         Sample(
@@ -35,7 +36,7 @@ def test_sample_init(batch_table: pd.DataFrame) -> None:
         )
 
     # 2.2 invalid target column specified
-    with pytest.raises(ValueError):
+    with pytest.raises(KeyError):
         Sample(
             observations=batch_table,
             target_name="doesnt_exist",
@@ -43,7 +44,7 @@ def test_sample_init(batch_table: pd.DataFrame) -> None:
         )
 
     # 3. column is target and also feature
-    with pytest.raises(ValueError):
+    with pytest.raises(KeyError):
         f_columns_false = f_columns.copy()
         f_columns_false.append("Yield")
 
@@ -106,3 +107,13 @@ def test_sample(batch_table: pd.DataFrame) -> None:
     # test select_observations
     sub = s2.select_observations(numbers=[0, 1, 2, 3])
     assert len(sub) == 4
+
+    # test that s.features is a deterministic operation that does not depend on the
+    # global python environment variable PYTHONHASHSEED
+    parallel = Parallel(n_jobs=-3)
+
+    def get_column(sample: Sample):
+        return list(sample.features.columns)
+
+    columns1, columns2 = parallel(delayed(get_column)(sample) for sample in [s, s])
+    assert columns1 == columns2
