@@ -187,9 +187,11 @@ class NDArrayTransformerDF(
     """
 
     # noinspection PyPep8Naming
-    def _base_fit(self, X: pd.DataFrame, y: Optional[pd.Series], **fit_params) -> None:
+    def _base_fit(
+        self, X: pd.DataFrame, y: Optional[pd.Series], **fit_params
+    ) -> _BaseTransformer:
         # noinspection PyUnresolvedReferences
-        self.base_transformer.fit(X.values, y.values, **fit_params)
+        return self.base_transformer.fit(X.values, y.values, **fit_params)
 
     # noinspection PyPep8Naming
     def _base_transform(self, X: pd.DataFrame) -> np.ndarray:
