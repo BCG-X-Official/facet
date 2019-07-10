@@ -5,54 +5,49 @@ import pandas as pd
 from pandas.core.dtypes.common import is_numeric_dtype
 
 from yieldengine import Sample
-from yieldengine.model.prediction import PredictorCV
+from yieldengine.model.prediction import ModelFitCV
 from yieldengine.preprocessing import FunctionTransformerDF
 
 
 class UnivariateSimulation:
-    __slots__ = ["_predictor"]
+    __slots__ = ["_model_fit"]
 
     F_SPLIT_ID = "split_id"
     F_PARAMETER_VALUE = "parameter_value"
     F_RELATIVE_YIELD_CHANGE = "relative_yield_change"
 
-    def __init__(self, predictor: PredictorCV):
-        self._predictor = predictor
+    def __init__(self, model_fit: ModelFitCV):
+        self._model_fit = model_fit
 
     @property
-    def predictor(self) -> PredictorCV:
-        return self._predictor
+    def model_fit(self) -> ModelFitCV:
+        return self._model_fit
 
     def simulate_yield_change(
         self, parameterized_feature: str, parameter_values: np.ndarray
     ) -> pd.DataFrame:
-        if parameterized_feature not in self.predictor.sample.feature_names:
+        if parameterized_feature not in self.model_fit.sample.feature_names:
             raise ValueError(f"Feature '{parameterized_feature}' not in sample")
 
         results = []
 
-        self.predictor.fit()
-
         for parameter_value in parameter_values:
-            simul_transformer = UnivariateSimulation.make_column_replacing_transformer(
+            feature_synthesizer = UnivariateSimulation.make_column_replacing_transformer(
                 parameterized_feature=parameterized_feature,
                 parameter_value=parameter_value,
-                columns_out=self.predictor.sample.features.columns,
             )
 
-            synthetic_sample = simul_transformer.fit_transform_sample(
-                self.predictor.sample
+            synthetic_sample = feature_synthesizer.fit_transform_sample(
+                self.model_fit.sample
             )
 
-            predictor_for_syn_sample = self.predictor.copy_with_sample(
+            predictor_for_syn_sample = self.model_fit.copy_with_sample(
                 sample=synthetic_sample
             )
 
-            predictor_for_syn_sample.fit()
-
-            for split_id in self.predictor.split_ids:
+            for split_id in range(self.model_fit.n_splits):
                 predictions_for_split_hist: pd.Series = (
-                    self.predictor.predictions_for_split(split_id=split_id)
+                    self.model_fit.predictions_for_split(split_id=split_id)
                 )
 
                 predictions_for_split_syn: pd.Series = (
@@ -99,7 +94,7 @@ class UnivariateSimulation:
 
     @staticmethod
     def make_column_replacing_transformer(
-        parameterized_feature: str, parameter_value: Any, columns_out: pd.Index
+        parameterized_feature: str, parameter_value: Any
     ) -> FunctionTransformerDF:
         # noinspection PyPep8Naming
         return FunctionTransformerDF(
