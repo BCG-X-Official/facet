@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 from lightgbm.sklearn import LGBMRegressor
 from sklearn import datasets
-from sklearn.model_selection import BaseCrossValidator, ShuffleSplit
+from sklearn.model_selection import BaseCrossValidator, RepeatedKFold
 from sklearn.svm import SVR
 from sklearn.utils import Bunch
 
@@ -14,7 +14,7 @@ from yieldengine import Sample
 from yieldengine.df.transform import DataFrameTransformer
 from yieldengine.model import Model
 from yieldengine.model.inspection import ModelInspector
-from yieldengine.model.prediction import PredictorCV
+from yieldengine.model.prediction import ModelFitCV
 from yieldengine.model.selection import (
     ModelEvaluation,
     ModelGrid,
@@ -25,8 +25,9 @@ from yieldengine.model.validation import CircularCrossValidator
 
 log = logging.getLogger(__name__)
 
-N_SPLITS = 5
-TEST_RATIO = 0.2
+K_FOLDS: int = 5
+TEST_RATIO = 1 / K_FOLDS
+N_SPLITS = K_FOLDS * 10
 BOSTON_TARGET = "target"
 
 
@@ -37,8 +38,8 @@ def test_model_inspection(available_cpus: int) -> None:
 
     # define a CV:
     # noinspection PyTypeChecker
-    test_cv: BaseCrossValidator = ShuffleSplit(
-        n_splits=N_SPLITS, test_size=TEST_RATIO, random_state=42
+    test_cv: BaseCrossValidator = RepeatedKFold(
+        n_splits=K_FOLDS, n_repeats=N_SPLITS // K_FOLDS, random_state=42
     )
 
     # define parameters and models
@@ -87,7 +88,7 @@ def test_model_inspection(available_cpus: int) -> None:
     ][0]
 
     for model_evaluation in best_svr, best_lgbm:
-        mp = PredictorCV(
+        model_fit = ModelFitCV(
             model=model_evaluation.model,
             cv=test_cv,
             sample=test_sample,
@@ -95,32 +96,34 @@ def test_model_inspection(available_cpus: int) -> None:
         )
 
         # test predictions_for_all_samples
-        predictions_df: pd.DataFrame = mp.predictions_for_all_samples()
+        predictions_df: pd.DataFrame = model_fit.predictions_for_all_splits()
+        assert ModelFitCV.F_PREDICTION in predictions_df.columns
+        assert ModelFitCV.F_TARGET in predictions_df.columns
 
-        assert PredictorCV.F_SPLIT_ID in predictions_df.columns
-        assert PredictorCV.F_PREDICTION in predictions_df.columns
-
-        # check number of split starts
-        assert predictions_df[PredictorCV.F_SPLIT_ID].nunique() == N_SPLITS
-
-        # check correct number of rows
-        ALLOWED_VARIANCE = 0.01
+        # check number of split ids
         assert (
-            (len(test_sample) * (TEST_RATIO - ALLOWED_VARIANCE) * N_SPLITS)
-            <= len(predictions_df)
-            <= (len(test_sample) * (TEST_RATIO + ALLOWED_VARIANCE) * N_SPLITS)
+            predictions_df.index.get_level_values(level=ModelFitCV.F_SPLIT_ID).nunique()
+            == N_SPLITS
         )
 
-        mi = ModelInspector(predictor=mp)
+        # check correct number of rows
+        allowed_variance = 0.01
+        assert (
+            (len(test_sample) * (TEST_RATIO - allowed_variance) * N_SPLITS)
+            <= len(predictions_df)
+            <= (len(test_sample) * (TEST_RATIO + allowed_variance) * N_SPLITS)
+        )
+
+        model_inspector = ModelInspector(model_fit=model_fit)
         # make and check shap value matrix
-        shap_matrix = mi.shap_matrix()
+        shap_matrix = model_inspector.shap_matrix()
 
         # the length of rows in shap_matrix should be equal to the unique observation
         # indices we have had in the predictions_df
-        assert len(shap_matrix) == len(predictions_df.index.unique())
+        assert len(shap_matrix) == len(test_sample)
 
         # correlated shap matrix: feature dependencies
-        corr_matrix: pd.DataFrame = mi.feature_dependency_matrix()
+        corr_matrix: pd.DataFrame = model_inspector.feature_dependency_matrix()
         log.info(corr_matrix)
         # check number of rows
         assert len(corr_matrix) == len(test_sample.feature_names) - 1
@@ -135,7 +138,7 @@ def test_model_inspection(available_cpus: int) -> None:
                 <= 1.0
             )
 
-        linkage_tree = mi.cluster_dependent_features()
+        linkage_tree = model_inspector.cluster_dependent_features()
 
 
 def test_model_inspection_with_encoding(
@@ -168,13 +171,13 @@ def test_model_inspection_with_encoding(
         if isinstance(model_evaluation.model.estimator, LGBMRegressor)
     ][0]
     for model_evaluation in [best_lgbm]:
-        mp = PredictorCV(
+        model_fit = ModelFitCV(
             model=model_evaluation.model,
             cv=circular_cv,
             sample=sample,
             n_jobs=available_cpus,
         )
-        mi = ModelInspector(predictor=mp)
+        mi = ModelInspector(model_fit=model_fit)
 
         shap_matrix = mi.shap_matrix()
 
