@@ -30,6 +30,7 @@ class OutlierRemoverDF(BaseEstimator, TransformerMixin):
         threshold_iqr: pd.Series = (q3 - q1) * self.iqr_multiple
         self.threshold_low_ = q1 - threshold_iqr
         self.threshold_high_ = q3 + threshold_iqr
+        return self
 
     # noinspection PyPep8Naming
     def transform(self, X: pd.DataFrame) -> pd.DataFrame:
