@@ -1,4 +1,9 @@
-"""Module that defines various dendrogram styles."""
+"""Define various dendrogram styles.
+
+:class:`~MatplotStyle` is a an abstract matplotlib style which is implemented by
+:class:`~LineStyle` for a classical tree style and by :class:`~FeatMapStyle` for a
+heat map style.
+"""
 
 import logging
 from abc import ABC
@@ -33,7 +38,7 @@ class _PercentageFormatter(Formatter):
 class MatplotStyle(DendrogramStyle, ABC):
     """Base Matplotlib style for dendrogram.
 
-    Provides basic support for plotting a color legend for feature importance,
+    Provide basic support for plotting a color legend for feature importance,
     and providing the `Axes` object for plotting the actual dendrogram including
     tick marks for the feature distance axis.
 

@@ -1,4 +1,10 @@
-"""This module allows to draw dendrograms with different styles."""
+"""Specify the high-level mechanisms to draw a dendrogram.
+
+The class :class:`~DendrogramDrawer` draws a dendrogram based
+on a :class:`~.linkage.LinkageTree` and a :class:`~DendrogramStyle`.
+The class `~DendrogramStyle` is an abstract class that that must be implemented for
+each specific style.
+"""
 import logging
 from abc import ABC, abstractmethod
 from typing import *
@@ -25,11 +31,11 @@ class DendrogramStyle(ABC):
 
     @abstractmethod
     def draw_leaf_labels(self, labels: Sequence[str]) -> None:
-        """Render the labels for all leaves"""
+        """Render the labels for all leaves."""
         pass
 
     @abstractmethod
-    def draw_title(self, title: str):
+    def draw_title(self, title: str) -> None:
         """Draw the title of the dendrogram."""
         pass
 
@@ -37,8 +43,7 @@ class DendrogramStyle(ABC):
     def draw_link_leg(
         self, bottom: float, top: float, first_leaf: int, n_leaves: int, weight: float
     ) -> None:
-        """
-        Draw a leaf.
+        """Draw a leaf of the linkage tree.
 
         :param bottom: the clustering level (i.e. similarity) of the child nodes
         :param top: the clustering level (i.e. similarity) of the parent node
@@ -120,8 +125,8 @@ class DendrogramDrawer:
         :param node: the node to be drawn
         :param y: the value determining the position of the node with respect to the
           leaves of the tree
-        :param width_relative: float between 0 and 1, the relative height in the tree of the node: the root
-          has maximal width_relative 1
+        :param width_relative: float between 0 and 1, the relative height in the tree
+          of the node: the root has maximal width_relative 1
         :return info: `_SubtreeInfo` which contains weights and labels
         """
         if node.is_leaf:
