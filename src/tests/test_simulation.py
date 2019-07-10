@@ -5,7 +5,7 @@ import pandas as pd
 
 from yieldengine import Sample
 from yieldengine.df.transform import DataFrameTransformer
-from yieldengine.model.prediction import PredictorCV
+from yieldengine.model.prediction import ModelFitCV
 from yieldengine.model.selection import ModelEvaluation, ModelGrid, ModelRanker
 from yieldengine.model.validation import CircularCrossValidator
 from yieldengine.simulation import UnivariateSimulation
@@ -36,14 +36,14 @@ def test_univariate_simulation(
         sample=sample, n_jobs=available_cpus
     )
 
-    mp = PredictorCV(
+    model_fit = ModelFitCV(
         model=model_ranking[0].model,
         cv=circular_cv,
         sample=sample,
         n_jobs=available_cpus,
     )
 
-    sim = UnivariateSimulation(predictor=mp)
+    sim = UnivariateSimulation(model_fit=model_fit)
 
     parameterized_feature = "Step4-6 RawMat Vendor Compound08 Purity (#)"
 
