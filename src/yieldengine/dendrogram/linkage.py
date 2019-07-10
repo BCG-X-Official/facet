@@ -1,4 +1,10 @@
-"""This modules defines a `LinkageTree` class used for the drawing of dendrograms."""
+"""Define the class :class:`~yieldengine.dendrogram.linkage.LinkageTree`
+which serves as the internal representation of dendrograms.
+
+The classes :class:`~yieldengine.dendrogram.linkage.LinkageNode` and
+:class:`~yieldengine.dendrogram.linkage.LeafNode` are the building blocks of
+:class:`~yieldengine.dendrogram.linkage.LinkageTree`. Both these classes inherit from
+:class:`~yieldengine.dendrogram.linkage.Node`."""
 
 from abc import ABC, abstractmethod
 from typing import *
@@ -83,7 +89,7 @@ class LinkageNode(Node):
 
     @property
     def is_leaf(self) -> bool:
-        """true if the node is a leaf, False otherwise."""
+        """``True`` if the node is a leaf, ``False`` otherwise."""
         return False
 
     def __repr__(self) -> str:
@@ -199,7 +205,7 @@ class LinkageTree:
         return self._nodes[-1]
 
     def children(self, node: Node) -> Optional[Tuple[Node, Node]]:
-        """Returns None if the node is a leaf, otherwise the pair of children."""
+        """Return None if the node is a leaf, otherwise the pair of children."""
         if node.is_leaf:
             return None
         else:
