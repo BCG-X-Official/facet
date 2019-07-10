@@ -28,6 +28,7 @@ class ModelInspector:
     :param PredictorCV predictor: predictor containing the information about the \
     model, the data (a Sample object), the cross-validation and predictions.
     """
+
     __slots__ = [
         "_shap_matrix",
         "_feature_dependency_matrix",
@@ -90,6 +91,12 @@ class ModelInspector:
             shap_matrix = self._explainer_factory(
                 estimator=estimator, data=data_transformed
             ).shap_values(data_transformed)
+
+            if not isinstance(shap_matrix, np.ndarray):
+                log.warning(
+                    f"shap explainer output expected to be an ndarray but was "
+                    f"{type(shap_matrix)}"
+                )
 
             return pd.DataFrame(
                 data=shap_matrix,
