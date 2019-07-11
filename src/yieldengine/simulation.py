@@ -3,23 +3,23 @@ from typing import *
 import numpy as np
 import pandas as pd
 
-from yieldengine.model.prediction import PredictorCV
+from yieldengine.model.prediction import ModelFitCV
 from yieldengine.preprocessing import FunctionTransformerDF
 
 
 class UnivariateSimulation:
-    __slots__ = ["_predictor"]
+    __slots__ = ["_model_fit"]
 
     F_SPLIT_ID = "split_id"
     F_PARAMETER_VALUE = "parameter_value"
     F_RELATIVE_TARGET_CHANGE = "relative_target_change"
 
-    def __init__(self, predictor: PredictorCV):
-        self._predictor = predictor
+    def __init__(self, model_fit: ModelFitCV):
+        self._model_fit = model_fit
 
     @property
-    def predictor(self) -> PredictorCV:
-        return self._predictor
+    def model_fit(self) -> ModelFitCV:
+        return self._model_fit
 
     def simulate_feature(
         self, feature_name: str, feature_values: Iterable[Any]
@@ -32,36 +32,32 @@ class UnivariateSimulation:
         predictions on the sample where the `parametrized_feature` is set to the
         given value, compared to the predictions on the original sample.
 
-        :param parameterized_feature: name of the feature to use in the simulation
-        :param parameter_values: values to use in the simulation
+        :param feature_name: name of the feature to use in the simulation
+        :param feature_values: values to use in the simulation
         :return: dataframe with three columns: `split_id`, `parameter_value` and
-        `relative_yield_change`.
+        `relative_target_change`.
         """
-        if feature_name not in self.predictor.sample.feature_names:
+        if feature_name not in self.model_fit.sample.feature_names:
             raise ValueError(f"Feature '{feature_name}' not in sample")
 
         results = []
 
-        self.predictor.fit()
-
         for value in feature_values:
-            simul_transformer = UnivariateSimulation.make_column_replacing_transformer(
+            feature_synthesizer = UnivariateSimulation.make_column_replacing_transformer(
                 feature_name=feature_name, feature_value=value
             )
 
-            synthetic_sample = simul_transformer.fit_transform_sample(
-                self.predictor.sample
+            synthetic_sample = feature_synthesizer.fit_transform_sample(
+                self.model_fit.sample
             )
 
-            predictor_for_syn_sample = self.predictor.copy_with_sample(
+            predictor_for_syn_sample = self.model_fit.copy_with_sample(
                 sample=synthetic_sample
             )
 
-            predictor_for_syn_sample.fit()
-
-            for split_id in self.predictor.split_ids:
+            for split_id in range(self.model_fit.n_splits):
                 predictions_for_split_hist: pd.Series = (
-                    self.predictor.predictions_for_split(split_id=split_id)
+                    self.model_fit.predictions_for_split(split_id=split_id)
                 )
 
                 predictions_for_split_syn: pd.Series = (

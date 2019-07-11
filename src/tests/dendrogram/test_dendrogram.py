@@ -9,7 +9,7 @@ from yieldengine.dendrogram.style import FeatMapStyle, LineStyle
 from yieldengine.df.transform import DataFrameTransformer
 from yieldengine.model import Model
 from yieldengine.model.inspection import ModelInspector
-from yieldengine.model.prediction import PredictorCV
+from yieldengine.model.prediction import ModelFitCV
 from yieldengine.model.validation import CircularCrossValidator
 
 
@@ -20,7 +20,7 @@ def model_inspector(
 
     cv = CircularCrossValidator(test_ratio=0.20, num_splits=5)
     model = Model(estimator=LGBMRegressor(), preprocessing=simple_preprocessor)
-    return ModelInspector(predictor=PredictorCV(model=model, cv=cv, sample=sample))
+    return ModelInspector(model_fit=ModelFitCV(model=model, cv=cv, sample=sample))
 
 
 def test_linkage_drawer_style(model_inspector: ModelInspector) -> None:

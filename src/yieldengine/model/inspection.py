@@ -6,17 +6,15 @@ from typing import *
 
 import numpy as np
 import pandas as pd
-from matplotlib import pyplot
-from scipy.cluster.hierarchy import dendrogram, linkage
+from scipy.cluster.hierarchy import linkage
 from scipy.spatial.distance import squareform
 from shap import KernelExplainer, TreeExplainer
 from shap.explainers.explainer import Explainer
 from sklearn.base import BaseEstimator
 
-from yieldengine import deprecated
 from yieldengine.dendrogram import LinkageTree
 from yieldengine.model import Model
-from yieldengine.model.prediction import PredictorCV
+from yieldengine.model.prediction import ModelFitCV
 
 log = logging.getLogger(__name__)
 
@@ -25,14 +23,14 @@ class ModelInspector:
     """
     Class to inspect the shap values of a model.
 
-    :param PredictorCV predictor: predictor containing the information about the \
+    :param ModelFitCV model_fit: predictor containing the information about the \
     model, the data (a Sample object), the cross-validation and predictions.
     """
 
     __slots__ = [
         "_shap_matrix",
         "_feature_dependency_matrix",
-        "_predictor",
+        "_model_fit",
         "_explainer_factory",
     ]
 
@@ -40,7 +38,7 @@ class ModelInspector:
 
     def __init__(
         self,
-        predictor: PredictorCV,
+        model_fit: ModelFitCV,
         explainer_factory: Optional[
             Callable[[BaseEstimator, pd.DataFrame], Explainer]
         ] = None,
@@ -48,7 +46,7 @@ class ModelInspector:
 
         self._shap_matrix: Optional[pd.DataFrame] = None
         self._feature_dependency_matrix: Optional[pd.DataFrame] = None
-        self._predictor = predictor
+        self._model_fit = model_fit
         self._explainer_factory = (
             explainer_factory
             if explainer_factory is not None
@@ -56,26 +54,33 @@ class ModelInspector:
         )
 
     @property
-    def predictor(self) -> PredictorCV:
-        """The `PredictorCV` used for inspection."""
-        return self._predictor
+    def model_fit(self) -> ModelFitCV:
+        """the `ModelFitCV` used for inspection"""
+        return self._model_fit
 
     def shap_matrix(self) -> pd.DataFrame:
-        """Return shap values as a dataframe."""
+        """
+        Calculate the SHAP matrix where each row is an observation in a
+        specific test split, and each column is a feature, and values are the SHAP
+        values per observation/split and feature
+
+         :return: shap matrix as a data frame
+        """
         if self._shap_matrix is not None:
             return self._shap_matrix
 
-        sample = self.predictor.sample
+        sample = self.model_fit.sample
 
-        predictions_by_observation_and_split = self.predictor.predictions_for_all_samples().set_index(
-            PredictorCV.F_SPLIT_ID, append=True
+        predictions_by_observation_and_split = (
+            self.model_fit.predictions_for_all_splits()
         )
 
-        def shap_matrix_for_split(split_id: int, split_model: Model) -> pd.DataFrame:
+        def _shap_matrix_for_split(split_id: int, split_model: Model) -> pd.DataFrame:
 
             observation_indices_in_split = predictions_by_observation_and_split.xs(
-                key=split_id, level=PredictorCV.F_SPLIT_ID
+                key=split_id, level=ModelFitCV.F_SPLIT_ID
             ).index
+            log.debug(observation_indices_in_split.to_list())
 
             split_x = sample.select_observations(
                 ids=observation_indices_in_split
@@ -106,8 +111,8 @@ class ModelInspector:
 
         shap_values_df = pd.concat(
             objs=[
-                shap_matrix_for_split(split_id, model)
-                for split_id, model in self.predictor.model_by_split.items()
+                _shap_matrix_for_split(split_id, model)
+                for split_id, model in enumerate(self.model_fit.fitted_models())
             ],
             sort=True,
         ).fillna(0.0)
@@ -166,30 +171,6 @@ class ModelInspector:
             leaf_labels=feature_importances.index,
             leaf_weights=feature_importances.values,
         )
-
-    @deprecated("experimental version using scipy natively")
-    def plot_feature_dendrogram_scipy(
-        self, figsize: Tuple[int, int] = (20, 30)
-    ) -> None:
-
-        feature_dependencies = self.feature_dependency_matrix()
-
-        compressed = squareform(1 - np.abs(feature_dependencies.values))
-
-        linkage_matrix = linkage(y=compressed, method="single")
-        pyplot.figure(num=None, figsize=figsize, facecolor="w", edgecolor="k")
-        dendrogram(
-            linkage_matrix,
-            labels=feature_dependencies.index.values,
-            orientation="left",
-            distance_sort=True,
-            leaf_font_size=16,
-        )
-        pyplot.axvline(x=0.5, ymin=0, ymax=1, linestyle="--", color="#000000")
-        pyplot.axvline(x=0.25, ymin=0, ymax=1, linestyle="--", color="#000000")
-        pyplot.title("Hierarchical Clustering: Correlated Feature Dependence")
-
-        pyplot.show()
 
 
 def default_explainer_factory(
