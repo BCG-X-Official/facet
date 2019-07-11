@@ -1,3 +1,6 @@
+# coding=utf-8
+"""This module contains the ModelInspector class which allows to compute and
+visualize information regarding the shap values of a model."""
 import logging
 from typing import *
 
@@ -19,53 +22,46 @@ log = logging.getLogger(__name__)
 
 
 class ModelInspector:
+    """
+    Class to inspect the shap values of a model.
+
+    :param PredictorCV predictor: predictor containing the information about the \
+    model, the data (a Sample object), the cross-validation and predictions.
+    """
+
     __slots__ = [
-        "_shap_explainer_by_split",
         "_shap_matrix",
         "_feature_dependency_matrix",
         "_predictor",
+        "_explainer_factory",
     ]
 
     F_FEATURE = "feature"
 
-    def __init__(self, predictor: PredictorCV) -> None:
+    def __init__(
+        self,
+        predictor: PredictorCV,
+        explainer_factory: Optional[
+            Callable[[BaseEstimator, pd.DataFrame], Explainer]
+        ] = None,
+    ) -> None:
 
         self._shap_matrix: Optional[pd.DataFrame] = None
         self._feature_dependency_matrix: Optional[pd.DataFrame] = None
         self._predictor = predictor
+        self._explainer_factory = (
+            explainer_factory
+            if explainer_factory is not None
+            else default_explainer_factory
+        )
 
     @property
     def predictor(self) -> PredictorCV:
+        """The `PredictorCV` used for inspection."""
         return self._predictor
 
-    @staticmethod
-    def _make_shap_explainer(estimator: BaseEstimator, data: pd.DataFrame) -> Explainer:
-
-        # NOTE:
-        # unfortunately, there is no convenient function in shap to determine the best
-        # explainer method. hence we use this try/except approach.
-
-        # further there is no consistent "Modeltype X is unsupported" exception raised,
-        # which is why we need to always assume the error resulted from this cause -
-        # we should not attempt to filter the exception type or message given that it is
-        # currently inconsistent
-
-        # todo: instead create factory for shap explainers
-        try:
-            return TreeExplainer(
-                model=estimator, data=data, feature_dependence="independent"
-            )
-        except Exception as e:
-            log.debug(
-                f"failed to instantiate shap.TreeExplainer:{str(e)},"
-                "using shap.KernelExplainer as fallback"
-            )
-            # when using KernelExplainer, shap expects "model" to be a callable that
-            # predicts
-            # noinspection PyUnresolvedReferences
-            return KernelExplainer(model=estimator.predict, data=data)
-
     def shap_matrix(self) -> pd.DataFrame:
+        """Return shap values as a dataframe."""
         if self._shap_matrix is not None:
             return self._shap_matrix
 
@@ -92,9 +88,15 @@ class ModelInspector:
             else:
                 data_transformed = split_x
 
-            shap_matrix = ModelInspector._make_shap_explainer(
+            shap_matrix = self._explainer_factory(
                 estimator=estimator, data=data_transformed
             ).shap_values(data_transformed)
+
+            if not isinstance(shap_matrix, np.ndarray):
+                log.warning(
+                    f"shap explainer output expected to be an ndarray but was "
+                    f"{type(shap_matrix)}"
+                )
 
             return pd.DataFrame(
                 data=shap_matrix,
@@ -117,7 +119,7 @@ class ModelInspector:
 
     def feature_importances(self) -> pd.Series:
         """
-        :returns feature importances as their mean absolute SHAP contributions,
+        :return: feature importances as their mean absolute SHAP contributions, \
         normalised to a total 100%
         """
         feature_importances: pd.Series = self.shap_matrix().abs().mean()
@@ -126,6 +128,7 @@ class ModelInspector:
         )
 
     def feature_dependency_matrix(self) -> pd.DataFrame:
+        """Return the Pearson correlation matrix of the shap matrix."""
         if self._feature_dependency_matrix is None:
             shap_matrix = self.shap_matrix()
 
@@ -138,6 +141,7 @@ class ModelInspector:
         return self._feature_dependency_matrix
 
     def cluster_dependent_features(self) -> LinkageTree:
+        """Returns a `LinkageTree` based on the `feature_dependency_matrix`."""
         # convert shap correlations to distances (1 = most distant)
         feature_distance_matrix = 1 - self.feature_dependency_matrix().abs()
 
@@ -186,3 +190,29 @@ class ModelInspector:
         pyplot.title("Hierarchical Clustering: Correlated Feature Dependence")
 
         pyplot.show()
+
+
+def default_explainer_factory(
+    estimator: BaseEstimator, data: pd.DataFrame
+) -> Explainer:
+
+    # NOTE:
+    # unfortunately, there is no convenient function in shap to determine the best
+    # explainer method. hence we use this try/except approach.
+
+    # further there is no consistent "Modeltype X is unsupported" exception raised,
+    # which is why we need to always assume the error resulted from this cause -
+    # we should not attempt to filter the exception type or message given that it is
+    # currently inconsistent
+
+    try:
+        return TreeExplainer(model=estimator)
+    except Exception as e:
+        log.debug(
+            f"failed to instantiate shap.TreeExplainer:{str(e)},"
+            "using shap.KernelExplainer as fallback"
+        )
+        # when using KernelExplainer, shap expects "model" to be a callable that
+        # predicts
+        # noinspection PyUnresolvedReferences
+        return KernelExplainer(model=estimator.predict, data=data)

@@ -10,7 +10,11 @@ from yieldengine.df.transform import DataFrameTransformer
 class Model:
     """
     A model can create a pipeline for a preprocessing transformer (optional; possibly a
-    pipeline itself) and an estimator
+    pipeline itself) and an estimator.
+
+    :param BaseEstimator estimator: the base estimator used in the pipeline
+    :param preprocessing: the preprocessing step in the pipeline (None or \
+    `DataFrameTransformer`)
     """
 
     __slots__ = ["_pipeline", "_preprocessing", "_estimator"]
@@ -34,14 +38,16 @@ class Model:
 
         self._estimator = estimator
         self._preprocessing = preprocessing
-
-    def pipeline(self) -> PipelineDF:
-        return PipelineDF(
+        self._pipeline = PipelineDF(
             steps=[
                 (Model.STEP_PREPROCESSING, self.preprocessing),
                 (Model.STEP_ESTIMATOR, self.estimator),
             ]
         )
+
+    @property
+    def pipeline(self) -> PipelineDF:
+        return self._pipeline
 
     @property
     def preprocessing(self) -> DataFrameTransformer:
@@ -52,6 +58,12 @@ class Model:
         return self._estimator
 
     def clone(self, parameters: Optional[Dict[str, Any]] = None) -> "Model":
+        """
+         Clone this model.
+
+        :param parameters: parameters used to reset the model parameters
+        :return: the cloned model
+        """
         estimator = clone(self._estimator)
         preprocessing = self._preprocessing
         if preprocessing is not None:
@@ -63,6 +75,6 @@ class Model:
         # to set the parameters, we need to wrap the preprocessor and estimator in a
         # pipeline object
         if parameters is not None:
-            new_model.pipeline().set_params(**parameters)
+            new_model.pipeline.set_params(**parameters)
 
         return new_model
