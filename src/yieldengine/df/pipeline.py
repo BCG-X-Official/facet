@@ -20,6 +20,8 @@ log = logging.getLogger(__name__)
 class PipelineDF(DataFrameTransformer[Pipeline], DataFramePredictor[Pipeline]):
     """
     Wrapper class around `sklearn.pipeline.Pipeline` that returns dataframes.
+
+    :param `**kwargs`: the arguments used to construct the wrapped `Pipeline` object
     """
 
     def __init__(self, **kwargs) -> None:
@@ -83,6 +85,10 @@ class PipelineDF(DataFrameTransformer[Pipeline], DataFramePredictor[Pipeline]):
 
     @property
     def steps(self) -> Sequence[Tuple[str, Union[DataFrameTransformer, BaseEstimator]]]:
+        """
+        The `steps` attribute of the underlying `Pipeline`.
+        :return: List of (name, transform) tuples (implementing fit/transform).
+        """
         return self.base_transformer.steps
 
     @property
@@ -95,7 +101,7 @@ class PipelineDF(DataFrameTransformer[Pipeline], DataFramePredictor[Pipeline]):
 
     def __len__(self) -> int:
         """
-        @returns the length of the Pipeline
+        :return: the length of the Pipeline
         """
         return len(self.base_transformer.steps)
 
