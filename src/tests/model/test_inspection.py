@@ -27,7 +27,7 @@ log = logging.getLogger(__name__)
 
 K_FOLDS: int = 5
 TEST_RATIO = 1 / K_FOLDS
-N_SPLITS = K_FOLDS * 10
+N_SPLITS = K_FOLDS * 2
 BOSTON_TARGET = "target"
 
 
