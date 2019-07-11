@@ -87,7 +87,12 @@ def test_model_inspection(available_cpus: int) -> None:
     ][0]
 
     for model_evaluation in best_svr, best_lgbm:
-        mp = PredictorCV(model=model_evaluation.model, cv=test_cv, sample=test_sample)
+        mp = PredictorCV(
+            model=model_evaluation.model,
+            cv=test_cv,
+            sample=test_sample,
+            n_jobs=available_cpus,
+        )
 
         # test predictions_for_all_samples
         predictions_df: pd.DataFrame = mp.predictions_for_all_samples()
@@ -116,7 +121,7 @@ def test_model_inspection(available_cpus: int) -> None:
 
         # correlated shap matrix: feature dependencies
         corr_matrix: pd.DataFrame = mi.feature_dependency_matrix()
-
+        log.info(corr_matrix)
         # check number of rows
         assert len(corr_matrix) == len(test_sample.feature_names) - 1
         assert len(corr_matrix.columns) == len(test_sample.feature_names) - 1
@@ -163,7 +168,12 @@ def test_model_inspection_with_encoding(
         if isinstance(model_evaluation.model.estimator, LGBMRegressor)
     ][0]
     for model_evaluation in [best_lgbm]:
-        mp = PredictorCV(model=model_evaluation.model, cv=circular_cv, sample=sample)
+        mp = PredictorCV(
+            model=model_evaluation.model,
+            cv=circular_cv,
+            sample=sample,
+            n_jobs=available_cpus,
+        )
         mi = ModelInspector(predictor=mp)
 
         shap_matrix = mi.shap_matrix()
