@@ -5,7 +5,10 @@ from typing import *
 import numpy as np
 import pandas as pd
 from lightgbm.sklearn import LGBMRegressor
+from shap import KernelExplainer, TreeExplainer
+from shap.explainers.explainer import Explainer
 from sklearn import datasets
+from sklearn.base import BaseEstimator
 from sklearn.model_selection import BaseCrossValidator, ShuffleSplit
 from sklearn.svm import SVR
 from sklearn.utils import Bunch
@@ -184,6 +187,17 @@ def test_model_inspection_with_encoding(
         # cluster feature importances
         linkage_tree = mi.cluster_dependent_features()
 
-        # additionally try the ModelInspector with a different feature dependence:
-        mi2 = ModelInspector(predictor=mp, shap_feature_dependence="independent")
+        #  test the ModelInspector with a custom ExplainerFactory:
+        def ef(estimator: BaseEstimator, data: pd.DataFrame) -> Explainer:
+
+            try:
+                return TreeExplainer(model=estimator, feature_dependence="independent")
+            except Exception as e:
+                log.debug(
+                    f"failed to instantiate shap.TreeExplainer:{str(e)},"
+                    "using shap.KernelExplainer as fallback"
+                )
+                return KernelExplainer(model=estimator.predict, data=data)
+
+        mi2 = ModelInspector(predictor=mp, explainer_factory=ef)
         mi2.shap_matrix()
