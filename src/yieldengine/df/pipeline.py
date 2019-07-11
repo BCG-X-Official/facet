@@ -9,6 +9,7 @@ from typing import *
 import pandas as pd
 from sklearn.base import BaseEstimator
 from sklearn.pipeline import Pipeline
+from sklearn.utils import Bunch
 
 from yieldengine.df.predict import DataFramePredictor
 from yieldengine.df.transform import DataFrameTransformer
@@ -20,8 +21,9 @@ class PipelineDF(DataFrameTransformer[Pipeline], DataFramePredictor[Pipeline]):
     """
     Wrapper class around `sklearn.pipeline.Pipeline` that returns dataframes.
 
-    :param `**kwargs`: the arguments passed to `DataFrameTransformer` in `__init__`
+    :param `**kwargs`: the arguments used to construct the wrapped `Pipeline` object
     """
+
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
         self._validate_steps()
@@ -89,6 +91,14 @@ class PipelineDF(DataFrameTransformer[Pipeline], DataFramePredictor[Pipeline]):
         """
         return self.base_transformer.steps
 
+    @property
+    def named_steps(self) -> Bunch:
+        """
+        Read-only attribute to access any step parameter by user given name.
+        Keys are step names and values are steps parameters.
+        """
+        return self.base_transformer.named_steps
+
     def __len__(self) -> int:
         """
         :return: the length of the Pipeline
@@ -117,11 +127,3 @@ class PipelineDF(DataFrameTransformer[Pipeline], DataFramePredictor[Pipeline]):
             )
         else:
             return self.base_transformer[ind]
-
-    @property
-    def named_steps(self) -> Mapping[str, DataFrameTransformer]:
-        """
-        :return: mapping of step names to the data frame transformers representing
-        the steps
-        """
-        return self.base_transformer.named_steps
