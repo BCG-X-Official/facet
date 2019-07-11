@@ -4,6 +4,7 @@ visualize information regarding the shap values of a model."""
 import logging
 from typing import *
 
+import numpy as np
 import pandas as pd
 from scipy.cluster.hierarchy import linkage
 from scipy.spatial.distance import squareform
