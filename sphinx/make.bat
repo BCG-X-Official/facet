@@ -1,5 +1,4 @@
 @ECHO OFF
-
 pushd %~dp0
 
 REM Command file for Sphinx documentation
@@ -11,6 +10,7 @@ set SOURCEDIR=source
 set BUILDDIR=build
 
 if "%1" == "" goto help
+if "%1" == "html" goto html
 
 %SPHINXBUILD% >NUL 2>NUL
 if errorlevel 9009 (
@@ -26,6 +26,21 @@ if errorlevel 9009 (
 )
 
 %SPHINXBUILD% -M %1 %SOURCEDIR% %BUILDDIR% %SPHINXOPTS%
+goto end
+
+:html
+REM generate apidoc using docstrings
+sphinx-apidoc -o %SOURCEDIR% -f ./../src/yieldengine
+REM run the sphinx build for html
+%SPHINXBUILD% -M %1 %SOURCEDIR% %BUILDDIR% %SPHINXOPTS%
+REM clean up potentially pre-existing files in /docs
+del /q /s ..\docs\* >nul
+for /d %%i in (..\docs\*) do rd /s /q "%%i"
+REM move the last build into /docs
+set DIR_HTML=build\html
+set DIR_DOCS=..\docs
+for %%i in (%DIR_HTML%\*) do move "%%i" %DIR_DOCS%\ >nul
+for /d %%i in (%DIR_HTML%\*) do move "%%i" %DIR_DOCS%\ >nul
 goto end
 
 :help
