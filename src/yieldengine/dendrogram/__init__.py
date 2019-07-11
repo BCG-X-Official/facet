@@ -26,17 +26,17 @@ class DendrogramStyle(ABC):
     Base class for dendrogram drawing styles.
 
     Implementations must define `draw_leaf_labels`, `draw_title`, `draw_link_leg` \
-    and `draw_link_connector`.
+    and `draw_link_connector`
     """
 
     @abstractmethod
     def draw_leaf_labels(self, labels: Sequence[str]) -> None:
-        """Render the labels for all leaves."""
+        """Render the labels for all leaves"""
         pass
 
     @abstractmethod
     def draw_title(self, title: str) -> None:
-        """Draw the title of the dendrogram."""
+        """Draw the title of the dendrogram"""
         pass
 
     @abstractmethod
@@ -170,5 +170,3 @@ class DendrogramDrawer:
                 n_leaves_right=len(info_right.labels),
                 weight=info.weight,
             )
-
-            return info
