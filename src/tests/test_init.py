@@ -1,6 +1,7 @@
 import pytest
 
 import tests
+from yieldengine import deprecated
 
 
 def test_get_global_config() -> None:
@@ -18,3 +19,17 @@ def test_get_global_config() -> None:
     # test raising of ValueError exception for invalid section name
     with pytest.raises(expected_exception=ValueError):
         invalid_config = tests.read_test_config(section="does_not_exist!")
+
+
+def test_deprecated() -> None:
+    @deprecated(message=None)
+    def f() -> None:
+        pass
+
+    f()
+
+    @deprecated(message="test message")
+    def g() -> None:
+        pass
+
+    g()
