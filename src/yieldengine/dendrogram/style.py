@@ -1,15 +1,18 @@
-"""Define various dendrogram styles.
+"""Implementations of dendrogram styles.
 
-:class:`~MatplotStyle` is a an abstract matplotlib style which is implemented by
-:class:`~LineStyle` for a classical tree style and by :class:`~FeatMapStyle` for a
-heat map style.
+:class:`~MatplotStyle` is a an abstract base class for styles using matplotlib
+
+:class:`~LineStyle` renders dendrogram trees in the classical style as a line drawing
+
+:class:`~FeatMapStyle` renders dendrogram trees as a combination of tree and heatmap
+for better visibility of feature importance
 """
 
 import logging
+import math
 from abc import ABC
 from typing import *
 
-import math
 import matplotlib.text as mt
 from matplotlib import cm
 from matplotlib.axes import Axes
@@ -76,7 +79,7 @@ class MatplotStyle(DendrogramStyle, ABC):
         cax.yaxis.set_major_formatter(MatplotStyle._PERCENTAGE_FORMATTER)
 
     def draw_title(self, title: str) -> None:
-        """Draw the title."""
+        """Draw the title of the dendrogram"""
         self._ax.set_title(label=title)
 
     def draw_leaf_labels(self, labels: Sequence[str]) -> None:
