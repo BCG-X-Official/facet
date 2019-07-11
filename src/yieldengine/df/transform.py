@@ -1,7 +1,9 @@
 # coding=utf-8
+"""Base classes with wrapper around sklearn transformers."""
 
 import logging
-from abc import ABCMeta, abstractmethod
+from abc import ABC, abstractmethod
+from types import new_class
 from typing import *
 
 import numpy as np
@@ -18,14 +20,14 @@ _BaseTransformer = TypeVar(
 )
 
 
-class DataFrameTransformer(
-    DataFrameEstimator[_BaseTransformer], TransformerMixin, metaclass=ABCMeta
-):
+class DataFrameTransformer(DataFrameEstimator[_BaseTransformer], TransformerMixin, ABC):
     """
     Wraps around an sklearn transformer and ensures that the X and y objects passed
-    and returned are pandas data frames with valid column names
+    and returned are pandas data frames with valid column names.
 
-    :param base_transformer the sklearn transformer to be wrapped
+    Implementations must define `_make_base_transformer` and `_get_columns_original`.
+
+    :param: base_transformer the sklearn transformer to be wrapped
     """
 
     F_COLUMN_ORIGINAL = "column_original"
@@ -37,10 +39,16 @@ class DataFrameTransformer(
 
     @property
     def base_transformer(self) -> _BaseTransformer:
+        """The base sklean transformer"""
         return self.base_estimator
 
     # noinspection PyPep8Naming
     def transform(self, X: pd.DataFrame) -> pd.DataFrame:
+        """Calls the transform method of the base transformer `self.base_transformer`.
+
+        :param X: dataframe to transform
+        :return: transformed dataframe
+        """
         self._check_parameter_types(X, None)
 
         transformed = self._base_transform(X)
@@ -53,6 +61,14 @@ class DataFrameTransformer(
     def fit_transform(
         self, X: pd.DataFrame, y: Optional[pd.Series] = None, **fit_params
     ) -> pd.DataFrame:
+        """Calls the fit_transform method of the base transformer
+        `self.base_transformer`.
+
+        :param X: dataframe to transform
+        :param y: series of training targets
+        :param fit_params: parameters passed to the fit method of the base transformer
+        :return: dataframe of transformed sample
+        """
         self._check_parameter_types(X, y)
 
         transformed = self._base_fit_transform(X, y, **fit_params)
@@ -65,6 +81,13 @@ class DataFrameTransformer(
 
     # noinspection PyPep8Naming
     def inverse_transform(self, X: pd.DataFrame) -> pd.DataFrame:
+        """Apply inverse transformations in reverse order on the base tranformer.
+
+        All estimators in the pipeline must support ``inverse_transform``.
+        :param X: dataframe of samples
+        :return: dataframe of inversed samples
+        """
+
         self._check_parameter_types(X, None)
 
         transformed = self._base_inverse_transform(X)
@@ -74,6 +97,11 @@ class DataFrameTransformer(
         )
 
     def fit_transform_sample(self, sample: Sample) -> Sample:
+        """
+        Fit and transform with input and output being a `Sample` object.
+        :param sample: `Sample` object used as input
+        :return: transformed `Sample` object
+        """
         return Sample(
             observations=pd.concat(
                 objs=[self.fit_transform(sample.features), sample.target], axis=1
@@ -83,6 +111,8 @@ class DataFrameTransformer(
 
     @property
     def columns_original(self) -> pd.Series:
+        """Series with index the name of the output columns and with values the
+        original name of the column"""
         self._ensure_fitted()
         if self._columns_original is None:
             self._columns_original = (
@@ -94,6 +124,7 @@ class DataFrameTransformer(
 
     @property
     def columns_out(self) -> pd.Index:
+        """The `pd.Index` of name of the output columns"""
         return self.columns_original.index
 
     @classmethod
@@ -121,11 +152,9 @@ class DataFrameTransformer(
         self._columns_out = None
         self._columns_original = None
 
+    @staticmethod
     def _transformed_to_df(
-        self,
-        transformed: Union[pd.DataFrame, np.ndarray],
-        index: pd.Index,
-        columns: pd.Index,
+        transformed: Union[pd.DataFrame, np.ndarray], index: pd.Index, columns: pd.Index
     ):
         if isinstance(transformed, pd.DataFrame):
             return transformed
@@ -150,7 +179,7 @@ class DataFrameTransformer(
 
 
 class NDArrayTransformerDF(
-    DataFrameTransformer[_BaseTransformer], Generic[_BaseTransformer], metaclass=ABCMeta
+    DataFrameTransformer[_BaseTransformer], Generic[_BaseTransformer], ABC
 ):
     """
     Special case of DataFrameTransformer where the base transformer does not accept
@@ -158,9 +187,11 @@ class NDArrayTransformerDF(
     """
 
     # noinspection PyPep8Naming
-    def _base_fit(self, X: pd.DataFrame, y: Optional[pd.Series], **fit_params) -> None:
+    def _base_fit(
+        self, X: pd.DataFrame, y: Optional[pd.Series], **fit_params
+    ) -> _BaseTransformer:
         # noinspection PyUnresolvedReferences
-        self.base_transformer.fit(X.values, y.values, **fit_params)
+        return self.base_transformer.fit(X.values, y.values, **fit_params)
 
     # noinspection PyPep8Naming
     def _base_transform(self, X: pd.DataFrame) -> np.ndarray:
@@ -180,11 +211,13 @@ class NDArrayTransformerDF(
 
 
 class ColumnPreservingTransformer(
-    DataFrameTransformer[_BaseTransformer], Generic[_BaseTransformer], metaclass=ABCMeta
+    DataFrameTransformer[_BaseTransformer], Generic[_BaseTransformer], ABC
 ):
-    """
+    """Abstract base class for a `DataFrameTransformer`.
+
     All output columns of a ColumnPreservingTransformer have the same names as their
-    associated input columns
+    associated input columns. Implementations must define `_make_base_transformer` \
+    and `_get_columns_out`.
     """
 
     @abstractmethod
@@ -200,30 +233,62 @@ class ColumnPreservingTransformer(
 
 
 class ConstantColumnTransformer(
-    ColumnPreservingTransformer[_BaseTransformer],
-    Generic[_BaseTransformer],
-    metaclass=ABCMeta,
+    ColumnPreservingTransformer[_BaseTransformer], Generic[_BaseTransformer], ABC
 ):
-    """
-    A ConstantColumnTransformer does not add, remove, or rename any of the input columns
+    """Abstract base class for a `DataFrameTransformer`.
+
+    A ConstantColumnTransformer does not add, remove, or rename any of the input
+    columns. Implementations must define `_make_base_transformer`.
     """
 
     def _get_columns_out(self) -> pd.Index:
         return self.columns_in
 
 
-# Decorator to easily create ConstantColumnTransformers, example:
-# see: src/tests/transform/test_constant_column_transformer
-def constant_column_transformer(source_transformer: type) -> Callable:
-    def decorate(class_in: type) -> type:
-        def _make_base_transformer(**kwargs) -> source_transformer:
-            return source_transformer(**kwargs)
+def df_transformer(
+    cls: Type[_BaseTransformer] = None,
+    *,
+    df_transformer_type: Type[
+        DataFrameTransformer[_BaseTransformer]
+    ] = ConstantColumnTransformer,
+) -> Union[
+    Callable[[Type[_BaseTransformer]], Type[DataFrameTransformer[_BaseTransformer]]],
+    Type[DataFrameTransformer[_BaseTransformer]],
+]:
+    """
+    Class decorator wrapping an sklearn transformer in a `DataFrameTransformer`
+    :param cls: the transformer class to wrap
+    :param df_transformer_type: optional parameter indicating the \
+                                `DataFrameTransformer` class to be used for wrapping; \
+                                defaults to `ConstantColumnTransformer`
+    :return: the resulting `DataFrameTransformer` with `cls` as the base \
+             transformer
+    """
 
-        def __init__(self, **kwargs) -> None:
-            ConstantColumnTransformer[source_transformer].__init__(self, **kwargs)
+    def _init_class_namespace(namespace: Dict[str, Any]) -> None:
+        # noinspection PyProtectedMember
+        namespace[
+            df_transformer_type._make_base_transformer.__name__
+        ] = lambda **kwargs: cls(**kwargs)
 
-        class_in.__init__ = __init__
-        class_in._make_base_transformer = _make_base_transformer
-        return class_in
+    def _decorate(
+        cls: Type[_BaseTransformer]
+    ) -> Type[DataFrameTransformer[_BaseTransformer]]:
+        return cast(
+            Type[DataFrameTransformer[_BaseTransformer]],
+            new_class(
+                name=cls.__name__,
+                bases=(df_transformer_type,),
+                exec_body=_init_class_namespace,
+            ),
+        )
 
-    return decorate
+    if not issubclass(df_transformer_type, DataFrameTransformer):
+        raise ValueError(
+            f"arg df_transformer_type not a "
+            f"{DataFrameTransformer.__name__} class: {df_transformer_type}"
+        )
+    if cls is None:
+        return _decorate
+    else:
+        return _decorate(cls)
