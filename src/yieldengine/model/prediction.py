@@ -6,6 +6,7 @@ import copy
 import logging
 from typing import *
 
+import numpy as np
 import pandas as pd
 from joblib import delayed, Parallel
 from sklearn.model_selection import BaseCrossValidator
@@ -159,16 +160,27 @@ class ModelFitCV:
 
             sample = self.sample
 
-            predictions_per_split: Iterable[pd.DataFrame] = [
-                self._predictions_for_split(
-                    split_id=split_id,
-                    test_model=self.fitted_model(split_id=split_id),
-                    test_sample=sample.select_observations(numbers=test_indices),
+            def _predictions_for_split(
+                split_id: int, test_indices: np.ndarray
+            ) -> pd.DataFrame:
+                test_sample = sample.select_observations(numbers=test_indices)
+                return pd.DataFrame(
+                    data={
+                        ModelFitCV.F_SPLIT_ID: split_id,
+                        ModelFitCV.F_PREDICTION: self.fitted_model(
+                            split_id=split_id
+                        ).pipeline.predict(X=test_sample.features),
+                    },
+                    index=test_sample.index,
                 )
+
+            predictions_per_split: Iterable[pd.DataFrame] = [
+                _predictions_for_split(split_id=split_id, test_indices=test_indices)
                 for split_id, (_, test_indices) in enumerate(
                     self.cv.split(sample.features, sample.target)
                 )
             ]
+
             self._predictions_for_all_samples = (
                 pd.concat(predictions_per_split)
                 .join(sample.target.rename(ModelFitCV.F_TARGET))
@@ -188,28 +200,6 @@ class ModelFitCV:
         copied_predictor._sample = sample
         copied_predictor._predictions_for_all_samples = None
         return copied_predictor
-
-    @staticmethod
-    def _predictions_for_split(
-        split_id: int, test_model: Model, test_sample: Sample
-    ) -> pd.DataFrame:
-        """
-        Compute predictions for a given split.
-
-        :param split_id: the split id
-        :param test_model: the fitted model for the split
-        :param test_sample: the `Sample` of the split test set
-        :return: dataframe with columns `split_id` and `prediction`.
-        """
-        return pd.DataFrame(
-            data={
-                ModelFitCV.F_SPLIT_ID: split_id,
-                ModelFitCV.F_PREDICTION: test_model.pipeline.predict(
-                    X=test_sample.features
-                ),
-            },
-            index=test_sample.index,
-        )
 
     @staticmethod
     def _fit_model_for_split(model: Model, train_sample: Sample) -> Model:
