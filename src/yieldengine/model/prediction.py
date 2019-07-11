@@ -1,55 +1,93 @@
+# coding=utf-8
+"""Module with the `PredictorCV class which gather information from a model, its
+cross validation and the sample used."""
+
 import copy
+import logging
 from typing import *
 
-import numpy as np
 import pandas as pd
+from joblib import delayed, Parallel
 from sklearn.base import BaseEstimator
 from sklearn.model_selection import BaseCrossValidator
 
 from yieldengine import Sample
 from yieldengine.model import Model
 
+log = logging.getLogger(__name__)
+
 
 class PredictorCV:
+    """
+    Class containing the information of a model that has been fitted with some \
+    cross-validation.
+
+    :param Model model: the underlying model
+    :param BaseCrossValidator cv: underlying cross validator
+    :param Sample sample: the `Sample` object used to fit the model.
+    """
+
     __slots__ = [
         "_model",
         "_cv",
         "_sample",
         "_predictions_for_all_samples",
         "_model_by_split",
+        "_n_jobs",
+        "_verbose",
     ]
 
     F_SPLIT_ID = "split_id"
     F_PREDICTION = "prediction"
     F_TARGET = "target"
 
-    def __init__(self, model: Model, cv: BaseCrossValidator, sample: Sample) -> None:
+    def __init__(
+        self,
+        model: Model,
+        cv: BaseCrossValidator,
+        sample: Sample,
+        n_jobs: int = 1,
+        verbose: int = 0,
+    ) -> None:
         self._model = model
         self._cv = cv
         self._sample = sample
         self._model_by_split: Optional[Dict[int, Model]] = None
         self._predictions_for_all_samples: Optional[pd.DataFrame] = None
+        self._n_jobs = n_jobs
+        self._verbose = verbose
 
     @property
     def cv(self) -> BaseCrossValidator:
+        """The underlying `BaseCrossValidator`"""
         return self._cv
 
     @property
     def sample(self) -> Sample:
+        """The underlying `Sample`"""
         return self._sample
 
     @property
     def model_by_split(self) -> Optional[Dict[int, Model]]:
+        """
+        When self is fitted, dictionary whit keys the split indexes (as int) and \
+        values a clone of the fitted model for this split. `None` when not fitted.
+        """
         return self._model_by_split
 
     @property
     def split_ids(self) -> Optional[Set[int]]:
+        """The set of split ids when self is fitted, None otherwrise."""
         return set() if self.model_by_split is None else self.model_by_split.keys()
+
+    @property
+    def n_jobs(self) -> int:
+        return self._n_jobs
 
     def model(self, split_id: int) -> Model:
         """
         :param split_id: start index of test split
-        :return: the model that was used to predict the dependent variable of
+        :return: the model that was used to predict the dependent variable of \
         the test split
         """
         if self._model_by_split is None:
@@ -66,7 +104,7 @@ class PredictorCV:
     def estimator(self, split: int) -> BaseEstimator:
         """
         :param split: start index of test split
-        :return: the estimator that was used to predict the dependent variable of
+        :return: the estimator that was used to predict the dependent variable of \
         the test split
         """
         if self._model_by_split is None:
@@ -77,23 +115,32 @@ class PredictorCV:
         return self._model_by_split is not None
 
     def fit(self) -> None:
+        """Fits the predictor."""
         if self._is_fitted():
             return
 
         self._model_by_split: Dict[int, Model] = {}
 
         sample = self.sample
+        args = []
 
         for split_id, (train_indices, _) in enumerate(
             self.cv.split(sample.features, sample.target)
         ):
             train_sample = sample.select_observations(numbers=train_indices)
+            model = self._model.clone()
+            args.append((model, train_sample, split_id))
 
-            self._model_by_split[split_id] = model = self._model.clone()
+        parallel = Parallel(n_jobs=self.n_jobs, verbose=self._verbose)
 
-            pipeline = model.pipeline()
+        models = parallel(
+            delayed(_fit_model_for_split)(_model, train_sample, split_id)
+            for _model, train_sample, split_id in args
+        )
 
-            pipeline.fit(X=train_sample.features, y=train_sample.target)
+        for split_id, _model in models:
+            self._model_by_split[split_id] = _model
+        log.info("Finished to fit PredictorCV.")
 
     def predictions_for_all_samples(self) -> pd.DataFrame:
         """
@@ -110,40 +157,86 @@ class PredictorCV:
         :return: the data frame with the predictions per observation and test split
         """
 
-        if self._predictions_for_all_samples is not None:
-            return self._predictions_for_all_samples
+        if self._predictions_for_all_samples is None:
 
-        if not self._is_fitted():
-            self.fit()
+            if not self._is_fitted():
+                self.fit()
 
-        sample = self.sample
+            sample = self.sample
 
-        def predict(split_id: int, test_indices: np.ndarray) -> pd.DataFrame:
-            test_sample = sample.select_observations(numbers=test_indices)
+            def _predictions_for_all_samples() -> pd.DataFrame:
+                parallel = Parallel(n_jobs=self.n_jobs, verbose=self._verbose)
 
-            pipeline = self.model(split_id=split_id).pipeline()
-
-            return pd.DataFrame(
-                data={
-                    PredictorCV.F_SPLIT_ID: split_id,
-                    PredictorCV.F_PREDICTION: pipeline.predict(X=test_sample.features),
-                },
-                index=test_sample.index,
-            )
-
-        self._predictions_for_all_samples = pd.concat(
-            [
-                predict(split_id, test_indices=test_indices)
-                for split_id, (_, test_indices) in enumerate(
-                    self.cv.split(sample.features, sample.target)
+                predictions_per_split: Iterable[pd.DataFrame] = parallel(
+                    delayed(_predictions_for_split)(
+                        split_id=split_id,
+                        test_sample=sample.select_observations(numbers=test_indices),
+                        test_model=self.model(split_id=split_id),
+                    )
+                    for split_id, (_, test_indices) in enumerate(
+                        self.cv.split(sample.features, sample.target)
+                    )
                 )
-            ]
-        ).join(sample.target.rename(PredictorCV.F_TARGET))
+
+                predictions: pd.DataFrame = pd.concat(predictions_per_split).join(
+                    sample.target.rename(PredictorCV.F_TARGET)
+                )
+
+                return predictions
+
+            self._predictions_for_all_samples = _predictions_for_all_samples()
 
         return self._predictions_for_all_samples
 
     def copy_with_sample(self, sample: Sample):
+        """
+        Copies the predictor whith some new `Sample`.
+
+        :param sample: the `Sample` used for the copy
+        :return: the copy of self
+        """
         copied_predictor = copy.copy(self)
         copied_predictor._sample = sample
         copied_predictor._predictions_for_all_samples = None
         return copied_predictor
+
+
+#
+# we move all parallelisable code outside of the PredictorCV class as this brings a
+# major performance benefit under Windows
+#
+
+
+def _predictions_for_split(
+    split_id: int, test_sample: Sample, test_model: Model
+) -> pd.DataFrame:
+    """
+    Compute predictions for a given split.
+
+    :param split_id: the split id
+    :param test_sample: the `Sample` of the split test set
+    :param test_model: the fitted model for the split
+    :return: dataframe with columns `split_id` and `prediction`.
+    """
+    return pd.DataFrame(
+        data={
+            PredictorCV.F_SPLIT_ID: split_id,
+            PredictorCV.F_PREDICTION: test_model.pipeline.predict(
+                X=test_sample.features
+            ),
+        },
+        index=test_sample.index,
+    )
+
+
+def _fit_model_for_split(model: Model, train_sample: Sample, split_id: int):
+    """
+    Fit a model using a sample.
+
+    :param model:  the `Model` to fit
+    :param train_sample: `Sample` to fit on
+    :param split_id: the split id
+    :return: tuple of the the split_id and the fitted `Model`
+    """
+    model.pipeline.fit(X=train_sample.features, y=train_sample.target)
+    return split_id, model
