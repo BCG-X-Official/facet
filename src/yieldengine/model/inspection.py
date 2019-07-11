@@ -96,6 +96,12 @@ class ModelInspector:
                 estimator=estimator, data=data_transformed
             ).shap_values(data_transformed)
 
+            if not isinstance(shap_matrix, np.ndarray):
+                log.warning(
+                    f"shap explainer output expected to be an ndarray but was "
+                    f"{type(shap_matrix)}"
+                )
+
             return pd.DataFrame(
                 data=shap_matrix,
                 index=observation_indices_in_split,

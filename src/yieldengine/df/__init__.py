@@ -64,7 +64,9 @@ class DataFrameEstimator(ABC, BaseEstimator, Generic[_BaseEstimator]):
         return self
 
     # noinspection PyPep8Naming
-    def fit(self, X: pd.DataFrame, y: Optional[pd.Series] = None, **fit_params) -> None:
+    def fit(
+        self, X: pd.DataFrame, y: Optional[pd.Series] = None, **fit_params
+    ) -> "DataFrameEstimator[_BaseEstimator]":
         """
         Fit the base estimator.
 
@@ -76,6 +78,8 @@ class DataFrameEstimator(ABC, BaseEstimator, Generic[_BaseEstimator]):
         self._base_fit(X, y, **fit_params)
 
         self._post_fit(X, y, **fit_params)
+
+        return self
 
     @property
     def is_fitted(self) -> bool:
@@ -93,9 +97,11 @@ class DataFrameEstimator(ABC, BaseEstimator, Generic[_BaseEstimator]):
             raise RuntimeError("transformer not fitted")
 
     # noinspection PyPep8Naming
-    def _base_fit(self, X: pd.DataFrame, y: Optional[pd.Series], **fit_params) -> None:
+    def _base_fit(
+        self, X: pd.DataFrame, y: Optional[pd.Series], **fit_params
+    ) -> _BaseEstimator:
         # noinspection PyUnresolvedReferences
-        self.base_transformer.fit(X, y, **fit_params)
+        return self.base_transformer.fit(X, y, **fit_params)
 
     # noinspection PyPep8Naming,PyUnusedLocal
     def _post_fit(
