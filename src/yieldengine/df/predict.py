@@ -41,7 +41,9 @@ class DataFramePredictor(DataFrameEstimator[_BasePredictor], metaclass=ABCMeta):
         """
         self._check_parameter_types(X, None)
 
-        return self._prediction_to_series(X, self._base_predict(X, **predict_params))
+        return self._prediction_to_series_or_frame(
+            X, self._base_predict(X, **predict_params)
+        )
 
     # noinspection PyPep8Naming
     def fit_predict(self, X: pd.DataFrame, y: pd.Series, **fit_params) -> pd.Series:
@@ -55,7 +57,7 @@ class DataFramePredictor(DataFrameEstimator[_BasePredictor], metaclass=ABCMeta):
         """
         self._check_parameter_types(X, y)
 
-        result = self._prediction_to_series(
+        result = self._prediction_to_series_or_frame(
             X, self._base_fit_predict(X, y, **fit_params)
         )
 
@@ -64,28 +66,28 @@ class DataFramePredictor(DataFrameEstimator[_BasePredictor], metaclass=ABCMeta):
         return result
 
     # noinspection PyPep8Naming
-    def predict_proba(self, X: pd.DataFrame) -> pd.Series:
+    def predict_proba(self, X: pd.DataFrame) -> Union[pd.Series, pd.DataFrame]:
         """
         Probability estimates.
 
         :param X: dataframe of features
-        :return: the series of probabiliy estimates
+        :return: the series/dataframe (multiclasss) of probabiliy estimates
         """
         self._check_parameter_types(X, None)
 
-        return self._prediction_to_series(X, self._base_predict_proba(X))
+        return self._prediction_to_series_or_frame(X, self._base_predict_proba(X))
 
     # noinspection PyPep8Naming
-    def predict_log_proba(self, X: pd.DataFrame) -> pd.Series:
+    def predict_log_proba(self, X: pd.DataFrame) -> Union[pd.Series, pd.DataFrame]:
         """
         Log of probability estimates.
 
         :param X: dataframe of features
-        :return: series of log-probabilities
+        :return: series/dataframe (multiclasss) of log-probabilities
         """
         self._check_parameter_types(X, None)
 
-        return self._prediction_to_series(X, self._base_predict_log_proba(X))
+        return self._prediction_to_series_or_frame(X, self._base_predict_log_proba(X))
 
     # noinspection PyPep8Naming
     def decision_function(self, X: pd.DataFrame) -> pd.DataFrame:
@@ -122,13 +124,23 @@ class DataFramePredictor(DataFrameEstimator[_BasePredictor], metaclass=ABCMeta):
         return self._base_score(X, y, sample_weight)
 
     # noinspection PyPep8Naming
-    def _prediction_to_series(
+    def _prediction_to_series_or_frame(
         self, X: pd.DataFrame, y: Union[np.ndarray, pd.Series, Sequence[Any]]
-    ) -> pd.Series:
+    ) -> Union[pd.Series, pd.DataFrame]:
         if isinstance(y, pd.Series):
             return y
-        else:
+        elif isinstance(y, pd.DataFrame):
+            return y
+        elif isinstance(y, Sequence) or (
+            isinstance(y, np.ndarray) and (len(y.shape) < 2 or y.shape[1] == 1)
+        ):
             return pd.Series(y, name=self.F_PREDICTION, index=X.index)
+        else:
+            labels = None
+            if isinstance(self.base_estimator, ClassifierMixin):
+                labels = self.base_estimator.classes_
+
+            return pd.DataFrame(data=y, columns=labels)
 
     # noinspection PyPep8Naming
     def _base_predict(self, X: pd.DataFrame, **predict_params) -> ListLike:
