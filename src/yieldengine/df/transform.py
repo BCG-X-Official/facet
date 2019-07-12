@@ -30,7 +30,7 @@ class DataFrameTransformer(DataFrameEstimator[_BaseTransformer], TransformerMixi
     :param: base_transformer the sklearn transformer to be wrapped
     """
 
-    F_COLUMN_ORIGINAL = "column_original"
+    F_COLUMN_OUT = "column_out"
 
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
@@ -117,8 +117,8 @@ class DataFrameTransformer(DataFrameEstimator[_BaseTransformer], TransformerMixi
         if self._columns_original is None:
             self._columns_original = (
                 self._get_columns_original()
-                .rename(self.F_COLUMN_ORIGINAL)
-                .rename_axis(index=self.F_COLUMN)
+                .rename(self.F_COLUMN_IN)
+                .rename_axis(index=self.F_COLUMN_OUT)
             )
         return self._columns_original
 
