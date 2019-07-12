@@ -101,7 +101,7 @@ class DataFrameEstimator(ABC, BaseEstimator, Generic[_BaseEstimator]):
         self, X: pd.DataFrame, y: Optional[pd.Series], **fit_params
     ) -> _BaseEstimator:
         # noinspection PyUnresolvedReferences
-        return self.base_transformer.fit(X, y, **fit_params)
+        return self._base_estimator.fit(X, y, **fit_params)
 
     # noinspection PyPep8Naming,PyUnusedLocal
     def _post_fit(
