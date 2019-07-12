@@ -1,4 +1,4 @@
-from abc import ABC
+from abc import ABC, abstractmethod
 from enum import Enum
 from typing import *
 
@@ -24,6 +24,7 @@ class Model(ABC):
     STEP_PREPROCESSING = "preprocessing"
     STEP_ESTIMATOR = "estimator"
 
+    @abstractmethod
     def __init__(
         self,
         estimator: BaseEstimator,
@@ -83,7 +84,12 @@ class Model(ABC):
 
 
 class RegressionModel(Model):
-    pass
+    def __init__(
+        self,
+        estimator: BaseEstimator,
+        preprocessing: Optional[DataFrameTransformer] = None,
+    ):
+        super().__init__(estimator, preprocessing)
 
 
 class ProbabilityCalibrationMethod(Enum):
