@@ -66,24 +66,24 @@ class DataFramePredictor(DataFrameEstimator[_BasePredictor], metaclass=ABCMeta):
         return result
 
     # noinspection PyPep8Naming
-    def predict_proba(self, X: pd.DataFrame) -> Union[pd.Series, pd.DataFrame]:
+    def predict_proba(self, X: pd.DataFrame) -> pd.Series:
         """
         Probability estimates.
 
         :param X: dataframe of features
-        :return: the series/dataframe (multiclasss) of probabiliy estimates
+        :return: the series of probabiliy estimates
         """
         self._check_parameter_types(X, None)
 
         return self._prediction_to_series_or_frame(X, self._base_predict_proba(X))
 
     # noinspection PyPep8Naming
-    def predict_log_proba(self, X: pd.DataFrame) -> Union[pd.Series, pd.DataFrame]:
+    def predict_log_proba(self, X: pd.DataFrame) -> pd.Series:
         """
         Log of probability estimates.
 
         :param X: dataframe of features
-        :return: series/dataframe (multiclasss) of log-probabilities
+        :return: series of log-probabilities
         """
         self._check_parameter_types(X, None)
 

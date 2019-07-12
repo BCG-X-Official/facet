@@ -104,13 +104,13 @@ class ClassificationModel(Model):
         self,
         estimator: BaseEstimator,
         preprocessing: Optional[DataFrameTransformer] = None,
-        calibration_method: Optional[
+        calibration: Optional[
             ProbabilityCalibrationMethod
         ] = ProbabilityCalibrationMethod.SIGMOID,
     ):
         super().__init__(estimator, preprocessing)
-        self._calibration_method = calibration_method
+        self._calibration_method = calibration
 
     @property
-    def calibration_method(self) -> ProbabilityCalibrationMethod:
-        return self.calibration_method
+    def calibration(self) -> ProbabilityCalibrationMethod:
+        return self._calibration_method
