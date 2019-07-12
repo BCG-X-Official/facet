@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 
 from yieldengine.df.predict import DataFramePredictor
 
@@ -9,12 +9,12 @@ def test_dataframe_predictor_classifier(
     iris_df: pd.DataFrame, iris_target: str
 ) -> None:
     # implement a lightweight DataFramePredictor for RandomForestClassifier...
-    class lgbm_predictor_df(DataFramePredictor[RandomForestClassifier]):
+    class rf_predictor_df(DataFramePredictor[RandomForestClassifier]):
         @classmethod
         def _make_base_estimator(cls, **kwargs) -> RandomForestClassifier:
             return RandomForestClassifier(**kwargs)
 
-    classifier_df = lgbm_predictor_df()
+    classifier_df = rf_predictor_df()
 
     x = iris_df.drop(columns=iris_target)
     y = iris_df.loc[:, iris_target]
@@ -41,5 +41,24 @@ def test_dataframe_predictor_classifier(
         assert list(y.unique()) == list(predicted_probas.columns)
 
 
-def test_dataframe_predictor_regressor() -> None:
-    pass
+def test_dataframe_predictor_regressor(
+    boston_df: pd.DataFrame, boston_target: str
+) -> None:
+    # implement a lightweight DataFramePredictor for RandomForestRegressor...
+    class rf_predictor_df(DataFramePredictor[RandomForestRegressor]):
+        @classmethod
+        def _make_base_estimator(cls, **kwargs) -> RandomForestRegressor:
+            return RandomForestRegressor(**kwargs)
+
+    classifier_df = rf_predictor_df()
+
+    x = boston_df.drop(columns=boston_target)
+    y = boston_df.loc[:, boston_target]
+
+    classifier_df.fit(X=x, y=y)
+
+    predictions = classifier_df.predict(X=x)
+
+    # test predictions data-type, length and values
+    assert isinstance(predictions, pd.Series)
+    assert len(predictions) == len(y)
