@@ -18,7 +18,7 @@ class DataFrameEstimator(ABC, BaseEstimator, Generic[_BaseEstimator]):
     :param `**kwargs`: the arguments passed to the base estimator
     """
 
-    F_COLUMN = "column"
+    F_COLUMN_IN = "column_in"
 
     def __init__(self, **kwargs) -> None:
         super().__init__()
@@ -101,13 +101,13 @@ class DataFrameEstimator(ABC, BaseEstimator, Generic[_BaseEstimator]):
         self, X: pd.DataFrame, y: Optional[pd.Series], **fit_params
     ) -> _BaseEstimator:
         # noinspection PyUnresolvedReferences
-        return self.base_transformer.fit(X, y, **fit_params)
+        return self._base_estimator.fit(X, y, **fit_params)
 
     # noinspection PyPep8Naming,PyUnusedLocal
     def _post_fit(
         self, X: pd.DataFrame, y: Optional[pd.Series] = None, **fit_params
     ) -> None:
-        self._columns_in = X.columns.rename(self.F_COLUMN)
+        self._columns_in = X.columns.rename(self.F_COLUMN_IN)
 
     # noinspection PyPep8Naming
     @staticmethod
