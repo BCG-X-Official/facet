@@ -15,6 +15,7 @@ from sklearn.utils import Bunch
 
 from yieldengine import Sample
 from yieldengine.df.transform import DataFrameTransformer
+from yieldengine.model import RegressionModel
 from yieldengine.model.inspection import ModelInspector
 from yieldengine.model.prediction import ModelFitCV
 from yieldengine.model.selection import (
