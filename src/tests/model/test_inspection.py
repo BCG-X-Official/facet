@@ -2,16 +2,13 @@ import logging
 import warnings
 from typing import *
 
-import numpy as np
 import pandas as pd
 from lightgbm.sklearn import LGBMRegressor
 from shap import KernelExplainer, TreeExplainer
 from shap.explainers.explainer import Explainer
-from sklearn import datasets
 from sklearn.base import BaseEstimator
 from sklearn.model_selection import BaseCrossValidator, RepeatedKFold
 from sklearn.svm import SVR
-from sklearn.utils import Bunch
 
 from yieldengine import Sample
 from yieldengine.df.transform import DataFrameTransformer
@@ -31,10 +28,9 @@ log = logging.getLogger(__name__)
 K_FOLDS: int = 5
 TEST_RATIO = 1 / K_FOLDS
 N_SPLITS = K_FOLDS * 2
-BOSTON_TARGET = "target"
 
 
-def test_model_inspection(available_cpus: int) -> None:
+def test_model_inspection(available_cpus: int, boston_sample: Sample) -> None:
     warnings.filterwarnings("ignore", message="numpy.dtype size changed")
     warnings.filterwarnings("ignore", message="numpy.ufunc size changed")
     warnings.filterwarnings("ignore", message="You are accessing a training score")
@@ -61,16 +57,9 @@ def test_model_inspection(available_cpus: int) -> None:
         ),
     ]
 
-    #  load sklearn test-data and convert to pd
-    boston: Bunch = datasets.load_boston()
-
     # use first 100 rows only, since KernelExplainer is very slow...
-    test_data = pd.DataFrame(
-        data=np.c_[boston.data, boston.target],
-        columns=[*boston.feature_names, BOSTON_TARGET],
-    ).loc[:100,]
 
-    test_sample: Sample = Sample(observations=test_data, target_name=BOSTON_TARGET)
+    test_sample: Sample = boston_sample.select_observations(numbers=range(0, 100))
 
     model_ranker: ModelRanker = ModelRanker(
         grids=models, cv=test_cv, scoring="neg_mean_squared_error"
