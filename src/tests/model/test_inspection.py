@@ -194,13 +194,16 @@ def test_model_inspection_with_encoding(
         def ef(estimator: BaseEstimator, data: pd.DataFrame) -> Explainer:
 
             try:
-                return TreeExplainer(model=estimator, feature_dependence="independent")
+                return TreeExplainer(
+                    model=estimator, feature_dependence="independent", data=data
+                )
             except Exception as e:
                 log.debug(
                     f"failed to instantiate shap.TreeExplainer:{str(e)},"
                     "using shap.KernelExplainer as fallback"
                 )
+                # noinspection PyUnresolvedReferences
                 return KernelExplainer(model=estimator.predict, data=data)
 
-        mi2 = ModelInspector(predictor=mp, explainer_factory=ef)
+        mi2 = ModelInspector(model_fit=model_fit, explainer_factory=ef)
         mi2.shap_matrix()
