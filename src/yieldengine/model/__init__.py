@@ -1,3 +1,5 @@
+from abc import ABC
+from enum import Enum
 from typing import *
 
 from sklearn import clone
@@ -7,7 +9,7 @@ from yieldengine.df.pipeline import PipelineDF
 from yieldengine.df.transform import DataFrameTransformer
 
 
-class Model:
+class Model(ABC):
     """
     A model can create a pipeline for a preprocessing transformer (optional; possibly a
     pipeline itself) and an estimator.
@@ -78,3 +80,31 @@ class Model:
             new_model.pipeline.set_params(**parameters)
 
         return new_model
+
+
+class RegressionModel(Model):
+    pass
+
+
+class ProbabilityCalibrationMethod(Enum):
+    SIGMOID = "sigmoid"
+    ISOTONIC = "isotonic"
+
+
+class ClassificationModel(Model):
+    __slots__ = ["_pipeline", "_preprocessing", "_estimator", "_calibration_method"]
+
+    def __init__(
+        self,
+        estimator: BaseEstimator,
+        preprocessing: Optional[DataFrameTransformer] = None,
+        calibration_method: Optional[
+            ProbabilityCalibrationMethod
+        ] = ProbabilityCalibrationMethod.SIGMOID,
+    ):
+        super().__init__(estimator, preprocessing)
+        self._calibration_method = calibration_method
+
+    @property
+    def calibration_method(self) -> ProbabilityCalibrationMethod:
+        return self.calibration_method
