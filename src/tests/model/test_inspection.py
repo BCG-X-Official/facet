@@ -15,7 +15,6 @@ from sklearn.utils import Bunch
 
 from yieldengine import Sample
 from yieldengine.df.transform import DataFrameTransformer
-from yieldengine.model import Model
 from yieldengine.model.inspection import ModelInspector
 from yieldengine.model.prediction import ModelFitCV
 from yieldengine.model.selection import (
@@ -48,11 +47,11 @@ def test_model_inspection(available_cpus: int) -> None:
     # define parameters and models
     models = [
         ModelGrid(
-            model=Model(estimator=SVR(gamma="scale"), preprocessing=None),
+            model=RegressionModel(estimator=SVR(gamma="scale"), preprocessing=None),
             estimator_parameters={"kernel": ("linear", "rbf"), "C": [1, 10]},
         ),
         ModelGrid(
-            model=Model(estimator=LGBMRegressor(), preprocessing=None),
+            model=RegressionModel(estimator=LGBMRegressor(), preprocessing=None),
             estimator_parameters={
                 "max_depth": (1, 2, 5),
                 "min_split_gain": (0.1, 0.2, 0.5),
