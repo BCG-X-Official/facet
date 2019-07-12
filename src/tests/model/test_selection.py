@@ -8,6 +8,7 @@ from sklearn import datasets
 from sklearn.svm import SVC
 
 from yieldengine import Sample
+from yieldengine.model import RegressionModel
 from yieldengine.model.selection import (
     ModelEvaluation,
     ModelGrid,
