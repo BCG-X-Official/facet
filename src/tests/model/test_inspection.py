@@ -230,8 +230,8 @@ def test_model_inspection_classifier(available_cpus: int, iris_sample: Sample) -
 
     # adjust iris-sample to only include classes 0 and 1 - since (for now) only
     # binary classification is supported
-    test_sample: Sample = iris_sample.select_observations(
-        numbers=iris_sample.index[iris_sample.target.isin([0, 1])]
+    test_sample: Sample = iris_sample.select_observations_by_index(
+        ids=iris_sample.index[iris_sample.target.isin([0, 1])]
     )
 
     model_ranker: ModelRanker = ModelRanker(
