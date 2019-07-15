@@ -82,7 +82,7 @@ class ModelInspector:
             ).index
             log.debug(observation_indices_in_split.to_list())
 
-            split_x = sample.select_observations(
+            split_x = sample.select_observations_by_index(
                 ids=observation_indices_in_split
             ).features
 
