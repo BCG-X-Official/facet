@@ -1,3 +1,7 @@
+"""
+Global definitions of basic types and functions for use across the yield engine library
+"""
+
 import logging
 from copy import copy
 from typing import *
@@ -10,7 +14,9 @@ log = logging.getLogger(__name__)
 # noinspection PyShadowingBuiltins
 _T = TypeVar("_T")
 ListLike = Union[np.ndarray, pd.Series, Sequence[_T]]
-MatrixLike = Union[np.ndarray, pd.DataFrame, Sequence[Sequence[_T]]]
+MatrixLike = Union[
+    np.ndarray, pd.Series, pd.DataFrame, Sequence[Union[_T, "MatrixLike"[_T]]]
+]
 
 
 def deprecated(message: str):
@@ -40,7 +46,7 @@ class Sample:
     """
     Utility class to wrap a Pandas DataFrame in order to easily access its
 
-        - features as a dataframe
+        - features as a data frame
         - target as a series
         - feature columns by type, e.g., numbers or objects
 
@@ -156,42 +162,35 @@ class Sample:
         self, dtype: Union[type, str, Sequence[Union[type, str]]]
     ) -> pd.DataFrame:
         """
-        Return a dataframe with columns for all features matching the given type
+        Return a data frame with columns for all features matching the given type
         :param dtype: dtype, or sequence of dtypes, for filtering features. See DTYPE_*
         constants for common type selectors
-        :return: dataframe of the selected features
+        :return: data frame of the selected features
         """
         return self.features.select_dtypes(dtype)
 
-    def select_observations(
-        self,
-        numbers: Optional[Iterable[int]] = None,
-        ids: Optional[Iterable[Any]] = None,
+    def select_observations_by_position(
+        self, positions: Optional[Iterable[int]] = None
     ) -> "Sample":
         """
-        Select observations either by numerical indices (`iloc`) or index items (`loc`)
-        :param numbers: numerical indices of observations to select (optional)
-        :param ids: indices of observations to select (optional)
+        Select observations by positional indices (`iloc`)
+        :param positions: positional indices of observations to select
         :return: copy of this sample, containing only the observations at the given
         indices
         """
-        if numbers is None:
-            if ids is None:
-                raise ValueError(
-                    "need to specify either numbers or ids to select observations by"
-                )
-        elif ids is not None:
-            raise ValueError(
-                "need to specify only one of either numbers or ids to select observations by"
-            )
-
         subsample = copy(self)
+        subsample._observations = self._observations.iloc[positions, :]
+        return subsample
 
-        if numbers is not None:
-            subsample._observations = self._observations.iloc[numbers, :]
-        else:
-            subsample._observations = self._observations.loc[ids, :]
-
+    def select_observations_by_index(self, ids: Iterable[Any] = None) -> "Sample":
+        """
+        Select observations index items (`loc`)
+        :param ids: indices of observations to select
+        :return: copy of this sample, containing only the observations at the given
+        indices
+        """
+        subsample = copy(self)
+        subsample._observations = self._observations.loc[ids, :]
         return subsample
 
     def select_features(self, feature_names: ListLike[str]) -> "Sample":
