@@ -58,8 +58,10 @@ class RangePartitioning(
             lower_bound = np.min(values)
         if upper_bound is None:
             upper_bound = np.max(values)
-        if upper_bound <= lower_bound:
-            raise ValueError("arg lower_bound >= arg upper_bound")
+        if lower_bound >= upper_bound:
+            raise ValueError(
+                f"arg lower_bound >= arg upper_bound: [{lower_bound}, {upper_bound})"
+            )
 
         # calculate the step count based on the maximum number of partitions,
         # rounded to the next-largest rounded value ending in 1, 2, or 5
