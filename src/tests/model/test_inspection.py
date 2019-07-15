@@ -13,7 +13,11 @@ from sklearn.svm import SVR
 
 from yieldengine import Sample
 from yieldengine.df.transform import DataFrameTransformer
-from yieldengine.model import ClassificationModel, RegressionModel
+from yieldengine.model import (
+    ClassificationModel,
+    ProbabilityCalibrationMethod,
+    RegressionModel,
+)
 from yieldengine.model.inspection import ModelInspector
 from yieldengine.model.prediction import ModelFitCV
 from yieldengine.model.selection import (
@@ -214,13 +218,19 @@ def test_model_inspection_classifier(available_cpus: int, iris_sample: Sample) -
     models = [
         ModelGrid(
             model=ClassificationModel(
-                estimator=RandomForestClassifier(), preprocessing=None
+                estimator=RandomForestClassifier(),
+                preprocessing=None,
+                calibration=ProbabilityCalibrationMethod.NO_CALIBRATION,
             ),
             estimator_parameters={"n_estimators": [50, 80]},
         )
     ]
 
-    test_sample: Sample = iris_sample
+    # adjust iris-sample to only include classes 0 and 1 - since (for now) only
+    # binary classification is supported
+    test_sample: Sample = iris_sample.select_observations(
+        numbers=iris_sample.index[iris_sample.target.isin([0, 1])]
+    )
 
     model_ranker: ModelRanker = ModelRanker(
         grids=models, cv=test_cv, scoring="f1_macro"
