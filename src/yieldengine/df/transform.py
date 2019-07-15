@@ -3,7 +3,7 @@
 
 import logging
 from abc import ABC, abstractmethod
-from types import new_class
+from functools import wraps
 from typing import *
 
 import numpy as np
@@ -265,23 +265,16 @@ def df_transformer(
              transformer
     """
 
-    def _init_class_namespace(namespace: Dict[str, Any]) -> None:
-        # noinspection PyProtectedMember
-        namespace[
-            df_transformer_type._make_base_transformer.__name__
-        ] = lambda **kwargs: cls(**kwargs)
-
     def _decorate(
-        cls: Type[_BaseTransformer]
+        decoratee: Type[_BaseTransformer]
     ) -> Type[DataFrameTransformer[_BaseTransformer]]:
-        return cast(
-            Type[DataFrameTransformer[_BaseTransformer]],
-            new_class(
-                name=cls.__name__,
-                bases=(df_transformer_type,),
-                exec_body=_init_class_namespace,
-            ),
-        )
+        @wraps(decoratee, updated=())
+        class _DataFrameTransformer(df_transformer_type):
+            @classmethod
+            def _make_base_transformer(c, **kwargs) -> _BaseTransformer:
+                return cls(**kwargs)
+
+        return _DataFrameTransformer
 
     if not issubclass(df_transformer_type, DataFrameTransformer):
         raise ValueError(
