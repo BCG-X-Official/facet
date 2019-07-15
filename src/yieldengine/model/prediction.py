@@ -139,7 +139,10 @@ class ModelFitCV:
             != ProbabilityCalibrationMethod.NO_CALIBRATION
             and self._probability_calibration_method is not None
         ):
-            log.info("Calibrating classifier probabilities using test sets")
+            log.info(
+                f"Calibrating classifier probabilities"
+                f" using method: {self._probability_calibration_method.value}"
+            )
             self._model_by_split: List[Model] = self._parrallel()(
                 delayed(self._calibrate_probabilities_for_split)(
                     self._model_by_split[idx],
