@@ -80,6 +80,10 @@ class Model(ABC):
         if parameters is not None:
             new_model.pipeline.set_params(**parameters)
 
+        # the additional calibration property has to be cloned correctly
+        if isinstance(self, ClassificationModel):
+            new_model._calibration_method = self._calibration_method
+
         return new_model
 
 
@@ -95,6 +99,7 @@ class RegressionModel(Model):
 class ProbabilityCalibrationMethod(Enum):
     SIGMOID = "sigmoid"
     ISOTONIC = "isotonic"
+    NO_CALIBRATION = "no-calibration"
 
 
 class ClassificationModel(Model):
