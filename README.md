@@ -20,9 +20,36 @@ Simply run `pytest tests/` from the project root folder (or use the PyCharm test
 The generated Sphinx documentation of yieldengine is located at _/docs_. To build the documentation, ensure you have the Python packages `sphinx=2.0.1` and `sphinx_rtd_theme=0.4.3` installed, which we have purposely not included into the `environment.yml`. To update, simply run `make html` from within _/sphinx_. **Note: the Makefile (-> make.bat) has not been adapted/tested for Windows**
 
 ## 2. Documentation guideline
-The documentation is written in docstrings. 
-The style fo the docstring follows ReStructuredText syntax which is the default for 
-Sphinx.
+The documentation is written inside the docstrings. 
+The style fo the docstring the follows ReStructuredText syntax which is the default 
+for Sphinx.
+Docstring are writen in an imperative style for instance:
+```"""Do this."""``` instead of ```"""Does this."""``` 
+
+A onliner docstring is of the form:
+```
+"""This is a oneliner docstring."""
+```
+
+If the docstring does not fit in one line it should look like:
+```
+"""Onliner short description.
+
+Optionnal longer description.
+That can be on multiple line.
+
+:param param1: description of param1
+...
+:return: the return value
+"""
+```
+
+Modules and classes must have a docstring. 
+Methods and attributes which are public must have a docstring but methods and 
+attributes which are private do not need a docstring.
+
+
+
 
 
  
