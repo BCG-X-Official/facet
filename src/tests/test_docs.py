@@ -129,12 +129,12 @@ def parameters_inconsistent(parent: str, call_obj_name: str, call_obj: object) -
     """
     docstr_params = extract_params_from_docstr(str(call_obj.__doc__))
     full_args = inspect.getfullargspec(call_obj)
+    func_args = full_args.args
+
+    if "self" in func_args:
+        func_args.remove("self")
 
     if docstr_params is not None and len(docstr_params) > 0:
-        func_args = full_args.args
-
-        if "self" in func_args:
-            func_args.remove("self")
 
         for idx, f_arg in enumerate(func_args):
             if idx > len(docstr_params) or docstr_params[idx] != f_arg:
