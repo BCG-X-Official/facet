@@ -21,29 +21,25 @@ The generated Sphinx documentation of yieldengine is located at _/docs_. To buil
 
 ## 2. Documentation guideline
 The documentation is written inside the docstrings. 
-The style fo the docstring the follows ReStructuredText syntax which is the default 
-for Sphinx.
-Docstring are writen in an imperative style for instance:
-```"""Do this."""``` instead of ```"""Does this."""``` 
-
-A onliner docstring is of the form:
+The style fo the docstring follows the reStructuredText syntax which is the default 
+syntax for Sphinx.
+Docstring are writen in an imperative style for instance. So write  
+```"""Do this."""```   
+instead of   
+```"""Does this."""```  
+A onliner docstring is of the form:  
+```"""This is a oneliner docstring."""```  
+If the docstring does not fit in one line it should look like:  
 ```
-"""This is a oneliner docstring."""
-```
-
-If the docstring does not fit in one line it should look like:
-```
-"""Onliner short description.
+"""Short description.
 
 Optionnal longer description.
 That can be on multiple line.
 
-:param param1: description of param1
-...
+:param param_1: description of param_1
 :return: the return value
 """
-```
-
+```  
 Modules and classes must have a docstring. 
 Methods and attributes which are public must have a docstring but methods and 
 attributes which are private do not need a docstring.
