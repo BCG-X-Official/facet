@@ -4,6 +4,7 @@ Global definitions of basic types and functions for use across the yield engine 
 
 import logging
 from copy import copy
+from functools import wraps
 from typing import *
 
 import numpy as np
@@ -15,7 +16,7 @@ log = logging.getLogger(__name__)
 _T = TypeVar("_T")
 ListLike = Union[np.ndarray, pd.Series, Sequence[_T]]
 MatrixLike = Union[
-    np.ndarray, pd.Series, pd.DataFrame, Sequence[Union[_T, "MatrixLike"[_T]]]
+    np.ndarray, pd.Series, pd.DataFrame, Sequence[Union[_T, "MatrixLike[_T]"]]
 ]
 
 
@@ -26,15 +27,16 @@ def deprecated(message: str):
     """
 
     def _deprecated_inner(func: callable) -> callable:
+        @wraps(func)
         def new_func(*args, **kwargs) -> Any:
             """
             Function wrapper
             """
-            message_header = "Call to deprecated function {}".format(func.__name__)
+            message_header = f"Call to deprecated function {func.__name__}"
             if message is None:
                 log.warning(message_header)
             else:
-                log.warning("{}: {}".format(message_header, message))
+                log.warning(f"{message_header}: {message}")
             return func(*args, **kwargs)
 
         return new_func
