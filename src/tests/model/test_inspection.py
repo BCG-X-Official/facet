@@ -64,7 +64,9 @@ def test_model_inspection(available_cpus: int, boston_sample: Sample) -> None:
 
     # use first 100 rows only, since KernelExplainer is very slow...
 
-    test_sample: Sample = boston_sample.select_observations(numbers=range(0, 100))
+    test_sample: Sample = boston_sample.select_observations_by_position(
+        positions=range(0, 100)
+    )
 
     model_ranker: ModelRanker = ModelRanker(
         grids=models, cv=test_cv, scoring="neg_mean_squared_error"
