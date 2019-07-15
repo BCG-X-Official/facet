@@ -105,15 +105,8 @@ def test_sample(batch_table: pd.DataFrame) -> None:
     assert len(s) == len(batch_table)
 
     # test select_observations
-    sub = s2.select_observations(numbers=[0, 1, 2, 3])
+    sub = s2.select_observations_by_position(positions=[0, 1, 2, 3])
     assert len(sub) == 4
-
-    # test select observations with incorrect parameters
-    with pytest.raises(ValueError):
-        s2.select_observations(numbers=None, ids=None)
-
-    with pytest.raises(ValueError):
-        s2.select_observations(numbers=[1, 2, 3], ids=[1, 2, 3])
 
     # test select features
     sample_features = s2.select_features(feature_names=s2.features.columns[0:10])
