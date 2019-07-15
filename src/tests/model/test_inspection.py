@@ -285,8 +285,8 @@ def test_model_inspection_classifier(available_cpus: int, iris_sample: Sample) -
     corr_matrix: pd.DataFrame = model_inspector.feature_dependency_matrix()
     log.info(corr_matrix)
     # check number of rows
-    assert len(corr_matrix) == len(test_sample.feature_names) - 1
-    assert len(corr_matrix.columns) == len(test_sample.feature_names) - 1
+    assert len(corr_matrix) == len(test_sample.feature_names)
+    assert len(corr_matrix.columns) == len(test_sample.feature_names)
 
     # check correlation values
     for c in corr_matrix.columns:
