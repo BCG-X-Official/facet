@@ -123,7 +123,8 @@ class ModelFitCV:
 
         self._model_by_split: List[Model] = self._parrallel()(
             delayed(self._fit_model_for_split)(
-                model.clone(), sample.select_observations(numbers=train_indices)
+                model.clone(),
+                sample.select_observations_by_position(positions=train_indices),
             )
             for train_indices, _ in self.cv.split(sample.features, sample.target)
         )
@@ -182,7 +183,9 @@ class ModelFitCV:
                 self.cv.split(sample.features, sample.target)
             ):
 
-                test_sample = sample.select_observations(numbers=test_indices)
+                test_sample = sample.select_observations_by_position(
+                    positions=test_indices
+                )
 
                 if isinstance(self.model, RegressionModel):
                     predictions = self.fitted_model(split_id=split_id).pipeline.predict(
