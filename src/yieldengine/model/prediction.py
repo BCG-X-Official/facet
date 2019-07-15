@@ -12,7 +12,12 @@ from sklearn.calibration import CalibratedClassifierCV
 from sklearn.model_selection import BaseCrossValidator
 
 from yieldengine import Sample
-from yieldengine.model import ClassificationModel, Model, RegressionModel
+from yieldengine.model import (
+    ClassificationModel,
+    Model,
+    ProbabilityCalibrationMethod,
+    RegressionModel,
+)
 
 log = logging.getLogger(__name__)
 
@@ -64,7 +69,7 @@ class ModelFitCV:
         self._shared_memory = shared_memory
         self._verbose = verbose
 
-        if isinstance(self.model, ClassificationModel):
+        if isinstance(model, ClassificationModel):
             model: ClassificationModel = model
             self._probability_calibration_method = model.calibration
         else:
@@ -129,13 +134,20 @@ class ModelFitCV:
             for train_indices, _ in self.cv.split(sample.features, sample.target)
         )
 
-        if self._probability_calibration_method is not None:
-            log.info("Calibrating classifier probabilities using testsets")
+        if (
+            self._probability_calibration_method
+            != ProbabilityCalibrationMethod.NO_CALIBRATION
+            and self._probability_calibration_method is not None
+        ):
+            log.info("Calibrating classifier probabilities using test sets")
             self._model_by_split: List[Model] = self._parrallel()(
                 delayed(self._calibrate_probabilities_for_split)(
-                    model, sample.select_observations(numbers=test_indices)
+                    self._model_by_split[idx],
+                    sample.select_observations_by_position(positions=test_indices),
                 )
-                for _, test_indices in self.cv.split(sample.features, sample.target)
+                for idx, (_, test_indices) in enumerate(
+                    self.cv.split(sample.features, sample.target)
+                )
             )
 
     def _parrallel(self) -> Parallel:
@@ -198,10 +210,12 @@ class ModelFitCV:
 
                     n_classes = predictions.shape[1]
 
+                    # supporting only binary classification where n-classes == 2
                     assert (
                         n_classes == 2
                     ), f"Got non-binary probabilities for {n_classes} classes"
 
+                    # just proceed with probabilities that it is class 0:
                     predictions = predictions.loc[:, predictions.columns[0]]
 
                 else:
@@ -255,9 +269,14 @@ class ModelFitCV:
     ) -> ClassificationModel:
 
         cv = CalibratedClassifierCV(
-            base_estimator=model.pipeline, method=model.calibration, cv="prefit"
+            base_estimator=model.estimator, method=model.calibration.value, cv="prefit"
         )
 
-        cv.fit(X=test_sample.features, y=test_sample.target)
+        if model.preprocessing is not None:
+            data_transformed = model.preprocessing.transform(test_sample.features)
+        else:
+            data_transformed = test_sample.features
+
+        cv.fit(X=data_transformed, y=test_sample.target)
 
         return model
