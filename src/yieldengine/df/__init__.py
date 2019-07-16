@@ -20,8 +20,7 @@ _BaseEstimator = TypeVar("_BaseEstimator", bound=BaseEstimator)
 
 
 class DataFrameEstimator(ABC, BaseEstimator, Generic[_BaseEstimator]):
-    """
-    Abstract base class that is a wrapper around the sklearn `BaseEstimator` class.
+    """Abstract base class that is a wrapper around the sklearn `BaseEstimator` class.
 
     Implementations must define a method `_make_base_estimator`.
 
@@ -50,8 +49,7 @@ class DataFrameEstimator(ABC, BaseEstimator, Generic[_BaseEstimator]):
         return self._base_estimator
 
     def get_params(self, deep=True) -> Dict[str, Any]:
-        """
-        Get parameters for this estimator.
+        """Get parameters for this estimator.
 
         :param deep: If True, return the parameters for this estimator and \
         contained sub-objects that are estimators
@@ -62,8 +60,7 @@ class DataFrameEstimator(ABC, BaseEstimator, Generic[_BaseEstimator]):
         return self._base_estimator.get_params(deep=deep)
 
     def set_params(self, **kwargs) -> "DataFrameEstimator":
-        """
-        Set the parameters of this estimator.
+        """Set the parameters of this estimator.
 
         Valid parameter keys can be listed with ``get_params()``.
 
@@ -77,8 +74,7 @@ class DataFrameEstimator(ABC, BaseEstimator, Generic[_BaseEstimator]):
     def fit(
         self, X: pd.DataFrame, y: Optional[pd.Series] = None, **fit_params
     ) -> "DataFrameEstimator[_BaseEstimator]":
-        """
-        Fit the base estimator.
+        """Fit the base estimator.
 
         :param X: dataframe to fit the estimator
         :param y: pandas series
