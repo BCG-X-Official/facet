@@ -48,7 +48,7 @@ class DataFramePredictor(DataFrameEstimator[_BasePredictor], metaclass=ABCMeta):
         :param X: the dataframe of features
         :param y: the series of target used to train the model
         :param fit_params: additional arguments passed to the the `predict` method
-        of the base estimator
+          of the base estimator
         :return: `pd.Series` of the predictions for X
         """
         self._check_parameter_types(X, y)

@@ -139,7 +139,7 @@ class DataFrameTransformer(DataFrameEstimator[_BaseTransformer], TransformerMixi
 
     @abstractmethod
     def _get_columns_original(self) -> pd.Series:
-        """Series mapping output column names to the original columns names."""
+        """Return the series mapping output column names to original columns names."""
         pass
 
     # noinspection PyPep8Naming,PyUnusedLocal
