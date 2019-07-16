@@ -1,7 +1,10 @@
 # coding=utf-8
-"""Module with the `ModelFitCV class which gather information from a model, its
-cross validation and the sample used."""
+"""Fitted models with cross-validation.
 
+The `~ModelFitCV` encapsulates a fully trained model. It contains a `Model` (
+preprocessing + estimator), a dataset given by a `Sample` object and a
+cross-validation method. The model is fitted accordingly.
+"""
 import copy
 import logging
 from typing import *
@@ -18,12 +21,7 @@ log = logging.getLogger(__name__)
 
 
 class ModelFitCV:
-    """
-    A model fitted multiple times to different subsets of a given sample, \
-    determined by the train splits from a given cross-validator.
-
-    Required for model inspection and simulation where we are interested in \
-    performance on unseen data
+    """Full information about a fitted model with cross-validation.
 
     :param Model model: model to be fitted
     :param BaseCrossValidator cv: the cross validator generating the train splits
@@ -65,41 +63,34 @@ class ModelFitCV:
 
     @property
     def model(self) -> Model:
-        """
-        :return: the ingoing, usually unfitted model to be fitted to the training splits
-        """
+        """The ingoing, usually unfitted model to be fitted to the training splits."""
         return self._model
 
     @property
     def cv(self) -> BaseCrossValidator:
-        """
-        :return: the cross validator generating the train splits
+        """The cross validator generating the train splits.
         """
         return self._cv
 
     @property
     def sample(self) -> Sample:
-        """
-        :return: the sample from which the training sets are drawn
+        """The sample from which the training sets are drawn
         """
         return self._sample
 
     @property
     def n_splits(self) -> int:
-        """
-        :return: the number of splits in this model fit
-        """
+        """Number of splits in this model fit."""
         return self.cv.get_n_splits(X=self.sample.features, y=self.sample.target)
 
     def fitted_models(self) -> Iterator[Model]:
-        """
-        :return: an iterator of all models fitted for the train splits
-        """
+        """Iterator of all models fitted for the train splits."""
         self._fit()
         return iter(self._model_by_split)
 
     def fitted_model(self, split_id: int) -> Model:
-        """
+        """Return the fitted model for a given split.
+
         :param split_id: start index of test split
         :return: the model fitted for the train split at the given index
         """
@@ -135,14 +126,21 @@ class ModelFitCV:
         ]
 
     def predictions_for_split(self, split_id: int) -> pd.Series:
+        """The predictions for a given split.
+
+        :return: the series of predictions of the split
+        """
         return self._series_for_split(split_id=split_id, column=ModelFitCV.F_PREDICTION)
 
     def targets_for_split(self, split_id: int) -> pd.Series:
+        """Return the target for this split.
+
+        :return: the series of targets for this split"""
         return self._series_for_split(split_id=split_id, column=ModelFitCV.F_TARGET)
 
     def predictions_for_all_splits(self) -> pd.DataFrame:
-        """
-        For each split of this Predictor's CV, predict all values in the test set.
+        """For each split of this Predictor's CV, predict all values in the test set.
+
         The result is a data frame with one row per prediction, indexed by the
         observations in the sample and the split id (index level F_SPLIT_ID),
         and with columns F_PREDICTION (the predicted value for the
@@ -190,8 +188,7 @@ class ModelFitCV:
         return self._predictions_for_all_samples
 
     def copy_with_sample(self, sample: Sample):
-        """
-        Copies the predictor with some new `Sample`.
+        """Copy the predictor with some new `Sample`.
 
         :param sample: the `Sample` used for the copy
         :return: the copy of self
@@ -203,8 +200,7 @@ class ModelFitCV:
 
     @staticmethod
     def _fit_model_for_split(model: Model, train_sample: Sample) -> Model:
-        """
-        Fit a model using a sample.
+        """Fit a model using a sample.
 
         :param model:  the `Model` to fit
         :param train_sample: `Sample` to fit on
