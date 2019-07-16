@@ -17,7 +17,12 @@ There is a `environment.yml` provided in the project root folder, which you can 
 ### 1.2 Pytest
 Simply run `pytest tests/` from the project root folder (or use the PyCharm testrunner). The execution of pytest with coverage can be triggered using `pytest --cov=yieldengine tests/`.
 ### 1.3 Sphinx Documentation
-The generated Sphinx documentation of yieldengine is located at _/docs_. To build the documentation, ensure you have the Python packages `sphinx=2.0.1` and `sphinx_rtd_theme=0.4.3` installed, which we have purposely not included into the `environment.yml`. To update, simply run `make html` from within _/sphinx_. **Note: the Makefile (-> make.bat) has not been adapted/tested for Windows**
+The generated Sphinx documentation of yieldengine is located at _/docs_. 
+To build the documentation, ensure you have the Python packages `sphinx=2.0.1` and `sphinx_rtd_theme=0.4.3` installed, which we have purposely not included into the `environment.yml`. 
+To update, simply run `make html` from within _/sphinx_. 
+By default `make html` only compiles files which have been modfified since last 
+compilation. To force the compilation of the full documentation enter first `make 
+clean`.  
 
 ## 2. Documentation guideline
 The documentation is written inside the docstrings. 
