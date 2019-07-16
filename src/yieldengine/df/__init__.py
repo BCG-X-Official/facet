@@ -1,6 +1,10 @@
 # coding=utf-8
-"""This package defines wrappers around various sklearn `BaseEstimator` that
-nicely handle dataframes as input and output.
+"""Wrap sklearn `BaseEstimator` to return dataframes instead of numpy arrays.
+
+The abstract class `~DataFrameEstimator` wraps a `BaseEstimator` so that the `predict`
+or `transform` methods of the implementations return dataframe.
+`~DataFrameEstimator` has an attribute `columns_in` which is the index of the
+columns of the input dataframe.
 """
 
 import logging
@@ -18,6 +22,8 @@ _BaseEstimator = TypeVar("_BaseEstimator", bound=BaseEstimator)
 class DataFrameEstimator(ABC, BaseEstimator, Generic[_BaseEstimator]):
     """
     Abstract base class that is a wrapper around the sklearn `BaseEstimator` class.
+
+    Implementations must define a method `_make_base_estimator`.
 
     :param `**kwargs`: the arguments passed to the base estimator
     """
@@ -87,7 +93,7 @@ class DataFrameEstimator(ABC, BaseEstimator, Generic[_BaseEstimator]):
 
     @property
     def is_fitted(self) -> bool:
-        """True if the base estimator is fitted, else false"""
+        """True if the base estimator is fitted, else False"""
         return self._columns_in is not None
 
     @property
