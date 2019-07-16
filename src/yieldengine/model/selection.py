@@ -1,6 +1,11 @@
 # coding=utf-8
-"""Classes to define model with hyperparameters grid and classes to analyse
-analyse and report the scores of these models."""
+"""Selection and hyperparameter optimization of models.
+
+The `~ModelGrid` class encapsulates a `~yieldengine.model.Model` and a grid of
+hyperparameters.
+
+The `~ModelRanker` class allows to select the best model among a list of `~ModelGrid`.
+"""
 import re
 from collections import defaultdict
 from itertools import chain
@@ -16,9 +21,7 @@ ParameterGrid = Dict[str, Sequence[Any]]
 
 
 class ModelGrid:
-    """
-    Class containing information about a model and a grid of hyperparmeters both for \
-    the preprocessing and the estimator steps.
+    """A model with a grid of hyperparameters.
 
     :param Model model: underlying `Model`
     :param ParameterGrid estimator_parameters: dict of the hyperparameter grid for \
@@ -59,7 +62,7 @@ class ModelGrid:
 
     @property
     def model(self) -> Model:
-        """The underlying `Model`"""
+        """The underlying `Model`."""
         return self._model
 
     @property
@@ -79,10 +82,9 @@ class ModelGrid:
 
 
 class ModelScoring:
-    """"
-    Class for statistics of a cross validated model.
+    """"Statistics for a given split of a cross validated model.
 
-    :param split_scores: iterable of the scores of the splits
+    :param split_scores: iterable of the scores of the split
     """
 
     def __init__(self, split_scores: Iterable[float]):
@@ -98,7 +100,17 @@ class ModelScoring:
 
 
 class ModelEvaluation(NamedTuple):
-    """Class with attributes model, parameters, scoring and ranking_score."""
+    """`NamedTuple` containing the information about a fitted model.
+
+    Has attributes:
+    - model: the `Model`
+    - parameters: dict with keys the model parameters (str) and value the value of
+    the parameter
+    - scoring: dict with keys the str scores ("train_score", "test_score",
+    "train_r2",...)
+    - ranking_score: score for the default scorer. Should be one of the values of
+      `scoring`.
+    """
 
     model: Model
     parameters: Mapping[str, Any]
@@ -107,13 +119,14 @@ class ModelEvaluation(NamedTuple):
 
 
 class ModelRanker:
-    """
+    """Rank a list of model using a common cross-validation strategy.
+
     Turns a model zoo along with
 
         - an (optional) pre-processing pipeline
         - a cross-validation instance
         - a scoring function \
-    into a scikit-learn pipeline.
+    into a sklearn pipeline.
 
     :param grids: list of model grids to be ranked
     :param cv: a cross validation object (i.e. CircularCrossValidator)
@@ -144,13 +157,11 @@ class ModelRanker:
 
     @staticmethod
     def default_ranking_scorer(scoring: ModelScoring) -> float:
-        """
-        The default scoring function to evaluate on top of GridSearchCV test scores,
-        given by :code:`GridSearchCV.cv_results_`.
+        """The default scoring function: ``mean - 2*std``.
 
         Its output is used for ranking globally across the model zoo.
 
-        :param scoring: the model scoring dictionary with entries for all scorers
+        :param scoring: the `ModelScoring` containing scores for a given split
         :return: score to be used for model ranking
         """
         return scoring.mean() - 2 * scoring.std()
@@ -163,8 +174,7 @@ class ModelRanker:
         n_jobs: Optional[int] = None,
         pre_dispatch: str = "2*n_jobs",
     ) -> Sequence[ModelEvaluation]:
-        """
-        Execute the pipeline with the given sample and return the ranking.
+        """Execute the pipeline for all models compute the ranking.
 
         :param sample: sample to fit pipeline to
         :param ranking_scorer: scoring function used for ranking across models, \
@@ -212,16 +222,23 @@ class ModelRanker:
         def _scoring(
             cv_results: Mapping[str, Sequence[float]]
         ) -> List[Dict[str, ModelScoring]]:
-            """
-            helper function;  for each model in the grid returns a tuple of test scores_for_split across all splits.
+            """Convert a `cv_results_` attribute into dict's with `ModelScoring` values.
+
+            Helper function;  for each model in the grid returns a tuple of test
+            scores_for_split across all splits.
             The length of the tuple is equal to the number of splits that were tested
-            The test scores_for_split are sorted in the order the splits were tested
-            :param cv_results: the GridSearchCV object's results dictionary
-            :return: a list of test scores per scored model; each list entry maps score types to a list of scores per
-                     split
+            The test scores_for_split are sorted in the order the splits were tested.
+
+            :param cv_results: the `GridSearchCV.cv_results_` attribute of a sklearn
+            GridSearchCV
+            :return: a list of test scores per scored model; each list entry maps score
+              types to a list of scores per split. The i-th element of this list is
+              typically of the form ``{'train_score': model_scoring1, 'test_score':
+              model_scoring2,...}``
             """
 
-            # the splits are stored in the cv_results using keys 'split0...' thru 'split<nn>...'
+            # the splits are stored in the cv_results using keys 'split0...'
+            # through 'split<nn>...'
             # match these dictionary keys in cv_results; ignore all other keys
             matches_for_split_x_metric: List[Tuple[str, Match]] = [
                 (
@@ -234,7 +251,8 @@ class ModelRanker:
             ]
 
             # extract the integer indices from the matched results keys
-            # create tuples (metric, split_index, scores_per_model_for_split), e.g., ('test_r2', 0, [0.34, 0.23, ...])
+            # create tuples (metric, split_index, scores_per_model_for_split),
+            # e.g., ('test_r2', 0, [0.34, 0.23, ...])
             metric_x_split_index_x_scores_per_model: List[
                 Tuple[str, int, Sequence[float]]
             ] = sorted(
@@ -243,13 +261,13 @@ class ModelRanker:
                     for key, match in matches_for_split_x_metric
                     if match is not None
                 ),
-                key=lambda x: x[
-                    1
-                ],  # sort by split_id so we can later collect scores in the correct sequence
+                key=lambda x: x[1],  # sort by split_id so we can later collect scores
+                # in the correct sequence
             )
 
-            # Group results per model, result is a list where each item contains the scoring for one model.
-            # Each scoring is a dictionary, mapping each metric to a list of scores for the different splits.
+            # Group results per model, result is a list where each item contains the
+            # scoring for one model. Each scoring is a dictionary, mapping each
+            # metric to a list of scores for the different splits.
             n_models = len(cv_results[ModelRanker.F_PARAMETERS])
 
             scores_per_model_per_metric_per_split: List[Dict[str, List[float]]] = [
@@ -265,6 +283,10 @@ class ModelRanker:
                     scores_per_model_per_metric_per_split[model_ix][metric].append(
                         split_score
                     )
+            # Now in general, the i-th element of scores_per_model_per_metric_per_split
+            # is a dict
+            # {'train_score': [a_0,...,a_(n-1)], 'test_score': [b_0,..,b_(n-1)]} where
+            # a_j (resp. b_j) is the train (resp. test) score for model i in split j
 
             return [
                 {
@@ -291,11 +313,16 @@ class ModelRanker:
         ]
 
         # create ranking by assigning rank values and creating "RankedModel" types
-        return sorted(scorings, key=lambda scoring: scoring.ranking_score, reverse=True)
+        return sorted(
+            scorings,
+            key=lambda model_evaluation: model_evaluation.ranking_score,
+            reverse=True,
+        )
 
 
 def summary_report(ranking: Sequence[ModelEvaluation]) -> str:
-    """
+    """Return the report of a `ModelRanker`.
+
     :return: a summary string of the model ranking
     """
 

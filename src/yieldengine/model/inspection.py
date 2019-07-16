@@ -1,6 +1,9 @@
 # coding=utf-8
-"""This module contains the ModelInspector class which allows to compute and
-visualize information regarding the shap values of a model."""
+"""Inspection of a model.
+
+The ``ModelInspector`` computes the shap matrix and the associated linkage tree of a
+model which has been fitted using cross-validation.
+"""
 import logging
 from typing import *
 
@@ -20,11 +23,11 @@ log = logging.getLogger(__name__)
 
 
 class ModelInspector:
-    """
-    Class to inspect the shap values of a model.
+    """Inspect a model through its shap values.
 
     :param ModelFitCV model_fit: predictor containing the information about the \
     model, the data (a Sample object), the cross-validation and predictions.
+    :param explainer_factory: method that returns a shap Explainer
     """
 
     __slots__ = [
@@ -55,14 +58,14 @@ class ModelInspector:
 
     @property
     def model_fit(self) -> ModelFitCV:
-        """the `ModelFitCV` used for inspection"""
+        """The `ModelFitCV` used for inspection."""
         return self._model_fit
 
     def shap_matrix(self) -> pd.DataFrame:
-        """
-        Calculate the SHAP matrix where each row is an observation in a
-        specific test split, and each column is a feature, and values are the SHAP
-        values per observation/split and feature
+        """Calculate the SHAP matrix for all splits.
+
+        Each row is an observation in a specific test split, and each column is a
+        feature, and values are the SHAP values per observation/split and feature.
 
          :return: shap matrix as a data frame
         """
@@ -123,7 +126,8 @@ class ModelInspector:
         return self._shap_matrix
 
     def feature_importances(self) -> pd.Series:
-        """
+        """Feature importance computed using absolute value of shap values.
+
         :return: feature importances as their mean absolute SHAP contributions, \
         normalised to a total 100%
         """
@@ -146,7 +150,7 @@ class ModelInspector:
         return self._feature_dependency_matrix
 
     def cluster_dependent_features(self) -> LinkageTree:
-        """Returns a `LinkageTree` based on the `feature_dependency_matrix`."""
+        """Return the `LinkageTree` based on the `feature_dependency_matrix`."""
         # convert shap correlations to distances (1 = most distant)
         feature_distance_matrix = 1 - self.feature_dependency_matrix().abs()
 
@@ -176,6 +180,9 @@ class ModelInspector:
 def default_explainer_factory(
     estimator: BaseEstimator, data: pd.DataFrame
 ) -> Explainer:
+    """Return the default shap explainer: `shap.TreeExplainer`.
+
+    :return: `shap.TreeExplainer`"""
 
     # NOTE:
     # unfortunately, there is no convenient function in shap to determine the best
