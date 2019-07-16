@@ -14,7 +14,7 @@ import numpy as np
 
 class Node(ABC):
     """
-    Abstract class of a node.
+    Node of a `LinkageTree`.
 
     Implementations must define `children_distance`, `weight`, `label`, `is_leaf`.
     """
@@ -61,7 +61,7 @@ class Node(ABC):
 
 
 class LinkageNode(Node):
-    """Class for a non leaf node in a linkage tree.
+    """Class for an internal node in a `LinkageTree`.
 
     :param children_distance: distance from the node to its children
     """
@@ -97,7 +97,7 @@ class LinkageNode(Node):
 
 
 class LeafNode(Node):
-    """Class for a leaf in a linkage tree.
+    """Leaf in a linkage tree.
 
     :param index: the leaf index
     :param label: the leaf label
@@ -137,7 +137,7 @@ class LeafNode(Node):
 
 class LinkageTree:
     """
-    Class of a linkage tree.
+    Wrapper around a scipy linkage matrix.
 
     :param scipy_linkage_matrix: linkage matrix from scipy
     :param leaf_labels: labels of the leaves

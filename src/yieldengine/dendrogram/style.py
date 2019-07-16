@@ -1,5 +1,8 @@
 """Implementations of dendrogram styles.
 
+The dendrogram styles are given as a parameter to a
+`yieldengine.dendrogram.DendrogramDrawer` and determine the style of the plot.
+
 :class:`~MatplotStyle` is a an abstract base class for styles using matplotlib
 
 :class:`~LineStyle` renders dendrogram trees in the classical style as a line drawing
@@ -9,10 +12,10 @@ for better visibility of feature importance
 """
 
 import logging
-import math
 from abc import ABC
 from typing import *
 
+import math
 import matplotlib.text as mt
 from matplotlib import cm
 from matplotlib.axes import Axes
@@ -32,14 +35,14 @@ _COLOR_WHITE = "white"
 
 
 class _PercentageFormatter(Formatter):
-    """Class to format percentage."""
+    """Format percentage."""
 
     def __call__(self, x, pos=None) -> str:
         return f"{x * 100.0:.0f}%"
 
 
 class MatplotStyle(DendrogramStyle, ABC):
-    """Base Matplotlib style for dendrogram.
+    """Base class for Matplotlib styles for dendrogram.
 
     Provide basic support for plotting a color legend for feature importance,
     and providing the `Axes` object for plotting the actual dendrogram including
@@ -167,7 +170,7 @@ class LineStyle(MatplotStyle):
 
 
 class FeatMapStyle(MatplotStyle):
-    """Plot dendrogram with a heat map style.
+    """Plot dendrograms with a heat map style.
 
     :param ax: a matplotlib `Axes`
     :param min_weight: the min weight in the color bar
