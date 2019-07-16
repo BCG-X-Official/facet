@@ -103,11 +103,12 @@ class ModelEvaluation(NamedTuple):
     """`NamedTuple` containing the information about a fitted model.
 
     Has attributes:
+
     - model: the `Model`
     - parameters: dict with keys the model parameters (str) and value the value of
-    the parameter
+      the parameter
     - scoring: dict with keys the str scores ("train_score", "test_score",
-    "train_r2",...)
+      "train_r2",...)
     - ranking_score: score for the default scorer. Should be one of the values of
       `scoring`.
     """
