@@ -27,8 +27,13 @@ Docstring are writen in an imperative style for instance. So write
 ```"""Do this."""```   
 instead of   
 ```"""Does this."""```  
-A onliner docstring is of the form:  
-```"""This is a oneliner docstring."""```  
+
+Do not add a blank line after the starting triple quotes """ of a docstring.
+
+A one-liner docstring is of the form:  
+```"""This is a one-liner docstring."""``` 
+For a one-liner docstring there is no blank line a after the docstring.
+
 If the docstring does not fit in one line it should look like:  
 ```
 """Short description.
@@ -44,8 +49,22 @@ Modules and classes must have a docstring.
 Methods and attributes which are public must have a docstring but methods and 
 attributes which are private do not need a docstring.
 
-
-
+Property attributes of a class are documented as attributes and not as methods. For 
+instance use
+```
+@property
+    def foo(self) -> Foo:
+        """The foo object."""
+        pass
+```
+instead of 
+```
+@property
+    def foo(self) -> Foo:
+        """
+        :return: the foo object"""
+        pass
+```
 
 
  
