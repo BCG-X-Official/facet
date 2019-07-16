@@ -1,6 +1,5 @@
 # coding=utf-8
-"""Base classes for wrapper around regressors and classifiers returning pandas
-objects."""
+"""Base classes for wrapper around regressors and classifiers returning dataframes."""
 
 import logging
 from abc import ABCMeta
@@ -19,8 +18,7 @@ _BasePredictor = TypeVar("_BasePredictor", bound=Union[RegressorMixin, Classifie
 
 
 class DataFramePredictor(DataFrameEstimator[_BasePredictor], metaclass=ABCMeta):
-    """
-    Wrapper around sklearn regressor and classifiers that preserves dataframes.
+    """Wrap around sklearn regressor and classifiers and preserve dataframes.
 
     :param `**kwargs`: arguments passed to `DataFrameEstimator` in `__init__`
     """
@@ -32,8 +30,7 @@ class DataFramePredictor(DataFrameEstimator[_BasePredictor], metaclass=ABCMeta):
 
     # noinspection PyPep8Naming
     def predict(self, X: pd.DataFrame, **predict_params) -> pd.Series:
-        """
-        Return the predictions as a `pd.Series`.
+        """Return the predictions as a `pd.Series`.
 
         :param X: the dataframe of features
         :param predict_params: additional arguments passed to the `predict` method \
@@ -46,8 +43,8 @@ class DataFramePredictor(DataFrameEstimator[_BasePredictor], metaclass=ABCMeta):
 
     # noinspection PyPep8Naming
     def fit_predict(self, X: pd.DataFrame, y: pd.Series, **fit_params) -> pd.Series:
-        """
-        Fit and return the predictions.
+        """Fit and return the predictions.
+
         :param X: the dataframe of features
         :param y: the series of target used to train the model
         :param fit_params: additional arguments passed to the the `predict` method
@@ -66,8 +63,7 @@ class DataFramePredictor(DataFrameEstimator[_BasePredictor], metaclass=ABCMeta):
 
     # noinspection PyPep8Naming
     def predict_proba(self, X: pd.DataFrame) -> pd.Series:
-        """
-        Probability estimates.
+        """Probability estimates.
 
         :param X: dataframe of features
         :return: the series of probability estimates
@@ -78,8 +74,7 @@ class DataFramePredictor(DataFrameEstimator[_BasePredictor], metaclass=ABCMeta):
 
     # noinspection PyPep8Naming
     def predict_log_proba(self, X: pd.DataFrame) -> pd.Series:
-        """
-        Log of probability estimates.
+        """Log of probability estimates.
 
         :param X: dataframe of features
         :return: series of log-probabilities
@@ -90,8 +85,7 @@ class DataFramePredictor(DataFrameEstimator[_BasePredictor], metaclass=ABCMeta):
 
     # noinspection PyPep8Naming
     def decision_function(self, X: pd.DataFrame) -> pd.DataFrame:
-        """
-        Evaluate the decision function for the samples in X.
+        """Evaluate the decision function for the samples in X.
 
         :param X: dataframe of features
         :return: dataframe of the decision functions of the sample for each class
@@ -111,8 +105,7 @@ class DataFramePredictor(DataFrameEstimator[_BasePredictor], metaclass=ABCMeta):
         y: Optional[pd.Series] = None,
         sample_weight: Optional[Any] = None,
     ) -> float:
-        """
-        Return the score of the base estimator.
+        """Return the score of the base estimator.
 
         :param X: dataframe of the features, shape = (n_samples, n_features)
         :param y: series of the true targets, shape = (n_samples) or (n_samples, \
@@ -170,10 +163,7 @@ class DataFramePredictor(DataFrameEstimator[_BasePredictor], metaclass=ABCMeta):
 class NDArrayPredictorDF(
     Generic[_BasePredictor], DataFramePredictor[_BasePredictor], metaclass=ABCMeta
 ):
-    """
-    Special case of DataFrameTransformer where the base transformer does not accept
-    data frames, but only numpy ndarrays.
-    """
+    """`DataFrameTransformer` whose base transformer accepts only  numpy ndarrays."""
 
     # noinspection PyPep8Naming
     def _base_predict(self, X: pd.DataFrame, **predict_params) -> ListLike:

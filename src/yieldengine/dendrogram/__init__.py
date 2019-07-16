@@ -78,6 +78,8 @@ class DendrogramStyle(ABC):
 class DendrogramDrawer:
     """Class to draw a `LinkageTree` as a dendrogram.
 
+    The class has one public method `~self.draw` which draws the dendrogram.
+
     :param title: the title of the plot
     :param linkage_tree: the `LinkageTree` to draw
     :param style: the `DendrogramStyle` used to draw

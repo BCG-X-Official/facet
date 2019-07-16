@@ -1,6 +1,5 @@
 # coding=utf-8
-"""Base classes for wrapper around pipeline returning pandas objects and keeping
-track of the column names."""
+"""Define a wrapper around pipeline which returns dataframes."""
 
 
 import logging
@@ -19,7 +18,7 @@ log = logging.getLogger(__name__)
 
 class PipelineDF(DataFrameTransformer[Pipeline], DataFramePredictor[Pipeline]):
     """
-    Wrapper class around `sklearn.pipeline.Pipeline` that returns dataframes.
+    Wrapper around `sklearn.pipeline.Pipeline` that returns dataframes.
 
     :param `**kwargs`: the arguments used to construct the wrapped `Pipeline` object
     """
@@ -96,6 +95,7 @@ class PipelineDF(DataFrameTransformer[Pipeline], DataFramePredictor[Pipeline]):
     def named_steps(self) -> Bunch:
         """
         Read-only attribute to access any step parameter by user given name.
+
         Keys are step names and values are steps parameters.
         """
         return self.base_transformer.named_steps
