@@ -21,9 +21,7 @@ _BaseTransformer = TypeVar(
 
 
 class DataFrameTransformer(DataFrameEstimator[_BaseTransformer], TransformerMixin, ABC):
-    """
-    Wrap around an sklearn transformer and ensure that the X and y objects passed
-    and returned are pandas dataframes with valid column names.
+    """Wrap around an sklearn transformer and return dataframes.
 
     Implementations must define `_make_base_transformer` and `_get_columns_original`.
 
@@ -112,7 +110,9 @@ class DataFrameTransformer(DataFrameEstimator[_BaseTransformer], TransformerMixi
 
     @property
     def columns_original(self) -> pd.Series:
-        """Series with index the name of the output columns and with values the
+        """Series mapping output column names to the original columns names.
+
+        Series with index the name of the output columns and with values the
         original name of the column."""
         self._ensure_fitted()
         if self._columns_original is None:
@@ -139,9 +139,7 @@ class DataFrameTransformer(DataFrameEstimator[_BaseTransformer], TransformerMixi
 
     @abstractmethod
     def _get_columns_original(self) -> pd.Series:
-        """The mapping from this transformer's output columns to the original columns
-          as a series.
-        """
+        """Series mapping output column names to the original columns names."""
         pass
 
     # noinspection PyPep8Naming,PyUnusedLocal
@@ -181,10 +179,7 @@ class DataFrameTransformer(DataFrameEstimator[_BaseTransformer], TransformerMixi
 class NDArrayTransformerDF(
     DataFrameTransformer[_BaseTransformer], Generic[_BaseTransformer], ABC
 ):
-    """
-    Special case of DataFrameTransformer where the base transformer does not accept
-    dataframes, but only numpy ndarrays
-    """
+    """`DataFrameTransformer` whose base transformer only accepts numpy ndarrays."""
 
     # noinspection PyPep8Naming
     def _base_fit(
@@ -222,9 +217,7 @@ class ColumnPreservingTransformer(
 
     @abstractmethod
     def _get_columns_out(self) -> pd.Index:
-        """
-        Column labels for arrays returned by the fitted transformer.
-        """
+        """Column labels for arrays returned by the fitted transformer."""
         pass
 
     def _get_columns_original(self) -> pd.Series:
@@ -255,8 +248,7 @@ def df_transformer(
     Callable[[Type[_BaseTransformer]], Type[DataFrameTransformer[_BaseTransformer]]],
     Type[DataFrameTransformer[_BaseTransformer]],
 ]:
-    """
-    Class decorator wrapping an sklearn transformer in a `DataFrameTransformer`.
+    """Class decorator wrapping an sklearn transformer in a `DataFrameTransformer`.
 
     :param cls: the transformer class to wrap
     :param df_transformer_type: optional parameter indicating the \

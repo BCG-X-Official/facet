@@ -1,7 +1,4 @@
-"""
-This package defines a :class:`~Model` model class and other classes to inspect the
-model and add cross validation support.
-"""
+"""Utility classes to define, fit and inspect a machine learning model."""
 
 from typing import *
 
@@ -13,9 +10,10 @@ from yieldengine.df.transform import DataFrameTransformer
 
 
 class Model:
-    """
-    A model can create a pipeline for a preprocessing transformer (optional; possibly a
-    pipeline itself) and an estimator.
+    """Specify the preprocessing step and the estimator in an ML model.
+
+    A `Model` is a wrapper around a `PipelinedDF` (the `self.pipeline` attributes)
+    which has two steps: ```"preprocessing"``` and ```"estimator"```.
 
     :param BaseEstimator estimator: the base estimator used in the pipeline
     :param preprocessing: the preprocessing step in the pipeline (None or \
@@ -68,11 +66,10 @@ class Model:
         return self._estimator
 
     def clone(self, parameters: Optional[Dict[str, Any]] = None) -> "Model":
-        """
-         Clone this model.
+        """Clone `self`.
 
         :param parameters: parameters used to reset the model parameters
-        :return: the cloned model
+        :return: the cloned `Model`
         """
         estimator = clone(self._estimator)
         preprocessing = self._preprocessing
