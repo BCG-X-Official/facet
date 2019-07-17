@@ -7,7 +7,7 @@ from yieldengine import Sample
 from yieldengine.dendrogram import DendrogramDrawer
 from yieldengine.dendrogram.style import FeatMapStyle, LineStyle
 from yieldengine.df.transform import DataFrameTransformer
-from yieldengine.model import Model
+from yieldengine.model import RegressionModel
 from yieldengine.model.inspection import ModelInspector
 from yieldengine.model.prediction import ModelFitCV
 from yieldengine.model.validation import CircularCrossValidator
@@ -19,7 +19,9 @@ def model_inspector(
 ) -> ModelInspector:
 
     cv = CircularCrossValidator(test_ratio=0.20, num_splits=5)
-    model = Model(estimator=LGBMRegressor(), preprocessing=simple_preprocessor)
+    model = RegressionModel(
+        estimator=LGBMRegressor(), preprocessing=simple_preprocessor
+    )
     return ModelInspector(model_fit=ModelFitCV(model=model, cv=cv, sample=sample))
 
 

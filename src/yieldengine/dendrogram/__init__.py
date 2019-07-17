@@ -172,3 +172,5 @@ class DendrogramDrawer:
                 n_leaves_right=len(info_right.labels),
                 weight=info.weight,
             )
+
+            return info
