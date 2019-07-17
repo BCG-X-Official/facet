@@ -121,4 +121,4 @@ class DataFrameEstimator(ABC, BaseEstimator, Generic[_BaseEstimator]):
         if not isinstance(X, pd.DataFrame):
             raise TypeError("arg X must be a DataFrame")
         if y is not None and not isinstance(y, pd.Series):
-            raise TypeError("arg y must be a Series")
+            raise TypeError("arg y must be None or a Series")

@@ -100,6 +100,32 @@ class ModelInspector:
                 estimator=estimator, data=data_transformed
             ).shap_values(data_transformed)
 
+            # todo: we need another condition to handle LGBM's (inconsistent) output
+            if isinstance(shap_matrix, list):
+                # the shap explainer returns an array [obs x features] for each of the
+                # target-classes
+
+                n_arrays = len(shap_matrix)
+
+                # we decided to support only binary classification == 2 classes:
+                assert n_arrays == 2, (
+                    f"Expected 2 arrays of shap values in binary classification, "
+                    f"got {n_arrays}"
+                )
+
+                # in the binary classification case, we will proceed with shap values
+                # for class 0, since values for class 1 will just be the same
+                # values times (*-1)  (the opposite probability)
+
+                # to assure the values are returned as expected above,
+                # and no information of class 1 is discarded, assert the
+                # following:
+                assert np.all(
+                    (shap_matrix[0]) - (shap_matrix[1] * -1) < 1e-10
+                ), "Expected shap_matrix(class 0) == shap_matrix(class 1) * -1"
+
+                shap_matrix = shap_matrix[0]
+
             if not isinstance(shap_matrix, np.ndarray):
                 log.warning(
                     f"shap explainer output expected to be an ndarray but was "
