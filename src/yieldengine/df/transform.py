@@ -1,5 +1,4 @@
 # coding=utf-8
-"""Base classes with wrappers around sklearn transformers."""
 
 import logging
 from abc import ABC, abstractmethod
