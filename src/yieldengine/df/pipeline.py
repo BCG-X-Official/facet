@@ -10,13 +10,17 @@ from sklearn.base import BaseEstimator
 from sklearn.pipeline import Pipeline
 from sklearn.utils import Bunch
 
-from yieldengine.df.predict import DataFramePredictor
+from yieldengine.df.predict import DataFrameClassifier, DataFrameRegressor
 from yieldengine.df.transform import DataFrameTransformer
 
 log = logging.getLogger(__name__)
 
 
-class PipelineDF(DataFrameTransformer[Pipeline], DataFramePredictor[Pipeline]):
+class PipelineDF(
+    DataFrameTransformer[Pipeline],
+    DataFrameRegressor[Pipeline],
+    DataFrameClassifier[Pipeline],
+):
     """Wrapper around `sklearn.pipeline.Pipeline` that returns dataframes.
 
     :param `**kwargs`: the arguments used to construct the wrapped `Pipeline` object
