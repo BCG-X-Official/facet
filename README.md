@@ -135,18 +135,30 @@ clean`.
     """
     ```
 
-- Do not add a blank line after the starting triple quotes (`"""`) of a docstring, e.g.,
-
+- For multi-line docstrings, insert a line break after the leading triple quote and
+ before the trailing triple quote, e.g.,
     ```
-    """fit the model
-    
-    Use the underlying estimator's `fit` method
-    to fit the model using the given training sample.
-    
-    :param sample: training sample
-    :return: the return value
-    """
-    ```  
+    def fit():
+        """
+        Fit the model.
+        
+        Use the underlying estimator's `fit` method
+        to fit the model using the given training sample.
+        
+        :param sample: training sample
+        """
+    ```
+    but not
+    ```
+    def fit():
+        """Fit the model.
+        
+        Use the underlying estimator's `fit` method
+        to fit the model using the given training sample.
+        
+        :param sample: training sample"""
+    ```
+
 
 - As a general rule, aim to describe not only _what_ the code does, but also _why_
 , including the rationale for any design choices that may not be obvious
