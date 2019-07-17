@@ -164,4 +164,25 @@ clean`.
 , including the rationale for any design choices that may not be obvious
 
 - Provide examples wherever this helps explain usage patterns
+
+- Words inside double backquotes are rendered as code sample and are used for code 
+snippets, for instance ``` 
+                       ``print("hello")``
+                        ``` 
+is rendered with some code formatting.
  
+- To cross-reference objects in the docstrings use reStructured roles:
+   - class: ```
+            :class:`package.module.class_name`
+            ```
+   - method of a class/object: ```
+                               :meth:`package.module.class.method`
+                               ```
+   - an attribute (and a property): ```
+                                     :attr:`package.module.class.attribute`
+                                     ```  
+   - Using instead ```
+                   :attr:`~package.module.class.attribute`
+                                     ```
+     would display only the last part of the link `attribute` instead of the full 
+     part  `package.module.class.attribute`.
