@@ -3,7 +3,7 @@
 
 import logging
 from abc import ABC, abstractmethod
-from types import new_class
+from functools import wraps
 from typing import *
 
 import numpy as np
@@ -28,7 +28,7 @@ class DataFrameTransformer(DataFrameEstimator[_BaseTransformer], TransformerMixi
     :param: base_transformer the sklearn transformer to be wrapped
     """
 
-    F_COLUMN_ORIGINAL = "column_original"
+    F_COLUMN_OUT = "column_out"
 
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
@@ -59,8 +59,7 @@ class DataFrameTransformer(DataFrameEstimator[_BaseTransformer], TransformerMixi
     def fit_transform(
         self, X: pd.DataFrame, y: Optional[pd.Series] = None, **fit_params
     ) -> pd.DataFrame:
-        """Call the fit_transform method of the base transformer
-        `self.base_transformer`.
+        """Call the fit_transform method of `self.base_transformer`.
 
         :param X: dataframe to transform
         :param y: series of training targets
@@ -96,8 +95,8 @@ class DataFrameTransformer(DataFrameEstimator[_BaseTransformer], TransformerMixi
 
     def fit_transform_sample(self, sample: Sample) -> Sample:
         """
-        Fit and transform with input and output being a :class:`~yieldengine.Sample`
-        object.
+        Fit and transform with input/output being a :class:`~yieldengine.Sample` object.
+
         :param sample: `Sample` object used as input
         :return: transformed `Sample` object
         """
@@ -118,8 +117,8 @@ class DataFrameTransformer(DataFrameEstimator[_BaseTransformer], TransformerMixi
         if self._columns_original is None:
             self._columns_original = (
                 self._get_columns_original()
-                .rename(self.F_COLUMN_ORIGINAL)
-                .rename_axis(index=self.F_COLUMN)
+                .rename(self.F_COLUMN_IN)
+                .rename_axis(index=self.F_COLUMN_OUT)
             )
         return self._columns_original
 
@@ -258,25 +257,16 @@ def df_transformer(
              transformer
     """
 
-    def _init_class_namespace(namespace: Dict[str, Any]) -> None:
-        # noinspection PyProtectedMember
-        namespace[
-            df_transformer_type._make_base_transformer.__name__
-        ] = lambda **kwargs: cls(**kwargs)
-
     def _decorate(
-        _cls: Type[_BaseTransformer]
+        decoratee: Type[_BaseTransformer]
     ) -> Type[DataFrameTransformer[_BaseTransformer]]:
-        _new_class = new_class(
-            name=_cls.__name__,
-            bases=(df_transformer_type,),
-            exec_body=_init_class_namespace,
-        )
-        _new_class = cast(Type[DataFrameTransformer[_BaseTransformer]], _new_class)
-        # update __doc__ and __module__ to be able to use autodoc
-        _new_class.__doc__ = cls.__doc__
-        _new_class.__module__ = cls.__module__
-        return _new_class
+        @wraps(decoratee, updated=())
+        class _DataFrameTransformer(df_transformer_type):
+            @classmethod
+            def _make_base_transformer(c, **kwargs) -> _BaseTransformer:
+                return cls(**kwargs)
+
+        return _DataFrameTransformer
 
     if not issubclass(df_transformer_type, DataFrameTransformer):
         raise ValueError(
