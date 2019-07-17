@@ -267,14 +267,16 @@ def df_transformer(
     def _decorate(
         _cls: Type[_BaseTransformer]
     ) -> Type[DataFrameTransformer[_BaseTransformer]]:
-        return cast(
-            Type[DataFrameTransformer[_BaseTransformer]],
-            new_class(
-                name=_cls.__name__,
-                bases=(df_transformer_type,),
-                exec_body=_init_class_namespace,
-            ),
+        _new_class = new_class(
+            name=_cls.__name__,
+            bases=(df_transformer_type,),
+            exec_body=_init_class_namespace,
         )
+        _new_class = cast(Type[DataFrameTransformer[_BaseTransformer]], _new_class)
+        # update __doc__ and __module__ to be able to use autodoc
+        _new_class.__doc__ = cls.__doc__
+        _new_class.__module__ = cls.__module__
+        return _new_class
 
     if not issubclass(df_transformer_type, DataFrameTransformer):
         raise ValueError(
