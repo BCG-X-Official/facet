@@ -1,3 +1,5 @@
+from abc import ABC, abstractmethod
+from enum import Enum
 from typing import *
 
 from sklearn import clone
@@ -7,7 +9,7 @@ from yieldengine.df.pipeline import PipelineDF
 from yieldengine.df.transform import DataFrameTransformer
 
 
-class Model:
+class Model(ABC):
     """
     A model can create a pipeline for a preprocessing transformer (optional; possibly a
     pipeline itself) and an estimator.
@@ -22,6 +24,7 @@ class Model:
     STEP_PREPROCESSING = "preprocessing"
     STEP_ESTIMATOR = "estimator"
 
+    @abstractmethod
     def __init__(
         self,
         estimator: BaseEstimator,
@@ -77,4 +80,42 @@ class Model:
         if parameters is not None:
             new_model.pipeline.set_params(**parameters)
 
+        # the additional calibration property has to be cloned correctly
+        if isinstance(self, ClassificationModel):
+            new_model._calibration_method = self._calibration_method
+
         return new_model
+
+
+class RegressionModel(Model):
+    def __init__(
+        self,
+        estimator: BaseEstimator,
+        preprocessing: Optional[DataFrameTransformer] = None,
+    ):
+        super().__init__(estimator, preprocessing)
+
+
+class ProbabilityCalibrationMethod(Enum):
+    SIGMOID = "sigmoid"
+    ISOTONIC = "isotonic"
+    NO_CALIBRATION = "no-calibration"
+
+
+class ClassificationModel(Model):
+    __slots__ = ["_pipeline", "_preprocessing", "_estimator", "_calibration_method"]
+
+    def __init__(
+        self,
+        estimator: BaseEstimator,
+        preprocessing: Optional[DataFrameTransformer] = None,
+        calibration: Optional[
+            ProbabilityCalibrationMethod
+        ] = ProbabilityCalibrationMethod.SIGMOID,
+    ):
+        super().__init__(estimator, preprocessing)
+        self._calibration_method = calibration
+
+    @property
+    def calibration(self) -> ProbabilityCalibrationMethod:
+        return self._calibration_method
