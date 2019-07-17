@@ -1,5 +1,9 @@
-"""Utility classes to define, fit and inspect a machine learning model."""
+"""
+Utility classes to define, fit and inspect a machine learning model
+"""
 
+from abc import ABC, abstractmethod
+from enum import Enum
 from typing import *
 
 from sklearn import clone
@@ -9,11 +13,11 @@ from yieldengine.df.pipeline import PipelineDF
 from yieldengine.df.transform import DataFrameTransformer
 
 
-class Model:
+class Model(ABC):
     """Specify the preprocessing step and the estimator in an ML model.
 
-    A `Model` is a wrapper around a `PipelinedDF` (the `self.pipeline` attributes)
-    which has two steps: ```"preprocessing"``` and ```"estimator"```.
+    A model can creates a pipeline for a preprocessing transformer (optional; possibly a
+    pipeline itself) and an estimator.
 
     :param BaseEstimator estimator: the base estimator used in the pipeline
     :param preprocessing: the preprocessing step in the pipeline (None or \
@@ -25,6 +29,7 @@ class Model:
     STEP_PREPROCESSING = "preprocessing"
     STEP_ESTIMATOR = "estimator"
 
+    @abstractmethod
     def __init__(
         self,
         estimator: BaseEstimator,
@@ -84,4 +89,42 @@ class Model:
         if parameters is not None:
             new_model.pipeline.set_params(**parameters)
 
+        # the additional calibration property has to be cloned correctly
+        if isinstance(self, ClassificationModel):
+            new_model._calibration_method = self._calibration_method
+
         return new_model
+
+
+class RegressionModel(Model):
+    def __init__(
+        self,
+        estimator: BaseEstimator,
+        preprocessing: Optional[DataFrameTransformer] = None,
+    ):
+        super().__init__(estimator, preprocessing)
+
+
+class ProbabilityCalibrationMethod(Enum):
+    SIGMOID = "sigmoid"
+    ISOTONIC = "isotonic"
+    NO_CALIBRATION = "no-calibration"
+
+
+class ClassificationModel(Model):
+    __slots__ = ["_pipeline", "_preprocessing", "_estimator", "_calibration_method"]
+
+    def __init__(
+        self,
+        estimator: BaseEstimator,
+        preprocessing: Optional[DataFrameTransformer] = None,
+        calibration: Optional[
+            ProbabilityCalibrationMethod
+        ] = ProbabilityCalibrationMethod.SIGMOID,
+    ):
+        super().__init__(estimator, preprocessing)
+        self._calibration_method = calibration
+
+    @property
+    def calibration(self) -> ProbabilityCalibrationMethod:
+        return self._calibration_method
