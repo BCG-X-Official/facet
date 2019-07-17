@@ -7,10 +7,12 @@ import numpy as np
 import pandas as pd
 import pytest
 from lightgbm.sklearn import LGBMRegressor
+from sklearn import datasets
 from sklearn.ensemble import AdaBoostRegressor, RandomForestRegressor
 from sklearn.linear_model import LinearRegression
 from sklearn.svm import SVR
 from sklearn.tree import DecisionTreeRegressor, ExtraTreeRegressor
+from sklearn.utils import Bunch
 
 from tests import read_test_config
 from tests.model import make_simple_transformer
@@ -29,6 +31,16 @@ logging.getLogger("shap").setLevel(logging.WARNING)
 warnings.filterwarnings(
     "ignore", message=r"Starting from version 2", category=UserWarning
 )
+
+
+@pytest.fixture
+def boston_target() -> str:
+    return "target"
+
+
+@pytest.fixture
+def iris_target() -> str:
+    return "target"
 
 
 @pytest.fixture
@@ -124,3 +136,36 @@ def simple_preprocessor(sample: Sample) -> DataFrameTransformer:
         impute_median_columns=sample.features_by_type(Sample.DTYPE_NUMERICAL).columns,
         one_hot_encode_columns=sample.features_by_type(Sample.DTYPE_OBJECT).columns,
     )
+
+
+@pytest.fixture
+def boston_df(boston_target: str) -> pd.DataFrame:
+    #  load sklearn test-data and convert to pd
+    boston: Bunch = datasets.load_boston()
+
+    # use first 100 rows only, since KernelExplainer is very slow...
+    return pd.DataFrame(
+        data=np.c_[boston.data, boston.target],
+        columns=[*boston.feature_names, boston_target],
+    )
+
+
+@pytest.fixture
+def boston_sample(boston_df: pd.DataFrame, boston_target: str) -> Sample:
+    return Sample(observations=boston_df, target_name=boston_target)
+
+
+@pytest.fixture
+def iris_df(iris_target: str) -> pd.DataFrame:
+    #  load sklearn test-data and convert to pd
+    iris: Bunch = datasets.load_iris()
+
+    # use first 100 rows only, since KernelExplainer is very slow...
+    return pd.DataFrame(
+        data=np.c_[iris.data, iris.target], columns=[*iris.feature_names, iris_target]
+    )
+
+
+@pytest.fixture
+def iris_sample(iris_df: pd.DataFrame, iris_target: str) -> Sample:
+    return Sample(observations=iris_df, target_name=iris_target)
