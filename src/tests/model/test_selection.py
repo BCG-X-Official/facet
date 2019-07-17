@@ -8,7 +8,7 @@ from sklearn import datasets
 from sklearn.svm import SVC
 
 from yieldengine import Sample
-from yieldengine.model import Model
+from yieldengine.model import RegressionModel
 from yieldengine.model.selection import (
     ModelEvaluation,
     ModelGrid,
@@ -48,8 +48,8 @@ def test_model_ranker(
 
     # check if parameters set for estimators actually match expected:
     for scoring in model_ranking:
-        assert set(scoring.model.pipeline().get_params()).issubset(
-            scoring.model.pipeline().get_params()
+        assert set(scoring.model.pipeline.get_params()).issubset(
+            scoring.model.pipeline.get_params()
         )
 
     log.debug(f"\n{model_ranking}")
@@ -66,7 +66,7 @@ def test_model_ranker_no_preprocessing(available_cpus: int) -> None:
     # define parameters and model
     models = [
         ModelGrid(
-            model=Model(estimator=SVC(gamma="scale"), preprocessing=None),
+            model=RegressionModel(estimator=SVC(gamma="scale"), preprocessing=None),
             estimator_parameters={"kernel": ("linear", "rbf"), "C": [1, 10]},
         )
     ]
