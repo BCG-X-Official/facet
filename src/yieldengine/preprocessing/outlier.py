@@ -16,11 +16,11 @@ class OutlierRemoverDF(BaseEstimator, TransformerMixin):
     """Remove outliers according to Tukey's method.
 
     A sample is considered an outlier if it is outside the range
-    :math:`[Q_1 - iqr_multiple(Q_3-Q_1), Q_3 + iqr_multiple(Q_3-Q_1)]`
+    :math:`[Q_1 - iqr\\_ multiple(Q_3-Q_1), Q_3 + iqr\\_ multiple(Q_3-Q_1)]`
     where :math:`Q_1` and :math:`Q_3` are the lower and upper quartiles.
 
     :param float iqr_multiple: the multiple used to define the range of non-outlier
-    points in the above explanation
+      samples in the above explanation
     """
 
     def __init__(self, iqr_multiple: float):

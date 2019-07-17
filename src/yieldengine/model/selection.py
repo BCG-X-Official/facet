@@ -1,5 +1,5 @@
 # coding=utf-8
-"""Selection and hyperparameter optimization of models.
+"""Selection and optimization of hyperparameter  and models.
 
 The `~ModelGrid` class encapsulates a `~yieldengine.model.Model` and a grid of
 hyperparameters.
@@ -24,10 +24,10 @@ class ModelGrid:
     """A model with a grid of hyperparameters.
 
     :param Model model: underlying `Model`
-    :param ParameterGrid estimator_parameters: dict of the hyperparameter grid for \
-    the estimator
+    :param ParameterGrid estimator_parameters: dict of the hyperparameter grid for
+      the estimator
     :param preprocessing_parameters: dictionary of the hyperparameter grid for \
-    the preprocessing step of the model (can be None)
+      the preprocessing step of the model (can be None)
     """
 
     def __init__(
@@ -122,14 +122,11 @@ class ModelEvaluation(NamedTuple):
 class ModelRanker:
     """Rank a list of model using a common cross-validation strategy.
 
-    Turns a model zoo along with
+    Given a list of `ModelGrid`, a cross-validation splitter and a scoring function,
+    a grid search is performed to find the best combination of model with
+    hyperparameters for the given cross-validation splits and scoring function.
 
-        - an (optional) pre-processing pipeline
-        - a cross-validation instance
-        - a scoring function \
-    into a sklearn pipeline.
-
-    :param grids: list of model grids to be ranked
+    :param grids: list of `ModelGrid` to be ranked
     :param cv: a cross validation object (i.e. CircularCrossValidator)
     :param scoring: a scorer to use when doing CV within GridSearch
     """
@@ -175,7 +172,7 @@ class ModelRanker:
         n_jobs: Optional[int] = None,
         pre_dispatch: str = "2*n_jobs",
     ) -> Sequence[ModelEvaluation]:
-        """Execute the pipeline for all models compute the ranking.
+        """Execute the pipeline for all models and compute the ranking.
 
         :param sample: sample to fit pipeline to
         :param ranking_scorer: scoring function used for ranking across models, \
@@ -189,7 +186,6 @@ class ModelRanker:
         :param pre_dispatch: maximum number of the data to make (default: `"2*n_jobs"`)
 
         :return the created model ranking of type :code:`ModelRanking`
-
         """
 
         # construct searchers
@@ -233,7 +229,9 @@ class ModelRanker:
             :param cv_results: the `GridSearchCV.cv_results_` attribute of a sklearn
             GridSearchCV
             :return: a list of test scores per scored model; each list entry maps score
-              types to a list of scores per split. The i-th element of this list is
+              types (as str) to a :class:`ModelScoring` of scores per split. The i-th
+              element of this
+              list is
               typically of the form ``{'train_score': model_scoring1, 'test_score':
               model_scoring2,...}``
             """
@@ -322,7 +320,7 @@ class ModelRanker:
 
 
 def summary_report(ranking: Sequence[ModelEvaluation]) -> str:
-    """Return the report of a `ModelRanker`.
+    """Return a human-readable report of a `ModelRanker`.
 
     :return: a summary string of the model ranking
     """
