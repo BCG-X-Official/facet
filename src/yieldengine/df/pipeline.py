@@ -88,7 +88,7 @@ class PipelineDF(
         return pd.Series(index=_columns_out, data=_columns_original)
 
     @property
-    def steps(self) -> Sequence[Tuple[str, Union[DataFrameTransformer, BaseEstimator]]]:
+    def steps(self) -> List[Tuple[str, Union[DataFrameTransformer, BaseEstimator]]]:
         """
         The `steps` attribute of the underlying `Pipeline`.
         :return: List of (name, transform) tuples (implementing fit/transform).
