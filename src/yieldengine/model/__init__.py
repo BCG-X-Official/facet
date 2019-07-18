@@ -6,39 +6,42 @@ The :class:`Model` specifies a model as a pipeline with two steps:
 - an estimator step
 """
 
-from abc import ABC, abstractmethod
-from enum import Enum
 from typing import *
 
 from sklearn import clone
-from sklearn.base import BaseEstimator
+from sklearn.base import ClassifierMixin, RegressorMixin
 
 from yieldengine.df.pipeline import PipelineDF
+from yieldengine.df.predict import DataFramePredictor
 from yieldengine.df.transform import DataFrameTransformer
 
+__all__ = ["Model"]
 
-class Model(ABC):
+# todo: replace this with DataFramePredictor once we have provided DF versions of all
+#       sklearn regressors and classifiers
+Predictor = Union[DataFramePredictor, RegressorMixin, ClassifierMixin]
+
+
+# todo: rename to PredictiveWorkflow (tbc)
+class Model:
     """
     Specify the preprocessing step and the estimator for a model.
 
     A model can creates a pipeline for a preprocessing transformer (optional; possibly a
     pipeline itself) and an estimator.
 
-    :param BaseEstimator estimator: the base estimator used in the pipeline
+    :param Estimator predictor: the base estimator used in the pipeline
     :param preprocessing: the preprocessing step in the pipeline (None or \
     `DataFrameTransformer`)
     """
 
-    __slots__ = ["_pipeline", "_preprocessing", "_estimator"]
+    __slots__ = ["_pipeline", "_preprocessing", "_predictor"]
 
     STEP_PREPROCESSING = "preprocessing"
     STEP_ESTIMATOR = "estimator"
 
-    @abstractmethod
     def __init__(
-        self,
-        estimator: BaseEstimator,
-        preprocessing: Optional[DataFrameTransformer] = None,
+        self, predictor: Predictor, preprocessing: Optional[DataFrameTransformer] = None
     ) -> None:
         super().__init__()
 
@@ -49,12 +52,12 @@ class Model(ABC):
                 "arg preprocessing expected to be a " "DataFrameTransformer"
             )
 
-        self._estimator = estimator
+        self._predictor = predictor
         self._preprocessing = preprocessing
         self._pipeline = PipelineDF(
             steps=[
                 (Model.STEP_PREPROCESSING, self.preprocessing),
-                (Model.STEP_ESTIMATOR, self.estimator),
+                (Model.STEP_ESTIMATOR, self.predictor),
             ]
         )
 
@@ -72,9 +75,9 @@ class Model(ABC):
         return self._preprocessing
 
     @property
-    def estimator(self) -> BaseEstimator:
-        """The ``estimator`` step of the pipeline."""
-        return self._estimator
+    def predictor(self) -> Predictor:
+        """The ``predictor`` step of the pipeline."""
+        return self._predictor
 
     def clone(self, parameters: Optional[Dict[str, Any]] = None) -> "Model":
         """
@@ -83,55 +86,17 @@ class Model(ABC):
         :param parameters: parameters used to reset the model parameters
         :return: the cloned `Model`
         """
-        estimator = clone(self._estimator)
+        predictor = clone(self._predictor)
         preprocessing = self._preprocessing
         if preprocessing is not None:
             preprocessing = clone(preprocessing)
 
         my_class: Type[Model] = self.__class__
-        new_model: Model = my_class(estimator=estimator, preprocessing=preprocessing)
+        new_model: Model = my_class(predictor=predictor, preprocessing=preprocessing)
 
         # to set the parameters, we need to wrap the preprocessor and estimator in a
         # pipeline object
         if parameters is not None:
             new_model.pipeline.set_params(**parameters)
 
-        # the additional calibration property has to be cloned correctly
-        if isinstance(self, ClassificationModel):
-            new_model._calibration_method = self._calibration_method
-
         return new_model
-
-
-class RegressionModel(Model):
-    def __init__(
-        self,
-        estimator: BaseEstimator,
-        preprocessing: Optional[DataFrameTransformer] = None,
-    ):
-        super().__init__(estimator, preprocessing)
-
-
-class ProbabilityCalibrationMethod(Enum):
-    SIGMOID = "sigmoid"
-    ISOTONIC = "isotonic"
-    NO_CALIBRATION = "no-calibration"
-
-
-class ClassificationModel(Model):
-    __slots__ = ["_pipeline", "_preprocessing", "_estimator", "_calibration_method"]
-
-    def __init__(
-        self,
-        estimator: BaseEstimator,
-        preprocessing: Optional[DataFrameTransformer] = None,
-        calibration: Optional[
-            ProbabilityCalibrationMethod
-        ] = ProbabilityCalibrationMethod.SIGMOID,
-    ):
-        super().__init__(estimator, preprocessing)
-        self._calibration_method = calibration
-
-    @property
-    def calibration(self) -> ProbabilityCalibrationMethod:
-        return self._calibration_method
