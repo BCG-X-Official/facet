@@ -335,7 +335,7 @@ def summary_report(ranking: Sequence[ModelEvaluation]) -> str:
     """
 
     def _model_name(evaluation: ModelEvaluation) -> str:
-        return evaluation.model.estimator.__class__.__name__
+        return evaluation.model.predictor.__class__.__name__
 
     def _parameters(params: Mapping[str, Iterable[Any]]) -> str:
         return ",".join(

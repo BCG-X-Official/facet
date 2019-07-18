@@ -1,7 +1,9 @@
 import logging
 import warnings
+from itertools import combinations
 from typing import *
 
+import numpy as np
 import pandas as pd
 from lightgbm.sklearn import LGBMRegressor
 from shap import KernelExplainer, TreeExplainer
@@ -13,13 +15,13 @@ from sklearn.svm import SVR
 
 from yieldengine import Sample
 from yieldengine.df.transform import DataFrameTransformer
-from yieldengine.model import (
-    ClassificationModel,
-    ProbabilityCalibrationMethod,
-    RegressionModel,
-)
+from yieldengine.model import Model
 from yieldengine.model.inspection import ModelInspector
-from yieldengine.model.prediction import ModelFitCV
+from yieldengine.model.prediction import (
+    ClassifierFitCV,
+    ProbabilityCalibrationMethod,
+    RegressorFitCV,
+)
 from yieldengine.model.selection import (
     ModelEvaluation,
     ModelGrid,
@@ -49,11 +51,11 @@ def test_model_inspection(available_cpus: int, boston_sample: Sample) -> None:
     # define parameters and models
     models = [
         ModelGrid(
-            model=RegressionModel(estimator=SVR(gamma="scale"), preprocessing=None),
+            model=Model(predictor=SVR(gamma="scale"), preprocessing=None),
             estimator_parameters={"kernel": ("linear", "rbf"), "C": [1, 10]},
         ),
         ModelGrid(
-            model=RegressionModel(estimator=LGBMRegressor(), preprocessing=None),
+            model=Model(predictor=LGBMRegressor(), preprocessing=None),
             estimator_parameters={
                 "max_depth": (1, 2, 5),
                 "min_split_gain": (0.1, 0.2, 0.5),
@@ -79,26 +81,28 @@ def test_model_inspection(available_cpus: int, boston_sample: Sample) -> None:
     log.debug(f"\n{summary_report(model_ranking[:10])}")
 
     # consider: model_with_type(...) function for ModelRanking
-    best_svr = [m for m in model_ranking if isinstance(m.model.estimator, SVR)][0]
+    best_svr = [m for m in model_ranking if isinstance(m.model.predictor, SVR)][0]
     best_lgbm = [
         model_evaluation
         for model_evaluation in model_ranking
-        if isinstance(model_evaluation.model.estimator, LGBMRegressor)
+        if isinstance(model_evaluation.model.predictor, LGBMRegressor)
     ][0]
 
     for model_evaluation in best_svr, best_lgbm:
-        model_fit = ModelFitCV(
+        model_fit = RegressorFitCV(
             model=model_evaluation.model, cv=test_cv, sample=test_sample
         )
 
         # test predictions_for_all_samples
         predictions_df: pd.DataFrame = model_fit.predictions_for_all_splits()
-        assert ModelFitCV.F_PREDICTION in predictions_df.columns
-        assert ModelFitCV.F_TARGET in predictions_df.columns
+        assert RegressorFitCV.F_PREDICTION in predictions_df.columns
+        assert RegressorFitCV.F_TARGET in predictions_df.columns
 
         # check number of split ids
         assert (
-            predictions_df.index.get_level_values(level=ModelFitCV.F_SPLIT_ID).nunique()
+            predictions_df.index.get_level_values(
+                level=RegressorFitCV.F_SPLIT_ID
+            ).nunique()
             == N_SPLITS
         )
 
@@ -110,7 +114,7 @@ def test_model_inspection(available_cpus: int, boston_sample: Sample) -> None:
             <= (len(test_sample) * (TEST_RATIO + allowed_variance) * N_SPLITS)
         )
 
-        model_inspector = ModelInspector(model_fit=model_fit)
+        model_inspector = ModelInspector(predictor_fit=model_fit)
         # make and check shap value matrix
         shap_matrix = model_inspector.shap_matrix()
 
@@ -163,13 +167,13 @@ def test_model_inspection_with_encoding(
     best_lgbm = [
         model_evaluation
         for model_evaluation in model_ranking
-        if isinstance(model_evaluation.model.estimator, LGBMRegressor)
+        if isinstance(model_evaluation.model.predictor, LGBMRegressor)
     ][0]
     for model_evaluation in [best_lgbm]:
-        model_fit = ModelFitCV(
+        model_fit = RegressorFitCV(
             model=model_evaluation.model, cv=circular_cv, sample=sample
         )
-        mi = ModelInspector(model_fit=model_fit)
+        mi = ModelInspector(predictor_fit=model_fit)
 
         shap_matrix = mi.shap_matrix()
 
@@ -194,7 +198,7 @@ def test_model_inspection_with_encoding(
                 # noinspection PyUnresolvedReferences
                 return KernelExplainer(model=estimator.predict, data=data)
 
-        mi2 = ModelInspector(model_fit=model_fit, explainer_factory=ef)
+        mi2 = ModelInspector(predictor_fit=model_fit, explainer_factory=ef)
         mi2.shap_matrix()
 
 
@@ -212,10 +216,8 @@ def test_model_inspection_classifier(available_cpus: int, iris_sample: Sample) -
     # define parameters and models
     models = [
         ModelGrid(
-            model=ClassificationModel(
-                estimator=RandomForestClassifier(), preprocessing=None
-            ),
-            estimator_parameters={"n_estimators": [50, 80]},
+            model=Model(predictor=RandomForestClassifier(), preprocessing=None),
+            estimator_parameters={"n_estimators": [50, 80], "random_state": [42]},
         )
     ]
 
@@ -238,32 +240,34 @@ def test_model_inspection_classifier(available_cpus: int, iris_sample: Sample) -
     # consider: model_with_type(...) function for ModelRanking
     model_evaluation = model_ranking[0]
 
+    # store proba-results
+    proba_results = {}
+
     # test various ProbabilityCalibrationMethods for a classifier:
     for calibration_method in (
         None,
-        ProbabilityCalibrationMethod.NO_CALIBRATION,
         ProbabilityCalibrationMethod.ISOTONIC,
         ProbabilityCalibrationMethod.SIGMOID,
     ):
 
-        model: ClassificationModel = model_evaluation.model
-        model._calibration_method = calibration_method
-
-        model_fit = ModelFitCV(
+        model_fit = ClassifierFitCV(
             model=model_evaluation.model,
             cv=test_cv,
             sample=test_sample,
+            calibration=calibration_method,
             n_jobs=available_cpus,
         )
 
         # test predictions_for_all_samples
         predictions_df: pd.DataFrame = model_fit.predictions_for_all_splits()
-        assert ModelFitCV.F_PREDICTION in predictions_df.columns
-        assert ModelFitCV.F_TARGET in predictions_df.columns
+        assert ClassifierFitCV.F_PREDICTION in predictions_df.columns
+        assert ClassifierFitCV.F_TARGET in predictions_df.columns
 
         # check number of split ids
         assert (
-            predictions_df.index.get_level_values(level=ModelFitCV.F_SPLIT_ID).nunique()
+            predictions_df.index.get_level_values(
+                level=ClassifierFitCV.F_SPLIT_ID
+            ).nunique()
             == N_SPLITS
         )
 
@@ -275,7 +279,14 @@ def test_model_inspection_classifier(available_cpus: int, iris_sample: Sample) -
             <= (len(test_sample) * (TEST_RATIO + allowed_variance) * N_SPLITS)
         )
 
-        model_inspector = ModelInspector(model_fit=model_fit)
+        # test probabilities for all samples
+        proba_df: pd.DataFrame = model_fit.probabilities_for_all_splits()
+
+        assert ClassifierFitCV.F_PROBA in proba_df.columns
+
+        proba_results[calibration_method] = proba_df.loc[:, ClassifierFitCV.F_PROBA]
+
+        model_inspector = ModelInspector(predictor_fit=model_fit)
         # make and check shap value matrix
         shap_matrix = model_inspector.shap_matrix()
 
@@ -300,3 +311,19 @@ def test_model_inspection_classifier(available_cpus: int, iris_sample: Sample) -
             )
 
         linkage_tree = model_inspector.cluster_dependent_features()
+
+    PROBABILITY_EFFECT_THRESHOLD = 0.3
+
+    for p1, p2 in combinations(
+        [
+            ProbabilityCalibrationMethod.ISOTONIC,
+            ProbabilityCalibrationMethod.SIGMOID,
+            None,
+        ],
+        2,
+    ):
+        cumulative_diff = np.sum(np.abs(proba_results[p1] - proba_results[p2]))
+
+        log.info(f"Cumulative diff of calibration {p1} vs {p2} is: {cumulative_diff}")
+
+        assert cumulative_diff > PROBABILITY_EFFECT_THRESHOLD
