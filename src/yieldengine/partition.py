@@ -7,8 +7,6 @@ The method :meth:`~Partitioning.frequencies` returns  an iterable of the number 
 values in the different partitions, the method :meth:`~Partitioning.partitions`
 returns a list of central value in each partition,
 and :attr:`~Partitioning.n_partitions` is the number of partitions.
-
-
 """
 import logging
 from abc import ABC, ABCMeta, abstractmethod
