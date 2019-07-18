@@ -340,7 +340,7 @@ class ClassifierFitCV(PredictorFitCV):
                     # CalibratedClassifierCV does expect a fitted classifier and does
                     # clone it itself - hence deepcopy so to be able to further
                     # differentiate between _model_by_split & _calibrated_model_by_split
-                    copy.deepcopy(self._model_by_split[idx]),
+                    self._model_by_split[idx],
                     sample.select_observations_by_position(positions=test_indices),
                     self._calibration,
                 )
@@ -353,6 +353,8 @@ class ClassifierFitCV(PredictorFitCV):
     def _calibrate_probabilities_for_split(
         model: Model, test_sample: Sample, calibration: ProbabilityCalibrationMethod
     ) -> Model:
+        # todo: design more "elegant" approach to create new model w/o using deepcopy
+        model = copy.deepcopy(model)
 
         cv = CalibratedClassifierCV(
             base_estimator=model.predictor, method=calibration.value, cv="prefit"
