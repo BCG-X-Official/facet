@@ -236,7 +236,9 @@ class ClassifierFitCV(PredictorFitCV):
         "_cv",
         "_sample",
         "_predictions_for_all_samples",
+        "_probabilities_for_all_samples",
         "_model_by_split",
+        "_calibrated_model_by_split",
         "_n_jobs",
         "_shared_memory",
         "_verbose",
@@ -263,22 +265,78 @@ class ClassifierFitCV(PredictorFitCV):
         )
 
         self._calibration = calibration
+        self._calibrated_model_by_split: Optional[List[Model]] = None
+        self._probabilities_for_all_samples: Optional[pd.DataFrame] = None
 
     def probabilities_for_all_splits(self) -> pd.DataFrame:
-        # todo: implement
-        pass
+        if self._probabilities_for_all_samples is not None:
+            return self._probabilities_for_all_samples
+
+        self._fit()
+
+        sample = self.sample
+
+        splitwise_predictions = []
+
+        for split_id, (_, test_indices) in enumerate(
+            self.cv.split(sample.features, sample.target)
+        ):
+            test_sample = sample.select_observations_by_position(positions=test_indices)
+
+            predictor = (
+                self.fitted_model(split_id=split_id)
+                if self._calibration is None
+                else self.fitted_calibrated_model(split_id=split_id)
+            )
+
+            predictions = predictor.pipeline.predict_proba(X=test_sample.features)
+
+            n_classes = predictions.shape[1]
+
+            # supporting only binary classification where n-classes == 2
+            assert (
+                n_classes == 2
+            ), f"Got non-binary probabilities for {n_classes} classes"
+
+            # just proceed with probabilities that it is class 0:
+            predictions = predictions.loc[:, predictions.columns[0]]
+
+            predictions_df = pd.DataFrame(
+                data={
+                    PredictorFitCV.F_SPLIT_ID: split_id,
+                    PredictorFitCV.F_PREDICTION: predictions,
+                },
+                index=test_sample.index,
+            )
+
+            splitwise_predictions.append(predictions_df)
+
+        self._probabilities_for_all_samples = (
+            pd.concat(splitwise_predictions)
+            .join(sample.target.rename(PredictorFitCV.F_TARGET))
+            .set_index(PredictorFitCV.F_SPLIT_ID, append=True)
+        )
+
+        return self._probabilities_for_all_samples
 
     def _fit(self) -> None:
         super()._fit()
 
         if self._calibration is not None:
+
+            if self._calibrated_model_by_split is not None:
+                return
+
             sample = self.sample
             log.info(
                 f"Calibrating classifier probabilities"
                 f" using method: {self._calibration.value}"
             )
-            self._model_by_split: List[Model] = self._parrallel()(
+            self._calibrated_model_by_split: List[Model] = self._parrallel()(
                 delayed(self._calibrate_probabilities_for_split)(
+                    # note: we specifically do not clone here, since
+                    # CalibratedClassifierCV does expect a fitted classifier and does
+                    # clone it itself
                     self._model_by_split[idx],
                     sample.select_observations_by_position(positions=test_indices),
                     self._calibration,
@@ -307,3 +365,11 @@ class ClassifierFitCV(PredictorFitCV):
         model._predictor = cv.calibrated_classifiers_[0].base_estimator
 
         return model
+
+    def fitted_calibrated_model(self, split_id: int) -> Model:
+        """
+        :param split_id: start index of test split
+        :return: the model fitted & calibrated for the train split at the given index
+        """
+        self._fit()
+        return self._calibrated_model_by_split[split_id]
