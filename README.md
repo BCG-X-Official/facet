@@ -196,4 +196,12 @@ is rendered with some code formatting.
    or in ```
    :attr:`ClassA.attribute_b`
           ``` 
+          
+- External links. This code ``` 
+`scikit-learn <https://scikit-learn.org/stable/>`_
+                  ```
+would create a url link: the left part `scikit-learn` is the displayed text and the 
+right part `https://scikit-learn.org/stable/` is the url link.
+
+
      
