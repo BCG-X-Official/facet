@@ -278,4 +278,6 @@ class ModelFitCV:
 
         cv.fit(X=data_transformed, y=test_sample.target)
 
+        model._predictor = cv.calibrated_classifiers_[0].base_estimator
+
         return model
