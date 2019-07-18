@@ -338,8 +338,9 @@ class ClassifierFitCV(PredictorFitCV):
                 delayed(self._calibrate_probabilities_for_split)(
                     # note: we specifically do not clone here, since
                     # CalibratedClassifierCV does expect a fitted classifier and does
-                    # clone it itself
-                    self._model_by_split[idx],
+                    # clone it itself - hence deepcopy so to be able to further
+                    # differentiate between _model_by_split & _calibrated_model_by_split
+                    copy.deepcopy(self._model_by_split[idx]),
                     sample.select_observations_by_position(positions=test_indices),
                     self._calibration,
                 )
@@ -364,7 +365,9 @@ class ClassifierFitCV(PredictorFitCV):
 
         cv.fit(X=data_transformed, y=test_sample.target)
 
-        model._predictor = cv.calibrated_classifiers_[0].base_estimator
+        model._predictor = cv.calibrated_classifiers_[0]
+
+        model.pipeline.steps[-1] = (Model.STEP_ESTIMATOR, cv.calibrated_classifiers_[0])
 
         return model
 
