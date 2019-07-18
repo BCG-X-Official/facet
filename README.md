@@ -184,10 +184,16 @@ is rendered with some code formatting.
    - an attribute (and a property): ```
                                      :attr:`package.module.class.attribute`
                                      ```  
-   - Using instead ```
+   - using instead ```
                    :attr:`~package.module.class.attribute`
                                      ```
      would display only the last part of the link `attribute` instead of the full 
      part  `package.module.class.attribute`.
+   - if a class, global function... is defined in the current module one does not to
+   specify the module path in the cross-reference, as in ```
+   :class:`ClassA`
+         ```
+   or in ```
+   :attr:`ClassA.attribute_b`
+          ``` 
      
-
