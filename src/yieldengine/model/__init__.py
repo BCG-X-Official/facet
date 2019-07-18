@@ -1,5 +1,9 @@
 """
-Utility classes to define, fit and inspect a machine learning model
+Models to make prediciton.
+
+The :class:`Model` specifies a model as a pipeline with two steps:
+- a preprocessing step
+- an estimator step
 """
 
 from abc import ABC, abstractmethod
@@ -14,7 +18,8 @@ from yieldengine.df.transform import DataFrameTransformer
 
 
 class Model(ABC):
-    """Specify the preprocessing step and the estimator in an ML model.
+    """
+    Specify the preprocessing step and the estimator for a model.
 
     A model can creates a pipeline for a preprocessing transformer (optional; possibly a
     pipeline itself) and an estimator.
@@ -55,7 +60,8 @@ class Model(ABC):
 
     @property
     def pipeline(self) -> PipelineDF:
-        """The underlying pipeline of the model.
+        """
+        The underlying pipeline of the model.
 
         It has two steps: ``preprocessing`` and ``estimator``."""
         return self._pipeline
@@ -71,7 +77,8 @@ class Model(ABC):
         return self._estimator
 
     def clone(self, parameters: Optional[Dict[str, Any]] = None) -> "Model":
-        """Clone `self`.
+        """
+        Clone `self`.
 
         :param parameters: parameters used to reset the model parameters
         :return: the cloned `Model`

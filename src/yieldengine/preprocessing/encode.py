@@ -18,7 +18,8 @@ __all__ = ["OneHotEncoderDF", "OrdinalEncoderDF", "LabelEncoderDF", "LabelBinari
 
 
 class OneHotEncoderDF(DataFrameTransformer[OneHotEncoder]):
-    """One-hot encoder that returns a DataFrame.
+    """
+    One-hot encoder that returns a DataFrame.
 
     The parameters are the same as the one passed to sklearn `OneHotEncoder`.
     """
@@ -35,7 +36,8 @@ class OneHotEncoderDF(DataFrameTransformer[OneHotEncoder]):
         return OneHotEncoder(**kwargs)
 
     def _get_columns_original(self) -> pd.Series:
-        """Return the series mapping output column names to original columns names.
+        """
+        Return the series mapping output column names to original columns names.
 
         :return: the series with index the column names of the output dataframe and
         values the corresponding input column names.
@@ -54,7 +56,8 @@ class OneHotEncoderDF(DataFrameTransformer[OneHotEncoder]):
 
 @df_transformer
 class OrdinalEncoderDF(OrdinalEncoder):
-    """Ordinal encoder that returns a DataFrame.
+    """
+    Ordinal encoder that returns a DataFrame.
 
     The parameters are the same as the one passed to sklearn `OrdinalEncoder`.
     """
@@ -64,7 +67,8 @@ class OrdinalEncoderDF(OrdinalEncoder):
 
 @df_transformer
 class LabelEncoderDF(LabelEncoder):
-    """Encode labels with integer values and return a DataFrame.
+    """
+    Encode labels with integer values and return a DataFrame.
 
     The parameters are the same as the one passed to sklearn `LabelEncoder`.
     """
@@ -74,7 +78,8 @@ class LabelEncoderDF(LabelEncoder):
 
 @df_transformer
 class LabelBinarizerDF(LabelBinarizer):
-    """Binarize labels in a one-vs-all fashion and return a DataFrame.
+    """
+    Binarize labels in a one-vs-all fashion and return a DataFrame.
 
     The parameters are the same as the one passed to sklearn `LabelBinarizer`.
     """

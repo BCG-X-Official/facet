@@ -1,5 +1,6 @@
 # coding=utf-8
-"""Fitted models with cross-validation.
+"""
+Fitted models with cross-validation.
 
 The `~ModelFitCV` encapsulates a fully trained model. It contains a `Model` (
 preprocessing + estimator), a dataset given by a `Sample` object and a
@@ -26,7 +27,8 @@ log = logging.getLogger(__name__)
 
 
 class ModelFitCV:
-    """Full information about a fitted model with cross-validation.
+    """
+    Full information about a model fitted with cross-validation.
 
     :param Model model: model to be fitted
     :param BaseCrossValidator cv: the cross validator generating the train splits
@@ -158,20 +160,23 @@ class ModelFitCV:
         ]
 
     def predictions_for_split(self, split_id: int) -> pd.Series:
-        """The predictions for a given split.
+        """
+        The predictions for a given split.
 
         :return: the series of predictions of the split
         """
         return self._series_for_split(split_id=split_id, column=ModelFitCV.F_PREDICTION)
 
     def targets_for_split(self, split_id: int) -> pd.Series:
-        """Return the target for this split.
+        """
+        Return the target for this split.
 
         :return: the series of targets for this split"""
         return self._series_for_split(split_id=split_id, column=ModelFitCV.F_TARGET)
 
     def predictions_for_all_splits(self) -> pd.DataFrame:
-        """For each split of this Predictor's CV, predict all values in the test set.
+        """
+        For each split of this Predictor's CV, predict all values in the test set.
 
         The result is a data frame with one row per prediction, indexed by the
         observations in the sample and the split id (index level F_SPLIT_ID),
@@ -241,9 +246,10 @@ class ModelFitCV:
         return self._predictions_for_all_samples
 
     def copy_with_sample(self, sample: Sample):
-        """Copy the predictor with some new `Sample`.
+        """
+        Copy the predictor with some new :class:`yieldengine.Sample`.
 
-        :param sample: the `Sample` used for the copy
+        :param sample: the :class:`yieldengine.Sample` used for the copy
         :return: the copy of self
         """
         copied_predictor = copy.copy(self)
@@ -255,7 +261,7 @@ class ModelFitCV:
     def _fit_model_for_split(model: Model, train_sample: Sample) -> Model:
         """Fit a model using a sample.
 
-        :param model:  the `Model` to fit
+        :param model:  the :class:`yieldengine.model.Model` to fit
         :param train_sample: `Sample` to fit on
         :return: tuple of the the split_id and the fitted `Model`
         """
