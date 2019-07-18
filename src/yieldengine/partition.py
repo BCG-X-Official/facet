@@ -1,4 +1,5 @@
-"""Partition sets.
+"""
+Partition sets.
 
 A :class:`~Partitioning` partitions a set of values
 into finitely many partitions (synonym of buckets).
@@ -32,7 +33,8 @@ class Partitioning(ABC, Generic[ValueType]):
 
     @abstractmethod
     def partitions(self) -> Iterable[ValueType]:
-        """Return central values of the partitions.
+        """
+        Return central values of the partitions.
 
         :return: for each partition, return a central value representing the partition
         """
@@ -40,7 +42,8 @@ class Partitioning(ABC, Generic[ValueType]):
 
     @abstractmethod
     def frequencies(self) -> Iterable[int]:
-        """Return the number of elements in each partitions.
+        """
+        Return the number of elements in each partitions.
 
         :return: for each partition, the number of observed values that fall within
           the partition
@@ -59,15 +62,13 @@ class RangePartitioning(
     """
     Partition numerical values in successive intervals of the same length.
 
-    The partitions are made of intervals which have all the same lengths.
-
-    The interval length is computed based on
+    The partitions are made of intervals which have all the same lengths. The
+    interval length is computed based on
     :attr:`max_partitions`, :attr:`lower_bound` and :attr:`upper_bound` by
     :meth:`_step_size`.
 
-
     Each partition is an interval whose endpoints are multiple of the interval
-    length. The rules used to determine these intervals are that:
+    length. The intervals satisfy the following conditions:
     - :attr:`lower_bound` is in the first interval
     - :attr:`upper_bound` is in the last interval
 
@@ -76,8 +77,6 @@ class RangePartitioning(
     [3.2, 3.4), [3.4, 3.6), [3.6, 3.8), [4.0, 4.2), [4.4, 4.6), [4.6, 4.8]
 
     Implementations must define :meth:`_step_size` and :meth:`_partition_center_offset`.
-
-
 
     :param values: list like of values to partition
     :param int max_partitions: the max number of partitions to make (default = 20);
@@ -93,7 +92,8 @@ class RangePartitioning(
         lower_bound: Optional[NumericType] = None,
         upper_bound: Optional[NumericType] = None,
     ) -> None:
-        """Constructor
+        """
+        Constructor
 
         :param values: list like of values to partition
         :param int max_partitions: the max number of partitions to make (default = 20);
@@ -129,7 +129,7 @@ class RangePartitioning(
         )
 
         def _frequencies() -> List[int]:
-            """Return the number of elements in each partitions."""
+            # Return the number of elements in each partitions
             partition_indices = [
                 int(round(value - first_partition) / step) for value in values
             ]
@@ -143,7 +143,8 @@ class RangePartitioning(
         self._frequencies = _frequencies()
 
     def partitions(self) -> Iterable[NumericType]:
-        """Return the central values of the partitions.
+        """
+        Return the central values of the partitions.
 
         :return: for each partition, return a central value representing the partition
         """
@@ -153,7 +154,8 @@ class RangePartitioning(
         )
 
     def frequencies(self) -> Iterable[int]:
-        """Return the number of elements in each partitions.
+        """
+        Return the number of elements in each partitions.
 
         :return: for each partition, the number of observed values that fall within
           the partition
@@ -166,7 +168,8 @@ class RangePartitioning(
         return self._n_partitions
 
     def partition_bounds(self) -> Iterable[Tuple[NumericType, NumericType]]:
-        """Return the endpoints of the intervals making the partitions.
+        """
+        Return the endpoints of the intervals making the partitions.
 
         :return: generator of the tuples (x, y) where x and y and the endopoints of
           the partitions
@@ -192,17 +195,6 @@ class RangePartitioning(
         :param step: the step size to round by
         :return: the nearest greater or equal step size in the series
                  (..., 0.1, 0.2, 0.5, 1, 2, 5, 10, 20, 50, ...)
-        >>> from yieldengine.partition import RangePartitioning
-        >>> RangePartitioning._ceil_step(1.99)
-        2.0
-        >>> RangePartitioning._ceil_step(2.)
-        2.0
-        >>> RangePartitioning._ceil_step(2.01)
-        5.0
-        >>> RangePartitioning._ceil_step(4.9)
-        5.0
-        >>> RangePartitioning._ceil_step(5.1)
-        10.0
         """
         if step <= 0:
             raise ValueError("arg step must be positive")
@@ -236,7 +228,6 @@ class ContinuousRangePartitioning(RangePartitioning[float]):
     :attr:`max_partitions`, :attr:`lower_bound` and :attr:`upper_bound` by
     :meth:`_step_size`.
 
-
     Each partition is an interval whose endpoints are multiple of the interval
     length. The rules used to determine these intervals are that:
     - :attr:`lower_bound` is in the first interval
@@ -248,6 +239,11 @@ class ContinuousRangePartitioning(RangePartitioning[float]):
 
     Implementations must define :meth:`_step_size` and :meth:`_partition_center_offset`.
 
+    :param values: list like of values to partition
+    :param int max_partitions: the max number of partitions to make (default = 20);
+      it should be greater or equal than 2
+    :param lower_bound: the lower bound of the elements in the partition
+    :param upper_bound: the upper bound of the elements in the partition
     """
 
     @staticmethod
@@ -274,7 +270,6 @@ class IntegerRangePartitioning(RangePartitioning[int]):
     :attr:`max_partitions`, :attr:`lower_bound` and :attr:`upper_bound` by
     :meth:`_step_size`.
 
-
     Each partition is an interval whose endpoints are multiple of the interval
     length. The rules used to determine these intervals are that:
     - :attr:`lower_bound` is in the first interval
@@ -285,8 +280,6 @@ class IntegerRangePartitioning(RangePartitioning[int]):
     [3.2, 3.4), [3.4, 3.6), [3.6, 3.8), [4.0, 4.2), [4.4, 4.6), [4.6, 4.8]
 
     Implementations must define :meth:`_step_size` and :meth:`_partition_center_offset`.
-
-
 
     :param values: list like of values to partition
     :param int max_partitions: the max number of partitions to make (default = 20);
@@ -313,7 +306,8 @@ class IntegerRangePartitioning(RangePartitioning[int]):
 
 
 class CategoryPartitioning(Partitioning[ValueType]):
-    """Partition categorical values.
+    """
+    Partition categorical values.
 
     Partition the elements by their values, keeping only the :attr:`max_partitions`
     msot frequent values.
@@ -337,7 +331,8 @@ class CategoryPartitioning(Partitioning[ValueType]):
         self._partitions = value_counts.index.values[:max_partitions]
 
     def partitions(self) -> Iterable[ValueType]:
-        """The list of the :attr:`max_partitions` most frequent values.
+        """
+        The list of the :attr:`max_partitions` most frequent values.
 
         :return: the list of most frequent values, ordered decreasingly by the
           frequency"""

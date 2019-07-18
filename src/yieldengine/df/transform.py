@@ -1,4 +1,12 @@
 # coding=utf-8
+"""
+Transform dataframe wrapping the scikit-learn API of transformers.
+
+:class:`DataFrameTransformer` is an ABC class that wraps sklearn `TransformerMixin`.
+It has a `fit` and a `transform` method.
+
+
+"""
 
 import logging
 from abc import ABC, abstractmethod
@@ -20,7 +28,8 @@ _BaseTransformer = TypeVar(
 
 
 class DataFrameTransformer(DataFrameEstimator[_BaseTransformer], TransformerMixin, ABC):
-    """Wrap around an sklearn transformer and return dataframes.
+    """
+    Wrap around an sklearn transformer and return dataframes.
 
     Implementations must define `_make_base_transformer` and `_get_columns_original`.
 
@@ -177,7 +186,11 @@ class DataFrameTransformer(DataFrameEstimator[_BaseTransformer], TransformerMixi
 class NDArrayTransformerDF(
     DataFrameTransformer[_BaseTransformer], Generic[_BaseTransformer], ABC
 ):
-    """`DataFrameTransformer` whose base transformer only accepts numpy ndarrays."""
+    """
+    `DataFrameTransformer` whose base transformer only accepts numpy ndarrays.
+
+    Wrap around the base transformer and converts the dataframe to an array when needed.
+    """
 
     # noinspection PyPep8Naming
     def _base_fit(
@@ -206,7 +219,8 @@ class NDArrayTransformerDF(
 class ColumnPreservingTransformer(
     DataFrameTransformer[_BaseTransformer], Generic[_BaseTransformer], ABC
 ):
-    """Abstract base class for a `DataFrameTransformer`.
+    """
+    Transform a dataframe without changing column names but can remove columns.
 
     All output columns of a ColumnPreservingTransformer have the same names as their
     associated input columns. Some columns can be removed.
@@ -215,10 +229,11 @@ class ColumnPreservingTransformer(
 
     @abstractmethod
     def _get_columns_out(self) -> pd.Index:
-        """Column labels for arrays returned by the fitted transformer."""
+        # Column labels for arrays returned by the fitted transformer.
         pass
 
     def _get_columns_original(self) -> pd.Series:
+        # return the series with output columns in index and output columns as values
         columns_out = self._get_columns_out()
         return pd.Series(index=columns_out, data=columns_out.values)
 
@@ -226,7 +241,8 @@ class ColumnPreservingTransformer(
 class ConstantColumnTransformer(
     ColumnPreservingTransformer[_BaseTransformer], Generic[_BaseTransformer], ABC
 ):
-    """Abstract base class for a `DataFrameTransformer`.
+    """
+    Transform a dataframe keeping exactly the same columns.
 
     A ConstantColumnTransformer does not add, remove, or rename any of the input
     columns. Implementations must define `_make_base_transformer`.
@@ -246,7 +262,8 @@ def df_transformer(
     Callable[[Type[_BaseTransformer]], Type[DataFrameTransformer[_BaseTransformer]]],
     Type[DataFrameTransformer[_BaseTransformer]],
 ]:
-    """Class decorator wrapping an sklearn transformer in a `DataFrameTransformer`.
+    """
+    Class decorator wrapping an sklearn transformer in a `DataFrameTransformer`.
 
     :param cls: the transformer class to wrap
     :param df_transformer_type: optional parameter indicating the \

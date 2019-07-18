@@ -21,7 +21,8 @@ class PipelineDF(
     DataFrameRegressor[Pipeline],
     DataFrameClassifier[Pipeline],
 ):
-    """Wrapper around `sklearn.pipeline.Pipeline` that returns dataframes.
+    """
+    Wrapper around `sklearn.pipeline.Pipeline` that returns dataframes.
 
     :param `**kwargs`: the arguments used to construct the wrapped `Pipeline` object
     """
@@ -87,7 +88,8 @@ class PipelineDF(
 
     @property
     def steps(self) -> Sequence[Tuple[str, Union[DataFrameTransformer, BaseEstimator]]]:
-        """The `steps` attribute of the underlying `Pipeline`.
+        """
+        The `steps` attribute of the underlying `Pipeline`.
 
         List of (name, transformer) tuples (transformers implement fit/transform).
         """
@@ -103,13 +105,12 @@ class PipelineDF(
         return self.base_transformer.named_steps
 
     def __len__(self) -> int:
-        """
-        :return: the length of the Pipeline
-        """
+        """The number of steps of the Pipeline."""
         return len(self.base_transformer.steps)
 
     def __getitem__(self, ind: Union[slice, int, str]) -> DataFrameTransformer:
-        """Return a sub-pipeline or a single estimator in the pipeline
+        """
+        Return a sub-pipeline or a single estimator in the pipeline
 
         Indexing with an integer will return an estimator; using a slice
         returns another Pipeline instance which copies a slice of this

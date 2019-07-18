@@ -1,4 +1,7 @@
-"""Define the class :class:`~yieldengine.dendrogram.linkage.LinkageTree`
+"""
+Linkage Tree.
+
+Define the class :class:`~yieldengine.dendrogram.linkage.LinkageTree`
 which serves as the internal representation of dendrograms.
 
 The classes :class:`~yieldengine.dendrogram.linkage.LinkageNode` and
@@ -61,7 +64,8 @@ class Node(ABC):
 
 
 class LinkageNode(Node):
-    """Class for an internal node in a `LinkageTree`.
+    """
+    Internal node in a `LinkageTree`.
 
     :param children_distance: distance from the node to its children
     """
@@ -97,7 +101,8 @@ class LinkageNode(Node):
 
 
 class LeafNode(Node):
-    """Leaf in a linkage tree.
+    """
+    Leaf in a linkage tree.
 
     :param index: the leaf index
     :param label: the leaf label
@@ -198,7 +203,8 @@ class LinkageTree:
 
     @property
     def root(self) -> Node:
-        """The root node of the linkage tree.
+        """
+        The root node of the linkage tree.
 
         It is the cluster containing all other clusters.
         """
