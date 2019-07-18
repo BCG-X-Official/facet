@@ -1,7 +1,9 @@
 import logging
 import warnings
+from itertools import combinations
 from typing import *
 
+import numpy as np
 import pandas as pd
 from lightgbm.sklearn import LGBMRegressor
 from shap import KernelExplainer, TreeExplainer
@@ -245,6 +247,9 @@ def test_model_inspection_classifier(available_cpus: int, iris_sample: Sample) -
     # consider: model_with_type(...) function for ModelRanking
     model_evaluation = model_ranking[0]
 
+    # store proba-results
+    proba_results = {}
+
     # test various ProbabilityCalibrationMethods for a classifier:
     for calibration_method in (
         None,
@@ -286,6 +291,8 @@ def test_model_inspection_classifier(available_cpus: int, iris_sample: Sample) -
 
         assert ClassifierFitCV.F_PROBA in proba_df.columns
 
+        proba_results[calibration_method] = proba_df.loc[:, ClassifierFitCV.F_PROBA]
+
         model_inspector = ModelInspector(predictor_fit=model_fit)
         # make and check shap value matrix
         shap_matrix = model_inspector.shap_matrix()
@@ -311,3 +318,19 @@ def test_model_inspection_classifier(available_cpus: int, iris_sample: Sample) -
             )
 
         linkage_tree = model_inspector.cluster_dependent_features()
+
+    PROBABILITY_EFFECT_THRESHOLD = 0.3
+
+    for p1, p2 in combinations(
+        [
+            ProbabilityCalibrationMethod.ISOTONIC,
+            ProbabilityCalibrationMethod.SIGMOID,
+            None,
+        ],
+        2,
+    ):
+        cumulative_diff = np.sum(np.abs(proba_results[p1] - proba_results[p2]))
+
+        log.info(f"Cumulative diff of calibration {p1} vs {p2} is: {cumulative_diff}")
+
+        assert cumulative_diff > PROBABILITY_EFFECT_THRESHOLD
