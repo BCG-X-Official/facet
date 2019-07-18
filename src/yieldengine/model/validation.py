@@ -1,7 +1,8 @@
 # coding=utf-8
-"""Cross-validation.
+"""
+Cross-validation.
 
-:class:`~CircularCrossValidator` class performs cross-validation with a fixed
+:class:`CircularCrossValidator` class performs cross-validation with a fixed
 test_ratio with a fix size window shifting at a constant pace = 1/num_splits.
 """
 from typing import *
@@ -11,7 +12,8 @@ from sklearn.model_selection import BaseCrossValidator
 
 
 class CircularCrossValidator(BaseCrossValidator):
-    """Rolling circular cross-validation.
+    """
+    Rolling circular cross-validation.
 
     Class to generate various CV splits of train and test data sets using circular
     out-of-sample splits.
@@ -43,7 +45,8 @@ class CircularCrossValidator(BaseCrossValidator):
 
     # noinspection PyPep8Naming
     def test_split_starts(self, X) -> Generator[int, None, None]:
-        """Generate the start indices of the test splits.
+        """
+        Generate the start indices of the test splits.
 
         :param X: a feature matrix
         :return: generator of the first integer index of each test split
@@ -53,7 +56,8 @@ class CircularCrossValidator(BaseCrossValidator):
     def _test_split_bounds(
         self, n_samples: int
     ) -> Generator[Tuple[int, int], None, None]:
-        """Generate the start and end indices of the test splits.
+        """
+        Generate the start and end indices of the test splits.
 
         :param n_samples: number of samples
         :return: generator of the first and last integer index of each test split
@@ -67,7 +71,8 @@ class CircularCrossValidator(BaseCrossValidator):
     # noinspection PyPep8Naming
     @staticmethod
     def _n_samples(X=None, y=None) -> int:
-        """Return the number of samples.
+        """
+        Return the number of samples.
 
         :return: the number of samples in X and y
         """
@@ -84,7 +89,8 @@ class CircularCrossValidator(BaseCrossValidator):
     def _iter_test_indices(
         self, X=None, y=None, groups=None
     ) -> Generator[np.array, None, None]:
-        """Generate the indices of the test splits.
+        """
+        Generate the indices of the test splits.
 
         Generator which yields the numpy arrays of the test_split indices.
 
@@ -105,7 +111,8 @@ class CircularCrossValidator(BaseCrossValidator):
 
     # noinspection PyPep8Naming
     def get_n_splits(self, X=None, y=None, groups=None) -> int:
-        """Return the number of splits.
+        """
+        Return the number of splits.
 
         Implementation of method in BaseCrossValidator: returns the number of splits
 

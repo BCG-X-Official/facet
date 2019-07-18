@@ -1,5 +1,6 @@
 # coding=utf-8
-"""Wrap sklearn `BaseEstimator` to return dataframes instead of numpy arrays.
+"""
+Wrap sklearn `BaseEstimator` to return dataframes instead of numpy arrays.
 
 The abstract class `~DataFrameEstimator` wraps a `BaseEstimator` so that the `predict`
 or `transform` methods of the implementations return dataframe.
@@ -20,7 +21,8 @@ _BaseEstimator = TypeVar("_BaseEstimator", bound=BaseEstimator)
 
 
 class DataFrameEstimator(ABC, BaseEstimator, Generic[_BaseEstimator]):
-    """Abstract base class that is a wrapper around the sklearn `BaseEstimator` class.
+    """
+    Abstract base class that is a wrapper around the sklearn `BaseEstimator` class.
 
     Implementations must define a method `_make_base_estimator`.
 
@@ -49,7 +51,8 @@ class DataFrameEstimator(ABC, BaseEstimator, Generic[_BaseEstimator]):
         return self._base_estimator
 
     def get_params(self, deep=True) -> Dict[str, Any]:
-        """Get parameters for this estimator.
+        """
+        Get parameters for this estimator.
 
         :param deep: If True, return the parameters for this estimator and \
         contained sub-objects that are estimators
@@ -60,7 +63,8 @@ class DataFrameEstimator(ABC, BaseEstimator, Generic[_BaseEstimator]):
         return self._base_estimator.get_params(deep=deep)
 
     def set_params(self, **kwargs) -> "DataFrameEstimator":
-        """Set the parameters of this estimator.
+        """
+        Set the parameters of this estimator.
 
         Valid parameter keys can be listed with ``get_params()``.
 
@@ -74,7 +78,8 @@ class DataFrameEstimator(ABC, BaseEstimator, Generic[_BaseEstimator]):
     def fit(
         self, X: pd.DataFrame, y: Optional[pd.Series] = None, **fit_params
     ) -> "DataFrameEstimator[_BaseEstimator]":
-        """Fit the base estimator.
+        """
+        Fit the base estimator.
 
         :param X: dataframe to fit the estimator
         :param y: pandas series
@@ -89,12 +94,12 @@ class DataFrameEstimator(ABC, BaseEstimator, Generic[_BaseEstimator]):
 
     @property
     def is_fitted(self) -> bool:
-        """True if the base estimator is fitted, else False"""
+        """``True`` if the base estimator is fitted, else ``False``."""
         return self._columns_in is not None
 
     @property
     def columns_in(self) -> pd.Index:
-        """The index of the input columns"""
+        """The index of the input columns."""
         self._ensure_fitted()
         return self._columns_in
 

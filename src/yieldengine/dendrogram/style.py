@@ -1,4 +1,5 @@
-"""Implementations of dendrogram styles.
+"""
+Dendrogram styles.
 
 The dendrogram styles are given as a parameter to a
 `yieldengine.dendrogram.DendrogramDrawer` and determine the style of the plot.
@@ -42,7 +43,8 @@ class _PercentageFormatter(Formatter):
 
 
 class MatplotStyle(DendrogramStyle, ABC):
-    """Base class for Matplotlib styles for dendrogram.
+    """
+    Base class for Matplotlib styles for dendrogram.
 
     Provide basic support for plotting a color legend for feature importance,
     and providing the `Axes` object for plotting the actual dendrogram including
@@ -82,7 +84,7 @@ class MatplotStyle(DendrogramStyle, ABC):
         cax.yaxis.set_major_formatter(MatplotStyle._PERCENTAGE_FORMATTER)
 
     def draw_title(self, title: str) -> None:
-        """Draw the title of the dendrogram"""
+        """Draw the title of the dendrogram."""
         self._ax.set_title(label=title)
 
     def draw_leaf_labels(self, labels: Sequence[str]) -> None:
@@ -92,7 +94,8 @@ class MatplotStyle(DendrogramStyle, ABC):
         y_axis.set_ticklabels(ticklabels=labels)
 
     def color(self, weight: float) -> RgbaColor:
-        """Return the color associated to the feature weight (= importance).
+        """
+        Return the color associated to the feature weight (= importance).
 
         :param weight: the weight
         :return: the color as a RGBA tuple
@@ -110,8 +113,8 @@ class LineStyle(MatplotStyle):
     def draw_link_leg(
         self, bottom: float, top: float, first_leaf: int, n_leaves: int, weight: float
     ) -> None:
-        """Draw a horizontal link in the dendrogram (between a node and one of its \
-        children.
+        """
+        Draw a horizontal link in the dendrogram between a node and one of its children.
 
         See :func:`~yieldengine.dendrogram.DendrogramStyle.draw_link_leg` for the
         documentation of the abstract method.
@@ -134,8 +137,8 @@ class LineStyle(MatplotStyle):
         n_leaves_right: int,
         weight: float,
     ) -> None:
-        """Draw a vertical link in the dendrogram (between a two sibling nodes) and \
-        the outgoing vertical line.
+        """
+        Draw a vertical link between two sibling nodes and the outgoing vertical line.
 
         See :func:`~yieldengine.dendrogram.DendrogramStyle.draw_link_connector` for the
         documentation of the abstract method.
@@ -170,7 +173,8 @@ class LineStyle(MatplotStyle):
 
 
 class FeatMapStyle(MatplotStyle):
-    """Plot dendrograms with a heat map style.
+    """
+    Plot dendrograms with a heat map style.
 
     :param ax: a matplotlib `Axes`
     :param min_weight: the min weight in the color bar
@@ -186,7 +190,8 @@ class FeatMapStyle(MatplotStyle):
     def draw_link_leg(
         self, bottom: float, top: float, first_leaf: int, n_leaves: int, weight: float
     ) -> None:
-        """Draw a horizontal box in the dendrogram for a leaf.
+        """
+        Draw a horizontal box in the dendrogram for a leaf.
 
         See :func:`~yieldengine.dendrogram.DendrogramStyle.draw_link_leg` for the
         documentation of the abstract method.
@@ -209,7 +214,8 @@ class FeatMapStyle(MatplotStyle):
         n_leaves_right: int,
         weight: float,
     ) -> None:
-        """Draw a link between a node and its two children as a box.
+        """
+        Draw a link between a node and its two children as a box.
 
         See :func:`~yieldengine.dendrogram.DendrogramStyle.draw_link_connector` for the
         documentation of the abstract method.
@@ -230,7 +236,8 @@ class FeatMapStyle(MatplotStyle):
         )
 
     def _draw_hbar(self, x: float, y: float, w: float, h: float, weight: float) -> None:
-        """Draw a box.
+        """
+        Draw a box.
 
         :param x: left x position of the box
         :param y: top vertical position of the box
