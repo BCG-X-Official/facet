@@ -4,22 +4,24 @@ cross validation and the sample used."""
 
 import copy
 import logging
+from enum import Enum
 from typing import *
 
 import pandas as pd
 from joblib import delayed, Parallel
+from sklearn.base import ClassifierMixin, RegressorMixin
 from sklearn.calibration import CalibratedClassifierCV
 from sklearn.model_selection import BaseCrossValidator
 
 from yieldengine import Sample
-from yieldengine.model import (
-    ClassificationModel,
-    Model,
-    ProbabilityCalibrationMethod,
-    RegressionModel,
-)
+from yieldengine.model import Model
 
 log = logging.getLogger(__name__)
+
+
+class ProbabilityCalibrationMethod(Enum):
+    SIGMOID = "sigmoid"
+    ISOTONIC = "isotonic"
 
 
 class ModelFitCV:
@@ -44,7 +46,7 @@ class ModelFitCV:
         "_n_jobs",
         "_shared_memory",
         "_verbose",
-        "_probability_calibration_method",
+        "_calibration",
     ]
 
     F_SPLIT_ID = "split_id"
@@ -56,6 +58,7 @@ class ModelFitCV:
         model: Model,
         cv: BaseCrossValidator,
         sample: Sample,
+        calibration: Optional[ProbabilityCalibrationMethod] = None,
         n_jobs: int = 1,
         shared_memory: bool = True,
         verbose: int = 0,
@@ -63,17 +66,13 @@ class ModelFitCV:
         self._model = model
         self._cv = cv
         self._sample = sample
-        self._model_by_split: Optional[List[Model]] = None
-        self._predictions_for_all_samples: Optional[pd.DataFrame] = None
+        self._calibration = calibration
         self._n_jobs = n_jobs
         self._shared_memory = shared_memory
         self._verbose = verbose
 
-        if isinstance(model, ClassificationModel):
-            model: ClassificationModel = model
-            self._probability_calibration_method = model.calibration
-        else:
-            self._probability_calibration_method = None
+        self._model_by_split: Optional[List[Model]] = None
+        self._predictions_for_all_samples: Optional[pd.DataFrame] = None
 
     @property
     def model(self) -> Model:
@@ -134,19 +133,16 @@ class ModelFitCV:
             for train_indices, _ in self.cv.split(sample.features, sample.target)
         )
 
-        if (
-            self._probability_calibration_method
-            != ProbabilityCalibrationMethod.NO_CALIBRATION
-            and self._probability_calibration_method is not None
-        ):
+        if self._calibration is not None:
             log.info(
                 f"Calibrating classifier probabilities"
-                f" using method: {self._probability_calibration_method.value}"
+                f" using method: {self._calibration.value}"
             )
             self._model_by_split: List[Model] = self._parrallel()(
                 delayed(self._calibrate_probabilities_for_split)(
                     self._model_by_split[idx],
                     sample.select_observations_by_position(positions=test_indices),
+                    self._calibration,
                 )
                 for idx, (_, test_indices) in enumerate(
                     self.cv.split(sample.features, sample.target)
@@ -202,11 +198,11 @@ class ModelFitCV:
                     positions=test_indices
                 )
 
-                if isinstance(self.model, RegressionModel):
+                if isinstance(self.model.predictor, RegressorMixin):
                     predictions = self.fitted_model(split_id=split_id).pipeline.predict(
                         X=test_sample.features
                     )
-                elif isinstance(self.model, ClassificationModel):
+                elif isinstance(self.model.predictor, ClassifierMixin):
                     predictions = self.fitted_model(
                         split_id=split_id
                     ).pipeline.predict_proba(X=test_sample.features)
@@ -268,11 +264,11 @@ class ModelFitCV:
 
     @staticmethod
     def _calibrate_probabilities_for_split(
-        model: ClassificationModel, test_sample: Sample
-    ) -> ClassificationModel:
+        model: Model, test_sample: Sample, calibration: ProbabilityCalibrationMethod
+    ) -> Model:
 
         cv = CalibratedClassifierCV(
-            base_estimator=model.estimator, method=model.calibration.value, cv="prefit"
+            base_estimator=model.predictor, method=calibration.value, cv="prefit"
         )
 
         if model.preprocessing is not None:
