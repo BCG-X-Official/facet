@@ -15,7 +15,11 @@ from yieldengine import Sample
 from yieldengine.df.transform import DataFrameTransformer
 from yieldengine.model import Model
 from yieldengine.model.inspection import ModelInspector
-from yieldengine.model.prediction import ModelFitCV, ProbabilityCalibrationMethod
+from yieldengine.model.prediction import (
+    ClassifierFitCV,
+    ProbabilityCalibrationMethod,
+    RegressorFitCV,
+)
 from yieldengine.model.selection import (
     ModelEvaluation,
     ModelGrid,
@@ -83,7 +87,7 @@ def test_model_inspection(available_cpus: int, boston_sample: Sample) -> None:
     ][0]
 
     for model_evaluation in best_svr, best_lgbm:
-        model_fit = ModelFitCV(
+        model_fit = RegressorFitCV(
             model=model_evaluation.model,
             cv=test_cv,
             sample=test_sample,
@@ -92,12 +96,14 @@ def test_model_inspection(available_cpus: int, boston_sample: Sample) -> None:
 
         # test predictions_for_all_samples
         predictions_df: pd.DataFrame = model_fit.predictions_for_all_splits()
-        assert ModelFitCV.F_PREDICTION in predictions_df.columns
-        assert ModelFitCV.F_TARGET in predictions_df.columns
+        assert RegressorFitCV.F_PREDICTION in predictions_df.columns
+        assert RegressorFitCV.F_TARGET in predictions_df.columns
 
         # check number of split ids
         assert (
-            predictions_df.index.get_level_values(level=ModelFitCV.F_SPLIT_ID).nunique()
+            predictions_df.index.get_level_values(
+                level=RegressorFitCV.F_SPLIT_ID
+            ).nunique()
             == N_SPLITS
         )
 
@@ -109,7 +115,7 @@ def test_model_inspection(available_cpus: int, boston_sample: Sample) -> None:
             <= (len(test_sample) * (TEST_RATIO + allowed_variance) * N_SPLITS)
         )
 
-        model_inspector = ModelInspector(model_fit=model_fit)
+        model_inspector = ModelInspector(predictor_fit=model_fit)
         # make and check shap value matrix
         shap_matrix = model_inspector.shap_matrix()
 
@@ -166,13 +172,13 @@ def test_model_inspection_with_encoding(
         if isinstance(model_evaluation.model.predictor, LGBMRegressor)
     ][0]
     for model_evaluation in [best_lgbm]:
-        model_fit = ModelFitCV(
+        model_fit = RegressorFitCV(
             model=model_evaluation.model,
             cv=circular_cv,
             sample=sample,
             n_jobs=available_cpus,
         )
-        mi = ModelInspector(model_fit=model_fit)
+        mi = ModelInspector(predictor_fit=model_fit)
 
         shap_matrix = mi.shap_matrix()
 
@@ -197,7 +203,7 @@ def test_model_inspection_with_encoding(
                 # noinspection PyUnresolvedReferences
                 return KernelExplainer(model=estimator.predict, data=data)
 
-        mi2 = ModelInspector(model_fit=model_fit, explainer_factory=ef)
+        mi2 = ModelInspector(predictor_fit=model_fit, explainer_factory=ef)
         mi2.shap_matrix()
 
 
@@ -248,7 +254,7 @@ def test_model_inspection_classifier(available_cpus: int, iris_sample: Sample) -
 
         model = model_evaluation.model
 
-        model_fit = ModelFitCV(
+        model_fit = ClassifierFitCV(
             model=model_evaluation.model,
             cv=test_cv,
             sample=test_sample,
@@ -258,12 +264,14 @@ def test_model_inspection_classifier(available_cpus: int, iris_sample: Sample) -
 
         # test predictions_for_all_samples
         predictions_df: pd.DataFrame = model_fit.predictions_for_all_splits()
-        assert ModelFitCV.F_PREDICTION in predictions_df.columns
-        assert ModelFitCV.F_TARGET in predictions_df.columns
+        assert ClassifierFitCV.F_PREDICTION in predictions_df.columns
+        assert ClassifierFitCV.F_TARGET in predictions_df.columns
 
         # check number of split ids
         assert (
-            predictions_df.index.get_level_values(level=ModelFitCV.F_SPLIT_ID).nunique()
+            predictions_df.index.get_level_values(
+                level=ClassifierFitCV.F_SPLIT_ID
+            ).nunique()
             == N_SPLITS
         )
 
@@ -275,7 +283,7 @@ def test_model_inspection_classifier(available_cpus: int, iris_sample: Sample) -
             <= (len(test_sample) * (TEST_RATIO + allowed_variance) * N_SPLITS)
         )
 
-        model_inspector = ModelInspector(model_fit=model_fit)
+        model_inspector = ModelInspector(predictor_fit=model_fit)
         # make and check shap value matrix
         shap_matrix = model_inspector.shap_matrix()
 
