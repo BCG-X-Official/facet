@@ -46,6 +46,9 @@ clean`.
     - properties
     - atributes
 
+- (From PEP 8): Docstrings are not necessary for non-public methods, but you should 
+have a comment that describes what the method does.
+
 - Docstrings must follow the reStructuredText syntax (i.e., the default syntax for
  Sphinx)
 
@@ -186,3 +189,5 @@ is rendered with some code formatting.
                                      ```
      would display only the last part of the link `attribute` instead of the full 
      part  `package.module.class.attribute`.
+     
+
