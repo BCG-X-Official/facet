@@ -32,10 +32,20 @@ clean`.
 
 ## 2. Documentation guideline
 
+### 2.1 General guidelines
+
 - The documentation is generated from docstrings in the source code
 
 - Before writing your own documentation, take some time to study the documentation of
  the existing code, and try to emulate the same style
+ 
+ - As a general rule, aim to describe not only _what_ the code does, but also _why_
+, including the rationale for any design choices that may not be obvious
+
+- Provide examples wherever this helps explain usage patterns
+
+
+### 2.2 Docstring guidelines
 
 - A docstring is mandatory for all of the following entities in the source code
 , except when they are protected/private (i.e. the name starts with a leading `_
@@ -70,7 +80,8 @@ have a comment that describes what the method does.
   unnecessary or redundant phrases. For example:
     ```
     class ModelInspector:
-        """Explains the inner workings of a predictive model based on the SHAP approach.
+        """
+        Explains the inner workings of a predictive model based on the SHAP approach.
   
         The model inspector offers the following anaalyses:
         - ...
@@ -79,7 +90,8 @@ have a comment that describes what the method does.
     but not
     ```
     class ModelInspector:
-        """This is a class that provides the functionality to inspect models
+        """
+        This is a class that provides the functionality to inspect models
         ...
     ```
     (too verbose, and explains the class in terms of its name which does not add any
@@ -97,14 +109,14 @@ have a comment that describes what the method does.
     ```
     @property
         def foo(self) -> Foo:
-            """
-            :return: the foo object"""
+            """:return: the foo object"""
             pass
     ```
 
 
 
-- Start full sentences with a capitalised word and end each sentence with punctuation
+- Start full sentences and phrases with a capitalised word and end each sentence with
+ punctuation
 , e.g.,
 
     ```"""Fit the model."""```   
@@ -113,8 +125,8 @@ have a comment that describes what the method does.
 
     ```"""fit the model"""```
 
-- Phrases that are not full sentences should not be capitalised and should not end
- with punctuation: 
+- Single-phrase parameter and property descriptions should not be capitalised and should
+ not end with punctuation: 
  
      ```
     :param color_fg: the foreground color
@@ -126,17 +138,9 @@ have a comment that describes what the method does.
     :param color_fg: The foreground color.
     ```   
 
-- Fit one-liner docstrings on a single line, e.g.,
+- One-liner docstrings may be fitted on a single line, e.g.,
 
     ```"""Fit the model."""```
-
-    but not 
-
-    ```
-    """
-    Fit the model.
-    """
-    ```
 
 - For multi-line docstrings, insert a line break after the leading triple quote and
  before the trailing triple quote, e.g.,
@@ -162,17 +166,12 @@ have a comment that describes what the method does.
         :param sample: training sample"""
     ```
 
+### 2.3 Docstring tips & tricks
 
-- As a general rule, aim to describe not only _what_ the code does, but also _why_
-, including the rationale for any design choices that may not be obvious
-
-- Provide examples wherever this helps explain usage patterns
-
-- Words inside double backquotes are rendered as code sample and are used for code 
-snippets, for instance ``` 
-                       ``print("hello")``
-                        ``` 
-is rendered with some code formatting.
+- To render text as a code, enclose it in double backquotes, e.g.,
+    ``` 
+    ``print("hello")``
+    ``` 
  
 - To cross-reference objects in the docstrings use reStructured roles:
    - class: ```
@@ -189,19 +188,20 @@ is rendered with some code formatting.
                                      ```
      would display only the last part of the link `attribute` instead of the full 
      part  `package.module.class.attribute`.
-   - if a class, global function... is defined in the current module one does not to
-   specify the module path in the cross-reference, as in ```
-   :class:`ClassA`
-         ```
-   or in ```
-   :attr:`ClassA.attribute_b`
-          ``` 
+   - if an identifier is defined in the current module, the cross-reference does not
+    need to include the module path, as in
+    ```
+    :class:`ClassA`
+    ```
+    or in
+    ```
+    :attr:`ClassA.attribute_b`
+    ``` 
           
-- External links. This code ``` 
-`scikit-learn <https://scikit-learn.org/stable/>`_
-                  ```
-would create a url link: the left part `scikit-learn` is the displayed text and the 
-right part `https://scikit-learn.org/stable/` is the url link.
-
+- External links. To create a link to `https://scikit-learn.org/stable/`, labeled
+ "scikit_learn", write
+    ``` 
+    `scikit-learn <https://scikit-learn.org/stable/>`_
+    ```
 
      
