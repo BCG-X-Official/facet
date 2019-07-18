@@ -378,5 +378,8 @@ class ClassifierFitCV(PredictorFitCV):
         """
         :return: an iterator of all models fitted & calibrated over all train splits
         """
+        if self._calibration is None:
+            raise NotImplementedError("Calibration is 'None' for this ClassifierFitCV")
+
         self._fit()
         return iter(self._calibrated_model_by_split)
