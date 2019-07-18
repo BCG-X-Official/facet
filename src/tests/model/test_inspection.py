@@ -252,8 +252,6 @@ def test_model_inspection_classifier(available_cpus: int, iris_sample: Sample) -
         ProbabilityCalibrationMethod.SIGMOID,
     ):
 
-        model = model_evaluation.model
-
         model_fit = ClassifierFitCV(
             model=model_evaluation.model,
             cv=test_cv,
@@ -282,6 +280,11 @@ def test_model_inspection_classifier(available_cpus: int, iris_sample: Sample) -
             <= len(predictions_df)
             <= (len(test_sample) * (TEST_RATIO + allowed_variance) * N_SPLITS)
         )
+
+        # test probabilities for all samples
+        proba_df: pd.DataFrame = model_fit.probabilities_for_all_splits()
+
+        assert ClassifierFitCV.F_PROBA in proba_df.columns
 
         model_inspector = ModelInspector(predictor_fit=model_fit)
         # make and check shap value matrix
