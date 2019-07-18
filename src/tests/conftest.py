@@ -19,7 +19,7 @@ from tests.model import make_simple_transformer
 from tests.paths import TEST_DATA_CSV
 from yieldengine import Sample
 from yieldengine.df.transform import DataFrameTransformer
-from yieldengine.model import RegressionModel
+from yieldengine.model import Model
 from yieldengine.model.selection import ModelGrid
 
 logging.basicConfig(level=logging.DEBUG)
@@ -67,9 +67,7 @@ def regressor_grids(simple_preprocessor) -> List[ModelGrid]:
     RANDOM_STATE = {f"random_state": [42]}
     return [
         ModelGrid(
-            model=RegressionModel(
-                preprocessing=simple_preprocessor, estimator=LGBMRegressor()
-            ),
+            model=Model(preprocessing=simple_preprocessor, predictor=LGBMRegressor()),
             estimator_parameters={
                 "max_depth": [5, 10],
                 "min_split_gain": [0.1, 0.2],
@@ -78,20 +76,20 @@ def regressor_grids(simple_preprocessor) -> List[ModelGrid]:
             },
         ),
         ModelGrid(
-            model=RegressionModel(
-                preprocessing=simple_preprocessor, estimator=AdaBoostRegressor()
+            model=Model(
+                preprocessing=simple_preprocessor, predictor=AdaBoostRegressor()
             ),
             estimator_parameters={"n_estimators": [50, 80], **RANDOM_STATE},
         ),
         ModelGrid(
-            model=RegressionModel(
-                preprocessing=simple_preprocessor, estimator=RandomForestRegressor()
+            model=Model(
+                preprocessing=simple_preprocessor, predictor=RandomForestRegressor()
             ),
             estimator_parameters={"n_estimators": [50, 80], **RANDOM_STATE},
         ),
         ModelGrid(
-            model=RegressionModel(
-                preprocessing=simple_preprocessor, estimator=DecisionTreeRegressor()
+            model=Model(
+                preprocessing=simple_preprocessor, predictor=DecisionTreeRegressor()
             ),
             estimator_parameters={
                 "max_depth": [0.5, 1.0],
@@ -100,18 +98,18 @@ def regressor_grids(simple_preprocessor) -> List[ModelGrid]:
             },
         ),
         ModelGrid(
-            model=RegressionModel(
-                preprocessing=simple_preprocessor, estimator=ExtraTreeRegressor()
+            model=Model(
+                preprocessing=simple_preprocessor, predictor=ExtraTreeRegressor()
             ),
             estimator_parameters={"max_depth": [5, 10, 12], **RANDOM_STATE},
         ),
         ModelGrid(
-            model=RegressionModel(preprocessing=simple_preprocessor, estimator=SVR()),
+            model=Model(preprocessing=simple_preprocessor, predictor=SVR()),
             estimator_parameters={"gamma": [0.5, 1], "C": [50, 100]},
         ),
         ModelGrid(
-            model=RegressionModel(
-                preprocessing=simple_preprocessor, estimator=LinearRegression()
+            model=Model(
+                preprocessing=simple_preprocessor, predictor=LinearRegression()
             ),
             estimator_parameters={"normalize": [False, True]},
         ),
