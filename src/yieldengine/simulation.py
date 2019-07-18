@@ -3,7 +3,7 @@ from typing import *
 import numpy as np
 import pandas as pd
 
-from yieldengine.model.prediction import ModelFitCV
+from yieldengine.model.prediction import PredictorFitCV
 from yieldengine.preprocessing import FunctionTransformerDF
 
 
@@ -14,11 +14,11 @@ class UnivariateSimulation:
     F_PARAMETER_VALUE = "parameter_value"
     F_RELATIVE_TARGET_CHANGE = "relative_target_change"
 
-    def __init__(self, model_fit: ModelFitCV):
+    def __init__(self, model_fit: PredictorFitCV):
         self._model_fit = model_fit
 
     @property
-    def model_fit(self) -> ModelFitCV:
+    def model_fit(self) -> PredictorFitCV:
         return self._model_fit
 
     def simulate_feature(
