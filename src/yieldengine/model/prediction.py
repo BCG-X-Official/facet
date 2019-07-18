@@ -288,8 +288,6 @@ class ClassifierFitCV(PredictorFitCV):
                 )
             )
 
-        pass
-
     @staticmethod
     def _calibrate_probabilities_for_split(
         model: Model, test_sample: Sample, calibration: ProbabilityCalibrationMethod
