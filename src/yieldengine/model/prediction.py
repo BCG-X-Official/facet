@@ -271,6 +271,8 @@ class ClassifierFitCV(PredictorFitCV):
         self._probabilities_for_all_samples: Optional[pd.DataFrame] = None
 
     def probabilities_for_all_splits(self) -> pd.DataFrame:
+        # todo: add support for multi-class classifiers
+        # todo: add support for log probabilities
         if self._probabilities_for_all_samples is not None:
             return self._probabilities_for_all_samples
 
