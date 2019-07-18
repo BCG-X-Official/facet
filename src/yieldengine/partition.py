@@ -9,10 +9,10 @@ returns a list of central value in each partition,
 and :attr:`~Partitioning.n_partitions` is the number of partitions.
 """
 import logging
+import math
 from abc import ABC, ABCMeta, abstractmethod
 from typing import *
 
-import math
 import numpy as np
 import pandas as pd
 
@@ -144,7 +144,7 @@ class RangePartitioning(
         """
         Return the central values of the partitions.
 
-        :return: for each partition, return a central value representing the partition
+        :return: for each partition, a central value representing the partition
         """
         step = self._step
         return (
@@ -234,8 +234,6 @@ class ContinuousRangePartitioning(RangePartitioning[float]):
     For example, if the computed interval length is 0.2, some possible
     partitions would be:
     [3.2, 3.4), [3.4, 3.6), [3.6, 3.8), [4.0, 4.2), [4.4, 4.6), [4.6, 4.8]
-
-    Implementations must define :meth:`_step_size` and :meth:`_partition_center_offset`.
 
     :param values: list like of values to partition
     :param int max_partitions: the max number of partitions to make (default = 20);
