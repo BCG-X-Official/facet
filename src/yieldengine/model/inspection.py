@@ -86,7 +86,7 @@ class ModelInspector:
                 ids=observation_indices_in_split
             ).features
 
-            estimator = split_model.estimator
+            estimator = split_model.predictor
 
             if split_model.preprocessing is not None:
                 data_transformed = split_model.preprocessing.transform(split_x)

@@ -13,13 +13,9 @@ from sklearn.svm import SVR
 
 from yieldengine import Sample
 from yieldengine.df.transform import DataFrameTransformer
-from yieldengine.model import (
-    ClassificationModel,
-    ProbabilityCalibrationMethod,
-    RegressionModel,
-)
+from yieldengine.model import Model
 from yieldengine.model.inspection import ModelInspector
-from yieldengine.model.prediction import ModelFitCV
+from yieldengine.model.prediction import ModelFitCV, ProbabilityCalibrationMethod
 from yieldengine.model.selection import (
     ModelEvaluation,
     ModelGrid,
@@ -49,11 +45,11 @@ def test_model_inspection(available_cpus: int, boston_sample: Sample) -> None:
     # define parameters and models
     models = [
         ModelGrid(
-            model=RegressionModel(estimator=SVR(gamma="scale"), preprocessing=None),
+            model=Model(predictor=SVR(gamma="scale"), preprocessing=None),
             estimator_parameters={"kernel": ("linear", "rbf"), "C": [1, 10]},
         ),
         ModelGrid(
-            model=RegressionModel(estimator=LGBMRegressor(), preprocessing=None),
+            model=Model(predictor=LGBMRegressor(), preprocessing=None),
             estimator_parameters={
                 "max_depth": (1, 2, 5),
                 "min_split_gain": (0.1, 0.2, 0.5),
@@ -79,11 +75,11 @@ def test_model_inspection(available_cpus: int, boston_sample: Sample) -> None:
     log.debug(f"\n{summary_report(model_ranking[:10])}")
 
     # consider: model_with_type(...) function for ModelRanking
-    best_svr = [m for m in model_ranking if isinstance(m.model.estimator, SVR)][0]
+    best_svr = [m for m in model_ranking if isinstance(m.model.predictor, SVR)][0]
     best_lgbm = [
         model_evaluation
         for model_evaluation in model_ranking
-        if isinstance(model_evaluation.model.estimator, LGBMRegressor)
+        if isinstance(model_evaluation.model.predictor, LGBMRegressor)
     ][0]
 
     for model_evaluation in best_svr, best_lgbm:
@@ -167,7 +163,7 @@ def test_model_inspection_with_encoding(
     best_lgbm = [
         model_evaluation
         for model_evaluation in model_ranking
-        if isinstance(model_evaluation.model.estimator, LGBMRegressor)
+        if isinstance(model_evaluation.model.predictor, LGBMRegressor)
     ][0]
     for model_evaluation in [best_lgbm]:
         model_fit = ModelFitCV(
@@ -219,9 +215,7 @@ def test_model_inspection_classifier(available_cpus: int, iris_sample: Sample) -
     # define parameters and models
     models = [
         ModelGrid(
-            model=ClassificationModel(
-                estimator=RandomForestClassifier(), preprocessing=None
-            ),
+            model=Model(predictor=RandomForestClassifier(), preprocessing=None),
             estimator_parameters={"n_estimators": [50, 80]},
         )
     ]
@@ -248,18 +242,17 @@ def test_model_inspection_classifier(available_cpus: int, iris_sample: Sample) -
     # test various ProbabilityCalibrationMethods for a classifier:
     for calibration_method in (
         None,
-        ProbabilityCalibrationMethod.NO_CALIBRATION,
         ProbabilityCalibrationMethod.ISOTONIC,
         ProbabilityCalibrationMethod.SIGMOID,
     ):
 
-        model: ClassificationModel = model_evaluation.model
-        model._calibration_method = calibration_method
+        model = model_evaluation.model
 
         model_fit = ModelFitCV(
             model=model_evaluation.model,
             cv=test_cv,
             sample=test_sample,
+            calibration=calibration_method,
             n_jobs=available_cpus,
         )
 
