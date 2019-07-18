@@ -14,7 +14,7 @@ from sklearn.base import BaseEstimator
 
 from yieldengine.dendrogram import LinkageTree
 from yieldengine.model import Model
-from yieldengine.model.prediction import ModelFitCV
+from yieldengine.model.prediction import PredictorFitCV
 
 log = logging.getLogger(__name__)
 
@@ -23,14 +23,14 @@ class ModelInspector:
     """
     Class to inspect the shap values of a model.
 
-    :param ModelFitCV model_fit: predictor containing the information about the \
+    :param PredictorFitCV model_fit: predictor containing the information about the \
     model, the data (a Sample object), the cross-validation and predictions.
     """
 
     __slots__ = [
         "_shap_matrix",
         "_feature_dependency_matrix",
-        "_model_fit",
+        "_predictor_fit",
         "_explainer_factory",
     ]
 
@@ -38,7 +38,7 @@ class ModelInspector:
 
     def __init__(
         self,
-        model_fit: ModelFitCV,
+        predictor_fit: PredictorFitCV,
         explainer_factory: Optional[
             Callable[[BaseEstimator, pd.DataFrame], Explainer]
         ] = None,
@@ -46,7 +46,7 @@ class ModelInspector:
 
         self._shap_matrix: Optional[pd.DataFrame] = None
         self._feature_dependency_matrix: Optional[pd.DataFrame] = None
-        self._model_fit = model_fit
+        self._predictor_fit = predictor_fit
         self._explainer_factory = (
             explainer_factory
             if explainer_factory is not None
@@ -54,9 +54,9 @@ class ModelInspector:
         )
 
     @property
-    def model_fit(self) -> ModelFitCV:
-        """the `ModelFitCV` used for inspection"""
-        return self._model_fit
+    def model_fit(self) -> PredictorFitCV:
+        """the `PredictorFitCV` used for inspection"""
+        return self._predictor_fit
 
     def shap_matrix(self) -> pd.DataFrame:
         """
@@ -78,7 +78,7 @@ class ModelInspector:
         def _shap_matrix_for_split(split_id: int, split_model: Model) -> pd.DataFrame:
 
             observation_indices_in_split = predictions_by_observation_and_split.xs(
-                key=split_id, level=ModelFitCV.F_SPLIT_ID
+                key=split_id, level=PredictorFitCV.F_SPLIT_ID
             ).index
             log.debug(observation_indices_in_split.to_list())
 
