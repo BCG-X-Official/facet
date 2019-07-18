@@ -245,6 +245,8 @@ class ClassifierFitCV(PredictorFitCV):
         "_calibration",
     ]
 
+    F_PROBA = "proba_class_0"
+
     def __init__(
         self,
         model: Model,
@@ -289,9 +291,9 @@ class ClassifierFitCV(PredictorFitCV):
                 else self.calibrated_model(split_id=split_id)
             )
 
-            predictions = predictor.pipeline.predict_proba(X=test_sample.features)
+            probabilities = predictor.pipeline.predict_proba(X=test_sample.features)
 
-            n_classes = predictions.shape[1]
+            n_classes = probabilities.shape[1]
 
             # supporting only binary classification where n-classes == 2
             assert (
@@ -299,12 +301,12 @@ class ClassifierFitCV(PredictorFitCV):
             ), f"Got non-binary probabilities for {n_classes} classes"
 
             # just proceed with probabilities that it is class 0:
-            predictions = predictions.loc[:, predictions.columns[0]]
+            probabilities = probabilities.loc[:, probabilities.columns[0]]
 
             predictions_df = pd.DataFrame(
                 data={
                     PredictorFitCV.F_SPLIT_ID: split_id,
-                    PredictorFitCV.F_PREDICTION: predictions,
+                    ClassifierFitCV.F_PROBA: probabilities,
                 },
                 index=test_sample.index,
             )
