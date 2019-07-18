@@ -1,12 +1,12 @@
 # coding=utf-8
 """
-Selection and optimization of hyperparameter  and models.
+Model selection and hyperparameter optimisation.
 
 The :class:`ModelGrid` class encapsulates a `~yieldengine.model.Model` and a grid of
 hyperparameters.
 
-:class:`ModelRanker` allows to select the best model among a list of
-:class:`ModelGrid`.
+:class:`ModelRanker` selects the best model and parametrisation based on the
+model and hyperparameter choices provided as a list of :class:`ModelGrid`.
 """
 import re
 from collections import defaultdict
@@ -26,11 +26,11 @@ class ModelGrid:
     """
     A model with a grid of hyperparameters.
 
-    :param Model model: underlying :class:`Model`
-    :param ParameterGrid estimator_parameters: dict of the hyperparameter grid for
-      the estimator
-    :param preprocessing_parameters: dictionary of the hyperparameter grid for \
-      the preprocessing step of the model (can be None)
+    :param model: the :class:`Model` to which the hyperparameters will be applied
+    :param estimator_parameters: the hyperparameter grid in which to search for the \
+        optimal parameter values for the model's estimator
+    :param preprocessing_parameters: the hyperparameter grid in which to search for \
+        the optimal parameter values for the model's preprocessing pipeline (optional)
     """
 
     def __init__(
@@ -65,56 +65,59 @@ class ModelGrid:
 
     @property
     def model(self) -> Model:
-        """The underlying `Model`."""
+        """
+        The :class:`~yieldengine.model.Model` for which to optimise the parameters.
+        """
         return self._model
 
     @property
     def estimator_parameters(self) -> ParameterGrid:
-        """The dictionary of parameters for the estimator."""
+        """The parameter grid for the estimator."""
         return self._estimator_parameters
 
     @property
     def preprocessing_parameters(self) -> Optional[ParameterGrid]:
-        """The dictionary of parameters for the preprocessor."""
+        """The parameter grid for the preprocessor."""
         return self._preprocessing_parameters
 
     @property
     def parameters(self) -> ParameterGrid:
-        """Dict of the parameter grid of the estimator."""
+        """The parameters grid for the pipeline representing the entire model."""
         return self._grid
 
 
 class ModelScoring:
     """"
-    Statistics for a given split of a cross validated model.
+    Basic statistics on the scoring across all cross validation splits of a model.
 
-    :param split_scores: iterable of the scores of the split
+    :param split_scores: scores of all cross validation splits for a model
     """
 
     def __init__(self, split_scores: Iterable[float]):
         self.split_scores = np.array(split_scores)
 
     def mean(self) -> float:
-        """Mean of the scores of the splits."""
+        """:return: mean of the split scores"""
         return self.split_scores.mean()
 
     def std(self) -> float:
-        """Standard deviation of the split scores."""
+        """:return: standard deviation of the split scores"""
         return self.split_scores.std()
 
 
 class ModelEvaluation(NamedTuple):
     """
-    `NamedTuple` containing the information about a fitted model.
+    Scoring evaluation for a fitted model.
 
     Has attributes:
-    - model: the `Model`
-    - parameters: dict with keys the model parameters (str) and value the value of
-      the parameter
-    - scoring: dict with keys the str scores ("train_score", "test_score",
-      "train_r2",...)
-    - ranking_score: score for the default scorer. Should be one of the values of
-      `scoring`.
+    - model: the evaluated `Model`
+    - parameters: the hyperparameters selected for the model during grid \
+        search, as a mapping of parameter names to parameter values
+    - scoring: scorings for the model based on the provided scorers; \
+        each scoring is applied across all splits. (e.g.,
+        "train_score", "test_score", "train_r2", "test_r2")
+    - ranking_score: overall model score determined by the model ranker's default \
+        scorer and ranking metric
     """
 
     model: Model
@@ -128,18 +131,18 @@ class ModelRanker:
     Rank a list of model using a common cross-validation strategy.
 
     Given a list of `ModelGrid`, a cross-validation splitter and a scoring function,
-    a grid search is performed to find the best combination of model with
+    performs a grid search to find the best combination of model with
     hyperparameters for the given cross-validation splits and scoring function.
 
     :param grids: list of `ModelGrid` to be ranked
-    :param cv: a cross validation object (i.e. CircularCrossValidator)
+    :param cv: a cross validator (i.e. \
+        :class:`~yieldengine.model.validation.CircularCrossValidator`)
     :param scoring: a scorer to use when doing CV within GridSearch
     """
 
     __slots__ = ["_grids", "_scoring", "_cv", "_searchers", "_pipeline"]
 
     F_PARAMETERS = "params"
-    F_TEST_SCORE = "test_score"
 
     def __init__(
         self,
