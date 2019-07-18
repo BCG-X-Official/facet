@@ -23,8 +23,8 @@ class ModelInspector:
     """
     Class to inspect the shap values of a model.
 
-    :param PredictorFitCV model_fit: predictor containing the information about the \
-    model, the data (a Sample object), the cross-validation and predictions.
+    :param PredictorFitCV predictor_fit: predictor containing the information about
+    the model, the data (a Sample object), the cross-validation and predictions.
     """
 
     __slots__ = [
@@ -80,7 +80,6 @@ class ModelInspector:
             observation_indices_in_split = predictions_by_observation_and_split.xs(
                 key=split_id, level=PredictorFitCV.F_SPLIT_ID
             ).index
-            log.debug(observation_indices_in_split.to_list())
 
             split_x = sample.select_observations_by_index(
                 ids=observation_indices_in_split
