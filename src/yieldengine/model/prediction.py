@@ -286,7 +286,7 @@ class ClassifierFitCV(PredictorFitCV):
             predictor = (
                 self.fitted_model(split_id=split_id)
                 if self._calibration is None
-                else self.fitted_calibrated_model(split_id=split_id)
+                else self.calibrated_model(split_id=split_id)
             )
 
             predictions = predictor.pipeline.predict_proba(X=test_sample.features)
@@ -366,10 +366,17 @@ class ClassifierFitCV(PredictorFitCV):
 
         return model
 
-    def fitted_calibrated_model(self, split_id: int) -> Model:
+    def calibrated_model(self, split_id: int) -> Model:
         """
         :param split_id: start index of test split
         :return: the model fitted & calibrated for the train split at the given index
         """
         self._fit()
         return self._calibrated_model_by_split[split_id]
+
+    def calibrated_models(self) -> Iterator[Model]:
+        """
+        :return: an iterator of all models fitted & calibrated over all train splits
+        """
+        self._fit()
+        return iter(self._calibrated_model_by_split)
