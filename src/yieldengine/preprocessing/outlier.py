@@ -13,7 +13,8 @@ log = logging.getLogger(__name__)
 
 @df_transformer
 class OutlierRemoverDF(BaseEstimator, TransformerMixin):
-    """Remove outliers according to Tukey's method.
+    """
+    Remove outliers according to Tukey's method.
 
     A sample is considered an outlier if it is outside the range
     :math:`[Q_1 - iqr\\_ multiple(Q_3-Q_1), Q_3 + iqr\\_ multiple(Q_3-Q_1)]`
@@ -32,7 +33,10 @@ class OutlierRemoverDF(BaseEstimator, TransformerMixin):
 
     # noinspection PyPep8Naming
     def fit(self, X: pd.DataFrame, y: Optional[pd.Series] = None) -> "OutlierRemoverDF":
-        """Fit the transformer."""
+        """
+        Fit the transformer.
+
+        :return: the fitted transformer"""
         q1: pd.Series = X.quantile(q=0.25)
         q3: pd.Series = X.quantile(q=0.75)
         threshold_iqr: pd.Series = (q3 - q1) * self.iqr_multiple
@@ -42,7 +46,8 @@ class OutlierRemoverDF(BaseEstimator, TransformerMixin):
 
     # noinspection PyPep8Naming
     def transform(self, X: pd.DataFrame) -> pd.DataFrame:
-        """Return X where outliers are replaced by Nan.
+        """
+        Return X where outliers are replaced by Nan.
 
         :return: the dataframe X where outliers are replaced by Nan
         """

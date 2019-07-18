@@ -1,4 +1,5 @@
-"""Specify the high-level mechanisms to draw a dendrogram.
+"""
+Specify the high-level mechanisms to draw a dendrogram.
 
 The class :class:`~DendrogramDrawer` draws a dendrogram based
 on a :class:`~.linkage.LinkageTree` and a :class:`~DendrogramStyle`.
@@ -26,24 +27,25 @@ class DendrogramStyle(ABC):
     Base class for dendrogram drawing styles.
 
     Implementations must define `draw_leaf_labels`, `draw_title`, `draw_link_leg` \
-    and `draw_link_connector`
+    and `draw_link_connector`.
     """
 
     @abstractmethod
     def draw_leaf_labels(self, labels: Sequence[str]) -> None:
-        """Render the labels for all leaves"""
+        """Render the labels for all leaves."""
         pass
 
     @abstractmethod
     def draw_title(self, title: str) -> None:
-        """Draw the title of the dendrogram"""
+        """Draw the title of the dendrogram."""
         pass
 
     @abstractmethod
     def draw_link_leg(
         self, bottom: float, top: float, first_leaf: int, n_leaves: int, weight: float
     ) -> None:
-        """Draw a leaf of the linkage tree.
+        """
+        Draw a leaf of the linkage tree.
 
         :param bottom: the clustering level (i.e. similarity) of the child nodes
         :param top: the clustering level (i.e. similarity) of the parent node
@@ -63,7 +65,8 @@ class DendrogramStyle(ABC):
         n_leaves_right: int,
         weight: float,
     ) -> None:
-        """Draw a connector between two child nodes and their parent node.
+        """
+        Draw a connector between two child nodes and their parent node.
 
         :param bottom: the clustering level (i.e. similarity) of the child nodes
         :param top: the clustering level (i.e. similarity) of the parent node
@@ -76,7 +79,8 @@ class DendrogramStyle(ABC):
 
 
 class DendrogramDrawer:
-    """Class to draw a `LinkageTree` as a dendrogram.
+    """
+    Class to draw a `LinkageTree` as a dendrogram.
 
     The class has one public method `~self.draw` which draws the dendrogram.
 
@@ -94,12 +98,7 @@ class DendrogramDrawer:
         self._node_weight = node_weight = np.zeros(len(linkage_tree), float)
 
         def calculate_weights(n: Node) -> (float, int):
-            """
-            Calculate the weight of a node and number of leaves under it.
-
-            :param n: the node
-            :return: tuple (weight, n_leaves)
-            """
+            # Calculate the weight of a node and number of leaves under it
             if n.is_leaf:
                 weight = n.weight
                 n_leaves = 1
@@ -121,8 +120,8 @@ class DendrogramDrawer:
         self._style.draw_leaf_labels(tree_info.labels)
 
     def _draw(self, node: Node, y: int, width_relative: float) -> _SubtreeInfo:
-        """Recursively draw the part of the dendrogram for a given node and its
-        children.
+        """
+        Recursively draw the part of the dendrogram under a node.
 
         :param node: the node to be drawn
         :param y: the value determining the position of the node with respect to the

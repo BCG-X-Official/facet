@@ -14,7 +14,8 @@ __all__ = ["SimpleImputerDF", "MissingIndicatorDF"]
 
 
 class SimpleImputerDF(ColumnPreservingTransformer[SimpleImputer]):
-    """Wrap sklearn `SimpleImputer` and return a DataFrame.
+    """
+    Wrap sklearn `SimpleImputer` and return a DataFrame.
 
     The parameters are the same as the one passed to sklearn `SimpleImputer`.
     """
@@ -38,7 +39,8 @@ class SimpleImputerDF(ColumnPreservingTransformer[SimpleImputer]):
 
 
 class MissingIndicatorDF(DataFrameTransformer[MissingIndicator]):
-    """Wrap sklearn `MissingIndicator` and returns a DataFrame.
+    """
+    Wrap sklearn `MissingIndicator` and returns a DataFrame.
 
     The parameters are the same as the one passed to sklearn `MissingIndicator`.
     """

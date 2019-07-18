@@ -1,10 +1,12 @@
 # coding=utf-8
-"""Selection and optimization of hyperparameter  and models.
+"""
+Selection and optimization of hyperparameter  and models.
 
-The `~ModelGrid` class encapsulates a `~yieldengine.model.Model` and a grid of
+The :class:`ModelGrid` class encapsulates a `~yieldengine.model.Model` and a grid of
 hyperparameters.
 
-The `~ModelRanker` class allows to select the best model among a list of `~ModelGrid`.
+:class:`ModelRanker` allows to select the best model among a list of
+:class:`ModelGrid`.
 """
 import re
 from collections import defaultdict
@@ -21,9 +23,10 @@ ParameterGrid = Dict[str, Sequence[Any]]
 
 
 class ModelGrid:
-    """A model with a grid of hyperparameters.
+    """
+    A model with a grid of hyperparameters.
 
-    :param Model model: underlying `Model`
+    :param Model model: underlying :class:`Model`
     :param ParameterGrid estimator_parameters: dict of the hyperparameter grid for
       the estimator
     :param preprocessing_parameters: dictionary of the hyperparameter grid for \
@@ -82,7 +85,8 @@ class ModelGrid:
 
 
 class ModelScoring:
-    """"Statistics for a given split of a cross validated model.
+    """"
+    Statistics for a given split of a cross validated model.
 
     :param split_scores: iterable of the scores of the split
     """
@@ -100,10 +104,10 @@ class ModelScoring:
 
 
 class ModelEvaluation(NamedTuple):
-    """`NamedTuple` containing the information about a fitted model.
+    """
+    `NamedTuple` containing the information about a fitted model.
 
     Has attributes:
-
     - model: the `Model`
     - parameters: dict with keys the model parameters (str) and value the value of
       the parameter
@@ -120,7 +124,8 @@ class ModelEvaluation(NamedTuple):
 
 
 class ModelRanker:
-    """Rank a list of model using a common cross-validation strategy.
+    """
+    Rank a list of model using a common cross-validation strategy.
 
     Given a list of `ModelGrid`, a cross-validation splitter and a scoring function,
     a grid search is performed to find the best combination of model with
@@ -155,7 +160,8 @@ class ModelRanker:
 
     @staticmethod
     def default_ranking_scorer(scoring: ModelScoring) -> float:
-        """The default scoring function: ``mean - 2*std``.
+        """
+        The default scoring function: ``mean - 2*std``.
 
         Its output is used for ranking globally across the model zoo.
 
@@ -172,7 +178,8 @@ class ModelRanker:
         n_jobs: Optional[int] = None,
         pre_dispatch: str = "2*n_jobs",
     ) -> Sequence[ModelEvaluation]:
-        """Execute the pipeline for all models and compute the ranking.
+        """
+        Execute the pipeline for all models and compute the ranking.
 
         :param sample: sample to fit pipeline to
         :param ranking_scorer: scoring function used for ranking across models, \
@@ -219,7 +226,8 @@ class ModelRanker:
         def _scoring(
             cv_results: Mapping[str, Sequence[float]]
         ) -> List[Dict[str, ModelScoring]]:
-            """Convert a `cv_results_` attribute into dict's with `ModelScoring` values.
+            """
+            Convert a ``cv_results_`` attribute into dict's with `ModelScoring` values.
 
             Helper function;  for each model in the grid returns a tuple of test
             scores_for_split across all splits.
@@ -320,7 +328,8 @@ class ModelRanker:
 
 
 def summary_report(ranking: Sequence[ModelEvaluation]) -> str:
-    """Return a human-readable report of a `ModelRanker`.
+    """
+    Return a human-readable report of a :class:`ModelRanker`.
 
     :return: a summary string of the model ranking
     """

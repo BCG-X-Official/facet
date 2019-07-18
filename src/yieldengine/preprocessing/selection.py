@@ -1,4 +1,9 @@
-"""Boruta method for feature selection."""
+"""
+Select relevant features.
+
+The Boruta method selects the features that perform better than noise. See `BorutaPy
+<https://github.com/scikit-learn-contrib/boruta_py>`_.
+"""
 
 import pandas as pd
 from boruta import BorutaPy
@@ -9,7 +14,9 @@ __all__ = ["BorutaDF"]
 
 
 class BorutaDF(NDArrayTransformerDF[BorutaPy], ColumnPreservingTransformer[BorutaPy]):
-    """Wrap the boruta class `BorutaPy` for feature selection and return a dataframe.
+    """
+    Wrap the boruta class :class:`BorutaPy` for feature selection and return a
+    dataframe.
 
     The `fit` method of self accepts a dataframe and the transform method
     returns a dataframe.

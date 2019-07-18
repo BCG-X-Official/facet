@@ -15,7 +15,8 @@ __all__ = ["ColumnTransformerDF"]
 
 
 class ColumnTransformerDF(DataFrameTransformer[ColumnTransformer]):
-    """Wrap sklearn ```ColumnTransformer``` and return a DataFrame.
+    """
+    Wrap sklearn ```ColumnTransformer``` and return a DataFrame.
 
     Like a sklearn `ColumnTransformer`, self has a `transformers` parameter (None by
     default) which is a list of tuple of the form (name, transformer, column(s)),
@@ -54,7 +55,8 @@ class ColumnTransformerDF(DataFrameTransformer[ColumnTransformer]):
         return ColumnTransformer(**kwargs)
 
     def _get_columns_original(self) -> pd.Series:
-        """Return the series mapping output column names to original columns names.
+        """
+        Return the series mapping output column names to original columns names.
 
         :return: the series with index the column names of the output dataframe and
         values the corresponding input column names.
