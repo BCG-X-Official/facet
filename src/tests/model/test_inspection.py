@@ -222,7 +222,7 @@ def test_model_inspection_classifier(available_cpus: int, iris_sample: Sample) -
     models = [
         ModelGrid(
             model=Model(predictor=RandomForestClassifier(), preprocessing=None),
-            estimator_parameters={"n_estimators": [50, 80]},
+            estimator_parameters={"n_estimators": [50, 80], "random_state": [42]},
         )
     ]
 
