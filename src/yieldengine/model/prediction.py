@@ -1,15 +1,15 @@
 # coding=utf-8
-"""Module with the `ModelFitCV class which gather information from a model, its
+"""Module with the `PredictorFitCV class which gather information from a model, its
 cross validation and the sample used."""
 
 import copy
 import logging
+from abc import ABC
 from enum import Enum
 from typing import *
 
 import pandas as pd
 from joblib import delayed, Parallel
-from sklearn.base import ClassifierMixin, RegressorMixin
 from sklearn.calibration import CalibratedClassifierCV
 from sklearn.model_selection import BaseCrossValidator
 
@@ -24,7 +24,7 @@ class ProbabilityCalibrationMethod(Enum):
     ISOTONIC = "isotonic"
 
 
-class ModelFitCV:
+class PredictorFitCV(ABC):
     """
     A model fitted multiple times to different subsets of a given sample, \
     determined by the train splits from a given cross-validator.
@@ -46,7 +46,6 @@ class ModelFitCV:
         "_n_jobs",
         "_shared_memory",
         "_verbose",
-        "_calibration",
     ]
 
     F_SPLIT_ID = "split_id"
@@ -58,7 +57,6 @@ class ModelFitCV:
         model: Model,
         cv: BaseCrossValidator,
         sample: Sample,
-        calibration: Optional[ProbabilityCalibrationMethod] = None,
         n_jobs: int = 1,
         shared_memory: bool = True,
         verbose: int = 0,
@@ -66,11 +64,9 @@ class ModelFitCV:
         self._model = model
         self._cv = cv
         self._sample = sample
-        self._calibration = calibration
         self._n_jobs = n_jobs
         self._shared_memory = shared_memory
         self._verbose = verbose
-
         self._model_by_split: Optional[List[Model]] = None
         self._predictions_for_all_samples: Optional[pd.DataFrame] = None
 
@@ -133,22 +129,6 @@ class ModelFitCV:
             for train_indices, _ in self.cv.split(sample.features, sample.target)
         )
 
-        if self._calibration is not None:
-            log.info(
-                f"Calibrating classifier probabilities"
-                f" using method: {self._calibration.value}"
-            )
-            self._model_by_split: List[Model] = self._parrallel()(
-                delayed(self._calibrate_probabilities_for_split)(
-                    self._model_by_split[idx],
-                    sample.select_observations_by_position(positions=test_indices),
-                    self._calibration,
-                )
-                for idx, (_, test_indices) in enumerate(
-                    self.cv.split(sample.features, sample.target)
-                )
-            )
-
     def _parrallel(self) -> Parallel:
         return Parallel(
             n_jobs=self._n_jobs,
@@ -158,15 +138,17 @@ class ModelFitCV:
 
     def _series_for_split(self, split_id: int, column: str) -> pd.Series:
         all_predictions: pd.DataFrame = self.predictions_for_all_splits()
-        return all_predictions.xs(key=split_id, level=ModelFitCV.F_SPLIT_ID).loc[
+        return all_predictions.xs(key=split_id, level=PredictorFitCV.F_SPLIT_ID).loc[
             :, column
         ]
 
     def predictions_for_split(self, split_id: int) -> pd.Series:
-        return self._series_for_split(split_id=split_id, column=ModelFitCV.F_PREDICTION)
+        return self._series_for_split(
+            split_id=split_id, column=PredictorFitCV.F_PREDICTION
+        )
 
     def targets_for_split(self, split_id: int) -> pd.Series:
-        return self._series_for_split(split_id=split_id, column=ModelFitCV.F_TARGET)
+        return self._series_for_split(split_id=split_id, column=PredictorFitCV.F_TARGET)
 
     def predictions_for_all_splits(self) -> pd.DataFrame:
         """
@@ -183,7 +165,6 @@ class ModelFitCV:
         """
 
         if self._predictions_for_all_samples is None:
-
             self._fit()
 
             sample = self.sample
@@ -198,32 +179,14 @@ class ModelFitCV:
                     positions=test_indices
                 )
 
-                if isinstance(self.model.predictor, RegressorMixin):
-                    predictions = self.fitted_model(split_id=split_id).pipeline.predict(
-                        X=test_sample.features
-                    )
-                elif isinstance(self.model.predictor, ClassifierMixin):
-                    predictions = self.fitted_model(
-                        split_id=split_id
-                    ).pipeline.predict_proba(X=test_sample.features)
-
-                    n_classes = predictions.shape[1]
-
-                    # supporting only binary classification where n-classes == 2
-                    assert (
-                        n_classes == 2
-                    ), f"Got non-binary probabilities for {n_classes} classes"
-
-                    # just proceed with probabilities that it is class 0:
-                    predictions = predictions.loc[:, predictions.columns[0]]
-
-                else:
-                    raise TypeError(f"Unknown model type: {self.model.__class__}")
+                predictions = self.fitted_model(split_id=split_id).pipeline.predict(
+                    X=test_sample.features
+                )
 
                 predictions_df = pd.DataFrame(
                     data={
-                        ModelFitCV.F_SPLIT_ID: split_id,
-                        ModelFitCV.F_PREDICTION: predictions,
+                        PredictorFitCV.F_SPLIT_ID: split_id,
+                        PredictorFitCV.F_PREDICTION: predictions,
                     },
                     index=test_sample.index,
                 )
@@ -232,8 +195,8 @@ class ModelFitCV:
 
             self._predictions_for_all_samples = (
                 pd.concat(splitwise_predictions)
-                .join(sample.target.rename(ModelFitCV.F_TARGET))
-                .set_index(ModelFitCV.F_SPLIT_ID, append=True)
+                .join(sample.target.rename(PredictorFitCV.F_TARGET))
+                .set_index(PredictorFitCV.F_SPLIT_ID, append=True)
             )
 
         return self._predictions_for_all_samples
@@ -262,10 +225,138 @@ class ModelFitCV:
         model.pipeline.fit(X=train_sample.features, y=train_sample.target)
         return model
 
+
+class RegressorFitCV(PredictorFitCV):
+    pass
+
+
+class ClassifierFitCV(PredictorFitCV):
+    __slots__ = [
+        "_model",
+        "_cv",
+        "_sample",
+        "_predictions_for_all_samples",
+        "_probabilities_for_all_samples",
+        "_model_by_split",
+        "_calibrated_model_by_split",
+        "_n_jobs",
+        "_shared_memory",
+        "_verbose",
+        "_calibration",
+    ]
+
+    F_PROBA = "proba_class_0"
+
+    def __init__(
+        self,
+        model: Model,
+        cv: BaseCrossValidator,
+        sample: Sample,
+        calibration: Optional[ProbabilityCalibrationMethod] = None,
+        n_jobs: int = 1,
+        shared_memory: bool = True,
+        verbose: int = 0,
+    ):
+        super().__init__(
+            model=model,
+            cv=cv,
+            sample=sample,
+            n_jobs=n_jobs,
+            shared_memory=shared_memory,
+            verbose=verbose,
+        )
+
+        self._calibration = calibration
+        self._calibrated_model_by_split: Optional[List[Model]] = None
+        self._probabilities_for_all_samples: Optional[pd.DataFrame] = None
+
+    def probabilities_for_all_splits(self) -> pd.DataFrame:
+        # todo: add support for multi-class classifiers
+        # todo: add support for log probabilities
+        if self._probabilities_for_all_samples is not None:
+            return self._probabilities_for_all_samples
+
+        self._fit()
+
+        sample = self.sample
+
+        splitwise_predictions = []
+
+        for split_id, (_, test_indices) in enumerate(
+            self.cv.split(sample.features, sample.target)
+        ):
+            test_sample = sample.select_observations_by_position(positions=test_indices)
+
+            predictor = (
+                self.fitted_model(split_id=split_id)
+                if self._calibration is None
+                else self.calibrated_model(split_id=split_id)
+            )
+
+            probabilities = predictor.pipeline.predict_proba(X=test_sample.features)
+
+            n_classes = probabilities.shape[1]
+
+            # supporting only binary classification where n-classes == 2
+            assert (
+                n_classes == 2
+            ), f"Got non-binary probabilities for {n_classes} classes"
+
+            # just proceed with probabilities that it is class 0:
+            probabilities = probabilities.loc[:, probabilities.columns[0]]
+
+            predictions_df = pd.DataFrame(
+                data={
+                    PredictorFitCV.F_SPLIT_ID: split_id,
+                    ClassifierFitCV.F_PROBA: probabilities,
+                },
+                index=test_sample.index,
+            )
+
+            splitwise_predictions.append(predictions_df)
+
+        self._probabilities_for_all_samples = (
+            pd.concat(splitwise_predictions)
+            .join(sample.target.rename(PredictorFitCV.F_TARGET))
+            .set_index(PredictorFitCV.F_SPLIT_ID, append=True)
+        )
+
+        return self._probabilities_for_all_samples
+
+    def _fit(self) -> None:
+        super()._fit()
+
+        if self._calibration is not None:
+
+            if self._calibrated_model_by_split is not None:
+                return
+
+            sample = self.sample
+            log.info(
+                f"Calibrating classifier probabilities"
+                f" using method: {self._calibration.value}"
+            )
+            self._calibrated_model_by_split: List[Model] = self._parrallel()(
+                delayed(self._calibrate_probabilities_for_split)(
+                    # note: we specifically do not clone here, since
+                    # CalibratedClassifierCV does expect a fitted classifier and does
+                    # clone it itself - hence deepcopy so to be able to further
+                    # differentiate between _model_by_split & _calibrated_model_by_split
+                    self._model_by_split[idx],
+                    sample.select_observations_by_position(positions=test_indices),
+                    self._calibration,
+                )
+                for idx, (_, test_indices) in enumerate(
+                    self.cv.split(sample.features, sample.target)
+                )
+            )
+
     @staticmethod
     def _calibrate_probabilities_for_split(
         model: Model, test_sample: Sample, calibration: ProbabilityCalibrationMethod
     ) -> Model:
+        # todo: design more "elegant" approach to create new model w/o using deepcopy
+        model = copy.deepcopy(model)
 
         cv = CalibratedClassifierCV(
             base_estimator=model.predictor, method=calibration.value, cv="prefit"
@@ -278,4 +369,26 @@ class ModelFitCV:
 
         cv.fit(X=data_transformed, y=test_sample.target)
 
+        model._predictor = cv.calibrated_classifiers_[0]
+
+        model.pipeline.steps[-1] = (Model.STEP_ESTIMATOR, cv.calibrated_classifiers_[0])
+
         return model
+
+    def calibrated_model(self, split_id: int) -> Model:
+        """
+        :param split_id: start index of test split
+        :return: the model fitted & calibrated for the train split at the given index
+        """
+        self._fit()
+        return self._calibrated_model_by_split[split_id]
+
+    def calibrated_models(self) -> Iterator[Model]:
+        """
+        :return: an iterator of all models fitted & calibrated over all train splits
+        """
+        if self._calibration is None:
+            raise NotImplementedError("Calibration is 'None' for this ClassifierFitCV")
+
+        self._fit()
+        return iter(self._calibrated_model_by_split)
