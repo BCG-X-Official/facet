@@ -30,9 +30,21 @@ By default `make html` only compiles files which have been modfified since last
 compilation. To force the compilation of the full documentation enter first `make 
 clean`.  
 
-## 2. Documentation guideline
+## 2. Git guidelines
 
-### 2.1 General guidelines
+- For commits to GitHub, phrase commit comments as the completion of the sentence
+ "This commit will <...>", e.g.
+    ```
+    add method foo to class Bar
+    ``` 
+    but not
+    ```
+    added method foo to class Bar 
+    ```
+
+## 3. Documentation guidelines
+
+### 3.1 General guidelines
 
 - The documentation is generated from docstrings in the source code
 
@@ -45,7 +57,7 @@ clean`.
 - Provide examples wherever this helps explain usage patterns
 
 
-### 2.2 Docstring guidelines
+### 3.2 Docstring guidelines
 
 - A docstring is mandatory for all of the following entities in the source code
 , except when they are protected/private (i.e. the name starts with a leading `_
@@ -166,7 +178,7 @@ have a comment that describes what the method does.
         :param sample: training sample"""
     ```
 
-### 2.3 Docstring tips & tricks
+### 3.3 Docstring tips & tricks
 
 - To render text as a code, enclose it in double backquotes, e.g.,
     ``` 
