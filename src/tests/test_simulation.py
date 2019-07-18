@@ -5,7 +5,7 @@ import pandas as pd
 
 from yieldengine import Sample
 from yieldengine.df.transform import DataFrameTransformer
-from yieldengine.model.prediction import ModelFitCV
+from yieldengine.model.prediction import RegressorFitCV
 from yieldengine.model.selection import ModelEvaluation, ModelGrid, ModelRanker
 from yieldengine.model.validation import CircularCrossValidator
 from yieldengine.partition import ContinuousRangePartitioning
@@ -37,7 +37,7 @@ def test_univariate_simulation(
         sample=sample, n_jobs=available_cpus
     )
 
-    model_fit = ModelFitCV(
+    model_fit = RegressorFitCV(
         model=model_ranking[0].model,
         cv=circular_cv,
         sample=sample,
