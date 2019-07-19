@@ -32,7 +32,7 @@ class PipelineDF(
     Wrap around :class:`sklearn.pipeline.Pipeline` with dataframes in input and output.
 
     :param `**kwargs`: the arguments used to construct the wrapped
-    :class:`~sklearn.pipeline.Pipeline`
+      :class:`~sklearn.pipeline.Pipeline`
     """
 
     def __init__(self, **kwargs) -> None:
