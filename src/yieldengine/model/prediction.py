@@ -237,6 +237,7 @@ class ClassifierFitCV(PredictorFitCV):
         "_sample",
         "_predictions_for_all_samples",
         "_probabilities_for_all_samples",
+        "_log_probabilities_for_all_samples",
         "_model_by_split",
         "_calibrated_model_by_split",
         "_n_jobs",
@@ -269,12 +270,25 @@ class ClassifierFitCV(PredictorFitCV):
         self._calibration = calibration
         self._calibrated_model_by_split: Optional[List[Model]] = None
         self._probabilities_for_all_samples: Optional[pd.DataFrame] = None
+        self._log_probabilities_for_all_samples: Optional[pd.DataFrame] = None
 
     def probabilities_for_all_splits(self) -> pd.DataFrame:
-        # todo: add support for log probabilities
-        if self._probabilities_for_all_samples is not None:
-            return self._probabilities_for_all_samples
+        if self._probabilities_for_all_samples is None:
+            self._probabilities_for_all_samples = self._probabilities_for_all_splits(
+                log_proba=False
+            )
 
+        return self._probabilities_for_all_samples
+
+    def log_probabilities_for_all_splits(self) -> pd.DataFrame:
+        if self._log_probabilities_for_all_samples is None:
+            self._log_probabilities_for_all_samples = self._probabilities_for_all_splits(
+                log_proba=True
+            )
+
+        return self._log_probabilities_for_all_samples
+
+    def _probabilities_for_all_splits(self, log_proba: bool) -> pd.DataFrame:
         self._fit()
 
         sample = self.sample
@@ -292,7 +306,12 @@ class ClassifierFitCV(PredictorFitCV):
                 else self.calibrated_model(split_id=split_id)
             )
 
-            probabilities = predictor.pipeline.predict_proba(X=test_sample.features)
+            if log_proba:
+                probabilities = predictor.pipeline.predict_log_proba(
+                    X=test_sample.features
+                )
+            else:
+                probabilities = predictor.pipeline.predict_proba(X=test_sample.features)
 
             # todo: can remove this, when solely using DataFrameClassifiers
             if hasattr(predictor.predictor, "classes_"):
@@ -311,13 +330,11 @@ class ClassifierFitCV(PredictorFitCV):
 
             splitwise_predictions.append(predictions_df)
 
-        self._probabilities_for_all_samples = (
+        return (
             pd.concat(splitwise_predictions)
             .join(sample.target.rename(PredictorFitCV.F_TARGET))
             .set_index(PredictorFitCV.F_SPLIT_ID, append=True)
         )
-
-        return self._probabilities_for_all_samples
 
     def _fit(self) -> None:
         super()._fit()
