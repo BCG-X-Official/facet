@@ -23,6 +23,7 @@ log = logging.getLogger(__name__)
 K_FOLDS: int = 5
 TEST_RATIO = 1 / K_FOLDS
 N_SPLITS = K_FOLDS * 2
+CALIBRATION_DIFF_THRESHOLD = 0.3
 
 
 def test_prediction_classifier(available_cpus: int, iris_sample: Sample) -> None:
@@ -115,8 +116,6 @@ def test_prediction_classifier(available_cpus: int, iris_sample: Sample) -> None
                 log_proba_df.loc[:, "setosa"] == np.log(proba_df.loc[:, "setosa"])
             )
 
-    PROBABILITY_EFFECT_THRESHOLD = 0.3
-
     for p1, p2 in combinations(
         [
             ProbabilityCalibrationMethod.ISOTONIC,
@@ -129,4 +128,4 @@ def test_prediction_classifier(available_cpus: int, iris_sample: Sample) -> None
 
         log.info(f"Cumulative diff of calibration {p1} vs {p2} is: {cumulative_diff}")
 
-        assert cumulative_diff > PROBABILITY_EFFECT_THRESHOLD
+        assert cumulative_diff > CALIBRATION_DIFF_THRESHOLD
