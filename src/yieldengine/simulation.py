@@ -20,7 +20,7 @@ class UnivariateSimulation:
     Aggregated percentiles uplift are then computed by
     :meth:`UnivariateSimulation.aggregate_simulation_results`.
 
-    :param ModelFitCV model_fit: fitted model used for the simulation
+    :param model_fit: fitted model used for the simulation
     """
 
     __slots__ = ["_model_fit"]
@@ -118,7 +118,7 @@ class UnivariateSimulation:
             """
             Return the function computed the n-th percentile.
 
-            :param int n: the percentile to compute; int between 0 and 100
+            :param n: the percentile to compute; int between 0 and 100
             :return: the n-th percentile function
             """
 
@@ -142,15 +142,15 @@ class UnivariateSimulation:
         """
         Replace the values in a column with a constant value.
 
-        :param str feature_name: the name of the column
-        :param object feature_value: the constant value to use to fill the column
+        :param feature_name: the name of the column
+        :param feature_value: the constant value to use to fill the column
         `feature_name`
-        :return: a :class:`FunctionTransformerDF` that fill the values in
-        the column `feature_name` by the constant value `feature_value`
+        :return: transformer that fills the values in the column `feature_name` by the
+          constant value ``feature_value``
         """
 
         def transform(x: pd.DataFrame) -> pd.DataFrame:
-            # Set all values in the column feature_name to feature_value
+            """Set all values in the column feature_name to feature_value."""
             x[feature_name] = feature_value
             return x
 

@@ -1,5 +1,10 @@
 # coding=utf-8
-"""Base classes for wrapper around regressors and classifiers returning dataframes."""
+"""
+Base classes for wrapper around regressors and classifiers returning dataframes.
+
+:class:`DataFramePredictor` is an abstract class that specifies ``predict``,
+``fit_predict`` and ``score`` methods which have dataframes as input and output.
+"""
 
 import logging
 from abc import ABC

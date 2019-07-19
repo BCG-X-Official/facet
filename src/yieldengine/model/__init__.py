@@ -1,7 +1,7 @@
 """
-Models to make prediciton.
+Models to make predictions.
 
-The :class:`Model` specifies a model as a pipeline with two steps:
+:class:`Model` specifies a model as a pipeline with two steps:
 - a preprocessing step
 - an estimator step
 """
@@ -27,12 +27,14 @@ class Model:
     """
     Specify the preprocessing step and the estimator for a model.
 
-    A model can creates a pipeline for a preprocessing transformer (optional; possibly a
+    A model can create a pipeline for a preprocessing transformer (optional; possibly a
     pipeline itself) and an estimator.
 
-    :param Estimator predictor: the base estimator used in the pipeline
+    :param predictor: the base estimator used in the pipeline
+    :type predictor: :class:`.DataFramePredictor` or RegressorMixin or
+      ClassifierMixin
     :param preprocessing: the preprocessing step in the pipeline (None or \
-    `DataFrameTransformer`)
+      `DataFrameTransformer`)
     """
 
     __slots__ = ["_pipeline", "_preprocessing", "_predictor"]

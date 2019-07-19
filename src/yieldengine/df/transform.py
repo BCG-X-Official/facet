@@ -1,12 +1,17 @@
 # coding=utf-8
 """
-Transform dataframe wrapping the scikit-learn API of transformers.
+Wrappers around scikit-learn transformer.
+
+Create classes analogue to :class:`sklearn.base.TransformerMixin`. The outcome are
+classes the have ``fit``, ``transform`` and ``fit_transform`` methods that accept and
+return dataframes (while scikit-learn transformers alwsays return a numpy array and
+sometimes do not accept a dataframe as input).
 
 :class:`DataFrameTransformer` is an ABC class that wraps sklearn
 :class:`sklearn.base.TransformerMixin`.
-It has ``fit``, ``transform`` and ``fit_transform`` methods.
 
-
+The attribute :attr:`DataFrameTransformer.columns_original` is a
+:class:`pandas.Series` with index the output columns and values the input column names.
 """
 
 import logging
@@ -32,7 +37,8 @@ class DataFrameTransformer(DataFrameEstimator[_BaseTransformer], TransformerMixi
     """
     Wrap a :class:`sklearn.base.TransformerMixin` and return dataframes.
 
-    Implementations must define ``_make_base_transformer`` and ``_get_columns_original``.
+    Implementations must define ``_make_base_transformer`` and
+    ``_get_columns_original``.
 
     :param `**kwargs`: parameters of scikit-learn transformer to be wrapped
     """
