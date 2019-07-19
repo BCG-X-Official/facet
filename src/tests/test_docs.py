@@ -112,7 +112,7 @@ def extract_params_from_docstr(docstr: str) -> List[str]:
     :return: list of parameter names
     """
     all_params = re.findall(
-        pattern="(\:param\s+)(.{1,40})(\:)", string=docstr, flags=re.MULTILINE
+        pattern="(\\:param\\s+)(.{1,40})(\\:)", string=docstr, flags=re.MULTILINE
     )
 
     return [p[1].strip() for p in all_params]
