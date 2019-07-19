@@ -1,4 +1,13 @@
-"""Impute and indicate missing values."""
+"""
+Wrap scikit-learn imputers with dataframes as input and output.
+
+The classes defined in this module all  have ``fit``, ``transform``
+and ``fit_transform`` methods and have dataframes as input and output.
+
+:class:`SimpleImputerDF` wraps :class:`sklearn.impute.SimpleImputer`.
+
+:class:`MissingIndicatorDF` wraps :class:`sklearn.impute.SimpleImputer`.
+"""
 
 import logging
 
@@ -15,9 +24,12 @@ __all__ = ["SimpleImputerDF", "MissingIndicatorDF"]
 
 class SimpleImputerDF(ColumnPreservingTransformer[SimpleImputer]):
     """
-    Wrap sklearn `SimpleImputer` and return a DataFrame.
+    Impute missing values with dataframes as input and output.
 
-    The parameters are the same as the one passed to sklearn `SimpleImputer`.
+    Wrap around :class:`sklearn.impute.SimpleImputer`. The ``fit``,
+    ``transform`` and ``fit_transform`` methods accept and return dataframes.
+    The parameters are the same as the one passed to
+    :class:`sklearn.impute.SimpleImputer`.
     """
 
     def __init__(self, **kwargs) -> None:
@@ -40,9 +52,15 @@ class SimpleImputerDF(ColumnPreservingTransformer[SimpleImputer]):
 
 class MissingIndicatorDF(DataFrameTransformer[MissingIndicator]):
     """
-    Wrap sklearn `MissingIndicator` and returns a DataFrame.
+    Indicate missing values with dataframes as input and output.
 
-    The parameters are the same as the one passed to sklearn `MissingIndicator`.
+    Wrap :class:`sklearn.impute.MissingIndicatorDF`. The ``fit``,
+    ``transform`` and ``fit_transform`` methods accept and return dataframes.
+    The parameters are the same as the one passed to
+    :class:`sklearn.impute.MissingIndicator`.
+
+    The parameters are the same as the one passed to
+    :class:`sklearn.impute.MissingIndicator`.
     """
 
     def __init__(

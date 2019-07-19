@@ -2,8 +2,9 @@
 """
 Fitted models with cross-validation.
 
-The `~PredictorFitCV` encapsulates a fully trained model. It contains a `Model` (
-preprocessing + estimator), a dataset given by a `Sample` object and a
+:class:`PredictorFitCV` encapsulates a fully trained model.
+It contains a :class:`.Model` (preprocessing + estimator), a dataset given by a
+:class:`yieldengine.Sample` object and a
 cross-validation method. The model is fitted accordingly.
 """
 import copy
@@ -32,9 +33,9 @@ class PredictorFitCV(ABC):
     """
     Full information about a model fitted with cross-validation.
 
-    :param Model model: model to be fitted
-    :param BaseCrossValidator cv: the cross validator generating the train splits
-    :param Sample sample: the sample from which the training sets are drawn
+    :param model: model to be fitted
+    :param cv: the cross validator generating the train splits
+    :param sample: the sample from which the training sets are drawn
     """
 
     __slots__ = [
@@ -77,14 +78,12 @@ class PredictorFitCV(ABC):
 
     @property
     def cv(self) -> BaseCrossValidator:
-        """The cross validator generating the train splits.
-        """
+        """The cross validator generating the train splits."""
         return self._cv
 
     @property
     def sample(self) -> Sample:
-        """The sample from which the training sets are drawn
-        """
+        """The sample from which the training sets are drawn."""
         return self._sample
 
     @property
@@ -98,7 +97,8 @@ class PredictorFitCV(ABC):
         return iter(self._model_by_split)
 
     def fitted_model(self, split_id: int) -> Model:
-        """Return the fitted model for a given split.
+        """
+        Return the fitted model for a given split.
 
         :param split_id: start index of test split
         :return: the model fitted for the train split at the given index
@@ -154,12 +154,12 @@ class PredictorFitCV(ABC):
 
     def predictions_for_all_splits(self) -> pd.DataFrame:
         """
-        For each split of this Predictor's CV, predict all values in the test set.
+        Predict all values in the test set.
 
         The result is a data frame with one row per prediction, indexed by the
-        observations in the sample and the split id (index level F_SPLIT_ID),
-        and with columns F_PREDICTION (the predicted value for the
-        given observation and split), and F_TARGET (the actual target)
+        observations in the sample and the split id (index level ``F_SPLIT_ID``),
+        and with columns ``F_PREDICTION` (the predicted value for the
+        given observation and split), and ``F_TARGET`` (the actual target)
 
         Note that there can be multiple prediction rows per observation if the test
         splits overlap.
@@ -218,11 +218,12 @@ class PredictorFitCV(ABC):
 
     @staticmethod
     def _fit_model_for_split(model: Model, train_sample: Sample) -> Model:
-        """Fit a model using a sample.
+        """
+        Fit a model using a sample.
 
         :param model:  the :class:`yieldengine.model.Model` to fit
-        :param train_sample: `Sample` to fit on
-        :return: tuple of the the split_id and the fitted `Model`
+        :param train_sample: data used to fit the model
+        :return: fitted model for the split
         """
         model.pipeline.fit(X=train_sample.features, y=train_sample.target)
         return model
