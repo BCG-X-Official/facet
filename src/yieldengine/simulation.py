@@ -51,7 +51,7 @@ class UnivariateSimulation:
         :param feature_name: name of the feature to use in the simulation
         :param feature_values: values to use in the simulation
         :return: dataframe with three columns: `split_id`, `parameter_value` and
-        `relative_target_change`.
+          `relative_target_change`.
         """
         if feature_name not in self.model_fit.sample.feature_names:
             raise ValueError(f"Feature '{feature_name}' not in sample")
@@ -111,7 +111,7 @@ class UnivariateSimulation:
           and `relative_yield_change`
         :param percentiles: the list of percentiles
         :return: dataframe with columns percentile_<p> where p goes through the list
-        `percentiles` and whose index is given by the parameter values
+          `percentiles` and whose index is given by the parameter values
         """
 
         def percentile(n: int) -> Callable[float, float]:
@@ -144,7 +144,7 @@ class UnivariateSimulation:
 
         :param feature_name: the name of the column
         :param feature_value: the constant value to use to fill the column
-        `feature_name`
+          `feature_name`
         :return: transformer that fills the values in the column `feature_name` by the
           constant value ``feature_value``
         """
