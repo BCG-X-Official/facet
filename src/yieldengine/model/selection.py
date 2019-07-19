@@ -110,13 +110,14 @@ class ModelEvaluation(NamedTuple):
     Scoring evaluation for a fitted model.
 
     Has attributes:
+
     - model: the evaluated  :class:`~yieldengine.model.Model`
-    - parameters: the hyperparameters selected for the model during grid \
+    - parameters: the hyperparameters selected for the model during grid
         search, as a mapping of parameter names to parameter values
-    - scoring: scorings for the model based on the provided scorers; \
+    - scoring: scorings for the model based on the provided scorers;
         each scoring is applied across all splits. (e.g.,
         "train_score", "test_score", "train_r2", "test_r2")
-    - ranking_score: overall model score determined by the model ranker's default \
+    - ranking_score: overall model score determined by the model ranker's default
         scorer and ranking metric
     """
 
