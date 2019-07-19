@@ -1,9 +1,10 @@
 """
-Specify the high-level mechanisms to draw a dendrogram.
+Draw and set the plot styles of dendrograms.
 
-The class :class:`~DendrogramDrawer` draws a dendrogram based
-on a :class:`~.linkage.LinkageTree` and a :class:`~DendrogramStyle`.
-The class `~DendrogramStyle` is an abstract class that that must be implemented for
+The class :class:`DendrogramDrawer` draws a dendrogram based
+on :class:`~linkage.LinkageTree` and a :class:`DendrogramStyle`.
+
+The class :class:`DendrogramStyle` is an abstract class that that must be implemented for
 each specific style.
 """
 import logging
@@ -32,12 +33,18 @@ class DendrogramStyle(ABC):
 
     @abstractmethod
     def draw_leaf_labels(self, labels: Sequence[str]) -> None:
-        """Render the labels for all leaves."""
+        """Render the labels for all leaves.
+
+        :param labels: labels of the leaves
+        """
         pass
 
     @abstractmethod
     def draw_title(self, title: str) -> None:
-        """Draw the title of the dendrogram."""
+        """Draw the title of the dendrogram.
+
+        :title: the title
+        """
         pass
 
     @abstractmethod
