@@ -4,8 +4,8 @@ Draw and set the plot styles of dendrograms.
 The class :class:`DendrogramDrawer` draws a dendrogram based
 on :class:`~linkage.LinkageTree` and a :class:`DendrogramStyle`.
 
-The class :class:`DendrogramStyle` is an abstract class that that must be implemented for
-each specific style.
+The class :class:`DendrogramStyle` is an abstract class that that must be implemented
+for each specific style.
 """
 import logging
 from abc import ABC, abstractmethod
@@ -105,7 +105,7 @@ class DendrogramDrawer:
         self._node_weight = node_weight = np.zeros(len(linkage_tree), float)
 
         def calculate_weights(n: Node) -> (float, int):
-            # Calculate the weight of a node and number of leaves under it
+            """calculate the weight of a node and number of leaves under it"""
             if n.is_leaf:
                 weight = n.weight
                 n_leaves = 1

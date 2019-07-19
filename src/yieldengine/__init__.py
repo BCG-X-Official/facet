@@ -23,7 +23,11 @@ MatrixLike = Union[
 def deprecated(message: str):
     """
     Decorator to mark functions as deprecated.
+
     It will result in a warning being logged when the function is used.
+
+    :return: decorator; the decorated functions logs a warning message saying it is
+    deprecated
     """
 
     def _deprecated_inner(func: callable) -> callable:
@@ -84,7 +88,7 @@ class Sample:
         variable
         :param feature_names: iterable of column names that constitute as feature
         variables or \
-        None, in which case all non-target columns are features
+        ``None``, in which case all non-target columns are features
         """
         if observations is None or not isinstance(observations, pd.DataFrame):
             raise ValueError("sample is not a DataFrame")
@@ -127,23 +131,17 @@ class Sample:
 
     @property
     def target_name(self) -> str:
-        """
-        :return: name of the target column
-        """
+        """Name of the target column."""
         return self._target_name
 
     @property
     def feature_names(self) -> ListLike[str]:
-        """
-        :return: list of feature column names
-        """
+        """List of feature column names."""
         return self._feature_names
 
     @property
     def index(self) -> pd.Index:
-        """
-        :return: index of all observations in this sample
-        """
+        """Index of all observations in this sample."""
         return self.target.index
 
     @property
@@ -165,6 +163,7 @@ class Sample:
     ) -> pd.DataFrame:
         """
         Return a data frame with columns for all features matching the given type
+
         :param dtype: dtype, or sequence of dtypes, for filtering features. See DTYPE_*
         constants for common type selectors
         :return: data frame of the selected features
@@ -187,6 +186,7 @@ class Sample:
     def select_observations_by_index(self, ids: Iterable[Any] = None) -> "Sample":
         """
         Select observations index items (`loc`)
+
         :param ids: indices of observations to select
         :return: copy of this sample, containing only the observations at the given
         indices
@@ -198,6 +198,7 @@ class Sample:
     def select_features(self, feature_names: ListLike[str]) -> "Sample":
         """
         Return a Sample object which only includes the given features
+
         :param feature_names: names of features to be selected
         :return: copy of this sample, containing only the features with the given names
         """

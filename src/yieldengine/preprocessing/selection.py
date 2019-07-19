@@ -1,8 +1,14 @@
 """
 Select relevant features.
 
-The Boruta method selects the features that perform better than noise. See `BorutaPy
+Given a dataset and an estimator,
+the Boruta method selects the features that perform better than noise for the problem.
+See `BorutaPy
 <https://github.com/scikit-learn-contrib/boruta_py>`_.
+
+:class:`BorutaDF` wraps
+:class:`BorutaPy <https://github.com/scikit-learn-contrib/boruta_py>` with dataframes
+as input and output.
 """
 
 import pandas as pd
@@ -15,21 +21,22 @@ __all__ = ["BorutaDF"]
 
 class BorutaDF(NDArrayTransformerDF[BorutaPy], ColumnPreservingTransformer[BorutaPy]):
     """
+    Feature Selection with the Boruta method with dataframes as input and output.
+
     Wrap the boruta class :class:`BorutaPy` for feature selection and return a
     dataframe.
 
-    The `fit` method of self accepts a dataframe and the transform method
-    returns a dataframe.
+    ``self.fit`` accepts a dataframe and ``self.transform`` returns a dataframe.
 
     The parameters are the parameters from the boruta :class:`BorutaPy`. For
     convenience we list below the description of the parameters as they appear in
-    :class:`BorutaPy`.
+    https://github.com/scikit-learn-contrib/boruta_py.
 
     :param estimator: object
         A supervised learning estimator, with a 'fit' method that returns the
         `feature_importances_` attribute. Important features must correspond to
         high absolute values in the `feature_importances_`.
-    :param int n_estimators: int or string, default = 1000
+    :param n_estimators: int or string, default = 1000
         If int sets the number of estimators in the chosen ensemble method.
         If 'auto' this is determined automatically based on the size of the
         dataset. The other parameters of the used estimators need to be set
