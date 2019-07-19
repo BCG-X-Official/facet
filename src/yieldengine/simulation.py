@@ -114,7 +114,7 @@ class UnivariateSimulation:
           `percentiles` and whose index is given by the parameter values
         """
 
-        def percentile(n: int) -> Callable[float, float]:
+        def percentile(n: int) -> Callable[[float], float]:
             """
             Return the function computed the n-th percentile.
 
@@ -122,12 +122,12 @@ class UnivariateSimulation:
             :return: the n-th percentile function
             """
 
-            def _percentile(x: float):
-
+            def percentile_(x: float):
+                """n-th percentile function"""
                 return np.percentile(x, n)
 
-            _percentile.__name__ = "percentile_%s" % n
-            return _percentile
+            percentile_.__name__ = "percentile_%s" % n
+            return percentile_
 
         return (
             results_per_split.drop(columns=UnivariateSimulation.F_SPLIT_ID)
