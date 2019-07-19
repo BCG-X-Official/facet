@@ -271,9 +271,23 @@ using the typing module. Hence do not specify the parameter types in the docstri
     For sphinx to use it the `extensions` variable in `conf.py` must contain 
     `"sphinx_autodoc_typehints"`. 
     
-- The intersphinx extension allows to automatically link to other objects of other 
-    sphinx projects. This works for `sklearn`, `numpy`, `matplotlib`. For it to work 
+- The `intersphinx` extension allows to automatically link to other objects of other 
+    sphinx projects. This works for `sklearn`, `numpy`, `matplotlib`, `shap`. For it to 
+    work 
     the extensions attribute of `conf.py` must contain `sphinx.ext
     .intersphins` and one must specify an `intersphinx_mapping` mapping to url links 
-    of the documentation. 
+    of the documentation. Caveat: ```:mod:`shap`.
+    Intersphinx does not care look at the context of imported modules, e.g.
+    ``` 
+    import pandas as pd
+    The :class:`pd.DataFrame` is useful
+    ```
+    will not generate a url likn, while
+     ``` 
+    import pandas as pd
+    The :class:`pandas.DataFrame` is useful
+    ```
+    will generate a link although in the module `pandas` itself is not recognized.
+    **Beware that intersphinx and sphinx-autodoc-typehints seem not to work together**.
+    
      
