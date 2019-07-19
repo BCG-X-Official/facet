@@ -33,7 +33,7 @@ goto end
 
 :html
 REM generate apidoc using docstrings
-sphinx-apidoc -o %SOURCEDIR% -f ./../src/yieldengine
+sphinx-apidoc --no-toc -o %SOURCEDIR% -f ./../src/yieldengine
 REM run the sphinx build for html
 %SPHINXBUILD% -M %1 %SOURCEDIR% %BUILDDIR% %SPHINXOPTS%
 REM clean up potentially pre-existing files in /docs
