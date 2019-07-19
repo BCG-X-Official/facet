@@ -1,9 +1,7 @@
 import logging
 import warnings
-from itertools import combinations
 from typing import *
 
-import numpy as np
 import pandas as pd
 from lightgbm.sklearn import LGBMRegressor
 from shap import KernelExplainer, TreeExplainer
@@ -228,10 +226,10 @@ def test_model_inspection_classifier(available_cpus: int, iris_sample: Sample) -
         )
     ]
 
-    # adjust iris-sample to only include classes 0 and 1 - since (for now) only
-    # binary classification is supported
+    # model inspector does only support binary classification - hence
+    # filter the test_sample down to only 2 target classes:
     test_sample: Sample = iris_sample.select_observations_by_index(
-        ids=iris_sample.index[iris_sample.target.isin([0, 1])]
+        ids=iris_sample.target.isin(iris_sample.target.unique()[0:2])
     )
 
     model_ranker: ModelRanker = ModelRanker(
@@ -250,87 +248,36 @@ def test_model_inspection_classifier(available_cpus: int, iris_sample: Sample) -
     # store proba-results
     proba_results = {}
 
-    # test various ProbabilityCalibrationMethods for a classifier:
-    for calibration_method in (
-        None,
-        ProbabilityCalibrationMethod.ISOTONIC,
-        ProbabilityCalibrationMethod.SIGMOID,
-    ):
+    model_fit = ClassifierFitCV(
+        model=model_evaluation.model,
+        cv=test_cv,
+        sample=test_sample,
+        calibration=ProbabilityCalibrationMethod.SIGMOID,
+        n_jobs=available_cpus,
+    )
 
-        model_fit = ClassifierFitCV(
-            model=model_evaluation.model,
-            cv=test_cv,
-            sample=test_sample,
-            calibration=calibration_method,
-            n_jobs=available_cpus,
-        )
+    model_inspector = ModelInspector(predictor_fit=model_fit)
+    # make and check shap value matrix
+    shap_matrix = model_inspector.shap_matrix()
 
-        # test predictions_for_all_samples
-        predictions_df: pd.DataFrame = model_fit.predictions_for_all_splits()
-        assert ClassifierFitCV.F_PREDICTION in predictions_df.columns
-        assert ClassifierFitCV.F_TARGET in predictions_df.columns
+    # the length of rows in shap_matrix should be equal to the unique observation
+    # indices we have had in the predictions_df
+    assert len(shap_matrix) == len(test_sample)
 
-        # check number of split ids
+    # correlated shap matrix: feature dependencies
+    corr_matrix: pd.DataFrame = model_inspector.feature_dependency_matrix()
+    log.info(corr_matrix)
+    # check number of rows
+    assert len(corr_matrix) == len(test_sample.feature_names)
+    assert len(corr_matrix.columns) == len(test_sample.feature_names)
+
+    # check correlation values
+    for c in corr_matrix.columns:
         assert (
-            predictions_df.index.get_level_values(
-                level=ClassifierFitCV.F_SPLIT_ID
-            ).nunique()
-            == N_SPLITS
+            -1.0
+            <= corr_matrix.fillna(0).loc[:, c].min()
+            <= corr_matrix.fillna(0).loc[:, c].max()
+            <= 1.0
         )
 
-        # check correct number of rows
-        allowed_variance = 0.01
-        assert (
-            (len(test_sample) * (TEST_RATIO - allowed_variance) * N_SPLITS)
-            <= len(predictions_df)
-            <= (len(test_sample) * (TEST_RATIO + allowed_variance) * N_SPLITS)
-        )
-
-        # test probabilities for all samples
-        proba_df: pd.DataFrame = model_fit.probabilities_for_all_splits()
-
-        assert ClassifierFitCV.F_PROBA in proba_df.columns
-
-        proba_results[calibration_method] = proba_df.loc[:, ClassifierFitCV.F_PROBA]
-
-        model_inspector = ModelInspector(predictor_fit=model_fit)
-        # make and check shap value matrix
-        shap_matrix = model_inspector.shap_matrix()
-
-        # the length of rows in shap_matrix should be equal to the unique observation
-        # indices we have had in the predictions_df
-        assert len(shap_matrix) == len(test_sample)
-
-        # correlated shap matrix: feature dependencies
-        corr_matrix: pd.DataFrame = model_inspector.feature_dependency_matrix()
-        log.info(corr_matrix)
-        # check number of rows
-        assert len(corr_matrix) == len(test_sample.feature_names)
-        assert len(corr_matrix.columns) == len(test_sample.feature_names)
-
-        # check correlation values
-        for c in corr_matrix.columns:
-            assert (
-                -1.0
-                <= corr_matrix.fillna(0).loc[:, c].min()
-                <= corr_matrix.fillna(0).loc[:, c].max()
-                <= 1.0
-            )
-
-        linkage_tree = model_inspector.cluster_dependent_features()
-
-    PROBABILITY_EFFECT_THRESHOLD = 0.3
-
-    for p1, p2 in combinations(
-        [
-            ProbabilityCalibrationMethod.ISOTONIC,
-            ProbabilityCalibrationMethod.SIGMOID,
-            None,
-        ],
-        2,
-    ):
-        cumulative_diff = np.sum(np.abs(proba_results[p1] - proba_results[p2]))
-
-        log.info(f"Cumulative diff of calibration {p1} vs {p2} is: {cumulative_diff}")
-
-        assert cumulative_diff > PROBABILITY_EFFECT_THRESHOLD
+    linkage_tree = model_inspector.cluster_dependent_features()
