@@ -158,10 +158,16 @@ def iris_df(iris_target: str) -> pd.DataFrame:
     #  load sklearn test-data and convert to pd
     iris: Bunch = datasets.load_iris()
 
-    # use first 100 rows only, since KernelExplainer is very slow...
-    return pd.DataFrame(
+    iris_df = pd.DataFrame(
         data=np.c_[iris.data, iris.target], columns=[*iris.feature_names, iris_target]
     )
+
+    # replace target numericals with actual class labels
+    iris_df.loc[:, iris_target] = iris_df.loc[:, iris_target].apply(
+        lambda x: iris.target_names[int(x)]
+    )
+
+    return iris_df
 
 
 @pytest.fixture
