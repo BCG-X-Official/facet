@@ -271,7 +271,6 @@ class ClassifierFitCV(PredictorFitCV):
         self._probabilities_for_all_samples: Optional[pd.DataFrame] = None
 
     def probabilities_for_all_splits(self) -> pd.DataFrame:
-        # todo: add support for multi-class classifiers
         # todo: add support for log probabilities
         if self._probabilities_for_all_samples is not None:
             return self._probabilities_for_all_samples
@@ -287,7 +286,7 @@ class ClassifierFitCV(PredictorFitCV):
         ):
             test_sample = sample.select_observations_by_position(positions=test_indices)
 
-            predictor = (
+            predictor: Model = (
                 self.fitted_model(split_id=split_id)
                 if self._calibration is None
                 else self.calibrated_model(split_id=split_id)
@@ -295,23 +294,20 @@ class ClassifierFitCV(PredictorFitCV):
 
             probabilities = predictor.pipeline.predict_proba(X=test_sample.features)
 
-            n_classes = probabilities.shape[1]
+            # todo: can remove this, when solely using DataFrameClassifiers
+            if hasattr(predictor.predictor, "classes_"):
+                assert not isinstance(
+                    probabilities, list
+                ), "multi-output classification not supported"
 
-            # supporting only binary classification where n-classes == 2
-            assert (
-                n_classes == 2
-            ), f"Got non-binary probabilities for {n_classes} classes"
+                probabilities.columns = predictor.predictor.classes_
 
-            # just proceed with probabilities that it is class 0:
-            probabilities = probabilities.loc[:, probabilities.columns[0]]
-
-            predictions_df = pd.DataFrame(
-                data={
-                    PredictorFitCV.F_SPLIT_ID: split_id,
-                    ClassifierFitCV.F_PROBA: probabilities,
-                },
-                index=test_sample.index,
+            predictions_df_ = {PredictorFitCV.F_SPLIT_ID: split_id}
+            predictions_df_.update(
+                {label: probabilities.loc[:, label] for label in probabilities.columns}
             )
+
+            predictions_df = pd.DataFrame(data=predictions_df_, index=test_sample.index)
 
             splitwise_predictions.append(predictions_df)
 
