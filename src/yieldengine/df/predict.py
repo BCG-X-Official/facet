@@ -23,7 +23,7 @@ class DataFramePredictor(DataFrameEstimator[_BasePredictor], ABC):
     """
     Base class for sklearn regressors and classifiers that preserve data frames
 
-    :param `**kwargs`: arguments passed to `DataFrameEstimator` in `__init__`
+    :param `**kwargs`: arguments passed to :class:`.DataFrameEstimator` in ``__init__``
     """
 
     F_PREDICTION = "prediction"
@@ -33,7 +33,7 @@ class DataFramePredictor(DataFrameEstimator[_BasePredictor], ABC):
         """
         Number of outputs predicted by this predictor.
 
-        Defaults to 1 if base predictor does not define property `n_outputs_`.
+        Defaults to 1 if base predictor does not define property ``n_outputs_``.
         """
         if self.is_fitted:
             return getattr(self.base_estimator, "n_outputs_", 1)
@@ -51,7 +51,7 @@ class DataFramePredictor(DataFrameEstimator[_BasePredictor], ABC):
         return a dataframe.
 
         :param X: the data frame of features
-        :param predict_params: additional arguments passed to the `predict` method \
+        :param predict_params: additional arguments passed to the ``predict`` method \
         of the base estimator
         :return: the predictions
         """
@@ -69,9 +69,9 @@ class DataFramePredictor(DataFrameEstimator[_BasePredictor], ABC):
 
         :param X: the data frame of features
         :param y: the series of target used to train the model
-        :param fit_params: additional arguments passed to the the `predict` method
+        :param fit_params: additional arguments passed to the the ``predict`` method
           of the base estimator
-        :return: `pd.Series` of the predictions for X
+        :return: series of the predictions for X
         """
         self._check_parameter_types(X, y)
 
