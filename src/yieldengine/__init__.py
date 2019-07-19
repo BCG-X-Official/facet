@@ -27,7 +27,7 @@ def deprecated(message: str):
     It will result in a warning being logged when the function is used.
 
     :return: decorator; the decorated functions logs a warning message saying it is
-    deprecated
+      deprecated
     """
 
     def _deprecated_inner(func: callable) -> callable:
@@ -164,8 +164,8 @@ class Sample:
         """
         Return a data frame with columns for all features matching the given type
 
-        :param dtype: dtype, or sequence of dtypes, for filtering features. See DTYPE_*
-        constants for common type selectors
+        :param dtype: dtype, or sequence of dtypes, for filtering features.
+          See DTYPE_*constants for common type selectors
         :return: data frame of the selected features
         """
         return self.features.select_dtypes(dtype)
@@ -189,7 +189,7 @@ class Sample:
 
         :param ids: indices of observations to select
         :return: copy of this sample, containing only the observations at the given
-        indices
+          indices
         """
         subsample = copy(self)
         subsample._observations = self._observations.loc[ids, :]
