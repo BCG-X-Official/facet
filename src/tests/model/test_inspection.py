@@ -245,9 +245,6 @@ def test_model_inspection_classifier(available_cpus: int, iris_sample: Sample) -
     # consider: model_with_type(...) function for ModelRanking
     model_evaluation = model_ranking[0]
 
-    # store proba-results
-    proba_results = {}
-
     model_fit = ClassifierFitCV(
         model=model_evaluation.model,
         cv=test_cv,
