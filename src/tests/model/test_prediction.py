@@ -104,8 +104,16 @@ def test_prediction_classifier(available_cpus: int, iris_sample: Sample) -> None
         for target_class in test_sample.target.unique():
             assert target_class in proba_df.columns
 
-        # store probabilites for class "0.0"
+        # store probabilites for class "setosa"
         proba_results[calibration_method] = proba_df.loc[:, "setosa"]
+
+        # test log-probabilities for uncalibrated classifier:
+        if calibration_method is None:
+            log_proba_df = model_fit.log_probabilities_for_all_splits()
+            assert log_proba_df.shape == proba_df.shape
+            assert np.all(
+                log_proba_df.loc[:, "setosa"] == np.log(proba_df.loc[:, "setosa"])
+            )
 
     PROBABILITY_EFFECT_THRESHOLD = 0.3
 
