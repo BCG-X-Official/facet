@@ -1,13 +1,11 @@
 """
 Linkage Tree.
 
-Define the class :class:`~yieldengine.dendrogram.linkage.LinkageTree`
-which serves as the internal representation of dendrograms.
+:class:`LinkageTree` is the internal representation of dendrograms.
 
-The classes :class:`~yieldengine.dendrogram.linkage.LinkageNode` and
-:class:`~yieldengine.dendrogram.linkage.LeafNode` are the building blocks of
-:class:`~yieldengine.dendrogram.linkage.LinkageTree`. Both these classes inherit from
-:class:`~yieldengine.dendrogram.linkage.Node`."""
+:class:`LinkageNode` and :class:`LeafNode` are the building blocks of
+:class:`LinkageTree`. Both these classes inherit from :class:`Node`.
+"""
 
 from abc import ABC, abstractmethod
 from typing import *
@@ -17,7 +15,7 @@ import numpy as np
 
 class Node(ABC):
     """
-    Node of a `LinkageTree`.
+    Node of a :class:`LinkageTree`.
 
     Implementations must define `children_distance`, `weight`, `label`, `is_leaf`.
     """
@@ -65,7 +63,7 @@ class Node(ABC):
 
 class LinkageNode(Node):
     """
-    Internal node in a `LinkageTree`.
+    Internal node in a :class:`LinkageTree`.
 
     :param children_distance: distance from the node to its children
     """
@@ -211,7 +209,10 @@ class LinkageTree:
         return self._nodes[-1]
 
     def children(self, node: Node) -> Optional[Tuple[Node, Node]]:
-        """Return None if the node is a leaf, otherwise the pair of children."""
+        """Return the children of the node.
+
+        :return: ``None`` if the node is a leaf, otherwise the pair of children
+        """
         if node.is_leaf:
             return None
         else:
