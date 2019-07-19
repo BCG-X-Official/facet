@@ -1,4 +1,10 @@
-"""Remove outliers."""
+"""
+Remove outliers.
+
+:class:`OutlierRemoverDF: remove outliers according to Tukey's method.
+Has ``fit``, ``transform``
+and ``fit_transform`` methods and has dataframes as input and output.
+"""
 
 import logging
 from typing import Optional
@@ -20,7 +26,7 @@ class OutlierRemoverDF(BaseEstimator, TransformerMixin):
     :math:`[Q_1 - iqr\\_ multiple(Q_3-Q_1), Q_3 + iqr\\_ multiple(Q_3-Q_1)]`
     where :math:`Q_1` and :math:`Q_3` are the lower and upper quartiles.
 
-    :param float iqr_multiple: the multiple used to define the range of non-outlier
+    :param iqr_multiple: the multiple used to define the range of non-outlier
       samples in the above explanation
     """
 
@@ -36,7 +42,9 @@ class OutlierRemoverDF(BaseEstimator, TransformerMixin):
         """
         Fit the transformer.
 
-        :return: the fitted transformer"""
+        :return: the fitted transformer
+        """
+
         q1: pd.Series = X.quantile(q=0.25)
         q3: pd.Series = X.quantile(q=0.75)
         threshold_iqr: pd.Series = (q3 - q1) * self.iqr_multiple

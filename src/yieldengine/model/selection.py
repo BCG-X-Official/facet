@@ -2,7 +2,7 @@
 """
 Model selection and hyperparameter optimisation.
 
-The :class:`ModelGrid` class encapsulates a `~yieldengine.model.Model` and a grid of
+:class:`ModelGrid` encapsulates a :class:`yieldengine.model.Model` and a grid of
 hyperparameters.
 
 :class:`ModelRanker` selects the best model and parametrisation based on the
@@ -110,7 +110,7 @@ class ModelEvaluation(NamedTuple):
     Scoring evaluation for a fitted model.
 
     Has attributes:
-    - model: the evaluated `Model`
+    - model: the evaluated  :class:`~yieldengine.model.Model`
     - parameters: the hyperparameters selected for the model during grid \
         search, as a mapping of parameter names to parameter values
     - scoring: scorings for the model based on the provided scorers; \
@@ -130,11 +130,12 @@ class ModelRanker:
     """
     Rank a list of model using a common cross-validation strategy.
 
-    Given a list of `ModelGrid`, a cross-validation splitter and a scoring function,
+    Given a list of :class:`ModelGrid`, a cross-validation splitter and a scoring
+    function,
     performs a grid search to find the best combination of model with
     hyperparameters for the given cross-validation splits and scoring function.
 
-    :param grids: list of `ModelGrid` to be ranked
+    :param grids: list of :class:`ModelGrid` to be ranked
     :param cv: a cross validator (i.e. \
         :class:`~yieldengine.model.validation.CircularCrossValidator`)
     :param scoring: a scorer to use when doing CV within GridSearch
@@ -168,7 +169,7 @@ class ModelRanker:
 
         Its output is used for ranking globally across the model zoo.
 
-        :param scoring: the `ModelScoring` containing scores for a given split
+        :param scoring: the :class:`ModelScoring` containing scores for a given split
         :return: score to be used for model ranking
         """
         return scoring.mean() - 2 * scoring.std()
@@ -195,7 +196,7 @@ class ModelRanker:
         :param n_jobs: number of threads to use (default: one)
         :param pre_dispatch: maximum number of the data to make (default: `"2*n_jobs"`)
 
-        :return the created model ranking of type :code:`ModelRanking`
+        :return: the created model ranking
         """
 
         # construct searchers
@@ -230,15 +231,14 @@ class ModelRanker:
             cv_results: Mapping[str, Sequence[float]]
         ) -> List[Dict[str, ModelScoring]]:
             """
-            Convert a ``cv_results_`` attribute into dict's with `ModelScoring` values.
+            Convert ``cv_results_`` into a mapping with :class:`ModelScoring` values.
 
             Helper function;  for each model in the grid returns a tuple of test
             scores_for_split across all splits.
             The length of the tuple is equal to the number of splits that were tested
             The test scores_for_split are sorted in the order the splits were tested.
 
-            :param cv_results: the `GridSearchCV.cv_results_` attribute of a sklearn
-            GridSearchCV
+            :param cv_results: a :attr:`sklearn.GridSearchCV.cv_results_` attribute
             :return: a list of test scores per scored model; each list entry maps score
               types (as str) to a :class:`ModelScoring` of scores per split. The i-th
               element of this
@@ -332,7 +332,7 @@ class ModelRanker:
 
 def summary_report(ranking: Sequence[ModelEvaluation]) -> str:
     """
-    Return a human-readable report of a :class:`ModelRanker`.
+    Return a human-readable report.
 
     :return: a summary string of the model ranking
     """

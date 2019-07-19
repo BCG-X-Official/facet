@@ -1,11 +1,22 @@
-"""Plot facilities for EDA."""
+"""
+Plot facilities for EDA.
+
+:meth:`plot_ecdf_df` plots empirical cumulative plots of numerical columns of a
+dataframe.
+
+:meth:`plot_ecdf` plots empirical cumulative plots of numerical columns of a a list
+like data (:class:`pandas.Series`, numerical list, etc).
+
+:meth:`plot_hist_df` plots count plots of the categorical columns of a dataframe.
+"""
 
 import logging
-from typing import List, Optional, Tuple
+from typing import Iterable, List, Optional, Tuple
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+from pandas.api.types import is_numeric_dtype
 
 log = logging.getLogger(__name__)
 COLOR_NON_OUTLIER = "blue"
@@ -23,15 +34,17 @@ def ecdf(
 ) -> Tuple[
     List[float], List[float], List[float], List[float], List[float], List[float]
 ]:
-    """Compute ECDF for a one-dimensional iterable of values.
+    """
+    Compute ECDF for a one-dimensional iterable of values.
 
     Return the x and y values of an empirical cumulative distribution plot of the
-    values in `data`. Outlier and far outlier points are returned in separate lists.
+    values in ``data``. Outlier and far outlier points are returned in separate
+    lists.
 
     A sample is considered an outlier if it is outside the range
     :math:`[Q_1 - iqr\\_ multiple(Q_3-Q_1), Q_3 + iqr\\_ multiple(Q_3-Q_1)]`
     where :math:`Q_1` and :math:`Q_3` are the lower and upper quartiles. The same
-    is used for far outliers with `iqr_multiple` replaced by `iqr_multiple_far`.
+    is used for far outliers with ``iqr_multiple`` replaced by ``iqr_multiple_far``.
 
     :param data: the series of values forming our sample
     :param iqr_multiple: iqr multiple to determine outliers. If None then no
@@ -93,7 +106,7 @@ def ecdf(
 
 
 def plot_ecdf(
-    data: pd.Series,
+    data: Iterable,
     color_non_outlier: str = COLOR_NON_OUTLIER,
     color_outlier: str = COLOR_OUTLIER,
     color_far_outlier: str = COLOR_FAR_OUTLIER,
@@ -101,7 +114,8 @@ def plot_ecdf(
     iqr_multiple_far: float = IQR_MULTIPLE_FAR,
     **kwargs,
 ) -> None:
-    """Plot an empirical cumulative distribution plot from a list-like data.
+    """
+    Plot an empirical cumulative distribution plot from a list-like data.
 
     Plot a scatter plot of the empirical cumulative distribution plot of the
     values in `data`. Outlier and far outlier points are shown in a different color.
@@ -111,7 +125,7 @@ def plot_ecdf(
     where :math:`Q_1` and :math:`Q_3` are the lower and upper quartiles. The same
     is used for far outliers with `iqr_multiple` replaced by `iqr_multiple_far`.
 
-    :param data: the series of values forming our sample
+    :param data: the data of values forming our sample; must be numerical values
     :param color_non_outlier: the color for non outlier points
     :param color_outlier: the color for outlier points
     :param color_far_outlier: the color for far outlier points
@@ -120,6 +134,19 @@ def plot_ecdf(
     :param iqr_multiple_far: iqr multiple to determine far outliers. If None no far
       outliers are computed. Should be greater then iqr_multiple when both are not None
     """
+
+    if not isinstance(data, pd.Series):
+        try:
+            data = pd.Series(data=data)
+        finally:
+            if not isinstance(data, pd.Series):
+                log.warning("data can not cast to a pandas.Series")
+                return None
+
+    if not is_numeric_dtype(data):
+        log.warning("data is not of numeric type")
+        return None
+
     x_inlier, y_inlier, x_outlier, y_outlier, x_far_outlier, y_far_outlier = ecdf(
         data, iqr_multiple=iqr_multiple, iqr_multiple_far=iqr_multiple_far
     )
@@ -153,6 +180,8 @@ def plot_ecdf_df(
       outliers are computed. Should be greater then iqr_multiple when both are not None
     """
     numerical_features = df.select_dtypes(include="number").columns.values
+    if len(numerical_features) == 0:
+        log.warning("there are no numerical columns in df; can not plot any ECDF")
     for feature in numerical_features:
         plot_ecdf(
             df.loc[:, feature],
@@ -169,7 +198,7 @@ def plot_ecdf_df(
 def plot_hist_df(df: pd.DataFrame) -> None:
     """Plot the histograms of the categorical columns of a dataframe.
 
-    :param df: the dataframe whose categorical columns are used for the count plot
+    :param df:  dataframe whose categorical columns are used for the count plot
     """
     categorical_features = df.select_dtypes(include=["category", object]).columns
     for feature in categorical_features:

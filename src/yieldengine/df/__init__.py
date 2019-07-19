@@ -1,10 +1,8 @@
 # coding=utf-8
 """
-Wrap scikit-learn :class:`sklearn.base.BaseEstimator` to return dataframes instead of
-numpy
-arrays.
+Wrap scikit-learn `BaseEstimator` to return dataframes instead of numpy arrays.
 
-The abstract class :class:`DataFrameEstimator` wraps a
+The abstract class :class:`DataFrameEstimator` wraps
 :class:`~sklearn.base.BaseEstimator` so that the ``predict``
 and ``transform`` methods of the implementations return dataframe.
 :class:`DataFrameEstimator` has an attribute :attr:`~DataFrameEstimator.columns_in`

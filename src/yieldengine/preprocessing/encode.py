@@ -1,4 +1,18 @@
-"""Wrap sklearn encoders to output dataframes."""
+"""
+Wrap scikit-learn encoders to output dataframes.
+
+The classes defined in this module all inherit from
+:class:`yieldengine.df.DataFrameTransformerDF` hence they have ``fit``, ``transform``
+and ``fit_transform`` methods and have dataframes as input and output.
+
+:class:`OneHotEncoderDF` wraps :class:`sklearn.preprocessing.OneHotEncoder`.
+
+:class:`OrdinalEncoderDF` wraps :class:`sklearn.preprocessing.OrdinalEncoder`.
+
+:class:`LabelEncoderDF` wraps :class:`sklearn.preprocessing.LabelEncoder`.
+
+:class:`LabelBinarizerDF` wraps :class:`sklearn.preprocessing.LabelBinarizer`.
+"""
 
 import logging
 
@@ -19,9 +33,12 @@ __all__ = ["OneHotEncoderDF", "OrdinalEncoderDF", "LabelEncoderDF", "LabelBinari
 
 class OneHotEncoderDF(DataFrameTransformer[OneHotEncoder]):
     """
-    One-hot encoder that returns a DataFrame.
+    One-hot encoder with dataframes as input and output.
 
-    The parameters are the same as the one passed to sklearn `OneHotEncoder`.
+    Wrap around :class:`sklearn.preprocessing.OneHotEncoder`. The ``fit``,
+    ``transform`` and ``fit_transform`` methods accept and return dataframes.
+    The parameters are the same as the one passed to
+    :class:`sklearn.preprocessing.OneHotEncoder`.
     """
 
     def __init__(self, **kwargs) -> None:
@@ -57,9 +74,12 @@ class OneHotEncoderDF(DataFrameTransformer[OneHotEncoder]):
 @df_transformer
 class OrdinalEncoderDF(OrdinalEncoder):
     """
-    Ordinal encoder that returns a DataFrame.
+    Ordinal encoder with dataframes as input and output.
 
-    The parameters are the same as the one passed to sklearn `OrdinalEncoder`.
+    Wrap around :class:`sklearn.preprocessing.OrdinalEncoder`.
+
+    The parameters are the same as the one passed to
+    :class:`sklearn.preprocessing.OrdinalEncoder`.
     """
 
     pass
@@ -68,9 +88,12 @@ class OrdinalEncoderDF(OrdinalEncoder):
 @df_transformer
 class LabelEncoderDF(LabelEncoder):
     """
-    Encode labels with integer values and return a DataFrame.
+    Encode labels with integer values with dataframes as input and output.
 
-    The parameters are the same as the one passed to sklearn `LabelEncoder`.
+    Wrap around :class:`sklearn.preprocessing.LabelEncoder`.
+
+    The parameters are the same as the one passed to
+    :class:`sklearn.preprocessing.LabelEncoder`.
     """
 
     pass
@@ -79,9 +102,12 @@ class LabelEncoderDF(LabelEncoder):
 @df_transformer
 class LabelBinarizerDF(LabelBinarizer):
     """
-    Binarize labels in a one-vs-all fashion and return a DataFrame.
+    Binarize labels in a one-vs-all fashion with dataframes as input and output.
 
-    The parameters are the same as the one passed to sklearn `LabelBinarizer`.
+    Wrap around :class:`sklearn.preprocessing.LabelBinarizer`.
+
+    The parameters are the same as the one passed to
+    :class:`sklearn.preprocessing.LabelBinarizer`.
     """
 
     pass
