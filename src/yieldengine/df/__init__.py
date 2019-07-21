@@ -116,3 +116,18 @@ class DataFrameEstimator(ABC, BaseEstimator, Generic[_BaseEstimator]):
             raise TypeError("arg X must be a DataFrame")
         if y is not None and not isinstance(y, pd.Series):
             raise TypeError("arg y must be None or a Series")
+
+    def __dir__(self) -> Iterable[str]:
+        return {*super().__dir__(), *self._base_estimator.__dir__()}
+
+    def __getattr__(self, name: str) -> Any:
+        if name.startswith("_"):
+            raise AttributeError(name)
+        else:
+            return getattr(self._base_estimator, name)
+
+    def __setattr__(self, name: str, value: Any) -> Any:
+        if name.startswith("_"):
+            super().__setattr__(name, value)
+        else:
+            setattr(self._base_estimator, name, value)
