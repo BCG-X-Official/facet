@@ -1,6 +1,5 @@
 # coding=utf-8
-"""Base classes for wrapper around pipeline returning pandas objects and keeping
-track of the column names."""
+"""Define a wrapper around pipeline which returns dataframes."""
 
 
 import logging
@@ -23,7 +22,7 @@ class PipelineDF(
     DataFrameClassifier[Pipeline],
 ):
     """
-    Wrapper class around `sklearn.pipeline.Pipeline` that returns dataframes.
+    Wrapper around `sklearn.pipeline.Pipeline` that returns dataframes.
 
     :param `**kwargs`: the arguments used to construct the wrapped `Pipeline` object
     """
@@ -91,7 +90,8 @@ class PipelineDF(
     def steps(self) -> List[Tuple[str, DataFrameEstimator]]:
         """
         The `steps` attribute of the underlying `Pipeline`.
-        :return: List of (name, transform) tuples (implementing fit/transform).
+
+        List of (name, transformer) tuples (transformers implement fit/transform).
         """
         return self.base_transformer.steps
 
@@ -99,18 +99,18 @@ class PipelineDF(
     def named_steps(self) -> Bunch:
         """
         Read-only attribute to access any step parameter by user given name.
+
         Keys are step names and values are steps parameters.
         """
         return self.base_transformer.named_steps
 
     def __len__(self) -> int:
-        """
-        :return: the length of the Pipeline
-        """
+        """The number of steps of the Pipeline."""
         return len(self.base_transformer.steps)
 
     def __getitem__(self, ind: Union[slice, int, str]) -> DataFrameEstimator:
-        """Returns a sub-pipeline or a single estimator in the pipeline
+        """
+        Return a sub-pipeline or a single estimator in the pipeline
 
         Indexing with an integer will return an estimator; using a slice
         returns another Pipeline instance which copies a slice of this

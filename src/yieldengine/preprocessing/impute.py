@@ -1,3 +1,5 @@
+"""Impute and indicate missing values."""
+
 import logging
 
 import numpy as np
@@ -12,6 +14,12 @@ __all__ = ["SimpleImputerDF", "MissingIndicatorDF"]
 
 
 class SimpleImputerDF(ColumnPreservingTransformer[SimpleImputer]):
+    """
+    Wrap sklearn `SimpleImputer` and return a DataFrame.
+
+    The parameters are the same as the one passed to sklearn `SimpleImputer`.
+    """
+
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
 
@@ -31,6 +39,12 @@ class SimpleImputerDF(ColumnPreservingTransformer[SimpleImputer]):
 
 
 class MissingIndicatorDF(DataFrameTransformer[MissingIndicator]):
+    """
+    Wrap sklearn `MissingIndicator` and returns a DataFrame.
+
+    The parameters are the same as the one passed to sklearn `MissingIndicator`.
+    """
+
     def __init__(
         self,
         missing_values=np.nan,

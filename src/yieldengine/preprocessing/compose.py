@@ -1,3 +1,5 @@
+"""Wrapper around sklearn `ColumnTransformer` compatible with dataframes."""
+
 import logging
 from functools import reduce
 from typing import *
@@ -13,6 +15,15 @@ __all__ = ["ColumnTransformerDF"]
 
 
 class ColumnTransformerDF(DataFrameTransformer[ColumnTransformer]):
+    """
+    Wrap sklearn ```ColumnTransformer``` and return a DataFrame.
+
+    Like a sklearn `ColumnTransformer`, self has a `transformers` parameter (None by
+    default) which is a list of tuple of the form (name, transformer, column(s)),
+    but here all the transformers must be of type
+    :class:`~yieldengine.df.transform.DataFrameTransformer`.
+    """
+
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
         # noinspection PyTypeChecker
@@ -45,11 +56,11 @@ class ColumnTransformerDF(DataFrameTransformer[ColumnTransformer]):
 
     def _get_columns_original(self) -> pd.Series:
         """
-        :return: a list of the original features from which the output of this
-        transformer is derived. The list is aligned with the columns returned by
-        method :meth" `output columns` and this has the same length
-        """
+        Return the series mapping output column names to original columns names.
 
+        :return: the series with index the column names of the output dataframe and
+        values the corresponding input column names.
+        """
         return reduce(
             lambda x, y: x.append(y),
             (
