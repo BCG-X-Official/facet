@@ -90,10 +90,7 @@ def test_model_inspection(available_cpus: int, boston_sample: Sample) -> None:
 
     for model_evaluation in best_svr, best_lgbm:
         model_fit = RegressorFitCV(
-            model=model_evaluation.model,
-            cv=test_cv,
-            sample=test_sample,
-            n_jobs=available_cpus,
+            model=model_evaluation.model, cv=test_cv, sample=test_sample
         )
 
         # test predictions_for_all_samples
@@ -127,7 +124,6 @@ def test_model_inspection(available_cpus: int, boston_sample: Sample) -> None:
 
         # correlated shap matrix: feature dependencies
         corr_matrix: pd.DataFrame = model_inspector.feature_dependency_matrix()
-        log.info(corr_matrix)
         # check number of rows
         assert len(corr_matrix) == len(test_sample.feature_names) - 1
         assert len(corr_matrix.columns) == len(test_sample.feature_names) - 1
@@ -177,10 +173,7 @@ def test_model_inspection_with_encoding(
     ][0]
     for model_evaluation in [best_lgbm]:
         model_fit = RegressorFitCV(
-            model=model_evaluation.model,
-            cv=circular_cv,
-            sample=sample,
-            n_jobs=available_cpus,
+            model=model_evaluation.model, cv=circular_cv, sample=sample
         )
         mi = ModelInspector(predictor_fit=model_fit)
 
