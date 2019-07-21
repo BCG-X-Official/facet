@@ -1,18 +1,25 @@
 """
 Partition sets.
 
-A :class:`~Partitioning` partitions a set of values
+:class:`Partitioning` partitions a set of values
 into finitely many partitions (synonym of buckets).
-The method :meth:`~Partitioning.frequencies` returns  an iterable of the number of
-values in the different partitions, the method :meth:`~Partitioning.partitions`
+:meth:`~Partitioning.frequencies` returns  an iterable of the number of
+values in the different partitions, :meth:`~Partitioning.partitions`
 returns a list of central value in each partition,
 and :attr:`~Partitioning.n_partitions` is the number of partitions.
+
+:class:`ContinuousRangePartitioning` is adapted set of floats
+
+:class:`IntegerRangePartitioning` is adapted to sets of  integers; the bounds of the
+partitions are integers
+
+:class:`CategoryPartitioning` is adapted to categorical sets
 """
 import logging
-import math
 from abc import ABC, ABCMeta, abstractmethod
 from typing import *
 
+import math
 import numpy as np
 import pandas as pd
 
@@ -77,7 +84,7 @@ class RangePartitioning(
     Implementations must define :meth:`_step_size` and :meth:`_partition_center_offset`.
 
     :param values: list like of values to partition
-    :param int max_partitions: the max number of partitions to make (default = 20);
+    :param max_partitions: the max number of partitions to make (default = 20);
       it should be greater or equal than 2
     :param lower_bound: the lower bound of the elements in the partition
     :param upper_bound: the upper bound of the elements in the partition
@@ -90,17 +97,6 @@ class RangePartitioning(
         lower_bound: Optional[NumericType] = None,
         upper_bound: Optional[NumericType] = None,
     ) -> None:
-        """
-        Constructor
-
-        :param values: list like of values to partition
-        :param int max_partitions: the max number of partitions to make (default = 20);
-          it should be greater or equal than 2
-        :param lower_bound: the lower bound of the elements in the partition
-        :param upper_bound: the upper bound of the elements in the partition
-
-        """
-
         super().__init__()
 
         if lower_bound is None:
@@ -169,7 +165,7 @@ class RangePartitioning(
         """
         Return the endpoints of the intervals making the partitions.
 
-        :return: generator of the tuples (x, y) where x and y and the endopoints of
+        :return: generator of the tuples (x, y) where x and y and the endpoints of
           the partitions
         """
 
@@ -236,11 +232,25 @@ class ContinuousRangePartitioning(RangePartitioning[float]):
     [3.2, 3.4), [3.4, 3.6), [3.6, 3.8), [4.0, 4.2), [4.4, 4.6), [4.6, 4.8]
 
     :param values: list like of values to partition
-    :param int max_partitions: the max number of partitions to make (default = 20);
+    :param max_partitions: the max number of partitions to make (default = 20);
       it should be greater or equal than 2
     :param lower_bound: the lower bound of the elements in the partition
     :param upper_bound: the upper bound of the elements in the partition
     """
+
+    def __init__(
+        self,
+        values: ListLike[NumericType],
+        max_partitions: int = DEFAULT_MAX_PARTITIONS,
+        lower_bound: Optional[NumericType] = None,
+        upper_bound: Optional[NumericType] = None,
+    ) -> None:
+        super().__init__(
+            values=values,
+            max_partitions=max_partitions,
+            lower_bound=lower_bound,
+            upper_bound=upper_bound,
+        )
 
     @staticmethod
     def _step_size(
@@ -257,9 +267,9 @@ class ContinuousRangePartitioning(RangePartitioning[float]):
 
 class IntegerRangePartitioning(RangePartitioning[int]):
     """
-    Partition numerical values in successive intervals of same length with int bounds.
+    Partition numerical values in intervals of same length with integer bounds.
 
-    The interval length of the intervals making the partitions is an integer. The
+    The interval length of the partitions is an integer. The
     bounds of the intervals are all integer which are multiple of the interval length.
 
     The interval length is computed based on
@@ -271,18 +281,28 @@ class IntegerRangePartitioning(RangePartitioning[int]):
     - :attr:`lower_bound` is in the first interval
     - :attr:`upper_bound` is in the last interval
 
-    For example, if the computed interval length is 0.2, some possible
-    partitions would be:
-    [3.2, 3.4), [3.4, 3.6), [3.6, 3.8), [4.0, 4.2), [4.4, 4.6), [4.6, 4.8]
-
     Implementations must define :meth:`_step_size` and :meth:`_partition_center_offset`.
 
     :param values: list like of values to partition
-    :param int max_partitions: the max number of partitions to make (default = 20);
+    :param max_partitions: the max number of partitions to make (default = 20);
       it should be greater or equal than 2
     :param lower_bound: the lower bound of the elements in the partition
     :param upper_bound: the upper bound of the elements in the partition
     """
+
+    def __init__(
+        self,
+        values: ListLike[NumericType],
+        max_partitions: int = DEFAULT_MAX_PARTITIONS,
+        lower_bound: Optional[NumericType] = None,
+        upper_bound: Optional[NumericType] = None,
+    ) -> None:
+        super().__init__(
+            values=values,
+            max_partitions=max_partitions,
+            lower_bound=lower_bound,
+            upper_bound=upper_bound,
+        )
 
     @staticmethod
     def _step_size(lower_bound: int, upper_bound: int, max_partitions: int) -> int:
@@ -306,7 +326,7 @@ class CategoryPartitioning(Partitioning[ValueType]):
     Partition categorical values.
 
     Partition the elements by their values, keeping only the :attr:`max_partitions`
-    msot frequent values.
+    most frequent values.
 
     :param values: list of values
     :max_partitions: the maximum number of partitions

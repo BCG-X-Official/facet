@@ -11,6 +11,12 @@ You can find the API reference of yield-engine at
     - [1.1 Python Environment](#11-python-environment)
     - [1.2 Pytest](#12-pytest)
     - [1.3 Sphinx Documentation](#13-sphinx-documentation)
+- [2. Git guidelines](#2-git-guidelines)
+- [3. Documentation guidelines](#3-documentation-guidelines)
+  - [3.1 General guidelines](#31-general-guidlines)
+  - [3.2 Docstring guidelines](#32-docstring-guidelines)
+  - [3.3 Docstring tips and tricks](#33-docstring-tips--tricks)
+
 
 ## 1. Setup
 
@@ -125,8 +131,6 @@ have a comment that describes what the method does.
             pass
     ```
 
-
-
 - Start full sentences and phrases with a capitalised word and end each sentence with
  punctuation
 , e.g.,
@@ -178,6 +182,27 @@ have a comment that describes what the method does.
         :param sample: training sample"""
     ```
 
+- For method arguments, return value, and class parameters, one must hint the type 
+using the typing module. Hence do not specify the parameter types in the docstrings 
+(see [link](#sphinx-type-hint)), e.g. 
+    ```
+    def f(x: int) -> float:
+       """
+       Do something.
+       
+       :param x: input value
+       :return: output value
+    ```
+    but not
+    ```
+    def f(x: int) -> float:
+       """
+       Do something.
+       
+       :param int x: input value
+       :return float: output value
+    ```    
+
 ### 3.3 Docstring tips & tricks
 
 - To render text as a code, enclose it in double backquotes, e.g.,
@@ -208,12 +233,61 @@ have a comment that describes what the method does.
     or in
     ```
     :attr:`ClassA.attribute_b`
-    ``` 
-          
+    ```
+    - if an object is located in another module, you can prepend a dot to refer to it
+        . For instance in module `package1.packag3.module1` and you want to refer to 
+        `package1.package3.package4.module2.MyClass`  the following will work
+        ``` 
+        """We use :class:`.Myclass` in this module."""
+        ```
+        If there are several `MyClass` across the project, this is ambiguous and 
+        sphinx raises an warning.
+    - if an object has been imported in a module it won't be recognized by 
+        cross-referencing directly, hence
+        ``` 
+        """This module uses :class:`SomeClass`"""
+        from other_module import SomeClass
+        ```
+        won't work, but
+        ``` 
+        """This module uses :class:`.SomeClass`"""
+        from other_module import SomeClass
+        ```
+        will work (see above explanation).
+                  
 - External links. To create a link to `https://scikit-learn.org/stable/`, labeled
- "scikit_learn", write
+    "scikit_learn", write
     ``` 
     `scikit-learn <https://scikit-learn.org/stable/>`_
     ```
-
+    
+- <a id="sphinx-type-hint"></a> The sphinx extension  [sphinx-autodoc-typehints]
+    (https://github.com/agronholm/sphinx-autodoc-typehints) extract the type hinting and 
+    infers the parameter types of methods and classes when generating the documentation 
+    from docstrings. To install the extension:
+    ```
+    conda install -c conda-forge sphinx-autodoc-typehints=1.6
+    ``` 
+    For sphinx to use it the `extensions` variable in `conf.py` must contain 
+    `"sphinx_autodoc_typehints"`. 
+    
+- The `intersphinx` extension allows to automatically link to other objects of other 
+    sphinx projects. This works for `sklearn`, `numpy`, `matplotlib`, `shap`. For it to 
+    work 
+    the extensions attribute of `conf.py` must contain `sphinx.ext
+    .intersphins` and one must specify an `intersphinx_mapping` mapping to url links 
+    of the documentation. Caveat: ```:mod:`shap`.
+    Intersphinx does not care look at the context of imported modules, e.g.
+    ``` 
+    import pandas as pd
+    The :class:`pd.DataFrame` is useful
+    ```
+    will not generate a url likn, while
+     ``` 
+    import pandas as pd
+    The :class:`pandas.DataFrame` is useful
+    ```
+    will generate a link although in the module `pandas` itself is not recognized.
+    **Beware that intersphinx and sphinx-autodoc-typehints seem not to work together**.
+    
      

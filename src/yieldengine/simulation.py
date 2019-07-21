@@ -20,7 +20,7 @@ class UnivariateSimulation:
     Aggregated percentiles uplift are then computed by
     :meth:`UnivariateSimulation.aggregate_simulation_results`.
 
-    :param ModelFitCV model_fit: fitted model used for the simulation
+    :param model_fit: fitted model used for the simulation
     """
 
     __slots__ = ["_model_fit"]
@@ -51,7 +51,7 @@ class UnivariateSimulation:
         :param feature_name: name of the feature to use in the simulation
         :param feature_values: values to use in the simulation
         :return: dataframe with three columns: `split_id`, `parameter_value` and
-        `relative_target_change`.
+          `relative_target_change`.
         """
         if feature_name not in self.model_fit.sample.feature_names:
             raise ValueError(f"Feature '{feature_name}' not in sample")
@@ -111,23 +111,23 @@ class UnivariateSimulation:
           and `relative_yield_change`
         :param percentiles: the list of percentiles
         :return: dataframe with columns percentile_<p> where p goes through the list
-        `percentiles` and whose index is given by the parameter values
+          `percentiles` and whose index is given by the parameter values
         """
 
         def percentile(n: int) -> Callable[[float], float]:
             """
             Return the function computed the n-th percentile.
 
-            :param int n: the percentile to compute; int between 0 and 100
+            :param n: the percentile to compute; int between 0 and 100
             :return: the n-th percentile function
             """
 
-            def _percentile(x: float):
-
+            def percentile_(x: float):
+                """n-th percentile function"""
                 return np.percentile(x, n)
 
-            _percentile.__name__ = "percentile_%s" % n
-            return _percentile
+            percentile_.__name__ = "percentile_%s" % n
+            return percentile_
 
         return (
             results_per_split.drop(columns=UnivariateSimulation.F_SPLIT_ID)
@@ -142,15 +142,15 @@ class UnivariateSimulation:
         """
         Replace the values in a column with a constant value.
 
-        :param str feature_name: the name of the column
-        :param object feature_value: the constant value to use to fill the column
-        `feature_name`
-        :return: a :class:`FunctionTransformerDF` that fill the values in
-        the column `feature_name` by the constant value `feature_value`
+        :param feature_name: the name of the column
+        :param feature_value: the constant value to use to fill the column
+          `feature_name`
+        :return: transformer that fills the values in the column `feature_name` by the
+          constant value ``feature_value``
         """
 
         def transform(x: pd.DataFrame) -> pd.DataFrame:
-            # Set all values in the column feature_name to feature_value
+            """Set all values in the column feature_name to feature_value."""
             x[feature_name] = feature_value
             return x
 

@@ -2,14 +2,14 @@
 Dendrogram styles.
 
 The dendrogram styles are given as a parameter to a
-`yieldengine.dendrogram.DendrogramDrawer` and determine the style of the plot.
+:class:`~yieldengine.dendrogram.DendrogramDrawer` and determine the style of the plot.
 
-:class:`~MatplotStyle` is a an abstract base class for styles using matplotlib
+:class:`MatplotStyle` is a an abstract base class for styles using matplotlib.
 
-:class:`~LineStyle` renders dendrogram trees in the classical style as a line drawing
+:class:`~LineStyle` renders dendrogram trees in the classical style as a line drawing.
 
 :class:`~FeatMapStyle` renders dendrogram trees as a combination of tree and heatmap
-for better visibility of feature importance
+for better visibility of feature importance.
 """
 
 import logging
@@ -50,7 +50,7 @@ class MatplotStyle(DendrogramStyle, ABC):
     and providing the `Axes` object for plotting the actual dendrogram including
     tick marks for the feature distance axis.
 
-    :param ax: `Axes` object to draw on
+    :param ax: :class:`matplotlib.axes.Axes` object to draw on
     :param min_weight: the min weight on the feature importance color scale, must be \
                        greater than 0 and smaller than 1 (default: 0.01)
     """
