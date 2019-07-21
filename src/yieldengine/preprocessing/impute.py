@@ -6,7 +6,10 @@ import numpy as np
 import pandas as pd
 from sklearn.impute import MissingIndicator, SimpleImputer
 
-from yieldengine.df.transform import ColumnPreservingTransformer, DataFrameTransformer
+from yieldengine.df.transform import (
+    ColumnPreservingTransformer,
+    DataFrameTransformerWrapper,
+)
 
 log = logging.getLogger(__name__)
 
@@ -38,7 +41,7 @@ class SimpleImputerDF(ColumnPreservingTransformer[SimpleImputer]):
         return self.columns_in.delete(np.argwhere(nan_mask))
 
 
-class MissingIndicatorDF(DataFrameTransformer[MissingIndicator]):
+class MissingIndicatorDF(DataFrameTransformerWrapper[MissingIndicator]):
     """
     Wrap sklearn `MissingIndicator` and returns a DataFrame.
 

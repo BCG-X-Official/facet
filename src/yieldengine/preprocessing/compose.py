@@ -7,14 +7,14 @@ from typing import *
 import pandas as pd
 from sklearn.compose import ColumnTransformer
 
-from yieldengine.df.transform import DataFrameTransformer
+from yieldengine.df.transform import DataFrameTransformerWrapper
 
 log = logging.getLogger(__name__)
 
 __all__ = ["ColumnTransformerDF"]
 
 
-class ColumnTransformerDF(DataFrameTransformer[ColumnTransformer]):
+class ColumnTransformerDF(DataFrameTransformerWrapper[ColumnTransformer]):
     """
     Wrap sklearn ```ColumnTransformer``` and return a DataFrame.
 
@@ -38,14 +38,14 @@ class ColumnTransformerDF(DataFrameTransformer[ColumnTransformer]):
         if not (
             all(
                 [
-                    isinstance(transformer, DataFrameTransformer)
+                    isinstance(transformer, DataFrameTransformerWrapper)
                     for _, transformer, _ in column_transformer.transformers
                 ]
             )
         ):
             raise ValueError(
                 "arg column_transformer must only contain instances of "
-                "DataFrameTransformer"
+                "DataFrameTransformerWrapper"
             )
 
         self._columnTransformer = column_transformer
@@ -69,7 +69,7 @@ class ColumnTransformerDF(DataFrameTransformer[ColumnTransformer]):
             ),
         )
 
-    def _inner_transformers(self) -> Iterable[DataFrameTransformer]:
+    def _inner_transformers(self) -> Iterable[DataFrameTransformerWrapper]:
         return (
             df_transformer
             for _, df_transformer, columns in self.base_transformer.transformers_

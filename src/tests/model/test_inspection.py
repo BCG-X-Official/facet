@@ -14,7 +14,7 @@ from sklearn.model_selection import BaseCrossValidator, RepeatedKFold
 from sklearn.svm import SVR
 
 from yieldengine import Sample
-from yieldengine.df.transform import DataFrameTransformer
+from yieldengine.df.transform import DataFrameTransformerWrapper
 from yieldengine.model import Model
 from yieldengine.model.inspection import ModelInspector
 from yieldengine.model.prediction import (
@@ -144,7 +144,7 @@ def test_model_inspection_with_encoding(
     batch_table: pd.DataFrame,
     regressor_grids: List[ModelGrid],
     sample: Sample,
-    simple_preprocessor: DataFrameTransformer,
+    simple_preprocessor: DataFrameTransformerWrapper,
     available_cpus: int,
 ) -> None:
 

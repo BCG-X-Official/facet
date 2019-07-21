@@ -2,7 +2,7 @@
 """Base classes for wrapper around regressors and classifiers returning dataframes."""
 
 import logging
-from abc import ABC
+from abc import ABC, abstractmethod
 from typing import *
 
 import numpy as np
@@ -10,7 +10,7 @@ import pandas as pd
 from sklearn.base import ClassifierMixin, RegressorMixin
 
 from yieldengine import ListLike, MatrixLike
-from yieldengine.df import DataFrameEstimator
+from yieldengine.df import DataFrameEstimator, DataFrameEstimatorWrapper
 
 log = logging.getLogger(__name__)
 
@@ -19,7 +19,38 @@ _BaseRegressor = TypeVar("_BaseRegressor", bound=RegressorMixin)
 _BaseClassifier = TypeVar("_BaseClassifier", bound=ClassifierMixin)
 
 
-class DataFramePredictor(DataFrameEstimator[_BasePredictor], ABC):
+class DataFramePredictor(DataFrameEstimator, ABC):
+    @property
+    @abstractmethod
+    def n_outputs(self) -> int:
+        pass
+
+    # noinspection PyPep8Naming
+    @abstractmethod
+    def predict(
+        self, X: pd.DataFrame, **predict_params
+    ) -> Union[pd.Series, pd.DataFrame]:
+        pass
+
+    # noinspection PyPep8Naming
+    @abstractmethod
+    def fit_predict(self, X: pd.DataFrame, y: pd.Series, **fit_params) -> pd.Series:
+        pass
+
+    # noinspection PyPep8Naming
+    @abstractmethod
+    def score(
+        self,
+        X: pd.DataFrame,
+        y: Optional[pd.Series] = None,
+        sample_weight: Optional[Any] = None,
+    ) -> float:
+        pass
+
+
+class DataFramePredictorWrapper(
+    DataFramePredictor, DataFrameEstimatorWrapper[_BasePredictor], ABC
+):
     """
     Base class for sklearn regressors and classifiers that preserve data frames
 
@@ -128,13 +159,51 @@ class DataFramePredictor(DataFrameEstimator[_BasePredictor], ABC):
         )
 
 
-class DataFrameRegressor(DataFramePredictor[_BaseRegressor]):
+class DataFrameRegressor(DataFramePredictor, RegressorMixin):
+    """
+    Sklearn regressor that preserves data frames.
+    """
+
+
+class DataFrameRegressorWrapper(
+    DataFrameRegressor, DataFramePredictorWrapper[_BaseRegressor]
+):
     """
     Wrapper around sklearn regressors that preserves data frames.
     """
 
 
-class DataFrameClassifier(DataFramePredictor[_BaseClassifier]):
+class DataFrameClassifier(DataFramePredictor, ClassifierMixin):
+    """
+    Sklearn classifier that preserves data frames.
+    """
+
+    @property
+    @abstractmethod
+    def classes(self) -> Optional[ListLike[Any]]:
+        pass
+
+    # noinspection PyPep8Naming
+    @abstractmethod
+    def predict_proba(self, X: pd.DataFrame) -> Union[pd.DataFrame, List[pd.DataFrame]]:
+        pass
+
+    # noinspection PyPep8Naming
+    @abstractmethod
+    def predict_log_proba(
+        self, X: pd.DataFrame
+    ) -> Union[pd.DataFrame, List[pd.DataFrame]]:
+        pass
+
+    # noinspection PyPep8Naming
+    @abstractmethod
+    def decision_function(self, X: pd.DataFrame) -> Union[pd.Series, pd.DataFrame]:
+        pass
+
+
+class DataFrameClassifierWrapper(
+    DataFrameClassifier, DataFramePredictorWrapper[_BaseClassifier]
+):
     """
     Wrapper around sklearn classifiers that preserves data frames.
     """

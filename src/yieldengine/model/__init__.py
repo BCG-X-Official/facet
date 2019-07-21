@@ -12,12 +12,12 @@ import pandas as pd
 from sklearn import clone
 from sklearn.base import BaseEstimator, ClassifierMixin, RegressorMixin
 
-from yieldengine.df.predict import DataFrameClassifier
-from yieldengine.df.transform import DataFrameTransformer, df_estimator
+from yieldengine.df.predict import DataFrameClassifierWrapper
+from yieldengine.df.transform import DataFrameTransformerWrapper, df_estimator
 
 __all__ = ["Model"]
 
-# todo: replace this with DataFramePredictor once we have provided DF versions of all
+# todo: replace this with DataFramePredictorWrapper once we have provided DF versions of all
 #       sklearn regressors and classifiers
 Predictor = TypeVar(
     "Predictor", bound=Union[RegressorMixin, ClassifierMixin] and BaseEstimator
@@ -25,7 +25,7 @@ Predictor = TypeVar(
 
 
 # todo: rename to PredictiveWorkflow (tbc)
-@df_estimator(df_estimator_type=DataFrameClassifier)
+@df_estimator(df_estimator_type=DataFrameClassifierWrapper)
 class Model(BaseEstimator, Generic[Predictor]):
     """
     Specify the preprocessing step and the estimator for a model.
@@ -35,19 +35,21 @@ class Model(BaseEstimator, Generic[Predictor]):
 
     :param Estimator predictor: the base estimator used in the pipeline
     :param preprocessing: the preprocessing step in the pipeline (None or \
-    `DataFrameTransformer`)
+    `DataFrameTransformerWrapper`)
     """
 
     def __init__(
-        self, predictor: Predictor, preprocessing: Optional[DataFrameTransformer] = None
+        self,
+        predictor: Predictor,
+        preprocessing: Optional[DataFrameTransformerWrapper] = None,
     ) -> None:
         super().__init__()
 
         if preprocessing is not None and not isinstance(
-            preprocessing, DataFrameTransformer
+            preprocessing, DataFrameTransformerWrapper
         ):
             raise ValueError(
-                "arg preprocessing expected to be a " "DataFrameTransformer"
+                "arg preprocessing expected to be a " "DataFrameTransformerWrapper"
             )
 
         self.preprocessing = preprocessing
