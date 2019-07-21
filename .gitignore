@@ -405,3 +405,6 @@ TSWLatexianTemp*
 #
 /tmp
 !/tmp/readme.md
+
+# exclude docs while they are not yet stable
+/docs
