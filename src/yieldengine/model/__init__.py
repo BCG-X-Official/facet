@@ -1,21 +1,24 @@
 from typing import *
 
+import pandas as pd
 from sklearn import clone
-from sklearn.base import ClassifierMixin, RegressorMixin
+from sklearn.base import BaseEstimator, ClassifierMixin, RegressorMixin
 
-from yieldengine.df.pipeline import PipelineDF
-from yieldengine.df.predict import DataFramePredictor
-from yieldengine.df.transform import DataFrameTransformer
+from yieldengine.df.predict import DataFrameClassifier
+from yieldengine.df.transform import DataFrameTransformer, df_estimator
 
 __all__ = ["Model"]
 
 # todo: replace this with DataFramePredictor once we have provided DF versions of all
 #       sklearn regressors and classifiers
-Predictor = Union[DataFramePredictor, RegressorMixin, ClassifierMixin]
+Predictor = TypeVar(
+    "Predictor", bound=Union[RegressorMixin, ClassifierMixin] and BaseEstimator
+)
 
 
 # todo: rename to PredictiveWorkflow (tbc)
-class Model:
+@df_estimator(df_estimator_type=DataFrameClassifier)
+class Model(BaseEstimator, Generic[Predictor]):
     """
     A model can create a pipeline for a preprocessing transformer (optional; possibly a
     pipeline itself) and an estimator.
@@ -24,11 +27,6 @@ class Model:
     :param preprocessing: the preprocessing step in the pipeline (None or \
     `DataFrameTransformer`)
     """
-
-    __slots__ = ["_pipeline", "_preprocessing", "_predictor"]
-
-    STEP_PREPROCESSING = "preprocessing"
-    STEP_ESTIMATOR = "estimator"
 
     def __init__(
         self, predictor: Predictor, preprocessing: Optional[DataFrameTransformer] = None
@@ -42,45 +40,87 @@ class Model:
                 "arg preprocessing expected to be a " "DataFrameTransformer"
             )
 
-        self._predictor = predictor
-        self._preprocessing = preprocessing
-        self._pipeline = PipelineDF(
-            steps=[
-                (Model.STEP_PREPROCESSING, self.preprocessing),
-                (Model.STEP_ESTIMATOR, self.predictor),
-            ]
+        self.preprocessing = preprocessing
+        self.predictor = predictor
+
+    @property
+    def pipeline(self) -> "Model":
+        return self
+
+    # noinspection PyPep8Naming
+    def fit(
+        self, X: pd.DataFrame, y: Optional[pd.Series] = None, **fit_params
+    ) -> "Model[Predictor]":
+        self.predictor.fit(self._pre_fit_transform(X, y, **fit_params), y, **fit_params)
+        return self
+
+    # noinspection PyPep8Naming
+    def predict(
+        self, X: pd.DataFrame, **predict_params
+    ) -> Union[pd.Series, pd.DataFrame]:
+        return self.predictor.predict(self._pre_transform(X), **predict_params)
+
+    # noinspection PyPep8Naming
+    def fit_predict(self, X: pd.DataFrame, y: pd.Series, **fit_params) -> pd.Series:
+        return self.predictor.fit_predict(
+            self._pre_fit_transform(X, y, **fit_params), y, **fit_params
         )
 
-    @property
-    def pipeline(self) -> PipelineDF:
-        return self._pipeline
+    # noinspection PyPep8Naming
+    def predict_proba(self, X: pd.DataFrame) -> Union[pd.DataFrame, List[pd.DataFrame]]:
+        return self.predictor.predict_proba(self._pre_transform(X))
 
-    @property
-    def preprocessing(self) -> DataFrameTransformer:
-        return self._preprocessing
+    # noinspection PyPep8Naming
+    def predict_log_proba(
+        self, X: pd.DataFrame
+    ) -> Union[pd.DataFrame, List[pd.DataFrame]]:
+        return self.predictor.predict_log_proba(self._pre_transform(X))
 
-    @property
-    def predictor(self) -> Predictor:
-        return self._predictor
+    # noinspection PyPep8Naming
+    def decision_function(self, X: pd.DataFrame) -> Union[pd.Series, pd.DataFrame]:
+        return self.predictor.decision_function(self._pre_transform(X))
+
+    # noinspection PyPep8Naming
+    def score(
+        self,
+        X: pd.DataFrame,
+        y: Optional[pd.Series] = None,
+        sample_weight: Optional[Any] = None,
+    ) -> float:
+        if sample_weight is None:
+            return self.predictor.score(self._pre_transform(X), y)
+        else:
+            return self.predictor.score(
+                self._pre_transform(X), y, sample_weight=sample_weight
+            )
+
+    # noinspection PyPep8Naming
+    def _pre_transform(self, X: pd.DataFrame) -> pd.DataFrame:
+        if self.preprocessing is not None:
+            return self.preprocessing.transform(X)
+        else:
+            return X
+
+    # noinspection PyPep8Naming
+    def _pre_fit_transform(
+        self, X: pd.DataFrame, y: pd.Series, **fit_params
+    ) -> pd.DataFrame:
+        if self.preprocessing is not None:
+            return self.preprocessing.fit_transform(X, y, **fit_params)
+        else:
+            return X
 
     def clone(self, parameters: Optional[Dict[str, Any]] = None) -> "Model":
         """
-         Clone this model.
+        Create an unfitted clone this model with new parameters.
 
-        :param parameters: parameters used to reset the model parameters
+        :param parameters: parameters to set in the cloned the model (optional)
         :return: the cloned model
         """
-        predictor = clone(self._predictor)
-        preprocessing = self._preprocessing
-        if preprocessing is not None:
-            preprocessing = clone(preprocessing)
 
-        my_class: Type[Model] = self.__class__
-        new_model: Model = my_class(predictor=predictor, preprocessing=preprocessing)
+        copy = clone(self)
 
-        # to set the parameters, we need to wrap the preprocessor and estimator in a
-        # pipeline object
         if parameters is not None:
-            new_model.pipeline.set_params(**parameters)
+            copy.set_params(**parameters)
 
-        return new_model
+        return copy

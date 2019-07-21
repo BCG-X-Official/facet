@@ -48,9 +48,7 @@ def test_model_ranker(
 
     # check if parameters set for estimators actually match expected:
     for scoring in model_ranking:
-        assert set(scoring.model.pipeline.get_params()).issubset(
-            scoring.model.pipeline.get_params()
-        )
+        assert set(scoring.model.get_params()).issubset(scoring.model.get_params())
 
     log.debug(f"\n{model_ranking}")
 

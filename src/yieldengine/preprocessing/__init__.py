@@ -71,5 +71,5 @@ class PolynomialFeaturesDF(ColumnPreservingTransformer[PolynomialFeatures]):
         )
 
     @classmethod
-    def _make_base_transformer(cls, **kwargs) -> PolynomialFeatures:
+    def _make_base_estimator(cls, **kwargs) -> PolynomialFeatures:
         return PolynomialFeatures(**kwargs)

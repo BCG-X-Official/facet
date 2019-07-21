@@ -7,10 +7,10 @@ import logging
 from typing import *
 
 import pandas as pd
-from sklearn.base import BaseEstimator
 from sklearn.pipeline import Pipeline
 from sklearn.utils import Bunch
 
+from yieldengine.df import DataFrameEstimator
 from yieldengine.df.predict import DataFrameClassifier, DataFrameRegressor
 from yieldengine.df.transform import DataFrameTransformer
 
@@ -61,7 +61,7 @@ class PipelineDF(
         return transform_steps
 
     @classmethod
-    def _make_base_transformer(cls, **kwargs) -> Pipeline:
+    def _make_base_estimator(cls, **kwargs) -> Pipeline:
         return Pipeline(**kwargs)
 
     def _get_columns_original(self) -> pd.Series:
@@ -88,7 +88,7 @@ class PipelineDF(
         return pd.Series(index=_columns_out, data=_columns_original)
 
     @property
-    def steps(self) -> List[Tuple[str, Union[DataFrameTransformer, BaseEstimator]]]:
+    def steps(self) -> List[Tuple[str, DataFrameEstimator]]:
         """
         The `steps` attribute of the underlying `Pipeline`.
         :return: List of (name, transform) tuples (implementing fit/transform).
@@ -109,14 +109,14 @@ class PipelineDF(
         """
         return len(self.base_transformer.steps)
 
-    def __getitem__(self, ind: Union[slice, int, str]) -> DataFrameTransformer:
+    def __getitem__(self, ind: Union[slice, int, str]) -> DataFrameEstimator:
         """Returns a sub-pipeline or a single estimator in the pipeline
 
         Indexing with an integer will return an estimator; using a slice
         returns another Pipeline instance which copies a slice of this
         Pipeline. This copy is shallow: modifying (or fitting) estimators in
         the sub-pipeline will affect the larger pipeline and vice-versa.
-        However, replacing a value in `step` will not affect a copy.
+        However, replacing a value in `steps` will not change a copy.
         """
 
         if isinstance(ind, slice):
