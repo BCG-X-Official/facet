@@ -4,7 +4,7 @@ from typing import *
 import pandas as pd
 
 from yieldengine import Sample
-from yieldengine.df.transform import DataFrameTransformer
+from yieldengine.df.transform import DataFrameTransformerWrapper
 from yieldengine.model.prediction import RegressorFitCV
 from yieldengine.model.selection import ModelEvaluation, ModelGrid, ModelRanker
 from yieldengine.model.validation import CircularCrossValidator
@@ -21,7 +21,7 @@ def test_univariate_simulation(
     batch_table: pd.DataFrame,
     regressor_grids: Iterable[ModelGrid],
     sample: Sample,
-    simple_preprocessor: DataFrameTransformer,
+    simple_preprocessor: DataFrameTransformerWrapper,
     available_cpus: int,
 ) -> None:
 

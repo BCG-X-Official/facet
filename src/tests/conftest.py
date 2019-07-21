@@ -18,7 +18,7 @@ from tests import read_test_config
 from tests.model import make_simple_transformer
 from tests.paths import TEST_DATA_CSV
 from yieldengine import Sample
-from yieldengine.df.transform import DataFrameTransformer
+from yieldengine.df.transform import DataFrameTransformerWrapper
 from yieldengine.model import Model
 from yieldengine.model.selection import ModelGrid
 
@@ -131,7 +131,7 @@ def sample(batch_table: pd.DataFrame) -> Sample:
 
 
 @pytest.fixture
-def simple_preprocessor(sample: Sample) -> DataFrameTransformer:
+def simple_preprocessor(sample: Sample) -> DataFrameTransformerWrapper:
     return make_simple_transformer(
         impute_median_columns=sample.features_by_type(Sample.DTYPE_NUMERICAL).columns,
         one_hot_encode_columns=sample.features_by_type(Sample.DTYPE_OBJECT).columns,

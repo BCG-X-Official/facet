@@ -2,14 +2,14 @@ import numpy as np
 import pandas as pd
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 
-from yieldengine.df.predict import DataFrameClassifier, DataFrameRegressor
+from yieldengine.df.predict import DataFrameClassifierWrapper, DataFrameRegressorWrapper
 
 
 def test_dataframe_predictor_classifier(
     iris_df: pd.DataFrame, iris_target: str
 ) -> None:
-    # implement a lightweight DataFramePredictor for RandomForestClassifier...
-    class rf_predictor_df(DataFrameClassifier[RandomForestClassifier]):
+    # implement a lightweight DataFramePredictorWrapper for RandomForestClassifier...
+    class rf_predictor_df(DataFrameClassifierWrapper[RandomForestClassifier]):
         @classmethod
         def _make_base_estimator(cls, **kwargs) -> RandomForestClassifier:
             return RandomForestClassifier(**kwargs)
@@ -44,8 +44,8 @@ def test_dataframe_predictor_classifier(
 def test_dataframe_predictor_regressor(
     boston_df: pd.DataFrame, boston_target: str
 ) -> None:
-    # implement a lightweight DataFrameRegressor for RandomForestRegressor...
-    class rf_predictor_df(DataFrameRegressor[RandomForestRegressor]):
+    # implement a lightweight DataFrameRegressorWrapper for RandomForestRegressor...
+    class rf_predictor_df(DataFrameRegressorWrapper[RandomForestRegressor]):
         @classmethod
         def _make_base_estimator(cls, **kwargs) -> RandomForestRegressor:
             return RandomForestRegressor(**kwargs)

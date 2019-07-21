@@ -10,14 +10,14 @@ from sklearn.preprocessing import (
     OrdinalEncoder,
 )
 
-from yieldengine.df.transform import DataFrameTransformer, df_transformer
+from yieldengine.df.transform import DataFrameTransformerWrapper, df_transformer
 
 log = logging.getLogger(__name__)
 
 __all__ = ["OneHotEncoderDF", "OrdinalEncoderDF", "LabelEncoderDF", "LabelBinarizerDF"]
 
 
-class OneHotEncoderDF(DataFrameTransformer[OneHotEncoder]):
+class OneHotEncoderDF(DataFrameTransformerWrapper[OneHotEncoder]):
     """
     One-hot encoder that returns a DataFrame.
 
