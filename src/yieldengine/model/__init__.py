@@ -1,3 +1,11 @@
+"""
+Models to make prediciton.
+
+The :class:`Model` specifies a model as a pipeline with two steps:
+- a preprocessing step
+- an estimator step
+"""
+
 from typing import *
 
 import pandas as pd
@@ -20,7 +28,9 @@ Predictor = TypeVar(
 @df_estimator(df_estimator_type=DataFrameClassifier)
 class Model(BaseEstimator, Generic[Predictor]):
     """
-    A model can create a pipeline for a preprocessing transformer (optional; possibly a
+    Specify the preprocessing step and the estimator for a model.
+
+    A model can creates a pipeline for a preprocessing transformer (optional; possibly a
     pipeline itself) and an estimator.
 
     :param Estimator predictor: the base estimator used in the pipeline
@@ -115,7 +125,7 @@ class Model(BaseEstimator, Generic[Predictor]):
         Create an unfitted clone this model with new parameters.
 
         :param parameters: parameters to set in the cloned the model (optional)
-        :return: the cloned model
+        :return: the cloned `Model`
         """
 
         copy = clone(self)

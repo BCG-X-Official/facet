@@ -1,3 +1,14 @@
+"""
+Linkage Tree.
+
+Define the class :class:`~yieldengine.dendrogram.linkage.LinkageTree`
+which serves as the internal representation of dendrograms.
+
+The classes :class:`~yieldengine.dendrogram.linkage.LinkageNode` and
+:class:`~yieldengine.dendrogram.linkage.LeafNode` are the building blocks of
+:class:`~yieldengine.dendrogram.linkage.LinkageTree`. Both these classes inherit from
+:class:`~yieldengine.dendrogram.linkage.Node`."""
+
 from abc import ABC, abstractmethod
 from typing import *
 
@@ -5,6 +16,12 @@ import numpy as np
 
 
 class Node(ABC):
+    """
+    Node of a `LinkageTree`.
+
+    Implementations must define `children_distance`, `weight`, `label`, `is_leaf`.
+    """
+
     __slots__ = ["_index"]
 
     def __init__(self, index: int) -> None:
@@ -12,26 +29,31 @@ class Node(ABC):
 
     @property
     def index(self) -> int:
+        """The index of the node."""
         return self._index
 
     @property
     @abstractmethod
     def children_distance(self) -> float:
+        """Distance from the node to its children."""
         pass
 
     @property
     @abstractmethod
     def weight(self) -> float:
+        """Weight of the node."""
         pass
 
     @property
     @abstractmethod
     def label(self) -> str:
+        """Label of the node."""
         pass
 
     @property
     @abstractmethod
     def is_leaf(self) -> bool:
+        """True if the node is a leaf, False otherwise."""
         pass
 
     def _type_error(self, property_name: str) -> TypeError:
@@ -42,6 +64,12 @@ class Node(ABC):
 
 
 class LinkageNode(Node):
+    """
+    Internal node in a `LinkageTree`.
+
+    :param children_distance: distance from the node to its children
+    """
+
     __slots__ = ["_children_distance"]
 
     def __init__(self, index: int, children_distance: Optional[float]) -> None:
@@ -50,18 +78,22 @@ class LinkageNode(Node):
 
     @property
     def children_distance(self) -> float:
+        """Distance to the children."""
         return self._children_distance
 
     @property
     def weight(self) -> float:
+        """Undefined, should not be called."""
         raise self._type_error("weight")
 
     @property
     def label(self) -> str:
+        """Undefined, should not be called."""
         raise self._type_error("label")
 
     @property
     def is_leaf(self) -> bool:
+        """``True`` if the node is a leaf, ``False`` otherwise."""
         return False
 
     def __repr__(self) -> str:
@@ -69,6 +101,14 @@ class LinkageNode(Node):
 
 
 class LeafNode(Node):
+    """
+    Leaf in a linkage tree.
+
+    :param index: the leaf index
+    :param label: the leaf label
+    :param weight: the leaf weight
+    """
+
     __slots__ = ["_weight", "_label"]
 
     def __init__(self, index: int, label: str, weight: float) -> None:
@@ -78,18 +118,22 @@ class LeafNode(Node):
 
     @property
     def children_distance(self) -> float:
+        """Distance to the children."""
         raise self._type_error("children_distance")
 
     @property
     def label(self) -> str:
+        """Label of the node."""
         return self._label
 
     @property
     def weight(self) -> float:
+        """Importance of the node."""
         return self._weight
 
     @property
     def is_leaf(self) -> bool:
+        """True."""
         return True
 
     def __repr__(self) -> str:
@@ -97,6 +141,14 @@ class LeafNode(Node):
 
 
 class LinkageTree:
+    """
+    Wrapper around a scipy linkage matrix.
+
+    :param scipy_linkage_matrix: linkage matrix from scipy
+    :param leaf_labels: labels of the leaves
+    :param leaf_weights: importance of the leaves
+    """
+
     F_CHILD_LEFT = 0
     F_CHILD_RIGHT = 1
     F_CHILDREN_DISTANCE = 2
@@ -151,9 +203,15 @@ class LinkageTree:
 
     @property
     def root(self) -> Node:
+        """
+        The root node of the linkage tree.
+
+        It is the cluster containing all other clusters.
+        """
         return self._nodes[-1]
 
     def children(self, node: Node) -> Optional[Tuple[Node, Node]]:
+        """Return None if the node is a leaf, otherwise the pair of children."""
         if node.is_leaf:
             return None
         else:
@@ -166,6 +224,7 @@ class LinkageTree:
 
     @property
     def n_leaves(self) -> int:
+        """The number of leaves."""
         return len(self) - len(self._linkage_matrix)
 
     def __len__(self) -> int:

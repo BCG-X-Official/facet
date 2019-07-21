@@ -2,6 +2,7 @@ import logging
 import warnings
 from typing import *
 
+import joblib
 import numpy as np
 import pandas as pd
 import pytest
@@ -44,7 +45,8 @@ def iris_target() -> str:
 
 @pytest.fixture
 def available_cpus() -> int:
-    return -3
+    cpu_count = joblib.cpu_count()
+    return max(1, cpu_count - 2, cpu_count * 3 // 4)
 
 
 @pytest.fixture

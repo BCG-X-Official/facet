@@ -1,5 +1,5 @@
 # coding=utf-8
-"""Base classes for wrapper around regressor and classifier returning pandas objects."""
+"""Base classes for wrapper around regressors and classifiers returning dataframes."""
 
 import logging
 from abc import ABC
@@ -22,6 +22,8 @@ _BaseClassifier = TypeVar("_BaseClassifier", bound=ClassifierMixin)
 class DataFramePredictor(DataFrameEstimator[_BasePredictor], ABC):
     """
     Base class for sklearn regressors and classifiers that preserve data frames
+
+    :param `**kwargs`: arguments passed to `DataFrameEstimator` in `__init__`
     """
 
     F_PREDICTION = "prediction"
@@ -29,8 +31,9 @@ class DataFramePredictor(DataFrameEstimator[_BasePredictor], ABC):
     @property
     def n_outputs(self) -> int:
         """
-        the number of outputs predicted by this predictor; defaults to 1 if base
-        predictor does not define property n_outputs_
+        Number of outputs predicted by this predictor.
+
+        Defaults to 1 if base predictor does not define property `n_outputs_`.
         """
         if self.is_fitted:
             return getattr(self.base_estimator, "n_outputs_", 1)
@@ -42,11 +45,13 @@ class DataFramePredictor(DataFrameEstimator[_BasePredictor], ABC):
         self, X: pd.DataFrame, **predict_params
     ) -> Union[pd.Series, pd.DataFrame]:
         """
-        Returns prediction as series for single-output problems, or as a data frame
-        for multi-output problems.
+        Compute the prediction as a series or a dataframe.
+
+        For single-output problems, return a series, fro multi-output problems,
+        return a dataframe.
 
         :param X: the data frame of features
-        :param predict_params: additional arguments passed to the the `predict` method \
+        :param predict_params: additional arguments passed to the `predict` method \
         of the base estimator
         :return: the predictions
         """
@@ -60,11 +65,12 @@ class DataFramePredictor(DataFrameEstimator[_BasePredictor], ABC):
     # noinspection PyPep8Naming
     def fit_predict(self, X: pd.DataFrame, y: pd.Series, **fit_params) -> pd.Series:
         """
-        Fit and predict.
+        Fit and return the predictions.
+
         :param X: the data frame of features
         :param y: the series of target used to train the model
         :param fit_params: additional arguments passed to the the `predict` method
-        of the base estimator
+          of the base estimator
         :return: `pd.Series` of the predictions for X
         """
         self._check_parameter_types(X, y)
@@ -86,7 +92,7 @@ class DataFramePredictor(DataFrameEstimator[_BasePredictor], ABC):
         sample_weight: Optional[Any] = None,
     ) -> float:
         """
-        Returns the score of the base estimator.
+        Return the score of the base estimator.
 
         :param X: data frame of the features, shape = (n_samples, n_features)
         :param y: series of the true targets, shape = (n_samples) or (n_samples, \
@@ -124,20 +130,21 @@ class DataFramePredictor(DataFrameEstimator[_BasePredictor], ABC):
 
 class DataFrameRegressor(DataFramePredictor[_BaseRegressor]):
     """
-    Wrapper around sklearn regressors that preserves data frames
+    Wrapper around sklearn regressors that preserves data frames.
     """
 
 
 class DataFrameClassifier(DataFramePredictor[_BaseClassifier]):
     """
-    Wrapper around sklearn classifiers that preserves data frames
+    Wrapper around sklearn classifiers that preserves data frames.
     """
 
     @property
     def classes(self) -> Optional[ListLike[Any]]:
         """
-        The classes of this classifier after fitting; None if the base estimator has
-        no `classes_` property
+        Classes of this classifier after fitting.
+
+        ``None`` if the base estimator has no `classes_` property.
         """
         if self.is_fitted:
             return getattr(self.base_estimator, "classes_", None)
@@ -179,7 +186,8 @@ class DataFrameClassifier(DataFramePredictor[_BaseClassifier]):
     # noinspection PyPep8Naming
     def decision_function(self, X: pd.DataFrame) -> Union[pd.Series, pd.DataFrame]:
         """
-        Evaluates the decision function for the samples in X.
+        Evaluate the decision function for the samples in X.
+
         :param X: data frame of features
         :return: data frame of the decision functions of the sample for each class
         """
