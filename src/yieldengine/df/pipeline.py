@@ -1,6 +1,12 @@
 # coding=utf-8
-"""Base classes for wrapper around pipeline returning pandas objects and keeping
-track of the column names."""
+"""
+Pipeline for dataframes.
+
+:class:`PipelineDF` wraps :class:`sklearn.pipeline.Pipeline` so that
+
+- ``transform`` returns dataframes
+- ``fit`` accepts dataframes
+"""
 
 
 import logging
@@ -23,9 +29,11 @@ class PipelineDF(
     DataFrameClassifierWrapper[Pipeline],
 ):
     """
-    Wrapper around `sklearn.pipeline.Pipeline` that returns dataframes.
+    Wrapper around :class:`sklearn.pipeline.Pipeline` with dataframes in input and
+    output.
 
-    :param `**kwargs`: the arguments used to construct the wrapped `Pipeline` object
+    :param `**kwargs`: the arguments used to construct the wrapped
+      :class:`~sklearn.pipeline.Pipeline`
     """
 
     def __init__(self, **kwargs) -> None:
@@ -90,7 +98,7 @@ class PipelineDF(
     @property
     def steps(self) -> List[Tuple[str, DataFrameEstimatorWrapper]]:
         """
-        The `steps` attribute of the underlying `Pipeline`.
+        The ``steps`` attribute of the underlying :class:`~sklearn.pipeline.Pipeline`.
 
         List of (name, transformer) tuples (transformers implement fit/transform).
         """
@@ -106,7 +114,7 @@ class PipelineDF(
         return self.base_transformer.named_steps
 
     def __len__(self) -> int:
-        """The number of steps of the Pipeline."""
+        """The number of steps of the pipeline."""
         return len(self.base_transformer.steps)
 
     def __getitem__(self, ind: Union[slice, int, str]) -> DataFrameEstimatorWrapper:

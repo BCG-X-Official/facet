@@ -1,11 +1,12 @@
 # coding=utf-8
 """
-Wrap sklearn `BaseEstimator` to return dataframes instead of numpy arrays.
+Wrap scikit-learn `BaseEstimator` to return dataframes instead of numpy arrays.
 
-The abstract class `~DataFrameEstimator` wraps a `BaseEstimator` so that the `predict`
-or `transform` methods of the implementations return dataframe.
-`~DataFrameEstimator` has an attribute `columns_in` which is the index of the
-columns of the input dataframe.
+The abstract class :class:`DataFrameEstimator` wraps
+:class:`~sklearn.base.BaseEstimator` so that the ``predict``
+and ``transform`` methods of the implementations return dataframe.
+:class:`DataFrameEstimator` has an attribute :attr:`~DataFrameEstimator.columns_in`
+which is the index of the columns of the input dataframe.
 """
 
 import logging
@@ -47,9 +48,9 @@ class DataFrameEstimator(ABC, BaseEstimator):
 
 class DataFrameEstimatorWrapper(DataFrameEstimator, Generic[_BaseEstimator]):
     """
-    Abstract base class that is a wrapper around the sklearn `BaseEstimator` class.
+    Abstract base class that is a wrapper around :class:`sklearn.base.BaseEstimator`.
 
-    Implementations must define a method `_make_base_estimator`.
+    Implementations must define a method ``_make_base_estimator``.
 
     :param `**kwargs`: the arguments passed to the base estimator
     """
@@ -78,7 +79,7 @@ class DataFrameEstimatorWrapper(DataFrameEstimator, Generic[_BaseEstimator]):
         """
         Get parameters for this estimator.
 
-        :param deep: If True, return the parameters for this estimator and \
+        :param deep: if ``True``, return the parameters for this estimator and \
         contained sub-objects that are estimators
 
         :return: mapping of the parameter names to their values

@@ -1,4 +1,13 @@
-"""Wrapper around sklearn `ColumnTransformer` compatible with dataframes."""
+"""
+Wrap scikit-learn `ColumnTransformer` to return dataframes instead of numpy arrays.
+
+The classes defined in this module all inherit from
+:class:`yieldengine.df.DataFrameTransformerDF` hence they have ``fit``, ``transform``
+and ``fit_transform`` methods and have dataframes as input and output.
+
+:class:`ColumnTransformDF` wraps around :class:`sklearn.compose.ColumnTransformer`.
+
+"""
 
 import logging
 from functools import reduce
@@ -16,10 +25,12 @@ __all__ = ["ColumnTransformerDF"]
 
 class ColumnTransformerDF(DataFrameTransformerWrapper[ColumnTransformer]):
     """
-    Wrap sklearn ```ColumnTransformer``` and return a DataFrame.
+    Wrap :class:`sklearn.compose.ColumnTransformer` and return a DataFrame.
 
-    Like a sklearn `ColumnTransformer`, self has a `transformers` parameter (None by
-    default) which is a list of tuple of the form (name, transformer, column(s)),
+    Like :class:`~sklearn.compose.ColumnTransformer`, it has a ``transformers``
+    parameter
+    (``None`` by default) which is a list of tuple of the form (name, transformer,
+    column(s)),
     but here all the transformers must be of type
     :class:`~yieldengine.df.transform.DataFrameTransformer`.
     """

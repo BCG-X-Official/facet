@@ -18,13 +18,10 @@ class CircularCrossValidator(BaseCrossValidator):
     Class to generate various CV splits of train and test data sets using circular
     out-of-sample splits.
 
-    Compatible with sklearn's GridSearchCV object, if you set
-    :code:`cv=circular_cross_validator`
-
-    See sklearn's `code <https://github.com/scikit-learn/scikit-learn/blob/7b136e9
-    /sklearn/model_selection/_search.py#L961>`_
-    and `reference <https://scikit-learn.org/stable/modules/generated/
-    sklearn.model_selection.GridSearchCV.html>`_
+    Compatible with  :class:`sklearn.model_selection.GridSearchCV` object, if you set
+    :code:`cv=circular_cross_validator`. See sklearn's `code
+    <https://github.com/scikit-learn/scikit-learn/blob/7b136e9
+    /sklearn/model_selection/_search.py#L961>`_.
 
     :param test_ratio:  Ratio determining the size of the test set (default=0.2).
     :param num_splits:   Number of splits to generate (default=50).
@@ -98,7 +95,7 @@ class CircularCrossValidator(BaseCrossValidator):
         :param y: targets (need to specify if X is None)
         :param groups: not used in this implementation, which is solely based on
           num_samples, num_splits, test_ratio
-        :return: Iterable (Generator of np.arrays) of all test-sets
+        :return: Iterable (Generator of numpy arrays) of all test-sets
         """
         n_samples = self._n_samples(X, y)
 
