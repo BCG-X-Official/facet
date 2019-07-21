@@ -26,8 +26,7 @@ class DataFrameTransformer(
     DataFrameEstimator[T_BaseTransformer], TransformerMixin, ABC
 ):
     """
-    Wraps around an sklearn transformer and ensures that the X and y objects passed
-    and returned are pandas data frames with valid column names.
+    Wrapper around an sklearn transformer and return dataframes.
 
     Implementations must define `_make_base_estimator` and `_get_columns_original`.
 
@@ -43,12 +42,12 @@ class DataFrameTransformer(
 
     @property
     def base_transformer(self) -> T_BaseTransformer:
-        """The base sklean transformer"""
+        """The base sklearn transformer"""
         return self.base_estimator
 
     # noinspection PyPep8Naming
     def transform(self, X: pd.DataFrame) -> pd.DataFrame:
-        """Calls the transform method of the base transformer `self.base_transformer`.
+        """Call the transform method of the base transformer ``self.base_transformer``.
 
         :param X: dataframe to transform
         :return: transformed dataframe
@@ -65,8 +64,7 @@ class DataFrameTransformer(
     def fit_transform(
         self, X: pd.DataFrame, y: Optional[pd.Series] = None, **fit_params
     ) -> pd.DataFrame:
-        """Calls the fit_transform method of the base transformer
-        `self.base_transformer`.
+        """Call the fit_transform method of `self.base_transformer`.
 
         :param X: dataframe to transform
         :param y: series of training targets
@@ -85,7 +83,7 @@ class DataFrameTransformer(
 
     # noinspection PyPep8Naming
     def inverse_transform(self, X: pd.DataFrame) -> pd.DataFrame:
-        """Apply inverse transformations in reverse order on the base tranformer.
+        """Apply inverse transformations in reverse order on the base transformer.
 
         All estimators in the pipeline must support ``inverse_transform``.
         :param X: dataframe of samples
@@ -102,7 +100,8 @@ class DataFrameTransformer(
 
     def fit_transform_sample(self, sample: Sample) -> Sample:
         """
-        Fit and transform with input and output being a `Sample` object.
+        Fit and transform with input/output being a :class:`~yieldengine.Sample` object.
+
         :param sample: `Sample` object used as input
         :return: transformed `Sample` object
         """
@@ -115,8 +114,10 @@ class DataFrameTransformer(
 
     @property
     def columns_original(self) -> pd.Series:
-        """Series with index the name of the output columns and with values the
-        original name of the column"""
+        """Series mapping output column names to the original columns names.
+
+        Series with index the name of the output columns and with values the
+        original name of the column."""
         self._ensure_fitted()
         if self._columns_original is None:
             self._columns_original = (
@@ -128,15 +129,12 @@ class DataFrameTransformer(
 
     @property
     def columns_out(self) -> pd.Index:
-        """The `pd.Index` of name of the output columns"""
+        """The `pd.Index` of names of the output columns."""
         return self.columns_original.index
 
     @abstractmethod
     def _get_columns_original(self) -> pd.Series:
-        """
-        :return: a mapping from this transformer's output columns to the original
-        columns as a series
-        """
+        """Return the series mapping output column names to original columns names."""
         pass
 
     # noinspection PyPep8Naming,PyUnusedLocal
@@ -177,8 +175,9 @@ class NDArrayTransformerDF(
     DataFrameTransformer[T_BaseTransformer], Generic[T_BaseTransformer], ABC
 ):
     """
-    Special case of DataFrameTransformer where the base transformer does not accept
-    data frames, but only numpy ndarrays
+    `DataFrameTransformer` whose base transformer only accepts numpy ndarrays.
+
+    Wrap around the base transformer and converts the dataframe to an array when needed.
     """
 
     # noinspection PyPep8Naming
@@ -208,21 +207,22 @@ class NDArrayTransformerDF(
 class ColumnPreservingTransformer(
     DataFrameTransformer[T_BaseTransformer], Generic[T_BaseTransformer], ABC
 ):
-    """Abstract base class for a `DataFrameTransformer`.
+    """
+    Transform a dataframe without changing column names but can remove columns.
 
     All output columns of a ColumnPreservingTransformer have the same names as their
-    associated input columns. Implementations must define `_make_base_estimator`
+    associated input columns. Some columns can be removed.
+    Implementations must define `_make_base_estimator`
     and `_get_columns_out`.
     """
 
     @abstractmethod
     def _get_columns_out(self) -> pd.Index:
-        """
-        :returns column labels for arrays returned by the fitted transformer
-        """
+        # Column labels for arrays returned by the fitted transformer.
         pass
 
     def _get_columns_original(self) -> pd.Series:
+        # return the series with output columns in index and output columns as values
         columns_out = self._get_columns_out()
         return pd.Series(index=columns_out, data=columns_out.values)
 
@@ -230,7 +230,8 @@ class ColumnPreservingTransformer(
 class ConstantColumnTransformer(
     ColumnPreservingTransformer[T_BaseTransformer], Generic[T_BaseTransformer], ABC
 ):
-    """Abstract base class for a `DataFrameTransformer`.
+    """
+    Transform a dataframe keeping exactly the same columns.
 
     A ConstantColumnTransformer does not add, remove, or rename any of the input
     columns. Implementations must define `_make_base_estimator`.
@@ -251,7 +252,8 @@ def df_estimator(
     Type[DataFrameEstimator[T_BaseEstimator]],
 ]:
     """
-    Class decorator wrapping an sklearn transformer in a `DataFrameTransformer`
+    Class decorator wrapping an sklearn transformer in a `DataFrameTransformer`.
+
     :param base_estimator: the transformer class to wrap
     :param df_estimator_type: optional parameter indicating the \
                                 `DataFrameTransformer` class to be used for wrapping; \

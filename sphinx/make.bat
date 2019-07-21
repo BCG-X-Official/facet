@@ -8,6 +8,9 @@ if "%SPHINXBUILD%" == "" (
 )
 set SOURCEDIR=source
 set BUILDDIR=build
+REM say to apidoc which members to consider
+REM set SPHINX_APIDOC_OPTIONS=members,undoc-members,show-inheritance,inherited-members
+
 
 if "%1" == "" goto help
 if "%1" == "html" goto html
