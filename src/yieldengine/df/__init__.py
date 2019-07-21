@@ -20,7 +20,32 @@ log = logging.getLogger(__name__)
 _BaseEstimator = TypeVar("_BaseEstimator", bound=BaseEstimator)
 
 
-class DataFrameEstimator(ABC, BaseEstimator, Generic[_BaseEstimator]):
+class DataFrameEstimator(ABC, BaseEstimator):
+    def __init__(self, **kwargs) -> None:
+        super().__init__()
+        self._columns_in = None
+
+    # noinspection PyPep8Naming
+    @abstractmethod
+    def fit(
+        self, X: pd.DataFrame, y: Optional[pd.Series] = None, **fit_params
+    ) -> "DataFrameEstimator":
+        pass
+
+    @property
+    @abstractmethod
+    def is_fitted(self) -> bool:
+        """`True` if the base estimator is fitted, else `False`"""
+        pass
+
+    @property
+    @abstractmethod
+    def columns_in(self) -> pd.Index:
+        """The names of the input columns this estimator was fitted on"""
+        pass
+
+
+class DataFrameEstimatorWrapper(DataFrameEstimator, Generic[_BaseEstimator]):
     """
     Abstract base class that is a wrapper around the sklearn `BaseEstimator` class.
 
@@ -32,9 +57,8 @@ class DataFrameEstimator(ABC, BaseEstimator, Generic[_BaseEstimator]):
     F_COLUMN_IN = "column_in"
 
     def __init__(self, **kwargs) -> None:
-        super().__init__()
+        super().__init__(**kwargs)
         self._base_estimator = type(self)._make_base_estimator(**kwargs)
-        self._columns_in = None
 
     @classmethod
     @abstractmethod
@@ -46,7 +70,7 @@ class DataFrameEstimator(ABC, BaseEstimator, Generic[_BaseEstimator]):
         """
         Return the base sklearn `BaseEstimator`.
 
-        :return: the estimator underlying self
+        :return: the estimator underlying this DataFrameEstimatorWrapper
         """
         return self._base_estimator
 
@@ -62,7 +86,7 @@ class DataFrameEstimator(ABC, BaseEstimator, Generic[_BaseEstimator]):
         # noinspection PyUnresolvedReferences
         return self._base_estimator.get_params(deep=deep)
 
-    def set_params(self, **kwargs) -> "DataFrameEstimator":
+    def set_params(self, **kwargs) -> "DataFrameEstimatorWrapper":
         """
         Set the parameters of this estimator.
 
@@ -77,7 +101,7 @@ class DataFrameEstimator(ABC, BaseEstimator, Generic[_BaseEstimator]):
     # noinspection PyPep8Naming
     def fit(
         self, X: pd.DataFrame, y: Optional[pd.Series] = None, **fit_params
-    ) -> "DataFrameEstimator[_BaseEstimator]":
+    ) -> "DataFrameEstimatorWrapper[_BaseEstimator]":
         """
         Fit the base estimator.
 
