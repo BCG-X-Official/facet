@@ -6,7 +6,7 @@ from matplotlib.pyplot import figure
 from yieldengine import Sample
 from yieldengine.dendrogram import DendrogramDrawer
 from yieldengine.dendrogram.style import FeatMapStyle, LineStyle
-from yieldengine.df.transform import DataFrameTransformer
+from yieldengine.df.transform import DataFrameTransformerWrapper
 from yieldengine.model import Model
 from yieldengine.model.inspection import ModelInspector
 from yieldengine.model.prediction import RegressorFitCV
@@ -15,7 +15,9 @@ from yieldengine.model.validation import CircularCrossValidator
 
 @pytest.fixture()
 def model_inspector(
-    batch_table: pd.DataFrame, sample: Sample, simple_preprocessor: DataFrameTransformer
+    batch_table: pd.DataFrame,
+    sample: Sample,
+    simple_preprocessor: DataFrameTransformerWrapper,
 ) -> ModelInspector:
 
     cv = CircularCrossValidator(test_ratio=0.20, num_splits=5)

@@ -114,7 +114,7 @@ class UnivariateSimulation:
         `percentiles` and whose index is given by the parameter values
         """
 
-        def percentile(n: int) -> Callable[float, float]:
+        def percentile(n: int) -> Callable[[float], float]:
             """
             Return the function computed the n-th percentile.
 

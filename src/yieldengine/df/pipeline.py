@@ -1,5 +1,6 @@
 # coding=utf-8
-"""Define a wrapper around pipeline which returns dataframes."""
+"""Base classes for wrapper around pipeline returning pandas objects and keeping
+track of the column names."""
 
 
 import logging
@@ -9,17 +10,17 @@ import pandas as pd
 from sklearn.pipeline import Pipeline
 from sklearn.utils import Bunch
 
-from yieldengine.df import DataFrameEstimator
-from yieldengine.df.predict import DataFrameClassifier, DataFrameRegressor
-from yieldengine.df.transform import DataFrameTransformer
+from yieldengine.df import DataFrameEstimatorWrapper
+from yieldengine.df.predict import DataFrameClassifierWrapper, DataFrameRegressorWrapper
+from yieldengine.df.transform import DataFrameTransformerWrapper
 
 log = logging.getLogger(__name__)
 
 
 class PipelineDF(
-    DataFrameTransformer[Pipeline],
-    DataFrameRegressor[Pipeline],
-    DataFrameClassifier[Pipeline],
+    DataFrameTransformerWrapper[Pipeline],
+    DataFrameRegressorWrapper[Pipeline],
+    DataFrameClassifierWrapper[Pipeline],
 ):
     """
     Wrapper around `sklearn.pipeline.Pipeline` that returns dataframes.
@@ -34,14 +35,14 @@ class PipelineDF(
     def _validate_steps(self) -> None:
         for name, transformer in self._transform_steps():
             if transformer is not None and not isinstance(
-                transformer, DataFrameTransformer
+                transformer, DataFrameTransformerWrapper
             ):
                 raise ValueError(
-                    f"expected all transformers to implement DataFrameTransformer, but "
+                    f"expected all transformers to implement DataFrameTransformerWrapper, but "
                     f"step '{name}' is a {type(transformer).__name__}"
                 )
 
-    def _transform_steps(self) -> List[Tuple[str, DataFrameTransformer]]:
+    def _transform_steps(self) -> List[Tuple[str, DataFrameTransformerWrapper]]:
         pipeline = self.base_transformer
 
         steps = pipeline.steps
@@ -87,7 +88,7 @@ class PipelineDF(
         return pd.Series(index=_columns_out, data=_columns_original)
 
     @property
-    def steps(self) -> List[Tuple[str, DataFrameEstimator]]:
+    def steps(self) -> List[Tuple[str, DataFrameEstimatorWrapper]]:
         """
         The `steps` attribute of the underlying `Pipeline`.
 
@@ -108,7 +109,7 @@ class PipelineDF(
         """The number of steps of the Pipeline."""
         return len(self.base_transformer.steps)
 
-    def __getitem__(self, ind: Union[slice, int, str]) -> DataFrameEstimator:
+    def __getitem__(self, ind: Union[slice, int, str]) -> DataFrameEstimatorWrapper:
         """
         Return a sub-pipeline or a single estimator in the pipeline
 
