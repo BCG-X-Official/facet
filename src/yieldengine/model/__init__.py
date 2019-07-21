@@ -56,10 +56,6 @@ class Model(BaseEstimator, Generic[Predictor]):
         self.preprocessing = preprocessing
         self.predictor = predictor
 
-    @property
-    def pipeline(self) -> "Model":
-        return self
-
     # noinspection PyPep8Naming
     def fit(
         self, X: pd.DataFrame, y: Optional[pd.Series] = None, **fit_params

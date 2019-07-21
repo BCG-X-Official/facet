@@ -296,7 +296,7 @@ class ClassifierFitCV(PredictorFitCV):
                 else self.calibrated_model(split_id=split_id)
             )
 
-            probabilities = predictor.pipeline.predict_proba(X=test_sample.features)
+            probabilities = predictor.predict_proba(X=test_sample.features)
 
             n_classes = probabilities.shape[1]
 
