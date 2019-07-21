@@ -10,23 +10,18 @@ from typing import *
 
 import pandas as pd
 from sklearn import clone
-from sklearn.base import BaseEstimator, ClassifierMixin, RegressorMixin
 
-from yieldengine.df.predict import DataFrameClassifierWrapper
-from yieldengine.df.transform import DataFrameTransformerWrapper, df_estimator
+from yieldengine import ListLike
+from yieldengine.df.predict import DataFrameClassifier, DataFrameRegressor
+from yieldengine.df.transform import DataFrameTransformer
 
 __all__ = ["Model"]
 
-# todo: replace this with DataFramePredictorWrapper once we have provided DF versions of all
-#       sklearn regressors and classifiers
-Predictor = TypeVar(
-    "Predictor", bound=Union[RegressorMixin, ClassifierMixin] and BaseEstimator
-)
+Predictor = TypeVar("Predictor", bound=Union[DataFrameRegressor, DataFrameClassifier])
 
 
 # todo: rename to PredictiveWorkflow (tbc)
-@df_estimator(df_estimator_type=DataFrameClassifierWrapper)
-class Model(BaseEstimator, Generic[Predictor]):
+class Model(DataFrameRegressor, DataFrameClassifier, Generic[Predictor]):
     """
     Specify the preprocessing step and the estimator for a model.
 
@@ -40,14 +35,12 @@ class Model(BaseEstimator, Generic[Predictor]):
     """
 
     def __init__(
-        self,
-        predictor: Predictor,
-        preprocessing: Optional[DataFrameTransformerWrapper] = None,
+        self, predictor: Predictor, preprocessing: Optional[DataFrameTransformer] = None
     ) -> None:
         super().__init__()
 
         if preprocessing is not None and not isinstance(
-            preprocessing, DataFrameTransformerWrapper
+            preprocessing, DataFrameTransformer
         ):
             raise ValueError(
                 "arg preprocessing expected to be a " "DataFrameTransformerWrapper"
@@ -62,6 +55,17 @@ class Model(BaseEstimator, Generic[Predictor]):
     ) -> "Model[Predictor]":
         self.predictor.fit(self._pre_fit_transform(X, y, **fit_params), y, **fit_params)
         return self
+
+    @property
+    def is_fitted(self) -> bool:
+        return self.preprocessing.is_fitted and self.predictor.is_fitted
+
+    @property
+    def columns_in(self) -> pd.Index:
+        if self.preprocessing is not None:
+            return self.preprocessing.columns_in
+        else:
+            return self.predictor.columns_in
 
     # noinspection PyPep8Naming
     def predict(
@@ -102,6 +106,14 @@ class Model(BaseEstimator, Generic[Predictor]):
             return self.predictor.score(
                 self._pre_transform(X), y, sample_weight=sample_weight
             )
+
+    @property
+    def classes(self) -> Optional[ListLike[Any]]:
+        return self.predictor.classes
+
+    @property
+    def n_outputs(self) -> int:
+        return self.predictor.n_outputs
 
     # noinspection PyPep8Naming
     def _pre_transform(self, X: pd.DataFrame) -> pd.DataFrame:
