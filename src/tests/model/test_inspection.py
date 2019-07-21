@@ -146,7 +146,7 @@ def test_model_inspection(available_cpus: int, boston_sample: Sample) -> None:
 
 def test_model_inspection_with_encoding(
     batch_table: pd.DataFrame,
-    regressor_grids: Iterable[ModelGrid],
+    regressor_grids: List[ModelGrid],
     sample: Sample,
     simple_preprocessor: DataFrameTransformer,
     available_cpus: int,
@@ -158,6 +158,8 @@ def test_model_inspection_with_encoding(
     model_ranker: ModelRanker = ModelRanker(
         grids=regressor_grids, cv=circular_cv, scoring="r2"
     )
+
+    model = regressor_grids[0].model
 
     # run the ModelRanker to retrieve a ranking
     model_ranking: Sequence[ModelEvaluation] = model_ranker.run(

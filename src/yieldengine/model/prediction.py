@@ -179,7 +179,7 @@ class PredictorFitCV(ABC):
                     positions=test_indices
                 )
 
-                predictions = self.fitted_model(split_id=split_id).pipeline.predict(
+                predictions = self.fitted_model(split_id=split_id).predict(
                     X=test_sample.features
                 )
 
@@ -222,7 +222,7 @@ class PredictorFitCV(ABC):
         :param train_sample: `Sample` to fit on
         :return: tuple of the the split_id and the fitted `Model`
         """
-        model.pipeline.fit(X=train_sample.features, y=train_sample.target)
+        model.fit(X=train_sample.features, y=train_sample.target)
         return model
 
 
@@ -369,9 +369,7 @@ class ClassifierFitCV(PredictorFitCV):
 
         cv.fit(X=data_transformed, y=test_sample.target)
 
-        model._predictor = cv.calibrated_classifiers_[0]
-
-        model.pipeline.steps[-1] = (Model.STEP_ESTIMATOR, cv.calibrated_classifiers_[0])
+        model.predictor = cv.calibrated_classifiers_[0]
 
         return model
 

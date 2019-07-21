@@ -122,13 +122,13 @@ class DataFramePredictor(DataFrameEstimator[_BasePredictor], ABC):
         )
 
 
-class DataFrameRegressor(DataFramePredictor[_BaseRegressor], ABC):
+class DataFrameRegressor(DataFramePredictor[_BaseRegressor]):
     """
     Wrapper around sklearn regressors that preserves data frames
     """
 
 
-class DataFrameClassifier(DataFramePredictor[_BaseClassifier], ABC):
+class DataFrameClassifier(DataFramePredictor[_BaseClassifier]):
     """
     Wrapper around sklearn classifiers that preserves data frames
     """

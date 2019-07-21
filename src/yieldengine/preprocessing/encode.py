@@ -28,7 +28,7 @@ class OneHotEncoderDF(DataFrameTransformer[OneHotEncoder]):
             )
 
     @classmethod
-    def _make_base_transformer(cls, **kwargs) -> OneHotEncoder:
+    def _make_base_estimator(cls, **kwargs) -> OneHotEncoder:
         return OneHotEncoder(**kwargs)
 
     def _get_columns_original(self) -> pd.Series:

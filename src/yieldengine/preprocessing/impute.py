@@ -16,7 +16,7 @@ class SimpleImputerDF(ColumnPreservingTransformer[SimpleImputer]):
         super().__init__(**kwargs)
 
     @classmethod
-    def _make_base_transformer(cls, **kwargs) -> SimpleImputer:
+    def _make_base_estimator(cls, **kwargs) -> SimpleImputer:
         return SimpleImputer(**kwargs)
 
     def _get_columns_out(self) -> pd.Index:
@@ -48,7 +48,7 @@ class MissingIndicatorDF(DataFrameTransformer[MissingIndicator]):
         )
 
     @classmethod
-    def _make_base_transformer(cls, **kwargs) -> MissingIndicator:
+    def _make_base_estimator(cls, **kwargs) -> MissingIndicator:
         return MissingIndicator(**kwargs)
 
     def _get_columns_original(self) -> pd.Series:

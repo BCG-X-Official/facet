@@ -32,7 +32,7 @@ class BorutaDF(NDArrayTransformerDF[BorutaPy], ColumnPreservingTransformer[Borut
         )
 
     @classmethod
-    def _make_base_transformer(cls, **kwargs) -> BorutaPy:
+    def _make_base_estimator(cls, **kwargs) -> BorutaPy:
         return BorutaPy(**kwargs)
 
     def _get_columns_out(self) -> pd.Index:
