@@ -1,5 +1,18 @@
 # coding=utf-8
-"""Base classes with wrapper around sklearn transformers."""
+"""
+Wrappers around scikit-learn transformers.
+
+Create classes analogue to :class:`sklearn.base.TransformerMixin`. The outcome are
+classes the have ``fit``, ``transform`` and ``fit_transform`` methods that accept and
+return dataframes (while scikit-learn transformers alwsays return a numpy array and
+sometimes do not accept a dataframe as input).
+
+:class:`DataFrameTransformer` is an ABC class that wraps sklearn
+:class:`sklearn.base.TransformerMixin`.
+
+The attribute :attr:`DataFrameTransformer.columns_original` is a
+:class:`pandas.Series` with index the output columns and values the input column names.
+"""
 
 import logging
 from abc import ABC, abstractmethod
@@ -39,10 +52,10 @@ class DataFrameTransformer(DataFrameEstimator, TransformerMixin, ABC):
 
     def fit_transform_sample(self, sample: Sample) -> Sample:
         """
-        Fit and transform with input/output being a :class:`~yieldengine.Sample` object.
+        Fit and transform with input/output as a :class:`~yieldengine.Sample` object.
 
-        :param sample: `Sample` object used as input
-        :return: transformed `Sample` object
+        :param sample: sample used as input
+        :return: transformed sample
         """
         return Sample(
             observations=pd.concat(
@@ -66,12 +79,13 @@ class DataFrameTransformerWrapper(
     DataFrameTransformer, DataFrameEstimatorWrapper[T_BaseTransformer], ABC
 ):
     """
-    Wraps around an sklearn transformer and ensures that the X and y objects passed
-    and returned are pandas data frames with valid column names.
+    Wraps a :class:`sklearn.base.TransformerMixin` and ensures that the X and y
+    objects passed and returned are pandas data frames with valid column names.
 
-    Implementations must define `_make_base_estimator` and `_get_columns_original`.
+    Implementations must define ``_make_base_estmiator`` and
+    ``_get_columns_original``.
 
-    :param: base_transformer the sklearn transformer to be wrapped
+    :param `**kwargs`: parameters of scikit-learn transformer to be wrapped
     """
 
     F_COLUMN_OUT = "column_out"
@@ -83,7 +97,7 @@ class DataFrameTransformerWrapper(
 
     @property
     def base_transformer(self) -> T_BaseTransformer:
-        """The base sklearn transformer"""
+        """The base scikit-learn transformer"""
         return self.base_estimator
 
     # noinspection PyPep8Naming
@@ -105,7 +119,7 @@ class DataFrameTransformerWrapper(
     def fit_transform(
         self, X: pd.DataFrame, y: Optional[pd.Series] = None, **fit_params
     ) -> pd.DataFrame:
-        """Call the fit_transform method of `self.base_transformer`.
+        """Call the ``fit_transform`` method of ``self.base_transformer``.
 
         :param X: dataframe to transform
         :param y: series of training targets
@@ -236,10 +250,10 @@ class ColumnPreservingTransformer(
     """
     Transforms a dataframe without changing column names but can remove columns.
 
-    All output columns of a ColumnPreservingTransformer have the same names as their
+    All output columns of a :class:`ColumnPreservingTransformer` have the same names as
+    their
     associated input columns. Some columns can be removed.
-    Implementations must define `_make_base_estimator`
-    and `_get_columns_out`.
+    Implementations must define ``_make_base_estimator`` and ``_get_columns_out``.
     """
 
     @abstractmethod
@@ -260,7 +274,7 @@ class ConstantColumnTransformer(
     Transforms a dataframe keeping exactly the same columns.
 
     A ConstantColumnTransformer does not add, remove, or rename any of the input
-    columns. Implementations must define `_make_base_estimator`.
+    columns. Implementations must define ``_make_base_estimator``.
     """
 
     def _get_columns_out(self) -> pd.Index:
@@ -278,13 +292,14 @@ def df_estimator(
     Type[DataFrameEstimatorWrapper[T_BaseEstimator]],
 ]:
     """
-    Class decorator wrapping an sklearn transformer in a `DataFrameTransformerWrapper`.
-    :param base_estimator: the transformer class to wrap
+    Class decorator wrapping a :class:`sklearn.base.BaseEstimattor` in a
+    :class:`DataFrameEstimatorWrapper`.
+    :param base_estimator: the estimator class to wrap
     :param df_estimator_type: optional parameter indicating the \
-                              `DataFrameTransformerWrapper` class to be used for \
-                              wrapping; defaults to `ConstantColumnTransformer`
-    :return: the resulting `DataFrameTransformerWrapper` with `cls` as the base \
-             transformer
+                              :class:`DataFrameEstimatorWrapper` class to be used for \
+                              wrapping; defaults to :class:`DataFrameEstimatorWrapper`
+    :return: the resulting `DataFrameEstimatorWrapper` with ``base_estimator`` as \
+             the base estimator
     """
 
     def _decorate(
@@ -325,13 +340,16 @@ def df_transformer(
     Type[DataFrameTransformerWrapper[T_BaseTransformer]],
 ]:
     """
-    Class decorator wrapping an sklearn transformer in a `DataFrameTransformerWrapper`
+    Class decorator wrapping a :class:`sklearn.base.TransformerMixin` into a
+    :class:`DataFrameTransformer`.
+
     :param base_transformer: the transformer class to wrap
     :param df_transformer_type: optional parameter indicating the \
-                                `DataFrameTransformerWrapper` class to be used for \
-                                wrapping; defaults to `ConstantColumnTransformer`
-    :return: the resulting `DataFrameTransformerWrapper` with `cls` as the base \
-             transformer
+                                :class:`DataFrameTransformer` class to be used for
+                                wrapping; \
+                                defaults to :class:`ConstantColumnTransformer`
+    :return: the resulting `DataFrameTransformer` with ``base_transformer`` \
+             as the base transformer
     """
 
     return cast(
