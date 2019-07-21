@@ -15,17 +15,21 @@ from yieldengine.df import DataFrameEstimator
 
 log = logging.getLogger(__name__)
 
-_BaseTransformer = TypeVar(
-    "_BaseTransformer", bound=Union[BaseEstimator, TransformerMixin]
+T_BaseEstimator = TypeVar("T_BaseEstimator", bound=BaseEstimator)
+
+T_BaseTransformer = TypeVar(
+    "T_BaseTransformer", bound=Union[BaseEstimator, TransformerMixin]
 )
 
 
-class DataFrameTransformer(DataFrameEstimator[_BaseTransformer], TransformerMixin, ABC):
+class DataFrameTransformer(
+    DataFrameEstimator[T_BaseTransformer], TransformerMixin, ABC
+):
     """
     Wraps around an sklearn transformer and ensures that the X and y objects passed
     and returned are pandas data frames with valid column names.
 
-    Implementations must define `_make_base_transformer` and `_get_columns_original`.
+    Implementations must define `_make_base_estimator` and `_get_columns_original`.
 
     :param: base_transformer the sklearn transformer to be wrapped
     """
@@ -38,7 +42,7 @@ class DataFrameTransformer(DataFrameEstimator[_BaseTransformer], TransformerMixi
         self._columns_original = None
 
     @property
-    def base_transformer(self) -> _BaseTransformer:
+    def base_transformer(self) -> T_BaseTransformer:
         """The base sklean transformer"""
         return self.base_estimator
 
@@ -127,15 +131,6 @@ class DataFrameTransformer(DataFrameEstimator[_BaseTransformer], TransformerMixi
         """The `pd.Index` of name of the output columns"""
         return self.columns_original.index
 
-    @classmethod
-    def _make_base_estimator(cls, **kwargs) -> _BaseTransformer:
-        return cls._make_base_transformer(**kwargs)
-
-    @classmethod
-    @abstractmethod
-    def _make_base_transformer(cls, **kwargs) -> _BaseTransformer:
-        pass
-
     @abstractmethod
     def _get_columns_original(self) -> pd.Series:
         """
@@ -179,7 +174,7 @@ class DataFrameTransformer(DataFrameEstimator[_BaseTransformer], TransformerMixi
 
 
 class NDArrayTransformerDF(
-    DataFrameTransformer[_BaseTransformer], Generic[_BaseTransformer], ABC
+    DataFrameTransformer[T_BaseTransformer], Generic[T_BaseTransformer], ABC
 ):
     """
     Special case of DataFrameTransformer where the base transformer does not accept
@@ -189,7 +184,7 @@ class NDArrayTransformerDF(
     # noinspection PyPep8Naming
     def _base_fit(
         self, X: pd.DataFrame, y: Optional[pd.Series], **fit_params
-    ) -> _BaseTransformer:
+    ) -> T_BaseTransformer:
         # noinspection PyUnresolvedReferences
         return self.base_transformer.fit(X.values, y.values, **fit_params)
 
@@ -211,12 +206,12 @@ class NDArrayTransformerDF(
 
 
 class ColumnPreservingTransformer(
-    DataFrameTransformer[_BaseTransformer], Generic[_BaseTransformer], ABC
+    DataFrameTransformer[T_BaseTransformer], Generic[T_BaseTransformer], ABC
 ):
     """Abstract base class for a `DataFrameTransformer`.
 
     All output columns of a ColumnPreservingTransformer have the same names as their
-    associated input columns. Implementations must define `_make_base_transformer` \
+    associated input columns. Implementations must define `_make_base_estimator`
     and `_get_columns_out`.
     """
 
@@ -233,32 +228,32 @@ class ColumnPreservingTransformer(
 
 
 class ConstantColumnTransformer(
-    ColumnPreservingTransformer[_BaseTransformer], Generic[_BaseTransformer], ABC
+    ColumnPreservingTransformer[T_BaseTransformer], Generic[T_BaseTransformer], ABC
 ):
     """Abstract base class for a `DataFrameTransformer`.
 
     A ConstantColumnTransformer does not add, remove, or rename any of the input
-    columns. Implementations must define `_make_base_transformer`.
+    columns. Implementations must define `_make_base_estimator`.
     """
 
     def _get_columns_out(self) -> pd.Index:
         return self.columns_in
 
 
-def df_transformer(
-    cls: Type[_BaseTransformer] = None,
+def df_estimator(
+    base_estimator: Type[T_BaseEstimator] = None,
     *,
-    df_transformer_type: Type[
-        DataFrameTransformer[_BaseTransformer]
-    ] = ConstantColumnTransformer,
+    df_estimator_type: Type[DataFrameEstimator[T_BaseEstimator]] = DataFrameEstimator[
+        T_BaseEstimator
+    ],
 ) -> Union[
-    Callable[[Type[_BaseTransformer]], Type[DataFrameTransformer[_BaseTransformer]]],
-    Type[DataFrameTransformer[_BaseTransformer]],
+    Callable[[Type[T_BaseEstimator]], Type[DataFrameEstimator[T_BaseEstimator]]],
+    Type[DataFrameEstimator[T_BaseEstimator]],
 ]:
     """
     Class decorator wrapping an sklearn transformer in a `DataFrameTransformer`
-    :param cls: the transformer class to wrap
-    :param df_transformer_type: optional parameter indicating the \
+    :param base_estimator: the transformer class to wrap
+    :param df_estimator_type: optional parameter indicating the \
                                 `DataFrameTransformer` class to be used for wrapping; \
                                 defaults to `ConstantColumnTransformer`
     :return: the resulting `DataFrameTransformer` with `cls` as the base \
@@ -266,22 +261,58 @@ def df_transformer(
     """
 
     def _decorate(
-        decoratee: Type[_BaseTransformer]
-    ) -> Type[DataFrameTransformer[_BaseTransformer]]:
+        decoratee: Type[T_BaseEstimator]
+    ) -> Type[DataFrameEstimator[T_BaseEstimator]]:
         @wraps(decoratee, updated=())
-        class _DataFrameTransformer(df_transformer_type):
+        class _DataFrameEstimator(df_estimator_type):
             @classmethod
-            def _make_base_transformer(c, **kwargs) -> _BaseTransformer:
-                return cls(**kwargs)
+            def _make_base_estimator(cls, **kwargs) -> T_BaseEstimator:
+                return decoratee(**kwargs)
 
-        return _DataFrameTransformer
+        decoratee.__name__ = f"_{decoratee.__name__}Base"
+        decoratee.__qualname__ = f"{decoratee.__qualname__}.{decoratee.__name__}"
+        setattr(_DataFrameEstimator, decoratee.__name__, decoratee)
+        return _DataFrameEstimator
 
-    if not issubclass(df_transformer_type, DataFrameTransformer):
+    if not issubclass(df_estimator_type, DataFrameEstimator):
         raise ValueError(
             f"arg df_transformer_type not a "
-            f"{DataFrameTransformer.__name__} class: {df_transformer_type}"
+            f"{DataFrameEstimator.__name__} class: {df_estimator_type}"
         )
-    if cls is None:
+    if base_estimator is None:
         return _decorate
     else:
-        return _decorate(cls)
+        return _decorate(base_estimator)
+
+
+def df_transformer(
+    base_transformer: Type[T_BaseTransformer] = None,
+    *,
+    df_transformer_type: Type[
+        DataFrameTransformer[T_BaseTransformer]
+    ] = ConstantColumnTransformer,
+) -> Union[
+    Callable[[Type[T_BaseTransformer]], Type[DataFrameTransformer[T_BaseTransformer]]],
+    Type[DataFrameTransformer[T_BaseTransformer]],
+]:
+    """
+    Class decorator wrapping an sklearn transformer in a `DataFrameTransformer`
+    :param base_transformer: the transformer class to wrap
+    :param df_transformer_type: optional parameter indicating the \
+                                `DataFrameTransformer` class to be used for wrapping; \
+                                defaults to `ConstantColumnTransformer`
+    :return: the resulting `DataFrameTransformer` with `cls` as the base \
+             transformer
+    """
+
+    return cast(
+        Union[
+            Callable[
+                [Type[T_BaseTransformer]], Type[DataFrameTransformer[T_BaseTransformer]]
+            ],
+            Type[DataFrameTransformer[T_BaseTransformer]],
+        ],
+        df_estimator(
+            base_estimator=base_transformer, df_estimator_type=df_transformer_type
+        ),
+    )

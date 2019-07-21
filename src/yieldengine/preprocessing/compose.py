@@ -40,7 +40,7 @@ class ColumnTransformerDF(DataFrameTransformer[ColumnTransformer]):
         self._columnTransformer = column_transformer
 
     @classmethod
-    def _make_base_transformer(cls, **kwargs) -> ColumnTransformer:
+    def _make_base_estimator(cls, **kwargs) -> ColumnTransformer:
         return ColumnTransformer(**kwargs)
 
     def _get_columns_original(self) -> pd.Series:

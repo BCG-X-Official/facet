@@ -45,13 +45,13 @@ class ModelGrid:
             ]
 
         grid_parameters: Iterable[Tuple[str, Any]] = _prefix_parameter_names(
-            parameters=estimator_parameters, prefix=Model.STEP_ESTIMATOR
+            parameters=estimator_parameters, prefix="predictor"
         )
         if preprocessing_parameters is not None:
             grid_parameters = chain(
                 grid_parameters,
                 _prefix_parameter_names(
-                    parameters=preprocessing_parameters, prefix=Model.STEP_PREPROCESSING
+                    parameters=preprocessing_parameters, prefix="preprocessing"
                 ),
             )
 
@@ -185,7 +185,7 @@ class ModelRanker:
         searchers: List[Tuple[GridSearchCV, ModelGrid]] = [
             (
                 GridSearchCV(
-                    estimator=grid.model.pipeline,
+                    estimator=grid.model,
                     cv=self._cv,
                     param_grid=grid.parameters,
                     scoring=self._scoring,
