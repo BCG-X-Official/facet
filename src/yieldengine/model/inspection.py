@@ -27,7 +27,7 @@ class ModelInspector:
     """
     Inspect a model through its shap values.
 
-    :param PredictorFitCV predictor_fit: predictor containing the information about the
+    :param predictor_fit: predictor containing the information about the
       model, the data (a Sample object), the cross-validation and predictions.
     :param explainer_factory: method that returns a shap Explainer
     """
@@ -60,7 +60,7 @@ class ModelInspector:
 
     @property
     def model_fit(self) -> PredictorFitCV:
-        """The `PredictorFitCV` used for inspection."""
+        """:class:`PredictorFitCV` used for inspection."""
         return self._predictor_fit
 
     def shap_matrix(self) -> pd.DataFrame:
@@ -185,7 +185,7 @@ class ModelInspector:
 
     def cluster_dependent_features(self) -> LinkageTree:
         """
-        Return the `LinkageTree` based on the `feature_dependency_matrix`.
+        Return the :class:`.LinkageTree` based on the `feature_dependency_matrix`.
 
         :return: linkage tree for the shap clustering dendrogram
         """
@@ -219,15 +219,22 @@ def default_explainer_factory(
     estimator: BaseEstimator, data: pd.DataFrame
 ) -> Explainer:
     """
-    Return the default shap explainer: `shap.TreeExplainer`.
+    Return the  explainer :class:`shap.Explainer` used to compute the shap values.
 
-    :return: `shap.TreeExplainer`"""
+    Try to return :class:`shap.TreeExplainer` if ``self.estimator`` is compatible,
+    i.e. is tree-based.
+    Otherwise return :class:`shap.KernelExplainer` which is expected to be much slower.
+
+    :param estimator: estimator from which we want to compute shap values
+    :param data: data used to compute the shap values
+    :return: :class:`shap.TreeExplainer` if the estimator is compatible,
+        else :class:`shap.KernelExplainer`."""
 
     # NOTE:
     # unfortunately, there is no convenient function in shap to determine the best
     # explainer method. hence we use this try/except approach.
 
-    # further there is no consistent "Modeltype X is unsupported" exception raised,
+    # further there is no consistent "Model type X is unsupported" exception raised,
     # which is why we need to always assume the error resulted from this cause -
     # we should not attempt to filter the exception type or message given that it is
     # currently inconsistent
