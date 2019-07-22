@@ -12,8 +12,8 @@ import pandas as pd
 from sklearn import clone
 from sklearn.base import BaseEstimator
 
-from yieldengine import ListLike
-from yieldengine.sklearndf import (
+from gamma import ListLike
+from gamma.sklearndf import (
     DataFrameClassifier,
     DataFramePredictor,
     DataFrameRegressor,

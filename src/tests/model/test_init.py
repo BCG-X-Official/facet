@@ -2,9 +2,9 @@ import pytest
 from lightgbm import LGBMRegressor
 from sklearn.preprocessing import OneHotEncoder
 
+from gamma.model import ModelPipelineDF
+from gamma.sklearndf.regression import LGBMRegressorDF
 from tests.model import make_simple_transformer
-from yieldengine.model import ModelPipelineDF
-from yieldengine.sklearndf.regression import LGBMRegressorDF
 
 
 def test_model() -> None:

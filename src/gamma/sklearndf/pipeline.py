@@ -12,7 +12,7 @@ import pandas as pd
 from sklearn.pipeline import Pipeline
 from sklearn.utils import Bunch
 
-from yieldengine.sklearndf._wrapper import (
+from gamma.sklearndf._wrapper import (
     DataFrameClassifierWrapper,
     DataFrameEstimatorWrapper,
     DataFrameRegressorWrapper,

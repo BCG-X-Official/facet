@@ -1,7 +1,7 @@
 from typing import Sequence
 
-from yieldengine.sklearndf import DataFrameTransformer
-from yieldengine.sklearndf.transformation import (
+from gamma.sklearndf import DataFrameTransformer
+from gamma.sklearndf.transformation import (
     ColumnTransformerDF,
     OneHotEncoderDF,
     SimpleImputerDF,

@@ -7,16 +7,16 @@ import numpy as np
 import pandas as pd
 from sklearn.model_selection import BaseCrossValidator, RepeatedKFold
 
-from yieldengine import Sample
-from yieldengine.model import ModelPipelineDF
-from yieldengine.model.prediction import ClassifierFitCV, ProbabilityCalibrationMethod
-from yieldengine.model.selection import (
+from gamma import Sample
+from gamma.model import ModelPipelineDF
+from gamma.model.prediction import ClassifierFitCV, ProbabilityCalibrationMethod
+from gamma.model.selection import (
     ModelEvaluation,
     ModelGrid,
     ModelRanker,
     summary_report,
 )
-from yieldengine.sklearndf.classification import RandomForestClassifierDF
+from gamma.sklearndf.classification import RandomForestClassifierDF
 
 log = logging.getLogger(__name__)
 
