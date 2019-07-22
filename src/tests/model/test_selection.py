@@ -64,7 +64,9 @@ def test_model_ranker_no_preprocessing(available_cpus: int) -> None:
     # define parameters and model
     models = [
         ModelGrid(
-            model=ModelPipelineDF(predictor=SVCDF(gamma="scale"), preprocessing=None),
+            pipeline=ModelPipelineDF(
+                predictor=SVCDF(gamma="scale"), preprocessing=None
+            ),
             estimator_parameters={"kernel": ("linear", "rbf"), "C": [1, 10]},
         )
     ]
