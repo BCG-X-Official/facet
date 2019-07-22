@@ -10,15 +10,14 @@ import logging
 from typing import Optional
 
 import pandas as pd
-from sklearn.base import BaseEstimator, TransformerMixin
+from sklearn.base import BaseEstimator
 
-from yieldengine.df.transform import df_transformer
+from yieldengine.df.transform import DataFrameTransformer
 
 log = logging.getLogger(__name__)
 
 
-@df_transformer
-class OutlierRemoverDF(BaseEstimator, TransformerMixin):
+class OutlierRemoverDF(DataFrameTransformer, BaseEstimator):
     """
     Remove outliers according to Tukey's method.
 
@@ -31,14 +30,18 @@ class OutlierRemoverDF(BaseEstimator, TransformerMixin):
     """
 
     def __init__(self, iqr_multiple: float):
+        super().__init__()
         if iqr_multiple < 0.0:
             raise ValueError(f"arg iqr_multiple is negative: {iqr_multiple}")
         self.iqr_multiple = iqr_multiple
         self.threshold_low_ = None
         self.threshold_high_ = None
+        self.columns_original_ = None
 
     # noinspection PyPep8Naming
-    def fit(self, X: pd.DataFrame, y: Optional[pd.Series] = None) -> "OutlierRemoverDF":
+    def fit(
+        self, X: pd.DataFrame, y: Optional[pd.Series] = None, **fit_params
+    ) -> "OutlierRemoverDF":
         """
         Fit the transformer.
 
@@ -50,6 +53,7 @@ class OutlierRemoverDF(BaseEstimator, TransformerMixin):
         threshold_iqr: pd.Series = (q3 - q1) * self.iqr_multiple
         self.threshold_low_ = q1 - threshold_iqr
         self.threshold_high_ = q3 + threshold_iqr
+        self.columns_original_ = pd.Series(index=X.columns, data=X.columns.values)
         return self
 
     # noinspection PyPep8Naming
@@ -60,3 +64,18 @@ class OutlierRemoverDF(BaseEstimator, TransformerMixin):
         :return: the dataframe X where outliers are replaced by Nan
         """
         return X.where(cond=(X >= self.threshold_low_) & (X <= self.threshold_high_))
+
+    def inverse_transform(self, X: pd.DataFrame) -> pd.DataFrame:
+        raise RuntimeError("inverse transform not possible")
+
+    @property
+    def is_fitted(self) -> bool:
+        return self.threshold_low_ is not None
+
+    @property
+    def columns_in(self) -> pd.Index:
+        return self.columns_original.index
+
+    @property
+    def columns_original(self) -> pd.Series:
+        return self.columns_original_
