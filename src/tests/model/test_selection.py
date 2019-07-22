@@ -7,7 +7,7 @@ import pandas as pd
 from sklearn import datasets
 
 from yieldengine import Sample
-from yieldengine.model import Model
+from yieldengine.model import ModelPipelineDF
 from yieldengine.model.selection import (
     ModelEvaluation,
     ModelGrid,
@@ -64,7 +64,7 @@ def test_model_ranker_no_preprocessing(available_cpus: int) -> None:
     # define parameters and model
     models = [
         ModelGrid(
-            model=Model(predictor=SVCDF(gamma="scale"), preprocessing=None),
+            model=ModelPipelineDF(predictor=SVCDF(gamma="scale"), preprocessing=None),
             estimator_parameters={"kernel": ("linear", "rbf"), "C": [1, 10]},
         )
     ]

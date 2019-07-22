@@ -8,7 +8,7 @@ from shap.explainers.explainer import Explainer
 from sklearn.model_selection import BaseCrossValidator, RepeatedKFold
 
 from yieldengine import Sample
-from yieldengine.model import Model
+from yieldengine.model import ModelPipelineDF
 from yieldengine.model.inspection import ModelInspector
 from yieldengine.model.prediction import (
     ClassifierFitCV,
@@ -48,11 +48,11 @@ def test_model_inspection(available_cpus: int, boston_sample: Sample) -> None:
     # define parameters and models
     models = [
         ModelGrid(
-            model=Model(predictor=SVRDF(gamma="scale"), preprocessing=None),
+            model=ModelPipelineDF(predictor=SVRDF(gamma="scale"), preprocessing=None),
             estimator_parameters={"kernel": ("linear", "rbf"), "C": [1, 10]},
         ),
         ModelGrid(
-            model=Model(predictor=LGBMRegressorDF(), preprocessing=None),
+            model=ModelPipelineDF(predictor=LGBMRegressorDF(), preprocessing=None),
             estimator_parameters={
                 "max_depth": (1, 2, 5),
                 "min_split_gain": (0.1, 0.2, 0.5),
@@ -218,7 +218,9 @@ def test_model_inspection_classifier(available_cpus: int, iris_sample: Sample) -
     # define parameters and models
     models = [
         ModelGrid(
-            model=Model(predictor=RandomForestClassifierDF(), preprocessing=None),
+            model=ModelPipelineDF(
+                predictor=RandomForestClassifierDF(), preprocessing=None
+            ),
             estimator_parameters={"n_estimators": [50, 80], "random_state": [42]},
         )
     ]

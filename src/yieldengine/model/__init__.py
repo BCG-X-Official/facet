@@ -1,7 +1,7 @@
 """
-Models to make predictions.
+Model pipeline enabled for data frames.
 
-:class:`Model` specifies a model as a pipeline with two steps:
+A :class:`ModelPipelineDF` is a special case of a pipeline with two steps:
 - a preprocessing step
 - an estimator step
 """
@@ -20,30 +20,28 @@ from yieldengine.sklearndf import (
     DataFrameTransformer,
 )
 
-__all__ = ["Model"]
+__all__ = ["ModelPipelineDF"]
 
-T_Predictor = TypeVar("Predictor", bound=Union[DataFrameRegressor, DataFrameClassifier])
+T_PredictorDF = TypeVar(
+    "PredictorDF", bound=Union[DataFrameRegressor, DataFrameClassifier]
+)
 
 
-# todo: rename to PredictiveWorkflow (tbc)
-class Model(
-    BaseEstimator, DataFrameRegressor, DataFrameClassifier, Generic[T_Predictor]
+class ModelPipelineDF(
+    BaseEstimator, DataFrameRegressor, DataFrameClassifier, Generic[T_PredictorDF]
 ):
     """
-    Specify the preprocessing step and the estimator for a model.
+    A data frame enabled model pipeline with an optional preprocessing step and a
+    mandatory estimator step.
 
-    A model creates a pipeline for a preprocessing transformer (optional; possibly a
-    pipeline itself) and an estimator.
-
+    :param preprocessing: the preprocessing step in the pipeline (defaults to ``None``)
     :param predictor: the base estimator used in the pipeline
     :type predictor: :class:`.DataFramePredictor`
-    :param preprocessing: the preprocessing step in the pipeline (None or \
-      `DataFrameTransformer`)
     """
 
     def __init__(
         self,
-        predictor: T_Predictor,
+        predictor: T_PredictorDF,
         preprocessing: Optional[DataFrameTransformer] = None,
     ) -> None:
         super().__init__()
@@ -67,7 +65,7 @@ class Model(
     # noinspection PyPep8Naming
     def fit(
         self, X: pd.DataFrame, y: Optional[pd.Series] = None, **fit_params
-    ) -> "Model[T_Predictor]":
+    ) -> "ModelPipelineDF[T_PredictorDF]":
         self.predictor.fit(self._pre_fit_transform(X, y, **fit_params), y, **fit_params)
         return self
 
@@ -152,12 +150,12 @@ class Model(
         else:
             return X
 
-    def clone(self, parameters: Optional[Dict[str, Any]] = None) -> "Model":
+    def clone(self, parameters: Optional[Dict[str, Any]] = None) -> "ModelPipelineDF":
         """
         Create an unfitted clone this model with new parameters.
 
         :param parameters: parameters to set in the cloned the model (optional)
-        :return: the cloned `Model`
+        :return: the cloned `ModelPipelineDF`
         """
 
         copy = clone(self)
