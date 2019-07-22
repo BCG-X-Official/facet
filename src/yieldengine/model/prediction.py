@@ -36,6 +36,11 @@ class PredictorFitCV(ABC):
     :param model: model to be fitted
     :param cv: the cross validator generating the train splits
     :param sample: the sample from which the training sets are drawn
+    :param n_jobs: number of jobs to run in parallel. Default to ``None`` which is
+      interpreted a 1.
+    :param shared_memory: if ``True`` use threads in the parallel runs. If `False`
+      use multiprocessing
+    :param verbose: verbosity level used in the parallel computation
     """
 
     __slots__ = [

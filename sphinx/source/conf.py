@@ -32,7 +32,10 @@ extensions = [
     "sphinx.ext.autodoc",
     "sphinx_autodoc_typehints",
     "sphinx.ext.intersphinx",
+    "nbsphinx",
 ]
+
+nbsphinx_allow_errors = True
 
 # add intersphinx mapping
 intersphinx_mapping = {
@@ -47,6 +50,7 @@ intersphinx_mapping = {
         (None, "./_intersphinx/sklearn-objects.inv"),
     ),
     "shap": ("https://shap.readthedocs.io/en/latest/", None),
+    "joblib": ("https://joblib.readthedocs.io/en/latest", None),
 }
 
 # Add any paths that contain templates here, relative to this directory.
