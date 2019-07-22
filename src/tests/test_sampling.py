@@ -21,7 +21,7 @@ def test_discrete_partitioning() -> None:
         assert dvp.n_partitions == len(partitions)
 
 
-def test_continouus_partitioning() -> None:
+def test_continuous_partitioning() -> None:
     for i in range(0, 10000):
         values = (
             np.random.randint(
