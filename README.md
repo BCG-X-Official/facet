@@ -13,9 +13,10 @@ You can find the API reference of yield-engine at
     - [1.3 Sphinx Documentation](#13-sphinx-documentation)
 - [2. Git guidelines](#2-git-guidelines)
 - [3. Documentation guidelines](#3-documentation-guidelines)
-  - [3.1 General guidelines](#31-general-guidlines)
+  - [3.1 General guidelines](#31-general-guidelines)
   - [3.2 Docstring guidelines](#32-docstring-guidelines)
   - [3.3 Docstring tips and tricks](#33-docstring-tips--tricks)
+  - [3.4 Notebooks and documentation](#34-connverting-notebooks-to-documentation-with-nbsphinx)
 
 
 ## 1. Setup
@@ -42,7 +43,16 @@ To build the documentation, ensure you have (purposely not included into the
 
 - sphinx-autodoc-typehints installed  with `conda install -c conda-forge 
     sphinx-autodoc-typehints=1.6`
-    
+
+Let us mention the following extensions used in the `conf.py` sphinx configuration 
+script:
+
+- intersphinx (external links to other documentations built with sphins: sklearn, 
+   numpy...)
+
+- viewcode to include source code in the docuemtation, and links to the source code 
+  from the objects documentation
+
 To update, simply run `make html` from within _/sphinx_. 
 By default `make html` only compiles files which have been modfified since last 
 compilation. To force the compilation of the full documentation enter first `make 
@@ -273,8 +283,9 @@ using the typing module. Hence do not specify the parameter types in the docstri
     `scikit-learn <https://scikit-learn.org/stable/>`_
     ```
     
-- <a id="sphinx-type-hint"></a> The sphinx extension  [sphinx-autodoc-typehints]
-    (https://github.com/agronholm/sphinx-autodoc-typehints) extract the type hinting and 
+- <a id="sphinx-type-hint"></a> The sphinx extension  
+    [sphinx-autodoc-typehints](https://github.com/agronholm/sphinx-autodoc-typehints) 
+    extracts the type hinting and 
     infers the parameter types of methods and classes when generating the documentation 
     from docstrings. To install the extension:
     ```
@@ -301,5 +312,17 @@ using the typing module. Hence do not specify the parameter types in the docstri
     ```
     will generate a link although in the module `pandas` itself is not recognized.
     **Beware that intersphinx and sphinx-autodoc-typehints seem not to work together**.
+    
+## 3.4 Connverting notebooks to documentation with nbsphinx
+
+- To hide a notebook cell from the generated documentation, add `"nbsphinx": 
+    "hidden"` to the metadata of the cell. To change the meatadata of a cell, in the 
+    main menu of the jupyter notebook server, click on *View -> CellToolbar -> edit 
+    Metadata.
+    
+- To interpret a notebook cell as reStructuredText by nbsphinx, make a 
+    *Raw NBConvert* cell, then click on the jupyeter notebook server main menu to 
+    *View -> CellToolbar -> Raw Cell Format*, then chose ReST in the dropdown in the 
+    top right part of the cell.  
     
      
