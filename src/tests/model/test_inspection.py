@@ -5,16 +5,13 @@ from typing import *
 
 import numpy as np
 import pandas as pd
-from lightgbm.sklearn import LGBMRegressor
 from shap import KernelExplainer, TreeExplainer
 from shap.explainers.explainer import Explainer
-from sklearn.base import BaseEstimator
-from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import BaseCrossValidator, RepeatedKFold
-from sklearn.svm import SVR
 
 from yieldengine import Sample
-from yieldengine.df.transform import DataFrameTransformerWrapper
+from yieldengine.df.predict import DataFramePredictor, DataFramePredictorWrapper
+from yieldengine.df.transform import DataFrameTransformer
 from yieldengine.model import Model
 from yieldengine.model.inspection import ModelInspector
 from yieldengine.model.prediction import (
@@ -29,6 +26,8 @@ from yieldengine.model.selection import (
     summary_report,
 )
 from yieldengine.model.validation import CircularCrossValidator
+from yieldengine.prediction.classification import RandomForestClassifierDF
+from yieldengine.prediction.regression import LGBMRegressorDF, SVRDF
 
 log = logging.getLogger(__name__)
 
@@ -51,11 +50,11 @@ def test_model_inspection(available_cpus: int, boston_sample: Sample) -> None:
     # define parameters and models
     models = [
         ModelGrid(
-            model=Model(predictor=SVR(gamma="scale"), preprocessing=None),
+            model=Model(predictor=SVRDF(gamma="scale"), preprocessing=None),
             estimator_parameters={"kernel": ("linear", "rbf"), "C": [1, 10]},
         ),
         ModelGrid(
-            model=Model(predictor=LGBMRegressor(), preprocessing=None),
+            model=Model(predictor=LGBMRegressorDF(), preprocessing=None),
             estimator_parameters={
                 "max_depth": (1, 2, 5),
                 "min_split_gain": (0.1, 0.2, 0.5),
@@ -81,11 +80,11 @@ def test_model_inspection(available_cpus: int, boston_sample: Sample) -> None:
     log.debug(f"\n{summary_report(model_ranking[:10])}")
 
     # consider: model_with_type(...) function for ModelRanking
-    best_svr = [m for m in model_ranking if isinstance(m.model.predictor, SVR)][0]
+    best_svr = [m for m in model_ranking if isinstance(m.model.predictor, SVRDF)][0]
     best_lgbm = [
         model_evaluation
         for model_evaluation in model_ranking
-        if isinstance(model_evaluation.model.predictor, LGBMRegressor)
+        if isinstance(model_evaluation.model.predictor, LGBMRegressorDF)
     ][0]
 
     for model_evaluation in best_svr, best_lgbm:
@@ -144,7 +143,7 @@ def test_model_inspection_with_encoding(
     batch_table: pd.DataFrame,
     regressor_grids: List[ModelGrid],
     sample: Sample,
-    simple_preprocessor: DataFrameTransformerWrapper,
+    simple_preprocessor: DataFrameTransformer,
     available_cpus: int,
 ) -> None:
 
@@ -169,7 +168,7 @@ def test_model_inspection_with_encoding(
     best_lgbm = [
         model_evaluation
         for model_evaluation in model_ranking
-        if isinstance(model_evaluation.model.predictor, LGBMRegressor)
+        if isinstance(model_evaluation.model.predictor, LGBMRegressorDF)
     ][0]
     for model_evaluation in [best_lgbm]:
         model_fit = RegressorFitCV(
@@ -186,7 +185,10 @@ def test_model_inspection_with_encoding(
         linkage_tree = mi.cluster_dependent_features()
 
         #  test the ModelInspector with a custom ExplainerFactory:
-        def ef(estimator: BaseEstimator, data: pd.DataFrame) -> Explainer:
+        def ef(estimator: DataFramePredictor, data: pd.DataFrame) -> Explainer:
+
+            while isinstance(estimator, DataFramePredictorWrapper):
+                estimator = estimator.base_estimator
 
             try:
                 return TreeExplainer(
@@ -218,7 +220,7 @@ def test_model_inspection_classifier(available_cpus: int, iris_sample: Sample) -
     # define parameters and models
     models = [
         ModelGrid(
-            model=Model(predictor=RandomForestClassifier(), preprocessing=None),
+            model=Model(predictor=RandomForestClassifierDF(), preprocessing=None),
             estimator_parameters={"n_estimators": [50, 80], "random_state": [42]},
         )
     ]
