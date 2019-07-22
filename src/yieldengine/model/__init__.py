@@ -57,7 +57,7 @@ class Model(
             )
         if not isinstance(predictor, DataFramePredictor):
             raise TypeError(
-                "arg preprocessing expected to be a DataFramePredictor but is a "
+                "arg predictor expected to be a DataFramePredictor but is a "
                 f"{type(predictor).__name__}"
             )
 
