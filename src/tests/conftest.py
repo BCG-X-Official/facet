@@ -13,7 +13,7 @@ from tests import read_test_config
 from tests.model import make_simple_transformer
 from tests.paths import TEST_DATA_CSV
 from yieldengine import Sample
-from yieldengine.model import Model
+from yieldengine.model import ModelPipelineDF
 from yieldengine.model.selection import ModelGrid
 from yieldengine.sklearndf import DataFrameTransformer
 from yieldengine.sklearndf.regression import (
@@ -71,7 +71,9 @@ def regressor_grids(simple_preprocessor) -> List[ModelGrid]:
     RANDOM_STATE = {f"random_state": [42]}
     return [
         ModelGrid(
-            model=Model(preprocessing=simple_preprocessor, predictor=LGBMRegressorDF()),
+            model=ModelPipelineDF(
+                preprocessing=simple_preprocessor, predictor=LGBMRegressorDF()
+            ),
             estimator_parameters={
                 "max_depth": [5, 10],
                 "min_split_gain": [0.1, 0.2],
@@ -80,19 +82,19 @@ def regressor_grids(simple_preprocessor) -> List[ModelGrid]:
             },
         ),
         ModelGrid(
-            model=Model(
+            model=ModelPipelineDF(
                 preprocessing=simple_preprocessor, predictor=AdaBoostRegressorDF()
             ),
             estimator_parameters={"n_estimators": [50, 80], **RANDOM_STATE},
         ),
         ModelGrid(
-            model=Model(
+            model=ModelPipelineDF(
                 preprocessing=simple_preprocessor, predictor=RandomForestRegressorDF()
             ),
             estimator_parameters={"n_estimators": [50, 80], **RANDOM_STATE},
         ),
         ModelGrid(
-            model=Model(
+            model=ModelPipelineDF(
                 preprocessing=simple_preprocessor, predictor=DecisionTreeRegressorDF()
             ),
             estimator_parameters={
@@ -102,17 +104,17 @@ def regressor_grids(simple_preprocessor) -> List[ModelGrid]:
             },
         ),
         ModelGrid(
-            model=Model(
+            model=ModelPipelineDF(
                 preprocessing=simple_preprocessor, predictor=ExtraTreeRegressorDF()
             ),
             estimator_parameters={"max_depth": [5, 10, 12], **RANDOM_STATE},
         ),
         ModelGrid(
-            model=Model(preprocessing=simple_preprocessor, predictor=SVRDF()),
+            model=ModelPipelineDF(preprocessing=simple_preprocessor, predictor=SVRDF()),
             estimator_parameters={"gamma": [0.5, 1], "C": [50, 100]},
         ),
         ModelGrid(
-            model=Model(
+            model=ModelPipelineDF(
                 preprocessing=simple_preprocessor, predictor=LinearRegressionDF()
             ),
             estimator_parameters={"normalize": [False, True]},

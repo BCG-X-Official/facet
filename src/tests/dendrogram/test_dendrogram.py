@@ -18,7 +18,9 @@ def model_inspector(
 ) -> ModelInspector:
 
     cv = CircularCrossValidator(test_ratio=0.20, num_splits=5)
-    model = Model(predictor=LGBMRegressorDF(), preprocessing=simple_preprocessor)
+    model = ModelPipelineDF(
+        predictor=LGBMRegressorDF(), preprocessing=simple_preprocessor
+    )
     return ModelInspector(
         predictor_fit=RegressorFitCV(model=model, cv=cv, sample=sample)
     )

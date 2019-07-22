@@ -15,11 +15,11 @@ from scipy.spatial.distance import squareform
 from shap import KernelExplainer, TreeExplainer
 from shap.explainers.explainer import Explainer
 
-from yieldengine.dendrogram import LinkageTree
-from yieldengine.model import Model
+from yieldengine.model import ModelPipelineDF
 from yieldengine.model.prediction import PredictorFitCV
 from yieldengine.sklearndf import DataFramePredictor
 from yieldengine.sklearndf._wrapper import DataFrameEstimatorWrapper
+from yieldengine.viz.dendrogram import LinkageTree
 
 log = logging.getLogger(__name__)
 
@@ -82,7 +82,9 @@ class ModelInspector:
             self.model_fit.predictions_for_all_splits()
         )
 
-        def _shap_matrix_for_split(split_id: int, split_model: Model) -> pd.DataFrame:
+        def _shap_matrix_for_split(
+            split_id: int, split_model: ModelPipelineDF
+        ) -> pd.DataFrame:
 
             observation_indices_in_split = predictions_by_observation_and_split.xs(
                 key=split_id, level=PredictorFitCV.F_SPLIT_ID
@@ -237,7 +239,7 @@ def default_explainer_factory(
     # unfortunately, there is no convenient function in shap to determine the best
     # explainer method. hence we use this try/except approach.
 
-    # further there is no consistent "Model type X is unsupported" exception raised,
+    # further there is no consistent "ModelPipelineDF type X is unsupported" exception raised,
     # which is why we need to always assume the error resulted from this cause -
     # we should not attempt to filter the exception type or message given that it is
     # currently inconsistent
