@@ -1,6 +1,6 @@
 import yaml
 
-from tests.paths import TEST_CONFIG_YML
+from test.paths import TEST_CONFIG_YML
 
 
 def read_test_config(section: str = None):
