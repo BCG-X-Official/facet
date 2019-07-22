@@ -11,9 +11,10 @@ which is hosted at `GitHub <https://git.sourceai.io/schneider-joerg/yield-engine
 
 .. toctree::
    :titlesonly:
-   :maxdepth: 1
+   :maxdepth: 2
    :caption: Contents
 
+   tutorial/quick_start
    API reference of yieldengine <yieldengine>
    examples/index
 
