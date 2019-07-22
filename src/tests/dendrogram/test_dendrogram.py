@@ -3,14 +3,13 @@ import pytest
 from matplotlib.pyplot import figure
 
 from yieldengine import Sample
-from yieldengine.dendrogram import DendrogramDrawer
-from yieldengine.dendrogram.style import FeatMapStyle, LineStyle
-from yieldengine.model import Model
+from yieldengine.model import ModelPipelineDF
 from yieldengine.model.inspection import ModelInspector
 from yieldengine.model.prediction import RegressorFitCV
 from yieldengine.model.validation import CircularCrossValidator
 from yieldengine.sklearndf import DataFrameTransformer
 from yieldengine.sklearndf.regression import LGBMRegressorDF
+from yieldengine.viz.dendrogram import DendrogramDrawer, FeatMapStyle, LineStyle
 
 
 @pytest.fixture()
