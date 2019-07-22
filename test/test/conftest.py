@@ -22,9 +22,9 @@ from gamma.sklearndf.regression import (
     RandomForestRegressorDF,
     SVRDF,
 )
-from tests import read_test_config
-from tests.model import make_simple_transformer
-from tests.paths import TEST_DATA_CSV
+from test import read_test_config
+from test.model import make_simple_transformer
+from test.paths import TEST_DATA_CSV
 
 logging.basicConfig(level=logging.DEBUG)
 log = logging.getLogger(__name__)
