@@ -29,8 +29,20 @@ To measure test coverage, use `pytest --cov=yieldengine
  tests/`.
  
 ### 1.3 Sphinx Documentation
+
 The generated Sphinx documentation of yieldengine is located at _/docs_. 
-To build the documentation, ensure you have the Python packages `sphinx=2.0.1` and `sphinx_rtd_theme=0.4.3` installed, which we have purposely not included into the `environment.yml`. 
+To build the documentation, ensure you have (purposely not included into the 
+`environment.yml`):
+
+- the Python packages `sphinx=2.0.1` installed
+  
+- `sphinx_rtd_theme=0.4.3` installed
+
+-  `nbsphinx` installed with `conda install -c conda-forge nbsphinx=0.4.2`
+
+- sphinx-autodoc-typehints installed  with `conda install -c conda-forge 
+    sphinx-autodoc-typehints=1.6`
+    
 To update, simply run `make html` from within _/sphinx_. 
 By default `make html` only compiles files which have been modfified since last 
 compilation. To force the compilation of the full documentation enter first `make 
