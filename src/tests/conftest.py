@@ -71,7 +71,7 @@ def regressor_grids(simple_preprocessor) -> List[ModelGrid]:
     RANDOM_STATE = {f"random_state": [42]}
     return [
         ModelGrid(
-            model=ModelPipelineDF(
+            pipeline=ModelPipelineDF(
                 preprocessing=simple_preprocessor, predictor=LGBMRegressorDF()
             ),
             estimator_parameters={
@@ -82,19 +82,19 @@ def regressor_grids(simple_preprocessor) -> List[ModelGrid]:
             },
         ),
         ModelGrid(
-            model=ModelPipelineDF(
+            pipeline=ModelPipelineDF(
                 preprocessing=simple_preprocessor, predictor=AdaBoostRegressorDF()
             ),
             estimator_parameters={"n_estimators": [50, 80], **RANDOM_STATE},
         ),
         ModelGrid(
-            model=ModelPipelineDF(
+            pipeline=ModelPipelineDF(
                 preprocessing=simple_preprocessor, predictor=RandomForestRegressorDF()
             ),
             estimator_parameters={"n_estimators": [50, 80], **RANDOM_STATE},
         ),
         ModelGrid(
-            model=ModelPipelineDF(
+            pipeline=ModelPipelineDF(
                 preprocessing=simple_preprocessor, predictor=DecisionTreeRegressorDF()
             ),
             estimator_parameters={
@@ -104,17 +104,19 @@ def regressor_grids(simple_preprocessor) -> List[ModelGrid]:
             },
         ),
         ModelGrid(
-            model=ModelPipelineDF(
+            pipeline=ModelPipelineDF(
                 preprocessing=simple_preprocessor, predictor=ExtraTreeRegressorDF()
             ),
             estimator_parameters={"max_depth": [5, 10, 12], **RANDOM_STATE},
         ),
         ModelGrid(
-            model=ModelPipelineDF(preprocessing=simple_preprocessor, predictor=SVRDF()),
+            pipeline=ModelPipelineDF(
+                preprocessing=simple_preprocessor, predictor=SVRDF()
+            ),
             estimator_parameters={"gamma": [0.5, 1], "C": [50, 100]},
         ),
         ModelGrid(
-            model=ModelPipelineDF(
+            pipeline=ModelPipelineDF(
                 preprocessing=simple_preprocessor, predictor=LinearRegressionDF()
             ),
             estimator_parameters={"normalize": [False, True]},
