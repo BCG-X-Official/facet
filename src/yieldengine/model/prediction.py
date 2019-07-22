@@ -41,11 +41,11 @@ class PredictorFitCV(ABC):
         "_model",
         "_cv",
         "_sample",
-        "_predictions_for_all_samples",
-        "_model_by_split",
         "_n_jobs",
         "_shared_memory",
         "_verbose",
+        "_model_by_split",
+        "_predictions_for_all_samples",
     ]
 
     F_SPLIT_ID = "split_id"
@@ -232,16 +232,8 @@ class RegressorFitCV(PredictorFitCV):
 
 class ClassifierFitCV(PredictorFitCV):
     __slots__ = [
-        "_model",
-        "_cv",
-        "_sample",
-        "_predictions_for_all_samples",
         "_probabilities_for_all_samples",
-        "_model_by_split",
         "_calibrated_model_by_split",
-        "_n_jobs",
-        "_shared_memory",
-        "_verbose",
         "_calibration",
     ]
 
