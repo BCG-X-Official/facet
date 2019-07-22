@@ -29,11 +29,19 @@ author = "Joerg Schneider"
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
-    "sphinx.ext.autodoc",
-    "sphinx_autodoc_typehints",
-    "sphinx.ext.intersphinx",
     "nbsphinx",
+    "sphinx.ext.autodoc",
+    "sphinx.ext.intersphinx",
+    "sphinx.ext.viewcode",
+    "sphinx_autodoc_typehints",
 ]
+
+
+# -- Options for autodoc / autosummary ------------------------------------
+# generate autosummary even if no references
+autosummary_generate = True
+autosummary_generate_overwrite = True
+autodoc_default_flags = ["members"]
 
 nbsphinx_allow_errors = True
 
@@ -59,7 +67,7 @@ templates_path = ["_templates"]
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
-exclude_patterns = []
+exclude_patterns = ["*/.ipynb_checkpoints/*"]
 
 
 # -- Options for HTML output -------------------------------------------------
