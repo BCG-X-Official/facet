@@ -404,7 +404,8 @@ TSWLatexianTemp*
 # project specific
 #
 /tmp
-!/tmp/readme.md
+!/tmp/README.md
 
 # exclude docs while they are not yet stable
 /docs
+!/docs/README.md
