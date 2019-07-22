@@ -24,7 +24,7 @@ from matplotlib.colorbar import ColorbarBase, make_axes
 from matplotlib.colors import LogNorm
 from matplotlib.ticker import Formatter
 
-from yieldengine.viz import ChartStyle, MatplotStyle, RgbaColor
+from gamma.viz import ChartStyle, MatplotStyle, RgbaColor
 
 log = logging.getLogger(__name__)
 

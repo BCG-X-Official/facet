@@ -1,6 +1,6 @@
 import numpy as np
 
-from yieldengine.partition import (
+from gamma.partition import (
     ContinuousRangePartitioning,
     DEFAULT_MAX_PARTITIONS,
     IntegerRangePartitioning,

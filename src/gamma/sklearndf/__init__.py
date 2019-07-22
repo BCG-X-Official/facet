@@ -21,7 +21,7 @@ from sklearn.base import (
     TransformerMixin,
 )
 
-from yieldengine import ListLike, Sample
+from gamma import ListLike, Sample
 
 log = logging.getLogger(__name__)
 

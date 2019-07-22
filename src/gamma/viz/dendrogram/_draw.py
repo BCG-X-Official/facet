@@ -3,9 +3,9 @@ from typing import *
 
 import numpy as np
 
-from yieldengine.viz import ChartDrawer
-from yieldengine.viz.dendrogram._linkage import LinkageTree, Node
-from yieldengine.viz.dendrogram._style import DendrogramStyle
+from gamma.viz import ChartDrawer
+from gamma.viz.dendrogram._linkage import LinkageTree, Node
+from gamma.viz.dendrogram._style import DendrogramStyle
 
 log = logging.getLogger(__name__)
 
