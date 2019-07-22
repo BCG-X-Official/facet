@@ -13,12 +13,12 @@ from sklearn import clone
 from sklearn.base import BaseEstimator
 
 from yieldengine import ListLike
-from yieldengine.df.predict import (
+from yieldengine.sklearndf import (
     DataFrameClassifier,
     DataFramePredictor,
     DataFrameRegressor,
+    DataFrameTransformer,
 )
-from yieldengine.df.transform import DataFrameTransformer
 
 __all__ = ["Model"]
 

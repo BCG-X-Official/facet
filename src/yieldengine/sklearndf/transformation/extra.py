@@ -1,32 +1,99 @@
 """
-Select relevant features.
-
-Given a dataset and an estimator,
-the Boruta method selects the features that perform better than noise for the problem.
-See `BorutaPy
-<https://github.com/scikit-learn-contrib/boruta_py>`_.
-
-:class:`BorutaDF` wraps
-:class:`BorutaPy <https://github.com/scikit-learn-contrib/boruta_py>` with dataframes
-as input and output.
+Additional transformers outside of the sckit-learn canon, created by Gamma
 """
+
+import logging
+from typing import *
 
 import pandas as pd
 from boruta import BorutaPy
+from sklearn.base import BaseEstimator
 
-from yieldengine.df.transform import ColumnPreservingTransformer, NDArrayTransformerDF
+from yieldengine.sklearndf import DataFrameTransformer
+from yieldengine.sklearndf._wrapper import (
+    ColumnPreservingTransformer,
+    NDArrayTransformerDF,
+)
 
-__all__ = ["BorutaDF"]
+log = logging.getLogger(__name__)
+
+
+class OutlierRemoverDF(DataFrameTransformer, BaseEstimator):
+    """
+    Remove outliers according to Tukey's method.
+
+    A sample is considered an outlier if it is outside the range
+    :math:`[Q_1 - iqr\\_ multiple(Q_3-Q_1), Q_3 + iqr\\_ multiple(Q_3-Q_1)]`
+    where :math:`Q_1` and :math:`Q_3` are the lower and upper quartiles.
+
+    :param iqr_multiple: the multiple used to define the range of non-outlier
+      samples in the above explanation
+    """
+
+    def __init__(self, iqr_multiple: float):
+        super().__init__()
+        if iqr_multiple < 0.0:
+            raise ValueError(f"arg iqr_multiple is negative: {iqr_multiple}")
+        self.iqr_multiple = iqr_multiple
+        self.threshold_low_ = None
+        self.threshold_high_ = None
+        self.columns_original_ = None
+
+    # noinspection PyPep8Naming
+    def fit(
+        self, X: pd.DataFrame, y: Optional[pd.Series] = None, **fit_params
+    ) -> "OutlierRemoverDF":
+        """
+        Fit the transformer.
+
+        :return: the fitted transformer
+        """
+
+        q1: pd.Series = X.quantile(q=0.25)
+        q3: pd.Series = X.quantile(q=0.75)
+        threshold_iqr: pd.Series = (q3 - q1) * self.iqr_multiple
+        self.threshold_low_ = q1 - threshold_iqr
+        self.threshold_high_ = q3 + threshold_iqr
+        self.columns_original_ = pd.Series(index=X.columns, data=X.columns.values)
+        return self
+
+    # noinspection PyPep8Naming
+    def transform(self, X: pd.DataFrame) -> pd.DataFrame:
+        """
+        Return X where outliers are replaced by Nan.
+
+        :return: the dataframe X where outliers are replaced by Nan
+        """
+        return X.where(cond=(X >= self.threshold_low_) & (X <= self.threshold_high_))
+
+    def inverse_transform(self, X: pd.DataFrame) -> pd.DataFrame:
+        raise RuntimeError("inverse transform not possible")
+
+    @property
+    def is_fitted(self) -> bool:
+        return self.threshold_low_ is not None
+
+    @property
+    def columns_in(self) -> pd.Index:
+        return self.columns_original.index
+
+    @property
+    def columns_original(self) -> pd.Series:
+        return self.columns_original_
 
 
 class BorutaDF(NDArrayTransformerDF[BorutaPy], ColumnPreservingTransformer[BorutaPy]):
     """
     Feature Selection with the Boruta method with dataframes as input and output.
 
-    Wrap the boruta class :class:`BorutaPy` for feature selection and return a
-    dataframe.
 
-    ``self.fit`` accepts a dataframe and ``self.transform`` returns a dataframe.
+    Given a dataset and an estimator, the Boruta method selects the features that
+    perform better than noise for the problem. See `BorutaPy
+    <https://github.com/scikit-learn-contrib/boruta_py>`_.
+
+    :class:`BorutaDF` wraps :class:`BorutaPy
+    <https://github.com/scikit-learn-contrib/boruta_py>` with dataframes
+    as input and output.
 
     The parameters are the parameters from the boruta :class:`BorutaPy`. For
     convenience we list below the description of the parameters as they appear in
@@ -78,7 +145,7 @@ class BorutaDF(NDArrayTransformerDF[BorutaPy], ColumnPreservingTransformer[Borut
         max_iter=100,
         random_state=None,
         verbose=0,
-        **kwargs
+        **kwargs,
     ) -> None:
         super().__init__(
             estimator=estimator,
@@ -89,7 +156,7 @@ class BorutaDF(NDArrayTransformerDF[BorutaPy], ColumnPreservingTransformer[Borut
             max_iter=max_iter,
             random_state=random_state,
             verbose=verbose,
-            **kwargs
+            **kwargs,
         )
 
     @classmethod

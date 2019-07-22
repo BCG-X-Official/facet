@@ -1,11 +1,7 @@
 # coding=utf-8
 """
-Pipeline for dataframes.
-
-:class:`PipelineDF` wraps :class:`sklearn.pipeline.Pipeline` so that
-
-- ``transform`` returns dataframes
-- ``fit`` accepts dataframes
+scikit-learn pipeline implementing the DataFrameTransformer, DataFrameRegressor,
+and DataFrameClassifier interfaces.
 """
 
 
@@ -16,9 +12,12 @@ import pandas as pd
 from sklearn.pipeline import Pipeline
 from sklearn.utils import Bunch
 
-from yieldengine.df import DataFrameEstimatorWrapper
-from yieldengine.df.predict import DataFrameClassifierWrapper, DataFrameRegressorWrapper
-from yieldengine.df.transform import DataFrameTransformerWrapper
+from yieldengine.sklearndf._wrapper import (
+    DataFrameClassifierWrapper,
+    DataFrameEstimatorWrapper,
+    DataFrameRegressorWrapper,
+    DataFrameTransformerWrapper,
+)
 
 log = logging.getLogger(__name__)
 
