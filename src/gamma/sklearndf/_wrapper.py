@@ -23,8 +23,8 @@ from sklearn.base import (
     TransformerMixin,
 )
 
-from yieldengine import ListLike, MatrixLike
-from yieldengine.sklearndf import (
+from gamma import ListLike, MatrixLike
+from gamma.sklearndf import (
     DataFrameClassifier,
     DataFrameEstimator,
     DataFramePredictor,

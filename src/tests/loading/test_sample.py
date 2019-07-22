@@ -2,7 +2,7 @@ import pandas as pd
 import pytest
 from joblib import delayed, Parallel
 
-from yieldengine import Sample
+from gamma import Sample
 
 
 # checks various erroneous inputs

@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 
-from yieldengine.sklearndf._wrapper import (
+from gamma.sklearndf._wrapper import (
     DataFrameClassifierWrapper,
     DataFrameRegressorWrapper,
 )

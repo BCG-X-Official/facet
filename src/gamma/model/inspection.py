@@ -15,11 +15,11 @@ from scipy.spatial.distance import squareform
 from shap import KernelExplainer, TreeExplainer
 from shap.explainers.explainer import Explainer
 
-from yieldengine.model import ModelPipelineDF
-from yieldengine.model.prediction import PredictorFitCV
-from yieldengine.sklearndf import DataFramePredictor
-from yieldengine.sklearndf._wrapper import DataFrameEstimatorWrapper
-from yieldengine.viz.dendrogram import LinkageTree
+from gamma.model import ModelPipelineDF
+from gamma.model.prediction import PredictorFitCV
+from gamma.sklearndf import DataFramePredictor
+from gamma.sklearndf._wrapper import DataFrameEstimatorWrapper
+from gamma.viz.dendrogram import LinkageTree
 
 log = logging.getLogger(__name__)
 

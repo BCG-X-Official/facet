@@ -1,7 +1,7 @@
 import pytest
 
 import tests
-from yieldengine import deprecated
+from gamma import deprecated
 
 
 def test_get_global_config() -> None:

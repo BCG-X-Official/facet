@@ -5,8 +5,8 @@ from typing import *
 import numpy as np
 import pandas as pd
 
-from yieldengine.model.prediction import PredictorFitCV
-from yieldengine.sklearndf.transformation import FunctionTransformerDF
+from gamma.model.prediction import PredictorFitCV
+from gamma.sklearndf.transformation import FunctionTransformerDF
 
 
 class UnivariateSimulation:

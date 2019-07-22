@@ -1,5 +1,5 @@
-from yieldengine import Sample
-from yieldengine.sklearndf import DataFrameTransformer
+from gamma import Sample
+from gamma.sklearndf import DataFrameTransformer
 
 
 def test_column_transformer_df(

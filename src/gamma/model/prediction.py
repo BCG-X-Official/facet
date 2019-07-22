@@ -17,9 +17,9 @@ import pandas as pd
 from joblib import delayed, Parallel
 from sklearn.model_selection import BaseCrossValidator
 
-from yieldengine import Sample
-from yieldengine.model import ModelPipelineDF
-from yieldengine.sklearndf.classification import CalibratedClassifierCVDF
+from gamma import Sample
+from gamma.model import ModelPipelineDF
+from gamma.sklearndf.classification import CalibratedClassifierCVDF
 
 log = logging.getLogger(__name__)
 

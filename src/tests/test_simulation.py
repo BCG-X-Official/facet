@@ -3,13 +3,13 @@ from typing import *
 
 import pandas as pd
 
-from yieldengine import Sample
-from yieldengine.model.prediction import RegressorFitCV
-from yieldengine.model.selection import ModelEvaluation, ModelGrid, ModelRanker
-from yieldengine.model.validation import CircularCrossValidator
-from yieldengine.partition import ContinuousRangePartitioning
-from yieldengine.simulation import UnivariateSimulation
-from yieldengine.sklearndf import DataFrameTransformer
+from gamma import Sample
+from gamma.model.prediction import RegressorFitCV
+from gamma.model.selection import ModelEvaluation, ModelGrid, ModelRanker
+from gamma.model.validation import CircularCrossValidator
+from gamma.partition import ContinuousRangePartitioning
+from gamma.simulation import UnivariateSimulation
+from gamma.sklearndf import DataFrameTransformer
 
 log = logging.getLogger(__name__)
 
