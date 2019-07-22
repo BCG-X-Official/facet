@@ -241,6 +241,7 @@ class RegressorFitCV(PredictorFitCV):
 class ClassifierFitCV(PredictorFitCV):
     __slots__ = [
         "_probabilities_for_all_samples",
+        "_log_probabilities_for_all_samples",
         "_calibrated_model_by_split",
         "_calibration",
     ]
@@ -269,13 +270,25 @@ class ClassifierFitCV(PredictorFitCV):
         self._calibration = calibration
         self._calibrated_model_by_split: Optional[List[Model]] = None
         self._probabilities_for_all_samples: Optional[pd.DataFrame] = None
+        self._log_probabilities_for_all_samples: Optional[pd.DataFrame] = None
 
     def probabilities_for_all_splits(self) -> pd.DataFrame:
-        # todo: add support for multi-class classifiers
-        # todo: add support for log probabilities
-        if self._probabilities_for_all_samples is not None:
-            return self._probabilities_for_all_samples
+        if self._probabilities_for_all_samples is None:
+            self._probabilities_for_all_samples = self._probabilities_for_all_splits(
+                log_proba=False
+            )
 
+        return self._probabilities_for_all_samples
+
+    def log_probabilities_for_all_splits(self) -> pd.DataFrame:
+        if self._log_probabilities_for_all_samples is None:
+            self._log_probabilities_for_all_samples = self._probabilities_for_all_splits(
+                log_proba=True
+            )
+
+        return self._log_probabilities_for_all_samples
+
+    def _probabilities_for_all_splits(self, log_proba: bool) -> pd.DataFrame:
         self._fit()
 
         sample = self.sample
@@ -287,41 +300,39 @@ class ClassifierFitCV(PredictorFitCV):
         ):
             test_sample = sample.select_observations_by_position(positions=test_indices)
 
-            predictor = (
+            predictor: Model = (
                 self.fitted_model(split_id=split_id)
                 if self._calibration is None
                 else self.calibrated_model(split_id=split_id)
             )
 
-            probabilities = predictor.predict_proba(X=test_sample.features)
+            if log_proba:
+                probabilities = predictor.predict_log_proba(X=test_sample.features)
+            else:
+                probabilities = predictor.predict_proba(X=test_sample.features)
 
-            n_classes = probabilities.shape[1]
+            # todo: can remove this, when solely using DataFrameClassifiers
+            if hasattr(predictor.predictor, "classes_"):
+                assert not isinstance(
+                    probabilities, list
+                ), "multi-output classification not supported"
 
-            # supporting only binary classification where n-classes == 2
-            assert (
-                n_classes == 2
-            ), f"Got non-binary probabilities for {n_classes} classes"
+                probabilities.columns = predictor.predictor.classes_
 
-            # just proceed with probabilities that it is class 0:
-            probabilities = probabilities.loc[:, probabilities.columns[0]]
-
-            predictions_df = pd.DataFrame(
-                data={
-                    PredictorFitCV.F_SPLIT_ID: split_id,
-                    ClassifierFitCV.F_PROBA: probabilities,
-                },
-                index=test_sample.index,
+            predictions_df_ = {PredictorFitCV.F_SPLIT_ID: split_id}
+            predictions_df_.update(
+                {label: probabilities.loc[:, label] for label in probabilities.columns}
             )
+
+            predictions_df = pd.DataFrame(data=predictions_df_, index=test_sample.index)
 
             splitwise_predictions.append(predictions_df)
 
-        self._probabilities_for_all_samples = (
+        return (
             pd.concat(splitwise_predictions)
             .join(sample.target.rename(PredictorFitCV.F_TARGET))
             .set_index(PredictorFitCV.F_SPLIT_ID, append=True)
         )
-
-        return self._probabilities_for_all_samples
 
     def _fit(self) -> None:
         super()._fit()
