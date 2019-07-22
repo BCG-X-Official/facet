@@ -156,7 +156,6 @@ class ExtraTreesClassifierDF(ExtraTreesClassifier, _DataFrameClassifier):
 
 
 # noinspection PyAbstractClass
-# noinspection PyAbstractClass
 @_df_classifier
 class GradientBoostingClassifierDF(GradientBoostingClassifier, _DataFrameClassifier):
     """
