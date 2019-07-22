@@ -24,9 +24,9 @@ ParameterGrid = Dict[str, Sequence[Any]]
 
 class ModelGrid:
     """
-    A model with a grid of hyperparameters.
+    A grid of hyperparameters for model tuning.
 
-    :param model: the :class:`ModelPipelineDF` to which the hyperparameters will be applied
+    :param pipeline: the :class:`ModelPipelineDF` to which the hyperparameters will be applied
     :param estimator_parameters: the hyperparameter grid in which to search for the \
         optimal parameter values for the model's estimator
     :param preprocessing_parameters: the hyperparameter grid in which to search for \
@@ -35,11 +35,11 @@ class ModelGrid:
 
     def __init__(
         self,
-        model: ModelPipelineDF,
+        pipeline: ModelPipelineDF,
         estimator_parameters: ParameterGrid,
         preprocessing_parameters: Optional[ParameterGrid] = None,
     ) -> None:
-        self._model = model
+        self._pipeline = pipeline
         self._estimator_parameters = estimator_parameters
         self._preprocessing_parameters = preprocessing_parameters
 
@@ -64,11 +64,11 @@ class ModelGrid:
         self._grid = dict(grid_parameters)
 
     @property
-    def model(self) -> ModelPipelineDF:
+    def pipeline(self) -> ModelPipelineDF:
         """
         The :class:`~yieldengine.model.ModelPipelineDF` for which to optimise the parameters.
         """
-        return self._model
+        return self._pipeline
 
     @property
     def estimator_parameters(self) -> ParameterGrid:
@@ -129,11 +129,10 @@ class ModelEvaluation(NamedTuple):
 
 class ModelRanker:
     """
-    Rank a list of model using a common cross-validation strategy.
+    Rank a list of model using a cross-validation.
 
     Given a list of :class:`ModelGrid`, a cross-validation splitter and a scoring
-    function,
-    performs a grid search to find the best combination of model with
+    function, performs a grid search to find the best combination of model with
     hyperparameters for the given cross-validation splits and scoring function.
 
     :param grids: list of :class:`ModelGrid` to be ranked
@@ -204,7 +203,7 @@ class ModelRanker:
         searchers: List[Tuple[GridSearchCV, ModelGrid]] = [
             (
                 GridSearchCV(
-                    estimator=grid.model,
+                    estimator=grid.pipeline,
                     cv=self._cv,
                     param_grid=grid.parameters,
                     scoring=self._scoring,
@@ -309,7 +308,7 @@ class ModelRanker:
 
         scorings = [
             ModelEvaluation(
-                model=grid.model.clone(parameters=params),
+                model=grid.pipeline.clone(parameters=params),
                 parameters=params,
                 scoring=scoring,
                 # compute the final score using function defined above:
