@@ -7,6 +7,7 @@ if "%SPHINXBUILD%" == "" (
 	set SPHINXBUILD=sphinx-build
 )
 set SOURCEDIR=source
+set NOTEBOOK_QUICK_START=..\tutorial
 set BUILDDIR=build
 REM say to apidoc which members to consider
 REM set SPHINX_APIDOC_OPTIONS=members,undoc-members,show-inheritance,inherited-members
@@ -33,9 +34,11 @@ goto end
 
 :html
 REM generate apidoc using docstrings
-sphinx-apidoc --no-toc -o %SOURCEDIR% -f ./../src/yieldengine
+sphinx-apidoc -e --no-toc -o %SOURCEDIR% -f ./../src/yieldengine
 REM run the sphinx build for html
 %SPHINXBUILD% -M %1 %SOURCEDIR% %BUILDDIR% %SPHINXOPTS%
+REM run sphinx for notebook
+REM %SPHINXBUILD% -b %1 -c %SOURCEDIR% %NOTEBOOK_QUICK_START% %BUILDDIR% %SPHINXOPTS%
 REM clean up potentially pre-existing files in /docs
 del /q /s ..\docs\* >nul
 for /d %%i in (..\docs\*) do rd /s /q "%%i"
