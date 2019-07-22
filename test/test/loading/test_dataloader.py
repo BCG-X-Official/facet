@@ -1,8 +1,8 @@
 import pytest
 
-import tests
-from tests.loading import dataloader
-from tests.paths import TEST_DATA_CSV
+import test
+from test.loading import dataloader
+from test.paths import TEST_DATA_CSV
 
 
 def test_load_raw_data() -> None:
@@ -15,7 +15,7 @@ def test_validate_raw_data() -> None:
 
     # now test if the exception is properly thrown, when a column is missing:
     # load how the needed columns should be called:
-    inputfile_config = tests.read_test_config(section="inputfile")
+    inputfile_config = test.read_test_config(section="inputfile")
     date_column_name = inputfile_config["date_column_name"]
     yield_column_name = inputfile_config["yield_column_name"]
     # remove them...
