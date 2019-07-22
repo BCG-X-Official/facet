@@ -16,14 +16,14 @@ partitions are integers
 :class:`CategoryPartitioning` is adapted to categorical sets
 """
 import logging
+import math
 from abc import ABC, ABCMeta, abstractmethod
 from typing import *
 
-import math
 import numpy as np
 import pandas as pd
 
-from yieldengine import ListLike
+from gamma import ListLike
 
 log = logging.getLogger(__name__)
 

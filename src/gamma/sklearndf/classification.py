@@ -46,8 +46,8 @@ from sklearn.semi_supervised import LabelPropagation, LabelSpreading
 from sklearn.svm import LinearSVC, NuSVC, SVC
 from sklearn.tree import DecisionTreeClassifier, ExtraTreeClassifier
 
-from yieldengine.sklearndf import _DataFramePredictor, DataFrameClassifier
-from yieldengine.sklearndf._wrapper import DataFrameClassifierWrapper, df_estimator
+from gamma.sklearndf import _DataFramePredictor, DataFrameClassifier
+from gamma.sklearndf._wrapper import DataFrameClassifierWrapper, df_estimator
 
 log = logging.getLogger(__name__)
 

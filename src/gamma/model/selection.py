@@ -16,8 +16,8 @@ from typing import *
 import numpy as np
 from sklearn.model_selection import BaseCrossValidator, GridSearchCV
 
-from yieldengine import Sample
-from yieldengine.model import ModelPipelineDF
+from gamma import Sample
+from gamma.model import ModelPipelineDF
 
 ParameterGrid = Dict[str, Sequence[Any]]
 

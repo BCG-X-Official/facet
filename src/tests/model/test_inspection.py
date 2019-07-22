@@ -7,25 +7,25 @@ from shap import KernelExplainer, TreeExplainer
 from shap.explainers.explainer import Explainer
 from sklearn.model_selection import BaseCrossValidator, RepeatedKFold
 
-from yieldengine import Sample
-from yieldengine.model import ModelPipelineDF
-from yieldengine.model.inspection import ModelInspector
-from yieldengine.model.prediction import (
+from gamma import Sample
+from gamma.model import ModelPipelineDF
+from gamma.model.inspection import ModelInspector
+from gamma.model.prediction import (
     ClassifierFitCV,
     ProbabilityCalibrationMethod,
     RegressorFitCV,
 )
-from yieldengine.model.selection import (
+from gamma.model.selection import (
     ModelEvaluation,
     ModelGrid,
     ModelRanker,
     summary_report,
 )
-from yieldengine.model.validation import CircularCrossValidator
-from yieldengine.sklearndf import DataFramePredictor, DataFrameTransformer
-from yieldengine.sklearndf._wrapper import DataFramePredictorWrapper
-from yieldengine.sklearndf.classification import RandomForestClassifierDF
-from yieldengine.sklearndf.regression import LGBMRegressorDF, SVRDF
+from gamma.model.validation import CircularCrossValidator
+from gamma.sklearndf import DataFramePredictor, DataFrameTransformer
+from gamma.sklearndf._wrapper import DataFramePredictorWrapper
+from gamma.sklearndf.classification import RandomForestClassifierDF
+from gamma.sklearndf.regression import LGBMRegressorDF, SVRDF
 
 log = logging.getLogger(__name__)
 

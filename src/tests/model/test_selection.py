@@ -6,16 +6,16 @@ import numpy as np
 import pandas as pd
 from sklearn import datasets
 
-from yieldengine import Sample
-from yieldengine.model import ModelPipelineDF
-from yieldengine.model.selection import (
+from gamma import Sample
+from gamma.model import ModelPipelineDF
+from gamma.model.selection import (
     ModelEvaluation,
     ModelGrid,
     ModelRanker,
     summary_report,
 )
-from yieldengine.model.validation import CircularCrossValidator
-from yieldengine.sklearndf.classification import SVCDF
+from gamma.model.validation import CircularCrossValidator
+from gamma.sklearndf.classification import SVCDF
 
 log = logging.getLogger(__name__)
 

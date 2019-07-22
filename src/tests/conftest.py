@@ -9,14 +9,11 @@ import pytest
 from sklearn import datasets
 from sklearn.utils import Bunch
 
-from tests import read_test_config
-from tests.model import make_simple_transformer
-from tests.paths import TEST_DATA_CSV
-from yieldengine import Sample
-from yieldengine.model import ModelPipelineDF
-from yieldengine.model.selection import ModelGrid
-from yieldengine.sklearndf import DataFrameTransformer
-from yieldengine.sklearndf.regression import (
+from gamma import Sample
+from gamma.model import ModelPipelineDF
+from gamma.model.selection import ModelGrid
+from gamma.sklearndf import DataFrameTransformer
+from gamma.sklearndf.regression import (
     AdaBoostRegressorDF,
     DecisionTreeRegressorDF,
     ExtraTreeRegressorDF,
@@ -25,6 +22,9 @@ from yieldengine.sklearndf.regression import (
     RandomForestRegressorDF,
     SVRDF,
 )
+from tests import read_test_config
+from tests.model import make_simple_transformer
+from tests.paths import TEST_DATA_CSV
 
 logging.basicConfig(level=logging.DEBUG)
 log = logging.getLogger(__name__)

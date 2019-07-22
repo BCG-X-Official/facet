@@ -11,7 +11,7 @@ import pandas as pd
 from sklearn import compose, impute, preprocessing
 from sklearn.base import BaseEstimator
 
-from yieldengine.sklearndf._wrapper import (
+from gamma.sklearndf._wrapper import (
     ColumnPreservingTransformer,
     ConstantColumnTransformer,
     DataFrameTransformerWrapper,

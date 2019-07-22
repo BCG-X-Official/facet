@@ -9,11 +9,8 @@ import pandas as pd
 from boruta import BorutaPy
 from sklearn.base import BaseEstimator
 
-from yieldengine.sklearndf import DataFrameTransformer
-from yieldengine.sklearndf._wrapper import (
-    ColumnPreservingTransformer,
-    NDArrayTransformerDF,
-)
+from gamma.sklearndf import DataFrameTransformer
+from gamma.sklearndf._wrapper import ColumnPreservingTransformer, NDArrayTransformerDF
 
 log = logging.getLogger(__name__)
 
