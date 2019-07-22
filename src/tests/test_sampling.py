@@ -10,7 +10,7 @@ from yieldengine.partition import (
 def test_discrete_partitioning() -> None:
     for i in range(0, 10000):
         values = np.random.randint(
-            low=0, high=1000, size=max(int(np.random.rand() * 1000), 2)
+            low=0, high=10000, size=max(int(np.random.rand() * 1000), 3)
         )
         dvp = IntegerRangePartitioning(
             values=values, max_partitions=DEFAULT_MAX_PARTITIONS
@@ -25,7 +25,7 @@ def test_continuous_partitioning() -> None:
     for i in range(0, 10000):
         values = (
             np.random.randint(
-                low=0, high=1000, size=max(int(np.random.rand() * 1000), 2)
+                low=0, high=10000, size=max(int(np.random.rand() * 1000), 3)
             )
             * np.random.rand()
         )
