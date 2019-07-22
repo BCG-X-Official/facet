@@ -10,18 +10,25 @@ from typing import *
 
 import pandas as pd
 from sklearn import clone
+from sklearn.base import BaseEstimator
 
 from yieldengine import ListLike
-from yieldengine.df.predict import DataFrameClassifier, DataFrameRegressor
+from yieldengine.df.predict import (
+    DataFrameClassifier,
+    DataFramePredictor,
+    DataFrameRegressor,
+)
 from yieldengine.df.transform import DataFrameTransformer
 
 __all__ = ["Model"]
 
-Predictor = TypeVar("Predictor", bound=Union[DataFrameRegressor, DataFrameClassifier])
+T_Predictor = TypeVar("Predictor", bound=Union[DataFrameRegressor, DataFrameClassifier])
 
 
 # todo: rename to PredictiveWorkflow (tbc)
-class Model(DataFrameRegressor, DataFrameClassifier, Generic[Predictor]):
+class Model(
+    BaseEstimator, DataFrameRegressor, DataFrameClassifier, Generic[T_Predictor]
+):
     """
     Specify the preprocessing step and the estimator for a model.
 
@@ -35,15 +42,23 @@ class Model(DataFrameRegressor, DataFrameClassifier, Generic[Predictor]):
     """
 
     def __init__(
-        self, predictor: Predictor, preprocessing: Optional[DataFrameTransformer] = None
+        self,
+        predictor: T_Predictor,
+        preprocessing: Optional[DataFrameTransformer] = None,
     ) -> None:
         super().__init__()
 
         if preprocessing is not None and not isinstance(
             preprocessing, DataFrameTransformer
         ):
-            raise ValueError(
-                "arg preprocessing expected to be a " "DataFrameTransformerWrapper"
+            raise TypeError(
+                "arg preprocessing expected to be a DataFrameTransformer but is a "
+                f"{type(preprocessing).__name__}"
+            )
+        if not isinstance(predictor, DataFramePredictor):
+            raise TypeError(
+                "arg preprocessing expected to be a DataFramePredictor but is a "
+                f"{type(predictor).__name__}"
             )
 
         self.preprocessing = preprocessing
@@ -52,7 +67,7 @@ class Model(DataFrameRegressor, DataFrameClassifier, Generic[Predictor]):
     # noinspection PyPep8Naming
     def fit(
         self, X: pd.DataFrame, y: Optional[pd.Series] = None, **fit_params
-    ) -> "Model[Predictor]":
+    ) -> "Model[T_Predictor]":
         self.predictor.fit(self._pre_fit_transform(X, y, **fit_params), y, **fit_params)
         return self
 
@@ -81,17 +96,23 @@ class Model(DataFrameRegressor, DataFrameClassifier, Generic[Predictor]):
 
     # noinspection PyPep8Naming
     def predict_proba(self, X: pd.DataFrame) -> Union[pd.DataFrame, List[pd.DataFrame]]:
-        return self.predictor.predict_proba(self._pre_transform(X))
+        return cast(DataFrameClassifier, self.predictor).predict_proba(
+            self._pre_transform(X)
+        )
 
     # noinspection PyPep8Naming
     def predict_log_proba(
         self, X: pd.DataFrame
     ) -> Union[pd.DataFrame, List[pd.DataFrame]]:
-        return self.predictor.predict_log_proba(self._pre_transform(X))
+        return cast(DataFrameClassifier, self.predictor).predict_log_proba(
+            self._pre_transform(X)
+        )
 
     # noinspection PyPep8Naming
     def decision_function(self, X: pd.DataFrame) -> Union[pd.Series, pd.DataFrame]:
-        return self.predictor.decision_function(self._pre_transform(X))
+        return cast(DataFrameClassifier, self.predictor).decision_function(
+            self._pre_transform(X)
+        )
 
     # noinspection PyPep8Naming
     def score(
@@ -109,7 +130,7 @@ class Model(DataFrameRegressor, DataFrameClassifier, Generic[Predictor]):
 
     @property
     def classes(self) -> Optional[ListLike[Any]]:
-        return self.predictor.classes
+        return cast(DataFrameClassifier, self.predictor).classes
 
     @property
     def n_outputs(self) -> int:

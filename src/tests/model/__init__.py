@@ -1,6 +1,6 @@
 from typing import Sequence
 
-from yieldengine.df.transform import DataFrameTransformerWrapper
+from yieldengine.df.transform import DataFrameTransformer
 from yieldengine.preprocessing.compose import ColumnTransformerDF
 from yieldengine.preprocessing.encode import OneHotEncoderDF
 from yieldengine.preprocessing.impute import SimpleImputerDF
@@ -12,7 +12,7 @@ STEP_ONE_HOT_ENCODE = "one-hot-encode"
 def make_simple_transformer(
     impute_median_columns: Sequence[str] = None,
     one_hot_encode_columns: Sequence[str] = None,
-) -> DataFrameTransformerWrapper:
+) -> DataFrameTransformer:
     column_transforms = []
 
     if impute_median_columns is not None and len(impute_median_columns) > 0:

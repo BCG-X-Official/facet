@@ -22,9 +22,14 @@ log = logging.getLogger(__name__)
 _BaseEstimator = TypeVar("_BaseEstimator", bound=BaseEstimator)
 
 
-class DataFrameEstimator(ABC, BaseEstimator):
+class DataFrameEstimator(ABC):
     def __init__(self, **kwargs) -> None:
         super().__init__()
+        if not isinstance(self, BaseEstimator):
+            raise TypeError(
+                f"class {type(self).__name__} is required to inherit from class "
+                f"{BaseEstimator.__name__}"
+            )
         self._columns_in = None
 
     # noinspection PyPep8Naming
@@ -47,7 +52,9 @@ class DataFrameEstimator(ABC, BaseEstimator):
         pass
 
 
-class DataFrameEstimatorWrapper(DataFrameEstimator, Generic[_BaseEstimator]):
+class DataFrameEstimatorWrapper(
+    DataFrameEstimator, BaseEstimator, Generic[_BaseEstimator]
+):
     """
     Abstract base class that is a wrapper around :class:`sklearn.base.BaseEstimator`.
 
@@ -197,15 +204,30 @@ def df_estimator(
     def _decorate(
         decoratee: Type[T_BaseEstimator]
     ) -> Type[DataFrameEstimatorWrapper[T_BaseEstimator]]:
+
+        # determine the sklearn estimator we are wrapping
+
+        sklearn_base_estimators = [
+            base for base in decoratee.__bases__ if issubclass(base, BaseEstimator)
+        ]
+
+        if len(sklearn_base_estimators) != 1:
+            raise TypeError(
+                f"class {decoratee.__name__} must have exactly one base class "
+                f"that implements class {BaseEstimator.__name__}"
+            )
+
+        sklearn_base_estimator = sklearn_base_estimators[0]
+
+        # wrap the base estimator
+
         @wraps(decoratee, updated=())
         class _DataFrameEstimator(df_estimator_type):
             @classmethod
             def _make_base_estimator(cls, **kwargs) -> T_BaseEstimator:
-                return decoratee(**kwargs)
+                # noinspection PyArgumentList
+                return sklearn_base_estimator(**kwargs)
 
-        decoratee.__name__ = f"_{decoratee.__name__}Base"
-        decoratee.__qualname__ = f"{decoratee.__qualname__}.{decoratee.__name__}"
-        setattr(_DataFrameEstimator, decoratee.__name__, decoratee)
         return _DataFrameEstimator
 
     if not issubclass(df_estimator_type, DataFrameEstimatorWrapper):
