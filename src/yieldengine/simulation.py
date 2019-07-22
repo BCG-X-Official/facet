@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 
 from yieldengine.model.prediction import PredictorFitCV
-from yieldengine.preprocessing import FunctionTransformerDF
+from yieldengine.sklearndf.transformation import FunctionTransformerDF
 
 
 class UnivariateSimulation:

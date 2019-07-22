@@ -8,8 +8,6 @@ from shap.explainers.explainer import Explainer
 from sklearn.model_selection import BaseCrossValidator, RepeatedKFold
 
 from yieldengine import Sample
-from yieldengine.df.predict import DataFramePredictor, DataFramePredictorWrapper
-from yieldengine.df.transform import DataFrameTransformer
 from yieldengine.model import Model
 from yieldengine.model.inspection import ModelInspector
 from yieldengine.model.prediction import (
@@ -24,8 +22,10 @@ from yieldengine.model.selection import (
     summary_report,
 )
 from yieldengine.model.validation import CircularCrossValidator
-from yieldengine.prediction.classification import RandomForestClassifierDF
-from yieldengine.prediction.regression import LGBMRegressorDF, SVRDF
+from yieldengine.sklearndf import DataFramePredictor, DataFrameTransformer
+from yieldengine.sklearndf._wrapper import DataFramePredictorWrapper
+from yieldengine.sklearndf.classification import RandomForestClassifierDF
+from yieldengine.sklearndf.regression import LGBMRegressorDF, SVRDF
 
 log = logging.getLogger(__name__)
 
