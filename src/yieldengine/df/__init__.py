@@ -17,9 +17,10 @@ from typing import *
 import pandas as pd
 from sklearn.base import BaseEstimator
 
+
 log = logging.getLogger(__name__)
 
-_BaseEstimator = TypeVar("_BaseEstimator", bound=BaseEstimator)
+T_BaseEstimator = TypeVar("T_BaseEstimator", bound=BaseEstimator)
 
 
 class DataFrameEstimator(ABC):
@@ -53,7 +54,7 @@ class DataFrameEstimator(ABC):
 
 
 class DataFrameEstimatorWrapper(
-    DataFrameEstimator, BaseEstimator, Generic[_BaseEstimator]
+    DataFrameEstimator, BaseEstimator, Generic[T_BaseEstimator]
 ):
     """
     Abstract base class that is a wrapper around :class:`sklearn.base.BaseEstimator`.
@@ -71,11 +72,11 @@ class DataFrameEstimatorWrapper(
 
     @classmethod
     @abstractmethod
-    def _make_base_estimator(cls, **kwargs) -> _BaseEstimator:
+    def _make_base_estimator(cls, **kwargs) -> T_BaseEstimator:
         pass
 
     @property
-    def base_estimator(self) -> _BaseEstimator:
+    def base_estimator(self) -> T_BaseEstimator:
         """
         Return the base sklearn `BaseEstimator`.
 
@@ -95,7 +96,7 @@ class DataFrameEstimatorWrapper(
         # noinspection PyUnresolvedReferences
         return self._base_estimator.get_params(deep=deep)
 
-    def set_params(self, **kwargs) -> "DataFrameEstimatorWrapper":
+    def set_params(self, **kwargs) -> "DataFrameEstimatorWrapper[T_BaseEstimator]":
         """
         Set the parameters of this estimator.
 
@@ -110,7 +111,7 @@ class DataFrameEstimatorWrapper(
     # noinspection PyPep8Naming
     def fit(
         self, X: pd.DataFrame, y: Optional[pd.Series] = None, **fit_params
-    ) -> "DataFrameEstimatorWrapper[_BaseEstimator]":
+    ) -> "DataFrameEstimatorWrapper[T_BaseEstimator]":
         """
         Fit the base estimator.
 
@@ -143,7 +144,7 @@ class DataFrameEstimatorWrapper(
     # noinspection PyPep8Naming
     def _base_fit(
         self, X: pd.DataFrame, y: Optional[pd.Series], **fit_params
-    ) -> _BaseEstimator:
+    ) -> T_BaseEstimator:
         # noinspection PyUnresolvedReferences
         return self._base_estimator.fit(X, y, **fit_params)
 
@@ -177,9 +178,6 @@ class DataFrameEstimatorWrapper(
             setattr(self._base_estimator, name, value)
 
 
-T_BaseEstimator = TypeVar("T_BaseEstimator", bound=BaseEstimator)
-
-
 def df_estimator(
     base_estimator: Type[T_BaseEstimator] = None,
     *,
@@ -191,7 +189,7 @@ def df_estimator(
     Type[DataFrameEstimatorWrapper[T_BaseEstimator]],
 ]:
     """
-    Class decorator wrapping a :class:`sklearn.base.BaseEstimattor` in a
+    Class decorator wrapping a :class:`sklearn.base.BaseEstimator` in a
     :class:`DataFrameEstimatorWrapper`.
     :param base_estimator: the estimator class to wrap
     :param df_estimator_type: optional parameter indicating the \
