@@ -5,7 +5,6 @@ from typing import *
 
 import numpy as np
 import pandas as pd
-from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import BaseCrossValidator, RepeatedKFold
 
 from yieldengine import Sample
@@ -17,6 +16,7 @@ from yieldengine.model.selection import (
     ModelRanker,
     summary_report,
 )
+from yieldengine.prediction.classification import RandomForestClassifierDF
 
 log = logging.getLogger(__name__)
 
@@ -40,7 +40,7 @@ def test_prediction_classifier(available_cpus: int, iris_sample: Sample) -> None
     # define parameters and models
     models = [
         ModelGrid(
-            model=Model(predictor=RandomForestClassifier(), preprocessing=None),
+            model=Model(predictor=RandomForestClassifierDF(), preprocessing=None),
             estimator_parameters={"n_estimators": [50, 80], "random_state": [42]},
         )
     ]
