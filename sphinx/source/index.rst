@@ -15,7 +15,7 @@ which is hosted at `GitHub <https://git.sourceai.io/schneider-joerg/yield-engine
    :caption: Contents
 
    tutorial/quick_start
-   API reference of yieldengine <yieldengine>
+   API reference of yieldengine <gamma>
    examples/index
 
 
