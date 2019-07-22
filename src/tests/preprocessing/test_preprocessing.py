@@ -13,7 +13,8 @@ from sklearn.preprocessing import (
     StandardScaler,
 )
 
-from yieldengine.preprocessing import (
+from yieldengine.sklearndf.transformation import (
+    ColumnTransformerDF,
     MaxAbsScalerDF,
     MinMaxScalerDF,
     NormalizerDF,
@@ -22,8 +23,7 @@ from yieldengine.preprocessing import (
     RobustScalerDF,
     StandardScalerDF,
 )
-from yieldengine.preprocessing.compose import ColumnTransformerDF
-from yieldengine.preprocessing.outlier import OutlierRemoverDF
+from yieldengine.sklearndf.transformation.extra import OutlierRemoverDF
 
 
 @pytest.fixture

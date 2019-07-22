@@ -13,10 +13,10 @@ from tests import read_test_config
 from tests.model import make_simple_transformer
 from tests.paths import TEST_DATA_CSV
 from yieldengine import Sample
-from yieldengine.df.transform import DataFrameTransformer
 from yieldengine.model import Model
 from yieldengine.model.selection import ModelGrid
-from yieldengine.prediction.regression import (
+from yieldengine.sklearndf import DataFrameTransformer
+from yieldengine.sklearndf.regression import (
     AdaBoostRegressorDF,
     DecisionTreeRegressorDF,
     ExtraTreeRegressorDF,

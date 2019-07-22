@@ -53,9 +53,8 @@ from sklearn.neural_network import MLPRegressor
 from sklearn.svm import LinearSVR, NuSVR, SVR
 from sklearn.tree import DecisionTreeRegressor, ExtraTreeRegressor
 
-from yieldengine.df import df_estimator
-from yieldengine.df.predict import DataFrameRegressor, DataFrameRegressorWrapper
-from yieldengine.prediction import _DataFramePredictor
+from yieldengine.sklearndf import _DataFramePredictor, DataFrameRegressor
+from yieldengine.sklearndf._wrapper import DataFrameRegressorWrapper, df_estimator
 
 log = logging.getLogger(__name__)
 

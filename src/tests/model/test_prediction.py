@@ -16,7 +16,7 @@ from yieldengine.model.selection import (
     ModelRanker,
     summary_report,
 )
-from yieldengine.prediction.classification import RandomForestClassifierDF
+from yieldengine.sklearndf.classification import RandomForestClassifierDF
 
 log = logging.getLogger(__name__)
 

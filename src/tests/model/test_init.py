@@ -4,7 +4,7 @@ from sklearn.preprocessing import OneHotEncoder
 
 from tests.model import make_simple_transformer
 from yieldengine.model import Model
-from yieldengine.prediction.regression import LGBMRegressorDF
+from yieldengine.sklearndf.regression import LGBMRegressorDF
 
 
 def test_model() -> None:
