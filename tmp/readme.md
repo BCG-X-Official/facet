@@ -1,1 +1,0 @@
-This folder is for temporary files which will not be managed by git.
