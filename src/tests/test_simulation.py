@@ -7,9 +7,9 @@ from gamma import Sample
 from gamma.model.prediction import RegressorFitCV
 from gamma.model.selection import ModelEvaluation, ModelGrid, ModelRanker
 from gamma.model.validation import CircularCrossValidator
-from gamma.partition import ContinuousRangePartitioning
-from gamma.simulation import UnivariateSimulation
 from gamma.sklearndf import DataFrameTransformer
+from gamma.yieldengine.partition import ContinuousRangePartitioning
+from gamma.yieldengine.simulation import UnivariateSimulation
 
 log = logging.getLogger(__name__)
 
