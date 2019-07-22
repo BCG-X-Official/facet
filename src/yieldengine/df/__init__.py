@@ -11,6 +11,7 @@ which is the index of the columns of the input dataframe.
 
 import logging
 from abc import ABC, abstractmethod
+from functools import wraps
 from typing import *
 
 import pandas as pd
@@ -167,3 +168,52 @@ class DataFrameEstimatorWrapper(DataFrameEstimator, Generic[_BaseEstimator]):
             super().__setattr__(name, value)
         else:
             setattr(self._base_estimator, name, value)
+
+
+T_BaseEstimator = TypeVar("T_BaseEstimator", bound=BaseEstimator)
+
+
+def df_estimator(
+    base_estimator: Type[T_BaseEstimator] = None,
+    *,
+    df_estimator_type: Type[
+        DataFrameEstimatorWrapper[T_BaseEstimator]
+    ] = DataFrameEstimatorWrapper[T_BaseEstimator],
+) -> Union[
+    Callable[[Type[T_BaseEstimator]], Type[DataFrameEstimatorWrapper[T_BaseEstimator]]],
+    Type[DataFrameEstimatorWrapper[T_BaseEstimator]],
+]:
+    """
+    Class decorator wrapping a :class:`sklearn.base.BaseEstimattor` in a
+    :class:`DataFrameEstimatorWrapper`.
+    :param base_estimator: the estimator class to wrap
+    :param df_estimator_type: optional parameter indicating the \
+                              :class:`DataFrameEstimatorWrapper` class to be used for \
+                              wrapping; defaults to :class:`DataFrameEstimatorWrapper`
+    :return: the resulting `DataFrameEstimatorWrapper` with ``base_estimator`` as \
+             the base estimator
+    """
+
+    def _decorate(
+        decoratee: Type[T_BaseEstimator]
+    ) -> Type[DataFrameEstimatorWrapper[T_BaseEstimator]]:
+        @wraps(decoratee, updated=())
+        class _DataFrameEstimator(df_estimator_type):
+            @classmethod
+            def _make_base_estimator(cls, **kwargs) -> T_BaseEstimator:
+                return decoratee(**kwargs)
+
+        decoratee.__name__ = f"_{decoratee.__name__}Base"
+        decoratee.__qualname__ = f"{decoratee.__qualname__}.{decoratee.__name__}"
+        setattr(_DataFrameEstimator, decoratee.__name__, decoratee)
+        return _DataFrameEstimator
+
+    if not issubclass(df_estimator_type, DataFrameEstimatorWrapper):
+        raise ValueError(
+            f"arg df_transformer_type not a "
+            f"{DataFrameEstimatorWrapper.__name__} class: {df_estimator_type}"
+        )
+    if base_estimator is None:
+        return _decorate
+    else:
+        return _decorate(base_estimator)
