@@ -1,8 +1,8 @@
 # coding=utf-8
 """
-Model selection and hyperparameter optimisation.
+ModelPipelineDF selection and hyperparameter optimisation.
 
-:class:`ModelGrid` encapsulates a :class:`yieldengine.model.Model` and a grid of
+:class:`ModelGrid` encapsulates a :class:`yieldengine.model.ModelPipelineDF` and a grid of
 hyperparameters.
 
 :class:`ModelRanker` selects the best model and parametrisation based on the
@@ -17,7 +17,7 @@ import numpy as np
 from sklearn.model_selection import BaseCrossValidator, GridSearchCV
 
 from yieldengine import Sample
-from yieldengine.model import Model
+from yieldengine.model import ModelPipelineDF
 
 ParameterGrid = Dict[str, Sequence[Any]]
 
@@ -26,7 +26,7 @@ class ModelGrid:
     """
     A model with a grid of hyperparameters.
 
-    :param model: the :class:`Model` to which the hyperparameters will be applied
+    :param model: the :class:`ModelPipelineDF` to which the hyperparameters will be applied
     :param estimator_parameters: the hyperparameter grid in which to search for the \
         optimal parameter values for the model's estimator
     :param preprocessing_parameters: the hyperparameter grid in which to search for \
@@ -35,7 +35,7 @@ class ModelGrid:
 
     def __init__(
         self,
-        model: Model,
+        model: ModelPipelineDF,
         estimator_parameters: ParameterGrid,
         preprocessing_parameters: Optional[ParameterGrid] = None,
     ) -> None:
@@ -64,9 +64,9 @@ class ModelGrid:
         self._grid = dict(grid_parameters)
 
     @property
-    def model(self) -> Model:
+    def model(self) -> ModelPipelineDF:
         """
-        The :class:`~yieldengine.model.Model` for which to optimise the parameters.
+        The :class:`~yieldengine.model.ModelPipelineDF` for which to optimise the parameters.
         """
         return self._model
 
@@ -111,7 +111,7 @@ class ModelEvaluation(NamedTuple):
 
     Has attributes:
 
-    - model: the evaluated  :class:`~yieldengine.model.Model`
+    - model: the evaluated  :class:`~yieldengine.model.ModelPipelineDF`
     - parameters: the hyperparameters selected for the model during grid
         search, as a mapping of parameter names to parameter values
     - scoring: scorings for the model based on the provided scorers;
@@ -121,7 +121,7 @@ class ModelEvaluation(NamedTuple):
         scorer and ranking metric
     """
 
-    model: Model
+    model: ModelPipelineDF
     parameters: Mapping[str, Any]
     scoring: Mapping[str, ModelScoring]
     ranking_score: float
