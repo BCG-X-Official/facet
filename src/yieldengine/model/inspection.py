@@ -16,10 +16,10 @@ from shap import KernelExplainer, TreeExplainer
 from shap.explainers.explainer import Explainer
 
 from yieldengine.dendrogram import LinkageTree
-from yieldengine.df import DataFrameEstimatorWrapper
-from yieldengine.df.predict import DataFramePredictor, DataFramePredictorWrapper
 from yieldengine.model import Model
 from yieldengine.model.prediction import PredictorFitCV
+from yieldengine.sklearndf import DataFramePredictor
+from yieldengine.sklearndf._wrapper import DataFrameEstimatorWrapper
 
 log = logging.getLogger(__name__)
 
@@ -242,7 +242,7 @@ def default_explainer_factory(
     # we should not attempt to filter the exception type or message given that it is
     # currently inconsistent
 
-    if isinstance(estimator, DataFramePredictorWrapper):
+    if isinstance(estimator, DataFrameEstimatorWrapper):
         estimator = estimator.base_estimator
 
     try:

@@ -15,7 +15,7 @@ from yieldengine.model.selection import (
     summary_report,
 )
 from yieldengine.model.validation import CircularCrossValidator
-from yieldengine.prediction.classification import SVCDF
+from yieldengine.sklearndf.classification import SVCDF
 
 log = logging.getLogger(__name__)
 

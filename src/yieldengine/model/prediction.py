@@ -19,7 +19,7 @@ from sklearn.model_selection import BaseCrossValidator
 
 from yieldengine import Sample
 from yieldengine.model import Model
-from yieldengine.prediction.classification import CalibratedClassifierCVDF
+from yieldengine.sklearndf.classification import CalibratedClassifierCVDF
 
 log = logging.getLogger(__name__)
 

@@ -5,12 +5,12 @@ from matplotlib.pyplot import figure
 from yieldengine import Sample
 from yieldengine.dendrogram import DendrogramDrawer
 from yieldengine.dendrogram.style import FeatMapStyle, LineStyle
-from yieldengine.df.transform import DataFrameTransformer
 from yieldengine.model import Model
 from yieldengine.model.inspection import ModelInspector
 from yieldengine.model.prediction import RegressorFitCV
 from yieldengine.model.validation import CircularCrossValidator
-from yieldengine.prediction.regression import LGBMRegressorDF
+from yieldengine.sklearndf import DataFrameTransformer
+from yieldengine.sklearndf.regression import LGBMRegressorDF
 
 
 @pytest.fixture()

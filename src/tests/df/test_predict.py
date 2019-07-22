@@ -2,7 +2,10 @@ import numpy as np
 import pandas as pd
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 
-from yieldengine.df.predict import DataFrameClassifierWrapper, DataFrameRegressorWrapper
+from yieldengine.sklearndf._wrapper import (
+    DataFrameClassifierWrapper,
+    DataFrameRegressorWrapper,
+)
 
 
 def test_dataframe_predictor_classifier(
