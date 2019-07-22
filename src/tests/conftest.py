@@ -6,21 +6,25 @@ import joblib
 import numpy as np
 import pandas as pd
 import pytest
-from lightgbm.sklearn import LGBMRegressor
 from sklearn import datasets
-from sklearn.ensemble import AdaBoostRegressor, RandomForestRegressor
-from sklearn.linear_model import LinearRegression
-from sklearn.svm import SVR
-from sklearn.tree import DecisionTreeRegressor, ExtraTreeRegressor
 from sklearn.utils import Bunch
 
 from tests import read_test_config
 from tests.model import make_simple_transformer
 from tests.paths import TEST_DATA_CSV
 from yieldengine import Sample
-from yieldengine.df.transform import DataFrameTransformerWrapper
+from yieldengine.df.transform import DataFrameTransformer
 from yieldengine.model import Model
 from yieldengine.model.selection import ModelGrid
+from yieldengine.prediction.regression import (
+    AdaBoostRegressorDF,
+    DecisionTreeRegressorDF,
+    ExtraTreeRegressorDF,
+    LGBMRegressorDF,
+    LinearRegressionDF,
+    RandomForestRegressorDF,
+    SVRDF,
+)
 
 logging.basicConfig(level=logging.DEBUG)
 log = logging.getLogger(__name__)
@@ -67,7 +71,7 @@ def regressor_grids(simple_preprocessor) -> List[ModelGrid]:
     RANDOM_STATE = {f"random_state": [42]}
     return [
         ModelGrid(
-            model=Model(preprocessing=simple_preprocessor, predictor=LGBMRegressor()),
+            model=Model(preprocessing=simple_preprocessor, predictor=LGBMRegressorDF()),
             estimator_parameters={
                 "max_depth": [5, 10],
                 "min_split_gain": [0.1, 0.2],
@@ -77,19 +81,19 @@ def regressor_grids(simple_preprocessor) -> List[ModelGrid]:
         ),
         ModelGrid(
             model=Model(
-                preprocessing=simple_preprocessor, predictor=AdaBoostRegressor()
+                preprocessing=simple_preprocessor, predictor=AdaBoostRegressorDF()
             ),
             estimator_parameters={"n_estimators": [50, 80], **RANDOM_STATE},
         ),
         ModelGrid(
             model=Model(
-                preprocessing=simple_preprocessor, predictor=RandomForestRegressor()
+                preprocessing=simple_preprocessor, predictor=RandomForestRegressorDF()
             ),
             estimator_parameters={"n_estimators": [50, 80], **RANDOM_STATE},
         ),
         ModelGrid(
             model=Model(
-                preprocessing=simple_preprocessor, predictor=DecisionTreeRegressor()
+                preprocessing=simple_preprocessor, predictor=DecisionTreeRegressorDF()
             ),
             estimator_parameters={
                 "max_depth": [0.5, 1.0],
@@ -99,17 +103,17 @@ def regressor_grids(simple_preprocessor) -> List[ModelGrid]:
         ),
         ModelGrid(
             model=Model(
-                preprocessing=simple_preprocessor, predictor=ExtraTreeRegressor()
+                preprocessing=simple_preprocessor, predictor=ExtraTreeRegressorDF()
             ),
             estimator_parameters={"max_depth": [5, 10, 12], **RANDOM_STATE},
         ),
         ModelGrid(
-            model=Model(preprocessing=simple_preprocessor, predictor=SVR()),
+            model=Model(preprocessing=simple_preprocessor, predictor=SVRDF()),
             estimator_parameters={"gamma": [0.5, 1], "C": [50, 100]},
         ),
         ModelGrid(
             model=Model(
-                preprocessing=simple_preprocessor, predictor=LinearRegression()
+                preprocessing=simple_preprocessor, predictor=LinearRegressionDF()
             ),
             estimator_parameters={"normalize": [False, True]},
         ),
@@ -131,7 +135,7 @@ def sample(batch_table: pd.DataFrame) -> Sample:
 
 
 @pytest.fixture
-def simple_preprocessor(sample: Sample) -> DataFrameTransformerWrapper:
+def simple_preprocessor(sample: Sample) -> DataFrameTransformer:
     return make_simple_transformer(
         impute_median_columns=sample.features_by_type(Sample.DTYPE_NUMERICAL).columns,
         one_hot_encode_columns=sample.features_by_type(Sample.DTYPE_OBJECT).columns,

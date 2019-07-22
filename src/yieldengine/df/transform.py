@@ -37,11 +37,10 @@ class DataFrameTransformer(DataFrameEstimator, TransformerMixin, ABC):
     def transform(self, X: pd.DataFrame) -> pd.DataFrame:
         pass
 
-    @abstractmethod
     def fit_transform(
         self, X: pd.DataFrame, y: Optional[pd.Series] = None, **fit_params
     ) -> pd.DataFrame:
-        pass
+        return self.fit(X, y, **fit_params).transform(X)
 
     @abstractmethod
     def inverse_transform(self, X: pd.DataFrame) -> pd.DataFrame:

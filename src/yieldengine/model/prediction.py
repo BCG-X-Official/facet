@@ -15,11 +15,11 @@ from typing import *
 
 import pandas as pd
 from joblib import delayed, Parallel
-from sklearn.calibration import CalibratedClassifierCV
 from sklearn.model_selection import BaseCrossValidator
 
 from yieldengine import Sample
 from yieldengine.model import Model
+from yieldengine.prediction.classification import CalibratedClassifierCVDF
 
 log = logging.getLogger(__name__)
 
@@ -353,7 +353,7 @@ class ClassifierFitCV(PredictorFitCV):
         # todo: design more "elegant" approach to create new model w/o using deepcopy
         model = copy.deepcopy(model)
 
-        cv = CalibratedClassifierCV(
+        cv = CalibratedClassifierCVDF(
             base_estimator=model.predictor, method=calibration.value, cv="prefit"
         )
 

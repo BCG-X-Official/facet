@@ -14,9 +14,10 @@ from scipy.cluster.hierarchy import linkage
 from scipy.spatial.distance import squareform
 from shap import KernelExplainer, TreeExplainer
 from shap.explainers.explainer import Explainer
-from sklearn.base import BaseEstimator
 
 from yieldengine.dendrogram import LinkageTree
+from yieldengine.df import DataFrameEstimatorWrapper
+from yieldengine.df.predict import DataFramePredictor, DataFramePredictorWrapper
 from yieldengine.model import Model
 from yieldengine.model.prediction import PredictorFitCV
 
@@ -45,7 +46,7 @@ class ModelInspector:
         self,
         predictor_fit: PredictorFitCV,
         explainer_factory: Optional[
-            Callable[[BaseEstimator, pd.DataFrame], Explainer]
+            Callable[[DataFramePredictor, pd.DataFrame], Explainer]
         ] = None,
     ) -> None:
 
@@ -92,6 +93,8 @@ class ModelInspector:
             ).features
 
             estimator = split_model.predictor
+            if isinstance(estimator, DataFrameEstimatorWrapper):
+                estimator = estimator.base_estimator
 
             if split_model.preprocessing is not None:
                 data_transformed = split_model.preprocessing.transform(split_x)
@@ -216,7 +219,7 @@ class ModelInspector:
 
 
 def default_explainer_factory(
-    estimator: BaseEstimator, data: pd.DataFrame
+    estimator: DataFramePredictor, data: pd.DataFrame
 ) -> Explainer:
     """
     Return the  explainer :class:`shap.Explainer` used to compute the shap values.
@@ -238,6 +241,9 @@ def default_explainer_factory(
     # which is why we need to always assume the error resulted from this cause -
     # we should not attempt to filter the exception type or message given that it is
     # currently inconsistent
+
+    if isinstance(estimator, DataFramePredictorWrapper):
+        estimator = estimator.base_estimator
 
     try:
         return TreeExplainer(model=estimator)

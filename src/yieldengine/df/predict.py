@@ -19,9 +19,11 @@ from yieldengine.df import DataFrameEstimator, DataFrameEstimatorWrapper
 
 log = logging.getLogger(__name__)
 
-_BasePredictor = TypeVar("_BasePredictor", bound=Union[RegressorMixin, ClassifierMixin])
-_BaseRegressor = TypeVar("_BaseRegressor", bound=RegressorMixin)
-_BaseClassifier = TypeVar("_BaseClassifier", bound=ClassifierMixin)
+T_BasePredictor = TypeVar(
+    "T_BasePredictor", bound=Union[RegressorMixin, ClassifierMixin]
+)
+T_BaseRegressor = TypeVar("T_BaseRegressor", bound=RegressorMixin)
+T_BaseClassifier = TypeVar("T_BaseClassifier", bound=ClassifierMixin)
 
 
 class DataFramePredictor(DataFrameEstimator, ABC):
@@ -54,7 +56,7 @@ class DataFramePredictor(DataFrameEstimator, ABC):
 
 
 class DataFramePredictorWrapper(
-    DataFramePredictor, DataFrameEstimatorWrapper[_BasePredictor], ABC
+    DataFramePredictor, DataFrameEstimatorWrapper[T_BasePredictor], ABC
 ):
     """
     Base class for sklearn regressors and classifiers that preserve data frames
@@ -171,7 +173,7 @@ class DataFrameRegressor(DataFramePredictor, RegressorMixin):
 
 
 class DataFrameRegressorWrapper(
-    DataFrameRegressor, DataFramePredictorWrapper[_BaseRegressor]
+    DataFrameRegressor, DataFramePredictorWrapper[T_BaseRegressor]
 ):
     """
     Wrapper around sklearn regressors that preserves data frames.
@@ -207,7 +209,7 @@ class DataFrameClassifier(DataFramePredictor, ClassifierMixin):
 
 
 class DataFrameClassifierWrapper(
-    DataFrameClassifier, DataFramePredictorWrapper[_BaseClassifier]
+    DataFrameClassifier, DataFramePredictorWrapper[T_BaseClassifier]
 ):
     """
     Wrapper around sklearn classifiers that preserves data frames.

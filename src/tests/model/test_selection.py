@@ -5,7 +5,6 @@ from typing import *
 import numpy as np
 import pandas as pd
 from sklearn import datasets
-from sklearn.svm import SVC
 
 from yieldengine import Sample
 from yieldengine.model import Model
@@ -16,6 +15,7 @@ from yieldengine.model.selection import (
     summary_report,
 )
 from yieldengine.model.validation import CircularCrossValidator
+from yieldengine.prediction.classification import SVCDF
 
 log = logging.getLogger(__name__)
 
@@ -64,7 +64,7 @@ def test_model_ranker_no_preprocessing(available_cpus: int) -> None:
     # define parameters and model
     models = [
         ModelGrid(
-            model=Model(predictor=SVC(gamma="scale"), preprocessing=None),
+            model=Model(predictor=SVCDF(gamma="scale"), preprocessing=None),
             estimator_parameters={"kernel": ("linear", "rbf"), "C": [1, 10]},
         )
     ]
