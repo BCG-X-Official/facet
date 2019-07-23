@@ -16,46 +16,42 @@ from typing import *
 
 import numpy as np
 import pandas as pd
-from sklearn.base import (
-    BaseEstimator,
-    ClassifierMixin,
-    RegressorMixin,
-    TransformerMixin,
-)
+from sklearn.base import BaseEstimator
 
 from gamma import ListLike, MatrixLike
 from gamma.sklearndf import (
-    DataFrameClassifier,
-    DataFrameEstimator,
-    DataFramePredictor,
-    DataFrameRegressor,
-    DataFrameTransformer,
+    BaseEstimatorDF,
+    BasePredictorDF,
+    ClassifierDF,
+    RegressorDF,
+    T_Classifier,
+    T_Estimator,
+    T_Predictor,
+    T_Regressor,
+    T_Transformer,
+    TransformerDF,
 )
 
 log = logging.getLogger(__name__)
 
-#
-# type variables
-#
-
-T_BaseEstimator = TypeVar("T_BaseEstimator", bound=BaseEstimator)
-T_BaseTransformer = TypeVar(
-    "T_BaseTransformer", bound=Union[BaseEstimator, TransformerMixin]
-)
-T_BasePredictor = TypeVar(
-    "T_BasePredictor", bound=Union[RegressorMixin, ClassifierMixin]
-)
-T_BaseRegressor = TypeVar("T_BaseRegressor", bound=RegressorMixin)
-T_BaseClassifier = TypeVar("T_BaseClassifier", bound=ClassifierMixin)
-
-
+__all__ = [
+    "BaseEstimatorWrapperDF",
+    "BasePredictorWrapperDF",
+    "RegressorWrapperDF",
+    "ClassifierWrapperDF",
+    "TransformerWrapperDF",
+    "PersistentNamingTransformerWrapperDF",
+    "PersistentColumnTransformerWrapperDF",
+    "NDArrayTransformerWrapperDF",
+    "df_estimator",
+]
 #
 # base wrapper classes
 #
 
 
-class DataFrameEstimatorWrapper(
-    DataFrameEstimator, BaseEstimator, Generic[T_BaseEstimator]
+class BaseEstimatorWrapperDF(
+    BaseEstimatorDF[T_Estimator], BaseEstimator, Generic[T_Estimator]
 ):
     """
     Abstract base class that is a wrapper around :class:`sklearn.base.BaseEstimator`.
@@ -69,21 +65,21 @@ class DataFrameEstimatorWrapper(
 
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
-        self._base_estimator = type(self)._make_base_estimator(**kwargs)
+        self._delegate_estimator = type(self)._make_delegate_estimator(**kwargs)
 
     @classmethod
     @abstractmethod
-    def _make_base_estimator(cls, **kwargs) -> T_BaseEstimator:
+    def _make_delegate_estimator(cls, **kwargs) -> T_Estimator:
         pass
 
     @property
-    def base_estimator(self) -> T_BaseEstimator:
+    def delegate_estimator(self) -> T_Estimator:
         """
-        Return the base sklearn `BaseEstimator`.
+        Return the original estimator which this wrapper delegates to.
 
-        :return: the estimator underlying this DataFrameEstimatorWrapper
+        :return: the original estimator which this estimator delegates to
         """
-        return self._base_estimator
+        return self._delegate_estimator
 
     def get_params(self, deep=True) -> Dict[str, Any]:
         """
@@ -95,9 +91,9 @@ class DataFrameEstimatorWrapper(
         :return: mapping of the parameter names to their values
         """
         # noinspection PyUnresolvedReferences
-        return self._base_estimator.get_params(deep=deep)
+        return self._delegate_estimator.get_params(deep=deep)
 
-    def set_params(self, **kwargs) -> "DataFrameEstimatorWrapper[T_BaseEstimator]":
+    def set_params(self, **kwargs) -> "BaseEstimatorWrapperDF[T_Estimator]":
         """
         Set the parameters of this estimator.
 
@@ -106,13 +102,13 @@ class DataFrameEstimatorWrapper(
         :returns self
         """
         # noinspection PyUnresolvedReferences
-        self._base_estimator.set_params(**kwargs)
+        self._delegate_estimator.set_params(**kwargs)
         return self
 
     # noinspection PyPep8Naming
     def fit(
         self, X: pd.DataFrame, y: Optional[pd.Series] = None, **fit_params
-    ) -> "DataFrameEstimatorWrapper[T_BaseEstimator]":
+    ) -> "BaseEstimatorWrapperDF[T_Estimator]":
         """
         Fit the base estimator.
 
@@ -145,9 +141,9 @@ class DataFrameEstimatorWrapper(
     # noinspection PyPep8Naming
     def _base_fit(
         self, X: pd.DataFrame, y: Optional[pd.Series], **fit_params
-    ) -> T_BaseEstimator:
+    ) -> T_Estimator:
         # noinspection PyUnresolvedReferences
-        return self._base_estimator.fit(X, y, **fit_params)
+        return self._delegate_estimator.fit(X, y, **fit_params)
 
     # noinspection PyPep8Naming,PyUnusedLocal
     def _post_fit(
@@ -164,23 +160,26 @@ class DataFrameEstimatorWrapper(
             raise TypeError("arg y must be None or a Series")
 
     def __dir__(self) -> Iterable[str]:
-        return {*super().__dir__(), *self._base_estimator.__dir__()}
+        return {*super().__dir__(), *self._delegate_estimator.__dir__()}
 
     def __getattr__(self, name: str) -> Any:
         if name.startswith("_"):
             raise AttributeError(name)
         else:
-            return getattr(self._base_estimator, name)
+            return getattr(self._delegate_estimator, name)
 
     def __setattr__(self, name: str, value: Any) -> Any:
         if name.startswith("_"):
             super().__setattr__(name, value)
         else:
-            setattr(self._base_estimator, name, value)
+            setattr(self._delegate_estimator, name, value)
 
 
-class DataFrameTransformerWrapper(
-    DataFrameTransformer, DataFrameEstimatorWrapper[T_BaseTransformer], ABC
+class TransformerWrapperDF(
+    TransformerDF[T_Transformer],
+    BaseEstimatorWrapperDF[T_Transformer],
+    Generic[T_Transformer],
+    ABC,
 ):
     """
     Wraps a :class:`sklearn.base.TransformerMixin` and ensures that the X and y
@@ -200,9 +199,9 @@ class DataFrameTransformerWrapper(
         self._columns_original = None
 
     @property
-    def base_transformer(self) -> T_BaseTransformer:
+    def base_transformer(self) -> T_Transformer:
         """The base scikit-learn transformer"""
-        return self.base_estimator
+        return self.delegate_estimator
 
     # noinspection PyPep8Naming
     def transform(self, X: pd.DataFrame) -> pd.DataFrame:
@@ -314,13 +313,16 @@ class DataFrameTransformerWrapper(
         return self.base_transformer.inverse_transform(X)
 
 
-class DataFramePredictorWrapper(
-    DataFramePredictor, DataFrameEstimatorWrapper[T_BasePredictor], ABC
+class BasePredictorWrapperDF(
+    BasePredictorDF[T_Predictor],
+    BaseEstimatorWrapperDF[T_Predictor],
+    Generic[T_Predictor],
+    ABC,
 ):
     """
     Base class for sklearn regressors and classifiers that preserve data frames
 
-    :param `**kwargs`: arguments passed to :class:`.DataFrameEstimator` in ``__init__``
+    :param `**kwargs`: arguments passed to :class:`.BaseEstimatorDF` in ``__init__``
     """
 
     F_PREDICTION = "prediction"
@@ -333,7 +335,7 @@ class DataFramePredictorWrapper(
         Defaults to 1 if base predictor does not define property ``n_outputs_``.
         """
         if self.is_fitted:
-            return getattr(self.base_estimator, "n_outputs_", 1)
+            return getattr(self.delegate_estimator, "n_outputs_", 1)
         else:
             raise AttributeError("n_outputs not defined for unfitted predictor")
 
@@ -356,7 +358,7 @@ class DataFramePredictorWrapper(
 
         # noinspection PyUnresolvedReferences
         return self._prediction_to_series_or_frame(
-            X, self.base_estimator.predict(X, **predict_params)
+            X, self.delegate_estimator.predict(X, **predict_params)
         )
 
     # noinspection PyPep8Naming
@@ -374,7 +376,7 @@ class DataFramePredictorWrapper(
 
         # noinspection PyUnresolvedReferences
         result = self._prediction_to_series_or_frame(
-            X, self.base_estimator.fit_predict(X, y, **fit_params)
+            X, self.delegate_estimator.fit_predict(X, y, **fit_params)
         )
 
         self._post_fit(X, y, **fit_params)
@@ -398,7 +400,7 @@ class DataFramePredictorWrapper(
         :return: the score of the model
         """
         self._check_parameter_types(X, None)
-        return self.base_estimator.score(X, y, sample_weight)
+        return self.delegate_estimator.score(X, y, sample_weight)
 
     # noinspection PyPep8Naming
     def _prediction_to_series_or_frame(
@@ -425,16 +427,22 @@ class DataFramePredictorWrapper(
         )
 
 
-class DataFrameRegressorWrapper(
-    DataFrameRegressor, DataFramePredictorWrapper[T_BaseRegressor], ABC
+class RegressorWrapperDF(
+    RegressorDF[T_Regressor],
+    BasePredictorWrapperDF[T_Regressor],
+    Generic[T_Regressor],
+    ABC,
 ):
     """
     Wrapper around sklearn regressors that preserves data frames.
     """
 
 
-class DataFrameClassifierWrapper(
-    DataFrameClassifier, DataFramePredictorWrapper[T_BaseClassifier], ABC
+class ClassifierWrapperDF(
+    ClassifierDF[T_Classifier],
+    BasePredictorWrapperDF[T_Classifier],
+    Generic[T_Classifier],
+    ABC,
 ):
     """
     Wrapper around sklearn classifiers that preserves data frames.
@@ -448,7 +456,7 @@ class DataFrameClassifierWrapper(
         ``None`` if the base estimator has no `classes_` property.
         """
         if self.is_fitted:
-            return getattr(self.base_estimator, "classes_", None)
+            return getattr(self.delegate_estimator, "classes_", None)
         else:
             raise AttributeError("classes not defined for unfitted classifier")
 
@@ -464,7 +472,7 @@ class DataFrameClassifierWrapper(
 
         # noinspection PyUnresolvedReferences
         return self._prediction_with_class_labels(
-            X, self.base_estimator.predict_proba(X)
+            X, self.delegate_estimator.predict_proba(X)
         )
 
     # noinspection PyPep8Naming
@@ -481,7 +489,7 @@ class DataFrameClassifierWrapper(
 
         # noinspection PyUnresolvedReferences
         return self._prediction_with_class_labels(
-            X, self.base_estimator.predict_log_proba(X)
+            X, self.delegate_estimator.predict_log_proba(X)
         )
 
     # noinspection PyPep8Naming
@@ -496,7 +504,7 @@ class DataFrameClassifierWrapper(
 
         # noinspection PyUnresolvedReferences
         return self._prediction_with_class_labels(
-            X, self.base_estimator.decision_function(X)
+            X, self.delegate_estimator.decision_function(X)
         )
 
     # noinspection PyPep8Naming
@@ -533,11 +541,11 @@ class DataFrameClassifierWrapper(
 #
 
 
-class NDArrayTransformerDF(
-    DataFrameTransformerWrapper[T_BaseTransformer], Generic[T_BaseTransformer], ABC
+class NDArrayTransformerWrapperDF(
+    TransformerWrapperDF[T_Transformer], Generic[T_Transformer], ABC
 ):
     """
-    `DataFrameTransformer` whose base transformer only accepts numpy ndarrays.
+    `TransformerDF` whose base transformer only accepts numpy ndarrays.
 
     Wraps around the base transformer and converts the data frame to an array when
     needed.
@@ -546,7 +554,7 @@ class NDArrayTransformerDF(
     # noinspection PyPep8Naming
     def _base_fit(
         self, X: pd.DataFrame, y: Optional[pd.Series], **fit_params
-    ) -> T_BaseTransformer:
+    ) -> T_Transformer:
         # noinspection PyUnresolvedReferences
         return self.base_transformer.fit(X.values, y.values, **fit_params)
 
@@ -567,16 +575,16 @@ class NDArrayTransformerDF(
         return self.base_transformer.inverse_transform(X.values)
 
 
-class ColumnPreservingTransformer(
-    DataFrameTransformerWrapper[T_BaseTransformer], Generic[T_BaseTransformer], ABC
+class PersistentNamingTransformerWrapperDF(
+    TransformerWrapperDF[T_Transformer], Generic[T_Transformer], ABC
 ):
     """
     Transforms a data frame without changing column names, but possibly removing
     columns.
 
-    All output columns of a :class:`ColumnPreservingTransformer` have the same names as
-    their associated input columns. Some columns can be removed.
-    Implementations must define ``_make_base_estimator`` and ``_get_columns_out``.
+    All output columns of a :class:`PersistentNamingTransformerWrapperDF` have the same
+    names as their associated input columns. Some columns can be removed.
+    Implementations must define ``_make_delegate_estimator`` and ``_get_columns_out``.
     """
 
     @abstractmethod
@@ -590,14 +598,14 @@ class ColumnPreservingTransformer(
         return pd.Series(index=columns_out, data=columns_out.values)
 
 
-class ConstantColumnTransformer(
-    ColumnPreservingTransformer[T_BaseTransformer], Generic[T_BaseTransformer], ABC
+class PersistentColumnTransformerWrapperDF(
+    PersistentNamingTransformerWrapperDF[T_Transformer], Generic[T_Transformer], ABC
 ):
     """
     Transforms a data frame keeping exactly the same columns.
 
-    A ConstantColumnTransformer does not add, remove, or rename any of the input
-    columns. Implementations must define ``_make_base_estimator``.
+    A ``PersistentColumnTransformerWrapperDF`` does not add, remove, or rename any of the
+    input columns.
     """
 
     def _get_columns_out(self) -> pd.Index:
@@ -610,29 +618,29 @@ class ConstantColumnTransformer(
 
 
 def df_estimator(
-    base_estimator: Type[T_BaseEstimator] = None,
+    delegate_estimator: Type[T_Estimator] = None,
     *,
     df_estimator_type: Type[
-        DataFrameEstimatorWrapper[T_BaseEstimator]
-    ] = DataFrameEstimatorWrapper[T_BaseEstimator],
+        BaseEstimatorWrapperDF[T_Estimator]
+    ] = BaseEstimatorWrapperDF[T_Estimator],
 ) -> Union[
-    Callable[[Type[T_BaseEstimator]], Type[DataFrameEstimatorWrapper[T_BaseEstimator]]],
-    Type[DataFrameEstimatorWrapper[T_BaseEstimator]],
+    Callable[[Type[T_Estimator]], Type[BaseEstimatorWrapperDF[T_Estimator]]],
+    Type[BaseEstimatorWrapperDF[T_Estimator]],
 ]:
     """
     Class decorator wrapping a :class:`sklearn.base.BaseEstimator` in a
-    :class:`DataFrameEstimatorWrapper`.
-    :param base_estimator: the estimator class to wrap
+    :class:`BaseEstimatorWrapperDF`.
+    :param delegate_estimator: the estimator class to wrap
     :param df_estimator_type: optional parameter indicating the \
-                              :class:`DataFrameEstimatorWrapper` class to be used for \
-                              wrapping; defaults to :class:`DataFrameEstimatorWrapper`
-    :return: the resulting `DataFrameEstimatorWrapper` with ``base_estimator`` as \
+                              :class:`BaseEstimatorWrapperDF` class to be used for \
+                              wrapping; defaults to :class:`BaseEstimatorWrapperDF`
+    :return: the resulting `BaseEstimatorWrapperDF` with ``base_estimator`` as \
              the base estimator
     """
 
     def _decorate(
-        decoratee: Type[T_BaseEstimator]
-    ) -> Type[DataFrameEstimatorWrapper[T_BaseEstimator]]:
+        decoratee: Type[T_Estimator]
+    ) -> Type[BaseEstimatorWrapperDF[T_Estimator]]:
 
         # determine the sklearn estimator we are wrapping
 
@@ -653,18 +661,18 @@ def df_estimator(
         @wraps(decoratee, updated=())
         class _DataFrameEstimator(df_estimator_type):
             @classmethod
-            def _make_base_estimator(cls, **kwargs) -> T_BaseEstimator:
+            def _make_delegate_estimator(cls, **kwargs) -> T_Estimator:
                 # noinspection PyArgumentList
                 return sklearn_base_estimator(**kwargs)
 
         return _DataFrameEstimator
 
-    if not issubclass(df_estimator_type, DataFrameEstimatorWrapper):
+    if not issubclass(df_estimator_type, BaseEstimatorWrapperDF):
         raise ValueError(
             f"arg df_transformer_type not a "
-            f"{DataFrameEstimatorWrapper.__name__} class: {df_estimator_type}"
+            f"{BaseEstimatorWrapperDF.__name__} class: {df_estimator_type}"
         )
-    if base_estimator is None:
+    if delegate_estimator is None:
         return _decorate
     else:
-        return _decorate(base_estimator)
+        return _decorate(delegate_estimator)
