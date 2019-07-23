@@ -2,7 +2,7 @@
 MVC-based classes for drawing charts.
 """
 from abc import ABC, abstractmethod
-from typing import Generic, Optional, Tuple, TypeVar
+from typing import Generic, Tuple, TypeVar
 
 from matplotlib.axes import Axes
 
@@ -16,12 +16,14 @@ T_Style = TypeVar("T_Style", bound="ChartStyle")
 
 
 class ChartDrawer(Generic[T_Model, T_Style], ABC):
-    """Chart drawer.
+    """
+    Base class for chart drawers.
 
-    Implementations must define :meth:`ChartDrawer._draw`.
+    Implementations must define a :meth:`~ChartDrawer._draw` method.
+
     :param title: title of the chart
-    :param model: the data model of the chart
-    :param style: the chart style of the chart
+    :param model: the model containing the underlying data represented by the chart
+    :param style: the style of the chart
     """
 
     def __init__(self, title: str, model: T_Model, style: T_Style) -> None:
@@ -42,6 +44,7 @@ class ChartDrawer(Generic[T_Model, T_Style], ABC):
         return self._style
 
     def draw(self) -> None:
+        """Draw the chart."""
         self.style.draw_title(self._title)
         self._draw()
 
@@ -57,9 +60,9 @@ class ChartDrawer(Generic[T_Model, T_Style], ABC):
 
 class ChartStyle(ABC):
     """
-    Chart style.
+    Base class for a drawer style.
 
-    Implementations must define :meth:`ChartStyle.draw_title`.
+    Implementations must define :meth:`~ChartStyle.draw_title`.
     """
 
     @abstractmethod
@@ -72,11 +75,13 @@ class ChartStyle(ABC):
 
 
 class MatplotStyle(ChartStyle, ABC):
+    """Matplotlib drawer style.
+
+    Implementations must define :meth:`~ChartStyle.draw_title`.
+    :param ax: drawn axes
     """
 
-    """
-
-    def __init__(self, ax: Optional[Axes]) -> None:
+    def __init__(self, ax: Axes) -> None:
         super().__init__()
         self._ax = ax
 
