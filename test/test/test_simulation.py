@@ -7,7 +7,7 @@ from gamma import Sample
 from gamma.model.prediction import RegressorFitCV
 from gamma.model.selection import ModelEvaluation, ModelGrid, ModelRanker
 from gamma.model.validation import CircularCrossValidator
-from gamma.sklearndf import DataFrameTransformer
+from gamma.sklearndf import TransformerDF
 from gamma.yieldengine.partition import ContinuousRangePartitioning
 from gamma.yieldengine.simulation import UnivariateSimulation
 
@@ -21,7 +21,7 @@ def test_univariate_simulation(
     batch_table: pd.DataFrame,
     regressor_grids: Iterable[ModelGrid],
     sample: Sample,
-    simple_preprocessor: DataFrameTransformer,
+    simple_preprocessor: TransformerDF,
     available_cpus: int,
 ) -> None:
 
