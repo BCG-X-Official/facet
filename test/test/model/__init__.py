@@ -1,6 +1,6 @@
 from typing import Sequence
 
-from gamma.sklearndf import DataFrameTransformer
+from gamma.sklearndf import TransformerDF
 from gamma.sklearndf.transformation import (
     ColumnTransformerDF,
     OneHotEncoderDF,
@@ -14,7 +14,7 @@ STEP_ONE_HOT_ENCODE = "one-hot-encode"
 def make_simple_transformer(
     impute_median_columns: Sequence[str] = None,
     one_hot_encode_columns: Sequence[str] = None,
-) -> DataFrameTransformer:
+) -> TransformerDF:
     column_transforms = []
 
     if impute_median_columns is not None and len(impute_median_columns) > 0:

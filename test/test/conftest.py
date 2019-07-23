@@ -12,7 +12,7 @@ from sklearn.utils import Bunch
 from gamma import Sample
 from gamma.model import ModelPipelineDF
 from gamma.model.selection import ModelGrid
-from gamma.sklearndf import DataFrameTransformer
+from gamma.sklearndf import TransformerDF
 from gamma.sklearndf.regression import (
     AdaBoostRegressorDF,
     DecisionTreeRegressorDF,
@@ -139,7 +139,7 @@ def sample(batch_table: pd.DataFrame) -> Sample:
 
 
 @pytest.fixture
-def simple_preprocessor(sample: Sample) -> DataFrameTransformer:
+def simple_preprocessor(sample: Sample) -> TransformerDF:
     return make_simple_transformer(
         impute_median_columns=sample.features_by_type(Sample.DTYPE_NUMERICAL).columns,
         one_hot_encode_columns=sample.features_by_type(Sample.DTYPE_OBJECT).columns,
