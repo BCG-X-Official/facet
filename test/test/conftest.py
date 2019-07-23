@@ -10,9 +10,9 @@ from sklearn import datasets
 from sklearn.utils import Bunch
 
 from gamma import Sample
-from gamma.model import ModelPipelineDF
 from gamma.model.selection import ModelGrid
 from gamma.sklearndf import TransformerDF
+from gamma.sklearndf.pipeline import ModelPipelineDF
 from gamma.sklearndf.regression import (
     AdaBoostRegressorDF,
     DecisionTreeRegressorDF,

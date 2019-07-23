@@ -3,11 +3,11 @@ import pytest
 from matplotlib.pyplot import figure
 
 from gamma import Sample
-from gamma.model import ModelPipelineDF
 from gamma.model.inspection import ModelInspector
 from gamma.model.prediction import RegressorFitCV
 from gamma.model.validation import CircularCrossValidator
 from gamma.sklearndf import TransformerDF
+from gamma.sklearndf.pipeline import ModelPipelineDF
 from gamma.sklearndf.regression import LGBMRegressorDF
 from gamma.viz.dendrogram import DendrogramDrawer, FeatMapStyle, LineStyle
 
