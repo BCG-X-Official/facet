@@ -17,6 +17,8 @@ from gamma.sklearndf._wrapper import (
 
 log = logging.getLogger(__name__)
 
+__all__ = ["OutlierRemoverDF", "BorutaDF"]
+
 
 class OutlierRemoverDF(TransformerDF["OutlierRemoverDF"], BaseEstimator):
     """

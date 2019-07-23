@@ -50,6 +50,51 @@ from gamma.sklearndf._wrapper import ClassifierWrapperDF, df_estimator
 
 log = logging.getLogger(__name__)
 
+
+# [sym for sym in dir(classification) if sym.endswith("DF")]
+__all__ = [
+    "AdaBoostClassifierDF",
+    "BaggingClassifierDF",
+    "BernoulliNBDF",
+    "CalibratedClassifierCVDF",
+    "ClassifierChainDF",
+    "ClassifierDF",
+    "ClassifierWrapperDF",
+    "ComplementNBDF",
+    "DecisionTreeClassifierDF",
+    "DummyClassifierDF",
+    "ExtraTreeClassifierDF",
+    "ExtraTreesClassifierDF",
+    "GaussianNBDF",
+    "GaussianProcessClassifierDF",
+    "GradientBoostingClassifierDF",
+    "KNeighborsClassifierDF",
+    "LabelPropagationDF",
+    "LabelSpreadingDF",
+    "LinearDiscriminantAnalysisDF",
+    "LinearSVCDF",
+    "LogisticRegressionCVDF",
+    "LogisticRegressionDF",
+    "MLPClassifierDF",
+    "MultiOutputClassifierDF",
+    "MultinomialNBDF",
+    "NearestCentroidDF",
+    "NuSVCDF",
+    "OneVsOneClassifierDF",
+    "OneVsRestClassifierDF",
+    "OutputCodeClassifierDF",
+    "PassiveAggressiveClassifierDF",
+    "PerceptronDF",
+    "QuadraticDiscriminantAnalysisDF",
+    "RadiusNeighborsClassifierDF",
+    "RandomForestClassifierDF",
+    "RidgeClassifierCVDF",
+    "RidgeClassifierDF",
+    "SGDClassifierDF",
+    "SVCDF",
+    "VotingClassifierDF",
+]
+
 #
 # decorator for wrapping the sklearn classifier classes
 #
