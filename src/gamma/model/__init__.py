@@ -9,26 +9,21 @@ A :class:`ModelPipelineDF` is a special case of a pipeline with two steps:
 from typing import *
 
 import pandas as pd
-from sklearn import clone
 from sklearn.base import BaseEstimator
 
 from gamma import ListLike
-from gamma.sklearndf import (
-    DataFrameClassifier,
-    DataFramePredictor,
-    DataFrameRegressor,
-    DataFrameTransformer,
-)
+from gamma.sklearndf import BasePredictorDF, ClassifierDF, RegressorDF, TransformerDF
 
 __all__ = ["ModelPipelineDF"]
 
-T_PredictorDF = TypeVar(
-    "PredictorDF", bound=Union[DataFrameRegressor, DataFrameClassifier]
-)
+T_PredictorDF = TypeVar("PredictorDF", bound=Union[RegressorDF, ClassifierDF])
 
 
 class ModelPipelineDF(
-    BaseEstimator, DataFrameRegressor, DataFrameClassifier, Generic[T_PredictorDF]
+    RegressorDF[T_PredictorDF],
+    ClassifierDF[T_PredictorDF],
+    BaseEstimator,
+    Generic[T_PredictorDF],
 ):
     """
     A data frame enabled model pipeline with an optional preprocessing step and a
@@ -36,31 +31,31 @@ class ModelPipelineDF(
 
     :param preprocessing: the preprocessing step in the pipeline (defaults to ``None``)
     :param predictor: the base estimator used in the pipeline
-    :type predictor: :class:`.DataFramePredictor`
+    :type predictor: :class:`.BasePredictorDF`
     """
 
     def __init__(
-        self,
-        predictor: T_PredictorDF,
-        preprocessing: Optional[DataFrameTransformer] = None,
+        self, predictor: T_PredictorDF, preprocessing: Optional[TransformerDF] = None
     ) -> None:
         super().__init__()
 
-        if preprocessing is not None and not isinstance(
-            preprocessing, DataFrameTransformer
-        ):
+        if preprocessing is not None and not isinstance(preprocessing, TransformerDF):
             raise TypeError(
-                "arg preprocessing expected to be a DataFrameTransformer but is a "
+                "arg preprocessing expected to be a TransformerDF but is a "
                 f"{type(preprocessing).__name__}"
             )
-        if not isinstance(predictor, DataFramePredictor):
+        if not isinstance(predictor, BasePredictorDF):
             raise TypeError(
-                "arg predictor expected to be a DataFramePredictor but is a "
+                "arg predictor expected to be a BasePredictorDF but is a "
                 f"{type(predictor).__name__}"
             )
 
         self.preprocessing = preprocessing
         self.predictor = predictor
+
+    @property
+    def delegate_estimator(self) -> T_PredictorDF:
+        return self
 
     # noinspection PyPep8Naming
     def fit(
@@ -94,21 +89,19 @@ class ModelPipelineDF(
 
     # noinspection PyPep8Naming
     def predict_proba(self, X: pd.DataFrame) -> Union[pd.DataFrame, List[pd.DataFrame]]:
-        return cast(DataFrameClassifier, self.predictor).predict_proba(
-            self._pre_transform(X)
-        )
+        return cast(ClassifierDF, self.predictor).predict_proba(self._pre_transform(X))
 
     # noinspection PyPep8Naming
     def predict_log_proba(
         self, X: pd.DataFrame
     ) -> Union[pd.DataFrame, List[pd.DataFrame]]:
-        return cast(DataFrameClassifier, self.predictor).predict_log_proba(
+        return cast(ClassifierDF, self.predictor).predict_log_proba(
             self._pre_transform(X)
         )
 
     # noinspection PyPep8Naming
     def decision_function(self, X: pd.DataFrame) -> Union[pd.Series, pd.DataFrame]:
-        return cast(DataFrameClassifier, self.predictor).decision_function(
+        return cast(ClassifierDF, self.predictor).decision_function(
             self._pre_transform(X)
         )
 
@@ -128,7 +121,7 @@ class ModelPipelineDF(
 
     @property
     def classes(self) -> Optional[ListLike[Any]]:
-        return cast(DataFrameClassifier, self.predictor).classes
+        return cast(ClassifierDF, self.predictor).classes
 
     @property
     def n_outputs(self) -> int:
@@ -149,18 +142,3 @@ class ModelPipelineDF(
             return self.preprocessing.fit_transform(X, y, **fit_params)
         else:
             return X
-
-    def clone(self, parameters: Optional[Dict[str, Any]] = None) -> "ModelPipelineDF":
-        """
-        Create an unfitted clone this model with new parameters.
-
-        :param parameters: parameters to set in the cloned the model (optional)
-        :return: the cloned `ModelPipelineDF`
-        """
-
-        copy = clone(self)
-
-        if parameters is not None:
-            copy.set_params(**parameters)
-
-        return copy

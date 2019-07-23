@@ -9,13 +9,16 @@ import pandas as pd
 from boruta import BorutaPy
 from sklearn.base import BaseEstimator
 
-from gamma.sklearndf import DataFrameTransformer
-from gamma.sklearndf._wrapper import ColumnPreservingTransformer, NDArrayTransformerDF
+from gamma.sklearndf import TransformerDF
+from gamma.sklearndf._wrapper import (
+    NDArrayTransformerWrapperDF,
+    PersistentNamingTransformerWrapperDF,
+)
 
 log = logging.getLogger(__name__)
 
 
-class OutlierRemoverDF(DataFrameTransformer, BaseEstimator):
+class OutlierRemoverDF(TransformerDF["OutlierRemoverDF"], BaseEstimator):
     """
     Remove outliers according to Tukey's method.
 
@@ -35,6 +38,11 @@ class OutlierRemoverDF(DataFrameTransformer, BaseEstimator):
         self.threshold_low_ = None
         self.threshold_high_ = None
         self.columns_original_ = None
+
+    @property
+    def delegate_estimator(self) -> "OutlierRemoverDF":
+        """Return """
+        return self
 
     # noinspection PyPep8Naming
     def fit(
@@ -79,7 +87,10 @@ class OutlierRemoverDF(DataFrameTransformer, BaseEstimator):
         return self.columns_original_
 
 
-class BorutaDF(NDArrayTransformerDF[BorutaPy], ColumnPreservingTransformer[BorutaPy]):
+class BorutaDF(
+    NDArrayTransformerWrapperDF[BorutaPy],
+    PersistentNamingTransformerWrapperDF[BorutaPy],
+):
     """
     Feature Selection with the Boruta method with dataframes as input and output.
 
@@ -157,7 +168,7 @@ class BorutaDF(NDArrayTransformerDF[BorutaPy], ColumnPreservingTransformer[Borut
         )
 
     @classmethod
-    def _make_base_estimator(cls, **kwargs) -> BorutaPy:
+    def _make_delegate_estimator(cls, **kwargs) -> BorutaPy:
         return BorutaPy(**kwargs)
 
     def _get_columns_out(self) -> pd.Index:
