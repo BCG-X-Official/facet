@@ -2,21 +2,22 @@
 """
 Wrap scikit-learn `BaseEstimator` to return dataframes instead of numpy arrays.
 
-The abstract class :class:`DataFrameEstimator` wraps
+The abstract class :class:`BaseEstimatorDF` wraps
 :class:`~sklearn.base.BaseEstimator` so that the ``predict``
 and ``transform`` methods of the implementations return dataframe.
-:class:`DataFrameEstimator` has an attribute :attr:`~DataFrameEstimator.columns_in`
+:class:`BaseEstimatorDF` has an attribute :attr:`~BaseEstimatorDF.columns_in`
 which is the index of the columns of the input dataframe.
 """
 
 import logging
 from abc import ABC, abstractmethod
-from typing import Any, List, Optional, Union
+from typing import *
 
 import pandas as pd
 from sklearn.base import (
     BaseEstimator,
     ClassifierMixin,
+    clone,
     RegressorMixin,
     TransformerMixin,
 )
@@ -25,8 +26,26 @@ from gamma import ListLike, Sample
 
 log = logging.getLogger(__name__)
 
+#
+# type variables
+#
 
-class DataFrameEstimator(ABC):
+# noinspection PyShadowingBuiltins
+_T = TypeVar("_T")
+
+T_Estimator = TypeVar("T_Estimator", bound=BaseEstimator)
+T_Transformer = TypeVar("T_Transformer", bound=Union[BaseEstimator, TransformerMixin])
+T_Predictor = TypeVar("T_Predictor", bound=Union[RegressorMixin, ClassifierMixin])
+T_Regressor = TypeVar("T_Regressor", bound=RegressorMixin)
+T_Classifier = TypeVar("T_Classifier", bound=ClassifierMixin)
+
+
+#
+# class definitions
+#
+
+
+class BaseEstimatorDF(ABC, Generic[T_Estimator]):
     def __init__(self, **kwargs) -> None:
         super().__init__()
         if not isinstance(self, BaseEstimator):
@@ -36,11 +55,22 @@ class DataFrameEstimator(ABC):
             )
         self._columns_in = None
 
+    @property
+    @abstractmethod
+    def delegate_estimator(self) -> T_Estimator:
+        """
+        If this estimator is derived from a non-data frame estimator, return the
+        original estimator; otherwise, return ``self``.
+
+        :return: the original estimator that this estimator delegates to
+        """
+        pass
+
     # noinspection PyPep8Naming
     @abstractmethod
     def fit(
         self, X: pd.DataFrame, y: Optional[pd.Series] = None, **fit_params
-    ) -> "DataFrameEstimator":
+    ) -> "BaseEstimatorDF":
         pass
 
     @property
@@ -55,8 +85,15 @@ class DataFrameEstimator(ABC):
         """The names of the input columns this estimator was fitted on"""
         pass
 
+    def clone(self: _T) -> _T:
+        """
+        Make an unfitted clone of this estimator.
+        :return: the unfitted clone
+        """
+        return clone(self)
 
-class DataFramePredictor(DataFrameEstimator, ABC):
+
+class BasePredictorDF(BaseEstimatorDF[T_Predictor], Generic[T_Predictor], ABC):
     @property
     @abstractmethod
     def n_outputs(self) -> int:
@@ -85,64 +122,21 @@ class DataFramePredictor(DataFrameEstimator, ABC):
         pass
 
 
-class _DataFramePredictor(DataFramePredictor):
-    """Dummy data frame predictor class, for type hinting only."""
-
-    @property
-    def n_outputs(self) -> int:
-        """Dummy implementation."""
-        raise NotImplementedError()
-
+class TransformerDF(
+    BaseEstimatorDF[T_Transformer], TransformerMixin, Generic[T_Transformer], ABC
+):
     # noinspection PyPep8Naming
-    def predict(
-        self, X: pd.DataFrame, **predict_params
-    ) -> Union[pd.Series, pd.DataFrame]:
-        """Dummy implementation."""
-        raise NotImplementedError()
-
-    # noinspection PyPep8Naming
-    def fit_predict(self, X: pd.DataFrame, y: pd.Series, **fit_params) -> pd.Series:
-        """Dummy implementation."""
-        raise NotImplementedError()
-
-    # noinspection PyPep8Naming
-    def score(
-        self,
-        X: pd.DataFrame,
-        y: Optional[pd.Series] = None,
-        sample_weight: Optional[Any] = None,
-    ) -> float:
-        """Dummy implementation."""
-        raise NotImplementedError()
-
-    # noinspection PyPep8Naming
-    def fit(
-        self, X: pd.DataFrame, y: Optional[pd.Series] = None, **fit_params
-    ) -> "DataFramePredictor":
-        """Dummy implementation."""
-        raise NotImplementedError()
-
-    @property
-    def is_fitted(self) -> bool:
-        """Dummy implementation."""
-        raise NotImplementedError()
-
-    @property
-    def columns_in(self) -> pd.Index:
-        """Dummy implementation."""
-        raise NotImplementedError()
-
-
-class DataFrameTransformer(DataFrameEstimator, TransformerMixin, ABC):
     @abstractmethod
     def transform(self, X: pd.DataFrame) -> pd.DataFrame:
         pass
 
+    # noinspection PyPep8Naming
     def fit_transform(
         self, X: pd.DataFrame, y: Optional[pd.Series] = None, **fit_params
     ) -> pd.DataFrame:
         return self.fit(X, y, **fit_params).transform(X)
 
+    # noinspection PyPep8Naming
     @abstractmethod
     def inverse_transform(self, X: pd.DataFrame) -> pd.DataFrame:
         pass
@@ -172,13 +166,17 @@ class DataFrameTransformer(DataFrameEstimator, TransformerMixin, ABC):
         return self.columns_original.index
 
 
-class DataFrameRegressor(DataFramePredictor, RegressorMixin):
+class RegressorDF(
+    BasePredictorDF[T_Regressor], RegressorMixin, Generic[T_Regressor], ABC
+):
     """
     Sklearn regressor that preserves data frames.
     """
 
 
-class DataFrameClassifier(DataFramePredictor, ClassifierMixin):
+class ClassifierDF(
+    BasePredictorDF[T_Classifier], ClassifierMixin, Generic[T_Classifier], ABC
+):
     """
     Sklearn classifier that preserves data frames.
     """
