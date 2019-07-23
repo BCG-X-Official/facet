@@ -7,7 +7,6 @@ import pandas as pd
 from sklearn import datasets
 
 from gamma import Sample
-from gamma.model import ModelPipelineDF
 from gamma.model.selection import (
     ModelEvaluation,
     ModelGrid,
@@ -16,6 +15,7 @@ from gamma.model.selection import (
 )
 from gamma.model.validation import CircularCrossValidator
 from gamma.sklearndf.classification import SVCDF
+from gamma.sklearndf.pipeline import ModelPipelineDF
 
 log = logging.getLogger(__name__)
 
@@ -67,7 +67,7 @@ def test_model_ranker_no_preprocessing(available_cpus: int) -> None:
             pipeline=ModelPipelineDF(
                 predictor=SVCDF(gamma="scale"), preprocessing=None
             ),
-            estimator_parameters={"kernel": ("linear", "rbf"), "C": [1, 10]},
+            predictor_parameters={"kernel": ("linear", "rbf"), "C": [1, 10]},
         )
     ]
 
