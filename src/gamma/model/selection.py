@@ -72,7 +72,7 @@ class ModelGrid:
         return self._pipeline
 
     @property
-    def estimator_parameters(self) -> ParameterGrid:
+    def predictor_parameters(self) -> ParameterGrid:
         """The parameter grid for the estimator."""
         return self._predictor_parameters
 
