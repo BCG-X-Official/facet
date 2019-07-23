@@ -308,7 +308,7 @@ class ModelRanker:
 
         scorings = [
             ModelEvaluation(
-                model=grid.pipeline.clone(parameters=params),
+                model=grid.pipeline.clone().set_params(**params),
                 parameters=params,
                 scoring=scoring,
                 # compute the final score using function defined above:
