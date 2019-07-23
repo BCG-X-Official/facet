@@ -43,7 +43,7 @@ def test_prediction_classifier(available_cpus: int, iris_sample: Sample) -> None
             pipeline=ModelPipelineDF(
                 predictor=RandomForestClassifierDF(), preprocessing=None
             ),
-            estimator_parameters={"n_estimators": [50, 80], "random_state": [42]},
+            predictor_parameters={"n_estimators": [50, 80], "random_state": [42]},
         )
     ]
 
