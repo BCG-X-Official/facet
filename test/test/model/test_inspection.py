@@ -51,11 +51,11 @@ def test_model_inspection(available_cpus: int, boston_sample: Sample) -> None:
             pipeline=ModelPipelineDF(
                 predictor=SVRDF(gamma="scale"), preprocessing=None
             ),
-            estimator_parameters={"kernel": ("linear", "rbf"), "C": [1, 10]},
+            predictor_parameters={"kernel": ("linear", "rbf"), "C": [1, 10]},
         ),
         ModelGrid(
             pipeline=ModelPipelineDF(predictor=LGBMRegressorDF(), preprocessing=None),
-            estimator_parameters={
+            predictor_parameters={
                 "max_depth": (1, 2, 5),
                 "min_split_gain": (0.1, 0.2, 0.5),
                 "num_leaves": (2, 3),
@@ -220,7 +220,7 @@ def test_model_inspection_classifier(available_cpus: int, iris_sample: Sample) -
             pipeline=ModelPipelineDF(
                 predictor=RandomForestClassifierDF(), preprocessing=None
             ),
-            estimator_parameters={"n_estimators": [50, 80], "random_state": [42]},
+            predictor_parameters={"n_estimators": [50, 80], "random_state": [42]},
         )
     ]
 
