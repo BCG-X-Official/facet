@@ -1,7 +1,7 @@
 # coding=utf-8
 """
-scikit-learn pipeline implementing the DataFrameTransformer, DataFrameRegressor,
-and DataFrameClassifier interfaces.
+scikit-learn pipeline implementing the TransformerDF, RegressorDF,
+and ClassifierDF interfaces.
 """
 
 
@@ -13,19 +13,19 @@ from sklearn.pipeline import Pipeline
 from sklearn.utils import Bunch
 
 from gamma.sklearndf._wrapper import (
-    DataFrameClassifierWrapper,
-    DataFrameEstimatorWrapper,
-    DataFrameRegressorWrapper,
-    DataFrameTransformerWrapper,
+    BaseEstimatorWrapperDF,
+    ClassifierWrapperDF,
+    RegressorWrapperDF,
+    TransformerWrapperDF,
 )
 
 log = logging.getLogger(__name__)
 
 
 class PipelineDF(
-    DataFrameTransformerWrapper[Pipeline],
-    DataFrameRegressorWrapper[Pipeline],
-    DataFrameClassifierWrapper[Pipeline],
+    TransformerWrapperDF[Pipeline],
+    RegressorWrapperDF[Pipeline],
+    ClassifierWrapperDF[Pipeline],
 ):
     """
     Wrapper around :class:`sklearn.pipeline.Pipeline` with dataframes in input and
@@ -42,14 +42,14 @@ class PipelineDF(
     def _validate_steps(self) -> None:
         for name, transformer in self._transform_steps():
             if transformer is not None and not isinstance(
-                transformer, DataFrameTransformerWrapper
+                transformer, TransformerWrapperDF
             ):
                 raise ValueError(
-                    f"expected all transformers to implement DataFrameTransformerWrapper, but "
+                    f"expected all transformers to implement TransformerWrapperDF, but "
                     f"step '{name}' is a {type(transformer).__name__}"
                 )
 
-    def _transform_steps(self) -> List[Tuple[str, DataFrameTransformerWrapper]]:
+    def _transform_steps(self) -> List[Tuple[str, TransformerWrapperDF]]:
         pipeline = self.base_transformer
 
         steps = pipeline.steps
@@ -68,7 +68,7 @@ class PipelineDF(
         return transform_steps
 
     @classmethod
-    def _make_base_estimator(cls, **kwargs) -> Pipeline:
+    def _make_delegate_estimator(cls, **kwargs) -> Pipeline:
         return Pipeline(**kwargs)
 
     def _get_columns_original(self) -> pd.Series:
@@ -95,7 +95,7 @@ class PipelineDF(
         return pd.Series(index=_columns_out, data=_columns_original)
 
     @property
-    def steps(self) -> List[Tuple[str, DataFrameEstimatorWrapper]]:
+    def steps(self) -> List[Tuple[str, BaseEstimatorWrapperDF]]:
         """
         The ``steps`` attribute of the underlying :class:`~sklearn.pipeline.Pipeline`.
 
@@ -116,7 +116,7 @@ class PipelineDF(
         """The number of steps of the pipeline."""
         return len(self.base_transformer.steps)
 
-    def __getitem__(self, ind: Union[slice, int, str]) -> DataFrameEstimatorWrapper:
+    def __getitem__(self, ind: Union[slice, int, str]) -> BaseEstimatorWrapperDF:
         """
         Return a sub-pipeline or a single estimator in the pipeline
 

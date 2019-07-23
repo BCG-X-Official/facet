@@ -1,23 +1,16 @@
 import numpy as np
 import pandas as pd
-from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 
-from gamma.sklearndf._wrapper import (
-    DataFrameClassifierWrapper,
-    DataFrameRegressorWrapper,
-)
+from gamma.sklearndf.classification import RandomForestClassifierDF
+from gamma.sklearndf.regression import RandomForestRegressorDF
 
 
 def test_dataframe_predictor_classifier(
     iris_df: pd.DataFrame, iris_target: str
 ) -> None:
-    # implement a lightweight DataFramePredictorWrapper for RandomForestClassifier...
-    class rf_predictor_df(DataFrameClassifierWrapper[RandomForestClassifier]):
-        @classmethod
-        def _make_base_estimator(cls, **kwargs) -> RandomForestClassifier:
-            return RandomForestClassifier(**kwargs)
+    # implement a lightweight BasePredictorWrapperDF for RandomForestClassifier...
 
-    classifier_df = rf_predictor_df()
+    classifier_df = RandomForestClassifierDF()
 
     x = iris_df.drop(columns=iris_target)
     y = iris_df.loc[:, iris_target]
@@ -47,13 +40,9 @@ def test_dataframe_predictor_classifier(
 def test_dataframe_predictor_regressor(
     boston_df: pd.DataFrame, boston_target: str
 ) -> None:
-    # implement a lightweight DataFrameRegressorWrapper for RandomForestRegressor...
-    class rf_predictor_df(DataFrameRegressorWrapper[RandomForestRegressor]):
-        @classmethod
-        def _make_base_estimator(cls, **kwargs) -> RandomForestRegressor:
-            return RandomForestRegressor(**kwargs)
+    # implement a lightweight RegressorWrapperDF for RandomForestRegressor...
 
-    classifier_df = rf_predictor_df()
+    classifier_df = RandomForestRegressorDF()
 
     x = boston_df.drop(columns=boston_target)
     y = boston_df.loc[:, boston_target]
