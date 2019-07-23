@@ -20,6 +20,8 @@ from gamma.sklearndf._wrapper import (
 
 log = logging.getLogger(__name__)
 
+__all__ = ["PipelineDF"]
+
 
 class PipelineDF(
     ClassifierWrapperDF[Pipeline],

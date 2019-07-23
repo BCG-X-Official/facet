@@ -34,7 +34,17 @@ from gamma.sklearndf import (
 
 log = logging.getLogger(__name__)
 
-
+__all__ = [
+    "BaseEstimatorWrapperDF",
+    "BasePredictorWrapperDF",
+    "RegressorWrapperDF",
+    "ClassifierWrapperDF",
+    "TransformerWrapperDF",
+    "PersistentNamingTransformerWrapperDF",
+    "PersistentColumnTransformerWrapperDF",
+    "NDArrayTransformerWrapperDF",
+    "df_estimator",
+]
 #
 # base wrapper classes
 #
