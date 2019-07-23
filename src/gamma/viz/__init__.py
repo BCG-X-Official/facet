@@ -16,6 +16,13 @@ T_Style = TypeVar("T_Style", bound="ChartStyle")
 
 
 class ChartDrawer(Generic[T_Model, T_Style], ABC):
+    """Chart drawer.
+
+    :param title: title of the chart
+    :param model: the data model of the chart
+    :param style: the chart style of the chart
+    """
+
     def __init__(self, title: str, model: T_Model, style: T_Style) -> None:
         self._title = title
         self._model = model
@@ -48,6 +55,12 @@ class ChartDrawer(Generic[T_Model, T_Style], ABC):
 
 
 class ChartStyle(ABC):
+    """
+    Chart style.
+
+    Implementations must define :meth:`ChartStyle.draw_title`.
+    """
+
     @abstractmethod
     def draw_title(self, title: str) -> None:
         """
@@ -58,6 +71,10 @@ class ChartStyle(ABC):
 
 
 class MatplotStyle(ChartStyle, ABC):
+    """
+
+    """
+
     def __init__(self, ax: Axes) -> None:
         super().__init__()
         self._ax = ax
