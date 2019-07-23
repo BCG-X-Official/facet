@@ -16,6 +16,7 @@ from gamma.yieldengine.simulation import UnivariateSimulation
 T_RangePartitioning = TypeVar("T_RangePartitioning", bound=RangePartitioning)
 
 DEFAULT_PARTITIONING = ContinuousRangePartitioning
+from gamma.yieldengine.partition import DEFAULT_MAX_PARTITIONS
 
 
 class SimulationData:
@@ -47,7 +48,7 @@ class SimulationData:
         self,
         model: PredictorFitCV,
         feature: str,
-        max_partitions: Optional[int] = None,
+        max_partitions: Optional[int] = DEFAULT_MAX_PARTITIONS,
         lower_bound: Optional[NumericType] = None,
         upper_bound: Optional[NumericType] = None,
         partition_type: Optional[T_RangePartitioning] = None,
