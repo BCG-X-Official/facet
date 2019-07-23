@@ -34,7 +34,17 @@ from gamma.sklearndf import (
 
 log = logging.getLogger(__name__)
 
-
+__all__ = [
+    "BaseEstimatorWrapperDF",
+    "BasePredictorWrapperDF",
+    "RegressorWrapperDF",
+    "ClassifierWrapperDF",
+    "TransformerWrapperDF",
+    "PersistentNamingTransformerWrapperDF",
+    "PersistentColumnTransformerWrapperDF",
+    "NDArrayTransformerWrapperDF",
+    "df_estimator",
+]
 #
 # base wrapper classes
 #
@@ -316,6 +326,23 @@ class BasePredictorWrapperDF(
     """
 
     F_PREDICTION = "prediction"
+
+    @classmethod
+    def from_fitted(
+        cls: "Type[BasePredictorWrapperDF[T_Predictor]]",
+        predictor: T_Predictor,
+        columns_in: pd.Index,
+    ) -> "BasePredictorWrapperDF[T_Predictor]":
+        class _FittedPredictor(cls):
+            def __init__(self) -> None:
+                super().__init__()
+                self._columns_in = columns_in
+
+            @classmethod
+            def _make_delegate_estimator(cls, **kwargs) -> T_Predictor:
+                return predictor
+
+        return _FittedPredictor()
 
     @property
     def n_outputs(self) -> int:

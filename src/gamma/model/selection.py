@@ -17,7 +17,7 @@ import numpy as np
 from sklearn.model_selection import BaseCrossValidator, GridSearchCV
 
 from gamma import Sample
-from gamma.model import ModelPipelineDF
+from gamma.sklearndf.pipeline import ModelPipelineDF
 
 ParameterGrid = Dict[str, Sequence[Any]]
 

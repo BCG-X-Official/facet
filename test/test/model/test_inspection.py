@@ -5,10 +5,10 @@ from typing import *
 import pandas as pd
 from shap import KernelExplainer, TreeExplainer
 from shap.explainers.explainer import Explainer
+from sklearn.base import BaseEstimator
 from sklearn.model_selection import BaseCrossValidator, RepeatedKFold
 
 from gamma import Sample
-from gamma.model import ModelPipelineDF
 from gamma.model.inspection import ModelInspector
 from gamma.model.prediction import (
     ClassifierFitCV,
@@ -22,8 +22,9 @@ from gamma.model.selection import (
     summary_report,
 )
 from gamma.model.validation import CircularCrossValidator
-from gamma.sklearndf import BasePredictorDF, TransformerDF
+from gamma.sklearndf import TransformerDF
 from gamma.sklearndf.classification import RandomForestClassifierDF
+from gamma.sklearndf.pipeline import ModelPipelineDF
 from gamma.sklearndf.regression import LGBMRegressorDF, SVRDF
 
 log = logging.getLogger(__name__)
@@ -184,13 +185,11 @@ def test_model_inspection_with_encoding(
         linkage_tree = mi.cluster_dependent_features()
 
         #  test the ModelInspector with a custom ExplainerFactory:
-        def ef(estimator: BasePredictorDF, data: pd.DataFrame) -> Explainer:
+        def ef(estimator: BaseEstimator, data: pd.DataFrame) -> Explainer:
 
             try:
                 return TreeExplainer(
-                    model=estimator.delegate_estimator,
-                    feature_dependence="independent",
-                    data=data,
+                    model=estimator, feature_dependence="independent", data=data
                 )
             except Exception as e:
                 log.debug(

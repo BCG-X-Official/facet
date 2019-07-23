@@ -50,6 +50,51 @@ from gamma.sklearndf._wrapper import ClassifierWrapperDF, df_estimator
 
 log = logging.getLogger(__name__)
 
+
+# [sym for sym in dir(classification) if sym.endswith("DF")]
+__all__ = [
+    "AdaBoostClassifierDF",
+    "BaggingClassifierDF",
+    "BernoulliNBDF",
+    "CalibratedClassifierCVDF",
+    "ClassifierChainDF",
+    "ClassifierDF",
+    "ClassifierWrapperDF",
+    "ComplementNBDF",
+    "DecisionTreeClassifierDF",
+    "DummyClassifierDF",
+    "ExtraTreeClassifierDF",
+    "ExtraTreesClassifierDF",
+    "GaussianNBDF",
+    "GaussianProcessClassifierDF",
+    "GradientBoostingClassifierDF",
+    "KNeighborsClassifierDF",
+    "LabelPropagationDF",
+    "LabelSpreadingDF",
+    "LinearDiscriminantAnalysisDF",
+    "LinearSVCDF",
+    "LogisticRegressionCVDF",
+    "LogisticRegressionDF",
+    "MLPClassifierDF",
+    "MultiOutputClassifierDF",
+    "MultinomialNBDF",
+    "NearestCentroidDF",
+    "NuSVCDF",
+    "OneVsOneClassifierDF",
+    "OneVsRestClassifierDF",
+    "OutputCodeClassifierDF",
+    "PassiveAggressiveClassifierDF",
+    "PerceptronDF",
+    "QuadraticDiscriminantAnalysisDF",
+    "RadiusNeighborsClassifierDF",
+    "RandomForestClassifierDF",
+    "RidgeClassifierCVDF",
+    "RidgeClassifierDF",
+    "SGDClassifierDF",
+    "SVCDF",
+    "VotingClassifierDF",
+]
+
 #
 # decorator for wrapping the sklearn classifier classes
 #
@@ -285,15 +330,19 @@ class BernoulliNBDF(BernoulliNB, ClassifierDF):
 #
 
 
-# noinspection PyAbstractClass
-@_df_classifier
-class CalibratedClassifierCVDF(CalibratedClassifierCV, ClassifierDF):
+class CalibratedClassifierCVDF(ClassifierWrapperDF[CalibratedClassifierCV]):
     """
     Wraps :class:`sklearn.calibration.CalibratedClassifierCV`; accepts and returns data
     frames.
     """
 
-    pass
+    def __init__(self, base_estimator: ClassifierDF, **kwargs):
+        super().__init__(base_estimator=base_estimator.delegate_estimator, **kwargs)
+        self.base_estimator_df = base_estimator
+
+    @classmethod
+    def _make_delegate_estimator(cls, **kwargs) -> CalibratedClassifierCV:
+        return CalibratedClassifierCV(**kwargs)
 
 
 #
