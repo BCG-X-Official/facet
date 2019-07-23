@@ -10,10 +10,9 @@ from typing import *
 
 import pandas as pd
 from sklearn.pipeline import Pipeline
-from sklearn.utils import Bunch
 
+from gamma.sklearndf import BaseEstimatorDF, TransformerDF
 from gamma.sklearndf._wrapper import (
-    BaseEstimatorWrapperDF,
     ClassifierWrapperDF,
     RegressorWrapperDF,
     TransformerWrapperDF,
@@ -23,9 +22,9 @@ log = logging.getLogger(__name__)
 
 
 class PipelineDF(
-    TransformerWrapperDF[Pipeline],
-    RegressorWrapperDF[Pipeline],
     ClassifierWrapperDF[Pipeline],
+    RegressorWrapperDF[Pipeline],
+    TransformerWrapperDF[Pipeline],
 ):
     """
     Wrapper around :class:`sklearn.pipeline.Pipeline` with dataframes in input and
@@ -41,15 +40,14 @@ class PipelineDF(
 
     def _validate_steps(self) -> None:
         for name, transformer in self._transform_steps():
-            if transformer is not None and not isinstance(
-                transformer, TransformerWrapperDF
-            ):
+            if transformer is not None and not isinstance(transformer, TransformerDF):
                 raise ValueError(
-                    f"expected all transformers to implement TransformerWrapperDF, but "
+                    f"expected all transformers to implement class "
+                    f"{TransformerDF.__name__}, but "
                     f"step '{name}' is a {type(transformer).__name__}"
                 )
 
-    def _transform_steps(self) -> List[Tuple[str, TransformerWrapperDF]]:
+    def _transform_steps(self) -> List[Tuple[str, TransformerDF]]:
         pipeline = self.base_transformer
 
         steps = pipeline.steps
@@ -95,7 +93,7 @@ class PipelineDF(
         return pd.Series(index=_columns_out, data=_columns_original)
 
     @property
-    def steps(self) -> List[Tuple[str, BaseEstimatorWrapperDF]]:
+    def steps(self) -> List[Tuple[str, BaseEstimatorDF]]:
         """
         The ``steps`` attribute of the underlying :class:`~sklearn.pipeline.Pipeline`.
 
@@ -104,11 +102,11 @@ class PipelineDF(
         return self.base_transformer.steps
 
     @property
-    def named_steps(self) -> Bunch:
+    def named_steps(self) -> object:
         """
         Read-only attribute to access any step parameter by user given name.
 
-        Keys are step names and values are steps parameters.
+        :return: object with attributes corresponding to the names of the steps
         """
         return self.base_transformer.named_steps
 
@@ -116,7 +114,7 @@ class PipelineDF(
         """The number of steps of the pipeline."""
         return len(self.base_transformer.steps)
 
-    def __getitem__(self, ind: Union[slice, int, str]) -> BaseEstimatorWrapperDF:
+    def __getitem__(self, ind: Union[slice, int, str]) -> BaseEstimatorDF:
         """
         Return a sub-pipeline or a single estimator in the pipeline
 
