@@ -23,7 +23,6 @@ from gamma.model.selection import (
 )
 from gamma.model.validation import CircularCrossValidator
 from gamma.sklearndf import BasePredictorDF, TransformerDF
-from gamma.sklearndf._wrapper import BasePredictorWrapperDF
 from gamma.sklearndf.classification import RandomForestClassifierDF
 from gamma.sklearndf.regression import LGBMRegressorDF, SVRDF
 
@@ -187,12 +186,11 @@ def test_model_inspection_with_encoding(
         #  test the ModelInspector with a custom ExplainerFactory:
         def ef(estimator: BasePredictorDF, data: pd.DataFrame) -> Explainer:
 
-            while isinstance(estimator, BasePredictorWrapperDF):
-                estimator = estimator.base_estimator
-
             try:
                 return TreeExplainer(
-                    model=estimator, feature_dependence="independent", data=data
+                    model=estimator.delegate_estimator,
+                    feature_dependence="independent",
+                    data=data,
                 )
             except Exception as e:
                 log.debug(
