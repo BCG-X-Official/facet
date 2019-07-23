@@ -7,14 +7,14 @@ from gamma.model import ModelPipelineDF
 from gamma.model.inspection import ModelInspector
 from gamma.model.prediction import RegressorFitCV
 from gamma.model.validation import CircularCrossValidator
-from gamma.sklearndf import DataFrameTransformer
+from gamma.sklearndf import TransformerDF
 from gamma.sklearndf.regression import LGBMRegressorDF
 from gamma.viz.dendrogram import DendrogramDrawer, FeatMapStyle, LineStyle
 
 
 @pytest.fixture()
 def model_inspector(
-    batch_table: pd.DataFrame, sample: Sample, simple_preprocessor: DataFrameTransformer
+    batch_table: pd.DataFrame, sample: Sample, simple_preprocessor: TransformerDF
 ) -> ModelInspector:
 
     cv = CircularCrossValidator(test_ratio=0.20, num_splits=5)

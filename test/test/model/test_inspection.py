@@ -5,6 +5,7 @@ from typing import *
 import pandas as pd
 from shap import KernelExplainer, TreeExplainer
 from shap.explainers.explainer import Explainer
+from sklearn.base import BaseEstimator
 from sklearn.model_selection import BaseCrossValidator, RepeatedKFold
 
 from gamma import Sample
@@ -22,8 +23,7 @@ from gamma.model.selection import (
     summary_report,
 )
 from gamma.model.validation import CircularCrossValidator
-from gamma.sklearndf import DataFramePredictor, DataFrameTransformer
-from gamma.sklearndf._wrapper import DataFramePredictorWrapper
+from gamma.sklearndf import TransformerDF
 from gamma.sklearndf.classification import RandomForestClassifierDF
 from gamma.sklearndf.regression import LGBMRegressorDF, SVRDF
 
@@ -143,7 +143,7 @@ def test_model_inspection_with_encoding(
     batch_table: pd.DataFrame,
     regressor_grids: List[ModelGrid],
     sample: Sample,
-    simple_preprocessor: DataFrameTransformer,
+    simple_preprocessor: TransformerDF,
     available_cpus: int,
 ) -> None:
 
@@ -185,10 +185,7 @@ def test_model_inspection_with_encoding(
         linkage_tree = mi.cluster_dependent_features()
 
         #  test the ModelInspector with a custom ExplainerFactory:
-        def ef(estimator: DataFramePredictor, data: pd.DataFrame) -> Explainer:
-
-            while isinstance(estimator, DataFramePredictorWrapper):
-                estimator = estimator.base_estimator
+        def ef(estimator: BaseEstimator, data: pd.DataFrame) -> Explainer:
 
             try:
                 return TreeExplainer(
