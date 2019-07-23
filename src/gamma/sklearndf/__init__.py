@@ -47,11 +47,10 @@ __all__ = [
 _T = TypeVar("_T")
 
 T_Estimator = TypeVar("T_Estimator", bound=BaseEstimator)
-T_Transformer = TypeVar("T_Transformer", bound=Union[BaseEstimator, TransformerMixin])
+T_Transformer = TypeVar("T_Transformer", bound=TransformerMixin)
 T_Predictor = TypeVar("T_Predictor", bound=Union[RegressorMixin, ClassifierMixin])
 T_Regressor = TypeVar("T_Regressor", bound=RegressorMixin)
 T_Classifier = TypeVar("T_Classifier", bound=ClassifierMixin)
-
 
 #
 # class definitions
@@ -215,3 +214,12 @@ class ClassifierDF(
     @abstractmethod
     def decision_function(self, X: pd.DataFrame) -> Union[pd.Series, pd.DataFrame]:
         pass
+
+
+#
+# type variables for df predictors
+#
+
+T_PredictorDF = TypeVar("T_PredictorDF", bound=BasePredictorDF)
+T_RegressorDF = TypeVar("T_RegressorDF", bound=RegressorDF)
+T_ClassifierDF = TypeVar("T_ClassifierDF", bound=ClassifierDF)

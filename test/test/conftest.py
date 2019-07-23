@@ -10,9 +10,9 @@ from sklearn import datasets
 from sklearn.utils import Bunch
 
 from gamma import Sample
-from gamma.model import ModelPipelineDF
 from gamma.model.selection import ModelGrid
 from gamma.sklearndf import TransformerDF
+from gamma.sklearndf.pipeline import ModelPipelineDF
 from gamma.sklearndf.regression import (
     AdaBoostRegressorDF,
     DecisionTreeRegressorDF,
@@ -74,7 +74,7 @@ def regressor_grids(simple_preprocessor) -> List[ModelGrid]:
             pipeline=ModelPipelineDF(
                 preprocessing=simple_preprocessor, predictor=LGBMRegressorDF()
             ),
-            estimator_parameters={
+            predictor_parameters={
                 "max_depth": [5, 10],
                 "min_split_gain": [0.1, 0.2],
                 "num_leaves": [50, 100, 200],
@@ -85,19 +85,19 @@ def regressor_grids(simple_preprocessor) -> List[ModelGrid]:
             pipeline=ModelPipelineDF(
                 preprocessing=simple_preprocessor, predictor=AdaBoostRegressorDF()
             ),
-            estimator_parameters={"n_estimators": [50, 80], **RANDOM_STATE},
+            predictor_parameters={"n_estimators": [50, 80], **RANDOM_STATE},
         ),
         ModelGrid(
             pipeline=ModelPipelineDF(
                 preprocessing=simple_preprocessor, predictor=RandomForestRegressorDF()
             ),
-            estimator_parameters={"n_estimators": [50, 80], **RANDOM_STATE},
+            predictor_parameters={"n_estimators": [50, 80], **RANDOM_STATE},
         ),
         ModelGrid(
             pipeline=ModelPipelineDF(
                 preprocessing=simple_preprocessor, predictor=DecisionTreeRegressorDF()
             ),
-            estimator_parameters={
+            predictor_parameters={
                 "max_depth": [0.5, 1.0],
                 "max_features": [0.5, 1.0],
                 **RANDOM_STATE,
@@ -107,19 +107,19 @@ def regressor_grids(simple_preprocessor) -> List[ModelGrid]:
             pipeline=ModelPipelineDF(
                 preprocessing=simple_preprocessor, predictor=ExtraTreeRegressorDF()
             ),
-            estimator_parameters={"max_depth": [5, 10, 12], **RANDOM_STATE},
+            predictor_parameters={"max_depth": [5, 10, 12], **RANDOM_STATE},
         ),
         ModelGrid(
             pipeline=ModelPipelineDF(
                 preprocessing=simple_preprocessor, predictor=SVRDF()
             ),
-            estimator_parameters={"gamma": [0.5, 1], "C": [50, 100]},
+            predictor_parameters={"gamma": [0.5, 1], "C": [50, 100]},
         ),
         ModelGrid(
             pipeline=ModelPipelineDF(
                 preprocessing=simple_preprocessor, predictor=LinearRegressionDF()
             ),
-            estimator_parameters={"normalize": [False, True]},
+            predictor_parameters={"normalize": [False, True]},
         ),
     ]
 

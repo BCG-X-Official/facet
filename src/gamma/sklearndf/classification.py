@@ -330,15 +330,19 @@ class BernoulliNBDF(BernoulliNB, ClassifierDF):
 #
 
 
-# noinspection PyAbstractClass
-@_df_classifier
-class CalibratedClassifierCVDF(CalibratedClassifierCV, ClassifierDF):
+class CalibratedClassifierCVDF(ClassifierWrapperDF[CalibratedClassifierCV]):
     """
     Wraps :class:`sklearn.calibration.CalibratedClassifierCV`; accepts and returns data
     frames.
     """
 
-    pass
+    def __init__(self, base_estimator: ClassifierDF, **kwargs):
+        super().__init__(base_estimator=base_estimator.delegate_estimator, **kwargs)
+        self.base_estimator_df = base_estimator
+
+    @classmethod
+    def _make_delegate_estimator(cls, **kwargs) -> CalibratedClassifierCV:
+        return CalibratedClassifierCV(**kwargs)
 
 
 #
