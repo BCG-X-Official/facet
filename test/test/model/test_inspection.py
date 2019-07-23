@@ -9,7 +9,6 @@ from sklearn.base import BaseEstimator
 from sklearn.model_selection import BaseCrossValidator, RepeatedKFold
 
 from gamma import Sample
-from gamma.model import ModelPipelineDF
 from gamma.model.inspection import ModelInspector
 from gamma.model.prediction import (
     ClassifierFitCV,
@@ -25,6 +24,7 @@ from gamma.model.selection import (
 from gamma.model.validation import CircularCrossValidator
 from gamma.sklearndf import TransformerDF
 from gamma.sklearndf.classification import RandomForestClassifierDF
+from gamma.sklearndf.pipeline import ModelPipelineDF
 from gamma.sklearndf.regression import LGBMRegressorDF, SVRDF
 
 log = logging.getLogger(__name__)
