@@ -22,25 +22,71 @@ from typing import *
 
 import numpy as np
 import pandas as pd
-import sklearn.feature_extraction
-from sklearn import (
-    cluster,
-    compose,
-    cross_decomposition,
-    decomposition,
-    discriminant_analysis,
-    feature_extraction,
-    feature_selection,
-    impute,
-    kernel_approximation,
-    manifold,
-    neighbors,
-    neural_network,
-    pipeline,
-    preprocessing,
-    random_projection,
+from sklearn.cluster import FeatureAgglomeration
+from sklearn.compose import ColumnTransformer
+from sklearn.cross_decomposition import PLSSVD
+from sklearn.decomposition import (
+    DictionaryLearning,
+    FactorAnalysis,
+    FastICA,
+    IncrementalPCA,
+    KernelPCA,
+    LatentDirichletAllocation,
+    MiniBatchDictionaryLearning,
+    MiniBatchSparsePCA,
+    NMF,
+    PCA,
+    SparseCoder,
+    SparsePCA,
+    TruncatedSVD,
 )
-from sklearn.impute import _iterative
+from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
+from sklearn.feature_extraction import DictVectorizer, FeatureHasher
+from sklearn.feature_extraction.text import HashingVectorizer, TfidfTransformer
+from sklearn.feature_selection import (
+    GenericUnivariateSelect,
+    RFE,
+    RFECV,
+    SelectFdr,
+    SelectFpr,
+    SelectFromModel,
+    SelectFwe,
+    SelectKBest,
+    SelectPercentile,
+    VarianceThreshold,
+)
+from sklearn.impute import MissingIndicator, SimpleImputer
+from sklearn.impute._iterative import IterativeImputer
+from sklearn.kernel_approximation import (
+    AdditiveChi2Sampler,
+    Nystroem,
+    RBFSampler,
+    SkewedChi2Sampler,
+)
+from sklearn.manifold import Isomap, LocallyLinearEmbedding
+from sklearn.neighbors import NeighborhoodComponentsAnalysis
+from sklearn.neural_network import BernoulliRBM
+from sklearn.pipeline import FeatureUnion
+from sklearn.preprocessing import (
+    Binarizer,
+    FunctionTransformer,
+    KBinsDiscretizer,
+    KernelCenterer,
+    LabelBinarizer,
+    LabelEncoder,
+    MaxAbsScaler,
+    MinMaxScaler,
+    MultiLabelBinarizer,
+    Normalizer,
+    OneHotEncoder,
+    OrdinalEncoder,
+    PolynomialFeatures,
+    PowerTransformer,
+    QuantileTransformer,
+    RobustScaler,
+    StandardScaler,
+)
+from sklearn.random_projection import GaussianRandomProjection, SparseRandomProjection
 
 from gamma.sklearndf import T_Transformer, TransformerDF
 from gamma.sklearndf._wrapper import (
@@ -52,6 +98,75 @@ from gamma.sklearndf._wrapper import (
 
 log = logging.getLogger(__name__)
 
+# [sym for sym in dir(transformation) if sym.endswith("DF")]
+__all__ = [
+    "AdditiveChi2SamplerDF",
+    "BernoulliRBMDF",
+    "BinarizerDF",
+    "ColumnTransformerDF",
+    "DictVectorizerDF",
+    "DictionaryLearningDF",
+    "FactorAnalysisDF",
+    "FastICADF",
+    "FeatureAgglomerationDF",
+    "FeatureHasherDF",
+    "FeatureUnionDF",
+    "FunctionTransformerDF",
+    "GaussianRandomProjectionDF",
+    "GenericUnivariateSelectDF",
+    "HashingVectorizerDF",
+    "IncrementalPCADF",
+    "IsomapDF",
+    "IterativeImputerDF",
+    "KBinsDiscretizerDF",
+    "KernelCentererDF",
+    "KernelPCADF",
+    "LabelBinarizerDF",
+    "LabelEncoderDF",
+    "LatentDirichletAllocationDF",
+    "LinearDiscriminantAnalysisDF",
+    "LocallyLinearEmbeddingDF",
+    "MaxAbsScalerDF",
+    "MinMaxScalerDF",
+    "MiniBatchDictionaryLearningDF",
+    "MiniBatchSparsePCADF",
+    "MissingIndicatorDF",
+    "MultiLabelBinarizerDF",
+    "NMFDF",
+    "NeighborhoodComponentsAnalysisDF",
+    "NormalizerDF",
+    "NystroemDF",
+    "OneHotEncoderDF",
+    "OrdinalEncoderDF",
+    "PCADF",
+    "PLSSVDDF",
+    "PersistentColumnTransformerWrapperDF",
+    "PersistentNamingTransformerWrapperDF",
+    "PolynomialFeaturesDF",
+    "PowerTransformerDF",
+    "QuantileTransformerDF",
+    "RBFSamplerDF",
+    "RFECVDF",
+    "RFEDF",
+    "RobustScalerDF",
+    "SelectFdrDF",
+    "SelectFprDF",
+    "SelectFromModelDF",
+    "SelectFweDF",
+    "SelectKBestDF",
+    "SelectPercentileDF",
+    "SimpleImputerDF",
+    "SkewedChi2SamplerDF",
+    "SparseCoderDF",
+    "SparsePCADF",
+    "SparseRandomProjectionDF",
+    "StandardScalerDF",
+    "TfidfTransformerDF",
+    "TransformerDF",
+    "TransformerWrapperDF",
+    "TruncatedSVDDF",
+    "VarianceThresholdDF",
+]
 
 #
 # decorator for wrapping the sklearn transformer classes
@@ -76,7 +191,7 @@ def _df_transformer(
 
 
 @_df_transformer
-class FeatureAgglomerationDF(cluster.FeatureAgglomeration, TransformerDF):
+class FeatureAgglomerationDF(FeatureAgglomeration, TransformerDF):
     """
     Wraps :class:`sklearn.cluster.FeatureAgglomeration`;
     accepts and returns data frames.
@@ -90,7 +205,7 @@ class FeatureAgglomerationDF(cluster.FeatureAgglomeration, TransformerDF):
 #
 
 
-class ColumnTransformerDF(TransformerWrapperDF[compose.ColumnTransformer]):
+class ColumnTransformerDF(TransformerWrapperDF[ColumnTransformer]):
     """
     Wrap :class:`sklearn.compose.ColumnTransformer` and return a DataFrame.
 
@@ -129,8 +244,8 @@ class ColumnTransformerDF(TransformerWrapperDF[compose.ColumnTransformer]):
         self._columnTransformer = column_transformer
 
     @classmethod
-    def _make_delegate_estimator(cls, **kwargs) -> compose.ColumnTransformer:
-        return compose.ColumnTransformer(**kwargs)
+    def _make_delegate_estimator(cls, **kwargs) -> ColumnTransformer:
+        return ColumnTransformer(**kwargs)
 
     def _get_columns_original(self) -> pd.Series:
         """
@@ -162,7 +277,7 @@ class ColumnTransformerDF(TransformerWrapperDF[compose.ColumnTransformer]):
 
 
 @_df_transformer
-class PLSSVDDF(cross_decomposition.PLSSVD, TransformerDF):
+class PLSSVDDF(PLSSVD, TransformerDF):
     """
     Wraps :class:`sklearn.cross_decomposition.pls_.PLSSVD`;
     accepts and returns data frames.
@@ -177,9 +292,7 @@ class PLSSVDDF(cross_decomposition.PLSSVD, TransformerDF):
 
 
 @_df_transformer
-class LatentDirichletAllocationDF(
-    decomposition.LatentDirichletAllocation, TransformerDF
-):
+class LatentDirichletAllocationDF(LatentDirichletAllocation, TransformerDF):
     """
     Wraps :class:`decomposition.online_lda.LatentDirichletAllocation`;
     accepts and returns data frames.
@@ -189,7 +302,7 @@ class LatentDirichletAllocationDF(
 
 
 @_df_transformer
-class FactorAnalysisDF(decomposition.FactorAnalysis, TransformerDF):
+class FactorAnalysisDF(FactorAnalysis, TransformerDF):
     """
     Wraps :class:`decomposition.factor_analysis.FactorAnalysis`;
     accepts and returns data frames.
@@ -199,7 +312,7 @@ class FactorAnalysisDF(decomposition.FactorAnalysis, TransformerDF):
 
 
 @_df_transformer
-class KernelPCADF(decomposition.KernelPCA, TransformerDF):
+class KernelPCADF(KernelPCA, TransformerDF):
     """
     Wraps :class:`decomposition.kernel_pca.KernelPCA`;
     accepts and returns data frames.
@@ -209,7 +322,7 @@ class KernelPCADF(decomposition.KernelPCA, TransformerDF):
 
 
 @_df_transformer
-class TruncatedSVDDF(decomposition.TruncatedSVD, TransformerDF):
+class TruncatedSVDDF(TruncatedSVD, TransformerDF):
     """
     Wraps :class:`decomposition.truncated_svd.TruncatedSVD`;
     accepts and returns data frames.
@@ -219,7 +332,7 @@ class TruncatedSVDDF(decomposition.TruncatedSVD, TransformerDF):
 
 
 @_df_transformer
-class FastICADF(decomposition.FastICA, TransformerDF):
+class FastICADF(FastICA, TransformerDF):
     """
     Wraps :class:`decomposition.fastica_.FastICA`;
     accepts and returns data frames.
@@ -229,7 +342,7 @@ class FastICADF(decomposition.FastICA, TransformerDF):
 
 
 @_df_transformer
-class SparseCoderDF(decomposition.SparseCoder, TransformerDF):
+class SparseCoderDF(SparseCoder, TransformerDF):
     """
     Wraps :class:`decomposition.dict_learning.SparseCoder`;
     accepts and returns data frames.
@@ -239,7 +352,7 @@ class SparseCoderDF(decomposition.SparseCoder, TransformerDF):
 
 
 @_df_transformer
-class DictionaryLearningDF(decomposition.DictionaryLearning, TransformerDF):
+class DictionaryLearningDF(DictionaryLearning, TransformerDF):
     """
     Wraps :class:`decomposition.dict_learning.DictionaryLearning`;
     accepts and returns data frames.
@@ -249,9 +362,7 @@ class DictionaryLearningDF(decomposition.DictionaryLearning, TransformerDF):
 
 
 @_df_transformer
-class MiniBatchDictionaryLearningDF(
-    decomposition.MiniBatchDictionaryLearning, TransformerDF
-):
+class MiniBatchDictionaryLearningDF(MiniBatchDictionaryLearning, TransformerDF):
     """
     Wraps :class:`decomposition.dict_learning.MiniBatchDictionaryLearning`;
     accepts and returns data frames.
@@ -261,7 +372,7 @@ class MiniBatchDictionaryLearningDF(
 
 
 @_df_transformer
-class IncrementalPCADF(decomposition.IncrementalPCA, TransformerDF):
+class IncrementalPCADF(IncrementalPCA, TransformerDF):
     """
     Wraps :class:`decomposition.incremental_pca.IncrementalPCA`;
     accepts and returns data frames.
@@ -271,7 +382,7 @@ class IncrementalPCADF(decomposition.IncrementalPCA, TransformerDF):
 
 
 @_df_transformer
-class PCADF(decomposition.PCA, TransformerDF):
+class PCADF(PCA, TransformerDF):
     """
     Wraps :class:`decomposition.pca.PCA`;
     accepts and returns data frames.
@@ -281,7 +392,7 @@ class PCADF(decomposition.PCA, TransformerDF):
 
 
 @_df_transformer
-class SparsePCADF(decomposition.SparsePCA, TransformerDF):
+class SparsePCADF(SparsePCA, TransformerDF):
     """
     Wraps :class:`decomposition.sparse_pca.SparsePCA`;
     accepts and returns data frames.
@@ -291,7 +402,7 @@ class SparsePCADF(decomposition.SparsePCA, TransformerDF):
 
 
 @_df_transformer
-class MiniBatchSparsePCADF(decomposition.MiniBatchSparsePCA, TransformerDF):
+class MiniBatchSparsePCADF(MiniBatchSparsePCA, TransformerDF):
     """
     Wraps :class:`decomposition.sparse_pca.MiniBatchSparsePCA`;
     accepts and returns data frames.
@@ -301,7 +412,7 @@ class MiniBatchSparsePCADF(decomposition.MiniBatchSparsePCA, TransformerDF):
 
 
 @_df_transformer
-class NMFDF(decomposition.NMF, TransformerDF):
+class NMFDF(NMF, TransformerDF):
     """
     Wraps :class:`decomposition.NMF`;
     accepts and returns data frames.
@@ -316,9 +427,7 @@ class NMFDF(decomposition.NMF, TransformerDF):
 
 
 @_df_transformer
-class LinearDiscriminantAnalysisDF(
-    discriminant_analysis.LinearDiscriminantAnalysis, TransformerDF
-):
+class LinearDiscriminantAnalysisDF(LinearDiscriminantAnalysis, TransformerDF):
     """
     Wraps :class:`sklearn.discriminant_analysis.LinearDiscriminantAnalysis`;
     accepts and returns data frames.
@@ -333,7 +442,7 @@ class LinearDiscriminantAnalysisDF(
 
 
 @_df_transformer
-class FeatureHasherDF(feature_extraction.FeatureHasher, TransformerDF):
+class FeatureHasherDF(FeatureHasher, TransformerDF):
     """
     Wraps :class:`sklearn.feature_extraction.FeatureHasher`;
     accepts and returns data frames.
@@ -343,7 +452,7 @@ class FeatureHasherDF(feature_extraction.FeatureHasher, TransformerDF):
 
 
 @_df_transformer
-class DictVectorizerDF(sklearn.feature_extraction.DictVectorizer, TransformerDF):
+class DictVectorizerDF(DictVectorizer, TransformerDF):
     """
     Wraps :class:`sklearn.feature_extraction.dict_vectorizer.DictVectorizer`;
     accepts and returns data frames.
@@ -353,7 +462,7 @@ class DictVectorizerDF(sklearn.feature_extraction.DictVectorizer, TransformerDF)
 
 
 @_df_transformer
-class HashingVectorizerDF(feature_extraction.text.HashingVectorizer, TransformerDF):
+class HashingVectorizerDF(HashingVectorizer, TransformerDF):
     """
     Wraps :class:`sklearn.feature_extraction.text.HashingVectorizer`;
     accepts and returns data frames.
@@ -363,7 +472,7 @@ class HashingVectorizerDF(feature_extraction.text.HashingVectorizer, Transformer
 
 
 @_df_transformer
-class TfidfTransformerDF(feature_extraction.text.TfidfTransformer, TransformerDF):
+class TfidfTransformerDF(TfidfTransformer, TransformerDF):
     """
     Wraps :class:`sklearn.feature_extraction.text.TfidfTransformer`;
     accepts and returns data frames.
@@ -376,7 +485,7 @@ class TfidfTransformerDF(feature_extraction.text.TfidfTransformer, TransformerDF
 # feature_selection
 #
 @_df_transformer
-class VarianceThresholdDF(feature_selection.VarianceThreshold, TransformerDF):
+class VarianceThresholdDF(VarianceThreshold, TransformerDF):
     """
     Wraps :class:`sklearn.feature_selection.VarianceThreshold`;
     accepts and returns data frames.
@@ -386,7 +495,7 @@ class VarianceThresholdDF(feature_selection.VarianceThreshold, TransformerDF):
 
 
 @_df_transformer
-class RFEDF(feature_selection.RFE, TransformerDF):
+class RFEDF(RFE, TransformerDF):
     """
     Wraps :class:`sklearn.feature_selection.RFE`;
     accepts and returns data frames.
@@ -396,7 +505,7 @@ class RFEDF(feature_selection.RFE, TransformerDF):
 
 
 @_df_transformer
-class RFECVDF(feature_selection.RFECV, TransformerDF):
+class RFECVDF(RFECV, TransformerDF):
     """
     Wraps :class:`sklearn.feature_selection.RFECV`;
     accepts and returns data frames.
@@ -406,7 +515,7 @@ class RFECVDF(feature_selection.RFECV, TransformerDF):
 
 
 @_df_transformer
-class SelectFromModelDF(feature_selection.SelectFromModel, TransformerDF):
+class SelectFromModelDF(SelectFromModel, TransformerDF):
     """
     Wraps :class:`sklearn.feature_selection.SelectFromModel`;
     accepts and returns data frames.
@@ -416,7 +525,7 @@ class SelectFromModelDF(feature_selection.SelectFromModel, TransformerDF):
 
 
 @_df_transformer
-class SelectPercentileDF(feature_selection.SelectPercentile, TransformerDF):
+class SelectPercentileDF(SelectPercentile, TransformerDF):
     """
     Wraps :class:`sklearn.feature_selection.SelectPercentile`;
     accepts and returns data frames.
@@ -426,7 +535,7 @@ class SelectPercentileDF(feature_selection.SelectPercentile, TransformerDF):
 
 
 @_df_transformer
-class SelectKBestDF(feature_selection.SelectKBest, TransformerDF):
+class SelectKBestDF(SelectKBest, TransformerDF):
     """
     Wraps :class:`sklearn.feature_selection.SelectKBest`;
     accepts and returns data frames.
@@ -436,7 +545,7 @@ class SelectKBestDF(feature_selection.SelectKBest, TransformerDF):
 
 
 @_df_transformer
-class SelectFprDF(feature_selection.SelectFpr, TransformerDF):
+class SelectFprDF(SelectFpr, TransformerDF):
     """
     Wraps :class:`sklearn.feature_selection.SelectFpr`;
     accepts and returns data frames.
@@ -446,7 +555,7 @@ class SelectFprDF(feature_selection.SelectFpr, TransformerDF):
 
 
 @_df_transformer
-class SelectFdrDF(feature_selection.SelectFdr, TransformerDF):
+class SelectFdrDF(SelectFdr, TransformerDF):
     """
     Wraps :class:`sklearn.feature_selection.SelectFdr`;
     accepts and returns data frames.
@@ -456,7 +565,7 @@ class SelectFdrDF(feature_selection.SelectFdr, TransformerDF):
 
 
 @_df_transformer
-class SelectFweDF(feature_selection.SelectFwe, TransformerDF):
+class SelectFweDF(SelectFwe, TransformerDF):
     """
     Wraps :class:`sklearn.feature_selection.SelectFwe`;
     accepts and returns data frames.
@@ -466,9 +575,7 @@ class SelectFweDF(feature_selection.SelectFwe, TransformerDF):
 
 
 @_df_transformer
-class GenericUnivariateSelectDF(
-    feature_selection.GenericUnivariateSelect, TransformerDF
-):
+class GenericUnivariateSelectDF(GenericUnivariateSelect, TransformerDF):
     """
     Wraps :class:`sklearn.feature_selection.GenericUnivariateSelect`;
     accepts and returns data frames.
@@ -480,9 +587,9 @@ class GenericUnivariateSelectDF(
 #
 # impute
 #
-class SimpleImputerDF(PersistentNamingTransformerWrapperDF[impute.SimpleImputer]):
+class SimpleImputerDF(PersistentNamingTransformerWrapperDF[SimpleImputer]):
     """
-    Impute missing values with dataframes as input and output.
+    Impute missing values with data frames as input and output.
 
     Wrap around :class:`impute.SimpleImputer`. The ``fit``,
     ``transform`` and ``fit_transform`` methods accept and return dataframes.
@@ -494,8 +601,8 @@ class SimpleImputerDF(PersistentNamingTransformerWrapperDF[impute.SimpleImputer]
         super().__init__(**kwargs)
 
     @classmethod
-    def _make_delegate_estimator(cls, **kwargs) -> impute.SimpleImputer:
-        return impute.SimpleImputer(**kwargs)
+    def _make_delegate_estimator(cls, **kwargs) -> SimpleImputer:
+        return SimpleImputer(**kwargs)
 
     def _get_columns_out(self) -> pd.Index:
         stats = self.base_transformer.statistics_
@@ -508,7 +615,7 @@ class SimpleImputerDF(PersistentNamingTransformerWrapperDF[impute.SimpleImputer]
         return self.columns_in.delete(np.argwhere(nan_mask))
 
 
-class MissingIndicatorDF(TransformerWrapperDF[impute.MissingIndicator]):
+class MissingIndicatorDF(TransformerWrapperDF[MissingIndicator]):
     """
     Indicate missing values with dataframes as input and output.
 
@@ -538,8 +645,8 @@ class MissingIndicatorDF(TransformerWrapperDF[impute.MissingIndicator]):
         )
 
     @classmethod
-    def _make_delegate_estimator(cls, **kwargs) -> impute.MissingIndicator:
-        return impute.MissingIndicator(**kwargs)
+    def _make_delegate_estimator(cls, **kwargs) -> MissingIndicator:
+        return MissingIndicator(**kwargs)
 
     def _get_columns_original(self) -> pd.Series:
         columns_original: np.ndarray = self.columns_in[
@@ -551,7 +658,7 @@ class MissingIndicatorDF(TransformerWrapperDF[impute.MissingIndicator]):
 
 # noinspection PyProtectedMember
 @_df_transformer
-class IterativeImputerDF(impute._iterative.IterativeImputer, TransformerDF):
+class IterativeImputerDF(IterativeImputer, TransformerDF):
     """
     Wraps :class:`sklearn.impute.IterativeImputer`;
     accepts and returns data frames.
@@ -564,7 +671,7 @@ class IterativeImputerDF(impute._iterative.IterativeImputer, TransformerDF):
 # kernel_approximation
 #
 @_df_transformer
-class RBFSamplerDF(kernel_approximation.RBFSampler, TransformerDF):
+class RBFSamplerDF(RBFSampler, TransformerDF):
     """
     Wraps :class:`sklearn.kernel_approximation.RBFSampler`;
     accepts and returns data frames.
@@ -574,7 +681,7 @@ class RBFSamplerDF(kernel_approximation.RBFSampler, TransformerDF):
 
 
 @_df_transformer
-class SkewedChi2SamplerDF(kernel_approximation.SkewedChi2Sampler, TransformerDF):
+class SkewedChi2SamplerDF(SkewedChi2Sampler, TransformerDF):
     """
     Wraps :class:`sklearn.kernel_approximation.SkewedChi2Sampler`;
     accepts and returns data frames.
@@ -584,7 +691,7 @@ class SkewedChi2SamplerDF(kernel_approximation.SkewedChi2Sampler, TransformerDF)
 
 
 @_df_transformer
-class AdditiveChi2SamplerDF(kernel_approximation.AdditiveChi2Sampler, TransformerDF):
+class AdditiveChi2SamplerDF(AdditiveChi2Sampler, TransformerDF):
     """
     Wraps :class:`sklearn.kernel_approximation.AdditiveChi2Sampler`;
     accepts and returns data frames.
@@ -594,7 +701,7 @@ class AdditiveChi2SamplerDF(kernel_approximation.AdditiveChi2Sampler, Transforme
 
 
 @_df_transformer
-class NystroemDF(kernel_approximation.Nystroem, TransformerDF):
+class NystroemDF(Nystroem, TransformerDF):
     """
     Wraps :class:`sklearn.kernel_approximation.Nystroem`;
     accepts and returns data frames.
@@ -609,7 +716,7 @@ class NystroemDF(kernel_approximation.Nystroem, TransformerDF):
 
 
 @_df_transformer
-class LocallyLinearEmbeddingDF(manifold.LocallyLinearEmbedding, TransformerDF):
+class LocallyLinearEmbeddingDF(LocallyLinearEmbedding, TransformerDF):
     """
     Wraps :class:`sklearn.manifold.LocallyLinearEmbedding`;
     accepts and returns data frames.
@@ -619,7 +726,7 @@ class LocallyLinearEmbeddingDF(manifold.LocallyLinearEmbedding, TransformerDF):
 
 
 @_df_transformer
-class IsomapDF(manifold.Isomap, TransformerDF):
+class IsomapDF(Isomap, TransformerDF):
     """
     Wraps :class:`sklearn.manifold.Isomap`;
     accepts and returns data frames.
@@ -634,9 +741,7 @@ class IsomapDF(manifold.Isomap, TransformerDF):
 
 
 @_df_transformer
-class NeighborhoodComponentsAnalysisDF(
-    neighbors.NeighborhoodComponentsAnalysis, TransformerDF
-):
+class NeighborhoodComponentsAnalysisDF(NeighborhoodComponentsAnalysis, TransformerDF):
     """
     Wraps :class:`sklearn.neighbors.NeighborhoodComponentsAnalysis`;
     accepts and returns data frames.
@@ -649,7 +754,7 @@ class NeighborhoodComponentsAnalysisDF(
 # neural_network
 #
 @_df_transformer
-class BernoulliRBMDF(neural_network.BernoulliRBM, TransformerDF):
+class BernoulliRBMDF(BernoulliRBM, TransformerDF):
     """
     Wraps :class:`sklearn.neural_network.BernoulliRBM`;
     accepts and returns data frames.
@@ -664,7 +769,7 @@ class BernoulliRBMDF(neural_network.BernoulliRBM, TransformerDF):
 
 
 @_df_transformer
-class FeatureUnionDF(pipeline.FeatureUnion, TransformerDF):
+class FeatureUnionDF(FeatureUnion, TransformerDF):
     """
     Wraps :class:`sklearn.pipeline.FeatureUnion`;
     accepts and returns data frames.
@@ -677,7 +782,7 @@ class FeatureUnionDF(pipeline.FeatureUnion, TransformerDF):
 # preprocessing
 #
 @_df_transformer
-class MinMaxScalerDF(preprocessing.MinMaxScaler, TransformerDF):
+class MinMaxScalerDF(MinMaxScaler, TransformerDF):
     """
     Wraps :class:`sklearn.preprocessing.MinMaxScaler`;
     accepts and returns data frames.
@@ -687,7 +792,7 @@ class MinMaxScalerDF(preprocessing.MinMaxScaler, TransformerDF):
 
 
 @_df_transformer
-class StandardScalerDF(preprocessing.StandardScaler, TransformerDF):
+class StandardScalerDF(StandardScaler, TransformerDF):
     """
     Wraps :class:`sklearn.preprocessing.StandardScaler`;
     accepts and returns data frames.
@@ -697,7 +802,7 @@ class StandardScalerDF(preprocessing.StandardScaler, TransformerDF):
 
 
 @_df_transformer
-class MaxAbsScalerDF(preprocessing.MaxAbsScaler, TransformerDF):
+class MaxAbsScalerDF(MaxAbsScaler, TransformerDF):
     """
     Wraps :class:`sklearn.preprocessing.MaxAbsScaler`;
     accepts and returns data frames.
@@ -707,7 +812,7 @@ class MaxAbsScalerDF(preprocessing.MaxAbsScaler, TransformerDF):
 
 
 @_df_transformer
-class RobustScalerDF(preprocessing.RobustScaler, TransformerDF):
+class RobustScalerDF(RobustScaler, TransformerDF):
     """
     Wraps :class:`sklearn.preprocessing.RobustScaler`;
     accepts and returns data frames.
@@ -716,9 +821,7 @@ class RobustScalerDF(preprocessing.RobustScaler, TransformerDF):
     pass
 
 
-class PolynomialFeaturesDF(
-    PersistentNamingTransformerWrapperDF[preprocessing.PolynomialFeatures]
-):
+class PolynomialFeaturesDF(PersistentNamingTransformerWrapperDF[PolynomialFeatures]):
     """
     Wraps :class:`sklearn.preprocessing.PolynomialFeatures`;
     accepts and returns data frames.
@@ -730,12 +833,12 @@ class PolynomialFeaturesDF(
         )
 
     @classmethod
-    def _make_delegate_estimator(cls, **kwargs) -> preprocessing.PolynomialFeatures:
-        return preprocessing.PolynomialFeatures(**kwargs)
+    def _make_delegate_estimator(cls, **kwargs) -> PolynomialFeatures:
+        return PolynomialFeatures(**kwargs)
 
 
 @_df_transformer
-class NormalizerDF(preprocessing.Normalizer, TransformerDF):
+class NormalizerDF(Normalizer, TransformerDF):
     """
     Wraps :class:`sklearn.preprocessing.Normalizer`;
     accepts and returns data frames.
@@ -745,7 +848,7 @@ class NormalizerDF(preprocessing.Normalizer, TransformerDF):
 
 
 @_df_transformer
-class BinarizerDF(preprocessing.Binarizer, TransformerDF):
+class BinarizerDF(Binarizer, TransformerDF):
     """
     Wraps :class:`sklearn.preprocessing.Binarizer`;
     accepts and returns data frames.
@@ -755,7 +858,7 @@ class BinarizerDF(preprocessing.Binarizer, TransformerDF):
 
 
 @_df_transformer
-class KernelCentererDF(preprocessing.KernelCenterer, TransformerDF):
+class KernelCentererDF(KernelCenterer, TransformerDF):
     """
     Wraps :class:`sklearn.preprocessing.KernelCenterer`;
     accepts and returns data frames.
@@ -765,7 +868,7 @@ class KernelCentererDF(preprocessing.KernelCenterer, TransformerDF):
 
 
 @_df_transformer
-class QuantileTransformerDF(preprocessing.QuantileTransformer, TransformerDF):
+class QuantileTransformerDF(QuantileTransformer, TransformerDF):
     """
     Wraps :class:`sklearn.preprocessing.QuantileTransformer`;
     accepts and returns data frames.
@@ -775,7 +878,7 @@ class QuantileTransformerDF(preprocessing.QuantileTransformer, TransformerDF):
 
 
 @_df_transformer
-class PowerTransformerDF(preprocessing.PowerTransformer, TransformerDF):
+class PowerTransformerDF(PowerTransformer, TransformerDF):
     """
     Wraps :class:`sklearn.preprocessing.PowerTransformer`;
     accepts and returns data frames.
@@ -785,7 +888,7 @@ class PowerTransformerDF(preprocessing.PowerTransformer, TransformerDF):
 
 
 @_df_transformer
-class FunctionTransformerDF(preprocessing.FunctionTransformer, TransformerDF):
+class FunctionTransformerDF(FunctionTransformer, TransformerDF):
     """
     Wraps :class:`sklearn.preprocessing.FunctionTransformer`;
     accepts and returns data frames.
@@ -795,7 +898,7 @@ class FunctionTransformerDF(preprocessing.FunctionTransformer, TransformerDF):
 
 
 @_df_transformer
-class LabelEncoderDF(preprocessing.LabelEncoder, TransformerDF):
+class LabelEncoderDF(LabelEncoder, TransformerDF):
     """
     Wraps :class:`sklearn.preprocessing.LabelEncoder`;
     accepts and returns data frames.
@@ -805,7 +908,7 @@ class LabelEncoderDF(preprocessing.LabelEncoder, TransformerDF):
 
 
 @_df_transformer
-class LabelBinarizerDF(preprocessing.LabelBinarizer, TransformerDF):
+class LabelBinarizerDF(LabelBinarizer, TransformerDF):
     """
     Wraps :class:`sklearn.preprocessing.LabelBinarizer`;
     accepts and returns data frames.
@@ -815,7 +918,7 @@ class LabelBinarizerDF(preprocessing.LabelBinarizer, TransformerDF):
 
 
 @_df_transformer
-class MultiLabelBinarizerDF(preprocessing.MultiLabelBinarizer, TransformerDF):
+class MultiLabelBinarizerDF(MultiLabelBinarizer, TransformerDF):
     """
     Wraps :class:`sklearn.preprocessing.MultiLabelBinarizer`;
     accepts and returns data frames.
@@ -824,7 +927,7 @@ class MultiLabelBinarizerDF(preprocessing.MultiLabelBinarizer, TransformerDF):
     pass
 
 
-class OneHotEncoderDF(TransformerWrapperDF[preprocessing.OneHotEncoder]):
+class OneHotEncoderDF(TransformerWrapperDF[OneHotEncoder]):
     """
     One-hot encoder with dataframes as input and output.
 
@@ -842,8 +945,8 @@ class OneHotEncoderDF(TransformerWrapperDF[preprocessing.OneHotEncoder]):
             )
 
     @classmethod
-    def _make_delegate_estimator(cls, **kwargs) -> preprocessing.OneHotEncoder:
-        return preprocessing.OneHotEncoder(**kwargs)
+    def _make_delegate_estimator(cls, **kwargs) -> OneHotEncoder:
+        return OneHotEncoder(**kwargs)
 
     def _get_columns_original(self) -> pd.Series:
         """
@@ -865,7 +968,7 @@ class OneHotEncoderDF(TransformerWrapperDF[preprocessing.OneHotEncoder]):
 
 
 @_df_transformer
-class OrdinalEncoderDF(preprocessing.OrdinalEncoder, TransformerDF):
+class OrdinalEncoderDF(OrdinalEncoder, TransformerDF):
     """
     Wraps :class:`sklearn.preprocessing.OrdinalEncoder`;
     accepts and returns data frames.
@@ -875,7 +978,7 @@ class OrdinalEncoderDF(preprocessing.OrdinalEncoder, TransformerDF):
 
 
 @_df_transformer
-class KBinsDiscretizerDF(preprocessing.KBinsDiscretizer, TransformerDF):
+class KBinsDiscretizerDF(KBinsDiscretizer, TransformerDF):
     """
     Wraps :class:`sklearn.preprocessing.KBinsDiscretizer`;
     accepts and returns data frames.
@@ -888,9 +991,7 @@ class KBinsDiscretizerDF(preprocessing.KBinsDiscretizer, TransformerDF):
 # random_projection
 #
 @_df_transformer
-class GaussianRandomProjectionDF(
-    random_projection.GaussianRandomProjection, TransformerDF
-):
+class GaussianRandomProjectionDF(GaussianRandomProjection, TransformerDF):
     """
     Wraps :class:`sklearn.random_projection.GaussianRandomProjection`;
     accepts and returns data frames.
@@ -900,7 +1001,7 @@ class GaussianRandomProjectionDF(
 
 
 @_df_transformer
-class SparseRandomProjectionDF(random_projection.SparseRandomProjection, TransformerDF):
+class SparseRandomProjectionDF(SparseRandomProjection, TransformerDF):
     """
     Wraps :class:`sklearn.random_projection.SparseRandomProjection`;
     accepts and returns data frames.

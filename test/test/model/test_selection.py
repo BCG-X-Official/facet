@@ -7,7 +7,6 @@ import pandas as pd
 from sklearn import datasets
 
 from gamma import Sample
-from gamma.model import ModelPipelineDF
 from gamma.model.selection import (
     ModelEvaluation,
     ModelGrid,
@@ -16,6 +15,7 @@ from gamma.model.selection import (
 )
 from gamma.model.validation import CircularCrossValidator
 from gamma.sklearndf.classification import SVCDF
+from gamma.sklearndf.pipeline import ModelPipelineDF
 
 log = logging.getLogger(__name__)
 
