@@ -14,10 +14,10 @@ from scipy.cluster.hierarchy import linkage
 from scipy.spatial.distance import squareform
 from shap import KernelExplainer, TreeExplainer
 from shap.explainers.explainer import Explainer
+from sklearn.base import BaseEstimator
 
-from gamma.model import ModelPipelineDF
 from gamma.model.prediction import PredictorFitCV
-from gamma.sklearndf import BasePredictorDF
+from gamma.sklearndf.pipeline import ModelPipelineDF
 from gamma.viz.dendrogram import LinkageTree
 
 log = logging.getLogger(__name__)
@@ -45,7 +45,7 @@ class ModelInspector:
         self,
         predictor_fit: PredictorFitCV,
         explainer_factory: Optional[
-            Callable[[BasePredictorDF, pd.DataFrame], Explainer]
+            Callable[[BaseEstimator, pd.DataFrame], Explainer]
         ] = None,
     ) -> None:
 
@@ -55,7 +55,7 @@ class ModelInspector:
         self._explainer_factory = (
             explainer_factory
             if explainer_factory is not None
-            else default_explainer_factory
+            else tree_explainer_factory
         )
 
     @property
@@ -217,9 +217,7 @@ class ModelInspector:
         )
 
 
-def default_explainer_factory(
-    estimator: BasePredictorDF, data: pd.DataFrame
-) -> Explainer:
+def tree_explainer_factory(estimator: BaseEstimator, data: pd.DataFrame) -> Explainer:
     """
     Return the  explainer :class:`shap.Explainer` used to compute the shap values.
 
@@ -240,8 +238,6 @@ def default_explainer_factory(
     # which is why we need to always assume the error resulted from this cause -
     # we should not attempt to filter the exception type or message given that it is
     # currently inconsistent
-
-    estimator = estimator.delegate_estimator
 
     try:
         return TreeExplainer(model=estimator)
