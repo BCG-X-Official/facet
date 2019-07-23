@@ -8,7 +8,6 @@ import pandas as pd
 from sklearn.model_selection import BaseCrossValidator, RepeatedKFold
 
 from gamma import Sample
-from gamma.model import ModelPipelineDF
 from gamma.model.prediction import ClassifierFitCV, ProbabilityCalibrationMethod
 from gamma.model.selection import (
     ModelEvaluation,
@@ -17,6 +16,7 @@ from gamma.model.selection import (
     summary_report,
 )
 from gamma.sklearndf.classification import RandomForestClassifierDF
+from gamma.sklearndf.pipeline import ModelPipelineDF
 
 log = logging.getLogger(__name__)
 
@@ -43,7 +43,7 @@ def test_prediction_classifier(available_cpus: int, iris_sample: Sample) -> None
             pipeline=ModelPipelineDF(
                 predictor=RandomForestClassifierDF(), preprocessing=None
             ),
-            estimator_parameters={"n_estimators": [50, 80], "random_state": [42]},
+            predictor_parameters={"n_estimators": [50, 80], "random_state": [42]},
         )
     ]
 
