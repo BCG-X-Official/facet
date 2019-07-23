@@ -2,7 +2,7 @@
 MVC-based classes for drawing charts.
 """
 from abc import ABC, abstractmethod
-from typing import Generic, Tuple, TypeVar
+from typing import Generic, Optional, Tuple, TypeVar
 
 from matplotlib.axes import Axes
 
@@ -18,6 +18,7 @@ T_Style = TypeVar("T_Style", bound="ChartStyle")
 class ChartDrawer(Generic[T_Model, T_Style], ABC):
     """Chart drawer.
 
+    Implementations must define :meth:`ChartDrawer._draw`.
     :param title: title of the chart
     :param model: the data model of the chart
     :param style: the chart style of the chart
@@ -75,7 +76,7 @@ class MatplotStyle(ChartStyle, ABC):
 
     """
 
-    def __init__(self, ax: Axes) -> None:
+    def __init__(self, ax: Optional[Axes]) -> None:
         super().__init__()
         self._ax = ax
 
