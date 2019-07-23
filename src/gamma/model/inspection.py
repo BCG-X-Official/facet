@@ -18,7 +18,6 @@ from shap.explainers.explainer import Explainer
 from gamma.model import ModelPipelineDF
 from gamma.model.prediction import PredictorFitCV
 from gamma.sklearndf import BasePredictorDF
-from gamma.sklearndf._wrapper import BaseEstimatorWrapperDF
 from gamma.viz.dendrogram import LinkageTree
 
 log = logging.getLogger(__name__)
@@ -95,8 +94,6 @@ class ModelInspector:
             ).features
 
             estimator = split_model.predictor
-            if isinstance(estimator, BaseEstimatorWrapperDF):
-                estimator = estimator.delegate_estimator
 
             if split_model.preprocessing is not None:
                 data_transformed = split_model.preprocessing.transform(split_x)
@@ -104,7 +101,7 @@ class ModelInspector:
                 data_transformed = split_x
 
             shap_matrix = self._explainer_factory(
-                estimator=estimator, data=data_transformed
+                estimator=estimator.delegate_estimator, data=data_transformed
             ).shap_values(data_transformed)
 
             # todo: we need another condition to handle LGBM's (inconsistent) output
@@ -244,8 +241,7 @@ def default_explainer_factory(
     # we should not attempt to filter the exception type or message given that it is
     # currently inconsistent
 
-    if isinstance(estimator, BaseEstimatorWrapperDF):
-        estimator = estimator.delegate_estimator
+    estimator = estimator.delegate_estimator
 
     try:
         return TreeExplainer(model=estimator)

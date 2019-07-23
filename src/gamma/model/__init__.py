@@ -20,9 +20,9 @@ T_PredictorDF = TypeVar("PredictorDF", bound=Union[RegressorDF, ClassifierDF])
 
 
 class ModelPipelineDF(
-    RegressorDF[T_PredictorDF],
-    ClassifierDF[T_PredictorDF],
     BaseEstimator,
+    ClassifierDF[T_PredictorDF],
+    RegressorDF[T_PredictorDF],
     Generic[T_PredictorDF],
 ):
     """
