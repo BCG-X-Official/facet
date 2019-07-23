@@ -16,10 +16,10 @@ partitions are integers
 :class:`CategoryPartitioning` is adapted to categorical sets
 """
 import logging
-import math
 from abc import ABC, ABCMeta, abstractmethod
 from typing import *
 
+import math
 import numpy as np
 import pandas as pd
 
@@ -136,16 +136,16 @@ class RangePartitioning(
 
         self._frequencies = _frequencies()
 
-    def partitions(self) -> Iterable[NumericType]:
+    def partitions(self) -> List[NumericType]:
         """
         Return the central values of the partitions.
 
         :return: for each partition, a central value representing the partition
         """
         step = self._step
-        return (
+        return [
             self._first_partition + (idx * step) for idx in range(0, self.n_partitions)
-        )
+        ]
 
     def frequencies(self) -> Iterable[int]:
         """

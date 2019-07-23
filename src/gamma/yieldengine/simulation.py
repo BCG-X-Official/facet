@@ -99,7 +99,7 @@ class UnivariateSimulation:
 
     @staticmethod
     def aggregate_simulation_results(
-        results_per_split: pd.DataFrame, percentiles: List[int]
+        results_per_split: pd.DataFrame, percentiles: Iterable[int]
     ) -> pd.DataFrame:
         """
         Aggregate uplift values computed by `simulate_feature`.
