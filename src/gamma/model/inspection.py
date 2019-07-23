@@ -16,8 +16,8 @@ from shap import KernelExplainer, TreeExplainer
 from shap.explainers.explainer import Explainer
 from sklearn.base import BaseEstimator
 
-from gamma.model import ModelPipelineDF
 from gamma.model.prediction import PredictorFitCV
+from gamma.sklearndf.pipeline import ModelPipelineDF
 from gamma.viz.dendrogram import LinkageTree
 
 log = logging.getLogger(__name__)
@@ -55,7 +55,7 @@ class ModelInspector:
         self._explainer_factory = (
             explainer_factory
             if explainer_factory is not None
-            else default_explainer_factory
+            else tree_explainer_factory
         )
 
     @property
@@ -217,9 +217,7 @@ class ModelInspector:
         )
 
 
-def default_explainer_factory(
-    estimator: BaseEstimator, data: pd.DataFrame
-) -> Explainer:
+def tree_explainer_factory(estimator: BaseEstimator, data: pd.DataFrame) -> Explainer:
     """
     Return the  explainer :class:`shap.Explainer` used to compute the shap values.
 
