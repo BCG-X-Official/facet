@@ -14,11 +14,10 @@ from scipy.cluster.hierarchy import linkage
 from scipy.spatial.distance import squareform
 from shap import KernelExplainer, TreeExplainer
 from shap.explainers.explainer import Explainer
+from sklearn.base import BaseEstimator
 
 from gamma.model import ModelPipelineDF
 from gamma.model.prediction import PredictorFitCV
-from gamma.sklearndf import DataFramePredictor
-from gamma.sklearndf._wrapper import DataFrameEstimatorWrapper
 from gamma.viz.dendrogram import LinkageTree
 
 log = logging.getLogger(__name__)
@@ -46,7 +45,7 @@ class ModelInspector:
         self,
         predictor_fit: PredictorFitCV,
         explainer_factory: Optional[
-            Callable[[DataFramePredictor, pd.DataFrame], Explainer]
+            Callable[[BaseEstimator, pd.DataFrame], Explainer]
         ] = None,
     ) -> None:
 
@@ -95,8 +94,6 @@ class ModelInspector:
             ).features
 
             estimator = split_model.predictor
-            if isinstance(estimator, DataFrameEstimatorWrapper):
-                estimator = estimator.base_estimator
 
             if split_model.preprocessing is not None:
                 data_transformed = split_model.preprocessing.transform(split_x)
@@ -104,7 +101,7 @@ class ModelInspector:
                 data_transformed = split_x
 
             shap_matrix = self._explainer_factory(
-                estimator=estimator, data=data_transformed
+                estimator=estimator.delegate_estimator, data=data_transformed
             ).shap_values(data_transformed)
 
             # todo: we need another condition to handle LGBM's (inconsistent) output
@@ -221,7 +218,7 @@ class ModelInspector:
 
 
 def default_explainer_factory(
-    estimator: DataFramePredictor, data: pd.DataFrame
+    estimator: BaseEstimator, data: pd.DataFrame
 ) -> Explainer:
     """
     Return the  explainer :class:`shap.Explainer` used to compute the shap values.
@@ -243,9 +240,6 @@ def default_explainer_factory(
     # which is why we need to always assume the error resulted from this cause -
     # we should not attempt to filter the exception type or message given that it is
     # currently inconsistent
-
-    if isinstance(estimator, DataFrameEstimatorWrapper):
-        estimator = estimator.base_estimator
 
     try:
         return TreeExplainer(model=estimator)
