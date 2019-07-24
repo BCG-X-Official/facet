@@ -2,6 +2,8 @@ import logging
 from typing import *
 
 import pandas as pd
+from pandas.util.testing import assert_frame_equal
+from pytest import approx
 
 from gamma import Sample
 from gamma.model.prediction import RegressorFitCV
@@ -56,8 +58,44 @@ def test_univariate_simulation(
     )
 
     log.debug(res)
-    log.debug(
-        UnivariateSimulator.aggregate_simulation_results(
-            results_per_split=res, percentiles=[10, 50, 90]
-        )
+    # test aggregated values
+    # the values on the right were computed from correct runs
+    assert res.iloc[:, 2].mean() == approx(-0.005341351699881821)
+    assert res.iloc[:, 2].max() == approx(0.01904097474184785)
+    assert res.iloc[:, 2].min() == approx(-0.050256813777029286)
+
+    aggregated_results = UnivariateSimulator.aggregate_simulation_results(
+        results_per_split=res, percentiles=[10, 50, 90]
     )
+    log.debug(aggregated_results)
+
+    # test the first five rows of aggregated_results
+    # the values were computed from a correct run
+    dict_data = {
+        "percentile_10": {
+            24.0: -0.022085854777025404,
+            24.5: -0.01544493841392831,
+            25.0: -0.01544493841392831,
+            25.5: -0.01544493841392831,
+            26.0: -0.035765236211580544,
+        },
+        "percentile_50": {
+            24.0: 0.011567498441119817,
+            24.5: 0.0,
+            25.0: 0.0,
+            25.5: 0.0,
+            26.0: 0.0,
+        },
+        "percentile_90": {
+            24.0: 0.01860559941647595,
+            24.5: 0.0,
+            25.0: 0.0,
+            25.5: 0.0,
+            26.0: 0.0,
+        },
+    }
+    index = pd.Index(
+        data=[24.0, 24.5, 25.0, 25.5, 26.0], name=UnivariateSimulator.F_PARAMETER_VALUE
+    )
+    df_test = pd.DataFrame(data=dict_data, index=index)
+    assert_frame_equal(aggregated_results.head(), df_test)
