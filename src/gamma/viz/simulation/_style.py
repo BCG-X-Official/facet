@@ -14,7 +14,7 @@ from matplotlib.axes import Axes
 from matplotlib.lines import Line2D
 
 from gamma.viz import MatplotStyle
-from gamma.yieldengine.partition import NumericType
+from gamma.yieldengine.partition import T_NumericValue
 
 log = logging.getLogger(__name__)
 
@@ -38,7 +38,7 @@ class SimulationMatplotStyle(MatplotStyle):
         xticks_kwargs: Optional[Dict[str, Any]] = None,
         xlabel_kwargs: Optional[Dict[str, Any]] = None,
         xticklabels_kwargs: Optional[Dict[str, Any]] = None,
-        hspace: Optional[NumericType] = None,
+        hspace: Optional[T_NumericValue] = None,
         xtickslabels_format: Optional[str] = None,
         figsize=(10, 10),
     ) -> None:
@@ -85,10 +85,10 @@ class SimulationMatplotStyle(MatplotStyle):
         self,
         feature: str,
         target_name: str,
-        feature_values: Iterable[NumericType],
-        median_uplift: Iterable[NumericType],
-        low_percentile_uplift: Iterable[NumericType],
-        high_percentile_uplift: Iterable[NumericType],
+        feature_values: Iterable[T_NumericValue],
+        median_uplift: Iterable[T_NumericValue],
+        low_percentile_uplift: Iterable[T_NumericValue],
+        high_percentile_uplift: Iterable[T_NumericValue],
         low_percentile: int,
         high_percentile: int,
     ):
@@ -122,14 +122,14 @@ class SimulationMatplotStyle(MatplotStyle):
         self.set_spins()
 
     def _draw_extreme_uplift(
-        self, x: Iterable[NumericType], y: Iterable[NumericType]
+        self, x: Iterable[T_NumericValue], y: Iterable[T_NumericValue]
     ) -> Line2D:
         # draw curve of uplift for confidence interval
         line, = self._ax_uplift_graph.plot(x, y, color=self._color_confidence)
         return line
 
     def draw_low_confidence_uplift(
-        self, x: Iterable[NumericType], y: Iterable[NumericType]
+        self, x: Iterable[T_NumericValue], y: Iterable[T_NumericValue]
     ) -> Line2D:
         """Draw the low confidence uplift curve.
 
@@ -140,7 +140,7 @@ class SimulationMatplotStyle(MatplotStyle):
         return self._draw_extreme_uplift(x, y)
 
     def draw_high_confidence_uplift(
-        self, x: Iterable[NumericType], y: Iterable[NumericType]
+        self, x: Iterable[T_NumericValue], y: Iterable[T_NumericValue]
     ) -> Line2D:
         """
         Draw the high confidence uplift curve.
@@ -152,7 +152,7 @@ class SimulationMatplotStyle(MatplotStyle):
         return self._draw_extreme_uplift(x, y)
 
     def draw_middle_confidence_uplift(
-        self, x: Iterable[NumericType], y: Iterable[NumericType]
+        self, x: Iterable[T_NumericValue], y: Iterable[T_NumericValue]
     ) -> Line2D:
         """
         Draw the middle uplift curve.
@@ -165,7 +165,7 @@ class SimulationMatplotStyle(MatplotStyle):
         return line
 
     def draw_uplift_axis(
-        self, xaxis_label: str, yaxis_label: str, xticks: Iterable[NumericType]
+        self, xaxis_label: str, yaxis_label: str, xticks: Iterable[T_NumericValue]
     ):
         """
         Draw x ticks, set x labels in the uplift graph.

@@ -11,7 +11,7 @@ from typing import Optional
 from gamma.viz import ChartDrawer
 from gamma.viz.simulation._simulation_data import SimulationData, T_RangePartitioning
 from gamma.viz.simulation._style import SimulationMatplotStyle
-from gamma.yieldengine.partition import NumericType
+from gamma.yieldengine.partition import T_NumericValue
 from gamma.yieldengine.simulation import UnivariateSimulation
 
 
@@ -110,8 +110,8 @@ class SimulationDrawer(ChartDrawer[SimulationData, SimulationMatplotStyle]):
         self,
         feature: Optional[str] = None,
         max_partitions: Optional[int] = None,
-        lower_bound: Optional[NumericType] = None,
-        upper_bound: Optional[NumericType] = None,
+        lower_bound: Optional[T_NumericValue] = None,
+        upper_bound: Optional[T_NumericValue] = None,
         partition_type: Optional[T_RangePartitioning] = None,
     ):
         """

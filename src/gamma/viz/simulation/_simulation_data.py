@@ -8,8 +8,8 @@ import pandas as pd
 from gamma.model.prediction import PredictorFitCV
 from gamma.yieldengine.partition import (
     ContinuousRangePartitioning,
-    NumericType,
     RangePartitioning,
+    T_NumericValue,
 )
 from gamma.yieldengine.simulation import UnivariateSimulator
 
@@ -49,8 +49,8 @@ class SimulationData:
         model: PredictorFitCV,
         feature: str,
         max_partitions: Optional[int] = DEFAULT_MAX_PARTITIONS,
-        lower_bound: Optional[NumericType] = None,
-        upper_bound: Optional[NumericType] = None,
+        lower_bound: Optional[T_NumericValue] = None,
+        upper_bound: Optional[T_NumericValue] = None,
         partition_type: Optional[T_RangePartitioning] = None,
         percentiles: Optional[Tuple[int, int, int]] = (10, 50, 90),
     ) -> None:
@@ -118,8 +118,8 @@ class SimulationData:
         self,
         feature: Optional[str] = None,
         max_partitions: Optional[int] = None,
-        lower_bound: Optional[NumericType] = None,
-        upper_bound: Optional[NumericType] = None,
+        lower_bound: Optional[T_NumericValue] = None,
+        upper_bound: Optional[T_NumericValue] = None,
         partition_type: Optional[T_RangePartitioning] = None,
         percentiles: Optional[Tuple[int, int, int]] = None,
     ):
@@ -190,7 +190,9 @@ class SimulationData:
         return self._partitioning
 
     @property
-    def low_confidence_uplift(self) -> Tuple[List[NumericType], List[NumericType]]:
+    def low_confidence_uplift(
+        self
+    ) -> Tuple[List[T_NumericValue], List[T_NumericValue]]:
         """
         Low confidence values for the uplift simulation.
 
@@ -200,7 +202,9 @@ class SimulationData:
         return self._low_confidence_uplift
 
     @property
-    def middle_confidence_uplift(self) -> Tuple[List[NumericType], List[NumericType]]:
+    def middle_confidence_uplift(
+        self
+    ) -> Tuple[List[T_NumericValue], List[T_NumericValue]]:
         """
         Middle confidence for the uplift simulation.
 
@@ -210,7 +214,9 @@ class SimulationData:
         return self._middle_confidence_uplift
 
     @property
-    def high_confidence_uplift(self) -> Tuple[List[NumericType], List[NumericType]]:
+    def high_confidence_uplift(
+        self
+    ) -> Tuple[List[T_NumericValue], List[T_NumericValue]]:
         """
         High confidence for the uplift simulation.
 
