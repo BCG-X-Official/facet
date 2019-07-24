@@ -1,4 +1,6 @@
-"""Simulation of target uplift."""
+"""
+Univariate simulation of target uplift.
+"""
 
 from typing import *
 
@@ -9,16 +11,16 @@ from gamma.model.prediction import PredictorFitCV
 from gamma.sklearndf.transformation import FunctionTransformerDF
 
 
-class UnivariateSimulation:
+class UnivariateSimulator:
     """
     Simulate target uplift of one feature change.
 
     Given a fitted model and a feature of the model,
-    :meth:`UnivariateSimulation.simulate_feature` computes the prediction uplift
+    :meth:`UnivariateSimulator.simulate_feature` computes the prediction uplift
     if one would set the feature to a constant value for each sample in each test split.
 
     Aggregated percentiles uplift are then computed by
-    :meth:`UnivariateSimulation.aggregate_simulation_results`.
+    :meth:`UnivariateSimulator.aggregate_simulation_results`.
 
     :param model_fit: fitted model used for the simulation
     """
@@ -64,7 +66,7 @@ class UnivariateSimulation:
                 func=lambda x: (
                     x.drop(columns=feature_name).assign(**{feature_name: value})
                 ),
-                validate=False,
+                validate=True,
             ).fit_transform_sample(self.model_fit.sample)
 
             fit_for_syn_sample = self.model_fit.copy_with_sample(
@@ -90,9 +92,9 @@ class UnivariateSimulation:
         return pd.DataFrame(
             results,
             columns=[
-                UnivariateSimulation.F_SPLIT_ID,
-                UnivariateSimulation.F_PARAMETER_VALUE,
-                UnivariateSimulation.F_RELATIVE_TARGET_CHANGE,
+                UnivariateSimulator.F_SPLIT_ID,
+                UnivariateSimulator.F_PARAMETER_VALUE,
+                UnivariateSimulator.F_RELATIVE_TARGET_CHANGE,
             ],
         )
 
@@ -129,7 +131,7 @@ class UnivariateSimulation:
             return percentile_
 
         return (
-            results_per_split.drop(columns=UnivariateSimulation.F_SPLIT_ID)
-            .groupby(by=UnivariateSimulation.F_PARAMETER_VALUE)
+            results_per_split.drop(columns=UnivariateSimulator.F_SPLIT_ID)
+            .groupby(by=UnivariateSimulator.F_PARAMETER_VALUE)
             .agg([percentile(p) for p in percentiles])
         )
