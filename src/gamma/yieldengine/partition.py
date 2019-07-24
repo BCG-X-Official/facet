@@ -16,10 +16,10 @@ partitions are integers
 :class:`CategoryPartitioning` is adapted to categorical sets
 """
 import logging
+import math
 from abc import ABC, ABCMeta, abstractmethod
 from typing import *
 
-import math
 import numpy as np
 import pandas as pd
 
@@ -29,15 +29,15 @@ log = logging.getLogger(__name__)
 
 DEFAULT_MAX_PARTITIONS = 20
 
-ValueType = TypeVar("ValueType")
-NumericType = TypeVar("NumericType", bound=Union[int, float])
+T_Value = TypeVar("T_Value")
+T_NumericValue = TypeVar("T_NumericValue", bound=Union[int, float])
 
 
-class Partitioning(ABC, Generic[ValueType]):
+class Partitioning(ABC, Generic[T_Value]):
     """Partition a set of values, for use in visualizations and simulations."""
 
     @abstractmethod
-    def partitions(self) -> Iterable[ValueType]:
+    def partitions(self) -> Iterable[T_Value]:
         """
         Return central values of the partitions.
 
@@ -62,7 +62,7 @@ class Partitioning(ABC, Generic[ValueType]):
 
 
 class RangePartitioning(
-    Partitioning[NumericType], Generic[NumericType], metaclass=ABCMeta
+    Partitioning[T_NumericValue], Generic[T_NumericValue], metaclass=ABCMeta
 ):
     """
     Partition numerical values in successive intervals of the same length.
@@ -92,10 +92,10 @@ class RangePartitioning(
 
     def __init__(
         self,
-        values: ListLike[NumericType],
+        values: ListLike[T_NumericValue],
         max_partitions: int = DEFAULT_MAX_PARTITIONS,
-        lower_bound: Optional[NumericType] = None,
-        upper_bound: Optional[NumericType] = None,
+        lower_bound: Optional[T_NumericValue] = None,
+        upper_bound: Optional[T_NumericValue] = None,
     ) -> None:
         super().__init__()
 
@@ -136,7 +136,7 @@ class RangePartitioning(
 
         self._frequencies = _frequencies()
 
-    def partitions(self) -> List[NumericType]:
+    def partitions(self) -> Iterable[T_NumericValue]:
         """
         Return the central values of the partitions.
 
@@ -161,7 +161,7 @@ class RangePartitioning(
         """Number of partitions."""
         return self._n_partitions
 
-    def partition_bounds(self) -> Iterable[Tuple[NumericType, NumericType]]:
+    def partition_bounds(self) -> Iterable[Tuple[T_NumericValue, T_NumericValue]]:
         """
         Return the endpoints of the intervals making the partitions.
 
@@ -177,7 +177,7 @@ class RangePartitioning(
         )
 
     @property
-    def partition_width(self) -> NumericType:
+    def partition_width(self) -> T_NumericValue:
         """The interval length."""
         return self._step
 
@@ -198,14 +198,14 @@ class RangePartitioning(
     @staticmethod
     @abstractmethod
     def _step_size(
-        lower_bound: NumericType, upper_bound: NumericType, max_partitions: int
-    ) -> NumericType:
+        lower_bound: T_NumericValue, upper_bound: T_NumericValue, max_partitions: int
+    ) -> T_NumericValue:
         """Compute the step size (interval length) used in the partitions."""
         pass
 
     @property
     @abstractmethod
-    def _partition_center_offset(self) -> NumericType:
+    def _partition_center_offset(self) -> T_NumericValue:
         """Offset between center and endpoints of an interval."""
         pass
 
@@ -240,10 +240,10 @@ class ContinuousRangePartitioning(RangePartitioning[float]):
 
     def __init__(
         self,
-        values: ListLike[NumericType],
+        values: ListLike[T_NumericValue],
         max_partitions: int = DEFAULT_MAX_PARTITIONS,
-        lower_bound: Optional[NumericType] = None,
-        upper_bound: Optional[NumericType] = None,
+        lower_bound: Optional[T_NumericValue] = None,
+        upper_bound: Optional[T_NumericValue] = None,
     ) -> None:
         super().__init__(
             values=values,
@@ -292,10 +292,10 @@ class IntegerRangePartitioning(RangePartitioning[int]):
 
     def __init__(
         self,
-        values: ListLike[NumericType],
+        values: ListLike[T_NumericValue],
         max_partitions: int = DEFAULT_MAX_PARTITIONS,
-        lower_bound: Optional[NumericType] = None,
-        upper_bound: Optional[NumericType] = None,
+        lower_bound: Optional[T_NumericValue] = None,
+        upper_bound: Optional[T_NumericValue] = None,
     ) -> None:
         super().__init__(
             values=values,
@@ -321,7 +321,7 @@ class IntegerRangePartitioning(RangePartitioning[int]):
         return self._step // 2
 
 
-class CategoryPartitioning(Partitioning[ValueType]):
+class CategoryPartitioning(Partitioning[T_Value]):
     """
     Partition categorical values.
 
@@ -333,7 +333,7 @@ class CategoryPartitioning(Partitioning[ValueType]):
     """
 
     def __init__(
-        self, values: ListLike[ValueType], max_partitions: int = DEFAULT_MAX_PARTITIONS
+        self, values: ListLike[T_Value], max_partitions: int = DEFAULT_MAX_PARTITIONS
     ) -> None:
         super().__init__()
 
@@ -346,7 +346,7 @@ class CategoryPartitioning(Partitioning[ValueType]):
         self._frequencies = value_counts.values[:max_partitions]
         self._partitions = value_counts.index.values[:max_partitions]
 
-    def partitions(self) -> Iterable[ValueType]:
+    def partitions(self) -> Iterable[T_Value]:
         """
         The list of the :attr:`max_partitions` most frequent values.
 
