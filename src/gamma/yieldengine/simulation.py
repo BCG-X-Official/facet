@@ -9,7 +9,7 @@ import pandas as pd
 
 from gamma.model.prediction import PredictorFitCV
 from gamma.sklearndf.transformation import FunctionTransformerDF
-from gamma.yieldengine.partition import NumericType
+from gamma.yieldengine.partition import NumericType, RangePartitioning
 
 
 class UnivariateSimulation:
@@ -21,11 +21,14 @@ class UnivariateSimulation:
         self,
         feature: str,
         target_name: str,
-        feature_values: List[NumericType],
-        feature_frequencies: List[NumericType],
-        median_uplift: List[NumericType],
-        low_percentile_uplift: List[NumericType],
-        high_percentile_uplift: List[NumericType],
+        feature_values: Iterable[NumericType],
+        feature_frequencies: Iterable[int],
+        median_uplift: Iterable[NumericType],
+        low_percentile_uplift: Iterable[NumericType],
+        high_percentile_uplift: Iterable[NumericType],
+        low_percentile: int,
+        high_percentile: int,
+        partition_width: Optional[NumericType] = None,
     ):
         self._feature = feature
         self._target_name = target_name
@@ -34,6 +37,9 @@ class UnivariateSimulation:
         self._median_uplift = median_uplift
         self._low_percentile_uplift = low_percentile_uplift
         self._high_percentile_uplift = high_percentile_uplift
+        self._low_percentile = low_percentile
+        self._high_percentile = high_percentile
+        self._partition_width = partition_width
 
     @property
     def feature(self) -> str:
@@ -44,20 +50,36 @@ class UnivariateSimulation:
         return self._target_name
 
     @property
-    def feature_values(self) -> List[NumericType]:
+    def feature_values(self) -> Iterable[NumericType]:
         return self._feature_values
 
     @property
-    def median_uplift(self) -> List[NumericType]:
+    def feature_frequencies(self) -> Iterable[int]:
+        return self._feature_frequencies
+
+    @property
+    def median_uplift(self) -> Iterable[NumericType]:
         return self._median_uplift
 
     @property
-    def low_percentile_uplift(self) -> List[NumericType]:
+    def low_percentile_uplift(self) -> Iterable[NumericType]:
         return self._low_percentile_uplift
 
     @property
-    def high_percentile_uplift(self) -> List[NumericType]:
+    def high_percentile_uplift(self) -> Iterable[NumericType]:
         return self._high_percentile_uplift
+
+    @property
+    def low_percentile(self) -> int:
+        return self._low_percentile
+
+    @property
+    def high_percentile(self) -> int:
+        return self._high_percentile
+
+    @property
+    def partition_width(self) -> float:
+        return self._partition_width
 
 
 class UnivariateSimulator:
@@ -184,20 +206,24 @@ class UnivariateSimulator:
             .agg([percentile(p) for p in percentiles])
         )
 
-    def get_univariate_simulation(
+    def get_simulation(
         self,
         feature: str,
         feature_values: Iterable[Any],
+        feature_frequencies: Iterable[int],
         low_percentile: int,
         high_percentile: int,
+        partition_width: Optional[NumericType] = None,
     ) -> UnivariateSimulation:
         """
         Compute a summary of the univariate simulation.
 
         :param feature:
         :param feature_values:
+        :param feature_frequencies:
         :param low_percentile:
         :param high_percentile:
+        :param partition_width:
         :return: object holding
         """
         results_per_split = self.simulate_feature(
@@ -210,13 +236,42 @@ class UnivariateSimulator:
         low_percentile_uplift = prediction_uplift.iloc[:, 0].to_list()
         median_uplift = prediction_uplift.iloc[:, 1].to_list()
         high_percentile_uplift = prediction_uplift.iloc[:, 2].to_list()
-
         univariate_simulation = UnivariateSimulation(
             feature=feature,
             target_name=self._model_fit.sample.target_name,
             feature_values=feature_values,
+            feature_frequencies=feature_frequencies,
             median_uplift=median_uplift,
             low_percentile_uplift=low_percentile_uplift,
             high_percentile_uplift=high_percentile_uplift,
+            low_percentile=low_percentile,
+            high_percentile=high_percentile,
+            partition_width=partition_width,
         )
         return univariate_simulation
+
+    def get_simulation_from_partition(
+        self,
+        partition: RangePartitioning,
+        feature: str,
+        low_percentile: int = 10,
+        high_percentile: int = 90,
+    ):
+        """
+        Compute a simulation summary from a partition and a fitted model.
+
+        :param partition: the partition used for the simulation
+        :param feature:
+        """
+        feature_values = partition.partitions()
+        feature_frequencies = partition.frequencies()
+        partition_width = partition.partition_width
+        simulation = self.get_simulation(
+            feature=feature,
+            feature_values=feature_values,
+            feature_frequencies=feature_frequencies,
+            low_percentile=low_percentile,
+            high_percentile=high_percentile,
+            partition_width=partition_width,
+        )
+        return simulation
