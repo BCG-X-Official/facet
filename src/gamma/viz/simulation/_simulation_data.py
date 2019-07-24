@@ -11,7 +11,7 @@ from gamma.yieldengine.partition import (
     NumericType,
     RangePartitioning,
 )
-from gamma.yieldengine.simulation import UnivariateSimulation
+from gamma.yieldengine.simulation import UnivariateSimulator
 
 T_RangePartitioning = TypeVar("T_RangePartitioning", bound=RangePartitioning)
 
@@ -39,7 +39,7 @@ class SimulationData:
     :param upper_bound: upper bound on the values of ``feature`` used in the
       simulation. The default value ``None`` does not impose any upper bound.
     :param partition_type: the type of partition used. When ``None`` (default)
-    :class:`~gamma.yieldengine.partition.ContinuousRangePartitioning` is used.
+      :class:`~gamma.yieldengine.partition.ContinuousRangePartitioning` is used.
     :param percentiles: the percentiles used for low, middle and high simulated
       predictions
     """
@@ -65,7 +65,7 @@ class SimulationData:
         else:
             self._partition_type = DEFAULT_PARTITIONING
         self._percentiles = percentiles
-        self._simulation = UnivariateSimulation(model_fit=self._model)
+        self._simulation = UnivariateSimulator(model_fit=self._model)
         self._target_name = self._sample.target_name
         self._partitioning = None
         self._results_per_split = None
@@ -177,7 +177,7 @@ class SimulationData:
         Results of the simulation per split.
 
         This is the output of
-        :meth:`gamma.yieldengine.simulation.UnivariateSimulation.simulate_feature`.
+        :meth:`gamma.yieldengine.simulation.UnivariateSimulator.simulate_feature`.
 
         :return: for each combination of split, row and simulated value, it gives the
            prediction
