@@ -63,10 +63,7 @@ class UnivariateSimulator:
         for value in feature_values:
             # Replace the simulated column with a constant value.
             synthetic_sample = FunctionTransformerDF(
-                func=lambda x: (
-                    x.drop(columns=feature_name).assign(**{feature_name: value})
-                ),
-                validate=True,
+                func=lambda x: (x.assign(**{feature_name: value})), validate=False
             ).fit_transform_sample(self.model_fit.sample)
 
             fit_for_syn_sample = self.model_fit.copy_with_sample(
