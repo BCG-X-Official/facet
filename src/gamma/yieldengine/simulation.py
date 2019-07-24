@@ -9,7 +9,7 @@ import pandas as pd
 
 from gamma.model.prediction import PredictorFitCV
 from gamma.sklearndf.transformation import FunctionTransformerDF
-from gamma.yieldengine.partition import NumericType, RangePartitioning
+from gamma.yieldengine.partition import RangePartitioning, T_NumericValue
 
 
 class UnivariateSimulation:
@@ -21,14 +21,14 @@ class UnivariateSimulation:
         self,
         feature: str,
         target_name: str,
-        feature_values: Iterable[NumericType],
+        feature_values: Iterable[T_NumericValue],
         feature_frequencies: Iterable[int],
-        median_uplift: Iterable[NumericType],
-        low_percentile_uplift: Iterable[NumericType],
-        high_percentile_uplift: Iterable[NumericType],
+        median_uplift: Iterable[T_NumericValue],
+        low_percentile_uplift: Iterable[T_NumericValue],
+        high_percentile_uplift: Iterable[T_NumericValue],
         low_percentile: int,
         high_percentile: int,
-        partition_width: Optional[NumericType] = None,
+        partition_width: Optional[T_NumericValue] = None,
     ):
         self._feature = feature
         self._target_name = target_name
@@ -50,7 +50,7 @@ class UnivariateSimulation:
         return self._target_name
 
     @property
-    def feature_values(self) -> Iterable[NumericType]:
+    def feature_values(self) -> Iterable[T_NumericValue]:
         return self._feature_values
 
     @property
@@ -58,15 +58,15 @@ class UnivariateSimulation:
         return self._feature_frequencies
 
     @property
-    def median_uplift(self) -> Iterable[NumericType]:
+    def median_uplift(self) -> Iterable[T_NumericValue]:
         return self._median_uplift
 
     @property
-    def low_percentile_uplift(self) -> Iterable[NumericType]:
+    def low_percentile_uplift(self) -> Iterable[T_NumericValue]:
         return self._low_percentile_uplift
 
     @property
-    def high_percentile_uplift(self) -> Iterable[NumericType]:
+    def high_percentile_uplift(self) -> Iterable[T_NumericValue]:
         return self._high_percentile_uplift
 
     @property
@@ -213,7 +213,7 @@ class UnivariateSimulator:
         feature_frequencies: Iterable[int],
         low_percentile: int,
         high_percentile: int,
-        partition_width: Optional[NumericType] = None,
+        partition_width: Optional[T_NumericValue] = None,
     ) -> UnivariateSimulation:
         """
         Compute a summary of the univariate simulation.
