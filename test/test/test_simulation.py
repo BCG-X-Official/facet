@@ -9,7 +9,7 @@ from gamma.model.selection import ModelEvaluation, ModelGrid, ModelRanker
 from gamma.model.validation import CircularCrossValidator
 from gamma.sklearndf import TransformerDF
 from gamma.yieldengine.partition import ContinuousRangePartitioning
-from gamma.yieldengine.simulation import UnivariateSimulation
+from gamma.yieldengine.simulation import UnivariateSimulator
 
 log = logging.getLogger(__name__)
 
@@ -44,7 +44,7 @@ def test_univariate_simulation(
         n_jobs=available_cpus,
     )
 
-    sim = UnivariateSimulation(model_fit=model_fit)
+    sim = UnivariateSimulator(model_fit=model_fit)
 
     parameterized_feature = "Step4-6 RawMat Vendor Compound08 Purity (#)"
 
@@ -57,7 +57,7 @@ def test_univariate_simulation(
 
     log.debug(res)
     log.debug(
-        UnivariateSimulation.aggregate_simulation_results(
+        UnivariateSimulator.aggregate_simulation_results(
             results_per_split=res, percentiles=[10, 50, 90]
         )
     )
