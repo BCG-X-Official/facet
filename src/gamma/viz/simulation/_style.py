@@ -235,7 +235,7 @@ class SimulationMatplotStyle(MatplotStyle):
         self._ax_histogram.bar(
             x=feature_values,
             height=feature_frequencies,
-            width=0.9 * partition_width,
+            width=partition_width,
             color="silver",
             edgecolor="white",
         )
