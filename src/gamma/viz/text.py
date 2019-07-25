@@ -42,10 +42,10 @@ class CharacterMatrix:
                 return index
 
         if not isinstance(key, tuple) or len(key) != 2:
-            raise ValueError(f"expected (x, y) tuple but got {key}")
+            raise ValueError(f"expected (row, column) tuple but got {key}")
 
-        x, y = key
-        return _to_slice(x), _to_slice(y)
+        row, column = key
+        return _to_slice(row), _to_slice(column)
 
     def __str__(self) -> str:
         return "\n".join(self.lines())
