@@ -16,7 +16,7 @@ help:
 # js: adapted to do apidoc, generate html and move into the docs folder
 html: 
 	# generate apidoc using docstrings
-	sphinx-apidoc -o "$(SOURCEDIR)" -f ./../src/yieldengine
+	sphinx-apidoc -o "$(SOURCEDIR)" -f ./../src/gamma
 	# remove modules.rst - we never use it, since there is only the one module "yieldengine"
 	# (and thereby, we get rid of Sphinx's warning that it is never included in a toctree)
 
