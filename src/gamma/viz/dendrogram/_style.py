@@ -1,3 +1,16 @@
+#
+# NOT FOR CLIENT USE!
+#
+# This is a pre-release library under development. Handling of IP rights is still
+# being investigated. To avoid causing any potential IP disputes or issues, DO NOT USE
+# ANY OF THIS CODE ON A CLIENT PROJECT, even not in modified form.
+#
+# Please direct any queries to any of:
+# - Jan Ittner
+# - Jörg Schneider
+# - Florent Martin
+#
+
 """
 Dendrogram styles.
 
@@ -13,10 +26,10 @@ for better visibility of feature importance.
 """
 
 import logging
-import math
 from abc import ABC, abstractmethod
 from typing import Sequence, TextIO
 
+import math
 import matplotlib.text as mt
 from matplotlib import cm
 from matplotlib.axes import Axes
