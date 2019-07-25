@@ -88,7 +88,7 @@ class BaseEstimatorDF(ABC, Generic[T_Estimator]):
     @property
     @abstractmethod
     def is_fitted(self) -> bool:
-        """`True` if the base estimator is fitted, else `False`"""
+        """`True` if the delegate estimator is fitted, else `False`"""
         pass
 
     @property
