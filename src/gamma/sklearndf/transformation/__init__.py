@@ -220,7 +220,7 @@ class ColumnTransformerDF(TransformerWrapperDF[ColumnTransformer]):
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
         # noinspection PyTypeChecker
-        column_transformer = self.base_transformer
+        column_transformer = self.delegate_estimator
 
         if column_transformer.remainder != "drop":
             raise ValueError(
@@ -265,7 +265,7 @@ class ColumnTransformerDF(TransformerWrapperDF[ColumnTransformer]):
     def _inner_transformers(self) -> Iterable[TransformerWrapperDF]:
         return (
             df_transformer
-            for _, df_transformer, columns in self.base_transformer.transformers_
+            for _, df_transformer, columns in self.delegate_estimator.transformers_
             if len(columns) > 0
             if df_transformer != "drop"
         )
@@ -605,7 +605,7 @@ class SimpleImputerDF(PersistentNamingTransformerWrapperDF[SimpleImputer]):
         return SimpleImputer(**kwargs)
 
     def _get_columns_out(self) -> pd.Index:
-        stats = self.base_transformer.statistics_
+        stats = self.delegate_estimator.statistics_
         if issubclass(stats.dtype.type, float):
             nan_mask = np.isnan(stats)
         else:
@@ -650,7 +650,7 @@ class MissingIndicatorDF(TransformerWrapperDF[MissingIndicator]):
 
     def _get_columns_original(self) -> pd.Series:
         columns_original: np.ndarray = self.columns_in[
-            self.base_transformer.features_
+            self.delegate_estimator.features_
         ].values
         columns_out = pd.Index([f"{name}__missing" for name in columns_original])
         return pd.Series(index=columns_out, data=columns_original)
@@ -829,7 +829,9 @@ class PolynomialFeaturesDF(PersistentNamingTransformerWrapperDF[PolynomialFeatur
 
     def _get_columns_out(self) -> pd.Index:
         return pd.Index(
-            data=self.base_transformer.get_feature_names(input_features=self.columns_in)
+            data=self.delegate_estimator.get_feature_names(
+                input_features=self.columns_in
+            )
         )
 
     @classmethod
@@ -939,7 +941,7 @@ class OneHotEncoderDF(TransformerWrapperDF[OneHotEncoder]):
 
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
-        if self.base_transformer.sparse:
+        if self.delegate_estimator.sparse:
             raise ValueError(
                 "sparse matrices not supported; set OneHotEncoder.sparse to False"
             )
@@ -956,11 +958,11 @@ class OneHotEncoderDF(TransformerWrapperDF[OneHotEncoder]):
         values the corresponding input column names.
         """
         return pd.Series(
-            index=pd.Index(self.base_transformer.get_feature_names(self.columns_in)),
+            index=pd.Index(self.delegate_estimator.get_feature_names(self.columns_in)),
             data=[
                 column_original
                 for column_original, category in zip(
-                    self.columns_in, self.base_transformer.categories_
+                    self.columns_in, self.delegate_estimator.categories_
                 )
                 for _ in category
             ],

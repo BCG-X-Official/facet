@@ -26,6 +26,7 @@ from gamma.sklearndf import TransformerDF
 from gamma.sklearndf.classification import RandomForestClassifierDF
 from gamma.sklearndf.pipeline import ModelPipelineDF
 from gamma.sklearndf.regression import LGBMRegressorDF, SVRDF
+from gamma.viz.dendrogram import DendrogramDrawer, DendrogramTextStyle
 
 log = logging.getLogger(__name__)
 
@@ -51,11 +52,11 @@ def test_model_inspection(available_cpus: int, boston_sample: Sample) -> None:
             pipeline=ModelPipelineDF(
                 predictor=SVRDF(gamma="scale"), preprocessing=None
             ),
-            estimator_parameters={"kernel": ("linear", "rbf"), "C": [1, 10]},
+            predictor_parameters={"kernel": ("linear", "rbf"), "C": [1, 10]},
         ),
         ModelGrid(
             pipeline=ModelPipelineDF(predictor=LGBMRegressorDF(), preprocessing=None),
-            estimator_parameters={
+            predictor_parameters={
                 "max_depth": (1, 2, 5),
                 "min_split_gain": (0.1, 0.2, 0.5),
                 "num_leaves": (2, 3),
@@ -137,6 +138,10 @@ def test_model_inspection(available_cpus: int, boston_sample: Sample) -> None:
             )
 
         linkage_tree = model_inspector.cluster_dependent_features()
+        print()
+        DendrogramDrawer(
+            title="Test", linkage_tree=linkage_tree, style=DendrogramTextStyle()
+        ).draw()
 
 
 def test_model_inspection_with_encoding(
@@ -202,6 +207,12 @@ def test_model_inspection_with_encoding(
         mi2 = ModelInspector(predictor_fit=model_fit, explainer_factory=ef)
         mi2.shap_matrix()
 
+        linkage_tree = mi2.cluster_dependent_features()
+        print()
+        DendrogramDrawer(
+            title="Test", linkage_tree=linkage_tree, style=DendrogramTextStyle()
+        ).draw()
+
 
 def test_model_inspection_classifier(available_cpus: int, iris_sample: Sample) -> None:
     warnings.filterwarnings("ignore", message="numpy.dtype size changed")
@@ -220,7 +231,7 @@ def test_model_inspection_classifier(available_cpus: int, iris_sample: Sample) -
             pipeline=ModelPipelineDF(
                 predictor=RandomForestClassifierDF(), preprocessing=None
             ),
-            estimator_parameters={"n_estimators": [50, 80], "random_state": [42]},
+            predictor_parameters={"n_estimators": [50, 80], "random_state": [42]},
         )
     ]
 
@@ -276,3 +287,7 @@ def test_model_inspection_classifier(available_cpus: int, iris_sample: Sample) -
         )
 
     linkage_tree = model_inspector.cluster_dependent_features()
+    print()
+    DendrogramDrawer(
+        title="Test", linkage_tree=linkage_tree, style=DendrogramTextStyle()
+    ).draw()
