@@ -6,20 +6,22 @@ values in the simulation and on the y axis the associated prediction uplift. Bel
 this graph there is a histogram of the feature values.
 """
 
-from typing import Optional
+from typing import Optional, TypeVar
 
 from gamma.viz import ChartDrawer
-from gamma.viz.simulation._simulation_data import SimulationData, T_RangePartitioning
 from gamma.viz.simulation._style import SimulationMatplotStyle
-from gamma.yieldengine.partition import T_NumericValue
+from gamma.yieldengine.partition import RangePartitioning
 from gamma.yieldengine.simulation import UnivariateSimulation
 
+T_RangePartitioning = TypeVar("T_RangePartitioning", bound=RangePartitioning)
 
-class SimulationDrawer(ChartDrawer[SimulationData, SimulationMatplotStyle]):
+
+class SimulationDrawer(ChartDrawer[UnivariateSimulation, SimulationMatplotStyle]):
     """
     Simulation drawer with high/low confidence intervals.
 
     :param style: drawing style for the uplift graph and the feature histogram
+    :param simulation: the data for the simulation
     :param title: title of the char
     :param histogram: if ``True`` (default) the feature histogram is plotted,
       if ``False`` the histogram is not plotted
@@ -29,20 +31,19 @@ class SimulationDrawer(ChartDrawer[SimulationData, SimulationMatplotStyle]):
         self,
         # simulation_data: SimulationData,
         style: SimulationMatplotStyle,
+        simulation: UnivariateSimulation = None,
         title: Optional[str] = None,
         histogram: bool = True,
-        simulation: Optional[UnivariateSimulation] = None,
     ):
         super().__init__(title=title, model=simulation, style=style)
-        # self._simulation_data = simulation
         self._style = style
+        self._simulation = simulation
         self._title = title if title else "Simulation"
         self._histogram = histogram
-        self._simulation = simulation
 
     def _draw(self) -> None:
         # draw the simulation chart
-        self._style.initialize_chart(histogram=self._histogram)
+        # self._style.initialize_chart(histogram=self._histogram)
 
         self._draw_uplift_graph()
 
@@ -75,6 +76,7 @@ class SimulationDrawer(ChartDrawer[SimulationData, SimulationMatplotStyle]):
             low_percentile=low_percentile,
             high_percentile=high_percentile,
         )
+        return None
 
     def _draw_histogram(self) -> None:
         # draw the histogram of the simulation values
@@ -88,54 +90,4 @@ class SimulationDrawer(ChartDrawer[SimulationData, SimulationMatplotStyle]):
             feature_frequencies=feature_frequencies,
             partition_width=partition_width,
         )
-        # self._style.ax = ax
-        #
-        # x = self._simulation_data.partitioning.partitions()
-        # height = self._simulation_data.partitioning.frequencies()
-        # partition_width = self._simulation_data.partitioning.partition_width
-        #
-        # self._style.draw_histogram(x=x, height=height, width=partition_width)
         return None
-
-    def set_feature(self, feature: str) -> None:
-        """
-        Change the feature on which to simulate.
-
-        :param feature: the new feature to use for the simulation
-        """
-        self._simulation.feature = feature
-        return None
-
-    def update_simulation(
-        self,
-        feature: Optional[str] = None,
-        max_partitions: Optional[int] = None,
-        lower_bound: Optional[T_NumericValue] = None,
-        upper_bound: Optional[T_NumericValue] = None,
-        partition_type: Optional[T_RangePartitioning] = None,
-    ):
-        """
-        Update the partition parameters and re-run the simulation.
-
-        :param feature: new feature for the simulation
-        :param max_partitions: maximum number of partitions for the simulation
-        :param lower_bound: minimum value for the simulated feature values
-        :param upper_bound: maximum value for the simulated feature values
-        :param partition_type: class to use for the partitioning
-        """
-        self._simulation.update(
-            feature=feature,
-            max_partitions=max_partitions,
-            lower_bound=lower_bound,
-            upper_bound=upper_bound,
-            partition_type=partition_type,
-        )
-
-    @property
-    def histogram(self) -> bool:
-        """If ``True`` the simulation shows a histogram of the simulated feature."""
-        return self._histogram
-
-    @histogram.setter
-    def histogram(self, value: bool):
-        self._histogram = value
