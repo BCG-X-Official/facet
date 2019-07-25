@@ -174,4 +174,4 @@ class BorutaDF(
         return BorutaPy(**kwargs)
 
     def _get_columns_out(self) -> pd.Index:
-        return self.columns_in[self.base_transformer.support_]
+        return self.columns_in[self.delegate_estimator.support_]
