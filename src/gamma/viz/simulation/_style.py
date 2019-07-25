@@ -30,7 +30,9 @@ class SimulationMatplotStyle(MatplotStyle):
       feature takes the value given on the x axis. There are three curves on the
       graph: for low, middle and high confidence
 
-    - a histogram of the feature simulated values
+    - a histogram graph of the feature simulated values
+
+    :param ax: the axes where the uplift graph is plotted
     """
 
     def __init__(self, ax: Axes) -> None:
