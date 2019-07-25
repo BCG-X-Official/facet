@@ -336,34 +336,41 @@ class DendrogramTextStyle(DendrogramStyle, TextStyle):
     Dendrogram rendered as text.
     """
 
-    MAX_HEIGHT = 100
-
-    def __init__(self, out: TextIO = None, width: int = 80) -> None:
+    def __init__(
+        self, out: TextIO = None, width: int = 80, max_height: int = 100
+    ) -> None:
         super().__init__(out, width)
+        if max_height <= 0:
+            raise ValueError(
+                f"arg max_height expected to be positive integer but is {max_height}"
+            )
+        self._max_height = max_height
         self._dendrogram_left = min(20, width // 2)
         self._char_matrix = None
-        self._leaf_labels = None
-        self._title = None
+        self._n_labels = None
 
     def drawing_start(self, title: str) -> None:
-        self._char_matrix = CharacterMatrix(height=self.MAX_HEIGHT, width=self.width)
-        self._leaf_labels = None
-        self._title = title
+        self.out.write(f"{title:*^{self.width}s}\n")
+        self._char_matrix = CharacterMatrix(height=self._max_height, width=self.width)
 
     def drawing_finalize(self) -> None:
         try:
             super().drawing_finalize()
-            self.out.write(f"{self._title:*^{self.width}s}\n")
-            self.out.write(f"{self._char_matrix}\n")
+            for row in reversed(range(self._n_labels + 1)):
+                self.out.write(f"{self._char_matrix[row,:]}\n")
         finally:
             self._char_matrix = None
-            self._leaf_labels = None
-            self._title = None
+            self._n_labels = None
 
     def draw_leaf_labels(self, labels: Sequence[str]) -> None:
-        label_width = self._weight_column
         matrix = self._char_matrix
-        for row, label in enumerate(labels):
+        n_labels = len(labels)
+        if n_labels > self._max_height:
+            n_labels = self._max_height - 1
+            matrix[n_labels, :] = f"{'clipped╮':~^{self.width}s}\n"
+        self._n_labels = n_labels
+        label_width = self._weight_column
+        for row, label in enumerate(labels[:n_labels]):
             matrix[row, :label_width] = label
 
     @property
@@ -424,9 +431,10 @@ class DendrogramTextStyle(DendrogramStyle, TextStyle):
         y2 = first_leaf + n_leaves_left + (n_leaves_right - 1) // 2
         x = self._x_pos(bottom)
         matrix = self._char_matrix
-        matrix[(y1 + 1) : y2, x] = "|"
-        matrix[y1, x] = "\\"
-        matrix[y2, x] = "/"
+        if y2 - y1 > 1:
+            matrix[(y1 + 1) : y2, x] = "|"
+        matrix[y1, x] = "/"
+        matrix[y2, x] = "\\"
 
     def _x_pos(self, h: float) -> int:
         return self._dendrogram_left + int((self.width - self._dendrogram_left) * h)
