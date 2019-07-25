@@ -8,10 +8,11 @@ uplift.
 import logging
 from typing import Iterable, Optional
 
-import matplotlib.pyplot as plt
 from matplotlib.artist import Artist
 from matplotlib.axes import Axes
 from matplotlib.lines import Line2D
+from mpl_toolkits.axes_grid1 import make_axes_locatable
+from mpl_toolkits.axes_grid1.axes_size import Scaled
 
 from gamma.viz import MatplotStyle
 from gamma.yieldengine.partition import T_NumericValue
@@ -40,8 +41,15 @@ class SimulationMatplotStyle(MatplotStyle):
         self._ax_uplift_graph: Axes = ax
         self._ax_histogram: Optional[Axes] = None
 
+        # set some parameters of the plot
         self._color_confidence = "silver"
         self._color_middle_uplift = "red"
+        self._vertical_offset_histogram_label = 0.05
+        self._scale_padding = Scaled(0.2)
+        self._scale_histogram_height = Scaled(0.6)
+        self._fontsize_ylabel = 12
+        self._color_null_line = "black"
+        self._linewidth_null_line = 0.5
 
     def drawing_start(self, title: str) -> None:
         self._draw_title(title)
@@ -109,7 +117,7 @@ class SimulationMatplotStyle(MatplotStyle):
         :param feature_frequencies: the frequencies of the partitions
         :param partition_width: width of the bars in the histogram
         """
-        self._ax_histogram = self._ax_uplift_graph.figure.add_subplot(212)
+        self._ax_histogram = self._make_ax_histogram()
 
         self._ax_histogram.bar(
             x=feature_values,
@@ -121,21 +129,34 @@ class SimulationMatplotStyle(MatplotStyle):
         self._ax_histogram.invert_yaxis()
         self._ax_histogram.tick_params(axis="y", labelcolor="black")
         max_y = max(feature_frequencies)
-        y_offset = max_y * 0.05
+        y_offset = max_y * self._vertical_offset_histogram_label
         for (_x, _y) in zip(feature_values, feature_frequencies):
             if _y > 0:
                 self._ax_histogram.text(
-                    _x,
-                    _y + y_offset,
-                    str(_y),
-                    color="black",
+                    x=_x,
+                    y=_y + y_offset,
+                    s=str(_y),
                     horizontalalignment="center",
+                    verticalalignment="top",
                 )
         self._ax_histogram.get_yaxis().set_visible(False)
         self._ax_histogram.get_xaxis().set_visible(False)
         for pos in ["top", "right", "left", "bottom"]:
             self._ax_histogram.spines[pos].set_visible(False)
-        plt.subplots_adjust(hspace=0.2)
+
+    def _make_ax_histogram(self) -> Axes:
+        """
+        Return the axes for the histogram.
+
+        :return: the histogram axes
+        """
+        divider = make_axes_locatable(self._ax_uplift_graph)
+        histogram_axes = divider.append_axes(
+            position="bottom",
+            size=self._scale_histogram_height,
+            pad=self._scale_padding,
+        )
+        return histogram_axes
 
     def _draw_extreme_uplift(
         self, x: Iterable[T_NumericValue], y: Iterable[T_NumericValue]
@@ -198,12 +219,14 @@ class SimulationMatplotStyle(MatplotStyle):
 
         self._ax_uplift_graph.set_xlabel(xaxis_label)
 
-        self._ax_uplift_graph.set_ylabel(yaxis_label, color="black", fontsize=12)
+        self._ax_uplift_graph.set_ylabel(yaxis_label, fontsize=self._fontsize_ylabel)
         return None
 
     def _draw_null_uplift_line(self) -> None:
         """Draw  a horizontal line y=0 on the uplift graph."""
-        self._ax_uplift_graph.axhline(y=0, color="black", linewidth=0.5)
+        self._ax_uplift_graph.axhline(
+            y=0, color=self._color_null_line, linewidth=self._linewidth_null_line
+        )
 
     def _set_spins(self) -> None:
         """Set the spines (data boundary lines) in the uplift graph."""
