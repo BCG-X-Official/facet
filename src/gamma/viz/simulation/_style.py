@@ -43,6 +43,10 @@ class SimulationMatplotStyle(MatplotStyle):
         self._color_confidence = "silver"
         self._color_middle_uplift = "red"
 
+    def drawing_start(self, title: str) -> None:
+        self._draw_title(title)
+        return None
+
     @property
     def ax_uplift_graph(self) -> Axes:
         return self._ax_uplift_graph
@@ -51,7 +55,7 @@ class SimulationMatplotStyle(MatplotStyle):
     def ax_histogram(self) -> Optional[Axes]:
         return self._ax_histogram
 
-    def draw_title(self, title: str) -> None:
+    def _draw_title(self, title: str) -> None:
         """Print the title."""
         self._ax_uplift_graph.figure.suptitle(title)
 
