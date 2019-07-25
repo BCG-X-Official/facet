@@ -44,16 +44,16 @@ class SimulationDrawer(ChartDrawer[UnivariateSimulation, SimulationMatplotStyle]
     def _draw(self) -> None:
         # draw the simulation chart
         # self._style.initialize_chart(histogram=self._histogram)
-
+        self._style.drawing_start(self._title)
         self._draw_uplift_graph()
 
         if self._histogram:
             self._draw_histogram()
 
-        self._draw_title()
+        # self._draw_title()
 
-    def _draw_title(self) -> None:
-        self._style.draw_title(self._title)
+    # def _draw_title(self) -> None:
+    #     self._style.draw_title(self._title)
 
     def _draw_uplift_graph(self) -> None:
         # draw the graph with the uplift curves
