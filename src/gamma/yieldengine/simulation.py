@@ -256,12 +256,16 @@ class UnivariateSimulator:
         feature: str,
         low_percentile: int = 10,
         high_percentile: int = 90,
-    ):
+    ) -> UnivariateSimulation:
         """
         Compute a simulation summary from a partition and a fitted model.
 
         :param partition: the partition used for the simulation
-        :param feature:
+        :param feature: the feature of the simulation
+        :param low_percentile: percentile used to compute the low confidence of the
+          uplift simulation
+        :param high_percentile: percentile used to compute the high confidence of the
+          uplift simulation
         """
         feature_values = partition.partitions()
         feature_frequencies = partition.frequencies()
