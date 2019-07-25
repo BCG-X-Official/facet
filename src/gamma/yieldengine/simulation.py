@@ -59,15 +59,12 @@ class UnivariateSimulation:
         results = []
 
         for value in feature_values:
-            feature_synthesizer = UnivariateSimulation.make_column_replacing_transformer(
-                feature_name=feature_name, feature_value=value
-            )
+            # Replace the simulated column with a constant value.
+            synthetic_sample = FunctionTransformerDF(
+                func=lambda x: (x.assign(**{feature_name: value})), validate=False
+            ).fit_transform_sample(self.model_fit.sample)
 
-            synthetic_sample = feature_synthesizer.fit_transform_sample(
-                self.model_fit.sample
-            )
-
-            predictor_for_syn_sample = self.model_fit.copy_with_sample(
+            fit_for_syn_sample = self.model_fit.copy_with_sample(
                 sample=synthetic_sample
             )
 
@@ -77,7 +74,7 @@ class UnivariateSimulation:
                 )
 
                 predictions_for_split_syn: pd.Series = (
-                    predictor_for_syn_sample.predictions_for_split(split_id=split_id)
+                    fit_for_syn_sample.predictions_for_split(split_id=split_id)
                 )
 
                 relative_target_change = (
@@ -85,8 +82,7 @@ class UnivariateSimulation:
                     / predictions_for_split_hist.mean(axis=0)
                 ) - 1
 
-                relative_target_change_ = (split_id, value, relative_target_change)
-                results.append(relative_target_change_)
+                results.append((split_id, value, relative_target_change))
 
         return pd.DataFrame(
             results,
@@ -134,24 +130,3 @@ class UnivariateSimulation:
             .groupby(by=UnivariateSimulation.F_PARAMETER_VALUE)
             .agg([percentile(p) for p in percentiles])
         )
-
-    @staticmethod
-    def make_column_replacing_transformer(
-        feature_name: str, feature_value: object
-    ) -> FunctionTransformerDF:
-        """
-        Replace the values in a column with a constant value.
-
-        :param feature_name: the name of the column
-        :param feature_value: the constant value to use to fill the column
-          `feature_name`
-        :return: transformer that fills the values in the column `feature_name` by the
-          constant value ``feature_value``
-        """
-
-        def transform(x: pd.DataFrame) -> pd.DataFrame:
-            """Set all values in the column feature_name to feature_value."""
-            x[feature_name] = feature_value
-            return x
-
-        return FunctionTransformerDF(func=transform, validate=False)

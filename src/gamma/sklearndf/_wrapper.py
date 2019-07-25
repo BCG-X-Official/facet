@@ -56,15 +56,16 @@ class BaseEstimatorWrapperDF(
     """
     Abstract base class that is a wrapper around :class:`sklearn.base.BaseEstimator`.
 
-    Implementations must define a method ``_make_base_estimator``.
+    Implementations must define a method ``_make_delegate_estimator``.
 
-    :param `**kwargs`: the arguments passed to the base estimator
+    :param `**kwargs`: the arguments passed to the delegate estimator
     """
 
     F_COLUMN_IN = "column_in"
 
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
+        self._columns_in = None
         self._delegate_estimator = type(self)._make_delegate_estimator(**kwargs)
 
     @classmethod
@@ -110,14 +111,16 @@ class BaseEstimatorWrapperDF(
         self, X: pd.DataFrame, y: Optional[pd.Series] = None, **fit_params
     ) -> "BaseEstimatorWrapperDF[T_Estimator]":
         """
-        Fit the base estimator.
+        Fit the delegate estimator.
 
         :param X: data frame to fit the estimator
         :param y: pandas series
         """
+        self._reset_fit()
+
         self._check_parameter_types(X, y)
 
-        self._base_fit(X, y, **fit_params)
+        self._fit(X, y, **fit_params)
 
         self._post_fit(X, y, **fit_params)
 
@@ -125,7 +128,7 @@ class BaseEstimatorWrapperDF(
 
     @property
     def is_fitted(self) -> bool:
-        """``True`` if the base estimator is fitted, else ``False``."""
+        """``True`` if this estimator is fitted, else ``False``."""
         return self._columns_in is not None
 
     @property
@@ -138,8 +141,11 @@ class BaseEstimatorWrapperDF(
         if not self.is_fitted:
             raise RuntimeError("transformer not fitted")
 
+    def _reset_fit(self) -> None:
+        self._columns_in = None
+
     # noinspection PyPep8Naming
-    def _base_fit(
+    def _fit(
         self, X: pd.DataFrame, y: Optional[pd.Series], **fit_params
     ) -> T_Estimator:
         # noinspection PyUnresolvedReferences
@@ -152,10 +158,11 @@ class BaseEstimatorWrapperDF(
         self._columns_in = X.columns.rename(self.F_COLUMN_IN)
 
     # noinspection PyPep8Naming
-    @staticmethod
-    def _check_parameter_types(X: pd.DataFrame, y: Optional[pd.Series]) -> None:
+    def _check_parameter_types(self, X: pd.DataFrame, y: Optional[pd.Series]) -> None:
         if not isinstance(X, pd.DataFrame):
             raise TypeError("arg X must be a DataFrame")
+        if self.is_fitted:
+            BaseEstimatorWrapperDF._verify_df(df=X, expected_columns=self.columns_in)
         if y is not None and not isinstance(y, pd.Series):
             raise TypeError("arg y must be None or a Series")
 
@@ -174,6 +181,44 @@ class BaseEstimatorWrapperDF(
         else:
             setattr(self._delegate_estimator, name, value)
 
+    @staticmethod
+    def _verify_df(
+        df: pd.DataFrame, expected_columns: pd.Index, expected_index: pd.Index = None
+    ) -> None:
+        def _error_message(axis: str, actual: pd.Index, expected: pd.Index):
+            error_message = f"transformed data frame does not have expected {axis}"
+            missing_columns = expected.difference(actual)
+            extra_columns = actual.difference(expected)
+            error_detail = []
+            if len(actual) != len(expected):
+                error_detail.append(
+                    f"expected {len(expected)} items but got {len(actual)}"
+                )
+            if len(missing_columns) > 0:
+                error_detail.append(
+                    f"missing columns: "
+                    f"{', '.join(str(item) for item in missing_columns)}"
+                )
+            if len(extra_columns) > 0:
+                error_detail.append(
+                    f"extra columns: "
+                    f"{', '.join(str(item) for item in extra_columns)}"
+                )
+            if len(error_detail) == 0:
+                error_detail = [f"{axis} not in expected order"]
+            return f"{error_message} ({'; '.join(error_detail)})"
+
+        if not df.columns.equals(expected_columns):
+            raise ValueError(
+                _error_message(
+                    axis="columns", actual=df.columns, expected=expected_columns
+                )
+            )
+        if expected_index is not None and not df.index.equals(expected_index):
+            raise ValueError(
+                _error_message(axis="index", actual=df.index, expected=expected_index)
+            )
+
 
 class TransformerWrapperDF(
     TransformerDF[T_Transformer],
@@ -185,7 +230,7 @@ class TransformerWrapperDF(
     Wraps a :class:`sklearn.base.TransformerMixin` and ensures that the X and y
     objects passed and returned are pandas data frames with valid column names.
 
-    Implementations must define ``_make_base_estimator`` and
+    Implementations must define ``_make_delegate_estimator`` and
     ``_get_columns_original``.
 
     :param `**kwargs`: parameters of scikit-learn transformer to be wrapped
@@ -195,24 +240,19 @@ class TransformerWrapperDF(
 
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
-        self._columns_out = None
         self._columns_original = None
-
-    @property
-    def base_transformer(self) -> T_Transformer:
-        """The base scikit-learn transformer"""
-        return self.delegate_estimator
 
     # noinspection PyPep8Naming
     def transform(self, X: pd.DataFrame) -> pd.DataFrame:
-        """Call the transform method of the base transformer ``self.base_transformer``.
+        """Call the transform method of the delegate transformer
+        ``self.delegate_estimator``.
 
         :param X: data frame to transform
         :return: transformed data frame
         """
         self._check_parameter_types(X, None)
 
-        transformed = self._base_transform(X)
+        transformed = self._transform(X)
 
         return self._transformed_to_df(
             transformed=transformed, index=X.index, columns=self.columns_out
@@ -222,16 +262,19 @@ class TransformerWrapperDF(
     def fit_transform(
         self, X: pd.DataFrame, y: Optional[pd.Series] = None, **fit_params
     ) -> pd.DataFrame:
-        """Call the ``fit_transform`` method of ``self.base_transformer``.
+        """Call the ``fit_transform`` method of ``self.delegate_estimator``.
 
         :param X: data frame to transform
         :param y: series of training targets
-        :param fit_params: parameters passed to the fit method of the base transformer
+        :param fit_params: parameters passed to the fit method of the delegate
+                           transformer
         :return: data frame of transformed sample
         """
+        self._reset_fit()
+
         self._check_parameter_types(X, y)
 
-        transformed = self._base_fit_transform(X, y, **fit_params)
+        transformed = self._fit_transform(X, y, **fit_params)
 
         self._post_fit(X, y, **fit_params)
 
@@ -241,16 +284,19 @@ class TransformerWrapperDF(
 
     # noinspection PyPep8Naming
     def inverse_transform(self, X: pd.DataFrame) -> pd.DataFrame:
-        """Apply inverse transformations in reverse order on the base transformer.
+        """
+        Apply inverse transformations in reverse order on the delegate
+        transformer.
 
         All estimators in the pipeline must support ``inverse_transform``.
         :param X: data frame of samples
         :return: data frame of inverse-transformed samples
         """
+        self._reset_fit()
 
         self._check_parameter_types(X, None)
 
-        transformed = self._base_inverse_transform(X)
+        transformed = self._inverse_transform(X)
 
         return self._transformed_to_df(
             transformed=transformed, index=X.index, columns=self.columns_in
@@ -279,38 +325,41 @@ class TransformerWrapperDF(
         """
         pass
 
-    # noinspection PyPep8Naming,PyUnusedLocal
-    def _post_fit(
-        self, X: pd.DataFrame, y: Optional[pd.Series] = None, **fit_params
-    ) -> None:
-        super()._post_fit(X=X, y=y, **fit_params)
-        self._columns_out = None
-        self._columns_original = None
+    def _reset_fit(self) -> None:
+        try:
+            # noinspection PyProtectedMember
+            super()._reset_fit()
+        finally:
+            self._columns_original = None
 
     @staticmethod
     def _transformed_to_df(
         transformed: Union[pd.DataFrame, np.ndarray], index: pd.Index, columns: pd.Index
     ):
         if isinstance(transformed, pd.DataFrame):
+            # noinspection PyProtectedMember
+            TransformerWrapperDF._verify_df(
+                df=transformed, expected_columns=columns, expected_index=index
+            )
             return transformed
         else:
             return pd.DataFrame(data=transformed, index=index, columns=columns)
 
     # noinspection PyPep8Naming
-    def _base_transform(self, X: pd.DataFrame) -> np.ndarray:
+    def _transform(self, X: pd.DataFrame) -> np.ndarray:
         # noinspection PyUnresolvedReferences
-        return self.base_transformer.transform(X)
+        return self.delegate_estimator.transform(X)
 
     # noinspection PyPep8Naming
-    def _base_fit_transform(
+    def _fit_transform(
         self, X: pd.DataFrame, y: Optional[pd.Series], **fit_params
     ) -> np.ndarray:
-        return self.base_transformer.fit_transform(X, y, **fit_params)
+        return self.delegate_estimator.fit_transform(X, y, **fit_params)
 
     # noinspection PyPep8Naming
-    def _base_inverse_transform(self, X: pd.DataFrame) -> np.ndarray:
+    def _inverse_transform(self, X: pd.DataFrame) -> np.ndarray:
         # noinspection PyUnresolvedReferences
-        return self.base_transformer.inverse_transform(X)
+        return self.delegate_estimator.inverse_transform(X)
 
 
 class BasePredictorWrapperDF(
@@ -368,7 +417,7 @@ class BasePredictorWrapperDF(
 
         :param X: the data frame of features
         :param predict_params: additional arguments passed to the ``predict`` method \
-        of the base estimator
+        of the delegate estimator
         :return: the predictions
         """
         self._check_parameter_types(X, None)
@@ -386,7 +435,7 @@ class BasePredictorWrapperDF(
         :param X: the data frame of features
         :param y: the series of target used to train the model
         :param fit_params: additional arguments passed to the the ``predict`` method
-          of the base estimator
+          of the delegate estimator
         :return: series of the predictions for X
         """
         self._check_parameter_types(X, y)
@@ -408,7 +457,7 @@ class BasePredictorWrapperDF(
         sample_weight: Optional[Any] = None,
     ) -> float:
         """
-        Return the score of the base estimator.
+        Return the score of the delegate estimator.
 
         :param X: data frame of the features, shape = (n_samples, n_features)
         :param y: series of the true targets, shape = (n_samples) or (n_samples, \
@@ -424,7 +473,8 @@ class BasePredictorWrapperDF(
         self, X: pd.DataFrame, y: MatrixLike[Any]
     ) -> Union[pd.Series, pd.DataFrame]:
         if isinstance(y, pd.Series) or isinstance(y, pd.DataFrame):
-            # if we already have a series or data frame, return it unchanged
+            # if we already have a series or data frame, check it and return it
+            # unchanged
             return y
         elif isinstance(y, np.ndarray):
             if len(y) == len(X):
@@ -470,7 +520,7 @@ class ClassifierWrapperDF(
         """
         Classes of this classifier after fitting.
 
-        ``None`` if the base estimator has no `classes_` property.
+        ``None`` if the delegate estimator has no `classes_` property.
         """
         if self.is_fitted:
             return getattr(self.delegate_estimator, "classes_", None)
@@ -562,34 +612,34 @@ class NDArrayTransformerWrapperDF(
     TransformerWrapperDF[T_Transformer], Generic[T_Transformer], ABC
 ):
     """
-    `TransformerDF` whose base transformer only accepts numpy ndarrays.
+    `TransformerDF` whose delegate transformer only accepts numpy ndarrays.
 
-    Wraps around the base transformer and converts the data frame to an array when
+    Wraps around the delegate transformer and converts the data frame to an array when
     needed.
     """
 
     # noinspection PyPep8Naming
-    def _base_fit(
+    def _fit(
         self, X: pd.DataFrame, y: Optional[pd.Series], **fit_params
     ) -> T_Transformer:
         # noinspection PyUnresolvedReferences
-        return self.base_transformer.fit(X.values, y.values, **fit_params)
+        return self.delegate_estimator.fit(X.values, y.values, **fit_params)
 
     # noinspection PyPep8Naming
-    def _base_transform(self, X: pd.DataFrame) -> np.ndarray:
+    def _transform(self, X: pd.DataFrame) -> np.ndarray:
         # noinspection PyUnresolvedReferences
-        return self.base_transformer.transform(X.values)
+        return self.delegate_estimator.transform(X.values)
 
     # noinspection PyPep8Naming
-    def _base_fit_transform(
+    def _fit_transform(
         self, X: pd.DataFrame, y: Optional[pd.Series], **fit_params
     ) -> np.ndarray:
-        return self.base_transformer.fit_transform(X.values, y.values, **fit_params)
+        return self.delegate_estimator.fit_transform(X.values, y.values, **fit_params)
 
     # noinspection PyPep8Naming
-    def _base_inverse_transform(self, X: pd.DataFrame) -> np.ndarray:
+    def _inverse_transform(self, X: pd.DataFrame) -> np.ndarray:
         # noinspection PyUnresolvedReferences
-        return self.base_transformer.inverse_transform(X.values)
+        return self.delegate_estimator.inverse_transform(X.values)
 
 
 class PersistentNamingTransformerWrapperDF(
@@ -651,8 +701,8 @@ def df_estimator(
     :param df_estimator_type: optional parameter indicating the \
                               :class:`BaseEstimatorWrapperDF` class to be used for \
                               wrapping; defaults to :class:`BaseEstimatorWrapperDF`
-    :return: the resulting `BaseEstimatorWrapperDF` with ``base_estimator`` as \
-             the base estimator
+    :return: the resulting `BaseEstimatorWrapperDF` with ``delegate_estimator`` as \
+             the delegate estimator
     """
 
     def _decorate(
@@ -673,7 +723,7 @@ def df_estimator(
 
         sklearn_base_estimator = sklearn_base_estimators[0]
 
-        # wrap the base estimator
+        # wrap the delegate estimator
 
         @wraps(decoratee, updated=())
         class _DataFrameEstimator(df_estimator_type):

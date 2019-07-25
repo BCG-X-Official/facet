@@ -27,7 +27,7 @@ class ModelGrid:
     A grid of hyperparameters for model tuning.
 
     :param pipeline: the :class:`ModelPipelineDF` to which the hyperparameters will be applied
-    :param estimator_parameters: the hyperparameter grid in which to search for the \
+    :param predictor_parameters: the hyperparameter grid in which to search for the \
         optimal parameter values for the model's estimator
     :param preprocessing_parameters: the hyperparameter grid in which to search for \
         the optimal parameter values for the model's preprocessing pipeline (optional)
@@ -36,11 +36,11 @@ class ModelGrid:
     def __init__(
         self,
         pipeline: ModelPipelineDF,
-        estimator_parameters: ParameterGrid,
+        predictor_parameters: ParameterGrid,
         preprocessing_parameters: Optional[ParameterGrid] = None,
     ) -> None:
         self._pipeline = pipeline
-        self._estimator_parameters = estimator_parameters
+        self._predictor_parameters = predictor_parameters
         self._preprocessing_parameters = preprocessing_parameters
 
         def _prefix_parameter_names(
@@ -51,7 +51,7 @@ class ModelGrid:
             ]
 
         grid_parameters: Iterable[Tuple[str, Any]] = _prefix_parameter_names(
-            parameters=estimator_parameters, prefix="predictor"
+            parameters=predictor_parameters, prefix="predictor"
         )
         if preprocessing_parameters is not None:
             grid_parameters = chain(
@@ -66,14 +66,15 @@ class ModelGrid:
     @property
     def pipeline(self) -> ModelPipelineDF:
         """
-        The :class:`~yieldengine.model.ModelPipelineDF` for which to optimise the parameters.
+        The :class:`~yieldengine.model.ModelPipelineDF` for which to optimise the
+        parameters.
         """
         return self._pipeline
 
     @property
-    def estimator_parameters(self) -> ParameterGrid:
+    def predictor_parameters(self) -> ParameterGrid:
         """The parameter grid for the estimator."""
-        return self._estimator_parameters
+        return self._predictor_parameters
 
     @property
     def preprocessing_parameters(self) -> Optional[ParameterGrid]:
