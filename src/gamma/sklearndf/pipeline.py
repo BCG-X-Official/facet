@@ -60,7 +60,7 @@ class PipelineDF(
                 )
 
     def _transform_steps(self) -> List[Tuple[str, TransformerDF]]:
-        pipeline = self.base_transformer
+        pipeline = self.delegate_estimator
 
         steps = pipeline.steps
 
@@ -111,7 +111,7 @@ class PipelineDF(
 
         List of (name, transformer) tuples (transformers implement fit/transform).
         """
-        return self.base_transformer.steps
+        return self.delegate_estimator.steps
 
     @property
     def named_steps(self) -> object:
@@ -120,11 +120,11 @@ class PipelineDF(
 
         :return: object with attributes corresponding to the names of the steps
         """
-        return self.base_transformer.named_steps
+        return self.delegate_estimator.named_steps
 
     def __len__(self) -> int:
         """The number of steps of the pipeline."""
-        return len(self.base_transformer.steps)
+        return len(self.delegate_estimator.steps)
 
     def __getitem__(self, ind: Union[slice, int, str]) -> BaseEstimatorDF:
         """
@@ -138,7 +138,7 @@ class PipelineDF(
         """
 
         if isinstance(ind, slice):
-            base_pipeline = self.base_transformer
+            base_pipeline = self.delegate_estimator
             if ind.step not in (1, None):
                 raise ValueError("Pipeline slicing only supports a step of 1")
             # noinspection PyTypeChecker
@@ -148,7 +148,7 @@ class PipelineDF(
                 verbose=base_pipeline.verbose,
             )
         else:
-            return self.base_transformer[ind]
+            return self.delegate_estimator[ind]
 
 
 class ModelPipelineDF(BaseEstimator, ClassifierDF, RegressorDF, Generic[T_PredictorDF]):
@@ -157,7 +157,7 @@ class ModelPipelineDF(BaseEstimator, ClassifierDF, RegressorDF, Generic[T_Predic
     mandatory estimator step.
 
     :param preprocessing: the preprocessing step in the pipeline (defaults to ``None``)
-    :param predictor: the base estimator used in the pipeline
+    :param predictor: the delegate estimator used in the pipeline
     :type predictor: :class:`.BasePredictorDF`
     """
 

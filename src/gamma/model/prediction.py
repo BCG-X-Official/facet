@@ -121,26 +121,13 @@ class PredictorFitCV(ABC, Generic[T_PredictorDF]):
         model = self.model
         sample = self.sample
 
-        self._model_by_split: List[ModelPipelineDF] = self._parrallel()(
+        self._model_by_split: List[ModelPipelineDF] = self._parallel()(
             delayed(self._fit_model_for_split)(
                 model.clone(),
                 sample.select_observations_by_position(positions=train_indices),
             )
             for train_indices, _ in self.cv.split(sample.features, sample.target)
         )
-
-    def _parrallel(self) -> Parallel:
-        return Parallel(
-            n_jobs=self._n_jobs,
-            require="sharedmem" if self._shared_memory else None,
-            verbose=self._verbose,
-        )
-
-    def _series_for_split(self, split_id: int, column: str) -> pd.Series:
-        all_predictions: pd.DataFrame = self.predictions_for_all_splits()
-        return all_predictions.xs(key=split_id, level=PredictorFitCV.F_SPLIT_ID).loc[
-            :, column
-        ]
 
     def predictions_for_split(self, split_id: int) -> pd.Series:
         """
@@ -213,7 +200,7 @@ class PredictorFitCV(ABC, Generic[T_PredictorDF]):
 
     def copy_with_sample(self, sample: Sample):
         """
-        Copy the predictor with some new :class:`yieldengine.Sample`.
+        Make a copy of this predictor using a new :class:`yieldengine.Sample`.
 
         :param sample: the :class:`yieldengine.Sample` used for the copy
         :return: the copy of self
@@ -222,6 +209,19 @@ class PredictorFitCV(ABC, Generic[T_PredictorDF]):
         copied_predictor._sample = sample
         copied_predictor._predictions_for_all_samples = None
         return copied_predictor
+
+    def _parallel(self) -> Parallel:
+        return Parallel(
+            n_jobs=self._n_jobs,
+            require="sharedmem" if self._shared_memory else None,
+            verbose=self._verbose,
+        )
+
+    def _series_for_split(self, split_id: int, column: str) -> pd.Series:
+        all_predictions: pd.DataFrame = self.predictions_for_all_splits()
+        return all_predictions.xs(key=split_id, level=PredictorFitCV.F_SPLIT_ID).loc[
+            :, column
+        ]
 
     @staticmethod
     def _fit_model_for_split(
@@ -348,7 +348,7 @@ class ClassifierFitCV(PredictorFitCV[T_ClassifierDF], Generic[T_ClassifierDF]):
             )
             self._calibrated_model_by_split: List[
                 ModelPipelineDF[T_ClassifierDF]
-            ] = self._parrallel()(
+            ] = self._parallel()(
                 delayed(self._calibrate_probabilities_for_split)(
                     # note: we specifically do not clone here, since
                     # CalibratedClassifierCV does expect a fitted classifier and does
