@@ -7,6 +7,7 @@ from typing import *
 import numpy as np
 import pandas as pd
 
+from gamma import ListLike
 from gamma.model.prediction import PredictorFitCV
 from gamma.sklearndf.transformation import FunctionTransformerDF
 from gamma.yieldengine.partition import Partitioning, T_Number
@@ -22,9 +23,9 @@ class UnivariateSimulation:
         feature_name: str,
         target_name: str,
         partitioning: Partitioning,
-        median_uplift: Iterable[T_Number],
-        min_uplift: Iterable[T_Number],
-        max_uplift: Iterable[T_Number],
+        median_uplift: ListLike[T_Number],
+        min_uplift: ListLike[T_Number],
+        max_uplift: ListLike[T_Number],
         min_percentile: float,
         max_percentile: float,
     ):
@@ -50,15 +51,15 @@ class UnivariateSimulation:
         return self._partitioning
 
     @property
-    def median_uplift(self) -> Iterable[T_Number]:
+    def median_uplift(self) -> ListLike[T_Number]:
         return self._median_uplift
 
     @property
-    def min_uplift(self) -> Iterable[T_Number]:
+    def min_uplift(self) -> ListLike[T_Number]:
         return self._min_uplift
 
     @property
-    def max_uplift(self) -> Iterable[T_Number]:
+    def max_uplift(self) -> ListLike[T_Number]:
         return self._max_uplift
 
     @property
@@ -145,9 +146,9 @@ class UnivariateSimulator:
             feature_name=feature_name,
             target_name=self._model_fit.sample.target_name,
             partitioning=partitioning,
-            median_uplift=prediction_uplift.iloc[:, 1].to_list(),
-            min_uplift=prediction_uplift.iloc[:, 0].to_list(),
-            max_uplift=prediction_uplift.iloc[:, 2].to_list(),
+            median_uplift=prediction_uplift.iloc[:, 1].values,
+            min_uplift=prediction_uplift.iloc[:, 0].values,
+            max_uplift=prediction_uplift.iloc[:, 2].values,
             min_percentile=self._min_percentile,
             max_percentile=self._max_percentile,
         )
