@@ -231,14 +231,14 @@ class ColumnTransformerDF(TransformerWrapperDF[ColumnTransformer]):
         if not (
             all(
                 [
-                    isinstance(transformer, TransformerWrapperDF)
+                    isinstance(transformer, TransformerDF)
                     for _, transformer, _ in column_transformer.transformers
                 ]
             )
         ):
             raise ValueError(
                 "arg column_transformer must only contain instances of "
-                "TransformerWrapperDF"
+                f"{TransformerDF.__name__}"
             )
 
         self._columnTransformer = column_transformer
