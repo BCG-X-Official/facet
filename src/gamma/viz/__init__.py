@@ -6,6 +6,7 @@ from abc import ABC, abstractmethod
 from typing import *
 from typing import TextIO
 
+import matplotlib.pyplot as plt
 from matplotlib.axes import Axes
 
 T_Model = TypeVar("T_Model")
@@ -89,12 +90,12 @@ class MatplotStyle(ChartStyle, ABC):
     """Matplotlib drawer style.
 
     Implementations must define :meth:`~ChartStyle.draw_title`.
-    :param ax: drawn axes
+    :param ax: opttional axes object to draw on; if ``Null`` use pyplot's current axes
     """
 
     def __init__(self, ax: Optional[Axes] = None) -> None:
         super().__init__()
-        self._ax = ax
+        self._ax = plt.gca() if ax is None else ax
 
     @property
     def ax(self) -> Axes:
@@ -102,10 +103,6 @@ class MatplotStyle(ChartStyle, ABC):
         The matplot :class:`~matplotlib.axes.Axes` object to draw the chart in.
         """
         return self._ax
-
-    @ax.setter
-    def ax(self, new_ax: Axes):
-        self._ax = new_ax
 
 
 class TextStyle(ChartStyle, ABC):
