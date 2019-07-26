@@ -47,13 +47,13 @@ class SimulationDrawer(ChartDrawer[UnivariateSimulation, SimulationMatplotStyle]
     def _draw_uplift_graph(self) -> None:
         # draw the graph with the uplift curves
         simulation: UnivariateSimulation = self._model
-        self._style.draw_uplift_graph(
+        self._style.draw_uplift(
             feature_name=simulation.feature_name,
             target_name=simulation.target_name,
             partitioning=simulation.partitioning,
             median_uplift=simulation.median_uplift,
-            low_percentile_uplift=simulation.min_uplift,
-            high_percentile_uplift=simulation.max_uplift,
+            min_uplift=simulation.min_uplift,
+            max_uplift=simulation.max_uplift,
             low_percentile=simulation.min_percentile,
             high_percentile=simulation.max_percentile,
         )
