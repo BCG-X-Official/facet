@@ -1,9 +1,9 @@
 import pandas as pd
+from sklearn.ensemble import RandomForestRegressor
 
 from gamma import Sample
 from gamma.sklearndf import TransformerDF
 from gamma.sklearndf.pipeline import PipelineDF
-from gamma.sklearndf.regression import RandomForestRegressorDF
 from gamma.sklearndf.transformation import SimpleImputerDF
 from gamma.sklearndf.transformation.extra import BorutaDF
 
@@ -23,7 +23,7 @@ def test_boruta_df(boston_df: pd.DataFrame, boston_target: str) -> None:
             (
                 "boruta",
                 BorutaDF(
-                    estimator=RandomForestRegressorDF(), n_estimators=10, max_iter=10
+                    estimator=RandomForestRegressor(), n_estimators=10, max_iter=10
                 ),
             ),
         ]
