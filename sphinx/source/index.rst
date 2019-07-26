@@ -16,8 +16,7 @@ Installation
 TODO
 
 .. toctree::
-   :titlesonly:
-   :maxdepth: 3
+   :maxdepth: 4
    :caption: Contents
 
    tutorial/quick_start
