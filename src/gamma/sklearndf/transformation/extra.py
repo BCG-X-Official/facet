@@ -29,10 +29,11 @@ class OutlierRemoverDF(TransformerDF["OutlierRemoverDF"], BaseEstimator):
     where :math:`Q_1` and :math:`Q_3` are the lower and upper quartiles.
 
     :param iqr_multiple: the multiple used to define the range of non-outlier
-      samples in the above explanation
+      samples in the above explanation (defaults to 3.0 as per Tukey's definition of
+      far outliers)
     """
 
-    def __init__(self, iqr_multiple: float):
+    def __init__(self, iqr_multiple: float = 3.0):
         super().__init__()
         if iqr_multiple < 0.0:
             raise ValueError(f"arg iqr_multiple is negative: {iqr_multiple}")
