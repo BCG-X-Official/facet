@@ -46,13 +46,13 @@ def test_univariate_simulation(
         n_jobs=available_cpus,
     )
 
-    sim = UnivariateSimulator(model_fit=model_fit)
+    sim = UnivariateSimulator(model_fit=model_fit, min_percentile=10, max_percentile=90)
 
     parameterized_feature = "Step4-6 RawMat Vendor Compound08 Purity (#)"
 
-    res = sim.simulate_feature(
+    res = sim._simulate_feature_with_values(
         feature_name=parameterized_feature,
-        feature_values=ContinuousRangePartitioning(
+        simulated_values=ContinuousRangePartitioning(
             values=sample.features.loc[:, parameterized_feature]
         ).partitions(),
     )
@@ -64,9 +64,7 @@ def test_univariate_simulation(
     assert res.iloc[:, 2].max() == approx(0.01904097474184785)
     assert res.iloc[:, 2].min() == approx(-0.050256813777029286)
 
-    aggregated_results = UnivariateSimulator.aggregate_simulation_results(
-        results_per_split=res, percentiles=[10, 50, 90]
-    )
+    aggregated_results = sim._aggregate_simulation_results(results_per_split=res)
     log.debug(aggregated_results)
 
     # test the first five rows of aggregated_results
