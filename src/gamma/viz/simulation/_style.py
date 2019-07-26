@@ -6,22 +6,50 @@ uplift.
 """
 
 import logging
-from typing import Iterable, Optional
+from abc import ABC, abstractmethod
+from typing import Optional
 
-from matplotlib.artist import Artist
 from matplotlib.axes import Axes
-from matplotlib.lines import Line2D
 from mpl_toolkits.axes_grid1 import make_axes_locatable
+from mpl_toolkits.axes_grid1.axes_divider import AxesDivider
 from mpl_toolkits.axes_grid1.axes_size import Scaled
 
 from gamma import ListLike
-from gamma.viz import MatplotStyle
+from gamma.viz import ChartStyle, MatplotStyle
 from gamma.yieldengine.partition import Partitioning, T_Number
 
 log = logging.getLogger(__name__)
 
 
-class SimulationMatplotStyle(MatplotStyle):
+class SimulationStyle(ChartStyle, ABC):
+    @abstractmethod
+    def draw_uplift(
+        self,
+        feature_name: str,
+        target_name: str,
+        partitioning: Partitioning,
+        median_uplift: ListLike[T_Number],
+        min_uplift: ListLike[T_Number],
+        max_uplift: ListLike[T_Number],
+        low_percentile: int,
+        high_percentile: int,
+    ) -> None:
+        """
+        Draw the graph with the uplift curves: median, low and high percentiles.
+        """
+        pass
+
+    @abstractmethod
+    def draw_histogram(self, partitioning: Partitioning) -> None:
+        """
+        Draw frequencies histogram.
+
+        :param partitioning: the partitioning used for the simulation
+        """
+        pass
+
+
+class SimulationMatplotStyle(MatplotStyle, SimulationStyle):
     """
     Matplotlib Style for simulation chart.
 
@@ -35,68 +63,59 @@ class SimulationMatplotStyle(MatplotStyle):
     - a histogram graph of the feature simulated values
 
     :param ax: the axes where the uplift graph is plotted
+    :param x_label_height: the height of the central chart area reserved for the x
+      labels, relative to the overall chart height (default: 0.1)
     """
 
     _COLOR_CONFIDENCE = "silver"
+    _COLOR_BARS = "silver"
     _COLOR_MEDIAN_UPLIFT = "orange"
 
-    def __init__(self, ax: Optional[Axes] = None) -> None:
+    def __init__(self, ax: Optional[Axes] = None, x_label_height: float = 0.1) -> None:
         super().__init__(ax=ax)
-        self._ax_histogram: Optional[Axes] = None
+        if x_label_height <= 0 or x_label_height >= 1:
+            raise ValueError(f"arg x_label_height={x_label_height} must be > 0 and < 1")
+        self._x_label_height = x_label_height
 
-    def drawing_start(self, title: str) -> None:
-        self._draw_title(title)
-
-    @property
-    def ax_uplift_graph(self) -> Axes:
-        return self.ax
-
-    @property
-    def ax_histogram(self) -> Optional[Axes]:
-        return self._ax_histogram
-
-    def _draw_title(self, title: str) -> None:
-        """Print the title."""
-        self.ax.figure.suptitle(title)
-
-    def draw_uplift_graph(
+    def draw_uplift(
         self,
         feature_name: str,
         target_name: str,
         partitioning: Partitioning,
         median_uplift: ListLike[T_Number],
-        low_percentile_uplift: ListLike[T_Number],
-        high_percentile_uplift: ListLike[T_Number],
+        min_uplift: ListLike[T_Number],
+        max_uplift: ListLike[T_Number],
         low_percentile: int,
         high_percentile: int,
-    ):
+    ) -> None:
         """
         Draw the graph with the uplift curves: median, low and high percentiles.
         """
-        line_low = self._draw_low_confidence_uplift(
-            partitioning.partitions(), low_percentile_uplift
-        )
-        line_median = self._draw_middle_confidence_uplift(
-            partitioning.partitions(), median_uplift
-        )
-        line_high = self._draw_high_confidence_uplift(
-            partitioning.partitions(), high_percentile_uplift
-        )
+
+        x = self._x_labels(partitioning)
+        ax = self.ax
+        line_min, = ax.plot(x, min_uplift, color=self._COLOR_CONFIDENCE)
+        line_median, = ax.plot(x, median_uplift, color=self._COLOR_MEDIAN_UPLIFT)
+        line_max, = ax.plot(x, max_uplift, color=self._COLOR_CONFIDENCE)
 
         labels = [
             f"{high_percentile}th percentile",
             "Median",
             f"{low_percentile}th percentile",
         ]
-        handles = [line_high, line_median, line_low]
-        self._draw_uplift_legend(handles=handles, labels=labels)
+        handles = [line_max, line_median, line_min]
+        ax.legend(handles, labels)
 
-        self._draw_uplift_axis(
-            x_label=feature_name, y_label=f"Predicted mean uplift ({target_name})"
-        )
+        ax.tick_params(axis="x", labelbottom=True, bottom=False)
+        ax.set_ylabel(f"Predicted mean uplift ({target_name})")
 
-        self._draw_null_uplift_line()
-        self._set_spins()
+        if partitioning.is_categorical:
+            ax.set_xticks(x)
+            ax.set_xticklabels(labels=partitioning.partitions(), rotation=45)
+
+        ax.axhline(y=0, linewidth=0.5)
+        for pos in ["top", "right", "bottom"]:
+            ax.spines[pos].set_visible(False)
 
     def draw_histogram(self, partitioning: Partitioning) -> None:
         """
@@ -104,119 +123,52 @@ class SimulationMatplotStyle(MatplotStyle):
 
         :param partitioning: the partitioning used for the simulation
         """
-        self._ax_histogram = self._make_ax_histogram()
+        x_values = list(range(len(partitioning)))
+        y_values = partitioning.frequencies()
 
-        self._ax_histogram.bar(
-            x=(partitioning.partitions()),
-            height=(partitioning.frequencies()),
-            color="silver",
-            edgecolor="white",
+        # create the sub-axes for the histogram
+        uplift_y_min, uplift_y_max = self.ax.get_ylim()
+        uplift_height = abs(uplift_y_max - uplift_y_min)
+
+        divider: AxesDivider = make_axes_locatable(self.ax)
+        ax = divider.append_axes(
+            position="bottom",
+            size=Scaled(uplift_height),
+            pad=Scaled(
+                2 * self._x_label_height * uplift_height / (1 - self._x_label_height)
+            ),
         )
-        self._ax_histogram.invert_yaxis()
-        self._ax_histogram.tick_params(axis="y", labelcolor="black")
-        max_y = max(partitioning.frequencies())
-        label_vertical_offset = max_y * 0.05
-        for (_x, _y) in zip(partitioning.partitions(), partitioning.frequencies()):
-            if _y > 0:
-                self._ax_histogram.text(
-                    x=_x,
-                    y=_y + label_vertical_offset,
-                    s=str(_y),
+
+        ax.invert_yaxis()
+
+        ax.bar(x=x_values, height=y_values, color=self._COLOR_BARS, align="center")
+
+        ax.set_xmargin(0)
+
+        # draw labels
+        _, max_y = ax.get_ylim()
+        label_vertical_offset = max_y * 0.02
+        for x, y in zip(x_values, y_values):
+            if y > 0:
+                ax.text(
+                    x=x,
+                    y=y + label_vertical_offset,
+                    s=y,
                     horizontalalignment="center",
                     verticalalignment="top",
                 )
-        self._ax_histogram.get_yaxis().set_visible(False)
-        self._ax_histogram.get_xaxis().set_visible(False)
+
+        # ax.set_xticks(x_values)
+
+        # hide x and y axis
+        # ax.get_xaxis().set_visible(False)
+        ax.get_yaxis().set_visible(False)
+
         for pos in ["top", "right", "left", "bottom"]:
-            self._ax_histogram.spines[pos].set_visible(False)
+            ax.spines[pos].set_visible(False)
 
-    def _make_ax_histogram(self) -> Axes:
-        """
-        Return the axes for the histogram.
-
-        :return: the histogram axes
-        """
-        divider = make_axes_locatable(self.ax)
-        histogram_axes = divider.append_axes(
-            # todo: what is the meaning of Scaled in this context?
-            position="bottom",
-            size=Scaled(0.05),
-            pad=Scaled(0.01),
-        )
-        return histogram_axes
-
-    def _draw_extreme_uplift(
-        self, x: Iterable[T_Number], y: Iterable[T_Number]
-    ) -> Line2D:
-        # draw curve of uplift for confidence interval
-        line, = self.ax.plot(x, y, color=self._COLOR_CONFIDENCE)
-        return line
-
-    def _draw_low_confidence_uplift(
-        self, x: Iterable[T_Number], y: Iterable[T_Number]
-    ) -> Line2D:
-        """Draw the low confidence uplift curve.
-
-        :param x: simulated feature values
-        :param y: low confidence simulated predictions
-        :return: the matplotlib object representing the line plotted
-        """
-        return self._draw_extreme_uplift(x, y)
-
-    def _draw_high_confidence_uplift(
-        self, x: Iterable[T_Number], y: Iterable[T_Number]
-    ) -> Line2D:
-        """
-        Draw the high confidence uplift curve.
-
-        :param x: simulated feature values
-        :param y: high confidence simulated predictions
-        :return: the matplotlib object representing the line plotted
-        """
-        return self._draw_extreme_uplift(x, y)
-
-    def _draw_middle_confidence_uplift(
-        self, x: Iterable[T_Number], y: Iterable[T_Number]
-    ) -> Line2D:
-        """
-        Draw the middle uplift curve.
-
-        :param x: simulated feature values
-        :param y: middle confidence simulated predictions
-        :return: the matplotlib object representing the line plotted
-        """
-        return self.ax.plot(x, y, color=self._COLOR_MEDIAN_UPLIFT)
-
-    def _draw_uplift_axis(self, x_label: str, y_label: str) -> None:
-        """
-        Draw x ticks, set x labels in the uplift graph.
-
-        :param x_label: label for the x axis in the uplift graph
-        :param y_label: label for the y axis in the uplift graph
-        """
-
-        self.ax.tick_params(axis="x", labelbottom=True, bottom=False)
-        self.ax.set_xlabel(x_label)
-        self.ax.set_ylabel(y_label)
-
-    def _draw_null_uplift_line(self) -> None:
-        """Draw  a horizontal line y=0 on the uplift graph."""
-        self.ax.axhline(y=0, linewidth=0.5)
-
-    def _set_spins(self) -> None:
-        """Set the spines (data boundary lines) in the uplift graph."""
-
-        for pos in ["top", "right", "bottom"]:
-            self.ax.spines[pos].set_visible(False)
-
-    def _draw_uplift_legend(
-        self, handles: Iterable[Artist], labels: Iterable[str]
-    ) -> None:
-        """
-        Draw the legend of the uplift graph.
-
-        :param handles: the matplotlib objects to include in the legend
-        :param labels: the label in the legend for the matplotlib objects in ``handles``
-        """
-
-        self.ax.legend(handles, labels, frameon=False)
+    def _x_labels(self, partitioning) -> ListLike:
+        if partitioning.is_categorical:
+            return list(range(len(partitioning)))
+        else:
+            return partitioning.partitions()
