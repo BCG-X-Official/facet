@@ -30,7 +30,7 @@ log = logging.getLogger(__name__)
 DEFAULT_MAX_PARTITIONS = 20
 
 T_Value = TypeVar("T_Value")
-T_NumericValue = TypeVar("T_NumericValue", bound=Union[int, float])
+T_Number = TypeVar("T_Number", bound=Union[int, float])
 
 
 class Partitioning(ABC, Generic[T_Value]):
@@ -61,9 +61,7 @@ class Partitioning(ABC, Generic[T_Value]):
         pass
 
 
-class RangePartitioning(
-    Partitioning[T_NumericValue], Generic[T_NumericValue], metaclass=ABCMeta
-):
+class RangePartitioning(Partitioning[T_Number], Generic[T_Number], metaclass=ABCMeta):
     """
     Partition numerical values in successive intervals of the same length.
 
@@ -92,10 +90,10 @@ class RangePartitioning(
 
     def __init__(
         self,
-        values: ListLike[T_NumericValue],
+        values: ListLike[T_Number],
         max_partitions: int = DEFAULT_MAX_PARTITIONS,
-        lower_bound: Optional[T_NumericValue] = None,
-        upper_bound: Optional[T_NumericValue] = None,
+        lower_bound: Optional[T_Number] = None,
+        upper_bound: Optional[T_Number] = None,
     ) -> None:
         super().__init__()
 
@@ -136,7 +134,7 @@ class RangePartitioning(
 
         self._frequencies = _frequencies()
 
-    def partitions(self) -> Iterable[T_NumericValue]:
+    def partitions(self) -> Iterable[T_Number]:
         """
         Return the central values of the partitions.
 
@@ -161,7 +159,7 @@ class RangePartitioning(
         """Number of partitions."""
         return self._n_partitions
 
-    def partition_bounds(self) -> Iterable[Tuple[T_NumericValue, T_NumericValue]]:
+    def partition_bounds(self) -> Iterable[Tuple[T_Number, T_Number]]:
         """
         Return the endpoints of the intervals making the partitions.
 
@@ -177,7 +175,7 @@ class RangePartitioning(
         )
 
     @property
-    def partition_width(self) -> T_NumericValue:
+    def partition_width(self) -> T_Number:
         """The interval length."""
         return self._step
 
@@ -198,14 +196,14 @@ class RangePartitioning(
     @staticmethod
     @abstractmethod
     def _step_size(
-        lower_bound: T_NumericValue, upper_bound: T_NumericValue, max_partitions: int
-    ) -> T_NumericValue:
+        lower_bound: T_Number, upper_bound: T_Number, max_partitions: int
+    ) -> T_Number:
         """Compute the step size (interval length) used in the partitions."""
         pass
 
     @property
     @abstractmethod
-    def _partition_center_offset(self) -> T_NumericValue:
+    def _partition_center_offset(self) -> T_Number:
         """Offset between center and endpoints of an interval."""
         pass
 
@@ -240,10 +238,10 @@ class ContinuousRangePartitioning(RangePartitioning[float]):
 
     def __init__(
         self,
-        values: ListLike[T_NumericValue],
+        values: ListLike[T_Number],
         max_partitions: int = DEFAULT_MAX_PARTITIONS,
-        lower_bound: Optional[T_NumericValue] = None,
-        upper_bound: Optional[T_NumericValue] = None,
+        lower_bound: Optional[T_Number] = None,
+        upper_bound: Optional[T_Number] = None,
     ) -> None:
         super().__init__(
             values=values,
@@ -292,10 +290,10 @@ class IntegerRangePartitioning(RangePartitioning[int]):
 
     def __init__(
         self,
-        values: ListLike[T_NumericValue],
+        values: ListLike[T_Number],
         max_partitions: int = DEFAULT_MAX_PARTITIONS,
-        lower_bound: Optional[T_NumericValue] = None,
-        upper_bound: Optional[T_NumericValue] = None,
+        lower_bound: Optional[T_Number] = None,
+        upper_bound: Optional[T_Number] = None,
     ) -> None:
         super().__init__(
             values=values,
