@@ -90,7 +90,7 @@ class MatplotStyle(ChartStyle, ABC):
     """Matplotlib drawer style.
 
     Implementations must define :meth:`~ChartStyle.draw_title`.
-    :param ax: opttional axes object to draw on; if ``Null`` use pyplot's current axes
+    :param ax: optional axes object to draw on; if ``Null`` use pyplot's current axes
     """
 
     def __init__(self, ax: Optional[Axes] = None) -> None:
@@ -108,9 +108,10 @@ class MatplotStyle(ChartStyle, ABC):
 class TextStyle(ChartStyle, ABC):
     """
     Plain text drawing style.
+
     :param width: the maximum width available to render the text, defaults to 80
-    :param out: the output stream this style instance writes to, or `stdout` if
-                `None` is passed (defaults to `None`)
+    :param out: the output stream this style instance writes to, or `stdout` if \
+      `None` is passed (defaults to `None`)
     """
 
     def __init__(self, out: TextIO = None, width: int = 80) -> None:
