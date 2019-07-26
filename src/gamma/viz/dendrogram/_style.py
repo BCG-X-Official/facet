@@ -132,10 +132,6 @@ class DendrogramMatplotStyle(DendrogramStyle, MatplotStyle, ABC):
         cax.yaxis.set_minor_formatter(DendrogramMatplotStyle._PERCENTAGE_FORMATTER)
         cax.yaxis.set_major_formatter(DendrogramMatplotStyle._PERCENTAGE_FORMATTER)
 
-    def drawing_start(self, title: str) -> None:
-        """Draw the title of the dendrogram."""
-        self.ax.set_title(label=title)
-
     def draw_leaf_labels(self, labels: Sequence[str]) -> None:
         """Draw leaf labels on the dendrogram."""
         y_axis = self.ax.yaxis

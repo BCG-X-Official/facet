@@ -104,6 +104,10 @@ class MatplotStyle(ChartStyle, ABC):
         """
         return self._ax
 
+    def drawing_start(self, title: str) -> None:
+        """Draw the title of the chart."""
+        self.ax.set_title(label=title)
+
 
 class TextStyle(ChartStyle, ABC):
     """
