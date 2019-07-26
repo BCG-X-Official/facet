@@ -14,6 +14,7 @@ from matplotlib.lines import Line2D
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from mpl_toolkits.axes_grid1.axes_size import Scaled
 
+from gamma import ListLike
 from gamma.viz import MatplotStyle
 from gamma.yieldengine.partition import Partitioning, T_Number
 
@@ -36,28 +37,19 @@ class SimulationMatplotStyle(MatplotStyle):
     :param ax: the axes where the uplift graph is plotted
     """
 
-    def __init__(self, ax: Axes) -> None:
-        super().__init__()
-        self._ax_uplift_graph: Axes = ax
-        self._ax_histogram: Optional[Axes] = None
+    _COLOR_CONFIDENCE = "silver"
+    _COLOR_MEDIAN_UPLIFT = "orange"
 
-        # set some parameters of the plot
-        self._color_confidence = "silver"
-        self._color_middle_uplift = "red"
-        self._vertical_offset_histogram_label = 0.05
-        self._scale_padding = Scaled(0.2)
-        self._scale_histogram_height = Scaled(0.6)
-        self._fontsize_ylabel = 12
-        self._color_null_line = "black"
-        self._linewidth_null_line = 0.5
+    def __init__(self, ax: Optional[Axes] = None) -> None:
+        super().__init__(ax=ax)
+        self._ax_histogram: Optional[Axes] = None
 
     def drawing_start(self, title: str) -> None:
         self._draw_title(title)
-        return None
 
     @property
     def ax_uplift_graph(self) -> Axes:
-        return self._ax_uplift_graph
+        return self.ax
 
     @property
     def ax_histogram(self) -> Optional[Axes]:
@@ -65,16 +57,16 @@ class SimulationMatplotStyle(MatplotStyle):
 
     def _draw_title(self, title: str) -> None:
         """Print the title."""
-        self._ax_uplift_graph.figure.suptitle(title)
+        self.ax.figure.suptitle(title)
 
     def draw_uplift_graph(
         self,
         feature_name: str,
         target_name: str,
         partitioning: Partitioning,
-        median_uplift: Iterable[T_Number],
-        low_percentile_uplift: Iterable[T_Number],
-        high_percentile_uplift: Iterable[T_Number],
+        median_uplift: ListLike[T_Number],
+        low_percentile_uplift: ListLike[T_Number],
+        high_percentile_uplift: ListLike[T_Number],
         low_percentile: int,
         high_percentile: int,
     ):
@@ -100,8 +92,7 @@ class SimulationMatplotStyle(MatplotStyle):
         self._draw_uplift_legend(handles=handles, labels=labels)
 
         self._draw_uplift_axis(
-            xaxis_label=(feature_name),
-            yaxis_label=f"Predicted mean uplift ({target_name})",
+            x_label=feature_name, y_label=f"Predicted mean uplift ({target_name})"
         )
 
         self._draw_null_uplift_line()
@@ -124,12 +115,12 @@ class SimulationMatplotStyle(MatplotStyle):
         self._ax_histogram.invert_yaxis()
         self._ax_histogram.tick_params(axis="y", labelcolor="black")
         max_y = max(partitioning.frequencies())
-        y_offset = max_y * self._vertical_offset_histogram_label
+        label_vertical_offset = max_y * 0.05
         for (_x, _y) in zip(partitioning.partitions(), partitioning.frequencies()):
             if _y > 0:
                 self._ax_histogram.text(
                     x=_x,
-                    y=_y + y_offset,
+                    y=_y + label_vertical_offset,
                     s=str(_y),
                     horizontalalignment="center",
                     verticalalignment="top",
@@ -145,11 +136,12 @@ class SimulationMatplotStyle(MatplotStyle):
 
         :return: the histogram axes
         """
-        divider = make_axes_locatable(self._ax_uplift_graph)
+        divider = make_axes_locatable(self.ax)
         histogram_axes = divider.append_axes(
+            # todo: what is the meaning of Scaled in this context?
             position="bottom",
-            size=self._scale_histogram_height,
-            pad=self._scale_padding,
+            size=Scaled(0.05),
+            pad=Scaled(0.01),
         )
         return histogram_axes
 
@@ -157,7 +149,7 @@ class SimulationMatplotStyle(MatplotStyle):
         self, x: Iterable[T_Number], y: Iterable[T_Number]
     ) -> Line2D:
         # draw curve of uplift for confidence interval
-        line, = self._ax_uplift_graph.plot(x, y, color=self._color_confidence)
+        line, = self.ax.plot(x, y, color=self._COLOR_CONFIDENCE)
         return line
 
     def _draw_low_confidence_uplift(
@@ -193,33 +185,29 @@ class SimulationMatplotStyle(MatplotStyle):
         :param y: middle confidence simulated predictions
         :return: the matplotlib object representing the line plotted
         """
-        line, = self._ax_uplift_graph.plot(x, y, color=self._color_middle_uplift)
-        return line
+        return self.ax.plot(x, y, color=self._COLOR_MEDIAN_UPLIFT)
 
-    def _draw_uplift_axis(self, xaxis_label: str, yaxis_label: str) -> None:
+    def _draw_uplift_axis(self, x_label: str, y_label: str) -> None:
         """
         Draw x ticks, set x labels in the uplift graph.
 
-        :param xaxis_label: label for the x axis in the uplift graph
-        :param yaxis_label:  label for the y axis in the uplift graph
+        :param x_label: label for the x axis in the uplift graph
+        :param y_label: label for the y axis in the uplift graph
         """
 
-        self._ax_uplift_graph.tick_params(axis="x", labelbottom=True, bottom=False)
-
-        self._ax_uplift_graph.set_xlabel(xaxis_label)
-
-        self._ax_uplift_graph.set_ylabel(yaxis_label, fontsize=self._fontsize_ylabel)
+        self.ax.tick_params(axis="x", labelbottom=True, bottom=False)
+        self.ax.set_xlabel(x_label)
+        self.ax.set_ylabel(y_label)
 
     def _draw_null_uplift_line(self) -> None:
         """Draw  a horizontal line y=0 on the uplift graph."""
-        self._ax_uplift_graph.axhline(
-            y=0, color=self._color_null_line, linewidth=self._linewidth_null_line
-        )
+        self.ax.axhline(y=0, linewidth=0.5)
 
     def _set_spins(self) -> None:
         """Set the spines (data boundary lines) in the uplift graph."""
+
         for pos in ["top", "right", "bottom"]:
-            self._ax_uplift_graph.spines[pos].set_visible(False)
+            self.ax.spines[pos].set_visible(False)
 
     def _draw_uplift_legend(
         self, handles: Iterable[Artist], labels: Iterable[str]
@@ -230,4 +218,5 @@ class SimulationMatplotStyle(MatplotStyle):
         :param handles: the matplotlib objects to include in the legend
         :param labels: the label in the legend for the matplotlib objects in ``handles``
         """
-        self._ax_uplift_graph.legend(handles, labels, frameon=False)
+
+        self.ax.legend(handles, labels, frameon=False)
