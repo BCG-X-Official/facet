@@ -16,10 +16,10 @@ partitions are integers
 :class:`CategoryPartitioning` is adapted to categorical sets
 """
 import logging
-import math
 from abc import ABC, ABCMeta, abstractmethod
 from typing import *
 
+import math
 import numpy as np
 import pandas as pd
 
@@ -243,6 +243,11 @@ class ContinuousRangePartitioning(RangePartitioning[float]):
         lower_bound: Optional[T_Number] = None,
         upper_bound: Optional[T_Number] = None,
     ) -> None:
+        if max_partitions < 2:
+            raise ValueError(
+                f"max_partitions should be an integer greater or equal "
+                f"than 2. The value of max_partitions is {max_partitions}."
+            )
         super().__init__(
             values=values,
             max_partitions=max_partitions,
@@ -295,6 +300,11 @@ class IntegerRangePartitioning(RangePartitioning[int]):
         lower_bound: Optional[T_Number] = None,
         upper_bound: Optional[T_Number] = None,
     ) -> None:
+        if max_partitions < 2:
+            raise ValueError(
+                f"max_partitions should be an integer greater or equal "
+                f"than 2. The value of max_partitions is {max_partitions}."
+            )
         super().__init__(
             values=values,
             max_partitions=max_partitions,
