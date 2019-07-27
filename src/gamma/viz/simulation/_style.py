@@ -70,6 +70,9 @@ class SimulationMatplotStyle(MatplotStyle, SimulationStyle):
     _COLOR_CONFIDENCE = "silver"
     _COLOR_BARS = "silver"
     _COLOR_MEDIAN_UPLIFT = "orange"
+    _WIDTH_BARS = 0.8
+
+    _HISTOGRAM_SIZE_RATIO = 1 / 3
 
     def __init__(self, ax: Optional[Axes] = None, x_label_height: float = 0.1) -> None:
         super().__init__(ax=ax)
@@ -106,8 +109,8 @@ class SimulationMatplotStyle(MatplotStyle, SimulationStyle):
         handles = [line_max, line_median, line_min]
         ax.legend(handles, labels)
 
-        ax.tick_params(axis="x", labelbottom=True, bottom=False)
-        ax.set_ylabel(f"Predicted mean uplift ({target_name})")
+        ax.tick_params(axis="x", labelbottom=True, bottom=True)
+        ax.set_ylabel(f"Mean predicted uplift ({target_name})")
 
         if partitioning.is_categorical:
             ax.set_xticks(x)
@@ -123,31 +126,51 @@ class SimulationMatplotStyle(MatplotStyle, SimulationStyle):
 
         :param partitioning: the partitioning used for the simulation
         """
-        x_values = list(range(len(partitioning)))
+
+        # get histogram size and values (horizontally, we count bars from 0..n-1
+        n_partitions = len(partitioning)
+        x_values = list(range(n_partitions))
         y_values = partitioning.frequencies()
 
         # create the sub-axes for the histogram
         uplift_y_min, uplift_y_max = self.ax.get_ylim()
         uplift_height = abs(uplift_y_max - uplift_y_min)
-
         divider: AxesDivider = make_axes_locatable(self.ax)
         ax = divider.append_axes(
             position="bottom",
-            size=Scaled(uplift_height),
+            size=Scaled(uplift_height * self._HISTOGRAM_SIZE_RATIO),
             pad=Scaled(
-                2 * self._x_label_height * uplift_height / (1 - self._x_label_height)
+                (1 + self._HISTOGRAM_SIZE_RATIO)
+                * self._x_label_height
+                * uplift_height
+                / (1 - self._x_label_height)
             ),
         )
 
         ax.invert_yaxis()
 
-        ax.bar(x=x_values, height=y_values, color=self._COLOR_BARS, align="center")
+        # reduce the margin such that half a bar is to the left of the leftmost tickmark
+        x_margin, _ = ax.margins()
+        ax.set_xmargin(
+            max(
+                0,
+                (self._WIDTH_BARS / 2 - x_margin * (n_partitions - 1))
+                / (self._WIDTH_BARS - (n_partitions - 1)),
+            )
+        )
 
-        ax.set_xmargin(0)
+        # draw the histogram bars
+        ax.bar(
+            x=x_values,
+            height=y_values,
+            color=self._COLOR_BARS,
+            align="center",
+            width=self._WIDTH_BARS,
+        )
 
         # draw labels
-        _, max_y = ax.get_ylim()
-        label_vertical_offset = max_y * 0.02
+        min_y, max_y = ax.get_ylim()
+        label_vertical_offset = abs(max_y - min_y) * 0.05
         for x, y in zip(x_values, y_values):
             if y > 0:
                 ax.text(
@@ -158,12 +181,11 @@ class SimulationMatplotStyle(MatplotStyle, SimulationStyle):
                     verticalalignment="top",
                 )
 
-        # ax.set_xticks(x_values)
-
         # hide x and y axis
-        # ax.get_xaxis().set_visible(False)
+        ax.get_xaxis().set_visible(False)
         ax.get_yaxis().set_visible(False)
 
+        # hide the spines
         for pos in ["top", "right", "left", "bottom"]:
             ax.spines[pos].set_visible(False)
 
