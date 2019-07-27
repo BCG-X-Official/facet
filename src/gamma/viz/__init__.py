@@ -110,9 +110,21 @@ class MatplotStyle(ChartStyle, ABC):
         """Draw the title of the chart."""
         self.ax.set_title(label=title)
 
-    def text_extent(self, text) -> Tuple[float, float]:
+    def text_extent(self, text: str, **kwargs) -> Tuple[float, float]:
+        """
+        Calculate the horizontal and vertical extend of the given text in axis units.
+        Constructs a :class:`matplotlib.text.Text` artist then calculates it size
+        relative to the axis managed by this style object (attribute `ax`)
+
+        :param text: text to calculate the size for
+        :param kwargs: additional arguments to use when constructing the
+          :class:`~matplotlib.text.Text` artist, e.g., rotation
+        :return: tuple `(width, height)` in axis units
+        """
         (x0, y0), (x1, y1) = self.ax.transData.inverted().transform(
-            mt.Text(0, 0, text, figure=self.ax.figure).get_window_extent(self._renderer)
+            mt.Text(0, 0, text, figure=self.ax.figure, **kwargs).get_window_extent(
+                self._renderer
+            )
         )
         return abs(x1 - x0), abs(y1 - y0)
 

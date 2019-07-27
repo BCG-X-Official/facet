@@ -63,8 +63,6 @@ class SimulationMatplotStyle(MatplotStyle, SimulationStyle):
     - a histogram graph of the feature simulated values
 
     :param ax: the axes where the uplift graph is plotted
-    :param x_label_height: the height of the central chart area reserved for the x
-      labels, relative to the overall chart height (default: 0.1)
     """
 
     _COLOR_CONFIDENCE = "silver"
@@ -74,11 +72,8 @@ class SimulationMatplotStyle(MatplotStyle, SimulationStyle):
 
     _HISTOGRAM_SIZE_RATIO = 1 / 3
 
-    def __init__(self, ax: Optional[Axes] = None, x_label_height: float = 0.1) -> None:
+    def __init__(self, ax: Optional[Axes] = None) -> None:
         super().__init__(ax=ax)
-        if x_label_height <= 0 or x_label_height >= 1:
-            raise ValueError(f"arg x_label_height={x_label_height} must be > 0 and < 1")
-        self._x_label_height = x_label_height
 
     def draw_uplift(
         self,
@@ -95,7 +90,10 @@ class SimulationMatplotStyle(MatplotStyle, SimulationStyle):
         Draw the graph with the uplift curves: median, low and high percentiles.
         """
 
-        x = self._x_labels(partitioning)
+        if partitioning.is_categorical:
+            x = list(range(len(partitioning)))
+        else:
+            x = partitioning.partitions()
         ax = self.ax
         line_min, = ax.plot(x, min_uplift, color=self._COLOR_CONFIDENCE)
         line_median, = ax.plot(x, median_uplift, color=self._COLOR_MEDIAN_UPLIFT)
@@ -109,12 +107,17 @@ class SimulationMatplotStyle(MatplotStyle, SimulationStyle):
         handles = [line_max, line_median, line_min]
         ax.legend(handles, labels)
 
-        ax.tick_params(axis="x", labelbottom=True, bottom=True)
+        ax.tick_params(
+            axis="x",
+            labelbottom=True,
+            bottom=True,
+            labelrotation=45 if partitioning.is_categorical else 0,
+        )
         ax.set_ylabel(f"Mean predicted uplift ({target_name})")
 
-        if partitioning.is_categorical:
+        if partitioning.is_categorical or True:
             ax.set_xticks(x)
-            ax.set_xticklabels(labels=partitioning.partitions(), rotation=45)
+            ax.set_xticklabels(labels=partitioning.partitions())
 
         ax.axhline(y=0, linewidth=0.5)
         for pos in ["top", "right", "bottom"]:
@@ -132,20 +135,37 @@ class SimulationMatplotStyle(MatplotStyle, SimulationStyle):
         x_values = list(range(n_partitions))
         y_values = partitioning.frequencies()
 
-        # create the sub-axes for the histogram
-        uplift_y_min, uplift_y_max = self.ax.get_ylim()
-        uplift_height = abs(uplift_y_max - uplift_y_min)
-        divider: AxesDivider = make_axes_locatable(self.ax)
-        ax = divider.append_axes(
-            position="bottom",
-            size=Scaled(uplift_height * self._HISTOGRAM_SIZE_RATIO),
-            pad=Scaled(
-                (1 + self._HISTOGRAM_SIZE_RATIO)
-                * self._x_label_height
-                * uplift_height
-                / (1 - self._x_label_height)
-            ),
-        )
+        def _make_sub_axes() -> Axes:
+            # create the sub-axes for the histogram
+
+            parent_ax = self.ax
+            y_min, y_max = parent_ax.get_ylim()
+            uplift_height = abs(y_max - y_min)
+
+            _, text_height = self.text_extent("A")
+
+            vert_size = text_height + max(
+                h
+                for _, h in (
+                    self.text_extent(
+                        label, rotation=45 if partitioning.is_categorical else 0
+                    )
+                    for label in partitioning.partitions()
+                )
+            )
+
+            divider: AxesDivider = make_axes_locatable(parent_ax)
+            return divider.append_axes(
+                position="bottom",
+                size=Scaled(uplift_height * self._HISTOGRAM_SIZE_RATIO),
+                pad=Scaled(
+                    vert_size
+                    * (uplift_height / (uplift_height - vert_size))
+                    * (1 + self._HISTOGRAM_SIZE_RATIO)
+                ),
+            )
+
+        ax = _make_sub_axes()
 
         ax.invert_yaxis()
 
@@ -188,9 +208,3 @@ class SimulationMatplotStyle(MatplotStyle, SimulationStyle):
         # hide the spines
         for pos in ["top", "right", "left", "bottom"]:
             ax.spines[pos].set_visible(False)
-
-    def _x_labels(self, partitioning) -> ListLike:
-        if partitioning.is_categorical:
-            return list(range(len(partitioning)))
-        else:
-            return partitioning.partitions()
