@@ -7,6 +7,7 @@ from typing import *
 from typing import TextIO
 
 import matplotlib.pyplot as plt
+from matplotlib import text as mt
 from matplotlib.axes import Axes
 
 T_Model = TypeVar("T_Model")
@@ -95,7 +96,8 @@ class MatplotStyle(ChartStyle, ABC):
 
     def __init__(self, ax: Optional[Axes] = None) -> None:
         super().__init__()
-        self._ax = plt.gca() if ax is None else ax
+        self._ax = ax = plt.gca() if ax is None else ax
+        self._renderer = ax.figure.canvas.get_renderer()
 
     @property
     def ax(self) -> Axes:
@@ -107,6 +109,12 @@ class MatplotStyle(ChartStyle, ABC):
     def drawing_start(self, title: str) -> None:
         """Draw the title of the chart."""
         self.ax.set_title(label=title)
+
+    def text_extent(self, text) -> Tuple[float, float]:
+        (x0, y0), (x1, y1) = self.ax.transData.inverted().transform(
+            mt.Text(0, 0, text, figure=self.ax.figure).get_window_extent(self._renderer)
+        )
+        return abs(x1 - x0), abs(y1 - y0)
 
 
 class TextStyle(ChartStyle, ABC):

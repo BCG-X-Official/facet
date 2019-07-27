@@ -17,7 +17,6 @@ import math
 from abc import ABC, abstractmethod
 from typing import Sequence, TextIO
 
-import matplotlib.text as mt
 from matplotlib import cm
 from matplotlib.axes import Axes
 from matplotlib.colorbar import ColorbarBase, make_axes
@@ -229,8 +228,6 @@ class FeatMapStyle(DendrogramMatplotStyle):
         super().__init__(ax=ax, min_weight=min_weight)
         ax.margins(0, 0)
         ax.set_xlim(0, 1)
-        self._figure = ax.figure
-        self._renderer = ax.figure.canvas.get_renderer()
 
     def draw_link_leg(
         self, bottom: float, top: float, first_leaf: int, n_leaves: int, weight: float
@@ -309,12 +306,9 @@ class FeatMapStyle(DendrogramMatplotStyle):
             if round(weight_percent, 1) < 100
             else f"{weight_percent:.3g}%"
         )
-        fig = self._figure
-        (x0, _), (x1, _) = self.ax.transData.inverted().transform(
-            mt.Text(0, 0, label, figure=fig).get_window_extent(self._renderer)
-        )
+        text_width, _ = self.text_extent(label)
 
-        if abs(x1 - x0) <= w:
+        if text_width <= w:
             fill_luminance = sum(fill_color[:3]) / 3
             text_color = _COLOR_WHITE if fill_luminance < 0.5 else _COLOR_BLACK
             self.ax.text(
@@ -353,7 +347,7 @@ class DendrogramTextStyle(DendrogramStyle, TextStyle):
         try:
             super().drawing_finalize()
             for row in reversed(range(self._n_labels + 1)):
-                self.out.write(f"{self._char_matrix[row,:]}\n")
+                self.out.write(f"{self._char_matrix[row, :]}\n")
         finally:
             self._char_matrix = None
             self._n_labels = None
