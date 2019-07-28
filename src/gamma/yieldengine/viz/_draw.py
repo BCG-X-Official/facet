@@ -9,9 +9,9 @@ this graph there is a histogram of the feature values.
 from typing import TypeVar
 
 from gamma.viz import ChartDrawer
-from gamma.viz.simulation._style import SimulationStyle
 from gamma.yieldengine.partition import RangePartitioning
 from gamma.yieldengine.simulation import UnivariateSimulation
+from gamma.yieldengine.viz import SimulationStyle
 
 T_RangePartitioning = TypeVar("T_RangePartitioning", bound=RangePartitioning)
 
