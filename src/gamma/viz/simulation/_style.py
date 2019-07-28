@@ -65,7 +65,7 @@ class SimulationMatplotStyle(MatplotStyle, SimulationStyle):
     :param ax: the axes where the uplift graph is plotted
     """
 
-    _COLOR_CONFIDENCE = "silver"
+    _COLOR_CONFIDENCE = "blue"
     _COLOR_BARS = "silver"
     _COLOR_MEDIAN_UPLIFT = "orange"
     _WIDTH_BARS = 0.8
@@ -120,7 +120,7 @@ class SimulationMatplotStyle(MatplotStyle, SimulationStyle):
             ax.set_xticklabels(labels=partitioning.partitions())
 
         ax.axhline(y=0, linewidth=0.5)
-        for pos in ["top", "right", "bottom"]:
+        for pos in ["top", "right"]:
             ax.spines[pos].set_visible(False)
 
     def draw_histogram(self, partitioning: Partitioning) -> None:
