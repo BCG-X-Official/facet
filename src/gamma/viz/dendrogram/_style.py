@@ -306,18 +306,16 @@ class FeatMapStyle(DendrogramMatplotStyle):
             if round(weight_percent, 1) < 100
             else f"{weight_percent:.3g}%"
         )
-        text_width, _ = self.text_extent(label)
+
+        x_text = x + w / 2
+        y_text = y + (h - 1) / 2
+        text_width, _ = self.text_size(text=label, x=x_text, y=y_text)
 
         if text_width <= w:
             fill_luminance = sum(fill_color[:3]) / 3
             text_color = _COLOR_WHITE if fill_luminance < 0.5 else _COLOR_BLACK
             self.ax.text(
-                x + w / 2,
-                y + (h - 1) / 2,
-                label,
-                ha="center",
-                va="center",
-                color=text_color,
+                x_text, y_text, label, ha="center", va="center", color=text_color
             )
 
 

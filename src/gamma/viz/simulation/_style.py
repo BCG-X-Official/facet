@@ -142,25 +142,25 @@ class SimulationMatplotStyle(MatplotStyle, SimulationStyle):
             y_min, y_max = parent_ax.get_ylim()
             uplift_height = abs(y_max - y_min)
 
-            _, text_height = self.text_extent("A")
-
-            vert_size = text_height + max(
-                h
-                for _, h in (
-                    self.text_extent(
-                        label, rotation=45 if partitioning.is_categorical else 0
-                    )
-                    for label in partitioning.partitions()
+            def _x_axis_height() -> float:
+                _, axis_below_size_pixels = parent_ax.get_xaxis().get_text_heights(
+                    self._renderer
                 )
-            )
+                ((_, y0), (_, y1)) = parent_ax.transData.inverted().transform(
+                    ((0, 0), (0, axis_below_size_pixels))
+                )
+                return abs(y1 - y0)
+
+            # calculate the height of the x axis in data space; add additional padding
+            axis_below_size_data = _x_axis_height() * 1.2
 
             divider: AxesDivider = make_axes_locatable(parent_ax)
             return divider.append_axes(
                 position="bottom",
                 size=Scaled(uplift_height * self._HISTOGRAM_SIZE_RATIO),
                 pad=Scaled(
-                    vert_size
-                    * (uplift_height / (uplift_height - vert_size))
+                    axis_below_size_data
+                    * (uplift_height / (uplift_height - axis_below_size_data))
                     * (1 + self._HISTOGRAM_SIZE_RATIO)
                 ),
             )
@@ -188,9 +188,11 @@ class SimulationMatplotStyle(MatplotStyle, SimulationStyle):
             width=self._WIDTH_BARS,
         )
 
+        # padding between bars and labels is 2% of histogram height; might want to
+        # replace this with a measure based on text height
+        label_vertical_offset = max(y_values) * 0.02
+
         # draw labels
-        min_y, max_y = ax.get_ylim()
-        label_vertical_offset = abs(max_y - min_y) * 0.05
         for x, y in zip(x_values, y_values):
             if y > 0:
                 ax.text(
