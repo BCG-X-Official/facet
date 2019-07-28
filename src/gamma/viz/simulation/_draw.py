@@ -9,14 +9,14 @@ this graph there is a histogram of the feature values.
 from typing import TypeVar
 
 from gamma.viz import ChartDrawer
-from gamma.viz.simulation._style import SimulationMatplotStyle
+from gamma.viz.simulation._style import SimulationStyle
 from gamma.yieldengine.partition import RangePartitioning
 from gamma.yieldengine.simulation import UnivariateSimulation
 
 T_RangePartitioning = TypeVar("T_RangePartitioning", bound=RangePartitioning)
 
 
-class SimulationDrawer(ChartDrawer[UnivariateSimulation, SimulationMatplotStyle]):
+class SimulationDrawer(ChartDrawer[UnivariateSimulation, SimulationStyle]):
     """
     Simulation drawer with high/low confidence intervals.
 
@@ -31,7 +31,7 @@ class SimulationDrawer(ChartDrawer[UnivariateSimulation, SimulationMatplotStyle]
         self,
         title: str,
         simulation: UnivariateSimulation,
-        style: SimulationMatplotStyle,
+        style: SimulationStyle,
         histogram: bool = True,
     ):
         super().__init__(title=title, model=simulation, style=style)
