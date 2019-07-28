@@ -22,6 +22,10 @@ log = logging.getLogger(__name__)
 
 
 class SimulationStyle(ChartStyle, ABC):
+    """
+    The abstract simulation style known to the simulation drawer
+    """
+
     @abstractmethod
     def draw_uplift(
         self,
@@ -90,6 +94,8 @@ class SimulationMatplotStyle(MatplotStyle, SimulationStyle):
         Draw the graph with the uplift curves: median, low and high percentiles.
         """
 
+        # draw the mean predicted uplift, showing median and confidence ranges for
+        # each prediction
         if partitioning.is_categorical:
             x = list(range(len(partitioning)))
         else:
@@ -99,6 +105,7 @@ class SimulationMatplotStyle(MatplotStyle, SimulationStyle):
         line_median, = ax.plot(x, median_uplift, color=self._COLOR_MEDIAN_UPLIFT)
         line_max, = ax.plot(x, max_uplift, color=self._COLOR_CONFIDENCE)
 
+        # add a legend
         labels = [
             f"{high_percentile}th percentile",
             "Median",
@@ -107,19 +114,24 @@ class SimulationMatplotStyle(MatplotStyle, SimulationStyle):
         handles = [line_max, line_median, line_min]
         ax.legend(handles, labels)
 
+        # label the y aais
+        ax.set_ylabel(f"Mean predicted uplift ({target_name})")
+
+        # format and label the x axis
         ax.tick_params(
             axis="x",
             labelbottom=True,
             bottom=True,
             labelrotation=45 if partitioning.is_categorical else 0,
         )
-        ax.set_ylabel(f"Mean predicted uplift ({target_name})")
-
         if partitioning.is_categorical or True:
             ax.set_xticks(x)
             ax.set_xticklabels(labels=partitioning.partitions())
 
+        # add a horizontal line at y=0
         ax.axhline(y=0, linewidth=0.5)
+
+        # remove the top and right spines
         for pos in ["top", "right"]:
             ax.spines[pos].set_visible(False)
 
@@ -138,15 +150,17 @@ class SimulationMatplotStyle(MatplotStyle, SimulationStyle):
         def _make_sub_axes() -> Axes:
             # create the sub-axes for the histogram
 
-            parent_ax = self.ax
-            y_min, y_max = parent_ax.get_ylim()
+            # get the height of the main axes - this will be the basis for
+            # calculating the size of the new sub-axes for the histogram
+            main_ax = self.ax
+            y_min, y_max = main_ax.get_ylim()
             uplift_height = abs(y_max - y_min)
 
             def _x_axis_height() -> float:
-                _, axis_below_size_pixels = parent_ax.get_xaxis().get_text_heights(
+                _, axis_below_size_pixels = main_ax.get_xaxis().get_text_heights(
                     self._renderer
                 )
-                ((_, y0), (_, y1)) = parent_ax.transData.inverted().transform(
+                ((_, y0), (_, y1)) = main_ax.transData.inverted().transform(
                     ((0, 0), (0, axis_below_size_pixels))
                 )
                 return abs(y1 - y0)
@@ -154,7 +168,10 @@ class SimulationMatplotStyle(MatplotStyle, SimulationStyle):
             # calculate the height of the x axis in data space; add additional padding
             axis_below_size_data = _x_axis_height() * 1.2
 
-            divider: AxesDivider = make_axes_locatable(parent_ax)
+            # create the axes divider, then use it to append the new sub-axes at the
+            # bottom while leaving sufficient padding in-between to accommodate the
+            # main axes' x axis labels
+            divider: AxesDivider = make_axes_locatable(main_ax)
             return divider.append_axes(
                 position="bottom",
                 size=Scaled(uplift_height * self._HISTOGRAM_SIZE_RATIO),
@@ -169,7 +186,9 @@ class SimulationMatplotStyle(MatplotStyle, SimulationStyle):
 
         ax.invert_yaxis()
 
-        # reduce the margin such that half a bar is to the left of the leftmost tickmark
+        # reduce the horizontal margin such that half a bar is to the left of the
+        # leftmost tickmark (but the tickmark stays aligned with the main
+        # simulation chart)
         x_margin, _ = ax.margins()
         ax.set_xmargin(
             max(
