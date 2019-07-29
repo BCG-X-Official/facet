@@ -12,16 +12,23 @@ log = logging.getLogger(__name__)
 
 
 class CharacterMatrix:
-    def __init__(self, height: int, width: int):
-        if width <= 0:
-            raise ValueError(f"arg width must be positive but is {width}")
-        if height <= 0:
-            raise ValueError(f"arg height must be positive but is {height}")
-        self._width = width
-        self._matrix = [[" " for _ in range(width)] for _ in range(height)]
+    """
+    A matrix of characters, indexed by rows and columns.
+    
+    :param n_rows: the matrix height
+    :param n_columns: the matrix width
+    """
+
+    def __init__(self, n_rows: int, n_columns: int):
+        if n_columns <= 0:
+            raise ValueError(f"arg width must be positive but is {n_columns}")
+        if n_rows <= 0:
+            raise ValueError(f"arg height must be positive but is {n_rows}")
+        self._n_columns = n_columns
+        self._matrix = [[" " for _ in range(n_columns)] for _ in range(n_rows)]
 
     @property
-    def height(self) -> int:
+    def n_rows(self) -> int:
         """
         The height of this matrix.
 
@@ -30,16 +37,20 @@ class CharacterMatrix:
         return len(self._matrix)
 
     @property
-    def width(self) -> int:
+    def n_columns(self) -> int:
         """
         The height of this matrix.
         """
-        return self._width
+        return self._n_columns
 
     def lines(self) -> Iterable[str]:
+        """
+        :return: the lines in this matrix as strings
+        """
         return ("".join(line) for line in self._matrix)
 
-    def _key_as_slices(self, key: TextCoordinates) -> Tuple[slice, slice]:
+    @staticmethod
+    def _key_as_slices(key: TextCoordinates) -> Tuple[slice, slice]:
         def _to_slice(index: Union[int, slice]) -> slice:
             if isinstance(index, int):
                 return slice(index, index + 1)
@@ -56,7 +67,7 @@ class CharacterMatrix:
         return "\n".join(self.lines())
 
     def __len__(self) -> int:
-        return self.height
+        return self.n_rows
 
     def __getitem__(self, key: TextCoordinates):
         rows, columns = self._key_as_slices(key)
@@ -66,7 +77,7 @@ class CharacterMatrix:
         rows, columns = self._key_as_slices(key)
         value = str(value)
         single_char = len(value) == 1
-        positions = range(*columns.indices(self.width))
+        positions = range(*columns.indices(self.n_columns))
         for line in self._matrix[rows]:
             if single_char:
                 for pos in positions:
