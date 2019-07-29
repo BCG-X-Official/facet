@@ -339,7 +339,9 @@ class DendrogramTextStyle(DendrogramStyle, TextStyle):
 
     def drawing_start(self, title: str) -> None:
         self.out.write(f"{title:*^{self.width}s}\n")
-        self._char_matrix = CharacterMatrix(height=self._max_height, width=self.width)
+        self._char_matrix = CharacterMatrix(
+            n_rows=self._max_height, n_columns=self.width
+        )
 
     def drawing_finalize(self) -> None:
         try:
