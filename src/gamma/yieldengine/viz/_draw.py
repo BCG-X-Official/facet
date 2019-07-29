@@ -11,7 +11,7 @@ from typing import TypeVar
 from gamma.viz import ChartDrawer
 from gamma.yieldengine.partition import RangePartitioning
 from gamma.yieldengine.simulation import UnivariateSimulation
-from gamma.yieldengine.viz import SimulationStyle
+from gamma.yieldengine.viz._style import SimulationStyle
 
 T_RangePartitioning = TypeVar("T_RangePartitioning", bound=RangePartitioning)
 
@@ -54,8 +54,8 @@ class SimulationDrawer(ChartDrawer[UnivariateSimulation, SimulationStyle]):
             median_uplift=simulation.median_uplift,
             min_uplift=simulation.min_uplift,
             max_uplift=simulation.max_uplift,
-            low_percentile=simulation.min_percentile,
-            high_percentile=simulation.max_percentile,
+            min_percentile=simulation.min_percentile,
+            max_percentile=simulation.max_percentile,
         )
         return None
 
