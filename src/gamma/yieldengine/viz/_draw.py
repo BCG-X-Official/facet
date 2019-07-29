@@ -9,14 +9,14 @@ this graph there is a histogram of the feature values.
 from typing import TypeVar
 
 from gamma.viz import ChartDrawer
-from gamma.viz.simulation._style import SimulationMatplotStyle
 from gamma.yieldengine.partition import RangePartitioning
 from gamma.yieldengine.simulation import UnivariateSimulation
+from gamma.yieldengine.viz import SimulationStyle
 
 T_RangePartitioning = TypeVar("T_RangePartitioning", bound=RangePartitioning)
 
 
-class SimulationDrawer(ChartDrawer[UnivariateSimulation, SimulationMatplotStyle]):
+class SimulationDrawer(ChartDrawer[UnivariateSimulation, SimulationStyle]):
     """
     Simulation drawer with high/low confidence intervals.
 
@@ -31,7 +31,7 @@ class SimulationDrawer(ChartDrawer[UnivariateSimulation, SimulationMatplotStyle]
         self,
         title: str,
         simulation: UnivariateSimulation,
-        style: SimulationMatplotStyle,
+        style: SimulationStyle,
         histogram: bool = True,
     ):
         super().__init__(title=title, model=simulation, style=style)
@@ -47,13 +47,13 @@ class SimulationDrawer(ChartDrawer[UnivariateSimulation, SimulationMatplotStyle]
     def _draw_uplift_graph(self) -> None:
         # draw the graph with the uplift curves
         simulation: UnivariateSimulation = self._model
-        self._style.draw_uplift_graph(
+        self._style.draw_uplift(
             feature_name=simulation.feature_name,
             target_name=simulation.target_name,
             partitioning=simulation.partitioning,
             median_uplift=simulation.median_uplift,
-            low_percentile_uplift=simulation.min_uplift,
-            high_percentile_uplift=simulation.max_uplift,
+            min_uplift=simulation.min_uplift,
+            max_uplift=simulation.max_uplift,
             low_percentile=simulation.min_percentile,
             high_percentile=simulation.max_percentile,
         )

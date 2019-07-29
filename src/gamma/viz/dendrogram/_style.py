@@ -17,7 +17,6 @@ import math
 from abc import ABC, abstractmethod
 from typing import Sequence, TextIO
 
-import matplotlib.text as mt
 from matplotlib import cm
 from matplotlib.axes import Axes
 from matplotlib.colorbar import ColorbarBase, make_axes
@@ -132,10 +131,6 @@ class DendrogramMatplotStyle(DendrogramStyle, MatplotStyle, ABC):
         cax.yaxis.set_minor_formatter(DendrogramMatplotStyle._PERCENTAGE_FORMATTER)
         cax.yaxis.set_major_formatter(DendrogramMatplotStyle._PERCENTAGE_FORMATTER)
 
-    def drawing_start(self, title: str) -> None:
-        """Draw the title of the dendrogram."""
-        self.ax.set_title(label=title)
-
     def draw_leaf_labels(self, labels: Sequence[str]) -> None:
         """Draw leaf labels on the dendrogram."""
         y_axis = self.ax.yaxis
@@ -233,8 +228,6 @@ class FeatMapStyle(DendrogramMatplotStyle):
         super().__init__(ax=ax, min_weight=min_weight)
         ax.margins(0, 0)
         ax.set_xlim(0, 1)
-        self._figure = ax.figure
-        self._renderer = ax.figure.canvas.get_renderer()
 
     def draw_link_leg(
         self, bottom: float, top: float, first_leaf: int, n_leaves: int, weight: float
@@ -313,21 +306,16 @@ class FeatMapStyle(DendrogramMatplotStyle):
             if round(weight_percent, 1) < 100
             else f"{weight_percent:.3g}%"
         )
-        fig = self._figure
-        (x0, _), (x1, _) = self.ax.transData.inverted().transform(
-            mt.Text(0, 0, label, figure=fig).get_window_extent(self._renderer)
-        )
 
-        if abs(x1 - x0) <= w:
+        x_text = x + w / 2
+        y_text = y + (h - 1) / 2
+        text_width, _ = self.text_size(text=label, x=x_text, y=y_text)
+
+        if text_width <= w:
             fill_luminance = sum(fill_color[:3]) / 3
             text_color = _COLOR_WHITE if fill_luminance < 0.5 else _COLOR_BLACK
             self.ax.text(
-                x + w / 2,
-                y + (h - 1) / 2,
-                label,
-                ha="center",
-                va="center",
-                color=text_color,
+                x_text, y_text, label, ha="center", va="center", color=text_color
             )
 
 
@@ -357,7 +345,7 @@ class DendrogramTextStyle(DendrogramStyle, TextStyle):
         try:
             super().drawing_finalize()
             for row in reversed(range(self._n_labels + 1)):
-                self.out.write(f"{self._char_matrix[row,:]}\n")
+                self.out.write(f"{self._char_matrix[row, :]}\n")
         finally:
             self._char_matrix = None
             self._n_labels = None
