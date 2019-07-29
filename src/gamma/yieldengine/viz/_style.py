@@ -1,13 +1,13 @@
 """
 Simulation drawing styles
 
-:class:`SimulationMatplotStyle` draws some simulated low, middle and high prediction
+:class:`SimulationPlotStyle` draws some simulated low, middle and high prediction
 uplift.
 """
 
 import logging
 from abc import ABC, abstractmethod
-from typing import Optional
+from typing import *
 
 from matplotlib.axes import Axes
 from mpl_toolkits.axes_grid1 import make_axes_locatable
@@ -15,7 +15,8 @@ from mpl_toolkits.axes_grid1.axes_divider import AxesDivider
 from mpl_toolkits.axes_grid1.axes_size import Scaled
 
 from gamma import ListLike
-from gamma.viz import ChartStyle, MatplotStyle
+from gamma.viz import ChartStyle, MatplotStyle, TextStyle
+from gamma.viz.text import format_table
 from gamma.yieldengine.partition import Partitioning, T_Number
 
 log = logging.getLogger(__name__)
@@ -35,8 +36,8 @@ class SimulationStyle(ChartStyle, ABC):
         median_uplift: ListLike[T_Number],
         min_uplift: ListLike[T_Number],
         max_uplift: ListLike[T_Number],
-        low_percentile: int,
-        high_percentile: int,
+        min_percentile: float,
+        max_percentile: float,
     ) -> None:
         """
         Draw the graph with the uplift curves: median, low and high percentiles.
@@ -52,8 +53,22 @@ class SimulationStyle(ChartStyle, ABC):
         """
         pass
 
+    @staticmethod
+    def _uplift_label(target_name: str) -> str:
+        return f"Mean predicted uplift ({target_name})"
 
-class SimulationMatplotStyle(MatplotStyle, SimulationStyle):
+    @staticmethod
+    def _legend(min_percentile: float, max_percentile: float) -> Tuple[str, str, str]:
+        # generate a triple with legend names for the min percentile, median, and max
+        # percentile
+        return (
+            f"{min_percentile}th percentile",
+            "median",
+            f"{max_percentile}th " f"percentile",
+        )
+
+
+class SimulationPlotStyle(MatplotStyle, SimulationStyle):
     """
     Matplotlib Style for simulation chart.
 
@@ -87,8 +102,8 @@ class SimulationMatplotStyle(MatplotStyle, SimulationStyle):
         median_uplift: ListLike[T_Number],
         min_uplift: ListLike[T_Number],
         max_uplift: ListLike[T_Number],
-        low_percentile: int,
-        high_percentile: int,
+        min_percentile: float,
+        max_percentile: float,
     ) -> None:
         """
         Draw the graph with the uplift curves: median, low and high percentiles.
@@ -106,16 +121,14 @@ class SimulationMatplotStyle(MatplotStyle, SimulationStyle):
         line_max, = ax.plot(x, max_uplift, color=self._COLOR_CONFIDENCE)
 
         # add a legend
-        labels = [
-            f"{high_percentile}th percentile",
-            "Median",
-            f"{low_percentile}th percentile",
-        ]
+        labels = self._legend(
+            min_percentile=min_percentile, max_percentile=max_percentile
+        )
         handles = [line_max, line_median, line_min]
         ax.legend(handles, labels)
 
-        # label the y aais
-        ax.set_ylabel(f"Mean predicted uplift ({target_name})")
+        # label the y axis
+        ax.set_ylabel(self._uplift_label(target_name=target_name))
 
         # format and label the x axis
         ax.tick_params(
@@ -229,3 +242,93 @@ class SimulationMatplotStyle(MatplotStyle, SimulationStyle):
         # hide the spines
         for pos in ["top", "right", "left", "bottom"]:
             ax.spines[pos].set_visible(False)
+
+
+class SimulationReportStyle(SimulationStyle, TextStyle):
+    """
+    Simulation results as a text report
+    """
+
+    # general format wih sufficient space for potential sign and "e" notation
+    _NUM_PRECISION = 3
+    _NUM_WIDTH = _NUM_PRECISION + 6
+    _NUM_FORMAT = f"< {_NUM_WIDTH}.{_NUM_PRECISION}g"
+
+    # table headings
+    _PARTITION_HEADING = "Partition"
+    _FREQUENCY_HEADING = "Frequency"
+
+    # format for partitions
+    _PARTITION_TEXT_FORMAT = "s"
+    _PARTITION_NUMBER_FORMAT = ".3g"
+
+    # format for frequencies
+    _FREQUENCY_WIDTH = max(6, len(_FREQUENCY_HEADING))
+    _FREQUENCY_FORMAT = f"{_FREQUENCY_WIDTH}g"
+
+    def drawing_start(self, title: str) -> None:
+        """
+        Print the report title.
+        """
+        self.out.write(f"SIMULATION REPORT: {title}\n")
+
+    def draw_uplift(
+        self,
+        feature_name: str,
+        target_name: str,
+        partitioning: Partitioning,
+        median_uplift: ListLike[T_Number],
+        min_uplift: ListLike[T_Number],
+        max_uplift: ListLike[T_Number],
+        min_percentile: float,
+        max_percentile: float,
+    ) -> None:
+        """
+        Print the uplift report.
+        """
+        out = self.out
+        self.out.write(f"\n{self._uplift_label(target_name=target_name)}:\n\n")
+        out.write(
+            format_table(
+                headings=[
+                    self._PARTITION_HEADING,
+                    *self._legend(
+                        min_percentile=min_percentile, max_percentile=max_percentile
+                    ),
+                ],
+                formats=[
+                    self._partition_format(partitioning),
+                    *([self._NUM_FORMAT] * 3),
+                ],
+                data=list(
+                    zip(
+                        partitioning.partitions(), min_uplift, median_uplift, max_uplift
+                    )
+                ),
+            )
+        )
+
+    def draw_histogram(self, partitioning: Partitioning) -> None:
+        """
+        Print the histogram report.
+        """
+        self.out.write("\nObserved frequencies:\n\n")
+        self.out.write(
+            format_table(
+                headings=(self._PARTITION_HEADING, self._FREQUENCY_HEADING),
+                data=list(zip(partitioning.partitions(), partitioning.frequencies())),
+                formats=(self._partition_format(partitioning), self._FREQUENCY_FORMAT),
+            )
+        )
+
+    def drawing_finalize(self) -> None:
+        """
+        Print two trailing line breaks.
+        """
+        self.out.write("\n\n")
+
+    def _partition_format(self, partitioning: Partitioning) -> str:
+        if partitioning.is_categorical:
+            return self._PARTITION_TEXT_FORMAT
+        else:
+            return self._PARTITION_NUMBER_FORMAT
