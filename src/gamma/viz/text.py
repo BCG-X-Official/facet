@@ -1,5 +1,10 @@
+"""
+Utilities for text rendering
+"""
 import logging
 from typing import *
+
+from gamma import ListLike, MatrixLike
 
 TextCoordinates = Tuple[Union[int, slice], Union[int, slice]]
 
@@ -69,3 +74,66 @@ class CharacterMatrix:
             else:
                 for pos, char in zip(positions, value):
                     line[pos] = char
+
+
+def format_table(
+    headings: ListLike[str],
+    data: MatrixLike,
+    formats: Optional[ListLike[Optional[str]]] = None,
+) -> str:
+    """
+    Print a formatted text table
+    :param headings: the table headings
+    :param data: the table data, as a 2D list-like organised as a list of rows
+    :param formats: formatting strings for data in each row (optional); \
+        uses `str()` conversion for any formatting strings stated as `None`
+    :return: the formatted table as a multi-line string
+    """
+    n_columns = len(headings)
+
+    if formats is None:
+        formats = [None] * n_columns
+    elif len(formats) != n_columns:
+        raise ValueError("arg formats must have the same length as arg headings")
+
+    def _formatted(item: Any, format_string: str) -> str:
+        if format_string is None:
+            return str(item)
+        else:
+            return f"{item:{format_string}}"
+
+    def _make_row(items: ListLike):
+        if len(items) != n_columns:
+            raise ValueError(
+                "rows in data matrix must have the same length as arg headings"
+            )
+        return [
+            _formatted(item, format_string)
+            for item, format_string in zip(items, formats)
+        ]
+
+    rows = [_make_row(items) for items in data]
+
+    column_widths = [
+        max(column_lengths)
+        for column_lengths in zip(
+            *((len(item) for item in row) for row in (headings, *rows))
+        )
+    ]
+
+    dividers = ["-" * column_width for column_width in column_widths]
+
+    return "\n".join(
+        (
+            *(
+                " ".join(
+                    (
+                        f"{item:{column_width}s}"
+                        for item, column_width in zip(row, column_widths)
+                    )
+                )
+                for row in (headings, dividers, *rows)
+            ),
+            "",
+        )
+    )
