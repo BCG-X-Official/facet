@@ -384,4 +384,4 @@ class CategoryPartitioning(Partitioning[T_Value]):
         return True
 
     def __len__(self) -> int:
-        return self._partitions
+        return len(self._partitions)
