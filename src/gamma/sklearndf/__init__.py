@@ -29,14 +29,17 @@ log = logging.getLogger(__name__)
 __all__ = [
     "BaseEstimatorDF",
     "BasePredictorDF",
-    "TransformerDF",
-    "RegressorDF",
     "ClassifierDF",
+    "RegressorDF",
+    "T_Classifier",
+    "T_ClassifierDF",
     "T_Estimator",
     "T_Predictor",
-    "T_Transformer",
+    "T_PredictorDF",
     "T_Regressor",
-    "T_Classifier",
+    "T_RegressorDF",
+    "T_Transformer",
+    "TransformerDF",
 ]
 
 #

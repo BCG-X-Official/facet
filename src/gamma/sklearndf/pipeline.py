@@ -11,7 +11,7 @@ from typing import Any, cast, Generic, List, Optional, Union
 
 import pandas as pd
 from sklearn.base import BaseEstimator
-from sklearn.pipeline import Pipeline
+from sklearn.pipeline import FeatureUnion, Pipeline
 
 from gamma import ListLike
 from gamma.sklearndf import (
@@ -30,7 +30,7 @@ from gamma.sklearndf._wrapper import (
 
 log = logging.getLogger(__name__)
 
-__all__ = ["PipelineDF", "ModelPipelineDF"]
+__all__ = ["FeatureUnionDF", "PipelineDF", "ModelPipelineDF"]
 
 
 class PipelineDF(
@@ -140,6 +140,49 @@ class PipelineDF(
             )
         else:
             return self.delegate_estimator[ind]
+
+
+class FeatureUnionDF(TransformerWrapperDF[FeatureUnion]):
+    """
+    Wraps :class:`sklearn.pipeline.FeatureUnion`;
+    accepts and returns data frames.
+    """
+
+    @classmethod
+    def _make_delegate_estimator(cls, **kwargs) -> FeatureUnion:
+        return FeatureUnion(**kwargs)
+
+    def _get_columns_original(self) -> pd.Series:
+        # concatenate output->input mappings from all included transformers other than
+        # ones stated as `None` or `"drop"` or any other string
+
+        # prepend the name of the transformer so the resulting feature name is
+        # `<name>__<output column of sub-transformer>
+
+        def _prepend_columns_out(
+            columns_original: pd.Series, name_prefix: str
+        ) -> pd.Series:
+            return pd.Series(
+                data=columns_original.values,
+                index=name_prefix + columns_original.index.astype(str),
+            )
+
+        # noinspection PyProtectedMember
+        return pd.concat(
+            objs=(
+                _prepend_columns_out(
+                    columns_original=transformer.columns_original,
+                    name_prefix=f"{name}__",
+                )
+                for name, transformer, _ in self.delegate_estimator._iter()
+                if not (transformer is None or isinstance(transformer, str))
+            )
+        )
+
+
+#
+# GAMMA custom pipelines
+#
 
 
 class ModelPipelineDF(BaseEstimator, ClassifierDF, RegressorDF, Generic[T_PredictorDF]):
