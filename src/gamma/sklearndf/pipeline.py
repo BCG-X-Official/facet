@@ -78,8 +78,8 @@ class PipelineDF(
         return transform_steps
 
     @classmethod
-    def _make_delegate_estimator(cls, **kwargs) -> Pipeline:
-        return Pipeline(**kwargs)
+    def _make_delegate_estimator(cls, *args, **kwargs) -> Pipeline:
+        return Pipeline(*args, **kwargs)
 
     def _get_columns_original(self) -> pd.Series:
         col_mappings = [
@@ -149,8 +149,8 @@ class FeatureUnionDF(TransformerWrapperDF[FeatureUnion]):
     """
 
     @classmethod
-    def _make_delegate_estimator(cls, **kwargs) -> FeatureUnion:
-        return FeatureUnion(**kwargs)
+    def _make_delegate_estimator(cls, *args, **kwargs) -> FeatureUnion:
+        return FeatureUnion(*args, **kwargs)
 
     def _get_columns_original(self) -> pd.Series:
         # concatenate output->input mappings from all included transformers other than
