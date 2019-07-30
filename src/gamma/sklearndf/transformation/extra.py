@@ -166,8 +166,8 @@ class BorutaDF(
         )
 
     @classmethod
-    def _make_delegate_estimator(cls, **kwargs) -> BorutaPy:
-        return BorutaPy(**kwargs)
+    def _make_delegate_estimator(cls, *args, **kwargs) -> BorutaPy:
+        return BorutaPy(*args, **kwargs)
 
     def _get_columns_out(self) -> pd.Index:
         return self.columns_in[self.delegate_estimator.support_]
