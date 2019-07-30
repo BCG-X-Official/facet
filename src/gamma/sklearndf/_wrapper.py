@@ -167,7 +167,14 @@ class BaseEstimatorWrapperDF(
             raise TypeError("arg y must be None or a Series")
 
     def __dir__(self) -> Iterable[str]:
-        return {*super().__dir__(), *self._delegate_estimator.__dir__()}
+        return {
+            *super().__dir__(),
+            *(
+                attr
+                for attr in self._delegate_estimator.__dir__()
+                if not attr.startswith("_")
+            ),
+        }
 
     def __getattr__(self, name: str) -> Any:
         if name.startswith("_"):
