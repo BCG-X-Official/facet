@@ -113,15 +113,6 @@ class PipelineDF(
         """
         return self.delegate_estimator.steps
 
-    @property
-    def named_steps(self) -> object:
-        """
-        Read-only attribute to access any step parameter by user given name.
-
-        :return: object with attributes corresponding to the names of the steps
-        """
-        return self.delegate_estimator.named_steps
-
     def __len__(self) -> int:
         """The number of steps of the pipeline."""
         return len(self.delegate_estimator.steps)
@@ -141,7 +132,7 @@ class PipelineDF(
             base_pipeline = self.delegate_estimator
             if ind.step not in (1, None):
                 raise ValueError("Pipeline slicing only supports a step of 1")
-            # noinspection PyTypeChecker
+
             return self.__class__(
                 steps=base_pipeline.steps[ind],
                 memory=base_pipeline.memory,
