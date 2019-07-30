@@ -68,7 +68,6 @@ class BaseEstimatorDF(ABC, Generic[T_Estimator]):
         self._columns_in = None
 
     @property
-    @abstractmethod
     def delegate_estimator(self) -> T_Estimator:
         """
         If this estimator is derived from a non-data frame estimator, return the
@@ -76,7 +75,7 @@ class BaseEstimatorDF(ABC, Generic[T_Estimator]):
 
         :return: the original estimator that this estimator delegates to
         """
-        pass
+        return cast(BaseEstimator, self)
 
     # noinspection PyPep8Naming
     @abstractmethod
