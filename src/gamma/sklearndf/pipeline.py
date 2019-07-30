@@ -180,10 +180,6 @@ class ModelPipelineDF(BaseEstimator, ClassifierDF, RegressorDF, Generic[T_Predic
         self.preprocessing = preprocessing
         self.predictor = predictor
 
-    @property
-    def delegate_estimator(self) -> T_PredictorDF:
-        return self
-
     # noinspection PyPep8Naming
     def fit(
         self, X: pd.DataFrame, y: Optional[pd.Series] = None, **fit_params

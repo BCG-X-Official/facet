@@ -42,11 +42,6 @@ class OutlierRemoverDF(TransformerDF["OutlierRemoverDF"], BaseEstimator):
         self.threshold_high_ = None
         self.columns_original_ = None
 
-    @property
-    def delegate_estimator(self) -> "OutlierRemoverDF":
-        """Return """
-        return self
-
     # noinspection PyPep8Naming
     def fit(
         self, X: pd.DataFrame, y: Optional[pd.Series] = None, **fit_params
