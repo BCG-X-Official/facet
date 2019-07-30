@@ -242,8 +242,8 @@ class ColumnTransformerDF(TransformerWrapperDF[ColumnTransformer]):
         self._columnTransformer = column_transformer
 
     @classmethod
-    def _make_delegate_estimator(cls, **kwargs) -> ColumnTransformer:
-        return ColumnTransformer(**kwargs)
+    def _make_delegate_estimator(cls, *args, **kwargs) -> ColumnTransformer:
+        return ColumnTransformer(*args, **kwargs)
 
     def _get_columns_original(self) -> pd.Series:
         """
@@ -599,8 +599,8 @@ class SimpleImputerDF(PersistentNamingTransformerWrapperDF[SimpleImputer]):
         super().__init__(**kwargs)
 
     @classmethod
-    def _make_delegate_estimator(cls, **kwargs) -> SimpleImputer:
-        return SimpleImputer(**kwargs)
+    def _make_delegate_estimator(cls, *args, **kwargs) -> SimpleImputer:
+        return SimpleImputer(*args, **kwargs)
 
     def _get_columns_out(self) -> pd.Index:
         stats = self.delegate_estimator.statistics_
@@ -643,8 +643,8 @@ class MissingIndicatorDF(TransformerWrapperDF[MissingIndicator]):
         )
 
     @classmethod
-    def _make_delegate_estimator(cls, **kwargs) -> MissingIndicator:
-        return MissingIndicator(**kwargs)
+    def _make_delegate_estimator(cls, *args, **kwargs) -> MissingIndicator:
+        return MissingIndicator(*args, **kwargs)
 
     def _get_columns_original(self) -> pd.Series:
         columns_original: np.ndarray = self.columns_in[
@@ -818,8 +818,8 @@ class PolynomialFeaturesDF(PersistentNamingTransformerWrapperDF[PolynomialFeatur
         )
 
     @classmethod
-    def _make_delegate_estimator(cls, **kwargs) -> PolynomialFeatures:
-        return PolynomialFeatures(**kwargs)
+    def _make_delegate_estimator(cls, *args, **kwargs) -> PolynomialFeatures:
+        return PolynomialFeatures(*args, **kwargs)
 
 
 @_df_transformer
@@ -930,8 +930,8 @@ class OneHotEncoderDF(TransformerWrapperDF[OneHotEncoder]):
             )
 
     @classmethod
-    def _make_delegate_estimator(cls, **kwargs) -> OneHotEncoder:
-        return OneHotEncoder(**kwargs)
+    def _make_delegate_estimator(cls, *args, **kwargs) -> OneHotEncoder:
+        return OneHotEncoder(*args, **kwargs)
 
     def _get_columns_original(self) -> pd.Series:
         """
