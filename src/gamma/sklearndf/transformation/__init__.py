@@ -768,14 +768,31 @@ class BernoulliRBMDF(BernoulliRBM, TransformerDF):
 #
 
 
-@_df_transformer
-class FeatureUnionDF(FeatureUnion, TransformerDF):
+class FeatureUnionDF(TransformerWrapperDF[FeatureUnion]):
     """
     Wraps :class:`sklearn.pipeline.FeatureUnion`;
     accepts and returns data frames.
     """
 
-    pass
+    @classmethod
+    def _make_delegate_estimator(cls, **kwargs) -> FeatureUnion:
+        return FeatureUnion(**kwargs)
+
+    def _get_columns_original(self) -> pd.Series:
+        # concatenate output->input mappings from all included transformers other than
+        # ones stated as `None` or `"drop"` or any other string
+
+        # prepend the name of the transformer so the resulting feature name is
+        # `<name>__<output column of sub-transformer>
+
+        # noinspection PyTypeChecker
+        return pd.concat(
+            objs=(
+                f"{name}__" + cast(TransformerDF, transformer).columns_original
+                for name, transformer, _ in iter(self.delegate_estimator)
+                if not (transformer is None or isinstance(transformer, str))
+            )
+        )
 
 
 #
