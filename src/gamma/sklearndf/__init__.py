@@ -61,7 +61,7 @@ T_Classifier = TypeVar("T_Classifier", bound=ClassifierMixin)
 
 
 class BaseEstimatorDF(ABC, Generic[T_Estimator]):
-    def __init__(self, **kwargs) -> None:
+    def __init__(self) -> None:
         super().__init__()
         if not isinstance(self, BaseEstimator):
             raise TypeError(
