@@ -785,11 +785,22 @@ class FeatureUnionDF(TransformerWrapperDF[FeatureUnion]):
         # prepend the name of the transformer so the resulting feature name is
         # `<name>__<output column of sub-transformer>
 
-        # noinspection PyTypeChecker
+        def _prepend_columns_out(
+            columns_original: pd.Series, name_prefix: str
+        ) -> pd.Series:
+            return pd.Series(
+                data=columns_original.values,
+                index=name_prefix + columns_original.index.astype(str),
+            )
+
+        # noinspection PyProtectedMember
         return pd.concat(
             objs=(
-                f"{name}__" + cast(TransformerDF, transformer).columns_original
-                for name, transformer, _ in iter(self.delegate_estimator)
+                _prepend_columns_out(
+                    columns_original=transformer.columns_original,
+                    name_prefix=f"{name}__",
+                )
+                for name, transformer, _ in self.delegate_estimator._iter()
                 if not (transformer is None or isinstance(transformer, str))
             )
         )
