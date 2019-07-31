@@ -90,7 +90,7 @@ class BaseDimensionalityReductionWrapperDF(
     TransformerWrapperDF[T_Transformer], Generic[T_Transformer], ABC
 ):
     """
-    Transform data making dimensionality redcution style transform.
+    Transform data making dimensionality reduction style transform.
     """
 
     @abstractmethod
@@ -107,6 +107,10 @@ class BaseDimensionalityReductionWrapperDF(
 class AnonymousDimensionalityReductionWrapperDF(
     BaseDimensionalityReductionWrapperDF[T_Transformer], Generic[T_Transformer], ABC
 ):
+    """
+    Transform features doing dimensionality reductions.
+    """
+
     def _get_columns_out(self) -> pd.Index:
         # todo: implement this
         pass
@@ -121,7 +125,7 @@ class NamedDimensionalityReductionWrapperDF(
     """
     Apply dimensionality reduction on a dataframe.
 
-    The delegate transformer has a ``componnents_`` attribute of the form (
+    The delegate transformer has a ``components_`` attribute of the form (
     n_components, n_features).
     """
 
@@ -144,6 +148,12 @@ GET_SUPPORT = "get_support"
 class FeatureSelectionWrapperDF(
     ColumnSubsetTransformerWrapperDF[T_Transformer], Generic[T_Transformer], ABC
 ):
+    """
+    Select some features of a dataframe.
+
+    The delegate transformer has a get_support method.
+    """
+
     def _get_columns_out(self) -> pd.Index:
         if not (
             hasattr(self.delegate_estimator, GET_SUPPORT)
