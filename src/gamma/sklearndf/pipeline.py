@@ -225,13 +225,6 @@ class ModelPipelineDF(BaseEstimator, ClassifierDF, RegressorDF, Generic[T_Predic
     def is_fitted(self) -> bool:
         return self.preprocessing.is_fitted and self.predictor.is_fitted
 
-    @property
-    def columns_in(self) -> pd.Index:
-        if self.preprocessing is not None:
-            return self.preprocessing.columns_in
-        else:
-            return self.predictor.columns_in
-
     # noinspection PyPep8Naming
     def predict(
         self, X: pd.DataFrame, **predict_params
@@ -283,6 +276,12 @@ class ModelPipelineDF(BaseEstimator, ClassifierDF, RegressorDF, Generic[T_Predic
     @property
     def n_outputs(self) -> int:
         return self.predictor.n_outputs
+
+    def _get_columns_in(self) -> pd.Index:
+        if self.preprocessing is not None:
+            return self.preprocessing.columns_in
+        else:
+            return self.predictor.columns_in
 
     # noinspection PyPep8Naming
     def _pre_transform(self, X: pd.DataFrame) -> pd.DataFrame:
