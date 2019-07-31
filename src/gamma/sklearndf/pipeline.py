@@ -156,8 +156,8 @@ class ModelPipelineDF(BaseEstimator, ClassifierDF, RegressorDF, Generic[T_Predic
     A data frame enabled pipeline with an optional preprocessing step and a
     mandatory estimator step.
 
-    :param preprocessing: the preprocessing step in the pipeline (defaults to ``None``)
     :param predictor: the delegate estimator used in the pipeline
+    :param preprocessing: the preprocessing step in the pipeline (defaults to ``None``)
     :type predictor: :class:`.BasePredictorDF`
     """
 
