@@ -88,11 +88,10 @@ from sklearn.preprocessing import (
 from sklearn.random_projection import GaussianRandomProjection, SparseRandomProjection
 
 from gamma.sklearndf import T_Transformer, TransformerDF
-from gamma.sklearndf._wrapper import (
-    df_estimator,
-    PersistentColumnTransformerWrapperDF,
-    PersistentNamingTransformerWrapperDF,
-    TransformerWrapperDF,
+from gamma.sklearndf._wrapper import df_estimator, TransformerWrapperDF
+from gamma.sklearndf.transformation._wrapper import (
+    ColumnPreservingTransformerWrapperDF,
+    ColumnSubsetTransformerWrapperDF,
 )
 
 log = logging.getLogger(__name__)
@@ -138,8 +137,6 @@ __all__ = [
     "OrdinalEncoderDF",
     "PCADF",
     "PLSSVDDF",
-    "PersistentColumnTransformerWrapperDF",
-    "PersistentNamingTransformerWrapperDF",
     "PolynomialFeaturesDF",
     "PowerTransformerDF",
     "QuantileTransformerDF",
@@ -178,7 +175,7 @@ def _df_transformer(
         Type[TransformerWrapperDF[T_Transformer]],
         df_estimator(
             delegate_estimator=delegate_transformer,
-            df_estimator_type=PersistentColumnTransformerWrapperDF,
+            df_estimator_type=ColumnPreservingTransformerWrapperDF,
         ),
     )
 
@@ -585,7 +582,7 @@ class GenericUnivariateSelectDF(GenericUnivariateSelect, TransformerDF):
 #
 # impute
 #
-class SimpleImputerDF(PersistentNamingTransformerWrapperDF[SimpleImputer]):
+class SimpleImputerDF(ColumnSubsetTransformerWrapperDF[SimpleImputer]):
     """
     Impute missing values with data frames as input and output.
 
@@ -804,7 +801,7 @@ class RobustScalerDF(RobustScaler, TransformerDF):
     pass
 
 
-class PolynomialFeaturesDF(PersistentNamingTransformerWrapperDF[PolynomialFeatures]):
+class PolynomialFeaturesDF(ColumnSubsetTransformerWrapperDF[PolynomialFeatures]):
     """
     Wraps :class:`sklearn.preprocessing.PolynomialFeatures`;
     accepts and returns data frames.

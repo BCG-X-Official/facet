@@ -40,9 +40,6 @@ __all__ = [
     "RegressorWrapperDF",
     "ClassifierWrapperDF",
     "TransformerWrapperDF",
-    "PersistentNamingTransformerWrapperDF",
-    "PersistentColumnTransformerWrapperDF",
-    "NDArrayTransformerWrapperDF",
     "df_estimator",
 ]
 #
@@ -60,8 +57,6 @@ class BaseEstimatorWrapperDF(
 
     :param `**kwargs`: the arguments passed to the delegate estimator
     """
-
-    F_COLUMN_IN = "column_in"
 
     def __init__(self, *args, **kwargs) -> None:
         super().__init__()
@@ -131,15 +126,8 @@ class BaseEstimatorWrapperDF(
         """``True`` if this estimator is fitted, else ``False``."""
         return self._columns_in is not None
 
-    @property
-    def columns_in(self) -> pd.Index:
-        """The index of the input columns."""
-        self._ensure_fitted()
+    def _get_columns_in(self) -> pd.Index:
         return self._columns_in
-
-    def _ensure_fitted(self) -> None:
-        if not self.is_fitted:
-            raise RuntimeError("transformer not fitted")
 
     def _reset_fit(self) -> None:
         self._columns_in = None
@@ -243,14 +231,9 @@ class TransformerWrapperDF(
     Implementations must define ``_make_delegate_estimator`` and
     ``_get_columns_original``.
 
-    :param `**kwargs`: parameters of scikit-learn transformer to be wrapped
+    :param `**args`: positional arguments of scikit-learn transformer to be wrapped
+    :param `**kwargs`: keyword arguments  of scikit-learn transformer to be wrapped
     """
-
-    F_COLUMN_OUT = "column_out"
-
-    def __init__(self, *args, **kwargs) -> None:
-        super().__init__(*args, **kwargs)
-        self._columns_original = None
 
     # noinspection PyPep8Naming
     def transform(self, X: pd.DataFrame) -> pd.DataFrame:
@@ -311,29 +294,6 @@ class TransformerWrapperDF(
         return self._transformed_to_df(
             transformed=transformed, index=X.index, columns=self.columns_in
         )
-
-    @property
-    def columns_original(self) -> pd.Series:
-        """Series mapping output column names to the original columns names.
-
-        Series with index the name of the output columns and with values the
-        original name of the column."""
-        self._ensure_fitted()
-        if self._columns_original is None:
-            self._columns_original = (
-                self._get_columns_original()
-                .rename(self.F_COLUMN_IN)
-                .rename_axis(index=self.F_COLUMN_OUT)
-            )
-        return self._columns_original
-
-    @abstractmethod
-    def _get_columns_original(self) -> pd.Series:
-        """
-        :return: a mapping from this transformer's output columns to the original
-        columns as a series
-        """
-        pass
 
     def _reset_fit(self) -> None:
         try:
@@ -611,82 +571,6 @@ class ClassifierWrapperDF(
                 f"Unexpected shape of ndarray returned as prediction: {y.shape}"
             )
         raise TypeError(f"unexpected type or prediction result: {type(y).__name__}")
-
-
-#
-# specialised transformer wrappers
-#
-
-
-class NDArrayTransformerWrapperDF(
-    TransformerWrapperDF[T_Transformer], Generic[T_Transformer], ABC
-):
-    """
-    `TransformerDF` whose delegate transformer only accepts numpy ndarrays.
-
-    Wraps around the delegate transformer and converts the data frame to an array when
-    needed.
-    """
-
-    # noinspection PyPep8Naming
-    def _fit(
-        self, X: pd.DataFrame, y: Optional[pd.Series], **fit_params
-    ) -> T_Transformer:
-        # noinspection PyUnresolvedReferences
-        return self.delegate_estimator.fit(X.values, y.values, **fit_params)
-
-    # noinspection PyPep8Naming
-    def _transform(self, X: pd.DataFrame) -> np.ndarray:
-        # noinspection PyUnresolvedReferences
-        return self.delegate_estimator.transform(X.values)
-
-    # noinspection PyPep8Naming
-    def _fit_transform(
-        self, X: pd.DataFrame, y: Optional[pd.Series], **fit_params
-    ) -> np.ndarray:
-        return self.delegate_estimator.fit_transform(X.values, y.values, **fit_params)
-
-    # noinspection PyPep8Naming
-    def _inverse_transform(self, X: pd.DataFrame) -> np.ndarray:
-        # noinspection PyUnresolvedReferences
-        return self.delegate_estimator.inverse_transform(X.values)
-
-
-class PersistentNamingTransformerWrapperDF(
-    TransformerWrapperDF[T_Transformer], Generic[T_Transformer], ABC
-):
-    """
-    Transforms a data frame without changing column names, but possibly removing
-    columns.
-
-    All output columns of a :class:`PersistentNamingTransformerWrapperDF` have the same
-    names as their associated input columns. Some columns can be removed.
-    Implementations must define ``_make_delegate_estimator`` and ``_get_columns_out``.
-    """
-
-    @abstractmethod
-    def _get_columns_out(self) -> pd.Index:
-        # return column labels for arrays returned by the fitted transformer.
-        pass
-
-    def _get_columns_original(self) -> pd.Series:
-        # return the series with output columns in index and output columns as values
-        columns_out = self._get_columns_out()
-        return pd.Series(index=columns_out, data=columns_out.values)
-
-
-class PersistentColumnTransformerWrapperDF(
-    PersistentNamingTransformerWrapperDF[T_Transformer], Generic[T_Transformer], ABC
-):
-    """
-    Transforms a data frame keeping exactly the same columns.
-
-    A ``PersistentColumnTransformerWrapperDF`` does not add, remove, or rename any of the
-    input columns.
-    """
-
-    def _get_columns_out(self) -> pd.Index:
-        return self.columns_in
 
 
 #
