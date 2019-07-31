@@ -24,7 +24,7 @@ TODO
    tutorial/model
    tutorial/feature_selection
    tutorial/simulation
-   API reference of yieldengine <gamma>
+   API reference of gamma <gamma>
 
 
 
