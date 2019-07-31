@@ -29,7 +29,7 @@ IQR_MULTIPLE_FAR = 3.0
 
 class _XYSeries(NamedTuple):
     """
-    Series of x and y coordiantes for plotting; x and y values are held in two
+    Series of x and y coordinates for plotting; x and y values are held in two
     separate lists of the same length.
     """
 
