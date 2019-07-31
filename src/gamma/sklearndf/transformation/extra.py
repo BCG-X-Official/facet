@@ -70,18 +70,22 @@ class OutlierRemoverDF(TransformerDF["OutlierRemoverDF"], BaseEstimator):
         return X.where(cond=(X >= self.threshold_low_) & (X <= self.threshold_high_))
 
     def inverse_transform(self, X: pd.DataFrame) -> pd.DataFrame:
+        """Not possible."""
         raise RuntimeError("inverse transform not possible")
 
     @property
     def is_fitted(self) -> bool:
+        """True if the thresholds have been computed, lese False."""
         return self.threshold_low_ is not None
 
     @property
     def columns_in(self) -> pd.Index:
+        """The columns of the input dataframe."""
         return self.columns_original.index
 
     @property
     def columns_original(self) -> pd.Series:
+        """Mapping columns output to columns input."""
         return self.columns_original_
 
 

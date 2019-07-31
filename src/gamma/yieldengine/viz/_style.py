@@ -24,7 +24,7 @@ log = logging.getLogger(__name__)
 
 class SimulationStyle(ChartStyle, ABC):
     """
-    The abstract simulation style known to the simulation drawer
+    The abstract simulation style known to the simulation drawer.
     """
 
     @abstractmethod
@@ -106,7 +106,16 @@ class SimulationPlotStyle(MatplotStyle, SimulationStyle):
         max_percentile: float,
     ) -> None:
         """
-        Draw the graph with the uplift curves: median, low and high percentiles.
+        Draw the uplift graph.
+
+        :param feature_name: name of the simulated feature
+        :param target_name: name of the target
+        :param partitioning: partitioning of ``target_name`` used for the simulation
+        :param median_uplift: median uplift values
+        :param min_uplift: low percentile uplift values
+        :param max_uplift: high percentile uplift values
+        :param min_percentile: percentile used to compute min_uplift
+        :param max_percentile: percentile used to compute max_uplift
         """
 
         # draw the mean predicted uplift, showing median and confidence ranges for
