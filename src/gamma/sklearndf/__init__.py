@@ -29,14 +29,17 @@ log = logging.getLogger(__name__)
 __all__ = [
     "BaseEstimatorDF",
     "BasePredictorDF",
-    "TransformerDF",
-    "RegressorDF",
     "ClassifierDF",
+    "RegressorDF",
+    "T_Classifier",
+    "T_ClassifierDF",
     "T_Estimator",
     "T_Predictor",
-    "T_Transformer",
+    "T_PredictorDF",
     "T_Regressor",
-    "T_Classifier",
+    "T_RegressorDF",
+    "T_Transformer",
+    "TransformerDF",
 ]
 
 #
@@ -58,7 +61,7 @@ T_Classifier = TypeVar("T_Classifier", bound=ClassifierMixin)
 
 
 class BaseEstimatorDF(ABC, Generic[T_Estimator]):
-    def __init__(self, **kwargs) -> None:
+    def __init__(self) -> None:
         super().__init__()
         if not isinstance(self, BaseEstimator):
             raise TypeError(
@@ -68,7 +71,6 @@ class BaseEstimatorDF(ABC, Generic[T_Estimator]):
         self._columns_in = None
 
     @property
-    @abstractmethod
     def delegate_estimator(self) -> T_Estimator:
         """
         If this estimator is derived from a non-data frame estimator, return the
@@ -76,7 +78,7 @@ class BaseEstimatorDF(ABC, Generic[T_Estimator]):
 
         :return: the original estimator that this estimator delegates to
         """
-        pass
+        return cast(BaseEstimator, self)
 
     # noinspection PyPep8Naming
     @abstractmethod
