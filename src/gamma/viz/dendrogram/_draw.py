@@ -64,11 +64,7 @@ class DendrogramDrawer(ChartDrawer[LinkageTree, DendrogramStyle]):
         """
         if node.is_leaf:
             self.style.draw_link_leg(
-                bottom=0.0,
-                top=width_relative,
-                first_leaf=y,
-                n_leaves=1,
-                weight=node.weight,
+                bottom=0.0, top=width_relative, leaf=y, weight=node.weight
             )
 
             return _SubtreeInfo(labels=[node.label], weight=node.weight)
