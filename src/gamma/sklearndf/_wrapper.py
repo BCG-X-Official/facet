@@ -63,14 +63,14 @@ class BaseEstimatorWrapperDF(
 
     F_COLUMN_IN = "column_in"
 
-    def __init__(self, **kwargs) -> None:
-        super().__init__(**kwargs)
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__()
         self._columns_in = None
-        self._delegate_estimator = type(self)._make_delegate_estimator(**kwargs)
+        self._delegate_estimator = type(self)._make_delegate_estimator(*args, **kwargs)
 
     @classmethod
     @abstractmethod
-    def _make_delegate_estimator(cls, **kwargs) -> T_Estimator:
+    def _make_delegate_estimator(cls, *args, **kwargs) -> T_Estimator:
         pass
 
     @property
@@ -167,7 +167,14 @@ class BaseEstimatorWrapperDF(
             raise TypeError("arg y must be None or a Series")
 
     def __dir__(self) -> Iterable[str]:
-        return {*super().__dir__(), *self._delegate_estimator.__dir__()}
+        return {
+            *super().__dir__(),
+            *(
+                attr
+                for attr in self._delegate_estimator.__dir__()
+                if not attr.startswith("_")
+            ),
+        }
 
     def __getattr__(self, name: str) -> Any:
         if name.startswith("_"):
@@ -238,8 +245,8 @@ class TransformerWrapperDF(
 
     F_COLUMN_OUT = "column_out"
 
-    def __init__(self, **kwargs) -> None:
-        super().__init__(**kwargs)
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
         self._columns_original = None
 
     # noinspection PyPep8Naming
@@ -388,7 +395,7 @@ class BasePredictorWrapperDF(
                 self._columns_in = columns_in
 
             @classmethod
-            def _make_delegate_estimator(cls, **kwargs) -> T_Predictor:
+            def _make_delegate_estimator(cls, *args, **kwargs) -> T_Predictor:
                 return predictor
 
         return _FittedPredictor()
@@ -728,7 +735,7 @@ def df_estimator(
         @wraps(decoratee, updated=())
         class _DataFrameEstimator(df_estimator_type):
             @classmethod
-            def _make_delegate_estimator(cls, **kwargs) -> T_Estimator:
+            def _make_delegate_estimator(cls, *args, **kwargs) -> T_Estimator:
                 # noinspection PyArgumentList
                 return sklearn_base_estimator(**kwargs)
 
