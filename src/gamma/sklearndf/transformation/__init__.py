@@ -90,8 +90,11 @@ from sklearn.random_projection import GaussianRandomProjection, SparseRandomProj
 from gamma.sklearndf import T_Transformer, TransformerDF
 from gamma.sklearndf._wrapper import df_estimator, TransformerWrapperDF
 from gamma.sklearndf.transformation._wrapper import (
+    BaseDimensionalityReductionWrapperDF,
     ColumnPreservingTransformerWrapperDF,
     ColumnSubsetTransformerWrapperDF,
+    FeatureSelectionWrapperDF,
+    NamedDimensionalityReductionWrapperDF,
 )
 
 log = logging.getLogger(__name__)
@@ -166,6 +169,35 @@ __all__ = [
 #
 # decorator for wrapping the sklearn transformer classes
 #
+
+
+def _df_transformer_support(
+    delegate_transformer: Type[T_Transformer]
+) -> Type[TransformerWrapperDF[T_Transformer]]:
+    return cast(
+        Type[TransformerWrapperDF[T_Transformer]],
+        df_estimator(
+            delegate_estimator=delegate_transformer,
+            df_estimator_type=FeatureSelectionWrapperDF,
+        ),
+    )
+
+
+def _df_transformer_generic(
+    transformer_df_type: Type[T_Transformer]
+) -> Callable[[Type[T_Transformer]], Type[TransformerWrapperDF[T_Transformer]]]:
+    def decorater(
+        delegate_transformer: Type[T_Transformer]
+    ) -> Type[TransformerWrapperDF[T_Transformer]]:
+        return cast(
+            Type[TransformerWrapperDF[T_Transformer]],
+            df_estimator(
+                delegate_estimator=delegate_transformer,
+                df_estimator_type=transformer_df_type,
+            ),
+        )
+
+    return decorater
 
 
 def _df_transformer(
@@ -286,7 +318,7 @@ class PLSSVDDF(PLSSVD, TransformerDF):
 #
 
 
-@_df_transformer
+@_df_transformer_generic(NamedDimensionalityReductionWrapperDF)
 class LatentDirichletAllocationDF(LatentDirichletAllocation, TransformerDF):
     """
     Wraps :class:`decomposition.online_lda.LatentDirichletAllocation`;
@@ -296,7 +328,7 @@ class LatentDirichletAllocationDF(LatentDirichletAllocation, TransformerDF):
     pass
 
 
-@_df_transformer
+@_df_transformer_generic(NamedDimensionalityReductionWrapperDF)
 class FactorAnalysisDF(FactorAnalysis, TransformerDF):
     """
     Wraps :class:`decomposition.factor_analysis.FactorAnalysis`;
@@ -316,7 +348,7 @@ class KernelPCADF(KernelPCA, TransformerDF):
     pass
 
 
-@_df_transformer
+@_df_transformer_generic(NamedDimensionalityReductionWrapperDF)
 class TruncatedSVDDF(TruncatedSVD, TransformerDF):
     """
     Wraps :class:`decomposition.truncated_svd.TruncatedSVD`;
@@ -326,7 +358,7 @@ class TruncatedSVDDF(TruncatedSVD, TransformerDF):
     pass
 
 
-@_df_transformer
+@_df_transformer_generic(NamedDimensionalityReductionWrapperDF)
 class FastICADF(FastICA, TransformerDF):
     """
     Wraps :class:`decomposition.fastica_.FastICA`;
@@ -336,7 +368,7 @@ class FastICADF(FastICA, TransformerDF):
     pass
 
 
-@_df_transformer
+@_df_transformer_generic(NamedDimensionalityReductionWrapperDF)
 class SparseCoderDF(SparseCoder, TransformerDF):
     """
     Wraps :class:`decomposition.dict_learning.SparseCoder`;
@@ -346,7 +378,7 @@ class SparseCoderDF(SparseCoder, TransformerDF):
     pass
 
 
-@_df_transformer
+@_df_transformer_generic(NamedDimensionalityReductionWrapperDF)
 class DictionaryLearningDF(DictionaryLearning, TransformerDF):
     """
     Wraps :class:`decomposition.dict_learning.DictionaryLearning`;
@@ -356,7 +388,7 @@ class DictionaryLearningDF(DictionaryLearning, TransformerDF):
     pass
 
 
-@_df_transformer
+@_df_transformer_generic(NamedDimensionalityReductionWrapperDF)
 class MiniBatchDictionaryLearningDF(MiniBatchDictionaryLearning, TransformerDF):
     """
     Wraps :class:`decomposition.dict_learning.MiniBatchDictionaryLearning`;
@@ -366,7 +398,7 @@ class MiniBatchDictionaryLearningDF(MiniBatchDictionaryLearning, TransformerDF):
     pass
 
 
-@_df_transformer
+@_df_transformer_generic(NamedDimensionalityReductionWrapperDF)
 class IncrementalPCADF(IncrementalPCA, TransformerDF):
     """
     Wraps :class:`decomposition.incremental_pca.IncrementalPCA`;
@@ -376,7 +408,7 @@ class IncrementalPCADF(IncrementalPCA, TransformerDF):
     pass
 
 
-@_df_transformer
+@_df_transformer_generic(NamedDimensionalityReductionWrapperDF)
 class PCADF(PCA, TransformerDF):
     """
     Wraps :class:`decomposition.pca.PCA`;
@@ -386,7 +418,7 @@ class PCADF(PCA, TransformerDF):
     pass
 
 
-@_df_transformer
+@_df_transformer_generic(NamedDimensionalityReductionWrapperDF)
 class SparsePCADF(SparsePCA, TransformerDF):
     """
     Wraps :class:`decomposition.sparse_pca.SparsePCA`;
@@ -396,7 +428,7 @@ class SparsePCADF(SparsePCA, TransformerDF):
     pass
 
 
-@_df_transformer
+@_df_transformer_generic(NamedDimensionalityReductionWrapperDF)
 class MiniBatchSparsePCADF(MiniBatchSparsePCA, TransformerDF):
     """
     Wraps :class:`decomposition.sparse_pca.MiniBatchSparsePCA`;
@@ -406,7 +438,7 @@ class MiniBatchSparsePCADF(MiniBatchSparsePCA, TransformerDF):
     pass
 
 
-@_df_transformer
+@_df_transformer_generic(NamedDimensionalityReductionWrapperDF)
 class NMFDF(NMF, TransformerDF):
     """
     Wraps :class:`decomposition.NMF`;
@@ -479,7 +511,7 @@ class TfidfTransformerDF(TfidfTransformer, TransformerDF):
 #
 # feature_selection
 #
-@_df_transformer
+@_df_transformer_generic(FeatureSelectionWrapperDF)
 class VarianceThresholdDF(VarianceThreshold, TransformerDF):
     """
     Wraps :class:`sklearn.feature_selection.VarianceThreshold`;
@@ -489,7 +521,7 @@ class VarianceThresholdDF(VarianceThreshold, TransformerDF):
     pass
 
 
-@_df_transformer
+@_df_transformer_generic(FeatureSelectionWrapperDF)
 class RFEDF(RFE, TransformerDF):
     """
     Wraps :class:`sklearn.feature_selection.RFE`;
@@ -499,7 +531,7 @@ class RFEDF(RFE, TransformerDF):
     pass
 
 
-@_df_transformer
+@_df_transformer_generic(FeatureSelectionWrapperDF)
 class RFECVDF(RFECV, TransformerDF):
     """
     Wraps :class:`sklearn.feature_selection.RFECV`;
@@ -509,7 +541,7 @@ class RFECVDF(RFECV, TransformerDF):
     pass
 
 
-@_df_transformer
+@_df_transformer_generic(FeatureSelectionWrapperDF)
 class SelectFromModelDF(SelectFromModel, TransformerDF):
     """
     Wraps :class:`sklearn.feature_selection.SelectFromModel`;
@@ -519,7 +551,7 @@ class SelectFromModelDF(SelectFromModel, TransformerDF):
     pass
 
 
-@_df_transformer
+@_df_transformer_generic(FeatureSelectionWrapperDF)
 class SelectPercentileDF(SelectPercentile, TransformerDF):
     """
     Wraps :class:`sklearn.feature_selection.SelectPercentile`;
@@ -529,7 +561,7 @@ class SelectPercentileDF(SelectPercentile, TransformerDF):
     pass
 
 
-@_df_transformer
+@_df_transformer_generic(FeatureSelectionWrapperDF)
 class SelectKBestDF(SelectKBest, TransformerDF):
     """
     Wraps :class:`sklearn.feature_selection.SelectKBest`;
@@ -539,7 +571,7 @@ class SelectKBestDF(SelectKBest, TransformerDF):
     pass
 
 
-@_df_transformer
+@_df_transformer_generic(FeatureSelectionWrapperDF)
 class SelectFprDF(SelectFpr, TransformerDF):
     """
     Wraps :class:`sklearn.feature_selection.SelectFpr`;
@@ -549,7 +581,7 @@ class SelectFprDF(SelectFpr, TransformerDF):
     pass
 
 
-@_df_transformer
+@_df_transformer_generic(FeatureSelectionWrapperDF)
 class SelectFdrDF(SelectFdr, TransformerDF):
     """
     Wraps :class:`sklearn.feature_selection.SelectFdr`;
@@ -559,7 +591,7 @@ class SelectFdrDF(SelectFdr, TransformerDF):
     pass
 
 
-@_df_transformer
+@_df_transformer_generic(FeatureSelectionWrapperDF)
 class SelectFweDF(SelectFwe, TransformerDF):
     """
     Wraps :class:`sklearn.feature_selection.SelectFwe`;
@@ -569,7 +601,7 @@ class SelectFweDF(SelectFwe, TransformerDF):
     pass
 
 
-@_df_transformer
+@_df_transformer_generic(FeatureSelectionWrapperDF)
 class GenericUnivariateSelectDF(GenericUnivariateSelect, TransformerDF):
     """
     Wraps :class:`sklearn.feature_selection.GenericUnivariateSelect`;
@@ -720,14 +752,20 @@ class LocallyLinearEmbeddingDF(LocallyLinearEmbedding, TransformerDF):
     pass
 
 
-@_df_transformer
-class IsomapDF(Isomap, TransformerDF):
+class IsomapDF(BaseDimensionalityReductionWrapperDF[Isomap]):
     """
     Wraps :class:`sklearn.manifold.Isomap`;
     accepts and returns data frames.
     """
 
-    pass
+    def _get_columns_out(self) -> pd.Index:
+        n_components = self.delegate_estimator.embedding_.shape[1]
+        feature_format = "x_{}"
+        return pd.Index([feature_format.format(i) for i in range(n_components)])
+
+    @classmethod
+    def _make_delegate_estimator(cls, *args, **kwargs) -> Isomap:
+        return Isomap(*args, **kwargs)
 
 
 #
@@ -748,7 +786,7 @@ class NeighborhoodComponentsAnalysisDF(NeighborhoodComponentsAnalysis, Transform
 #
 # neural_network
 #
-@_df_transformer
+@_df_transformer_generic(NamedDimensionalityReductionWrapperDF)
 class BernoulliRBMDF(BernoulliRBM, TransformerDF):
     """
     Wraps :class:`sklearn.neural_network.BernoulliRBM`;
@@ -972,7 +1010,7 @@ class KBinsDiscretizerDF(KBinsDiscretizer, TransformerDF):
 #
 # random_projection
 #
-@_df_transformer
+@_df_transformer_generic(NamedDimensionalityReductionWrapperDF)
 class GaussianRandomProjectionDF(GaussianRandomProjection, TransformerDF):
     """
     Wraps :class:`sklearn.random_projection.GaussianRandomProjection`;
@@ -982,7 +1020,7 @@ class GaussianRandomProjectionDF(GaussianRandomProjection, TransformerDF):
     pass
 
 
-@_df_transformer
+@_df_transformer_generic(NamedDimensionalityReductionWrapperDF)
 class SparseRandomProjectionDF(SparseRandomProjection, TransformerDF):
     """
     Wraps :class:`sklearn.random_projection.SparseRandomProjection`;
