@@ -53,11 +53,8 @@ from sklearn.svm import LinearSVR, NuSVR, SVR
 from sklearn.tree import DecisionTreeRegressor, ExtraTreeRegressor
 
 from gamma.sklearndf import RegressorDF, T_Regressor, TransformerDF
-from gamma.sklearndf._wrapper import (
-    df_estimator,
-    PersistentColumnTransformerWrapperDF,
-    RegressorWrapperDF,
-)
+from gamma.sklearndf._wrapper import df_estimator, RegressorWrapperDF
+from gamma.sklearndf.transformation import ColumnPreservingTransformerWrapperDF
 
 log = logging.getLogger(__name__)
 
@@ -102,7 +99,6 @@ __all__ = [
     "PLSCanonicalDF",
     "PLSRegressionDF",
     "PassiveAggressiveRegressorDF",
-    "PersistentColumnTransformerWrapperDF",
     "RANSACRegressorDF",
     "RadiusNeighborsRegressorDF",
     "RandomForestRegressorDF",
@@ -137,7 +133,7 @@ def _df_regressor(
 
 class _RegressorTransformerWrapperDF(
     RegressorWrapperDF[T_Regressor],
-    PersistentColumnTransformerWrapperDF[T_Regressor],
+    ColumnPreservingTransformerWrapperDF[T_Regressor],
     Generic[T_Regressor],
 ):
     """
