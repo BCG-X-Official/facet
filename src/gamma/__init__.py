@@ -29,7 +29,7 @@ log = logging.getLogger(__name__)
 _T = TypeVar("_T")
 ListLike = Union[np.ndarray, pd.Series, Sequence[_T]]
 MatrixLike = Union[
-    np.ndarray, pd.Series, pd.DataFrame, Sequence[Union[_T, "MatrixLike[_T]"]]
+    np.ndarray, pd.Series, pd.DataFrame, Sequence[Union[_T, Sequence[_T]]]
 ]
 
 
