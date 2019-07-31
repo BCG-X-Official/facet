@@ -218,15 +218,25 @@ class ModelPipelineDF(BaseEstimator, ClassifierDF, RegressorDF, Generic[T_Predic
     def fit(
         self, X: pd.DataFrame, y: Optional[pd.Series] = None, **fit_params
     ) -> "ModelPipelineDF[T_PredictorDF]":
+        """
+        Fit the pipeline.
+
+        :param X: the feature dataframe used to fit the pipeline
+        :param y: the target values
+        :param fit_params: fit parameters
+        :return:
+        """
         self.predictor.fit(self._pre_fit_transform(X, y, **fit_params), y, **fit_params)
         return self
 
     @property
     def is_fitted(self) -> bool:
+        """True if the pipeline is fitted."""
         return self.preprocessing.is_fitted and self.predictor.is_fitted
 
     @property
     def columns_in(self) -> pd.Index:
+        """Columns of the input dataframe."""
         if self.preprocessing is not None:
             return self.preprocessing.columns_in
         else:
@@ -236,28 +246,61 @@ class ModelPipelineDF(BaseEstimator, ClassifierDF, RegressorDF, Generic[T_Predic
     def predict(
         self, X: pd.DataFrame, **predict_params
     ) -> Union[pd.Series, pd.DataFrame]:
+        """
+        Make prediction for target values.
+
+        :param X: the feature dataframe used for input
+        :param predict_params: parameters passed to the predictor
+        :return: the predcitions
+        """
         return self.predictor.predict(self._pre_transform(X), **predict_params)
 
     # noinspection PyPep8Naming
     def fit_predict(self, X: pd.DataFrame, y: pd.Series, **fit_params) -> pd.Series:
+        """
+        Fit and predict.
+
+        :param X: the features used to fit and predict
+        :param y: the target values used to fit
+        :param fit_params: parameters used for fit and predcit
+        :return: the predictions
+        """
         return self.predictor.fit_predict(
             self._pre_fit_transform(X, y, **fit_params), y, **fit_params
         )
 
     # noinspection PyPep8Naming
     def predict_proba(self, X: pd.DataFrame) -> Union[pd.DataFrame, List[pd.DataFrame]]:
+        """
+        Predict probabilities.
+
+        :param X: features used for the predictions
+        :return: probablity predictions
+        """
         return cast(ClassifierDF, self.predictor).predict_proba(self._pre_transform(X))
 
     # noinspection PyPep8Naming
     def predict_log_proba(
         self, X: pd.DataFrame
     ) -> Union[pd.DataFrame, List[pd.DataFrame]]:
+        """
+        Predict log probabilities.
+
+        :param X: features used for the predictions
+        :return: the log probabilities predictions
+        """
         return cast(ClassifierDF, self.predictor).predict_log_proba(
             self._pre_transform(X)
         )
 
     # noinspection PyPep8Naming
     def decision_function(self, X: pd.DataFrame) -> Union[pd.Series, pd.DataFrame]:
+        """
+        Return the decision function.
+
+        :param X: input data
+        :return: the decision function used
+        """
         return cast(ClassifierDF, self.predictor).decision_function(
             self._pre_transform(X)
         )
@@ -269,6 +312,14 @@ class ModelPipelineDF(BaseEstimator, ClassifierDF, RegressorDF, Generic[T_Predic
         y: Optional[pd.Series] = None,
         sample_weight: Optional[Any] = None,
     ) -> float:
+        """
+        Compute the score the model on some data.
+
+        :param X: data used to make the predictions
+        :param y: actual targets
+        :param sample_weight: weights
+        :return: the score
+        """
         if sample_weight is None:
             return self.predictor.score(self._pre_transform(X), y)
         else:
@@ -278,10 +329,12 @@ class ModelPipelineDF(BaseEstimator, ClassifierDF, RegressorDF, Generic[T_Predic
 
     @property
     def classes(self) -> Optional[ListLike[Any]]:
+        """The classes if a classification problem."""
         return cast(ClassifierDF, self.predictor).classes
 
     @property
     def n_outputs(self) -> int:
+        """The number of outputs."""
         return self.predictor.n_outputs
 
     # noinspection PyPep8Naming
