@@ -334,16 +334,32 @@ class DendrogramReportStyle(DendrogramStyle, TextStyle):
     Dendrogram rendered as text.
     """
 
+    _DEFAULT_LABEL_WIDTH = 20
+
     def __init__(
-        self, out: TextIO = None, width: int = 80, max_height: int = 100
+        self,
+        out: TextIO = None,
+        width: int = 80,
+        label_width: Optional[int] = None,
+        max_height: int = 100,
     ) -> None:
         super().__init__(out, width)
         if max_height <= 0:
             raise ValueError(
-                f"arg max_height expected to be positive integer but is {max_height}"
+                f"arg max_height={max_height} expected to be a positive integer"
+                f" {max_height}"
+            )
+        if label_width is not None and label_width > width // 2:
+            raise ValueError(
+                f"arg label_width={label_width} must be half or less of arg "
+                f"width={width}"
             )
         self._max_height = max_height
-        self._dendrogram_left = min(20, width // 2)
+        self._dendrogram_left = (
+            min(DendrogramReportStyle._DEFAULT_LABEL_WIDTH, width // 2)
+            if label_width is None
+            else label_width
+        )
         self._char_matrix = None
         self._n_labels = None
 
