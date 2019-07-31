@@ -61,6 +61,12 @@ T_Classifier = TypeVar("T_Classifier", bound=ClassifierMixin)
 
 
 class BaseEstimatorDF(ABC, Generic[T_Estimator]):
+    """
+    #todo find a good description
+
+    Implementations must define a ``fit`` method and an ``is_fitted`` property.
+    """
+
     F_COLUMN_IN = "column_in"
 
     def __init__(self) -> None:
