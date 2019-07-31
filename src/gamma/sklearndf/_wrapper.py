@@ -53,6 +53,8 @@ class BaseEstimatorWrapperDF(
     """
     Abstract base class that is a wrapper around :class:`sklearn.base.BaseEstimator`.
 
+    #todo explain what is the benefit compared to the class BaseEstimatorDF
+
     Implementations must define a method ``_make_delegate_estimator``.
 
     :param `**kwargs`: the arguments passed to the delegate estimator
