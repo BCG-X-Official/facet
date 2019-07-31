@@ -341,8 +341,8 @@ class CalibratedClassifierCVDF(ClassifierWrapperDF[CalibratedClassifierCV]):
         self.base_estimator_df = base_estimator
 
     @classmethod
-    def _make_delegate_estimator(cls, **kwargs) -> CalibratedClassifierCV:
-        return CalibratedClassifierCV(**kwargs)
+    def _make_delegate_estimator(cls, *args, **kwargs) -> CalibratedClassifierCV:
+        return CalibratedClassifierCV(*args, **kwargs)
 
 
 #
