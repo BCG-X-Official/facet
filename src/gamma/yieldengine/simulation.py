@@ -16,6 +16,17 @@ from gamma.yieldengine.partition import Partitioning, T_Number
 class UnivariateSimulation:
     """
     Summary result of a univariate simulation.
+
+    :param feature_name: name of the feature on which the simulation is made
+    :param target_name: name of the target
+    :param partitioning: the partition of ``feature_name`` used for the simulation
+    :param median_uplift: the median uplift values
+    :param min_uplift:  the low percentile uplift values
+    :param max_uplift: the high percentile uplift values
+    :param min_percentile: the percentile used to compute ``min_uplift``. Must be a
+      number between 0 and 100
+    :param max_percentile: the percentile used to compute ``max_uplift``. Must be a
+      number between 0 and 100
     """
 
     def __init__(
@@ -40,34 +51,42 @@ class UnivariateSimulation:
 
     @property
     def feature_name(self) -> str:
+        """Name of the feature on which the simulation is made."""
         return self._feature_name
 
     @property
     def target_name(self) -> str:
+        """Name of the target."""
         return self._target_name
 
     @property
     def partitioning(self) -> Partitioning:
+        """The partition of ``feature_name`` used for the simulation."""
         return self._partitioning
 
     @property
     def median_uplift(self) -> ListLike[T_Number]:
+        """The median uplift values."""
         return self._median_uplift
 
     @property
     def min_uplift(self) -> ListLike[T_Number]:
+        """The low percentile uplift values."""
         return self._min_uplift
 
     @property
     def max_uplift(self) -> ListLike[T_Number]:
+        """The high percentile uplift values."""
         return self._max_uplift
 
     @property
     def min_percentile(self) -> float:
+        """The percentile used to compute ``min_uplift``."""
         return self._min_percentile
 
     @property
     def max_percentile(self) -> float:
+        """The percentile used to compute ``max_uplift``."""
         return self._max_percentile
 
 
@@ -118,10 +137,12 @@ class UnivariateSimulator:
 
     @property
     def min_percentile(self) -> float:
+        """Percentile used to compute the low percentile uplift."""
         return self._min_percentile
 
     @property
     def max_percentile(self) -> float:
+        """Percentile used to compute the high percentile uplift."""
         return self._max_percentile
 
     def simulate_feature(
