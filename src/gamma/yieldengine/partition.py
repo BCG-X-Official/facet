@@ -16,10 +16,10 @@ partitions are integers
 :class:`CategoryPartitioning` is adapted to categorical sets
 """
 import logging
+import math
 from abc import ABC, ABCMeta, abstractmethod
 from typing import *
 
-import math
 import numpy as np
 import pandas as pd
 
@@ -167,8 +167,8 @@ class RangePartitioning(Partitioning[T_Number], Generic[T_Number], metaclass=ABC
         Return the endpoints of the intervals making the partitions.
 
         :return: sequence of tuples (x, y) for every partition, where x is the
-        inclusive lower bound of a partition range, and y is the exclusive upper
-        bound of a partition range
+          inclusive lower bound of a partition range, and y is the exclusive upper
+          bound of a partition range
         """
 
         center_offset_left = self._partition_center_offset
