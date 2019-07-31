@@ -166,28 +166,6 @@ class BaseEstimatorWrapperDF(
         if y is not None and not isinstance(y, pd.Series):
             raise TypeError("arg y must be None or a Series")
 
-    def __dir__(self) -> Iterable[str]:
-        return {
-            *super().__dir__(),
-            *(
-                attr
-                for attr in self._delegate_estimator.__dir__()
-                if not attr.startswith("_")
-            ),
-        }
-
-    def __getattr__(self, name: str) -> Any:
-        if name.startswith("_"):
-            raise AttributeError(name)
-        else:
-            return getattr(self._delegate_estimator, name)
-
-    def __setattr__(self, name: str, value: Any) -> Any:
-        if name.startswith("_"):
-            super().__setattr__(name, value)
-        else:
-            setattr(self._delegate_estimator, name, value)
-
     @staticmethod
     def _verify_df(
         df: pd.DataFrame, expected_columns: pd.Index, expected_index: pd.Index = None
@@ -225,6 +203,31 @@ class BaseEstimatorWrapperDF(
             raise ValueError(
                 _error_message(axis="index", actual=df.index, expected=expected_index)
             )
+
+    def __dir__(self) -> Iterable[str]:
+        # include non-private attributes of delegate estimator in directory
+        return {
+            *super().__dir__(),
+            *(
+                attr
+                for attr in self._delegate_estimator.__dir__()
+                if not attr.startswith("_")
+            ),
+        }
+
+    def __getattr__(self, name: str) -> Any:
+        # get a public attribute of the delegate estimator
+        if name.startswith("_"):
+            raise AttributeError(name)
+        else:
+            return getattr(self._delegate_estimator, name)
+
+    def __setattr__(self, name: str, value: Any) -> Any:
+        # set a public attribute of the delegate estimator
+        if name.startswith("_"):
+            super().__setattr__(name, value)
+        else:
+            setattr(self._delegate_estimator, name, value)
 
 
 class TransformerWrapperDF(
