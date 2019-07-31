@@ -407,5 +407,5 @@ TSWLatexianTemp*
 !/tmp/README.md
 
 # exclude docs while they are not yet stable
-/docs
+/docs/**
 !/docs/README.md

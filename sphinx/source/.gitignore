@@ -1,3 +1,2 @@
 # ignore auto-generated module rst's
-modules.rst
-yieldengine*.rst
+gamma*.rst
