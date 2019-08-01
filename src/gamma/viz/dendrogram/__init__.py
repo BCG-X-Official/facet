@@ -22,19 +22,19 @@ import logging
 from gamma.viz.dendrogram._draw import DendrogramDrawer
 from gamma.viz.dendrogram._linkage import LinkageTree, Node
 from gamma.viz.dendrogram._style import (
+    DendrogramFeatMapStyle,
+    DendrogramLineStyle,
+    DendrogramReportStyle,
     DendrogramStyle,
-    DendrogramTextStyle,
-    FeatMapStyle,
-    LineStyle,
 )
 
 log = logging.getLogger(__name__)
 
 __all__ = [
     "DendrogramDrawer",
+    "DendrogramFeatMapStyle",
+    "DendrogramLineStyle",
+    "DendrogramReportStyle",
     "DendrogramStyle",
-    "FeatMapStyle",
-    "LineStyle",
     "LinkageTree",
-    "DendrogramTextStyle",
 ]

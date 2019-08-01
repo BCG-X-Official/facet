@@ -34,7 +34,7 @@ goto end
 
 :html
 REM generate apidoc using docstrings
-sphinx-apidoc -e --no-toc -o %SOURCEDIR% -f ./../src/yieldengine
+sphinx-apidoc -e --no-toc -o %SOURCEDIR% -f ./../src/gamma
 REM run the sphinx build for html
 %SPHINXBUILD% -M %1 %SOURCEDIR% %BUILDDIR% %SPHINXOPTS%
 REM run sphinx for notebook

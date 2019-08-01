@@ -3,20 +3,30 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-yield-engine Documentation
+gamma Documentation
 ========================================
 
-This is the documentation page of BCGs *yieldengine* library,
+This is the documentation page of BCGs *gamma* library,
 which is hosted at `GitHub <https://git.sourceai.io/schneider-joerg/yield-engine/>`_.
+
+
+Installation
+============
+
+TODO
 
 .. toctree::
    :titlesonly:
-   :maxdepth: 2
+   :maxdepth: 3
    :caption: Contents
 
    tutorial/quick_start
-   API reference of yieldengine <yieldengine>
-   examples/index
+   tutorial/sklearndf
+   tutorial/model
+   tutorial/feature_selection
+   tutorial/simulation
+   API reference of yieldengine <gamma>
+
 
 
 

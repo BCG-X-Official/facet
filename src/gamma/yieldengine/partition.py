@@ -43,14 +43,14 @@ log = logging.getLogger(__name__)
 DEFAULT_MAX_PARTITIONS = 20
 
 T_Value = TypeVar("T_Value")
-T_NumericValue = TypeVar("T_NumericValue", bound=Union[int, float])
+T_Number = TypeVar("T_Number", bound=Union[int, float])
 
 
 class Partitioning(ABC, Generic[T_Value]):
     """Partition a set of values, for use in visualizations and simulations."""
 
     @abstractmethod
-    def partitions(self) -> Iterable[T_Value]:
+    def partitions(self) -> ListLike[T_Value]:
         """
         Return central values of the partitions.
 
@@ -59,7 +59,7 @@ class Partitioning(ABC, Generic[T_Value]):
         pass
 
     @abstractmethod
-    def frequencies(self) -> Iterable[int]:
+    def frequencies(self) -> ListLike[int]:
         """
         Return the number of elements in each partitions.
 
@@ -69,14 +69,16 @@ class Partitioning(ABC, Generic[T_Value]):
 
     @property
     @abstractmethod
-    def n_partitions(self) -> int:
-        """Number of partitions."""
+    def is_categorical(self) -> bool:
+        """```True``` if this is a partitioning of categories."""
+        pass
+
+    @abstractmethod
+    def __len__(self) -> int:
         pass
 
 
-class RangePartitioning(
-    Partitioning[T_NumericValue], Generic[T_NumericValue], metaclass=ABCMeta
-):
+class RangePartitioning(Partitioning[T_Number], Generic[T_Number], metaclass=ABCMeta):
     """
     Partition numerical values in successive intervals of the same length.
 
@@ -105,10 +107,10 @@ class RangePartitioning(
 
     def __init__(
         self,
-        values: ListLike[T_NumericValue],
+        values: ListLike[T_Number],
         max_partitions: int = DEFAULT_MAX_PARTITIONS,
-        lower_bound: Optional[T_NumericValue] = None,
-        upper_bound: Optional[T_NumericValue] = None,
+        lower_bound: Optional[T_Number] = None,
+        upper_bound: Optional[T_Number] = None,
     ) -> None:
         super().__init__()
 
@@ -149,18 +151,17 @@ class RangePartitioning(
 
         self._frequencies = _frequencies()
 
-    def partitions(self) -> Iterable[T_NumericValue]:
+    def partitions(self) -> ListLike[T_Number]:
         """
         Return the central values of the partitions.
 
         :return: for each partition, a central value representing the partition
         """
+        offset = self._first_partition
         step = self._step
-        return (
-            self._first_partition + (idx * step) for idx in range(0, self.n_partitions)
-        )
+        return [offset + (idx * step) for idx in range(self._n_partitions)]
 
-    def frequencies(self) -> Iterable[int]:
+    def frequencies(self) -> ListLike[int]:
         """
         Return the number of elements in each partitions.
 
@@ -170,27 +171,28 @@ class RangePartitioning(
         return self._frequencies
 
     @property
-    def n_partitions(self) -> int:
-        """Number of partitions."""
-        return self._n_partitions
+    def is_categorical(self) -> bool:
+        """```False```"""
+        return False
 
-    def partition_bounds(self) -> Iterable[Tuple[T_NumericValue, T_NumericValue]]:
+    def partition_bounds(self) -> Sequence[Tuple[T_Number, T_Number]]:
         """
         Return the endpoints of the intervals making the partitions.
 
-        :return: generator of the tuples (x, y) where x and y and the endpoints of
-          the partitions
+        :return: sequence of tuples (x, y) for every partition, where x is the
+        inclusive lower bound of a partition range, and y is the exclusive upper
+        bound of a partition range
         """
 
         center_offset_left = self._partition_center_offset
         center_offset_right = self._step - center_offset_left
-        return (
+        return [
             (center - center_offset_left, center + center_offset_right)
             for center in self.partitions()
-        )
+        ]
 
     @property
-    def partition_width(self) -> T_NumericValue:
+    def partition_width(self) -> T_Number:
         """The interval length."""
         return self._step
 
@@ -211,16 +213,19 @@ class RangePartitioning(
     @staticmethod
     @abstractmethod
     def _step_size(
-        lower_bound: T_NumericValue, upper_bound: T_NumericValue, max_partitions: int
-    ) -> T_NumericValue:
+        lower_bound: T_Number, upper_bound: T_Number, max_partitions: int
+    ) -> T_Number:
         """Compute the step size (interval length) used in the partitions."""
         pass
 
     @property
     @abstractmethod
-    def _partition_center_offset(self) -> T_NumericValue:
+    def _partition_center_offset(self) -> T_Number:
         """Offset between center and endpoints of an interval."""
         pass
+
+    def __len__(self) -> int:
+        return self._n_partitions
 
 
 class ContinuousRangePartitioning(RangePartitioning[float]):
@@ -253,10 +258,10 @@ class ContinuousRangePartitioning(RangePartitioning[float]):
 
     def __init__(
         self,
-        values: ListLike[T_NumericValue],
+        values: ListLike[T_Number],
         max_partitions: int = DEFAULT_MAX_PARTITIONS,
-        lower_bound: Optional[T_NumericValue] = None,
-        upper_bound: Optional[T_NumericValue] = None,
+        lower_bound: Optional[T_Number] = None,
+        upper_bound: Optional[T_Number] = None,
     ) -> None:
         super().__init__(
             values=values,
@@ -305,10 +310,10 @@ class IntegerRangePartitioning(RangePartitioning[int]):
 
     def __init__(
         self,
-        values: ListLike[T_NumericValue],
+        values: ListLike[T_Number],
         max_partitions: int = DEFAULT_MAX_PARTITIONS,
-        lower_bound: Optional[T_NumericValue] = None,
-        upper_bound: Optional[T_NumericValue] = None,
+        lower_bound: Optional[T_Number] = None,
+        upper_bound: Optional[T_Number] = None,
     ) -> None:
         super().__init__(
             values=values,
@@ -359,7 +364,7 @@ class CategoryPartitioning(Partitioning[T_Value]):
         self._frequencies = value_counts.values[:max_partitions]
         self._partitions = value_counts.index.values[:max_partitions]
 
-    def partitions(self) -> Iterable[T_Value]:
+    def partitions(self) -> ListLike[T_Value]:
         """
         The list of the :attr:`max_partitions` most frequent values.
 
@@ -367,7 +372,7 @@ class CategoryPartitioning(Partitioning[T_Value]):
           frequency"""
         return self._partitions
 
-    def frequencies(self) -> Iterable[int]:
+    def frequencies(self) -> ListLike[int]:
         """
         Return the number of elements in each partitions.
 
@@ -377,6 +382,9 @@ class CategoryPartitioning(Partitioning[T_Value]):
         return self._frequencies
 
     @property
-    def n_partitions(self) -> int:
-        """Number of partitions."""
-        return len(self._partitions)
+    def is_categorical(self) -> bool:
+        """```True```"""
+        return True
+
+    def __len__(self) -> int:
+        return self._partitions
