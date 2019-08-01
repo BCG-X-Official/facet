@@ -60,8 +60,8 @@ class PipelineDF(
 
     PASSTHROUGH = "passthrough"
 
-    def __init__(self, **kwargs) -> None:
-        super().__init__(**kwargs)
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
 
         # ensure that all steps support data frames, and that all except the last
         # step are data frame transformers
