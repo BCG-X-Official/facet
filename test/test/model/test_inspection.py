@@ -26,7 +26,7 @@ from gamma.sklearndf import TransformerDF
 from gamma.sklearndf.classification import RandomForestClassifierDF
 from gamma.sklearndf.pipeline import ModelPipelineDF
 from gamma.sklearndf.regression import LGBMRegressorDF, SVRDF
-from gamma.viz.dendrogram import DendrogramDrawer, DendrogramTextStyle
+from gamma.viz.dendrogram import DendrogramDrawer, DendrogramReportStyle
 
 log = logging.getLogger(__name__)
 
@@ -140,7 +140,7 @@ def test_model_inspection(available_cpus: int, boston_sample: Sample) -> None:
         linkage_tree = model_inspector.cluster_dependent_features()
         print()
         DendrogramDrawer(
-            title="Test", linkage_tree=linkage_tree, style=DendrogramTextStyle()
+            title="Test", linkage_tree=linkage_tree, style=DendrogramReportStyle()
         ).draw()
 
 
@@ -210,7 +210,7 @@ def test_model_inspection_with_encoding(
         linkage_tree = mi2.cluster_dependent_features()
         print()
         DendrogramDrawer(
-            title="Test", linkage_tree=linkage_tree, style=DendrogramTextStyle()
+            title="Test", linkage_tree=linkage_tree, style=DendrogramReportStyle()
         ).draw()
 
 
@@ -289,5 +289,5 @@ def test_model_inspection_classifier(available_cpus: int, iris_sample: Sample) -
     linkage_tree = model_inspector.cluster_dependent_features()
     print()
     DendrogramDrawer(
-        title="Test", linkage_tree=linkage_tree, style=DendrogramTextStyle()
+        title="Test", linkage_tree=linkage_tree, style=DendrogramReportStyle()
     ).draw()

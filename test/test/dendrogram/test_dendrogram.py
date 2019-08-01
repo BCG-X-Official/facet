@@ -9,7 +9,11 @@ from gamma.model.validation import CircularCrossValidator
 from gamma.sklearndf import TransformerDF
 from gamma.sklearndf.pipeline import ModelPipelineDF
 from gamma.sklearndf.regression import LGBMRegressorDF
-from gamma.viz.dendrogram import DendrogramDrawer, FeatMapStyle, LineStyle
+from gamma.viz.dendrogram import (
+    DendrogramDrawer,
+    DendrogramFeatMapStyle,
+    DendrogramLineStyle,
+)
 
 
 @pytest.fixture()
@@ -30,9 +34,11 @@ def test_linkage_drawer_style(model_inspector: ModelInspector) -> None:
     linkage = model_inspector.cluster_dependent_features()
     fig = figure(figsize=(8, 16))
     ax = fig.add_subplot(111)
-    dd = DendrogramDrawer(title="Test", linkage_tree=linkage, style=LineStyle(ax=ax))
+    dd = DendrogramDrawer(
+        title="Test", linkage_tree=linkage, style=DendrogramLineStyle(ax=ax)
+    )
     dd.draw()
     dd_2 = DendrogramDrawer(
-        title="Test", linkage_tree=linkage, style=FeatMapStyle(ax=ax)
+        title="Test", linkage_tree=linkage, style=DendrogramFeatMapStyle(ax=ax)
     )
     dd_2.draw()
