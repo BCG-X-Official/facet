@@ -106,8 +106,7 @@ def _df_classifier(
     return cast(
         Type[ClassifierWrapperDF[T_Classifier]],
         df_estimator(
-            delegate_estimator=delegate_classifier,
-            df_estimator_type=ClassifierWrapperDF,
+            delegate_estimator=delegate_classifier, df_wrapper_type=ClassifierWrapperDF
         ),
     )
 
