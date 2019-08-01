@@ -50,26 +50,24 @@ class SimulationStyle(ChartStyle, ABC):
         max_uplift: ListLike[T_Number],
         min_percentile: float,
         max_percentile: float,
-        partitions,
-        frequencies,
-        categorical,
+        partitions: ListLike[Any],
+        frequencies: ListLike[int],
+        is_categorical_feature: bool,
     ) -> None:
         """
         Draw the graph with the uplift curves: median, low and high percentiles.
-        :param categorical:
-        :param partitions:
-        :param frequencies:
         """
         pass
 
     @abstractmethod
-    def draw_histogram(self, partitions, frequencies, categorical) -> None:
+    def draw_histogram(
+        self,
+        partitions: ListLike[Any],
+        frequencies: ListLike[int],
+        is_categorical_feature: bool,
+    ) -> None:
         """
         Draw frequencies histogram.
-        :param categorical:
-        :param partitions:
-        :param frequencies:
-
         """
         pass
 
@@ -123,20 +121,17 @@ class SimulationPlotStyle(MatplotStyle, SimulationStyle):
         max_uplift: ListLike[T_Number],
         min_percentile: float,
         max_percentile: float,
-        partitions: ListLike[T_Value],
+        partitions: ListLike[Any],
         frequencies: ListLike[int],
-        categorical: bool,
+        is_categorical_feature: bool,
     ) -> None:
         """
         Draw the graph with the uplift curves: median, low and high percentiles.
-        :param categorical: 
-        :param partitions: 
-        :param frequencies: 
         """
 
         # draw the mean predicted uplift, showing median and confidence ranges for
         # each prediction
-        if categorical:
+        if is_categorical_feature:
             # x = list(range(len(partitioning)))
             x = range(len(partitions))
         else:
@@ -162,9 +157,9 @@ class SimulationPlotStyle(MatplotStyle, SimulationStyle):
             axis="x",
             labelbottom=True,
             bottom=True,
-            labelrotation=45 if categorical else 0,
+            labelrotation=45 if is_categorical_feature else 0,
         )
-        if categorical or True:
+        if is_categorical_feature or True:
             ax.set_xticks(x)
             ax.set_xticklabels(labels=partitions)
 
@@ -176,14 +171,13 @@ class SimulationPlotStyle(MatplotStyle, SimulationStyle):
             ax.spines[pos].set_visible(False)
 
     def draw_histogram(
-        self, partitions: ListLike[T_Value], frequencies: ListLike[int], categorical
+        self,
+        partitions: ListLike[T_Value],
+        frequencies: ListLike[int],
+        is_categorical_feature: bool,
     ) -> None:
         """
         Draw frequencies histogram.
-        :param categorical:
-        :param partitions:
-        :param frequencies:
-
         """
 
         # get histogram size and values (horizontally, we count bars from 0..n-1
@@ -312,15 +306,12 @@ class SimulationReportStyle(SimulationStyle, TextStyle):
         max_uplift: ListLike[T_Number],
         min_percentile: float,
         max_percentile: float,
-        partitions,
-        frequencies,
-        categorical,
+        partitions: ListLike[Any],
+        frequencies: ListLike[int],
+        is_categorical_feature: bool,
     ) -> None:
         """
         Print the uplift report.
-        :param categorical:
-        :param partitions:
-        :param frequencies:
         """
         out = self.out
         self.out.write(f"\n{self._uplift_label(target_name=target_name)}:\n\n")
@@ -333,17 +324,22 @@ class SimulationReportStyle(SimulationStyle, TextStyle):
                     ),
                 ],
                 formats=[
-                    self._partition_format(categorical),
+                    self._partition_format(is_categorical_feature),
                     *([self._NUM_FORMAT] * 3),
                 ],
                 data=list(zip(partitions, min_uplift, median_uplift, max_uplift)),
             )
         )
 
-    def draw_histogram(self, partitions, frequencies, categorical) -> None:
+    def draw_histogram(
+        self,
+        partitions: ListLike[T_Value],
+        frequencies: ListLike[int],
+        is_categorical_feature: bool,
+    ) -> None:
         """
         Print the histogram report.
-        :param categorical:
+        :param is_categorical_feature:
         :param partitions:
         :param frequencies:
         """
@@ -353,7 +349,7 @@ class SimulationReportStyle(SimulationStyle, TextStyle):
                 headings=(self._PARTITION_HEADING, self._FREQUENCY_HEADING),
                 data=list(zip(partitions, frequencies)),
                 formats=(
-                    self._partition_format(categorical=categorical),
+                    self._partition_format(is_categorical=is_categorical_feature),
                     self._FREQUENCY_FORMAT,
                 ),
             )
@@ -365,8 +361,8 @@ class SimulationReportStyle(SimulationStyle, TextStyle):
         """
         self.out.write("\n\n")
 
-    def _partition_format(self, categorical: bool) -> str:
-        if categorical:
+    def _partition_format(self, is_categorical: bool) -> str:
+        if is_categorical:
             return self._PARTITION_TEXT_FORMAT
         else:
             return self._PARTITION_NUMBER_FORMAT
