@@ -14,11 +14,17 @@
 """
 MVC-based classes for drawing charts.
 """
+import logging
 import sys
 from abc import ABC, abstractmethod
-from typing import Generic, TextIO, Tuple, TypeVar
+from typing import *
+from typing import TextIO
 
+import matplotlib.pyplot as plt
+from matplotlib import text as mt
 from matplotlib.axes import Axes
+
+log = logging.getLogger(__name__)
 
 T_Model = TypeVar("T_Model")
 T_Style = TypeVar("T_Style", bound="ChartStyle")
@@ -30,6 +36,16 @@ T_Style = TypeVar("T_Style", bound="ChartStyle")
 
 
 class ChartDrawer(Generic[T_Model, T_Style], ABC):
+    """
+    Base class for chart drawers.
+
+    Implementations must define a :meth:`~ChartDrawer._draw` method.
+
+    :param title: title of the chart
+    :param model: the model containing the underlying data represented by the chart
+    :param style: the style of the chart
+    """
+
     def __init__(self, title: str, model: T_Model, style: T_Style) -> None:
         self._title = title
         self._model = model
@@ -48,6 +64,7 @@ class ChartDrawer(Generic[T_Model, T_Style], ABC):
         return self._style
 
     def draw(self) -> None:
+        """Draw the chart."""
         self.style.drawing_start(self._title)
         self._draw()
         self.style.drawing_finalize()
@@ -63,6 +80,12 @@ class ChartDrawer(Generic[T_Model, T_Style], ABC):
 
 
 class ChartStyle(ABC):
+    """
+    Base class for a drawer style.
+
+    Implementations must define :meth:`~ChartStyle.draw_title`.
+    """
+
     @abstractmethod
     def drawing_start(self, title: str) -> None:
         """
@@ -81,9 +104,16 @@ class ChartStyle(ABC):
 
 
 class MatplotStyle(ChartStyle, ABC):
-    def __init__(self, ax: Axes) -> None:
+    """Matplotlib drawer style.
+
+    Implementations must define :meth:`~ChartStyle.draw_title`.
+    :param ax: optional axes object to draw on; if ``Null`` use pyplot's current axes
+    """
+
+    def __init__(self, ax: Optional[Axes] = None) -> None:
         super().__init__()
-        self._ax = ax
+        self._ax = ax = plt.gca() if ax is None else ax
+        self._renderer = ax.figure.canvas.get_renderer()
 
     @property
     def ax(self) -> Axes:
@@ -92,16 +122,64 @@ class MatplotStyle(ChartStyle, ABC):
         """
         return self._ax
 
+    def drawing_start(self, title: str) -> None:
+        """Draw the title of the chart."""
+        self.ax.set_title(label=title)
+
+    def text_size(
+        self, text: str, x: Optional[float] = None, y: Optional[float] = None, **kwargs
+    ) -> Tuple[float, float]:
+        """
+        Calculate the horizontal and vertical size of the given text in axis units.
+        Constructs a :class:`matplotlib.text.Text` artist then calculates it size
+        relative to the axis managed by this style object (attribute `ax`)
+        For non-linear axis scales text size differs depending on placement,
+        so the intended placement (in data coordinates) should be provided
+
+        :param text: text to calculate the size for
+        :param x: intended horizontal text placement (optional, defaults to left of
+            view)
+        :param y: intended vertical text placement (optional, defaults to bottom of
+            view)
+        :param kwargs: additional arguments to use when constructing the
+            :class:`~matplotlib.text.Text` artist, e.g., rotation
+        :return: tuple `(width, height)` in absolute axis units
+        """
+
+        ax = self.ax
+
+        if x is None or y is None:
+            x0, y0, _, _ = ax.dataLim.bounds
+            if x is None:
+                x = x0
+            if y is None:
+                y = y0
+
+        fig = ax.figure
+
+        extent = mt.Text(x, y, text, figure=fig, **kwargs).get_window_extent(
+            fig.canvas.get_renderer()
+        )
+
+        (x0, y0), (x1, y1) = ax.transData.inverted().transform(extent)
+
+        return abs(x1 - x0), abs(y1 - y0)
+
 
 class TextStyle(ChartStyle, ABC):
     """
     Plain text drawing style.
+
     :param width: the maximum width available to render the text, defaults to 80
-    :param out: the output stream this style instance writes to, or `stdout` if
-                `None` is passed (defaults to `None`)
+    :param out: the output stream this style instance writes to, or `stdout` if \
+      `None` is passed (defaults to `None`)
     """
 
     def __init__(self, out: TextIO = None, width: int = 80) -> None:
+        if width <= 0:
+            raise ValueError(
+                f"arg width expected to be positive integer but is {width}"
+            )
         self._out = sys.stdout if out is None else out
         self._width = width
 

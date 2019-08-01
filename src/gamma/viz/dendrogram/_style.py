@@ -15,22 +15,28 @@
 Dendrogram styles.
 
 The dendrogram styles are given as a parameter to a
-:class:`~yieldengine.dendrogram.DendrogramDrawer` and determine the style of the plot.
+:class:`~gamma.yieldengine.viz.DendrogramDrawer` and determine the style of the
+plot.
 
-:class:`DendrogramMatplotStyle` is a an abstract base class for styles using matplotlib.
+:class:`~DendrogramMatplotStyle` is a an abstract base class for styles using
+matplotlib.
 
-:class:`~LineStyle` renders dendrogram trees in the classical style as a line drawing.
+:class:`~DendrogramLineStyle` renders dendrogram trees in the classical style as a line
+drawing.
 
-:class:`~FeatMapStyle` renders dendrogram trees as a combination of tree and heatmap
-for better visibility of feature importance.
+:class:`~DendrogramFeatMapStyle` renders dendrogram trees as a combination of tree and
+heatmap for better visibility of feature importance.
+
+:class:`~DendrogramReportStyle` renders dendrogram trees as ASCII graphics for
+inclusion in text reports.
 """
 
 import logging
-from abc import ABC, abstractmethod
-from typing import Sequence, TextIO
-
 import math
-import matplotlib.text as mt
+from abc import ABC, abstractmethod
+from typing import *
+from typing import TextIO
+
 from matplotlib import cm
 from matplotlib.axes import Axes
 from matplotlib.colorbar import ColorbarBase, make_axes
@@ -71,15 +77,15 @@ class DendrogramStyle(ChartStyle, ABC):
 
     @abstractmethod
     def draw_link_leg(
-        self, bottom: float, top: float, first_leaf: int, n_leaves: int, weight: float
+        self, bottom: float, top: float, leaf: float, weight: float
     ) -> None:
         """
         Draw a leaf of the linkage tree.
 
         :param bottom: the x coordinate of the child node
         :param top: the x coordinate of the parent node
-        :param first_leaf: the index of the first leaf in the current sub-tree
-        :param n_leaves: the number of leaves in the current sub-tree
+        :param leaf: the index of the leaf where the link leg should be drawn (may be a
+            float, indicating a position in between two leaves)
         :param weight: the weight of the child node
         """
         pass
@@ -107,7 +113,7 @@ class DendrogramStyle(ChartStyle, ABC):
         pass
 
 
-class DendrogramMatplotStyle(DendrogramStyle, MatplotStyle, ABC):
+class DendrogramMatplotStyle(MatplotStyle, DendrogramStyle, ABC):
     """
     Base class for Matplotlib styles for dendrogram.
 
@@ -122,32 +128,33 @@ class DendrogramMatplotStyle(DendrogramStyle, MatplotStyle, ABC):
 
     _PERCENTAGE_FORMATTER = _PercentageFormatter()
 
-    def __init__(self, ax: Axes, min_weight: float = 0.01) -> None:
+    def __init__(self, ax: Optional[Axes] = None, min_weight: float = 0.01) -> None:
         super().__init__(ax=ax)
 
         if min_weight >= 1.0 or min_weight <= 0.0:
             raise ValueError("arg min_weight must be > 0.0 and < 1.0")
-
         self._min_weight = min_weight
 
-        ax.ticklabel_format(axis="x", scilimits=(-3, 3))
+        self._cm = None
+        self._cb = None
 
-        cax, _ = make_axes(ax)
+    def drawing_start(self, title: str) -> None:
+        super().drawing_start(title=title)
+
+        self.ax.ticklabel_format(axis="x", scilimits=(-3, 3))
+
+        cax, _ = make_axes(self.ax)
         self._cm = cm.get_cmap(name="plasma", lut=256)
         self._cb = ColorbarBase(
             cax,
             cmap=self._cm,
-            norm=LogNorm(min_weight, 1),
+            norm=LogNorm(self._min_weight, 1),
             label="feature importance",
             orientation="vertical",
         )
 
         cax.yaxis.set_minor_formatter(DendrogramMatplotStyle._PERCENTAGE_FORMATTER)
         cax.yaxis.set_major_formatter(DendrogramMatplotStyle._PERCENTAGE_FORMATTER)
-
-    def drawing_start(self, title: str) -> None:
-        """Draw the title of the dendrogram."""
-        self.ax.set_title(label=title)
 
     def draw_leaf_labels(self, labels: Sequence[str]) -> None:
         """Draw leaf labels on the dendrogram."""
@@ -169,11 +176,11 @@ class DendrogramMatplotStyle(DendrogramStyle, MatplotStyle, ABC):
         )
 
 
-class LineStyle(DendrogramMatplotStyle):
+class DendrogramLineStyle(DendrogramMatplotStyle):
     """The classical dendrogram style, as a coloured tree diagram."""
 
     def draw_link_leg(
-        self, bottom: float, top: float, first_leaf: int, n_leaves: int, weight: float
+        self, bottom: float, top: float, leaf: float, weight: float
     ) -> None:
         """
         Draw a horizontal link in the dendrogram between a node and one of its children.
@@ -183,12 +190,10 @@ class LineStyle(DendrogramMatplotStyle):
 
         :param bottom: the x coordinate of the child node
         :param top: the x coordinate of the parent node
-        :param first_leaf: the index of the first leaf in the current sub-tree
-        :param n_leaves: the number of leaves in the current sub-tree
+        :param leaf: the index of the first leaf in the current sub-tree
         :param weight: the weight of the child node
         """
-        line_y = first_leaf + (n_leaves - 1) / 2
-        self._draw_line(x1=bottom, x2=top, y1=line_y, y2=line_y, weight=weight)
+        self._draw_line(x1=bottom, x2=top, y1=leaf, y2=leaf, weight=weight)
 
     def draw_link_connector(
         self,
@@ -223,8 +228,7 @@ class LineStyle(DendrogramMatplotStyle):
         self.draw_link_leg(
             bottom=bottom,
             top=top,
-            first_leaf=first_leaf,
-            n_leaves=n_leaves_left + n_leaves_right,
+            leaf=(first_leaf + (n_leaves_left + n_leaves_right - 1) / 2),
             weight=weight,
         )
 
@@ -234,7 +238,7 @@ class LineStyle(DendrogramMatplotStyle):
         self.ax.plot((x1, x2), (y1, y2), color=self.color(weight))
 
 
-class FeatMapStyle(DendrogramMatplotStyle):
+class DendrogramFeatMapStyle(DendrogramMatplotStyle):
     """
     Plot dendrograms with a heat map style.
 
@@ -242,15 +246,16 @@ class FeatMapStyle(DendrogramMatplotStyle):
     :param min_weight: the min weight in the color bar
     """
 
-    def __init__(self, ax: Axes, min_weight: float = 0.01) -> None:
+    def __init__(self, ax: Optional[Axes] = None, min_weight: float = 0.01) -> None:
         super().__init__(ax=ax, min_weight=min_weight)
-        ax.margins(0, 0)
-        ax.set_xlim(0, 1)
-        self._figure = ax.figure
-        self._renderer = ax.figure.canvas.get_renderer()
+
+    def drawing_start(self, title: str) -> None:
+        super().drawing_start(title=title)
+        self.ax.margins(0, 0)
+        self.ax.set_xlim(0, 1)
 
     def draw_link_leg(
-        self, bottom: float, top: float, first_leaf: int, n_leaves: int, weight: float
+        self, bottom: float, top: float, leaf: int, weight: float
     ) -> None:
         """
         Draw a horizontal box in the dendrogram for a leaf.
@@ -260,12 +265,10 @@ class FeatMapStyle(DendrogramMatplotStyle):
 
         :param bottom: the x coordinate of the child node
         :param top: the x coordinate of the parent node
-        :param first_leaf: the index of the first leaf in the current sub-tree
-        :param n_leaves: the number of leaves in the current sub-tree
+        :param leaf: the index of the first leaf in the current sub-tree
         :param weight: the weight of the child node
         """
-        line_y = first_leaf + (n_leaves - 1) / 2
-        self._draw_hbar(x=bottom, w=top - bottom, y=line_y, h=1, weight=weight)
+        self._draw_hbar(x=bottom, w=top - bottom, y=leaf, h=1, weight=weight)
 
     def draw_link_connector(
         self,
@@ -326,57 +329,77 @@ class FeatMapStyle(DendrogramMatplotStyle):
             if round(weight_percent, 1) < 100
             else f"{weight_percent:.3g}%"
         )
-        fig = self._figure
-        (x0, _), (x1, _) = self.ax.transData.inverted().transform(
-            mt.Text(0, 0, label, figure=fig).get_window_extent(self._renderer)
-        )
 
-        if abs(x1 - x0) <= w:
+        x_text = x + w / 2
+        y_text = y + (h - 1) / 2
+        text_width, _ = self.text_size(text=label, x=x_text, y=y_text)
+
+        if text_width <= w:
             fill_luminance = sum(fill_color[:3]) / 3
             text_color = _COLOR_WHITE if fill_luminance < 0.5 else _COLOR_BLACK
             self.ax.text(
-                x + w / 2,
-                y + (h - 1) / 2,
-                label,
-                ha="center",
-                va="center",
-                color=text_color,
+                x_text, y_text, label, ha="center", va="center", color=text_color
             )
 
 
-class DendrogramTextStyle(DendrogramStyle, TextStyle):
+class DendrogramReportStyle(DendrogramStyle, TextStyle):
     """
     Dendrogram rendered as text.
     """
 
-    MAX_HEIGHT = 100
+    _DEFAULT_LABEL_WIDTH = 20
 
-    def __init__(self, out: TextIO = None, width: int = 80) -> None:
+    def __init__(
+        self,
+        out: TextIO = None,
+        width: int = 80,
+        label_width: Optional[int] = None,
+        max_height: int = 100,
+    ) -> None:
         super().__init__(out, width)
-        self._dendrogram_left = min(20, width // 2)
+        if max_height <= 0:
+            raise ValueError(
+                f"arg max_height={max_height} expected to be a positive integer"
+                f" {max_height}"
+            )
+        if label_width is not None and label_width > width // 2:
+            raise ValueError(
+                f"arg label_width={label_width} must be half or less of arg "
+                f"width={width}"
+            )
+        self._max_height = max_height
+        self._dendrogram_left = (
+            min(DendrogramReportStyle._DEFAULT_LABEL_WIDTH, width // 2)
+            if label_width is None
+            else label_width
+        )
         self._char_matrix = None
-        self._leaf_labels = None
-        self._title = None
+        self._n_labels = None
 
     def drawing_start(self, title: str) -> None:
-        self._char_matrix = CharacterMatrix(height=self.MAX_HEIGHT, width=self.width)
-        self._leaf_labels = None
-        self._title = title
+        self.out.write(f"{title:*^{self.width}s}\n")
+        self._char_matrix = CharacterMatrix(
+            n_rows=self._max_height, n_columns=self.width
+        )
 
     def drawing_finalize(self) -> None:
         try:
             super().drawing_finalize()
-            self.out.write(f"{self._title:*^{self.width}s}\n")
-            self.out.write(f"{self._char_matrix}\n")
+            for row in reversed(range(self._n_labels + 1)):
+                self.out.write(f"{self._char_matrix[row, :]}\n")
         finally:
             self._char_matrix = None
-            self._leaf_labels = None
-            self._title = None
+            self._n_labels = None
 
     def draw_leaf_labels(self, labels: Sequence[str]) -> None:
-        label_width = self._weight_column
         matrix = self._char_matrix
-        for row, label in enumerate(labels):
+        n_labels = len(labels)
+        if n_labels > self._max_height:
+            n_labels = self._max_height - 1
+            matrix[n_labels, :] = f"{'clipped':~^{self.width}s}\n"
+        self._n_labels = n_labels
+        label_width = self._weight_column
+        for row, label in enumerate(labels[:n_labels]):
             matrix[row, :label_width] = label
 
     @property
@@ -384,21 +407,31 @@ class DendrogramTextStyle(DendrogramStyle, TextStyle):
         return self._dendrogram_left - 5
 
     def draw_link_leg(
-        self, bottom: float, top: float, first_leaf: int, n_leaves: int, weight: float
+        self, bottom: float, top: float, leaf: float, weight: float
     ) -> None:
         """
         Draw a horizontal link in the dendrogram between a node and one of its children.
 
         :param bottom: the x coordinate of the child node
         :param top: the x coordinate of the parent node
-        :param first_leaf: the index of the first leaf in the current sub-tree
-        :param n_leaves: the number of leaves in the current sub-tree
+        :param leaf: the index of the first leaf in the current sub-tree
         :param weight: the weight of the child node
         """
-        line_y = first_leaf + (n_leaves - 1) // 2
-        self._char_matrix[line_y, self._x_pos(bottom) : self._x_pos(top) + 1] = "-"
-        if n_leaves == 1:
-            # we're in a leaf so can draw the weight next to he label
+
+        # determine the y coordinate in the character matrix
+        line_y = int(leaf)
+
+        # if leaf is in between two leaves, we want to draw a line in
+        # between two text lines (using an underscore symbol)
+        is_in_between_line = round(leaf * 2) & 1
+
+        # draw the link leg in the character matrix
+        self._char_matrix[
+            line_y + is_in_between_line, self._x_pos(bottom) : self._x_pos(top)
+        ] = ("_" if is_in_between_line else "-")
+
+        # if we're in a leaf, we can draw the weight next to he label
+        if bottom == 0:
             self._char_matrix[
                 line_y, self._weight_column : self._dendrogram_left
             ] = f"{weight * 100:3.0f}%"
@@ -415,8 +448,8 @@ class DendrogramTextStyle(DendrogramStyle, TextStyle):
         """
         Draw a vertical link between two sibling nodes and the outgoing vertical line.
 
-        See :func:`~yieldengine.dendrogram.DendrogramStyle.draw_link_connector` for the
-        documentation of the abstract method.
+        See :func:`~gamma.yieldengine.viz.DendrogramStyle
+        .draw_link_connector` for the documentation of the abstract method.
 
         :param bottom: the clustering level (i.e. similarity) of the child nodes
         :param top: the clustering level (i.e. similarity) of the parent node
@@ -425,21 +458,26 @@ class DendrogramTextStyle(DendrogramStyle, TextStyle):
         :param n_leaves_right: the number of leaves in the right sub-tree
         :param weight: the weight of the parent node
         """
+
+        y1 = first_leaf + n_leaves_left // 2
+        y2 = first_leaf + n_leaves_left + (n_leaves_right - 1) // 2
+
         self.draw_link_leg(
             bottom=bottom,
             top=top,
-            first_leaf=first_leaf,
-            n_leaves=n_leaves_left + n_leaves_right,
+            leaf=(first_leaf - 0.5) + (n_leaves_left + n_leaves_right) / 2,
+            # leaf=(first_leaf - 0.5)
+            # + n_leaves_left / 2
+            # + (n_leaves_left + n_leaves_right) / 4,
             weight=weight,
         )
 
-        y1 = first_leaf + (n_leaves_left - 1) // 2
-        y2 = first_leaf + n_leaves_left + (n_leaves_right - 1) // 2
         x = self._x_pos(bottom)
         matrix = self._char_matrix
-        matrix[(y1 + 1) : y2, x] = "|"
-        matrix[y1, x] = "\\"
-        matrix[y2, x] = "/"
+        if y2 - y1 > 1:
+            matrix[(y1 + 1) : y2, x] = "|"
+        matrix[y1, x] = "/"
+        matrix[y2, x] = "\\"
 
     def _x_pos(self, h: float) -> int:
         return self._dendrogram_left + int((self.width - self._dendrogram_left) * h)
