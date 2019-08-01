@@ -86,6 +86,25 @@ class ColumnPreservingTransformerWrapperDF(
         return self.columns_in
 
 
+class BaseMultipleInputColumnsWrapperDF(
+    TransformerWrapperDF[T_Transformer], Generic[T_Transformer], ABC
+):
+    """
+    Transform data whom output columns have multiple input columns.
+    """
+
+    @abstractmethod
+    def _get_columns_out(self) -> pd.Index:
+        # return column labels for arrays returned by the fitted transformer.
+        pass
+
+    def _get_columns_original(self) -> pd.Series:
+        raise AttributeError(
+            "columns_original is not defined for transformers whom output columns are "
+            "linked with multiple input columns."
+        )
+
+
 class BaseDimensionalityReductionWrapperDF(
     TransformerWrapperDF[T_Transformer], Generic[T_Transformer], ABC
 ):
@@ -104,16 +123,29 @@ class BaseDimensionalityReductionWrapperDF(
         )
 
 
+N_COMPONENTS = "n_components"
+
+
 class AnonymousDimensionalityReductionWrapperDF(
     BaseDimensionalityReductionWrapperDF[T_Transformer], Generic[T_Transformer], ABC
 ):
     """
     Transform features doing dimensionality reductions.
+
+    The delegate transformer has a ``n_components`` attribute.
     """
 
     def _get_columns_out(self) -> pd.Index:
-        # todo: implement this
-        pass
+        if not hasattr(self.delegate_estimator, N_COMPONENTS):
+            raise AttributeError(
+                f"NamedDimensionalityReductionWrapperDF should have "
+                f"a {N_COMPONENTS} attribute but does not have. The "
+                f"delegate "
+                f"estimator is {repr(T_Transformer)}"
+            )
+        feature_format = "x_{}"
+        n_features = getattr(self.delegate_estimator, N_COMPONENTS)
+        return pd.Index([feature_format.format(i) for i in range(n_features)])
 
 
 COMPONENTS = "components_"
@@ -125,8 +157,9 @@ class NamedDimensionalityReductionWrapperDF(
     """
     Apply dimensionality reduction on a dataframe.
 
-    The delegate transformer has a ``components_`` attribute of the form (
-    n_components, n_features).
+    The delegate transformer has a ``components_`` attribute which is an array of
+    shape (n_components, n_features) and we use n_components to retrieve the number
+    of output columns.
     """
 
     def _get_columns_out(self) -> pd.Index:
