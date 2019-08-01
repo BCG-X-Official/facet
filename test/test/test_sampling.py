@@ -16,9 +16,9 @@ def test_discrete_partitioning() -> None:
             values=values, max_partitions=DEFAULT_MAX_PARTITIONS
         )
         # test correct number of partitions
-        assert dvp.n_partitions <= DEFAULT_MAX_PARTITIONS
+        assert len(dvp) <= DEFAULT_MAX_PARTITIONS
         partitions = list(dvp.partitions())
-        assert dvp.n_partitions == len(partitions)
+        assert len(dvp) == len(partitions)
 
 
 def test_continuous_partitioning() -> None:
@@ -33,6 +33,6 @@ def test_continuous_partitioning() -> None:
             values=values, max_partitions=DEFAULT_MAX_PARTITIONS
         )
         # test correct number of partitions
-        assert cvp.n_partitions <= DEFAULT_MAX_PARTITIONS
+        assert len(cvp) <= DEFAULT_MAX_PARTITIONS
         partitions = list(cvp.partitions())
-        assert cvp.n_partitions == len(partitions)
+        assert len(cvp) == len(partitions)

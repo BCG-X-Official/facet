@@ -119,8 +119,7 @@ def _df_classifier(
     return cast(
         Type[ClassifierWrapperDF[T_Classifier]],
         df_estimator(
-            delegate_estimator=delegate_classifier,
-            df_estimator_type=ClassifierWrapperDF,
+            delegate_estimator=delegate_classifier, df_wrapper_type=ClassifierWrapperDF
         ),
     )
 
@@ -354,8 +353,8 @@ class CalibratedClassifierCVDF(ClassifierWrapperDF[CalibratedClassifierCV]):
         self.base_estimator_df = base_estimator
 
     @classmethod
-    def _make_delegate_estimator(cls, **kwargs) -> CalibratedClassifierCV:
-        return CalibratedClassifierCV(**kwargs)
+    def _make_delegate_estimator(cls, *args, **kwargs) -> CalibratedClassifierCV:
+        return CalibratedClassifierCV(*args, **kwargs)
 
 
 #
