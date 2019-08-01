@@ -10,10 +10,8 @@ from boruta import BorutaPy
 from sklearn.base import BaseEstimator
 
 from gamma.sklearndf import TransformerDF
-from gamma.sklearndf._wrapper import (
-    NDArrayTransformerWrapperDF,
-    PersistentNamingTransformerWrapperDF,
-)
+from gamma.sklearndf.transformation import ColumnSubsetTransformerWrapperDF
+from gamma.sklearndf.transformation._wrapper import NDArrayTransformerWrapperDF
 
 log = logging.getLogger(__name__)
 
@@ -76,18 +74,15 @@ class OutlierRemoverDF(TransformerDF["OutlierRemoverDF"], BaseEstimator):
     def is_fitted(self) -> bool:
         return self.threshold_low_ is not None
 
-    @property
-    def columns_in(self) -> pd.Index:
-        return self.columns_original.index
-
-    @property
-    def columns_original(self) -> pd.Series:
+    def _get_columns_original(self) -> pd.Series:
         return self.columns_original_
+
+    def _get_columns_in(self) -> pd.Index:
+        return self.columns_original.index
 
 
 class BorutaDF(
-    NDArrayTransformerWrapperDF[BorutaPy],
-    PersistentNamingTransformerWrapperDF[BorutaPy],
+    NDArrayTransformerWrapperDF[BorutaPy], ColumnSubsetTransformerWrapperDF[BorutaPy]
 ):
     """
     Feature Selection with the Boruta method with dataframes as input and output.
