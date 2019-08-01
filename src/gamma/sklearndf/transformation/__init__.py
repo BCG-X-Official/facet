@@ -480,10 +480,9 @@ class PolynomialFeaturesDF(
     """
 
     def _get_columns_out(self) -> pd.Index:
-        # todo: deal case when columns_in is not an iterable of strings
         return pd.Index(
             data=self.delegate_estimator.get_feature_names(
-                input_features=self.columns_in
+                input_features=self.columns_in.astype(str)
             )
         )
 
@@ -641,7 +640,7 @@ class KBinsDiscretizerDF(TransformerWrapperDF[KBinsDiscretizer]):
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
         if self.delegate_estimator.encode == "onehot":
-            raise AttributeError(
+            raise NotImplementedError(
                 'property encode="onehot" is not supported due to sparse matrices;'
                 'consider using "onehot-dense" instead'
             )
@@ -674,7 +673,7 @@ class KBinsDiscretizerDF(TransformerWrapperDF[KBinsDiscretizer]):
                 index=self.columns_in.astype(str) + "_bin", data=self.columns_in
             )
         else:
-            raise AttributeError(
+            raise ValueError(
                 f"unexpected value for property encode={self.delegate_estimator.encode}"
             )
 
@@ -785,7 +784,7 @@ class NMFDF(NMF, TransformerDF):
     pass
 
 
-@df_estimator(df_wrapper_type=ComponentsDimensionalityReductionWrapperDF)
+@df_estimator(df_wrapper_type=NComponentsDimensionalityReductionWrapperDF)
 class PCADF(PCA, TransformerDF):
     """
     Wraps :class:`decomposition.pca.PCA`;
