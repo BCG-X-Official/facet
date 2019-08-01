@@ -61,6 +61,14 @@ T_Classifier = TypeVar("T_Classifier", bound=ClassifierMixin)
 
 
 class BaseEstimatorDF(ABC, Generic[T_Estimator]):
+    """
+    #todo find a good description
+
+    Implementations must define a ``fit`` method and an ``is_fitted`` property.
+    """
+
+    F_COLUMN_IN = "column_in"
+
     def __init__(self) -> None:
         super().__init__()
         if not isinstance(self, BaseEstimator):
@@ -94,10 +102,10 @@ class BaseEstimatorDF(ABC, Generic[T_Estimator]):
         pass
 
     @property
-    @abstractmethod
     def columns_in(self) -> pd.Index:
         """The names of the input columns this estimator was fitted on"""
-        pass
+        self._ensure_fitted()
+        return self._get_columns_in().rename(self.F_COLUMN_IN)
 
     def clone(self: _T) -> _T:
         """
@@ -105,6 +113,16 @@ class BaseEstimatorDF(ABC, Generic[T_Estimator]):
         :return: the unfitted clone
         """
         return clone(self)
+
+    def _ensure_fitted(self) -> None:
+        # raise an AttributeError if this transformer is not fitted
+        if not self.is_fitted:
+            raise AttributeError("estimator is not fitted")
+
+    @abstractmethod
+    def _get_columns_in(self) -> pd.Index:
+        # get the input columns as a pandas Index
+        pass
 
 
 class BasePredictorDF(BaseEstimatorDF[T_Predictor], Generic[T_Predictor], ABC):
@@ -139,6 +157,12 @@ class BasePredictorDF(BaseEstimatorDF[T_Predictor], Generic[T_Predictor], ABC):
 class TransformerDF(
     BaseEstimatorDF[T_Transformer], TransformerMixin, Generic[T_Transformer], ABC
 ):
+    F_COLUMN_OUT = "column_out"
+
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+        self._columns_original = None
+
     # noinspection PyPep8Naming
     @abstractmethod
     def transform(self, X: pd.DataFrame) -> pd.DataFrame:
@@ -170,13 +194,36 @@ class TransformerDF(
         )
 
     @property
-    @abstractmethod
     def columns_original(self) -> pd.Series:
-        pass
+        """Series mapping output column names to the original columns names.
+
+        Series with index the name of the output columns and with values the
+        original name of the column."""
+        self._ensure_fitted()
+        if self._columns_original is None:
+            self._columns_original = (
+                self._get_columns_original()
+                .rename(self.F_COLUMN_IN)
+                .rename_axis(index=self.F_COLUMN_OUT)
+            )
+        return self._columns_original
 
     @property
     def columns_out(self) -> pd.Index:
         """The `pd.Index` of names of the output columns."""
+        self._ensure_fitted()
+        return self._get_columns_out().rename(self.F_COLUMN_OUT)
+
+    @abstractmethod
+    def _get_columns_original(self) -> pd.Series:
+        """
+        :return: a mapping from this transformer's output columns to the original
+        columns as a series
+        """
+        pass
+
+    def _get_columns_out(self) -> pd.Index:
+        # default behaviour: get index returned by columns_original
         return self.columns_original.index
 
 
