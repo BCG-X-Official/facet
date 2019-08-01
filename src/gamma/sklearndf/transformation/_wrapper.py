@@ -16,7 +16,7 @@ log = logging.getLogger(__name__)
 
 
 class NDArrayTransformerWrapperDF(
-    TransformerWrapperDF[T_Transformer], Generic[T_Transformer], ABC
+    TransformerWrapperDF[T_Transformer], Generic[T_Transformer]
 ):
     """
     `TransformerDF` whose delegate transformer only accepts numpy ndarrays.
@@ -50,7 +50,7 @@ class NDArrayTransformerWrapperDF(
 
 
 class ColumnSubsetTransformerWrapperDF(
-    TransformerWrapperDF[T_Transformer], Generic[T_Transformer], ABC
+    TransformerWrapperDF[T_Transformer], Generic[T_Transformer]
 ):
     """
     Transforms a data frame without changing column names, but possibly removing
@@ -73,7 +73,7 @@ class ColumnSubsetTransformerWrapperDF(
 
 
 class ColumnPreservingTransformerWrapperDF(
-    ColumnSubsetTransformerWrapperDF[T_Transformer], Generic[T_Transformer], ABC
+    ColumnSubsetTransformerWrapperDF[T_Transformer], Generic[T_Transformer]
 ):
     """
     Transform a data frame keeping exactly the same columns.
@@ -86,7 +86,7 @@ class ColumnPreservingTransformerWrapperDF(
         return self.columns_in
 
 
-class BaseMultipleInputColumnsWrapperDF(
+class BaseMultipleInputsPerOutputTransformerWrapperDF(
     TransformerWrapperDF[T_Transformer], Generic[T_Transformer], ABC
 ):
     """
@@ -95,39 +95,36 @@ class BaseMultipleInputColumnsWrapperDF(
 
     @abstractmethod
     def _get_columns_out(self) -> pd.Index:
-        # return column labels for arrays returned by the fitted transformer.
+        # make this method abstract to ensure subclasses override the default
+        # behaviour, which usually relies on method `_get_columns_original`
         pass
 
     def _get_columns_original(self) -> pd.Series:
         raise AttributeError(
-            "columns_original is not defined for transformers whom output columns are "
-            "linked with multiple input columns."
+            "transformer maps multiple inputs to individual output columns"
         )
 
 
 class BaseDimensionalityReductionWrapperDF(
-    TransformerWrapperDF[T_Transformer], Generic[T_Transformer], ABC
+    BaseMultipleInputsPerOutputTransformerWrapperDF[T_Transformer],
+    Generic[T_Transformer],
+    ABC,
 ):
     """
     Transform data making dimensionality reduction style transform.
     """
 
+    @property
     @abstractmethod
-    def _get_columns_out(self) -> pd.Index:
-        # return column labels for arrays returned by the fitted transformer.
+    def _n_components(self) -> int:
         pass
 
-    def _get_columns_original(self) -> pd.Series:
-        raise AttributeError(
-            "columns_original is not defined for dimensionality reduction transformers"
-        )
+    def _get_columns_out(self) -> pd.Index:
+        return pd.Index([f"x_{i}" for i in range(self._n_components)])
 
 
-N_COMPONENTS = "n_components"
-
-
-class AnonymousDimensionalityReductionWrapperDF(
-    BaseDimensionalityReductionWrapperDF[T_Transformer], Generic[T_Transformer], ABC
+class NComponentsDimensionalityReductionWrapperDF(
+    BaseDimensionalityReductionWrapperDF[T_Transformer], Generic[T_Transformer]
 ):
     """
     Transform features doing dimensionality reductions.
@@ -135,68 +132,55 @@ class AnonymousDimensionalityReductionWrapperDF(
     The delegate transformer has a ``n_components`` attribute.
     """
 
-    def _get_columns_out(self) -> pd.Index:
-        if not hasattr(self.delegate_estimator, N_COMPONENTS):
-            raise AttributeError(
-                f"NamedDimensionalityReductionWrapperDF should have "
-                f"a {N_COMPONENTS} attribute but does not have. The "
-                f"delegate "
-                f"estimator is {repr(T_Transformer)}"
-            )
-        feature_format = "x_{}"
-        n_features = getattr(self.delegate_estimator, N_COMPONENTS)
-        return pd.Index([feature_format.format(i) for i in range(n_features)])
+    _ATTR_N_COMPONENTS = "n_components"
+
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+        self._validate_delegate_attribute(attribute_name=self._ATTR_N_COMPONENTS)
+
+    @property
+    def _n_components(self) -> int:
+        return getattr(self.delegate_estimator, self._ATTR_N_COMPONENTS)
 
 
-COMPONENTS = "components_"
-
-
-class NamedDimensionalityReductionWrapperDF(
-    BaseDimensionalityReductionWrapperDF[T_Transformer], Generic[T_Transformer], ABC
+class ComponentsDimensionalityReductionWrapperDF(
+    BaseDimensionalityReductionWrapperDF[T_Transformer], Generic[T_Transformer]
 ):
     """
-    Apply dimensionality reduction on a dataframe.
+    Apply dimensionality reduction on a data frame.
 
     The delegate transformer has a ``components_`` attribute which is an array of
-    shape (n_components, n_features) and we use n_components to retrieve the number
+    shape (n_components, n_features) and we use n_components to determine the number
     of output columns.
     """
 
-    def _get_columns_out(self) -> pd.Index:
-        if not hasattr(self.delegate_estimator, COMPONENTS):
-            raise AttributeError(
-                f"NamedDimensionalityReductionWrapperDF should have "
-                f"a {COMPONENTS} attribute but does not have. The "
-                f"delegate "
-                f"estimator is {repr(T_Transformer)}"
-            )
-        feature_format = "x_{}"
-        n_features = getattr(self.delegate_estimator, COMPONENTS).shape[0]
-        return pd.Index([feature_format.format(i) for i in range(n_features)])
+    _ATTR_COMPONENTS = "components_"
 
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+        self._validate_delegate_attribute(attribute_name=self._ATTR_COMPONENTS)
 
-GET_SUPPORT = "get_support"
+    @property
+    def _n_components(self) -> int:
+        return len(getattr(self.delegate_estimator, self._ATTR_COMPONENTS))
 
 
 class FeatureSelectionWrapperDF(
     ColumnSubsetTransformerWrapperDF[T_Transformer], Generic[T_Transformer], ABC
 ):
     """
-    Select some features of a dataframe.
+    Wrapper for feature selection transformers.
 
-    The delegate transformer has a get_support method.
+    The delegate transformer has a `get_support` method providing the indices of the
+    selected input columns
     """
 
+    _ATTR_GET_SUPPORT = "get_support"
+
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+        self._validate_delegate_attribute(attribute_name=self._ATTR_GET_SUPPORT)
+
     def _get_columns_out(self) -> pd.Index:
-        if not (
-            hasattr(self.delegate_estimator, GET_SUPPORT)
-            and callable(getattr(self.delegate_estimator, GET_SUPPORT))
-        ):
-            raise AttributeError(
-                f"FeatureSelectionWrapperDF should have a "
-                f"{GET_SUPPORT} method but does not have. The "
-                f"delegate "
-                f"estimator is {repr(T_Transformer)}"
-            )
-        support_indices = getattr(self.delegate_estimator, GET_SUPPORT)(indices=True)
-        return self.columns_in[support_indices]
+        get_support = getattr(self.delegate_estimator, self._ATTR_GET_SUPPORT)
+        return self.columns_in[get_support()]
