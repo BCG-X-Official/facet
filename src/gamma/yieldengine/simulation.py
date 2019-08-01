@@ -173,10 +173,14 @@ class UnivariateSimulator:
             raise ValueError(f"Feature '{feature_name}' not in sample")
 
         def _simulate_values() -> Generator[Tuple[int, Any, float], None, None]:
+            dtype = self.model_fit.sample.features.loc[:, feature_name].dtype
             for value in simulated_values:
                 # replace the simulated column with a constant value
                 synthetic_sample = FunctionTransformerDF(
-                    func=lambda x: (x.assign(**{feature_name: value})), validate=False
+                    func=lambda x: (
+                        x.assign(**{feature_name: value}).astype({feature_name: dtype})
+                    ),
+                    validate=False,
                 ).fit_transform_sample(self.model_fit.sample)
 
                 fit_for_syn_sample = self.model_fit.copy_with_sample(
