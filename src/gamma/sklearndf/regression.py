@@ -3,7 +3,7 @@
 #
 # This is a pre-release library under development. Handling of IP rights is still
 # being investigated. To avoid causing any potential IP disputes or issues, DO NOT USE
-# ANY OF THIS CODE ON A CLIENT PROJECT, even not in modified form.
+# ANY OF THIS CODE ON A CLIENT PROJECT, not even in modified form.
 #
 # Please direct any queries to any of:
 # - Jan Ittner
@@ -67,6 +67,8 @@ from sklearn.tree import DecisionTreeRegressor, ExtraTreeRegressor
 
 from gamma.sklearndf import RegressorDF, T_Regressor, TransformerDF
 from gamma.sklearndf._wrapper import df_estimator, RegressorWrapperDF
+
+# noinspection PyProtectedMember
 from gamma.sklearndf.transformation import ColumnPreservingTransformerWrapperDF
 
 log = logging.getLogger(__name__)
