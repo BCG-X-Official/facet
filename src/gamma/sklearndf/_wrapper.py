@@ -194,6 +194,13 @@ class BaseEstimatorWrapperDF(
                 _error_message(axis="index", actual=df.index, expected=expected_index)
             )
 
+    def _validate_delegate_attribute(self, attribute_name: str) -> None:
+        if not hasattr(self.delegate_estimator, attribute_name):
+            raise AttributeError(
+                f"delegate estimator of type {type(self.delegate_estimator).__name__} "
+                f"does not have attribute {attribute_name}"
+            )
+
     def __dir__(self) -> Iterable[str]:
         # include non-private attributes of delegate estimator in directory
         return {
@@ -583,9 +590,9 @@ class ClassifierWrapperDF(
 def df_estimator(
     delegate_estimator: Type[T_Estimator] = None,
     *,
-    df_estimator_type: Type[
-        BaseEstimatorWrapperDF[T_Estimator]
-    ] = BaseEstimatorWrapperDF[T_Estimator],
+    df_wrapper_type: Type[BaseEstimatorWrapperDF[T_Estimator]] = BaseEstimatorWrapperDF[
+        T_Estimator
+    ],
 ) -> Union[
     Callable[[Type[T_Estimator]], Type[BaseEstimatorWrapperDF[T_Estimator]]],
     Type[BaseEstimatorWrapperDF[T_Estimator]],
@@ -594,7 +601,7 @@ def df_estimator(
     Class decorator wrapping a :class:`sklearn.base.BaseEstimator` in a
     :class:`BaseEstimatorWrapperDF`.
     :param delegate_estimator: the estimator class to wrap
-    :param df_estimator_type: optional parameter indicating the \
+    :param df_wrapper_type: optional parameter indicating the \
                               :class:`BaseEstimatorWrapperDF` class to be used for \
                               wrapping; defaults to :class:`BaseEstimatorWrapperDF`
     :return: the resulting `BaseEstimatorWrapperDF` with ``delegate_estimator`` as \
@@ -622,7 +629,7 @@ def df_estimator(
         # wrap the delegate estimator
 
         @wraps(decoratee, updated=())
-        class _DataFrameEstimator(df_estimator_type):
+        class _DataFrameEstimator(df_wrapper_type):
             @classmethod
             def _make_delegate_estimator(cls, *args, **kwargs) -> T_Estimator:
                 # noinspection PyArgumentList
@@ -630,10 +637,10 @@ def df_estimator(
 
         return _DataFrameEstimator
 
-    if not issubclass(df_estimator_type, BaseEstimatorWrapperDF):
+    if not issubclass(df_wrapper_type, BaseEstimatorWrapperDF):
         raise ValueError(
             f"arg df_transformer_type not a "
-            f"{BaseEstimatorWrapperDF.__name__} class: {df_estimator_type}"
+            f"{BaseEstimatorWrapperDF.__name__} class: {df_wrapper_type}"
         )
     if delegate_estimator is None:
         return _decorate

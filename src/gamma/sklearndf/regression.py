@@ -126,7 +126,7 @@ def _df_regressor(
     return cast(
         Type[RegressorWrapperDF[T_Regressor]],
         df_estimator(
-            delegate_estimator=delegate_regressor, df_estimator_type=RegressorWrapperDF
+            delegate_estimator=delegate_regressor, df_wrapper_type=RegressorWrapperDF
         ),
     )
 
@@ -150,7 +150,7 @@ def _df_regressor_transformer(
         Type[_RegressorTransformerWrapperDF[T_Regressor]],
         df_estimator(
             delegate_estimator=delegate_regressor_transformer,
-            df_estimator_type=_RegressorTransformerWrapperDF,
+            df_wrapper_type=_RegressorTransformerWrapperDF,
         ),
     )
 
