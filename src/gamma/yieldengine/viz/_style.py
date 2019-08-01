@@ -17,7 +17,7 @@ from mpl_toolkits.axes_grid1.axes_size import Scaled
 from gamma import ListLike
 from gamma.viz import ChartStyle, MatplotStyle, TextStyle
 from gamma.viz.text import format_table
-from gamma.yieldengine.partition import Partitioning, T_Number
+from gamma.yieldengine.partition import T_Number, T_Value
 
 log = logging.getLogger(__name__)
 
@@ -32,24 +32,31 @@ class SimulationStyle(ChartStyle, ABC):
         self,
         feature_name: str,
         target_name: str,
-        partitioning: Partitioning,
         median_uplift: ListLike[T_Number],
         min_uplift: ListLike[T_Number],
         max_uplift: ListLike[T_Number],
         min_percentile: float,
         max_percentile: float,
+        partitions,
+        frequencies,
+        categorical,
     ) -> None:
         """
         Draw the graph with the uplift curves: median, low and high percentiles.
+        :param categorical:
+        :param partitions:
+        :param frequencies:
         """
         pass
 
     @abstractmethod
-    def draw_histogram(self, partitioning: Partitioning) -> None:
+    def draw_histogram(self, partitions, frequencies, categorical) -> None:
         """
         Draw frequencies histogram.
+        :param categorical:
+        :param partitions:
+        :param frequencies:
 
-        :param partitioning: the partitioning used for the simulation
         """
         pass
 
@@ -98,23 +105,30 @@ class SimulationPlotStyle(MatplotStyle, SimulationStyle):
         self,
         feature_name: str,
         target_name: str,
-        partitioning: Partitioning,
         median_uplift: ListLike[T_Number],
         min_uplift: ListLike[T_Number],
         max_uplift: ListLike[T_Number],
         min_percentile: float,
         max_percentile: float,
+        partitions: ListLike[T_Value],
+        frequencies: ListLike[int],
+        categorical: bool,
     ) -> None:
         """
         Draw the graph with the uplift curves: median, low and high percentiles.
+        :param categorical: 
+        :param partitions: 
+        :param frequencies: 
         """
 
         # draw the mean predicted uplift, showing median and confidence ranges for
         # each prediction
-        if partitioning.is_categorical:
-            x = list(range(len(partitioning)))
+        if categorical:
+            # x = list(range(len(partitioning)))
+            x = range(len(partitions))
         else:
-            x = partitioning.partitions()
+            # x = partitioning.partitions()
+            x = partitions
         ax = self.ax
         line_min, = ax.plot(x, min_uplift, color=self._COLOR_CONFIDENCE)
         line_median, = ax.plot(x, median_uplift, color=self._COLOR_MEDIAN_UPLIFT)
@@ -135,11 +149,11 @@ class SimulationPlotStyle(MatplotStyle, SimulationStyle):
             axis="x",
             labelbottom=True,
             bottom=True,
-            labelrotation=45 if partitioning.is_categorical else 0,
+            labelrotation=45 if categorical else 0,
         )
-        if partitioning.is_categorical or True:
+        if categorical or True:
             ax.set_xticks(x)
-            ax.set_xticklabels(labels=partitioning.partitions())
+            ax.set_xticklabels(labels=partitions)
 
         # add a horizontal line at y=0
         ax.axhline(y=0, linewidth=0.5)
@@ -148,17 +162,21 @@ class SimulationPlotStyle(MatplotStyle, SimulationStyle):
         for pos in ["top", "right"]:
             ax.spines[pos].set_visible(False)
 
-    def draw_histogram(self, partitioning: Partitioning) -> None:
+    def draw_histogram(
+        self, partitions: ListLike[T_Value], frequencies: ListLike[int], categorical
+    ) -> None:
         """
         Draw frequencies histogram.
+        :param categorical:
+        :param partitions:
+        :param frequencies:
 
-        :param partitioning: the partitioning used for the simulation
         """
 
         # get histogram size and values (horizontally, we count bars from 0..n-1
-        n_partitions = len(partitioning)
+        n_partitions = len(partitions)
         x_values = list(range(n_partitions))
-        y_values = partitioning.frequencies()
+        y_values = frequencies
 
         def _make_sub_axes() -> Axes:
             # create the sub-axes for the histogram
@@ -276,15 +294,20 @@ class SimulationReportStyle(SimulationStyle, TextStyle):
         self,
         feature_name: str,
         target_name: str,
-        partitioning: Partitioning,
         median_uplift: ListLike[T_Number],
         min_uplift: ListLike[T_Number],
         max_uplift: ListLike[T_Number],
         min_percentile: float,
         max_percentile: float,
+        partitions,
+        frequencies,
+        categorical,
     ) -> None:
         """
         Print the uplift report.
+        :param categorical:
+        :param partitions:
+        :param frequencies:
         """
         out = self.out
         self.out.write(f"\n{self._uplift_label(target_name=target_name)}:\n\n")
@@ -297,27 +320,29 @@ class SimulationReportStyle(SimulationStyle, TextStyle):
                     ),
                 ],
                 formats=[
-                    self._partition_format(partitioning),
+                    self._partition_format(categorical),
                     *([self._NUM_FORMAT] * 3),
                 ],
-                data=list(
-                    zip(
-                        partitioning.partitions(), min_uplift, median_uplift, max_uplift
-                    )
-                ),
+                data=list(zip(partitions, min_uplift, median_uplift, max_uplift)),
             )
         )
 
-    def draw_histogram(self, partitioning: Partitioning) -> None:
+    def draw_histogram(self, partitions, frequencies, categorical) -> None:
         """
         Print the histogram report.
+        :param categorical:
+        :param partitions:
+        :param frequencies:
         """
         self.out.write("\nObserved frequencies:\n\n")
         self.out.write(
             format_table(
                 headings=(self._PARTITION_HEADING, self._FREQUENCY_HEADING),
-                data=list(zip(partitioning.partitions(), partitioning.frequencies())),
-                formats=(self._partition_format(partitioning), self._FREQUENCY_FORMAT),
+                data=list(zip(partitions, frequencies)),
+                formats=(
+                    self._partition_format(categorical=categorical),
+                    self._FREQUENCY_FORMAT,
+                ),
             )
         )
 
@@ -327,8 +352,8 @@ class SimulationReportStyle(SimulationStyle, TextStyle):
         """
         self.out.write("\n\n")
 
-    def _partition_format(self, partitioning: Partitioning) -> str:
-        if partitioning.is_categorical:
+    def _partition_format(self, categorical: bool) -> str:
+        if categorical:
             return self._PARTITION_TEXT_FORMAT
         else:
             return self._PARTITION_NUMBER_FORMAT
