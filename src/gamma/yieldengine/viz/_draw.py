@@ -19,15 +19,13 @@ values in the simulation and on the y axis the associated prediction uplift. Bel
 this graph there is a histogram of the feature values.
 """
 
-from typing import NamedTuple, TypeVar
+from typing import NamedTuple
 
 from gamma import ListLike
 from gamma.viz import ChartDrawer
-from gamma.yieldengine.partition import RangePartitioning, T_Value
+from gamma.yieldengine.partition import T_Value
 from gamma.yieldengine.simulation import UnivariateSimulation
 from gamma.yieldengine.viz._style import SimulationStyle
-
-T_RangePartitioning = TypeVar("T_RangePartitioning", bound=RangePartitioning)
 
 
 class SimulationDrawer(ChartDrawer[UnivariateSimulation, SimulationStyle]):
@@ -41,15 +39,8 @@ class SimulationDrawer(ChartDrawer[UnivariateSimulation, SimulationStyle]):
       if ``False`` the histogram is not plotted
     """
 
-    F_MEDIAN_UPLIFT = "median_uplift"
-    F_MIN_UPLIFT = "min_uplift"
-    F_MAX_UPLIFT = "max_uplift"
-    F_FREQUENCIES = "frequencies"
-    F_PARTITIONS = "partitions"
-
-    class SimulationSeries(NamedTuple):
-        """The series of values for the simulation."""
-
+    class _SimulationSeries(NamedTuple):
+        # A set of aligned series representing the simulation result
         median_uplift: ListLike[T_Value]
         min_uplift: ListLike[T_Value]
         max_uplift: ListLike[T_Value]
@@ -68,22 +59,23 @@ class SimulationDrawer(ChartDrawer[UnivariateSimulation, SimulationStyle]):
 
     def _draw(self) -> None:
         # draw the simulation chart
-        self._draw_uplift_graph()
+        simulation_series = self._get_simulation_series()
+
+        self._draw_uplift_graph(simulation_series)
 
         if self._histogram:
-            self._draw_histogram()
+            self._draw_histogram(simulation_series)
 
-    def _draw_uplift_graph(self) -> None:
+    def _draw_uplift_graph(self, simulation_series: _SimulationSeries) -> None:
         # draw the graph with the uplift curves
         simulation: UnivariateSimulation = self._model
-        categorical = simulation.partitioning.is_categorical
-        simulation_series = self._get_simulation_series()
+
         self._style.draw_uplift(
             feature_name=simulation.feature_name,
             target_name=simulation.target_name,
             min_percentile=simulation.min_percentile,
             max_percentile=simulation.max_percentile,
-            categorical=categorical,
+            is_categorical_feature=simulation.partitioning.is_categorical,
             partitions=simulation_series.partitions,
             frequencies=simulation_series.frequencies,
             median_uplift=simulation_series.median_uplift,
@@ -92,34 +84,36 @@ class SimulationDrawer(ChartDrawer[UnivariateSimulation, SimulationStyle]):
         )
         return None
 
-    def _draw_histogram(self) -> None:
+    def _draw_histogram(self, simulation_series: _SimulationSeries) -> None:
         # draw the histogram of the simulation values
-        categorical = self._model.partitioning.is_categorical
-        simulation_series = self._get_simulation_series()
+
         self._style.draw_histogram(
             partitions=simulation_series.partitions,
             frequencies=simulation_series.frequencies,
-            categorical=categorical,
+            is_categorical_feature=self._model.partitioning.is_categorical,
         )
         return None
 
-    def _get_simulation_series(self) -> SimulationSeries:
+    def _get_simulation_series(self) -> _SimulationSeries:
         # return the simulation series for median uplift, min uplift, max uplift,
         # partitions and frequencies
-        # If categorical is true, the series are sorted
-        # increasingly with respect to order of the series median uplift.
-        # If categorical is false the original order of the series is not changed.
-        simulation: UnivariateSimulation = self._model
+        # If the partitioning of the simulation is categorical, the series are
+        # sorted in ascending order of the median uplift.
+        # Otherwise, the simulation series are returned unchanged.
 
-        simulation_lists = [
+        simulation: UnivariateSimulation = self.model
+
+        simulation_series = self._SimulationSeries(
             simulation.median_uplift,
             simulation.min_uplift,
             simulation.max_uplift,
             simulation.partitioning.partitions(),
             simulation.partitioning.frequencies(),
-        ]
+        )
 
         if simulation.partitioning.is_categorical:
-            print("been here")
-            simulation_lists = zip(*sorted(zip(*simulation_lists), key=lambda x: x[0]))
-        return self.SimulationSeries(*simulation_lists)
+            return self._SimulationSeries(
+                *zip(*sorted(zip(*simulation_series), key=lambda x: x[0]))
+            )
+        else:
+            return simulation_series
