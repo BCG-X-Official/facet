@@ -1,3 +1,16 @@
+#
+# NOT FOR CLIENT USE!
+#
+# This is a pre-release library under development. Handling of IP rights is still
+# being investigated. To avoid causing any potential IP disputes or issues, DO NOT USE
+# ANY OF THIS CODE ON A CLIENT PROJECT, not even in modified form.
+#
+# Please direct any queries to any of:
+# - Jan Ittner
+# - Jörg Schneider
+# - Florent Martin
+#
+
 import logging
 from typing import *
 
@@ -64,11 +77,7 @@ class DendrogramDrawer(ChartDrawer[LinkageTree, DendrogramStyle]):
         """
         if node.is_leaf:
             self.style.draw_link_leg(
-                bottom=0.0,
-                top=width_relative,
-                first_leaf=y,
-                n_leaves=1,
-                weight=node.weight,
+                bottom=0.0, top=width_relative, leaf=y, weight=node.weight
             )
 
             return _SubtreeInfo(labels=[node.label], weight=node.weight)

@@ -1,3 +1,16 @@
+#
+# NOT FOR CLIENT USE!
+#
+# This is a pre-release library under development. Handling of IP rights is still
+# being investigated. To avoid causing any potential IP disputes or issues, DO NOT USE
+# ANY OF THIS CODE ON A CLIENT PROJECT, not even in modified form.
+#
+# Please direct any queries to any of:
+# - Jan Ittner
+# - Jörg Schneider
+# - Florent Martin
+#
+
 """
 Additional transformers outside of the sckit-learn canon, created by Gamma
 """
@@ -10,10 +23,8 @@ from boruta import BorutaPy
 from sklearn.base import BaseEstimator
 
 from gamma.sklearndf import TransformerDF
-from gamma.sklearndf._wrapper import (
-    NDArrayTransformerWrapperDF,
-    PersistentNamingTransformerWrapperDF,
-)
+from gamma.sklearndf.transformation import ColumnSubsetTransformerWrapperDF
+from gamma.sklearndf.transformation._wrapper import NDArrayTransformerWrapperDF
 
 log = logging.getLogger(__name__)
 
@@ -70,28 +81,21 @@ class OutlierRemoverDF(TransformerDF["OutlierRemoverDF"], BaseEstimator):
         return X.where(cond=(X >= self.threshold_low_) & (X <= self.threshold_high_))
 
     def inverse_transform(self, X: pd.DataFrame) -> pd.DataFrame:
-        """Not possible."""
         raise RuntimeError("inverse transform not possible")
 
     @property
     def is_fitted(self) -> bool:
-        """True if the thresholds have been computed, lese False."""
         return self.threshold_low_ is not None
 
-    @property
-    def columns_in(self) -> pd.Index:
-        """The columns of the input dataframe."""
-        return self.columns_original.index
-
-    @property
-    def columns_original(self) -> pd.Series:
-        """Mapping columns output to columns input."""
+    def _get_columns_original(self) -> pd.Series:
         return self.columns_original_
+
+    def _get_columns_in(self) -> pd.Index:
+        return self.columns_original.index
 
 
 class BorutaDF(
-    NDArrayTransformerWrapperDF[BorutaPy],
-    PersistentNamingTransformerWrapperDF[BorutaPy],
+    NDArrayTransformerWrapperDF[BorutaPy], ColumnSubsetTransformerWrapperDF[BorutaPy]
 ):
     """
     Feature Selection with the Boruta method with dataframes as input and output.

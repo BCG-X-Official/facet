@@ -1,3 +1,16 @@
+#
+# NOT FOR CLIENT USE!
+#
+# This is a pre-release library under development. Handling of IP rights is still
+# being investigated. To avoid causing any potential IP disputes or issues, DO NOT USE
+# ANY OF THIS CODE ON A CLIENT PROJECT, not even in modified form.
+#
+# Please direct any queries to any of:
+# - Jan Ittner
+# - Jörg Schneider
+# - Florent Martin
+#
+
 """
 Utilities for text rendering
 """
@@ -14,7 +27,7 @@ log = logging.getLogger(__name__)
 class CharacterMatrix:
     """
     A matrix of characters, indexed by rows and columns.
-    
+
     :param n_rows: the matrix height
     :param n_columns: the matrix width
     """

@@ -1,15 +1,27 @@
-# coding=utf-8
+#
+# NOT FOR CLIENT USE!
+#
+# This is a pre-release library under development. Handling of IP rights is still
+# being investigated. To avoid causing any potential IP disputes or issues, DO NOT USE
+# ANY OF THIS CODE ON A CLIENT PROJECT, not even in modified form.
+#
+# Please direct any queries to any of:
+# - Jan Ittner
+# - Jörg Schneider
+# - Florent Martin
+#
+
 """
 scikit-learn pipeline implementing the TransformerDF, RegressorDF,
 and ClassifierDF interfaces.
 """
-
 
 import logging
 from typing import *
 from typing import Any, cast, Generic, List, Optional, Union
 
 import pandas as pd
+from pandas.core.arrays import ExtensionArray
 from sklearn.base import BaseEstimator
 from sklearn.pipeline import FeatureUnion, Pipeline
 
@@ -39,70 +51,52 @@ class PipelineDF(
     TransformerWrapperDF[Pipeline],
 ):
     """
-    Wrapper around :class:`sklearn.pipeline.Pipeline` with dataframes in input and
+    Wrapper around :class:`sklearn.pipeline.Pipeline` with data frames in input and
     output.
 
     :param `**kwargs`: the arguments used to construct the wrapped
       :class:`~sklearn.pipeline.Pipeline`
     """
 
+    PASSTHROUGH = "passthrough"
+
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
-        self._validate_steps()
 
-    def _validate_steps(self) -> None:
-        for name, transformer in self._transform_steps():
-            if transformer is not None and not isinstance(transformer, TransformerDF):
-                raise ValueError(
-                    f"expected all transformers to implement class "
-                    f"{TransformerDF.__name__}, but "
-                    f"step '{name}' is a {type(transformer).__name__}"
-                )
+        # ensure that all steps support data frames, and that all except the last
+        # step are data frame transformers
 
-    def _transform_steps(self) -> List[Tuple[str, TransformerDF]]:
-        pipeline = self.delegate_estimator
-
-        steps = pipeline.steps
+        steps = self.steps
 
         if len(steps) == 0:
-            return []
+            return
 
-        estimator = steps[-1][1]
+        for name, transformer in steps[:-1]:
+            if not (
+                self._is_passthrough(transformer)
+                or isinstance(transformer, TransformerDF)
+            ):
+                raise ValueError(
+                    f'expected step "{name}" to contain a '
+                    f"{TransformerDF.__name__}, but found an instance of "
+                    f"{type(transformer).__name__}"
+                )
 
-        if estimator is not None and (
-            hasattr(estimator, "fit_transform") or hasattr(estimator, "transform")
+        final_step = steps[-1]
+        final_estimator = final_step[1]
+        if not (
+            self._is_passthrough(final_estimator)
+            or isinstance(final_estimator, BaseEstimatorDF)
         ):
-            transform_steps = steps
-        else:
-            transform_steps = steps[:-1]
-        return transform_steps
+            raise ValueError(
+                f'expected final step "{final_step[0]}" to contain a '
+                f"{BaseEstimatorDF.__name__}, but found an instance of "
+                f"{type(final_estimator).__name__}"
+            )
 
     @classmethod
     def _make_delegate_estimator(cls, *args, **kwargs) -> Pipeline:
         return Pipeline(*args, **kwargs)
-
-    def _get_columns_original(self) -> pd.Series:
-        col_mappings = [
-            df_transformer.columns_original
-            for _, df_transformer in self._transform_steps()
-            if df_transformer is not None
-        ]
-
-        if len(col_mappings) == 0:
-            _columns_original = _columns_out = self.columns_in
-        else:
-            _columns_out = col_mappings[-1].index
-            _columns_original = col_mappings[-1].values
-
-            # iterate backwards starting from the penultimate item
-            for preceding_out_to_original_mapping in col_mappings[-2::-1]:
-                # join the original columns of my current transformer on the out columns
-                # in the preceding transformer, then repeat
-                _columns_original = preceding_out_to_original_mapping.loc[
-                    _columns_original
-                ].values
-
-        return pd.Series(index=_columns_out, data=_columns_original)
 
     @property
     def steps(self) -> List[Tuple[str, BaseEstimatorDF]]:
@@ -141,6 +135,72 @@ class PipelineDF(
         else:
             return self.delegate_estimator[ind]
 
+    @staticmethod
+    def _is_passthrough(estimator: Union[BaseEstimatorDF, str, None]) -> bool:
+        # return True if the estimator is a "passthrough" (i.e. identity) transformer
+        # in the pipeline
+        return estimator is None or estimator == PipelineDF.PASSTHROUGH
+
+    def _transformer_steps(self) -> Iterator[Tuple[str, TransformerDF]]:
+        # make an iterator of all transform steps, i.e. excluding the final step
+        # in case it is not a transformer
+        # excludes steps whose transformer is `None` or `"passthrough"`
+
+        def _iter_not_none(
+            transformer_steps: Sequence[Tuple[str, BaseEstimatorDF]]
+        ) -> Iterator[Tuple[str, TransformerDF]]:
+            return (
+                (name, cast(TransformerDF, transformer))
+                for name, transformer in transformer_steps
+                if not self._is_passthrough(transformer)
+            )
+
+        steps = self.steps
+
+        if len(steps) == 0:
+            return iter([])
+
+        final_estimator = steps[-1][1]
+
+        if isinstance(final_estimator, TransformerDF):
+            return _iter_not_none(steps)
+        else:
+            return _iter_not_none(steps[:-1])
+
+    def _get_columns_original(self) -> pd.Series:
+        col_mappings = [
+            df_transformer.columns_original
+            for _, df_transformer in self._transformer_steps()
+        ]
+
+        if len(col_mappings) == 0:
+            _columns_out: pd.Index = self.columns_in
+            _columns_original: Union[
+                pd.np.ndarray, ExtensionArray
+            ] = _columns_out.values
+        else:
+            _columns_out: pd.Index = col_mappings[-1].index
+            _columns_original: Union[pd.np.ndarray, ExtensionArray] = col_mappings[
+                -1
+            ].values
+
+            # iterate backwards starting from the penultimate item
+            for preceding_out_to_original_mapping in col_mappings[-2::-1]:
+                # join the original columns of my current transformer on the out columns
+                # in the preceding transformer, then repeat
+                _columns_original = preceding_out_to_original_mapping.loc[
+                    _columns_original
+                ].values
+
+        return pd.Series(index=_columns_out, data=_columns_original)
+
+    def _get_columns_out(self) -> pd.Index:
+        for _, transformer in reversed(self.steps):
+            if isinstance(transformer, TransformerDF):
+                return transformer.columns_out
+
+        return self.columns_in
+
 
 class FeatureUnionDF(TransformerWrapperDF[FeatureUnion]):
     """
@@ -152,6 +212,10 @@ class FeatureUnionDF(TransformerWrapperDF[FeatureUnion]):
     def _make_delegate_estimator(cls, *args, **kwargs) -> FeatureUnion:
         return FeatureUnion(*args, **kwargs)
 
+    @staticmethod
+    def _prepend_columns_out(columns_out: pd.Index, name_prefix: str) -> pd.Index:
+        return pd.Index(data=f"{name_prefix}__" + columns_out.astype(str))
+
     def _get_columns_original(self) -> pd.Series:
         # concatenate output->input mappings from all included transformers other than
         # ones stated as `None` or `"drop"` or any other string
@@ -159,25 +223,45 @@ class FeatureUnionDF(TransformerWrapperDF[FeatureUnion]):
         # prepend the name of the transformer so the resulting feature name is
         # `<name>__<output column of sub-transformer>
 
-        def _prepend_columns_out(
+        def _prepend_columns_original(
             columns_original: pd.Series, name_prefix: str
         ) -> pd.Series:
             return pd.Series(
                 data=columns_original.values,
-                index=name_prefix + columns_original.index.astype(str),
+                index=self._prepend_columns_out(
+                    columns_out=columns_original.index, name_prefix=name_prefix
+                ),
             )
 
         # noinspection PyProtectedMember
         return pd.concat(
             objs=(
-                _prepend_columns_out(
-                    columns_original=transformer.columns_original,
-                    name_prefix=f"{name}__",
+                _prepend_columns_original(
+                    columns_original=transformer.columns_original, name_prefix=name
                 )
                 for name, transformer, _ in self.delegate_estimator._iter()
-                if not (transformer is None or isinstance(transformer, str))
             )
         )
+
+    def _get_columns_out(self) -> pd.Index:
+        # concatenate output columns from all included transformers other than
+        # ones stated as `None` or `"drop"` or any other string
+
+        # prepend the name of the transformer so the resulting feature name is
+        # `<name>__<output column of sub-transformer>
+
+        # noinspection PyProtectedMember
+        indices = [
+            self._prepend_columns_out(
+                columns_out=transformer.columns_out, name_prefix=name
+            )
+            for name, transformer, _ in self.delegate_estimator._iter()
+        ]
+
+        if len(indices) == 0:
+            return pd.Index()
+        else:
+            return indices[0].append(other=indices[1:])
 
 
 #
@@ -190,8 +274,8 @@ class ModelPipelineDF(BaseEstimator, ClassifierDF, RegressorDF, Generic[T_Predic
     A data frame enabled pipeline with an optional preprocessing step and a
     mandatory estimator step.
 
-    :param predictor: the delegate estimator used in the pipeline
     :param preprocessing: the preprocessing step in the pipeline (defaults to ``None``)
+    :param predictor: the delegate estimator used in the pipeline
     :type predictor: :class:`.BasePredictorDF`
     """
 
@@ -218,89 +302,39 @@ class ModelPipelineDF(BaseEstimator, ClassifierDF, RegressorDF, Generic[T_Predic
     def fit(
         self, X: pd.DataFrame, y: Optional[pd.Series] = None, **fit_params
     ) -> "ModelPipelineDF[T_PredictorDF]":
-        """
-        Fit the pipeline.
-
-        :param X: the feature dataframe used to fit the pipeline
-        :param y: the target values
-        :param fit_params: fit parameters
-        :return:
-        """
         self.predictor.fit(self._pre_fit_transform(X, y, **fit_params), y, **fit_params)
         return self
 
     @property
     def is_fitted(self) -> bool:
-        """True if the pipeline is fitted."""
         return self.preprocessing.is_fitted and self.predictor.is_fitted
-
-    @property
-    def columns_in(self) -> pd.Index:
-        """Columns of the input dataframe."""
-        if self.preprocessing is not None:
-            return self.preprocessing.columns_in
-        else:
-            return self.predictor.columns_in
 
     # noinspection PyPep8Naming
     def predict(
         self, X: pd.DataFrame, **predict_params
     ) -> Union[pd.Series, pd.DataFrame]:
-        """
-        Make prediction for target values.
-
-        :param X: the feature dataframe used for input
-        :param predict_params: parameters passed to the predictor
-        :return: the predcitions
-        """
         return self.predictor.predict(self._pre_transform(X), **predict_params)
 
     # noinspection PyPep8Naming
     def fit_predict(self, X: pd.DataFrame, y: pd.Series, **fit_params) -> pd.Series:
-        """
-        Fit and predict.
-
-        :param X: the features used to fit and predict
-        :param y: the target values used to fit
-        :param fit_params: parameters used for fit and predcit
-        :return: the predictions
-        """
         return self.predictor.fit_predict(
             self._pre_fit_transform(X, y, **fit_params), y, **fit_params
         )
 
     # noinspection PyPep8Naming
     def predict_proba(self, X: pd.DataFrame) -> Union[pd.DataFrame, List[pd.DataFrame]]:
-        """
-        Predict probabilities.
-
-        :param X: features used for the predictions
-        :return: probablity predictions
-        """
         return cast(ClassifierDF, self.predictor).predict_proba(self._pre_transform(X))
 
     # noinspection PyPep8Naming
     def predict_log_proba(
         self, X: pd.DataFrame
     ) -> Union[pd.DataFrame, List[pd.DataFrame]]:
-        """
-        Predict log probabilities.
-
-        :param X: features used for the predictions
-        :return: the log probabilities predictions
-        """
         return cast(ClassifierDF, self.predictor).predict_log_proba(
             self._pre_transform(X)
         )
 
     # noinspection PyPep8Naming
     def decision_function(self, X: pd.DataFrame) -> Union[pd.Series, pd.DataFrame]:
-        """
-        Return the decision function.
-
-        :param X: input data
-        :return: the decision function used
-        """
         return cast(ClassifierDF, self.predictor).decision_function(
             self._pre_transform(X)
         )
@@ -312,14 +346,6 @@ class ModelPipelineDF(BaseEstimator, ClassifierDF, RegressorDF, Generic[T_Predic
         y: Optional[pd.Series] = None,
         sample_weight: Optional[Any] = None,
     ) -> float:
-        """
-        Compute the score the model on some data.
-
-        :param X: data used to make the predictions
-        :param y: actual targets
-        :param sample_weight: weights
-        :return: the score
-        """
         if sample_weight is None:
             return self.predictor.score(self._pre_transform(X), y)
         else:
@@ -329,13 +355,17 @@ class ModelPipelineDF(BaseEstimator, ClassifierDF, RegressorDF, Generic[T_Predic
 
     @property
     def classes(self) -> Optional[ListLike[Any]]:
-        """The classes if a classification problem."""
         return cast(ClassifierDF, self.predictor).classes
 
     @property
     def n_outputs(self) -> int:
-        """The number of outputs."""
         return self.predictor.n_outputs
+
+    def _get_columns_in(self) -> pd.Index:
+        if self.preprocessing is not None:
+            return self.preprocessing.columns_in
+        else:
+            return self.predictor.columns_in
 
     # noinspection PyPep8Naming
     def _pre_transform(self, X: pd.DataFrame) -> pd.DataFrame:
