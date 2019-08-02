@@ -407,7 +407,7 @@ class DendrogramReportStyle(DendrogramStyle, TextStyle):
         self._n_labels = n_labels
         label_width = self._weight_column
         for row, label in enumerate(labels[:n_labels]):
-            matrix[row, :label_width] = label
+            matrix[row, :label_width] = label + " "
 
     @property
     def _weight_column(self) -> int:
