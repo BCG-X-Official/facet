@@ -46,10 +46,10 @@ class ChartDrawer(Generic[T_Model, T_Style], ABC):
     :param style: the style of the chart
     """
 
-    def __init__(self, title: str, model: T_Model, style: T_Style) -> None:
-        self._title = title
+    def __init__(self, model: T_Model, style: T_Style, title: str) -> None:
         self._model = model
         self._style = style
+        self._title = title
 
     @property
     def title(self) -> str:
