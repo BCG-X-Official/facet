@@ -194,7 +194,7 @@ class UnivariateSimulator:
         Run a simulation on a feature.
 
         For each combination of split_id and feature value the uplift (in % as a
-        number between 0 and 1) of the target is computed. It is the uplift between
+        number between -1 and 1) of the target is computed. It is the uplift between
         predictions on the sample where the `feature_name` column is set to the
         given value, compared to the predictions on the original sample.
 
