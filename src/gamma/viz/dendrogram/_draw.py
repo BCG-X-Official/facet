@@ -39,8 +39,8 @@ class DendrogramDrawer(ChartDrawer[LinkageTree, DendrogramStyle]):
     :param style: the `DendrogramStyle` used to draw
     """
 
-    def __init__(self, title: str, linkage_tree: LinkageTree, style: DendrogramStyle):
-        super().__init__(title, linkage_tree, style)
+    def __init__(self, linkage_tree: LinkageTree, style: DendrogramStyle, title: str):
+        super().__init__(model=linkage_tree, style=style, title=title)
         self._node_weight = node_weight = np.zeros(len(linkage_tree), float)
 
         def calculate_weights(n: Node) -> (float, int):

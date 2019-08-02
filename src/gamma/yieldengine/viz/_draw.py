@@ -19,7 +19,7 @@ values in the simulation and on the y axis the associated prediction uplift. Bel
 this graph there is a histogram of the feature values.
 """
 
-from typing import NamedTuple
+from typing import *
 
 from gamma import ListLike
 from gamma.viz import ChartDrawer
@@ -49,12 +49,16 @@ class SimulationDrawer(ChartDrawer[UnivariateSimulation, SimulationStyle]):
 
     def __init__(
         self,
-        title: str,
         simulation: UnivariateSimulation,
         style: SimulationStyle,
+        title: Optional[str] = None,
         histogram: bool = True,
     ):
-        super().__init__(title=title, model=simulation, style=style)
+        super().__init__(
+            model=simulation,
+            style=style,
+            title=simulation.feature_name if title is None else title,
+        )
         self._histogram = histogram
 
     def _draw(self) -> None:
