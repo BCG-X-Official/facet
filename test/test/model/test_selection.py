@@ -9,19 +9,19 @@ from sklearn import datasets
 from gamma import Sample
 from gamma.model.selection import (
     ModelEvaluation,
-    ModelGrid,
+    ModelParameterGrid,
     ModelRanker,
     summary_report,
 )
 from gamma.model.validation import CircularCrossValidator
 from gamma.sklearndf.classification import SVCDF
-from gamma.sklearndf.pipeline import ModelPipelineDF
+from gamma.sklearndf.pipeline import ClassificationPipelineDF
 
 log = logging.getLogger(__name__)
 
 
 def test_model_ranker(
-    batch_table: pd.DataFrame, regressor_grids, sample: Sample, available_cpus: int
+    batch_table: pd.DataFrame, regressor_grids, sample: Sample, n_jobs
 ) -> None:
     # define the circular cross validator with just 5 splits (to speed up testing)
     circular_cv = CircularCrossValidator(test_ratio=0.20, num_splits=5)
@@ -32,7 +32,7 @@ def test_model_ranker(
 
     # run the ModelRanker to retrieve a ranking
     model_ranking: Sequence[ModelEvaluation] = model_ranker.run(
-        sample=sample, n_jobs=available_cpus
+        sample=sample, n_jobs=n_jobs
     )
 
     assert len(model_ranking) > 0
@@ -53,7 +53,7 @@ def test_model_ranker(
     log.debug(f"\n{model_ranking}")
 
 
-def test_model_ranker_no_preprocessing(available_cpus: int) -> None:
+def test_model_ranker_no_preprocessing(n_jobs) -> None:
     warnings.filterwarnings("ignore", message="numpy.dtype size changed")
     warnings.filterwarnings("ignore", message="numpy.ufunc size changed")
     warnings.filterwarnings("ignore", message="You are accessing a training score")
@@ -63,11 +63,11 @@ def test_model_ranker_no_preprocessing(available_cpus: int) -> None:
 
     # define parameters and model
     models = [
-        ModelGrid(
-            pipeline=ModelPipelineDF(
-                predictor=SVCDF(gamma="scale"), preprocessing=None
+        ModelParameterGrid(
+            pipeline=ClassificationPipelineDF(
+                classifier=SVCDF(gamma="scale"), preprocessing=None
             ),
-            predictor_parameters={"kernel": ("linear", "rbf"), "C": [1, 10]},
+            estimator_parameters={"kernel": ("linear", "rbf"), "C": [1, 10]},
         )
     ]
 
@@ -82,7 +82,7 @@ def test_model_ranker_no_preprocessing(available_cpus: int) -> None:
     test_sample: Sample = Sample(observations=test_data, target_name="target")
 
     model_ranking: Sequence[ModelEvaluation] = model_ranker.run(
-        test_sample, n_jobs=available_cpus
+        test_sample, n_jobs=n_jobs
     )
 
     log.debug(f"\n{summary_report(model_ranking[:10])}")

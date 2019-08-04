@@ -29,30 +29,31 @@ import numpy as np
 from sklearn.model_selection import BaseCrossValidator, GridSearchCV
 
 from gamma import Sample
-from gamma.sklearndf.pipeline import ModelPipelineDF
+from gamma.sklearndf.pipeline import EstimatorPipelineDF, PredictivePipelineDF
 
 ParameterGrid = Dict[str, Sequence[Any]]
 
 
-class ModelGrid:
+class ModelParameterGrid:
     """
     A grid of hyperparameters for model tuning.
 
-    :param pipeline: the :class:`ModelPipelineDF` to which the hyperparameters will be applied
-    :param predictor_parameters: the hyperparameter grid in which to search for the \
-        optimal parameter values for the model's estimator
-    :param preprocessing_parameters: the hyperparameter grid in which to search for \
+    :param pipeline: the :class:`ModelPipelineDF` to which the hyperparameters will be
+        applied
+    :param estimator_parameters: the hyperparameter grid in which to search for the
+        optimal parameter values for the pipeline's final estimator
+    :param preprocessing_parameters: the hyperparameter grid in which to search for
         the optimal parameter values for the model's preprocessing pipeline (optional)
     """
 
     def __init__(
         self,
-        pipeline: ModelPipelineDF,
-        predictor_parameters: ParameterGrid,
+        pipeline: EstimatorPipelineDF,
+        estimator_parameters: ParameterGrid,
         preprocessing_parameters: Optional[ParameterGrid] = None,
     ) -> None:
         self._pipeline = pipeline
-        self._predictor_parameters = predictor_parameters
+        self._estimator_parameters = estimator_parameters
         self._preprocessing_parameters = preprocessing_parameters
 
         def _prefix_parameter_names(
@@ -63,22 +64,23 @@ class ModelGrid:
             ]
 
         grid_parameters: Iterable[Tuple[str, Any]] = _prefix_parameter_names(
-            parameters=predictor_parameters, prefix="predictor"
+            parameters=estimator_parameters, prefix=pipeline.final_estimator_param_
         )
         if preprocessing_parameters is not None:
             grid_parameters = chain(
                 grid_parameters,
                 _prefix_parameter_names(
-                    parameters=preprocessing_parameters, prefix="preprocessing"
+                    parameters=preprocessing_parameters,
+                    prefix=pipeline.preprocessing_param_,
                 ),
             )
 
         self._grid = dict(grid_parameters)
 
     @property
-    def pipeline(self) -> ModelPipelineDF:
+    def pipeline(self) -> PredictivePipelineDF:
         """
-        The :class:`~yieldengine.model.ModelPipelineDF` for which to optimise the
+        The :class:`~yieldengine.model.PredictivePipelineDF` for which to optimise the
         parameters.
         """
         return self._pipeline
@@ -86,7 +88,7 @@ class ModelGrid:
     @property
     def predictor_parameters(self) -> ParameterGrid:
         """The parameter grid for the estimator."""
-        return self._predictor_parameters
+        return self._estimator_parameters
 
     @property
     def preprocessing_parameters(self) -> Optional[ParameterGrid]:
@@ -124,7 +126,7 @@ class ModelEvaluation(NamedTuple):
 
     Has attributes:
 
-    - model: the evaluated  :class:`~yieldengine.model.ModelPipelineDF`
+    - model: the fitted  :class:`~yieldengine.model.PredictivePipelineDF`
     - parameters: the hyperparameters selected for the model during grid
         search, as a mapping of parameter names to parameter values
     - scoring: scorings for the model based on the provided scorers;
@@ -134,7 +136,7 @@ class ModelEvaluation(NamedTuple):
         scorer and ranking metric
     """
 
-    model: ModelPipelineDF
+    model: PredictivePipelineDF
     parameters: Mapping[str, Any]
     scoring: Mapping[str, ModelScoring]
     ranking_score: float
@@ -160,7 +162,7 @@ class ModelRanker:
 
     def __init__(
         self,
-        grids: Iterable[ModelGrid],
+        grids: Iterable[ModelParameterGrid],
         cv: Optional[BaseCrossValidator] = None,
         scoring: Union[
             str,
@@ -213,7 +215,7 @@ class ModelRanker:
         """
 
         # construct searchers
-        searchers: List[Tuple[GridSearchCV, ModelGrid]] = [
+        searchers: List[Tuple[GridSearchCV, ModelParameterGrid]] = [
             (
                 GridSearchCV(
                     estimator=grid.pipeline,
@@ -351,7 +353,7 @@ def summary_report(ranking: Sequence[ModelEvaluation]) -> str:
     """
 
     def _model_name(evaluation: ModelEvaluation) -> str:
-        return evaluation.model.predictor.__class__.__name__
+        return evaluation.model.final_estimator_.__class__.__name__
 
     def _parameters(params: Mapping[str, Iterable[Any]]) -> str:
         return ",".join(

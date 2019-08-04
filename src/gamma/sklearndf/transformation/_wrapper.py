@@ -17,15 +17,27 @@ Specialised transformer wrappers.
 
 import logging
 from abc import ABC, abstractmethod
-from typing import Generic, Optional
+from typing import *
 
 import numpy as np
 import pandas as pd
+from sklearn.base import TransformerMixin
 
-from gamma.sklearndf import T_Transformer
 from gamma.sklearndf._wrapper import TransformerWrapperDF
 
 log = logging.getLogger(__name__)
+
+
+#
+# type variables
+#
+
+T_Transformer = TypeVar("T_Transformer", bound=TransformerMixin)
+
+
+#
+# wrapper classes for transformers
+#
 
 
 class NDArrayTransformerWrapperDF(

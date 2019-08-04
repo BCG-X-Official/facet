@@ -2,7 +2,6 @@ import logging
 import warnings
 from typing import *
 
-import joblib
 import numpy as np
 import pandas as pd
 import pytest
@@ -10,9 +9,9 @@ from sklearn import datasets
 from sklearn.utils import Bunch
 
 from gamma import Sample
-from gamma.model.selection import ModelGrid
+from gamma.model.selection import ModelParameterGrid
 from gamma.sklearndf import TransformerDF
-from gamma.sklearndf.pipeline import ModelPipelineDF
+from gamma.sklearndf.pipeline import RegressionPipelineDF
 from gamma.sklearndf.regression import (
     AdaBoostRegressorDF,
     DecisionTreeRegressorDF,
@@ -48,9 +47,8 @@ def iris_target() -> str:
 
 
 @pytest.fixture
-def available_cpus() -> int:
-    cpu_count = joblib.cpu_count()
-    return max(1, cpu_count - 2, cpu_count * 3 // 4)
+def n_jobs() -> int:
+    return -3
 
 
 @pytest.fixture
@@ -67,59 +65,59 @@ def batch_table() -> pd.DataFrame:
 
 
 @pytest.fixture
-def regressor_grids(simple_preprocessor) -> List[ModelGrid]:
+def regressor_grids(simple_preprocessor) -> List[ModelParameterGrid]:
     RANDOM_STATE = {f"random_state": [42]}
     return [
-        ModelGrid(
-            pipeline=ModelPipelineDF(
-                preprocessing=simple_preprocessor, predictor=LGBMRegressorDF()
+        ModelParameterGrid(
+            pipeline=RegressionPipelineDF(
+                preprocessing=simple_preprocessor, regressor=LGBMRegressorDF()
             ),
-            predictor_parameters={
+            estimator_parameters={
                 "max_depth": [5, 10],
                 "min_split_gain": [0.1, 0.2],
                 "num_leaves": [50, 100, 200],
                 **RANDOM_STATE,
             },
         ),
-        ModelGrid(
-            pipeline=ModelPipelineDF(
-                preprocessing=simple_preprocessor, predictor=AdaBoostRegressorDF()
+        ModelParameterGrid(
+            pipeline=RegressionPipelineDF(
+                preprocessing=simple_preprocessor, regressor=AdaBoostRegressorDF()
             ),
-            predictor_parameters={"n_estimators": [50, 80], **RANDOM_STATE},
+            estimator_parameters={"n_estimators": [50, 80], **RANDOM_STATE},
         ),
-        ModelGrid(
-            pipeline=ModelPipelineDF(
-                preprocessing=simple_preprocessor, predictor=RandomForestRegressorDF()
+        ModelParameterGrid(
+            pipeline=RegressionPipelineDF(
+                preprocessing=simple_preprocessor, regressor=RandomForestRegressorDF()
             ),
-            predictor_parameters={"n_estimators": [50, 80], **RANDOM_STATE},
+            estimator_parameters={"n_estimators": [50, 80], **RANDOM_STATE},
         ),
-        ModelGrid(
-            pipeline=ModelPipelineDF(
-                preprocessing=simple_preprocessor, predictor=DecisionTreeRegressorDF()
+        ModelParameterGrid(
+            pipeline=RegressionPipelineDF(
+                preprocessing=simple_preprocessor, regressor=DecisionTreeRegressorDF()
             ),
-            predictor_parameters={
+            estimator_parameters={
                 "max_depth": [0.5, 1.0],
                 "max_features": [0.5, 1.0],
                 **RANDOM_STATE,
             },
         ),
-        ModelGrid(
-            pipeline=ModelPipelineDF(
-                preprocessing=simple_preprocessor, predictor=ExtraTreeRegressorDF()
+        ModelParameterGrid(
+            pipeline=RegressionPipelineDF(
+                preprocessing=simple_preprocessor, regressor=ExtraTreeRegressorDF()
             ),
-            predictor_parameters={"max_depth": [5, 10, 12], **RANDOM_STATE},
+            estimator_parameters={"max_depth": [5, 10, 12], **RANDOM_STATE},
         ),
-        ModelGrid(
-            pipeline=ModelPipelineDF(
-                preprocessing=simple_preprocessor, predictor=SVRDF()
+        ModelParameterGrid(
+            pipeline=RegressionPipelineDF(
+                preprocessing=simple_preprocessor, regressor=SVRDF()
             ),
-            predictor_parameters={"gamma": [0.5, 1], "C": [50, 100]},
+            estimator_parameters={"gamma": [0.5, 1], "C": [50, 100]},
         ),
-        ModelGrid(
-            pipeline=ModelPipelineDF(
-                preprocessing=simple_preprocessor, predictor=LinearRegressionDF()
+        ModelParameterGrid(
+            pipeline=RegressionPipelineDF(
+                preprocessing=simple_preprocessor, regressor=LinearRegressionDF()
             ),
-            predictor_parameters={"normalize": [False, True]},
+            estimator_parameters={"normalize": [False, True]},
         ),
     ]
 

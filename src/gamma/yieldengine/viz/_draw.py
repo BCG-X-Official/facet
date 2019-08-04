@@ -108,9 +108,9 @@ class SimulationDrawer(ChartDrawer[UnivariateSimulation, SimulationStyle]):
         simulation: UnivariateSimulation = self.model
 
         simulation_series = self._SimulationSeries(
-            simulation.median_uplift,
-            simulation.min_uplift,
-            simulation.max_uplift,
+            simulation.median_change,
+            simulation.min_change,
+            simulation.max_change,
             simulation.partitioning.partitions(),
             simulation.partitioning.frequencies(),
         )

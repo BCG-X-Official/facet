@@ -9,7 +9,7 @@ from sklearn.base import BaseEstimator
 from sklearn.model_selection import BaseCrossValidator, RepeatedKFold
 
 from gamma import Sample
-from gamma.model.inspection import ModelInspector
+from gamma.model.inspection import PredictiveModelInspector
 from gamma.model.prediction import (
     ClassifierFitCV,
     ProbabilityCalibrationMethod,
@@ -17,14 +17,14 @@ from gamma.model.prediction import (
 )
 from gamma.model.selection import (
     ModelEvaluation,
-    ModelGrid,
+    ModelParameterGrid,
     ModelRanker,
     summary_report,
 )
 from gamma.model.validation import CircularCrossValidator
 from gamma.sklearndf import TransformerDF
 from gamma.sklearndf.classification import RandomForestClassifierDF
-from gamma.sklearndf.pipeline import ModelPipelineDF
+from gamma.sklearndf.pipeline import ClassificationPipelineDF, RegressionPipelineDF
 from gamma.sklearndf.regression import LGBMRegressorDF, SVRDF
 from gamma.viz.dendrogram import DendrogramDrawer, DendrogramReportStyle
 
@@ -35,7 +35,7 @@ TEST_RATIO = 1 / K_FOLDS
 N_SPLITS = K_FOLDS * 2
 
 
-def test_model_inspection(available_cpus: int, boston_sample: Sample) -> None:
+def test_model_inspection(n_jobs, boston_sample: Sample) -> None:
     warnings.filterwarnings("ignore", message="numpy.dtype size changed")
     warnings.filterwarnings("ignore", message="numpy.ufunc size changed")
     warnings.filterwarnings("ignore", message="You are accessing a training score")
@@ -48,15 +48,17 @@ def test_model_inspection(available_cpus: int, boston_sample: Sample) -> None:
 
     # define parameters and models
     models = [
-        ModelGrid(
-            pipeline=ModelPipelineDF(
-                predictor=SVRDF(gamma="scale"), preprocessing=None
+        ModelParameterGrid(
+            pipeline=(
+                RegressionPipelineDF(regressor=SVRDF(gamma="scale"), preprocessing=None)
             ),
-            predictor_parameters={"kernel": ("linear", "rbf"), "C": [1, 10]},
+            estimator_parameters={"kernel": ("linear", "rbf"), "C": [1, 10]},
         ),
-        ModelGrid(
-            pipeline=ModelPipelineDF(predictor=LGBMRegressorDF(), preprocessing=None),
-            predictor_parameters={
+        ModelParameterGrid(
+            pipeline=RegressionPipelineDF(
+                regressor=LGBMRegressorDF(), preprocessing=None
+            ),
+            estimator_parameters={
                 "max_depth": (1, 2, 5),
                 "min_split_gain": (0.1, 0.2, 0.5),
                 "num_leaves": (2, 3),
@@ -75,22 +77,22 @@ def test_model_inspection(available_cpus: int, boston_sample: Sample) -> None:
     )
 
     model_ranking: Sequence[ModelEvaluation] = model_ranker.run(
-        test_sample, n_jobs=available_cpus
+        test_sample, n_jobs=n_jobs
     )
 
     log.debug(f"\n{summary_report(model_ranking[:10])}")
 
     # consider: model_with_type(...) function for ModelRanking
-    best_svr = [m for m in model_ranking if isinstance(m.model.predictor, SVRDF)][0]
+    best_svr = [m for m in model_ranking if isinstance(m.model.regressor, SVRDF)][0]
     best_lgbm = [
         model_evaluation
         for model_evaluation in model_ranking
-        if isinstance(model_evaluation.model.predictor, LGBMRegressorDF)
+        if isinstance(model_evaluation.model.regressor, LGBMRegressorDF)
     ][0]
 
     for model_evaluation in best_svr, best_lgbm:
         model_fit = RegressorFitCV(
-            model=model_evaluation.model, cv=test_cv, sample=test_sample
+            pipeline=model_evaluation.model, cv=test_cv, sample=test_sample
         )
 
         # test predictions_for_all_samples
@@ -114,7 +116,7 @@ def test_model_inspection(available_cpus: int, boston_sample: Sample) -> None:
             <= (len(test_sample) * (TEST_RATIO + allowed_variance) * N_SPLITS)
         )
 
-        model_inspector = ModelInspector(predictor_fit=model_fit)
+        model_inspector = PredictiveModelInspector(models=model_fit)
         # make and check shap value matrix
         shap_matrix = model_inspector.shap_matrix()
 
@@ -146,10 +148,10 @@ def test_model_inspection(available_cpus: int, boston_sample: Sample) -> None:
 
 def test_model_inspection_with_encoding(
     batch_table: pd.DataFrame,
-    regressor_grids: List[ModelGrid],
+    regressor_grids: Sequence[ModelParameterGrid],
     sample: Sample,
     simple_preprocessor: TransformerDF,
-    available_cpus: int,
+    n_jobs,
 ) -> None:
 
     # define the circular cross validator with just 5 splits (to speed up testing)
@@ -163,7 +165,7 @@ def test_model_inspection_with_encoding(
 
     # run the ModelRanker to retrieve a ranking
     model_ranking: Sequence[ModelEvaluation] = model_ranker.run(
-        sample=sample, n_jobs=available_cpus
+        sample=sample, n_jobs=n_jobs
     )
 
     log.debug(f"\n{summary_report(model_ranking[:10])}")
@@ -173,13 +175,13 @@ def test_model_inspection_with_encoding(
     best_lgbm = [
         model_evaluation
         for model_evaluation in model_ranking
-        if isinstance(model_evaluation.model.predictor, LGBMRegressorDF)
+        if isinstance(model_evaluation.model.regressor, LGBMRegressorDF)
     ][0]
     for model_evaluation in [best_lgbm]:
         model_fit = RegressorFitCV(
-            model=model_evaluation.model, cv=circular_cv, sample=sample
+            pipeline=model_evaluation.model, cv=circular_cv, sample=sample
         )
-        mi = ModelInspector(predictor_fit=model_fit)
+        mi = PredictiveModelInspector(models=model_fit)
 
         shap_matrix = mi.shap_matrix()
 
@@ -204,7 +206,8 @@ def test_model_inspection_with_encoding(
                 # noinspection PyUnresolvedReferences
                 return KernelExplainer(model=estimator.predict, data=data)
 
-        mi2 = ModelInspector(predictor_fit=model_fit, explainer_factory=ef)
+        mi2 = PredictiveModelInspector(
+            models=model_fit, explainer_factory=ef)
         mi2.shap_matrix()
 
         linkage_tree = mi2.cluster_dependent_features()
@@ -214,7 +217,7 @@ def test_model_inspection_with_encoding(
         ).draw()
 
 
-def test_model_inspection_classifier(available_cpus: int, iris_sample: Sample) -> None:
+def test_model_inspection_classifier(n_jobs, iris_sample: Sample) -> None:
     warnings.filterwarnings("ignore", message="numpy.dtype size changed")
     warnings.filterwarnings("ignore", message="numpy.ufunc size changed")
     warnings.filterwarnings("ignore", message="You are accessing a training score")
@@ -227,11 +230,11 @@ def test_model_inspection_classifier(available_cpus: int, iris_sample: Sample) -
 
     # define parameters and models
     models = [
-        ModelGrid(
-            pipeline=ModelPipelineDF(
-                predictor=RandomForestClassifierDF(), preprocessing=None
+        ModelParameterGrid(
+            pipeline=ClassificationPipelineDF(
+                classifier=RandomForestClassifierDF(), preprocessing=None
             ),
-            predictor_parameters={"n_estimators": [50, 80], "random_state": [42]},
+            estimator_parameters={"n_estimators": [50, 80], "random_state": [42]},
         )
     ]
 
@@ -246,7 +249,7 @@ def test_model_inspection_classifier(available_cpus: int, iris_sample: Sample) -
     )
 
     model_ranking: Sequence[ModelEvaluation] = model_ranker.run(
-        test_sample, n_jobs=available_cpus
+        test_sample, n_jobs=n_jobs
     )
 
     log.debug(f"\n{summary_report(model_ranking[:10])}")
@@ -255,14 +258,14 @@ def test_model_inspection_classifier(available_cpus: int, iris_sample: Sample) -
     model_evaluation = model_ranking[0]
 
     model_fit = ClassifierFitCV(
-        model=model_evaluation.model,
+        pipeline=model_evaluation.model,
         cv=test_cv,
         sample=test_sample,
         calibration=ProbabilityCalibrationMethod.SIGMOID,
-        n_jobs=available_cpus,
+        n_jobs=n_jobs,
     )
 
-    model_inspector = ModelInspector(predictor_fit=model_fit)
+    model_inspector = PredictiveModelInspector(models=model_fit)
     # make and check shap value matrix
     shap_matrix = model_inspector.shap_matrix()
 
