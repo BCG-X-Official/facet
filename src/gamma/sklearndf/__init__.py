@@ -43,14 +43,6 @@ __all__ = [
     "BasePredictorDF",
     "ClassifierDF",
     "RegressorDF",
-    "T_Classifier",
-    "T_ClassifierDF",
-    "T_Estimator",
-    "T_Predictor",
-    "T_PredictorDF",
-    "T_Regressor",
-    "T_RegressorDF",
-    "T_Transformer",
     "TransformerDF",
 ]
 
@@ -98,7 +90,7 @@ class BaseEstimatorDF(ABC, Generic[T_Estimator]):
 
         :return: the original estimator that this estimator delegates to
         """
-        return cast(BaseEstimator, self)
+        return cast(T_Estimator, self)
 
     # noinspection PyPep8Naming
     @abstractmethod
@@ -275,12 +267,3 @@ class ClassifierDF(
     @abstractmethod
     def decision_function(self, X: pd.DataFrame) -> Union[pd.Series, pd.DataFrame]:
         pass
-
-
-#
-# type variables for df predictors
-#
-
-T_PredictorDF = TypeVar("T_PredictorDF", bound=BasePredictorDF)
-T_RegressorDF = TypeVar("T_RegressorDF", bound=RegressorDF)
-T_ClassifierDF = TypeVar("T_ClassifierDF", bound=ClassifierDF)
