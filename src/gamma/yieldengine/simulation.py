@@ -14,16 +14,18 @@
 """
 Univariate simulation of target uplift.
 """
-
+from abc import ABC, abstractmethod
 from typing import *
 
 import numpy as np
 import pandas as pd
 
 from gamma import ListLike
-from gamma.model.prediction import PredictorFitCV
+from gamma.model.prediction import ClassifierFitCV, PredictorFitCV, RegressorFitCV
 from gamma.sklearndf.transformation import FunctionTransformerDF
 from gamma.yieldengine.partition import Partitioning, T_Number
+
+T_PredictiveFitCV = TypeVar("T_PredictiveFitCV", bound=PredictorFitCV)
 
 
 class UnivariateSimulation:
@@ -36,18 +38,18 @@ class UnivariateSimulation:
         feature_name: str,
         target_name: str,
         partitioning: Partitioning,
-        median_uplift: ListLike[T_Number],
-        min_uplift: ListLike[T_Number],
-        max_uplift: ListLike[T_Number],
+        median_change: ListLike[T_Number],
+        min_change: ListLike[T_Number],
+        max_change: ListLike[T_Number],
         min_percentile: float,
         max_percentile: float,
     ):
         self._feature_name = feature_name
         self._target_name = target_name
         self._partitioning = partitioning
-        self._median_uplift = median_uplift
-        self._min_uplift = min_uplift
-        self._max_uplift = max_uplift
+        self._median_change = median_change
+        self._min_change = min_change
+        self._max_change = max_change
         self._min_percentile = min_percentile
         self._max_percentile = max_percentile
 
@@ -64,53 +66,64 @@ class UnivariateSimulation:
         return self._partitioning
 
     @property
-    def median_uplift(self) -> ListLike[T_Number]:
-        return self._median_uplift
+    def median_change(self) -> ListLike[T_Number]:
+        """Median average change determined by a simulation."""
+        return self._median_change
 
     @property
-    def min_uplift(self) -> ListLike[T_Number]:
-        return self._min_uplift
+    def min_change(self) -> ListLike[T_Number]:
+        """
+        Minimum average change, at the lower end of the confidence interval,
+        determined by a simulation.
+        """
+        return self._min_change
 
     @property
-    def max_uplift(self) -> ListLike[T_Number]:
-        return self._max_uplift
+    def max_change(self) -> ListLike[T_Number]:
+        """
+        Minimum average change, at the lower end of the confidence interval,
+        determined by a simulation.
+        """
+        return self._max_change
 
     @property
     def min_percentile(self) -> float:
+        """
+        Percentile of the lower end of thw confidence interval.
+        """
         return self._min_percentile
 
     @property
     def max_percentile(self) -> float:
+        """
+        Percentile of the upper end of thw confidence interval.
+        """
         return self._max_percentile
 
 
-class UnivariateSimulator:
+class UnivariateSimulator(Generic[T_PredictiveFitCV], ABC):
     """
-    Simulate target uplift of one feature change.
+    Predicts a change in outcome for a range of values for a given feature,
+    using predictions of a fitted model. Works with collections of models fitted to
+    different data splits, therefore can determine confidence intervals for the
+    predicted values.
 
-    Given a fitted model and a feature of the model,
-    :meth:`UnivariateSimulator.simulate_feature` computes the prediction uplift
-    if one would set the feature to a constant value for each sample in each test split.
+    Typical simulated outcomes are target variables of regressions, or probabilities
+    of classifications.
 
-    Aggregated percentiles uplift are then computed by
-    :meth:`UnivariateSimulator.aggregate_simulation_results`.
-
-    :param model_fit: fitted model used for the simulation
+    :param models: fitted models (based on a cross-validation strategy) used to
+        predict changes in outcome during the simulation
     :param min_percentile: lower bound of the confidence interval (default: 2.5)
     :param max_percentile: upper bound of the confidence interval (default: 97.5)
-"""
-
-    F_SPLIT_ID = "split_id"
-    F_PARAMETER_VALUE = "parameter_value"
-    F_RELATIVE_TARGET_CHANGE = "relative_target_change"
+    """
 
     def __init__(
         self,
-        model_fit: PredictorFitCV,
+        models: T_PredictiveFitCV,
         min_percentile: float = 2.5,
         max_percentile: float = 97.5,
     ):
-        self._model_fit = model_fit
+
         if not 0 <= min_percentile <= 100:
             raise ValueError(
                 f"arg min_percentile={min_percentile} must be in the range"
@@ -121,34 +134,67 @@ class UnivariateSimulator:
                 f"arg max_percentile={max_percentile} must be in the range"
                 "from 0 to 1"
             )
-        self._min_percentile = min_percentile
+
         self._max_percentile = max_percentile
+        self._min_percentile = min_percentile
+        self._models = models
 
     @property
-    def model_fit(self) -> PredictorFitCV:
-        """The fitted model used for the simulation."""
-        return self._model_fit
+    def models(self) -> T_PredictiveFitCV:
+        """The fitted models used for the simulation."""
+        return self._models
 
     @property
     def min_percentile(self) -> float:
+        """
+        Percentile of the lower end of the confidence interval.
+        """
         return self._min_percentile
 
     @property
     def max_percentile(self) -> float:
+        """
+        Percentile of the upper end of the confidence interval.
+        """
         return self._max_percentile
+
+    @abstractmethod
+    def simulate_feature(self, feature_name: str, partitioning: Partitioning):
+        """
+        Simulate average target uplift for the given feature and for each partition in
+        the given partitioning.
+
+        :param feature_name: the feature of the simulation
+        :param partitioning: the partitioning used for the simulation
+        """
+        pass
+
+
+class UnivariateProbabilitySimulator(UnivariateSimulator[ClassifierFitCV]):
+    def simulate_feature(self, feature_name: str, partitioning: Partitioning):
+        raise NotImplementedError(
+            "simulation of average change in probability will be included in a future "
+            "release"
+        )
+
+
+class UnivariateUpliftSimulator(UnivariateSimulator[RegressorFitCV]):
+    F_SPLIT_ID = "split_id"
+    F_PARAMETER_VALUE = "parameter_value"
+    F_RELATIVE_TARGET_CHANGE = "relative_target_change"
 
     def simulate_feature(
         self, feature_name: str, partitioning: Partitioning
     ) -> UnivariateSimulation:
         """
-        Simulate average yield uplift for the given feature and for each partition in
+        Simulate average target uplift for the given feature and for each partition in
         the given partitioning.
 
         :param feature_name: the feature of the simulation
         :param partitioning: the partitioning used for the simulation
         """
         simulated_values = partitioning.partitions()
-        prediction_uplift = self._aggregate_simulation_results(
+        predicted_change = self._aggregate_simulation_results(
             results_per_split=(
                 self._simulate_feature_with_values(
                     feature_name=feature_name, simulated_values=simulated_values
@@ -157,11 +203,11 @@ class UnivariateSimulator:
         )
         return UnivariateSimulation(
             feature_name=feature_name,
-            target_name=self._model_fit.sample.target_name,
+            target_name=self.models.sample.target_name,
             partitioning=partitioning,
-            median_uplift=prediction_uplift.iloc[:, 1].values,
-            min_uplift=prediction_uplift.iloc[:, 0].values,
-            max_uplift=prediction_uplift.iloc[:, 2].values,
+            median_change=predicted_change.iloc[:, 1].values,
+            min_change=predicted_change.iloc[:, 0].values,
+            max_change=predicted_change.iloc[:, 2].values,
             min_percentile=self._min_percentile,
             max_percentile=self._max_percentile,
         )
@@ -182,11 +228,11 @@ class UnivariateSimulator:
         :return: dataframe with three columns: `split_id`, `parameter_value` and
           `relative_target_change`.
         """
-        if feature_name not in self.model_fit.sample.feature_names:
+        if feature_name not in self.models.sample.feature_names:
             raise ValueError(f"Feature '{feature_name}' not in sample")
 
         def _simulate_values() -> Generator[Tuple[int, Any, float], None, None]:
-            feature_dtype = self.model_fit.sample.features.loc[:, feature_name].dtype
+            feature_dtype = self.models.sample.features.loc[:, feature_name].dtype
             for value in simulated_values:
                 # replace the simulated column with a constant value
                 synthetic_sample = FunctionTransformerDF(
@@ -196,15 +242,15 @@ class UnivariateSimulator:
                         )
                     ),
                     validate=False,
-                ).fit_transform_sample(self.model_fit.sample)
+                ).fit_transform_sample(self.models.sample)
 
-                fit_for_syn_sample = self.model_fit.copy_with_sample(
+                fit_for_syn_sample = self.models.copy_with_sample(
                     sample=synthetic_sample
                 )
 
-                for split_id in range(self.model_fit.n_splits):
+                for split_id in range(self.models.n_splits):
                     predictions_for_split_hist: pd.Series = (
-                        self.model_fit.predictions_for_split(split_id=split_id)
+                        self.models.predictions_for_split(split_id=split_id)
                     )
 
                     predictions_for_split_syn: pd.Series = (
@@ -221,9 +267,9 @@ class UnivariateSimulator:
         return pd.DataFrame(
             data=_simulate_values(),
             columns=[
-                UnivariateSimulator.F_SPLIT_ID,
-                UnivariateSimulator.F_PARAMETER_VALUE,
-                UnivariateSimulator.F_RELATIVE_TARGET_CHANGE,
+                UnivariateUpliftSimulator.F_SPLIT_ID,
+                UnivariateUpliftSimulator.F_PARAMETER_VALUE,
+                UnivariateUpliftSimulator.F_RELATIVE_TARGET_CHANGE,
             ],
         )
 
@@ -258,9 +304,9 @@ class UnivariateSimulator:
             return percentile_
 
         return (
-            results_per_split.drop(columns=UnivariateSimulator.F_SPLIT_ID)
-            .groupby(by=UnivariateSimulator.F_PARAMETER_VALUE)[
-                UnivariateSimulator.F_RELATIVE_TARGET_CHANGE
+            results_per_split.drop(columns=UnivariateUpliftSimulator.F_SPLIT_ID)
+            .groupby(by=UnivariateUpliftSimulator.F_PARAMETER_VALUE)[
+                UnivariateUpliftSimulator.F_RELATIVE_TARGET_CHANGE
             ]
             .agg(
                 [

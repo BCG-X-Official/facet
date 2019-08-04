@@ -18,6 +18,7 @@ import logging
 from typing import *
 
 from lightgbm.sklearn import LGBMRegressor
+from sklearn.base import RegressorMixin
 from sklearn.compose import TransformedTargetRegressor
 from sklearn.cross_decomposition import CCA, PLSCanonical, PLSRegression
 from sklearn.dummy import DummyRegressor
@@ -65,7 +66,7 @@ from sklearn.neural_network import MLPRegressor
 from sklearn.svm import LinearSVR, NuSVR, SVR
 from sklearn.tree import DecisionTreeRegressor, ExtraTreeRegressor
 
-from gamma.sklearndf import RegressorDF, T_Regressor, TransformerDF
+from gamma.sklearndf import RegressorDF, TransformerDF
 from gamma.sklearndf._wrapper import df_estimator, RegressorWrapperDF
 
 # noinspection PyProtectedMember
@@ -77,7 +78,14 @@ __all__ = [sym for sym in dir() if sym.endswith("DF")]
 
 
 #
-# decorator for wrapping the sklearn regressor classes
+# type variables
+#
+
+T_Regressor = TypeVar("T_Regressor", bound=RegressorMixin)
+
+
+#
+# wrapper for hybrid regressor/transformer classes
 #
 
 

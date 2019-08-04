@@ -7,11 +7,11 @@ from pytest import approx
 
 from gamma import Sample
 from gamma.model.prediction import RegressorFitCV
-from gamma.model.selection import ModelEvaluation, ModelGrid, ModelRanker
+from gamma.model.selection import ModelEvaluation, ModelParameterGrid, ModelRanker
 from gamma.model.validation import CircularCrossValidator
 from gamma.sklearndf import TransformerDF
 from gamma.yieldengine.partition import ContinuousRangePartitioning
-from gamma.yieldengine.simulation import UnivariateSimulator
+from gamma.yieldengine.simulation import UnivariateUpliftSimulator
 
 log = logging.getLogger(__name__)
 
@@ -21,10 +21,10 @@ TEST_RATIO = 0.2
 
 def test_univariate_simulation(
     batch_table: pd.DataFrame,
-    regressor_grids: Iterable[ModelGrid],
+    regressor_grids: Iterable[ModelParameterGrid],
     sample: Sample,
     simple_preprocessor: TransformerDF,
-    available_cpus: int,
+    n_jobs,
 ) -> None:
 
     # define the circular cross validator with just 5 splits (to speed up testing)
@@ -36,17 +36,15 @@ def test_univariate_simulation(
 
     # run the ModelRanker to retrieve a ranking
     model_ranking: Sequence[ModelEvaluation] = model_ranker.run(
-        sample=sample, n_jobs=available_cpus
+        sample=sample, n_jobs=n_jobs
     )
 
-    model_fit = RegressorFitCV(
-        model=model_ranking[0].model,
-        cv=circular_cv,
-        sample=sample,
-        n_jobs=available_cpus,
+    models = RegressorFitCV(
+        pipeline=model_ranking[0].model, cv=circular_cv, sample=sample, n_jobs=n_jobs
     )
 
-    sim = UnivariateSimulator(model_fit=model_fit, min_percentile=10, max_percentile=90)
+    sim = UnivariateUpliftSimulator(
+        models=models, min_percentile=10, max_percentile=90)
 
     parameterized_feature = "Step4-6 RawMat Vendor Compound08 Purity (#)"
 
@@ -93,7 +91,7 @@ def test_univariate_simulation(
         },
     }
     index = pd.Index(
-        data=[24.0, 24.5, 25.0, 25.5, 26.0], name=UnivariateSimulator.F_PARAMETER_VALUE
+        data=[24.0, 24.5, 25.0, 25.5, 26.0], name=UnivariateUpliftSimulator.F_PARAMETER_VALUE
     )
     df_test = pd.DataFrame(data=dict_data, index=index)
     assert_frame_equal(aggregated_results.head(), df_test)
