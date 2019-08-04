@@ -28,52 +28,62 @@ from shap import KernelExplainer, TreeExplainer
 from shap.explainers.explainer import Explainer
 from sklearn.base import BaseEstimator
 
-from gamma.model.prediction import PredictorFitCV
-from gamma.sklearndf.pipeline import ModelPipelineDF
+from gamma import Sample
+from gamma.model.prediction import EstimatorFitCV, PredictorFitCV
+from gamma.sklearndf.pipeline import PredictivePipelineDF
 from gamma.viz.dendrogram import LinkageTree
 
 log = logging.getLogger(__name__)
 
+__all__ = ["ModelInspector", "PredictiveModelInspector"]
 
-class ModelInspector:
+
+T_EstimatorFitCV = TypeVar("T_EstimatorFitCV", bound=EstimatorFitCV)
+
+
+class ModelInspector(Generic[T_EstimatorFitCV]):
+
+    __slots__ = ["_models"]
+
+    def __init__(self, models: T_EstimatorFitCV) -> None:
+
+        self._models = models
+
+    @property
+    def models(self) -> T_EstimatorFitCV:
+        """collection of CV-fitted models handled by this model inspector."""
+        return self._models
+
+
+class PredictiveModelInspector(ModelInspector[PredictorFitCV]):
     """
-    Inspect a model through its shap values.
+    Inspect a model through its SHAP values.
 
-    :param predictor_fit: predictor containing the information about the
+    :param models: predictor containing the information about the
       model, the data (a Sample object), the cross-validation and predictions.
     :param explainer_factory: method that returns a shap Explainer
     """
 
-    __slots__ = [
-        "_shap_matrix",
-        "_feature_dependency_matrix",
-        "_predictor_fit",
-        "_explainer_factory",
-    ]
+    __slots__ = ["_shap_matrix", "_feature_dependency_matrix", "_explainer_factory"]
 
     F_FEATURE = "feature"
 
     def __init__(
         self,
-        predictor_fit: PredictorFitCV,
+        models: PredictorFitCV,
         explainer_factory: Optional[
             Callable[[BaseEstimator, pd.DataFrame], Explainer]
         ] = None,
     ) -> None:
 
+        super().__init__(models)
         self._shap_matrix: Optional[pd.DataFrame] = None
         self._feature_dependency_matrix: Optional[pd.DataFrame] = None
-        self._predictor_fit = predictor_fit
         self._explainer_factory = (
             explainer_factory
             if explainer_factory is not None
             else tree_explainer_factory
         )
-
-    @property
-    def model_fit(self) -> PredictorFitCV:
-        """:class:`PredictorFitCV` used for inspection."""
-        return self._predictor_fit
 
     def shap_matrix(self) -> pd.DataFrame:
         """
@@ -87,14 +97,15 @@ class ModelInspector:
         if self._shap_matrix is not None:
             return self._shap_matrix
 
-        sample = self.model_fit.sample
+        regression_models: PredictorFitCV = self.models
+        sample: Sample = regression_models.sample
 
         predictions_by_observation_and_split = (
-            self.model_fit.predictions_for_all_splits()
+            regression_models.predictions_for_all_splits()
         )
 
         def _shap_matrix_for_split(
-            split_id: int, split_model: ModelPipelineDF
+            split_id: int, split_model: PredictivePipelineDF
         ) -> pd.DataFrame:
 
             observation_indices_in_split = predictions_by_observation_and_split.xs(
@@ -105,7 +116,7 @@ class ModelInspector:
                 ids=observation_indices_in_split
             ).features
 
-            estimator = split_model.predictor
+            estimator = split_model.final_estimator_
 
             if split_model.preprocessing is not None:
                 data_transformed = split_model.preprocessing.transform(split_x)
@@ -157,7 +168,7 @@ class ModelInspector:
         shap_values_df = pd.concat(
             objs=[
                 _shap_matrix_for_split(split_id, model)
-                for split_id, model in enumerate(self.model_fit.fitted_models())
+                for split_id, model in enumerate(regression_models)
             ],
             sort=True,
         ).fillna(0.0)

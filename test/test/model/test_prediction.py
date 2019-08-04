@@ -11,12 +11,12 @@ from gamma import Sample
 from gamma.model.prediction import ClassifierFitCV, ProbabilityCalibrationMethod
 from gamma.model.selection import (
     ModelEvaluation,
-    ModelGrid,
+    ModelParameterGrid,
     ModelRanker,
     summary_report,
 )
 from gamma.sklearndf.classification import RandomForestClassifierDF
-from gamma.sklearndf.pipeline import ModelPipelineDF
+from gamma.sklearndf.pipeline import ClassificationPipelineDF
 
 log = logging.getLogger(__name__)
 
@@ -26,7 +26,7 @@ N_SPLITS = K_FOLDS * 2
 CALIBRATION_DIFF_THRESHOLD = 0.3
 
 
-def test_prediction_classifier(available_cpus: int, iris_sample: Sample) -> None:
+def test_prediction_classifier(n_jobs, iris_sample: Sample) -> None:
     warnings.filterwarnings("ignore", message="numpy.dtype size changed")
     warnings.filterwarnings("ignore", message="numpy.ufunc size changed")
     warnings.filterwarnings("ignore", message="You are accessing a training score")
@@ -39,11 +39,11 @@ def test_prediction_classifier(available_cpus: int, iris_sample: Sample) -> None
 
     # define parameters and models
     models = [
-        ModelGrid(
-            pipeline=ModelPipelineDF(
-                predictor=RandomForestClassifierDF(), preprocessing=None
+        ModelParameterGrid(
+            pipeline=ClassificationPipelineDF(
+                classifier=RandomForestClassifierDF(), preprocessing=None
             ),
-            predictor_parameters={"n_estimators": [50, 80], "random_state": [42]},
+            estimator_parameters={"n_estimators": [50, 80], "random_state": [42]},
         )
     ]
 
@@ -54,7 +54,7 @@ def test_prediction_classifier(available_cpus: int, iris_sample: Sample) -> None
     )
 
     model_ranking: Sequence[ModelEvaluation] = model_ranker.run(
-        test_sample, n_jobs=available_cpus
+        test_sample, n_jobs=n_jobs
     )
 
     log.debug(f"\n{summary_report(model_ranking[:10])}")
@@ -73,11 +73,11 @@ def test_prediction_classifier(available_cpus: int, iris_sample: Sample) -> None
     ):
 
         model_fit = ClassifierFitCV(
-            model=model_evaluation.model,
+            pipeline=model_evaluation.model,
             cv=test_cv,
             sample=test_sample,
             calibration=calibration_method,
-            n_jobs=available_cpus,
+            n_jobs=n_jobs,
         )
 
         # test predictions_for_all_samples
