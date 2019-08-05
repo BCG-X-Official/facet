@@ -377,12 +377,14 @@ class DendrogramReportStyle(DendrogramStyle, TextStyle):
         self._n_labels = None
 
     def drawing_start(self, title: str) -> None:
+        """Write the title."""
         self.out.write(f"{title:*^{self.width}s}\n")
         self._char_matrix = CharacterMatrix(
             n_rows=self._max_height, n_columns=self.width
         )
 
     def drawing_finalize(self) -> None:
+        """Finalize writing the text."""
         try:
             super().drawing_finalize()
             for row in reversed(range(self._n_labels + 1)):
@@ -392,6 +394,11 @@ class DendrogramReportStyle(DendrogramStyle, TextStyle):
             self._n_labels = None
 
     def draw_leaf_labels(self, labels: Sequence[str]) -> None:
+        """
+        Draw the feature labels in the drawing.
+        
+        :param labels: the name of the features 
+        """
         matrix = self._char_matrix
         n_labels = len(labels)
         if n_labels > self._max_height:
@@ -400,7 +407,7 @@ class DendrogramReportStyle(DendrogramStyle, TextStyle):
         self._n_labels = n_labels
         label_width = self._weight_column
         for row, label in enumerate(labels[:n_labels]):
-            matrix[row, :label_width] = label
+            matrix[row, :label_width] = label + " "
 
     @property
     def _weight_column(self) -> int:
