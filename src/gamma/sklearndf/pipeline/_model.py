@@ -125,7 +125,9 @@ class EstimatorPipelineDF(
             return X
 
 
-class PredictivePipelineDF(EstimatorPipelineDF[T_PredictorDF], Generic[T_PredictorDF], ABC):
+class PredictivePipelineDF(
+    EstimatorPipelineDF[T_PredictorDF], Generic[T_PredictorDF], ABC
+):
 
     # noinspection PyPep8Naming
     def predict(
