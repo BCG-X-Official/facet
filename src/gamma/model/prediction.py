@@ -44,19 +44,7 @@ from gamma.sklearndf.pipeline import (
 
 log = logging.getLogger(__name__)
 
-__all__ = [
-    "ProbabilityCalibrationMethod",
-    "EstimatorFitCV",
-    "PredictorFitCV",
-    "RegressorFitCV",
-    "ClassifierFitCV",
-]
-
-
-class ProbabilityCalibrationMethod(Enum):
-    SIGMOID = "sigmoid"
-    ISOTONIC = "isotonic"
-
+__all__ = ["EstimatorFitCV", "PredictorFitCV", "RegressorFitCV", "ClassifierFitCV"]
 
 T_EstimatorPipelineDF = TypeVar("T_EstimatorPipelineDF", bound=EstimatorPipelineDF)
 T_PredictivePipelineDF = TypeVar("T_PredictivePipelineDF", bound=PredictivePipelineDF)
@@ -130,7 +118,6 @@ class EstimatorFitCV(ABC, Generic[T_EstimatorPipelineDF]):
         return self._model_by_split[split_id]
 
     def _fit(self) -> None:
-
         if self._model_by_split is not None:
             return
 
@@ -252,7 +239,6 @@ class PredictorFitCV(
             for split_id, (_, test_indices) in enumerate(
                 self.cv.split(sample.features, sample.target)
             ):
-
                 test_sample = sample.select_observations_by_position(
                     positions=test_indices
                 )
@@ -311,6 +297,13 @@ class ClassifierFitCV(
         "_calibrated_model_by_split",
         "_calibration",
     ]
+
+    class ProbabilityCalibrationMethod(Enum):
+        SIGMOID = "sigmoid"
+        ISOTONIC = "isotonic"
+
+    SIGMOID = ProbabilityCalibrationMethod.SIGMOID
+    ISOTONIC = ProbabilityCalibrationMethod.ISOTONIC
 
     F_PROBA = "proba_class_0"
 

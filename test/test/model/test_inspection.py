@@ -10,11 +10,7 @@ from sklearn.model_selection import BaseCrossValidator, RepeatedKFold
 
 from gamma import Sample
 from gamma.model.inspection import PredictiveModelInspector
-from gamma.model.prediction import (
-    ClassifierFitCV,
-    ProbabilityCalibrationMethod,
-    RegressorFitCV,
-)
+from gamma.model.prediction import ClassifierFitCV, RegressorFitCV
 from gamma.model.selection import (
     ModelEvaluation,
     ModelParameterGrid,
@@ -206,8 +202,7 @@ def test_model_inspection_with_encoding(
                 # noinspection PyUnresolvedReferences
                 return KernelExplainer(model=estimator.predict, data=data)
 
-        mi2 = PredictiveModelInspector(
-            models=model_fit, explainer_factory=ef)
+        mi2 = PredictiveModelInspector(models=model_fit, explainer_factory=ef)
         mi2.shap_matrix()
 
         linkage_tree = mi2.cluster_dependent_features()
@@ -261,7 +256,7 @@ def test_model_inspection_classifier(n_jobs, iris_sample: Sample) -> None:
         pipeline=model_evaluation.model,
         cv=test_cv,
         sample=test_sample,
-        calibration=ProbabilityCalibrationMethod.SIGMOID,
+        calibration=ClassifierFitCV.SIGMOID,
         n_jobs=n_jobs,
     )
 
