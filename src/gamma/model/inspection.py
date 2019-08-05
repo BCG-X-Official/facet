@@ -256,8 +256,8 @@ def tree_explainer_factory(estimator: BaseEstimator, data: pd.DataFrame) -> Expl
     # NOTE:
     # unfortunately, there is no convenient function in shap to determine the best
     # explainer method. hence we use this try/except approach.
-
-    # further there is no consistent "ModelPipelineDF type X is unsupported" exception raised,
+    # further there is no consistent "ModelPipelineDF type X is unsupported"
+    # exception raised,
     # which is why we need to always assume the error resulted from this cause -
     # we should not attempt to filter the exception type or message given that it is
     # currently inconsistent

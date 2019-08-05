@@ -53,14 +53,17 @@ class ChartDrawer(Generic[T_Model, T_Style], ABC):
 
     @property
     def title(self) -> str:
+        """Title of the chart."""
         return self._title
 
     @property
     def model(self) -> T_Model:
+        """The model holding the data to plot."""
         return self._model
 
     @property
     def style(self) -> T_Style:
+        """Style used for drawing the chart."""
         return self._style
 
     def draw(self) -> None:
