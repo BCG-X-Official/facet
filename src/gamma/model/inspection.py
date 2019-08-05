@@ -18,6 +18,7 @@ The :class:`ModelInspector` class computes the shap matrix and the associated li
 tree of a model which has been fitted using cross-validation.
 """
 import logging
+from abc import ABC, abstractmethod
 from typing import *
 
 import numpy as np
@@ -28,14 +29,23 @@ from shap import KernelExplainer, TreeExplainer
 from shap.explainers.explainer import Explainer
 from sklearn.base import BaseEstimator
 
-from gamma import Sample
-from gamma.model.fitcv import EstimatorFitCV, PredictorFitCV
+from gamma.model.fitcv import (
+    EstimatorFitCV,
+    PredictorFitCV,
+    RegressorFitCV,
+    ClassifierFitCV,
+)
 from gamma.sklearndf.pipeline import PredictivePipelineDF
 from gamma.viz.dendrogram import LinkageTree
 
 log = logging.getLogger(__name__)
 
-__all__ = ["ModelInspector", "PredictiveModelInspector"]
+__all__ = [
+    "ModelInspector",
+    "PredictiveModelInspector",
+    "ClassificationModelInspector",
+    "RegressionModelInspector",
+]
 
 
 T_EstimatorFitCV = TypeVar("T_EstimatorFitCV", bound=EstimatorFitCV)
@@ -55,7 +65,7 @@ class ModelInspector(Generic[T_EstimatorFitCV]):
         return self._models
 
 
-class PredictiveModelInspector(ModelInspector[PredictorFitCV]):
+class PredictiveModelInspector(ModelInspector[PredictorFitCV], ABC):
     """
     Inspect a model through its SHAP values.
 
@@ -97,78 +107,10 @@ class PredictiveModelInspector(ModelInspector[PredictorFitCV]):
         if self._shap_matrix is not None:
             return self._shap_matrix
 
-        regression_models: PredictorFitCV = self.models
-        sample: Sample = regression_models.sample
-
-        predictions_by_observation_and_split = (
-            regression_models.predictions_for_all_splits()
-        )
-
-        def _shap_matrix_for_split(
-            split_id: int, split_model: PredictivePipelineDF
-        ) -> pd.DataFrame:
-
-            observation_indices_in_split = predictions_by_observation_and_split.xs(
-                key=split_id, level=PredictorFitCV.F_SPLIT_ID
-            ).index
-
-            split_x = sample.select_observations_by_index(
-                ids=observation_indices_in_split
-            ).features
-
-            estimator = split_model.final_estimator_
-
-            if split_model.preprocessing is not None:
-                data_transformed = split_model.preprocessing.transform(split_x)
-            else:
-                data_transformed = split_x
-
-            shap_matrix = self._explainer_factory(
-                estimator=estimator.delegate_estimator, data=data_transformed
-            ).shap_values(data_transformed)
-
-            # todo: we need another condition to handle LGBM's (inconsistent) output
-            if isinstance(shap_matrix, list):
-                # the shap explainer returns an array [obs x features] for each of the
-                # target-classes
-
-                n_arrays = len(shap_matrix)
-
-                # we decided to support only binary classification == 2 classes:
-                assert n_arrays == 2, (
-                    f"Expected 2 arrays of shap values in binary classification, "
-                    f"got {n_arrays}"
-                )
-
-                # in the binary classification case, we will proceed with shap values
-                # for class 0, since values for class 1 will just be the same
-                # values times (*-1)  (the opposite probability)
-
-                # to assure the values are returned as expected above,
-                # and no information of class 1 is discarded, assert the
-                # following:
-                assert np.all(
-                    (shap_matrix[0]) - (shap_matrix[1] * -1) < 1e-10
-                ), "Expected shap_matrix(class 0) == shap_matrix(class 1) * -1"
-
-                shap_matrix = shap_matrix[0]
-
-            if not isinstance(shap_matrix, np.ndarray):
-                log.warning(
-                    f"shap explainer output expected to be an ndarray but was "
-                    f"{type(shap_matrix)}"
-                )
-
-            return pd.DataFrame(
-                data=shap_matrix,
-                index=observation_indices_in_split,
-                columns=data_transformed.columns,
-            )
-
         shap_values_df = pd.concat(
             objs=[
-                _shap_matrix_for_split(split_id, model)
-                for split_id, model in enumerate(regression_models)
+                self._shap_matrix_for_split(split_id, model)
+                for split_id, model in enumerate(self.models)
             ],
             sort=True,
         ).fillna(0.0)
@@ -177,6 +119,56 @@ class PredictiveModelInspector(ModelInspector[PredictorFitCV]):
         self._shap_matrix = shap_values_df.groupby(by=shap_values_df.index).mean()
 
         return self._shap_matrix
+
+    def _shap_matrix_for_split(
+        self, split_id: int, split_model: PredictivePipelineDF
+    ) -> pd.DataFrame:
+        """
+        Calaculate the SHAP matrix for a single split.
+
+        :param split_id: the numeric split ID (1,2,3...etc.)
+        :param split_model: model trained on the split
+        :return: SHAP matrix of a single split as dataframe
+        """
+        observation_indices_in_split = (
+            self.models.predictions_for_all_splits()
+            .xs(key=split_id, level=PredictorFitCV.F_SPLIT_ID)
+            .index
+        )
+
+        split_x = self.models.sample.select_observations_by_index(
+            ids=observation_indices_in_split
+        ).features
+
+        estimator = split_model.final_estimator_
+
+        if split_model.preprocessing is not None:
+            data_transformed = split_model.preprocessing.transform(split_x)
+        else:
+            data_transformed = split_x
+
+        raw_shap_values = self._explainer_factory(
+            estimator=estimator.delegate_estimator, data=data_transformed
+        ).shap_values(data_transformed)
+
+        return self._shap_matrix_for_split_to_df(
+            raw_shap_values=raw_shap_values, split_transformed=data_transformed
+        )
+
+    @abstractmethod
+    def _shap_matrix_for_split_to_df(
+        self,
+        raw_shap_values: Union[np.ndarray, List[np.ndarray]],
+        split_transformed: pd.DataFrame,
+    ) -> pd.DataFrame:
+        """
+        Convert the SHAP matrix for a single split to a dataframe.
+
+        :param raw_shap_values: the raw values returned by the SHAP explainer
+        :param split_transformed: the transformed data the model was trained on
+        :return: SHAP matrix of a single split as dataframe
+        """
+        pass
 
     def feature_importances(self) -> pd.Series:
         """
@@ -273,3 +265,124 @@ def tree_explainer_factory(estimator: BaseEstimator, data: pd.DataFrame) -> Expl
         # predicts
         # noinspection PyUnresolvedReferences
         return KernelExplainer(model=estimator.predict, data=data)
+
+
+class RegressionModelInspector(PredictiveModelInspector):
+    """
+    Inspect a regression model through its SHAP values.
+
+    :param models: regressor containing the information about the
+      model, the data (a Sample object), the cross-validation and predictions.
+    :param explainer_factory: method that returns a shap Explainer
+    """
+
+    def __init__(
+        self,
+        models: RegressorFitCV,
+        explainer_factory: Optional[
+            Callable[[BaseEstimator, pd.DataFrame], Explainer]
+        ] = None,
+    ) -> None:
+
+        super().__init__(models, explainer_factory)
+
+    def _shap_matrix_for_split_to_df(
+        self,
+        raw_shap_values: Union[np.ndarray, List[np.ndarray]],
+        split_transformed: pd.DataFrame,
+    ) -> pd.DataFrame:
+        """
+        Convert the SHAP matrix for a single split to a dataframe.
+
+        :param raw_shap_values: the raw values returned by the SHAP explainer
+        :param split_transformed: the transformed data the model was trained on
+        :return: SHAP matrix of a single split as dataframe
+        """
+
+        # In the regression case, only ndarray outputs are expected from SHAP:
+        if not isinstance(raw_shap_values, np.ndarray):
+            raise ValueError(
+                f"shap explainer output expected to be an ndarray but was "
+                f"{type(raw_shap_values)}"
+            )
+
+        return pd.DataFrame(
+            data=raw_shap_values,
+            index=split_transformed.index,
+            columns=split_transformed.columns,
+        )
+
+
+class ClassificationModelInspector(PredictiveModelInspector):
+    """
+    Inspect a classification model through its SHAP values.
+
+    Currently only binary, single-output classification problems are supported.
+
+    :param models: classifier containing the information about the
+      model, the data (a Sample object), the cross-validation and predictions.
+    :param explainer_factory: method that returns a shap Explainer
+    """
+
+    def __init__(
+        self,
+        models: ClassifierFitCV,
+        explainer_factory: Optional[
+            Callable[[BaseEstimator, pd.DataFrame], Explainer]
+        ] = None,
+    ) -> None:
+
+        super().__init__(models, explainer_factory)
+
+    # todo: adapt this method (and override others) to support non-binary classification
+    def _shap_matrix_for_split_to_df(
+        self,
+        raw_shap_values: Union[np.ndarray, List[np.ndarray]],
+        split_transformed: pd.DataFrame,
+    ) -> pd.DataFrame:
+        """
+        Convert the SHAP matrix for a single split to a dataframe.
+
+        :param raw_shap_values: the raw values returned by the SHAP explainer
+        :param split_transformed: the transformed data the model was trained on
+        :return: SHAP matrix of a single split as dataframe
+        """
+
+        if isinstance(raw_shap_values, list):
+            # the shap explainer returned an array [obs x features] for each of the
+            # target-classes
+
+            n_arrays = len(raw_shap_values)
+
+            # we decided to support only binary classification == 2 classes:
+            assert n_arrays == 2, (
+                "Expected 2 arrays of SHAP values in binary classification, "
+                f"got {n_arrays}"
+            )
+
+            # in the binary classification case, we will proceed with SHAP values
+            # for class 0, since values for class 1 will just be the same
+            # values times (*-1)  (the opposite probability)
+
+            # to assure the values are returned as expected above,
+            # and no information of class 1 is discarded, assert the
+            # following:
+            assert np.all(
+                (raw_shap_values[0]) - (raw_shap_values[1] * -1) < 1e-10
+            ), "Expected shap_values(class 0) == shap_values(class 1) * -1"
+
+            # all good: proceed with SHAP values for class 0:
+            raw_shap_values = raw_shap_values[0]
+
+        # after the above transformation, `raw_shap_values` should be ndarray:
+        if not isinstance(raw_shap_values, np.ndarray):
+            raise ValueError(
+                f"shap explainer output expected to be an ndarray but was "
+                f"{type(raw_shap_values)}"
+            )
+
+        return pd.DataFrame(
+            data=raw_shap_values,
+            index=split_transformed.index,
+            columns=split_transformed.columns,
+        )
