@@ -18,9 +18,9 @@ sys.path.insert(0, os.path.abspath("./../../src"))
 
 # -- Project information -----------------------------------------------------
 
-project = "yield-engine"
-copyright = "2019, Joerg Schneider"
-author = "Joerg Schneider"
+project = "gamma"
+copyright = "2019, BCG Gamma copyright (? or Jan Ittner?)"
+author = "Jan Ittner"
 
 
 # -- General configuration ---------------------------------------------------
