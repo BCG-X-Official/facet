@@ -21,7 +21,7 @@ import numpy as np
 import pandas as pd
 
 from gamma import ListLike
-from gamma.model.prediction import ClassifierFitCV, PredictorFitCV, RegressorFitCV
+from gamma.model.fitcv import ClassifierFitCV, PredictorFitCV, RegressorFitCV
 from gamma.sklearndf.transformation import FunctionTransformerDF
 from gamma.yieldengine.partition import Partitioning, T_Number
 
@@ -35,9 +35,9 @@ class UnivariateSimulation:
     :param feature_name: name of the feature on which the simulation is made
     :param target_name: name of the target
     :param partitioning: the partition of ``feature_name`` used for the simulation
-    :param median_uplift: the median uplift values
-    :param min_uplift:  the low percentile uplift values
-    :param max_uplift: the high percentile uplift values
+    :param median_change: the median change values
+    :param min_change:  the low percentile change values
+    :param max_change: the high percentile change values
     :param min_percentile: the percentile used to compute ``min_uplift``. Must be a
       number between 0 and 100
     :param max_percentile: the percentile used to compute ``max_uplift``. Must be a
