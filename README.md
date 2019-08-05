@@ -1,7 +1,7 @@
 # yield-engine
 
 You can find the API reference of yield-engine at
-[https://git.sourceai.io/pages/schneider-joerg/yield-engine/]().
+[https://git.sourceai.io/pages/alpha/yield-engine/]().
 
 ## Table of Contents  
 
