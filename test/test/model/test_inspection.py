@@ -10,7 +10,10 @@ from sklearn.model_selection import BaseCrossValidator, RepeatedKFold
 
 from gamma import Sample
 from gamma.model.fitcv import ClassifierFitCV, RegressorFitCV
-from gamma.model.inspection import PredictiveModelInspector
+from gamma.model.inspection import (
+    RegressionModelInspector,
+    ClassificationModelInspector,
+)
 from gamma.model.selection import (
     ModelEvaluation,
     ModelParameterGrid,
@@ -112,7 +115,7 @@ def test_model_inspection(n_jobs, boston_sample: Sample) -> None:
             <= (len(test_sample) * (TEST_RATIO + allowed_variance) * N_SPLITS)
         )
 
-        model_inspector = PredictiveModelInspector(models=model_fit)
+        model_inspector = RegressionModelInspector(models=model_fit)
         # make and check shap value matrix
         shap_matrix = model_inspector.shap_matrix()
 
@@ -177,7 +180,7 @@ def test_model_inspection_with_encoding(
         model_fit = RegressorFitCV(
             pipeline=model_evaluation.model, cv=circular_cv, sample=sample
         )
-        mi = PredictiveModelInspector(models=model_fit)
+        mi = RegressionModelInspector(models=model_fit)
 
         shap_matrix = mi.shap_matrix()
 
@@ -202,7 +205,7 @@ def test_model_inspection_with_encoding(
                 # noinspection PyUnresolvedReferences
                 return KernelExplainer(model=estimator.predict, data=data)
 
-        mi2 = PredictiveModelInspector(models=model_fit, explainer_factory=ef)
+        mi2 = RegressionModelInspector(models=model_fit, explainer_factory=ef)
         mi2.shap_matrix()
 
         linkage_tree = mi2.cluster_dependent_features()
@@ -260,7 +263,7 @@ def test_model_inspection_classifier(n_jobs, iris_sample: Sample) -> None:
         n_jobs=n_jobs,
     )
 
-    model_inspector = PredictiveModelInspector(models=model_fit)
+    model_inspector = ClassificationModelInspector(models=model_fit)
     # make and check shap value matrix
     shap_matrix = model_inspector.shap_matrix()
 
