@@ -9,8 +9,8 @@ from sklearn.base import BaseEstimator
 from sklearn.model_selection import BaseCrossValidator, RepeatedKFold
 
 from gamma import Sample
+from gamma.model.fitcv import ClassifierFitCV, RegressorFitCV
 from gamma.model.inspection import PredictiveModelInspector
-from gamma.model.prediction import ClassifierFitCV, RegressorFitCV
 from gamma.model.selection import (
     ModelEvaluation,
     ModelParameterGrid,

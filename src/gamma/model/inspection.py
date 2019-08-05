@@ -29,7 +29,7 @@ from shap.explainers.explainer import Explainer
 from sklearn.base import BaseEstimator
 
 from gamma import Sample
-from gamma.model.prediction import EstimatorFitCV, PredictorFitCV
+from gamma.model.fitcv import EstimatorFitCV, PredictorFitCV
 from gamma.sklearndf.pipeline import PredictivePipelineDF
 from gamma.viz.dendrogram import LinkageTree
 

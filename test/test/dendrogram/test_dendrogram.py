@@ -3,8 +3,8 @@ import pytest
 from matplotlib.pyplot import figure
 
 from gamma import Sample
+from gamma.model.fitcv import RegressorFitCV
 from gamma.model.inspection import PredictiveModelInspector
-from gamma.model.prediction import RegressorFitCV
 from gamma.model.validation import CircularCrossValidator
 from gamma.sklearndf import TransformerDF
 from gamma.sklearndf.pipeline import RegressionPipelineDF
