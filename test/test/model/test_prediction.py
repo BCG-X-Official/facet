@@ -8,7 +8,7 @@ import pandas as pd
 from sklearn.model_selection import BaseCrossValidator, RepeatedKFold
 
 from gamma import Sample
-from gamma.model.prediction import ClassifierFitCV, ProbabilityCalibrationMethod
+from gamma.model.prediction import ClassifierFitCV
 from gamma.model.selection import (
     ModelEvaluation,
     ModelParameterGrid,
@@ -66,11 +66,7 @@ def test_prediction_classifier(n_jobs, iris_sample: Sample) -> None:
     proba_results = {}
 
     # test various ProbabilityCalibrationMethods for a classifier:
-    for calibration_method in (
-        None,
-        ProbabilityCalibrationMethod.ISOTONIC,
-        ProbabilityCalibrationMethod.SIGMOID,
-    ):
+    for calibration_method in (None, ClassifierFitCV.ISOTONIC, ClassifierFitCV.SIGMOID):
 
         model_fit = ClassifierFitCV(
             pipeline=model_evaluation.model,
@@ -119,12 +115,7 @@ def test_prediction_classifier(n_jobs, iris_sample: Sample) -> None:
             )
 
     for p1, p2 in combinations(
-        [
-            ProbabilityCalibrationMethod.ISOTONIC,
-            ProbabilityCalibrationMethod.SIGMOID,
-            None,
-        ],
-        2,
+        [ClassifierFitCV.ISOTONIC, ClassifierFitCV.SIGMOID, None], 2
     ):
         cumulative_diff = np.sum(np.abs(proba_results[p1] - proba_results[p2]))
 
