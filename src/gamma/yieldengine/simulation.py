@@ -31,6 +31,17 @@ T_PredictiveFitCV = TypeVar("T_PredictiveFitCV", bound=PredictorFitCV)
 class UnivariateSimulation:
     """
     Summary result of a univariate simulation.
+
+    :param feature_name: name of the feature on which the simulation is made
+    :param target_name: name of the target
+    :param partitioning: the partition of ``feature_name`` used for the simulation
+    :param median_uplift: the median uplift values
+    :param min_uplift:  the low percentile uplift values
+    :param max_uplift: the high percentile uplift values
+    :param min_percentile: the percentile used to compute ``min_uplift``. Must be a
+      number between 0 and 100
+    :param max_percentile: the percentile used to compute ``max_uplift``. Must be a
+      number between 0 and 100
     """
 
     def __init__(
@@ -55,14 +66,17 @@ class UnivariateSimulation:
 
     @property
     def feature_name(self) -> str:
+        """Name of the feature on which the simulation is made."""
         return self._feature_name
 
     @property
     def target_name(self) -> str:
+        """Name of the target."""
         return self._target_name
 
     @property
     def partitioning(self) -> Partitioning:
+        """The partition of ``feature_name`` used for the simulation."""
         return self._partitioning
 
     @property
@@ -219,7 +233,7 @@ class UnivariateUpliftSimulator(UnivariateSimulator[RegressorFitCV]):
         Run a simulation on a feature.
 
         For each combination of split_id and feature value the uplift (in % as a
-        number between 0 and 1) of the target is computed. It is the uplift between
+        number between -1 and 1) of the target is computed. It is the uplift between
         predictions on the sample where the `feature_name` column is set to the
         given value, compared to the predictions on the original sample.
 

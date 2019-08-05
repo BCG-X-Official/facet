@@ -180,8 +180,8 @@ class RangePartitioning(Partitioning[T_Number], Generic[T_Number], metaclass=ABC
         Return the endpoints of the intervals making the partitions.
 
         :return: sequence of tuples (x, y) for every partition, where x is the
-        inclusive lower bound of a partition range, and y is the exclusive upper
-        bound of a partition range
+          inclusive lower bound of a partition range, and y is the exclusive upper
+          bound of a partition range
         """
 
         center_offset_left = self._partition_center_offset
@@ -263,6 +263,11 @@ class ContinuousRangePartitioning(RangePartitioning[float]):
         lower_bound: Optional[T_Number] = None,
         upper_bound: Optional[T_Number] = None,
     ) -> None:
+        if max_partitions < 2:
+            raise ValueError(
+                f"max_partitions should be an integer greater or equal "
+                f"than 2. The value of max_partitions is {max_partitions}."
+            )
         super().__init__(
             values=values,
             max_partitions=max_partitions,
@@ -315,6 +320,11 @@ class IntegerRangePartitioning(RangePartitioning[int]):
         lower_bound: Optional[T_Number] = None,
         upper_bound: Optional[T_Number] = None,
     ) -> None:
+        if max_partitions < 2:
+            raise ValueError(
+                f"max_partitions should be an integer greater or equal "
+                f"than 2. The value of max_partitions is {max_partitions}."
+            )
         super().__init__(
             values=values,
             max_partitions=max_partitions,
@@ -387,4 +397,4 @@ class CategoryPartitioning(Partitioning[T_Value]):
         return True
 
     def __len__(self) -> int:
-        return self._partitions
+        return len(self._partitions)
