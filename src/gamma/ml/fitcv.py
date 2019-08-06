@@ -30,8 +30,7 @@ import pandas as pd
 from joblib import delayed, Parallel
 from sklearn.model_selection import BaseCrossValidator
 
-from gamma.model import Sample
-
+from gamma.ml import Sample
 # noinspection PyProtectedMember
 from gamma.sklearndf._wrapper import ClassifierWrapperDF
 from gamma.sklearndf.classification import CalibratedClassifierCVDF
@@ -146,7 +145,7 @@ class EstimatorFitCV(ABC, Generic[T_EstimatorPipelineDF]):
         """
         Fit a model using a sample.
 
-        :param pipeline:  the :class:`yieldengine.model.ModelPipelineDF` to fit
+        :param pipeline:  the :class:`gamma.ml.ModelPipelineDF` to fit
         :param train_sample: data used to fit the model
         :return: fitted model for the split
         """
@@ -407,7 +406,7 @@ class ClassifierFitCV(
                 delayed(self._calibrate_probabilities_for_split)(
                     # note: we specifically do not clone here, since
                     # CalibratedClassifierCV does expect a fitted classifier and does
-                    # clone it itself - hence deepcopy so to be able to further
+                    # clone it itself
                     # differentiate between _model_by_split & _calibrated_model_by_split
                     self._model_by_split[idx],
                     sample.select_observations_by_position(positions=test_indices),

@@ -21,7 +21,7 @@ import numpy as np
 import pandas as pd
 
 from gamma import ListLike
-from gamma.model.fitcv import ClassifierFitCV, PredictorFitCV, RegressorFitCV
+from gamma.ml.fitcv import ClassifierFitCV, PredictorFitCV, RegressorFitCV
 from gamma.sklearndf.transformation import FunctionTransformerDF
 from gamma.yieldengine.partition import Partitioning, T_Number
 

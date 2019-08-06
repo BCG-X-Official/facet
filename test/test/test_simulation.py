@@ -5,10 +5,10 @@ import pandas as pd
 from pandas.util.testing import assert_frame_equal
 from pytest import approx
 
-from gamma.model import Sample
-from gamma.model.fitcv import RegressorFitCV
-from gamma.model.selection import ModelEvaluation, ModelParameterGrid, ModelRanker
-from gamma.model.validation import CircularCrossValidator
+from gamma.ml import Sample
+from gamma.ml.fitcv import RegressorFitCV
+from gamma.ml.selection import ModelEvaluation, ModelParameterGrid, ModelRanker
+from gamma.ml.validation import CircularCrossValidator
 from gamma.sklearndf import TransformerDF
 from gamma.yieldengine.partition import ContinuousRangePartitioning
 from gamma.yieldengine.simulation import UnivariateUpliftSimulator

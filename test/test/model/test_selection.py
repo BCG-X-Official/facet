@@ -6,14 +6,14 @@ import numpy as np
 import pandas as pd
 from sklearn import datasets
 
-from gamma.model import Sample
-from gamma.model.selection import (
+from gamma.ml import Sample
+from gamma.ml.selection import (
     ModelEvaluation,
     ModelParameterGrid,
     ModelRanker,
     summary_report,
 )
-from gamma.model.validation import CircularCrossValidator
+from gamma.ml.validation import CircularCrossValidator
 from gamma.sklearndf.classification import SVCDF
 from gamma.sklearndf.pipeline import ClassificationPipelineDF
 
