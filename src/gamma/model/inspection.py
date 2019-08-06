@@ -334,7 +334,6 @@ class ClassificationModelInspector(PredictiveModelInspector):
 
         super().__init__(models, explainer_factory)
 
-    # todo: adapt this method (and override others) to support non-binary classification
     def _shap_matrix_for_split_to_df(
         self,
         raw_shap_values: Union[np.ndarray, List[np.ndarray]],
@@ -348,6 +347,9 @@ class ClassificationModelInspector(PredictiveModelInspector):
         :return: SHAP matrix of a single split as dataframe
         """
 
+        # todo: adapt this method (and override others) to support non-binary
+        #   classification
+
         if isinstance(raw_shap_values, list):
             # the shap explainer returned an array [obs x features] for each of the
             # target-classes
@@ -356,8 +358,8 @@ class ClassificationModelInspector(PredictiveModelInspector):
 
             # we decided to support only binary classification == 2 classes:
             assert n_arrays == 2, (
-                "Expected 2 arrays of SHAP values in binary classification, "
-                f"got {n_arrays}"
+                "classification model inspection only supports binary classifiers, "
+                f"but SHAP analysis returned values for {n_arrays} classes"
             )
 
             # in the binary classification case, we will proceed with SHAP values
