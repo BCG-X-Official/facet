@@ -26,6 +26,6 @@ dependencies:
   - pip:
       - pre_commit == 1.16.*
       - boruta == 0.3
-      - git+ssh://git@git.sourceai.io/schneider-joerg/gamma-common.git#egg=gamma.common
-      - git+ssh://git@git.sourceai.io/schneider-joerg/gamma-sklearndf.git#egg=gamma.sklearndf
-      - git+ssh://git@git.sourceai.io/schneider-joerg/gamma-viz.git#egg=gamma.viz
+      - git+ssh://git@git.sourceai.io/alpha/gamma-common.git#egg=gamma.common
+      - git+ssh://git@git.sourceai.io/alpha/gamma-sklearndf.git#egg=gamma.sklearndf
+      - git+ssh://git@git.sourceai.io/alpha/gamma-viz.git#egg=gamma.viz
