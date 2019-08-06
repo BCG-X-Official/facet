@@ -19,7 +19,7 @@ from sklearn.utils.testing import (
     assert_raises_regex,
 )
 
-from gamma import Sample
+from gamma.model import Sample
 from gamma.sklearndf import TransformerDF
 from gamma.sklearndf._wrapper import df_estimator
 from gamma.sklearndf.classification import LogisticRegressionDF, SVCDF

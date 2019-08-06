@@ -8,7 +8,7 @@ import pytest
 from sklearn import datasets
 from sklearn.utils import Bunch
 
-from gamma import Sample
+from gamma.model import Sample
 from gamma.model.selection import ModelParameterGrid
 from gamma.sklearndf import TransformerDF
 from gamma.sklearndf.pipeline import RegressionPipelineDF
