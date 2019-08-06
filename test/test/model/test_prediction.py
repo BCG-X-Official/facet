@@ -7,9 +7,9 @@ import numpy as np
 import pandas as pd
 from sklearn.model_selection import BaseCrossValidator, RepeatedKFold
 
-from gamma.model import Sample
-from gamma.model.fitcv import ClassifierFitCV
-from gamma.model.selection import (
+from gamma.ml import Sample
+from gamma.ml.fitcv import ClassifierFitCV
+from gamma.ml.selection import (
     ModelEvaluation,
     ModelParameterGrid,
     ModelRanker,
