@@ -130,9 +130,9 @@ setup(
         "scikit-learn>=0.21,<0.22",
         "joblib>=0.13,<0.14",
         # todo: add tag for version control in there
-        "gamma-common @ git+ssh://git@git.sourceai.io/schneider-joerg/gamma-common.git#egg=gamma.common",
-        "gamma-sklearndf @ git+ssh://git@git.sourceai.io/schneider-joerg/gamma-sklearndf.git#egg=gamma.sklearndf",
-        "gamma-viz @ git+ssh://git@git.sourceai.io/schneider-joerg/gamma-viz.git#egg=gamma.viz",
+        "gamma-common @ git+ssh://git@git.sourceai.io/alpha/gamma-common.git#egg=gamma.common",
+        "gamma-sklearndf @ git+ssh://git@git.sourceai.io/alpha/gamma-sklearndf.git#egg=gamma.sklearndf",
+        "gamma-viz @ git+ssh://git@git.sourceai.io/alpha/gamma-viz.git#egg=gamma.viz",
     ],
     dependency_links=[],
     # Optional
