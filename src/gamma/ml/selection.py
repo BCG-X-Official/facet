@@ -14,7 +14,7 @@
 """
 ModelPipelineDF selection and hyperparameter optimisation.
 
-:class:`ModelGrid` encapsulates a :class:`yieldengine.model.ModelPipelineDF` and a grid of
+:class:`ModelParameterGrid` encapsulates a :class:`gamma.ml.ModelPipelineDF` and a grid of
 hyperparameters.
 
 :class:`ModelRanker` selects the best model and parametrisation based on the
@@ -28,7 +28,7 @@ from typing import *
 import numpy as np
 from sklearn.model_selection import BaseCrossValidator, GridSearchCV
 
-from gamma.model import Sample
+from gamma.ml import Sample
 from gamma.sklearndf.pipeline import EstimatorPipelineDF, PredictivePipelineDF
 
 ParameterGrid = Dict[str, Sequence[Any]]
@@ -80,7 +80,7 @@ class ModelParameterGrid:
     @property
     def pipeline(self) -> PredictivePipelineDF:
         """
-        The :class:`~yieldengine.model.PredictivePipelineDF` for which to optimise the
+        The :class:`~gamma.ml.PredictivePipelineDF` for which to optimise the
         parameters.
         """
         return self._pipeline
@@ -126,7 +126,7 @@ class ModelEvaluation(NamedTuple):
 
     Has attributes:
 
-    - model: the fitted  :class:`~yieldengine.model.PredictivePipelineDF`
+    - model: the fitted  :class:`~gamma.ml.PredictivePipelineDF`
     - parameters: the hyperparameters selected for the model during grid
         search, as a mapping of parameter names to parameter values
     - scoring: scorings for the model based on the provided scorers;
@@ -144,7 +144,7 @@ class ModelEvaluation(NamedTuple):
 
 class ModelRanker:
     """
-    Rank a list of model using a cross-validation.
+    Rank a list of models using a cross-validation.
 
     Given a list of :class:`ModelGrid`, a cross-validation splitter and a scoring
     function, performs a grid search to find the best combination of model with
@@ -152,7 +152,7 @@ class ModelRanker:
 
     :param grids: list of :class:`ModelGrid` to be ranked
     :param cv: a cross validator (i.e. \
-        :class:`~yieldengine.model.validation.CircularCrossValidator`)
+        :class:`~gamma.ml.validation.CircularCrossValidator`)
     :param scoring: a scorer to use when doing CV within GridSearch
     """
 

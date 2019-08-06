@@ -2,7 +2,7 @@ import pandas as pd
 import pytest
 from joblib import delayed, Parallel
 
-from gamma.model import Sample
+from gamma.ml import Sample
 
 
 # checks various erroneous inputs
