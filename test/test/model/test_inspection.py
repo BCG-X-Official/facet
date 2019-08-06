@@ -8,19 +8,16 @@ from shap.explainers.explainer import Explainer
 from sklearn.base import BaseEstimator
 from sklearn.model_selection import BaseCrossValidator, RepeatedKFold
 
-from gamma.model import Sample
-from gamma.model.fitcv import ClassifierFitCV, RegressorFitCV
-from gamma.model.inspection import (
-    ClassificationModelInspector,
-    RegressionModelInspector,
-)
-from gamma.model.selection import (
+from gamma.ml import Sample
+from gamma.ml.fitcv import ClassifierFitCV, RegressorFitCV
+from gamma.ml.inspection import ClassificationModelInspector, RegressionModelInspector
+from gamma.ml.selection import (
     ModelEvaluation,
     ModelParameterGrid,
     ModelRanker,
     summary_report,
 )
-from gamma.model.validation import CircularCrossValidator
+from gamma.ml.validation import CircularCrossValidator
 from gamma.sklearndf import TransformerDF
 from gamma.sklearndf.classification import RandomForestClassifierDF
 from gamma.sklearndf.pipeline import ClassificationPipelineDF, RegressionPipelineDF

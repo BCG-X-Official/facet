@@ -6,7 +6,7 @@ import pytest
 from sklearn import datasets, svm, tree
 from sklearn.model_selection import GridSearchCV
 
-from gamma.model.validation import CircularCrossValidator
+from gamma.ml.validation import CircularCrossValidator
 
 
 def test_circular_cv_init(batch_table: pd.DataFrame) -> None:
@@ -82,7 +82,7 @@ def test_circular_cv_with_sk_learn() -> None:
 
     assert clf.best_score_ > 0.85, "Expected a minimum score of 0.85"
 
-    # define new paramters and a different model
+    # define new parameters and a different model
     # use the defined my_cv circular CV again within GridSeachCV:
     parameters = {
         "criterion": ("gini", "entropy"),

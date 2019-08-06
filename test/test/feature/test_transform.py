@@ -1,7 +1,7 @@
 import pandas as pd
 from sklearn.ensemble import RandomForestRegressor
 
-from gamma.model import Sample
+from gamma.ml import Sample
 from gamma.sklearndf import TransformerDF
 from gamma.sklearndf.pipeline import PipelineDF
 from gamma.sklearndf.transformation import SimpleImputerDF

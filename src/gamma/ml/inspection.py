@@ -29,11 +29,11 @@ from shap import KernelExplainer, TreeExplainer
 from shap.explainers.explainer import Explainer
 from sklearn.base import BaseEstimator
 
-from gamma.model.fitcv import (
+from gamma.ml.fitcv import (
+    ClassifierFitCV,
     EstimatorFitCV,
     PredictorFitCV,
     RegressorFitCV,
-    ClassifierFitCV,
 )
 from gamma.sklearndf.pipeline import PredictivePipelineDF
 from gamma.viz.dendrogram import LinkageTree
@@ -61,7 +61,7 @@ class ModelInspector(Generic[T_EstimatorFitCV]):
 
     @property
     def models(self) -> T_EstimatorFitCV:
-        """collection of CV-fitted models handled by this model inspector."""
+        """collection of CV-fitted models handled by this modelinspector."""
         return self._models
 
 
