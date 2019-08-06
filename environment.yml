@@ -1,4 +1,4 @@
-name: yield-engine
+name: gamma-ml
 channels:
   - conda-forge
 dependencies:
@@ -26,3 +26,6 @@ dependencies:
   - pip:
       - pre_commit == 1.16.*
       - boruta == 0.3
+      - git+ssh://git@git.sourceai.io/schneider-joerg/gamma-common.git#egg=gamma.common
+      - git+ssh://git@git.sourceai.io/schneider-joerg/gamma-sklearndf.git#egg=gamma.sklearndf
+      - git+ssh://git@git.sourceai.io/schneider-joerg/gamma-viz.git#egg=gamma.viz

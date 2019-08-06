@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/yield-engine.iml" filepath="$PROJECT_DIR$/.idea/yield-engine.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/gamma-ml.iml" filepath="$PROJECT_DIR$/.idea/gamma-ml.iml" />
     </modules>
   </component>
 </project>
