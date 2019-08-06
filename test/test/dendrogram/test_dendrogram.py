@@ -2,7 +2,7 @@ import pandas as pd
 import pytest
 from matplotlib.pyplot import figure
 
-from gamma import Sample
+from gamma.model import Sample
 from gamma.model.fitcv import RegressorFitCV
 from gamma.model.inspection import RegressionModelInspector
 from gamma.model.validation import CircularCrossValidator

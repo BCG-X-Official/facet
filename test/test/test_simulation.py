@@ -5,7 +5,7 @@ import pandas as pd
 from pandas.util.testing import assert_frame_equal
 from pytest import approx
 
-from gamma import Sample
+from gamma.model import Sample
 from gamma.model.fitcv import RegressorFitCV
 from gamma.model.selection import ModelEvaluation, ModelParameterGrid, ModelRanker
 from gamma.model.validation import CircularCrossValidator
