@@ -172,5 +172,22 @@ class Sample:
 
         return subsample
 
+    def replace_features(self, features: pd.DataFrame) -> "Sample":
+        """
+        Return a new sample with this sample's target vector, and features replaced
+        with the given features dataframe. The index if the given features must be
+        compatible with the index of this sample's observations.
+        :param features: the features to replace the current features with
+        :return: new Sample object with the replaced features
+        """
+        target = self.target
+        if not features.index.isin(target.index).all():
+            raise ValueError(
+                "index of arg features contains items that do not exist in this sample"
+            )
+        return Sample(
+            observations=features.join(self.target), target_name=self.target.name
+        )
+
     def __len__(self) -> int:
         return len(self._observations)
