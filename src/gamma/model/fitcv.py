@@ -30,7 +30,7 @@ import pandas as pd
 from joblib import delayed, Parallel
 from sklearn.model_selection import BaseCrossValidator
 
-from gamma import Sample
+from gamma.model import Sample
 
 # noinspection PyProtectedMember
 from gamma.sklearndf._wrapper import ClassifierWrapperDF

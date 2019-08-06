@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 from sklearn import datasets
 
-from gamma import Sample
+from gamma.model import Sample
 from gamma.model.selection import (
     ModelEvaluation,
     ModelParameterGrid,

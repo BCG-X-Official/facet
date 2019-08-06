@@ -28,7 +28,7 @@ from typing import *
 import numpy as np
 from sklearn.model_selection import BaseCrossValidator, GridSearchCV
 
-from gamma import Sample
+from gamma.model import Sample
 from gamma.sklearndf.pipeline import EstimatorPipelineDF, PredictivePipelineDF
 
 ParameterGrid = Dict[str, Sequence[Any]]

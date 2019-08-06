@@ -8,11 +8,11 @@ from shap.explainers.explainer import Explainer
 from sklearn.base import BaseEstimator
 from sklearn.model_selection import BaseCrossValidator, RepeatedKFold
 
-from gamma import Sample
+from gamma.model import Sample
 from gamma.model.fitcv import ClassifierFitCV, RegressorFitCV
 from gamma.model.inspection import (
-    RegressionModelInspector,
     ClassificationModelInspector,
+    RegressionModelInspector,
 )
 from gamma.model.selection import (
     ModelEvaluation,
