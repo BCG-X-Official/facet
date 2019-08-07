@@ -8,6 +8,10 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry type="module" module-name="gamma-common" />
+    <orderEntry type="module" module-name="gamma-viz" />
+    <orderEntry type="module" module-name="gamma-sklearndf" />
+    <orderEntry type="module" module-name="gamma-ml" />
   </component>
   <component name="TestRunnerService">
     <option name="projectConfiguration" value="pytest" />
