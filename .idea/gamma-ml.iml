@@ -8,6 +8,9 @@
     </content>
     <orderEntry type="jdk" jdkName="gamma-ml" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry type="module" module-name="gamma-common" />
+    <orderEntry type="module" module-name="gamma-sklearndf" />
+    <orderEntry type="module" module-name="gamma-viz" />
   </component>
   <component name="PackageRequirementsSettings">
     <option name="requirementsPath" value="" />
