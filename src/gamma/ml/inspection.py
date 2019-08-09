@@ -35,8 +35,8 @@ from gamma.ml.fitcv import (
     PredictorFitCV,
     RegressorFitCV,
 )
+from gamma.ml.viz import LinkageTree
 from gamma.sklearndf.pipeline import PredictivePipelineDF
-from gamma.viz.dendrogram import LinkageTree
 
 log = logging.getLogger(__name__)
 
