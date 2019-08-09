@@ -1,7 +1,7 @@
 import pytest
 
 import test
-from gamma import deprecated
+from gamma.common import deprecated
 
 
 def test_get_global_config() -> None:
