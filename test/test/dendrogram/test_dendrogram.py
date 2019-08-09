@@ -6,14 +6,10 @@ from gamma.ml import Sample
 from gamma.ml.fitcv import RegressorFitCV
 from gamma.ml.inspection import RegressionModelInspector
 from gamma.ml.validation import CircularCrossValidator
+from gamma.ml.viz import DendrogramDrawer, DendrogramFeatMapStyle, DendrogramLineStyle
 from gamma.sklearndf import TransformerDF
 from gamma.sklearndf.pipeline import RegressionPipelineDF
 from gamma.sklearndf.regression import LGBMRegressorDF
-from gamma.viz.dendrogram import (
-    DendrogramDrawer,
-    DendrogramFeatMapStyle,
-    DendrogramLineStyle,
-)
 
 
 @pytest.fixture()
