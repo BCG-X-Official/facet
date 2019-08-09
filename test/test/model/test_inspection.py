@@ -18,11 +18,11 @@ from gamma.ml.selection import (
     summary_report,
 )
 from gamma.ml.validation import CircularCrossValidator
+from gamma.ml.viz import DendrogramDrawer, DendrogramReportStyle
 from gamma.sklearndf import TransformerDF
 from gamma.sklearndf.classification import RandomForestClassifierDF
 from gamma.sklearndf.pipeline import ClassificationPipelineDF, RegressionPipelineDF
 from gamma.sklearndf.regression import LGBMRegressorDF, SVRDF
-from gamma.viz.dendrogram import DendrogramDrawer, DendrogramReportStyle
 
 log = logging.getLogger(__name__)
 
