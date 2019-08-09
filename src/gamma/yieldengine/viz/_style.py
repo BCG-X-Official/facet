@@ -27,7 +27,7 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 from mpl_toolkits.axes_grid1.axes_divider import AxesDivider
 from mpl_toolkits.axes_grid1.axes_size import Scaled
 
-from gamma import ListLike
+from gamma.common import ListLike
 from gamma.viz import ChartStyle, MatplotStyle, TextStyle
 from gamma.viz.text import format_table
 from gamma.yieldengine.partition import T_Number, T_Value
