@@ -21,7 +21,7 @@ this graph there is a histogram of the feature values.
 
 from typing import *
 
-from gamma import ListLike
+from gamma.common import ListLike
 from gamma.viz import ChartDrawer
 from gamma.yieldengine.partition import T_Value
 from gamma.yieldengine.simulation import UnivariateSimulation
