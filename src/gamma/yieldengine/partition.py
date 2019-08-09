@@ -36,7 +36,7 @@ from typing import *
 import numpy as np
 import pandas as pd
 
-from gamma import ListLike
+from gamma.common import ListLike
 
 log = logging.getLogger(__name__)
 
