@@ -3,7 +3,7 @@ import pytest
 import test
 
 
-def test_get_global_config() -> None:
+def test_read_test_config() -> None:
     config = test.read_test_config()
     # yaml.safe_load() returns a list of items/dicts
     assert type(config) == list, "Expected a list"
