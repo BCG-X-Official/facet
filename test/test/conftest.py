@@ -37,6 +37,11 @@ warnings.filterwarnings(
 
 
 @pytest.fixture
+def inputfile_config() -> Dict[str, Any]:
+    return read_test_config(section="inputfile")
+
+
+@pytest.fixture
 def boston_target() -> str:
     return "target"
 
@@ -52,10 +57,8 @@ def n_jobs() -> int:
 
 
 @pytest.fixture
-def batch_table() -> pd.DataFrame:
+def batch_table(inputfile_config: Dict[str, Any]) -> pd.DataFrame:
 
-    # Note: this file is not included within the git repository!
-    inputfile_config = read_test_config(section="inputfile")
     return pd.read_csv(
         filepath_or_buffer=TEST_DATA_CSV,
         delimiter=inputfile_config["delimiter"],
@@ -123,7 +126,7 @@ def regressor_grids(simple_preprocessor) -> List[ModelParameterGrid]:
 
 
 @pytest.fixture
-def sample(batch_table: pd.DataFrame) -> Sample:
+def sample(batch_table: pd.DataFrame, inputfile_config: Dict[str, Any]) -> Sample:
     # drop columns that should not take part in model
     batch_table = batch_table.drop(columns=["Date", "Batch Id"])
 
@@ -132,7 +135,9 @@ def sample(batch_table: pd.DataFrame) -> Sample:
         axis=1, how="all"
     )
 
-    sample = Sample(observations=batch_table, target_name="Yield")
+    sample = Sample(
+        observations=batch_table, target_name=inputfile_config["yield_column_name"]
+    )
     return sample
 
 
@@ -149,7 +154,6 @@ def boston_df(boston_target: str) -> pd.DataFrame:
     #  load sklearn test-data and convert to pd
     boston: Bunch = datasets.load_boston()
 
-    # use first 100 rows only, since KernelExplainer is very slow...
     return pd.DataFrame(
         data=np.c_[boston.data, boston.target],
         columns=[*boston.feature_names, boston_target],
