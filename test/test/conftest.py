@@ -21,8 +21,12 @@ from gamma.sklearndf.regression import (
     RandomForestRegressorDF,
     SVRDF,
 )
+from gamma.sklearndf.transformation import (
+    ColumnTransformerDF,
+    OneHotEncoderDF,
+    SimpleImputerDF,
+)
 from test import read_test_config
-from test.model import make_simple_transformer
 from test.paths import TEST_DATA_CSV
 
 logging.basicConfig(level=logging.DEBUG)
@@ -34,6 +38,32 @@ logging.getLogger("shap").setLevel(logging.WARNING)
 warnings.filterwarnings(
     "ignore", message=r"Starting from version 2", category=UserWarning
 )
+
+STEP_IMPUTE = "impute"
+STEP_ONE_HOT_ENCODE = "one-hot-encode"
+
+
+def make_simple_transformer(
+    impute_median_columns: Sequence[str] = None,
+    one_hot_encode_columns: Sequence[str] = None,
+) -> TransformerDF:
+    column_transforms = []
+
+    if impute_median_columns is not None and len(impute_median_columns) > 0:
+        column_transforms.append(
+            (STEP_IMPUTE, SimpleImputerDF(strategy="median"), impute_median_columns)
+        )
+
+    if one_hot_encode_columns is not None and len(one_hot_encode_columns) > 0:
+        column_transforms.append(
+            (
+                STEP_ONE_HOT_ENCODE,
+                OneHotEncoderDF(sparse=False, handle_unknown="ignore"),
+                one_hot_encode_columns,
+            )
+        )
+
+    return ColumnTransformerDF(transformers=column_transforms)
 
 
 @pytest.fixture
