@@ -22,7 +22,7 @@ from gamma.sklearndf.regression import (
     SVRDF,
 )
 from test import read_test_config
-from test.model import make_simple_transformer
+from test.gamma.ml import make_simple_transformer
 from test.paths import TEST_DATA_CSV
 
 logging.basicConfig(level=logging.DEBUG)
