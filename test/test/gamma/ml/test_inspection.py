@@ -24,7 +24,6 @@ from gamma.sklearndf.classification import RandomForestClassifierDF
 from gamma.sklearndf.pipeline import ClassificationPipelineDF, RegressionPipelineDF
 from gamma.sklearndf.regression import LGBMRegressorDF, SVRDF
 
-
 log = logging.getLogger(__name__)
 
 K_FOLDS: int = 5

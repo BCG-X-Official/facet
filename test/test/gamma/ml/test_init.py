@@ -4,7 +4,7 @@ from sklearn.preprocessing import OneHotEncoder
 
 from gamma.sklearndf.pipeline import RegressionPipelineDF
 from gamma.sklearndf.regression import LGBMRegressorDF
-from test.model import make_simple_transformer
+from test.gamma.ml import make_simple_transformer
 
 
 def test_model() -> None:
