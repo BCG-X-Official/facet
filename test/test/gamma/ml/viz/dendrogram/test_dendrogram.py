@@ -1,12 +1,11 @@
 import pandas as pd
 import pytest
-from matplotlib.pyplot import figure
 
 from gamma.ml import Sample
 from gamma.ml.fitcv import RegressorFitCV
 from gamma.ml.inspection import RegressionModelInspector
 from gamma.ml.validation import CircularCrossValidator
-from gamma.ml.viz import DendrogramDrawer, DendrogramFeatMapStyle, DendrogramLineStyle
+from gamma.ml.viz import DendrogramDrawer, DendrogramReportStyle
 from gamma.sklearndf import TransformerDF
 from gamma.sklearndf.pipeline import RegressionPipelineDF
 from gamma.sklearndf.regression import LGBMRegressorDF
@@ -26,15 +25,9 @@ def model_inspector(
     )
 
 
-def test_linkage_drawer_style(model_inspector: RegressionModelInspector) -> None:
+def test_dendrogram_drawer_textstyle(model_inspector: RegressionModelInspector) -> None:
     linkage = model_inspector.cluster_dependent_features()
-    fig = figure(figsize=(8, 16))
-    ax = fig.add_subplot(111)
     dd = DendrogramDrawer(
-        title="Test", linkage_tree=linkage, style=DendrogramLineStyle(ax=ax)
+        title="Test", linkage_tree=linkage, style=DendrogramReportStyle()
     )
     dd.draw()
-    dd_2 = DendrogramDrawer(
-        title="Test", linkage_tree=linkage, style=DendrogramFeatMapStyle(ax=ax)
-    )
-    dd_2.draw()
