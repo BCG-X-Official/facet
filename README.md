@@ -6,8 +6,10 @@ GAMMA's yieldengine library.
 The pip-project `gamma-yieldengine` can be installed using:
 - `pip install git+ssh://git@git.sourceai.io/alpha/gamma-yieldengine.git#egg=gamma.yieldengine`
  (*latest version*)
- - `pip install git+ssh://git@git.sourceai.io/alpha/gamma-yieldengine.git@[VERSION-TAG]#egg=gamma.yieldengine`
- (*specific version -  currently not available*)
+ - Check [this page](./../../releases) for available releases and use 
+ `pip install git+ssh://git@git.sourceai.io/alpha/gamma-yieldengine.git@[VERSION-TAG]#egg=gamma.yieldengine`
+ to install a specific version. E.g. to install `v1.0.0` use:
+ `pip install git+ssh://git@git.sourceai.io/alpha/gamma-yieldengine.git@v1.0.0#egg=gamma.yieldengine`
 
 Ensure that you have set up a working SSH key on git.sourceai.io!
 
