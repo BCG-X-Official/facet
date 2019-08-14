@@ -6,6 +6,7 @@ from typing import *
 import numpy as np
 import pandas as pd
 from sklearn.model_selection import BaseCrossValidator, RepeatedKFold
+from pandas.util import hash_pandas_object
 
 from gamma.ml import Sample
 from gamma.ml.fitcv import ClassifierFitCV
@@ -24,6 +25,8 @@ K_FOLDS: int = 5
 TEST_RATIO = 1 / K_FOLDS
 N_SPLITS = K_FOLDS * 2
 CALIBRATION_DIFF_THRESHOLD = 0.3
+
+CHKSUM_CLASSIFIER_PREDICTIONS = 13680176299872221154
 
 
 def test_prediction_classifier(n_jobs, iris_sample: Sample) -> None:
@@ -95,6 +98,11 @@ def test_prediction_classifier(n_jobs, iris_sample: Sample) -> None:
             (len(test_sample) * (TEST_RATIO - allowed_variance) * N_SPLITS)
             <= len(predictions_df)
             <= (len(test_sample) * (TEST_RATIO + allowed_variance) * N_SPLITS)
+        )
+
+        assert (
+            np.sum(hash_pandas_object(predictions_df).values)
+            == CHKSUM_CLASSIFIER_PREDICTIONS
         )
 
         # test probabilities for all samples
