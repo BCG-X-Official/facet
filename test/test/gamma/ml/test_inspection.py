@@ -3,6 +3,8 @@ import warnings
 from typing import *
 
 import pandas as pd
+import numpy as np
+from pandas.core.util.hashing import hash_pandas_object
 from shap import KernelExplainer, TreeExplainer
 from shap.explainers.explainer import Explainer
 from sklearn.base import BaseEstimator
@@ -32,6 +34,12 @@ N_SPLITS = K_FOLDS * 2
 
 
 def test_model_inspection(n_jobs, boston_sample: Sample) -> None:
+
+    # define checksums for this test - one for the LGBM, one for the SVR
+    CHKSUMS_PREDICTIONS = (8498474725463556484, 781552878134992853)
+    CHKSUMS_SHAP = (5120923735415774388, 2945880188040048636)
+    CHKSUM_CORR_MATRIX = (4159152513108370414, 16061019524360971856)
+
     warnings.filterwarnings("ignore", message="numpy.dtype size changed")
     warnings.filterwarnings("ignore", message="numpy.ufunc size changed")
     warnings.filterwarnings("ignore", message="You are accessing a training score")
@@ -86,7 +94,8 @@ def test_model_inspection(n_jobs, boston_sample: Sample) -> None:
         if isinstance(model_evaluation.model.regressor, LGBMRegressorDF)
     ][0]
 
-    for model_evaluation in best_svr, best_lgbm:
+    for model_index, model_evaluation in enumerate((best_lgbm, best_svr)):
+
         model_fit = RegressorFitCV(
             pipeline=model_evaluation.model, cv=test_cv, sample=test_sample
         )
@@ -112,6 +121,12 @@ def test_model_inspection(n_jobs, boston_sample: Sample) -> None:
             <= (len(test_sample) * (TEST_RATIO + allowed_variance) * N_SPLITS)
         )
 
+        # check actual prediction values using checksum:
+        assert (
+            np.sum(hash_pandas_object(predictions_df).values)
+            == CHKSUMS_PREDICTIONS[model_index]
+        )
+
         model_inspector = RegressionModelInspector(models=model_fit)
         # make and check shap value matrix
         shap_matrix = model_inspector.shap_matrix()
@@ -120,8 +135,16 @@ def test_model_inspection(n_jobs, boston_sample: Sample) -> None:
         # indices we have had in the predictions_df
         assert len(shap_matrix) == len(test_sample)
 
+        # check actual values using checksum:
+        #
+        assert (
+            np.sum(hash_pandas_object(shap_matrix.round(decimals=4)).values)
+            == CHKSUMS_SHAP[model_index]
+        )
+
         # correlated shap matrix: feature dependencies
         corr_matrix: pd.DataFrame = model_inspector.feature_dependency_matrix()
+
         # check number of rows
         assert len(corr_matrix) == len(test_sample.feature_names) - 1
         assert len(corr_matrix.columns) == len(test_sample.feature_names) - 1
@@ -135,8 +158,14 @@ def test_model_inspection(n_jobs, boston_sample: Sample) -> None:
                 <= 1.0
             )
 
+        # check actual values using checksum:
+        assert (
+            np.sum(hash_pandas_object(corr_matrix.round(decimals=4)).values)
+            == CHKSUM_CORR_MATRIX[model_index]
+        )
+
         linkage_tree = model_inspector.cluster_dependent_features()
-        print()
+
         DendrogramDrawer(
             title="Test", linkage_tree=linkage_tree, style=DendrogramReportStyle()
         ).draw()
@@ -150,14 +179,17 @@ def test_model_inspection_with_encoding(
     n_jobs,
 ) -> None:
 
+    # define checksums for this test
+    CHKSUM_PREDICTIONS = 15445317532513327074
+    CHKSUM_SHAP = 2454983946504277938
+    CHKSUM_CORR_MATRIX = 9841870561220906358
+
     # define the circular cross validator with just 5 splits (to speed up testing)
     circular_cv = CircularCrossValidator(test_ratio=0.20, num_splits=5)
 
     model_ranker: ModelRanker = ModelRanker(
         grids=regressor_grids, cv=circular_cv, scoring="r2"
     )
-
-    model = regressor_grids[0].pipeline
 
     # run the ModelRanker to retrieve a ranking
     model_ranking: Sequence[ModelEvaluation] = model_ranker.run(
@@ -166,56 +198,81 @@ def test_model_inspection_with_encoding(
 
     log.debug(f"\n{summary_report(model_ranking[:10])}")
 
-    # consider: model_with_type(...) function for ModelRanking
-    # best_svr = [m for m in model_ranking if isinstance(m.estimator, SVR)][0]
-    best_lgbm = [
+    # we get the best model_evaluation which is a LGBM - for the sake of test
+    # performance
+    model_evaluation = [
         model_evaluation
         for model_evaluation in model_ranking
         if isinstance(model_evaluation.model.regressor, LGBMRegressorDF)
     ][0]
-    for model_evaluation in [best_lgbm]:
-        model_fit = RegressorFitCV(
-            pipeline=model_evaluation.model, cv=circular_cv, sample=sample
-        )
-        mi = RegressionModelInspector(models=model_fit)
 
-        shap_matrix = mi.shap_matrix()
+    model_fit = RegressorFitCV(
+        pipeline=model_evaluation.model, cv=circular_cv, sample=sample
+    )
 
-        # correlated shap matrix: feature dependencies
-        corr_matrix: pd.DataFrame = mi.feature_dependency_matrix()
+    predictions = model_fit.predictions_for_all_splits()
 
-        # cluster feature importances
-        linkage_tree = mi.cluster_dependent_features()
+    # check actual values using checksum:
+    assert (
+        np.sum(hash_pandas_object(predictions.round(decimals=4)).values)
+        == CHKSUM_PREDICTIONS
+    )
 
-        #  test the ModelInspector with a custom ExplainerFactory:
-        def ef(estimator: BaseEstimator, data: pd.DataFrame) -> Explainer:
+    mi = RegressionModelInspector(models=model_fit)
 
-            try:
-                return TreeExplainer(
-                    model=estimator, feature_dependence="independent", data=data
-                )
-            except Exception as e:
-                log.debug(
-                    f"failed to instantiate shap.TreeExplainer:{str(e)},"
-                    "using shap.KernelExplainer as fallback"
-                )
-                # noinspection PyUnresolvedReferences
-                return KernelExplainer(model=estimator.predict, data=data)
+    shap_matrix = mi.shap_matrix()
 
-        mi2 = RegressionModelInspector(models=model_fit, explainer_factory=ef)
-        mi2.shap_matrix()
+    # check actual values using checksum:
+    assert (
+        np.sum(hash_pandas_object(shap_matrix.round(decimals=4)).values) == CHKSUM_SHAP
+    )
 
-        linkage_tree = mi2.cluster_dependent_features()
-        print()
-        DendrogramDrawer(
-            title="Test", linkage_tree=linkage_tree, style=DendrogramReportStyle()
-        ).draw()
+    # correlated shap matrix: feature dependencies
+    corr_matrix: pd.DataFrame = mi.feature_dependency_matrix()
+
+    # check actual values using checksum:
+    assert (
+        np.sum(hash_pandas_object(corr_matrix.round(decimals=4)).values)
+        == CHKSUM_CORR_MATRIX
+    )
+
+    # cluster feature importances
+    linkage_tree = mi.cluster_dependent_features()
+
+    #  test the ModelInspector with a custom ExplainerFactory:
+    def ef(estimator: BaseEstimator, data: pd.DataFrame) -> Explainer:
+
+        try:
+            return TreeExplainer(
+                model=estimator, feature_dependence="independent", data=data
+            )
+        except Exception as e:
+            log.debug(
+                f"failed to instantiate shap.TreeExplainer:{str(e)},"
+                "using shap.KernelExplainer as fallback"
+            )
+            # noinspection PyUnresolvedReferences
+            return KernelExplainer(model=estimator.predict, data=data)
+
+    mi2 = RegressionModelInspector(models=model_fit, explainer_factory=ef)
+    mi2.shap_matrix()
+
+    linkage_tree = mi2.cluster_dependent_features()
+    print()
+    DendrogramDrawer(
+        title="Test", linkage_tree=linkage_tree, style=DendrogramReportStyle()
+    ).draw()
 
 
 def test_model_inspection_classifier(n_jobs, iris_sample: Sample) -> None:
     warnings.filterwarnings("ignore", message="numpy.dtype size changed")
     warnings.filterwarnings("ignore", message="numpy.ufunc size changed")
     warnings.filterwarnings("ignore", message="You are accessing a training score")
+
+    # define checksums for this test
+    CHKSUM_PREDICTIONS = 13787062061417505156
+    CHKSUM_SHAP = 12636830693175052845
+    CHKSUM_CORR_MATRIX = 9331449050691600977
 
     # define a CV:
     # noinspection PyTypeChecker
@@ -260,9 +317,22 @@ def test_model_inspection_classifier(n_jobs, iris_sample: Sample) -> None:
         n_jobs=n_jobs,
     )
 
+    predictions = model_fit.predictions_for_all_splits()
+
+    # check actual values using checksum:
+    assert (
+        np.sum(hash_pandas_object(predictions.round(decimals=4)).values)
+        == CHKSUM_PREDICTIONS
+    )
+
     model_inspector = ClassificationModelInspector(models=model_fit)
     # make and check shap value matrix
     shap_matrix = model_inspector.shap_matrix()
+
+    # check actual values using checksum:
+    assert (
+        np.sum(hash_pandas_object(shap_matrix.round(decimals=4)).values) == CHKSUM_SHAP
+    )
 
     # the length of rows in shap_matrix should be equal to the unique observation
     # indices we have had in the predictions_df
@@ -283,6 +353,12 @@ def test_model_inspection_classifier(n_jobs, iris_sample: Sample) -> None:
             <= corr_matrix.fillna(0).loc[:, c].max()
             <= 1.0
         )
+
+    # check actual values using checksum:
+    assert (
+        np.sum(hash_pandas_object(corr_matrix.round(decimals=4)).values)
+        == CHKSUM_CORR_MATRIX
+    )
 
     linkage_tree = model_inspector.cluster_dependent_features()
     print()
