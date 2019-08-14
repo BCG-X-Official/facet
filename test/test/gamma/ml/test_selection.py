@@ -1,3 +1,4 @@
+import hashlib
 import logging
 import warnings
 from typing import *
@@ -18,6 +19,8 @@ from gamma.sklearndf.classification import SVCDF
 from gamma.sklearndf.pipeline import ClassificationPipelineDF
 
 log = logging.getLogger(__name__)
+
+CHKSUM_SUMMARY_REPORT = "925b6623fa1b10bee69cb179b03a6c52"
 
 
 def test_model_ranker(
@@ -51,6 +54,9 @@ def test_model_ranker(
         assert set(scoring.model.get_params()).issubset(scoring.model.get_params())
 
     log.debug(f"\n{model_ranking}")
+    assert CHKSUM_SUMMARY_REPORT == (
+        hashlib.md5(summary_report(model_ranking).encode("utf-8")).hexdigest()
+    )
 
 
 def test_model_ranker_no_preprocessing(n_jobs) -> None:
