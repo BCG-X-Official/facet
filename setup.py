@@ -129,8 +129,8 @@ setup(
         "shap>=0.28,<0.29",
         "scikit-learn>=0.21,<0.22",
         "joblib>=0.13,<0.14",
-        # todo: add tag for version control in there
-        "gamma-common @ git+ssh://git@git.sourceai.io/alpha/gamma-common.git#egg=gamma.common",
+        # todo: add tag for version control to all deps, as done for gamma-common:
+        "gamma-common @ git+ssh://git@git.sourceai.io/alpha/gamma-common.git@v1.0.0#egg=gamma.common",
         "gamma-sklearndf @ git+ssh://git@git.sourceai.io/alpha/gamma-sklearndf.git#egg=gamma.sklearndf",
         "gamma-viz @ git+ssh://git@git.sourceai.io/alpha/gamma-viz.git#egg=gamma.viz",
     ],
