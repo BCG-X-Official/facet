@@ -36,7 +36,7 @@ from gamma.ml.fitcv import (
     RegressorFitCV,
 )
 from gamma.ml.viz import LinkageTree
-from gamma.sklearndf.pipeline import PredictivePipelineDF
+from gamma.sklearndf.pipeline import PredictorPipelineDF
 
 log = logging.getLogger(__name__)
 
@@ -121,7 +121,7 @@ class PredictorInspector(ModelInspector[PredictorFitCV], ABC):
         return self._shap_matrix
 
     def _shap_matrix_for_split(
-        self, split_id: int, split_model: PredictivePipelineDF
+        self, split_id: int, split_model: PredictorPipelineDF
     ) -> pd.DataFrame:
         """
         Calaculate the SHAP matrix for a single split.

@@ -37,7 +37,7 @@ from gamma.sklearndf.classification import CalibratedClassifierCVDF
 from gamma.sklearndf.pipeline import (
     ClassifierPipelineDF,
     EstimatorPipelineDF,
-    PredictivePipelineDF,
+    PredictorPipelineDF,
     RegressorPipelineDF,
 )
 
@@ -46,9 +46,9 @@ log = logging.getLogger(__name__)
 __all__ = ["EstimatorFitCV", "PredictorFitCV", "RegressorFitCV", "ClassifierFitCV"]
 
 T_EstimatorPipelineDF = TypeVar("T_EstimatorPipelineDF", bound=EstimatorPipelineDF)
-T_PredictivePipelineDF = TypeVar("T_PredictivePipelineDF", bound=PredictivePipelineDF)
-T_RegressionPipelineDF = TypeVar("T_RegressionPipelineDF", bound=RegressorPipelineDF)
-T_ClassificationPipelineDF = TypeVar(
+T_PredictorPipelineDF = TypeVar("T_PredictivePipelineDF", bound=PredictorPipelineDF)
+T_RegressorPipelineDF = TypeVar("T_RegressorPipelineDF", bound=RegressorPipelineDF)
+T_ClassifierPipelineDF = TypeVar(
     "T_ClassificationPipelineDF", bound=ClassifierPipelineDF
 )
 
@@ -154,7 +154,7 @@ class EstimatorFitCV(ABC, Generic[T_EstimatorPipelineDF]):
 
 
 class PredictorFitCV(
-    EstimatorFitCV[T_PredictivePipelineDF], Generic[T_PredictivePipelineDF]
+    EstimatorFitCV[T_PredictorPipelineDF], Generic[T_PredictorPipelineDF]
 ):
     """
     Collection of predictive models fitted for all splits of a given cross-validation
@@ -178,7 +178,7 @@ class PredictorFitCV(
 
     def __init__(
         self,
-        pipeline: T_PredictivePipelineDF,
+        pipeline: T_PredictorPipelineDF,
         cv: BaseCrossValidator,
         sample: Sample,
         n_jobs: int = 1,
@@ -282,13 +282,13 @@ class PredictorFitCV(
 
 
 class RegressorFitCV(
-    PredictorFitCV[T_RegressionPipelineDF], Generic[T_RegressionPipelineDF]
+    PredictorFitCV[T_RegressorPipelineDF], Generic[T_RegressorPipelineDF]
 ):
     pass
 
 
 class ClassifierFitCV(
-    PredictorFitCV[T_ClassificationPipelineDF], Generic[T_ClassificationPipelineDF]
+    PredictorFitCV[T_ClassifierPipelineDF], Generic[T_ClassifierPipelineDF]
 ):
     __slots__ = [
         "_probabilities_for_all_samples",
@@ -308,7 +308,7 @@ class ClassifierFitCV(
 
     def __init__(
         self,
-        pipeline: T_ClassificationPipelineDF,
+        pipeline: T_ClassifierPipelineDF,
         cv: BaseCrossValidator,
         sample: Sample,
         calibration: Optional[ProbabilityCalibrationMethod] = None,
@@ -327,7 +327,7 @@ class ClassifierFitCV(
 
         self._calibration = calibration
         self._calibrated_model_by_split: Optional[
-            List[T_ClassificationPipelineDF]
+            List[T_ClassifierPipelineDF]
         ] = None
         self._probabilities_for_all_samples: Optional[pd.DataFrame] = None
         self._log_probabilities_for_all_samples: Optional[pd.DataFrame] = None
@@ -360,7 +360,7 @@ class ClassifierFitCV(
         ):
             test_sample = sample.select_observations_by_position(positions=test_indices)
 
-            pipeline: T_ClassificationPipelineDF = (
+            pipeline: T_ClassifierPipelineDF = (
                 self[split_id]
                 if self._calibration is None
                 else self.calibrated_model(split_id=split_id)
@@ -401,7 +401,7 @@ class ClassifierFitCV(
                 f'"{self._calibration.value}"'
             )
             self._calibrated_model_by_split: List[
-                T_ClassificationPipelineDF
+                T_ClassifierPipelineDF
             ] = self._parallel()(
                 delayed(self._calibrate_probabilities_for_split)(
                     # note: we specifically do not clone here, since
@@ -419,10 +419,10 @@ class ClassifierFitCV(
 
     @staticmethod
     def _calibrate_probabilities_for_split(
-        model: T_ClassificationPipelineDF,
+        model: T_ClassifierPipelineDF,
         test_sample: Sample,
         calibration: ProbabilityCalibrationMethod,
-    ) -> T_ClassificationPipelineDF:
+    ) -> T_ClassifierPipelineDF:
 
         cv = CalibratedClassifierCVDF(
             base_estimator=model.classifier, method=calibration.value, cv="prefit"
@@ -441,7 +441,7 @@ class ClassifierFitCV(
 
         return model_calibrated
 
-    def calibrated_model(self, split_id: int) -> T_ClassificationPipelineDF:
+    def calibrated_model(self, split_id: int) -> T_ClassifierPipelineDF:
         """
         :param split_id: start index of test split
         :return: the model fitted & calibrated for the train split at the given index
@@ -449,7 +449,7 @@ class ClassifierFitCV(
         self._fit()
         return self._calibrated_model_by_split[split_id]
 
-    def calibrated_models(self) -> Iterator[T_ClassificationPipelineDF]:
+    def calibrated_models(self) -> Iterator[T_ClassifierPipelineDF]:
         """
         :return: an iterator of all models fitted & calibrated over all train splits
         """
