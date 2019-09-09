@@ -35,10 +35,10 @@ from gamma.ml import Sample
 from gamma.sklearndf._wrapper import ClassifierWrapperDF
 from gamma.sklearndf.classification import CalibratedClassifierCVDF
 from gamma.sklearndf.pipeline import (
-    ClassificationPipelineDF,
+    ClassifierPipelineDF,
     EstimatorPipelineDF,
     PredictivePipelineDF,
-    RegressionPipelineDF,
+    RegressorPipelineDF,
 )
 
 log = logging.getLogger(__name__)
@@ -47,9 +47,9 @@ __all__ = ["EstimatorFitCV", "PredictorFitCV", "RegressorFitCV", "ClassifierFitC
 
 T_EstimatorPipelineDF = TypeVar("T_EstimatorPipelineDF", bound=EstimatorPipelineDF)
 T_PredictivePipelineDF = TypeVar("T_PredictivePipelineDF", bound=PredictivePipelineDF)
-T_RegressionPipelineDF = TypeVar("T_RegressionPipelineDF", bound=RegressionPipelineDF)
+T_RegressionPipelineDF = TypeVar("T_RegressionPipelineDF", bound=RegressorPipelineDF)
 T_ClassificationPipelineDF = TypeVar(
-    "T_ClassificationPipelineDF", bound=ClassificationPipelineDF
+    "T_ClassificationPipelineDF", bound=ClassifierPipelineDF
 )
 
 
@@ -429,7 +429,7 @@ class ClassifierFitCV(
         )
 
         # clone the model to create a calibrated fit for the current split
-        model_calibrated = ClassificationPipelineDF(
+        model_calibrated = ClassifierPipelineDF(
             classifier=cv, preprocessing=model.preprocessing
         )
 

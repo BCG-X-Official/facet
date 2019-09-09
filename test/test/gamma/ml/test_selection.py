@@ -16,7 +16,7 @@ from gamma.ml.selection import (
 )
 from gamma.ml.validation import CircularCrossValidator
 from gamma.sklearndf.classification import SVCDF
-from gamma.sklearndf.pipeline import ClassificationPipelineDF
+from gamma.sklearndf.pipeline import ClassifierPipelineDF
 
 log = logging.getLogger(__name__)
 
@@ -70,7 +70,7 @@ def test_model_ranker_no_preprocessing(n_jobs) -> None:
     # define parameters and model
     models = [
         ModelParameterGrid(
-            pipeline=ClassificationPipelineDF(
+            pipeline=ClassifierPipelineDF(
                 classifier=SVCDF(gamma="scale"), preprocessing=None
             ),
             estimator_parameters={"kernel": ("linear", "rbf"), "C": [1, 10]},

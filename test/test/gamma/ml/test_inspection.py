@@ -12,7 +12,7 @@ from sklearn.model_selection import BaseCrossValidator, RepeatedKFold
 
 from gamma.ml import Sample
 from gamma.ml.fitcv import ClassifierFitCV, RegressorFitCV
-from gamma.ml.inspection import ClassificationModelInspector, RegressionModelInspector
+from gamma.ml.inspection import ClassifierInspector, RegressorInspector
 from gamma.ml.selection import (
     ModelEvaluation,
     ModelParameterGrid,
@@ -23,7 +23,7 @@ from gamma.ml.validation import CircularCrossValidator
 from gamma.ml.viz import DendrogramDrawer, DendrogramReportStyle
 from gamma.sklearndf import TransformerDF
 from gamma.sklearndf.classification import RandomForestClassifierDF
-from gamma.sklearndf.pipeline import ClassificationPipelineDF, RegressionPipelineDF
+from gamma.sklearndf.pipeline import ClassifierPipelineDF, RegressorPipelineDF
 from gamma.sklearndf.regression import LGBMRegressorDF, SVRDF
 
 log = logging.getLogger(__name__)
@@ -54,12 +54,12 @@ def test_model_inspection(n_jobs, boston_sample: Sample) -> None:
     models = [
         ModelParameterGrid(
             pipeline=(
-                RegressionPipelineDF(regressor=SVRDF(gamma="scale"), preprocessing=None)
+                RegressorPipelineDF(regressor=SVRDF(gamma="scale"), preprocessing=None)
             ),
             estimator_parameters={"kernel": ("linear", "rbf"), "C": [1, 10]},
         ),
         ModelParameterGrid(
-            pipeline=RegressionPipelineDF(
+            pipeline=RegressorPipelineDF(
                 regressor=LGBMRegressorDF(), preprocessing=None
             ),
             estimator_parameters={
@@ -127,7 +127,7 @@ def test_model_inspection(n_jobs, boston_sample: Sample) -> None:
             == CHKSUMS_PREDICTIONS[model_index]
         )
 
-        model_inspector = RegressionModelInspector(models=model_fit)
+        model_inspector = RegressorInspector(models=model_fit)
         # make and check shap value matrix
         shap_matrix = model_inspector.shap_matrix()
 
@@ -218,7 +218,7 @@ def test_model_inspection_with_encoding(
         == CHKSUM_PREDICTIONS
     )
 
-    mi = RegressionModelInspector(models=model_fit)
+    mi = RegressorInspector(models=model_fit)
 
     shap_matrix = mi.shap_matrix()
 
@@ -254,7 +254,7 @@ def test_model_inspection_with_encoding(
             # noinspection PyUnresolvedReferences
             return KernelExplainer(model=estimator.predict, data=data)
 
-    mi2 = RegressionModelInspector(models=model_fit, explainer_factory=ef)
+    mi2 = RegressorInspector(models=model_fit, explainer_factory=ef)
     mi2.shap_matrix()
 
     linkage_tree = mi2.cluster_dependent_features()
@@ -283,7 +283,7 @@ def test_model_inspection_classifier(n_jobs, iris_sample: Sample) -> None:
     # define parameters and models
     models = [
         ModelParameterGrid(
-            pipeline=ClassificationPipelineDF(
+            pipeline=ClassifierPipelineDF(
                 classifier=RandomForestClassifierDF(), preprocessing=None
             ),
             estimator_parameters={"n_estimators": [50, 80], "random_state": [42]},
@@ -325,7 +325,7 @@ def test_model_inspection_classifier(n_jobs, iris_sample: Sample) -> None:
         == CHKSUM_PREDICTIONS
     )
 
-    model_inspector = ClassificationModelInspector(models=model_fit)
+    model_inspector = ClassifierInspector(models=model_fit)
     # make and check shap value matrix
     shap_matrix = model_inspector.shap_matrix()
 
