@@ -36,12 +36,12 @@ class CircularCrossValidator(BaseCrossValidator):
     /sklearn/model_selection/_search.py#L961>`_.
 
     :param test_ratio:  Ratio determining the size of the test set (default=0.2).
-    :param num_splits:   Number of splits to generate (default=50).
+    :param n_splits:   Number of splits to generate (default=50).
     """
 
-    __slots__ = ["_test_ratio", "_num_splits", "_use_bootstrapping"]
+    __slots__ = ["_test_ratio", "_n_splits", "_use_bootstrapping"]
 
-    def __init__(self, test_ratio: float = 0.2, num_splits: int = 50) -> None:
+    def __init__(self, test_ratio: float = 0.2, n_splits: int = 50) -> None:
         super().__init__()
 
         if not (0 < test_ratio < 1):
@@ -50,7 +50,7 @@ class CircularCrossValidator(BaseCrossValidator):
             )
 
         self._test_ratio = test_ratio
-        self._num_splits = num_splits
+        self._n_splits = n_splits
 
     # noinspection PyPep8Naming
     def test_split_starts(self, X) -> Generator[int, None, None]:
@@ -71,9 +71,9 @@ class CircularCrossValidator(BaseCrossValidator):
         :param n_samples: number of samples
         :return: generator of the first and last integer index of each test split
         """
-        step = n_samples / self._num_splits
+        step = n_samples / self._n_splits
         test_size = max(1.0, n_samples * self._test_ratio)
-        for split in range(self._num_splits):
+        for split in range(self._n_splits):
             split_start = split * step
             yield (int(split_start), int(split_start + test_size))
 
@@ -134,4 +134,4 @@ class CircularCrossValidator(BaseCrossValidator):
         :return: Returns the number of splits as configured during the construction of
           the object
         """
-        return self._num_splits
+        return self._n_splits

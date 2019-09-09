@@ -16,7 +16,7 @@ def model_inspector(
     batch_table: pd.DataFrame, sample: Sample, simple_preprocessor: TransformerDF
 ) -> RegressorInspector:
 
-    cv = CircularCrossValidator(test_ratio=0.20, num_splits=5)
+    cv = CircularCrossValidator(test_ratio=0.20, n_splits=5)
     pipeline = RegressorPipelineDF(
         regressor=LGBMRegressorDF(), preprocessing=simple_preprocessor
     )

@@ -9,7 +9,7 @@ from sklearn import datasets
 from sklearn.utils import Bunch
 
 from gamma.ml import Sample
-from gamma.ml.selection import ModelParameterGrid
+from gamma.ml.selection import ParameterGrid
 from gamma.sklearndf import TransformerDF
 from gamma.sklearndf.pipeline import RegressorPipelineDF
 from gamma.sklearndf.regression import (
@@ -68,10 +68,10 @@ def batch_table(inputfile_config: Dict[str, Any]) -> pd.DataFrame:
 
 
 @pytest.fixture
-def regressor_grids(simple_preprocessor) -> List[ModelParameterGrid]:
+def regressor_grids(simple_preprocessor) -> List[ParameterGrid]:
     RANDOM_STATE = {f"random_state": [42]}
     return [
-        ModelParameterGrid(
+        ParameterGrid(
             pipeline=RegressorPipelineDF(
                 preprocessing=simple_preprocessor, regressor=LGBMRegressorDF()
             ),
@@ -82,19 +82,19 @@ def regressor_grids(simple_preprocessor) -> List[ModelParameterGrid]:
                 **RANDOM_STATE,
             },
         ),
-        ModelParameterGrid(
+        ParameterGrid(
             pipeline=RegressorPipelineDF(
                 preprocessing=simple_preprocessor, regressor=AdaBoostRegressorDF()
             ),
             estimator_parameters={"n_estimators": [50, 80], **RANDOM_STATE},
         ),
-        ModelParameterGrid(
+        ParameterGrid(
             pipeline=RegressorPipelineDF(
                 preprocessing=simple_preprocessor, regressor=RandomForestRegressorDF()
             ),
             estimator_parameters={"n_estimators": [50, 80], **RANDOM_STATE},
         ),
-        ModelParameterGrid(
+        ParameterGrid(
             pipeline=RegressorPipelineDF(
                 preprocessing=simple_preprocessor, regressor=DecisionTreeRegressorDF()
             ),
@@ -104,19 +104,19 @@ def regressor_grids(simple_preprocessor) -> List[ModelParameterGrid]:
                 **RANDOM_STATE,
             },
         ),
-        ModelParameterGrid(
+        ParameterGrid(
             pipeline=RegressorPipelineDF(
                 preprocessing=simple_preprocessor, regressor=ExtraTreeRegressorDF()
             ),
             estimator_parameters={"max_depth": [5, 10, 12], **RANDOM_STATE},
         ),
-        ModelParameterGrid(
+        ParameterGrid(
             pipeline=RegressorPipelineDF(
                 preprocessing=simple_preprocessor, regressor=SVRDF()
             ),
             estimator_parameters={"gamma": [0.5, 1], "C": [50, 100]},
         ),
-        ModelParameterGrid(
+        ParameterGrid(
             pipeline=RegressorPipelineDF(
                 preprocessing=simple_preprocessor, regressor=LinearRegressionDF()
             ),
