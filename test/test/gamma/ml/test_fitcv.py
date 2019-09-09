@@ -12,7 +12,7 @@ from gamma.ml import Sample
 from gamma.ml.fitcv import ClassifierFitCV
 from gamma.ml.selection import (
     ModelEvaluation,
-    ModelParameterGrid,
+    ParameterGrid,
     ModelRanker,
     summary_report,
 )
@@ -42,7 +42,7 @@ def test_prediction_classifier(n_jobs, iris_sample: Sample) -> None:
 
     # define parameters and models
     models = [
-        ModelParameterGrid(
+        ParameterGrid(
             pipeline=ClassifierPipelineDF(
                 classifier=RandomForestClassifierDF(), preprocessing=None
             ),

@@ -10,7 +10,7 @@ from sklearn import datasets
 from gamma.ml import Sample
 from gamma.ml.selection import (
     ModelEvaluation,
-    ModelParameterGrid,
+    ParameterGrid,
     ModelRanker,
     summary_report,
 )
@@ -27,7 +27,7 @@ def test_model_ranker(
     batch_table: pd.DataFrame, regressor_grids, sample: Sample, n_jobs
 ) -> None:
     # define the circular cross validator with just 5 splits (to speed up testing)
-    circular_cv = CircularCrossValidator(test_ratio=0.20, num_splits=5)
+    circular_cv = CircularCrossValidator(test_ratio=0.20, n_splits=5)
 
     model_ranker: ModelRanker = ModelRanker(
         grids=regressor_grids, cv=circular_cv, scoring="r2"
@@ -65,11 +65,11 @@ def test_model_ranker_no_preprocessing(n_jobs) -> None:
     warnings.filterwarnings("ignore", message="You are accessing a training score")
 
     # define a yield-engine circular CV:
-    cv = CircularCrossValidator(test_ratio=0.21, num_splits=50)
+    cv = CircularCrossValidator(test_ratio=0.21, n_splits=50)
 
     # define parameters and model
     models = [
-        ModelParameterGrid(
+        ParameterGrid(
             pipeline=ClassifierPipelineDF(
                 classifier=SVCDF(gamma="scale"), preprocessing=None
             ),

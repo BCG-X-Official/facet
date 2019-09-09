@@ -34,7 +34,7 @@ def test_get_train_test_splits_as_indices() -> None:
     test_splits = 200
     test_X = np.arange(0, 1000, 1)
 
-    my_cv = CircularCrossValidator(test_ratio=0.2, num_splits=test_splits)
+    my_cv = CircularCrossValidator(test_ratio=0.2, n_splits=test_splits)
 
     list_of_test_splits = list(my_cv._iter_test_indices(test_X))
 
@@ -65,7 +65,7 @@ def test_circular_cv_with_sk_learn() -> None:
     iris = datasets.load_iris()
 
     # define a yield-engine circular CV:
-    my_cv = CircularCrossValidator(test_ratio=0.21, num_splits=50)
+    my_cv = CircularCrossValidator(test_ratio=0.21, n_splits=50)
 
     # define parameters and model
     parameters = {"kernel": ("linear", "rbf"), "C": [1, 10]}

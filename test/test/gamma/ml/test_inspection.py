@@ -15,7 +15,7 @@ from gamma.ml.fitcv import ClassifierFitCV, RegressorFitCV
 from gamma.ml.inspection import ClassifierInspector, RegressorInspector
 from gamma.ml.selection import (
     ModelEvaluation,
-    ModelParameterGrid,
+    ParameterGrid,
     ModelRanker,
     summary_report,
 )
@@ -52,13 +52,13 @@ def test_model_inspection(n_jobs, boston_sample: Sample) -> None:
 
     # define parameters and models
     models = [
-        ModelParameterGrid(
+        ParameterGrid(
             pipeline=(
                 RegressorPipelineDF(regressor=SVRDF(gamma="scale"), preprocessing=None)
             ),
             estimator_parameters={"kernel": ("linear", "rbf"), "C": [1, 10]},
         ),
-        ModelParameterGrid(
+        ParameterGrid(
             pipeline=RegressorPipelineDF(
                 regressor=LGBMRegressorDF(), preprocessing=None
             ),
@@ -173,7 +173,7 @@ def test_model_inspection(n_jobs, boston_sample: Sample) -> None:
 
 def test_model_inspection_with_encoding(
     batch_table: pd.DataFrame,
-    regressor_grids: Sequence[ModelParameterGrid],
+    regressor_grids: Sequence[ParameterGrid],
     sample: Sample,
     simple_preprocessor: TransformerDF,
     n_jobs,
@@ -185,7 +185,7 @@ def test_model_inspection_with_encoding(
     CHKSUM_CORR_MATRIX = 9841870561220906358
 
     # define the circular cross validator with just 5 splits (to speed up testing)
-    circular_cv = CircularCrossValidator(test_ratio=0.20, num_splits=5)
+    circular_cv = CircularCrossValidator(test_ratio=0.20, n_splits=5)
 
     model_ranker: ModelRanker = ModelRanker(
         grids=regressor_grids, cv=circular_cv, scoring="r2"
@@ -282,7 +282,7 @@ def test_model_inspection_classifier(n_jobs, iris_sample: Sample) -> None:
 
     # define parameters and models
     models = [
-        ModelParameterGrid(
+        ParameterGrid(
             pipeline=ClassifierPipelineDF(
                 classifier=RandomForestClassifierDF(), preprocessing=None
             ),

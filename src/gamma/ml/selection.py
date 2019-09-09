@@ -14,7 +14,7 @@
 """
 ModelPipelineDF selection and hyperparameter optimisation.
 
-:class:`ModelParameterGrid` encapsulates a :class:`gamma.ml.ModelPipelineDF` and a grid of
+:class:`ParameterGrid` encapsulates a :class:`gamma.ml.ModelPipelineDF` and a grid of
 hyperparameters.
 
 :class:`ModelRanker` selects the best model and parametrisation based on the
@@ -31,10 +31,8 @@ from sklearn.model_selection import BaseCrossValidator, GridSearchCV
 from gamma.ml import Sample
 from gamma.sklearndf.pipeline import EstimatorPipelineDF, PredictorPipelineDF
 
-ParameterGrid = Dict[str, Sequence[Any]]
 
-
-class ModelParameterGrid:
+class ParameterGrid:
     """
     A grid of hyperparameters for model tuning.
 
@@ -49,8 +47,8 @@ class ModelParameterGrid:
     def __init__(
         self,
         pipeline: EstimatorPipelineDF,
-        estimator_parameters: ParameterGrid,
-        preprocessing_parameters: Optional[ParameterGrid] = None,
+        estimator_parameters: Dict[str, Sequence[Any]],
+        preprocessing_parameters: Optional[Dict[str, Sequence[Any]]] = None,
     ) -> None:
         self._pipeline = pipeline
         self._estimator_parameters = estimator_parameters
@@ -86,18 +84,18 @@ class ModelParameterGrid:
         return self._pipeline
 
     @property
-    def predictor_parameters(self) -> ParameterGrid:
+    def predictor_parameters(self) -> Dict[str, Sequence[Any]]:
         """The parameter grid for the estimator."""
         return self._estimator_parameters
 
     @property
-    def preprocessing_parameters(self) -> Optional[ParameterGrid]:
+    def preprocessing_parameters(self) -> Optional[Dict[str, Sequence[Any]]]:
         """The parameter grid for the preprocessor."""
         return self._preprocessing_parameters
 
     @property
-    def parameters(self) -> ParameterGrid:
-        """The parameters grid for the pipeline representing the entire model."""
+    def parameters(self) -> Dict[str, Sequence[Any]]:
+        """The parameter     grid for the pipeline representing the entire model."""
         return self._grid
 
 
@@ -162,7 +160,7 @@ class ModelRanker:
 
     def __init__(
         self,
-        grids: Iterable[ModelParameterGrid],
+        grids: Iterable[ParameterGrid],
         cv: Optional[BaseCrossValidator] = None,
         scoring: Union[
             str,
@@ -215,7 +213,7 @@ class ModelRanker:
         """
 
         # construct searchers
-        searchers: List[Tuple[GridSearchCV, ModelParameterGrid]] = [
+        searchers: List[Tuple[GridSearchCV, ParameterGrid]] = [
             (
                 GridSearchCV(
                     estimator=grid.pipeline,
