@@ -7,7 +7,7 @@ from pytest import approx
 
 from gamma.ml import Sample
 from gamma.ml.fitcv import RegressorFitCV
-from gamma.ml.selection import ModelEvaluation, ModelParameterGrid, ModelRanker
+from gamma.ml.selection import ModelEvaluation, ParameterGrid, ModelRanker
 from gamma.ml.validation import CircularCrossValidator
 from gamma.sklearndf import TransformerDF
 from gamma.yieldengine.partition import ContinuousRangePartitioning
@@ -21,14 +21,14 @@ TEST_RATIO = 0.2
 
 def test_univariate_simulation(
     batch_table: pd.DataFrame,
-    regressor_grids: Iterable[ModelParameterGrid],
+    regressor_grids: Iterable[ParameterGrid],
     sample: Sample,
     simple_preprocessor: TransformerDF,
     n_jobs,
 ) -> None:
 
     # define the circular cross validator with just 5 splits (to speed up testing)
-    circular_cv = CircularCrossValidator(test_ratio=TEST_RATIO, num_splits=N_SPLITS)
+    circular_cv = CircularCrossValidator(test_ratio=TEST_RATIO, n_splits=N_SPLITS)
 
     model_ranker: ModelRanker = ModelRanker(
         grids=regressor_grids, cv=circular_cv, scoring="r2"
