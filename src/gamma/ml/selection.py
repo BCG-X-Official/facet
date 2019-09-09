@@ -29,7 +29,7 @@ import numpy as np
 from sklearn.model_selection import BaseCrossValidator, GridSearchCV
 
 from gamma.ml import Sample
-from gamma.sklearndf.pipeline import EstimatorPipelineDF, PredictivePipelineDF
+from gamma.sklearndf.pipeline import EstimatorPipelineDF, PredictorPipelineDF
 
 ParameterGrid = Dict[str, Sequence[Any]]
 
@@ -78,9 +78,9 @@ class ModelParameterGrid:
         self._grid = dict(grid_parameters)
 
     @property
-    def pipeline(self) -> PredictivePipelineDF:
+    def pipeline(self) -> PredictorPipelineDF:
         """
-        The :class:`~gamma.ml.PredictivePipelineDF` for which to optimise the
+        The :class:`~gamma.ml.PredictorPipelineDF` for which to optimise the
         parameters.
         """
         return self._pipeline
@@ -126,7 +126,7 @@ class ModelEvaluation(NamedTuple):
 
     Has attributes:
 
-    - model: the fitted  :class:`~gamma.ml.PredictivePipelineDF`
+    - model: the fitted  :class:`~gamma.ml.PredictorPipelineDF`
     - parameters: the hyperparameters selected for the model during grid
         search, as a mapping of parameter names to parameter values
     - scoring: scorings for the model based on the provided scorers;
@@ -136,7 +136,7 @@ class ModelEvaluation(NamedTuple):
         scorer and ranking metric
     """
 
-    model: PredictivePipelineDF
+    model: PredictorPipelineDF
     parameters: Mapping[str, Any]
     scoring: Mapping[str, ModelScoring]
     ranking_score: float
