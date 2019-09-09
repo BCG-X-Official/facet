@@ -42,9 +42,9 @@ log = logging.getLogger(__name__)
 
 __all__ = [
     "ModelInspector",
-    "PredictiveModelInspector",
-    "ClassificationModelInspector",
-    "RegressionModelInspector",
+    "PredictorInspector",
+    "ClassifierInspector",
+    "RegressorInspector",
 ]
 
 
@@ -65,7 +65,7 @@ class ModelInspector(Generic[T_EstimatorFitCV]):
         return self._models
 
 
-class PredictiveModelInspector(ModelInspector[PredictorFitCV], ABC):
+class PredictorInspector(ModelInspector[PredictorFitCV], ABC):
     """
     Inspect a model through its SHAP values.
 
@@ -267,7 +267,7 @@ def tree_explainer_factory(estimator: BaseEstimator, data: pd.DataFrame) -> Expl
         return KernelExplainer(model=estimator.predict, data=data)
 
 
-class RegressionModelInspector(PredictiveModelInspector):
+class RegressorInspector(PredictorInspector):
     """
     Inspect a regression model through its SHAP values.
 
@@ -313,7 +313,7 @@ class RegressionModelInspector(PredictiveModelInspector):
         )
 
 
-class ClassificationModelInspector(PredictiveModelInspector):
+class ClassifierInspector(PredictorInspector):
     """
     Inspect a classification model through its SHAP values.
 

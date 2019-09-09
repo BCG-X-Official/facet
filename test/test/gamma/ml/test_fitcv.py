@@ -17,7 +17,7 @@ from gamma.ml.selection import (
     summary_report,
 )
 from gamma.sklearndf.classification import RandomForestClassifierDF
-from gamma.sklearndf.pipeline import ClassificationPipelineDF
+from gamma.sklearndf.pipeline import ClassifierPipelineDF
 
 log = logging.getLogger(__name__)
 
@@ -43,7 +43,7 @@ def test_prediction_classifier(n_jobs, iris_sample: Sample) -> None:
     # define parameters and models
     models = [
         ModelParameterGrid(
-            pipeline=ClassificationPipelineDF(
+            pipeline=ClassifierPipelineDF(
                 classifier=RandomForestClassifierDF(), preprocessing=None
             ),
             estimator_parameters={"n_estimators": [50, 80], "random_state": [42]},
