@@ -196,7 +196,8 @@ class ModelRanker:
         pre_dispatch: str = "2*n_jobs",
     ) -> Sequence[ModelEvaluation]:
         """
-        Execute the pipeline for all models and compute the ranking.
+        Execute the pipeline for all parameter grids and parameter combinations, and
+        rank the resulting models in descending order.
 
         :param sample: sample to fit pipeline to
         :param ranking_scorer: scoring function used for ranking across models, \
@@ -220,6 +221,7 @@ class ModelRanker:
                     cv=self._cv,
                     param_grid=grid.parameters,
                     scoring=self._scoring,
+                    iid=False,
                     return_train_score=False,
                     n_jobs=n_jobs,
                     pre_dispatch=pre_dispatch,
