@@ -148,7 +148,7 @@ class PredictorInspector(ModelInspector[PredictorFitCV], ABC):
             data_transformed = split_x
 
         raw_shap_values = self._explainer_factory(
-            estimator=estimator.root_estimator(), data=data_transformed
+            estimator=estimator.root_estimator, data=data_transformed
         ).shap_values(data_transformed)
 
         return self._shap_matrix_for_split_to_df(
