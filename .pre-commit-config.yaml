@@ -3,4 +3,3 @@ repos:
     rev: stable
     hooks:
     - id: black
-      args: [-q]
