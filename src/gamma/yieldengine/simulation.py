@@ -173,19 +173,31 @@ class UnivariateSimulator(Generic[T_PredictiveFitCV], ABC):
         return self._max_percentile
 
     @abstractmethod
-    def simulate_feature(self, feature_name: str, partitioning: Partitioning):
+    def simulate_feature(self, name: str, partitioning: Partitioning):
         """
-        Simulate average target uplift for the given feature and for each partition in
-        the given partitioning.
+        Simulate the average impact on the target when fixing the value of the given
+        feature across all observations.
 
-        :param feature_name: the feature of the simulation
-        :param partitioning: the partitioning used for the simulation
+        :param name: the feature to run the simulation for
+        :param partitioning: the partitioning of feature values to run simulations for
         """
         pass
 
 
 class UnivariateProbabilitySimulator(UnivariateSimulator[ClassifierFitCV]):
-    def simulate_feature(self, feature_name: str, partitioning: Partitioning):
+    """
+    Univariate simulation for change in average predicted probability (CAPP) based on a
+    classification model.
+    """
+
+    def simulate_feature(self, name: str, partitioning: Partitioning):
+        """
+        Simulate the average change in probability when fixing the
+        value of the given feature across all observations.
+
+        :param name: the feature to run the simulation for
+        :param partitioning: the partitioning of feature values to run simulations for
+        """
         raise NotImplementedError(
             "simulation of average change in probability will be included in a future "
             "release"
@@ -193,31 +205,42 @@ class UnivariateProbabilitySimulator(UnivariateSimulator[ClassifierFitCV]):
 
 
 class UnivariateUpliftSimulator(UnivariateSimulator[RegressorFitCV]):
+    """
+    Univariate simulation for target uplift based on a regression model.
+    """
+
     F_SPLIT_ID = "split_id"
     F_PARAMETER_VALUE = "parameter_value"
     F_RELATIVE_TARGET_CHANGE = "relative_target_change"
 
     def simulate_feature(
-        self, feature_name: str, partitioning: Partitioning
+        self, name: str, partitioning: Partitioning
     ) -> UnivariateSimulation:
         """
-        Simulate average target uplift for the given feature and for each partition in
-        the given partitioning.
+        Simulate the average target uplift when fixing the value of the given feature
+        across all observations.
 
-        :param feature_name: the feature of the simulation
-        :param partitioning: the partitioning used for the simulation
+        :param name: the feature to run the simulation for
+        :param partitioning: the partitioning of feature values to run simulations for
         """
+
+        sample = self.models.sample
+        target = sample.target
+
+        if not isinstance(target, pd.Series):
+            raise NotImplementedError("multi-target simulations are not supported")
+
         simulated_values = partitioning.partitions()
         predicted_change = self._aggregate_simulation_results(
             results_per_split=(
                 self._simulate_feature_with_values(
-                    feature_name=feature_name, simulated_values=simulated_values
+                    feature_name=name, simulated_values=simulated_values
                 )
             )
         )
         return UnivariateSimulation(
-            feature_name=feature_name,
-            target_name=self.models.sample.target_name,
+            feature_name=name,
+            target_name=target.name,
             partitioning=partitioning,
             median_change=predicted_change.iloc[:, 1].values,
             min_change=predicted_change.iloc[:, 0].values,
@@ -242,11 +265,12 @@ class UnivariateUpliftSimulator(UnivariateSimulator[RegressorFitCV]):
         :return: dataframe with three columns: `split_id`, `parameter_value` and
           `relative_target_change`.
         """
-        if feature_name not in self.models.sample.feature_names:
+        sample = self.models.sample
+
+        if feature_name not in sample.features.columns:
             raise ValueError(f"Feature '{feature_name}' not in sample")
 
         def _simulate_values() -> Generator[Tuple[int, Any, float], None, None]:
-            sample = self.models.sample
             feature_dtype = sample.features.loc[:, feature_name].dtype
             for value in simulated_values:
                 # replace the simulated column with a constant value
