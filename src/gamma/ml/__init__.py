@@ -2,7 +2,8 @@ from copy import copy
 from typing import Any, Iterable, Optional, Sequence, Union
 
 import pandas as pd
-from gamma.common import ListLike
+
+from gamma.common import is_list_like, ListLike
 
 
 class Sample:
@@ -29,72 +30,72 @@ class Sample:
     DTYPE_CATEGORICAL = "category"
     DTYPE_DATETIME_TZ = "datetimetz"
 
-    __slots__ = ["_observations", "_target_name", "_feature_names"]
+    __slots__ = ["_observations", "_target", "_features"]
 
     def __init__(
         self,
         observations: pd.DataFrame,
-        target_name: str,
-        feature_names: ListLike[str] = None,
+        target: Union[str, ListLike[str]],
+        features: ListLike[str] = None,
     ) -> None:
         """
         Construct a Sample object.
 
         :param observations: a Pandas DataFrame
-        :param target_name: string of column name that constitutes as the target
-        variable
-        :param feature_names: iterable of column names that constitute as feature
-        variables or \
-        ``None``, in which case all non-target columns are features
+        :param target: string or list-like of strings naming the columns that \
+            represent the target variable(s)
+        :param features: optional list-like of strings naming the columns that \
+            represent feature variables; or ``None`` (default), in which case all \
+            non-target columns are considered to be features
         """
+
+        def _ensure_columns_exist(column_type: str, columns: Iterable[str]):
+            # check if all provided feature names actually exist in the observations df
+            missing_columns = [
+                name for name in columns if not observations.columns.contains(key=name)
+            ]
+            if len(missing_columns) > 0:
+                missing_columns_list = '", "'.join(missing_columns)
+                raise KeyError(
+                    f"observations table is missing {column_type} columns "
+                    f'{", ".join(missing_columns_list)}'
+                )
+
         if observations is None or not isinstance(observations, pd.DataFrame):
             raise ValueError("sample is not a DataFrame")
 
         self._observations = observations
 
-        if target_name is None or not isinstance(target_name, str):
-            raise KeyError("target is not a string")
+        multi_target = is_list_like(target)
 
-        if target_name not in self._observations.columns:
-            raise KeyError(
-                f"target '{target_name}' is not a column in the observations table"
-            )
-
-        self._target_name = target_name
-
-        if feature_names is None:
-            feature_names = observations.columns.drop(labels=self._target_name)
+        if multi_target:
+            _ensure_columns_exist(column_type="target", columns=target)
         else:
-            # check if all provided feature names actually exist in the observations df
-            missing_columns = [
-                name
-                for name in feature_names
-                if not observations.columns.contains(key=name)
-            ]
-            if len(missing_columns) > 0:
-                missing_columns_list = '", "'.join(missing_columns)
+            if target not in self._observations.columns:
                 raise KeyError(
-                    "observations table is missing columns for features "
-                    f'"{missing_columns_list}"'
+                    f'target "{target}" is not a column in the observations table'
                 )
 
-            # ensure target column is not part of features:
-            if self._target_name in feature_names:
-                raise KeyError(
-                    f"features include the target column {self._target_name}"
-                )
+        self._target = target
 
-        self._feature_names = feature_names
+        if features is None:
+            features = observations.columns.drop(labels=target)
+        else:
+            _ensure_columns_exist(column_type="feature", columns=features)
 
-    @property
-    def target_name(self) -> str:
-        """Name of the target column."""
-        return self._target_name
+            # ensure features and target(s) do not overlap
 
-    @property
-    def feature_names(self) -> ListLike[str]:
-        """List of feature column names."""
-        return self._feature_names
+            if multi_target:
+                shared = set(target).intersection(features)
+                if len(shared) > 0:
+                    raise KeyError(
+                        f'targets {", ".join(shared)} are also included in the features'
+                    )
+            else:
+                if target in features:
+                    raise KeyError(f"target {target} is also included in the features")
+
+        self._features = features
 
     @property
     def index(self) -> pd.Index:
@@ -102,18 +103,19 @@ class Sample:
         return self.target.index
 
     @property
-    def target(self) -> pd.Series:
+    def target(self) -> Union[pd.Series, pd.DataFrame]:
         """
-        :return: the target column as a series
+        :return: the target as a pandas Series (if the target is a single column), or \
+            as a pandas DataFrame if the Sample has multiple target columns
         """
-        return self._observations.loc[:, self._target_name]
+        return self._observations.loc[:, self._target]
 
     @property
     def features(self) -> pd.DataFrame:
         """
         :return: all feature columns as a data frame
         """
-        return self._observations.loc[:, self._feature_names]
+        return self._observations.loc[:, self._features]
 
     def features_by_type(
         self, dtype: Union[type, str, Sequence[Union[type, str]]]
@@ -152,41 +154,51 @@ class Sample:
         subsample._observations = self._observations.loc[ids, :]
         return subsample
 
-    def select_features(self, feature_names: ListLike[str]) -> "Sample":
+    def select_features(self, features: ListLike[str]) -> "Sample":
         """
         Return a Sample object which only includes the given features
 
-        :param feature_names: names of features to be selected
+        :param features: names of features to be selected
         :return: copy of this sample, containing only the features with the given names
         """
-        subsample = copy(self)
-        if not set(feature_names).issubset(self._feature_names):
+        if not set(features).issubset(self._features):
             raise ValueError(
                 "arg features is not a subset of the features in this sample"
             )
-        subsample._feature_names = feature_names
-        subsample._observations = self._observations.loc[
-            :, [*feature_names, self._target_name]
-        ]
+
+        subsample = copy(self)
+        subsample._features = features
+
+        target = self._target
+        if not is_list_like(target):
+            target = [target]
+
+        subsample._observations = self._observations.loc[:, [*features, *target]]
 
         return subsample
 
     def replace_features(self, features: pd.DataFrame) -> "Sample":
         """
         Return a new sample with this sample's target vector, and features replaced
-        with the given features dataframe. The index if the given features must be
+        with the given features data frame. The index if the given features must be
         compatible with the index of this sample's observations.
         :param features: the features to replace the current features with
         :return: new Sample object with the replaced features
         """
         target = self.target
-        if not features.index.isin(target.index).all():
+
+        if not features.index.isin(self.index).all():
             raise ValueError(
                 "index of arg features contains items that do not exist in this sample"
             )
+
         return Sample(
-            observations=features.join(self.target), target_name=self.target.name
+            observations=features.join(target),
+            target=target.name if isinstance(target, pd.Series) else target.columns,
         )
 
     def __len__(self) -> int:
+        """
+        :return: the number of observations in this sample
+        """
         return len(self._observations)

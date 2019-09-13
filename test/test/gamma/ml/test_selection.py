@@ -10,8 +10,8 @@ from sklearn import datasets
 from gamma.ml import Sample
 from gamma.ml.selection import (
     ModelEvaluation,
-    ParameterGrid,
     ModelRanker,
+    ParameterGrid,
     summary_report,
 )
 from gamma.ml.validation import CircularCrossValidator
@@ -85,7 +85,7 @@ def test_model_ranker_no_preprocessing(n_jobs) -> None:
         data=np.c_[iris["data"], iris["target"]],
         columns=iris["feature_names"] + ["target"],
     )
-    test_sample: Sample = Sample(observations=test_data, target_name="target")
+    test_sample: Sample = Sample(observations=test_data, target="target")
 
     model_ranking: Sequence[ModelEvaluation] = model_ranker.run(
         test_sample, n_jobs=n_jobs
