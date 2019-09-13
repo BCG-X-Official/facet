@@ -1,4 +1,5 @@
 [tool.black]
+quiet = "True"
 line-length = 88
 target_version = ['py36']
 include = '\.pyi?$'
