@@ -136,7 +136,7 @@ def sample(batch_table: pd.DataFrame, inputfile_config: Dict[str, Any]) -> Sampl
     )
 
     sample = Sample(
-        observations=batch_table, target_name=inputfile_config["yield_column_name"]
+        observations=batch_table, target=inputfile_config["yield_column_name"]
     )
     return sample
 
@@ -162,7 +162,7 @@ def boston_df(boston_target: str) -> pd.DataFrame:
 
 @pytest.fixture
 def boston_sample(boston_df: pd.DataFrame, boston_target: str) -> Sample:
-    return Sample(observations=boston_df, target_name=boston_target)
+    return Sample(observations=boston_df, target=boston_target)
 
 
 @pytest.fixture
@@ -184,4 +184,4 @@ def iris_df(iris_target: str) -> pd.DataFrame:
 
 @pytest.fixture
 def iris_sample(iris_df: pd.DataFrame, iris_target: str) -> Sample:
-    return Sample(observations=iris_df, target_name=iris_target)
+    return Sample(observations=iris_df, target=iris_target)

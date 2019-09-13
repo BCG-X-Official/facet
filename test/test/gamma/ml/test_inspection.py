@@ -2,8 +2,8 @@ import logging
 import warnings
 from typing import *
 
-import pandas as pd
 import numpy as np
+import pandas as pd
 from pandas.core.util.hashing import hash_pandas_object
 from shap import KernelExplainer, TreeExplainer
 from shap.explainers.explainer import Explainer
@@ -15,8 +15,8 @@ from gamma.ml.fitcv import ClassifierFitCV, RegressorFitCV
 from gamma.ml.inspection import ClassifierInspector, RegressorInspector
 from gamma.ml.selection import (
     ModelEvaluation,
-    ParameterGrid,
     ModelRanker,
+    ParameterGrid,
     summary_report,
 )
 from gamma.ml.validation import CircularCrossValidator
@@ -146,8 +146,8 @@ def test_model_inspection(n_jobs, boston_sample: Sample) -> None:
         corr_matrix: pd.DataFrame = model_inspector.feature_dependency_matrix()
 
         # check number of rows
-        assert len(corr_matrix) == len(test_sample.feature_names) - 1
-        assert len(corr_matrix.columns) == len(test_sample.feature_names) - 1
+        assert len(corr_matrix) == len(test_sample.features.columns) - 1
+        assert len(corr_matrix.columns) == len(test_sample.features.columns) - 1
 
         # check correlation values
         for c in corr_matrix.columns:
@@ -342,8 +342,8 @@ def test_model_inspection_classifier(n_jobs, iris_sample: Sample) -> None:
     corr_matrix: pd.DataFrame = model_inspector.feature_dependency_matrix()
     log.info(corr_matrix)
     # check number of rows
-    assert len(corr_matrix) == len(test_sample.feature_names)
-    assert len(corr_matrix.columns) == len(test_sample.feature_names)
+    assert len(corr_matrix) == len(test_sample.features.columns)
+    assert len(corr_matrix.columns) == len(test_sample.features.columns)
 
     # check correlation values
     for c in corr_matrix.columns:
