@@ -5,15 +5,15 @@ from typing import *
 
 import numpy as np
 import pandas as pd
-from sklearn.model_selection import BaseCrossValidator, RepeatedKFold
 from pandas.util import hash_pandas_object
+from sklearn.model_selection import BaseCrossValidator, RepeatedKFold
 
 from gamma.ml import Sample
 from gamma.ml.fitcv import ClassifierFitCV
 from gamma.ml.selection import (
     ModelEvaluation,
-    ParameterGrid,
     ModelRanker,
+    ParameterGrid,
     summary_report,
 )
 from gamma.sklearndf.classification import RandomForestClassifierDF
@@ -80,7 +80,7 @@ def test_prediction_classifier(n_jobs, iris_sample: Sample) -> None:
         )
 
         # test predictions_for_all_samples
-        predictions_df: pd.DataFrame = model_fit.predictions_for_all_splits()
+        predictions_df = model_fit.predictions_for_all_splits()
         assert ClassifierFitCV.F_PREDICTION in predictions_df.columns
         assert ClassifierFitCV.F_TARGET in predictions_df.columns
 

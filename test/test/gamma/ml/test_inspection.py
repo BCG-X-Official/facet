@@ -76,13 +76,11 @@ def test_model_inspection(n_jobs, boston_sample: Sample) -> None:
         positions=range(0, 100)
     )
 
-    model_ranker: ModelRanker = ModelRanker(
+    model_ranker = ModelRanker(
         grids=models, cv=test_cv, scoring="neg_mean_squared_error"
     )
 
-    model_ranking: Sequence[ModelEvaluation] = model_ranker.run(
-        test_sample, n_jobs=n_jobs
-    )
+    model_ranking = model_ranker.run(test_sample, n_jobs=n_jobs)
 
     log.debug(f"\n{summary_report(model_ranking[:10])}")
 
@@ -101,7 +99,7 @@ def test_model_inspection(n_jobs, boston_sample: Sample) -> None:
         )
 
         # test predictions_for_all_samples
-        predictions_df: pd.DataFrame = model_fit.predictions_for_all_splits()
+        predictions_df = model_fit.predictions_for_all_splits()
         assert RegressorFitCV.F_PREDICTION in predictions_df.columns
         assert RegressorFitCV.F_TARGET in predictions_df.columns
 

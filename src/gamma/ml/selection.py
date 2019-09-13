@@ -29,24 +29,34 @@ import numpy as np
 from sklearn.model_selection import BaseCrossValidator, GridSearchCV
 
 from gamma.ml import Sample
-from gamma.sklearndf.pipeline import EstimatorPipelineDF, PredictorPipelineDF
+from gamma.sklearndf.pipeline import EstimatorPipelineDF
+
+__all__ = [
+    "ParameterGrid",
+    "ModelScoring",
+    "ModelEvaluation",
+    "ModelRanker",
+    "summary_report",
+]
+
+T_EstimatorPipelineDF = TypeVar("T_EstimatorPipelineDF", bound=EstimatorPipelineDF)
 
 
-class ParameterGrid:
+class ParameterGrid(Generic[T_EstimatorPipelineDF]):
     """
-    A grid of hyperparameters for model tuning.
+    A grid of hyper-parameters for model tuning.
 
-    :param pipeline: the :class:`ModelPipelineDF` to which the hyperparameters will be
-        applied
-    :param estimator_parameters: the hyperparameter grid in which to search for the
+    :param pipeline: the :class:`ModelPipelineDF` to which the hyper-parameters will \
+        be applied
+    :param estimator_parameters: the hyper-parameter grid in which to search for the \
         optimal parameter values for the pipeline's final estimator
-    :param preprocessing_parameters: the hyperparameter grid in which to search for
+    :param preprocessing_parameters: the hyper-parameter grid in which to search for \
         the optimal parameter values for the model's preprocessing pipeline (optional)
     """
 
     def __init__(
         self,
-        pipeline: EstimatorPipelineDF,
+        pipeline: T_EstimatorPipelineDF,
         estimator_parameters: Dict[str, Sequence[Any]],
         preprocessing_parameters: Optional[Dict[str, Sequence[Any]]] = None,
     ) -> None:
@@ -76,15 +86,15 @@ class ParameterGrid:
         self._grid = dict(grid_parameters)
 
     @property
-    def pipeline(self) -> PredictorPipelineDF:
+    def pipeline(self) -> T_EstimatorPipelineDF:
         """
-        The :class:`~gamma.ml.PredictorPipelineDF` for which to optimise the
+        The :class:`~gamma.ml.EstimatorPipelineDF` for which to optimise the
         parameters.
         """
         return self._pipeline
 
     @property
-    def predictor_parameters(self) -> Dict[str, Sequence[Any]]:
+    def estimator_parameters(self) -> Dict[str, Sequence[Any]]:
         """The parameter grid for the estimator."""
         return self._estimator_parameters
 
@@ -118,7 +128,7 @@ class ModelScoring:
         return self.split_scores.std()
 
 
-class ModelEvaluation(NamedTuple):
+class ModelEvaluation(Generic[T_EstimatorPipelineDF]):
     """
     Scoring evaluation for a fitted model.
 
@@ -134,22 +144,30 @@ class ModelEvaluation(NamedTuple):
         scorer and ranking metric
     """
 
-    model: PredictorPipelineDF
-    parameters: Mapping[str, Any]
-    scoring: Mapping[str, ModelScoring]
-    ranking_score: float
+    def __init__(
+        self,
+        model: T_EstimatorPipelineDF,
+        parameters: Mapping[str, Any],
+        scoring: Mapping[str, ModelScoring],
+        ranking_score: float,
+    ) -> None:
+        super().__init__()
+        self.model = model
+        self.parameters = parameters
+        self.scoring = scoring
+        self.ranking_score = ranking_score
 
 
-class ModelRanker:
+class ModelRanker(Generic[T_EstimatorPipelineDF]):
     """
     Rank a list of models using a cross-validation.
 
     Given a list of :class:`ModelGrid`, a cross-validation splitter and a scoring
     function, performs a grid search to find the best combination of model with
-    hyperparameters for the given cross-validation splits and scoring function.
+    hyper-parameters for the given cross-validation splits and scoring function.
 
     :param grids: list of :class:`ModelGrid` to be ranked
-    :param cv: a cross validator (i.e. \
+    :param cv: a cross validator (e.g., \
         :class:`~gamma.ml.validation.CircularCrossValidator`)
     :param scoring: a scorer to use when doing CV within GridSearch
     """
@@ -160,7 +178,7 @@ class ModelRanker:
 
     def __init__(
         self,
-        grids: Iterable[ParameterGrid],
+        grids: Iterable[ParameterGrid[T_EstimatorPipelineDF]],
         cv: Optional[BaseCrossValidator] = None,
         scoring: Union[
             str,
@@ -194,7 +212,7 @@ class ModelRanker:
         ranking_metric: str = "test_score",
         n_jobs: Optional[int] = None,
         pre_dispatch: str = "2*n_jobs",
-    ) -> Sequence[ModelEvaluation]:
+    ) -> Sequence[ModelEvaluation[T_EstimatorPipelineDF]]:
         """
         Execute the pipeline for all parameter grids and parameter combinations, and
         rank the resulting models in descending order.
