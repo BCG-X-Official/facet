@@ -4,7 +4,7 @@ import pytest
 from gamma.ml import Sample
 from gamma.ml.fitcv import RegressorFitCV
 from gamma.ml.inspection import RegressorInspector
-from gamma.ml.validation import CircularCrossValidator
+from gamma.ml.validation import CircularCV
 from gamma.ml.viz import DendrogramDrawer, DendrogramReportStyle
 from gamma.sklearndf import TransformerDF
 from gamma.sklearndf.pipeline import RegressorPipelineDF
@@ -16,7 +16,7 @@ def model_inspector(
     batch_table: pd.DataFrame, sample: Sample, simple_preprocessor: TransformerDF
 ) -> RegressorInspector:
 
-    cv = CircularCrossValidator(test_ratio=0.20, n_splits=5)
+    cv = CircularCV(test_ratio=0.20, n_splits=5)
     pipeline = RegressorPipelineDF(
         regressor=LGBMRegressorDF(), preprocessing=simple_preprocessor
     )

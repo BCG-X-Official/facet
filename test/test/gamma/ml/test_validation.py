@@ -6,7 +6,7 @@ import pytest
 from sklearn import datasets, svm, tree
 from sklearn.model_selection import GridSearchCV
 
-from gamma.ml.validation import CircularCrossValidator
+from gamma.ml.validation import CircularCV
 
 
 def test_circular_cv_init(batch_table: pd.DataFrame) -> None:
@@ -18,15 +18,15 @@ def test_circular_cv_init(batch_table: pd.DataFrame) -> None:
     # check erroneous inputs
     #   - test_ratio = 0
     with pytest.raises(expected_exception=ValueError):
-        CircularCrossValidator(test_ratio=0.0)
+        CircularCV(test_ratio=0.0)
 
     #   - test_ratio < 0
     with pytest.raises(expected_exception=ValueError):
-        CircularCrossValidator(test_ratio=-0.0001)
+        CircularCV(test_ratio=-0.0001)
 
     #   - test_ratio > 1
     with pytest.raises(expected_exception=ValueError):
-        CircularCrossValidator(test_ratio=1.00001)
+        CircularCV(test_ratio=1.00001)
 
 
 def test_get_train_test_splits_as_indices() -> None:
@@ -34,7 +34,7 @@ def test_get_train_test_splits_as_indices() -> None:
     test_splits = 200
     test_X = np.arange(0, 1000, 1)
 
-    my_cv = CircularCrossValidator(test_ratio=0.2, n_splits=test_splits)
+    my_cv = CircularCV(test_ratio=0.2, n_splits=test_splits)
 
     list_of_test_splits = list(my_cv._iter_test_indices(test_X))
 
@@ -65,7 +65,7 @@ def test_circular_cv_with_sk_learn() -> None:
     iris = datasets.load_iris()
 
     # define a yield-engine circular CV:
-    my_cv = CircularCrossValidator(test_ratio=0.21, n_splits=50)
+    my_cv = CircularCV(test_ratio=0.21, n_splits=50)
 
     # define parameters and model
     parameters = {"kernel": ("linear", "rbf"), "C": [1, 10]}

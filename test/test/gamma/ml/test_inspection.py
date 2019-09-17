@@ -19,7 +19,7 @@ from gamma.ml.selection import (
     ParameterGrid,
     summary_report,
 )
-from gamma.ml.validation import CircularCrossValidator
+from gamma.ml.validation import CircularCV
 from gamma.ml.viz import DendrogramDrawer, DendrogramReportStyle
 from gamma.sklearndf import TransformerDF
 from gamma.sklearndf.classification import RandomForestClassifierDF
@@ -183,7 +183,7 @@ def test_model_inspection_with_encoding(
     CHKSUM_CORR_MATRIX = 9841870561220906358
 
     # define the circular cross validator with just 5 splits (to speed up testing)
-    circular_cv = CircularCrossValidator(test_ratio=0.20, n_splits=5)
+    circular_cv = CircularCV(test_ratio=0.20, n_splits=5)
 
     model_ranker: ModelRanker = ModelRanker(
         grids=regressor_grids, cv=circular_cv, scoring="r2"

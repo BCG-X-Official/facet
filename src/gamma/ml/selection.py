@@ -168,7 +168,7 @@ class ModelRanker(Generic[T_EstimatorPipelineDF]):
 
     :param grids: list of :class:`ModelGrid` to be ranked
     :param cv: a cross validator (e.g., \
-        :class:`~gamma.ml.validation.CircularCrossValidator`)
+        :class:`~gamma.ml.validation.CircularCV`)
     :param scoring: a scorer to use when doing CV within GridSearch
     """
 
