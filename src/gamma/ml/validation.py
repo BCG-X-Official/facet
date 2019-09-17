@@ -16,7 +16,7 @@ Cross-validation.
 
 :class:`BootstrapCV` performs bootstrap sampling.
 
-:class:`CircularCrossValidator` class performs cross-validation with a fixed
+:class:`CircularCV` class performs cross-validation with a fixed
 test_ratio with a fix size window shifting at a constant pace = 1/num_splits.
 """
 from typing import *
@@ -99,7 +99,7 @@ class BootstrapCV(BaseCrossValidator):
         return self.n_splits
 
 
-class CircularCrossValidator(BaseCrossValidator):
+class CircularCV(BaseCrossValidator):
     """
     Rolling circular cross-validation.
 
