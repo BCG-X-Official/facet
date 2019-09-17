@@ -31,6 +31,7 @@ from joblib import delayed, Parallel
 from sklearn.model_selection import BaseCrossValidator
 
 from gamma.ml import Sample
+
 # noinspection PyProtectedMember
 from gamma.sklearndf._wrapper import ClassifierWrapperDF
 from gamma.sklearndf.classification import CalibratedClassifierCVDF
@@ -326,9 +327,7 @@ class ClassifierFitCV(
         )
 
         self._calibration = calibration
-        self._calibrated_model_by_split: Optional[
-            List[T_ClassifierPipelineDF]
-        ] = None
+        self._calibrated_model_by_split: Optional[List[T_ClassifierPipelineDF]] = None
         self._probabilities_for_all_samples: Optional[pd.DataFrame] = None
         self._log_probabilities_for_all_samples: Optional[pd.DataFrame] = None
 
@@ -436,7 +435,7 @@ class ClassifierFitCV(
         model_calibrated.fit(X=test_sample.features, y=test_sample.target)
 
         model_calibrated.predictor_ = ClassifierWrapperDF.from_fitted(
-            cv.calibrated_classifiers_[0], cv.columns_in
+            cv.calibrated_classifiers_[0], cv.features_in
         )
 
         return model_calibrated
