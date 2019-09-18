@@ -1,3 +1,4 @@
+# noinspection PyPackageRequirements
 import pytest
 from lightgbm import LGBMRegressor
 from sklearn.preprocessing import OneHotEncoder
