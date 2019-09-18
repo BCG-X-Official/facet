@@ -1,4 +1,6 @@
 import pandas as pd
+
+# noinspection PyPackageRequirements
 import pytest
 from joblib import delayed, Parallel
 

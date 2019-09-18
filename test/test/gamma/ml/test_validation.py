@@ -2,6 +2,8 @@ import warnings
 
 import numpy as np
 import pandas as pd
+
+# noinspection PyPackageRequirements
 import pytest
 from sklearn import datasets, svm, tree
 from sklearn.model_selection import GridSearchCV
