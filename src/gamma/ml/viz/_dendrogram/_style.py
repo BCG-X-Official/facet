@@ -139,6 +139,10 @@ class DendrogramMatplotStyle(MatplotStyle, DendrogramStyle, ABC):
         self._cb = None
 
     def drawing_start(self, title: str) -> None:
+        """
+        Called once by the drawer when starting to draw a new dendrogram.
+        :param title: the title of the dendrogram
+        """
         super().drawing_start(title=title)
 
         self.ax.ticklabel_format(axis="x", scilimits=(-3, 3))
@@ -250,6 +254,10 @@ class DendrogramFeatMapStyle(DendrogramMatplotStyle):
         super().__init__(ax=ax, min_weight=min_weight)
 
     def drawing_start(self, title: str) -> None:
+        """
+        Called once by the drawer when starting to draw a new dendrogram.
+        :param title: the title of the dendrogram
+        """
         super().drawing_start(title=title)
         self.ax.margins(0, 0)
         self.ax.set_xlim(0, 1)

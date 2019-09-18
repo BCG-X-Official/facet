@@ -61,7 +61,9 @@ class ModelInspector(Generic[T_EstimatorFitCV]):
 
     @property
     def models(self) -> T_EstimatorFitCV:
-        """collection of CV-fitted models handled by this modelinspector."""
+        """
+        CV fit of the model being examined by this inspector
+        """
         return self._models
 
 
