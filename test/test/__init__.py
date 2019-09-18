@@ -1,3 +1,4 @@
+# noinspection PyPackageRequirements
 import yaml
 
 from test.paths import TEST_CONFIG_YML

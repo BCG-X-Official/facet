@@ -4,8 +4,14 @@ from typing import *
 
 import numpy as np
 import pandas as pd
+
+# noinspection PyPackageRequirements
 import pytest
+
+# noinspection PyPackageRequirements
 from sklearn import datasets
+
+# noinspection PyPackageRequirements
 from sklearn.utils import Bunch
 
 from gamma.ml import Sample

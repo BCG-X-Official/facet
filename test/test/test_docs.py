@@ -6,6 +6,7 @@ import re
 from glob import glob
 from typing import *
 
+# noinspection PyPackageRequirements
 import pytest
 
 log = logging.getLogger(__name__)
