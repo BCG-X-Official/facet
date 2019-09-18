@@ -11,6 +11,10 @@
 # - Florent Martin
 #
 
+"""
+Drawing dendrograms
+"""
+
 import logging
 from typing import *
 

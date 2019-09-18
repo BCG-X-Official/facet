@@ -1,3 +1,7 @@
+"""
+The Gamma machine learning library
+"""
+
 from copy import copy
 from typing import Any, Iterable, Optional, Sequence, Union
 
