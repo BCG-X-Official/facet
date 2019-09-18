@@ -3,6 +3,8 @@ from typing import *
 
 import pandas as pd
 from pandas.util.testing import assert_frame_equal
+
+# noinspection PyPackageRequirements
 from pytest import approx
 
 from gamma.ml import Sample
