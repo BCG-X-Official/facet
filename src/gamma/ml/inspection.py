@@ -40,34 +40,29 @@ from gamma.sklearndf.pipeline import PredictorPipelineDF
 
 log = logging.getLogger(__name__)
 
-__all__ = [
-    "ModelInspector",
-    "PredictorInspector",
-    "ClassifierInspector",
-    "RegressorInspector",
-]
+__all__ = ["ClassifierInspector", "RegressorInspector"]
 
 
-T_EstimatorFitCV = TypeVar("T_EstimatorFitCV", bound=EstimatorFitCV)
+_T_EstimatorFitCV = TypeVar("T_EstimatorFitCV", bound=EstimatorFitCV)
 
 
-class ModelInspector(Generic[T_EstimatorFitCV]):
+class BaseInspector(Generic[_T_EstimatorFitCV]):
 
     __slots__ = ["_models"]
 
-    def __init__(self, models: T_EstimatorFitCV) -> None:
+    def __init__(self, models: _T_EstimatorFitCV) -> None:
 
         self._models = models
 
     @property
-    def models(self) -> T_EstimatorFitCV:
+    def models(self) -> _T_EstimatorFitCV:
         """
         CV fit of the model being examined by this inspector
         """
         return self._models
 
 
-class PredictorInspector(ModelInspector[PredictorFitCV], ABC):
+class BasePredictorInspector(BaseInspector[PredictorFitCV], ABC):
     """
     Inspect a model through its SHAP values.
 
@@ -269,7 +264,7 @@ def tree_explainer_factory(estimator: BaseEstimator, data: pd.DataFrame) -> Expl
         return KernelExplainer(model=estimator.predict, data=data)
 
 
-class RegressorInspector(PredictorInspector):
+class RegressorInspector(BasePredictorInspector):
     """
     Inspect a regression model through its SHAP values.
 
@@ -315,7 +310,7 @@ class RegressorInspector(PredictorInspector):
         )
 
 
-class ClassifierInspector(PredictorInspector):
+class ClassifierInspector(BasePredictorInspector):
     """
     Inspect a classification model through its SHAP values.
 
