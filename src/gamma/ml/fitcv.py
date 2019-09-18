@@ -47,11 +47,9 @@ log = logging.getLogger(__name__)
 __all__ = ["EstimatorFitCV", "PredictorFitCV", "RegressorFitCV", "ClassifierFitCV"]
 
 T_EstimatorPipelineDF = TypeVar("T_EstimatorPipelineDF", bound=EstimatorPipelineDF)
-T_PredictorPipelineDF = TypeVar("T_PredictivePipelineDF", bound=PredictorPipelineDF)
+T_PredictorPipelineDF = TypeVar("T_PredictorPipelineDF", bound=PredictorPipelineDF)
 T_RegressorPipelineDF = TypeVar("T_RegressorPipelineDF", bound=RegressorPipelineDF)
-T_ClassifierPipelineDF = TypeVar(
-    "T_ClassificationPipelineDF", bound=ClassifierPipelineDF
-)
+T_ClassifierPipelineDF = TypeVar("T_ClassifierPipelineDF", bound=ClassifierPipelineDF)
 
 
 class EstimatorFitCV(ABC, Generic[T_EstimatorPipelineDF]):
