@@ -14,7 +14,7 @@
 """
 Fitted models with cross-validation.
 
-:class:`PredictorFitCV` encapsulates a fully trained model.
+:class:`LearnerFitCV` encapsulates a fully trained model.
 It contains a :class:`.ModelPipelineDF` (preprocessing + estimator), a dataset given by a
 :class:`yieldengine.Sample` object and a
 cross-validation method. The model is fitted accordingly.
@@ -31,23 +31,23 @@ from joblib import delayed, Parallel
 from sklearn.model_selection import BaseCrossValidator
 
 from gamma.ml import Sample
-
-# noinspection PyProtectedMember
-from gamma.sklearndf._wrapper import ClassifierWrapperDF
 from gamma.sklearndf.classification import CalibratedClassifierCVDF
 from gamma.sklearndf.pipeline import (
     ClassifierPipelineDF,
     EstimatorPipelineDF,
-    PredictorPipelineDF,
+    LearnerPipelineDF,
     RegressorPipelineDF,
 )
 
+# noinspection PyProtectedMember
+from gamma.sklearndf.wrapper import ClassifierWrapperDF
+
 log = logging.getLogger(__name__)
 
-__all__ = ["EstimatorFitCV", "PredictorFitCV", "RegressorFitCV", "ClassifierFitCV"]
+__all__ = ["EstimatorFitCV", "LearnerFitCV", "RegressorFitCV", "ClassifierFitCV"]
 
 _T_EstimatorPipelineDF = TypeVar("_T_EstimatorPipelineDF", bound=EstimatorPipelineDF)
-_T_PredictorPipelineDF = TypeVar("_T_PredictorPipelineDF", bound=PredictorPipelineDF)
+_T_LearnerPipelineDF = TypeVar("_T_PredictorPipelineDF", bound=LearnerPipelineDF)
 _T_RegressorPipelineDF = TypeVar("_T_RegressorPipelineDF", bound=RegressorPipelineDF)
 _T_ClassifierPipelineDF = TypeVar("_T_ClassifierPipelineDF", bound=ClassifierPipelineDF)
 
@@ -167,12 +167,10 @@ class EstimatorFitCV(ABC, Generic[_T_EstimatorPipelineDF]):
         return pipeline
 
 
-class PredictorFitCV(
-    EstimatorFitCV[_T_PredictorPipelineDF], Generic[_T_PredictorPipelineDF]
-):
+class LearnerFitCV(EstimatorFitCV[_T_LearnerPipelineDF], Generic[_T_LearnerPipelineDF]):
     """
     Collection of predictive models fitted for all splits of a given cross-validation
-    strategy, basef on a predictive pipeline.
+    strategy, based on a predictive pipeline.
 
     :param pipeline: predictive pipeline to be fitted
     :param cv: the cross validator generating the train splits
@@ -192,7 +190,7 @@ class PredictorFitCV(
 
     def __init__(
         self,
-        pipeline: _T_PredictorPipelineDF,
+        pipeline: _T_LearnerPipelineDF,
         cv: BaseCrossValidator,
         sample: Sample,
         n_jobs: int = 1,
@@ -217,7 +215,7 @@ class PredictorFitCV(
         :return: the series of predictions of the split
         """
         return self._series_for_split(
-            split_id=split_id, column=PredictorFitCV.F_PREDICTION
+            split_id=split_id, column=LearnerFitCV.F_PREDICTION
         )
 
     def targets_for_split(self, split_id: int) -> pd.Series:
@@ -225,7 +223,7 @@ class PredictorFitCV(
         Return the target for this split.
 
         :return: the series of targets for this split"""
-        return self._series_for_split(split_id=split_id, column=PredictorFitCV.F_TARGET)
+        return self._series_for_split(split_id=split_id, column=LearnerFitCV.F_TARGET)
 
     def predictions_for_all_splits(self) -> pd.DataFrame:
         """
@@ -260,8 +258,8 @@ class PredictorFitCV(
 
                 predictions_df = pd.DataFrame(
                     data={
-                        PredictorFitCV.F_SPLIT_ID: split_id,
-                        PredictorFitCV.F_PREDICTION: predictions,
+                        LearnerFitCV.F_SPLIT_ID: split_id,
+                        LearnerFitCV.F_PREDICTION: predictions,
                     },
                     index=test_sample.index,
                 )
@@ -270,8 +268,8 @@ class PredictorFitCV(
 
             self._predictions_for_all_samples = (
                 pd.concat(splitwise_predictions)
-                .join(sample.target.rename(PredictorFitCV.F_TARGET))
-                .set_index(PredictorFitCV.F_SPLIT_ID, append=True)
+                .join(sample.target.rename(LearnerFitCV.F_TARGET))
+                .set_index(LearnerFitCV.F_SPLIT_ID, append=True)
             )
 
         return self._predictions_for_all_samples
@@ -290,19 +288,19 @@ class PredictorFitCV(
 
     def _series_for_split(self, split_id: int, column: str) -> pd.Series:
         all_predictions: pd.DataFrame = self.predictions_for_all_splits()
-        return all_predictions.xs(key=split_id, level=PredictorFitCV.F_SPLIT_ID).loc[
+        return all_predictions.xs(key=split_id, level=LearnerFitCV.F_SPLIT_ID).loc[
             :, column
         ]
 
 
 class RegressorFitCV(
-    PredictorFitCV[_T_RegressorPipelineDF], Generic[_T_RegressorPipelineDF]
+    LearnerFitCV[_T_RegressorPipelineDF], Generic[_T_RegressorPipelineDF]
 ):
     pass
 
 
 class ClassifierFitCV(
-    PredictorFitCV[_T_ClassifierPipelineDF], Generic[_T_ClassifierPipelineDF]
+    LearnerFitCV[_T_ClassifierPipelineDF], Generic[_T_ClassifierPipelineDF]
 ):
     __slots__ = [
         "_probabilities_for_all_samples",
@@ -387,7 +385,7 @@ class ClassifierFitCV(
                 pd.Series(
                     data=split_id,
                     index=probabilities.index,
-                    name=PredictorFitCV.F_SPLIT_ID,
+                    name=LearnerFitCV.F_SPLIT_ID,
                 )
             )
 
@@ -395,8 +393,8 @@ class ClassifierFitCV(
 
         return (
             pd.concat(predictions_per_split)
-            .join(sample.target.rename(PredictorFitCV.F_TARGET))
-            .set_index(PredictorFitCV.F_SPLIT_ID, append=True)
+            .join(sample.target.rename(LearnerFitCV.F_TARGET))
+            .set_index(LearnerFitCV.F_SPLIT_ID, append=True)
         )
 
     def _fit(self) -> None:

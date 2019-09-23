@@ -134,7 +134,7 @@ class ModelEvaluation(Generic[T_EstimatorPipelineDF]):
 
     Has attributes:
 
-    - model: the fitted  :class:`~gamma.ml.PredictorPipelineDF`
+    - model: the fitted  :class:`~gamma.ml.LearnerPipelineDF`
     - parameters: the hyperparameters selected for the model during grid
         search, as a mapping of parameter names to parameter values
     - scoring: scorings for the model based on the provided scorers;
