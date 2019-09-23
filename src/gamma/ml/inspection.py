@@ -29,14 +29,9 @@ from shap import KernelExplainer, TreeExplainer
 from shap.explainers.explainer import Explainer
 from sklearn.base import BaseEstimator
 
-from gamma.ml.fitcv import (
-    ClassifierFitCV,
-    EstimatorFitCV,
-    PredictorFitCV,
-    RegressorFitCV,
-)
+from gamma.ml.fitcv import ClassifierFitCV, EstimatorFitCV, LearnerFitCV, RegressorFitCV
 from gamma.ml.viz import LinkageTree
-from gamma.sklearndf.pipeline import PredictorPipelineDF
+from gamma.sklearndf.pipeline import LearnerPipelineDF
 
 log = logging.getLogger(__name__)
 
@@ -62,7 +57,7 @@ class BaseInspector(Generic[_T_EstimatorFitCV]):
         return self._models
 
 
-class BasePredictorInspector(BaseInspector[PredictorFitCV], ABC):
+class BaseLearnerInspector(BaseInspector[LearnerFitCV], ABC):
     """
     Inspect a model through its SHAP values.
 
@@ -77,7 +72,7 @@ class BasePredictorInspector(BaseInspector[PredictorFitCV], ABC):
 
     def __init__(
         self,
-        models: PredictorFitCV,
+        models: LearnerFitCV,
         explainer_factory: Optional[
             Callable[[BaseEstimator, pd.DataFrame], Explainer]
         ] = None,
@@ -118,7 +113,7 @@ class BasePredictorInspector(BaseInspector[PredictorFitCV], ABC):
         return self._shap_matrix
 
     def _shap_matrix_for_split(
-        self, split_id: int, split_model: PredictorPipelineDF
+        self, split_id: int, split_model: LearnerPipelineDF
     ) -> pd.DataFrame:
         """
         Calaculate the SHAP matrix for a single split.
@@ -129,7 +124,7 @@ class BasePredictorInspector(BaseInspector[PredictorFitCV], ABC):
         """
         observation_indices_in_split = (
             self.models.predictions_for_all_splits()
-            .xs(key=split_id, level=PredictorFitCV.F_SPLIT_ID)
+            .xs(key=split_id, level=LearnerFitCV.F_SPLIT_ID)
             .index
         )
 
@@ -264,7 +259,7 @@ def tree_explainer_factory(estimator: BaseEstimator, data: pd.DataFrame) -> Expl
         return KernelExplainer(model=estimator.predict, data=data)
 
 
-class RegressorInspector(BasePredictorInspector):
+class RegressorInspector(BaseLearnerInspector):
     """
     Inspect a regression model through its SHAP values.
 
@@ -310,7 +305,7 @@ class RegressorInspector(BasePredictorInspector):
         )
 
 
-class ClassifierInspector(BasePredictorInspector):
+class ClassifierInspector(BaseLearnerInspector):
     """
     Inspect a classification model through its SHAP values.
 
