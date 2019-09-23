@@ -33,7 +33,7 @@ from sklearn.model_selection import BaseCrossValidator
 from gamma.ml import Sample
 
 # noinspection PyProtectedMember
-from gamma.sklearndf._wrapper import ClassifierWrapperDF
+from gamma.sklearndf.wrapper import ClassifierWrapperDF
 from gamma.sklearndf.classification import CalibratedClassifierCVDF
 from gamma.sklearndf.pipeline import (
     ClassifierPipelineDF,
