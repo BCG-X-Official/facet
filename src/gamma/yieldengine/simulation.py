@@ -21,11 +21,11 @@ import numpy as np
 import pandas as pd
 
 from gamma.common import ListLike
-from gamma.ml.fitcv import ClassifierFitCV, PredictorFitCV, RegressorFitCV
+from gamma.ml.fitcv import ClassifierFitCV, LearnerFitCV, RegressorFitCV
 from gamma.sklearndf.transformation import FunctionTransformerDF
 from gamma.yieldengine.partition import Partitioning, T_Number
 
-T_PredictiveFitCV = TypeVar("T_PredictiveFitCV", bound=PredictorFitCV)
+T_LearnerFitCV = TypeVar("T_LearnerFitCV", bound=LearnerFitCV)
 
 
 class UnivariateSimulation:
@@ -115,7 +115,7 @@ class UnivariateSimulation:
         return self._max_percentile
 
 
-class UnivariateSimulator(Generic[T_PredictiveFitCV], ABC):
+class UnivariateSimulator(Generic[T_LearnerFitCV], ABC):
     """
     Predicts a change in outcome for a range of values for a given feature,
     using predictions of a fitted model. Works with collections of models fitted to
@@ -133,7 +133,7 @@ class UnivariateSimulator(Generic[T_PredictiveFitCV], ABC):
 
     def __init__(
         self,
-        models: T_PredictiveFitCV,
+        models: T_LearnerFitCV,
         min_percentile: float = 2.5,
         max_percentile: float = 97.5,
     ):
@@ -154,7 +154,7 @@ class UnivariateSimulator(Generic[T_PredictiveFitCV], ABC):
         self._models = models
 
     @property
-    def models(self) -> T_PredictiveFitCV:
+    def models(self) -> T_LearnerFitCV:
         """The fitted models used for the simulation."""
         return self._models
 
