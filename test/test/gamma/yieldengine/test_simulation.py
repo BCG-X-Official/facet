@@ -8,8 +8,7 @@ from pandas.util.testing import assert_frame_equal
 from pytest import approx
 
 from gamma.ml import Sample
-from gamma.ml.fitcv import RegressorFitCV
-from gamma.ml.selection import ModelEvaluation, ParameterGrid, ModelRanker
+from gamma.ml.selection import ParameterGrid, RegressorRanker
 from gamma.ml.validation import CircularCV
 from gamma.sklearndf import TransformerDF
 from gamma.yieldengine.partition import ContinuousRangePartitioning
@@ -32,24 +31,19 @@ def test_univariate_simulation(
     # define the circular cross validator with just 5 splits (to speed up testing)
     circular_cv = CircularCV(test_ratio=TEST_RATIO, n_splits=N_SPLITS)
 
-    model_ranker: ModelRanker = ModelRanker(
-        grids=regressor_grids, cv=circular_cv, scoring="r2"
+    model_ranker = RegressorRanker(
+        grid=regressor_grids, sample=sample, cv=circular_cv, scoring="r2", n_jobs=n_jobs
     )
 
-    # run the ModelRanker to retrieve a ranking
-    model_ranking: Sequence[ModelEvaluation] = model_ranker.run(
-        sample=sample, n_jobs=n_jobs
-    )
+    predictions = model_ranker.best_model_predictions()
 
-    models = RegressorFitCV(
-        pipeline=model_ranking[0].model, cv=circular_cv, sample=sample, n_jobs=n_jobs
+    simulator = UnivariateUpliftSimulator(
+        predictions=predictions, min_percentile=10, max_percentile=90
     )
-
-    sim = UnivariateUpliftSimulator(models=models, min_percentile=10, max_percentile=90)
 
     parameterized_feature = "Step4-6 RawMat Vendor Compound08 Purity (#)"
 
-    res = sim._simulate_feature_with_values(
+    res = simulator._simulate_feature_with_values(
         feature_name=parameterized_feature,
         simulated_values=ContinuousRangePartitioning(
             values=sample.features.loc[:, parameterized_feature]
@@ -63,7 +57,7 @@ def test_univariate_simulation(
     assert res.iloc[:, 2].max() == approx(0.01904097474184785)
     assert res.iloc[:, 2].min() == approx(-0.050256813777029286)
 
-    aggregated_results = sim._aggregate_simulation_results(results_per_split=res)
+    aggregated_results = simulator._aggregate_simulation_results(results_per_split=res)
     log.debug(aggregated_results)
 
     # test the first five rows of aggregated_results
