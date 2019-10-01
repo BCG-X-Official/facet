@@ -4,7 +4,7 @@ import pandas as pd
 import pytest
 
 from gamma.ml import Sample
-from gamma.ml.fitcv import RegressorFitCV
+from gamma.ml.predictioncv import RegressorPredictionCV
 from gamma.ml.inspection import RegressorInspector
 from gamma.ml.validation import CircularCV
 from gamma.ml.viz import DendrogramDrawer, DendrogramReportStyle
@@ -23,7 +23,7 @@ def model_inspector(
         regressor=LGBMRegressorDF(), preprocessing=simple_preprocessor
     )
     return RegressorInspector(
-        models=RegressorFitCV(pipeline=pipeline, cv=cv, sample=sample)
+        predictions=RegressorPredictionCV(pipeline=pipeline, cv=cv, sample=sample)
     )
 
 

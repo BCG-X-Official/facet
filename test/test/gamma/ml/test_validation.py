@@ -69,7 +69,7 @@ def test_circular_cv_with_sk_learn() -> None:
     # define a yield-engine circular CV:
     my_cv = CircularCV(test_ratio=0.21, n_splits=50)
 
-    # define parameters and model
+    # define parameters and pipeline
     parameters = {"kernel": ("linear", "rbf"), "C": [1, 10]}
     svc = svm.SVC(gamma="scale")
 
@@ -84,7 +84,7 @@ def test_circular_cv_with_sk_learn() -> None:
 
     assert clf.best_score_ > 0.85, "Expected a minimum score of 0.85"
 
-    # define new parameters and a different model
+    # define new parameters and a different pipeline
     # use the defined my_cv circular CV again within GridSeachCV:
     parameters = {
         "criterion": ("gini", "entropy"),
