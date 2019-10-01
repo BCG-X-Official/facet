@@ -21,11 +21,15 @@ import numpy as np
 import pandas as pd
 
 from gamma.common import ListLike
-from gamma.ml.fitcv import ClassifierFitCV, LearnerFitCV, RegressorFitCV
+from gamma.ml.predictioncv import (
+    ClassifierPredictionCV,
+    PredictionCV,
+    RegressorPredictionCV,
+)
 from gamma.sklearndf.transformation import FunctionTransformerDF
 from gamma.yieldengine.partition import Partitioning, T_Number
 
-T_LearnerFitCV = TypeVar("T_LearnerFitCV", bound=LearnerFitCV)
+T_PredictionCV = TypeVar("T_PredictionCV", bound=PredictionCV)
 
 
 class UnivariateSimulation:
@@ -115,25 +119,26 @@ class UnivariateSimulation:
         return self._max_percentile
 
 
-class UnivariateSimulator(Generic[T_LearnerFitCV], ABC):
+class UnivariateSimulator(Generic[T_PredictionCV], ABC):
     """
-    Predicts a change in outcome for a range of values for a given feature,
-    using predictions of a fitted model. Works with collections of models fitted to
-    different data splits, therefore can determine confidence intervals for the
-    predicted values.
+    Estimates the average change in outcome for a range of values for a given feature,
+    using cross-validated predictions for all observations in a given data sample.
 
-    Typical simulated outcomes are target variables of regressions, or probabilities
-    of classifications.
+    Determines confidence intervals for the predicted changes using multiple
+    predictions for individual data points from different cross-validation splits.
 
-    :param models: fitted models (based on a cross-validation strategy) used to
-        predict changes in outcome during the simulation
+    Works both with estimating the average change for target variables of regressors,
+    or probabilities of binary classifiers.
+
+    :param predictions: cross-validated predictions of a model for all observations \
+        in a given sample
     :param min_percentile: lower bound of the confidence interval (default: 2.5)
     :param max_percentile: upper bound of the confidence interval (default: 97.5)
     """
 
     def __init__(
         self,
-        models: T_LearnerFitCV,
+        predictions: T_PredictionCV,
         min_percentile: float = 2.5,
         max_percentile: float = 97.5,
     ):
@@ -151,12 +156,12 @@ class UnivariateSimulator(Generic[T_LearnerFitCV], ABC):
 
         self._max_percentile = max_percentile
         self._min_percentile = min_percentile
-        self._models = models
+        self._predictions = predictions
 
     @property
-    def models(self) -> T_LearnerFitCV:
-        """The fitted models used for the simulation."""
-        return self._models
+    def predictions(self) -> T_PredictionCV:
+        """The cross-validated predictions used for the simulation."""
+        return self._predictions
 
     @property
     def min_percentile(self) -> float:
@@ -184,7 +189,7 @@ class UnivariateSimulator(Generic[T_LearnerFitCV], ABC):
         pass
 
 
-class UnivariateProbabilitySimulator(UnivariateSimulator[ClassifierFitCV]):
+class UnivariateProbabilitySimulator(UnivariateSimulator[ClassifierPredictionCV]):
     """
     Univariate simulation for change in average predicted probability (CAPP) based on a
     classification model.
@@ -204,7 +209,7 @@ class UnivariateProbabilitySimulator(UnivariateSimulator[ClassifierFitCV]):
         )
 
 
-class UnivariateUpliftSimulator(UnivariateSimulator[RegressorFitCV]):
+class UnivariateUpliftSimulator(UnivariateSimulator[RegressorPredictionCV]):
     """
     Univariate simulation for target uplift based on a regression model.
     """
@@ -224,7 +229,7 @@ class UnivariateUpliftSimulator(UnivariateSimulator[RegressorFitCV]):
         :param partitioning: the partitioning of feature values to run simulations for
         """
 
-        sample = self.models.sample
+        sample = self.predictions.sample
         target = sample.target
 
         if not isinstance(target, pd.Series):
@@ -265,7 +270,7 @@ class UnivariateUpliftSimulator(UnivariateSimulator[RegressorFitCV]):
         :return: dataframe with three columns: `split_id`, `parameter_value` and
           `relative_target_change`.
         """
-        sample = self.models.sample
+        sample = self.predictions.sample
 
         if feature_name not in sample.features.columns:
             raise ValueError(f"Feature '{feature_name}' not in sample")
@@ -285,13 +290,13 @@ class UnivariateUpliftSimulator(UnivariateSimulator[RegressorFitCV]):
                     ).fit_transform(X=sample.features, y=sample.target)
                 )
 
-                fit_for_syn_sample = self.models.copy_with_sample(
+                fit_for_syn_sample = self.predictions.copy_with_sample(
                     sample=synthetic_sample
                 )
 
-                for split_id in range(self.models.n_splits):
+                for split_id in range(self.predictions.n_splits):
                     predictions_for_split_hist: pd.Series = (
-                        self.models.predictions_for_split(split_id=split_id)
+                        self.predictions.predictions_for_split(split_id=split_id)
                     )
 
                     predictions_for_split_syn: pd.Series = (
