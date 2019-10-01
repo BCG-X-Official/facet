@@ -63,13 +63,13 @@ def test_sample(batch_table: pd.DataFrame) -> None:
     feature_columns = list(batch_table.drop(columns="Yield").columns)
     s = Sample(observations=batch_table, target="Yield", features=feature_columns)
 
-    # run the checks on s:
+    # _rank_learners the checks on s:
     run_assertions(s)
 
     # test implicit setting of features by only giving the target
     s2 = Sample(observations=batch_table, target="Yield")
 
-    # run the checks on s2:
+    # _rank_learners the checks on s2:
     run_assertions(s2)
 
     # test numerical features

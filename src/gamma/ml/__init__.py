@@ -127,8 +127,8 @@ class Sample:
         """
         Return a data frame with columns for all features matching the given type
 
-        :param dtype: dtype, or sequence of dtypes, for filtering features.
-          See DTYPE_*constants for common type selectors
+        :param dtype: dtype, or sequence of dtypes, for filtering features. \
+            See `DTYPE_…` constants for common type selectors
         :return: data frame of the selected features
         """
         return self.features.select_dtypes(dtype)

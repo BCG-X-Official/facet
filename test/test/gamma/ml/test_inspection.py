@@ -11,14 +11,13 @@ from sklearn.base import BaseEstimator
 from sklearn.model_selection import BaseCrossValidator, RepeatedKFold
 
 from gamma.ml import Sample
-from gamma.ml.fitcv import ClassifierFitCV, RegressorFitCV
-from gamma.ml.inspection import ClassifierInspector, RegressorInspector
-from gamma.ml.selection import (
-    ModelEvaluation,
-    ModelRanker,
-    ParameterGrid,
-    summary_report,
+from gamma.ml.predictioncv import (
+    CalibratedClassifierPredictionCV,
+    ClassifierPredictionCV,
+    RegressorPredictionCV,
 )
+from gamma.ml.inspection import ClassifierInspector, RegressorInspector
+from gamma.ml.selection import ClassifierRanker, ParameterGrid, RegressorRanker
 from gamma.ml.validation import CircularCV
 from gamma.ml.viz import DendrogramDrawer, DendrogramReportStyle
 from gamma.sklearndf import TransformerDF
@@ -50,19 +49,19 @@ def test_model_inspection(n_jobs, boston_sample: Sample) -> None:
         n_splits=K_FOLDS, n_repeats=N_SPLITS // K_FOLDS, random_state=42
     )
 
-    # define parameters and models
+    # define parameters and predictions
     models = [
         ParameterGrid(
             pipeline=(
                 RegressorPipelineDF(regressor=SVRDF(gamma="scale"), preprocessing=None)
             ),
-            estimator_parameters={"kernel": ("linear", "rbf"), "C": [1, 10]},
+            learner_parameters={"kernel": ("linear", "rbf"), "C": [1, 10]},
         ),
         ParameterGrid(
             pipeline=RegressorPipelineDF(
                 regressor=LGBMRegressorDF(), preprocessing=None
             ),
-            estimator_parameters={
+            learner_parameters={
                 "max_depth": (1, 2, 5),
                 "min_split_gain": (0.1, 0.2, 0.5),
                 "num_leaves": (2, 3),
@@ -76,37 +75,41 @@ def test_model_inspection(n_jobs, boston_sample: Sample) -> None:
         positions=range(0, 100)
     )
 
-    model_ranker = ModelRanker(
-        grids=models, cv=test_cv, scoring="neg_mean_squared_error"
+    ranker = RegressorRanker(
+        grid=models,
+        sample=test_sample,
+        cv=test_cv,
+        scoring="neg_mean_squared_error",
+        n_jobs=n_jobs,
     )
 
-    model_ranking = model_ranker.run(test_sample, n_jobs=n_jobs)
+    log.debug(f"\n{ranker.summary_report(max_learners=10)}")
 
-    log.debug(f"\n{summary_report(model_ranking[:10])}")
+    ranking = ranker.ranking()
 
     # consider: model_with_type(...) function for ModelRanking
-    best_svr = [m for m in model_ranking if isinstance(m.model.regressor, SVRDF)][0]
+    best_svr = [m for m in ranking if isinstance(m.pipeline.regressor, SVRDF)][0]
     best_lgbm = [
         model_evaluation
-        for model_evaluation in model_ranking
-        if isinstance(model_evaluation.model.regressor, LGBMRegressorDF)
+        for model_evaluation in ranking
+        if isinstance(model_evaluation.pipeline.regressor, LGBMRegressorDF)
     ][0]
 
     for model_index, model_evaluation in enumerate((best_lgbm, best_svr)):
 
-        model_fit = RegressorFitCV(
-            pipeline=model_evaluation.model, cv=test_cv, sample=test_sample
+        model_fit = RegressorPredictionCV(
+            pipeline=model_evaluation.pipeline, cv=test_cv, sample=test_sample
         )
 
         # test predictions_for_all_samples
         predictions_df = model_fit.predictions_for_all_splits()
-        assert RegressorFitCV.F_PREDICTION in predictions_df.columns
-        assert RegressorFitCV.F_TARGET in predictions_df.columns
+        assert RegressorPredictionCV.COL_PREDICTION in predictions_df.columns
+        assert RegressorPredictionCV.COL_TARGET in predictions_df.columns
 
         # check number of split ids
         assert (
             predictions_df.index.get_level_values(
-                level=RegressorFitCV.F_SPLIT_ID
+                level=RegressorPredictionCV.COL_SPLIT_ID
             ).nunique()
             == N_SPLITS
         )
@@ -125,7 +128,7 @@ def test_model_inspection(n_jobs, boston_sample: Sample) -> None:
             == CHKSUMS_PREDICTIONS[model_index]
         )
 
-        model_inspector = RegressorInspector(models=model_fit)
+        model_inspector = RegressorInspector(predictions=model_fit)
         # make and check shap value matrix
         shap_matrix = model_inspector.shap_matrix()
 
@@ -185,30 +188,25 @@ def test_model_inspection_with_encoding(
     # define the circular cross validator with just 5 splits (to speed up testing)
     circular_cv = CircularCV(test_ratio=0.20, n_splits=5)
 
-    model_ranker: ModelRanker = ModelRanker(
-        grids=regressor_grids, cv=circular_cv, scoring="r2"
+    ranker: RegressorRanker = RegressorRanker(
+        grid=regressor_grids, sample=sample, cv=circular_cv, scoring="r2", n_jobs=n_jobs
     )
 
-    # run the ModelRanker to retrieve a ranking
-    model_ranking: Sequence[ModelEvaluation] = model_ranker.run(
-        sample=sample, n_jobs=n_jobs
-    )
-
-    log.debug(f"\n{summary_report(model_ranking[:10])}")
+    log.debug(f"\n{ranker.summary_report(max_learners=10)}")
 
     # we get the best model_evaluation which is a LGBM - for the sake of test
     # performance
-    model_evaluation = [
-        model_evaluation
-        for model_evaluation in model_ranking
-        if isinstance(model_evaluation.model.regressor, LGBMRegressorDF)
+    validation = [
+        validation
+        for validation in ranker.ranking()
+        if isinstance(validation.pipeline.regressor, LGBMRegressorDF)
     ][0]
 
-    model_fit = RegressorFitCV(
-        pipeline=model_evaluation.model, cv=circular_cv, sample=sample
+    validation_model = RegressorPredictionCV(
+        pipeline=validation.pipeline, cv=circular_cv, sample=sample
     )
 
-    predictions = model_fit.predictions_for_all_splits()
+    predictions = validation_model.predictions_for_all_splits()
 
     # check actual values using checksum:
     assert (
@@ -216,7 +214,7 @@ def test_model_inspection_with_encoding(
         == CHKSUM_PREDICTIONS
     )
 
-    mi = RegressorInspector(models=model_fit)
+    mi = RegressorInspector(predictions=validation_model)
 
     shap_matrix = mi.shap_matrix()
 
@@ -252,7 +250,7 @@ def test_model_inspection_with_encoding(
             # noinspection PyUnresolvedReferences
             return KernelExplainer(model=estimator.predict, data=data)
 
-    mi2 = RegressorInspector(models=model_fit, explainer_factory=ef)
+    mi2 = RegressorInspector(predictions=validation_model, explainer_factory=ef)
     mi2.shap_matrix()
 
     linkage_tree = mi2.cluster_dependent_features()
@@ -278,41 +276,31 @@ def test_model_inspection_classifier(n_jobs, iris_sample: Sample) -> None:
         n_splits=K_FOLDS, n_repeats=N_SPLITS // K_FOLDS, random_state=42
     )
 
-    # define parameters and models
+    # define parameters and predictions
     models = [
         ParameterGrid(
             pipeline=ClassifierPipelineDF(
                 classifier=RandomForestClassifierDF(), preprocessing=None
             ),
-            estimator_parameters={"n_estimators": [50, 80], "random_state": [42]},
+            learner_parameters={"n_estimators": [50, 80], "random_state": [42]},
         )
     ]
 
-    # model inspector does only support binary classification - hence
+    # pipeline inspector does only support binary classification - hence
     # filter the test_sample down to only 2 target classes:
     test_sample: Sample = iris_sample.select_observations_by_index(
         ids=iris_sample.target.isin(iris_sample.target.unique()[0:2])
     )
 
-    model_ranker: ModelRanker = ModelRanker(
-        grids=models, cv=test_cv, scoring="f1_macro"
+    model_ranker = ClassifierRanker(
+        grid=models, sample=test_sample, cv=test_cv, scoring="f1_macro", n_jobs=n_jobs
     )
 
-    model_ranking: Sequence[ModelEvaluation] = model_ranker.run(
-        test_sample, n_jobs=n_jobs
-    )
+    log.debug(f"\n{model_ranker.summary_report(max_learners=10)}")
 
-    log.debug(f"\n{summary_report(model_ranking[:10])}")
-
-    # consider: model_with_type(...) function for ModelRanking
-    model_evaluation = model_ranking[0]
-
-    model_fit = ClassifierFitCV(
-        pipeline=model_evaluation.model,
-        cv=test_cv,
-        sample=test_sample,
-        calibration=ClassifierFitCV.SIGMOID,
-        n_jobs=n_jobs,
+    model_fit = CalibratedClassifierPredictionCV.from_uncalibrated(
+        uncalibrated_fit_predict=model_ranker.best_model_predictions,
+        calibration=ClassifierPredictionCV.CALIBRATION_SIGMOID,
     )
 
     predictions = model_fit.predictions_for_all_splits()
@@ -323,7 +311,7 @@ def test_model_inspection_classifier(n_jobs, iris_sample: Sample) -> None:
         == CHKSUM_PREDICTIONS
     )
 
-    model_inspector = ClassifierInspector(models=model_fit)
+    model_inspector = ClassifierInspector(predictions=model_fit)
     # make and check shap value matrix
     shap_matrix = model_inspector.shap_matrix()
 

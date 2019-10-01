@@ -1,7 +1,6 @@
 import logging
 import warnings
 from itertools import combinations
-from typing import *
 
 import numpy as np
 import pandas as pd
@@ -9,13 +8,11 @@ from pandas.util import hash_pandas_object
 from sklearn.model_selection import BaseCrossValidator, RepeatedKFold
 
 from gamma.ml import Sample
-from gamma.ml.fitcv import ClassifierFitCV
-from gamma.ml.selection import (
-    ModelEvaluation,
-    ModelRanker,
-    ParameterGrid,
-    summary_report,
+from gamma.ml.predictioncv import (
+    ClassifierPredictionCV,
+    CalibratedClassifierPredictionCV,
 )
+from gamma.ml.selection import ParameterGrid, ClassifierRanker
 from gamma.sklearndf.classification import RandomForestClassifierDF
 from gamma.sklearndf.pipeline import ClassifierPipelineDF
 
@@ -40,54 +37,53 @@ def test_prediction_classifier(n_jobs, iris_sample: Sample) -> None:
         n_splits=K_FOLDS, n_repeats=N_SPLITS // K_FOLDS, random_state=42
     )
 
-    # define parameters and models
+    # define parameters and predictions
     models = [
         ParameterGrid(
             pipeline=ClassifierPipelineDF(
                 classifier=RandomForestClassifierDF(), preprocessing=None
             ),
-            estimator_parameters={"n_estimators": [50, 80], "random_state": [42]},
+            learner_parameters={"n_estimators": [50, 80], "random_state": [42]},
         )
     ]
 
     test_sample: Sample = iris_sample
 
-    model_ranker: ModelRanker = ModelRanker(
-        grids=models, cv=test_cv, scoring="f1_macro"
+    model_ranker: ClassifierRanker = ClassifierRanker(
+        grid=models, sample=test_sample, cv=test_cv, scoring="f1_macro", n_jobs=n_jobs
     )
 
-    model_ranking: Sequence[ModelEvaluation] = model_ranker.run(
-        test_sample, n_jobs=n_jobs
-    )
-
-    log.debug(f"\n{summary_report(model_ranking[:10])}")
+    log.debug(f"\n{model_ranker.summary_report(max_learners=10)}")
 
     # consider: model_with_type(...) function for ModelRanking
-    model_evaluation = model_ranking[0]
+    fit_predict = model_ranker.best_model_predictions
 
     # store proba-results
     proba_results = {}
 
     # test various ProbabilityCalibrationMethods for a classifier:
-    for calibration_method in (None, ClassifierFitCV.ISOTONIC, ClassifierFitCV.SIGMOID):
+    for calibration_method in (
+        None,
+        ClassifierPredictionCV.CALIBRATION_ISOTONIC,
+        ClassifierPredictionCV.CALIBRATION_SIGMOID,
+    ):
 
-        model_fit = ClassifierFitCV(
-            pipeline=model_evaluation.model,
-            cv=test_cv,
-            sample=test_sample,
-            calibration=calibration_method,
-            n_jobs=n_jobs,
-        )
+        if calibration_method is None:
+            calibrated = fit_predict
+        else:
+            calibrated = CalibratedClassifierPredictionCV.from_uncalibrated(
+                uncalibrated_fit_predict=fit_predict, calibration=calibration_method
+            )
 
         # test predictions_for_all_samples
-        predictions_df = model_fit.predictions_for_all_splits()
-        assert ClassifierFitCV.F_PREDICTION in predictions_df.columns
-        assert ClassifierFitCV.F_TARGET in predictions_df.columns
+        predictions_df = calibrated.predictions_for_all_splits()
+        assert ClassifierPredictionCV.COL_PREDICTION in predictions_df.columns
+        assert ClassifierPredictionCV.COL_TARGET in predictions_df.columns
 
         # check number of split ids
         assert (
             predictions_df.index.get_level_values(
-                level=ClassifierFitCV.F_SPLIT_ID
+                level=ClassifierPredictionCV.COL_SPLIT_ID
             ).nunique()
             == N_SPLITS
         )
@@ -106,7 +102,7 @@ def test_prediction_classifier(n_jobs, iris_sample: Sample) -> None:
         )
 
         # test probabilities for all samples
-        proba_df: pd.DataFrame = model_fit.probabilities_for_all_splits()
+        proba_df: pd.DataFrame = calibrated.probabilities_for_all_splits()
 
         for target_class in test_sample.target.unique():
             assert target_class in proba_df.columns
@@ -116,14 +112,19 @@ def test_prediction_classifier(n_jobs, iris_sample: Sample) -> None:
 
         # test log-probabilities for uncalibrated classifier:
         if calibration_method is None:
-            log_proba_df = model_fit.log_probabilities_for_all_splits()
+            log_proba_df = calibrated.log_probabilities_for_all_splits()
             assert log_proba_df.shape == proba_df.shape
             assert np.all(
                 log_proba_df.loc[:, "setosa"] == np.log(proba_df.loc[:, "setosa"])
             )
 
     for p1, p2 in combinations(
-        [ClassifierFitCV.ISOTONIC, ClassifierFitCV.SIGMOID, None], 2
+        [
+            ClassifierPredictionCV.CALIBRATION_ISOTONIC,
+            ClassifierPredictionCV.CALIBRATION_SIGMOID,
+            None,
+        ],
+        2,
     ):
         cumulative_diff = np.sum(np.abs(proba_results[p1] - proba_results[p2]))
 
