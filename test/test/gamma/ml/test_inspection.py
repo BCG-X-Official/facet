@@ -19,11 +19,11 @@ from gamma.ml.crossfit import RegressorCrossfit
 from gamma.ml.inspection import ClassifierInspector, RegressorInspector
 from gamma.ml.selection import ClassifierRanker, ParameterGrid, RegressorRanker
 from gamma.ml.validation import CircularCV
-from gamma.ml.viz import DendrogramDrawer, DendrogramReportStyle
 from gamma.sklearndf import TransformerDF
 from gamma.sklearndf.classification import RandomForestClassifierDF
 from gamma.sklearndf.pipeline import ClassifierPipelineDF, RegressorPipelineDF
 from gamma.sklearndf.regression import LGBMRegressorDF, SVRDF
+from gamma.viz.dendrogram import DendrogramDrawer, DendrogramReportStyle
 
 log = logging.getLogger(__name__)
 

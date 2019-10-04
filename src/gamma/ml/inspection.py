@@ -31,12 +31,12 @@ from sklearn.base import BaseEstimator
 
 from gamma.common import ListLike
 from gamma.ml.crossfit import ClassifierCrossfit, LearnerCrossfit, RegressorCrossfit
-from gamma.ml.viz import LinkageTree
 from gamma.sklearndf.pipeline import (
     ClassifierPipelineDF,
     LearnerPipelineDF,
     RegressorPipelineDF,
 )
+from gamma.viz.dendrogram import LinkageTree
 
 log = logging.getLogger(__name__)
 
