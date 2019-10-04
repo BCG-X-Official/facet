@@ -1,3 +1,7 @@
+"""
+Model inspector tests.
+"""
+import hashlib
 import logging
 import warnings
 from typing import *
@@ -11,11 +15,7 @@ from sklearn.base import BaseEstimator
 from sklearn.model_selection import BaseCrossValidator, RepeatedKFold
 
 from gamma.ml import Sample
-from gamma.ml.predictioncv import (
-    CalibratedClassifierPredictionCV,
-    ClassifierPredictionCV,
-    RegressorPredictionCV,
-)
+from gamma.ml.crossfit import RegressorCrossfit
 from gamma.ml.inspection import ClassifierInspector, RegressorInspector
 from gamma.ml.selection import ClassifierRanker, ParameterGrid, RegressorRanker
 from gamma.ml.validation import CircularCV
@@ -33,11 +33,10 @@ N_SPLITS = K_FOLDS * 2
 
 
 def test_model_inspection(n_jobs, boston_sample: Sample) -> None:
-
-    # define checksums for this test - one for the LGBM, one for the SVR
-    CHKSUMS_PREDICTIONS = (8498474725463556484, 781552878134992853)
-    CHKSUMS_SHAP = (5120923735415774388, 2945880188040048636)
-    CHKSUM_CORR_MATRIX = (4159152513108370414, 16061019524360971856)
+    # checksums for the model inspection test - one for the LGBM, one for the SVR
+    checksums_shap = (5120923735415774388, 2945880188040048636)
+    checksum_corr_matrix = (4159152513108370414, 16061019524360971856)
+    checksum_summary_report = "ecc865e256775699f651cc0d2277f972"
 
     warnings.filterwarnings("ignore", message="numpy.dtype size changed")
     warnings.filterwarnings("ignore", message="numpy.ufunc size changed")
@@ -49,8 +48,8 @@ def test_model_inspection(n_jobs, boston_sample: Sample) -> None:
         n_splits=K_FOLDS, n_repeats=N_SPLITS // K_FOLDS, random_state=42
     )
 
-    # define parameters and predictions
-    models = [
+    # define parameter grid
+    grid = [
         ParameterGrid(
             pipeline=(
                 RegressorPipelineDF(regressor=SVRDF(gamma="scale"), preprocessing=None)
@@ -71,24 +70,24 @@ def test_model_inspection(n_jobs, boston_sample: Sample) -> None:
 
     # use first 100 rows only, since KernelExplainer is very slow...
 
-    test_sample: Sample = boston_sample.select_observations_by_position(
-        positions=range(0, 100)
-    )
+    test_sample: Sample = boston_sample.observations_by_position(positions=slice(100))
 
     ranker = RegressorRanker(
-        grid=models,
-        sample=test_sample,
-        cv=test_cv,
-        scoring="neg_mean_squared_error",
-        n_jobs=n_jobs,
-    )
+        grid=grid, cv=test_cv, scoring="neg_mean_squared_error", n_jobs=n_jobs
+    ).fit(sample=test_sample)
 
     log.debug(f"\n{ranker.summary_report(max_learners=10)}")
+
+    assert (
+        hashlib.md5(ranker.summary_report().encode("utf-8")).hexdigest()
+    ) == checksum_summary_report
 
     ranking = ranker.ranking()
 
     # consider: model_with_type(...) function for ModelRanking
-    best_svr = [m for m in ranking if isinstance(m.pipeline.regressor, SVRDF)][0]
+    best_svr = [
+        model for model in ranking if isinstance(model.pipeline.regressor, SVRDF)
+    ][0]
     best_lgbm = [
         model_evaluation
         for model_evaluation in ranking
@@ -97,38 +96,11 @@ def test_model_inspection(n_jobs, boston_sample: Sample) -> None:
 
     for model_index, model_evaluation in enumerate((best_lgbm, best_svr)):
 
-        model_fit = RegressorPredictionCV(
-            pipeline=model_evaluation.pipeline, cv=test_cv, sample=test_sample
-        )
+        model_fit = RegressorCrossfit(
+            base_estimator=model_evaluation.pipeline, cv=test_cv
+        ).fit(sample=test_sample)
 
-        # test predictions_for_all_samples
-        predictions_df = model_fit.predictions_for_all_splits()
-        assert RegressorPredictionCV.COL_PREDICTION in predictions_df.columns
-        assert RegressorPredictionCV.COL_TARGET in predictions_df.columns
-
-        # check number of split ids
-        assert (
-            predictions_df.index.get_level_values(
-                level=RegressorPredictionCV.COL_SPLIT_ID
-            ).nunique()
-            == N_SPLITS
-        )
-
-        # check correct number of rows
-        allowed_variance = 0.01
-        assert (
-            (len(test_sample) * (TEST_RATIO - allowed_variance) * N_SPLITS)
-            <= len(predictions_df)
-            <= (len(test_sample) * (TEST_RATIO + allowed_variance) * N_SPLITS)
-        )
-
-        # check actual prediction values using checksum:
-        assert (
-            np.sum(hash_pandas_object(predictions_df).values)
-            == CHKSUMS_PREDICTIONS[model_index]
-        )
-
-        model_inspector = RegressorInspector(predictions=model_fit)
+        model_inspector = RegressorInspector(crossfit=model_fit)
         # make and check shap value matrix
         shap_matrix = model_inspector.shap_matrix()
 
@@ -140,7 +112,7 @@ def test_model_inspection(n_jobs, boston_sample: Sample) -> None:
         #
         assert (
             np.sum(hash_pandas_object(shap_matrix.round(decimals=4)).values)
-            == CHKSUMS_SHAP[model_index]
+            == checksums_shap[model_index]
         )
 
         # correlated shap matrix: feature dependencies
@@ -162,13 +134,13 @@ def test_model_inspection(n_jobs, boston_sample: Sample) -> None:
         # check actual values using checksum:
         assert (
             np.sum(hash_pandas_object(corr_matrix.round(decimals=4)).values)
-            == CHKSUM_CORR_MATRIX[model_index]
+            == checksum_corr_matrix[model_index]
         )
 
         linkage_tree = model_inspector.cluster_dependent_features()
 
         DendrogramDrawer(
-            title="Test", linkage_tree=linkage_tree, style=DendrogramReportStyle()
+            title="Test", linkage=linkage_tree, style=DendrogramReportStyle()
         ).draw()
 
 
@@ -179,20 +151,23 @@ def test_model_inspection_with_encoding(
     simple_preprocessor: TransformerDF,
     n_jobs,
 ) -> None:
-
     # define checksums for this test
-    CHKSUM_PREDICTIONS = 15445317532513327074
-    CHKSUM_SHAP = 2454983946504277938
-    CHKSUM_CORR_MATRIX = 9841870561220906358
+    checksum_shap = 2454983946504277938
+    checksum_corr_matrix = 9841870561220906358
+    checksum_summary_report = "b0a27e3f52fbe8fb8a9b03aae41db9b4"
 
     # define the circular cross validator with just 5 splits (to speed up testing)
     circular_cv = CircularCV(test_ratio=0.20, n_splits=5)
 
     ranker: RegressorRanker = RegressorRanker(
-        grid=regressor_grids, sample=sample, cv=circular_cv, scoring="r2", n_jobs=n_jobs
-    )
+        grid=regressor_grids, cv=circular_cv, scoring="r2", n_jobs=n_jobs
+    ).fit(sample=sample)
 
     log.debug(f"\n{ranker.summary_report(max_learners=10)}")
+
+    assert (
+        hashlib.md5(ranker.summary_report().encode("utf-8")).hexdigest()
+    ) == checksum_summary_report
 
     # we get the best model_evaluation which is a LGBM - for the sake of test
     # performance
@@ -202,25 +177,18 @@ def test_model_inspection_with_encoding(
         if isinstance(validation.pipeline.regressor, LGBMRegressorDF)
     ][0]
 
-    validation_model = RegressorPredictionCV(
-        pipeline=validation.pipeline, cv=circular_cv, sample=sample
-    )
+    validation_model = RegressorCrossfit(
+        base_estimator=validation.pipeline, cv=circular_cv, n_jobs=n_jobs
+    ).fit(sample=sample)
 
-    predictions = validation_model.predictions_for_all_splits()
-
-    # check actual values using checksum:
-    assert (
-        np.sum(hash_pandas_object(predictions.round(decimals=4)).values)
-        == CHKSUM_PREDICTIONS
-    )
-
-    mi = RegressorInspector(predictions=validation_model)
+    mi = RegressorInspector(crossfit=validation_model)
 
     shap_matrix = mi.shap_matrix()
 
     # check actual values using checksum:
     assert (
-        np.sum(hash_pandas_object(shap_matrix.round(decimals=4)).values) == CHKSUM_SHAP
+        np.sum(hash_pandas_object(shap_matrix.round(decimals=4)).values)
+        == checksum_shap
     )
 
     # correlated shap matrix: feature dependencies
@@ -229,14 +197,14 @@ def test_model_inspection_with_encoding(
     # check actual values using checksum:
     assert (
         np.sum(hash_pandas_object(corr_matrix.round(decimals=4)).values)
-        == CHKSUM_CORR_MATRIX
+        == checksum_corr_matrix
     )
 
     # cluster feature importances
-    linkage_tree = mi.cluster_dependent_features()
+    _linkage = mi.cluster_dependent_features()
 
     #  test the ModelInspector with a custom ExplainerFactory:
-    def ef(estimator: BaseEstimator, data: pd.DataFrame) -> Explainer:
+    def _ef(estimator: BaseEstimator, data: pd.DataFrame) -> Explainer:
 
         try:
             return TreeExplainer(
@@ -250,13 +218,13 @@ def test_model_inspection_with_encoding(
             # noinspection PyUnresolvedReferences
             return KernelExplainer(model=estimator.predict, data=data)
 
-    mi2 = RegressorInspector(predictions=validation_model, explainer_factory=ef)
+    mi2 = RegressorInspector(crossfit=validation_model, explainer_factory=_ef)
     mi2.shap_matrix()
 
     linkage_tree = mi2.cluster_dependent_features()
     print()
     DendrogramDrawer(
-        title="Test", linkage_tree=linkage_tree, style=DendrogramReportStyle()
+        title="Test", linkage=linkage_tree, style=DendrogramReportStyle()
     ).draw()
 
 
@@ -266,9 +234,9 @@ def test_model_inspection_classifier(n_jobs, iris_sample: Sample) -> None:
     warnings.filterwarnings("ignore", message="You are accessing a training score")
 
     # define checksums for this test
-    CHKSUM_PREDICTIONS = 13787062061417505156
-    CHKSUM_SHAP = 12636830693175052845
-    CHKSUM_CORR_MATRIX = 9331449050691600977
+    checksum_shap = 12636830693175052845
+    checksum_corr_matrix = 9331449050691600977
+    checksum_summary_report = "1fd7d20f9ac87e39258cc60e9c7d8005"
 
     # define a CV:
     # noinspection PyTypeChecker
@@ -276,7 +244,7 @@ def test_model_inspection_classifier(n_jobs, iris_sample: Sample) -> None:
         n_splits=K_FOLDS, n_repeats=N_SPLITS // K_FOLDS, random_state=42
     )
 
-    # define parameters and predictions
+    # define parameters and crossfit
     models = [
         ParameterGrid(
             pipeline=ClassifierPipelineDF(
@@ -293,31 +261,25 @@ def test_model_inspection_classifier(n_jobs, iris_sample: Sample) -> None:
     )
 
     model_ranker = ClassifierRanker(
-        grid=models, sample=test_sample, cv=test_cv, scoring="f1_macro", n_jobs=n_jobs
-    )
+        grid=models, cv=test_cv, scoring="f1_macro", n_jobs=n_jobs
+    ).fit(sample=test_sample)
 
     log.debug(f"\n{model_ranker.summary_report(max_learners=10)}")
 
-    model_fit = CalibratedClassifierPredictionCV.from_uncalibrated(
-        uncalibrated_fit_predict=model_ranker.best_model_predictions,
-        calibration=ClassifierPredictionCV.CALIBRATION_SIGMOID,
-    )
-
-    predictions = model_fit.predictions_for_all_splits()
-
-    # check actual values using checksum:
     assert (
-        np.sum(hash_pandas_object(predictions.round(decimals=4)).values)
-        == CHKSUM_PREDICTIONS
-    )
+        hashlib.md5(model_ranker.summary_report().encode("utf-8")).hexdigest()
+    ) == checksum_summary_report
 
-    model_inspector = ClassifierInspector(predictions=model_fit)
+    crossfit = model_ranker.best_model_crossfit
+
+    model_inspector = ClassifierInspector(crossfit=crossfit)
     # make and check shap value matrix
     shap_matrix = model_inspector.shap_matrix()
 
     # check actual values using checksum:
     assert (
-        np.sum(hash_pandas_object(shap_matrix.round(decimals=4)).values) == CHKSUM_SHAP
+        np.sum(hash_pandas_object(shap_matrix.round(decimals=4)).values)
+        == checksum_shap
     )
 
     # the length of rows in shap_matrix should be equal to the unique observation
@@ -343,11 +305,11 @@ def test_model_inspection_classifier(n_jobs, iris_sample: Sample) -> None:
     # check actual values using checksum:
     assert (
         np.sum(hash_pandas_object(corr_matrix.round(decimals=4)).values)
-        == CHKSUM_CORR_MATRIX
+        == checksum_corr_matrix
     )
 
     linkage_tree = model_inspector.cluster_dependent_features()
     print()
     DendrogramDrawer(
-        title="Test", linkage_tree=linkage_tree, style=DendrogramReportStyle()
+        title="Test", linkage=linkage_tree, style=DendrogramReportStyle()
     ).draw()

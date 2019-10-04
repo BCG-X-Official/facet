@@ -20,39 +20,54 @@ hyperparameters.
 :class:`LearnerRanker` selects the best pipeline and parametrisation based on the
 pipeline and hyperparameter choices provided as a list of :class:`ModelGrid`.
 """
+import logging
 import re
 from abc import ABC, abstractmethod
 from collections import defaultdict
 from itertools import chain
 from typing import *
 
-import copy
 import numpy as np
 from sklearn.model_selection import BaseCrossValidator, GridSearchCV
 
 from gamma.ml import Sample
-from gamma.ml.predictioncv import (
-    ClassifierPredictionCV,
-    PredictionCV,
-    RegressorPredictionCV,
-)
-from gamma.sklearndf import ClassifierDF, RegressorDF
+from gamma.ml.crossfit import ClassifierCrossfit, LearnerCrossfit, RegressorCrossfit
 from gamma.sklearndf.pipeline import (
     ClassifierPipelineDF,
     LearnerPipelineDF,
     RegressorPipelineDF,
 )
 
-__all__ = ["ParameterGrid", "Scoring", "Validation", "LearnerRanker"]
+log = logging.getLogger(__name__)
 
-T_LearnerPipelineDF = TypeVar("T_LearnerPipelineDF", bound=LearnerPipelineDF)
-T_PredictionCV = TypeVar("T_PredictionCV", bound=PredictionCV[T_LearnerPipelineDF])
-_T_FinalRegressorDF = TypeVar("_T_FinalRegressorDF", bound=RegressorDF)
-_T_FinalClassifierDF = TypeVar("_T_FinalClassifierDF", bound=ClassifierDF)
+__all__ = [
+    "ParameterGrid",
+    "Scoring",
+    "LearnerEvaluation",
+    "LearnerRanker",
+    "RegressorRanker",
+    "ClassifierRanker",
+]
+
+#
+# Type variables
+#
+
+_T_LearnerPipelineDF = TypeVar("T_LearnerPipelineDF", bound=LearnerPipelineDF)
+_T_RegressorPipelineDF = TypeVar("_T_RegressorPipelineDF", bound=RegressorPipelineDF)
+_T_ClassifierPipelineDF = TypeVar("_T_ClassifierPipelineDF", bound=ClassifierPipelineDF)
+
+_T_Crossfit = TypeVar("T_PredictionCV", bound=LearnerCrossfit[_T_LearnerPipelineDF])
+
+# noinspection PyShadowingBuiltins
 _T = TypeVar("_T")
 
+#
+# Class definitions
+#
 
-class ParameterGrid(Generic[T_LearnerPipelineDF]):
+
+class ParameterGrid(Generic[_T_LearnerPipelineDF]):
     """
     A grid of hyper-parameters for pipeline tuning.
 
@@ -61,12 +76,13 @@ class ParameterGrid(Generic[T_LearnerPipelineDF]):
     :param learner_parameters: the hyper-parameter grid in which to search for the \
         optimal parameter values for the pipeline's final estimator
     :param preprocessing_parameters: the hyper-parameter grid in which to search for \
-        the optimal parameter values for the pipeline's preprocessing pipeline (optional)
+        the optimal parameter values for the pipeline's preprocessing pipeline \
+        (optional)
     """
 
     def __init__(
         self,
-        pipeline: T_LearnerPipelineDF,
+        pipeline: _T_LearnerPipelineDF,
         learner_parameters: Dict[str, Sequence[Any]],
         preprocessing_parameters: Optional[Dict[str, Sequence[Any]]] = None,
     ) -> None:
@@ -82,21 +98,21 @@ class ParameterGrid(Generic[T_LearnerPipelineDF]):
             ]
 
         grid_parameters: Iterable[Tuple[str, Any]] = _prefix_parameter_names(
-            parameters=learner_parameters, prefix=pipeline.final_estimator_param_
+            parameters=learner_parameters, prefix=pipeline.final_estimator_name
         )
         if preprocessing_parameters is not None:
             grid_parameters = chain(
                 grid_parameters,
                 _prefix_parameter_names(
                     parameters=preprocessing_parameters,
-                    prefix=pipeline.preprocessing_param_,
+                    prefix=pipeline.preprocessing_name,
                 ),
             )
 
         self._grid = dict(grid_parameters)
 
     @property
-    def pipeline(self) -> T_LearnerPipelineDF:
+    def pipeline(self) -> _T_LearnerPipelineDF:
         """
         The :class:`~gamma.ml.EstimatorPipelineDF` for which to optimise the
         parameters.
@@ -141,23 +157,23 @@ class Scoring:
         return self._split_scores.std()
 
 
-class Validation(Generic[T_LearnerPipelineDF]):
+class LearnerEvaluation(Generic[_T_LearnerPipelineDF]):
     """
-    Validation result for a specific parametrisation of a
+    LearnerEvaluation result for a specific parametrisation of a
     :class:`~gamma.sklearndf.pipeline.LearnerPipelineDF`, determined by a
-    :class:`~gamma.ml.selection.`
+    :class:`~gamma.ml.selection.LearnerRanker`
 
-    :param pipeline: the (unfitted) :class:`~gamma.ml.LearnerPipelineDF`
+    :param pipeline: the unfitted :class:`~gamma.ml.LearnerPipelineDF`
     :param parameters: the hyper-parameters selected for the learner during grid \
         search, as a mapping of parameter names to parameter values
     :param scoring: maps score names to :class:`~gamma.ml.Scoring` instances
     :param ranking_score: overall score determined by the 's ranking \
-        metric, used for ranking all predictions
+        metric, used for ranking all crossfit
     """
 
     def __init__(
         self,
-        pipeline: T_LearnerPipelineDF,
+        pipeline: _T_LearnerPipelineDF,
         parameters: Mapping[str, Any],
         scoring: Mapping[str, Scoring],
         ranking_score: float,
@@ -169,9 +185,9 @@ class Validation(Generic[T_LearnerPipelineDF]):
         self.ranking_score = ranking_score
 
 
-class LearnerRanker(Generic[T_LearnerPipelineDF, T_PredictionCV], ABC):
+class LearnerRanker(Generic[_T_LearnerPipelineDF, _T_Crossfit], ABC):
     """
-    Rank a list of predictions using a cross-validation.
+    Rank different parametrisations of one or more learners using cross-validation.
 
     Given a list of :class:`~gamma.ml.ParameterGrid`, a cross-validation splitter and a
     scoring function, performs a grid search to find the pipeline and
@@ -182,17 +198,16 @@ class LearnerRanker(Generic[T_LearnerPipelineDF, T_PredictionCV], ABC):
 
     :param grid: :class:`~gamma.ml.ParameterGrid` to be ranked (either single grid or \
         an iterable of multiple grids)
-    :param sample: sample with which to fit the candidate learners from the grid(s)
     :param cv: a cross validator (e.g., \
         :class:`~gamma.ml.validation.BootstrapCV`)
     :param scoring: a scorer to use when doing CV within GridSearch, defaults to \
         :meth:`.default_ranking_scorer`
-    :param ranking_scorer: scoring function used for ranking across predictions, \
+    :param ranking_scorer: scoring function used for ranking across crossfit, \
         taking mean and standard deviation of the ranking scores_for_split and \
         returning the overall ranking score (default: :meth:`.default_ranking_scorer`)
     :param ranking_metric: the scoring to be used for pipeline ranking, \
         given as a name to be used to look up the right Scoring object in the \
-        Validation.scoring dictionary (default: 'test_score').
+        LearnerEvaluation.scoring dictionary (default: 'test_score').
     :param n_jobs: number of threads to use (default: one)
     :param shared_memory: whether to use threading with shared memory (default: `False`)
     :param pre_dispatch: maximum number of the data to make (default: `"2*n_jobs"`)
@@ -220,10 +235,9 @@ class LearnerRanker(Generic[T_LearnerPipelineDF, T_PredictionCV], ABC):
     def __init__(
         self,
         grid: Union[
-            ParameterGrid[T_LearnerPipelineDF],
-            Iterable[ParameterGrid[T_LearnerPipelineDF]],
+            ParameterGrid[_T_LearnerPipelineDF],
+            Iterable[ParameterGrid[_T_LearnerPipelineDF]],
         ],
-        sample: Sample,
         cv: Optional[BaseCrossValidator],
         scoring: Union[
             str,
@@ -240,8 +254,7 @@ class LearnerRanker(Generic[T_LearnerPipelineDF, T_PredictionCV], ABC):
         pre_dispatch: str = "2*n_jobs",
         verbose: int = 0,
     ) -> None:
-        self._grids = [grid] if isinstance(grid, ParameterGrid) else list(grid)
-        self._sample = sample
+        self._grids = list(grid) if isinstance(grid, Iterable) else [grid]
         self._cv = cv
         self._scoring = scoring
         self._ranking_scorer = (
@@ -256,7 +269,8 @@ class LearnerRanker(Generic[T_LearnerPipelineDF, T_PredictionCV], ABC):
         self._verbose = verbose
 
         # initialise state
-        self._ranking: Optional[List[Validation]] = None
+        self._sample: Optional[Sample] = None
+        self._ranking: Optional[List[LearnerEvaluation]] = None
 
     @staticmethod
     def default_ranking_scorer(scoring: Scoring) -> float:
@@ -270,31 +284,46 @@ class LearnerRanker(Generic[T_LearnerPipelineDF, T_PredictionCV], ABC):
         """
         return scoring.mean() - 2 * scoring.std()
 
-    def ranking(self) -> List[Validation[T_LearnerPipelineDF]]:
+    def fit(self: _T, sample: Sample, **fit_params) -> _T:
+        """
+        :param sample: sample with which to fit the candidate learners from the grid(s)
+        :param fit_params: any fit parameters to pass on to the learner's fit method
+        """
+        self._rank_learners(sample=sample, **fit_params)
+        return self
+
+    @property
+    def is_fitted(self) -> bool:
+        """`True` if this ranker is fitted, `False` otherwise."""
+        return self._sample is not None
+
+    def _ensure_fitted(self) -> None:
+        if not self.is_fitted:
+            raise RuntimeError("expected ranker to be fitted")
+
+    def ranking(self) -> List[LearnerEvaluation[_T_LearnerPipelineDF]]:
         """
         :return a ranking of all learners that were evaluated based on the parameter
         grids passed to this ranker, in descending order of the ranking score.
         """
-        self._rank_learners()
-
+        self._ensure_fitted()
         return self._ranking.copy()
 
-    def best_model(self) -> T_LearnerPipelineDF:
+    @property
+    def best_model(self) -> _T_LearnerPipelineDF:
         """
         The pipeline which obtained the best ranking score, fitted on the entire sample
         """
         return self._best_pipeline().fit(X=self._sample.features, y=self._sample.target)
 
-    def best_model_predictions(self) -> T_PredictionCV:
+    @property
+    def best_model_crossfit(self) -> _T_Crossfit:
         """
-        The cross-validated predictions for the best model
+        The fitted crossfit for the best model
         """
-        return self._fit_and_predict_model(self._best_pipeline())
-
-    def _best_pipeline(self) -> T_LearnerPipelineDF:
-        # return the unfitted model with the best parametrisation
-        self._rank_learners()
-        return self._ranking[0].pipeline
+        return self._make_crossfit(pipeline=self._best_pipeline()).fit(
+            sample=self._sample
+        )
 
     def summary_report(self, max_learners: Optional[int] = None) -> str:
         """
@@ -307,8 +336,10 @@ class LearnerRanker(Generic[T_LearnerPipelineDF, T_PredictionCV], ABC):
         :return: a summary string of the pipeline ranking
         """
 
-        def _model_name(evaluation: Validation) -> str:
-            return evaluation.pipeline.final_estimator_.__class__.__name__
+        self._ensure_fitted()
+
+        def _model_name(evaluation: LearnerEvaluation) -> str:
+            return type(evaluation.pipeline).__name__
 
         def _parameters(params: Mapping[str, Iterable[Any]]) -> str:
             return ",".join(
@@ -329,8 +360,6 @@ class LearnerRanker(Generic[T_LearnerPipelineDF, T_PredictionCV], ABC):
                 ]
             )
 
-        self._rank_learners()
-
         ranking = self._ranking[:max_learners] if max_learners else self._ranking
 
         name_width = max([len(_model_name(ranked_model)) for ranked_model in ranking])
@@ -347,23 +376,25 @@ class LearnerRanker(Generic[T_LearnerPipelineDF, T_PredictionCV], ABC):
             ]
         )
 
-    def copy_with_sample(self: _T, sample: Sample) -> _T:
-        clone = copy.copy(self)
-        clone._sample = sample
-        clone._ranking = None
-        return clone
+    def _best_pipeline(self) -> _T_LearnerPipelineDF:
+        # return the unfitted model with the best parametrisation
+        self._ensure_fitted()
+        return self._ranking[0].pipeline
 
     @abstractmethod
-    def _fit_and_predict_model(self, pipeline: T_LearnerPipelineDF) -> T_PredictionCV:
+    def _make_crossfit(self, pipeline: _T_LearnerPipelineDF) -> _T_Crossfit:
         pass
 
-    def _rank_learners(self) -> None:
+    def _rank_learners(self, sample: Sample, **fit_params) -> None:
 
-        if self._ranking is not None:
-            return
+        if len(fit_params) > 0:
+            log.warning(
+                "Ignoting arg fit_params: current ranker implementation uses "
+                "GridSearchCV which does not support fit_params"
+            )
 
-        sample = self._sample
         ranking_scorer = self._ranking_scorer
+
         # construct searchers
         searchers: List[Tuple[GridSearchCV, ParameterGrid]] = [
             (
@@ -403,12 +434,10 @@ class LearnerRanker(Generic[T_LearnerPipelineDF, T_PredictionCV], ABC):
             The test scores_for_split are sorted in the order the splits were tested.
 
             :param cv_results: a :attr:`sklearn.GridSearchCV.cv_results_` attribute
-            :return: a list of test scores per scored pipeline; each list entry maps score
-              types (as str) to a :class:`Scoring` of scores per split. The i-th
-              element of this
-              list is
-              typically of the form ``{'train_score': model_scoring1, 'test_score':
-              model_scoring2,...}``
+            :return: a list of test scores per scored pipeline; each list entry maps \
+                score types (as str) to a :class:`Scoring` of scores per split. The \
+                i-th element of this list is typically of the form \
+                ``{'train_score': model_scoring1, 'test_score': model_scoring2,...}``
             """
 
             # the splits are stored in the cv_results using keys 'split0...'
@@ -467,7 +496,7 @@ class LearnerRanker(Generic[T_LearnerPipelineDF, T_PredictionCV], ABC):
 
         ranking_metric = self._ranking_metric
         ranking = [
-            Validation(
+            LearnerEvaluation(
                 pipeline=grid.pipeline.clone().set_params(**params),
                 parameters=params,
                 scoring=scoring,
@@ -484,23 +513,20 @@ class LearnerRanker(Generic[T_LearnerPipelineDF, T_PredictionCV], ABC):
 
         ranking.sort(key=lambda validation: validation.ranking_score, reverse=True)
 
+        self._sample = sample
         self._ranking = ranking
 
 
 class RegressorRanker(
-    LearnerRanker[
-        RegressorPipelineDF[_T_FinalRegressorDF],
-        RegressorPredictionCV[RegressorPipelineDF[_T_FinalRegressorDF]],
-    ],
-    Generic[_T_FinalRegressorDF],
+    LearnerRanker[_T_RegressorPipelineDF, RegressorCrossfit[_T_RegressorPipelineDF]],
+    Generic[_T_RegressorPipelineDF],
 ):
-    def _fit_and_predict_model(
-        self, pipeline: RegressorPipelineDF[_T_FinalRegressorDF]
-    ) -> RegressorPredictionCV[RegressorPipelineDF[_T_FinalRegressorDF]]:
-        return RegressorPredictionCV(
-            pipeline=pipeline,
+    def _make_crossfit(
+        self, pipeline: _T_RegressorPipelineDF
+    ) -> RegressorCrossfit[_T_RegressorPipelineDF]:
+        return RegressorCrossfit(
+            base_estimator=pipeline,
             cv=self._cv,
-            sample=self._sample,
             n_jobs=self._n_jobs,
             shared_memory=self._shared_memory,
             verbose=self._verbose,
@@ -508,19 +534,15 @@ class RegressorRanker(
 
 
 class ClassifierRanker(
-    LearnerRanker[
-        ClassifierPipelineDF[_T_FinalClassifierDF],
-        ClassifierPredictionCV[ClassifierPipelineDF[_T_FinalClassifierDF]],
-    ],
-    Generic[_T_FinalClassifierDF],
+    LearnerRanker[_T_ClassifierPipelineDF, ClassifierCrossfit[_T_ClassifierPipelineDF]],
+    Generic[_T_ClassifierPipelineDF],
 ):
-    def _fit_and_predict_model(
-        self, pipeline: ClassifierPipelineDF[_T_FinalClassifierDF]
-    ) -> ClassifierPredictionCV[ClassifierPipelineDF[_T_FinalClassifierDF]]:
-        return ClassifierPredictionCV(
-            pipeline=pipeline,
+    def _make_crossfit(
+        self, pipeline: _T_ClassifierPipelineDF
+    ) -> ClassifierCrossfit[_T_ClassifierPipelineDF]:
+        return ClassifierCrossfit(
+            base_estimator=pipeline,
             cv=self._cv,
-            sample=self._sample,
             n_jobs=self._n_jobs,
             shared_memory=self._shared_memory,
             verbose=self._verbose,

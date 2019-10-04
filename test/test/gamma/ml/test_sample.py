@@ -97,7 +97,7 @@ def test_sample(batch_table: pd.DataFrame) -> None:
     assert len(s) == len(batch_table)
 
     # test select_observations
-    sub = s2.select_observations_by_position(positions=[0, 1, 2, 3])
+    sub = s2.observations_by_position(positions=[0, 1, 2, 3])
     assert len(sub) == 4
 
     # test select features

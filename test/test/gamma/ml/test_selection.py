@@ -7,36 +7,36 @@ import pandas as pd
 from sklearn import datasets
 
 from gamma.ml import Sample
-from gamma.ml.predictioncv import RegressorPredictionCV
+from gamma.ml.crossfit import RegressorCrossfit
 from gamma.ml.selection import (
     ClassifierRanker,
+    LearnerEvaluation,
     ParameterGrid,
     RegressorRanker,
-    Validation,
 )
-from gamma.ml.validation import CircularCV
+from gamma.ml.validation import BootstrapCV
 from gamma.sklearndf.classification import SVCDF
 from gamma.sklearndf.pipeline import ClassifierPipelineDF
 
 log = logging.getLogger(__name__)
 
-CHKSUM_SUMMARY_REPORT = "925b6623fa1b10bee69cb179b03a6c52"
-
 
 def test_model_ranker(
     batch_table: pd.DataFrame, regressor_grids, sample: Sample, n_jobs
 ) -> None:
+    checksum_summary_report = "99d0a27bb3a83357e32f56acc63fc274"
+
     # define the circular cross validator with just 5 splits (to speed up testing)
-    circular_cv = CircularCV(test_ratio=0.20, n_splits=5)
+    cv = BootstrapCV(n_splits=5, random_state=42)
 
     ranker = RegressorRanker(
-        grid=regressor_grids, sample=sample, cv=circular_cv, scoring="r2", n_jobs=n_jobs
-    )
-    assert isinstance(ranker.best_model_predictions, RegressorPredictionCV)
+        grid=regressor_grids, cv=cv, scoring="r2", n_jobs=n_jobs
+    ).fit(sample=sample)
+    assert isinstance(ranker.best_model_crossfit, RegressorCrossfit)
 
     ranking = ranker.ranking()
     assert len(ranking) > 0
-    assert isinstance(ranking[0], Validation)
+    assert isinstance(ranking[0], LearnerEvaluation)
     assert (
         ranking[0].ranking_score
         >= ranking[1].ranking_score
@@ -52,18 +52,20 @@ def test_model_ranker(
             validation.pipeline.get_params()
         )
 
-    assert CHKSUM_SUMMARY_REPORT == (
+    assert (
         hashlib.md5(ranker.summary_report().encode("utf-8")).hexdigest()
-    )
+    ) == checksum_summary_report
 
 
 def test_model_ranker_no_preprocessing(n_jobs) -> None:
+    checksum_summary_report = "e91e44f10651f579c8a200a44d42dfe4"
+
     warnings.filterwarnings("ignore", message="numpy.dtype size changed")
     warnings.filterwarnings("ignore", message="numpy.ufunc size changed")
     warnings.filterwarnings("ignore", message="You are accessing a training score")
 
     # define a yield-engine circular CV:
-    cv = CircularCV(test_ratio=0.21, n_splits=50)
+    cv = BootstrapCV(n_splits=5, random_state=42)
 
     # define parameters and pipeline
     models = [
@@ -75,7 +77,7 @@ def test_model_ranker_no_preprocessing(n_jobs) -> None:
         )
     ]
 
-    #  load sklearn test-data and convert to pd
+    #  load scikit-learn test-data and convert to pd
     iris = datasets.load_iris()
     test_data = pd.DataFrame(
         data=np.c_[iris["data"], iris["target"]],
@@ -84,10 +86,14 @@ def test_model_ranker_no_preprocessing(n_jobs) -> None:
     test_sample: Sample = Sample(observations=test_data, target="target")
 
     model_ranker: ClassifierRanker = ClassifierRanker(
-        grid=models, sample=test_sample, cv=cv, n_jobs=n_jobs
-    )
+        grid=models, cv=cv, n_jobs=n_jobs
+    ).fit(sample=test_sample)
 
     log.debug(f"\n{model_ranker.summary_report(max_learners=10)}")
+
+    assert (
+        hashlib.md5(model_ranker.summary_report().encode("utf-8")).hexdigest()
+    ) == checksum_summary_report
 
     assert (
         model_ranker.ranking()[0].ranking_score >= 0.8
