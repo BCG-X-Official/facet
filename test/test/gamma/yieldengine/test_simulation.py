@@ -9,15 +9,14 @@ from pytest import approx
 
 from gamma.ml import Sample
 from gamma.ml.selection import ParameterGrid, RegressorRanker
-from gamma.ml.validation import CircularCV
+from gamma.ml.validation import StationaryBootstrapCV
 from gamma.sklearndf import TransformerDF
 from gamma.yieldengine.partition import ContinuousRangePartitioning
 from gamma.yieldengine.simulation import UnivariateUpliftSimulator
 
 log = logging.getLogger(__name__)
 
-N_SPLITS = 5
-TEST_RATIO = 0.2
+N_SPLITS = 10
 
 
 def test_univariate_simulation(
@@ -29,16 +28,16 @@ def test_univariate_simulation(
 ) -> None:
 
     # define the circular cross validator with just 5 splits (to speed up testing)
-    circular_cv = CircularCV(test_ratio=TEST_RATIO, n_splits=N_SPLITS)
+    cv = StationaryBootstrapCV(n_splits=N_SPLITS, random_state=42)
 
     model_ranker = RegressorRanker(
-        grid=regressor_grids, sample=sample, cv=circular_cv, scoring="r2", n_jobs=n_jobs
-    )
+        grid=regressor_grids, cv=cv, scoring="r2", n_jobs=n_jobs
+    ).fit(sample=sample)
 
-    predictions = model_ranker.best_model_predictions()
+    crossfit = model_ranker.best_model_crossfit
 
     simulator = UnivariateUpliftSimulator(
-        predictions=predictions, min_percentile=10, max_percentile=90
+        crossfit=crossfit, min_percentile=10, max_percentile=90
     )
 
     parameterized_feature = "Step4-6 RawMat Vendor Compound08 Purity (#)"
@@ -53,41 +52,48 @@ def test_univariate_simulation(
     log.debug(res)
     # test aggregated values
     # the values on the right were computed from correct runs
-    assert res.iloc[:, 2].mean() == approx(-0.005341351699881821)
-    assert res.iloc[:, 2].max() == approx(0.01904097474184785)
-    assert res.iloc[:, 2].min() == approx(-0.050256813777029286)
+    absolute_target_change_sr = res.loc[
+        :, UnivariateUpliftSimulator._COL_ABSOLUTE_TARGET_CHANGE
+    ]
+    assert absolute_target_change_sr.min() == approx(-0.7316366998749118)
+    assert absolute_target_change_sr.mean() == approx(-0.09974330639733585)
+    assert absolute_target_change_sr.max() == approx(0.6741931812285031)
 
     aggregated_results = simulator._aggregate_simulation_results(results_per_split=res)
     log.debug(aggregated_results)
 
     # test the first five rows of aggregated_results
     # the values were computed from a correct run
-    dict_data = {
-        "percentile_10": {
-            24.0: -0.022085854777025404,
-            24.5: -0.01544493841392831,
-            25.0: -0.01544493841392831,
-            25.5: -0.01544493841392831,
-            26.0: -0.035765236211580544,
-        },
-        "percentile_50": {
-            24.0: 0.011567498441119817,
-            24.5: 0.0,
-            25.0: 0.0,
-            25.5: 0.0,
-            26.0: 0.0,
-        },
-        "percentile_90": {
-            24.0: 0.01860559941647595,
-            24.5: 0.0,
-            25.0: 0.0,
-            25.5: 0.0,
-            26.0: 0.0,
-        },
-    }
+
     index = pd.Index(
-        data=[24.0, 24.5, 25.0, 25.5, 26.0],
-        name=UnivariateUpliftSimulator.F_PARAMETER_VALUE,
+        data=[29.0, 29.5, 30.0, 30.5, 31.0],
+        name=UnivariateUpliftSimulator._COL_PARAMETER_VALUE,
     )
-    df_test = pd.DataFrame(data=dict_data, index=index)
-    assert_frame_equal(aggregated_results.head(), df_test)
+    expected_data = {
+        "percentile_10": [
+            -0.6818825099675685,
+            -0.007029585576065488,
+            0.0538630336704145,
+            0.0538630336704145,
+            0.06007108162896415,
+        ],
+        "percentile_50": [
+            -0.3355583717195465,
+            0.3669534874333582,
+            0.3669534874333582,
+            0.3669534874333582,
+            0.37881715617286993,
+        ],
+        "percentile_90": [
+            -0.011813212687955503,
+            0.5806558851769821,
+            0.5806558851769821,
+            0.5806558851769821,
+            0.5790936685270693,
+        ],
+    }
+
+    expected_df = pd.DataFrame(data=expected_data, index=index)
+    assert_frame_equal(aggregated_results.loc[index], expected_df)
+
+    log.debug(f"\n{aggregated_results}")
