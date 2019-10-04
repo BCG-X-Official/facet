@@ -20,9 +20,9 @@ from typing import *
 
 import numpy as np
 
-from gamma.viz import ChartDrawer
 from gamma.ml.viz._dendrogram._linkage import LinkageTree, Node
 from gamma.ml.viz._dendrogram._style import DendrogramStyle
+from gamma.viz import ChartDrawer
 
 log = logging.getLogger(__name__)
 
@@ -39,13 +39,13 @@ class DendrogramDrawer(ChartDrawer[LinkageTree, DendrogramStyle]):
     The class has one public method `~self.draw` which draws the dendrogram.
 
     :param title: the title of the plot
-    :param linkage_tree: the `LinkageTree` to draw
+    :param linkage: the `LinkageTree` to draw
     :param style: the `DendrogramStyle` used to draw
     """
 
-    def __init__(self, linkage_tree: LinkageTree, style: DendrogramStyle, title: str):
-        super().__init__(model=linkage_tree, style=style, title=title)
-        self._node_weight = node_weight = np.zeros(len(linkage_tree), float)
+    def __init__(self, linkage: LinkageTree, style: DendrogramStyle, title: str):
+        super().__init__(model=linkage, style=style, title=title)
+        self._node_weight = node_weight = np.zeros(len(linkage), float)
 
         def calculate_weights(n: Node) -> (float, int):
             """calculate the weight of a node and number of leaves under it"""
@@ -53,7 +53,7 @@ class DendrogramDrawer(ChartDrawer[LinkageTree, DendrogramStyle]):
                 weight = n.weight
                 n_leaves = 1
             else:
-                l, r = linkage_tree.children(n)
+                l, r = linkage.children(n)
                 lw, ln = calculate_weights(l)
                 rw, rn = calculate_weights(r)
                 weight = lw + rw
@@ -61,7 +61,7 @@ class DendrogramDrawer(ChartDrawer[LinkageTree, DendrogramStyle]):
             node_weight[n.index] = weight / n_leaves
             return weight, n_leaves
 
-        calculate_weights(linkage_tree.root)
+        calculate_weights(linkage.root)
 
     def _draw(self) -> None:
         """Draw the linkage tree."""

@@ -153,9 +153,9 @@ class LeafNode(Node):
 
 class LinkageTree:
     """
-    Wrapper around a scipy linkage matrix.
+    Wrapper around a SciPy linkage matrix.
 
-    :param scipy_linkage_matrix: linkage matrix from scipy
+    :param scipy_linkage_matrix: linkage matrix from SciPy
     :param leaf_labels: labels of the leaves
     :param leaf_weights: importance of the leaves
     """

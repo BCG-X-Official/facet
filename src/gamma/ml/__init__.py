@@ -3,7 +3,7 @@ The Gamma machine learning library
 """
 
 from copy import copy
-from typing import Any, Iterable, Optional, Sequence, Union
+from typing import Any, Iterable, Sequence, Union
 
 import pandas as pd
 
@@ -133,8 +133,8 @@ class Sample:
         """
         return self.features.select_dtypes(dtype)
 
-    def select_observations_by_position(
-        self, positions: Optional[Iterable[int]] = None
+    def observations_by_position(
+        self, positions: Union[ListLike[int], slice]
     ) -> "Sample":
         """
         Select observations by positional indices (`iloc`)
@@ -146,7 +146,7 @@ class Sample:
         subsample._observations = self._observations.iloc[positions, :]
         return subsample
 
-    def select_observations_by_index(self, ids: Iterable[Any] = None) -> "Sample":
+    def select_observations_by_index(self, ids: ListLike[Any] = None) -> "Sample":
         """
         Select observations index items (`loc`)
 
