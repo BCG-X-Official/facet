@@ -22,13 +22,13 @@ this graph there is a histogram of the feature values.
 from typing import *
 
 from gamma.common import ListLike
-from gamma.viz import ChartDrawer
+from gamma.viz import Drawer
 from gamma.yieldengine.partition import T_Value
 from gamma.yieldengine.simulation import UnivariateSimulation
 from gamma.yieldengine.viz._style import SimulationStyle
 
 
-class SimulationDrawer(ChartDrawer[UnivariateSimulation, SimulationStyle]):
+class SimulationDrawer(Drawer[UnivariateSimulation, SimulationStyle]):
     """
     Simulation drawer with high/low confidence intervals.
 
