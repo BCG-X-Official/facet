@@ -129,7 +129,6 @@ setup(
         "gamma-sklearndf @ git+ssh://git@git.sourceai.io/alpha/gamma-sklearndf.git#egg=gamma.sklearndf",
         "gamma-viz @ git+ssh://git@git.sourceai.io/alpha/gamma-viz.git#egg=gamma.viz",
         "gamma-ml @ git+ssh://git@git.sourceai.io/alpha/gamma-ml.git#egg=gamma.ml",
-        "rsa>=4.0.0,<4.1.0",
     ],
     dependency_links=[],
     # Optional
