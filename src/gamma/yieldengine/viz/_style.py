@@ -28,14 +28,14 @@ from mpl_toolkits.axes_grid1.axes_divider import AxesDivider
 from mpl_toolkits.axes_grid1.axes_size import Scaled
 
 from gamma.common import ListLike
-from gamma.viz import ChartStyle, MatplotStyle, TextStyle
+from gamma.viz import DrawStyle, MatplotStyle, TextStyle
 from gamma.viz.text import format_table
 from gamma.yieldengine.partition import T_Number, T_Value
 
 log = logging.getLogger(__name__)
 
 
-class SimulationStyle(ChartStyle, ABC):
+class SimulationStyle(DrawStyle, ABC):
     """
     The abstract simulation style known to the simulation drawer.
     """
@@ -278,6 +278,12 @@ class SimulationPlotStyle(MatplotStyle, SimulationStyle):
         # hide the spines
         for pos in ["top", "right", "left", "bottom"]:
             ax.spines[pos].set_visible(False)
+
+    def drawing_finalize(self) -> None:
+        """
+        Finalize the chart.
+        """
+        pass
 
 
 class SimulationReportStyle(SimulationStyle, TextStyle):
