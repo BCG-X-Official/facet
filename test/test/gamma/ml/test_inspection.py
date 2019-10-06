@@ -139,9 +139,9 @@ def test_model_inspection(n_jobs, boston_sample: Sample) -> None:
 
         linkage_tree = model_inspector.cluster_dependent_features()
 
-        DendrogramDrawer(
-            title="Test", linkage=linkage_tree, style=DendrogramReportStyle()
-        ).draw()
+        DendrogramDrawer(style=DendrogramReportStyle()).draw(
+            data=linkage_tree, title="Test"
+        )
 
 
 def test_model_inspection_with_encoding(
@@ -223,9 +223,9 @@ def test_model_inspection_with_encoding(
 
     linkage_tree = mi2.cluster_dependent_features()
     print()
-    DendrogramDrawer(
-        title="Test", linkage=linkage_tree, style=DendrogramReportStyle()
-    ).draw()
+    DendrogramDrawer(style=DendrogramReportStyle()).draw(
+        data=linkage_tree, title="Test"
+    )
 
 
 def test_model_inspection_classifier(n_jobs, iris_sample: Sample) -> None:
@@ -310,6 +310,6 @@ def test_model_inspection_classifier(n_jobs, iris_sample: Sample) -> None:
 
     linkage_tree = model_inspector.cluster_dependent_features()
     print()
-    DendrogramDrawer(
-        title="Test", linkage=linkage_tree, style=DendrogramReportStyle()
-    ).draw()
+    DendrogramDrawer(style=DendrogramReportStyle()).draw(
+        data=linkage_tree, title="Test"
+    )
