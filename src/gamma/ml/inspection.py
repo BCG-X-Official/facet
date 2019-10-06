@@ -230,6 +230,7 @@ class BaseLearnerInspector(Generic[_T_LearnerPipelineDF], ABC):
             scipy_linkage_matrix=linkage_matrix,
             leaf_labels=feature_importances.index,
             leaf_weights=feature_importances.values,
+            max_distance=1.0,
         )
 
 
