@@ -279,12 +279,6 @@ class SimulationMatplotStyle(MatplotStyle, SimulationStyle):
         for pos in ["top", "right", "left", "bottom"]:
             ax.spines[pos].set_visible(False)
 
-    def drawing_finalize(self) -> None:
-        """
-        Finalize the chart.
-        """
-        pass
-
 
 class SimulationReportStyle(SimulationStyle, TextStyle):
     """
