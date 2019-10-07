@@ -176,8 +176,8 @@ def sample(batch_table: pd.DataFrame) -> Sample:
 @pytest.fixture
 def simple_preprocessor(sample: Sample) -> TransformerDF:
     return make_simple_transformer(
-        impute_median_columns=sample.features_by_type(Sample.DTYPE_NUMERICAL).columns,
-        one_hot_encode_columns=sample.features_by_type(Sample.DTYPE_OBJECT).columns,
+        impute_median_columns=sample.features.select_dtypes(np.number).columns,
+        one_hot_encode_columns=sample.features.select_dtypes(object).columns,
     )
 
 
