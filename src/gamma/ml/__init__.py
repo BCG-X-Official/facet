@@ -3,7 +3,7 @@ The Gamma machine learning library
 """
 
 from copy import copy
-from typing import Any, Iterable, Sequence, Union
+from typing import Any, Iterable, Union
 
 import pandas as pd
 
@@ -26,13 +26,6 @@ class Sample:
         - target column is not allowed as part of the features
 
     """
-
-    DTYPE_NUMERICAL = pd.np.number
-    DTYPE_OBJECT = object
-    DTYPE_DATETIME = pd.np.datetime64
-    DTYPE_TIMEDELTA = pd.np.timedelta64
-    DTYPE_CATEGORICAL = "category"
-    DTYPE_DATETIME_TZ = "datetimetz"
 
     __slots__ = ["_observations", "_target", "_features"]
 
@@ -120,18 +113,6 @@ class Sample:
         :return: all feature columns as a data frame
         """
         return self._observations.loc[:, self._features]
-
-    def features_by_type(
-        self, dtype: Union[type, str, Sequence[Union[type, str]]]
-    ) -> pd.DataFrame:
-        """
-        Return a data frame with columns for all features matching the given type
-
-        :param dtype: dtype, or sequence of dtypes, for filtering features. \
-            See `DTYPE_…` constants for common type selectors
-        :return: data frame of the selected features
-        """
-        return self.features.select_dtypes(dtype)
 
     def observations_by_position(
         self, positions: Union[ListLike[int], slice]
