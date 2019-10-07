@@ -306,7 +306,7 @@ class SimulationReportStyle(SimulationStyle, TextStyle):
     def _num_format(heading: str):
         return f"> {len(heading)}.{SimulationReportStyle._NUM_PRECISION}g"
 
-    def drawing_start(self, title: str) -> None:
+    def _drawing_start(self, title: str) -> None:
         """
         Print the report title.
         """
@@ -372,7 +372,7 @@ class SimulationReportStyle(SimulationStyle, TextStyle):
             )
         )
 
-    def drawing_finalize(self) -> None:
+    def _drawing_finalize(self) -> None:
         """
         Print two trailing line breaks.
         """
