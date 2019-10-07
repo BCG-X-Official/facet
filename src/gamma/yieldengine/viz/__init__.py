@@ -17,7 +17,7 @@ Drawers and styles for simulation
 
 from gamma.yieldengine.viz._draw import SimulationDrawer
 from gamma.yieldengine.viz._style import (
-    SimulationPlotStyle,
+    SimulationMatplotStyle,
     SimulationReportStyle,
     SimulationStyle,
 )
@@ -25,6 +25,6 @@ from gamma.yieldengine.viz._style import (
 __all__ = [
     "SimulationDrawer",
     "SimulationStyle",
-    "SimulationPlotStyle",
+    "SimulationMatplotStyle",
     "SimulationReportStyle",
 ]

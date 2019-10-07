@@ -14,7 +14,7 @@
 """
 Simulation drawing styles
 
-:class:`SimulationPlotStyle` draws some simulated low, middle and high prediction
+:class:`SimulationMatplotStyle` draws some simulated low, middle and high prediction
 uplift.
 """
 
@@ -86,7 +86,7 @@ class SimulationStyle(DrawStyle, ABC):
         )
 
 
-class SimulationPlotStyle(MatplotStyle, SimulationStyle):
+class SimulationMatplotStyle(MatplotStyle, SimulationStyle):
     """
     Matplotlib Style for simulation chart.
 
