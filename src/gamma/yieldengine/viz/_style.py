@@ -376,7 +376,7 @@ class SimulationReportStyle(SimulationStyle, TextStyle):
         """
         Print two trailing line breaks.
         """
-        self.out.write("\n\n")
+        self.out.write("\n")
 
     def _partition_format(self, is_categorical: bool) -> str:
         if is_categorical:
