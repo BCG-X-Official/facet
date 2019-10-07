@@ -1,3 +1,4 @@
+import numpy as np
 import pandas as pd
 
 # noinspection PyPackageRequirements
@@ -73,14 +74,14 @@ def test_sample(batch_table: pd.DataFrame) -> None:
     run_assertions(s2)
 
     # test numerical features
-    features_numerical = s.features_by_type(dtype=s.DTYPE_NUMERICAL).columns
+    features_numerical = s.features.select_dtypes(np.number).columns
     assert (
         "Step4 Fermentation Sensor Data Phase2 Pressure Val04 (mbar)"
         in features_numerical
     )
 
     # test categorical features
-    features_non_numerical = s.features_by_type(dtype=s.DTYPE_OBJECT).columns
+    features_non_numerical = s.features.select_dtypes(object).columns
     assert "Step4 RawMat Internal Compound01 QC (id)" in features_non_numerical
 
     # assert feature completeness
