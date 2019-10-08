@@ -118,7 +118,9 @@ class BaseLearnerInspector(Generic[_T_LearnerPipelineDF], ABC):
         shap_values_df = pd.concat(
             objs=[
                 self._shap_matrix_for_split(model, test_indices)
-                for model, (_, test_indices) in zip(crossfit.models(), crossfit.split())
+                for model, (_, test_indices) in zip(
+                    crossfit.models(), crossfit.splits()
+                )
             ],
             sort=True,
         ).fillna(0.0)
