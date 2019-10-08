@@ -339,7 +339,7 @@ class LearnerRanker(Generic[_T_LearnerPipelineDF, _T_Crossfit], ABC):
         self._ensure_fitted()
 
         def _model_name(evaluation: LearnerEvaluation) -> str:
-            return type(evaluation.pipeline).__name__
+            return type(evaluation.pipeline.final_estimator).__name__
 
         def _parameters(params: Mapping[str, Iterable[Any]]) -> str:
             return ",".join(
