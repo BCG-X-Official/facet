@@ -139,9 +139,7 @@ class BaseLearnerInspector(Generic[_T_LearnerPipelineDF], ABC):
         :param split_model: pipeline trained on the split
         :return: SHAP matrix of a single split as data frame
         """
-        x_oob = self.crossfit.training_sample.select_observations_by_index(
-            ids=oob_indices
-        ).features
+        x_oob = self.crossfit.training_sample.subsample(loc=oob_indices).features
 
         estimator = split_model.final_estimator
 
