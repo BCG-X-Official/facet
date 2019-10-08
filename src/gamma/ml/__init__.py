@@ -114,29 +114,34 @@ class Sample:
         """
         return self._observations.loc[:, self._features]
 
-    def observations_by_position(
-        self, positions: Union[ListLike[int], slice]
+    def subsample(
+        self,
+        *,
+        loc: Union[slice, ListLike[Any]] = None,
+        iloc: Union[slice, ListLike[int]] = None,
     ) -> "Sample":
         """
-        Select observations by positional indices (`iloc`)
-        :param positions: positional indices of observations to select
-        :return: copy of this sample, containing only the observations at the given
-        indices
+        Select observations either by indices (`loc` parameter), or integer indices
+        (`iloc` parameter). Exactly one of both parameters must be provided when
+        calling this method, not both.
+
+        :param loc: indices of observations to select
+        :param iloc: integer indices of observations to select
+        :return: copy of this sample, comprising only the observations at the given \
+            index locations
         """
         subsample = copy(self)
-        subsample._observations = self._observations.iloc[positions, :]
-        return subsample
-
-    def select_observations_by_index(self, ids: ListLike[Any] = None) -> "Sample":
-        """
-        Select observations index items (`loc`)
-
-        :param ids: indices of observations to select
-        :return: copy of this sample, containing only the observations at the given
-          indices
-        """
-        subsample = copy(self)
-        subsample._observations = self._observations.loc[ids, :]
+        if iloc is None:
+            if loc is None:
+                ValueError("either arg loc or arg iloc must be specified")
+            else:
+                subsample._observations = self._observations.loc[loc, :]
+        elif loc is None:
+            subsample._observations = self._observations.iloc[iloc, :]
+        else:
+            raise ValueError(
+                "arg loc and arg iloc must not both be specified at the same time"
+            )
         return subsample
 
     def select_features(self, features: ListLike[str]) -> "Sample":

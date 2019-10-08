@@ -70,7 +70,7 @@ def test_model_inspection(n_jobs, boston_sample: Sample) -> None:
 
     # use first 100 rows only, since KernelExplainer is very slow...
 
-    test_sample: Sample = boston_sample.observations_by_position(positions=slice(100))
+    test_sample: Sample = boston_sample.subsample(iloc=slice(100))
 
     ranker = RegressorRanker(
         grid=grid, cv=test_cv, scoring="neg_mean_squared_error", n_jobs=n_jobs
@@ -256,8 +256,8 @@ def test_model_inspection_classifier(n_jobs, iris_sample: Sample) -> None:
 
     # pipeline inspector does only support binary classification - hence
     # filter the test_sample down to only 2 target classes:
-    test_sample: Sample = iris_sample.select_observations_by_index(
-        ids=iris_sample.target.isin(iris_sample.target.unique()[0:2])
+    test_sample: Sample = iris_sample.subsample(
+        loc=iris_sample.target.isin(iris_sample.target.unique()[0:2])
     )
 
     model_ranker = ClassifierRanker(

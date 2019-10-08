@@ -112,15 +112,15 @@ class BaseCrossfit(ABC, Generic[_T_EstimatorDF]):
         """`True` if the delegate estimator is fitted, else `False`"""
         return self._training_sample is not None
 
-    def split(self) -> Generator[Tuple[ListLike[int], ListLike[int]], None, None]:
+    def get_n_splits(self) -> int:
+        """Number of splits used for this crossfit."""
+        return self.cv.get_n_splits()
+
+    def splits(self) -> Generator[Tuple[ListLike[int], ListLike[int]], None, None]:
         self._ensure_fitted()
         return self.cv.split(
             self._training_sample.features, self._training_sample.target
         )
-
-    def get_n_splits(self) -> int:
-        """Number of splits used for this crossfit."""
-        return self.cv.get_n_splits()
 
     def models(self) -> Iterator[_T_EstimatorDF]:
         """Iterator of all models fitted on the cross-validation train splits."""
@@ -214,7 +214,7 @@ class LearnerCrossfit(BaseCrossfit[_T_LearnerDF], Generic[_T_LearnerDF], ABC):
         # todo: move this method to Simulator class -- too specific!
 
         for split_id, (model, (_, test_indices)) in enumerate(
-            zip(self.models(), self.split())
+            zip(self.models(), self.splits())
         ):
             test_features = sample.features.iloc[test_indices, :]
             yield model.predict(X=test_features)
@@ -295,7 +295,7 @@ class ClassifierCrossfit(LearnerCrossfit[_T_ClassifierDF], Generic[_T_Classifier
         # todo: move this method to Simulator class -- too specific!
 
         for split_id, (model, (_, test_indices)) in enumerate(
-            zip(self.models(), self.split())
+            zip(self.models(), self.splits())
         ):
             test_features = sample.features.iloc[test_indices, :]
             yield method(model, test_features)
