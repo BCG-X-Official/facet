@@ -194,7 +194,7 @@ class LearnerCrossfit(BaseCrossfit[_T_LearnerDF], Generic[_T_LearnerDF], ABC):
             verbose=verbose,
         )
 
-    def predictions_oob(
+    def _predictions_oob(
         self, sample: Sample
     ) -> Generator[Union[pd.Series, pd.DataFrame], None, None]:
         """
@@ -249,28 +249,28 @@ class ClassifierCrossfit(LearnerCrossfit[_T_ClassifierDF], Generic[_T_Classifier
             verbose=verbose,
         )
 
-    def probabilities_oob(
+    def _probabilities_oob(
         self, sample: Sample
     ) -> Generator[Union[pd.DataFrame, List[pd.DataFrame]], None, None]:
-        yield from self._probabilities_oob(
+        yield from self._classification_oob(
             sample=sample, method=lambda model, x: model.predict_proba(x)
         )
 
-    def log_probabilities_oob(
+    def _log_probabilities_oob(
         self, sample: Sample
     ) -> Generator[Union[pd.DataFrame, List[pd.DataFrame]], None, None]:
-        yield from self._probabilities_oob(
+        yield from self._classification_oob(
             sample=sample, method=lambda model, x: model.predict_log_proba(x)
         )
 
-    def decision_function(
+    def _decision_function(
         self, sample: Sample
     ) -> Generator[Union[pd.Series, pd.DataFrame], None, None]:
-        yield from self._probabilities_oob(
-            sample=sample, method=lambda model, x: model.decision_function(x)
+        yield from self._classification_oob(
+            sample=sample, method=lambda model, x: model._decision_function(x)
         )
 
-    def _probabilities_oob(
+    def _classification_oob(
         self,
         sample: Sample,
         method: Callable[
