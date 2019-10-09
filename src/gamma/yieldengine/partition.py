@@ -366,10 +366,9 @@ class CategoryPartitioning(Partitioning[T_Value]):
         super().__init__()
 
         value_counts = pd.Series(data=values).value_counts(ascending=False)
-        if len(value_counts) > max_partitions:
-            log.warning(
-                f"arg values has {len(value_counts)} unique values, but "
-                f"arg max_partitions is only {max_partitions}"
+        if max_partitions < 2:
+            raise ValueError(
+                f"arg max_partitions={max_partitions} must be greater than 1"
             )
         self._frequencies = value_counts.values[:max_partitions]
         self._partitions = value_counts.index.values[:max_partitions]
