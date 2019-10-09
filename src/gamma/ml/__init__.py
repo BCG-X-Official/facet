@@ -3,7 +3,7 @@ The Gamma machine learning library
 """
 
 from copy import copy
-from typing import Any, Iterable, Optional, Sequence, Union
+from typing import Any, Iterable, Union
 
 import pandas as pd
 
@@ -26,13 +26,6 @@ class Sample:
         - target column is not allowed as part of the features
 
     """
-
-    DTYPE_NUMERICAL = pd.np.number
-    DTYPE_OBJECT = object
-    DTYPE_DATETIME = pd.np.datetime64
-    DTYPE_TIMEDELTA = pd.np.timedelta64
-    DTYPE_CATEGORICAL = "category"
-    DTYPE_DATETIME_TZ = "datetimetz"
 
     __slots__ = ["_observations", "_target", "_features"]
 
@@ -121,41 +114,34 @@ class Sample:
         """
         return self._observations.loc[:, self._features]
 
-    def features_by_type(
-        self, dtype: Union[type, str, Sequence[Union[type, str]]]
-    ) -> pd.DataFrame:
-        """
-        Return a data frame with columns for all features matching the given type
-
-        :param dtype: dtype, or sequence of dtypes, for filtering features.
-          See DTYPE_*constants for common type selectors
-        :return: data frame of the selected features
-        """
-        return self.features.select_dtypes(dtype)
-
-    def select_observations_by_position(
-        self, positions: Optional[Iterable[int]] = None
+    def subsample(
+        self,
+        *,
+        loc: Union[slice, ListLike[Any]] = None,
+        iloc: Union[slice, ListLike[int]] = None,
     ) -> "Sample":
         """
-        Select observations by positional indices (`iloc`)
-        :param positions: positional indices of observations to select
-        :return: copy of this sample, containing only the observations at the given
-        indices
+        Select observations either by indices (`loc` parameter), or integer indices
+        (`iloc` parameter). Exactly one of both parameters must be provided when
+        calling this method, not both.
+
+        :param loc: indices of observations to select
+        :param iloc: integer indices of observations to select
+        :return: copy of this sample, comprising only the observations at the given \
+            index locations
         """
         subsample = copy(self)
-        subsample._observations = self._observations.iloc[positions, :]
-        return subsample
-
-    def select_observations_by_index(self, ids: Iterable[Any] = None) -> "Sample":
-        """
-        Select observations index items (`loc`)
-
-        :param ids: indices of observations to select
-        :return: copy of this sample, containing only the observations at the given
-          indices
-        """
-        subsample = copy(self)
-        subsample._observations = self._observations.loc[ids, :]
+        if iloc is None:
+            if loc is None:
+                ValueError("either arg loc or arg iloc must be specified")
+            else:
+                subsample._observations = self._observations.loc[loc, :]
+        elif loc is None:
+            subsample._observations = self._observations.iloc[iloc, :]
+        else:
+            raise ValueError(
+                "arg loc and arg iloc must not both be specified at the same time"
+            )
         return subsample
 
     def select_features(self, features: ListLike[str]) -> "Sample":

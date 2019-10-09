@@ -1,3 +1,4 @@
+import numpy as np
 import pandas as pd
 
 # noinspection PyPackageRequirements
@@ -63,24 +64,24 @@ def test_sample(batch_table: pd.DataFrame) -> None:
     feature_columns = list(batch_table.drop(columns="Yield").columns)
     s = Sample(observations=batch_table, target="Yield", features=feature_columns)
 
-    # run the checks on s:
+    # _rank_learners the checks on s:
     run_assertions(s)
 
     # test implicit setting of features by only giving the target
     s2 = Sample(observations=batch_table, target="Yield")
 
-    # run the checks on s2:
+    # _rank_learners the checks on s2:
     run_assertions(s2)
 
     # test numerical features
-    features_numerical = s.features_by_type(dtype=s.DTYPE_NUMERICAL).columns
+    features_numerical = s.features.select_dtypes(np.number).columns
     assert (
         "Step4 Fermentation Sensor Data Phase2 Pressure Val04 (mbar)"
         in features_numerical
     )
 
     # test categorical features
-    features_non_numerical = s.features_by_type(dtype=s.DTYPE_OBJECT).columns
+    features_non_numerical = s.features.select_dtypes(object).columns
     assert "Step4 RawMat Internal Compound01 QC (id)" in features_non_numerical
 
     # assert feature completeness
@@ -97,7 +98,7 @@ def test_sample(batch_table: pd.DataFrame) -> None:
     assert len(s) == len(batch_table)
 
     # test select_observations
-    sub = s2.select_observations_by_position(positions=[0, 1, 2, 3])
+    sub = s2.subsample(iloc=[0, 1, 2, 3])
     assert len(sub) == 4
 
     # test select features
