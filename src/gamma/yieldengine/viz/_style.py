@@ -299,8 +299,12 @@ class SimulationReportStyle(SimulationStyle, TextStyle):
     _PARTITION_NUMBER_FORMAT = ".3g"
 
     # format for frequencies
-    _FREQUENCY_WIDTH = max(6, len(_FREQUENCY_HEADING))
+    _FREQUENCY_WIDTH = 6
     _FREQUENCY_FORMAT = f"{_FREQUENCY_WIDTH}g"
+
+    @staticmethod
+    def _num_format(heading: str):
+        return f"> {len(heading)}.{SimulationReportStyle._NUM_PRECISION}g"
 
     def drawing_start(self, title: str) -> None:
         """
@@ -339,6 +343,7 @@ class SimulationReportStyle(SimulationStyle, TextStyle):
                     *([self._NUM_FORMAT] * 3),
                 ],
                 data=list(zip(partitions, min_uplift, median_uplift, max_uplift)),
+                alignment=["<", ">", ">", ">"],
             )
         )
 
@@ -363,6 +368,7 @@ class SimulationReportStyle(SimulationStyle, TextStyle):
                     self._partition_format(is_categorical=is_categorical_feature),
                     self._FREQUENCY_FORMAT,
                 ),
+                alignment=["<", ">"],
             )
         )
 
