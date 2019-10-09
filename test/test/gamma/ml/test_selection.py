@@ -24,7 +24,7 @@ log = logging.getLogger(__name__)
 def test_model_ranker(
     batch_table: pd.DataFrame, regressor_grids, sample: Sample, n_jobs
 ) -> None:
-    checksum_summary_report = "99d0a27bb3a83357e32f56acc63fc274"
+    checksum_summary_report = "56b12490ff257bf083a47863c960cec6"
 
     # define the circular cross validator with just 5 splits (to speed up testing)
     cv = BootstrapCV(n_splits=5, random_state=42)
@@ -58,7 +58,7 @@ def test_model_ranker(
 
 
 def test_model_ranker_no_preprocessing(n_jobs) -> None:
-    checksum_summary_report = "e91e44f10651f579c8a200a44d42dfe4"
+    checksum_summary_report = "ad5210fce846d5eac2a38dee014a9648"
 
     warnings.filterwarnings("ignore", message="numpy.dtype size changed")
     warnings.filterwarnings("ignore", message="numpy.ufunc size changed")
