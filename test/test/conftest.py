@@ -102,65 +102,66 @@ def batch_table() -> pd.DataFrame:
 
 @pytest.fixture
 def regressor_grids(simple_preprocessor) -> List[ParameterGrid]:
-    RANDOM_STATE = {f"random_state": [42]}
+    random_state = {f"random_state": [42]}
+
     return [
         ParameterGrid(
             pipeline=RegressorPipelineDF(
                 preprocessing=simple_preprocessor, regressor=LGBMRegressorDF()
             ),
-            estimator_parameters={
+            learner_parameters={
                 "max_depth": [5, 10],
                 "min_split_gain": [0.1, 0.2],
                 "num_leaves": [50, 100, 200],
-                **RANDOM_STATE,
+                **random_state,
             },
         ),
         ParameterGrid(
             pipeline=RegressorPipelineDF(
                 preprocessing=simple_preprocessor, regressor=AdaBoostRegressorDF()
             ),
-            estimator_parameters={"n_estimators": [50, 80], **RANDOM_STATE},
+            learner_parameters={"n_estimators": [50, 80], **random_state},
         ),
         ParameterGrid(
             pipeline=RegressorPipelineDF(
                 preprocessing=simple_preprocessor, regressor=RandomForestRegressorDF()
             ),
-            estimator_parameters={"n_estimators": [50, 80], **RANDOM_STATE},
+            learner_parameters={"n_estimators": [50, 80], **random_state},
         ),
         ParameterGrid(
             pipeline=RegressorPipelineDF(
                 preprocessing=simple_preprocessor, regressor=DecisionTreeRegressorDF()
             ),
-            estimator_parameters={
+            learner_parameters={
                 "max_depth": [0.5, 1.0],
                 "max_features": [0.5, 1.0],
-                **RANDOM_STATE,
+                **random_state,
             },
         ),
         ParameterGrid(
             pipeline=RegressorPipelineDF(
                 preprocessing=simple_preprocessor, regressor=ExtraTreeRegressorDF()
             ),
-            estimator_parameters={"max_depth": [5, 10, 12], **RANDOM_STATE},
+            learner_parameters={"max_depth": [5, 10, 12], **random_state},
         ),
         ParameterGrid(
             pipeline=RegressorPipelineDF(
                 preprocessing=simple_preprocessor, regressor=SVRDF()
             ),
-            estimator_parameters={"gamma": [0.5, 1], "C": [50, 100]},
+            learner_parameters={"gamma": [0.5, 1], "C": [50, 100]},
         ),
         ParameterGrid(
             pipeline=RegressorPipelineDF(
                 preprocessing=simple_preprocessor, regressor=LinearRegressionDF()
             ),
-            estimator_parameters={"normalize": [False, True]},
+            learner_parameters={"normalize": [False, True]},
         ),
     ]
 
 
 @pytest.fixture
 def sample(batch_table: pd.DataFrame) -> Sample:
-    # drop columns that should not take part in model
+    # drop columns that should not be included in the model
     batch_table = batch_table.drop(columns=["Date", "Batch Id"])
 
     # replace values of +/- infinite with n/a, then drop all n/a columns:
@@ -175,8 +176,8 @@ def sample(batch_table: pd.DataFrame) -> Sample:
 @pytest.fixture
 def simple_preprocessor(sample: Sample) -> TransformerDF:
     return make_simple_transformer(
-        impute_median_columns=sample.features_by_type(Sample.DTYPE_NUMERICAL).columns,
-        one_hot_encode_columns=sample.features_by_type(Sample.DTYPE_OBJECT).columns,
+        impute_median_columns=sample.features.select_dtypes(np.number).columns,
+        one_hot_encode_columns=sample.features.select_dtypes(object).columns,
     )
 
 

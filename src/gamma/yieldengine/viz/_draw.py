@@ -22,92 +22,85 @@ this graph there is a histogram of the feature values.
 from typing import *
 
 from gamma.common import ListLike
-from gamma.viz import ChartDrawer
+from gamma.viz import Drawer
 from gamma.yieldengine.partition import T_Value
 from gamma.yieldengine.simulation import UnivariateSimulation
-from gamma.yieldengine.viz._style import SimulationStyle
+from gamma.yieldengine.viz._style import (
+    SimulationMatplotStyle,
+    SimulationReportStyle,
+    SimulationStyle,
+)
 
 
-class SimulationDrawer(ChartDrawer[UnivariateSimulation, SimulationStyle]):
+class _SimulationSeries(NamedTuple):
+    # A set of aligned series representing the simulation result
+    median_uplift: ListLike[T_Value]
+    min_uplift: ListLike[T_Value]
+    max_uplift: ListLike[T_Value]
+    partitions: ListLike[T_Value]
+    frequencies: ListLike[T_Value]
+
+
+class SimulationDrawer(Drawer[UnivariateSimulation, SimulationStyle]):
     """
     Simulation drawer with high/low confidence intervals.
 
-    :param style: drawing style for the uplift graph and the feature histogram
-    :param simulation: the data for the simulation
-    :param title: title of the char
-    :param histogram: if ``True`` (default) the feature histogram is plotted,
-      if ``False`` the histogram is not plotted
+    :param style: the style of the dendrogram; either as a
+        :class:`~gamma.yieldengine.viz.SimulationStyle` instance, or as the name of a \
+        default style. Permissible names are "matplot" for a style supporting \
+        Matplotlib, and "text" for a text-only report to stdout (default: `"matplot"`)
+    :param histogram: if ``True``, plot the histogram of observed values for the \
+        feature being simulated; if ``False`` do not plot the histogram (default: \
+        ``True``).
     """
 
-    class _SimulationSeries(NamedTuple):
-        # A set of aligned series representing the simulation result
-        median_uplift: ListLike[T_Value]
-        min_uplift: ListLike[T_Value]
-        max_uplift: ListLike[T_Value]
-        partitions: ListLike[T_Value]
-        frequencies: ListLike[T_Value]
+    _STYLES = {"matplot": SimulationMatplotStyle, "text": SimulationReportStyle}
 
     def __init__(
-        self,
-        simulation: UnivariateSimulation,
-        style: SimulationStyle,
-        title: Optional[str] = None,
-        histogram: bool = True,
-    ):
-        super().__init__(
-            model=simulation,
-            style=style,
-            title=simulation.feature_name if title is None else title,
-        )
+        self, style: Union[SimulationStyle, str] = "matplot", histogram: bool = True
+    ) -> None:
+        super().__init__(style=style)
         self._histogram = histogram
 
-    def _draw(self) -> None:
+    @classmethod
+    def _get_style_dict(cls) -> Mapping[str, Type[SimulationStyle]]:
+        return SimulationDrawer._STYLES
+
+    def _draw(self, data: UnivariateSimulation) -> None:
         # draw the simulation chart
-        simulation_series = self._get_simulation_series()
+        simulation_series = self._get_simulation_series(simulation=data)
 
-        self._draw_uplift_graph(simulation_series)
-
-        if self._histogram:
-            self._draw_histogram(simulation_series)
-
-    def _draw_uplift_graph(self, simulation_series: _SimulationSeries) -> None:
         # draw the graph with the uplift curves
-        simulation: UnivariateSimulation = self._model
-
         self._style.draw_uplift(
-            feature_name=simulation.feature_name,
-            target_name=simulation.target_name,
-            min_percentile=simulation.min_percentile,
-            max_percentile=simulation.max_percentile,
-            is_categorical_feature=simulation.partitioning.is_categorical,
+            feature_name=data.feature_name,
+            target_name=data.target_name,
+            min_percentile=data.min_percentile,
+            max_percentile=data.max_percentile,
+            is_categorical_feature=data.partitioning.is_categorical,
             partitions=simulation_series.partitions,
             frequencies=simulation_series.frequencies,
             median_uplift=simulation_series.median_uplift,
             min_uplift=simulation_series.min_uplift,
             max_uplift=simulation_series.max_uplift,
         )
-        return None
 
-    def _draw_histogram(self, simulation_series: _SimulationSeries) -> None:
-        # draw the histogram of the simulation values
+        if self._histogram:
+            # draw the histogram of the simulation values
+            self._style.draw_histogram(
+                partitions=simulation_series.partitions,
+                frequencies=simulation_series.frequencies,
+                is_categorical_feature=data.partitioning.is_categorical,
+            )
 
-        self._style.draw_histogram(
-            partitions=simulation_series.partitions,
-            frequencies=simulation_series.frequencies,
-            is_categorical_feature=self._model.partitioning.is_categorical,
-        )
-        return None
-
-    def _get_simulation_series(self) -> _SimulationSeries:
+    @staticmethod
+    def _get_simulation_series(simulation: UnivariateSimulation) -> _SimulationSeries:
         # return the simulation series for median uplift, min uplift, max uplift,
         # partitions and frequencies
         # If the partitioning of the simulation is categorical, the series are
         # sorted in ascending order of the median uplift.
         # Otherwise, the simulation series are returned unchanged.
 
-        simulation: UnivariateSimulation = self.model
-
-        simulation_series = self._SimulationSeries(
+        simulation_series = _SimulationSeries(
             simulation.median_change,
             simulation.min_change,
             simulation.max_change,
@@ -116,7 +109,8 @@ class SimulationDrawer(ChartDrawer[UnivariateSimulation, SimulationStyle]):
         )
 
         if simulation.partitioning.is_categorical:
-            return self._SimulationSeries(
+            # for categorical features, sort the categories by the median uplift
+            return _SimulationSeries(
                 *zip(*sorted(zip(*simulation_series), key=lambda x: x[0]))
             )
         else:
