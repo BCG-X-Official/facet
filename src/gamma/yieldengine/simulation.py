@@ -294,8 +294,8 @@ class UnivariateUpliftSimulator(UnivariateSimulator[RegressorCrossfit]):
                     (predictions_for_split_hist, predictions_for_split_syn),
                 ) in enumerate(
                     zip(
-                        crossfit.predictions_oob(sample=sample),
-                        crossfit.predictions_oob(sample=synthetic_sample),
+                        crossfit._predictions_oob(sample=sample),
+                        crossfit._predictions_oob(sample=synthetic_sample),
                     )
                 ):
                     absolute_target_change = predictions_for_split_syn.mean(
