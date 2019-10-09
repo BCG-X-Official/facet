@@ -18,11 +18,11 @@ from gamma.sklearndf.regression import (
     AdaBoostRegressorDF,
     DecisionTreeRegressorDF,
     ExtraTreeRegressorDF,
-    LGBMRegressorDF,
     LinearRegressionDF,
     RandomForestRegressorDF,
     SVRDF,
 )
+from gamma.sklearndf.regression.extra import LGBMRegressorDF
 from test import read_test_config
 from test.gamma.ml import make_simple_transformer
 from test.paths import TEST_DATA_CSV

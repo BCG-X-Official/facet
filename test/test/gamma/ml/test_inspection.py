@@ -22,7 +22,8 @@ from gamma.ml.validation import CircularCV
 from gamma.sklearndf import TransformerDF
 from gamma.sklearndf.classification import RandomForestClassifierDF
 from gamma.sklearndf.pipeline import ClassifierPipelineDF, RegressorPipelineDF
-from gamma.sklearndf.regression import LGBMRegressorDF, SVRDF
+from gamma.sklearndf.regression import SVRDF
+from gamma.sklearndf.regression.extra import LGBMRegressorDF
 from gamma.viz.dendrogram import DendrogramDrawer, DendrogramReportStyle
 
 log = logging.getLogger(__name__)
@@ -36,7 +37,7 @@ def test_model_inspection(n_jobs, boston_sample: Sample) -> None:
     # checksums for the model inspection test - one for the LGBM, one for the SVR
     checksums_shap = (5120923735415774388, 2945880188040048636)
     checksum_corr_matrix = (4159152513108370414, 16061019524360971856)
-    checksum_summary_report = "ecc865e256775699f651cc0d2277f972"
+    checksum_summary_report = "b613538c887c11a8c091870779a42aff"
 
     warnings.filterwarnings("ignore", message="numpy.dtype size changed")
     warnings.filterwarnings("ignore", message="numpy.ufunc size changed")
@@ -154,7 +155,7 @@ def test_model_inspection_with_encoding(
     # define checksums for this test
     checksum_shap = 2454983946504277938
     checksum_corr_matrix = 9841870561220906358
-    checksum_summary_report = "b0a27e3f52fbe8fb8a9b03aae41db9b4"
+    checksum_summary_report = "925b6623fa1b10bee69cb179b03a6c52"
 
     # define the circular cross validator with just 5 splits (to speed up testing)
     circular_cv = CircularCV(test_ratio=0.20, n_splits=5)
@@ -236,7 +237,7 @@ def test_model_inspection_classifier(n_jobs, iris_sample: Sample) -> None:
     # define checksums for this test
     checksum_shap = 12636830693175052845
     checksum_corr_matrix = 9331449050691600977
-    checksum_summary_report = "1fd7d20f9ac87e39258cc60e9c7d8005"
+    checksum_summary_report = "fafa6fa2d2fe158ee87e1ea0bbc2515c"
 
     # define a CV:
     # noinspection PyTypeChecker

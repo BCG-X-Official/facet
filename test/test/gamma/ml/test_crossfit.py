@@ -15,7 +15,7 @@ N_SPLITS = 10
 
 
 def test_prediction_classifier(n_jobs, iris_sample: Sample) -> None:
-    checksum_summary_report = "582bb7e9152c858438a272b096745637"
+    checksum_summary_report = "d1aa7a44702670a459ed11ddaa64bc46"
 
     warnings.filterwarnings("ignore", message="numpy.dtype size changed")
     warnings.filterwarnings("ignore", message="numpy.ufunc size changed")
