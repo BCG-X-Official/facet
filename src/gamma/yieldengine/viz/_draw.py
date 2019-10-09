@@ -62,6 +62,17 @@ class SimulationDrawer(Drawer[UnivariateSimulation, SimulationStyle]):
         super().__init__(style=style)
         self._histogram = histogram
 
+    def draw(self, data: UnivariateSimulation, title: Optional[str] = None) -> None:
+        """
+        Draw the simulation chart.
+        :param data: the univariate simulation to draw
+        :param title: the title of the chart (optional, defaults to a title \
+            stating the name of the simulated feature)
+        """
+        if title is None:
+            title = f"Simulation: {data.feature}"
+        super().draw(data=data, title=title)
+
     @classmethod
     def _get_style_dict(cls) -> Mapping[str, Type[SimulationStyle]]:
         return SimulationDrawer._STYLES
