@@ -27,7 +27,7 @@ import pandas as pd
 from sklearn.model_selection import BaseCrossValidator
 from sklearn.utils import check_random_state
 
-from gamma.common import ListLike
+from gamma.common import deprecated, ListLike
 
 
 class _BaseBootstrapCV(BaseCrossValidator):
@@ -214,6 +214,10 @@ class StationaryBootstrapCV(_BaseBootstrapCV):
         return train
 
 
+@deprecated(
+    message="This cross-validator will be removed from a future release. Consider "
+    "using BootstrapCV or StationaryBootstrapCV instead."
+)
 class CircularCV(BaseCrossValidator):
     """
     Rolling circular cross-validation.
