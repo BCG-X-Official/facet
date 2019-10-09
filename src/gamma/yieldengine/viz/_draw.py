@@ -72,8 +72,8 @@ class SimulationDrawer(Drawer[UnivariateSimulation, SimulationStyle]):
 
         # draw the graph with the uplift curves
         self._style.draw_uplift(
-            feature_name=data.feature_name,
-            target_name=data.target_name,
+            feature=data.feature,
+            target=data.target,
             min_percentile=data.min_percentile,
             max_percentile=data.max_percentile,
             is_categorical_feature=data.partitioning.is_categorical,

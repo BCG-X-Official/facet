@@ -32,9 +32,9 @@ class UnivariateSimulation:
     """
     Summary result of a univariate simulation.
 
-    :param feature_name: name of the feature on which the simulation is made
-    :param target_name: name of the target
-    :param partitioning: the partition of ``feature_name`` used for the simulation
+    :param feature: name of the feature on which the simulation is made
+    :param target: name of the target
+    :param partitioning: the partition of ``feature`` used for the simulation
     :param median_change: the median change values
     :param min_change:  the low percentile change values
     :param max_change: the high percentile change values
@@ -46,8 +46,8 @@ class UnivariateSimulation:
 
     def __init__(
         self,
-        feature_name: str,
-        target_name: str,
+        feature: str,
+        target: str,
         partitioning: Partitioning,
         median_change: ListLike[T_Number],
         min_change: ListLike[T_Number],
@@ -55,8 +55,8 @@ class UnivariateSimulation:
         min_percentile: float,
         max_percentile: float,
     ):
-        self._feature_name = feature_name
-        self._target_name = target_name
+        self._feature = feature
+        self._target = target
         self._partitioning = partitioning
         self._median_change = median_change
         self._min_change = min_change
@@ -65,18 +65,18 @@ class UnivariateSimulation:
         self._max_percentile = max_percentile
 
     @property
-    def feature_name(self) -> str:
+    def feature(self) -> str:
         """Name of the feature on which the simulation is made."""
-        return self._feature_name
+        return self._feature
 
     @property
-    def target_name(self) -> str:
+    def target(self) -> str:
         """Name of the target."""
-        return self._target_name
+        return self._target
 
     @property
     def partitioning(self) -> Partitioning:
-        """The partition of ``feature_name`` used for the simulation."""
+        """The partition of ``feature`` used for the simulation."""
         return self._partitioning
 
     @property
@@ -241,8 +241,8 @@ class UnivariateUpliftSimulator(UnivariateSimulator[RegressorCrossfit]):
             )
         )
         return UnivariateSimulation(
-            feature_name=name,
-            target_name=target.name,
+            feature=name,
+            target=target.name,
             partitioning=partitioning,
             median_change=predicted_change.iloc[:, 1].values,
             min_change=predicted_change.iloc[:, 0].values,
@@ -259,7 +259,7 @@ class UnivariateUpliftSimulator(UnivariateSimulator[RegressorCrossfit]):
 
         For each combination of split_id and feature value the uplift (in % as a
         number between -1 and 1) of the target is computed. It is the uplift between
-        crossfit on the sample where the `feature_name` column is set to the
+        crossfit on the sample where the `feature` column is set to the
         given value, compared to the crossfit on the original sample.
 
         :param feature_name: name of the feature to use in the simulation
