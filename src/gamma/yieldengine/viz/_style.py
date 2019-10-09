@@ -14,7 +14,7 @@
 """
 Simulation drawing styles
 
-:class:`SimulationPlotStyle` draws some simulated low, middle and high prediction
+:class:`SimulationMatplotStyle` draws some simulated low, middle and high prediction
 uplift.
 """
 
@@ -28,14 +28,14 @@ from mpl_toolkits.axes_grid1.axes_divider import AxesDivider
 from mpl_toolkits.axes_grid1.axes_size import Scaled
 
 from gamma.common import ListLike
-from gamma.viz import ChartStyle, MatplotStyle, TextStyle
+from gamma.viz import DrawStyle, MatplotStyle, TextStyle
 from gamma.viz.text import format_table
 from gamma.yieldengine.partition import T_Number, T_Value
 
 log = logging.getLogger(__name__)
 
 
-class SimulationStyle(ChartStyle, ABC):
+class SimulationStyle(DrawStyle, ABC):
     """
     The abstract simulation style known to the simulation drawer.
     """
@@ -86,7 +86,7 @@ class SimulationStyle(ChartStyle, ABC):
         )
 
 
-class SimulationPlotStyle(MatplotStyle, SimulationStyle):
+class SimulationMatplotStyle(MatplotStyle, SimulationStyle):
     """
     Matplotlib Style for simulation chart.
 
@@ -306,7 +306,7 @@ class SimulationReportStyle(SimulationStyle, TextStyle):
     def _num_format(heading: str):
         return f"> {len(heading)}.{SimulationReportStyle._NUM_PRECISION}g"
 
-    def drawing_start(self, title: str) -> None:
+    def _drawing_start(self, title: str) -> None:
         """
         Print the report title.
         """
@@ -372,11 +372,11 @@ class SimulationReportStyle(SimulationStyle, TextStyle):
             )
         )
 
-    def drawing_finalize(self) -> None:
+    def _drawing_finalize(self) -> None:
         """
         Print two trailing line breaks.
         """
-        self.out.write("\n\n")
+        self.out.write("\n")
 
     def _partition_format(self, is_categorical: bool) -> str:
         if is_categorical:
