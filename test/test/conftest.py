@@ -4,14 +4,20 @@ from typing import *
 
 import numpy as np
 import pandas as pd
+
+# noinspection PyPackageRequirements
 import pytest
+
+# noinspection PyPackageRequirements
 from sklearn import datasets
+
+# noinspection PyPackageRequirements
 from sklearn.utils import Bunch
 
 from gamma.ml import Sample
-from gamma.ml.selection import ModelParameterGrid
+from gamma.ml.selection import ParameterGrid
 from gamma.sklearndf import TransformerDF
-from gamma.sklearndf.pipeline import RegressionPipelineDF
+from gamma.sklearndf.pipeline import RegressorPipelineDF
 from gamma.sklearndf.regression import (
     AdaBoostRegressorDF,
     DecisionTreeRegressorDF,
@@ -95,11 +101,11 @@ def batch_table() -> pd.DataFrame:
 
 
 @pytest.fixture
-def regressor_grids(simple_preprocessor) -> List[ModelParameterGrid]:
+def regressor_grids(simple_preprocessor) -> List[ParameterGrid]:
     RANDOM_STATE = {f"random_state": [42]}
     return [
-        ModelParameterGrid(
-            pipeline=RegressionPipelineDF(
+        ParameterGrid(
+            pipeline=RegressorPipelineDF(
                 preprocessing=simple_preprocessor, regressor=LGBMRegressorDF()
             ),
             estimator_parameters={
@@ -109,20 +115,20 @@ def regressor_grids(simple_preprocessor) -> List[ModelParameterGrid]:
                 **RANDOM_STATE,
             },
         ),
-        ModelParameterGrid(
-            pipeline=RegressionPipelineDF(
+        ParameterGrid(
+            pipeline=RegressorPipelineDF(
                 preprocessing=simple_preprocessor, regressor=AdaBoostRegressorDF()
             ),
             estimator_parameters={"n_estimators": [50, 80], **RANDOM_STATE},
         ),
-        ModelParameterGrid(
-            pipeline=RegressionPipelineDF(
+        ParameterGrid(
+            pipeline=RegressorPipelineDF(
                 preprocessing=simple_preprocessor, regressor=RandomForestRegressorDF()
             ),
             estimator_parameters={"n_estimators": [50, 80], **RANDOM_STATE},
         ),
-        ModelParameterGrid(
-            pipeline=RegressionPipelineDF(
+        ParameterGrid(
+            pipeline=RegressorPipelineDF(
                 preprocessing=simple_preprocessor, regressor=DecisionTreeRegressorDF()
             ),
             estimator_parameters={
@@ -131,20 +137,20 @@ def regressor_grids(simple_preprocessor) -> List[ModelParameterGrid]:
                 **RANDOM_STATE,
             },
         ),
-        ModelParameterGrid(
-            pipeline=RegressionPipelineDF(
+        ParameterGrid(
+            pipeline=RegressorPipelineDF(
                 preprocessing=simple_preprocessor, regressor=ExtraTreeRegressorDF()
             ),
             estimator_parameters={"max_depth": [5, 10, 12], **RANDOM_STATE},
         ),
-        ModelParameterGrid(
-            pipeline=RegressionPipelineDF(
+        ParameterGrid(
+            pipeline=RegressorPipelineDF(
                 preprocessing=simple_preprocessor, regressor=SVRDF()
             ),
             estimator_parameters={"gamma": [0.5, 1], "C": [50, 100]},
         ),
-        ModelParameterGrid(
-            pipeline=RegressionPipelineDF(
+        ParameterGrid(
+            pipeline=RegressorPipelineDF(
                 preprocessing=simple_preprocessor, regressor=LinearRegressionDF()
             ),
             estimator_parameters={"normalize": [False, True]},
@@ -162,7 +168,7 @@ def sample(batch_table: pd.DataFrame) -> Sample:
         axis=1, how="all"
     )
 
-    sample = Sample(observations=batch_table, target_name="Yield")
+    sample = Sample(observations=batch_table, target="Yield")
     return sample
 
 
@@ -188,7 +194,7 @@ def boston_df(boston_target: str) -> pd.DataFrame:
 
 @pytest.fixture
 def boston_sample(boston_df: pd.DataFrame, boston_target: str) -> Sample:
-    return Sample(observations=boston_df, target_name=boston_target)
+    return Sample(observations=boston_df, target=boston_target)
 
 
 @pytest.fixture
@@ -210,4 +216,4 @@ def iris_df(iris_target: str) -> pd.DataFrame:
 
 @pytest.fixture
 def iris_sample(iris_df: pd.DataFrame, iris_target: str) -> Sample:
-    return Sample(observations=iris_df, target_name=iris_target)
+    return Sample(observations=iris_df, target=iris_target)
