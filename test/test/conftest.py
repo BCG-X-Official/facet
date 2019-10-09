@@ -22,11 +22,11 @@ from gamma.sklearndf.regression import (
     AdaBoostRegressorDF,
     DecisionTreeRegressorDF,
     ExtraTreeRegressorDF,
-    LGBMRegressorDF,
     LinearRegressionDF,
     RandomForestRegressorDF,
     SVRDF,
 )
+from gamma.sklearndf.regression.extra import LGBMRegressorDF
 from gamma.sklearndf.transformation import (
     ColumnTransformerDF,
     OneHotEncoderDF,
