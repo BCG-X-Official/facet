@@ -43,8 +43,8 @@ class SimulationStyle(DrawStyle, ABC):
     @abstractmethod
     def draw_uplift(
         self,
-        feature_name: str,
-        target_name: str,
+        feature: str,
+        target: str,
         median_uplift: ListLike[T_Number],
         min_uplift: ListLike[T_Number],
         max_uplift: ListLike[T_Number],
@@ -114,8 +114,8 @@ class SimulationMatplotStyle(MatplotStyle, SimulationStyle):
 
     def draw_uplift(
         self,
-        feature_name: str,
-        target_name: str,
+        feature: str,
+        target: str,
         median_uplift: ListLike[T_Number],
         min_uplift: ListLike[T_Number],
         max_uplift: ListLike[T_Number],
@@ -128,8 +128,8 @@ class SimulationMatplotStyle(MatplotStyle, SimulationStyle):
         """
         Draw the uplift graph.
 
-        :param feature_name: name of the simulated feature
-        :param target_name: name of the target
+        :param feature: name of the simulated feature
+        :param target: name of the target
         :param median_uplift: median uplift values
         :param min_uplift: low percentile uplift values
         :param max_uplift: high percentile uplift values
@@ -161,7 +161,7 @@ class SimulationMatplotStyle(MatplotStyle, SimulationStyle):
         ax.legend(handles, labels)
 
         # label the y axis
-        ax.set_ylabel(self._uplift_label(target_name=target_name))
+        ax.set_ylabel(self._uplift_label(target_name=target))
 
         # format and label the x axis
         ax.tick_params(
@@ -314,8 +314,8 @@ class SimulationReportStyle(SimulationStyle, TextStyle):
 
     def draw_uplift(
         self,
-        feature_name: str,
-        target_name: str,
+        feature: str,
+        target: str,
         median_uplift: ListLike[T_Number],
         min_uplift: ListLike[T_Number],
         max_uplift: ListLike[T_Number],
@@ -329,7 +329,7 @@ class SimulationReportStyle(SimulationStyle, TextStyle):
         Print the uplift report.
         """
         out = self.out
-        self.out.write(f"\n{self._uplift_label(target_name=target_name)}:\n\n")
+        self.out.write(f"\n{self._uplift_label(target_name=target)}:\n\n")
         out.write(
             format_table(
                 headings=[
