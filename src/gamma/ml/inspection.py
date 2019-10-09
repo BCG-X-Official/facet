@@ -12,10 +12,10 @@
 #
 
 """
-Inspection of a model.
+Inspection of a pipeline.
 
 The :class:`ModelInspector` class computes the shap matrix and the associated linkage
-tree of a model which has been fitted using cross-validation.
+tree of a pipeline which has been fitted using cross-validation.
 """
 import logging
 from abc import ABC, abstractmethod
@@ -29,56 +29,63 @@ from shap import KernelExplainer, TreeExplainer
 from shap.explainers.explainer import Explainer
 from sklearn.base import BaseEstimator
 
-from gamma.ml.fitcv import ClassifierFitCV, EstimatorFitCV, LearnerFitCV, RegressorFitCV
-from gamma.ml.viz import LinkageTree
-from gamma.sklearndf.pipeline import LearnerPipelineDF
+from gamma.common import ListLike
+from gamma.ml.crossfit import ClassifierCrossfit, LearnerCrossfit, RegressorCrossfit
+from gamma.sklearndf.pipeline import (
+    ClassifierPipelineDF,
+    LearnerPipelineDF,
+    RegressorPipelineDF,
+)
+from gamma.viz.dendrogram import LinkageTree
 
 log = logging.getLogger(__name__)
 
-__all__ = ["ClassifierInspector", "RegressorInspector"]
+__all__ = ["BaseLearnerInspector", "ClassifierInspector", "RegressorInspector"]
 
 
-_T_EstimatorFitCV = TypeVar("T_EstimatorFitCV", bound=EstimatorFitCV)
+#
+# Type variables
+#
+
+_T_LearnerPipelineDF = TypeVar("T_LearnerPipelineDF", bound=LearnerPipelineDF)
+_T_RegressorPipelineDF = TypeVar("_T_RegressorPipelineDF", bound=RegressorPipelineDF)
+_T_ClassifierPipelineDF = TypeVar("_T_ClassifierPipelineDF", bound=ClassifierPipelineDF)
 
 
-class BaseInspector(Generic[_T_EstimatorFitCV]):
-
-    __slots__ = ["_models"]
-
-    def __init__(self, models: _T_EstimatorFitCV) -> None:
-
-        self._models = models
-
-    @property
-    def models(self) -> _T_EstimatorFitCV:
-        """
-        CV fit of the model being examined by this inspector
-        """
-        return self._models
+#
+# Class definitions
+#
 
 
-class BaseLearnerInspector(BaseInspector[LearnerFitCV], ABC):
+class BaseLearnerInspector(Generic[_T_LearnerPipelineDF], ABC):
     """
-    Inspect a model through its SHAP values.
+    Inspect a pipeline through its SHAP values.
 
-    :param models: predictor containing the information about the
-      model, the data (a Sample object), the cross-validation and predictions.
-    :param explainer_factory: method that returns a shap Explainer
+    :param crossfit: predictor containing the information about the
+      pipeline, the data (a Sample object), the cross-validation and crossfit.
+    :param explainer_factory: calibration that returns a shap Explainer
     """
 
-    __slots__ = ["_shap_matrix", "_feature_dependency_matrix", "_explainer_factory"]
+    __slots__ = [
+        "_cross_fit",
+        "_shap_matrix",
+        "_feature_dependency_matrix",
+        "_explainer_factory",
+    ]
 
-    F_FEATURE = "feature"
+    COL_FEATURE = "feature"
 
     def __init__(
         self,
-        models: LearnerFitCV,
+        crossfit: LearnerCrossfit[_T_LearnerPipelineDF],
         explainer_factory: Optional[
             Callable[[BaseEstimator, pd.DataFrame], Explainer]
         ] = None,
     ) -> None:
+        if not crossfit.is_fitted:
+            raise ValueError("arg crossfit expected to be fitted")
 
-        super().__init__(models)
+        self._cross_fit = crossfit
         self._shap_matrix: Optional[pd.DataFrame] = None
         self._feature_dependency_matrix: Optional[pd.DataFrame] = None
         self._explainer_factory = (
@@ -86,6 +93,13 @@ class BaseLearnerInspector(BaseInspector[LearnerFitCV], ABC):
             if explainer_factory is not None
             else tree_explainer_factory
         )
+
+    @property
+    def crossfit(self) -> LearnerCrossfit[_T_LearnerPipelineDF]:
+        """
+        CV fit of the pipeline being examined by this inspector
+        """
+        return self._cross_fit
 
     def shap_matrix(self) -> pd.DataFrame:
         """
@@ -99,10 +113,14 @@ class BaseLearnerInspector(BaseInspector[LearnerFitCV], ABC):
         if self._shap_matrix is not None:
             return self._shap_matrix
 
+        crossfit = self.crossfit
+
         shap_values_df = pd.concat(
             objs=[
-                self._shap_matrix_for_split(split_id, model)
-                for split_id, model in enumerate(self.models)
+                self._shap_matrix_for_split(model, test_indices)
+                for model, (_, test_indices) in zip(
+                    crossfit.models(), crossfit.splits()
+                )
             ],
             sort=True,
         ).fillna(0.0)
@@ -113,31 +131,22 @@ class BaseLearnerInspector(BaseInspector[LearnerFitCV], ABC):
         return self._shap_matrix
 
     def _shap_matrix_for_split(
-        self, split_id: int, split_model: LearnerPipelineDF
+        self, split_model: LearnerPipelineDF, oob_indices: ListLike[int]
     ) -> pd.DataFrame:
         """
-        Calaculate the SHAP matrix for a single split.
+        Calculate the SHAP matrix for a single split.
 
-        :param split_id: the numeric split ID (1,2,3...etc.)
-        :param split_model: model trained on the split
-        :return: SHAP matrix of a single split as dataframe
+        :param split_model: pipeline trained on the split
+        :return: SHAP matrix of a single split as data frame
         """
-        observation_indices_in_split = (
-            self.models.predictions_for_all_splits()
-            .xs(key=split_id, level=LearnerFitCV.F_SPLIT_ID)
-            .index
-        )
+        x_oob = self.crossfit.training_sample.subsample(loc=oob_indices).features
 
-        split_x = self.models.sample.select_observations_by_index(
-            ids=observation_indices_in_split
-        ).features
-
-        estimator = split_model.final_estimator_
+        estimator = split_model.final_estimator
 
         if split_model.preprocessing is not None:
-            data_transformed = split_model.preprocessing.transform(split_x)
+            data_transformed = split_model.preprocessing.transform(x_oob)
         else:
-            data_transformed = split_x
+            data_transformed = x_oob
 
         raw_shap_values = self._explainer_factory(
             estimator=estimator.root_estimator, data=data_transformed
@@ -154,11 +163,11 @@ class BaseLearnerInspector(BaseInspector[LearnerFitCV], ABC):
         split_transformed: pd.DataFrame,
     ) -> pd.DataFrame:
         """
-        Convert the SHAP matrix for a single split to a dataframe.
+        Convert the SHAP matrix for a single split to a data frame.
 
         :param raw_shap_values: the raw values returned by the SHAP explainer
-        :param split_transformed: the transformed data the model was trained on
-        :return: SHAP matrix of a single split as dataframe
+        :param split_transformed: the transformed data the pipeline was trained on
+        :return: SHAP matrix of a single split as data frame
         """
         pass
 
@@ -178,7 +187,7 @@ class BaseLearnerInspector(BaseInspector[LearnerFitCV], ABC):
         """
         Return the Pearson correlation matrix of the shap matrix.
 
-        :return: dataframe with column and index given by the feature names,
+        :return: data frame with column and index given by the feature names,
           and values are the Pearson correlations of the shap values of features
         """
         if self._feature_dependency_matrix is None:
@@ -201,7 +210,7 @@ class BaseLearnerInspector(BaseInspector[LearnerFitCV], ABC):
         # convert shap correlations to distances (1 = most distant)
         feature_distance_matrix = 1 - self.feature_dependency_matrix().abs()
 
-        # compress the distance matrix (required by scipy)
+        # compress the distance matrix (required by SciPy)
         compressed_distance_vector = squareform(feature_distance_matrix)
 
         # calculate the linkage matrix
@@ -221,6 +230,7 @@ class BaseLearnerInspector(BaseInspector[LearnerFitCV], ABC):
             scipy_linkage_matrix=linkage_matrix,
             leaf_labels=feature_importances.index,
             leaf_weights=feature_importances.values,
+            max_distance=1.0,
         )
 
 
@@ -239,7 +249,7 @@ def tree_explainer_factory(estimator: BaseEstimator, data: pd.DataFrame) -> Expl
 
     # NOTE:
     # unfortunately, there is no convenient function in shap to determine the best
-    # explainer method. hence we use this try/except approach.
+    # explainer calibration. hence we use this try/except approach.
     # further there is no consistent "ModelPipelineDF type X is unsupported"
     # exception raised,
     # which is why we need to always assume the error resulted from this cause -
@@ -253,30 +263,31 @@ def tree_explainer_factory(estimator: BaseEstimator, data: pd.DataFrame) -> Expl
             f"failed to instantiate shap.TreeExplainer:{str(e)},"
             "using shap.KernelExplainer as fallback"
         )
-        # when using KernelExplainer, shap expects "model" to be a callable that
+        # when using KernelExplainer, shap expects "pipeline" to be a callable that
         # predicts
         # noinspection PyUnresolvedReferences
         return KernelExplainer(model=estimator.predict, data=data)
 
 
-class RegressorInspector(BaseLearnerInspector):
+class RegressorInspector(
+    BaseLearnerInspector[_T_RegressorPipelineDF], Generic[_T_RegressorPipelineDF]
+):
     """
-    Inspect a regression model through its SHAP values.
+    Inspect a regression pipeline through its SHAP values.
 
-    :param models: regressor containing the information about the
-      model, the data (a Sample object), the cross-validation and predictions.
-    :param explainer_factory: method that returns a shap Explainer
+    :param crossfit: regressor containing the information about the pipeline, \
+        the data (a Sample object), the cross-validation and crossfit.
+    :param explainer_factory: calibration that returns a shap Explainer
     """
 
     def __init__(
         self,
-        models: RegressorFitCV,
+        crossfit: RegressorCrossfit[_T_RegressorPipelineDF],
         explainer_factory: Optional[
             Callable[[BaseEstimator, pd.DataFrame], Explainer]
         ] = None,
     ) -> None:
-
-        super().__init__(models, explainer_factory)
+        super().__init__(crossfit=crossfit, explainer_factory=explainer_factory)
 
     def _shap_matrix_for_split_to_df(
         self,
@@ -284,17 +295,17 @@ class RegressorInspector(BaseLearnerInspector):
         split_transformed: pd.DataFrame,
     ) -> pd.DataFrame:
         """
-        Convert the SHAP matrix for a single split to a dataframe.
+        Convert the SHAP matrix for a single split to a data frame.
 
         :param raw_shap_values: the raw values returned by the SHAP explainer
-        :param split_transformed: the transformed data the model was trained on
-        :return: SHAP matrix of a single split as dataframe
+        :param split_transformed: the transformed data the pipeline was trained on
+        :return: SHAP matrix of a single split as data frame
         """
 
         # In the regression case, only ndarray outputs are expected from SHAP:
         if not isinstance(raw_shap_values, np.ndarray):
             raise ValueError(
-                f"shap explainer output expected to be an ndarray but was "
+                "shap explainer output expected to be an ndarray but was "
                 f"{type(raw_shap_values)}"
             )
 
@@ -305,26 +316,27 @@ class RegressorInspector(BaseLearnerInspector):
         )
 
 
-class ClassifierInspector(BaseLearnerInspector):
+class ClassifierInspector(
+    BaseLearnerInspector[_T_ClassifierPipelineDF], Generic[_T_ClassifierPipelineDF]
+):
     """
-    Inspect a classification model through its SHAP values.
+    Inspect a classification pipeline through its SHAP values.
 
     Currently only binary, single-output classification problems are supported.
 
-    :param models: classifier containing the information about the
-      model, the data (a Sample object), the cross-validation and predictions.
-    :param explainer_factory: method that returns a shap Explainer
+    :param crossfit: classifier containing the information about the pipeline, \
+        the data (a Sample object), the cross-validation and crossfit.
+    :param explainer_factory: calibration that returns a shap Explainer
     """
 
     def __init__(
         self,
-        models: ClassifierFitCV,
+        crossfit: ClassifierCrossfit[_T_ClassifierPipelineDF],
         explainer_factory: Optional[
             Callable[[BaseEstimator, pd.DataFrame], Explainer]
         ] = None,
     ) -> None:
-
-        super().__init__(models, explainer_factory)
+        super().__init__(crossfit=crossfit, explainer_factory=explainer_factory)
 
     def _shap_matrix_for_split_to_df(
         self,
@@ -332,14 +344,14 @@ class ClassifierInspector(BaseLearnerInspector):
         split_transformed: pd.DataFrame,
     ) -> pd.DataFrame:
         """
-        Convert the SHAP matrix for a single split to a dataframe.
+        Convert the SHAP matrix for a single split to a data frame.
 
         :param raw_shap_values: the raw values returned by the SHAP explainer
-        :param split_transformed: the transformed data the model was trained on
-        :return: SHAP matrix of a single split as dataframe
+        :param split_transformed: the transformed data the pipeline was trained on
+        :return: SHAP matrix of a single split as data frame
         """
 
-        # todo: adapt this method (and override others) to support non-binary
+        # todo: adapt this calibration (and override others) to support non-binary
         #   classification
 
         if isinstance(raw_shap_values, list):
@@ -350,7 +362,7 @@ class ClassifierInspector(BaseLearnerInspector):
 
             # we decided to support only binary classification == 2 classes:
             assert n_arrays == 2, (
-                "classification model inspection only supports binary classifiers, "
+                "classification pipeline inspection only supports binary classifiers, "
                 f"but SHAP analysis returned values for {n_arrays} classes"
             )
 
