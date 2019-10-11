@@ -26,8 +26,8 @@ from abc import ABC
 from typing import *
 
 import pandas as pd
-from joblib import delayed, Parallel
 from sklearn.model_selection import BaseCrossValidator
+from sklearn.utils import delayed, Parallel
 
 from gamma.common import ListLike
 from gamma.ml import Sample
