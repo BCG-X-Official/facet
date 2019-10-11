@@ -124,11 +124,10 @@ setup(
         "pandas>=0.24,<0.25",
         "numpy>=1.16,<1.17",
         "matplotlib>=3.0.0,<3.1.0",
-        # todo: add tag for version control to all deps, as done for gamma-common:
-        "gamma-common @ git+ssh://git@git.sourceai.io/alpha/gamma-common.git@v1.0.0#egg=gamma.common",
-        "gamma-sklearndf @ git+ssh://git@git.sourceai.io/alpha/gamma-sklearndf.git#egg=gamma.sklearndf",
-        "gamma-viz @ git+ssh://git@git.sourceai.io/alpha/gamma-viz.git#egg=gamma.viz",
-        "gamma-ml @ git+ssh://git@git.sourceai.io/alpha/gamma-ml.git#egg=gamma.ml",
+        "gamma-common @ git+ssh://git@git.sourceai.io/BCG/gamma-common.git@1.0.0#egg=gamma.common",
+        "gamma-sklearndf @ git+ssh://git@git.sourceai.io/BCG/gamma-sklearndf.git@1.0.0#egg=gamma.sklearndf",
+        "gamma-viz @ git+ssh://git@git.sourceai.io/BCG/gamma-viz.git@1.0.0#egg=gamma.viz",
+        "gamma-ml @ git+ssh://git@git.sourceai.io/BCG/gamma-ml.git@1.0.0#egg=gamma.ml",
     ],
     dependency_links=[],
     # Optional
