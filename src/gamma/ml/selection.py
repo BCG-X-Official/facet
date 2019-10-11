@@ -185,7 +185,7 @@ class LearnerEvaluation(Generic[_T_LearnerPipelineDF]):
         self.ranking_score = ranking_score
 
 
-class LearnerRanker(Generic[_T_LearnerPipelineDF, _T_Crossfit], ABC):
+class LearnerRanker(ABC, Generic[_T_LearnerPipelineDF, _T_Crossfit]):
     """
     Rank different parametrisations of one or more learners using cross-validation.
 

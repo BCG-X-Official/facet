@@ -57,7 +57,7 @@ _T_ClassifierPipelineDF = TypeVar("_T_ClassifierPipelineDF", bound=ClassifierPip
 #
 
 
-class BaseLearnerInspector(Generic[_T_LearnerPipelineDF], ABC):
+class BaseLearnerInspector(ABC, Generic[_T_LearnerPipelineDF]):
     """
     Inspect a pipeline through its SHAP values.
 
