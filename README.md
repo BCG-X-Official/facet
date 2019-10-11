@@ -10,12 +10,12 @@ ML related operations
 
 # Installation
 The pip-project `gamma-ml` can be installed using:
-- `pip install git+ssh://git@git.sourceai.io/alpha/gamma-ml.git#egg=gamma.ml`
+- `pip install git+ssh://git@git.sourceai.io/BCG/gamma-ml.git#egg=gamma.ml`
  (*latest version*)
  - Check [this page](./../../releases) for available releases and use 
- `pip install git+ssh://git@git.sourceai.io/alpha/gamma-ml.git@[VERSION-TAG]#egg=gamma.ml`
- to install a specific version. E.g. to install `v1.0.0` use:
- `pip install git+ssh://git@git.sourceai.io/alpha/gamma-ml.git@v1.0.0#egg=gamma.ml`
+ `pip install git+ssh://git@git.sourceai.io/BCG/gamma-ml.git@[VERSION-TAG]#egg=gamma.ml`
+ to install a specific version. E.g. to install `1.0.0` use:
+ `pip install git+ssh://git@git.sourceai.io/BCG/gamma-ml.git@1.0.0#egg=gamma.ml`
 
 Ensure that you have set up a working SSH key on git.sourceai.io!
 
