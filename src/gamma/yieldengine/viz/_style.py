@@ -296,7 +296,7 @@ class SimulationReportStyle(SimulationStyle, TextStyle):
 
     # format for partitions
     _PARTITION_TEXT_FORMAT = "s"
-    _PARTITION_NUMBER_FORMAT = ".3g"
+    _PARTITION_NUMBER_FORMAT = "g"
 
     # format for frequencies
     _FREQUENCY_WIDTH = 6
