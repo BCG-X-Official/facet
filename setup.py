@@ -124,7 +124,6 @@ setup(
         "pandas>=0.24,<0.25",
         "numpy>=1.16,<1.17",
         "matplotlib>=3.0.0,<3.1.0",
-        "lightgbm>=2.2,<2.3",
         "scipy>=1.2,<1.3",
         "shap>=0.28,<0.29",
         "scikit-learn>=0.21,<0.22",
