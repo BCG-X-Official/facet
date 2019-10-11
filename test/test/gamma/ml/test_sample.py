@@ -3,7 +3,7 @@ import pandas as pd
 
 # noinspection PyPackageRequirements
 import pytest
-from joblib import delayed, Parallel
+from sklearn.utils import delayed, Parallel
 
 from gamma.ml import Sample
 
