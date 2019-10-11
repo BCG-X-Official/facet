@@ -162,7 +162,7 @@ class BaseCrossfit(ABC, Generic[_T_EstimatorDF]):
         return estimator.fit(X=X, y=y, **fit_params)
 
 
-class LearnerCrossfit(BaseCrossfit[_T_LearnerDF], Generic[_T_LearnerDF], ABC):
+class LearnerCrossfit(BaseCrossfit[_T_LearnerDF], ABC, Generic[_T_LearnerDF]):
     """
     Generate cross-validated prediction for each observation in a sample, based on
     multiple fits of a learner across a collection of cross-validation splits
