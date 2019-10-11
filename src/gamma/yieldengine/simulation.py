@@ -115,7 +115,7 @@ class UnivariateSimulation:
         return self._max_percentile
 
 
-class UnivariateSimulator(Generic[_T_CrossFit], ABC):
+class UnivariateSimulator(ABC, Generic[_T_CrossFit]):
     """
     Estimates the average change in outcome for a range of values for a given feature,
     using cross-validated crossfit for all observations in a given data sample.
