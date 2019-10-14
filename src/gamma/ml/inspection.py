@@ -31,6 +31,7 @@ from sklearn.base import BaseEstimator
 from sklearn.utils import Parallel
 
 from gamma.common import ListLike
+from gamma.common.parallelization import ParallelizableMixin
 from gamma.ml import Sample
 from gamma.ml.crossfit import ClassifierCrossfit, LearnerCrossfit, RegressorCrossfit
 from gamma.sklearndf.pipeline import (
@@ -43,7 +44,6 @@ from gamma.viz.dendrogram import LinkageTree
 log = logging.getLogger(__name__)
 
 __all__ = ["BaseLearnerInspector", "ClassifierInspector", "RegressorInspector"]
-
 
 #
 # Type variables
@@ -59,7 +59,7 @@ _T_ClassifierPipelineDF = TypeVar("_T_ClassifierPipelineDF", bound=ClassifierPip
 #
 
 
-class BaseLearnerInspector(ABC, Generic[_T_LearnerPipelineDF]):
+class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[_T_LearnerPipelineDF]):
     """
     Inspect a pipeline through its SHAP values.
 
@@ -83,10 +83,13 @@ class BaseLearnerInspector(ABC, Generic[_T_LearnerPipelineDF]):
         explainer_factory: Optional[
             Callable[[BaseEstimator, pd.DataFrame], Explainer]
         ] = None,
+        *,
         n_jobs: int = 1,
         shared_memory: bool = True,
         verbose: int = 0,
     ) -> None:
+        super().__init__(n_jobs=n_jobs, shared_memory=shared_memory, verbose=verbose)
+
         if not crossfit.is_fitted:
             raise ValueError("arg crossfit expected to be fitted")
 
@@ -134,12 +137,8 @@ class BaseLearnerInspector(ABC, Generic[_T_LearnerPipelineDF]):
 
         training_sample = crossfit.training_sample
 
-        shap_values_df_for_splits = []
-
-        for model, (_train_split, oob_split) in zip(
-            crossfit.models(), crossfit.splits()
-        ):
-            shap_values_df = self._shap_values_for_split(
+        shap_values_df_for_splits = self._parallel()(
+            self._delayed(BaseLearnerInspector._shap_values_for_split)(
                 model,
                 training_sample,
                 oob_split,
@@ -147,7 +146,10 @@ class BaseLearnerInspector(ABC, Generic[_T_LearnerPipelineDF]):
                 explainer_factory_fn,
                 shap_matrix_for_split_to_df_fn,
             )
-            shap_values_df_for_splits.append(shap_values_df)
+            for model, (_train_split, oob_split) in zip(
+                crossfit.models(), crossfit.splits()
+            )
+        )
 
         shap_values_df = pd.concat(shap_values_df_for_splits)
 
@@ -328,8 +330,18 @@ class RegressorInspector(
         explainer_factory: Optional[
             Callable[[BaseEstimator, pd.DataFrame], Explainer]
         ] = None,
+        *,
+        n_jobs: int = 1,
+        shared_memory: bool = True,
+        verbose: int = 0,
     ) -> None:
-        super().__init__(crossfit=crossfit, explainer_factory=explainer_factory)
+        super().__init__(
+            crossfit=crossfit,
+            explainer_factory=explainer_factory,
+            n_jobs=n_jobs,
+            shared_memory=shared_memory,
+            verbose=verbose,
+        )
 
     @staticmethod
     def _shap_matrix_for_split_to_df(
@@ -375,8 +387,18 @@ class ClassifierInspector(
         explainer_factory: Optional[
             Callable[[BaseEstimator, pd.DataFrame], Explainer]
         ] = None,
+        *,
+        n_jobs: int = 1,
+        shared_memory: bool = True,
+        verbose: int = 0,
     ) -> None:
-        super().__init__(crossfit=crossfit, explainer_factory=explainer_factory)
+        super().__init__(
+            crossfit=crossfit,
+            explainer_factory=explainer_factory,
+            n_jobs=n_jobs,
+            shared_memory=shared_memory,
+            verbose=verbose,
+        )
 
     @staticmethod
     def _shap_matrix_for_split_to_df(
