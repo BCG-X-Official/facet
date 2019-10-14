@@ -35,8 +35,8 @@ N_SPLITS = K_FOLDS * 2
 
 def test_model_inspection(n_jobs, boston_sample: Sample) -> None:
     # checksums for the model inspection test - one for the LGBM, one for the SVR
-    checksums_shap = (5120923735415774388, 2945880188040048636)
-    checksum_corr_matrix = (4159152513108370414, 16061019524360971856)
+    checksums_shap = (17573313757033027070, 8162147391624654332)
+    checksum_corr_matrix = (15427021941901899256, 17570145586135505034)
     checksum_summary_report = "b613538c887c11a8c091870779a42aff"
 
     warnings.filterwarnings("ignore", message="numpy.dtype size changed")
@@ -153,8 +153,8 @@ def test_model_inspection_with_encoding(
     n_jobs,
 ) -> None:
     # define checksums for this test
-    checksum_shap = 2454983946504277938
-    checksum_corr_matrix = 9841870561220906358
+    checksum_shap = 10690277977123826530
+    checksum_corr_matrix = 17327858953091581982
     checksum_summary_report = "925b6623fa1b10bee69cb179b03a6c52"
 
     # define the circular cross validator with just 5 splits (to speed up testing)
@@ -235,8 +235,8 @@ def test_model_inspection_classifier(n_jobs, iris_sample: Sample) -> None:
     warnings.filterwarnings("ignore", message="You are accessing a training score")
 
     # define checksums for this test
-    checksum_shap = 12636830693175052845
-    checksum_corr_matrix = 9331449050691600977
+    checksum_shap = 10929025296667090237
+    checksum_corr_matrix = 4203011765388277947
     checksum_summary_report = "fafa6fa2d2fe158ee87e1ea0bbc2515c"
 
     # define a CV:
