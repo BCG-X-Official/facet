@@ -3,7 +3,7 @@ The Gamma machine learning library
 """
 
 from copy import copy
-from typing import Any, Iterable, Union
+from typing import *
 
 import pandas as pd
 
@@ -117,8 +117,8 @@ class Sample:
     def subsample(
         self,
         *,
-        loc: Union[slice, ListLike[Any]] = None,
-        iloc: Union[slice, ListLike[int]] = None,
+        loc: Optional[Union[slice, ListLike[Any]]] = None,
+        iloc: Optional[Union[slice, ListLike[int]]] = None,
     ) -> "Sample":
         """
         Select observations either by indices (`loc` parameter), or integer indices
