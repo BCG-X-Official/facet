@@ -1,6 +1,6 @@
 from os import path
 
-from setuptools import setup
+from setuptools import setup, find_namespace_packages
 
 here = path.abspath(path.dirname(__file__))
 # Get the long description from the README file
@@ -105,7 +105,7 @@ setup(
     #   py_modules=["my_module"],
     #
     # packages=find_packages(exclude=['contrib', 'docs', 'tests']),  # Required
-    packages=["gamma.ml"],
+    packages=find_namespace_packages(where="src"),
     package_dir={"": "src"},
     namespace_packages=["gamma"],
     # Specify which Python versions you support. In contrast to the
@@ -124,7 +124,6 @@ setup(
         "pandas>=0.24,<0.25",
         "numpy>=1.16,<1.17",
         "matplotlib>=3.0.0,<3.1.0",
-        "lightgbm>=2.2,<2.3",
         "scipy>=1.2,<1.3",
         "shap>=0.28,<0.29",
         "scikit-learn>=0.21,<0.22",
