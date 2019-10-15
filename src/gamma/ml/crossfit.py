@@ -26,10 +26,10 @@ from abc import ABC
 from typing import *
 
 import pandas as pd
-from joblib import delayed, Parallel
 from sklearn.model_selection import BaseCrossValidator
 
 from gamma.common import ListLike
+from gamma.common.parallelization import ParallelizableMixin
 from gamma.ml import Sample
 from gamma.sklearndf import BaseEstimatorDF, BaseLearnerDF, ClassifierDF, RegressorDF
 
@@ -44,7 +44,7 @@ _T_ClassifierDF = TypeVar("_T_ClassifierDF", bound=ClassifierDF)
 _T_RegressorDF = TypeVar("_T_RegressorDF", bound=RegressorDF)
 
 
-class BaseCrossfit(ABC, Generic[_T_EstimatorDF]):
+class BaseCrossfit(ParallelizableMixin, ABC, Generic[_T_EstimatorDF]):
     """
     :class:~gamma.sklearn all splits of a given cross-validation
     strategy, based on a pipeline.
@@ -75,32 +75,29 @@ class BaseCrossfit(ABC, Generic[_T_EstimatorDF]):
         shared_memory: bool = True,
         verbose: int = 0,
     ) -> None:
+        super().__init__(n_jobs=n_jobs, shared_memory=shared_memory, verbose=verbose)
         self.base_estimator = base_estimator
         self.cv = cv
-        self.n_jobs = n_jobs
-        self.shared_memory = shared_memory
-        self.verbose = verbose
 
         self._model_by_split: Optional[List[_T_EstimatorDF]] = None
         self._training_sample: Optional[Sample] = None
 
-    # noinspection PyPep8Naming
     def fit(self: _T, sample: Sample, **fit_params) -> _T:
         base_estimator = self.base_estimator
 
         features = sample.features
         target = sample.target
 
-        train_split, test_split = tuple(zip(*self.cv.split(features, target)))
+        train_splits, test_splits = tuple(zip(*self.cv.split(features, target)))
 
         self._model_by_split: List[_T_EstimatorDF] = self._parallel()(
-            delayed(BaseCrossfit._fit_model_for_split)(
+            self._delayed(BaseCrossfit._fit_model_for_split)(
                 base_estimator.clone(),
                 features.iloc[train_indices],
                 target.iloc[train_indices],
                 **fit_params,
             )
-            for train_indices in train_split
+            for train_indices in train_splits
         )
 
         self._training_sample = sample
@@ -136,13 +133,6 @@ class BaseCrossfit(ABC, Generic[_T_EstimatorDF]):
     def _ensure_fitted(self) -> None:
         if self._training_sample is None:
             raise RuntimeError(f"{type(self).__name__} expected to be fitted")
-
-    def _parallel(self) -> Parallel:
-        return Parallel(
-            n_jobs=self.n_jobs,
-            require="sharedmem" if self.shared_memory else None,
-            verbose=self.verbose,
-        )
 
     # noinspection PyPep8Naming
     @staticmethod
