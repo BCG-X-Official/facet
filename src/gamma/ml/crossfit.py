@@ -91,18 +91,19 @@ class BaseCrossfit(ParallelizableMixin, ABC, Generic[_T_EstimatorDF]):
             of the base estimator
         :return: `self`
         """
-        base_estimator = self.base_estimator
+        self_typed: BaseCrossfit = self  # support better type hinting in PyCharm
+        base_estimator = self_typed.base_estimator
 
         features = sample.features
         target = sample.target
 
         base_estimator.fit(X=sample.features, y=sample.target, **fit_params)
 
-        train_splits, test_splits = tuple(zip(*self.cv.split(features, target)))
+        train_splits, test_splits = tuple(zip(*self_typed.cv.split(features, target)))
 
-        with self._parallel() as parallel:
+        with self_typed._parallel() as parallel:
             self._model_by_split: List[_T_EstimatorDF] = parallel(
-                self._delayed(BaseCrossfit._fit_model_for_split)(
+                self_typed._delayed(BaseCrossfit._fit_model_for_split)(
                     base_estimator.clone(),
                     features.iloc[train_indices],
                     target.iloc[train_indices],
@@ -111,7 +112,7 @@ class BaseCrossfit(ParallelizableMixin, ABC, Generic[_T_EstimatorDF]):
                 for train_indices in train_splits
             )
 
-        self._training_sample = sample
+        self_typed._training_sample = sample
 
         return self
 
@@ -121,8 +122,11 @@ class BaseCrossfit(ParallelizableMixin, ABC, Generic[_T_EstimatorDF]):
         return self._training_sample is not None
 
     def get_n_splits(self) -> int:
-        """Number of splits used for this crossfit."""
-        return self.cv.get_n_splits()
+        """
+        Number of splits used for this crossfit.
+        """
+        self._ensure_fitted()
+        return len(self._model_by_split)
 
     def splits(self) -> Generator[Tuple[ListLike[int], ListLike[int]], None, None]:
         self._ensure_fitted()
