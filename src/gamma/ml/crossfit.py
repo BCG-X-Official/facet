@@ -51,11 +51,14 @@ class BaseCrossfit(ParallelizableMixin, ABC, Generic[_T_EstimatorDF]):
 
     :param base_estimator: predictive pipeline to be fitted
     :param cv: the cross validator generating the train splits
-    :param n_jobs: number of jobs to _rank_learners in parallel. Default to ``None`` which is
-      interpreted a 1.
-    :param shared_memory: if ``True`` use threads in the parallel runs. If `False`
-      use multiprocessing
-    :param verbose: verbosity level used in the parallel computation
+    :param n_jobs: number of jobs to use in parallel; \
+        if `None`, use joblib default (default: `None`).
+    :param shared_memory: if `True` use threads in the parallel runs. If `False` \
+        use multiprocessing (default: `False`).
+    :param pre_dispatch: number of batches to pre-dispatch; \
+        if `None`, use joblib default (default: `None`).
+    :param verbose: verbosity level used in the parallel computation; \
+        if `None`, use joblib default (default: `None`).
     """
 
     __slots__ = [
@@ -71,11 +74,17 @@ class BaseCrossfit(ParallelizableMixin, ABC, Generic[_T_EstimatorDF]):
         self,
         base_estimator: _T_EstimatorDF,
         cv: BaseCrossValidator,
-        n_jobs: int = 1,
-        shared_memory: bool = True,
-        verbose: int = 0,
+        n_jobs: Optional[int],
+        shared_memory: bool,
+        pre_dispatch: Optional[Union[str, int]],
+        verbose: Optional[int],
     ) -> None:
-        super().__init__(n_jobs=n_jobs, shared_memory=shared_memory, verbose=verbose)
+        super().__init__(
+            n_jobs=n_jobs,
+            shared_memory=shared_memory,
+            pre_dispatch=pre_dispatch,
+            verbose=verbose,
+        )
         self.base_estimator = base_estimator
         self.cv = cv
 
@@ -187,15 +196,17 @@ class LearnerCrossfit(BaseCrossfit[_T_LearnerDF], ABC, Generic[_T_LearnerDF]):
         self,
         base_estimator: _T_LearnerDF,
         cv: BaseCrossValidator,
-        n_jobs: int = 1,
-        shared_memory: bool = True,
-        verbose: int = 0,
+        n_jobs: Optional[int],
+        shared_memory: bool,
+        pre_dispatch: Optional[Union[str, int]],
+        verbose: Optional[int],
     ) -> None:
         super().__init__(
             base_estimator=base_estimator,
             cv=cv,
             n_jobs=n_jobs,
             shared_memory=shared_memory,
+            pre_dispatch=pre_dispatch,
             verbose=verbose,
         )
 
@@ -226,7 +237,23 @@ class LearnerCrossfit(BaseCrossfit[_T_LearnerDF], ABC, Generic[_T_LearnerDF]):
 
 
 class RegressorCrossfit(LearnerCrossfit[_T_RegressorDF], Generic[_T_RegressorDF]):
-    pass
+    def __init__(
+        self,
+        base_estimator: _T_RegressorDF,
+        cv: BaseCrossValidator,
+        n_jobs: Optional[int] = None,
+        shared_memory: bool = False,
+        pre_dispatch: Optional[Union[str, int]] = None,
+        verbose: Optional[int] = None,
+    ):
+        super().__init__(
+            base_estimator=base_estimator,
+            cv=cv,
+            n_jobs=n_jobs,
+            shared_memory=shared_memory,
+            pre_dispatch=pre_dispatch,
+            verbose=verbose,
+        )
 
 
 class ClassifierCrossfit(LearnerCrossfit[_T_ClassifierDF], Generic[_T_ClassifierDF]):
@@ -242,15 +269,17 @@ class ClassifierCrossfit(LearnerCrossfit[_T_ClassifierDF], Generic[_T_Classifier
         self,
         base_estimator: _T_ClassifierDF,
         cv: BaseCrossValidator,
-        n_jobs: int = 1,
-        shared_memory: bool = True,
-        verbose: int = 0,
+        n_jobs: Optional[int] = None,
+        shared_memory: bool = False,
+        pre_dispatch: Optional[Union[str, int]] = None,
+        verbose: Optional[int] = None,
     ):
         super().__init__(
             base_estimator=base_estimator,
             cv=cv,
             n_jobs=n_jobs,
             shared_memory=shared_memory,
+            pre_dispatch=pre_dispatch,
             verbose=verbose,
         )
 
