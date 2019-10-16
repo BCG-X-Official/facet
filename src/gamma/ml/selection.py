@@ -349,12 +349,12 @@ class LearnerRanker(
         return self._make_crossfit(
             pipeline=self._best_pipeline(),
             cv=self._cv if cv is None else cv,
-            n_jobs=self._n_jobs if n_jobs is None else n_jobs,
-            shared_memory=self._shared_memory
+            n_jobs=self.n_jobs if n_jobs is None else n_jobs,
+            shared_memory=self.shared_memory
             if shared_memory is None
             else shared_memory,
-            pre_dispatch=self._pre_dispatch if pre_dispatch is None else pre_dispatch,
-            verbose=self._verbose if verbose is None else verbose,
+            pre_dispatch=self.pre_dispatch if pre_dispatch is None else pre_dispatch,
+            verbose=self.verbose if verbose is None else verbose,
         ).fit(sample=self._sample, **self._fit_params)
 
     def summary_report(self, max_learners: Optional[int] = None) -> str:
