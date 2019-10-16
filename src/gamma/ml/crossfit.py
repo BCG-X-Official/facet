@@ -27,7 +27,6 @@ from typing import *
 
 import pandas as pd
 from sklearn.model_selection import BaseCrossValidator
-from sklearn.utils import delayed, Parallel
 
 from gamma.common import ListLike
 from gamma.common.parallelization import ParallelizableMixin
@@ -101,15 +100,16 @@ class BaseCrossfit(ParallelizableMixin, ABC, Generic[_T_EstimatorDF]):
 
         train_splits, test_splits = tuple(zip(*self.cv.split(features, target)))
 
-        self._model_by_split: List[_T_EstimatorDF] = self._parallel()(
-            self._delayed(BaseCrossfit._fit_model_for_split)(
-                base_estimator.clone(),
-                features.iloc[train_indices],
-                target.iloc[train_indices],
-                **fit_params,
+        with self._parallel() as parallel:
+            self._model_by_split: List[_T_EstimatorDF] = parallel(
+                self._delayed(BaseCrossfit._fit_model_for_split)(
+                    base_estimator.clone(),
+                    features.iloc[train_indices],
+                    target.iloc[train_indices],
+                    **fit_params,
+                )
+                for train_indices in train_splits
             )
-            for train_indices in train_splits
-        )
 
         self._training_sample = sample
 
