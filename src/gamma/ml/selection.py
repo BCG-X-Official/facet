@@ -270,6 +270,7 @@ class LearnerRanker(ABC, Generic[_T_LearnerPipelineDF, _T_Crossfit]):
 
         # initialise state
         self._sample: Optional[Sample] = None
+        self._fit_params: Optional[Dict[str, Any]] = None
         self._ranking: Optional[List[LearnerEvaluation]] = None
 
     @staticmethod
@@ -289,7 +290,7 @@ class LearnerRanker(ABC, Generic[_T_LearnerPipelineDF, _T_Crossfit]):
         :param sample: sample with which to fit the candidate learners from the grid(s)
         :param fit_params: any fit parameters to pass on to the learner's fit method
         """
-        self._rank_learners(sample=sample, **fit_params)
+        cast(LearnerRanker, self)._rank_learners(sample=sample, **fit_params)
         return self
 
     @property
@@ -316,14 +317,40 @@ class LearnerRanker(ABC, Generic[_T_LearnerPipelineDF, _T_Crossfit]):
         """
         return self._best_pipeline().fit(X=self._sample.features, y=self._sample.target)
 
-    @property
-    def best_model_crossfit(self) -> _T_Crossfit:
+    def best_model_crossfit(
+        self,
+        cv: Optional[BaseCrossValidator] = None,
+        n_jobs: Optional[int] = None,
+        shared_memory: Optional[bool] = None,
+        pre_dispatch: Optional[str] = None,
+        verbose: Optional[int] = None,
+    ) -> _T_Crossfit:
         """
-        The fitted crossfit for the best model
+        The crossfit for the best model, fitted with the same sample and fit
+        parameters used to fit this ranker.
+
+        :param cv: the cross-validator to use for generating the crossfit (default: \
+            use this ranker's cross-validator)
+        :param n_jobs: number of threads to use \
+            (default: inherit this ranker's setting)
+        :param shared_memory: whether to use threading with shared memory \
+            (default: inherit this ranker's setting)
+        :param pre_dispatch: maximum number of the data to make \
+            (default: inherit this ranker's setting)
+        :param verbose: verbosity of parallel processing \
+            (default: inherit this ranker's setting)
         """
-        return self._make_crossfit(pipeline=self._best_pipeline()).fit(
-            sample=self._sample
-        )
+
+        return self._make_crossfit(
+            pipeline=self._best_pipeline(),
+            cv=self._cv if cv is None else cv,
+            n_jobs=self._n_jobs if n_jobs is None else n_jobs,
+            shared_memory=self._shared_memory
+            if shared_memory is None
+            else shared_memory,
+            pre_dispatch=self._pre_dispatch if pre_dispatch is None else pre_dispatch,
+            verbose=self._verbose if verbose is None else verbose,
+        ).fit(sample=self._sample, **self._fit_params)
 
     def summary_report(self, max_learners: Optional[int] = None) -> str:
         """
@@ -382,7 +409,15 @@ class LearnerRanker(ABC, Generic[_T_LearnerPipelineDF, _T_Crossfit]):
         return self._ranking[0].pipeline
 
     @abstractmethod
-    def _make_crossfit(self, pipeline: _T_LearnerPipelineDF) -> _T_Crossfit:
+    def _make_crossfit(
+        self,
+        pipeline: _T_LearnerPipelineDF,
+        cv: BaseCrossValidator,
+        n_jobs: int,
+        shared_memory: bool,
+        pre_dispatch: str,
+        verbose: int,
+    ) -> _T_Crossfit:
         pass
 
     def _rank_learners(self, sample: Sample, **fit_params) -> None:
@@ -514,6 +549,7 @@ class LearnerRanker(ABC, Generic[_T_LearnerPipelineDF, _T_Crossfit]):
         ranking.sort(key=lambda validation: validation.ranking_score, reverse=True)
 
         self._sample = sample
+        self._fit_params = fit_params
         self._ranking = ranking
 
 
@@ -522,14 +558,20 @@ class RegressorRanker(
     Generic[_T_RegressorPipelineDF],
 ):
     def _make_crossfit(
-        self, pipeline: _T_RegressorPipelineDF
+        self,
+        pipeline: _T_RegressorPipelineDF,
+        cv: BaseCrossValidator,
+        n_jobs: int,
+        shared_memory: bool,
+        pre_dispatch: str,
+        verbose: int,
     ) -> RegressorCrossfit[_T_RegressorPipelineDF]:
         return RegressorCrossfit(
             base_estimator=pipeline,
-            cv=self._cv,
-            n_jobs=self._n_jobs,
-            shared_memory=self._shared_memory,
-            verbose=self._verbose,
+            cv=cv,
+            n_jobs=n_jobs,
+            shared_memory=shared_memory,
+            verbose=verbose,
         )
 
 
@@ -538,12 +580,18 @@ class ClassifierRanker(
     Generic[_T_ClassifierPipelineDF],
 ):
     def _make_crossfit(
-        self, pipeline: _T_ClassifierPipelineDF
+        self,
+        pipeline: _T_ClassifierPipelineDF,
+        cv,
+        n_jobs,
+        shared_memory,
+        pre_dispatch,
+        verbose,
     ) -> ClassifierCrossfit[_T_ClassifierPipelineDF]:
         return ClassifierCrossfit(
             base_estimator=pipeline,
-            cv=self._cv,
-            n_jobs=self._n_jobs,
-            shared_memory=self._shared_memory,
-            verbose=self._verbose,
+            cv=cv,
+            n_jobs=n_jobs,
+            shared_memory=shared_memory,
+            verbose=verbose,
         )
