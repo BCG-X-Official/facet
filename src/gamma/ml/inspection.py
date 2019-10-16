@@ -137,19 +137,20 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[_T_LearnerPipelineD
 
         training_sample = crossfit.training_sample
 
-        shap_values_df_for_splits = self._parallel()(
-            self._delayed(BaseLearnerInspector._shap_values_for_split)(
-                model,
-                training_sample,
-                oob_split,
-                features_out,
-                explainer_factory_fn,
-                shap_matrix_for_split_to_df_fn,
+        with self._parallel() as parallel:
+            shap_values_df_for_splits = parallel(
+                self._delayed(BaseLearnerInspector._shap_values_for_split)(
+                    model,
+                    training_sample,
+                    oob_split,
+                    features_out,
+                    explainer_factory_fn,
+                    shap_matrix_for_split_to_df_fn,
+                )
+                for model, (_train_split, oob_split) in zip(
+                    crossfit.models(), crossfit.splits()
+                )
             )
-            for model, (_train_split, oob_split) in zip(
-                crossfit.models(), crossfit.splits()
-            )
-        )
 
         shap_values_df = pd.concat(shap_values_df_for_splits)
 
