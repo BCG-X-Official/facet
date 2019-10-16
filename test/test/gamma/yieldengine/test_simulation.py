@@ -34,7 +34,7 @@ def test_univariate_simulation(
         grid=regressor_grids, cv=cv, scoring="r2", n_jobs=n_jobs
     ).fit(sample=sample)
 
-    crossfit = model_ranker.best_model_crossfit
+    crossfit = model_ranker.best_model_crossfit()
 
     simulator = UnivariateUpliftSimulator(
         crossfit=crossfit, min_percentile=10, max_percentile=90
