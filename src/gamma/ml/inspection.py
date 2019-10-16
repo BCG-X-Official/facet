@@ -28,7 +28,6 @@ from scipy.spatial.distance import squareform
 from shap import KernelExplainer, TreeExplainer
 from shap.explainers.explainer import Explainer
 from sklearn.base import BaseEstimator
-from sklearn.utils import Parallel
 
 from gamma.common import ListLike
 from gamma.common.parallelization import ParallelizableMixin
@@ -269,13 +268,6 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[_T_LearnerPipelineD
             leaf_labels=feature_importances.index,
             leaf_weights=feature_importances.values,
             max_distance=1.0,
-        )
-
-    def _parallel(self) -> Parallel:
-        return Parallel(
-            n_jobs=self.n_jobs,
-            require="sharedmem" if self.shared_memory else None,
-            verbose=self.verbose,
         )
 
 
