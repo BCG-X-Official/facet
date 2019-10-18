@@ -138,7 +138,7 @@ def test_model_inspection(n_jobs, boston_sample: Sample) -> None:
             == checksum_corr_matrix[model_index]
         )
 
-        linkage_tree = model_inspector.cluster_dependent_features()
+        linkage_tree = model_inspector.feature_dependency_linkage()
 
         DendrogramDrawer(style=DendrogramReportStyle()).draw(
             data=linkage_tree, title="Test"
@@ -202,7 +202,7 @@ def test_model_inspection_with_encoding(
     )
 
     # cluster feature importances
-    _linkage = mi.cluster_dependent_features()
+    _linkage = mi.feature_dependency_linkage()
 
     #  test the ModelInspector with a custom ExplainerFactory:
     def _ef(estimator: BaseEstimator, data: pd.DataFrame) -> Explainer:
@@ -222,7 +222,7 @@ def test_model_inspection_with_encoding(
     mi2 = RegressorInspector(crossfit=validation_model, explainer_factory=_ef)
     mi2.shap_matrix()
 
-    linkage_tree = mi2.cluster_dependent_features()
+    linkage_tree = mi2.feature_dependency_linkage()
     print()
     DendrogramDrawer(style=DendrogramReportStyle()).draw(
         data=linkage_tree, title="Test"
@@ -309,7 +309,7 @@ def test_model_inspection_classifier(n_jobs, iris_sample: Sample) -> None:
         == checksum_corr_matrix
     )
 
-    linkage_tree = model_inspector.cluster_dependent_features()
+    linkage_tree = model_inspector.feature_dependency_linkage()
     print()
     DendrogramDrawer(style=DendrogramReportStyle()).draw(
         data=linkage_tree, title="Test"
