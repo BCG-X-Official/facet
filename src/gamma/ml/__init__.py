@@ -12,19 +12,10 @@ from gamma.common import is_list_like, ListLike
 
 class Sample:
     """
-    Utility class to wrap a Pandas DataFrame in order to easily access its
+    Manages named features and target variables from a set of observations.
 
-        - features as a data frame
-        - target as a series
-        - feature columns by type, e.g., numbers or objects
-
-    via object properties.
-
-    An added benefit is through several checks:
-
-        - features & target columns need to be defined explicitly
-        - target column is not allowed as part of the features
-
+    Also provides basic methods for conveniently selecting subsets of features
+    or observations.
     """
 
     __slots__ = ["_observations", "_target", "_features"]
