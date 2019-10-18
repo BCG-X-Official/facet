@@ -30,6 +30,8 @@ from shap.explainers.explainer import Explainer
 from sklearn.base import BaseEstimator
 
 from gamma.common import ListLike
+from gamma.common.parallelization import ParallelizableMixin
+from gamma.ml import Sample
 from gamma.ml.crossfit import ClassifierCrossfit, LearnerCrossfit, RegressorCrossfit
 from gamma.sklearndf.pipeline import (
     ClassifierPipelineDF,
@@ -41,7 +43,6 @@ from gamma.viz.dendrogram import LinkageTree
 log = logging.getLogger(__name__)
 
 __all__ = ["BaseLearnerInspector", "ClassifierInspector", "RegressorInspector"]
-
 
 #
 # Type variables
@@ -57,7 +58,7 @@ _T_ClassifierPipelineDF = TypeVar("_T_ClassifierPipelineDF", bound=ClassifierPip
 #
 
 
-class BaseLearnerInspector(ABC, Generic[_T_LearnerPipelineDF]):
+class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[_T_LearnerPipelineDF]):
     """
     Inspect a pipeline through its SHAP values.
 
@@ -81,18 +82,28 @@ class BaseLearnerInspector(ABC, Generic[_T_LearnerPipelineDF]):
         explainer_factory: Optional[
             Callable[[BaseEstimator, pd.DataFrame], Explainer]
         ] = None,
+        *,
+        n_jobs: int = 1,
+        shared_memory: bool = True,
+        verbose: int = 0,
     ) -> None:
+        super().__init__(n_jobs=n_jobs, shared_memory=shared_memory, verbose=verbose)
+
         if not crossfit.is_fitted:
             raise ValueError("arg crossfit expected to be fitted")
 
         self._cross_fit = crossfit
-        self._shap_matrix: Optional[pd.DataFrame] = None
-        self._feature_dependency_matrix: Optional[pd.DataFrame] = None
         self._explainer_factory = (
             explainer_factory
             if explainer_factory is not None
             else tree_explainer_factory
         )
+        self.n_jobs = n_jobs
+        self.shared_memory = shared_memory
+        self.verbose = verbose
+
+        self._shap_matrix: Optional[pd.DataFrame] = None
+        self._feature_dependency_matrix: Optional[pd.DataFrame] = None
 
     @property
     def crossfit(self) -> LearnerCrossfit[_T_LearnerPipelineDF]:
@@ -110,63 +121,89 @@ class BaseLearnerInspector(ABC, Generic[_T_LearnerPipelineDF]):
 
         :return: shap matrix as a data frame
         """
+
         if self._shap_matrix is not None:
             return self._shap_matrix
 
         crossfit = self.crossfit
+        shap_matrix_for_split_to_df_fn = self._shap_matrix_for_split_to_df
+        explainer_factory_fn = self._explainer_factory
+        features_out = (
+            crossfit.base_estimator.preprocessing.features_out
+            if crossfit.base_estimator.preprocessing is not None
+            else crossfit.base_estimator.features_in
+        )
 
-        shap_values_df = pd.concat(
-            objs=[
-                self._shap_matrix_for_split(model, test_indices)
-                for model, (_, test_indices) in zip(
+        training_sample = crossfit.training_sample
+
+        with self._parallel() as parallel:
+            shap_values_df_for_splits = parallel(
+                self._delayed(BaseLearnerInspector._shap_values_for_split)(
+                    model,
+                    training_sample,
+                    oob_split,
+                    features_out,
+                    explainer_factory_fn,
+                    shap_matrix_for_split_to_df_fn,
+                )
+                for model, (_train_split, oob_split) in zip(
                     crossfit.models(), crossfit.splits()
                 )
-            ],
-            sort=True,
-        ).fillna(0.0)
+            )
+
+        shap_values_df = pd.concat(shap_values_df_for_splits)
 
         # Group SHAP matrix by observation ID and aggregate SHAP values using mean()
         self._shap_matrix = shap_values_df.groupby(by=shap_values_df.index).mean()
 
         return self._shap_matrix
 
-    def _shap_matrix_for_split(
-        self, split_model: LearnerPipelineDF, oob_indices: ListLike[int]
-    ) -> pd.DataFrame:
-        """
-        Calculate the SHAP matrix for a single split.
+    @staticmethod
+    def _shap_values_for_split(
+        model: _T_LearnerPipelineDF,
+        training_sample: Sample,
+        oob_split: np.ndarray,
+        features_out: pd.Index,
+        explainer_factory_fn: Callable[[BaseEstimator, pd.DataFrame], Explainer],
+        shap_matrix_for_split_to_df_fn: Callable[
+            [Union[np.ndarray, List[np.ndarray]], ListLike, ListLike], pd.DataFrame
+        ],
+    ):
 
-        :param split_model: pipeline trained on the split
-        :return: SHAP matrix of a single split as data frame
-        """
-        x_oob = self.crossfit.training_sample.subsample(loc=oob_indices).features
+        # get the features of all out-of-bag observations
+        x_oob = training_sample.subsample(loc=oob_split).features
 
-        estimator = split_model.final_estimator
+        # pre-process the features
+        if model.preprocessing is not None:
+            x_oob = model.preprocessing.transform(x_oob)
 
-        if split_model.preprocessing is not None:
-            data_transformed = split_model.preprocessing.transform(x_oob)
-        else:
-            data_transformed = x_oob
+        # calculate the shap values (returned as an ndarray)
+        shap_values_ndarray = explainer_factory_fn(
+            model.final_estimator.root_estimator, x_oob
+        ).shap_values(x_oob)
 
-        raw_shap_values = self._explainer_factory(
-            estimator=estimator.root_estimator, data=data_transformed
-        ).shap_values(data_transformed)
-
-        return self._shap_matrix_for_split_to_df(
-            raw_shap_values=raw_shap_values, split_transformed=data_transformed
+        # convert to a data frame (different logic depending on whether we have a
+        # regressor or a classifier)
+        shap_values_df = shap_matrix_for_split_to_df_fn(
+            shap_values_ndarray, oob_split, x_oob.columns
         )
 
+        # reindex to add missing columns and fill n/a values with zero shap importance
+        return shap_values_df.reindex(columns=features_out).fillna(0.0)
+
+    @staticmethod
     @abstractmethod
     def _shap_matrix_for_split_to_df(
-        self,
         raw_shap_values: Union[np.ndarray, List[np.ndarray]],
-        split_transformed: pd.DataFrame,
+        index: ListLike,
+        columns: ListLike,
     ) -> pd.DataFrame:
         """
         Convert the SHAP matrix for a single split to a data frame.
 
         :param raw_shap_values: the raw values returned by the SHAP explainer
-        :param split_transformed: the transformed data the pipeline was trained on
+        :param index: index of the transformed data the pipeline was trained on
+        :param columns: columns of the transformed data the pipeline was trained on
         :return: SHAP matrix of a single split as data frame
         """
         pass
@@ -286,19 +323,31 @@ class RegressorInspector(
         explainer_factory: Optional[
             Callable[[BaseEstimator, pd.DataFrame], Explainer]
         ] = None,
+        *,
+        n_jobs: int = 1,
+        shared_memory: bool = True,
+        verbose: int = 0,
     ) -> None:
-        super().__init__(crossfit=crossfit, explainer_factory=explainer_factory)
+        super().__init__(
+            crossfit=crossfit,
+            explainer_factory=explainer_factory,
+            n_jobs=n_jobs,
+            shared_memory=shared_memory,
+            verbose=verbose,
+        )
 
+    @staticmethod
     def _shap_matrix_for_split_to_df(
-        self,
         raw_shap_values: Union[np.ndarray, List[np.ndarray]],
-        split_transformed: pd.DataFrame,
+        index: ListLike,
+        columns: ListLike,
     ) -> pd.DataFrame:
         """
         Convert the SHAP matrix for a single split to a data frame.
 
         :param raw_shap_values: the raw values returned by the SHAP explainer
-        :param split_transformed: the transformed data the pipeline was trained on
+        :param index: index of the transformed data the pipeline was trained on
+        :param columns: columns of the transformed data the pipeline was trained on
         :return: SHAP matrix of a single split as data frame
         """
 
@@ -309,11 +358,7 @@ class RegressorInspector(
                 f"{type(raw_shap_values)}"
             )
 
-        return pd.DataFrame(
-            data=raw_shap_values,
-            index=split_transformed.index,
-            columns=split_transformed.columns,
-        )
+        return pd.DataFrame(data=raw_shap_values, index=index, columns=columns)
 
 
 class ClassifierInspector(
@@ -335,19 +380,31 @@ class ClassifierInspector(
         explainer_factory: Optional[
             Callable[[BaseEstimator, pd.DataFrame], Explainer]
         ] = None,
+        *,
+        n_jobs: int = 1,
+        shared_memory: bool = True,
+        verbose: int = 0,
     ) -> None:
-        super().__init__(crossfit=crossfit, explainer_factory=explainer_factory)
+        super().__init__(
+            crossfit=crossfit,
+            explainer_factory=explainer_factory,
+            n_jobs=n_jobs,
+            shared_memory=shared_memory,
+            verbose=verbose,
+        )
 
+    @staticmethod
     def _shap_matrix_for_split_to_df(
-        self,
         raw_shap_values: Union[np.ndarray, List[np.ndarray]],
-        split_transformed: pd.DataFrame,
+        index: ListLike,
+        columns: ListLike,
     ) -> pd.DataFrame:
         """
         Convert the SHAP matrix for a single split to a data frame.
 
         :param raw_shap_values: the raw values returned by the SHAP explainer
-        :param split_transformed: the transformed data the pipeline was trained on
+        :param index: index of the transformed data the pipeline was trained on
+        :param columns: columns of the transformed data the pipeline was trained on
         :return: SHAP matrix of a single split as data frame
         """
 
@@ -373,9 +430,10 @@ class ClassifierInspector(
             # to assure the values are returned as expected above,
             # and no information of class 1 is discarded, assert the
             # following:
-            assert np.all(
-                (raw_shap_values[0]) - (raw_shap_values[1] * -1) < 1e-10
-            ), "Expected shap_values(class 0) == shap_values(class 1) * -1"
+            assert (
+                np.allclose(raw_shap_values[0], -raw_shap_values[1]),
+                ("shap_values(class 0) == -shap_values(class 1)"),
+            )
 
             # all good: proceed with SHAP values for class 0:
             raw_shap_values = raw_shap_values[0]
@@ -387,8 +445,4 @@ class ClassifierInspector(
                 f"{type(raw_shap_values)}"
             )
 
-        return pd.DataFrame(
-            data=raw_shap_values,
-            index=split_transformed.index,
-            columns=split_transformed.columns,
-        )
+        return pd.DataFrame(data=raw_shap_values, index=index, columns=columns)

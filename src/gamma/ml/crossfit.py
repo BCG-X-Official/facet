@@ -106,6 +106,8 @@ class BaseCrossfit(ParallelizableMixin, ABC, Generic[_T_EstimatorDF]):
         features = sample.features
         target = sample.target
 
+        base_estimator.fit(X=sample.features, y=sample.target, **fit_params)
+
         train_splits, test_splits = tuple(zip(*self_typed.cv.split(features, target)))
 
         with self_typed._parallel() as parallel:
