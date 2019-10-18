@@ -46,8 +46,7 @@ _T_RegressorDF = TypeVar("_T_RegressorDF", bound=RegressorDF)
 
 class BaseCrossfit(ParallelizableMixin, ABC, Generic[_T_EstimatorDF]):
     """
-    :class:~gamma.sklearn all splits of a given cross-validation
-    strategy, based on a pipeline.
+    Fits an estimator to all train splits of a given cross-validation strategy.
 
     :param base_estimator: predictive pipeline to be fitted
     :param cv: the cross validator generating the train splits
