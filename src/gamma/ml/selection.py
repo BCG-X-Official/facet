@@ -28,9 +28,9 @@ from itertools import chain
 from typing import *
 
 import numpy as np
-from gamma.common.parallelization import ParallelizableMixin
 from sklearn.model_selection import BaseCrossValidator, GridSearchCV
 
+from gamma.common.parallelization import ParallelizableMixin
 from gamma.ml import Sample
 from gamma.ml.crossfit import ClassifierCrossfit, LearnerCrossfit, RegressorCrossfit
 from gamma.sklearndf.pipeline import (
@@ -573,7 +573,7 @@ class RegressorRanker(
     ) -> RegressorCrossfit[_T_RegressorPipelineDF]:
         return RegressorCrossfit(
             base_estimator=pipeline,
-            cv=self.cv,
+            cv=self._cv,
             n_jobs=self.n_jobs,
             shared_memory=self.shared_memory,
             pre_dispatch=self.pre_dispatch,
@@ -596,7 +596,7 @@ class ClassifierRanker(
     ) -> ClassifierCrossfit[_T_ClassifierPipelineDF]:
         return ClassifierCrossfit(
             base_estimator=pipeline,
-            cv=self.cv,
+            cv=self._cv,
             n_jobs=self.n_jobs,
             shared_memory=self.shared_memory,
             pre_dispatch=self.pre_dispatch,
