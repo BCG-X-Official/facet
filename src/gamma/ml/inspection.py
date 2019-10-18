@@ -48,7 +48,7 @@ __all__ = ["BaseLearnerInspector", "ClassifierInspector", "RegressorInspector"]
 # Type variables
 #
 
-_T_LearnerPipelineDF = TypeVar("T_LearnerPipelineDF", bound=LearnerPipelineDF)
+_T_LearnerPipelineDF = TypeVar("_T_LearnerPipelineDF", bound=LearnerPipelineDF)
 _T_RegressorPipelineDF = TypeVar("_T_RegressorPipelineDF", bound=RegressorPipelineDF)
 _T_ClassifierPipelineDF = TypeVar("_T_ClassifierPipelineDF", bound=ClassifierPipelineDF)
 
