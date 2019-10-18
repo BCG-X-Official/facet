@@ -28,6 +28,7 @@ from itertools import chain
 from typing import *
 
 import numpy as np
+from gamma.common.parallelization import ParallelizableMixin
 from sklearn.model_selection import BaseCrossValidator, GridSearchCV
 
 from gamma.ml import Sample
@@ -185,7 +186,9 @@ class LearnerEvaluation(Generic[_T_LearnerPipelineDF]):
         self.ranking_score = ranking_score
 
 
-class LearnerRanker(ABC, Generic[_T_LearnerPipelineDF, _T_Crossfit]):
+class LearnerRanker(
+    ParallelizableMixin, ABC, Generic[_T_LearnerPipelineDF, _T_Crossfit]
+):
     """
     Rank different parametrisations of one or more learners using cross-validation.
 
@@ -208,10 +211,14 @@ class LearnerRanker(ABC, Generic[_T_LearnerPipelineDF, _T_Crossfit]):
     :param ranking_metric: the scoring to be used for pipeline ranking, \
         given as a name to be used to look up the right Scoring object in the \
         LearnerEvaluation.scoring dictionary (default: 'test_score').
-    :param n_jobs: number of threads to use (default: one)
-    :param shared_memory: whether to use threading with shared memory (default: `False`)
-    :param pre_dispatch: maximum number of the data to make (default: `"2*n_jobs"`)
-    :param verbose: verbosity of parallel processing (default: 0)
+    :param n_jobs: number of jobs to use in parallel; \
+        if `None`, use joblib default (default: `None`).
+    :param shared_memory: if `True` use threads in the parallel runs. If `False` \
+        use multiprocessing (default: `False`).
+    :param pre_dispatch: number of batches to pre-dispatch; \
+        if `None`, use joblib default (default: `None`).
+    :param verbose: verbosity level used in the parallel computation; \
+        if `None`, use joblib default (default: `None`).
     """
 
     __slots__ = [
@@ -223,10 +230,6 @@ class LearnerRanker(ABC, Generic[_T_LearnerPipelineDF, _T_Crossfit]):
         "_pipeline",
         "_ranking_scorer",
         "_ranking_metric",
-        "_n_jobs",
-        "_shared_memory",
-        "_pre_dispatch",
-        "_verbose",
         "_ranking",
     ]
 
@@ -254,6 +257,12 @@ class LearnerRanker(ABC, Generic[_T_LearnerPipelineDF, _T_Crossfit]):
         pre_dispatch: str = "2*n_jobs",
         verbose: int = 0,
     ) -> None:
+        super().__init__(
+            n_jobs=n_jobs,
+            shared_memory=shared_memory,
+            pre_dispatch=pre_dispatch,
+            verbose=verbose,
+        )
         self._grids = list(grid) if isinstance(grid, Iterable) else [grid]
         self._cv = cv
         self._scoring = scoring
@@ -263,10 +272,6 @@ class LearnerRanker(ABC, Generic[_T_LearnerPipelineDF, _T_Crossfit]):
             else ranking_scorer
         )
         self._ranking_metric = ranking_metric
-        self._n_jobs = n_jobs
-        self._shared_memory = shared_memory
-        self._pre_dispatch = pre_dispatch
-        self._verbose = verbose
 
         # initialise state
         self._sample: Optional[Sample] = None
@@ -402,12 +407,12 @@ class LearnerRanker(ABC, Generic[_T_LearnerPipelineDF, _T_Crossfit]):
                     estimator=grid.pipeline,
                     param_grid=grid.parameters,
                     scoring=self._scoring,
-                    n_jobs=self._n_jobs,
+                    n_jobs=self.n_jobs,
                     iid=False,
                     refit=False,
                     cv=self._cv,
-                    verbose=self._verbose,
-                    pre_dispatch=self._pre_dispatch,
+                    verbose=self.verbose,
+                    pre_dispatch=self.pre_dispatch,
                     return_train_score=False,
                 ),
                 grid,
@@ -526,10 +531,11 @@ class RegressorRanker(
     ) -> RegressorCrossfit[_T_RegressorPipelineDF]:
         return RegressorCrossfit(
             base_estimator=pipeline,
-            cv=self._cv,
-            n_jobs=self._n_jobs,
-            shared_memory=self._shared_memory,
-            verbose=self._verbose,
+            cv=self.cv,
+            n_jobs=self.n_jobs,
+            shared_memory=self.shared_memory,
+            pre_dispatch=self.pre_dispatch,
+            verbose=self.verbose,
         )
 
 
@@ -542,8 +548,9 @@ class ClassifierRanker(
     ) -> ClassifierCrossfit[_T_ClassifierPipelineDF]:
         return ClassifierCrossfit(
             base_estimator=pipeline,
-            cv=self._cv,
-            n_jobs=self._n_jobs,
-            shared_memory=self._shared_memory,
-            verbose=self._verbose,
+            cv=self.cv,
+            n_jobs=self.n_jobs,
+            shared_memory=self.shared_memory,
+            pre_dispatch=self.pre_dispatch,
+            verbose=self.verbose,
         )
