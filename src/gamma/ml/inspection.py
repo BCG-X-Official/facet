@@ -29,7 +29,7 @@ from shap import KernelExplainer, TreeExplainer
 from shap.explainers.explainer import Explainer
 from sklearn.base import BaseEstimator
 
-from gamma.common import deprecated, ListLike
+from gamma.common import ListLike
 from gamma.common.parallelization import ParallelizableMixin
 from gamma.ml import Sample
 from gamma.ml.crossfit import ClassifierCrossfit, LearnerCrossfit, RegressorCrossfit
@@ -237,16 +237,6 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[_T_LearnerPipelineD
             self._feature_dependency_matrix = shap_matrix.corr(method="pearson")
 
         return self._feature_dependency_matrix
-
-    @deprecated(
-        message="method cluster_dependent_features has been replaced by method "
-        "feature_dependency_linkage and will be removed in a future version."
-    )
-    def cluster_dependent_features(self) -> LinkageTree:
-        """
-        Deprecated. Use :meth:`~.feature_dependency_linkage` instead.
-        """
-        return self.feature_dependency_linkage()
 
     def feature_dependency_linkage(self) -> LinkageTree:
         """
