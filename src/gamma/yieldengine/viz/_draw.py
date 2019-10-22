@@ -21,7 +21,6 @@ this graph there is a histogram of the feature values.
 
 from typing import *
 
-from gamma.common import ListLike
 from gamma.viz import Drawer
 from gamma.yieldengine.partition import T_Value
 from gamma.yieldengine.simulation import UnivariateSimulation
@@ -34,11 +33,11 @@ from gamma.yieldengine.viz._style import (
 
 class _SimulationSeries(NamedTuple):
     # A set of aligned series representing the simulation result
-    median_uplift: ListLike[T_Value]
-    min_uplift: ListLike[T_Value]
-    max_uplift: ListLike[T_Value]
-    partitions: ListLike[T_Value]
-    frequencies: ListLike[T_Value]
+    median_uplift: Sequence[T_Value]
+    min_uplift: Sequence[T_Value]
+    max_uplift: Sequence[T_Value]
+    partitions: Sequence[T_Value]
+    frequencies: Sequence[T_Value]
 
 
 class SimulationDrawer(Drawer[UnivariateSimulation, SimulationStyle]):
