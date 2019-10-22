@@ -271,7 +271,7 @@ def test_model_inspection_classifier(n_jobs, iris_sample: Sample) -> None:
         hashlib.md5(model_ranker.summary_report().encode("utf-8")).hexdigest()
     ) == checksum_summary_report
 
-    crossfit = model_ranker.best_model_crossfit
+    crossfit = model_ranker.best_model_crossfit()
 
     model_inspector = ClassifierInspector(crossfit=crossfit)
     # make and check shap value matrix
