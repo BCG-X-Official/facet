@@ -7,7 +7,7 @@ from typing import *
 
 import pandas as pd
 
-from gamma.common import is_list_like, ListLike
+from gamma.common import is_list_like
 
 
 class Sample:
@@ -23,8 +23,8 @@ class Sample:
     def __init__(
         self,
         observations: pd.DataFrame,
-        target: Union[str, ListLike[str]],
-        features: ListLike[str] = None,
+        target: Union[str, Sequence[str]],
+        features: Sequence[str] = None,
     ) -> None:
         """
         Construct a Sample object.
@@ -108,8 +108,8 @@ class Sample:
     def subsample(
         self,
         *,
-        loc: Optional[Union[slice, ListLike[Any]]] = None,
-        iloc: Optional[Union[slice, ListLike[int]]] = None,
+        loc: Optional[Union[slice, Sequence[Any]]] = None,
+        iloc: Optional[Union[slice, Sequence[int]]] = None,
     ) -> "Sample":
         """
         Select observations either by indices (`loc` parameter), or integer indices
@@ -135,7 +135,7 @@ class Sample:
             )
         return subsample
 
-    def select_features(self, features: ListLike[str]) -> "Sample":
+    def select_features(self, features: Sequence[str]) -> "Sample":
         """
         Return a Sample object which only includes the given features
 
