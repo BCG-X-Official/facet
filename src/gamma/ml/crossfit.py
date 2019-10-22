@@ -28,7 +28,6 @@ from typing import *
 import pandas as pd
 from sklearn.model_selection import BaseCrossValidator
 
-from gamma.common import ListLike
 from gamma.common.parallelization import ParallelizableMixin
 from gamma.ml import Sample
 from gamma.sklearndf import BaseEstimatorDF, BaseLearnerDF, ClassifierDF, RegressorDF
@@ -136,7 +135,7 @@ class BaseCrossfit(ParallelizableMixin, ABC, Generic[_T_EstimatorDF]):
         self._ensure_fitted()
         return len(self._model_by_split)
 
-    def splits(self) -> Generator[Tuple[ListLike[int], ListLike[int]], None, None]:
+    def splits(self) -> Generator[Tuple[Sequence[int], Sequence[int]], None, None]:
         self._ensure_fitted()
         return self.cv.split(
             self._training_sample.features, self._training_sample.target
