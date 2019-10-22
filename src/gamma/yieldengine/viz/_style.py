@@ -27,7 +27,6 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 from mpl_toolkits.axes_grid1.axes_divider import AxesDivider
 from mpl_toolkits.axes_grid1.axes_size import Scaled
 
-from gamma.common import ListLike
 from gamma.viz import DrawStyle, MatplotStyle, TextStyle
 from gamma.viz.text import format_table
 from gamma.yieldengine.partition import T_Number, T_Value
@@ -45,13 +44,13 @@ class SimulationStyle(DrawStyle, ABC):
         self,
         feature: str,
         target: str,
-        median_uplift: ListLike[T_Number],
-        min_uplift: ListLike[T_Number],
-        max_uplift: ListLike[T_Number],
+        median_uplift: Sequence[T_Number],
+        min_uplift: Sequence[T_Number],
+        max_uplift: Sequence[T_Number],
         min_percentile: float,
         max_percentile: float,
-        partitions: ListLike[Any],
-        frequencies: ListLike[int],
+        partitions: Sequence[Any],
+        frequencies: Sequence[int],
         is_categorical_feature: bool,
     ) -> None:
         """
@@ -62,8 +61,8 @@ class SimulationStyle(DrawStyle, ABC):
     @abstractmethod
     def draw_histogram(
         self,
-        partitions: ListLike[Any],
-        frequencies: ListLike[int],
+        partitions: Sequence[Any],
+        frequencies: Sequence[int],
         is_categorical_feature: bool,
     ) -> None:
         """
@@ -116,13 +115,13 @@ class SimulationMatplotStyle(MatplotStyle, SimulationStyle):
         self,
         feature: str,
         target: str,
-        median_uplift: ListLike[T_Number],
-        min_uplift: ListLike[T_Number],
-        max_uplift: ListLike[T_Number],
+        median_uplift: Sequence[T_Number],
+        min_uplift: Sequence[T_Number],
+        max_uplift: Sequence[T_Number],
         min_percentile: float,
         max_percentile: float,
-        partitions: ListLike[Any],
-        frequencies: ListLike[int],
+        partitions: Sequence[Any],
+        frequencies: Sequence[int],
         is_categorical_feature: bool,
     ) -> None:
         """
@@ -183,8 +182,8 @@ class SimulationMatplotStyle(MatplotStyle, SimulationStyle):
 
     def draw_histogram(
         self,
-        partitions: ListLike[T_Value],
-        frequencies: ListLike[int],
+        partitions: Sequence[T_Value],
+        frequencies: Sequence[int],
         is_categorical_feature: bool,
     ) -> None:
         """
@@ -316,13 +315,13 @@ class SimulationReportStyle(SimulationStyle, TextStyle):
         self,
         feature: str,
         target: str,
-        median_uplift: ListLike[T_Number],
-        min_uplift: ListLike[T_Number],
-        max_uplift: ListLike[T_Number],
+        median_uplift: Sequence[T_Number],
+        min_uplift: Sequence[T_Number],
+        max_uplift: Sequence[T_Number],
         min_percentile: float,
         max_percentile: float,
-        partitions: ListLike[Any],
-        frequencies: ListLike[int],
+        partitions: Sequence[Any],
+        frequencies: Sequence[int],
         is_categorical_feature: bool,
     ) -> None:
         """
@@ -349,8 +348,8 @@ class SimulationReportStyle(SimulationStyle, TextStyle):
 
     def draw_histogram(
         self,
-        partitions: ListLike[T_Value],
-        frequencies: ListLike[int],
+        partitions: Sequence[T_Value],
+        frequencies: Sequence[int],
         is_categorical_feature: bool,
     ) -> None:
         """
