@@ -20,7 +20,6 @@ from typing import *
 import numpy as np
 import pandas as pd
 
-from gamma.common import ListLike
 from gamma.ml.crossfit import ClassifierCrossfit, LearnerCrossfit, RegressorCrossfit
 from gamma.sklearndf.transformation import FunctionTransformerDF
 from gamma.yieldengine.partition import Partitioning, T_Number
@@ -49,9 +48,9 @@ class UnivariateSimulation:
         feature: str,
         target: str,
         partitioning: Partitioning,
-        median_change: ListLike[T_Number],
-        min_change: ListLike[T_Number],
-        max_change: ListLike[T_Number],
+        median_change: Sequence[T_Number],
+        min_change: Sequence[T_Number],
+        max_change: Sequence[T_Number],
         min_percentile: float,
         max_percentile: float,
     ):
@@ -80,12 +79,12 @@ class UnivariateSimulation:
         return self._partitioning
 
     @property
-    def median_change(self) -> ListLike[T_Number]:
+    def median_change(self) -> Sequence[T_Number]:
         """Median average change determined by a simulation."""
         return self._median_change
 
     @property
-    def min_change(self) -> ListLike[T_Number]:
+    def min_change(self) -> Sequence[T_Number]:
         """
         Minimum average change, at the lower end of the confidence interval,
         determined by a simulation.
@@ -93,7 +92,7 @@ class UnivariateSimulation:
         return self._min_change
 
     @property
-    def max_change(self) -> ListLike[T_Number]:
+    def max_change(self) -> Sequence[T_Number]:
         """
         Minimum average change, at the lower end of the confidence interval,
         determined by a simulation.

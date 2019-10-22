@@ -36,8 +36,6 @@ from typing import *
 import numpy as np
 import pandas as pd
 
-from gamma.common import ListLike
-
 log = logging.getLogger(__name__)
 
 DEFAULT_MAX_PARTITIONS = 20
@@ -50,7 +48,7 @@ class Partitioning(ABC, Generic[T_Value]):
     """Partition a set of values, for use in visualizations and simulations."""
 
     @abstractmethod
-    def partitions(self) -> ListLike[T_Value]:
+    def partitions(self) -> Sequence[T_Value]:
         """
         Return central values of the partitions.
 
@@ -59,7 +57,7 @@ class Partitioning(ABC, Generic[T_Value]):
         pass
 
     @abstractmethod
-    def frequencies(self) -> ListLike[int]:
+    def frequencies(self) -> Sequence[int]:
         """
         Return the number of elements in each partitions.
 
@@ -107,7 +105,7 @@ class RangePartitioning(Partitioning[T_Number], Generic[T_Number], metaclass=ABC
 
     def __init__(
         self,
-        values: ListLike[T_Number],
+        values: Sequence[T_Number],
         max_partitions: int = DEFAULT_MAX_PARTITIONS,
         lower_bound: Optional[T_Number] = None,
         upper_bound: Optional[T_Number] = None,
@@ -151,7 +149,7 @@ class RangePartitioning(Partitioning[T_Number], Generic[T_Number], metaclass=ABC
 
         self._frequencies = _frequencies()
 
-    def partitions(self) -> ListLike[T_Number]:
+    def partitions(self) -> Sequence[T_Number]:
         """
         Return the central values of the partitions.
 
@@ -161,7 +159,7 @@ class RangePartitioning(Partitioning[T_Number], Generic[T_Number], metaclass=ABC
         step = self._step
         return [offset + (idx * step) for idx in range(self._n_partitions)]
 
-    def frequencies(self) -> ListLike[int]:
+    def frequencies(self) -> Sequence[int]:
         """
         Return the number of elements in each partitions.
 
@@ -258,7 +256,7 @@ class ContinuousRangePartitioning(RangePartitioning[float]):
 
     def __init__(
         self,
-        values: ListLike[T_Number],
+        values: Sequence[T_Number],
         max_partitions: int = DEFAULT_MAX_PARTITIONS,
         lower_bound: Optional[T_Number] = None,
         upper_bound: Optional[T_Number] = None,
@@ -315,7 +313,7 @@ class IntegerRangePartitioning(RangePartitioning[int]):
 
     def __init__(
         self,
-        values: ListLike[T_Number],
+        values: Sequence[T_Number],
         max_partitions: int = DEFAULT_MAX_PARTITIONS,
         lower_bound: Optional[T_Number] = None,
         upper_bound: Optional[T_Number] = None,
@@ -361,7 +359,7 @@ class CategoryPartitioning(Partitioning[T_Value]):
     """
 
     def __init__(
-        self, values: ListLike[T_Value], max_partitions: int = DEFAULT_MAX_PARTITIONS
+        self, values: Sequence[T_Value], max_partitions: int = DEFAULT_MAX_PARTITIONS
     ) -> None:
         super().__init__()
 
@@ -373,7 +371,7 @@ class CategoryPartitioning(Partitioning[T_Value]):
         self._frequencies = value_counts.values[:max_partitions]
         self._partitions = value_counts.index.values[:max_partitions]
 
-    def partitions(self) -> ListLike[T_Value]:
+    def partitions(self) -> Sequence[T_Value]:
         """
         The list of the :attr:`max_partitions` most frequent values.
 
@@ -381,7 +379,7 @@ class CategoryPartitioning(Partitioning[T_Value]):
           frequency"""
         return self._partitions
 
-    def frequencies(self) -> ListLike[int]:
+    def frequencies(self) -> Sequence[int]:
         """
         Return the number of elements in each partitions.
 
