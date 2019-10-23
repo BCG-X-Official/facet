@@ -276,7 +276,7 @@ class BaseLearnerRanker(
         :param sample: sample with which to fit the candidate learners from the grid(s)
         :param fit_params: any fit parameters to pass on to the learner's fit method
         """
-        self._rank_learners(sample=sample, **fit_params)
+        cast(BaseLearnerRanker, self)._rank_learners(sample=sample, **fit_params)
         return self
 
     @property
