@@ -1,6 +1,7 @@
 """
 Core implementation of :mod:`gamma.ml.selection`
 """
+
 import logging
 import re
 from abc import ABC, abstractmethod
@@ -26,7 +27,7 @@ __all__ = [
     "ParameterGrid",
     "Scoring",
     "LearnerEvaluation",
-    "LearnerRanker",
+    "BaseLearnerRanker",
     "RegressorRanker",
     "ClassifierRanker",
 ]
@@ -143,7 +144,7 @@ class LearnerEvaluation(Generic[_T_LearnerPipelineDF]):
     """
     LearnerEvaluation result for a specific parametrisation of a
     :class:`~gamma.sklearndf.pipeline.LearnerPipelineDF`, determined by a
-    :class:`~gamma.ml.selection.LearnerRanker`
+    :class:`~gamma.ml.selection.BaseLearnerRanker`
 
     :param pipeline: the unfitted :class:`~gamma.ml.LearnerPipelineDF`
     :param parameters: the hyper-parameters selected for the learner during grid \
@@ -167,7 +168,7 @@ class LearnerEvaluation(Generic[_T_LearnerPipelineDF]):
         self.ranking_score = ranking_score
 
 
-class LearnerRanker(
+class BaseLearnerRanker(
     ParallelizableMixin, ABC, Generic[_T_LearnerPipelineDF, _T_Crossfit]
 ):
     """
@@ -248,7 +249,7 @@ class LearnerRanker(
         self._cv = cv
         self._scoring = scoring
         self._ranking_scorer = (
-            LearnerRanker.default_ranking_scorer
+            BaseLearnerRanker.default_ranking_scorer
             if ranking_scorer is None
             else ranking_scorer
         )
@@ -452,7 +453,7 @@ class LearnerRanker(
             # Group results per pipeline, result is a list where each item contains the
             # scoring for one pipeline. Each scoring is a dictionary, mapping each
             # metric to a list of scores for the different splits.
-            n_models = len(cv_results[LearnerRanker._COL_PARAMETERS])
+            n_models = len(cv_results[BaseLearnerRanker._COL_PARAMETERS])
 
             scores_per_model_per_metric_per_split: List[Dict[str, List[float]]] = [
                 defaultdict(list) for _ in range(n_models)
@@ -492,7 +493,7 @@ class LearnerRanker(
             for searcher, grid in searchers
             # we read and iterate over these 3 attributes from cv_results_:
             for params, scoring in zip(
-                searcher.cv_results_[LearnerRanker._COL_PARAMETERS],
+                searcher.cv_results_[BaseLearnerRanker._COL_PARAMETERS],
                 _scoring(searcher.cv_results_),
             )
         ]
@@ -504,7 +505,9 @@ class LearnerRanker(
 
 
 class RegressorRanker(
-    LearnerRanker[_T_RegressorPipelineDF, RegressorCrossfit[_T_RegressorPipelineDF]],
+    BaseLearnerRanker[
+        _T_RegressorPipelineDF, RegressorCrossfit[_T_RegressorPipelineDF]
+    ],
     Generic[_T_RegressorPipelineDF],
 ):
     def _make_crossfit(
@@ -521,7 +524,9 @@ class RegressorRanker(
 
 
 class ClassifierRanker(
-    LearnerRanker[_T_ClassifierPipelineDF, ClassifierCrossfit[_T_ClassifierPipelineDF]],
+    BaseLearnerRanker[
+        _T_ClassifierPipelineDF, ClassifierCrossfit[_T_ClassifierPipelineDF]
+    ],
     Generic[_T_ClassifierPipelineDF],
 ):
     def _make_crossfit(
