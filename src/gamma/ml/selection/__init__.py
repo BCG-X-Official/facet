@@ -7,4 +7,4 @@ hyperparameters.
 :class:`BaseLearnerRanker` selects the best pipeline and parametrisation based on the
 pipeline and hyperparameter choices provided as a list of :class:`ModelGrid`.
 """
-from ._core import *
+from ._selection import *
