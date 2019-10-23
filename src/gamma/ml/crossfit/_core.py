@@ -1,26 +1,6 @@
-#
-# NOT FOR CLIENT USE!
-#
-# This is a pre-release library under development. Handling of IP rights is still
-# being investigated. To avoid causing any potential IP disputes or issues, DO NOT USE
-# ANY OF THIS CODE ON A CLIENT PROJECT, not even in modified form.
-#
-# Please direct any queries to any of:
-# - Jan Ittner
-# - Jörg Schneider
-# - Florent Martin
-#
-
 """
-Meta-estimators that fit an estimator multiple times for all splits of a
-cross-validator, as the basis for model evaluation and inspection.
-
-:class:`LearnerCrossfit` encapsulates a fully trained pipeline.
-It contains a :class:`.ModelPipelineDF` (preprocessing + estimator), a dataset given by a
-:class:`yieldengine.Sample` object and a
-cross-validation calibration. The pipeline is fitted accordingly.
+Core implementation of :mod:`gamma.ml.crossfit`
 """
-
 import logging
 from abc import ABC
 from typing import *
