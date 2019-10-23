@@ -199,10 +199,6 @@ class StationaryBootstrapCV(_BaseBootstrapCV):
         return train
 
 
-@deprecated(
-    message="This cross-validator will be removed from a future release. Consider "
-    "using BootstrapCV or StationaryBootstrapCV instead."
-)
 class CircularCV(BaseCrossValidator):
     """
     Rolling circular cross-validation.
@@ -217,6 +213,10 @@ class CircularCV(BaseCrossValidator):
     :param n_splits:   Number of splits to generate (default=50).
     """
 
+    @deprecated(
+        message="This cross-validator will be removed from a future release. Consider "
+        "using BootstrapCV or StationaryBootstrapCV instead."
+    )
     def __init__(self, test_ratio: float = 0.2, n_splits: int = 50) -> None:
         super().__init__()
 
