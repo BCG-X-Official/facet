@@ -8,4 +8,4 @@ It contains a :class:`.ModelPipelineDF` (preprocessing + estimator), a dataset g
 cross-validation calibration. The pipeline is fitted accordingly.
 """
 
-from ._core import *
+from ._crossfit import *

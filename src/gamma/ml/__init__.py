@@ -1,1 +1,1 @@
-from ._core import Sample
+from ._ml import Sample
