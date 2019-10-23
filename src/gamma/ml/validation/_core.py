@@ -12,8 +12,7 @@ from sklearn.utils import check_random_state
 
 from gamma.common import deprecated
 
-
-__all__ = ["BootstrapCV", "StationaryBootstrapCV"]
+__all__ = ["BootstrapCV", "CircularCV", "StationaryBootstrapCV"]
 
 
 class _BaseBootstrapCV(BaseCrossValidator):
