@@ -32,7 +32,7 @@ def test_model_ranker(
     ranker = RegressorRanker(
         grid=regressor_grids, cv=cv, scoring="r2", n_jobs=n_jobs
     ).fit(sample=sample)
-    assert isinstance(ranker.best_model_crossfit, RegressorCrossfit)
+    assert isinstance(ranker.best_model_crossfit(), RegressorCrossfit)
 
     ranking = ranker.ranking()
     assert len(ranking) > 0
