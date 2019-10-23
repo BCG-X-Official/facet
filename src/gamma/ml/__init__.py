@@ -3,16 +3,16 @@ Machine learning library for advanced model selection, validation, and inspectio
 
 Implements the following subpackages:
 
-- :module:`gamma.ml.selection`: simultaneous hyperparameter optimization for one or \
+- :mod:`gamma.ml.selection`: simultaneous hyperparameter optimization for one or \
     more scikit-learn learners
-- :module:`gamma.ml.validation`: cross-validators for bootstrapping and stationary \
+- :mod:`gamma.ml.validation`: cross-validators for bootstrapping and stationary \
     bootstrapping (in the case of time series) - both not offered natively by \
     scikit-learn
-- :module:`gamma.ml.crossfit`: a unified approach to manage multiple fits \
+- :mod:`gamma.ml.crossfit`: a unified approach to manage multiple fits \
     of the same learner across all splits of a cross-validator, enabling a range of \
     methods for model selection, inspection, and simiulation/optimization (see \
-    :module:`gamma.yieldengine`)
-- :module:`gamma.ml.inspection`: explaining the interactions of a model's features \
+    :mod:`gamma.yieldengine`)
+- :mod:`gamma.ml.inspection`: explaining the interactions of a model's features \
     with each other, and with the target variable, based on the SHAP approach
 """
 
@@ -128,6 +128,8 @@ class Sample:
         iloc: Optional[Union[slice, Sequence[int]]] = None,
     ) -> "Sample":
         """
+        Return a new sample with a subset of this sample's observations.
+
         Select observations either by indices (`loc` parameter), or integer indices
         (`iloc` parameter). Exactly one of both parameters must be provided when
         calling this method, not both or none.
@@ -153,7 +155,7 @@ class Sample:
 
     def select_features(self, features: Sequence[str]) -> "Sample":
         """
-        Return a Sample object which only includes the features with the given names.
+        Return a new sample which only includes the features with the given names.
 
         :param features: names of the features to be selected
         :return: copy of this sample, containing only the features with the given names
