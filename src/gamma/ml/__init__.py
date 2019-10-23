@@ -16,4 +16,4 @@ Implements the following subpackages:
     with each other, and with the target variable, based on the SHAP approach
 """
 
-from ._core import Sample
+from ._ml import Sample
