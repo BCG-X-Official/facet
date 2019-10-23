@@ -1,24 +1,7 @@
-#
-# NOT FOR CLIENT USE!
-#
-# This is a pre-release library under development. Handling of IP rights is still
-# being investigated. To avoid causing any potential IP disputes or issues, DO NOT USE
-# ANY OF THIS CODE ON A CLIENT PROJECT, not even in modified form.
-#
-# Please direct any queries to any of:
-# - Jan Ittner
-# - Jörg Schneider
-# - Florent Martin
-#
-
 """
-Cross-validation.
-
-:class:`BootstrapCV` performs bootstrap sampling.
-
-:class:`CircularCV` class performs cross-validation with a fixed
-test_ratio with a fix size window shifting at a constant pace = 1/num_splits.
+Core implementation of :mod:`gamma.ml.validation`
 """
+
 from abc import abstractmethod
 from typing import *
 
@@ -28,6 +11,9 @@ from sklearn.model_selection import BaseCrossValidator
 from sklearn.utils import check_random_state
 
 from gamma.common import deprecated
+
+
+__all__ = ["BootstrapCV", "StationaryBootstrapCV"]
 
 
 class _BaseBootstrapCV(BaseCrossValidator):
