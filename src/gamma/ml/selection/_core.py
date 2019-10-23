@@ -178,29 +178,8 @@ class BaseLearnerRanker(
     scoring function, performs a grid search to find the pipeline and
     hyper-parameters with the best score across all cross-validation splits.
 
-    Ranking is performed lazily when first invoking any method that depends on the
-    result of the ranking, and then cached for subsequent calls.
-
-    :param grid: :class:`~gamma.ml.ParameterGrid` to be ranked (either single grid or \
-        an iterable of multiple grids)
-    :param cv: a cross validator (e.g., \
-        :class:`~gamma.ml.validation.BootstrapCV`)
-    :param scoring: a scorer to use when doing CV within GridSearch, defaults to \
-        :meth:`.default_ranking_scorer`
-    :param ranking_scorer: scoring function used for ranking across crossfit, \
-        taking mean and standard deviation of the ranking scores_for_split and \
-        returning the overall ranking score (default: :meth:`.default_ranking_scorer`)
-    :param ranking_metric: the scoring to be used for pipeline ranking, \
-        given as a name to be used to look up the right Scoring object in the \
-        LearnerEvaluation.scoring dictionary (default: 'test_score').
-    :param n_jobs: number of jobs to use in parallel; \
-        if `None`, use joblib default (default: `None`).
-    :param shared_memory: if `True` use threads in the parallel runs. If `False` \
-        use multiprocessing (default: `False`).
-    :param pre_dispatch: number of batches to pre-dispatch; \
-        if `None`, use joblib default (default: `None`).
-    :param verbose: verbosity level used in the parallel computation; \
-        if `None`, use joblib default (default: `None`).
+    The actual ranking is calculated when invoking the :meth:`.fit` method with a \
+    sample.
     """
 
     __slots__ = [
@@ -239,6 +218,28 @@ class BaseLearnerRanker(
         pre_dispatch: str = "2*n_jobs",
         verbose: int = 0,
     ) -> None:
+        """
+        :param grid: :class:`~gamma.ml.ParameterGrid` to be ranked (either single grid or \
+            an iterable of multiple grids)
+        :param cv: a cross validator (e.g., \
+            :class:`~gamma.ml.validation.BootstrapCV`)
+        :param scoring: a scorer to use when doing CV within GridSearch, defaults to \
+            :meth:`.default_ranking_scorer`
+        :param ranking_scorer: scoring function used for ranking across crossfit, \
+            taking mean and standard deviation of the ranking scores_for_split and \
+            returning the overall ranking score (default: :meth:`.default_ranking_scorer`)
+        :param ranking_metric: the scoring to be used for pipeline ranking, \
+            given as a name to be used to look up the right Scoring object in the \
+            LearnerEvaluation.scoring dictionary (default: 'test_score').
+        :param n_jobs: number of jobs to use in parallel; \
+            if `None`, use joblib default (default: `None`).
+        :param shared_memory: if `True` use threads in the parallel runs. If `False` \
+            use multiprocessing (default: `False`).
+        :param pre_dispatch: number of batches to pre-dispatch; \
+            if `None`, use joblib default (default: `None`).
+        :param verbose: verbosity level used in the parallel computation; \
+            if `None`, use joblib default (default: `None`).
+        """
         super().__init__(
             n_jobs=n_jobs,
             shared_memory=shared_memory,
@@ -546,6 +547,10 @@ class RegressorRanker(
     ],
     Generic[_T_RegressorPipelineDF],
 ):
+    """[will inherit doc string of base class]"""
+
+    __doc__ = cast(str, BaseLearnerRanker.__doc__).replace("learner", "regressor")
+
     def _make_crossfit(
         self,
         pipeline: _T_RegressorPipelineDF,
@@ -571,6 +576,10 @@ class ClassifierRanker(
     ],
     Generic[_T_ClassifierPipelineDF],
 ):
+    """[will inherit doc string of base class]"""
+
+    __doc__ = cast(str, BaseLearnerRanker.__doc__).replace("learner", "classifier")
+
     def _make_crossfit(
         self,
         pipeline: _T_ClassifierPipelineDF,
