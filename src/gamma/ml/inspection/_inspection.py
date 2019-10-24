@@ -18,8 +18,8 @@ from gamma.common.parallelization import ParallelizableMixin
 from gamma.ml import Sample
 from gamma.ml.crossfit import ClassifierCrossfit, LearnerCrossfit, RegressorCrossfit
 from gamma.sklearndf.pipeline import (
+    BaseLearnerPipelineDF,
     ClassifierPipelineDF,
-    LearnerPipelineDF,
     RegressorPipelineDF,
 )
 from gamma.viz.dendrogram import LinkageTree
@@ -32,9 +32,9 @@ __all__ = ["BaseLearnerInspector", "ClassifierInspector", "RegressorInspector"]
 # Type variables
 #
 
-_T_LearnerPipelineDF = TypeVar("_T_LearnerPipelineDF", bound=LearnerPipelineDF)
-_T_RegressorPipelineDF = TypeVar("_T_RegressorPipelineDF", bound=RegressorPipelineDF)
-_T_ClassifierPipelineDF = TypeVar("_T_ClassifierPipelineDF", bound=ClassifierPipelineDF)
+T_LearnerPipelineDF = TypeVar("T_LearnerPipelineDF", bound=BaseLearnerPipelineDF)
+T_RegressorPipelineDF = TypeVar("T_RegressorPipelineDF", bound=RegressorPipelineDF)
+T_ClassifierPipelineDF = TypeVar("T_ClassifierPipelineDF", bound=ClassifierPipelineDF)
 
 
 #
@@ -42,7 +42,7 @@ _T_ClassifierPipelineDF = TypeVar("_T_ClassifierPipelineDF", bound=ClassifierPip
 #
 
 
-class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[_T_LearnerPipelineDF]):
+class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF]):
     """
     Inspect a pipeline through its SHAP values.
 
@@ -62,7 +62,7 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[_T_LearnerPipelineD
 
     def __init__(
         self,
-        crossfit: LearnerCrossfit[_T_LearnerPipelineDF],
+        crossfit: LearnerCrossfit[T_LearnerPipelineDF],
         explainer_factory: Optional[
             Callable[[BaseEstimator, pd.DataFrame], Explainer]
         ] = None,
@@ -90,7 +90,7 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[_T_LearnerPipelineD
         self._feature_dependency_matrix: Optional[pd.DataFrame] = None
 
     @property
-    def crossfit(self) -> LearnerCrossfit[_T_LearnerPipelineDF]:
+    def crossfit(self) -> LearnerCrossfit[T_LearnerPipelineDF]:
         """
         CV fit of the pipeline being examined by this inspector
         """
@@ -144,7 +144,7 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[_T_LearnerPipelineD
 
     @staticmethod
     def _shap_values_for_split(
-        model: _T_LearnerPipelineDF,
+        model: T_LearnerPipelineDF,
         training_sample: Sample,
         oob_split: np.ndarray,
         features_out: pd.Index,
@@ -301,7 +301,7 @@ def tree_explainer_factory(estimator: BaseEstimator, data: pd.DataFrame) -> Expl
 
 
 class RegressorInspector(
-    BaseLearnerInspector[_T_RegressorPipelineDF], Generic[_T_RegressorPipelineDF]
+    BaseLearnerInspector[T_RegressorPipelineDF], Generic[T_RegressorPipelineDF]
 ):
     """
     Inspect a regression pipeline through its SHAP values.
@@ -313,7 +313,7 @@ class RegressorInspector(
 
     def __init__(
         self,
-        crossfit: RegressorCrossfit[_T_RegressorPipelineDF],
+        crossfit: RegressorCrossfit[T_RegressorPipelineDF],
         explainer_factory: Optional[
             Callable[[BaseEstimator, pd.DataFrame], Explainer]
         ] = None,
@@ -356,7 +356,7 @@ class RegressorInspector(
 
 
 class ClassifierInspector(
-    BaseLearnerInspector[_T_ClassifierPipelineDF], Generic[_T_ClassifierPipelineDF]
+    BaseLearnerInspector[T_ClassifierPipelineDF], Generic[T_ClassifierPipelineDF]
 ):
     """
     Inspect a classification pipeline through its SHAP values.
@@ -370,7 +370,7 @@ class ClassifierInspector(
 
     def __init__(
         self,
-        crossfit: ClassifierCrossfit[_T_ClassifierPipelineDF],
+        crossfit: ClassifierCrossfit[T_ClassifierPipelineDF],
         explainer_factory: Optional[
             Callable[[BaseEstimator, pd.DataFrame], Explainer]
         ] = None,
@@ -426,7 +426,7 @@ class ClassifierInspector(
             # following:
             assert (
                 np.allclose(raw_shap_values[0], -raw_shap_values[1]),
-                ("shap_values(class 0) == -shap_values(class 1)"),
+                "shap_values(class 0) == -shap_values(class 1)",
             )
 
             # all good: proceed with SHAP values for class 0:
