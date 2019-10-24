@@ -17,7 +17,7 @@ from gamma.ml import Sample
 from gamma.ml.crossfit import ClassifierCrossfit, LearnerCrossfit, RegressorCrossfit
 from gamma.sklearndf.pipeline import (
     ClassifierPipelineDF,
-    LearnerPipelineDF,
+    BaseLearnerPipelineDF,
     RegressorPipelineDF,
 )
 
@@ -36,7 +36,7 @@ __all__ = [
 # Type variables
 #
 
-T_LearnerPipelineDF = TypeVar("T_LearnerPipelineDF", bound=LearnerPipelineDF)
+T_LearnerPipelineDF = TypeVar("T_LearnerPipelineDF", bound=BaseLearnerPipelineDF)
 T_RegressorPipelineDF = TypeVar("T_RegressorPipelineDF", bound=RegressorPipelineDF)
 T_ClassifierPipelineDF = TypeVar("T_ClassifierPipelineDF", bound=ClassifierPipelineDF)
 
@@ -142,10 +142,9 @@ class Scoring:
 class LearnerEvaluation(Generic[T_LearnerPipelineDF]):
     """
     LearnerEvaluation result for a specific parametrisation of a
-    :class:`~gamma.sklearndf.pipeline.LearnerPipelineDF`, determined by a
-    :class:`~gamma.ml.selection.BaseLearnerRanker`
+    learner pipeline, determined by a learner ranker.
 
-    :param pipeline: the unfitted :class:`~gamma.ml.LearnerPipelineDF`
+    :param pipeline: the unfitted learner pipeline
     :param parameters: the hyper-parameters selected for the learner during grid \
         search, as a mapping of parameter names to parameter values
     :param scoring: maps score names to :class:`~gamma.ml.Scoring` instances

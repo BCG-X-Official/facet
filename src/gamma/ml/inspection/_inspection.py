@@ -18,8 +18,8 @@ from gamma.common.parallelization import ParallelizableMixin
 from gamma.ml import Sample
 from gamma.ml.crossfit import ClassifierCrossfit, LearnerCrossfit, RegressorCrossfit
 from gamma.sklearndf.pipeline import (
+    BaseLearnerPipelineDF,
     ClassifierPipelineDF,
-    LearnerPipelineDF,
     RegressorPipelineDF,
 )
 from gamma.viz.dendrogram import LinkageTree
@@ -32,7 +32,7 @@ __all__ = ["BaseLearnerInspector", "ClassifierInspector", "RegressorInspector"]
 # Type variables
 #
 
-T_LearnerPipelineDF = TypeVar("T_LearnerPipelineDF", bound=LearnerPipelineDF)
+T_LearnerPipelineDF = TypeVar("T_LearnerPipelineDF", bound=BaseLearnerPipelineDF)
 T_RegressorPipelineDF = TypeVar("T_RegressorPipelineDF", bound=RegressorPipelineDF)
 T_ClassifierPipelineDF = TypeVar("T_ClassifierPipelineDF", bound=ClassifierPipelineDF)
 
@@ -426,7 +426,7 @@ class ClassifierInspector(
             # following:
             assert (
                 np.allclose(raw_shap_values[0], -raw_shap_values[1]),
-                ("shap_values(class 0) == -shap_values(class 1)"),
+                "shap_values(class 0) == -shap_values(class 1)",
             )
 
             # all good: proceed with SHAP values for class 0:
