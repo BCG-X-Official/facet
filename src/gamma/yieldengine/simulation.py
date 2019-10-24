@@ -24,7 +24,7 @@ from gamma.ml.crossfit import ClassifierCrossfit, LearnerCrossfit, RegressorCros
 from gamma.sklearndf.transformation import FunctionTransformerDF
 from gamma.yieldengine.partition import Partitioning, T_Number
 
-_T_CrossFit = TypeVar("_T_CrossFit", bound=LearnerCrossfit)
+T_CrossFit = TypeVar("T_CrossFit", bound=LearnerCrossfit)
 
 
 class UnivariateSimulation:
@@ -114,7 +114,7 @@ class UnivariateSimulation:
         return self._max_percentile
 
 
-class UnivariateSimulator(ABC, Generic[_T_CrossFit]):
+class UnivariateSimulator(ABC, Generic[T_CrossFit]):
     """
     Estimates the average change in outcome for a range of values for a given feature,
     using cross-validated crossfit for all observations in a given data sample.
@@ -133,7 +133,7 @@ class UnivariateSimulator(ABC, Generic[_T_CrossFit]):
 
     def __init__(
         self,
-        crossfit: _T_CrossFit,
+        crossfit: T_CrossFit,
         min_percentile: float = 2.5,
         max_percentile: float = 97.5,
     ):
@@ -157,7 +157,7 @@ class UnivariateSimulator(ABC, Generic[_T_CrossFit]):
         self._min_percentile = min_percentile
 
     @property
-    def crossfit(self) -> _T_CrossFit:
+    def crossfit(self) -> T_CrossFit:
         """The crossfit used for the simulation."""
         return self._crossfit
 
