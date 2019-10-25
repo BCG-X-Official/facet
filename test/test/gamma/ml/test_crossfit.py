@@ -1,4 +1,3 @@
-import hashlib
 import logging
 import warnings
 
@@ -7,6 +6,7 @@ from gamma.ml.selection import ClassifierRanker, ParameterGrid
 from gamma.ml.validation import BootstrapCV
 from gamma.sklearndf.classification import RandomForestClassifierDF
 from gamma.sklearndf.pipeline import ClassifierPipelineDF
+from test.gamma.ml import check_ranking
 
 log = logging.getLogger(__name__)
 
@@ -15,7 +15,8 @@ N_SPLITS = 10
 
 
 def test_prediction_classifier(n_jobs, iris_sample: Sample) -> None:
-    checksum_summary_report = "d1aa7a44702670a459ed11ddaa64bc46"
+    checksum_learner_scores = 1.7833490219688168
+    checksum_learner_ranks = "a8fe61f0f98c078fbcf427ad344c1749"
 
     warnings.filterwarnings("ignore", message="numpy.dtype size changed")
     warnings.filterwarnings("ignore", message="numpy.ufunc size changed")
@@ -42,9 +43,12 @@ def test_prediction_classifier(n_jobs, iris_sample: Sample) -> None:
 
     log.debug(f"\n{model_ranker.summary_report(max_learners=10)}")
 
-    assert (
-        hashlib.md5(model_ranker.summary_report().encode("utf-8")).hexdigest()
-    ) == checksum_summary_report
+    check_ranking(
+        ranking=model_ranker.ranking(),
+        checksum_scores=checksum_learner_scores,
+        checksum_learners=checksum_learner_ranks,
+        first_n_learners=10,
+    )
 
     # consider: model_with_type(...) function for ModelRanking
     crossfit = model_ranker.best_model_crossfit()
