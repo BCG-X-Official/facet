@@ -47,6 +47,6 @@ def test_prediction_classifier(n_jobs, iris_sample: Sample) -> None:
     ) == checksum_summary_report
 
     # consider: model_with_type(...) function for ModelRanking
-    crossfit = model_ranker.best_model_crossfit
+    crossfit = model_ranker.best_model_crossfit()
 
     assert crossfit.is_fitted
