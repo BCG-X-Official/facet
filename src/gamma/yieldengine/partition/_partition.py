@@ -12,6 +12,8 @@ import pandas as pd
 log = logging.getLogger(__name__)
 
 __all__ = [
+    "T_Number",
+    "T_Value",
     "DEFAULT_MAX_PARTITIONS",
     "Partitioning",
     "RangePartitioning",
@@ -23,7 +25,7 @@ __all__ = [
 DEFAULT_MAX_PARTITIONS = 20
 
 T_Value = TypeVar("T_Value")
-T_Number = TypeVar("T_Number", bound=Union[int, float])
+T_Number = TypeVar("T_Number", int, float)
 
 
 class Partitioning(ABC, Generic[T_Value]):

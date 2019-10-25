@@ -22,7 +22,7 @@ this graph there is a histogram of the feature values.
 from typing import *
 
 from gamma.viz import Drawer
-from gamma.yieldengine.partition import T_Value
+from gamma.yieldengine.partition import T_Number
 from gamma.yieldengine.simulation import UnivariateSimulation
 from gamma.yieldengine.viz._style import (
     SimulationMatplotStyle,
@@ -31,13 +31,13 @@ from gamma.yieldengine.viz._style import (
 )
 
 
-class _SimulationSeries(NamedTuple):
+class _SimulationSeries(NamedTuple, Generic[T_Number]):
     # A set of aligned series representing the simulation result
-    median_uplift: Sequence[T_Value]
-    min_uplift: Sequence[T_Value]
-    max_uplift: Sequence[T_Value]
-    partitions: Sequence[T_Value]
-    frequencies: Sequence[T_Value]
+    median_uplift: Sequence[T_Number]
+    min_uplift: Sequence[T_Number]
+    max_uplift: Sequence[T_Number]
+    partitions: Sequence[T_Number]
+    frequencies: Sequence[T_Number]
 
 
 class SimulationDrawer(Drawer[UnivariateSimulation, SimulationStyle]):
@@ -103,7 +103,9 @@ class SimulationDrawer(Drawer[UnivariateSimulation, SimulationStyle]):
             )
 
     @staticmethod
-    def _get_simulation_series(simulation: UnivariateSimulation) -> _SimulationSeries:
+    def _get_simulation_series(
+        simulation: UnivariateSimulation[T_Number]
+    ) -> _SimulationSeries[T_Number]:
         # return the simulation series for median uplift, min uplift, max uplift,
         # partitions and frequencies
         # If the partitioning of the simulation is categorical, the series are
