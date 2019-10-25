@@ -1,19 +1,7 @@
-#
-# NOT FOR CLIENT USE!
-#
-# This is a pre-release library under development. Handling of IP rights is still
-# being investigated. To avoid causing any potential IP disputes or issues, DO NOT USE
-# ANY OF THIS CODE ON A CLIENT PROJECT, not even in modified form.
-#
-# Please direct any queries to any of:
-# - Jan Ittner
-# - Jörg Schneider
-# - Florent Martin
-#
+"""
+Core implementation of :mod:`gamma.yieldengine.simulation`
+"""
 
-"""
-Univariate simulation of target uplift.
-"""
 from abc import ABC, abstractmethod
 from typing import *
 
@@ -22,9 +10,17 @@ import pandas as pd
 
 from gamma.ml.crossfit import ClassifierCrossfit, LearnerCrossfit, RegressorCrossfit
 from gamma.sklearndf.transformation import FunctionTransformerDF
-from gamma.yieldengine.partition import Partitioning, T_Number
+from gamma.yieldengine.partition import Partitioning
+
+__all__ = [
+    "UnivariateSimulation",
+    "BaseUnivariateSimulator",
+    "UnivariateUpliftSimulator",
+    "UnivariateProbabilitySimulator",
+]
 
 T_CrossFit = TypeVar("T_CrossFit", bound=LearnerCrossfit)
+T_Number = TypeVar("T_Number", bound=Union[int, float])
 
 
 class UnivariateSimulation:
@@ -114,7 +110,7 @@ class UnivariateSimulation:
         return self._max_percentile
 
 
-class UnivariateSimulator(ABC, Generic[T_CrossFit]):
+class BaseUnivariateSimulator(ABC, Generic[T_CrossFit]):
     """
     Estimates the average change in outcome for a range of values for a given feature,
     using cross-validated crossfit for all observations in a given data sample.
@@ -187,7 +183,7 @@ class UnivariateSimulator(ABC, Generic[T_CrossFit]):
         pass
 
 
-class UnivariateProbabilitySimulator(UnivariateSimulator[ClassifierCrossfit]):
+class UnivariateProbabilitySimulator(BaseUnivariateSimulator[ClassifierCrossfit]):
     """
     Univariate simulation for change in average predicted probability (CAPP) based on a
     classification model.
@@ -207,7 +203,7 @@ class UnivariateProbabilitySimulator(UnivariateSimulator[ClassifierCrossfit]):
         )
 
 
-class UnivariateUpliftSimulator(UnivariateSimulator[RegressorCrossfit]):
+class UnivariateUpliftSimulator(BaseUnivariateSimulator[RegressorCrossfit]):
     """
     Univariate simulation for target uplift based on a regression model.
     """
