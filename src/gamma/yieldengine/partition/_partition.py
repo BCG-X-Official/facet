@@ -1,42 +1,24 @@
-#
-# NOT FOR CLIENT USE!
-#
-# This is a pre-release library under development. Handling of IP rights is still
-# being investigated. To avoid causing any potential IP disputes or issues, DO NOT USE
-# ANY OF THIS CODE ON A CLIENT PROJECT, not even in modified form.
-#
-# Please direct any queries to any of:
-# - Jan Ittner
-# - Jörg Schneider
-# - Florent Martin
-#
-
 """
-Partition sets.
-
-:class:`Partitioning` partitions a set of values
-into finitely many partitions (synonym of buckets).
-:meth:`~Partitioning.frequencies` returns  an iterable of the number of
-values in the different partitions, :meth:`~Partitioning.partitions`
-returns a list of central value in each partition,
-and :attr:`~Partitioning.n_partitions` is the number of partitions.
-
-:class:`ContinuousRangePartitioning` is adapted set of floats
-
-:class:`IntegerRangePartitioning` is adapted to sets of  integers; the bounds of the
-partitions are integers
-
-:class:`CategoryPartitioning` is adapted to categorical sets
+Core implementation of :mod:`gamma.yieldengine.partition`
 """
 import logging
 import math
-from abc import ABC, ABCMeta, abstractmethod
+from abc import ABC, abstractmethod
 from typing import *
 
 import numpy as np
 import pandas as pd
 
 log = logging.getLogger(__name__)
+
+__all__ = [
+    "DEFAULT_MAX_PARTITIONS",
+    "Partitioning",
+    "RangePartitioning",
+    "ContinuousRangePartitioning",
+    "IntegerRangePartitioning",
+    "CategoryPartitioning",
+]
 
 DEFAULT_MAX_PARTITIONS = 20
 
@@ -76,7 +58,7 @@ class Partitioning(ABC, Generic[T_Value]):
         pass
 
 
-class RangePartitioning(Partitioning[T_Number], Generic[T_Number], metaclass=ABCMeta):
+class RangePartitioning(Partitioning[T_Number], ABC, Generic[T_Number]):
     """
     Partition numerical values in successive intervals of the same length.
 
