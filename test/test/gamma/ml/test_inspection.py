@@ -1,7 +1,6 @@
 """
 Model inspector tests.
 """
-import hashlib
 import logging
 import warnings
 from typing import *
@@ -25,6 +24,7 @@ from gamma.sklearndf.pipeline import ClassifierPipelineDF, RegressorPipelineDF
 from gamma.sklearndf.regression import SVRDF
 from gamma.sklearndf.regression.extra import LGBMRegressorDF
 from gamma.viz.dendrogram import DendrogramDrawer, DendrogramReportStyle
+from test.gamma.ml import check_ranking
 
 log = logging.getLogger(__name__)
 
@@ -37,7 +37,8 @@ def test_model_inspection(n_jobs, boston_sample: Sample) -> None:
     # checksums for the model inspection test - one for the LGBM, one for the SVR
     checksums_shap = (17573313757033027070, 8162147391624654332)
     checksum_corr_matrix = (15427021941901899256, 17570145586135505034)
-    checksum_summary_report = "b613538c887c11a8c091870779a42aff"
+    checksum_learner_scores = -218.87516793944133
+    checksum_learner_ranks = "0972fa60fd9beb2c1f8be21324506f4d"
 
     warnings.filterwarnings("ignore", message="numpy.dtype size changed")
     warnings.filterwarnings("ignore", message="numpy.ufunc size changed")
@@ -79,9 +80,12 @@ def test_model_inspection(n_jobs, boston_sample: Sample) -> None:
 
     log.debug(f"\n{ranker.summary_report(max_learners=10)}")
 
-    assert (
-        hashlib.md5(ranker.summary_report().encode("utf-8")).hexdigest()
-    ) == checksum_summary_report
+    check_ranking(
+        ranking=ranker.ranking(),
+        checksum_scores=checksum_learner_scores,
+        checksum_learners=checksum_learner_ranks,
+        first_n_learners=10,
+    )
 
     ranking = ranker.ranking()
 
@@ -155,7 +159,9 @@ def test_model_inspection_with_encoding(
     # define checksums for this test
     checksum_shap = 10690277977123826530
     checksum_corr_matrix = 17327858953091581982
-    checksum_summary_report = "925b6623fa1b10bee69cb179b03a6c52"
+
+    checksum_learner_scores = -7.8631
+    checksum_learner_ranks = "2d763e35c03b309994f6c8585cacb035"
 
     # define the circular cross validator with just 5 splits (to speed up testing)
     circular_cv = CircularCV(test_ratio=0.20, n_splits=5)
@@ -166,9 +172,12 @@ def test_model_inspection_with_encoding(
 
     log.debug(f"\n{ranker.summary_report(max_learners=10)}")
 
-    assert (
-        hashlib.md5(ranker.summary_report().encode("utf-8")).hexdigest()
-    ) == checksum_summary_report
+    check_ranking(
+        ranking=ranker.ranking(),
+        checksum_scores=checksum_learner_scores,
+        checksum_learners=checksum_learner_ranks,
+        first_n_learners=10,
+    )
 
     # we get the best model_evaluation which is a LGBM - for the sake of test
     # performance
@@ -237,7 +246,8 @@ def test_model_inspection_classifier(n_jobs, iris_sample: Sample) -> None:
     # define checksums for this test
     checksum_shap = 10929025296667090237
     checksum_corr_matrix = 4203011765388277947
-    checksum_summary_report = "fafa6fa2d2fe158ee87e1ea0bbc2515c"
+    checksum_learner_scores = 2.0
+    checksum_learner_ranks = "a8fe61f0f98c078fbcf427ad344c1749"
 
     # define a CV:
     # noinspection PyTypeChecker
@@ -267,11 +277,14 @@ def test_model_inspection_classifier(n_jobs, iris_sample: Sample) -> None:
 
     log.debug(f"\n{model_ranker.summary_report(max_learners=10)}")
 
-    assert (
-        hashlib.md5(model_ranker.summary_report().encode("utf-8")).hexdigest()
-    ) == checksum_summary_report
+    check_ranking(
+        ranking=model_ranker.ranking(),
+        checksum_scores=checksum_learner_scores,
+        checksum_learners=checksum_learner_ranks,
+        first_n_learners=10,
+    )
 
-    crossfit = model_ranker.best_model_crossfit
+    crossfit = model_ranker.best_model_crossfit()
 
     model_inspector = ClassifierInspector(crossfit=crossfit)
     # make and check shap value matrix

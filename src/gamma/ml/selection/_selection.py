@@ -1,25 +1,7 @@
-#
-# NOT FOR CLIENT USE!
-#
-# This is a pre-release library under development. Handling of IP rights is still
-# being investigated. To avoid causing any potential IP disputes or issues, DO NOT USE
-# ANY OF THIS CODE ON A CLIENT PROJECT, not even in modified form.
-#
-# Please direct any queries to any of:
-# - Jan Ittner
-# - Jörg Schneider
-# - Florent Martin
-#
-
 """
-ModelPipelineDF selection and hyperparameter optimisation.
-
-:class:`ParameterGrid` encapsulates a :class:`gamma.ml.ModelPipelineDF` and a grid of
-hyperparameters.
-
-:class:`LearnerRanker` selects the best pipeline and parametrisation based on the
-pipeline and hyperparameter choices provided as a list of :class:`ModelGrid`.
+Core implementation of :mod:`gamma.ml.selection`
 """
+
 import logging
 import re
 from abc import ABC, abstractmethod
@@ -35,7 +17,7 @@ from gamma.ml import Sample
 from gamma.ml.crossfit import ClassifierCrossfit, LearnerCrossfit, RegressorCrossfit
 from gamma.sklearndf.pipeline import (
     ClassifierPipelineDF,
-    LearnerPipelineDF,
+    BaseLearnerPipelineDF,
     RegressorPipelineDF,
 )
 
@@ -45,7 +27,7 @@ __all__ = [
     "ParameterGrid",
     "Scoring",
     "LearnerEvaluation",
-    "LearnerRanker",
+    "BaseLearnerRanker",
     "RegressorRanker",
     "ClassifierRanker",
 ]
@@ -54,21 +36,20 @@ __all__ = [
 # Type variables
 #
 
-_T_LearnerPipelineDF = TypeVar("T_LearnerPipelineDF", bound=LearnerPipelineDF)
-_T_RegressorPipelineDF = TypeVar("_T_RegressorPipelineDF", bound=RegressorPipelineDF)
-_T_ClassifierPipelineDF = TypeVar("_T_ClassifierPipelineDF", bound=ClassifierPipelineDF)
+T_LearnerPipelineDF = TypeVar("T_LearnerPipelineDF", bound=BaseLearnerPipelineDF)
+T_RegressorPipelineDF = TypeVar("T_RegressorPipelineDF", bound=RegressorPipelineDF)
+T_ClassifierPipelineDF = TypeVar("T_ClassifierPipelineDF", bound=ClassifierPipelineDF)
 
-_T_Crossfit = TypeVar("T_PredictionCV", bound=LearnerCrossfit[_T_LearnerPipelineDF])
+T_LearnerCrossfit = TypeVar("T_Crossfit", bound=LearnerCrossfit[T_LearnerPipelineDF])
 
-# noinspection PyShadowingBuiltins
-_T = TypeVar("_T")
+T = TypeVar("T")
 
 #
 # Class definitions
 #
 
 
-class ParameterGrid(Generic[_T_LearnerPipelineDF]):
+class ParameterGrid(Generic[T_LearnerPipelineDF]):
     """
     A grid of hyper-parameters for pipeline tuning.
 
@@ -83,7 +64,7 @@ class ParameterGrid(Generic[_T_LearnerPipelineDF]):
 
     def __init__(
         self,
-        pipeline: _T_LearnerPipelineDF,
+        pipeline: T_LearnerPipelineDF,
         learner_parameters: Dict[str, Sequence[Any]],
         preprocessing_parameters: Optional[Dict[str, Sequence[Any]]] = None,
     ) -> None:
@@ -113,7 +94,7 @@ class ParameterGrid(Generic[_T_LearnerPipelineDF]):
         self._grid = dict(grid_parameters)
 
     @property
-    def pipeline(self) -> _T_LearnerPipelineDF:
+    def pipeline(self) -> T_LearnerPipelineDF:
         """
         The :class:`~gamma.ml.EstimatorPipelineDF` for which to optimise the
         parameters.
@@ -158,13 +139,12 @@ class Scoring:
         return self._split_scores.std()
 
 
-class LearnerEvaluation(Generic[_T_LearnerPipelineDF]):
+class LearnerEvaluation(Generic[T_LearnerPipelineDF]):
     """
     LearnerEvaluation result for a specific parametrisation of a
-    :class:`~gamma.sklearndf.pipeline.LearnerPipelineDF`, determined by a
-    :class:`~gamma.ml.selection.LearnerRanker`
+    learner pipeline, determined by a learner ranker.
 
-    :param pipeline: the unfitted :class:`~gamma.ml.LearnerPipelineDF`
+    :param pipeline: the unfitted learner pipeline
     :param parameters: the hyper-parameters selected for the learner during grid \
         search, as a mapping of parameter names to parameter values
     :param scoring: maps score names to :class:`~gamma.ml.Scoring` instances
@@ -174,7 +154,7 @@ class LearnerEvaluation(Generic[_T_LearnerPipelineDF]):
 
     def __init__(
         self,
-        pipeline: _T_LearnerPipelineDF,
+        pipeline: T_LearnerPipelineDF,
         parameters: Mapping[str, Any],
         scoring: Mapping[str, Scoring],
         ranking_score: float,
@@ -186,8 +166,8 @@ class LearnerEvaluation(Generic[_T_LearnerPipelineDF]):
         self.ranking_score = ranking_score
 
 
-class LearnerRanker(
-    ParallelizableMixin, ABC, Generic[_T_LearnerPipelineDF, _T_Crossfit]
+class BaseLearnerRanker(
+    ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF, T_LearnerCrossfit]
 ):
     """
     Rank different parametrisations of one or more learners using cross-validation.
@@ -196,29 +176,8 @@ class LearnerRanker(
     scoring function, performs a grid search to find the pipeline and
     hyper-parameters with the best score across all cross-validation splits.
 
-    Ranking is performed lazily when first invoking any method that depends on the
-    result of the ranking, and then cached for subsequent calls.
-
-    :param grid: :class:`~gamma.ml.ParameterGrid` to be ranked (either single grid or \
-        an iterable of multiple grids)
-    :param cv: a cross validator (e.g., \
-        :class:`~gamma.ml.validation.BootstrapCV`)
-    :param scoring: a scorer to use when doing CV within GridSearch, defaults to \
-        :meth:`.default_ranking_scorer`
-    :param ranking_scorer: scoring function used for ranking across crossfit, \
-        taking mean and standard deviation of the ranking scores_for_split and \
-        returning the overall ranking score (default: :meth:`.default_ranking_scorer`)
-    :param ranking_metric: the scoring to be used for pipeline ranking, \
-        given as a name to be used to look up the right Scoring object in the \
-        LearnerEvaluation.scoring dictionary (default: 'test_score').
-    :param n_jobs: number of jobs to use in parallel; \
-        if `None`, use joblib default (default: `None`).
-    :param shared_memory: if `True` use threads in the parallel runs. If `False` \
-        use multiprocessing (default: `False`).
-    :param pre_dispatch: number of batches to pre-dispatch; \
-        if `None`, use joblib default (default: `None`).
-    :param verbose: verbosity level used in the parallel computation; \
-        if `None`, use joblib default (default: `None`).
+    The actual ranking is calculated when invoking the :meth:`.fit` method with a \
+    sample.
     """
 
     __slots__ = [
@@ -238,8 +197,8 @@ class LearnerRanker(
     def __init__(
         self,
         grid: Union[
-            ParameterGrid[_T_LearnerPipelineDF],
-            Iterable[ParameterGrid[_T_LearnerPipelineDF]],
+            ParameterGrid[T_LearnerPipelineDF],
+            Iterable[ParameterGrid[T_LearnerPipelineDF]],
         ],
         cv: Optional[BaseCrossValidator],
         scoring: Union[
@@ -257,6 +216,28 @@ class LearnerRanker(
         pre_dispatch: str = "2*n_jobs",
         verbose: int = 0,
     ) -> None:
+        """
+        :param grid: :class:`~gamma.ml.ParameterGrid` to be ranked (either single grid or \
+            an iterable of multiple grids)
+        :param cv: a cross validator (e.g., \
+            :class:`~gamma.ml.validation.BootstrapCV`)
+        :param scoring: a scorer to use when doing CV within GridSearch, defaults to \
+            :meth:`.default_ranking_scorer`
+        :param ranking_scorer: scoring function used for ranking across crossfit, \
+            taking mean and standard deviation of the ranking scores_for_split and \
+            returning the overall ranking score (default: :meth:`.default_ranking_scorer`)
+        :param ranking_metric: the scoring to be used for pipeline ranking, \
+            given as a name to be used to look up the right Scoring object in the \
+            LearnerEvaluation.scoring dictionary (default: 'test_score').
+        :param n_jobs: number of jobs to use in parallel; \
+            if `None`, use joblib default (default: `None`).
+        :param shared_memory: if `True` use threads in the parallel runs. If `False` \
+            use multiprocessing (default: `False`).
+        :param pre_dispatch: number of batches to pre-dispatch; \
+            if `None`, use joblib default (default: `None`).
+        :param verbose: verbosity level used in the parallel computation; \
+            if `None`, use joblib default (default: `None`).
+        """
         super().__init__(
             n_jobs=n_jobs,
             shared_memory=shared_memory,
@@ -267,7 +248,7 @@ class LearnerRanker(
         self._cv = cv
         self._scoring = scoring
         self._ranking_scorer = (
-            LearnerRanker.default_ranking_scorer
+            BaseLearnerRanker.default_ranking_scorer
             if ranking_scorer is None
             else ranking_scorer
         )
@@ -275,6 +256,7 @@ class LearnerRanker(
 
         # initialise state
         self._sample: Optional[Sample] = None
+        self._fit_params: Optional[Dict[str, Any]] = None
         self._ranking: Optional[List[LearnerEvaluation]] = None
 
     @staticmethod
@@ -289,12 +271,12 @@ class LearnerRanker(
         """
         return scoring.mean() - 2 * scoring.std()
 
-    def fit(self: _T, sample: Sample, **fit_params) -> _T:
+    def fit(self: T, sample: Sample, **fit_params) -> T:
         """
         :param sample: sample with which to fit the candidate learners from the grid(s)
         :param fit_params: any fit parameters to pass on to the learner's fit method
         """
-        self._rank_learners(sample=sample, **fit_params)
+        cast(BaseLearnerRanker, self)._rank_learners(sample=sample, **fit_params)
         return self
 
     @property
@@ -306,7 +288,7 @@ class LearnerRanker(
         if not self.is_fitted:
             raise RuntimeError("expected ranker to be fitted")
 
-    def ranking(self) -> List[LearnerEvaluation[_T_LearnerPipelineDF]]:
+    def ranking(self) -> List[LearnerEvaluation[T_LearnerPipelineDF]]:
         """
         :return a ranking of all learners that were evaluated based on the parameter
         grids passed to this ranker, in descending order of the ranking score.
@@ -315,20 +297,46 @@ class LearnerRanker(
         return self._ranking.copy()
 
     @property
-    def best_model(self) -> _T_LearnerPipelineDF:
+    def best_model(self) -> T_LearnerPipelineDF:
         """
         The pipeline which obtained the best ranking score, fitted on the entire sample
         """
         return self._best_pipeline().fit(X=self._sample.features, y=self._sample.target)
 
-    @property
-    def best_model_crossfit(self) -> _T_Crossfit:
+    def best_model_crossfit(
+        self,
+        cv: Optional[BaseCrossValidator] = None,
+        n_jobs: Optional[int] = None,
+        shared_memory: Optional[bool] = None,
+        pre_dispatch: Optional[str] = None,
+        verbose: Optional[int] = None,
+    ) -> T_LearnerCrossfit:
         """
-        The fitted crossfit for the best model
+        The crossfit for the best model, fitted with the same sample and fit
+        parameters used to fit this ranker.
+
+        :param cv: the cross-validator to use for generating the crossfit (default: \
+            use this ranker's cross-validator)
+        :param n_jobs: number of threads to use \
+            (default: inherit this ranker's setting)
+        :param shared_memory: whether to use threading with shared memory \
+            (default: inherit this ranker's setting)
+        :param pre_dispatch: maximum number of the data to make \
+            (default: inherit this ranker's setting)
+        :param verbose: verbosity of parallel processing \
+            (default: inherit this ranker's setting)
         """
-        return self._make_crossfit(pipeline=self._best_pipeline()).fit(
-            sample=self._sample
-        )
+
+        return self._make_crossfit(
+            pipeline=self._best_pipeline(),
+            cv=self._cv if cv is None else cv,
+            n_jobs=self.n_jobs if n_jobs is None else n_jobs,
+            shared_memory=self.shared_memory
+            if shared_memory is None
+            else shared_memory,
+            pre_dispatch=self.pre_dispatch if pre_dispatch is None else pre_dispatch,
+            verbose=self.verbose if verbose is None else verbose,
+        ).fit(sample=self._sample, **self._fit_params)
 
     def summary_report(self, max_learners: Optional[int] = None) -> str:
         """
@@ -381,13 +389,21 @@ class LearnerRanker(
             ]
         )
 
-    def _best_pipeline(self) -> _T_LearnerPipelineDF:
+    def _best_pipeline(self) -> T_LearnerPipelineDF:
         # return the unfitted model with the best parametrisation
         self._ensure_fitted()
         return self._ranking[0].pipeline
 
     @abstractmethod
-    def _make_crossfit(self, pipeline: _T_LearnerPipelineDF) -> _T_Crossfit:
+    def _make_crossfit(
+        self,
+        pipeline: T_LearnerPipelineDF,
+        cv: BaseCrossValidator,
+        n_jobs: int,
+        shared_memory: bool,
+        pre_dispatch: str,
+        verbose: int,
+    ) -> T_LearnerCrossfit:
         pass
 
     def _rank_learners(self, sample: Sample, **fit_params) -> None:
@@ -471,7 +487,7 @@ class LearnerRanker(
             # Group results per pipeline, result is a list where each item contains the
             # scoring for one pipeline. Each scoring is a dictionary, mapping each
             # metric to a list of scores for the different splits.
-            n_models = len(cv_results[LearnerRanker._COL_PARAMETERS])
+            n_models = len(cv_results[BaseLearnerRanker._COL_PARAMETERS])
 
             scores_per_model_per_metric_per_split: List[Dict[str, List[float]]] = [
                 defaultdict(list) for _ in range(n_models)
@@ -511,7 +527,7 @@ class LearnerRanker(
             for searcher, grid in searchers
             # we read and iterate over these 3 attributes from cv_results_:
             for params, scoring in zip(
-                searcher.cv_results_[LearnerRanker._COL_PARAMETERS],
+                searcher.cv_results_[BaseLearnerRanker._COL_PARAMETERS],
                 _scoring(searcher.cv_results_),
             )
         ]
@@ -519,16 +535,27 @@ class LearnerRanker(
         ranking.sort(key=lambda validation: validation.ranking_score, reverse=True)
 
         self._sample = sample
+        self._fit_params = fit_params
         self._ranking = ranking
 
 
 class RegressorRanker(
-    LearnerRanker[_T_RegressorPipelineDF, RegressorCrossfit[_T_RegressorPipelineDF]],
-    Generic[_T_RegressorPipelineDF],
+    BaseLearnerRanker[T_RegressorPipelineDF, RegressorCrossfit[T_RegressorPipelineDF]],
+    Generic[T_RegressorPipelineDF],
 ):
+    """[will inherit doc string of base class]"""
+
+    __doc__ = cast(str, BaseLearnerRanker.__doc__).replace("learner", "regressor")
+
     def _make_crossfit(
-        self, pipeline: _T_RegressorPipelineDF
-    ) -> RegressorCrossfit[_T_RegressorPipelineDF]:
+        self,
+        pipeline: T_RegressorPipelineDF,
+        cv: BaseCrossValidator,
+        n_jobs: int,
+        shared_memory: bool,
+        pre_dispatch: str,
+        verbose: int,
+    ) -> RegressorCrossfit[T_RegressorPipelineDF]:
         return RegressorCrossfit(
             base_estimator=pipeline,
             cv=self._cv,
@@ -540,12 +567,24 @@ class RegressorRanker(
 
 
 class ClassifierRanker(
-    LearnerRanker[_T_ClassifierPipelineDF, ClassifierCrossfit[_T_ClassifierPipelineDF]],
-    Generic[_T_ClassifierPipelineDF],
+    BaseLearnerRanker[
+        T_ClassifierPipelineDF, ClassifierCrossfit[T_ClassifierPipelineDF]
+    ],
+    Generic[T_ClassifierPipelineDF],
 ):
+    """[will inherit doc string of base class]"""
+
+    __doc__ = cast(str, BaseLearnerRanker.__doc__).replace("learner", "classifier")
+
     def _make_crossfit(
-        self, pipeline: _T_ClassifierPipelineDF
-    ) -> ClassifierCrossfit[_T_ClassifierPipelineDF]:
+        self,
+        pipeline: T_ClassifierPipelineDF,
+        cv,
+        n_jobs,
+        shared_memory,
+        pre_dispatch,
+        verbose,
+    ) -> ClassifierCrossfit[T_ClassifierPipelineDF]:
         return ClassifierCrossfit(
             base_estimator=pipeline,
             cv=self._cv,
