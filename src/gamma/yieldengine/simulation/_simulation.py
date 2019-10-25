@@ -10,7 +10,7 @@ import pandas as pd
 
 from gamma.ml.crossfit import ClassifierCrossfit, LearnerCrossfit, RegressorCrossfit
 from gamma.sklearndf.transformation import FunctionTransformerDF
-from gamma.yieldengine.partition import Partitioning
+from gamma.yieldengine.partition import Partitioning, T_Number
 
 __all__ = [
     "UnivariateSimulation",
@@ -20,10 +20,9 @@ __all__ = [
 ]
 
 T_CrossFit = TypeVar("T_CrossFit", bound=LearnerCrossfit)
-T_Number = TypeVar("T_Number", bound=Union[int, float])
 
 
-class UnivariateSimulation:
+class UnivariateSimulation(Generic[T_Number]):
     """
     Summary result of a univariate simulation.
 
