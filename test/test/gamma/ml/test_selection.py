@@ -24,7 +24,9 @@ log = logging.getLogger(__name__)
 def test_model_ranker(
     batch_table: pd.DataFrame, regressor_grids, sample: Sample, n_jobs
 ) -> None:
-    checksum_summary_report = "56b12490ff257bf083a47863c960cec6"
+
+    checksum_learner_scores = 4.9944
+    checksum_learner_ranks = "97a4b0f59f52daab7b6d223075267548"
 
     # define the circular cross validator with just 5 splits (to speed up testing)
     cv = BootstrapCV(n_splits=5, random_state=42)
@@ -53,8 +55,29 @@ def test_model_ranker(
         )
 
     assert (
-        hashlib.md5(ranker.summary_report().encode("utf-8")).hexdigest()
-    ) == checksum_summary_report
+        round(
+            sum(
+                [
+                    round(learner_eval.ranking_score, 4)
+                    for learner_eval in ranker.ranking()[:10]
+                ]
+            ),
+            4,
+        )
+        == checksum_learner_scores
+    )
+
+    assert (
+        hashlib.md5(
+            "".join(
+                [
+                    str(learner_eval.pipeline.final_estimator)
+                    for learner_eval in ranker.ranking()[:10]
+                ]
+            ).encode("UTF-8")
+        ).hexdigest()
+        == checksum_learner_ranks
+    )
 
 
 def test_model_ranker_no_preprocessing(n_jobs) -> None:

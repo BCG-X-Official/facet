@@ -155,7 +155,9 @@ def test_model_inspection_with_encoding(
     # define checksums for this test
     checksum_shap = 10690277977123826530
     checksum_corr_matrix = 17327858953091581982
-    checksum_summary_report = "925b6623fa1b10bee69cb179b03a6c52"
+
+    checksum_learner_scores = -7.8632
+    checksum_learner_ranks = "2d763e35c03b309994f6c8585cacb035"
 
     # define the circular cross validator with just 5 splits (to speed up testing)
     circular_cv = CircularCV(test_ratio=0.20, n_splits=5)
@@ -167,8 +169,29 @@ def test_model_inspection_with_encoding(
     log.debug(f"\n{ranker.summary_report(max_learners=10)}")
 
     assert (
-        hashlib.md5(ranker.summary_report().encode("utf-8")).hexdigest()
-    ) == checksum_summary_report
+        round(
+            sum(
+                [
+                    round(learner_eval.ranking_score, 4)
+                    for learner_eval in ranker.ranking()[:10]
+                ]
+            ),
+            4,
+        )
+        == checksum_learner_scores
+    )
+
+    assert (
+        hashlib.md5(
+            "".join(
+                [
+                    str(learner_eval.pipeline.final_estimator)
+                    for learner_eval in ranker.ranking()[:10]
+                ]
+            ).encode("UTF-8")
+        ).hexdigest()
+        == checksum_learner_ranks
+    )
 
     # we get the best model_evaluation which is a LGBM - for the sake of test
     # performance
