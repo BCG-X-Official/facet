@@ -29,7 +29,7 @@ from shap import KernelExplainer, TreeExplainer
 from shap.explainers.explainer import Explainer
 from sklearn.base import BaseEstimator
 
-from gamma.common import ListLike
+from gamma.common import deprecated
 from gamma.common.parallelization import ParallelizableMixin
 from gamma.ml import Sample
 from gamma.ml.crossfit import ClassifierCrossfit, LearnerCrossfit, RegressorCrossfit
@@ -166,7 +166,7 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[_T_LearnerPipelineD
         features_out: pd.Index,
         explainer_factory_fn: Callable[[BaseEstimator, pd.DataFrame], Explainer],
         shap_matrix_for_split_to_df_fn: Callable[
-            [Union[np.ndarray, List[np.ndarray]], ListLike, ListLike], pd.DataFrame
+            [Union[np.ndarray, List[np.ndarray]], Sequence, Sequence], pd.DataFrame
         ],
     ):
 
@@ -195,8 +195,8 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[_T_LearnerPipelineD
     @abstractmethod
     def _shap_matrix_for_split_to_df(
         raw_shap_values: Union[np.ndarray, List[np.ndarray]],
-        index: ListLike,
-        columns: ListLike,
+        index: Sequence,
+        columns: Sequence,
     ) -> pd.DataFrame:
         """
         Convert the SHAP matrix for a single split to a data frame.
@@ -238,7 +238,17 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[_T_LearnerPipelineD
 
         return self._feature_dependency_matrix
 
+    @deprecated(
+        message="method cluster_dependent_features has been replaced by method "
+        "feature_dependency_linkage and will be removed in a future version."
+    )
     def cluster_dependent_features(self) -> LinkageTree:
+        """
+        Deprecated. Use :meth:`~.feature_dependency_linkage` instead.
+        """
+        return self.feature_dependency_linkage()
+
+    def feature_dependency_linkage(self) -> LinkageTree:
         """
         Return the :class:`.LinkageTree` based on the `feature_dependency_matrix`.
 
@@ -339,8 +349,8 @@ class RegressorInspector(
     @staticmethod
     def _shap_matrix_for_split_to_df(
         raw_shap_values: Union[np.ndarray, List[np.ndarray]],
-        index: ListLike,
-        columns: ListLike,
+        index: Sequence,
+        columns: Sequence,
     ) -> pd.DataFrame:
         """
         Convert the SHAP matrix for a single split to a data frame.
@@ -396,8 +406,8 @@ class ClassifierInspector(
     @staticmethod
     def _shap_matrix_for_split_to_df(
         raw_shap_values: Union[np.ndarray, List[np.ndarray]],
-        index: ListLike,
-        columns: ListLike,
+        index: Sequence,
+        columns: Sequence,
     ) -> pd.DataFrame:
         """
         Convert the SHAP matrix for a single split to a data frame.
