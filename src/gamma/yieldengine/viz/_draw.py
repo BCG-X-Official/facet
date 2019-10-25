@@ -31,7 +31,7 @@ from gamma.yieldengine.viz._style import (
 )
 
 
-class _SimulationSeries(NamedTuple, Generic[T_Number]):
+class _SimulationSeries(NamedTuple):
     # A set of aligned series representing the simulation result
     median_uplift: Sequence[T_Number]
     min_uplift: Sequence[T_Number]
@@ -103,9 +103,7 @@ class SimulationDrawer(Drawer[UnivariateSimulation, SimulationStyle]):
             )
 
     @staticmethod
-    def _get_simulation_series(
-        simulation: UnivariateSimulation[T_Number]
-    ) -> _SimulationSeries[T_Number]:
+    def _get_simulation_series(simulation: UnivariateSimulation) -> _SimulationSeries:
         # return the simulation series for median uplift, min uplift, max uplift,
         # partitions and frequencies
         # If the partitioning of the simulation is categorical, the series are
