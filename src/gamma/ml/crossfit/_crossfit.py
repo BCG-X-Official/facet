@@ -52,10 +52,10 @@ class BaseCrossfit(ParallelizableMixin, ABC, Generic[T_EstimatorDF]):
         self,
         base_estimator: T_EstimatorDF,
         cv: BaseCrossValidator,
-        n_jobs: Optional[int],
-        shared_memory: bool,
-        pre_dispatch: Optional[Union[str, int]],
-        verbose: Optional[int],
+        n_jobs: Optional[int] = None,
+        shared_memory: Optional[bool] = None,
+        pre_dispatch: Optional[Union[str, int]] = None,
+        verbose: Optional[int] = None,
     ) -> None:
         super().__init__(
             n_jobs=n_jobs,
@@ -174,10 +174,10 @@ class LearnerCrossfit(BaseCrossfit[T_LearnerDF], ABC, Generic[T_LearnerDF]):
         self,
         base_estimator: T_LearnerDF,
         cv: BaseCrossValidator,
-        n_jobs: Optional[int],
-        shared_memory: bool,
-        pre_dispatch: Optional[Union[str, int]],
-        verbose: Optional[int],
+        n_jobs: Optional[int] = None,
+        shared_memory: Optional[bool] = None,
+        pre_dispatch: Optional[Union[str, int]] = None,
+        verbose: Optional[int] = None,
     ) -> None:
         super().__init__(
             base_estimator=base_estimator,
@@ -215,23 +215,7 @@ class LearnerCrossfit(BaseCrossfit[T_LearnerDF], ABC, Generic[T_LearnerDF]):
 
 
 class RegressorCrossfit(LearnerCrossfit[T_RegressorDF], Generic[T_RegressorDF]):
-    def __init__(
-        self,
-        base_estimator: T_RegressorDF,
-        cv: BaseCrossValidator,
-        n_jobs: Optional[int] = None,
-        shared_memory: bool = False,
-        pre_dispatch: Optional[Union[str, int]] = None,
-        verbose: Optional[int] = None,
-    ):
-        super().__init__(
-            base_estimator=base_estimator,
-            cv=cv,
-            n_jobs=n_jobs,
-            shared_memory=shared_memory,
-            pre_dispatch=pre_dispatch,
-            verbose=verbose,
-        )
+    pass
 
 
 class ClassifierCrossfit(LearnerCrossfit[T_ClassifierDF], Generic[T_ClassifierDF]):
@@ -242,24 +226,6 @@ class ClassifierCrossfit(LearnerCrossfit[T_ClassifierDF], Generic[T_ClassifierDF
     __PROBA = "proba"
     __LOG_PROBA = "log_proba"
     __DECISION_FUNCTION = "decision_function"
-
-    def __init__(
-        self,
-        base_estimator: T_ClassifierDF,
-        cv: BaseCrossValidator,
-        n_jobs: Optional[int] = None,
-        shared_memory: bool = False,
-        pre_dispatch: Optional[Union[str, int]] = None,
-        verbose: Optional[int] = None,
-    ):
-        super().__init__(
-            base_estimator=base_estimator,
-            cv=cv,
-            n_jobs=n_jobs,
-            shared_memory=shared_memory,
-            pre_dispatch=pre_dispatch,
-            verbose=verbose,
-        )
 
     def _probabilities_oob(
         self, sample: Sample
