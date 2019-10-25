@@ -1,4 +1,3 @@
-import hashlib
 import logging
 import warnings
 
@@ -17,6 +16,7 @@ from gamma.ml.selection import (
 from gamma.ml.validation import BootstrapCV
 from gamma.sklearndf.classification import SVCDF
 from gamma.sklearndf.pipeline import ClassifierPipelineDF
+from test.gamma.ml import check_ranking
 
 log = logging.getLogger(__name__)
 
@@ -25,7 +25,7 @@ def test_model_ranker(
     batch_table: pd.DataFrame, regressor_grids, sample: Sample, n_jobs
 ) -> None:
 
-    checksum_learner_scores = 4.9944
+    checksum_learner_scores = 4.994168961240268
     checksum_learner_ranks = "97a4b0f59f52daab7b6d223075267548"
 
     # define the circular cross validator with just 5 splits (to speed up testing)
@@ -54,34 +54,17 @@ def test_model_ranker(
             validation.pipeline.get_params()
         )
 
-    assert (
-        round(
-            sum(
-                [
-                    round(learner_eval.ranking_score, 4)
-                    for learner_eval in ranker.ranking()[:10]
-                ]
-            ),
-            4,
-        )
-        == checksum_learner_scores
-    )
-
-    assert (
-        hashlib.md5(
-            "".join(
-                [
-                    str(learner_eval.pipeline.final_estimator)
-                    for learner_eval in ranker.ranking()[:10]
-                ]
-            ).encode("UTF-8")
-        ).hexdigest()
-        == checksum_learner_ranks
+    check_ranking(
+        ranking=ranker.ranking(),
+        checksum_scores=checksum_learner_scores,
+        checksum_learners=checksum_learner_ranks,
+        first_n_learners=10,
     )
 
 
 def test_model_ranker_no_preprocessing(n_jobs) -> None:
-    checksum_summary_report = "ad5210fce846d5eac2a38dee014a9648"
+    checksum_learner_scores = 3.6520651615505493
+    checksum_learner_ranks = "616a57e7656951a9109bf425be50ee34"
 
     warnings.filterwarnings("ignore", message="numpy.dtype size changed")
     warnings.filterwarnings("ignore", message="numpy.ufunc size changed")
@@ -114,9 +97,12 @@ def test_model_ranker_no_preprocessing(n_jobs) -> None:
 
     log.debug(f"\n{model_ranker.summary_report(max_learners=10)}")
 
-    assert (
-        hashlib.md5(model_ranker.summary_report().encode("utf-8")).hexdigest()
-    ) == checksum_summary_report
+    check_ranking(
+        ranking=model_ranker.ranking(),
+        checksum_scores=checksum_learner_scores,
+        checksum_learners=checksum_learner_ranks,
+        first_n_learners=10,
+    )
 
     assert (
         model_ranker.ranking()[0].ranking_score >= 0.8
