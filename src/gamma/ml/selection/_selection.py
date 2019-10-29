@@ -12,12 +12,13 @@ from typing import *
 import numpy as np
 from sklearn.model_selection import BaseCrossValidator, GridSearchCV
 
+from gamma.common.fit import FittableMixin
 from gamma.common.parallelization import ParallelizableMixin
 from gamma.ml import Sample
 from gamma.ml.crossfit import ClassifierCrossfit, LearnerCrossfit, RegressorCrossfit
 from gamma.sklearndf.pipeline import (
-    ClassifierPipelineDF,
     BaseLearnerPipelineDF,
+    ClassifierPipelineDF,
     RegressorPipelineDF,
 )
 
@@ -167,7 +168,10 @@ class LearnerEvaluation(Generic[T_LearnerPipelineDF]):
 
 
 class BaseLearnerRanker(
-    ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF, T_LearnerCrossfit]
+    ParallelizableMixin,
+    FittableMixin[Sample],
+    ABC,
+    Generic[T_LearnerPipelineDF, T_LearnerCrossfit],
 ):
     """
     Rank different parametrisations of one or more learners using cross-validation.
@@ -273,6 +277,9 @@ class BaseLearnerRanker(
 
     def fit(self: T, sample: Sample, **fit_params) -> T:
         """
+        Rank the candidate learners and their hyper-parameter combinations using the
+        given sample.
+
         :param sample: sample with which to fit the candidate learners from the grid(s)
         :param fit_params: any fit parameters to pass on to the learner's fit method
         """
@@ -283,10 +290,6 @@ class BaseLearnerRanker(
     def is_fitted(self) -> bool:
         """`True` if this ranker is fitted, `False` otherwise."""
         return self._sample is not None
-
-    def _ensure_fitted(self) -> None:
-        if not self.is_fitted:
-            raise RuntimeError("expected ranker to be fitted")
 
     def ranking(self) -> List[LearnerEvaluation[T_LearnerPipelineDF]]:
         """
