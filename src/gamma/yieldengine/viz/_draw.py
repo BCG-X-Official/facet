@@ -86,7 +86,7 @@ class SimulationDrawer(Drawer[UnivariateSimulation, SimulationStyle]):
             target=data.target,
             min_percentile=data.min_percentile,
             max_percentile=data.max_percentile,
-            is_categorical_feature=data.partitioning.is_categorical,
+            is_categorical_feature=data.partitioner.is_categorical,
             partitions=simulation_series.partitions,
             frequencies=simulation_series.frequencies,
             median_uplift=simulation_series.median_uplift,
@@ -99,7 +99,7 @@ class SimulationDrawer(Drawer[UnivariateSimulation, SimulationStyle]):
             self._style.draw_histogram(
                 partitions=simulation_series.partitions,
                 frequencies=simulation_series.frequencies,
-                is_categorical_feature=data.partitioning.is_categorical,
+                is_categorical_feature=data.partitioner.is_categorical,
             )
 
     @staticmethod
@@ -114,11 +114,11 @@ class SimulationDrawer(Drawer[UnivariateSimulation, SimulationStyle]):
             simulation.median_change,
             simulation.min_change,
             simulation.max_change,
-            simulation.partitioning.partitions(),
-            simulation.partitioning.frequencies(),
+            simulation.partitioner.partitions(),
+            simulation.partitioner.frequencies(),
         )
 
-        if simulation.partitioning.is_categorical:
+        if simulation.partitioner.is_categorical:
             # for categorical features, sort the categories by the median uplift
             return _SimulationSeries(
                 *zip(*sorted(zip(*simulation_series), key=lambda x: x[0]))

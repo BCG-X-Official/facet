@@ -10,7 +10,7 @@ import pandas as pd
 
 from gamma.ml.crossfit import ClassifierCrossfit, LearnerCrossfit, RegressorCrossfit
 from gamma.sklearndf.transformation import FunctionTransformerDF
-from gamma.yieldengine.partition import Partitioning, T_Number
+from gamma.yieldengine.partition import Partitioner, T_Number
 
 __all__ = [
     "UnivariateSimulation",
@@ -42,7 +42,7 @@ class UnivariateSimulation(Generic[T_Number]):
         self,
         feature: str,
         target: str,
-        partitioning: Partitioning,
+        partitioning: Partitioner,
         median_change: Sequence[T_Number],
         min_change: Sequence[T_Number],
         max_change: Sequence[T_Number],
@@ -69,8 +69,8 @@ class UnivariateSimulation(Generic[T_Number]):
         return self._target
 
     @property
-    def partitioning(self) -> Partitioning:
-        """The partition of ``feature`` used for the simulation."""
+    def partitioner(self) -> Partitioner:
+        """The partitioner generating the feature values to be simulated."""
         return self._partitioning
 
     @property
@@ -171,13 +171,13 @@ class BaseUnivariateSimulator(ABC, Generic[T_CrossFit]):
         return self._max_percentile
 
     @abstractmethod
-    def simulate_feature(self, name: str, partitioning: Partitioning):
+    def simulate_feature(self, name: str, partitioner: Partitioner):
         """
         Simulate the average impact on the target when fixing the value of the given
         feature across all observations.
 
         :param name: the feature to run the simulation for
-        :param partitioning: the partitioning of feature values to run simulations for
+        :param partitioner: the partitioner of feature values to run simulations for
         """
         pass
 
@@ -188,13 +188,13 @@ class UnivariateProbabilitySimulator(BaseUnivariateSimulator[ClassifierCrossfit]
     classification model.
     """
 
-    def simulate_feature(self, name: str, partitioning: Partitioning):
+    def simulate_feature(self, name: str, partitioner: Partitioner):
         """
         Simulate the average change in probability when fixing the
         value of the given feature across all observations.
 
         :param name: the feature to run the simulation for
-        :param partitioning: the partitioning of feature values to run simulations for
+        :param partitioner: the partitioner of feature values to run simulations for
         """
         raise NotImplementedError(
             "simulation of average change in probability will be included in a future "
@@ -212,14 +212,14 @@ class UnivariateUpliftSimulator(BaseUnivariateSimulator[RegressorCrossfit]):
     _COL_ABSOLUTE_TARGET_CHANGE = "absolute_target_change"
 
     def simulate_feature(
-        self, name: str, partitioning: Partitioning
+        self, name: str, partitioner: Partitioner
     ) -> UnivariateSimulation:
         """
         Simulate the average target uplift when fixing the value of the given feature
         across all observations.
 
         :param name: the feature to run the simulation for
-        :param partitioning: the partitioning of feature values to run simulations for
+        :param partitioner: the partitioner of feature values to run simulations for
         """
 
         sample = self.crossfit.training_sample
@@ -228,7 +228,7 @@ class UnivariateUpliftSimulator(BaseUnivariateSimulator[RegressorCrossfit]):
         if not isinstance(target, pd.Series):
             raise NotImplementedError("multi-target simulations are not supported")
 
-        simulated_values = partitioning.partitions()
+        simulated_values = partitioner.fit(sample.features.loc[:, name]).partitions()
         predicted_change = self._aggregate_simulation_results(
             results_per_split=self._simulate_feature_with_values(
                 feature_name=name, simulated_values=simulated_values
@@ -237,7 +237,7 @@ class UnivariateUpliftSimulator(BaseUnivariateSimulator[RegressorCrossfit]):
         return UnivariateSimulation(
             feature=name,
             target=target.name,
-            partitioning=partitioning,
+            partitioning=partitioner,
             median_change=predicted_change.iloc[:, 1].values,
             min_change=predicted_change.iloc[:, 0].values,
             max_change=predicted_change.iloc[:, 2].values,
