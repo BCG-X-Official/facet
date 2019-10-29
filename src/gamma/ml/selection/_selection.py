@@ -546,7 +546,7 @@ class RegressorRanker(
     BaseLearnerRanker[T_RegressorPipelineDF, RegressorCrossfit[T_RegressorPipelineDF]],
     Generic[T_RegressorPipelineDF],
 ):
-    """[will inherit doc string of base class]"""
+    """[inheriting doc string of base class]"""
 
     __doc__ = cast(str, BaseLearnerRanker.__doc__).replace("learner", "regressor")
 
@@ -575,7 +575,7 @@ class ClassifierRanker(
     ],
     Generic[T_ClassifierPipelineDF],
 ):
-    """[will inherit doc string of base class]"""
+    """[inheriting doc string of base class]"""
 
     __doc__ = cast(str, BaseLearnerRanker.__doc__).replace("learner", "classifier")
 
