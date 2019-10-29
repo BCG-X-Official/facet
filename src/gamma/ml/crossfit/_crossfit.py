@@ -8,6 +8,7 @@ from typing import *
 import pandas as pd
 from sklearn.model_selection import BaseCrossValidator
 
+from gamma.common.fit import FittableMixin
 from gamma.common.parallelization import ParallelizableMixin
 from gamma.ml import Sample
 from gamma.sklearndf import BaseEstimatorDF, BaseLearnerDF, ClassifierDF, RegressorDF
@@ -23,7 +24,9 @@ T_ClassifierDF = TypeVar("T_ClassifierDF", bound=ClassifierDF)
 T_RegressorDF = TypeVar("T_RegressorDF", bound=RegressorDF)
 
 
-class BaseCrossfit(ParallelizableMixin, ABC, Generic[T_EstimatorDF]):
+class BaseCrossfit(
+    FittableMixin[Sample], ParallelizableMixin, ABC, Generic[T_EstimatorDF]
+):
     """
     Fits an estimator to all train splits of a given cross-validation strategy.
 
@@ -131,10 +134,6 @@ class BaseCrossfit(ParallelizableMixin, ABC, Generic[T_EstimatorDF]):
         """The sample used to train this crossfit."""
         self._ensure_fitted()
         return self._training_sample
-
-    def _ensure_fitted(self) -> None:
-        if self._training_sample is None:
-            raise RuntimeError(f"{type(self).__name__} expected to be fitted")
 
     # noinspection PyPep8Naming
     @staticmethod
