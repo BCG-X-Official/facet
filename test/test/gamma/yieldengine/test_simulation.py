@@ -11,7 +11,7 @@ from gamma.ml import Sample
 from gamma.ml.selection import ParameterGrid, RegressorRanker
 from gamma.ml.validation import StationaryBootstrapCV
 from gamma.sklearndf import TransformerDF
-from gamma.yieldengine.partition import ContinuousRangePartitioning
+from gamma.yieldengine.partition import ContinuousRangePartitioner
 from gamma.yieldengine.simulation import UnivariateUpliftSimulator
 
 log = logging.getLogger(__name__)
@@ -44,9 +44,9 @@ def test_univariate_simulation(
 
     res = simulator._simulate_feature_with_values(
         feature_name=parameterized_feature,
-        simulated_values=ContinuousRangePartitioning(
-            values=sample.features.loc[:, parameterized_feature]
-        ).partitions(),
+        simulated_values=ContinuousRangePartitioner()
+        .fit(values=sample.features.loc[:, parameterized_feature])
+        .partitions(),
     )
 
     log.debug(res)

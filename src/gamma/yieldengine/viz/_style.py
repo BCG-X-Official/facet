@@ -142,10 +142,8 @@ class SimulationMatplotStyle(MatplotStyle, SimulationStyle):
         # draw the mean predicted uplift, showing median and confidence ranges for
         # each prediction
         if is_categorical_feature:
-            # x = list(range(len(partitioning)))
             x = range(len(partitions))
         else:
-            # x = partitioning.partitions()
             x = partitions
         ax = self.ax
         line_min, = ax.plot(x, min_uplift, color=self._COLOR_CONFIDENCE)
