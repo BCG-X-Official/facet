@@ -5,7 +5,9 @@ import logging
 from abc import ABC
 from typing import *
 
+import numpy as np
 import pandas as pd
+from numpy.random.mtrand import RandomState
 from sklearn.model_selection import BaseCrossValidator
 
 from gamma.common.fit import FittableMixin
@@ -17,7 +19,7 @@ log = logging.getLogger(__name__)
 
 __all__ = ["BaseCrossfit", "LearnerCrossfit", "RegressorCrossfit", "ClassifierCrossfit"]
 
-T = TypeVar("T")
+T = TypeVar("T", bound="BaseCrossFit")
 T_EstimatorDF = TypeVar("T_EstimatorDF", bound=BaseEstimatorDF)
 T_LearnerDF = TypeVar("T_LearnerDF", bound=BaseLearnerDF)
 T_ClassifierDF = TypeVar("T_ClassifierDF", bound=ClassifierDF)
@@ -29,17 +31,6 @@ class BaseCrossfit(
 ):
     """
     Fits an estimator to all train splits of a given cross-validation strategy.
-
-    :param base_estimator: predictive pipeline to be fitted
-    :param cv: the cross validator generating the train splits
-    :param n_jobs: number of jobs to use in parallel; \
-        if `None`, use joblib default (default: `None`).
-    :param shared_memory: if `True` use threads in the parallel runs. If `False` \
-        use multiprocessing (default: `False`).
-    :param pre_dispatch: number of batches to pre-dispatch; \
-        if `None`, use joblib default (default: `None`).
-    :param verbose: verbosity level used in the parallel computation; \
-        if `None`, use joblib default (default: `None`).
     """
 
     __slots__ = [
@@ -55,11 +46,22 @@ class BaseCrossfit(
         self,
         base_estimator: T_EstimatorDF,
         cv: BaseCrossValidator,
+        shuffle_features: Optional[bool] = None,
+        random_state: Union[int, RandomState, None] = None,
         n_jobs: Optional[int] = None,
         shared_memory: Optional[bool] = None,
         pre_dispatch: Optional[Union[str, int]] = None,
         verbose: Optional[int] = None,
     ) -> None:
+        f"""
+        :param base_estimator: predictive pipeline to be fitted
+        :param cv: the cross validator generating the train splits
+        :param shuffle_features: if `True`, shuffle column order of features for every \
+            crossfit (default: `True`)
+        :param random_state: optional random seed or random state for shuffling the \
+            feature column order
+        {ParallelizableMixin.__init__.__doc__}
+        """
         super().__init__(
             n_jobs=n_jobs,
             shared_memory=shared_memory,
@@ -68,9 +70,12 @@ class BaseCrossfit(
         )
         self.base_estimator = base_estimator
         self.cv = cv
+        self.shuffle_features = True if shuffle_features is None else shuffle_features
+        self.random_state = random_state
 
         self._model_by_split: Optional[List[T_EstimatorDF]] = None
         self._training_sample: Optional[Sample] = None
+        self._feature_order_by_split: Optional[List[np.ndarray]] = None
 
     def fit(self: T, sample: Sample, **fit_params) -> T:
         """
@@ -89,7 +94,8 @@ class BaseCrossfit(
 
         base_estimator.fit(X=sample.features, y=sample.target, **fit_params)
 
-        train_splits, test_splits = tuple(zip(*self_typed.cv.split(features, target)))
+        if self_typed.shuffle_features:
+            raise NotImplementedError("feature shuffling not yet implemented")
 
         with self_typed._parallel() as parallel:
             self._model_by_split: List[T_EstimatorDF] = parallel(
@@ -99,7 +105,7 @@ class BaseCrossfit(
                     target.iloc[train_indices],
                     **fit_params,
                 )
-                for train_indices in train_splits
+                for train_indices, _ in self_typed.cv.split(features, target)
             )
 
         self_typed._training_sample = sample
@@ -157,13 +163,6 @@ class LearnerCrossfit(BaseCrossfit[T_LearnerDF], ABC, Generic[T_LearnerDF]):
     """
     Generate cross-validated prediction for each observation in a sample, based on
     multiple fits of a learner across a collection of cross-validation splits
-
-    :param base_estimator: predictive pipeline to be fitted
-    :param cv: the cross validator generating the train splits
-    :param n_jobs: number of jobs to _rank_learners in parallel (default: 1)
-    :param shared_memory: if ``True`` use threading in the parallel runs. If `False`, \
-      use multiprocessing
-    :param verbose: verbosity level used in the parallel computation
     """
 
     COL_SPLIT_ID = "split_id"
@@ -173,6 +172,8 @@ class LearnerCrossfit(BaseCrossfit[T_LearnerDF], ABC, Generic[T_LearnerDF]):
         self,
         base_estimator: T_LearnerDF,
         cv: BaseCrossValidator,
+        shuffle_features: Optional[bool] = None,
+        random_state: Union[int, RandomState, None] = None,
         n_jobs: Optional[int] = None,
         shared_memory: Optional[bool] = None,
         pre_dispatch: Optional[Union[str, int]] = None,
@@ -181,6 +182,8 @@ class LearnerCrossfit(BaseCrossfit[T_LearnerDF], ABC, Generic[T_LearnerDF]):
         super().__init__(
             base_estimator=base_estimator,
             cv=cv,
+            shuffle_features=shuffle_features,
+            random_state=random_state,
             n_jobs=n_jobs,
             shared_memory=shared_memory,
             pre_dispatch=pre_dispatch,
