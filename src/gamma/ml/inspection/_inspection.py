@@ -252,9 +252,7 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF
 
         # select only the features that appear in the distance matrix, and in the
         # correct order
-        feature_importances = feature_importances.loc[
-            feature_importances.index.intersection(feature_distance_matrix.index)
-        ]
+        feature_importances = feature_importances.reindex(feature_distance_matrix.index)
 
         # build and return the linkage tree
         return LinkageTree(
