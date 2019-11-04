@@ -204,7 +204,7 @@ class SimulationMatplotStyle(MatplotStyle, SimulationStyle):
 
             def _x_axis_height() -> float:
                 _, axis_below_size_pixels = main_ax.get_xaxis().get_text_heights(
-                    self._renderer
+                    self.renderer
                 )
                 ((_, y0), (_, y1)) = main_ax.transData.inverted().transform(
                     ((0, 0), (0, axis_below_size_pixels))
