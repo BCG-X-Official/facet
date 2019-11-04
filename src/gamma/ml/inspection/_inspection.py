@@ -421,13 +421,12 @@ class ClassifierInspector(
             # for class 0, since values for class 1 will just be the same
             # values times (*-1)  (the opposite probability)
 
-            # to assure the values are returned as expected above,
+            # to ensure the values are returned as expected above,
             # and no information of class 1 is discarded, assert the
             # following:
-            assert (
-                np.allclose(raw_shap_values[0], -raw_shap_values[1]),
-                "shap_values(class 0) == -shap_values(class 1)",
-            )
+            assert np.allclose(
+                raw_shap_values[0], -raw_shap_values[1]
+            ), "shap_values(class 0) == -shap_values(class 1)"
 
             # all good: proceed with SHAP values for class 0:
             raw_shap_values = raw_shap_values[0]
