@@ -263,7 +263,7 @@ class SimulationMatplotStyle(MatplotStyle, SimulationStyle):
                 ax.text(
                     x=x,
                     y=y + label_vertical_offset,
-                    s=y,
+                    s=str(y),
                     horizontalalignment="center",
                     verticalalignment="top",
                 )
