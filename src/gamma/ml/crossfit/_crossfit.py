@@ -173,6 +173,7 @@ class LearnerCrossfit(BaseCrossfit[T_LearnerDF], ABC, Generic[T_LearnerDF]):
         self,
         base_estimator: T_LearnerDF,
         cv: BaseCrossValidator,
+        *,
         n_jobs: Optional[int] = None,
         shared_memory: Optional[bool] = None,
         pre_dispatch: Optional[Union[str, int]] = None,
