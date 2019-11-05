@@ -26,7 +26,12 @@ from gamma.viz.dendrogram import LinkageTree
 
 log = logging.getLogger(__name__)
 
-__all__ = ["BaseLearnerInspector", "ClassifierInspector", "RegressorInspector"]
+__all__ = [
+    "ExplainerFactory",
+    "BaseLearnerInspector",
+    "ClassifierInspector",
+    "RegressorInspector",
+]
 
 #
 # Type variables
@@ -38,6 +43,18 @@ T_ClassifierPipelineDF = TypeVar("T_ClassifierPipelineDF", bound=ClassifierPipel
 
 
 #
+# Type definitions
+#
+
+ExplainerFactory = Callable[[BaseEstimator, pd.DataFrame], Explainer]
+
+ShapToDataFrameFunction = Callable[
+    [List[np.ndarray], np.ndarray, pd.Index], List[pd.DataFrame]
+]
+
+InteractionsToDataFrameFunction = ShapToDataFrameFunction
+
+#
 # Class definitions
 #
 
@@ -45,10 +62,6 @@ T_ClassifierPipelineDF = TypeVar("T_ClassifierPipelineDF", bound=ClassifierPipel
 class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF]):
     """
     Inspect a pipeline through its SHAP values.
-
-    :param crossfit: predictor containing the information about the
-      pipeline, the data (a Sample object), the cross-validation and crossfit.
-    :param explainer_factory: calibration that returns a shap Explainer
     """
 
     __slots__ = [
@@ -58,19 +71,20 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF
         "_explainer_factory",
     ]
 
-    COL_FEATURE = "feature"
-
     def __init__(
         self,
         crossfit: LearnerCrossfit[T_LearnerPipelineDF],
-        explainer_factory: Optional[
-            Callable[[BaseEstimator, pd.DataFrame], Explainer]
-        ] = None,
         *,
-        n_jobs: int = 1,
-        shared_memory: bool = True,
-        verbose: int = 0,
+        explainer_factory: Optional[ExplainerFactory] = None,
+        n_jobs: Optional[int] = None,
+        shared_memory: Optional[bool] = None,
+        verbose: Optional[int] = None,
     ) -> None:
+        """
+        :param crossfit: predictor containing the information about the
+          pipeline, the data (a Sample object), the cross-validation and crossfit.
+        :param explainer_factory: calibration that returns a shap Explainer
+        """
         super().__init__(n_jobs=n_jobs, shared_memory=shared_memory, verbose=verbose)
 
         if not crossfit.is_fitted:
@@ -87,7 +101,10 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF
         self.verbose = verbose
 
         self._shap_matrix: Optional[pd.DataFrame] = None
+        self._interaction_matrix: Optional[pd.DataFrame] = None
         self._feature_dependency_matrix: Optional[pd.DataFrame] = None
+
+    __init__.__doc__ += ParallelizableMixin.__init__.__doc__
 
     @property
     def crossfit(self) -> LearnerCrossfit[T_LearnerPipelineDF]:
@@ -101,7 +118,8 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF
         Calculate the SHAP matrix for all splits.
 
         Each row is an observation in a specific test split, and each column is a
-        feature, and values are the SHAP values per observation/split and feature.
+        feature. Values are the SHAP values per observation, calculated as the mean
+        SHAP value across all splits that contain the observation.
 
         :return: shap matrix as a data frame
         """
@@ -112,11 +130,11 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF
         crossfit = self.crossfit
         shap_matrix_for_split_to_df_fn = self._shap_matrix_for_split_to_df
         explainer_factory_fn = self._explainer_factory
-        features_out = (
+        feature_columns: pd.Index = (
             crossfit.base_estimator.preprocessing.features_out
             if crossfit.base_estimator.preprocessing is not None
             else crossfit.base_estimator.features_in
-        )
+        ).rename(Sample.COL_FEATURE)
 
         training_sample = crossfit.training_sample
 
@@ -126,7 +144,7 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF
                     model,
                     training_sample,
                     oob_split,
-                    features_out,
+                    feature_columns,
                     explainer_factory_fn,
                     shap_matrix_for_split_to_df_fn,
                 )
@@ -142,18 +160,62 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF
 
         return self._shap_matrix
 
+    def interaction_matrix(self) -> pd.DataFrame:
+        """
+        Calculate the SHAP interaction matrix for all splits.
+
+        Each row is an observation in a specific test split, and each column is a
+        combination of two features. Values are the SHAP interaction values per
+        observation, calculated as the mean SHAP interaction value across all splits
+        that contain the observation.
+
+        :return: SHAP interaction matrix as a data frame
+        """
+        if self._interaction_matrix is not None:
+            return self._interaction_matrix
+
+        crossfit = self.crossfit
+        interaction_matrix_for_split_to_df_fn = self._interaction_matrix_for_split_to_df
+        explainer_factory_fn = self._explainer_factory
+        features_out: pd.Index = (
+            crossfit.base_estimator.preprocessing.features_out
+            if crossfit.base_estimator.preprocessing is not None
+            else crossfit.base_estimator.features_in
+        ).rename(Sample.COL_FEATURE)
+
+        training_sample = crossfit.training_sample
+
+        with self._parallel() as parallel:
+            interaction_values_df_for_splits = parallel(
+                self._delayed(BaseLearnerInspector._interaction_values_for_split)(
+                    model,
+                    training_sample,
+                    oob_split,
+                    features_out,
+                    explainer_factory_fn,
+                    interaction_matrix_for_split_to_df_fn,
+                )
+                for model, (_train_split, oob_split) in zip(
+                    crossfit.models(), crossfit.splits()
+                )
+            )
+
+        interaction_values_df = pd.concat(interaction_values_df_for_splits)
+
+        # Group SHAP matrix by observation ID and feature, and aggregate using mean()
+        self._interaction_matrix = interaction_values_df.groupby(level=(0, 1)).mean()
+
+        return self._interaction_matrix
+
     @staticmethod
     def _shap_values_for_split(
         model: T_LearnerPipelineDF,
         training_sample: Sample,
         oob_split: np.ndarray,
-        features_out: pd.Index,
-        explainer_factory_fn: Callable[[BaseEstimator, pd.DataFrame], Explainer],
-        shap_matrix_for_split_to_df_fn: Callable[
-            [Union[np.ndarray, List[np.ndarray]], Sequence, Sequence], pd.DataFrame
-        ],
+        feature_columns: pd.Index,
+        explainer_factory_fn: ExplainerFactory,
+        shap_matrix_for_split_to_df_fn: ShapToDataFrameFunction,
     ):
-
         # get the features of all out-of-bag observations
         x_oob = training_sample.subsample(loc=oob_split).features
 
@@ -162,33 +224,144 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF
             x_oob = model.preprocessing.transform(x_oob)
 
         # calculate the shap values (returned as an ndarray)
-        shap_values_ndarray = explainer_factory_fn(
+        shap_values = explainer_factory_fn(
             model.final_estimator.root_estimator, x_oob
         ).shap_values(x_oob)
 
-        # convert to a data frame (different logic depending on whether we have a
-        # regressor or a classifier)
-        shap_values_df = shap_matrix_for_split_to_df_fn(
-            shap_values_ndarray, oob_split, x_oob.columns
-        )
+        target = training_sample.target
 
-        # reindex to add missing columns and fill n/a values with zero shap importance
-        return shap_values_df.reindex(columns=features_out).fillna(0.0)
+        if isinstance(shap_values, np.ndarray):
+            # if we have a single target, the explainer will have returned a single
+            # tensor as an ndarray
+            shap_values: List[np.ndarray] = [shap_values]
+
+        if isinstance(target, pd.Series):
+            target_names = [target.name]
+        else:
+            target_names = target.columns.values
+
+        # convert to a data frame per target (different logic depending on whether we
+        # have a regressor or a classifier)
+        shap_values_df: List[pd.DataFrame] = [
+            shap.reindex(columns=feature_columns).fillna(0.0)
+            for shap in shap_matrix_for_split_to_df_fn(
+                shap_values, oob_split, x_oob.columns
+            )
+        ]
+
+        # if we have a single target, return that target; else, add a top level to the
+        # column index indicating each target
+        if len(shap_values_df) == 1:
+            return shap_values_df[0]
+        else:
+            return pd.concat(
+                shap_values_df, axis=1, keys=target_names, names=[Sample.COL_TARGET]
+            )
 
     @staticmethod
     @abstractmethod
     def _shap_matrix_for_split_to_df(
-        raw_shap_values: Union[np.ndarray, List[np.ndarray]],
-        index: Sequence,
-        columns: Sequence,
-    ) -> pd.DataFrame:
+        raw_shap_matrix: List[np.ndarray],
+        observations: np.ndarray,
+        features_in_split: pd.Index,
+    ) -> List[pd.DataFrame]:
         """
         Convert the SHAP matrix for a single split to a data frame.
 
-        :param raw_shap_values: the raw values returned by the SHAP explainer
-        :param index: index of the transformed data the pipeline was trained on
-        :param columns: columns of the transformed data the pipeline was trained on
+        :param raw_shap_matrix: the raw values returned by the SHAP explainer
+        :param observations: the ids used for indexing the explained observations
+        :param features_in_split: the features in the current split, \
+            explained by the SHAP explainer
         :return: SHAP matrix of a single split as data frame
+        """
+        pass
+
+    @staticmethod
+    def _interaction_values_for_split(
+        model: T_LearnerPipelineDF,
+        training_sample: Sample,
+        oob_split: np.ndarray,
+        features_out: pd.Index,
+        explainer_factory_fn: ExplainerFactory,
+        interaction_matrix_for_split_to_df_fn: InteractionsToDataFrameFunction,
+    ) -> pd.DataFrame:
+        # get the features of all out-of-bag observations
+        x_oob = training_sample.subsample(loc=oob_split).features
+
+        # pre-process the features
+        if model.preprocessing is not None:
+            x_oob = model.preprocessing.transform(x_oob)
+
+        # calculate the shap values (returned as an ndarray)
+        explainer = explainer_factory_fn(model.final_estimator.root_estimator, x_oob)
+
+        try:
+            # noinspection PyUnresolvedReferences
+            shap_interaction_values_fn = explainer.shap_interaction_values
+        except AttributeError:
+            raise RuntimeError(
+                "Explainer does not implement method shap_interaction_values"
+            )
+
+        shap_interaction_tensors: Union[
+            np.ndarray, List[np.ndarray]
+        ] = shap_interaction_values_fn(x_oob)
+
+        target = training_sample.target
+
+        if isinstance(shap_interaction_tensors, np.ndarray):
+            # if we have a single target, the explainer will have returned a single
+            # tensor as an ndarray
+            shap_interaction_tensors: List[np.ndarray] = [shap_interaction_tensors]
+
+        if isinstance(target, pd.Series):
+            target_names = [target.name]
+        else:
+            target_names = target.columns.values
+
+        # convert to a data frame per target (different logic depending on whether we
+        # have a regressor or a classifier)
+        # reindex the interaction matrices to ensure all features are included
+        interaction_matrix_per_target: List[pd.DataFrame] = [
+            interaction_matrix_df.reindex(
+                index=pd.MultiIndex.from_product(
+                    iterables=(interaction_matrix_df.index.levels[0], features_out),
+                    names=(training_sample.index.name, Sample.COL_FEATURE),
+                ),
+                columns=features_out,
+            ).fillna(0.0)
+            for interaction_matrix_df in interaction_matrix_for_split_to_df_fn(
+                shap_interaction_tensors, oob_split, x_oob.columns
+            )
+        ]
+
+        # if we have a single target, return that target; else, add a top level to the
+        # column index indicating each target
+        if len(interaction_matrix_per_target) == 1:
+            return interaction_matrix_per_target[0]
+        else:
+            return pd.concat(
+                interaction_matrix_per_target,
+                axis=1,
+                keys=target_names,
+                names=[Sample.COL_TARGET],
+            )
+
+    @staticmethod
+    @abstractmethod
+    def _interaction_matrix_for_split_to_df(
+        raw_interaction_tensors: List[np.ndarray],
+        observations: np.ndarray,
+        features_in_split: pd.Index,
+    ) -> List[pd.DataFrame]:
+        """
+        Convert the SHAP interaction matrix for a single split to a data frame.
+
+        :param raw_interaction_tensors: the raw values returned by the SHAP explainer
+        :param observations: the ids used for indexing the explained observations
+        :param features_in_split: the features in the current split, \
+            explained by the SHAP explainer
+        :return: SHAP interaction matrix of a single split as data frame
         """
         pass
 
@@ -303,23 +476,22 @@ class RegressorInspector(
 ):
     """
     Inspect a regression pipeline through its SHAP values.
-
-    :param crossfit: regressor containing the information about the pipeline, \
-        the data (a Sample object), the cross-validation and crossfit.
-    :param explainer_factory: calibration that returns a shap Explainer
     """
 
     def __init__(
         self,
         crossfit: RegressorCrossfit[T_RegressorPipelineDF],
-        explainer_factory: Optional[
-            Callable[[BaseEstimator, pd.DataFrame], Explainer]
-        ] = None,
         *,
-        n_jobs: int = 1,
-        shared_memory: bool = True,
-        verbose: int = 0,
+        explainer_factory: Optional[ExplainerFactory] = None,
+        n_jobs: Optional[int] = None,
+        shared_memory: Optional[bool] = None,
+        verbose: Optional[int] = None,
     ) -> None:
+        """
+        :param crossfit: regressor containing the information about the pipeline, \
+            the data (a Sample object), the cross-validation and crossfit.
+        :param explainer_factory: calibration that returns a shap Explainer
+        """
         super().__init__(
             crossfit=crossfit,
             explainer_factory=explainer_factory,
@@ -328,29 +500,40 @@ class RegressorInspector(
             verbose=verbose,
         )
 
+    __init__.__doc__ += ParallelizableMixin.__init__.__doc__
+
     @staticmethod
     def _shap_matrix_for_split_to_df(
-        raw_shap_values: Union[np.ndarray, List[np.ndarray]],
-        index: Sequence,
-        columns: Sequence,
-    ) -> pd.DataFrame:
-        """
-        Convert the SHAP matrix for a single split to a data frame.
+        raw_shap_matrices: List[np.ndarray],
+        observations: np.ndarray,
+        features_in_split: pd.Index,
+    ) -> List[pd.DataFrame]:
 
-        :param raw_shap_values: the raw values returned by the SHAP explainer
-        :param index: index of the transformed data the pipeline was trained on
-        :param columns: columns of the transformed data the pipeline was trained on
-        :return: SHAP matrix of a single split as data frame
-        """
-
-        # In the regression case, only ndarray outputs are expected from SHAP:
-        if not isinstance(raw_shap_values, np.ndarray):
-            raise ValueError(
-                "shap explainer output expected to be an ndarray but was "
-                f"{type(raw_shap_values)}"
+        return [
+            pd.DataFrame(
+                data=raw_shap_matrix, index=observations, columns=features_in_split
             )
+            for raw_shap_matrix in raw_shap_matrices
+        ]
 
-        return pd.DataFrame(data=raw_shap_values, index=index, columns=columns)
+    @staticmethod
+    def _interaction_matrix_for_split_to_df(
+        raw_interaction_tensors: List[np.ndarray],
+        observations: np.ndarray,
+        features_in_split: pd.Index,
+    ) -> List[pd.DataFrame]:
+        row_index = pd.MultiIndex.from_product((observations, features_in_split))
+
+        return [
+            pd.DataFrame(
+                data=raw_interaction_tensor.reshape(
+                    (-1, raw_interaction_tensor.shape[2])
+                ),
+                index=row_index,
+                columns=features_in_split,
+            )
+            for raw_interaction_tensor in raw_interaction_tensors
+        ]
 
 
 class ClassifierInspector(
@@ -360,23 +543,22 @@ class ClassifierInspector(
     Inspect a classification pipeline through its SHAP values.
 
     Currently only binary, single-output classification problems are supported.
-
-    :param crossfit: classifier containing the information about the pipeline, \
-        the data (a Sample object), the cross-validation and crossfit.
-    :param explainer_factory: calibration that returns a shap Explainer
     """
 
     def __init__(
         self,
         crossfit: ClassifierCrossfit[T_ClassifierPipelineDF],
-        explainer_factory: Optional[
-            Callable[[BaseEstimator, pd.DataFrame], Explainer]
-        ] = None,
         *,
-        n_jobs: int = 1,
-        shared_memory: bool = True,
-        verbose: int = 0,
+        explainer_factory: Optional[ExplainerFactory] = None,
+        n_jobs: Optional[int] = None,
+        shared_memory: Optional[bool] = None,
+        verbose: Optional[int] = None,
     ) -> None:
+        """
+        :param crossfit: classifier containing the information about the pipeline, \
+            the data (a Sample object), the cross-validation and crossfit.
+        :param explainer_factory: function that returns a shap Explainer
+        """
         super().__init__(
             crossfit=crossfit,
             explainer_factory=explainer_factory,
@@ -385,55 +567,55 @@ class ClassifierInspector(
             verbose=verbose,
         )
 
+    __init__.__doc__ += ParallelizableMixin.__init__.__doc__
+
     @staticmethod
     def _shap_matrix_for_split_to_df(
-        raw_shap_values: Union[np.ndarray, List[np.ndarray]],
-        index: Sequence,
-        columns: Sequence,
-    ) -> pd.DataFrame:
-        """
-        Convert the SHAP matrix for a single split to a data frame.
+        raw_shap_matrix: List[np.ndarray],
+        observations: np.ndarray,
+        features_in_split: pd.Index,
+    ) -> List[pd.DataFrame]:
 
-        :param raw_shap_values: the raw values returned by the SHAP explainer
-        :param index: index of the transformed data the pipeline was trained on
-        :param columns: columns of the transformed data the pipeline was trained on
-        :return: SHAP matrix of a single split as data frame
-        """
-
-        # todo: adapt this calibration (and override others) to support non-binary
+        # todo: adapt this function (and override others) to support non-binary
         #   classification
 
-        if isinstance(raw_shap_values, list):
-            # the shap explainer returned an array [obs x features] for each of the
-            # target-classes
+        # the shap explainer returned an array [obs x features] for each of the
+        # target-classes
 
-            n_arrays = len(raw_shap_values)
+        n_arrays = len(raw_shap_matrix)
 
-            # we decided to support only binary classification == 2 classes:
-            assert n_arrays == 2, (
-                "classification pipeline inspection only supports binary classifiers, "
-                f"but SHAP analysis returned values for {n_arrays} classes"
+        # we decided to support only binary classification == 2 classes:
+        assert n_arrays == 2, (
+            "classification pipeline inspection only supports binary classifiers, "
+            f"but SHAP analysis returned values for {n_arrays} classes"
+        )
+
+        # in the binary classification case, we will proceed with SHAP values
+        # for class 0, since values for class 1 will just be the same
+        # values times (*-1)  (the opposite probability)
+
+        # to ensure the values are returned as expected above,
+        # and no information of class 1 is discarded, assert the
+        # following:
+        assert np.allclose(
+            raw_shap_matrix[0], -raw_shap_matrix[1]
+        ), "shap_values(class 0) == -shap_values(class 1)"
+
+        # all good: proceed with SHAP values for class 0:
+        raw_shap_matrix = raw_shap_matrix[0]
+
+        return [
+            pd.DataFrame(
+                data=raw_shap_matrix, index=observations, columns=features_in_split
             )
+        ]
 
-            # in the binary classification case, we will proceed with SHAP values
-            # for class 0, since values for class 1 will just be the same
-            # values times (*-1)  (the opposite probability)
-
-            # to ensure the values are returned as expected above,
-            # and no information of class 1 is discarded, assert the
-            # following:
-            assert np.allclose(
-                raw_shap_values[0], -raw_shap_values[1]
-            ), "shap_values(class 0) == -shap_values(class 1)"
-
-            # all good: proceed with SHAP values for class 0:
-            raw_shap_values = raw_shap_values[0]
-
-        # after the above transformation, `raw_shap_values` should be ndarray:
-        if not isinstance(raw_shap_values, np.ndarray):
-            raise ValueError(
-                f"shap explainer output expected to be an ndarray but was "
-                f"{type(raw_shap_values)}"
-            )
-
-        return pd.DataFrame(data=raw_shap_values, index=index, columns=columns)
+    @staticmethod
+    def _interaction_matrix_for_split_to_df(
+        raw_interaction_tensors: List[np.ndarray],
+        observations: np.ndarray,
+        features_in_split: pd.Index,
+    ) -> List[pd.DataFrame]:
+        raise NotImplementedError(
+            "interaction matrices for classifiers are not yet implemented"
+        )

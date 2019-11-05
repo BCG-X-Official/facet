@@ -23,6 +23,10 @@ class Sample:
 
     __slots__ = ["_observations", "_target", "_features"]
 
+    COL_OBSERVATION = "observation"
+    COL_TARGET = "target"
+    COL_FEATURE = "feature"
+
     def __init__(
         self,
         observations: pd.DataFrame,
@@ -50,7 +54,20 @@ class Sample:
                 )
 
         if observations is None or not isinstance(observations, pd.DataFrame):
-            raise ValueError("sample is not a DataFrame")
+            raise ValueError("arg observations is not a DataFrame")
+
+        index = observations.index
+
+        if index.nlevels != 1:
+            raise ValueError(
+                f"arg observations has an index with {index.nlevels} levels, but "
+            )
+
+        # make sure the index has a name (but don't overwrite the original observations
+        # data frame
+        if index.name is None:
+            observations = observations.copy(deep=False)
+            observations.index = index.rename(Sample.COL_OBSERVATION)
 
         self._observations = observations
 
