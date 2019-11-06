@@ -60,11 +60,12 @@ class Sample:
 
         if index.nlevels != 1:
             raise ValueError(
-                f"arg observations has an index with {index.nlevels} levels, but "
+                f"index of arg observations has {index.nlevels} levels, "
+                "but is required to have 1 level"
             )
 
-        # make sure the index has a name (but don't overwrite the original observations
-        # data frame
+        # make sure the index has a name
+        # (but don't change the original observations data frame)
         if index.name is None:
             observations = observations.copy(deep=False)
             observations.index = index.rename(Sample.COL_OBSERVATION)
@@ -115,14 +116,28 @@ class Sample:
          Returned as a series if there is only a single target, or as a data frame if
          there are multiple targets
         """
-        return self._observations.loc[:, self._target]
+        targets: Union[pd.Series, pd.DataFrame] = self._observations.loc[
+            :, self._target
+        ]
+        if isinstance(targets, pd.DataFrame):
+            columns = targets.columns
+            if columns.name is None:
+                targets.columns = columns.rename(Sample.COL_TARGET)
+
+        return targets
 
     @property
     def features(self) -> pd.DataFrame:
         """
         The features for all observations.
         """
-        return self._observations.loc[:, self._features]
+        features: pd.DataFrame = self._observations.loc[:, self._features]
+
+        columns = features.columns
+        if columns.name is None:
+            features.columns = columns.rename(Sample.COL_FEATURE)
+
+        return features
 
     def subsample(
         self,
