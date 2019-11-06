@@ -154,7 +154,9 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF
         ).shap()
 
         # Group SHAP matrix by observation ID and aggregate SHAP values using mean()
-        self._shap_matrix = shap_values_df.groupby(by=shap_values_df.index).mean()
+        self._shap_matrix = shap_values_df.groupby(
+            level=0, sort=False, observed=True
+        ).mean()
 
         return self._shap_matrix
 
@@ -182,7 +184,9 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF
         ).shap()
 
         # Group SHAP matrix by observation ID and feature, and aggregate using mean()
-        self._interaction_matrix = interaction_values_df.groupby(level=(0, 1)).mean()
+        self._interaction_matrix = interaction_values_df.groupby(
+            level=(0, 1), sort=False, observed=True
+        ).mean()
 
         return self._interaction_matrix
 
@@ -243,8 +247,7 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF
                         crossfit.models(), crossfit.splits()
                     )
                 )
-            shap_values_df = pd.concat(shap_df_per_split)
-            return shap_values_df
+            return pd.concat(shap_df_per_split)
 
         @staticmethod
         @abstractmethod
@@ -381,33 +384,32 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF
             else:
                 target_names = target.columns.values
 
-            # convert to a data frame per target (different logic depending on whether we
-            # have a regressor or a classifier)
-            # reindex the interaction matrices to ensure all features are included
-            interaction_matrix_per_target: List[pd.DataFrame] = [
-                interaction_matrix_df.reindex(
-                    index=pd.MultiIndex.from_product(
-                        iterables=(interaction_matrix_df.index.levels[0], features_out),
-                        names=(training_sample.index.name, Sample.COL_FEATURE),
-                    ),
-                    columns=features_out,
-                ).fillna(0.0)
-                for interaction_matrix_df in interaction_matrix_for_split_to_df_fn(
-                    shap_interaction_tensors, oob_split, x_oob.columns
-                )
-            ]
+            interaction_matrix_per_target: List[
+                pd.DataFrame
+            ] = interaction_matrix_for_split_to_df_fn(
+                shap_interaction_tensors, oob_split, x_oob.columns
+            )
 
-            # if we have a single target, return that target; else, add a top level to the
-            # column index indicating each target
+            # if we have a single target, use the data frame for that target;
+            # else, concatenate the matrix data frame for all targets horizontally
+            # and add a top level to the column index indicating each target
             if len(interaction_matrix_per_target) == 1:
-                return interaction_matrix_per_target[0]
+                im = interaction_matrix_per_target[0]
             else:
-                return pd.concat(
+                im = pd.concat(
                     interaction_matrix_per_target,
                     axis=1,
                     keys=target_names,
                     names=[Sample.COL_TARGET],
                 )
+
+            # reindex the interaction matrices to ensure all features are included
+            return im.reindex(
+                pd.MultiIndex.from_product(
+                    iterables=(im.index.levels[0], features_out),
+                    names=(training_sample.index.name, Sample.COL_FEATURE),
+                )
+            )
 
     def feature_importances(self) -> pd.Series:
         """
