@@ -52,7 +52,18 @@ ShapToDataFrameFunction = Callable[
     [List[np.ndarray], np.ndarray, pd.Index], List[pd.DataFrame]
 ]
 
-InteractionsToDataFrameFunction = ShapToDataFrameFunction
+ShapFunction = Callable[
+    [
+        T_LearnerPipelineDF,  # model
+        Sample,  # training_sample
+        np.ndarray,  # oob_split
+        pd.Index,  # features_out
+        ExplainerFactory,  # explainer_factory_fn
+        ShapToDataFrameFunction,  # shap_matrix_for_split_to_df_fn
+    ],
+    pd.DataFrame,
+]
+
 
 #
 # Class definitions
@@ -127,33 +138,10 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF
         if self._shap_matrix is not None:
             return self._shap_matrix
 
-        crossfit = self.crossfit
-        shap_matrix_for_split_to_df_fn = self._shap_matrix_for_split_to_df
-        explainer_factory_fn = self._explainer_factory
-        feature_columns: pd.Index = (
-            crossfit.base_estimator.preprocessing.features_out
-            if crossfit.base_estimator.preprocessing is not None
-            else crossfit.base_estimator.features_in
-        ).rename(Sample.COL_FEATURE)
+        shap_fn = BaseLearnerInspector._shap_matrix_for_split
+        raw_shap_to_df_fn = self._shap_matrix_for_split_to_df
 
-        training_sample = crossfit.training_sample
-
-        with self._parallel() as parallel:
-            shap_values_df_for_splits = parallel(
-                self._delayed(BaseLearnerInspector._shap_values_for_split)(
-                    model,
-                    training_sample,
-                    oob_split,
-                    feature_columns,
-                    explainer_factory_fn,
-                    shap_matrix_for_split_to_df_fn,
-                )
-                for model, (_train_split, oob_split) in zip(
-                    crossfit.models(), crossfit.splits()
-                )
-            )
-
-        shap_values_df = pd.concat(shap_values_df_for_splits)
+        shap_values_df = self._calculate_shap(shap_fn, raw_shap_to_df_fn)
 
         # Group SHAP matrix by observation ID and aggregate SHAP values using mean()
         self._shap_matrix = shap_values_df.groupby(by=shap_values_df.index).mean()
@@ -174,8 +162,20 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF
         if self._interaction_matrix is not None:
             return self._interaction_matrix
 
+        shap_fn = BaseLearnerInspector._interaction_matrix_for_split
+        raw_shap_to_df_fn = self._interaction_matrix_for_split_to_df
+
+        interaction_values_df = self._calculate_shap(shap_fn, raw_shap_to_df_fn)
+
+        # Group SHAP matrix by observation ID and feature, and aggregate using mean()
+        self._interaction_matrix = interaction_values_df.groupby(level=(0, 1)).mean()
+
+        return self._interaction_matrix
+
+    def _calculate_shap(
+        self, shap_fn: ShapFunction, raw_shap_to_df_fn: ShapToDataFrameFunction
+    ) -> pd.DataFrame:
         crossfit = self.crossfit
-        interaction_matrix_for_split_to_df_fn = self._interaction_matrix_for_split_to_df
         explainer_factory_fn = self._explainer_factory
         features_out: pd.Index = (
             crossfit.base_estimator.preprocessing.features_out
@@ -186,33 +186,28 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF
         training_sample = crossfit.training_sample
 
         with self._parallel() as parallel:
-            interaction_values_df_for_splits = parallel(
-                self._delayed(BaseLearnerInspector._interaction_values_for_split)(
+            shap_df_per_split = parallel(
+                self._delayed(shap_fn)(
                     model,
                     training_sample,
                     oob_split,
                     features_out,
                     explainer_factory_fn,
-                    interaction_matrix_for_split_to_df_fn,
+                    raw_shap_to_df_fn,
                 )
                 for model, (_train_split, oob_split) in zip(
                     crossfit.models(), crossfit.splits()
                 )
             )
-
-        interaction_values_df = pd.concat(interaction_values_df_for_splits)
-
-        # Group SHAP matrix by observation ID and feature, and aggregate using mean()
-        self._interaction_matrix = interaction_values_df.groupby(level=(0, 1)).mean()
-
-        return self._interaction_matrix
+        shap_values_df = pd.concat(shap_df_per_split)
+        return shap_values_df
 
     @staticmethod
-    def _shap_values_for_split(
+    def _shap_matrix_for_split(
         model: T_LearnerPipelineDF,
         training_sample: Sample,
         oob_split: np.ndarray,
-        feature_columns: pd.Index,
+        features_out: pd.Index,
         explainer_factory_fn: ExplainerFactory,
         shap_matrix_for_split_to_df_fn: ShapToDataFrameFunction,
     ):
@@ -243,7 +238,7 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF
         # convert to a data frame per target (different logic depending on whether we
         # have a regressor or a classifier)
         shap_values_df: List[pd.DataFrame] = [
-            shap.reindex(columns=feature_columns).fillna(0.0)
+            shap.reindex(columns=features_out).fillna(0.0)
             for shap in shap_matrix_for_split_to_df_fn(
                 shap_values, oob_split, x_oob.columns
             )
@@ -277,13 +272,13 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF
         pass
 
     @staticmethod
-    def _interaction_values_for_split(
+    def _interaction_matrix_for_split(
         model: T_LearnerPipelineDF,
         training_sample: Sample,
         oob_split: np.ndarray,
         features_out: pd.Index,
         explainer_factory_fn: ExplainerFactory,
-        interaction_matrix_for_split_to_df_fn: InteractionsToDataFrameFunction,
+        interaction_matrix_for_split_to_df_fn: ShapToDataFrameFunction,
     ) -> pd.DataFrame:
         # get the features of all out-of-bag observations
         x_oob = training_sample.subsample(loc=oob_split).features
@@ -387,7 +382,7 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF
         if self._feature_dependency_matrix is None:
             shap_matrix = self.shap_matrix()
 
-            # exclude features with zero Shapley importance
+            # exclude features with zero SHAP importance
             # noinspection PyUnresolvedReferences
             shap_matrix = shap_matrix.loc[:, (shap_matrix != 0.0).any()]
 
