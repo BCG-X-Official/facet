@@ -144,16 +144,14 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF
         if self._shap_matrix is not None:
             return self._shap_matrix
 
-        raw_shap_to_df_fn = self._shap_matrix_for_split_to_df
-
-        shap_values_df = BaseLearnerInspector.ShapMatrixCalculator(
+        shap_values_df = self._shap_matrix_calculator_class()(
             crossfit=self.crossfit,
             explainer_factory=self._explainer_factory,
             n_jobs=self.n_jobs,
             shared_memory=self.shared_memory,
             pre_dispatch=self.pre_dispatch,
             verbose=self.verbose,
-        ).shap(raw_shap_to_df_fn)
+        ).shap()
 
         # Group SHAP matrix by observation ID and aggregate SHAP values using mean()
         self._shap_matrix = shap_values_df.groupby(by=shap_values_df.index).mean()
@@ -174,21 +172,31 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF
         if self._interaction_matrix is not None:
             return self._interaction_matrix
 
-        raw_shap_to_df_fn = self._interaction_matrix_for_split_to_df
-
-        interaction_values_df = BaseLearnerInspector.InteractionMatrixCalculator(
+        interaction_values_df = self._interaction_matrix_calculator_class()(
             crossfit=self.crossfit,
             explainer_factory=self._explainer_factory,
             n_jobs=self.n_jobs,
             shared_memory=self.shared_memory,
             pre_dispatch=self.pre_dispatch,
             verbose=self.verbose,
-        ).shap(raw_shap_to_df_fn)
+        ).shap()
 
         # Group SHAP matrix by observation ID and feature, and aggregate using mean()
         self._interaction_matrix = interaction_values_df.groupby(level=(0, 1)).mean()
 
         return self._interaction_matrix
+
+    @abstractmethod
+    def _shap_matrix_calculator_class(
+        self
+    ) -> Type["BaseLearnerInspector.ShapMatrixCalculator"]:
+        pass
+
+    @abstractmethod
+    def _interaction_matrix_calculator_class(
+        self
+    ) -> Type["BaseLearnerInspector.InteractionMatrixCalculator"]:
+        pass
 
     class BaseShapCalculator(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF]):
         def __init__(
@@ -210,7 +218,7 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF
             self._crossfit = crossfit
             self._explainer_factory = explainer_factory
 
-        def shap(self, raw_shap_to_df_fn: ShapToDataFrameFunction) -> pd.DataFrame:
+        def shap(self) -> pd.DataFrame:
             crossfit = self._crossfit
             explainer_factory = self._explainer_factory
             features_out: pd.Index = (
@@ -229,7 +237,7 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF
                         oob_split,
                         features_out,
                         explainer_factory,
-                        raw_shap_to_df_fn,
+                        self._raw_shap_to_df,
                     )
                     for model, (_train_split, oob_split) in zip(
                         crossfit.models(), crossfit.splits()
@@ -248,6 +256,24 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF
             explainer_factory_fn: ExplainerFactory,
             shap_matrix_for_split_to_df_fn: ShapToDataFrameFunction,
         ) -> pd.DataFrame:
+            pass
+
+        @staticmethod
+        @abstractmethod
+        def _raw_shap_to_df(
+            raw_shap_tensors: List[np.ndarray],
+            observations: np.ndarray,
+            features_in_split: pd.Index,
+        ) -> List[pd.DataFrame]:
+            """
+            Convert the SHAP tensors for a single split to a data frame.
+
+            :param raw_shap_tensors: the raw values returned by the SHAP explainer
+            :param observations: the ids used for indexing the explained observations
+            :param features_in_split: the features in the current split, \
+                explained by the SHAP explainer
+            :return: SHAP matrix of a single split as data frame
+            """
             pass
 
     class ShapMatrixCalculator(
@@ -286,22 +312,25 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF
             else:
                 target_names = target.columns.values
 
-            # convert to a data frame per target (different logic depending on whether we
-            # have a regressor or a classifier)
-            shap_values_df: List[pd.DataFrame] = [
+            # convert to a data frame per target (different logic depending on whether
+            # we have a regressor or a classifier)
+            shap_values_df_per_target: List[pd.DataFrame] = [
                 shap.reindex(columns=features_out).fillna(0.0)
                 for shap in shap_matrix_for_split_to_df_fn(
                     shap_values, oob_split, x_oob.columns
                 )
             ]
 
-            # if we have a single target, return that target; else, add a top level to the
-            # column index indicating each target
-            if len(shap_values_df) == 1:
-                return shap_values_df[0]
+            # if we have a single target, return that target; else, add a top level to
+            # the column index indicating each target
+            if len(shap_values_df_per_target) == 1:
+                return shap_values_df_per_target[0]
             else:
                 return pd.concat(
-                    shap_values_df, axis=1, keys=target_names, names=[Sample.COL_TARGET]
+                    shap_values_df_per_target,
+                    axis=1,
+                    keys=target_names,
+                    names=[Sample.COL_TARGET],
                 )
 
     class InteractionMatrixCalculator(
@@ -379,42 +408,6 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF
                     keys=target_names,
                     names=[Sample.COL_TARGET],
                 )
-
-    @staticmethod
-    @abstractmethod
-    def _shap_matrix_for_split_to_df(
-        raw_shap_matrix: List[np.ndarray],
-        observations: np.ndarray,
-        features_in_split: pd.Index,
-    ) -> List[pd.DataFrame]:
-        """
-        Convert the SHAP matrix for a single split to a data frame.
-
-        :param raw_shap_matrix: the raw values returned by the SHAP explainer
-        :param observations: the ids used for indexing the explained observations
-        :param features_in_split: the features in the current split, \
-            explained by the SHAP explainer
-        :return: SHAP matrix of a single split as data frame
-        """
-        pass
-
-    @staticmethod
-    @abstractmethod
-    def _interaction_matrix_for_split_to_df(
-        raw_interaction_tensors: List[np.ndarray],
-        observations: np.ndarray,
-        features_in_split: pd.Index,
-    ) -> List[pd.DataFrame]:
-        """
-        Convert the SHAP interaction matrix for a single split to a data frame.
-
-        :param raw_interaction_tensors: the raw values returned by the SHAP explainer
-        :param observations: the ids used for indexing the explained observations
-        :param features_in_split: the features in the current split, \
-            explained by the SHAP explainer
-        :return: SHAP interaction matrix of a single split as data frame
-        """
-        pass
 
     def feature_importances(self) -> pd.Series:
         """
@@ -553,38 +546,52 @@ class RegressorInspector(
 
     __init__.__doc__ += ParallelizableMixin.__init__.__doc__
 
-    @staticmethod
-    def _shap_matrix_for_split_to_df(
-        raw_shap_matrices: List[np.ndarray],
-        observations: np.ndarray,
-        features_in_split: pd.Index,
-    ) -> List[pd.DataFrame]:
+    def _shap_matrix_calculator_class(
+        self
+    ) -> Type["BaseLearnerInspector.ShapMatrixCalculator"]:
+        return RegressorInspector.RegressorShapMatrixCalculator
 
-        return [
-            pd.DataFrame(
-                data=raw_shap_matrix, index=observations, columns=features_in_split
-            )
-            for raw_shap_matrix in raw_shap_matrices
-        ]
+    def _interaction_matrix_calculator_class(
+        self
+    ) -> Type["BaseLearnerInspector.InteractionMatrixCalculator"]:
+        return RegressorInspector.RegressorInteractionMatrixCalculator
 
-    @staticmethod
-    def _interaction_matrix_for_split_to_df(
-        raw_interaction_tensors: List[np.ndarray],
-        observations: np.ndarray,
-        features_in_split: pd.Index,
-    ) -> List[pd.DataFrame]:
-        row_index = pd.MultiIndex.from_product((observations, features_in_split))
+    class RegressorShapMatrixCalculator(BaseLearnerInspector.ShapMatrixCalculator):
+        @staticmethod
+        def _raw_shap_to_df(
+            raw_shap_tensors: List[np.ndarray],
+            observations: np.ndarray,
+            features_in_split: pd.Index,
+        ) -> List[pd.DataFrame]:
+            pass
+            return [
+                pd.DataFrame(
+                    data=raw_shap_matrix, index=observations, columns=features_in_split
+                )
+                for raw_shap_matrix in raw_shap_tensors
+            ]
 
-        return [
-            pd.DataFrame(
-                data=raw_interaction_tensor.reshape(
-                    (-1, raw_interaction_tensor.shape[2])
-                ),
-                index=row_index,
-                columns=features_in_split,
-            )
-            for raw_interaction_tensor in raw_interaction_tensors
-        ]
+    class RegressorInteractionMatrixCalculator(
+        BaseLearnerInspector.InteractionMatrixCalculator
+    ):
+        @staticmethod
+        def _raw_shap_to_df(
+            raw_shap_tensors: List[np.ndarray],
+            observations: np.ndarray,
+            features_in_split: pd.Index,
+        ) -> List[pd.DataFrame]:
+            row_index = pd.MultiIndex.from_product((observations, features_in_split))
+
+            return [
+                pd.DataFrame(
+                    data=raw_interaction_tensor.reshape(
+                        (-1, raw_interaction_tensor.shape[2])
+                    ),
+                    index=row_index,
+                    columns=features_in_split,
+                )
+                for raw_interaction_tensor in raw_shap_tensors
+            ]
 
 
 class ClassifierInspector(
@@ -620,53 +627,66 @@ class ClassifierInspector(
 
     __init__.__doc__ += ParallelizableMixin.__init__.__doc__
 
-    @staticmethod
-    def _shap_matrix_for_split_to_df(
-        raw_shap_matrix: List[np.ndarray],
-        observations: np.ndarray,
-        features_in_split: pd.Index,
-    ) -> List[pd.DataFrame]:
+    def _shap_matrix_calculator_class(
+        self
+    ) -> Type["BaseLearnerInspector.ShapMatrixCalculator"]:
+        return ClassifierInspector.ClassifierShapMatrixCalculator
 
-        # todo: adapt this function (and override others) to support non-binary
-        #   classification
+    def _interaction_matrix_calculator_class(
+        self
+    ) -> Type["BaseLearnerInspector.InteractionMatrixCalculator"]:
+        return ClassifierInspector.ClassifierInteractionMatrixCalculator
 
-        # the shap explainer returned an array [obs x features] for each of the
-        # target-classes
+    class ClassifierShapMatrixCalculator(BaseLearnerInspector.ShapMatrixCalculator):
+        @staticmethod
+        def _raw_shap_to_df(
+            raw_shap_tensors: List[np.ndarray],
+            observations: np.ndarray,
+            features_in_split: pd.Index,
+        ) -> List[pd.DataFrame]:
+            # todo: adapt this function (and override others) to support non-binary
+            #   classification
 
-        n_arrays = len(raw_shap_matrix)
+            # the shap explainer returned an array [obs x features] for each of the
+            # target-classes
 
-        # we decided to support only binary classification == 2 classes:
-        assert n_arrays == 2, (
-            "classification pipeline inspection only supports binary classifiers, "
-            f"but SHAP analysis returned values for {n_arrays} classes"
-        )
+            n_arrays = len(raw_shap_tensors)
 
-        # in the binary classification case, we will proceed with SHAP values
-        # for class 0, since values for class 1 will just be the same
-        # values times (*-1)  (the opposite probability)
-
-        # to ensure the values are returned as expected above,
-        # and no information of class 1 is discarded, assert the
-        # following:
-        assert np.allclose(
-            raw_shap_matrix[0], -raw_shap_matrix[1]
-        ), "shap_values(class 0) == -shap_values(class 1)"
-
-        # all good: proceed with SHAP values for class 0:
-        raw_shap_matrix = raw_shap_matrix[0]
-
-        return [
-            pd.DataFrame(
-                data=raw_shap_matrix, index=observations, columns=features_in_split
+            # we decided to support only binary classification == 2 classes:
+            assert n_arrays == 2, (
+                "classification pipeline inspection only supports binary classifiers, "
+                f"but SHAP analysis returned values for {n_arrays} classes"
             )
-        ]
 
-    @staticmethod
-    def _interaction_matrix_for_split_to_df(
-        raw_interaction_tensors: List[np.ndarray],
-        observations: np.ndarray,
-        features_in_split: pd.Index,
-    ) -> List[pd.DataFrame]:
-        raise NotImplementedError(
-            "interaction matrices for classifiers are not yet implemented"
-        )
+            # in the binary classification case, we will proceed with SHAP values
+            # for class 0, since values for class 1 will just be the same
+            # values times (*-1)  (the opposite probability)
+
+            # to ensure the values are returned as expected above,
+            # and no information of class 1 is discarded, assert the
+            # following:
+            assert np.allclose(
+                raw_shap_tensors[0], -raw_shap_tensors[1]
+            ), "shap_values(class 0) == -shap_values(class 1)"
+
+            # all good: proceed with SHAP values for class 0:
+            raw_shap_matrix = raw_shap_tensors[0]
+
+            return [
+                pd.DataFrame(
+                    data=raw_shap_matrix, index=observations, columns=features_in_split
+                )
+            ]
+
+    class ClassifierInteractionMatrixCalculator(
+        BaseLearnerInspector.InteractionMatrixCalculator
+    ):
+        @staticmethod
+        def _raw_shap_to_df(
+            raw_shap_tensors: List[np.ndarray],
+            observations: np.ndarray,
+            features_in_split: pd.Index,
+        ) -> List[pd.DataFrame]:
+            raise NotImplementedError(
+                "interaction matrices for classifiers are not yet implemented"
+            )
