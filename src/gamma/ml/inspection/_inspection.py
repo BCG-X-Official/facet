@@ -101,8 +101,22 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF
         self.shared_memory = shared_memory
         self.verbose = verbose
 
-        self._shap_matrix: Optional[pd.DataFrame] = None
-        self._interaction_matrix: Optional[pd.DataFrame] = None
+        self._shap_matrix_calculator = self._shap_matrix_calculator_cls()(
+            explainer_factory=self._explainer_factory,
+            n_jobs=self.n_jobs,
+            shared_memory=self.shared_memory,
+            pre_dispatch=self.pre_dispatch,
+            verbose=self.verbose,
+        )
+
+        self._interaction_matrix_calculator = self._interaction_matrix_calculator_cls()(
+            explainer_factory=self._explainer_factory,
+            n_jobs=self.n_jobs,
+            shared_memory=self.shared_memory,
+            pre_dispatch=self.pre_dispatch,
+            verbose=self.verbose,
+        )
+
         self._feature_dependency_matrix: Optional[pd.DataFrame] = None
 
     __init__.__doc__ += ParallelizableMixin.__init__.__doc__
@@ -124,20 +138,10 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF
 
         :return: shap matrix as a data frame
         """
+        if not self._shap_matrix_calculator.is_fitted:
+            self._shap_matrix_calculator.fit(crossfit=self.crossfit)
 
-        if self._shap_matrix is not None:
-            return self._shap_matrix
-
-        self._shap_matrix = self._shap_matrix_calculator_class()(
-            crossfit=self.crossfit,
-            explainer_factory=self._explainer_factory,
-            n_jobs=self.n_jobs,
-            shared_memory=self.shared_memory,
-            pre_dispatch=self.pre_dispatch,
-            verbose=self.verbose,
-        ).shap()
-
-        return self._shap_matrix
+        return self._shap_matrix_calculator.matrix
 
     def interaction_matrix(self) -> pd.DataFrame:
         """
@@ -150,28 +154,19 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF
 
         :return: SHAP interaction matrix as a data frame
         """
-        if self._interaction_matrix is not None:
-            return self._interaction_matrix
+        if not self._interaction_matrix_calculator.is_fitted:
+            self._interaction_matrix_calculator.fit(crossfit=self.crossfit)
 
-        self._interaction_matrix = self._interaction_matrix_calculator_class()(
-            crossfit=self.crossfit,
-            explainer_factory=self._explainer_factory,
-            n_jobs=self.n_jobs,
-            shared_memory=self.shared_memory,
-            pre_dispatch=self.pre_dispatch,
-            verbose=self.verbose,
-        ).shap()
-
-        return self._interaction_matrix
+        return self._interaction_matrix_calculator.matrix
 
     @staticmethod
     @abstractmethod
-    def _shap_matrix_calculator_class() -> Type[ShapMatrixCalculator]:
+    def _shap_matrix_calculator_cls() -> Type[ShapMatrixCalculator]:
         pass
 
     @staticmethod
     @abstractmethod
-    def _interaction_matrix_calculator_class() -> Type[InteractionMatrixCalculator]:
+    def _interaction_matrix_calculator_cls() -> Type[InteractionMatrixCalculator]:
         pass
 
     def feature_importances(self) -> pd.Series:
@@ -312,11 +307,11 @@ class RegressorInspector(
     __init__.__doc__ += ParallelizableMixin.__init__.__doc__
 
     @staticmethod
-    def _shap_matrix_calculator_class() -> Type[ShapMatrixCalculator]:
+    def _shap_matrix_calculator_cls() -> Type[ShapMatrixCalculator]:
         return RegressorShapMatrixCalculator
 
     @staticmethod
-    def _interaction_matrix_calculator_class() -> Type[InteractionMatrixCalculator]:
+    def _interaction_matrix_calculator_cls() -> Type[InteractionMatrixCalculator]:
         return RegressorInteractionMatrixCalculator
 
 
@@ -354,9 +349,9 @@ class ClassifierInspector(
     __init__.__doc__ += ParallelizableMixin.__init__.__doc__
 
     @staticmethod
-    def _shap_matrix_calculator_class() -> Type[ShapMatrixCalculator]:
+    def _shap_matrix_calculator_cls() -> Type[ShapMatrixCalculator]:
         return ClassifierShapMatrixCalculator
 
     @staticmethod
-    def _interaction_matrix_calculator_class() -> Type[InteractionMatrixCalculator]:
+    def _interaction_matrix_calculator_cls() -> Type[InteractionMatrixCalculator]:
         return ClassifierInteractionMatrixCalculator
