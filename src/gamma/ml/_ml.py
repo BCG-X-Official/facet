@@ -76,23 +76,26 @@ class Sample:
 
         if multi_target:
             _ensure_columns_exist(column_type="target", columns=target)
+            if not isinstance(target, pd.Index):
+                target: pd.Index = pd.Index(target)
         else:
             if target not in self._observations.columns:
                 raise KeyError(
-                    f'target "{target}" is not a column in the observations table'
+                    f'arg target="{target}" is not a column in the observations table'
                 )
 
-        self._target = target
+        self._target: Union[str, pd.Index] = target
 
         if features is None:
-            features = observations.columns.drop(labels=target)
+            features: pd.Index = observations.columns.drop(labels=target)
         else:
             _ensure_columns_exist(column_type="feature", columns=features)
+            if not isinstance(features, pd.Index):
+                features: pd.Index = pd.Index(features)
 
             # ensure features and target(s) do not overlap
-
             if multi_target:
-                shared = set(target).intersection(features)
+                shared = target.intersection(features)
                 if len(shared) > 0:
                     raise KeyError(
                         f'targets {", ".join(shared)} are also included in the features'
@@ -105,8 +108,37 @@ class Sample:
 
     @property
     def index(self) -> pd.Index:
-        """Row index of all observations in this sample."""
-        return self.target.index
+        """
+        Row index of all observations in this sample.
+        """
+        return self._observations.index
+
+    @property
+    def feature_columns(self) -> pd.Index:
+        """
+        Column index of all features in this sample.
+        """
+        return self._features
+
+    def target_columns(self) -> Union[str, pd.Index]:
+        """
+        Name of the target column, of column index of all targets if this sample has
+        multiple targets.
+        """
+        return self._target
+
+    @property
+    def features(self) -> pd.DataFrame:
+        """
+        The features for all observations.
+        """
+        features: pd.DataFrame = self._observations.loc[:, self._features]
+
+        columns = features.columns
+        if columns.name is None:
+            features.columns = columns.rename(Sample.COL_FEATURE)
+
+        return features
 
     @property
     def target(self) -> Union[pd.Series, pd.DataFrame]:
@@ -127,17 +159,25 @@ class Sample:
         return targets
 
     @property
-    def features(self) -> pd.DataFrame:
+    def n_features(self) -> int:
         """
-        The features for all observations.
+        The number of features in this sample
         """
-        features: pd.DataFrame = self._observations.loc[:, self._features]
+        return len(self._features)
 
-        columns = features.columns
-        if columns.name is None:
-            features.columns = columns.rename(Sample.COL_FEATURE)
+    @property
+    def n_targets(self) -> int:
+        """
+        The number of targets in this sample
+        """
+        return len(self._target) if isinstance(self._target, pd.Index) else 1
 
-        return features
+    @property
+    def n_observations(self) -> int:
+        """
+        The number of observations in this sample
+        """
+        return len(self._observations)
 
     def subsample(
         self,
@@ -220,4 +260,4 @@ class Sample:
         """
         :return: the number of observations in this sample
         """
-        return len(self._observations)
+        return self.n_observations
