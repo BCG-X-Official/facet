@@ -144,17 +144,16 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF
         if self._shap_matrix is not None:
             return self._shap_matrix
 
-        shap_fn = BaseLearnerInspector._shap_matrix_for_split
         raw_shap_to_df_fn = self._shap_matrix_for_split_to_df
 
-        shap_values_df = BaseLearnerInspector.BaseShapCalculator(
+        shap_values_df = BaseLearnerInspector.ShapMatrixCalculator(
             crossfit=self.crossfit,
             explainer_factory=self._explainer_factory,
             n_jobs=self.n_jobs,
             shared_memory=self.shared_memory,
             pre_dispatch=self.pre_dispatch,
             verbose=self.verbose,
-        ).shap(shap_fn, raw_shap_to_df_fn)
+        ).shap(raw_shap_to_df_fn)
 
         # Group SHAP matrix by observation ID and aggregate SHAP values using mean()
         self._shap_matrix = shap_values_df.groupby(by=shap_values_df.index).mean()
@@ -175,17 +174,16 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF
         if self._interaction_matrix is not None:
             return self._interaction_matrix
 
-        shap_fn = BaseLearnerInspector._interaction_matrix_for_split
         raw_shap_to_df_fn = self._interaction_matrix_for_split_to_df
 
-        interaction_values_df = BaseLearnerInspector.BaseShapCalculator(
+        interaction_values_df = BaseLearnerInspector.InteractionMatrixCalculator(
             crossfit=self.crossfit,
             explainer_factory=self._explainer_factory,
             n_jobs=self.n_jobs,
             shared_memory=self.shared_memory,
             pre_dispatch=self.pre_dispatch,
             verbose=self.verbose,
-        ).shap(shap_fn, raw_shap_to_df_fn)
+        ).shap(raw_shap_to_df_fn)
 
         # Group SHAP matrix by observation ID and feature, and aggregate using mean()
         self._interaction_matrix = interaction_values_df.groupby(level=(0, 1)).mean()
@@ -212,9 +210,7 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF
             self._crossfit = crossfit
             self._explainer_factory = explainer_factory
 
-        def shap(
-            self, shap_fn: ShapFunction, raw_shap_to_df_fn: ShapToDataFrameFunction
-        ) -> pd.DataFrame:
+        def shap(self, raw_shap_to_df_fn: ShapToDataFrameFunction) -> pd.DataFrame:
             crossfit = self._crossfit
             explainer_factory = self._explainer_factory
             features_out: pd.Index = (
@@ -227,7 +223,7 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF
 
             with self._parallel() as parallel:
                 shap_df_per_split = parallel(
-                    self._delayed(shap_fn)(
+                    self._delayed(self._shap_for_split)(
                         model,
                         training_sample,
                         oob_split,
@@ -242,56 +238,147 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF
             shap_values_df = pd.concat(shap_df_per_split)
             return shap_values_df
 
-    @staticmethod
-    def _shap_matrix_for_split(
-        model: T_LearnerPipelineDF,
-        training_sample: Sample,
-        oob_split: np.ndarray,
-        features_out: pd.Index,
-        explainer_factory_fn: ExplainerFactory,
-        shap_matrix_for_split_to_df_fn: ShapToDataFrameFunction,
+        @staticmethod
+        @abstractmethod
+        def _shap_for_split(
+            model: T_LearnerPipelineDF,
+            training_sample: Sample,
+            oob_split: np.ndarray,
+            features_out: pd.Index,
+            explainer_factory_fn: ExplainerFactory,
+            shap_matrix_for_split_to_df_fn: ShapToDataFrameFunction,
+        ) -> pd.DataFrame:
+            pass
+
+    class ShapMatrixCalculator(
+        BaseShapCalculator[T_LearnerPipelineDF], ABC, Generic[T_LearnerPipelineDF]
     ):
-        # get the features of all out-of-bag observations
-        x_oob = training_sample.subsample(loc=oob_split).features
+        @staticmethod
+        def _shap_for_split(
+            model: T_LearnerPipelineDF,
+            training_sample: Sample,
+            oob_split: np.ndarray,
+            features_out: pd.Index,
+            explainer_factory_fn: ExplainerFactory,
+            shap_matrix_for_split_to_df_fn: ShapToDataFrameFunction,
+        ) -> pd.DataFrame:
+            # get the features of all out-of-bag observations
+            x_oob = training_sample.subsample(loc=oob_split).features
 
-        # pre-process the features
-        if model.preprocessing is not None:
-            x_oob = model.preprocessing.transform(x_oob)
+            # pre-process the features
+            if model.preprocessing is not None:
+                x_oob = model.preprocessing.transform(x_oob)
 
-        # calculate the shap values (returned as an ndarray)
-        shap_values = explainer_factory_fn(
-            model.final_estimator.root_estimator, x_oob
-        ).shap_values(x_oob)
+            # calculate the shap values (returned as an ndarray)
+            shap_values = explainer_factory_fn(
+                model.final_estimator.root_estimator, x_oob
+            ).shap_values(x_oob)
 
-        target = training_sample.target
+            target = training_sample.target
 
-        if isinstance(shap_values, np.ndarray):
-            # if we have a single target, the explainer will have returned a single
-            # tensor as an ndarray
-            shap_values: List[np.ndarray] = [shap_values]
+            if isinstance(shap_values, np.ndarray):
+                # if we have a single target, the explainer will have returned a single
+                # tensor as an ndarray
+                shap_values: List[np.ndarray] = [shap_values]
 
-        if isinstance(target, pd.Series):
-            target_names = [target.name]
-        else:
-            target_names = target.columns.values
+            if isinstance(target, pd.Series):
+                target_names = [target.name]
+            else:
+                target_names = target.columns.values
 
-        # convert to a data frame per target (different logic depending on whether we
-        # have a regressor or a classifier)
-        shap_values_df: List[pd.DataFrame] = [
-            shap.reindex(columns=features_out).fillna(0.0)
-            for shap in shap_matrix_for_split_to_df_fn(
-                shap_values, oob_split, x_oob.columns
+            # convert to a data frame per target (different logic depending on whether we
+            # have a regressor or a classifier)
+            shap_values_df: List[pd.DataFrame] = [
+                shap.reindex(columns=features_out).fillna(0.0)
+                for shap in shap_matrix_for_split_to_df_fn(
+                    shap_values, oob_split, x_oob.columns
+                )
+            ]
+
+            # if we have a single target, return that target; else, add a top level to the
+            # column index indicating each target
+            if len(shap_values_df) == 1:
+                return shap_values_df[0]
+            else:
+                return pd.concat(
+                    shap_values_df, axis=1, keys=target_names, names=[Sample.COL_TARGET]
+                )
+
+    class InteractionMatrixCalculator(
+        BaseShapCalculator[T_LearnerPipelineDF], ABC, Generic[T_LearnerPipelineDF]
+    ):
+        @staticmethod
+        def _shap_for_split(
+            model: T_LearnerPipelineDF,
+            training_sample: Sample,
+            oob_split: np.ndarray,
+            features_out: pd.Index,
+            explainer_factory_fn: ExplainerFactory,
+            interaction_matrix_for_split_to_df_fn: ShapToDataFrameFunction,
+        ) -> pd.DataFrame:
+            # get the features of all out-of-bag observations
+            x_oob = training_sample.subsample(loc=oob_split).features
+
+            # pre-process the features
+            if model.preprocessing is not None:
+                x_oob = model.preprocessing.transform(x_oob)
+
+            # calculate the shap values (returned as an ndarray)
+            explainer = explainer_factory_fn(
+                model.final_estimator.root_estimator, x_oob
             )
-        ]
 
-        # if we have a single target, return that target; else, add a top level to the
-        # column index indicating each target
-        if len(shap_values_df) == 1:
-            return shap_values_df[0]
-        else:
-            return pd.concat(
-                shap_values_df, axis=1, keys=target_names, names=[Sample.COL_TARGET]
-            )
+            try:
+                # noinspection PyUnresolvedReferences
+                shap_interaction_values_fn = explainer.shap_interaction_values
+            except AttributeError:
+                raise RuntimeError(
+                    "Explainer does not implement method shap_interaction_values"
+                )
+
+            shap_interaction_tensors: Union[
+                np.ndarray, List[np.ndarray]
+            ] = shap_interaction_values_fn(x_oob)
+
+            target = training_sample.target
+
+            if isinstance(shap_interaction_tensors, np.ndarray):
+                # if we have a single target, the explainer will have returned a single
+                # tensor as an ndarray
+                shap_interaction_tensors: List[np.ndarray] = [shap_interaction_tensors]
+
+            if isinstance(target, pd.Series):
+                target_names = [target.name]
+            else:
+                target_names = target.columns.values
+
+            # convert to a data frame per target (different logic depending on whether we
+            # have a regressor or a classifier)
+            # reindex the interaction matrices to ensure all features are included
+            interaction_matrix_per_target: List[pd.DataFrame] = [
+                interaction_matrix_df.reindex(
+                    index=pd.MultiIndex.from_product(
+                        iterables=(interaction_matrix_df.index.levels[0], features_out),
+                        names=(training_sample.index.name, Sample.COL_FEATURE),
+                    ),
+                    columns=features_out,
+                ).fillna(0.0)
+                for interaction_matrix_df in interaction_matrix_for_split_to_df_fn(
+                    shap_interaction_tensors, oob_split, x_oob.columns
+                )
+            ]
+
+            # if we have a single target, return that target; else, add a top level to the
+            # column index indicating each target
+            if len(interaction_matrix_per_target) == 1:
+                return interaction_matrix_per_target[0]
+            else:
+                return pd.concat(
+                    interaction_matrix_per_target,
+                    axis=1,
+                    keys=target_names,
+                    names=[Sample.COL_TARGET],
+                )
 
     @staticmethod
     @abstractmethod
@@ -310,77 +397,6 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF
         :return: SHAP matrix of a single split as data frame
         """
         pass
-
-    @staticmethod
-    def _interaction_matrix_for_split(
-        model: T_LearnerPipelineDF,
-        training_sample: Sample,
-        oob_split: np.ndarray,
-        features_out: pd.Index,
-        explainer_factory_fn: ExplainerFactory,
-        interaction_matrix_for_split_to_df_fn: ShapToDataFrameFunction,
-    ) -> pd.DataFrame:
-        # get the features of all out-of-bag observations
-        x_oob = training_sample.subsample(loc=oob_split).features
-
-        # pre-process the features
-        if model.preprocessing is not None:
-            x_oob = model.preprocessing.transform(x_oob)
-
-        # calculate the shap values (returned as an ndarray)
-        explainer = explainer_factory_fn(model.final_estimator.root_estimator, x_oob)
-
-        try:
-            # noinspection PyUnresolvedReferences
-            shap_interaction_values_fn = explainer.shap_interaction_values
-        except AttributeError:
-            raise RuntimeError(
-                "Explainer does not implement method shap_interaction_values"
-            )
-
-        shap_interaction_tensors: Union[
-            np.ndarray, List[np.ndarray]
-        ] = shap_interaction_values_fn(x_oob)
-
-        target = training_sample.target
-
-        if isinstance(shap_interaction_tensors, np.ndarray):
-            # if we have a single target, the explainer will have returned a single
-            # tensor as an ndarray
-            shap_interaction_tensors: List[np.ndarray] = [shap_interaction_tensors]
-
-        if isinstance(target, pd.Series):
-            target_names = [target.name]
-        else:
-            target_names = target.columns.values
-
-        # convert to a data frame per target (different logic depending on whether we
-        # have a regressor or a classifier)
-        # reindex the interaction matrices to ensure all features are included
-        interaction_matrix_per_target: List[pd.DataFrame] = [
-            interaction_matrix_df.reindex(
-                index=pd.MultiIndex.from_product(
-                    iterables=(interaction_matrix_df.index.levels[0], features_out),
-                    names=(training_sample.index.name, Sample.COL_FEATURE),
-                ),
-                columns=features_out,
-            ).fillna(0.0)
-            for interaction_matrix_df in interaction_matrix_for_split_to_df_fn(
-                shap_interaction_tensors, oob_split, x_oob.columns
-            )
-        ]
-
-        # if we have a single target, return that target; else, add a top level to the
-        # column index indicating each target
-        if len(interaction_matrix_per_target) == 1:
-            return interaction_matrix_per_target[0]
-        else:
-            return pd.concat(
-                interaction_matrix_per_target,
-                axis=1,
-                keys=target_names,
-                names=[Sample.COL_TARGET],
-            )
 
     @staticmethod
     @abstractmethod
