@@ -164,12 +164,14 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF
 
         return self._interaction_matrix
 
+    @staticmethod
     @abstractmethod
-    def _shap_matrix_calculator_class(self) -> Type[ShapMatrixCalculator]:
+    def _shap_matrix_calculator_class() -> Type[ShapMatrixCalculator]:
         pass
 
+    @staticmethod
     @abstractmethod
-    def _interaction_matrix_calculator_class(self) -> Type[InteractionMatrixCalculator]:
+    def _interaction_matrix_calculator_class() -> Type[InteractionMatrixCalculator]:
         pass
 
     def feature_importances(self) -> pd.Series:
@@ -309,10 +311,12 @@ class RegressorInspector(
 
     __init__.__doc__ += ParallelizableMixin.__init__.__doc__
 
-    def _shap_matrix_calculator_class(self) -> Type[ShapMatrixCalculator]:
+    @staticmethod
+    def _shap_matrix_calculator_class() -> Type[ShapMatrixCalculator]:
         return RegressorShapMatrixCalculator
 
-    def _interaction_matrix_calculator_class(self) -> Type[InteractionMatrixCalculator]:
+    @staticmethod
+    def _interaction_matrix_calculator_class() -> Type[InteractionMatrixCalculator]:
         return RegressorInteractionMatrixCalculator
 
 
@@ -349,8 +353,10 @@ class ClassifierInspector(
 
     __init__.__doc__ += ParallelizableMixin.__init__.__doc__
 
-    def _shap_matrix_calculator_class(self) -> Type[ShapMatrixCalculator]:
+    @staticmethod
+    def _shap_matrix_calculator_class() -> Type[ShapMatrixCalculator]:
         return ClassifierShapMatrixCalculator
 
-    def _interaction_matrix_calculator_class(self) -> Type[InteractionMatrixCalculator]:
+    @staticmethod
+    def _interaction_matrix_calculator_class() -> Type[InteractionMatrixCalculator]:
         return ClassifierInteractionMatrixCalculator
