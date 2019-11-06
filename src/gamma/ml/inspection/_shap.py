@@ -11,6 +11,7 @@ import pandas as pd
 from shap.explainers.explainer import Explainer
 from sklearn.base import BaseEstimator
 
+from gamma.common.fit import FittableMixin
 from gamma.common.parallelization import ParallelizableMixin
 from gamma.ml import Sample
 from gamma.ml.crossfit import LearnerCrossfit
@@ -23,7 +24,7 @@ log = logging.getLogger(__name__)
 #
 
 T_LearnerPipelineDF = TypeVar("T_LearnerPipelineDF", bound=BaseLearnerPipelineDF)
-
+T_Self = TypeVar("T_Self")
 
 #
 # Type definitions
@@ -35,12 +36,18 @@ ShapToDataFrameFunction = Callable[
     [List[np.ndarray], np.ndarray, pd.Index], List[pd.DataFrame]
 ]
 
+
 #
 # Class definitions
 #
 
 
-class BaseShapCalculator(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF]):
+class BaseShapCalculator(
+    FittableMixin[LearnerCrossfit[T_LearnerPipelineDF]],
+    ParallelizableMixin,
+    ABC,
+    Generic[T_LearnerPipelineDF],
+):
     """
     Base class for all SHAP calculators.
 
@@ -51,7 +58,6 @@ class BaseShapCalculator(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF])
 
     def __init__(
         self,
-        crossfit: LearnerCrossfit[T_LearnerPipelineDF],
         explainer_factory: ExplainerFactory,
         *,
         n_jobs: Optional[int] = None,
@@ -65,19 +71,49 @@ class BaseShapCalculator(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF])
             pre_dispatch=pre_dispatch,
             verbose=verbose,
         )
-        self._crossfit = crossfit
         self._explainer_factory = explainer_factory
+        self._shap: Optional[pd.DataFrame] = None
+        self._n_observations: Optional[int] = None
+        self._n_features: Optional[int] = None
+        self._n_targets: Optional[int] = None
 
-    def shap(self) -> pd.DataFrame:
+    def fit(
+        self: T_Self, crossfit: LearnerCrossfit[T_LearnerPipelineDF], **fit_params
+    ) -> T_Self:
         """
         Calculate the SHAP values.
-        :return: the resulting consolidated data frame, aggregated to one averaged \
-            SHAP matrix per observation
-        """
-        return self._consolidate_splits(self._shap_all_splits())
 
-    def _shap_all_splits(self) -> pd.DataFrame:
-        crossfit = self._crossfit
+        :return: self
+        """
+        self._shap = self._consolidate_splits(self._shap_all_splits(crossfit=crossfit))
+        training_sample = crossfit.training_sample
+        self._n_observations = len(training_sample)
+        self._n_features = training_sample.n_features
+        self._n_targets = training_sample.n_targets
+        return self
+
+    # noinspection PyMissingOrEmptyDocstring
+    @property
+    def is_fitted(self) -> bool:
+        return self._shap is not None
+
+    is_fitted.__doc__ = FittableMixin.is_fitted.__doc__
+
+    @property
+    def matrix(self) -> pd.DataFrame:
+        """
+        The resulting consolidated as a data frame, aggregated to one averaged SHAP
+        matrix per observation.
+
+        The format of the data frame varies depending on the nature of the SHAP
+        calculation, see documentation for implementations of this base class.
+        """
+        self._ensure_fitted()
+        return self._shap
+
+    def _shap_all_splits(
+        self, crossfit: LearnerCrossfit[T_LearnerPipelineDF]
+    ) -> pd.DataFrame:
         explainer_factory = self._explainer_factory
         features_out: pd.Index = (
             crossfit.base_estimator.preprocessing.features_out
@@ -210,6 +246,31 @@ class InteractionMatrixCalculator(
     """
     Base class for SHAP interaction matrix calculations.
     """
+
+    @property
+    def diagonals(self) -> pd.DataFrame:
+        """
+        The diagonals of all SHAP interaction matrices, of shape
+        (n_observations, n_targets * n_features)
+        """
+        self._ensure_fitted()
+
+        n_observations = self._n_observations
+        n_features = self._n_features
+        n_targets = self._n_targets
+        interaction_matrix = self.matrix
+
+        return pd.DataFrame(
+            np.diagonal(
+                interaction_matrix.values.reshape(
+                    (n_observations, n_features, n_targets, n_features)
+                ),
+                axis1=2,
+                axis2=3,
+            ).reshape((n_observations, n_targets * n_features)),
+            index=interaction_matrix.index.levels[0],
+            columns=interaction_matrix.columns,
+        )
 
     def _consolidate_splits(self, shap_all_splits_df: pd.DataFrame) -> pd.DataFrame:
         # Group SHAP matrix by observation ID and feature, and aggregate using mean()
