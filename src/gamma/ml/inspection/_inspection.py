@@ -89,6 +89,7 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF
         explainer_factory: Optional[ExplainerFactory] = None,
         n_jobs: Optional[int] = None,
         shared_memory: Optional[bool] = None,
+        pre_dispatch: Optional[Union[str, int]] = None,
         verbose: Optional[int] = None,
     ) -> None:
         """
@@ -96,7 +97,12 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF
           pipeline, the data (a Sample object), the cross-validation and crossfit.
         :param explainer_factory: calibration that returns a shap Explainer
         """
-        super().__init__(n_jobs=n_jobs, shared_memory=shared_memory, verbose=verbose)
+        super().__init__(
+            n_jobs=n_jobs,
+            shared_memory=shared_memory,
+            pre_dispatch=pre_dispatch,
+            verbose=verbose,
+        )
 
         if not crossfit.is_fitted:
             raise ValueError("arg crossfit expected to be fitted")
@@ -141,7 +147,14 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF
         shap_fn = BaseLearnerInspector._shap_matrix_for_split
         raw_shap_to_df_fn = self._shap_matrix_for_split_to_df
 
-        shap_values_df = self._calculate_shap(shap_fn, raw_shap_to_df_fn)
+        shap_values_df = BaseLearnerInspector.BaseShapCalculator(
+            crossfit=self.crossfit,
+            explainer_factory=self._explainer_factory,
+            n_jobs=self.n_jobs,
+            shared_memory=self.shared_memory,
+            pre_dispatch=self.pre_dispatch,
+            verbose=self.verbose,
+        ).shap(shap_fn, raw_shap_to_df_fn)
 
         # Group SHAP matrix by observation ID and aggregate SHAP values using mean()
         self._shap_matrix = shap_values_df.groupby(by=shap_values_df.index).mean()
@@ -165,42 +178,69 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF
         shap_fn = BaseLearnerInspector._interaction_matrix_for_split
         raw_shap_to_df_fn = self._interaction_matrix_for_split_to_df
 
-        interaction_values_df = self._calculate_shap(shap_fn, raw_shap_to_df_fn)
+        interaction_values_df = BaseLearnerInspector.BaseShapCalculator(
+            crossfit=self.crossfit,
+            explainer_factory=self._explainer_factory,
+            n_jobs=self.n_jobs,
+            shared_memory=self.shared_memory,
+            pre_dispatch=self.pre_dispatch,
+            verbose=self.verbose,
+        ).shap(shap_fn, raw_shap_to_df_fn)
 
         # Group SHAP matrix by observation ID and feature, and aggregate using mean()
         self._interaction_matrix = interaction_values_df.groupby(level=(0, 1)).mean()
 
         return self._interaction_matrix
 
-    def _calculate_shap(
-        self, shap_fn: ShapFunction, raw_shap_to_df_fn: ShapToDataFrameFunction
-    ) -> pd.DataFrame:
-        crossfit = self.crossfit
-        explainer_factory_fn = self._explainer_factory
-        features_out: pd.Index = (
-            crossfit.base_estimator.preprocessing.features_out
-            if crossfit.base_estimator.preprocessing is not None
-            else crossfit.base_estimator.features_in
-        ).rename(Sample.COL_FEATURE)
-
-        training_sample = crossfit.training_sample
-
-        with self._parallel() as parallel:
-            shap_df_per_split = parallel(
-                self._delayed(shap_fn)(
-                    model,
-                    training_sample,
-                    oob_split,
-                    features_out,
-                    explainer_factory_fn,
-                    raw_shap_to_df_fn,
-                )
-                for model, (_train_split, oob_split) in zip(
-                    crossfit.models(), crossfit.splits()
-                )
+    class BaseShapCalculator(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF]):
+        def __init__(
+            self,
+            crossfit: LearnerCrossfit[T_LearnerPipelineDF],
+            explainer_factory: ExplainerFactory,
+            *,
+            n_jobs: Optional[int] = None,
+            shared_memory: Optional[bool] = None,
+            pre_dispatch: Optional[Union[str, int]] = None,
+            verbose: Optional[int] = None,
+        ) -> None:
+            super().__init__(
+                n_jobs=n_jobs,
+                shared_memory=shared_memory,
+                pre_dispatch=pre_dispatch,
+                verbose=verbose,
             )
-        shap_values_df = pd.concat(shap_df_per_split)
-        return shap_values_df
+            self._crossfit = crossfit
+            self._explainer_factory = explainer_factory
+
+        def shap(
+            self, shap_fn: ShapFunction, raw_shap_to_df_fn: ShapToDataFrameFunction
+        ) -> pd.DataFrame:
+            crossfit = self._crossfit
+            explainer_factory = self._explainer_factory
+            features_out: pd.Index = (
+                crossfit.base_estimator.preprocessing.features_out
+                if crossfit.base_estimator.preprocessing is not None
+                else crossfit.base_estimator.features_in
+            ).rename(Sample.COL_FEATURE)
+
+            training_sample = crossfit.training_sample
+
+            with self._parallel() as parallel:
+                shap_df_per_split = parallel(
+                    self._delayed(shap_fn)(
+                        model,
+                        training_sample,
+                        oob_split,
+                        features_out,
+                        explainer_factory,
+                        raw_shap_to_df_fn,
+                    )
+                    for model, (_train_split, oob_split) in zip(
+                        crossfit.models(), crossfit.splits()
+                    )
+                )
+            shap_values_df = pd.concat(shap_df_per_split)
+            return shap_values_df
 
     @staticmethod
     def _shap_matrix_for_split(
