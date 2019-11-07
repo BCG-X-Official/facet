@@ -85,11 +85,22 @@ class BaseShapCalculator(
 
         :return: self
         """
-        self._shap = self._consolidate_splits(self._shap_all_splits(crossfit=crossfit))
+
+        # reset fit in case we get an exception along the way
+        self._shap = None
+
         training_sample = crossfit.training_sample
         self._n_observations = len(training_sample)
         self._n_features = training_sample.n_features
         self._n_targets = training_sample.n_targets
+
+        # calculate shap values and re-order the observation index to match the
+        # sequence in the original training sample
+        self._shap = self._consolidate_splits(
+            self._shap_all_splits(crossfit=crossfit),
+            observation_index=training_sample.index,
+        )
+
         return self
 
     # noinspection PyMissingOrEmptyDocstring
@@ -140,7 +151,9 @@ class BaseShapCalculator(
         return pd.concat(shap_df_per_split)
 
     @abstractmethod
-    def _consolidate_splits(self, shap_all_splits_df: pd.DataFrame) -> pd.DataFrame:
+    def _consolidate_splits(
+        self, shap_all_splits_df: pd.DataFrame, observation_index: pd.Index
+    ) -> pd.DataFrame:
         pass
 
     @staticmethod
@@ -184,9 +197,15 @@ class ShapMatrixCalculator(
     (n_observations, n_targets * n_features).
     """
 
-    def _consolidate_splits(self, shap_all_splits_df: pd.DataFrame) -> pd.DataFrame:
+    def _consolidate_splits(
+        self, shap_all_splits_df: pd.DataFrame, observation_index: pd.Index
+    ) -> pd.DataFrame:
         # Group SHAP matrix by observation ID and aggregate SHAP values using mean()
-        return shap_all_splits_df.groupby(level=0, sort=False, observed=True).mean()
+        return (
+            shap_all_splits_df.groupby(level=0, sort=False, observed=True)
+            .mean()
+            .reindex(labels=observation_index)
+        )
 
     @staticmethod
     def _shap_for_split(
@@ -278,11 +297,16 @@ class InteractionMatrixCalculator(
             columns=interaction_matrix.columns,
         )
 
-    def _consolidate_splits(self, shap_all_splits_df: pd.DataFrame) -> pd.DataFrame:
+    def _consolidate_splits(
+        self, shap_all_splits_df: pd.DataFrame, observation_index: pd.Index
+    ) -> pd.DataFrame:
         # Group SHAP matrix by observation ID and feature, and aggregate using mean()
-        return shap_all_splits_df.groupby(
-            level=(0, 1), sort=False, observed=True
-        ).mean()
+        # return shap_all_splits_df
+        return (
+            shap_all_splits_df.groupby(level=(0, 1), sort=False, observed=True)
+            .mean()
+            .reindex(labels=observation_index, level=0)
+        )
 
     @staticmethod
     def _shap_for_split(
