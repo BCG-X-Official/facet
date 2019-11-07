@@ -179,6 +179,9 @@ class ShapMatrixCalculator(
 ):
     """
     Base class for SHAP matrix calculations.
+
+    The :attr:`.matrix` property returns a SHAP matrix of shape
+    (n_observations, n_targets * n_features).
     """
 
     def _consolidate_splits(self, shap_all_splits_df: pd.DataFrame) -> pd.DataFrame:
@@ -245,9 +248,12 @@ class InteractionMatrixCalculator(
 ):
     """
     Base class for SHAP interaction matrix calculations.
+
+    The :attr:`.matrix` property returns a SHAP matrix of shape
+    (n_observations * n_features, n_targets * n_features), i.e., for each observation
+    and target we get a feature interaction matrix of size n_features * n_features.
     """
 
-    @property
     def diagonals(self) -> pd.DataFrame:
         """
         The diagonals of all SHAP interaction matrices, of shape
@@ -265,7 +271,7 @@ class InteractionMatrixCalculator(
                 interaction_matrix.values.reshape(
                     (n_observations, n_features, n_targets, n_features)
                 ),
-                axis1=2,
+                axis1=1,
                 axis2=3,
             ).reshape((n_observations, n_targets * n_features)),
             index=interaction_matrix.index.levels[0],
