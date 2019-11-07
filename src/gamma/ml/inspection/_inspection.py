@@ -68,6 +68,9 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF
         "_explainer_factory",
     ]
 
+    COL_IMPORTANCE = "importance"
+    COL_IMPORTANCE_MARGINAL = "marginal importance"
+
     def __init__(
         self,
         crossfit: LearnerCrossfit[T_LearnerPipelineDF],
@@ -169,33 +172,38 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF
           for multi-target models
         """
         shap_matrix = self.shap_matrix()
-        n_targets = self.crossfit.training_sample.n_targets
-        if n_targets == 1:
-            mean_abs_importance: pd.Series = shap_matrix.abs().mean()
-        else:
-            mean_abs_importance: pd.DataFrame = shap_matrix.T.groupby(
-                level=0, sort=False, observed=True
-            ).abs().mean().T
+        mean_abs_importance: pd.Series = shap_matrix.abs().mean()
+
+        total_importance: float = mean_abs_importance.sum()
 
         if marginal:
 
             diagonals = self._fitted_interaction_matrix_calculator().diagonals()
 
-            if n_targets == 1:
-                mean_abs_importance_incremental: pd.Series = (diagonals.abs().mean())
-            else:
-                mean_abs_importance_incremental: pd.DataFrame = diagonals.T.groupby(
-                    level=0, sort=False, observed=True
-                ).abs().mean().T
+            # noinspection PyTypeChecker
+            mean_abs_importance_marginal: pd.Series = (
+                cast(pd.DataFrame, shap_matrix * 2) - diagonals
+            ).abs().mean()
 
-            feature_importances = (
-                mean_abs_importance_incremental / mean_abs_importance.sum()
-            )
+            # noinspection PyTypeChecker
+            feature_importances = cast(
+                pd.Series, mean_abs_importance_marginal / total_importance
+            ).rename(BaseLearnerInspector.COL_IMPORTANCE_MARGINAL)
 
         else:
-            feature_importances = mean_abs_importance / mean_abs_importance.sum()
+            # noinspection PyTypeChecker
+            feature_importances = cast(
+                pd.Series, mean_abs_importance / total_importance
+            ).rename(BaseLearnerInspector.COL_IMPORTANCE)
 
-        return feature_importances.sort_values(ascending=False)
+        if self.crossfit.training_sample.n_targets > 1:
+            assert (
+                mean_abs_importance.index.nlevels == 2
+            ), "2 index levels in place for multi-output models"
+
+            feature_importances: pd.DataFrame = mean_abs_importance.unstack(level=0)
+
+        return feature_importances
 
     def feature_dependency_matrix(self) -> pd.DataFrame:
         """
