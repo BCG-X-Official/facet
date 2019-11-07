@@ -413,7 +413,7 @@ class BaseLearnerRanker(
 
         if len(fit_params) > 0:
             log.warning(
-                "Ignoting arg fit_params: current ranker implementation uses "
+                "Ignoring arg fit_params: current ranker implementation uses "
                 "GridSearchCV which does not support fit_params"
             )
 
@@ -561,7 +561,7 @@ class RegressorRanker(
     ) -> RegressorCrossfit[T_RegressorPipelineDF]:
         return RegressorCrossfit(
             base_estimator=pipeline,
-            cv=self._cv,
+            cv=cv,
             n_jobs=self.n_jobs,
             shared_memory=self.shared_memory,
             pre_dispatch=self.pre_dispatch,
@@ -582,7 +582,7 @@ class ClassifierRanker(
     def _make_crossfit(
         self,
         pipeline: T_ClassifierPipelineDF,
-        cv,
+        cv: BaseCrossValidator,
         n_jobs,
         shared_memory,
         pre_dispatch,
@@ -590,7 +590,7 @@ class ClassifierRanker(
     ) -> ClassifierCrossfit[T_ClassifierPipelineDF]:
         return ClassifierCrossfit(
             base_estimator=pipeline,
-            cv=self._cv,
+            cv=cv,
             n_jobs=self.n_jobs,
             shared_memory=self.shared_memory,
             pre_dispatch=self.pre_dispatch,
