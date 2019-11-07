@@ -339,17 +339,15 @@ class InteractionMatrixCalculator(
             np.ndarray, List[np.ndarray]
         ] = shap_interaction_values_fn(x_oob)
 
-        target = training_sample.target
-
         if isinstance(shap_interaction_tensors, np.ndarray):
             # if we have a single target, the explainer will have returned a single
             # tensor as an ndarray
             shap_interaction_tensors: List[np.ndarray] = [shap_interaction_tensors]
 
-        if isinstance(target, pd.Series):
-            target_names = [target.name]
+        if training_sample.n_targets == 1:
+            target_names = [training_sample.target_columns]
         else:
-            target_names = target.columns.values
+            target_names = training_sample.target_columns
 
         interaction_matrix_per_target: List[
             pd.DataFrame
@@ -374,7 +372,7 @@ class InteractionMatrixCalculator(
         return im.reindex(
             pd.MultiIndex.from_product(
                 iterables=(im.index.levels[0], features_out),
-                names=(training_sample.index.name, Sample.COL_FEATURE),
+                names=(x_oob.index.name, Sample.COL_FEATURE),
             )
         )
 
