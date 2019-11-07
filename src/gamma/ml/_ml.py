@@ -120,6 +120,7 @@ class Sample:
         """
         return self._features
 
+    @property
     def target_columns(self) -> Union[str, pd.Index]:
         """
         Name of the target column, of column index of all targets if this sample has
