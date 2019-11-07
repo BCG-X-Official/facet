@@ -283,7 +283,7 @@ class InteractionMatrixCalculator(
         n_observations = self._n_observations
         n_features = self._n_features
         n_targets = self._n_targets
-        interaction_matrix = self.matrix
+        interaction_matrix = self._shap
 
         return pd.DataFrame(
             np.diagonal(
