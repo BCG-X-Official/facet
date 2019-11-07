@@ -159,16 +159,6 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF
 
         return self._interaction_matrix_calculator.matrix
 
-    @staticmethod
-    @abstractmethod
-    def _shap_matrix_calculator_cls() -> Type[ShapMatrixCalculator]:
-        pass
-
-    @staticmethod
-    @abstractmethod
-    def _interaction_matrix_calculator_cls() -> Type[InteractionMatrixCalculator]:
-        pass
-
     def feature_importances(self) -> pd.Series:
         """
         Feature importance computed using absolute value of shap values.
@@ -238,6 +228,16 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF
             leaf_weights=feature_importances.values,
             max_distance=1.0,
         )
+
+    @staticmethod
+    @abstractmethod
+    def _shap_matrix_calculator_cls() -> Type[ShapMatrixCalculator]:
+        pass
+
+    @staticmethod
+    @abstractmethod
+    def _interaction_matrix_calculator_cls() -> Type[InteractionMatrixCalculator]:
+        pass
 
 
 def tree_explainer_factory(estimator: BaseEstimator, data: pd.DataFrame) -> Explainer:
