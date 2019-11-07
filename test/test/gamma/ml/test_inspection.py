@@ -15,7 +15,12 @@ from sklearn.model_selection import BaseCrossValidator, RepeatedKFold
 
 from gamma.ml import Sample
 from gamma.ml.crossfit import RegressorCrossfit
-from gamma.ml.inspection import ClassifierInspector, RegressorInspector
+from gamma.ml.inspection import (
+    ClassifierInspector,
+    kernel_explainer_factory,
+    RegressorInspector,
+    tree_explainer_factory,
+)
 from gamma.ml.selection import ClassifierRanker, ParameterGrid, RegressorRanker
 from gamma.ml.validation import CircularCV
 from gamma.sklearndf import TransformerDF
@@ -99,13 +104,18 @@ def test_model_inspection(n_jobs, boston_sample: Sample) -> None:
         if isinstance(model_evaluation.pipeline.regressor, LGBMRegressorDF)
     ][0]
 
-    for model_index, model_evaluation in enumerate((best_lgbm, best_svr)):
+    for model_index, (model_evaluation, factory) in enumerate(
+        ((best_lgbm, tree_explainer_factory), (best_svr, kernel_explainer_factory))
+    ):
 
-        model_fit = RegressorCrossfit(
-            base_estimator=model_evaluation.pipeline, cv=test_cv
-        ).fit(sample=test_sample)
+        pipeline: RegressorPipelineDF = model_evaluation.pipeline
+        model_fit = RegressorCrossfit(base_estimator=pipeline, cv=test_cv).fit(
+            sample=test_sample
+        )
 
-        model_inspector = RegressorInspector(crossfit=model_fit)
+        model_inspector = RegressorInspector(
+            crossfit=model_fit, explainer_factory=factory
+        )
         # make and check shap value matrix
         shap_matrix = model_inspector.shap_matrix()
 

@@ -34,6 +34,8 @@ from gamma.viz.dendrogram import LinkageTree
 log = logging.getLogger(__name__)
 
 __all__ = [
+    "kernel_explainer_factory",
+    "tree_explainer_factory",
     "ExplainerFactory",
     "BaseLearnerInspector",
     "ClassifierInspector",
@@ -274,34 +276,6 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF
         pass
 
 
-def tree_explainer_factory(model: BaseLearnerDF, data: pd.DataFrame) -> Explainer:
-    """
-    Return the  explainer :class:`shap.Explainer` used to compute the shap values.
-
-    Try to return :class:`shap.TreeExplainer` if ``self.estimator`` is compatible,
-    i.e. is tree-based.
-
-    :param model: estimator from which we want to compute shap values
-    :param data: data used to compute the shap values
-    :return: :class:`shap.TreeExplainer` if the estimator is compatible
-    """
-    return TreeExplainer(model=model)
-
-
-def kernel_explainer_factory(model: BaseLearnerDF, data: pd.DataFrame) -> Explainer:
-    """
-    Return the  explainer :class:`shap.Explainer` used to compute the shap values.
-
-    Try to return :class:`shap.TreeExplainer` if ``self.estimator`` is compatible,
-    i.e. is tree-based.
-
-    :param model: estimator from which we want to compute shap values
-    :param data: data used to compute the shap values
-    :return: :class:`shap.TreeExplainer` if the estimator is compatible
-    """
-    return KernelExplainer(model=model.predict, data=data)
-
-
 class RegressorInspector(
     BaseLearnerInspector[T_RegressorPipelineDF], Generic[T_RegressorPipelineDF]
 ):
@@ -382,3 +356,31 @@ class ClassifierInspector(
     @staticmethod
     def _interaction_matrix_calculator_cls() -> Type[InteractionMatrixCalculator]:
         return ClassifierInteractionMatrixCalculator
+
+
+def tree_explainer_factory(model: BaseLearnerDF, data: pd.DataFrame) -> Explainer:
+    """
+    Return the  explainer :class:`shap.Explainer` used to compute the shap values.
+
+    Try to return :class:`shap.TreeExplainer` if ``self.estimator`` is compatible,
+    i.e. is tree-based.
+
+    :param model: estimator from which we want to compute shap values
+    :param data: data used to compute the shap values
+    :return: :class:`shap.TreeExplainer` if the estimator is compatible
+    """
+    return TreeExplainer(model=model)
+
+
+def kernel_explainer_factory(model: BaseLearnerDF, data: pd.DataFrame) -> Explainer:
+    """
+    Return the  explainer :class:`shap.Explainer` used to compute the shap values.
+
+    Try to return :class:`shap.TreeExplainer` if ``self.estimator`` is compatible,
+    i.e. is tree-based.
+
+    :param model: estimator from which we want to compute shap values
+    :param data: data used to compute the shap values
+    :return: :class:`shap.TreeExplainer` if the estimator is compatible
+    """
+    return KernelExplainer(model=model.predict, data=data)
