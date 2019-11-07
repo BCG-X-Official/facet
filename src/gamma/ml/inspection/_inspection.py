@@ -10,7 +10,6 @@ from scipy.cluster.hierarchy import linkage
 from scipy.spatial.distance import squareform
 from shap import KernelExplainer, TreeExplainer
 from shap.explainers.explainer import Explainer
-from sklearn.base import BaseEstimator
 
 from gamma.common import deprecated
 from gamma.common.parallelization import ParallelizableMixin
@@ -275,39 +274,32 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF
         pass
 
 
-def tree_explainer_factory(estimator: BaseEstimator, data: pd.DataFrame) -> Explainer:
+def tree_explainer_factory(model: BaseLearnerDF, data: pd.DataFrame) -> Explainer:
     """
     Return the  explainer :class:`shap.Explainer` used to compute the shap values.
 
     Try to return :class:`shap.TreeExplainer` if ``self.estimator`` is compatible,
     i.e. is tree-based.
-    Otherwise return :class:`shap.KernelExplainer` which is expected to be much slower.
 
-    :param estimator: estimator from which we want to compute shap values
+    :param model: estimator from which we want to compute shap values
     :param data: data used to compute the shap values
-    :return: :class:`shap.TreeExplainer` if the estimator is compatible,
-        else :class:`shap.KernelExplainer`."""
+    :return: :class:`shap.TreeExplainer` if the estimator is compatible
+    """
+    return TreeExplainer(model=model)
 
-    # NOTE:
-    # unfortunately, there is no convenient function in shap to determine the best
-    # explainer calibration. hence we use this try/except approach.
-    # further there is no consistent "ModelPipelineDF type X is unsupported"
-    # exception raised,
-    # which is why we need to always assume the error resulted from this cause -
-    # we should not attempt to filter the exception type or message given that it is
-    # currently inconsistent
 
-    try:
-        return TreeExplainer(model=estimator)
-    except Exception as e:
-        log.debug(
-            f"failed to instantiate shap.TreeExplainer:{str(e)},"
-            "using shap.KernelExplainer as fallback"
-        )
-        # when using KernelExplainer, shap expects "pipeline" to be a callable that
-        # predicts
-        # noinspection PyUnresolvedReferences
-        return KernelExplainer(model=estimator.predict, data=data)
+def kernel_explainer_factory(model: BaseLearnerDF, data: pd.DataFrame) -> Explainer:
+    """
+    Return the  explainer :class:`shap.Explainer` used to compute the shap values.
+
+    Try to return :class:`shap.TreeExplainer` if ``self.estimator`` is compatible,
+    i.e. is tree-based.
+
+    :param model: estimator from which we want to compute shap values
+    :param data: data used to compute the shap values
+    :return: :class:`shap.TreeExplainer` if the estimator is compatible
+    """
+    return KernelExplainer(model=model.predict, data=data)
 
 
 class RegressorInspector(
