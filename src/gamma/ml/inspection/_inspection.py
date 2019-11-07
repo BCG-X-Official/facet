@@ -24,6 +24,7 @@ from gamma.ml.inspection._shap import (
     RegressorShapMatrixCalculator,
     ShapMatrixCalculator,
 )
+from gamma.sklearndf import BaseLearnerDF
 from gamma.sklearndf.pipeline import (
     BaseLearnerPipelineDF,
     ClassifierPipelineDF,
@@ -138,10 +139,7 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF
 
         :return: shap matrix as a data frame
         """
-        if not self._shap_matrix_calculator.is_fitted:
-            self._shap_matrix_calculator.fit(crossfit=self.crossfit)
-
-        return self._shap_matrix_calculator.matrix
+        return self._fitted_shap_matrix_calculator().matrix
 
     def interaction_matrix(self) -> pd.DataFrame:
         """
@@ -154,22 +152,49 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF
 
         :return: SHAP interaction matrix as a data frame
         """
-        if not self._interaction_matrix_calculator.is_fitted:
-            self._interaction_matrix_calculator.fit(crossfit=self.crossfit)
+        self._fitted_interaction_matrix_calculator()
 
         return self._interaction_matrix_calculator.matrix
 
-    def feature_importances(self) -> pd.Series:
+    def feature_importances(
+        self, *, marginal: bool = False
+    ) -> Union[pd.Series, pd.DataFrame]:
         """
         Feature importance computed using absolute value of shap values.
 
-        :return: feature importances as their mean absolute SHAP contributions,
-          normalised to a total 100%
+        :return: feature importances as their mean absolute SHAP contributions, \
+          normalised to a total 100%. Returned as a series of length n_features for \
+          single-target models, and as a data frame of shape (n_features, n_targets) \
+          for multi-target models
         """
-        feature_importances: pd.Series = self.shap_matrix().abs().mean()
-        return (feature_importances / feature_importances.sum()).sort_values(
-            ascending=False
-        )
+        shap_matrix = self.shap_matrix()
+        n_targets = self.crossfit.training_sample.n_targets
+        if n_targets == 1:
+            mean_abs_importance: pd.Series = shap_matrix.abs().mean()
+        else:
+            mean_abs_importance: pd.DataFrame = shap_matrix.T.groupby(
+                level=0, sort=False, observed=True
+            ).abs().mean().T
+
+        if marginal:
+
+            diagonals = self._fitted_interaction_matrix_calculator().diagonals()
+
+            if n_targets == 1:
+                mean_abs_importance_incremental: pd.Series = (diagonals.abs().mean())
+            else:
+                mean_abs_importance_incremental: pd.DataFrame = diagonals.T.groupby(
+                    level=0, sort=False, observed=True
+                ).abs().mean().T
+
+            feature_importances = (
+                mean_abs_importance_incremental / mean_abs_importance.sum()
+            )
+
+        else:
+            feature_importances = mean_abs_importance / mean_abs_importance.sum()
+
+        return feature_importances.sort_values(ascending=False)
 
     def feature_dependency_matrix(self) -> pd.DataFrame:
         """
@@ -228,6 +253,16 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF
             leaf_weights=feature_importances.values,
             max_distance=1.0,
         )
+
+    def _fitted_shap_matrix_calculator(self) -> ShapMatrixCalculator:
+        if not self._shap_matrix_calculator.is_fitted:
+            self._shap_matrix_calculator.fit(crossfit=self.crossfit)
+        return self._shap_matrix_calculator
+
+    def _fitted_interaction_matrix_calculator(self) -> InteractionMatrixCalculator:
+        if not self._interaction_matrix_calculator.is_fitted:
+            self._interaction_matrix_calculator.fit(crossfit=self.crossfit)
+        return self._interaction_matrix_calculator
 
     @staticmethod
     @abstractmethod
