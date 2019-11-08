@@ -160,7 +160,19 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF
 
         return self._interaction_matrix_calculator.matrix
 
+    @deprecated(
+        message="Use method feature_importance instead. "
+        "This method will be removed in a future release."
+    )
     def feature_importances(
+        self, *, marginal: bool = False
+    ) -> Union[pd.Series, pd.DataFrame]:
+        """
+        Deprecated. Use :meth:`.feature_importance` instead.
+        """
+        return self.feature_importance(marginal=marginal)
+
+    def feature_importance(
         self, *, marginal: bool = False
     ) -> Union[pd.Series, pd.DataFrame]:
         """
@@ -248,18 +260,18 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF
         # calculate the linkage matrix
         linkage_matrix = linkage(y=compressed_distance_vector, method="single")
 
-        # feature labels and weights will be used as the leaves of the linkage tree
-        feature_importances = self.feature_importances()
-
-        # select only the features that appear in the distance matrix, and in the
+        # Feature labels and weights will be used as the leaves of the linkage tree.
+        # Select only the features that appear in the distance matrix, and in the
         # correct order
-        feature_importances = feature_importances.reindex(feature_distance_matrix.index)
+        feature_importance = self.feature_importance().reindex(
+            feature_distance_matrix.index
+        )
 
         # build and return the linkage tree
         return LinkageTree(
             scipy_linkage_matrix=linkage_matrix,
-            leaf_labels=feature_importances.index,
-            leaf_weights=feature_importances.values,
+            leaf_labels=feature_importance.index,
+            leaf_weights=feature_importance.values,
             max_distance=1.0,
         )
 
