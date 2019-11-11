@@ -126,11 +126,9 @@ class BaseShapCalculator(
         self, crossfit: LearnerCrossfit[T_LearnerPipelineDF]
     ) -> pd.DataFrame:
         explainer_factory = self._explainer_factory
-        features_out: pd.Index = (
-            crossfit.base_estimator.preprocessing.features_out
-            if crossfit.base_estimator.preprocessing is not None
-            else crossfit.base_estimator.features_in
-        ).rename(Sample.COL_FEATURE)
+        features_out: pd.Index = crossfit.base_estimator.features_out.rename(
+            Sample.COL_FEATURE
+        )
 
         training_sample = crossfit.training_sample
 
