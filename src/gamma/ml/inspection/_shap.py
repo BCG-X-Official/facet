@@ -231,14 +231,9 @@ class ShapMatrixCalculator(
         target = training_sample.target
 
         if isinstance(shap_values, np.ndarray):
-            # if we have a single target, the explainer will have returned a single
-            # tensor as an ndarray
+            # if we have a single target *and* no classification, the explainer will
+            # have returned a single tensor as an ndarray
             shap_values: List[np.ndarray] = [shap_values]
-
-        if isinstance(target, pd.Series):
-            target_names = [target.name]
-        else:
-            target_names = target.columns.values
 
         # convert to a data frame per target (different logic depending on whether
         # we have a regressor or a classifier)
@@ -249,15 +244,17 @@ class ShapMatrixCalculator(
             )
         ]
 
-        # if we have a single target, return that target; else, add a top level to
-        # the column index indicating each target
+        # if we have a single target, return the data frame for that target;
+        # else, add a top level to the column index indicating each target
+
         if len(shap_values_df_per_target) == 1:
             return shap_values_df_per_target[0]
         else:
+            assert training_sample.n_targets > 1
             return pd.concat(
                 shap_values_df_per_target,
                 axis=1,
-                keys=target_names,
+                keys=target.columns.values,
                 names=[Sample.COL_TARGET],
             )
 
@@ -340,14 +337,9 @@ class InteractionMatrixCalculator(
         ] = shap_interaction_values_fn(x_oob)
 
         if isinstance(shap_interaction_tensors, np.ndarray):
-            # if we have a single target, the explainer will have returned a single
-            # tensor as an ndarray
+            # if we have a single target *and* no classification, the explainer will
+            # have returned a single tensor as an ndarray
             shap_interaction_tensors: List[np.ndarray] = [shap_interaction_tensors]
-
-        if training_sample.n_targets == 1:
-            target_names = [training_sample.target_columns]
-        else:
-            target_names = training_sample.target_columns
 
         interaction_matrix_per_target: List[
             pd.DataFrame
@@ -361,10 +353,11 @@ class InteractionMatrixCalculator(
         if len(interaction_matrix_per_target) == 1:
             im = interaction_matrix_per_target[0]
         else:
+            assert training_sample.n_targets > 1
             im = pd.concat(
                 interaction_matrix_per_target,
                 axis=1,
-                keys=target_names,
+                keys=training_sample.target_columns,
                 names=[Sample.COL_TARGET],
             )
 
