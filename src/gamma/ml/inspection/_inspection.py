@@ -178,6 +178,10 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF
         """
         Feature importance computed using absolute value of shap values.
 
+        :param marginal: if `True` calculate marginal feature importance, i.e., \
+            the relative loss in SHAP contribution when the feature is removed \
+            and all other features remain in place (default: `False`)
+
         :return: feature importances as their mean absolute SHAP contributions, \
           normalised to a total 100%. Returned as a series of length n_features for \
           single-target models, and as a data frame of shape (n_features, n_targets) \
