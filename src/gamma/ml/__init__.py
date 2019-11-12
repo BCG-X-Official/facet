@@ -16,4 +16,7 @@ Implements the following subpackages:
     with each other, and with the target variable, based on the SHAP approach
 """
 
+import gamma.common.licensing as _licensing
 from ._ml import Sample
+
+_licensing.check_license(__package__)
