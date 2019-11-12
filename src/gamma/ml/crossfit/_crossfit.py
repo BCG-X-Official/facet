@@ -118,7 +118,7 @@ class BaseCrossfit(
         self._ensure_fitted()
         return len(self._model_by_split)
 
-    def splits(self) -> Generator[Tuple[Sequence[int], Sequence[int]], None, None]:
+    def splits(self) -> Iterator[Tuple[Sequence[int], Sequence[int]]]:
         self._ensure_fitted()
         return self.cv.split(
             self._training_sample.features, self._training_sample.target
@@ -173,6 +173,7 @@ class LearnerCrossfit(BaseCrossfit[T_LearnerDF], ABC, Generic[T_LearnerDF]):
         self,
         base_estimator: T_LearnerDF,
         cv: BaseCrossValidator,
+        *,
         n_jobs: Optional[int] = None,
         shared_memory: Optional[bool] = None,
         pre_dispatch: Optional[Union[str, int]] = None,
