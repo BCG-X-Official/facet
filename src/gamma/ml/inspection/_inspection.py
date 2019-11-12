@@ -274,7 +274,7 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF
             list of linkage trees if the base estimator is a multi-output model
         """
         return self._linkage_from_affinity_matrix(
-            feature_affinity_matrix=self._dependencies(), target=0
+            feature_affinity_matrix=self._dependencies()
         )
 
     def feature_equivalence_linkage(self) -> Union[LinkageTree, List[LinkageTree]]:
@@ -286,7 +286,19 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF
             list of linkage trees if the base estimator is a multi-output model
         """
         return self._linkage_from_affinity_matrix(
-            feature_affinity_matrix=self._equivalence(), target=0
+            feature_affinity_matrix=self._equivalence()
+        )
+
+    def feature_synergy_linkage(self) -> Union[LinkageTree, List[LinkageTree]]:
+        """
+        Return the :class:`.LinkageTree` based on the
+        :meth:`feature_synergy_matrix`.
+
+        :return: linkage tree for the shap clustering dendrogram; \
+            list of linkage trees if the base estimator is a multi-output model
+        """
+        return self._linkage_from_affinity_matrix(
+            feature_affinity_matrix=self._synergies()
         )
 
     @property
@@ -322,6 +334,9 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF
             matrix, matrix_tidy, atol=1e-8, rtol=1e-8, equal_nan=True
         ), f"arg matrix is diagonal:\n{matrix}\n{matrix_tidy}\n{matrix - matrix_tidy}"
 
+        # replace nan values with 0.0 = no affinity when correlation is undefined
+        matrix_tidy = np.nan_to_num(matrix_tidy, copy=False)
+
         # set the matrix diagonals to 1.0 = full affinity of each feature with itself
         for matrix_for_target in matrix_tidy:
             np.fill_diagonal(matrix_for_target, 1.0)
@@ -345,8 +360,29 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF
         return matrix_df
 
     def _linkage_from_affinity_matrix(
+        self, feature_affinity_matrix: np.ndarray
+    ) -> Union[LinkageTree, List[LinkageTree]]:
+        # calculate the linkage trees for all targets in a feature distance matrix;
+        # matrix has shape (n_targets, n_features, n_features) with values ranging from
+        # (1 = closest, 0 = most distant)
+        # return a linkage tree if there is only one target, else return a list of
+        # linkage trees
+        n_targets = feature_affinity_matrix.shape[0]
+        if n_targets == 1:
+            return self._linkage_from_affinity_matrix_for_target(
+                feature_affinity_matrix, target=0
+            )
+        else:
+            return [
+                self._linkage_from_affinity_matrix_for_target(
+                    feature_affinity_matrix, target=i
+                )
+                for i in range(n_targets)
+            ]
+
+    def _linkage_from_affinity_matrix_for_target(
         self, feature_affinity_matrix: np.ndarray, target: int
-    ):
+    ) -> LinkageTree:
         # calculate the linkage tree from the a given target in a feature distance
         # matrix;
         # matrix has shape (n_targets, n_features, n_features) with values ranging from
@@ -456,9 +492,12 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF
 
         return self._tidy_up_affinity_matrix(dependencies_per_target)
 
-    def _synergies(self) -> np.ndarray:
-        # return an ndarray with feature/feature synergies for all feature pairs
+    def _direct_synergies(self) -> np.ndarray:
+        # return an ndarray with direct feature/feature synergies for all feature pairs
         # with shape (n_targets, n_features, n_features)
+        #
+        # a direct synergy is solely based on the interaction values of two features
+        # and does not take indirect synergies into account (see white paper)
 
         n_targets = self._n_targets
         n_features: int = self._n_features
@@ -496,18 +535,67 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF
             interaction_variance_matrix_per_target / pearson_quotients
         )
 
+    def _synergies(self) -> np.ndarray:
+        # return an ndarray with feature/feature synergies for all feature pairs
+        # with shape (n_targets, n_features, n_features)
+
+        # synergy is the residual dependency after subtracting equivalence
+        synergy_matrix = self._dependencies() - self._equivalence()
+
+        # reset the diagonal to 1: every feature is fully synergistic with itself
+        for m in synergy_matrix:
+            np.fill_diagonal(m, 1.0)
+
+        return synergy_matrix
+
     def _equivalence(self) -> np.ndarray:
         # return an ndarray with feature/feature equivalence for all feature pairs
         # with shape (n_targets, n_features, n_features)
 
-        # equivalence is the residual dependency after subtracting synergies
-        equivalence_matrix = self._dependencies() - self._synergies()
+        n_targets = self._n_targets
+        n_features: int = self._n_features
 
-        # reset the diagonal to 1: every feature is fully equivalent with itself
-        for m in equivalence_matrix:
-            np.fill_diagonal(m, 1.0)
+        # get the shap values
+        # as shape (n_targets, n_observations, n_features)
+        shap_values = (
+            self.shap_matrix()
+            .values.reshape((-1, n_targets, n_features))
+            .swapaxes(0, 1)
+        )
 
-        return equivalence_matrix
+        # get the shap interaction values
+        # as shape (n_targets, n_observations, n_features, n_features)
+        interactions = (
+            self.interaction_matrix()
+            .values.reshape((-1, n_targets, n_features, n_features))
+            .swapaxes(0, 1)
+        )
+
+        # get the pearson quotients
+        # as shape (n_targets, n_features, n_features)
+        pearson_quotients = self._pearson_quotients()
+
+        equivalence = np.ones((n_targets, n_features, n_features))
+
+        for i in range(n_features):
+            for j in range(i + 1, n_features):
+                equivalence[:, i, j] = equivalence[:, j, i] = (
+                    _covariance_per_row(
+                        shap_values[:, :, i] - interactions[:, :, i, j],
+                        shap_values[:, :, j] - interactions[:, :, i, j],
+                    )
+                    / pearson_quotients[:, i, j]
+                )
+
+        assert equivalence.shape == (
+            n_targets,
+            n_features,
+            n_features,
+        ), "shape of equivalence matrix is (n_targets, n_features, n_features)"
+
+        # the synergies are the interaction variances normalised with the pearson
+        # quotients
+        return equivalence
 
     @staticmethod
     @abstractmethod
@@ -602,6 +690,7 @@ class ClassifierInspector(
         return ClassifierInteractionMatrixCalculator
 
 
+# noinspection PyUnusedLocal
 def tree_explainer_factory(model: BaseLearnerDF, data: pd.DataFrame) -> Explainer:
     """
     Return the  explainer :class:`shap.Explainer` used to compute the shap values.
@@ -610,7 +699,7 @@ def tree_explainer_factory(model: BaseLearnerDF, data: pd.DataFrame) -> Explaine
     i.e. is tree-based.
 
     :param model: estimator from which we want to compute shap values
-    :param data: data used to compute the shap values
+    :param data: (ignored)
     :return: :class:`shap.TreeExplainer` if the estimator is compatible
     """
     return TreeExplainer(model=model)
@@ -628,3 +717,19 @@ def kernel_explainer_factory(model: BaseLearnerDF, data: pd.DataFrame) -> Explai
     :return: :class:`shap.TreeExplainer` if the estimator is compatible
     """
     return KernelExplainer(model=model.predict, data=data)
+
+
+def _covariance_per_row(a: np.ndarray, b: np.ndarray) -> np.ndarray:
+    # calculate the pair-wise variance of 2D matrices a and b
+    # a and b must have the same shape (n_rows, n_columns)
+    # returns a vector of pairwise covariances of shape (n_rows)
+
+    assert a.ndim == b.ndim == 2, "args a and b are 2D matrices"
+    assert a.shape == b.shape, "args a and b have the same shape"
+
+    # row-wise mean of input arrays, and subtract from input arrays themselves
+    a_ma = a - a.mean(-1, keepdims=True)
+    b_mb = b - b.mean(-1, keepdims=True)
+
+    # calculate pair-wise covariance for each row of a and b
+    return np.einsum("ij,ij->i", a_ma, b_mb) / a.shape[1]
