@@ -8,6 +8,7 @@ from typing import *
 import pandas as pd
 from sklearn.model_selection import BaseCrossValidator
 
+from gamma.common.fit import FittableMixin
 from gamma.common.parallelization import ParallelizableMixin
 from gamma.ml import Sample
 from gamma.sklearndf import BaseEstimatorDF, BaseLearnerDF, ClassifierDF, RegressorDF
@@ -23,7 +24,9 @@ T_ClassifierDF = TypeVar("T_ClassifierDF", bound=ClassifierDF)
 T_RegressorDF = TypeVar("T_RegressorDF", bound=RegressorDF)
 
 
-class BaseCrossfit(ParallelizableMixin, ABC, Generic[T_EstimatorDF]):
+class BaseCrossfit(
+    FittableMixin[Sample], ParallelizableMixin, ABC, Generic[T_EstimatorDF]
+):
     """
     Fits an estimator to all train splits of a given cross-validation strategy.
 
@@ -115,7 +118,7 @@ class BaseCrossfit(ParallelizableMixin, ABC, Generic[T_EstimatorDF]):
         self._ensure_fitted()
         return len(self._model_by_split)
 
-    def splits(self) -> Generator[Tuple[Sequence[int], Sequence[int]], None, None]:
+    def splits(self) -> Iterator[Tuple[Sequence[int], Sequence[int]]]:
         self._ensure_fitted()
         return self.cv.split(
             self._training_sample.features, self._training_sample.target
@@ -131,10 +134,6 @@ class BaseCrossfit(ParallelizableMixin, ABC, Generic[T_EstimatorDF]):
         """The sample used to train this crossfit."""
         self._ensure_fitted()
         return self._training_sample
-
-    def _ensure_fitted(self) -> None:
-        if self._training_sample is None:
-            raise RuntimeError(f"{type(self).__name__} expected to be fitted")
 
     # noinspection PyPep8Naming
     @staticmethod
@@ -174,6 +173,7 @@ class LearnerCrossfit(BaseCrossfit[T_LearnerDF], ABC, Generic[T_LearnerDF]):
         self,
         base_estimator: T_LearnerDF,
         cv: BaseCrossValidator,
+        *,
         n_jobs: Optional[int] = None,
         shared_memory: Optional[bool] = None,
         pre_dispatch: Optional[Union[str, int]] = None,
