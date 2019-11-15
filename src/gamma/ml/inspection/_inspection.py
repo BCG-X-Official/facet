@@ -160,18 +160,6 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF
         """
         return self._fitted_interaction_matrix_calculator().matrix
 
-    @deprecated(
-        message="Use method feature_importance instead. "
-        "This method will be removed in a future release."
-    )
-    def feature_importances(
-        self, *, marginal: bool = False
-    ) -> Union[pd.Series, pd.DataFrame]:
-        """
-        Deprecated. Use :meth:`.feature_importance` instead.
-        """
-        return self.feature_importance(marginal=marginal)
-
     def feature_importance(
         self, *, marginal: bool = False
     ) -> Union[pd.Series, pd.DataFrame]:
@@ -428,6 +416,18 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF
     @abstractmethod
     def _interaction_matrix_calculator_cls() -> Type[InteractionMatrixCalculator]:
         pass
+
+    @deprecated(
+        message="Use method feature_importance instead. "
+        "This method will be removed in a future release."
+    )
+    def feature_importances(
+        self, *, marginal: bool = False
+    ) -> Union[pd.Series, pd.DataFrame]:
+        """
+        Deprecated. Use :meth:`.feature_importance` instead.
+        """
+        return self.feature_importance(marginal=marginal)
 
     @deprecated(
         message="Replaced by method feature_association_matrix. "
