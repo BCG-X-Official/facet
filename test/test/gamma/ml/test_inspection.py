@@ -319,12 +319,8 @@ def test_model_inspection_classifier(n_jobs, iris_sample: Sample) -> None:
 
     # check correlation values
     for c in corr_matrix.columns:
-        assert (
-            -1.0
-            <= corr_matrix.fillna(0).loc[:, c].min()
-            <= corr_matrix.fillna(0).loc[:, c].max()
-            <= 1.0
-        )
+        c_corr = corr_matrix.loc[:, c]
+        assert -1.0 <= c_corr.min() <= c_corr.max() <= 1.0
 
     # check actual values using checksum:
     assert (
