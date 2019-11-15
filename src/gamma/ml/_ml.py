@@ -235,6 +235,16 @@ class Sample:
 
         return subsample
 
+    def drop_features(self, features: Sequence[str]) -> "Sample":
+        """
+        Return a new sample, dropping the features with the given names.
+
+        :param features: names of the features to be dropped
+        :return: copy of this sample, containing only the features not included in the \
+            given names
+        """
+        return self.select_features(self._features.drop(features))
+
     def replace_features(self, features: pd.DataFrame) -> "Sample":
         """
         Return a new sample using the given features, and the target variable(s) of \
