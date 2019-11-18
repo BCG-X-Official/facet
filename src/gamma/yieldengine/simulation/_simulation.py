@@ -8,7 +8,9 @@ from typing import *
 import numpy as np
 import pandas as pd
 
-from gamma.ml.crossfit import ClassifierCrossfit, LearnerCrossfit, RegressorCrossfit
+from gamma.ml import Sample
+from gamma.ml.crossfit import LearnerCrossfit
+from gamma.sklearndf import ClassifierDF, RegressorDF
 from gamma.sklearndf.transformation import FunctionTransformerDF
 from gamma.yieldengine.partition import Partitioner, T_Number
 
@@ -20,6 +22,8 @@ __all__ = [
 ]
 
 T_CrossFit = TypeVar("T_CrossFit", bound=LearnerCrossfit)
+T_RegressorDF = TypeVar("T_RegressorDF", bound=RegressorDF)
+T_ClassifierDF = TypeVar("T_ClassifierDF", bound=ClassifierDF)
 
 
 class UnivariateSimulation(Generic[T_Number]):
@@ -182,7 +186,9 @@ class BaseUnivariateSimulator(ABC, Generic[T_CrossFit]):
         pass
 
 
-class UnivariateProbabilitySimulator(BaseUnivariateSimulator[ClassifierCrossfit]):
+class UnivariateProbabilitySimulator(
+    BaseUnivariateSimulator[LearnerCrossfit[T_ClassifierDF]], Generic[T_ClassifierDF]
+):
     """
     Univariate simulation for change in average predicted probability (CAPP) based on a
     classification model.
@@ -201,8 +207,61 @@ class UnivariateProbabilitySimulator(BaseUnivariateSimulator[ClassifierCrossfit]
             "release"
         )
 
+    def _probabilities_oob(
+        self, sample: Sample
+    ) -> Generator[Union[pd.DataFrame, List[pd.DataFrame]], None, None]:
+        yield from self._classification_oob(
+            sample=sample, method=lambda model, x: model.predict_proba(x)
+        )
 
-class UnivariateUpliftSimulator(BaseUnivariateSimulator[RegressorCrossfit]):
+    def _log_probabilities_oob(
+        self, sample: Sample
+    ) -> Generator[Union[pd.DataFrame, List[pd.DataFrame]], None, None]:
+        yield from self._classification_oob(
+            sample=sample, method=lambda model, x: model.predict_log_proba(x)
+        )
+
+    def _decision_function(
+        self, sample: Sample
+    ) -> Generator[Union[pd.Series, pd.DataFrame], None, None]:
+        yield from self._classification_oob(
+            sample=sample, method=lambda model, x: model.decision_function(x)
+        )
+
+    def _classification_oob(
+        self,
+        sample: Sample,
+        method: Callable[
+            [ClassifierDF, pd.DataFrame],
+            Union[pd.DataFrame, List[pd.DataFrame], pd.Series],
+        ],
+    ) -> Generator[Union[pd.DataFrame, List[pd.DataFrame], pd.Series], None, None]:
+        """
+        Predict all values in the test set.
+
+        The result is a data frame with one row per prediction, indexed by the
+        observations in the sample and the split id (index level ``COL_SPLIT_ID``),
+        and with columns ``COL_PREDICTION` (the predicted value for the
+        given observation and split), and ``COL_TARGET`` (the actual target)
+
+        Note that there can be multiple prediction rows per observation if the test
+        splits overlap.
+
+        :return: the data frame with the crossfit per observation and test split
+        """
+
+        # todo: move this method to Simulator class -- too specific!
+
+        for split_id, (model, (_, test_indices)) in enumerate(
+            zip(self.crossfit.models(), self.crossfit.splits())
+        ):
+            test_features = sample.features.iloc[test_indices, :]
+            yield method(model, test_features)
+
+
+class UnivariateUpliftSimulator(
+    BaseUnivariateSimulator[LearnerCrossfit[T_RegressorDF]], Generic[T_RegressorDF]
+):
     """
     Univariate simulation for target uplift based on a regression model.
     """
@@ -288,8 +347,8 @@ class UnivariateUpliftSimulator(BaseUnivariateSimulator[RegressorCrossfit]):
                     (predictions_for_split_hist, predictions_for_split_syn),
                 ) in enumerate(
                     zip(
-                        crossfit._predictions_oob(sample=sample),
-                        crossfit._predictions_oob(sample=synthetic_sample),
+                        self._predictions_oob(sample=sample),
+                        self._predictions_oob(sample=synthetic_sample),
                     )
                 ):
                     absolute_target_change = predictions_for_split_syn.mean(
@@ -306,6 +365,29 @@ class UnivariateUpliftSimulator(BaseUnivariateSimulator[RegressorCrossfit]):
                 UnivariateUpliftSimulator._COL_ABSOLUTE_TARGET_CHANGE,
             ],
         )
+
+    def _predictions_oob(
+        self, sample: Sample
+    ) -> Generator[Union[pd.Series, pd.DataFrame], None, None]:
+        """
+        Predict all values in the test set.
+
+        The result is a data frame with one row per prediction, indexed by the
+        observations in the sample and the split id (index level ``COL_SPLIT_ID``),
+        and with columns ``COL_PREDICTION` (the predicted value for the
+        given observation and split), and ``COL_TARGET`` (the actual target)
+
+        Note that there can be multiple prediction rows per observation if the test
+        splits overlap.
+
+        :return: the data frame with the crossfit per observation and test split
+        """
+
+        for split_id, (model, (_, test_indices)) in enumerate(
+            zip(self.crossfit.models(), self.crossfit.splits())
+        ):
+            test_features = sample.features.iloc[test_indices, :]
+            yield model.predict(X=test_features)
 
     def _aggregate_simulation_results(
         self, results_per_split: pd.DataFrame
