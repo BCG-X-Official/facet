@@ -8,10 +8,10 @@ from typing import *
 import numpy as np
 import pandas as pd
 
+from gamma.common.parallelization import ParallelizableMixin
 from gamma.ml import Sample
 from gamma.ml.crossfit import LearnerCrossfit
 from gamma.sklearndf import ClassifierDF, RegressorDF
-from gamma.sklearndf.transformation import FunctionTransformerDF
 from gamma.yieldengine.partition import Partitioner, T_Number
 
 __all__ = [
@@ -113,7 +113,7 @@ class UnivariateSimulation(Generic[T_Number]):
         return self._max_percentile
 
 
-class BaseUnivariateSimulator(ABC, Generic[T_CrossFit]):
+class BaseUnivariateSimulator(ParallelizableMixin, ABC, Generic[T_CrossFit]):
     """
     Estimates the average change in outcome for a range of values for a given feature,
     using cross-validated crossfit for all observations in a given data sample.
@@ -123,19 +123,31 @@ class BaseUnivariateSimulator(ABC, Generic[T_CrossFit]):
 
     Works both with estimating the average change for target variables of regressors,
     or probabilities of binary classifiers.
-
-    :param crossfit: cross-validated crossfit of a model for all observations \
-        in a given sample
-    :param min_percentile: lower bound of the confidence interval (default: 2.5)
-    :param max_percentile: upper bound of the confidence interval (default: 97.5)
     """
 
     def __init__(
         self,
         crossfit: T_CrossFit,
+        *,
         min_percentile: float = 2.5,
         max_percentile: float = 97.5,
+        n_jobs: Optional[int] = None,
+        shared_memory: Optional[bool] = None,
+        pre_dispatch: Optional[Union[str, int]] = None,
+        verbose: Optional[int] = None,
     ):
+        """
+        :param crossfit: cross-validated crossfit of a model for all observations \
+        in a given sample
+        :param min_percentile: lower bound of the confidence interval (default: 2.5)
+        :param max_percentile: upper bound of the confidence interval (default: 97.5)
+        """
+        super().__init__(
+            n_jobs=n_jobs,
+            shared_memory=shared_memory,
+            pre_dispatch=pre_dispatch,
+            verbose=verbose,
+        )
 
         if not crossfit.is_fitted:
             raise ValueError("arg crossfit expected to be fitted")
@@ -154,6 +166,9 @@ class BaseUnivariateSimulator(ABC, Generic[T_CrossFit]):
         self._crossfit = crossfit
         self._max_percentile = max_percentile
         self._min_percentile = min_percentile
+
+    # add parallelization parameters to __init__ docstring
+    __init__.__doc__ += ParallelizableMixin.__init__.__doc__
 
     @property
     def crossfit(self) -> T_CrossFit:
@@ -250,8 +265,6 @@ class UnivariateProbabilitySimulator(
         :return: the data frame with the crossfit per observation and test split
         """
 
-        # todo: move this method to Simulator class -- too specific!
-
         for split_id, (model, (_, test_indices)) in enumerate(
             zip(self.crossfit.models(), self.crossfit.splits())
         ):
@@ -305,7 +318,7 @@ class UnivariateUpliftSimulator(
         )
 
     def _simulate_feature_with_values(
-        self, feature_name: str, simulated_values: Iterable[Any]
+        self, feature_name: str, simulated_values: Sequence[Any]
     ) -> pd.DataFrame:
         """
         Run a simulation on a feature.
@@ -321,73 +334,78 @@ class UnivariateUpliftSimulator(
           `relative_target_change`.
         """
 
+        def _compact_data_frame(df: pd.DataFrame):
+            # helper method to ensure a data frame is not a view, to minimise memory
+            # requirements before passing on for parallel processing
+            if df.values.base is df.values:
+                return df
+            else:
+                return df.copy(deep=True)
+
         crossfit = self.crossfit
         sample = crossfit.training_sample
 
         if feature_name not in sample.features.columns:
             raise ValueError(f"Feature '{feature_name}' not in sample")
 
-        def _simulate_values() -> Generator[Tuple[int, Any, float], None, None]:
-            feature_dtype = sample.features.loc[:, feature_name].dtype
-            for value in simulated_values:
-                # replace the simulated column with a constant value
-                synthetic_sample = sample.replace_features(
-                    FunctionTransformerDF(
-                        func=lambda x: (
-                            x.assign(**{feature_name: value}).astype(
-                                {feature_name: feature_dtype}
-                            )
-                        ),
-                        validate=False,
-                    ).fit_transform(X=sample.features, y=sample.target)
+        with self._parallel() as parallel:
+            result: List[List[float]] = parallel(
+                self._delayed(UnivariateUpliftSimulator._simulate_values_for_split)(
+                    model=model,
+                    subsample_features=_compact_data_frame(
+                        sample.subsample(iloc=test_indices).features
+                    ),
+                    feature_name=feature_name,
+                    simulated_values=simulated_values,
                 )
+                for (model, (_, test_indices)) in zip(
+                    self.crossfit.models(), self.crossfit.splits()
+                )
+            )
 
-                for (
-                    split_id,
-                    (predictions_for_split_hist, predictions_for_split_syn),
-                ) in enumerate(
-                    zip(
-                        self._predictions_oob(sample=sample),
-                        self._predictions_oob(sample=synthetic_sample),
-                    )
-                ):
-                    absolute_target_change = predictions_for_split_syn.mean(
-                        axis=0
-                    ) - predictions_for_split_hist.mean(axis=0)
-
-                    yield split_id, value, absolute_target_change
-
-        return pd.DataFrame(
-            data=_simulate_values(),
-            columns=[
-                UnivariateUpliftSimulator._COL_SPLIT_ID,
-                UnivariateUpliftSimulator._COL_PARAMETER_VALUE,
-                UnivariateUpliftSimulator._COL_ABSOLUTE_TARGET_CHANGE,
-            ],
+        col_split_id = UnivariateUpliftSimulator._COL_SPLIT_ID
+        col_parameter_value = UnivariateUpliftSimulator._COL_PARAMETER_VALUE
+        col_absolute_target_change = (
+            UnivariateUpliftSimulator._COL_ABSOLUTE_TARGET_CHANGE
         )
 
-    def _predictions_oob(
-        self, sample: Sample
-    ) -> Generator[Union[pd.Series, pd.DataFrame], None, None]:
-        """
-        Predict all values in the test set.
+        return pd.concat(
+            [
+                pd.DataFrame(
+                    {
+                        col_split_id: split_id,
+                        col_parameter_value: simulated_values,
+                        col_absolute_target_change: absolute_target_changes,
+                    }
+                )
+                for split_id, absolute_target_changes in enumerate(result)
+            ]
+        )
 
-        The result is a data frame with one row per prediction, indexed by the
-        observations in the sample and the split id (index level ``COL_SPLIT_ID``),
-        and with columns ``COL_PREDICTION` (the predicted value for the
-        given observation and split), and ``COL_TARGET`` (the actual target)
+    @staticmethod
+    def _simulate_values_for_split(
+        model: T_RegressorDF,
+        subsample_features: pd.DataFrame,
+        feature_name: str,
+        simulated_values: Sequence[Any],
+    ) -> List[float]:
+        # for a list of values to be simulated, return a list of absolute target changes
+        feature_dtype = subsample_features.loc[:, feature_name].dtype
 
-        Note that there can be multiple prediction rows per observation if the test
-        splits overlap.
+        def _absolute_target_change(value: Any) -> float:
+            # replace the simulated column with a constant value
+            synthetic_subsample_features = subsample_features.assign(
+                **{feature_name: value}
+            ).astype({feature_name: feature_dtype})
 
-        :return: the data frame with the crossfit per observation and test split
-        """
+            predictions_for_split_hist = model.predict(X=subsample_features)
+            predictions_for_split_syn = model.predict(X=synthetic_subsample_features)
 
-        for split_id, (model, (_, test_indices)) in enumerate(
-            zip(self.crossfit.models(), self.crossfit.splits())
-        ):
-            test_features = sample.features.iloc[test_indices, :]
-            yield model.predict(X=test_features)
+            return predictions_for_split_syn.mean(
+                axis=0
+            ) - predictions_for_split_hist.mean(axis=0)
+
+        return [_absolute_target_change(value) for value in simulated_values]
 
     def _aggregate_simulation_results(
         self, results_per_split: pd.DataFrame
