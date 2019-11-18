@@ -15,7 +15,7 @@ from shap.explainers.explainer import Explainer
 from gamma.common import deprecated
 from gamma.common.parallelization import ParallelizableMixin
 from gamma.ml import Sample
-from gamma.ml.crossfit import ClassifierCrossfit, LearnerCrossfit, RegressorCrossfit
+from gamma.ml.crossfit import LearnerCrossfit
 from gamma.ml.inspection._shap import (
     ClassifierInteractionMatrixCalculator,
     ClassifierShapMatrixCalculator,
@@ -459,7 +459,7 @@ class RegressorInspector(
 
     def __init__(
         self,
-        crossfit: RegressorCrossfit[T_RegressorPipelineDF],
+        crossfit: LearnerCrossfit[T_RegressorPipelineDF],
         *,
         explainer_factory: Optional[ExplainerFactory] = None,
         n_jobs: Optional[int] = None,
@@ -501,7 +501,7 @@ class ClassifierInspector(
 
     def __init__(
         self,
-        crossfit: ClassifierCrossfit[T_ClassifierPipelineDF],
+        crossfit: LearnerCrossfit[T_ClassifierPipelineDF],
         *,
         explainer_factory: Optional[ExplainerFactory] = None,
         n_jobs: Optional[int] = None,

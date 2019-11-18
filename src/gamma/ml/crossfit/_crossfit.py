@@ -15,7 +15,7 @@ from gamma.sklearndf import BaseEstimatorDF, BaseLearnerDF, ClassifierDF, Regres
 
 log = logging.getLogger(__name__)
 
-__all__ = ["BaseCrossfit", "LearnerCrossfit", "RegressorCrossfit", "ClassifierCrossfit"]
+__all__ = ["BaseCrossfit", "LearnerCrossfit"]
 
 T = TypeVar("T")
 T_EstimatorDF = TypeVar("T_EstimatorDF", bound=BaseEstimatorDF)
@@ -187,93 +187,3 @@ class LearnerCrossfit(BaseCrossfit[T_LearnerDF], ABC, Generic[T_LearnerDF]):
             pre_dispatch=pre_dispatch,
             verbose=verbose,
         )
-
-    def _predictions_oob(
-        self, sample: Sample
-    ) -> Generator[Union[pd.Series, pd.DataFrame], None, None]:
-        """
-        Predict all values in the test set.
-
-        The result is a data frame with one row per prediction, indexed by the
-        observations in the sample and the split id (index level ``COL_SPLIT_ID``),
-        and with columns ``COL_PREDICTION` (the predicted value for the
-        given observation and split), and ``COL_TARGET`` (the actual target)
-
-        Note that there can be multiple prediction rows per observation if the test
-        splits overlap.
-
-        :return: the data frame with the crossfit per observation and test split
-        """
-
-        # todo: move this method to Simulator class -- too specific!
-
-        for split_id, (model, (_, test_indices)) in enumerate(
-            zip(self.models(), self.splits())
-        ):
-            test_features = sample.features.iloc[test_indices, :]
-            yield model.predict(X=test_features)
-
-
-class RegressorCrossfit(LearnerCrossfit[T_RegressorDF], Generic[T_RegressorDF]):
-    pass
-
-
-class ClassifierCrossfit(LearnerCrossfit[T_ClassifierDF], Generic[T_ClassifierDF]):
-    __slots__ = ["_probabilities_for_all_samples", "_log_probabilities_for_all_samples"]
-
-    COL_PROBA = "proba_class_0"
-
-    __PROBA = "proba"
-    __LOG_PROBA = "log_proba"
-    __DECISION_FUNCTION = "decision_function"
-
-    def _probabilities_oob(
-        self, sample: Sample
-    ) -> Generator[Union[pd.DataFrame, List[pd.DataFrame]], None, None]:
-        yield from self._classification_oob(
-            sample=sample, method=lambda model, x: model.predict_proba(x)
-        )
-
-    def _log_probabilities_oob(
-        self, sample: Sample
-    ) -> Generator[Union[pd.DataFrame, List[pd.DataFrame]], None, None]:
-        yield from self._classification_oob(
-            sample=sample, method=lambda model, x: model.predict_log_proba(x)
-        )
-
-    def _decision_function(
-        self, sample: Sample
-    ) -> Generator[Union[pd.Series, pd.DataFrame], None, None]:
-        yield from self._classification_oob(
-            sample=sample, method=lambda model, x: model._decision_function(x)
-        )
-
-    def _classification_oob(
-        self,
-        sample: Sample,
-        method: Callable[
-            [T_ClassifierDF, pd.DataFrame],
-            Union[pd.DataFrame, List[pd.DataFrame], pd.Series],
-        ],
-    ) -> Generator[Union[pd.DataFrame, List[pd.DataFrame], pd.Series], None, None]:
-        """
-        Predict all values in the test set.
-
-        The result is a data frame with one row per prediction, indexed by the
-        observations in the sample and the split id (index level ``COL_SPLIT_ID``),
-        and with columns ``COL_PREDICTION` (the predicted value for the
-        given observation and split), and ``COL_TARGET`` (the actual target)
-
-        Note that there can be multiple prediction rows per observation if the test
-        splits overlap.
-
-        :return: the data frame with the crossfit per observation and test split
-        """
-
-        # todo: move this method to Simulator class -- too specific!
-
-        for split_id, (model, (_, test_indices)) in enumerate(
-            zip(self.models(), self.splits())
-        ):
-            test_features = sample.features.iloc[test_indices, :]
-            yield method(model, test_features)
