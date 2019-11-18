@@ -37,7 +37,7 @@ def test_univariate_simulation(
     crossfit = model_ranker.best_model_crossfit()
 
     simulator = UnivariateUpliftSimulator(
-        crossfit=crossfit, min_percentile=10, max_percentile=90
+        crossfit=crossfit, min_percentile=10, max_percentile=90, n_jobs=-3
     )
 
     parameterized_feature = "Step4-6 RawMat Vendor Compound08 Purity (#)"
