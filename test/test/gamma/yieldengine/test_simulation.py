@@ -8,9 +8,12 @@ from pandas.util.testing import assert_frame_equal
 from pytest import approx
 
 from gamma.ml import Sample
-from gamma.ml.selection import ParameterGrid, RegressorRanker
+from gamma.ml.crossfit import LearnerCrossfit
+from gamma.ml.selection import ParameterGrid
 from gamma.ml.validation import StationaryBootstrapCV
 from gamma.sklearndf import TransformerDF
+from gamma.sklearndf.pipeline import RegressorPipelineDF
+from gamma.sklearndf.regression.extra import LGBMRegressorDF
 from gamma.yieldengine.partition import ContinuousRangePartitioner
 from gamma.yieldengine.simulation import UnivariateUpliftSimulator
 
@@ -27,17 +30,23 @@ def test_univariate_simulation(
     n_jobs,
 ) -> None:
 
-    # define the circular cross validator with just 5 splits (to speed up testing)
-    cv = StationaryBootstrapCV(n_splits=N_SPLITS, random_state=42)
-
-    model_ranker = RegressorRanker(
-        grid=regressor_grids, cv=cv, scoring="r2", n_jobs=n_jobs
+    # use a pre-optimised model
+    crossfit = LearnerCrossfit(
+        base_estimator=RegressorPipelineDF(
+            preprocessing=simple_preprocessor,
+            regressor=LGBMRegressorDF(
+                max_depth=10, min_split_gain=0.2, num_leaves=50, random_state=42
+            ),
+        ),
+        cv=StationaryBootstrapCV(n_splits=N_SPLITS, random_state=42),
     ).fit(sample=sample)
 
-    crossfit = model_ranker.best_model_crossfit()
-
     simulator = UnivariateUpliftSimulator(
-        crossfit=crossfit, min_percentile=10, max_percentile=90
+        crossfit=crossfit,
+        min_percentile=10,
+        max_percentile=90,
+        n_jobs=n_jobs,
+        verbose=50,
     )
 
     parameterized_feature = "Step4-6 RawMat Vendor Compound08 Purity (#)"
