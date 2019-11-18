@@ -6,7 +6,7 @@ import pandas as pd
 from sklearn import datasets
 
 from gamma.ml import Sample
-from gamma.ml.crossfit import RegressorCrossfit
+from gamma.ml.crossfit import LearnerCrossfit
 from gamma.ml.selection import (
     ClassifierRanker,
     LearnerEvaluation,
@@ -34,7 +34,7 @@ def test_model_ranker(
     ranker = RegressorRanker(
         grid=regressor_grids, cv=cv, scoring="r2", n_jobs=n_jobs
     ).fit(sample=sample)
-    assert isinstance(ranker.best_model_crossfit(), RegressorCrossfit)
+    assert isinstance(ranker.best_model_crossfit(), LearnerCrossfit)
 
     ranking = ranker.ranking()
     assert len(ranking) > 0
