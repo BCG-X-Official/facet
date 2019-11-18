@@ -439,9 +439,11 @@ class UnivariateUpliftSimulator(
 
         return (
             results_per_split.drop(columns=UnivariateUpliftSimulator._COL_SPLIT_ID)
-            .groupby(by=UnivariateUpliftSimulator._COL_PARAMETER_VALUE)[
-                UnivariateUpliftSimulator._COL_ABSOLUTE_TARGET_CHANGE
-            ]
+            .groupby(
+                by=UnivariateUpliftSimulator._COL_PARAMETER_VALUE,
+                observed=True,
+                sort=False,
+            )[UnivariateUpliftSimulator._COL_ABSOLUTE_TARGET_CHANGE]
             .agg(
                 [
                     percentile(p)
