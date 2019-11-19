@@ -108,7 +108,7 @@ class SimulationMatplotStyle(MatplotStyle, SimulationStyle):
 
     _HISTOGRAM_SIZE_RATIO = 1 / 3
 
-    def __init__(self, ax: Optional[Axes] = None) -> None:
+    def __init__(self, *, ax: Optional[Axes] = None) -> None:
         super().__init__(ax=ax)
 
     def draw_uplift(
