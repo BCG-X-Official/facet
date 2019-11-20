@@ -16,5 +16,3 @@ partitions are integers
 :class:`CategoryPartitioner` is adapted to categorical sets
 """
 from ._partition import *
-
-__all__ = [member for member in _partition.__all__ if not member.startswith("Base")]
