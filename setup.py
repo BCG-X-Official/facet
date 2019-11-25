@@ -1,6 +1,9 @@
+"""
+Pip package definition
+"""
 from os import path
 
-from setuptools import setup
+from setuptools import find_namespace_packages, setup
 
 here = path.abspath(path.dirname(__file__))
 # Get the long description from the README file
@@ -30,7 +33,10 @@ setup(
     # This is a one-line description or tagline of what your project does. This
     # corresponds to the "Summary" metadata field:
     # https://packaging.python.org/specifications/core-metadata/#summary
-    description="GAMMA Yield-Engine",
+    description=(
+        "Gamma Yield Engine for simulating and optimising target variables "
+        "of regression and classification models"
+    ),
     # This is an optional longer description of your project that represents
     # the body of text which users will see when they visit PyPI.
     #
@@ -105,7 +111,7 @@ setup(
     #   py_modules=["my_module"],
     #
     # packages=find_packages(exclude=['contrib', 'docs', 'tests']),  # Required
-    packages=["gamma.yieldengine"],
+    packages=find_namespace_packages(where="src"),
     package_dir={"": "src"},
     namespace_packages=["gamma"],
     # Specify which Python versions you support. In contrast to the

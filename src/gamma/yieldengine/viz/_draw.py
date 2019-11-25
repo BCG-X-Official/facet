@@ -21,9 +21,8 @@ this graph there is a histogram of the feature values.
 
 from typing import *
 
-from gamma.common import ListLike
 from gamma.viz import Drawer
-from gamma.yieldengine.partition import T_Value
+from gamma.yieldengine.partition import T_Number
 from gamma.yieldengine.simulation import UnivariateSimulation
 from gamma.yieldengine.viz._style import (
     SimulationMatplotStyle,
@@ -34,11 +33,11 @@ from gamma.yieldengine.viz._style import (
 
 class _SimulationSeries(NamedTuple):
     # A set of aligned series representing the simulation result
-    median_uplift: ListLike[T_Value]
-    min_uplift: ListLike[T_Value]
-    max_uplift: ListLike[T_Value]
-    partitions: ListLike[T_Value]
-    frequencies: ListLike[T_Value]
+    median_uplift: Sequence[T_Number]
+    min_uplift: Sequence[T_Number]
+    max_uplift: Sequence[T_Number]
+    partitions: Sequence[T_Number]
+    frequencies: Sequence[T_Number]
 
 
 class SimulationDrawer(Drawer[UnivariateSimulation, SimulationStyle]):
@@ -87,7 +86,7 @@ class SimulationDrawer(Drawer[UnivariateSimulation, SimulationStyle]):
             target=data.target,
             min_percentile=data.min_percentile,
             max_percentile=data.max_percentile,
-            is_categorical_feature=data.partitioning.is_categorical,
+            is_categorical_feature=data.partitioner.is_categorical,
             partitions=simulation_series.partitions,
             frequencies=simulation_series.frequencies,
             median_uplift=simulation_series.median_uplift,
@@ -100,7 +99,7 @@ class SimulationDrawer(Drawer[UnivariateSimulation, SimulationStyle]):
             self._style.draw_histogram(
                 partitions=simulation_series.partitions,
                 frequencies=simulation_series.frequencies,
-                is_categorical_feature=data.partitioning.is_categorical,
+                is_categorical_feature=data.partitioner.is_categorical,
             )
 
     @staticmethod
@@ -115,11 +114,11 @@ class SimulationDrawer(Drawer[UnivariateSimulation, SimulationStyle]):
             simulation.median_change,
             simulation.min_change,
             simulation.max_change,
-            simulation.partitioning.partitions(),
-            simulation.partitioning.frequencies(),
+            simulation.partitioner.partitions(),
+            simulation.partitioner.frequencies(),
         )
 
-        if simulation.partitioning.is_categorical:
+        if simulation.partitioner.is_categorical:
             # for categorical features, sort the categories by the median uplift
             return _SimulationSeries(
                 *zip(*sorted(zip(*simulation_series), key=lambda x: x[0]))
