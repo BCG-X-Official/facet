@@ -29,7 +29,7 @@ setup(
     # For a discussion on single-sourcing the version across setup.py and the
     # project code, see
     # https://packaging.python.org/en/latest/single_source_version.html
-    version="1.0.0",  # Required
+    version="1.1.0",  # Required
     # This is a one-line description or tagline of what your project does. This
     # corresponds to the "Summary" metadata field:
     # https://packaging.python.org/specifications/core-metadata/#summary
@@ -132,9 +132,9 @@ setup(
         "scipy>=1.2,<1.3",
         "shap>=0.28,<0.29",
         "scikit-learn>=0.21,<0.22",
-        "gamma-common @ git+ssh://git@git.sourceai.io/BCG/gamma-common.git@1.0.0#egg=gamma.common",
-        "gamma-sklearndf @ git+ssh://git@git.sourceai.io/BCG/gamma-sklearndf.git@1.0.0#egg=gamma.sklearndf",
-        "gamma-viz @ git+ssh://git@git.sourceai.io/BCG/gamma-viz.git@1.0.0#egg=gamma.viz",
+        "gamma-common @ git+ssh://git@git.sourceai.io/BCG/gamma-common.git@1.1.0#egg=gamma.common",
+        "gamma-sklearndf @ git+ssh://git@git.sourceai.io/BCG/gamma-sklearndf.git@1.1.0#egg=gamma.sklearndf",
+        "gamma-viz @ git+ssh://git@git.sourceai.io/BCG/gamma-viz.git@1.1.0#egg=gamma.viz",
     ],
     dependency_links=[],
     # Optional
