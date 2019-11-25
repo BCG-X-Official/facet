@@ -11,12 +11,21 @@ from scipy.cluster.hierarchy import linkage
 from scipy.spatial.distance import squareform
 from shap import KernelExplainer, TreeExplainer
 from shap.explainers.explainer import Explainer
-from sklearn.base import BaseEstimator
 
 from gamma.common import deprecated
 from gamma.common.parallelization import ParallelizableMixin
 from gamma.ml import Sample
-from gamma.ml.crossfit import ClassifierCrossfit, LearnerCrossfit, RegressorCrossfit
+from gamma.ml.crossfit import LearnerCrossfit
+from gamma.ml.inspection._shap import (
+    ClassifierInteractionMatrixCalculator,
+    ClassifierShapMatrixCalculator,
+    ExplainerFactory,
+    InteractionMatrixCalculator,
+    RegressorInteractionMatrixCalculator,
+    RegressorShapMatrixCalculator,
+    ShapMatrixCalculator,
+)
+from gamma.sklearndf import BaseLearnerDF
 from gamma.sklearndf.pipeline import (
     BaseLearnerPipelineDF,
     ClassifierPipelineDF,
@@ -26,7 +35,14 @@ from gamma.viz.dendrogram import LinkageTree
 
 log = logging.getLogger(__name__)
 
-__all__ = ["BaseLearnerInspector", "ClassifierInspector", "RegressorInspector"]
+__all__ = [
+    "kernel_explainer_factory",
+    "tree_explainer_factory",
+    "ExplainerFactory",
+    "BaseLearnerInspector",
+    "ClassifierInspector",
+    "RegressorInspector",
+]
 
 #
 # Type variables
@@ -45,10 +61,6 @@ T_ClassifierPipelineDF = TypeVar("T_ClassifierPipelineDF", bound=ClassifierPipel
 class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF]):
     """
     Inspect a pipeline through its SHAP values.
-
-    :param crossfit: predictor containing the information about the
-      pipeline, the data (a Sample object), the cross-validation and crossfit.
-    :param explainer_factory: calibration that returns a shap Explainer
     """
 
     __slots__ = [
@@ -58,20 +70,30 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF
         "_explainer_factory",
     ]
 
-    COL_FEATURE = "feature"
+    COL_IMPORTANCE = "importance"
+    COL_IMPORTANCE_MARGINAL = "marginal importance"
 
     def __init__(
         self,
         crossfit: LearnerCrossfit[T_LearnerPipelineDF],
-        explainer_factory: Optional[
-            Callable[[BaseEstimator, pd.DataFrame], Explainer]
-        ] = None,
         *,
-        n_jobs: int = 1,
-        shared_memory: bool = True,
-        verbose: int = 0,
+        explainer_factory: Optional[ExplainerFactory] = None,
+        n_jobs: Optional[int] = None,
+        shared_memory: Optional[bool] = None,
+        pre_dispatch: Optional[Union[str, int]] = None,
+        verbose: Optional[int] = None,
     ) -> None:
-        super().__init__(n_jobs=n_jobs, shared_memory=shared_memory, verbose=verbose)
+        """
+        :param crossfit: predictor containing the information about the
+          pipeline, the data (a Sample object), the cross-validation and crossfit.
+        :param explainer_factory: calibration that returns a shap Explainer
+        """
+        super().__init__(
+            n_jobs=n_jobs,
+            shared_memory=shared_memory,
+            pre_dispatch=pre_dispatch,
+            verbose=verbose,
+        )
 
         if not crossfit.is_fitted:
             raise ValueError("arg crossfit expected to be fitted")
@@ -86,8 +108,25 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF
         self.shared_memory = shared_memory
         self.verbose = verbose
 
-        self._shap_matrix: Optional[pd.DataFrame] = None
+        self._shap_matrix_calculator = self._shap_matrix_calculator_cls()(
+            explainer_factory=self._explainer_factory,
+            n_jobs=self.n_jobs,
+            shared_memory=self.shared_memory,
+            pre_dispatch=self.pre_dispatch,
+            verbose=self.verbose,
+        )
+
+        self._interaction_matrix_calculator = self._interaction_matrix_calculator_cls()(
+            explainer_factory=self._explainer_factory,
+            n_jobs=self.n_jobs,
+            shared_memory=self.shared_memory,
+            pre_dispatch=self.pre_dispatch,
+            verbose=self.verbose,
+        )
+
         self._feature_dependency_matrix: Optional[pd.DataFrame] = None
+
+    __init__.__doc__ += ParallelizableMixin.__init__.__doc__
 
     @property
     def crossfit(self) -> LearnerCrossfit[T_LearnerPipelineDF]:
@@ -101,203 +140,369 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF
         Calculate the SHAP matrix for all splits.
 
         Each row is an observation in a specific test split, and each column is a
-        feature, and values are the SHAP values per observation/split and feature.
+        feature. Values are the SHAP values per observation, calculated as the mean
+        SHAP value across all splits that contain the observation.
 
         :return: shap matrix as a data frame
         """
+        return self._fitted_shap_matrix_calculator().matrix
 
-        if self._shap_matrix is not None:
-            return self._shap_matrix
-
-        crossfit = self.crossfit
-        shap_matrix_for_split_to_df_fn = self._shap_matrix_for_split_to_df
-        explainer_factory_fn = self._explainer_factory
-        features_out = (
-            crossfit.base_estimator.preprocessing.features_out
-            if crossfit.base_estimator.preprocessing is not None
-            else crossfit.base_estimator.features_in
-        )
-
-        training_sample = crossfit.training_sample
-
-        with self._parallel() as parallel:
-            shap_values_df_for_splits = parallel(
-                self._delayed(BaseLearnerInspector._shap_values_for_split)(
-                    model,
-                    training_sample,
-                    oob_split,
-                    features_out,
-                    explainer_factory_fn,
-                    shap_matrix_for_split_to_df_fn,
-                )
-                for model, (_train_split, oob_split) in zip(
-                    crossfit.models(), crossfit.splits()
-                )
-            )
-
-        shap_values_df = pd.concat(shap_values_df_for_splits)
-
-        # Group SHAP matrix by observation ID and aggregate SHAP values using mean()
-        self._shap_matrix = shap_values_df.groupby(by=shap_values_df.index).mean()
-
-        return self._shap_matrix
-
-    @staticmethod
-    def _shap_values_for_split(
-        model: T_LearnerPipelineDF,
-        training_sample: Sample,
-        oob_split: np.ndarray,
-        features_out: pd.Index,
-        explainer_factory_fn: Callable[[BaseEstimator, pd.DataFrame], Explainer],
-        shap_matrix_for_split_to_df_fn: Callable[
-            [Union[np.ndarray, List[np.ndarray]], Sequence, Sequence], pd.DataFrame
-        ],
-    ):
-
-        # get the features of all out-of-bag observations
-        x_oob = training_sample.subsample(loc=oob_split).features
-
-        # pre-process the features
-        if model.preprocessing is not None:
-            x_oob = model.preprocessing.transform(x_oob)
-
-        # calculate the shap values (returned as an ndarray)
-        shap_values_ndarray = explainer_factory_fn(
-            model.final_estimator.root_estimator, x_oob
-        ).shap_values(x_oob)
-
-        # convert to a data frame (different logic depending on whether we have a
-        # regressor or a classifier)
-        shap_values_df = shap_matrix_for_split_to_df_fn(
-            shap_values_ndarray, oob_split, x_oob.columns
-        )
-
-        # reindex to add missing columns and fill n/a values with zero shap importance
-        return shap_values_df.reindex(columns=features_out).fillna(0.0)
-
-    @staticmethod
-    @abstractmethod
-    def _shap_matrix_for_split_to_df(
-        raw_shap_values: Union[np.ndarray, List[np.ndarray]],
-        index: Sequence,
-        columns: Sequence,
-    ) -> pd.DataFrame:
+    def interaction_matrix(self) -> pd.DataFrame:
         """
-        Convert the SHAP matrix for a single split to a data frame.
+        Calculate the SHAP interaction matrix for all splits.
 
-        :param raw_shap_values: the raw values returned by the SHAP explainer
-        :param index: index of the transformed data the pipeline was trained on
-        :param columns: columns of the transformed data the pipeline was trained on
-        :return: SHAP matrix of a single split as data frame
+        Each row is an observation in a specific test split, and each column is a
+        combination of two features. Values are the SHAP interaction values per
+        observation, calculated as the mean SHAP interaction value across all splits
+        that contain the observation.
+
+        :return: SHAP interaction matrix as a data frame
         """
-        pass
+        return self._fitted_interaction_matrix_calculator().matrix
 
-    def feature_importances(self) -> pd.Series:
+    def feature_importance(
+        self, *, marginal: bool = False
+    ) -> Union[pd.Series, pd.DataFrame]:
         """
         Feature importance computed using absolute value of shap values.
 
-        :return: feature importances as their mean absolute SHAP contributions,
-          normalised to a total 100%
-        """
-        feature_importances: pd.Series = self.shap_matrix().abs().mean()
-        return (feature_importances / feature_importances.sum()).sort_values(
-            ascending=False
-        )
+        :param marginal: if `True` calculate marginal feature importance, i.e., \
+            the relative loss in SHAP contribution when the feature is removed \
+            and all other features remain in place (default: `False`)
 
-    def feature_dependency_matrix(self) -> pd.DataFrame:
+        :return: feature importances as their mean absolute SHAP contributions, \
+          normalised to a total 100%. Returned as a series of length n_features for \
+          single-target models, and as a data frame of shape (n_features, n_targets) \
+          for multi-target models
         """
-        Return the Pearson correlation matrix of the shap matrix.
+        shap_matrix = self.shap_matrix()
+        mean_abs_importance: pd.Series = shap_matrix.abs().mean()
+
+        total_importance: float = mean_abs_importance.sum()
+
+        if marginal:
+
+            diagonals = self._fitted_interaction_matrix_calculator().diagonals()
+
+            # noinspection PyTypeChecker
+            mean_abs_importance_marginal: pd.Series = (
+                cast(pd.DataFrame, shap_matrix * 2) - diagonals
+            ).abs().mean()
+
+            # noinspection PyTypeChecker
+            feature_importances = cast(
+                pd.Series, mean_abs_importance_marginal / total_importance
+            ).rename(BaseLearnerInspector.COL_IMPORTANCE_MARGINAL)
+
+        else:
+            # noinspection PyTypeChecker
+            feature_importances = cast(
+                pd.Series, mean_abs_importance / total_importance
+            ).rename(BaseLearnerInspector.COL_IMPORTANCE)
+
+        if self._n_targets > 1:
+            assert (
+                mean_abs_importance.index.nlevels == 2
+            ), "2 index levels in place for multi-output models"
+
+            feature_importances: pd.DataFrame = mean_abs_importance.unstack(level=0)
+
+        return feature_importances
+
+    def feature_association_matrix(self) -> pd.DataFrame:
+        """
+        Calculate the Pearson correlation matrix of the shap matrix.
 
         :return: data frame with column and index given by the feature names,
-          and values are the Pearson correlations of the shap values of features
+          and values as the Pearson correlations of the shap values of features
         """
         if self._feature_dependency_matrix is None:
-            shap_matrix = self.shap_matrix()
-
-            # exclude features with zero Shapley importance
-            # noinspection PyUnresolvedReferences
-            shap_matrix = shap_matrix.loc[:, (shap_matrix != 0.0).any()]
-
-            self._feature_dependency_matrix = shap_matrix.corr(method="pearson")
+            self._feature_dependency_matrix = self._feature_matrix_to_df(
+                self._association_matrix()
+            )
 
         return self._feature_dependency_matrix
 
-    @deprecated(
-        message="method cluster_dependent_features has been replaced by method "
-        "feature_dependency_linkage and will be removed in a future version."
-    )
-    def cluster_dependent_features(self) -> LinkageTree:
+    def feature_association_linkage(self) -> Union[LinkageTree, List[LinkageTree]]:
         """
-        Deprecated. Use :meth:`~.feature_dependency_linkage` instead.
-        """
-        return self.feature_dependency_linkage()
+        Calculate the :class:`.LinkageTree` based on the
+        :meth:`.feature_dependency_matrix`.
 
-    def feature_dependency_linkage(self) -> LinkageTree:
+        :return: linkage tree for the shap clustering dendrogram; \
+            list of linkage trees if the base estimator is a multi-output model
         """
-        Return the :class:`.LinkageTree` based on the `feature_dependency_matrix`.
+        return self._linkage_from_affinity_matrix(
+            feature_affinity_matrix=self._association_matrix()
+        )
 
-        :return: linkage tree for the shap clustering dendrogram
+    def feature_synergy_matrix(self) -> pd.DataFrame:
         """
-        # convert shap correlations to distances (1 = most distant)
-        feature_distance_matrix = 1 - self.feature_dependency_matrix().abs()
+        Calculate pairwise feature synergies based on feature interaction values.
+
+        Synergy values are expressed as relative absolute shap contributions and range
+        between 0.0 (no contribution) to 1.0 (full contribution).
+
+        For features :math:`i` and :math:`j`, the synergistic shap contribution is calculated as
+
+        .. math::
+            \\mathrm{syn}_{ij} = \\frac{| \\vec{\\phi}_{ij} | }
+                { \\sum_{a=1}^n\\sum_{b=1}^n| \\vec{\\phi}_{ab} | }
+
+        where :math:`| \\vec v |` represents the sum of absolute values of each
+        element of vector :math:`\\vec v`.
+
+        The total relative synergistic contribution of features :math:`i` and :math:`j`
+        is :math:`\\mathrm{syn}_{ij} + \\mathrm{syn}_{ji} = 2\\mathrm{syn}_{ij}`.
+
+        The residual, non-synergistic contribution of feature :math:`i` is
+        :math:`\\mathrm{syn}_{ii}`
+
+        The matrix returned by this method is a diagonal matrix
+
+        .. math::
+
+            \\newcommand\\syn[1]{\\mathrm{syn}_{#1}}
+            \\newcommand\\nan{\\mathit{nan}}
+            \\syn{} = \\begin{pmatrix}
+                \\syn{11} & \\nan & \\nan & \\dots & \\nan \\\\
+                2\\syn{21} & \\syn{22} & \\nan & \\dots & \\nan \\\\
+                2\\syn{31} & 2\\syn{32} & \\syn{33} & \\dots & \\nan \\\\
+                \\vdots & \\vdots & \\vdots & \\ddots & \\vdots \\\\
+                2\\syn{n1} & 2\\syn{n2} & 2\\syn{n3} & \\dots & \\syn{nn} \\\\
+            \\end{pmatrix}
+
+        with :math:`\\sum_{a=1}^n \\sum_{b=a}^n \\mathrm{syn}_{ab} = 1`
+
+        :return: feature synergy matrix as a data frame
+        """
+
+        n_features = self._n_features
+        n_targets = self._n_targets
+
+        # get a feature interaction ndarray with shape
+        # (n_observations, n_targets, n_features, n_features)
+        # where the innermost feature x feature arrays are symmetrical
+        im_matrix_per_observation_and_target = (
+            self.interaction_matrix()
+            .values.reshape((-1, n_features, n_targets, n_features))
+            .swapaxes(1, 2)
+        )
+
+        # calculate the mean absolute interactions for each target and feature/feature
+        # interaction
+        # resulting in a matrix of mean absolute values with shape
+        # (n_targets, n_features, n_features)
+        mean_absolute_interactions = abs(im_matrix_per_observation_and_target).mean(
+            axis=0
+        )
+        assert mean_absolute_interactions.shape == (
+            n_targets,
+            n_features,
+            n_features,
+        ), (
+            f"shape {mean_absolute_interactions.shape} "
+            f"== {(n_targets, n_features, n_features)}"
+        )
+
+        # we normalise the MAI for each target to a total of 1
+        mean_absolute_interactions /= mean_absolute_interactions.sum()
+        assert mean_absolute_interactions.shape == (n_targets, n_features, n_features)
+
+        # the total interaction effect for features i and j is the total of matrix
+        # cells (i,j) and (j,i); theoretically both should be the same but to minimize
+        # numerical errors we total both in the lower matrix triangle (but excluding the
+        # matrix diagonal, hence k=1)
+        mean_absolute_interactions += np.triu(mean_absolute_interactions, k=1).swapaxes(
+            1, 2
+        )
+        assert mean_absolute_interactions.shape == (n_targets, n_features, n_features)
+
+        # discard the upper matrix triangle by setting it to NAN
+        mean_absolute_interactions += np.triu(
+            np.full(shape=(n_features, n_features), fill_value=np.nan), k=1
+        )[np.newaxis, :, :]
+        assert mean_absolute_interactions.shape == (n_targets, n_features, n_features)
+
+        return self._feature_matrix_to_df(mean_absolute_interactions)
+
+    @property
+    def _n_targets(self) -> int:
+        return self.crossfit.training_sample.n_targets
+
+    @property
+    def _features(self) -> pd.Index:
+        return self.crossfit.base_estimator.features_out.rename(Sample.COL_FEATURE)
+
+    @property
+    def _n_features(self) -> int:
+        return len(self._features)
+
+    def _feature_matrix_to_df(self, matrix: np.ndarray) -> pd.DataFrame:
+        # transform a matrix of shape (n_targets, n_features, n_features)
+        # to a data frame
+
+        n_features = self._n_features
+        n_targets = self._n_targets
+
+        assert matrix.shape == (n_targets, n_features, n_features)
+
+        # transform to 2D shape (n_features, n_targets * n_features)
+        matrix_2d = matrix.swapaxes(0, 1).reshape((n_features, n_targets * n_features))
+
+        # convert ndarray to data frame with appropriate indices
+        matrix_df = pd.DataFrame(
+            data=matrix_2d, columns=self.shap_matrix().columns, index=self._features
+        )
+
+        assert matrix_df.shape == (n_features, n_targets * n_features)
+
+        return matrix_df
+
+    def _linkage_from_affinity_matrix(
+        self, feature_affinity_matrix: np.ndarray
+    ) -> Union[LinkageTree, List[LinkageTree]]:
+        # calculate the linkage trees for all targets in a feature distance matrix;
+        # matrix has shape (n_targets, n_features, n_features) with values ranging from
+        # (1 = closest, 0 = most distant)
+        # return a linkage tree if there is only one target, else return a list of
+        # linkage trees
+        n_targets = feature_affinity_matrix.shape[0]
+        if n_targets == 1:
+            return self._linkage_from_affinity_matrix_for_target(
+                feature_affinity_matrix, target=0
+            )
+        else:
+            return [
+                self._linkage_from_affinity_matrix_for_target(
+                    feature_affinity_matrix, target=i
+                )
+                for i in range(n_targets)
+            ]
+
+    def _linkage_from_affinity_matrix_for_target(
+        self, feature_affinity_matrix: np.ndarray, target: int
+    ) -> LinkageTree:
+        # calculate the linkage tree from the a given target in a feature distance
+        # matrix;
+        # matrix has shape (n_targets, n_features, n_features) with values ranging from
+        # (1 = closest, 0 = most distant)
+        # arg target is an integer index
 
         # compress the distance matrix (required by SciPy)
-        compressed_distance_vector = squareform(feature_distance_matrix)
+        compressed_distance_vector = squareform(
+            1 - abs(feature_affinity_matrix[target])
+        )
 
         # calculate the linkage matrix
         linkage_matrix = linkage(y=compressed_distance_vector, method="single")
 
-        # feature labels and weights will be used as the leaves of the linkage tree
-        feature_importances = self.feature_importances()
-
-        # select only the features that appear in the distance matrix, and in the
+        # Feature labels and weights will be used as the leaves of the linkage tree.
+        # Select only the features that appear in the distance matrix, and in the
         # correct order
-        feature_importances = feature_importances.loc[
-            feature_importances.index.intersection(feature_distance_matrix.index)
-        ]
+
+        feature_importance = self.feature_importance()
+        n_targets = self._n_targets
 
         # build and return the linkage tree
         return LinkageTree(
             scipy_linkage_matrix=linkage_matrix,
-            leaf_labels=feature_importances.index,
-            leaf_weights=feature_importances.values,
+            leaf_labels=feature_importance.index,
+            leaf_weights=feature_importance.values[n_targets]
+            if n_targets > 1
+            else feature_importance.values,
             max_distance=1.0,
         )
 
+    def _fitted_shap_matrix_calculator(self) -> ShapMatrixCalculator:
+        if not self._shap_matrix_calculator.is_fitted:
+            self._shap_matrix_calculator.fit(crossfit=self.crossfit)
+        return self._shap_matrix_calculator
 
-def tree_explainer_factory(estimator: BaseEstimator, data: pd.DataFrame) -> Explainer:
-    """
-    Return the  explainer :class:`shap.Explainer` used to compute the shap values.
+    def _fitted_interaction_matrix_calculator(self) -> InteractionMatrixCalculator:
+        if not self._interaction_matrix_calculator.is_fitted:
+            self._interaction_matrix_calculator.fit(crossfit=self.crossfit)
+        return self._interaction_matrix_calculator
 
-    Try to return :class:`shap.TreeExplainer` if ``self.estimator`` is compatible,
-    i.e. is tree-based.
-    Otherwise return :class:`shap.KernelExplainer` which is expected to be much slower.
+    def _association_matrix(self) -> np.ndarray:
+        # return an ndarray with a pearson correlation matrix of the shap matrix
+        # for each target, with shape (n_targets, n_features, n_features)
 
-    :param estimator: estimator from which we want to compute shap values
-    :param data: data used to compute the shap values
-    :return: :class:`shap.TreeExplainer` if the estimator is compatible,
-        else :class:`shap.KernelExplainer`."""
+        n_targets: int = self._n_targets
+        n_features: int = self._n_features
 
-    # NOTE:
-    # unfortunately, there is no convenient function in shap to determine the best
-    # explainer calibration. hence we use this try/except approach.
-    # further there is no consistent "ModelPipelineDF type X is unsupported"
-    # exception raised,
-    # which is why we need to always assume the error resulted from this cause -
-    # we should not attempt to filter the exception type or message given that it is
-    # currently inconsistent
-
-    try:
-        return TreeExplainer(model=estimator)
-    except Exception as e:
-        log.debug(
-            f"failed to instantiate shap.TreeExplainer:{str(e)},"
-            "using shap.KernelExplainer as fallback"
+        # get the shap matrix as an ndarray of shape
+        # (n_targets, n_observations, n_features);
+        # this is achieved by re-shaping the shap matrix to get the additional "target"
+        # dimension, then swapping the target and observation dimensions
+        shap_matrix_per_target = (
+            self.shap_matrix()
+            .values.reshape((-1, n_targets, n_features))
+            .swapaxes(0, 1)
         )
-        # when using KernelExplainer, shap expects "pipeline" to be a callable that
-        # predicts
-        # noinspection PyUnresolvedReferences
-        return KernelExplainer(model=estimator.predict, data=data)
+
+        def _ensure_diagonality(matrix: np.ndarray) -> np.ndarray:
+            # remove potential floating point errors
+            matrix = (matrix + matrix.T) / 2
+
+            # replace nan values with 0.0 = no association when correlation is undefined
+            np.nan_to_num(matrix, copy=False)
+
+            # set the matrix diagonals to 1.0 = full association of each feature with
+            # itself
+            np.fill_diagonal(matrix, 1.0)
+
+            return matrix
+
+        # calculate the shap correlation matrix for each target, and stack matrices
+        # horizontally
+        return np.array(
+            [
+                _ensure_diagonality(np.corrcoef(shap_for_target, rowvar=False))
+                for shap_for_target in shap_matrix_per_target
+            ]
+        )
+
+    @staticmethod
+    @abstractmethod
+    def _shap_matrix_calculator_cls() -> Type[ShapMatrixCalculator]:
+        pass
+
+    @staticmethod
+    @abstractmethod
+    def _interaction_matrix_calculator_cls() -> Type[InteractionMatrixCalculator]:
+        pass
+
+    @deprecated(
+        message="Use method feature_importance instead. "
+        "This method will be removed in a future release."
+    )
+    def feature_importances(
+        self, *, marginal: bool = False
+    ) -> Union[pd.Series, pd.DataFrame]:
+        """
+        Deprecated. Use :meth:`.feature_importance` instead.
+        """
+        return self.feature_importance(marginal=marginal)
+
+    @deprecated(
+        message="Replaced by method feature_association_matrix. "
+        "Method feature_dependency_matrix will be removed in the next release."
+    )
+    def feature_dependency_matrix(self) -> pd.DataFrame:
+        """
+        *Deprecated.* Use :meth:`~.feature_association_matrix` instead.
+        """
+        return self.feature_association_matrix()
+
+    @deprecated(
+        message="Replaced by method feature_dependency_matrix. "
+        "Method cluster_dependent_features will be removed in the next release."
+    )
+    def cluster_dependent_features(self) -> Union[LinkageTree, List[LinkageTree]]:
+        """
+        *Deprecated.* Use :meth:`~.feature_association_linkage` instead.
+        """
+        return self.feature_association_linkage()
 
 
 class RegressorInspector(
@@ -305,23 +510,22 @@ class RegressorInspector(
 ):
     """
     Inspect a regression pipeline through its SHAP values.
-
-    :param crossfit: regressor containing the information about the pipeline, \
-        the data (a Sample object), the cross-validation and crossfit.
-    :param explainer_factory: calibration that returns a shap Explainer
     """
 
     def __init__(
         self,
-        crossfit: RegressorCrossfit[T_RegressorPipelineDF],
-        explainer_factory: Optional[
-            Callable[[BaseEstimator, pd.DataFrame], Explainer]
-        ] = None,
+        crossfit: LearnerCrossfit[T_RegressorPipelineDF],
         *,
-        n_jobs: int = 1,
-        shared_memory: bool = True,
-        verbose: int = 0,
+        explainer_factory: Optional[ExplainerFactory] = None,
+        n_jobs: Optional[int] = None,
+        shared_memory: Optional[bool] = None,
+        verbose: Optional[int] = None,
     ) -> None:
+        """
+        :param crossfit: regressor containing the information about the pipeline, \
+            the data (a Sample object), the cross-validation and crossfit.
+        :param explainer_factory: calibration that returns a shap Explainer
+        """
         super().__init__(
             crossfit=crossfit,
             explainer_factory=explainer_factory,
@@ -330,29 +534,15 @@ class RegressorInspector(
             verbose=verbose,
         )
 
+    __init__.__doc__ += ParallelizableMixin.__init__.__doc__
+
     @staticmethod
-    def _shap_matrix_for_split_to_df(
-        raw_shap_values: Union[np.ndarray, List[np.ndarray]],
-        index: Sequence,
-        columns: Sequence,
-    ) -> pd.DataFrame:
-        """
-        Convert the SHAP matrix for a single split to a data frame.
+    def _shap_matrix_calculator_cls() -> Type[ShapMatrixCalculator]:
+        return RegressorShapMatrixCalculator
 
-        :param raw_shap_values: the raw values returned by the SHAP explainer
-        :param index: index of the transformed data the pipeline was trained on
-        :param columns: columns of the transformed data the pipeline was trained on
-        :return: SHAP matrix of a single split as data frame
-        """
-
-        # In the regression case, only ndarray outputs are expected from SHAP:
-        if not isinstance(raw_shap_values, np.ndarray):
-            raise ValueError(
-                "shap explainer output expected to be an ndarray but was "
-                f"{type(raw_shap_values)}"
-            )
-
-        return pd.DataFrame(data=raw_shap_values, index=index, columns=columns)
+    @staticmethod
+    def _interaction_matrix_calculator_cls() -> Type[InteractionMatrixCalculator]:
+        return RegressorInteractionMatrixCalculator
 
 
 class ClassifierInspector(
@@ -362,23 +552,22 @@ class ClassifierInspector(
     Inspect a classification pipeline through its SHAP values.
 
     Currently only binary, single-output classification problems are supported.
-
-    :param crossfit: classifier containing the information about the pipeline, \
-        the data (a Sample object), the cross-validation and crossfit.
-    :param explainer_factory: calibration that returns a shap Explainer
     """
 
     def __init__(
         self,
-        crossfit: ClassifierCrossfit[T_ClassifierPipelineDF],
-        explainer_factory: Optional[
-            Callable[[BaseEstimator, pd.DataFrame], Explainer]
-        ] = None,
+        crossfit: LearnerCrossfit[T_ClassifierPipelineDF],
         *,
-        n_jobs: int = 1,
-        shared_memory: bool = True,
-        verbose: int = 0,
+        explainer_factory: Optional[ExplainerFactory] = None,
+        n_jobs: Optional[int] = None,
+        shared_memory: Optional[bool] = None,
+        verbose: Optional[int] = None,
     ) -> None:
+        """
+        :param crossfit: classifier containing the information about the pipeline, \
+            the data (a Sample object), the cross-validation and crossfit.
+        :param explainer_factory: function that returns a shap Explainer
+        """
         super().__init__(
             crossfit=crossfit,
             explainer_factory=explainer_factory,
@@ -387,56 +576,57 @@ class ClassifierInspector(
             verbose=verbose,
         )
 
+    __init__.__doc__ += ParallelizableMixin.__init__.__doc__
+
     @staticmethod
-    def _shap_matrix_for_split_to_df(
-        raw_shap_values: Union[np.ndarray, List[np.ndarray]],
-        index: Sequence,
-        columns: Sequence,
-    ) -> pd.DataFrame:
-        """
-        Convert the SHAP matrix for a single split to a data frame.
+    def _shap_matrix_calculator_cls() -> Type[ShapMatrixCalculator]:
+        return ClassifierShapMatrixCalculator
 
-        :param raw_shap_values: the raw values returned by the SHAP explainer
-        :param index: index of the transformed data the pipeline was trained on
-        :param columns: columns of the transformed data the pipeline was trained on
-        :return: SHAP matrix of a single split as data frame
-        """
+    @staticmethod
+    def _interaction_matrix_calculator_cls() -> Type[InteractionMatrixCalculator]:
+        return ClassifierInteractionMatrixCalculator
 
-        # todo: adapt this calibration (and override others) to support non-binary
-        #   classification
 
-        if isinstance(raw_shap_values, list):
-            # the shap explainer returned an array [obs x features] for each of the
-            # target-classes
+# noinspection PyUnusedLocal
+def tree_explainer_factory(model: BaseLearnerDF, data: pd.DataFrame) -> Explainer:
+    """
+    Return the  explainer :class:`shap.Explainer` used to compute the shap values.
 
-            n_arrays = len(raw_shap_values)
+    Try to return :class:`shap.TreeExplainer` if ``self.estimator`` is compatible,
+    i.e. is tree-based.
 
-            # we decided to support only binary classification == 2 classes:
-            assert n_arrays == 2, (
-                "classification pipeline inspection only supports binary classifiers, "
-                f"but SHAP analysis returned values for {n_arrays} classes"
-            )
+    :param model: estimator from which we want to compute shap values
+    :param data: (ignored)
+    :return: :class:`shap.TreeExplainer` if the estimator is compatible
+    """
+    return TreeExplainer(model=model)
 
-            # in the binary classification case, we will proceed with SHAP values
-            # for class 0, since values for class 1 will just be the same
-            # values times (*-1)  (the opposite probability)
 
-            # to assure the values are returned as expected above,
-            # and no information of class 1 is discarded, assert the
-            # following:
-            assert (
-                np.allclose(raw_shap_values[0], -raw_shap_values[1]),
-                "shap_values(class 0) == -shap_values(class 1)",
-            )
+def kernel_explainer_factory(model: BaseLearnerDF, data: pd.DataFrame) -> Explainer:
+    """
+    Return the  explainer :class:`shap.Explainer` used to compute the shap values.
 
-            # all good: proceed with SHAP values for class 0:
-            raw_shap_values = raw_shap_values[0]
+    Try to return :class:`shap.TreeExplainer` if ``self.estimator`` is compatible,
+    i.e. is tree-based.
 
-        # after the above transformation, `raw_shap_values` should be ndarray:
-        if not isinstance(raw_shap_values, np.ndarray):
-            raise ValueError(
-                f"shap explainer output expected to be an ndarray but was "
-                f"{type(raw_shap_values)}"
-            )
+    :param model: estimator from which we want to compute shap values
+    :param data: data used to compute the shap values
+    :return: :class:`shap.TreeExplainer` if the estimator is compatible
+    """
+    return KernelExplainer(model=model.predict, data=data)
 
-        return pd.DataFrame(data=raw_shap_values, index=index, columns=columns)
+
+def _covariance_per_row(a: np.ndarray, b: np.ndarray) -> np.ndarray:
+    # calculate the pair-wise variance of 2D matrices a and b
+    # a and b must have the same shape (n_rows, n_columns)
+    # returns a vector of pairwise covariances of shape (n_rows)
+
+    assert a.ndim == b.ndim == 2, "args a and b are 2D matrices"
+    assert a.shape == b.shape, "args a and b have the same shape"
+
+    # row-wise mean of input arrays, and subtract from input arrays themselves
+    a_ma = a - a.mean(-1, keepdims=True)
+    b_mb = b - b.mean(-1, keepdims=True)
+
+    # calculate pair-wise covariance for each row of a and b
+    return np.einsum("ij,ij->i", a_ma, b_mb) / a.shape[1]

@@ -14,8 +14,13 @@ from sklearn.base import BaseEstimator
 from sklearn.model_selection import BaseCrossValidator, RepeatedKFold
 
 from gamma.ml import Sample
-from gamma.ml.crossfit import RegressorCrossfit
-from gamma.ml.inspection import ClassifierInspector, RegressorInspector
+from gamma.ml.crossfit import LearnerCrossfit
+from gamma.ml.inspection import (
+    ClassifierInspector,
+    kernel_explainer_factory,
+    RegressorInspector,
+    tree_explainer_factory,
+)
 from gamma.ml.selection import ClassifierRanker, ParameterGrid, RegressorRanker
 from gamma.ml.validation import CircularCV
 from gamma.sklearndf import TransformerDF
@@ -36,7 +41,7 @@ N_SPLITS = K_FOLDS * 2
 def test_model_inspection(n_jobs, boston_sample: Sample) -> None:
     # checksums for the model inspection test - one for the LGBM, one for the SVR
     checksums_shap = (17573313757033027070, 8162147391624654332)
-    checksum_corr_matrix = (15427021941901899256, 17570145586135505034)
+    checksum_corr_matrix = (13028973179387096991, 12822260854294120055)
     checksum_learner_scores = -218.87516793944133
     checksum_learner_ranks = "0972fa60fd9beb2c1f8be21324506f4d"
 
@@ -99,13 +104,18 @@ def test_model_inspection(n_jobs, boston_sample: Sample) -> None:
         if isinstance(model_evaluation.pipeline.regressor, LGBMRegressorDF)
     ][0]
 
-    for model_index, model_evaluation in enumerate((best_lgbm, best_svr)):
+    for model_index, (model_evaluation, factory) in enumerate(
+        ((best_lgbm, tree_explainer_factory), (best_svr, kernel_explainer_factory))
+    ):
 
-        model_fit = RegressorCrossfit(
-            base_estimator=model_evaluation.pipeline, cv=test_cv
-        ).fit(sample=test_sample)
+        pipeline: RegressorPipelineDF = model_evaluation.pipeline
+        model_fit = LearnerCrossfit(base_estimator=pipeline, cv=test_cv).fit(
+            sample=test_sample
+        )
 
-        model_inspector = RegressorInspector(crossfit=model_fit)
+        model_inspector = RegressorInspector(
+            crossfit=model_fit, explainer_factory=factory
+        )
         # make and check shap value matrix
         shap_matrix = model_inspector.shap_matrix()
 
@@ -124,8 +134,8 @@ def test_model_inspection(n_jobs, boston_sample: Sample) -> None:
         corr_matrix: pd.DataFrame = model_inspector.feature_dependency_matrix()
 
         # check number of rows
-        assert len(corr_matrix) == len(test_sample.features.columns) - 1
-        assert len(corr_matrix.columns) == len(test_sample.features.columns) - 1
+        assert len(corr_matrix) == len(test_sample.feature_columns)
+        assert len(corr_matrix.columns) == len(test_sample.feature_columns)
 
         # check correlation values
         for c in corr_matrix.columns:
@@ -158,7 +168,7 @@ def test_model_inspection_with_encoding(
 ) -> None:
     # define checksums for this test
     checksum_shap = 10690277977123826530
-    checksum_corr_matrix = 17327858953091581982
+    checksum_corr_matrix = 13928052446824900831
 
     checksum_learner_scores = -7.8631
     checksum_learner_ranks = "2d763e35c03b309994f6c8585cacb035"
@@ -187,7 +197,7 @@ def test_model_inspection_with_encoding(
         if isinstance(validation.pipeline.regressor, LGBMRegressorDF)
     ][0]
 
-    validation_model = RegressorCrossfit(
+    validation_model = LearnerCrossfit(
         base_estimator=validation.pipeline, cv=circular_cv, n_jobs=n_jobs
     ).fit(sample=sample)
 
@@ -304,17 +314,13 @@ def test_model_inspection_classifier(n_jobs, iris_sample: Sample) -> None:
     corr_matrix: pd.DataFrame = model_inspector.feature_dependency_matrix()
     log.info(corr_matrix)
     # check number of rows
-    assert len(corr_matrix) == len(test_sample.features.columns)
-    assert len(corr_matrix.columns) == len(test_sample.features.columns)
+    assert len(corr_matrix) == len(test_sample.feature_columns)
+    assert len(corr_matrix.columns) == len(test_sample.feature_columns)
 
     # check correlation values
     for c in corr_matrix.columns:
-        assert (
-            -1.0
-            <= corr_matrix.fillna(0).loc[:, c].min()
-            <= corr_matrix.fillna(0).loc[:, c].max()
-            <= 1.0
-        )
+        c_corr = corr_matrix.loc[:, c]
+        assert -1.0 <= c_corr.min() <= c_corr.max() <= 1.0
 
     # check actual values using checksum:
     assert (

@@ -52,8 +52,8 @@ def test_sample(batch_table: pd.DataFrame) -> None:
     # define various assertions we want to test:
     def run_assertions(s: Sample):
         assert s.target.name == "Yield"
-        assert "Yield" not in s.features.columns
-        assert len(s.features.columns) == len(batch_table.columns) - 1
+        assert "Yield" not in s.feature_columns
+        assert len(s.feature_columns) == len(batch_table.columns) - 1
 
         assert type(s.target) == pd.Series
         assert type(s.features) == pd.DataFrame
@@ -89,7 +89,7 @@ def test_sample(batch_table: pd.DataFrame) -> None:
         len(
             set(features_numerical)
             .union(set(features_non_numerical))
-            .difference(s.features.columns)
+            .difference(s.feature_columns)
         )
         == 0
     )
@@ -102,7 +102,7 @@ def test_sample(batch_table: pd.DataFrame) -> None:
     assert len(sub) == 4
 
     # test select features
-    sample_features = s2.select_features(features=s2.features.columns[0:10])
+    sample_features = s2.select_features(features=s2.feature_columns[0:10])
 
     with pytest.raises(ValueError):
         sample_features = s2.select_features(features=["does not exist"])
