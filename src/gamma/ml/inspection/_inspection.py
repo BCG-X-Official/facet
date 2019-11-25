@@ -14,7 +14,7 @@ from shap.explainers.explainer import Explainer
 
 from gamma.common.parallelization import ParallelizableMixin
 from gamma.ml import Sample
-from gamma.ml.crossfit import ClassifierCrossfit, LearnerCrossfit, RegressorCrossfit
+from gamma.ml.crossfit import LearnerCrossfit
 from gamma.ml.inspection._shap import (
     ClassifierInteractionMatrixCalculator,
     ClassifierShapMatrixCalculator,
@@ -210,10 +210,10 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF
 
     def feature_association_matrix(self) -> pd.DataFrame:
         """
-        Return the Pearson correlation matrix of the shap matrix.
+        Calculate the Pearson correlation matrix of the shap matrix.
 
         :return: data frame with column and index given by the feature names,
-          and values are the Pearson correlations of the shap values of features
+          and values as the Pearson correlations of the shap values of features
         """
         if self._feature_dependency_matrix is None:
             self._feature_dependency_matrix = self._feature_matrix_to_df(
@@ -224,7 +224,7 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF
 
     def feature_association_linkage(self) -> Union[LinkageTree, List[LinkageTree]]:
         """
-        Return the :class:`.LinkageTree` based on the
+        Calculate the :class:`.LinkageTree` based on the
         :meth:`.feature_dependency_matrix`.
 
         :return: linkage tree for the shap clustering dendrogram; \
@@ -233,6 +233,96 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF
         return self._linkage_from_affinity_matrix(
             feature_affinity_matrix=self._association_matrix()
         )
+
+    def feature_synergy_matrix(self) -> pd.DataFrame:
+        """
+        Calculate pairwise feature synergies based on feature interaction values.
+
+        Synergy values are expressed as relative absolute shap contributions and range
+        between 0.0 (no contribution) to 1.0 (full contribution).
+
+        For features :math:`i` and :math:`j`, the synergistic shap contribution is calculated as
+
+        .. math::
+            \\mathrm{syn}_{ij} = \\frac{| \\vec{\\phi}_{ij} | }
+                { \\sum_{a=1}^n\\sum_{b=1}^n| \\vec{\\phi}_{ab} | }
+
+        where :math:`| \\vec v |` represents the sum of absolute values of each
+        element of vector :math:`\\vec v`.
+
+        The total relative synergistic contribution of features :math:`i` and :math:`j`
+        is :math:`\\mathrm{syn}_{ij} + \\mathrm{syn}_{ji} = 2\\mathrm{syn}_{ij}`.
+
+        The residual, non-synergistic contribution of feature :math:`i` is
+        :math:`\\mathrm{syn}_{ii}`
+
+        The matrix returned by this method is a diagonal matrix
+
+        .. math::
+
+            \\newcommand\\syn[1]{\\mathrm{syn}_{#1}}
+            \\newcommand\\nan{\\mathit{nan}}
+            \\syn{} = \\begin{pmatrix}
+                \\syn{11} & \\nan & \\nan & \\dots & \\nan \\\\
+                2\\syn{21} & \\syn{22} & \\nan & \\dots & \\nan \\\\
+                2\\syn{31} & 2\\syn{32} & \\syn{33} & \\dots & \\nan \\\\
+                \\vdots & \\vdots & \\vdots & \\ddots & \\vdots \\\\
+                2\\syn{n1} & 2\\syn{n2} & 2\\syn{n3} & \\dots & \\syn{nn} \\\\
+            \\end{pmatrix}
+
+        with :math:`\\sum_{a=1}^n \\sum_{b=a}^n \\mathrm{syn}_{ab} = 1`
+
+        :return: feature synergy matrix as a data frame
+        """
+
+        n_features = self._n_features
+        n_targets = self._n_targets
+
+        # get a feature interaction ndarray with shape
+        # (n_observations, n_targets, n_features, n_features)
+        # where the innermost feature x feature arrays are symmetrical
+        im_matrix_per_observation_and_target = (
+            self.interaction_matrix()
+            .values.reshape((-1, n_features, n_targets, n_features))
+            .swapaxes(1, 2)
+        )
+
+        # calculate the mean absolute interactions for each target and feature/feature
+        # interaction
+        # resulting in a matrix of mean absolute values with shape
+        # (n_targets, n_features, n_features)
+        mean_absolute_interactions = abs(im_matrix_per_observation_and_target).mean(
+            axis=0
+        )
+        assert mean_absolute_interactions.shape == (
+            n_targets,
+            n_features,
+            n_features,
+        ), (
+            f"shape {mean_absolute_interactions.shape} "
+            f"== {(n_targets, n_features, n_features)}"
+        )
+
+        # we normalise the MAI for each target to a total of 1
+        mean_absolute_interactions /= mean_absolute_interactions.sum()
+        assert mean_absolute_interactions.shape == (n_targets, n_features, n_features)
+
+        # the total interaction effect for features i and j is the total of matrix
+        # cells (i,j) and (j,i); theoretically both should be the same but to minimize
+        # numerical errors we total both in the lower matrix triangle (but excluding the
+        # matrix diagonal, hence k=1)
+        mean_absolute_interactions += np.triu(mean_absolute_interactions, k=1).swapaxes(
+            1, 2
+        )
+        assert mean_absolute_interactions.shape == (n_targets, n_features, n_features)
+
+        # discard the upper matrix triangle by setting it to NAN
+        mean_absolute_interactions += np.triu(
+            np.full(shape=(n_features, n_features), fill_value=np.nan), k=1
+        )[np.newaxis, :, :]
+        assert mean_absolute_interactions.shape == (n_targets, n_features, n_features)
+
+        return self._feature_matrix_to_df(mean_absolute_interactions)
 
     @property
     def _n_targets(self) -> int:
@@ -247,8 +337,13 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF
         return len(self._features)
 
     def _feature_matrix_to_df(self, matrix: np.ndarray) -> pd.DataFrame:
+        # transform a matrix of shape (n_targets, n_features, n_features)
+        # to a data frame
+
         n_features = self._n_features
         n_targets = self._n_targets
+
+        assert matrix.shape == (n_targets, n_features, n_features)
 
         # transform to 2D shape (n_features, n_targets * n_features)
         matrix_2d = matrix.swapaxes(0, 1).reshape((n_features, n_targets * n_features))
@@ -327,46 +422,6 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF
             self._interaction_matrix_calculator.fit(crossfit=self.crossfit)
         return self._interaction_matrix_calculator
 
-    def _pearson_quotients(self) -> np.ndarray:
-        # return an ndarray with pearson quotients for all feature pairs
-        # with shape (n_targets, n_features, n_features)
-
-        n_targets = self._n_targets
-        n_features = self._n_features
-
-        # calculate the shap variance for each target/feature across observations
-        shap_var_per_target = (
-            self.shap_matrix().values.var(axis=0).reshape((n_targets, n_features, 1))
-        )
-
-        # calculate the pearson quotients for each feature pair as the square root of
-        # the product of the two features' variances
-        pearson_quotients = np.sqrt(
-            shap_var_per_target * np.transpose(shap_var_per_target, axes=(0, 2, 1))
-        )
-
-        # this should give us one quotients matrix per target
-        assert pearson_quotients.shape == (
-            n_targets,
-            n_features,
-            n_features,
-        ), "shape of pearson quotients is (n_targets, n_features, n_features)"
-
-        # fill the diagonals for all targets with nan
-
-        # create a tall array so we can handle diagonals separately for each target
-        pearson_quotients = pearson_quotients.reshape(
-            (n_targets * n_features, n_features)
-        )
-        # fill the diagonals in the tall matrix, with wrap-around
-        np.fill_diagonal(pearson_quotients, val=np.nan, wrap=True)
-        # restore the original shape
-        pearson_quotients = pearson_quotients.reshape(
-            (n_targets, n_features, n_features)
-        )
-
-        return pearson_quotients
-
     def _association_matrix(self) -> np.ndarray:
         # return an ndarray with a pearson correlation matrix of the shap matrix
         # for each target, with shape (n_targets, n_features, n_features)
@@ -426,7 +481,7 @@ class RegressorInspector(
 
     def __init__(
         self,
-        crossfit: RegressorCrossfit[T_RegressorPipelineDF],
+        crossfit: LearnerCrossfit[T_RegressorPipelineDF],
         *,
         explainer_factory: Optional[ExplainerFactory] = None,
         n_jobs: Optional[int] = None,
@@ -468,7 +523,7 @@ class ClassifierInspector(
 
     def __init__(
         self,
-        crossfit: ClassifierCrossfit[T_ClassifierPipelineDF],
+        crossfit: LearnerCrossfit[T_ClassifierPipelineDF],
         *,
         explainer_factory: Optional[ExplainerFactory] = None,
         n_jobs: Optional[int] = None,
