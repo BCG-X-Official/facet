@@ -27,7 +27,6 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 from mpl_toolkits.axes_grid1.axes_divider import AxesDivider
 from mpl_toolkits.axes_grid1.axes_size import Scaled
 
-from gamma.common import ListLike
 from gamma.viz import DrawStyle, MatplotStyle, TextStyle
 from gamma.viz.text import format_table
 from gamma.yieldengine.partition import T_Number, T_Value
@@ -45,13 +44,13 @@ class SimulationStyle(DrawStyle, ABC):
         self,
         feature: str,
         target: str,
-        median_uplift: ListLike[T_Number],
-        min_uplift: ListLike[T_Number],
-        max_uplift: ListLike[T_Number],
+        median_uplift: Sequence[T_Number],
+        min_uplift: Sequence[T_Number],
+        max_uplift: Sequence[T_Number],
         min_percentile: float,
         max_percentile: float,
-        partitions: ListLike[Any],
-        frequencies: ListLike[int],
+        partitions: Sequence[Any],
+        frequencies: Sequence[int],
         is_categorical_feature: bool,
     ) -> None:
         """
@@ -62,8 +61,8 @@ class SimulationStyle(DrawStyle, ABC):
     @abstractmethod
     def draw_histogram(
         self,
-        partitions: ListLike[Any],
-        frequencies: ListLike[int],
+        partitions: Sequence[Any],
+        frequencies: Sequence[int],
         is_categorical_feature: bool,
     ) -> None:
         """
@@ -109,20 +108,20 @@ class SimulationMatplotStyle(MatplotStyle, SimulationStyle):
 
     _HISTOGRAM_SIZE_RATIO = 1 / 3
 
-    def __init__(self, ax: Optional[Axes] = None) -> None:
+    def __init__(self, *, ax: Optional[Axes] = None) -> None:
         super().__init__(ax=ax)
 
     def draw_uplift(
         self,
         feature: str,
         target: str,
-        median_uplift: ListLike[T_Number],
-        min_uplift: ListLike[T_Number],
-        max_uplift: ListLike[T_Number],
+        median_uplift: Sequence[T_Number],
+        min_uplift: Sequence[T_Number],
+        max_uplift: Sequence[T_Number],
         min_percentile: float,
         max_percentile: float,
-        partitions: ListLike[Any],
-        frequencies: ListLike[int],
+        partitions: Sequence[Any],
+        frequencies: Sequence[int],
         is_categorical_feature: bool,
     ) -> None:
         """
@@ -143,10 +142,8 @@ class SimulationMatplotStyle(MatplotStyle, SimulationStyle):
         # draw the mean predicted uplift, showing median and confidence ranges for
         # each prediction
         if is_categorical_feature:
-            # x = list(range(len(partitioning)))
             x = range(len(partitions))
         else:
-            # x = partitioning.partitions()
             x = partitions
         ax = self.ax
         line_min, = ax.plot(x, min_uplift, color=self._COLOR_CONFIDENCE)
@@ -183,8 +180,8 @@ class SimulationMatplotStyle(MatplotStyle, SimulationStyle):
 
     def draw_histogram(
         self,
-        partitions: ListLike[T_Value],
-        frequencies: ListLike[int],
+        partitions: Sequence[T_Value],
+        frequencies: Sequence[int],
         is_categorical_feature: bool,
     ) -> None:
         """
@@ -207,7 +204,7 @@ class SimulationMatplotStyle(MatplotStyle, SimulationStyle):
 
             def _x_axis_height() -> float:
                 _, axis_below_size_pixels = main_ax.get_xaxis().get_text_heights(
-                    self._renderer
+                    self.renderer
                 )
                 ((_, y0), (_, y1)) = main_ax.transData.inverted().transform(
                     ((0, 0), (0, axis_below_size_pixels))
@@ -266,7 +263,7 @@ class SimulationMatplotStyle(MatplotStyle, SimulationStyle):
                 ax.text(
                     x=x,
                     y=y + label_vertical_offset,
-                    s=y,
+                    s=str(y),
                     horizontalalignment="center",
                     verticalalignment="top",
                 )
@@ -296,7 +293,7 @@ class SimulationReportStyle(SimulationStyle, TextStyle):
 
     # format for partitions
     _PARTITION_TEXT_FORMAT = "s"
-    _PARTITION_NUMBER_FORMAT = ".3g"
+    _PARTITION_NUMBER_FORMAT = "g"
 
     # format for frequencies
     _FREQUENCY_WIDTH = 6
@@ -316,13 +313,13 @@ class SimulationReportStyle(SimulationStyle, TextStyle):
         self,
         feature: str,
         target: str,
-        median_uplift: ListLike[T_Number],
-        min_uplift: ListLike[T_Number],
-        max_uplift: ListLike[T_Number],
+        median_uplift: Sequence[T_Number],
+        min_uplift: Sequence[T_Number],
+        max_uplift: Sequence[T_Number],
         min_percentile: float,
         max_percentile: float,
-        partitions: ListLike[Any],
-        frequencies: ListLike[int],
+        partitions: Sequence[Any],
+        frequencies: Sequence[int],
         is_categorical_feature: bool,
     ) -> None:
         """
@@ -349,8 +346,8 @@ class SimulationReportStyle(SimulationStyle, TextStyle):
 
     def draw_histogram(
         self,
-        partitions: ListLike[T_Value],
-        frequencies: ListLike[int],
+        partitions: Sequence[T_Value],
+        frequencies: Sequence[int],
         is_categorical_feature: bool,
     ) -> None:
         """

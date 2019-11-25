@@ -1,6 +1,6 @@
 """
 The Gamma yield engine library
 """
-from gamma.common.licensing import check_license
+import gamma.common.licensing as _licensing
 
-check_license()
+_licensing.check_license(__package__)
