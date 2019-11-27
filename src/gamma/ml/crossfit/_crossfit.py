@@ -95,7 +95,7 @@ class LearnerCrossfit(
         base_estimator.fit(X=sample.features, y=sample.target, **fit_params)
 
         if self_typed.shuffle_features:
-            raise NotImplementedError("feature shuffling not yet implemented")
+            log.warning("feature shuffling not yet implemented")
 
         with self_typed._parallel() as parallel:
             self._model_by_split: List[T_LearnerDF] = parallel(
