@@ -17,20 +17,20 @@ from gamma.sklearndf import BaseEstimatorDF, BaseLearnerDF, ClassifierDF, Regres
 
 log = logging.getLogger(__name__)
 
-__all__ = ["BaseCrossfit", "LearnerCrossfit"]
+__all__ = ["LearnerCrossfit"]
 
-T_Self = TypeVar("T", bound="BaseCrossFit")
+T_Self = TypeVar("T", bound="LearnerCrossfit")
 T_EstimatorDF = TypeVar("T_EstimatorDF", bound=BaseEstimatorDF)
 T_LearnerDF = TypeVar("T_LearnerDF", bound=BaseLearnerDF)
 T_ClassifierDF = TypeVar("T_ClassifierDF", bound=ClassifierDF)
 T_RegressorDF = TypeVar("T_RegressorDF", bound=RegressorDF)
 
 
-class BaseCrossfit(
-    FittableMixin[Sample], ParallelizableMixin, ABC, Generic[T_EstimatorDF]
+class LearnerCrossfit(
+    FittableMixin[Sample], ParallelizableMixin, ABC, Generic[T_LearnerDF]
 ):
     """
-    Fits an estimator to all train splits of a given cross-validation strategy.
+    Fits a learner to all train splits of a given cross-validation strategy.
     """
 
     __slots__ = [
@@ -86,7 +86,7 @@ class BaseCrossfit(
             of the base estimator
         :return: `self`
         """
-        self_typed: BaseCrossfit = self  # support better type hinting in PyCharm
+        self_typed: LearnerCrossfit = self  # support better type hinting in PyCharm
         base_estimator = self_typed.base_estimator
 
         features = sample.features
@@ -99,7 +99,7 @@ class BaseCrossfit(
 
         with self_typed._parallel() as parallel:
             self._model_by_split: List[T_EstimatorDF] = parallel(
-                self_typed._delayed(BaseCrossfit._fit_model_for_split)(
+                self_typed._delayed(LearnerCrossfit._fit_model_for_split)(
                     base_estimator.clone(),
                     features.iloc[train_indices],
                     target.iloc[train_indices],
@@ -125,6 +125,9 @@ class BaseCrossfit(
         return len(self._model_by_split)
 
     def splits(self) -> Iterator[Tuple[Sequence[int], Sequence[int]]]:
+        """
+        :return: an iterator of all train/test splits used by this crossfit
+        """
         self._ensure_fitted()
         return self.cv.split(
             self._training_sample.features, self._training_sample.target
@@ -157,36 +160,3 @@ class BaseCrossfit(
         :return: fitted pipeline for the split
         """
         return estimator.fit(X=X, y=y, **fit_params)
-
-
-class LearnerCrossfit(BaseCrossfit[T_LearnerDF], ABC, Generic[T_LearnerDF]):
-    """
-    Generate cross-validated prediction for each observation in a sample, based on
-    multiple fits of a learner across a collection of cross-validation splits
-    """
-
-    COL_SPLIT_ID = "split_id"
-    COL_TARGET = "target"
-
-    def __init__(
-        self,
-        base_estimator: T_LearnerDF,
-        cv: BaseCrossValidator,
-        *,
-        shuffle_features: Optional[bool] = None,
-        random_state: Union[int, RandomState, None] = None,
-        n_jobs: Optional[int] = None,
-        shared_memory: Optional[bool] = None,
-        pre_dispatch: Optional[Union[str, int]] = None,
-        verbose: Optional[int] = None,
-    ) -> None:
-        super().__init__(
-            base_estimator=base_estimator,
-            cv=cv,
-            shuffle_features=shuffle_features,
-            random_state=random_state,
-            n_jobs=n_jobs,
-            shared_memory=shared_memory,
-            pre_dispatch=pre_dispatch,
-            verbose=verbose,
-        )
