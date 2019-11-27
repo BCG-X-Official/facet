@@ -560,7 +560,7 @@ class RegressorRanker(
         verbose: int,
     ) -> LearnerCrossfit[T_RegressorPipelineDF]:
         return LearnerCrossfit(
-            base_estimator=pipeline,
+            base_learner=pipeline,
             cv=cv,
             n_jobs=self.n_jobs,
             shared_memory=self.shared_memory,
@@ -587,7 +587,7 @@ class ClassifierRanker(
         verbose,
     ) -> LearnerCrossfit[T_ClassifierPipelineDF]:
         return LearnerCrossfit(
-            base_estimator=pipeline,
+            base_learner=pipeline,
             cv=cv,
             n_jobs=self.n_jobs,
             shared_memory=self.shared_memory,
