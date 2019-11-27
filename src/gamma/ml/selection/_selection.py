@@ -15,7 +15,7 @@ from sklearn.model_selection import BaseCrossValidator, GridSearchCV
 from gamma.common.fit import FittableMixin
 from gamma.common.parallelization import ParallelizableMixin
 from gamma.ml import Sample
-from gamma.ml.crossfit import ClassifierCrossfit, LearnerCrossfit, RegressorCrossfit
+from gamma.ml.crossfit import LearnerCrossfit
 from gamma.sklearndf.pipeline import (
     BaseLearnerPipelineDF,
     ClassifierPipelineDF,
@@ -413,7 +413,7 @@ class BaseLearnerRanker(
 
         if len(fit_params) > 0:
             log.warning(
-                "Ignoting arg fit_params: current ranker implementation uses "
+                "Ignoring arg fit_params: current ranker implementation uses "
                 "GridSearchCV which does not support fit_params"
             )
 
@@ -543,7 +543,7 @@ class BaseLearnerRanker(
 
 
 class RegressorRanker(
-    BaseLearnerRanker[T_RegressorPipelineDF, RegressorCrossfit[T_RegressorPipelineDF]],
+    BaseLearnerRanker[T_RegressorPipelineDF, LearnerCrossfit[T_RegressorPipelineDF]],
     Generic[T_RegressorPipelineDF],
 ):
     """[inheriting doc string of base class]"""
@@ -558,10 +558,10 @@ class RegressorRanker(
         shared_memory: bool,
         pre_dispatch: str,
         verbose: int,
-    ) -> RegressorCrossfit[T_RegressorPipelineDF]:
-        return RegressorCrossfit(
+    ) -> LearnerCrossfit[T_RegressorPipelineDF]:
+        return LearnerCrossfit(
             base_estimator=pipeline,
-            cv=self._cv,
+            cv=cv,
             n_jobs=self.n_jobs,
             shared_memory=self.shared_memory,
             pre_dispatch=self.pre_dispatch,
@@ -570,9 +570,7 @@ class RegressorRanker(
 
 
 class ClassifierRanker(
-    BaseLearnerRanker[
-        T_ClassifierPipelineDF, ClassifierCrossfit[T_ClassifierPipelineDF]
-    ],
+    BaseLearnerRanker[T_ClassifierPipelineDF, LearnerCrossfit[T_ClassifierPipelineDF]],
     Generic[T_ClassifierPipelineDF],
 ):
     """[inheriting doc string of base class]"""
@@ -582,15 +580,15 @@ class ClassifierRanker(
     def _make_crossfit(
         self,
         pipeline: T_ClassifierPipelineDF,
-        cv,
+        cv: BaseCrossValidator,
         n_jobs,
         shared_memory,
         pre_dispatch,
         verbose,
-    ) -> ClassifierCrossfit[T_ClassifierPipelineDF]:
-        return ClassifierCrossfit(
+    ) -> LearnerCrossfit[T_ClassifierPipelineDF]:
+        return LearnerCrossfit(
             base_estimator=pipeline,
-            cv=self._cv,
+            cv=cv,
             n_jobs=self.n_jobs,
             shared_memory=self.shared_memory,
             pre_dispatch=self.pre_dispatch,
