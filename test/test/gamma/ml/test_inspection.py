@@ -109,7 +109,7 @@ def test_model_inspection(n_jobs, boston_sample: Sample) -> None:
     ):
 
         pipeline: RegressorPipelineDF = model_evaluation.pipeline
-        model_fit = LearnerCrossfit(base_estimator=pipeline, cv=test_cv).fit(
+        model_fit = LearnerCrossfit(base_learner=pipeline, cv=test_cv).fit(
             sample=test_sample
         )
 
@@ -198,7 +198,7 @@ def test_model_inspection_with_encoding(
     ][0]
 
     validation_model = LearnerCrossfit(
-        base_estimator=validation.pipeline, cv=circular_cv, n_jobs=n_jobs
+        base_learner=validation.pipeline, cv=circular_cv, n_jobs=n_jobs
     ).fit(sample=sample)
 
     mi = RegressorInspector(crossfit=validation_model)
