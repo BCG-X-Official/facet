@@ -9,6 +9,7 @@ import numpy as np
 import pandas as pd
 from numpy.random.mtrand import RandomState
 from sklearn.model_selection import BaseCrossValidator
+from sklearn.utils import check_random_state
 
 from gamma.common.fit import FittableMixin
 from gamma.common.parallelization import ParallelizableMixin
@@ -57,7 +58,7 @@ class LearnerCrossfit(
         :param base_learner: predictive pipeline to be fitted
         :param cv: the cross validator generating the train splits
         :param shuffle_features: if `True`, shuffle column order of features for every \
-            crossfit (default: `True`)
+            crossfit (default: `False`)
         :param random_state: optional random seed or random state for shuffling the \
             feature column order
         {ParallelizableMixin.__init__.__doc__}
@@ -70,12 +71,18 @@ class LearnerCrossfit(
         )
         self.base_estimator = base_learner  #: the learner being trained
         self.cv = cv  #: the cross validator
-        self.shuffle_features = True if shuffle_features is None else shuffle_features
+        self.shuffle_features = False if shuffle_features is None else shuffle_features
         self.random_state = random_state
 
         self._model_by_split: Optional[List[T_LearnerDF]] = None
         self._training_sample: Optional[Sample] = None
         self._feature_order_by_split: Optional[List[np.ndarray]] = None
+
+        if shuffle_features is None:
+            log.warning(
+                "default value of shuffle_features will change to False to True in "
+                "release 1.2.0; we recommend that you set this parameter explicitly."
+            )
 
     def fit(self: T_Self, sample: Sample, **fit_params) -> T_Self:
         """
@@ -89,23 +96,36 @@ class LearnerCrossfit(
         self_typed: LearnerCrossfit = self  # support better type hinting in PyCharm
         base_estimator = self_typed.base_estimator
 
-        features = sample.features
+        features: pd.DataFrame = sample.features
+        feature_columns = features.columns
+        n_features = len(feature_columns)
         target = sample.target
+        shuffle_features = self_typed.shuffle_features
+        if shuffle_features:
+            # we are shuffling features, so we create an infinite iterator
+            # that creates a new random permutation of feature indices on each
+            # iteration
+            random_state = check_random_state(self_typed.random_state)
+            feature_sequence = iter(lambda: random_state.permutation(n_features), [])
+        else:
+            # we are not shuffling features, hence we create an infinite iterator of
+            # always the same slice that preserves the existing feature sequence
+            original_feature_sequence = slice(None)
+            feature_sequence = iter(lambda: original_feature_sequence, slice(0))
 
-        base_estimator.fit(X=sample.features, y=sample.target, **fit_params)
-
-        if self_typed.shuffle_features:
-            log.warning("feature shuffling not yet implemented")
+        base_estimator.fit(X=features, y=target, **fit_params)
 
         with self_typed._parallel() as parallel:
             self._model_by_split: List[T_LearnerDF] = parallel(
                 self_typed._delayed(LearnerCrossfit._fit_model_for_split)(
                     base_estimator.clone(),
-                    features.iloc[train_indices],
+                    features.iloc[train_indices, feature_sequence],
                     target.iloc[train_indices],
                     **fit_params,
                 )
-                for train_indices, _ in self_typed.cv.split(features, target)
+                for feature_sequence, (train_indices, _) in zip(
+                    feature_sequence, self_typed.cv.split(features, target)
+                )
             )
 
         self_typed._training_sample = sample
