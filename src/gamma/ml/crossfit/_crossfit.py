@@ -71,7 +71,9 @@ class LearnerCrossfit(
         )
         self.base_estimator = base_learner  #: the learner being trained
         self.cv = cv  #: the cross validator
-        self.shuffle_features = False if shuffle_features is None else shuffle_features
+        self.shuffle_features: bool = (
+            False if shuffle_features is None else shuffle_features
+        )
         self.random_state = random_state
 
         self._model_by_split: Optional[List[T_LearnerDF]] = None
@@ -100,8 +102,7 @@ class LearnerCrossfit(
         feature_columns = features.columns
         n_features = len(feature_columns)
         target = sample.target
-        shuffle_features = self_typed.shuffle_features
-        if shuffle_features:
+        if self_typed.shuffle_features:
             # we are shuffling features, so we create an infinite iterator
             # that creates a new random permutation of feature indices on each
             # iteration
