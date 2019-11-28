@@ -157,7 +157,7 @@ class BaseShapCalculator(
     @staticmethod
     @abstractmethod
     def _shap_for_split(
-        model: T_LearnerPipelineDF,
+        model: BaseLearnerPipelineDF,
         training_sample: Sample,
         oob_split: np.ndarray,
         features_out: pd.Index,
@@ -202,12 +202,12 @@ class ShapMatrixCalculator(
         return (
             shap_all_splits_df.groupby(level=0, sort=False, observed=True)
             .mean()
-            .reindex(labels=observation_index)
+            .reindex(index=observation_index, copy=False)
         )
 
     @staticmethod
     def _shap_for_split(
-        model: T_LearnerPipelineDF,
+        model: BaseLearnerPipelineDF,
         training_sample: Sample,
         oob_split: np.ndarray,
         features_out: pd.Index,
@@ -222,11 +222,9 @@ class ShapMatrixCalculator(
             x_oob = model.preprocessing.transform(x_oob)
 
         # calculate the shap values (returned as an ndarray)
-        shap_values = explainer_factory_fn(
+        shap_values: np.ndarray = explainer_factory_fn(
             model.final_estimator.root_estimator, x_oob
         ).shap_values(x_oob)
-
-        target = training_sample.target
 
         if isinstance(shap_values, np.ndarray):
             # if we have a single target *and* no classification, the explainer will
@@ -234,9 +232,10 @@ class ShapMatrixCalculator(
             shap_values: List[np.ndarray] = [shap_values]
 
         # convert to a data frame per target (different logic depending on whether
-        # we have a regressor or a classifier)
+        # we have a regressor or a classifier, implemented by method
+        # shap_matrix_for_split_to_df_fn)
         shap_values_df_per_target: List[pd.DataFrame] = [
-            shap.reindex(columns=features_out).fillna(0.0)
+            shap.reindex(columns=features_out, copy=False, fill_value=0.0)
             for shap in shap_matrix_for_split_to_df_fn(
                 shap_values, oob_split, x_oob.columns
             )
@@ -252,7 +251,7 @@ class ShapMatrixCalculator(
             return pd.concat(
                 shap_values_df_per_target,
                 axis=1,
-                keys=target.columns.values,
+                keys=training_sample.target_columns.values,
                 names=[Sample.COL_TARGET],
             )
 
@@ -300,12 +299,12 @@ class InteractionMatrixCalculator(
         return (
             shap_all_splits_df.groupby(level=(0, 1), sort=False, observed=True)
             .mean()
-            .reindex(labels=observation_index, level=0)
+            .reindex(index=observation_index, level=0)
         )
 
     @staticmethod
     def _shap_for_split(
-        model: T_LearnerPipelineDF,
+        model: BaseLearnerPipelineDF,
         training_sample: Sample,
         oob_split: np.ndarray,
         features_out: pd.Index,
@@ -361,7 +360,7 @@ class InteractionMatrixCalculator(
 
         # reindex the interaction matrices to ensure all features are included
         return im.reindex(
-            pd.MultiIndex.from_product(
+            index=pd.MultiIndex.from_product(
                 iterables=(im.index.levels[0], features_out),
                 names=(x_oob.index.name, Sample.COL_FEATURE),
             )
@@ -379,7 +378,6 @@ class RegressorShapMatrixCalculator(ShapMatrixCalculator):
         observations: np.ndarray,
         features_in_split: pd.Index,
     ) -> List[pd.DataFrame]:
-        pass
         return [
             pd.DataFrame(
                 data=raw_shap_matrix, index=observations, columns=features_in_split
