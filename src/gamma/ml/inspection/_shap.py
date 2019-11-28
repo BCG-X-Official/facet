@@ -167,6 +167,25 @@ class BaseShapCalculator(
         pass
 
     @staticmethod
+    def _x_oob(
+        model: BaseLearnerPipelineDF, training_sample: Sample, oob_split: np.ndarray
+    ) -> pd.DataFrame:
+        # get the out-of-bag subsample of the training sample, with feature columns
+        # in the sequence that was used to fit the learner
+
+        # get the features of all out-of-bag observations
+        x_oob = training_sample.subsample(loc=oob_split).features
+
+        # pre-process the features
+        if model.preprocessing is not None:
+            x_oob = model.preprocessing.transform(x_oob)
+
+        # re-index the features to fit the sequence that was used to fit the learner
+        x_oob = x_oob.reindex(columns=model.final_estimator.features_in, copy=False)
+
+        return x_oob
+
+    @staticmethod
     @abstractmethod
     def _raw_shap_to_df(
         raw_shap_tensors: List[np.ndarray],
@@ -214,12 +233,7 @@ class ShapMatrixCalculator(
         explainer_factory_fn: ExplainerFactory,
         shap_matrix_for_split_to_df_fn: ShapToDataFrameFunction,
     ) -> pd.DataFrame:
-        # get the features of all out-of-bag observations
-        x_oob = training_sample.subsample(loc=oob_split).features
-
-        # pre-process the features
-        if model.preprocessing is not None:
-            x_oob = model.preprocessing.transform(x_oob)
+        x_oob = BaseShapCalculator._x_oob(model, training_sample, oob_split)
 
         # calculate the shap values (returned as an ndarray)
         shap_values: np.ndarray = explainer_factory_fn(
@@ -311,12 +325,7 @@ class InteractionMatrixCalculator(
         explainer_factory_fn: ExplainerFactory,
         interaction_matrix_for_split_to_df_fn: ShapToDataFrameFunction,
     ) -> pd.DataFrame:
-        # get the features of all out-of-bag observations
-        x_oob = training_sample.subsample(loc=oob_split).features
-
-        # pre-process the features
-        if model.preprocessing is not None:
-            x_oob = model.preprocessing.transform(x_oob)
+        x_oob = BaseShapCalculator._x_oob(model, training_sample, oob_split)
 
         # calculate the shap values (returned as an ndarray)
         explainer = explainer_factory_fn(model.final_estimator.root_estimator, x_oob)
