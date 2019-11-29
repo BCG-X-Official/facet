@@ -203,6 +203,14 @@ class BaseShapCalculator(
         """
         pass
 
+    @staticmethod
+    def _make_column_index(targets: Optional[pd.Index], features: pd.Index):
+        # make a (multi) index from an optional target index and a feature index
+        if targets is None:
+            return features
+        else:
+            return pd.MultiIndex.from_product((targets, features))
+
 
 class ShapMatrixCalculator(
     BaseShapCalculator[T_LearnerPipelineDF], ABC, Generic[T_LearnerPipelineDF]
@@ -217,11 +225,14 @@ class ShapMatrixCalculator(
     def _consolidate_splits(
         self, shap_all_splits_df: pd.DataFrame, observation_index: pd.Index
     ) -> pd.DataFrame:
-        # Group SHAP matrix by observation ID and aggregate SHAP values using mean()
-        return (
-            shap_all_splits_df.groupby(level=0, sort=False, observed=True)
-            .mean()
-            .reindex(index=observation_index, copy=False)
+        # Group SHAP matrix by observation ID, aggregate SHAP values using mean(),
+        # then restore the original order of observations
+        mean_per_split = shap_all_splits_df.groupby(
+            level=0, sort=False, observed=True
+        ).mean()
+        return mean_per_split.reindex(
+            index=observation_index.intersection(mean_per_split.index, sort=False),
+            copy=False,
         )
 
     @staticmethod
@@ -327,7 +338,7 @@ class InteractionMatrixCalculator(
     ) -> pd.DataFrame:
         x_oob = BaseShapCalculator._x_oob(model, training_sample, oob_split)
 
-        # calculate the shap values (returned as an ndarray)
+        # calculate the im values (returned as an ndarray)
         explainer = explainer_factory_fn(model.final_estimator.root_estimator, x_oob)
 
         try:
@@ -344,36 +355,35 @@ class InteractionMatrixCalculator(
 
         if isinstance(shap_interaction_tensors, np.ndarray):
             # if we have a single target *and* no classification, the explainer will
-            # have returned a single tensor as an ndarray
+            # have returned a single tensor as an ndarray, so we wrap it in a list
             shap_interaction_tensors: List[np.ndarray] = [shap_interaction_tensors]
 
-        interaction_matrix_per_target: List[
-            pd.DataFrame
-        ] = interaction_matrix_for_split_to_df_fn(
-            shap_interaction_tensors, oob_split, x_oob.columns
-        )
+        interaction_matrix_per_target: List[pd.DataFrame] = [
+            im.reindex(
+                index=pd.MultiIndex.from_product((oob_split, features_out)),
+                columns=features_out,
+                copy=False,
+                fill_value=0.0,
+            )
+            for im in interaction_matrix_for_split_to_df_fn(
+                shap_interaction_tensors, oob_split, x_oob.columns
+            )
+        ]
 
         # if we have a single target, use the data frame for that target;
         # else, concatenate the matrix data frame for all targets horizontally
         # and add a top level to the column index indicating each target
         if len(interaction_matrix_per_target) == 1:
-            im = interaction_matrix_per_target[0]
+            assert training_sample.n_targets == 1
+            return interaction_matrix_per_target[0]
         else:
             assert training_sample.n_targets > 1
-            im = pd.concat(
+            return pd.concat(
                 interaction_matrix_per_target,
                 axis=1,
                 keys=training_sample.target_columns,
                 names=[Sample.COL_TARGET],
             )
-
-        # reindex the interaction matrices to ensure all features are included
-        return im.reindex(
-            index=pd.MultiIndex.from_product(
-                iterables=(im.index.levels[0], features_out),
-                names=(x_oob.index.name, Sample.COL_FEATURE),
-            )
-        )
 
 
 class RegressorShapMatrixCalculator(ShapMatrixCalculator):
