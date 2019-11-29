@@ -135,9 +135,12 @@ class BootstrapCV(_BaseBootstrapCV):
 
 class StationaryBootstrapCV(_BaseBootstrapCV):
     """
-    Time series bootstrap based on Politis and Romano (1994), sampling blocks with
-    exponentially distributed sizes, instead of individual random observations as is
-    the case with the "regular" bootstrap
+    Bootstrap for stationary time series, based on Politis and Romano (1994).
+
+    This bootstrapping approach samples blocks with exponentially distributed sizes,
+    instead of individual random observations as is the case with the regular bootstrap.
+
+    Intended for use with time series that satisfy the stationarity requirement.
 
     Permissible as the `cv` argument of :class:`sklearn.model_selection.GridSearchCV`
     object.
