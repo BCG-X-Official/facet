@@ -48,15 +48,6 @@ class _BaseBootstrapCV(BaseCrossValidator):
         return self.n_splits
 
     # noinspection PyPep8Naming
-    def _iter_test_indices(
-        self,
-        X: Optional[Union[np.ndarray, pd.DataFrame]] = None,
-        y: Optional[Union[np.ndarray, pd.Series, pd.DataFrame]] = None,
-        groups: Sequence = None,
-    ):
-        pass
-
-    # noinspection PyPep8Naming
     def split(
         self,
         X: Union[np.ndarray, pd.DataFrame],
