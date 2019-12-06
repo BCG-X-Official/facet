@@ -70,8 +70,9 @@ def batch_table(inputfile_config: Dict[str, Any]) -> pd.DataFrame:
 
 
 @pytest.fixture
-def regressor_grids(simple_preprocessor) -> List[ParameterGrid]:
-    RANDOM_STATE = {f"random_state": [42]}
+def regressor_grids(simple_preprocessor: TransformerDF) -> List[ParameterGrid]:
+    random_state = {f"random_state": [42]}
+
     return [
         ParameterGrid(
             pipeline=RegressorPipelineDF(
@@ -81,20 +82,20 @@ def regressor_grids(simple_preprocessor) -> List[ParameterGrid]:
                 "max_depth": [5, 10],
                 "min_split_gain": [0.1, 0.2],
                 "num_leaves": [50, 100, 200],
-                **RANDOM_STATE,
+                **random_state,
             },
         ),
         ParameterGrid(
             pipeline=RegressorPipelineDF(
                 preprocessing=simple_preprocessor, regressor=AdaBoostRegressorDF()
             ),
-            learner_parameters={"n_estimators": [50, 80], **RANDOM_STATE},
+            learner_parameters={"n_estimators": [50, 80], **random_state},
         ),
         ParameterGrid(
             pipeline=RegressorPipelineDF(
                 preprocessing=simple_preprocessor, regressor=RandomForestRegressorDF()
             ),
-            learner_parameters={"n_estimators": [50, 80], **RANDOM_STATE},
+            learner_parameters={"n_estimators": [50, 80], **random_state},
         ),
         ParameterGrid(
             pipeline=RegressorPipelineDF(
@@ -103,14 +104,14 @@ def regressor_grids(simple_preprocessor) -> List[ParameterGrid]:
             learner_parameters={
                 "max_depth": [0.5, 1.0],
                 "max_features": [0.5, 1.0],
-                **RANDOM_STATE,
+                **random_state,
             },
         ),
         ParameterGrid(
             pipeline=RegressorPipelineDF(
                 preprocessing=simple_preprocessor, regressor=ExtraTreeRegressorDF()
             ),
-            learner_parameters={"max_depth": [5, 10, 12], **RANDOM_STATE},
+            learner_parameters={"max_depth": [5, 10, 12], **random_state},
         ),
         ParameterGrid(
             pipeline=RegressorPipelineDF(

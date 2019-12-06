@@ -46,15 +46,6 @@ class _BaseBootstrapCV(BaseCrossValidator):
         return self.n_splits
 
     # noinspection PyPep8Naming
-    def _iter_test_indices(
-        self,
-        X: Optional[Union[np.ndarray, pd.DataFrame]] = None,
-        y: Optional[Union[np.ndarray, pd.Series, pd.DataFrame]] = None,
-        groups: Sequence = None,
-    ):
-        pass
-
-    # noinspection PyPep8Naming
     def split(
         self,
         X: Union[np.ndarray, pd.DataFrame],
@@ -133,9 +124,12 @@ class BootstrapCV(_BaseBootstrapCV):
 
 class StationaryBootstrapCV(_BaseBootstrapCV):
     """
-    Time series bootstrap based on Politis and Romano (1994), sampling blocks with
-    exponentially distributed sizes, instead of individual random observations as is
-    the case with the "regular" bootstrap
+    Bootstrap for stationary time series, based on Politis and Romano (1994).
+
+    This bootstrapping approach samples blocks with exponentially distributed sizes,
+    instead of individual random observations as is the case with the regular bootstrap.
+
+    Intended for use with time series that satisfy the stationarity requirement.
 
     Permissible as the `cv` argument of :class:`sklearn.model_selection.GridSearchCV`
     object.

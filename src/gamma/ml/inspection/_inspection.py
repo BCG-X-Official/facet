@@ -241,7 +241,8 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF
         Synergy values are expressed as relative absolute shap contributions and range
         between 0.0 (no contribution) to 1.0 (full contribution).
 
-        For features :math:`i` and :math:`j`, the synergistic shap contribution is calculated as
+        For features :math:`i` and :math:`j`, the synergistic shap contribution is
+        calculated as
 
         .. math::
             \\mathrm{syn}_{ij} = \\frac{| \\vec{\\phi}_{ij} | }
