@@ -280,7 +280,7 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF
         n_features = self._n_features
         n_targets = self._n_targets
 
-        # get a feature interaction ndarray with shape
+        # get a feature interaction array with shape
         # (n_observations, n_targets, n_features, n_features)
         # where the innermost feature x feature arrays are symmetrical
         im_matrix_per_observation_and_target = (
@@ -289,42 +289,33 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF
             .swapaxes(1, 2)
         )
 
-        # calculate the mean absolute interactions for each target and feature/feature
-        # interaction
-        # resulting in a matrix of mean absolute values with shape
-        # (n_targets, n_features, n_features)
-        mean_absolute_interactions = abs(im_matrix_per_observation_and_target).mean(
-            axis=0
+        # calculate the average interactions for each target and feature/feature
+        # interaction, based on the standard deviation assuming a mean of 0.0.
+        # The resulting matrix has shape (n_targets, n_features, n_features)
+        synergy_matrix = np.sqrt(
+            (
+                im_matrix_per_observation_and_target
+                * im_matrix_per_observation_and_target
+            ).mean(axis=0)
         )
-        assert mean_absolute_interactions.shape == (
-            n_targets,
-            n_features,
-            n_features,
-        ), (
-            f"shape {mean_absolute_interactions.shape} "
-            f"== {(n_targets, n_features, n_features)}"
-        )
+        assert synergy_matrix.shape == (n_targets, n_features, n_features)
 
-        # we normalise the MAI for each target to a total of 1
-        mean_absolute_interactions /= mean_absolute_interactions.sum()
-        assert mean_absolute_interactions.shape == (n_targets, n_features, n_features)
+        # we normalise the synergy matrix for each target to a total of 1.0
+        synergy_matrix /= synergy_matrix.sum()
 
         # the total interaction effect for features i and j is the total of matrix
         # cells (i,j) and (j,i); theoretically both should be the same but to minimize
         # numerical errors we total both in the lower matrix triangle (but excluding the
         # matrix diagonal, hence k=1)
-        mean_absolute_interactions += np.triu(mean_absolute_interactions, k=1).swapaxes(
-            1, 2
-        )
-        assert mean_absolute_interactions.shape == (n_targets, n_features, n_features)
+        synergy_matrix += np.triu(synergy_matrix, k=1).swapaxes(1, 2)
 
-        # discard the upper matrix triangle by setting it to NAN
-        mean_absolute_interactions += np.triu(
+        # discard the upper matrix triangle by setting it to nan
+        synergy_matrix += np.triu(
             np.full(shape=(n_features, n_features), fill_value=np.nan), k=1
         )[np.newaxis, :, :]
-        assert mean_absolute_interactions.shape == (n_targets, n_features, n_features)
 
-        return self._feature_matrix_to_df(mean_absolute_interactions)
+        # create a data frame from the feature matrix
+        return self._feature_matrix_to_df(synergy_matrix)
 
     @property
     def _n_targets(self) -> int:
