@@ -87,7 +87,7 @@ class BaseShapCalculator(
         """
 
         # reset fit in case we get an exception along the way
-        self._shap = None
+        self.shap_ = None
 
         training_sample = crossfit.training_sample
         self.n_observations_ = len(training_sample)
@@ -212,7 +212,7 @@ class BaseShapCalculator(
             return pd.MultiIndex.from_product((targets, features))
 
 
-class ShapMatrixCalculator(
+class ShapValuesCalculator(
     BaseShapCalculator[T_LearnerPipelineDF], ABC, Generic[T_LearnerPipelineDF]
 ):
     """
@@ -246,14 +246,14 @@ class ShapMatrixCalculator(
     ) -> pd.DataFrame:
         x_oob = BaseShapCalculator._x_oob(model, training_sample, oob_split)
 
-        # calculate the shap values (returned as an ndarray)
+        # calculate the shap values (returned as an array)
         shap_values: np.ndarray = explainer_factory_fn(
             model.final_estimator.root_estimator, x_oob
         ).shap_values(x_oob)
 
         if isinstance(shap_values, np.ndarray):
             # if we have a single target *and* no classification, the explainer will
-            # have returned a single tensor as an ndarray
+            # have returned a single tensor as an array
             shap_values: List[np.ndarray] = [shap_values]
 
         # convert to a data frame per target (different logic depending on whether
@@ -281,7 +281,7 @@ class ShapMatrixCalculator(
             )
 
 
-class InteractionMatrixCalculator(
+class ShapInteractionValuesCalculator(
     BaseShapCalculator[T_LearnerPipelineDF], ABC, Generic[T_LearnerPipelineDF]
 ):
     """
@@ -338,7 +338,7 @@ class InteractionMatrixCalculator(
     ) -> pd.DataFrame:
         x_oob = BaseShapCalculator._x_oob(model, training_sample, oob_split)
 
-        # calculate the im values (returned as an ndarray)
+        # calculate the im values (returned as an array)
         explainer = explainer_factory_fn(model.final_estimator.root_estimator, x_oob)
 
         try:
@@ -355,7 +355,7 @@ class InteractionMatrixCalculator(
 
         if isinstance(shap_interaction_tensors, np.ndarray):
             # if we have a single target *and* no classification, the explainer will
-            # have returned a single tensor as an ndarray, so we wrap it in a list
+            # have returned a single tensor as an array, so we wrap it in a list
             shap_interaction_tensors: List[np.ndarray] = [shap_interaction_tensors]
 
         interaction_matrix_per_target: List[pd.DataFrame] = [
@@ -386,7 +386,7 @@ class InteractionMatrixCalculator(
             )
 
 
-class RegressorShapMatrixCalculator(ShapMatrixCalculator):
+class RegressorShapValuesCalculator(ShapValuesCalculator):
     """
     Calculates SHAP matrices for regression models.
     """
@@ -405,7 +405,7 @@ class RegressorShapMatrixCalculator(ShapMatrixCalculator):
         ]
 
 
-class RegressorInteractionMatrixCalculator(InteractionMatrixCalculator):
+class RegressorShapInteractionValuesCalculator(ShapInteractionValuesCalculator):
     """
     Calculates SHAP interaction matrices for regression models.
     """
@@ -430,7 +430,7 @@ class RegressorInteractionMatrixCalculator(InteractionMatrixCalculator):
         ]
 
 
-class ClassifierShapMatrixCalculator(ShapMatrixCalculator):
+class ClassifierShapValuesCalculator(ShapValuesCalculator):
     """
     Calculates SHAP matrices for classification models.
     """
@@ -476,7 +476,7 @@ class ClassifierShapMatrixCalculator(ShapMatrixCalculator):
         ]
 
 
-class ClassifierInteractionMatrixCalculator(InteractionMatrixCalculator):
+class ClassifierShapInteractionValuesCalculator(ShapInteractionValuesCalculator):
     """
     Calculates SHAP interaction matrices for classification models.
     """

@@ -17,13 +17,13 @@ from gamma.common.parallelization import ParallelizableMixin
 from gamma.ml import Sample
 from gamma.ml.crossfit import LearnerCrossfit
 from gamma.ml.inspection._shap import (
-    ClassifierInteractionMatrixCalculator,
-    ClassifierShapMatrixCalculator,
+    ClassifierShapInteractionValuesCalculator,
+    ClassifierShapValuesCalculator,
     ExplainerFactory,
-    InteractionMatrixCalculator,
-    RegressorInteractionMatrixCalculator,
-    RegressorShapMatrixCalculator,
-    ShapMatrixCalculator,
+    RegressorShapInteractionValuesCalculator,
+    RegressorShapValuesCalculator,
+    ShapInteractionValuesCalculator,
+    ShapValuesCalculator,
 )
 from gamma.ml.inspection._shap_decomposition import ShapInteractionDecomposer
 from gamma.sklearndf import BaseLearnerDF
@@ -116,7 +116,7 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF
         self.shared_memory = shared_memory
         self.verbose = verbose
 
-        self._shap_matrix_calculator = self._shap_matrix_calculator_cls()(
+        self._shap_values_calculator = self._shap_values_calculator_cls()(
             explainer_factory=self._explainer_factory,
             n_jobs=self.n_jobs,
             shared_memory=self.shared_memory,
@@ -124,13 +124,16 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF
             verbose=self.verbose,
         )
 
-        self._interaction_matrix_calculator = self._interaction_matrix_calculator_cls()(
-            explainer_factory=self._explainer_factory,
-            n_jobs=self.n_jobs,
-            shared_memory=self.shared_memory,
-            pre_dispatch=self.pre_dispatch,
-            verbose=self.verbose,
-        )
+        # fmt: off
+        self._shap_interaction_values_calculator = \
+            self._shap_interaction_values_calculator_cls()(
+                explainer_factory=self._explainer_factory,
+                n_jobs=self.n_jobs,
+                shared_memory=self.shared_memory,
+                pre_dispatch=self.pre_dispatch,
+                verbose=self.verbose,
+            )
+        # fmt: on
 
         self._feature_dependency_matrix: Optional[pd.DataFrame] = None
 
@@ -157,7 +160,7 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF
         """
         return self.crossfit.training_sample
 
-    def shap_matrix(self) -> pd.DataFrame:
+    def shap_values(self) -> pd.DataFrame:
         """
         Calculate the SHAP matrix for all splits.
 
@@ -167,9 +170,9 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF
 
         :return: shap matrix as a data frame
         """
-        return self._fitted_shap_matrix_calculator().matrix
+        return self._fitted_shap_values_calculator().matrix
 
-    def interaction_matrix(self) -> pd.DataFrame:
+    def shap_interaction_values(self) -> pd.DataFrame:
         """
         Calculate the SHAP interaction matrix for all splits.
 
@@ -180,7 +183,7 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF
 
         :return: SHAP interaction matrix as a data frame
         """
-        return self._fitted_interaction_matrix_calculator().matrix
+        return self._fitted_shap_interaction_values_calculator().matrix
 
     def feature_importance(
         self, *, marginal: bool = False
@@ -197,14 +200,14 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF
           single-target models, and as a data frame of shape (n_features, n_targets) \
           for multi-target models
         """
-        shap_matrix = self.shap_matrix()
+        shap_matrix = self.shap_values()
         mean_abs_importance: pd.Series = shap_matrix.abs().mean()
 
         total_importance: float = mean_abs_importance.sum()
 
         if marginal:
 
-            diagonals = self._fitted_interaction_matrix_calculator().diagonals()
+            diagonals = self._fitted_shap_interaction_values_calculator().diagonals()
 
             # noinspection PyTypeChecker
             mean_abs_importance_marginal: pd.Series = (
@@ -323,7 +326,7 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF
         # (n_observations, n_targets, n_features, n_features)
         # where the innermost feature x feature arrays are symmetrical
         im_matrix_per_observation_and_target = (
-            self.interaction_matrix()
+            self.shap_interaction_values()
             .values.reshape((-1, n_features, n_targets, n_features))
             .swapaxes(1, 2)
         )
@@ -420,7 +423,7 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF
 
         # convert array to data frame with appropriate indices
         matrix_df = pd.DataFrame(
-            data=matrix_2d, columns=self.shap_matrix().columns, index=self._features
+            data=matrix_2d, columns=self.shap_values().columns, index=self._features
         )
 
         assert matrix_df.shape == (n_features, n_targets * n_features)
@@ -482,20 +485,22 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF
             max_distance=1.0,
         )
 
-    def _fitted_shap_matrix_calculator(self) -> ShapMatrixCalculator:
-        if not self._shap_matrix_calculator.is_fitted:
-            self._shap_matrix_calculator.fit(crossfit=self.crossfit)
-        return self._shap_matrix_calculator
+    def _fitted_shap_values_calculator(self) -> ShapValuesCalculator:
+        if not self._shap_values_calculator.is_fitted:
+            self._shap_values_calculator.fit(crossfit=self.crossfit)
+        return self._shap_values_calculator
 
-    def _fitted_interaction_matrix_calculator(self) -> InteractionMatrixCalculator:
-        if not self._interaction_matrix_calculator.is_fitted:
-            self._interaction_matrix_calculator.fit(crossfit=self.crossfit)
-        return self._interaction_matrix_calculator
+    def _fitted_shap_interaction_values_calculator(
+        self
+    ) -> ShapInteractionValuesCalculator:
+        if not self._shap_interaction_values_calculator.is_fitted:
+            self._shap_interaction_values_calculator.fit(crossfit=self.crossfit)
+        return self._shap_interaction_values_calculator
 
     def _fitted_interaction_decomposer(self) -> ShapInteractionDecomposer:
         if not self._shap_interaction_decomposer.is_fitted:
             self._shap_interaction_decomposer.fit(
-                self._fitted_interaction_matrix_calculator()
+                self._fitted_shap_interaction_values_calculator()
             )
         return self._shap_interaction_decomposer
 
@@ -511,7 +516,7 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF
         # this is achieved by re-shaping the shap matrix to get the additional "target"
         # dimension, then swapping the target and observation dimensions
         shap_matrix_per_target = (
-            self.shap_matrix()
+            self.shap_values()
             .values.reshape((-1, n_targets, n_features))
             .swapaxes(0, 1)
         )
@@ -540,13 +545,35 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF
 
     @staticmethod
     @abstractmethod
-    def _shap_matrix_calculator_cls() -> Type[ShapMatrixCalculator]:
+    def _shap_values_calculator_cls() -> Type[ShapValuesCalculator]:
         pass
 
     @staticmethod
     @abstractmethod
-    def _interaction_matrix_calculator_cls() -> Type[InteractionMatrixCalculator]:
+    def _shap_interaction_values_calculator_cls() -> Type[
+        ShapInteractionValuesCalculator
+    ]:
         pass
+
+    @deprecated(
+        message="Use method shap_values instead. "
+        "This method will be removed in a future release."
+    )
+    def shap_matrix(self) -> pd.DataFrame:
+        """
+        Deprecated. Use :meth:`.shap_values` instead.
+        """
+        return self.shap_values()
+
+    @deprecated(
+        message="Use method shap_values instead. "
+        "This method will be removed in a future release."
+    )
+    def interaction_matrix(self) -> pd.DataFrame:
+        """
+        Deprecated. Use :meth:`.shap_interaction_values` instead.
+        """
+        return self.shap_interaction_values()
 
     # noinspection SpellCheckingInspection
     @deprecated(
@@ -614,12 +641,14 @@ class RegressorInspector(
     __init__.__doc__ += ParallelizableMixin.__init__.__doc__
 
     @staticmethod
-    def _shap_matrix_calculator_cls() -> Type[ShapMatrixCalculator]:
-        return RegressorShapMatrixCalculator
+    def _shap_values_calculator_cls() -> Type[ShapValuesCalculator]:
+        return RegressorShapValuesCalculator
 
     @staticmethod
-    def _interaction_matrix_calculator_cls() -> Type[InteractionMatrixCalculator]:
-        return RegressorInteractionMatrixCalculator
+    def _shap_interaction_values_calculator_cls() -> Type[
+        ShapInteractionValuesCalculator
+    ]:
+        return RegressorShapInteractionValuesCalculator
 
 
 class ClassifierInspector(
@@ -656,12 +685,14 @@ class ClassifierInspector(
     __init__.__doc__ += ParallelizableMixin.__init__.__doc__
 
     @staticmethod
-    def _shap_matrix_calculator_cls() -> Type[ShapMatrixCalculator]:
-        return ClassifierShapMatrixCalculator
+    def _shap_values_calculator_cls() -> Type[ShapValuesCalculator]:
+        return ClassifierShapValuesCalculator
 
     @staticmethod
-    def _interaction_matrix_calculator_cls() -> Type[InteractionMatrixCalculator]:
-        return ClassifierInteractionMatrixCalculator
+    def _shap_interaction_values_calculator_cls() -> Type[
+        ShapInteractionValuesCalculator
+    ]:
+        return ClassifierShapInteractionValuesCalculator
 
 
 # noinspection PyUnusedLocal

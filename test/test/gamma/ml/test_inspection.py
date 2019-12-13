@@ -117,9 +117,9 @@ def test_model_inspection(n_jobs, boston_sample: Sample) -> None:
             crossfit=model_fit, explainer_factory=factory
         )
         # make and check shap value matrix
-        shap_matrix = model_inspector.shap_matrix()
+        shap_matrix = model_inspector.shap_values()
 
-        # the length of rows in shap_matrix should be equal to the unique observation
+        # the length of rows in shap_values should be equal to the unique observation
         # indices we have had in the predictions_df
         assert len(shap_matrix) == len(test_sample)
 
@@ -203,7 +203,7 @@ def test_model_inspection_with_encoding(
 
     mi = RegressorInspector(crossfit=validation_model)
 
-    shap_matrix = mi.shap_matrix()
+    shap_matrix = mi.shap_values()
 
     # check actual values using checksum:
     assert (
@@ -239,7 +239,7 @@ def test_model_inspection_with_encoding(
             return KernelExplainer(model=estimator.predict, data=data)
 
     mi2 = RegressorInspector(crossfit=validation_model, explainer_factory=_ef)
-    mi2.shap_matrix()
+    mi2.shap_values()
 
     linkage_tree = mi2.cluster_dependent_features()
     print()
@@ -298,7 +298,7 @@ def test_model_inspection_classifier(n_jobs, iris_sample: Sample) -> None:
 
     model_inspector = ClassifierInspector(crossfit=crossfit)
     # make and check shap value matrix
-    shap_matrix = model_inspector.shap_matrix()
+    shap_matrix = model_inspector.shap_values()
 
     # check actual values using checksum:
     assert (
@@ -306,7 +306,7 @@ def test_model_inspection_classifier(n_jobs, iris_sample: Sample) -> None:
         == checksum_shap
     )
 
-    # the length of rows in shap_matrix should be equal to the unique observation
+    # the length of rows in shap_values should be equal to the unique observation
     # indices we have had in the predictions_df
     assert len(shap_matrix) == len(test_sample)
 

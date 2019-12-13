@@ -9,12 +9,12 @@ import numpy as np
 import pandas as pd
 
 from gamma.common.fit import FittableMixin
-from gamma.ml.inspection._shap import InteractionMatrixCalculator
+from gamma.ml.inspection._shap import ShapInteractionValuesCalculator
 
 log = logging.getLogger(__name__)
 
 
-class ShapInteractionDecomposer(FittableMixin[InteractionMatrixCalculator]):
+class ShapInteractionDecomposer(FittableMixin[ShapInteractionValuesCalculator]):
     """
     Decomposes SHAP interaction scores (i.e, SHAP importance) of all possible parings
     of features into additive components for synergy, equivalence, and independence.
@@ -100,12 +100,17 @@ class ShapInteractionDecomposer(FittableMixin[InteractionMatrixCalculator]):
         self._ensure_fitted()
         return self._to_frame(self.independence_)
 
-    def fit(self, im_calculator: InteractionMatrixCalculator, **fit_params) -> None:
+    def fit(self, im_calculator: ShapInteractionValuesCalculator, **fit_params) -> None:
         """
         Calculate the SHAP decomposition for the interaction matrix produced by the
         given interaction matrix calculator.
         :param im_calculator: the calculator from which to get the interaction matrix
         """
+
+        # reset fit in case we get an exception along the way
+        self.synergy_ = self.equivalence_ = self.independence_ = None
+        self.index_ = self.columns_ = None
+
         if len(fit_params) > 0:
             raise ValueError(
                 f'unsupported fit parameters: {", ".join(fit_params.values())}'
