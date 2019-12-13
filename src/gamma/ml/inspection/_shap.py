@@ -72,10 +72,10 @@ class BaseShapCalculator(
             verbose=verbose,
         )
         self._explainer_factory = explainer_factory
-        self._shap: Optional[pd.DataFrame] = None
-        self._n_observations: Optional[int] = None
-        self._n_features: Optional[int] = None
-        self._n_targets: Optional[int] = None
+        self.shap_: Optional[pd.DataFrame] = None
+        self.n_observations_: Optional[int] = None
+        self.n_features_: Optional[int] = None
+        self.n_targets_: Optional[int] = None
 
     def fit(
         self: T_Self, crossfit: LearnerCrossfit[T_LearnerPipelineDF], **fit_params
@@ -90,13 +90,13 @@ class BaseShapCalculator(
         self._shap = None
 
         training_sample = crossfit.training_sample
-        self._n_observations = len(training_sample)
-        self._n_features = training_sample.n_features
-        self._n_targets = training_sample.n_targets
+        self.n_observations_ = len(training_sample)
+        self.n_features_ = training_sample.n_features
+        self.n_targets_ = training_sample.n_targets
 
         # calculate shap values and re-order the observation index to match the
         # sequence in the original training sample
-        self._shap = self._consolidate_splits(
+        self.shap_ = self._consolidate_splits(
             self._shap_all_splits(crossfit=crossfit),
             observation_index=training_sample.index,
         )
@@ -106,7 +106,7 @@ class BaseShapCalculator(
     # noinspection PyMissingOrEmptyDocstring
     @property
     def is_fitted(self) -> bool:
-        return self._shap is not None
+        return self.shap_ is not None
 
     is_fitted.__doc__ = FittableMixin.is_fitted.__doc__
 
@@ -120,7 +120,7 @@ class BaseShapCalculator(
         calculation, see documentation for implementations of this base class.
         """
         self._ensure_fitted()
-        return self._shap
+        return self.shap_
 
     def _shap_all_splits(
         self, crossfit: LearnerCrossfit[T_LearnerPipelineDF]
@@ -299,10 +299,10 @@ class InteractionMatrixCalculator(
         """
         self._ensure_fitted()
 
-        n_observations = self._n_observations
-        n_features = self._n_features
-        n_targets = self._n_targets
-        interaction_matrix = self._shap
+        n_observations = self.n_observations_
+        n_features = self.n_features_
+        n_targets = self.n_targets_
+        interaction_matrix = self.shap_
 
         return pd.DataFrame(
             np.diagonal(
