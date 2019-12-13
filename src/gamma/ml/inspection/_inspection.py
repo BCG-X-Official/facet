@@ -273,6 +273,44 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF
         """
         return self._fitted_interaction_decomposer().synergy
 
+    def feature_equivalence_matrix(self) -> pd.DataFrame:
+        """
+        For each pairing of features, calculate the relative share of their equivalent
+        contribution to the model prediction.
+
+        Equivalent contributions are expressed as relative absolute shap contributions
+        and range between 0.0 (no contribution) to 1.0 (full contribution).
+
+        :return: relative feature synergy matrix as a data frame of shape \
+            (n_features, n_targets * n_features)
+        """
+        return self._fitted_interaction_decomposer().equivalence
+
+    def feature_equivalence_linkage(self) -> Union[LinkageTree, List[LinkageTree]]:
+        """
+        Calculate the :class:`.LinkageTree` based on the
+        :meth:`.feature_equivalence_matrix`.
+
+        :return: linkage tree for the shap clustering dendrogram; \
+            list of linkage trees if the base estimator is a multi-output model
+        """
+        return self._linkage_from_affinity_matrix(
+            feature_affinity_matrix=self._fitted_interaction_decomposer().equivalence_
+        )
+
+    def feature_independence_matrix(self) -> pd.DataFrame:
+        """
+        For each pairing of features, calculate the relative share of their independent
+        contribution to the model prediction.
+
+        Independent contributions are expressed as relative absolute shap contributions
+        and range between 0.0 (no contribution) to 1.0 (full contribution).
+
+        :return: relative feature synergy matrix as a data frame of shape \
+            (n_features, n_targets * n_features)
+        """
+        return self._fitted_interaction_decomposer().independence
+
     def feature_interaction_matrix(self) -> pd.DataFrame:
         """
         Calculate average shap interaction values for all feature pairings.
@@ -359,44 +397,6 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF
 
         # create a data frame from the feature matrix
         return self._feature_matrix_to_df(synergy_matrix)
-
-    def feature_equivalence_matrix(self) -> pd.DataFrame:
-        """
-        For each pairing of features, calculate the relative share of their equivalent
-        contribution to the model prediction.
-
-        Equivalent contributions are expressed as relative absolute shap contributions
-        and range between 0.0 (no contribution) to 1.0 (full contribution).
-
-        :return: relative feature synergy matrix as a data frame of shape \
-            (n_features, n_targets * n_features)
-        """
-        return self._fitted_interaction_decomposer().equivalence
-
-    def feature_equivalence_linkage(self) -> Union[LinkageTree, List[LinkageTree]]:
-        """
-        Calculate the :class:`.LinkageTree` based on the
-        :meth:`.feature_equivalence_matrix`.
-
-        :return: linkage tree for the shap clustering dendrogram; \
-            list of linkage trees if the base estimator is a multi-output model
-        """
-        return self._linkage_from_affinity_matrix(
-            feature_affinity_matrix=self._fitted_interaction_decomposer().equivalence_
-        )
-
-    def feature_independence_matrix(self) -> pd.DataFrame:
-        """
-        For each pairing of features, calculate the relative share of their independent
-        contribution to the model prediction.
-
-        Independent contributions are expressed as relative absolute shap contributions
-        and range between 0.0 (no contribution) to 1.0 (full contribution).
-
-        :return: relative feature synergy matrix as a data frame of shape \
-            (n_features, n_targets * n_features)
-        """
-        return self._fitted_interaction_decomposer().independence
 
     @property
     def _n_targets(self) -> int:
