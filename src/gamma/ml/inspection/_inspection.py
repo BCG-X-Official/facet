@@ -170,7 +170,7 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF
             the relative loss in SHAP contribution when the feature is removed \
             and all other features remain in place (default: `False`)
 
-        :return: feature importances as their mean absolute SHAP contributions, \
+        :return: importance of each feature as its mean absolute SHAP contribution, \
           normalised to a total 100%. Returned as a series of length n_features for \
           single-target models, and as a data frame of shape (n_features, n_targets) \
           for multi-target models
@@ -190,13 +190,13 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF
             ).abs().mean()
 
             # noinspection PyTypeChecker
-            feature_importances = cast(
+            feature_importance_sr = cast(
                 pd.Series, mean_abs_importance_marginal / total_importance
             ).rename(BaseLearnerInspector.COL_IMPORTANCE_MARGINAL)
 
         else:
             # noinspection PyTypeChecker
-            feature_importances = cast(
+            feature_importance_sr = cast(
                 pd.Series, mean_abs_importance / total_importance
             ).rename(BaseLearnerInspector.COL_IMPORTANCE)
 
@@ -205,9 +205,9 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF
                 mean_abs_importance.index.nlevels == 2
             ), "2 index levels in place for multi-output models"
 
-            feature_importances: pd.DataFrame = mean_abs_importance.unstack(level=0)
+            feature_importance_sr: pd.DataFrame = mean_abs_importance.unstack(level=0)
 
-        return feature_importances
+        return feature_importance_sr
 
     def feature_association_matrix(self) -> pd.DataFrame:
         """
@@ -341,7 +341,7 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF
         # transform to 2D shape (n_features, n_targets * n_features)
         matrix_2d = matrix.swapaxes(0, 1).reshape((n_features, n_targets * n_features))
 
-        # convert ndarray to data frame with appropriate indices
+        # convert array to data frame with appropriate indices
         matrix_df = pd.DataFrame(
             data=matrix_2d, columns=self.shap_matrix().columns, index=self._features
         )
@@ -416,13 +416,13 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF
         return self._interaction_matrix_calculator
 
     def _association_matrix(self) -> np.ndarray:
-        # return an ndarray with a pearson correlation matrix of the shap matrix
+        # return an array with a pearson correlation matrix of the shap matrix
         # for each target, with shape (n_targets, n_features, n_features)
 
         n_targets: int = self._n_targets
         n_features: int = self._n_features
 
-        # get the shap matrix as an ndarray of shape
+        # get the shap matrix as an array of shape
         # (n_targets, n_observations, n_features);
         # this is achieved by re-shaping the shap matrix to get the additional "target"
         # dimension, then swapping the target and observation dimensions
@@ -464,6 +464,7 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF
     def _interaction_matrix_calculator_cls() -> Type[InteractionMatrixCalculator]:
         pass
 
+    # noinspection SpellCheckingInspection
     @deprecated(
         message="Use method feature_importance instead. "
         "This method will be removed in a future release."
