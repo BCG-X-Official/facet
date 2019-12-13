@@ -25,6 +25,7 @@ from gamma.ml.inspection._shap import (
     RegressorShapMatrixCalculator,
     ShapMatrixCalculator,
 )
+from gamma.ml.inspection._shap_decomposition import ShapInteractionDecomposer
 from gamma.sklearndf import BaseLearnerDF
 from gamma.sklearndf.pipeline import (
     BaseLearnerPipelineDF,
@@ -64,7 +65,7 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF
     """
 
     __slots__ = [
-        "_cross_fit",
+        "_crossfit",
         "_shap_matrix",
         "_feature_dependency_matrix",
         "_explainer_factory",
@@ -78,6 +79,7 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF
         crossfit: LearnerCrossfit[T_LearnerPipelineDF],
         *,
         explainer_factory: Optional[ExplainerFactory] = None,
+        min_direct_synergy: Optional[float] = None,
         n_jobs: Optional[int] = None,
         shared_memory: Optional[bool] = None,
         pre_dispatch: Optional[Union[str, int]] = None,
@@ -86,7 +88,10 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF
         """
         :param crossfit: predictor containing the information about the
           pipeline, the data (a Sample object), the cross-validation and crossfit.
-        :param explainer_factory: calibration that returns a shap Explainer
+        :param explainer_factory: optional function that creates a shap Explainer \
+            (default: :func:``.tree_explainer_factory``)
+        :param min_direct_synergy: minimum direct synergy to consider a feature pair \
+            for calculation of indirect synergy (default: <DEFAULT_MIN_DIRECT_SYNERGY>)
         """
         super().__init__(
             n_jobs=n_jobs,
@@ -98,11 +103,14 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF
         if not crossfit.is_fitted:
             raise ValueError("arg crossfit expected to be fitted")
 
-        self._cross_fit = crossfit
+        self._crossfit = crossfit
         self._explainer_factory = (
             explainer_factory
             if explainer_factory is not None
             else tree_explainer_factory
+        )
+        self._shap_interaction_decomposer = ShapInteractionDecomposer(
+            min_direct_synergy=min_direct_synergy
         )
         self.n_jobs = n_jobs
         self.shared_memory = shared_memory
@@ -126,14 +134,28 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF
 
         self._feature_dependency_matrix: Optional[pd.DataFrame] = None
 
-    __init__.__doc__ += ParallelizableMixin.__init__.__doc__
+    # noinspection PyTypeChecker
+    __init__.__doc__ = (
+        __init__.__doc__.replace(
+            "<DEFAULT_MIN_DIRECT_SYNERGY>",
+            str(ShapInteractionDecomposer.DEFAULT_MIN_DIRECT_SYNERGY),
+        )
+        + ParallelizableMixin.__init__.__doc__
+    )
 
     @property
     def crossfit(self) -> LearnerCrossfit[T_LearnerPipelineDF]:
         """
-        CV fit of the pipeline being examined by this inspector
+        CV fit of the pipeline being examined by this inspector.
         """
-        return self._cross_fit
+        return self._crossfit
+
+    @property
+    def training_sample(self) -> Sample:
+        """
+        The training sample used for model inspection.
+        """
+        return self.crossfit.training_sample
 
     def shap_matrix(self) -> pd.DataFrame:
         """
@@ -226,7 +248,7 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF
     def feature_association_linkage(self) -> Union[LinkageTree, List[LinkageTree]]:
         """
         Calculate the :class:`.LinkageTree` based on the
-        :meth:`.feature_dependency_matrix`.
+        :meth:`.feature_association_matrix`.
 
         :return: linkage tree for the shap clustering dendrogram; \
             list of linkage trees if the base estimator is a multi-output model
@@ -237,25 +259,41 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF
 
     def feature_synergy_matrix(self) -> pd.DataFrame:
         """
-        Calculate pairwise feature synergies based on feature interaction values.
+        For each pairing of features, calculate the relative share of their synergistic
+        contribution to the model prediction.
+
+        Synergistic contributions are expressed as relative absolute shap contributions
+        and range between 0.0 (no contribution) to 1.0 (full contribution).
+
+        :return: relative feature synergy matrix as a data frame of shape \
+            (n_features, n_targets * n_features)
+        """
+        return self._fitted_interaction_decomposer().synergy
+
+    def feature_direct_synergy_matrix(self) -> pd.DataFrame:
+        """
+        Calculate pairwise direct feature synergies based on feature interaction values.
 
         Synergy values are expressed as relative absolute shap contributions and range
         between 0.0 (no contribution) to 1.0 (full contribution).
 
-        For features :math:`i` and :math:`j`, the synergistic shap contribution is
-        calculated as
+        For features :math:`f_i` and :math:`f_j`, the direct synergistic shap
+        contribution is calculated as
 
         .. math::
-            \\mathrm{syn}_{ij} = \\frac{| \\vec{\\phi}_{ij} | }
+            \\mathrm{syn}^{\\mathrm{direct}}_{ij} = \\frac{| \\vec{\\phi}_{ij} | }
                 { \\sum_{a=1}^n\\sum_{b=1}^n| \\vec{\\phi}_{ab} | }
 
         where :math:`| \\vec v |` represents the sum of absolute values of each
         element of vector :math:`\\vec v`.
 
-        The total relative synergistic contribution of features :math:`i` and :math:`j`
-        is :math:`\\mathrm{syn}_{ij} + \\mathrm{syn}_{ji} = 2\\mathrm{syn}_{ij}`.
+        The total relative direct synergistic contribution of features
+        :math:`f_i` and :math:`f_j` is
+        :math:`\\mathrm{syn}^{\\mathrm{direct}}_{ij} \
+            + \\mathrm{syn}^{\\mathrm{direct}}_{ji} \
+            = 2\\mathrm{syn}^{\\mathrm{direct}}_{ij}`.
 
-        The residual, non-synergistic contribution of feature :math:`i` is
+        The residual, non-synergistic contribution of feature :math:`f_i` is
         :math:`\\mathrm{syn}_{ii}`
 
         The matrix returned by this method is a diagonal matrix
@@ -274,7 +312,8 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF
 
         with :math:`\\sum_{a=1}^n \\sum_{b=a}^n \\mathrm{syn}_{ab} = 1`
 
-        :return: feature synergy matrix as a data frame
+        :return: feature synergy matrix as a data frame of shape \
+            (n_features, n_targets * n_features)
         """
 
         n_features = self._n_features
@@ -316,6 +355,44 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF
 
         # create a data frame from the feature matrix
         return self._feature_matrix_to_df(synergy_matrix)
+
+    def feature_equivalence_matrix(self) -> pd.DataFrame:
+        """
+        For each pairing of features, calculate the relative share of their equivalent
+        contribution to the model prediction.
+
+        Equivalent contributions are expressed as relative absolute shap contributions
+        and range between 0.0 (no contribution) to 1.0 (full contribution).
+
+        :return: relative feature synergy matrix as a data frame of shape \
+            (n_features, n_targets * n_features)
+        """
+        return self._fitted_interaction_decomposer().equivalence
+
+    def feature_equivalence_linkage(self) -> Union[LinkageTree, List[LinkageTree]]:
+        """
+        Calculate the :class:`.LinkageTree` based on the
+        :meth:`.feature_equivalence_matrix`.
+
+        :return: linkage tree for the shap clustering dendrogram; \
+            list of linkage trees if the base estimator is a multi-output model
+        """
+        return self._linkage_from_affinity_matrix(
+            feature_affinity_matrix=self._fitted_interaction_decomposer().equivalence_
+        )
+
+    def feature_independence_matrix(self) -> pd.DataFrame:
+        """
+        For each pairing of features, calculate the relative share of their independent
+        contribution to the model prediction.
+
+        Independent contributions are expressed as relative absolute shap contributions
+        and range between 0.0 (no contribution) to 1.0 (full contribution).
+
+        :return: relative feature synergy matrix as a data frame of shape \
+            (n_features, n_targets * n_features)
+        """
+        return self._fitted_interaction_decomposer().independence
 
     @property
     def _n_targets(self) -> int:
@@ -414,6 +491,13 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF
         if not self._interaction_matrix_calculator.is_fitted:
             self._interaction_matrix_calculator.fit(crossfit=self.crossfit)
         return self._interaction_matrix_calculator
+
+    def _fitted_interaction_decomposer(self) -> ShapInteractionDecomposer:
+        if not self._shap_interaction_decomposer.is_fitted:
+            self._shap_interaction_decomposer.fit(
+                self._fitted_interaction_matrix_calculator()
+            )
+        return self._shap_interaction_decomposer
 
     def _association_matrix(self) -> np.ndarray:
         # return an array with a pearson correlation matrix of the shap matrix
