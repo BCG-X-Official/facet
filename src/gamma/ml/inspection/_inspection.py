@@ -273,49 +273,50 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF
         """
         return self._fitted_interaction_decomposer().synergy
 
-    def feature_direct_synergy_matrix(self) -> pd.DataFrame:
+    def feature_interaction_matrix(self) -> pd.DataFrame:
         """
-        Calculate pairwise direct feature synergies based on feature interaction values.
+        Calculate average shap interaction values for all feature pairings.
 
-        Synergy values are expressed as relative absolute shap contributions and range
-        between 0.0 (no contribution) to 1.0 (full contribution).
+        The average values are normalised to add up to 1.0, and all range
+        between 0.0 and 1.0.
 
-        For features :math:`f_i` and :math:`f_j`, the direct synergistic shap
-        contribution is calculated as
+        For features :math:`f_i` and :math:`f_j`, the average shap interaction is
+        calculated as
 
         .. math::
-            \\mathrm{syn}^{\\mathrm{direct}}_{ij} = \\frac{| \\vec{\\phi}_{ij} | }
-                { \\sum_{a=1}^n\\sum_{b=1}^n| \\vec{\\phi}_{ab} | }
+            \\mathrm{si}_{ij} = \\frac
+                {\\sigma(\\vec{\\phi}_{ij})}
+                {\\sum_{a=1}^n \\sum_{b=1}^n \\sigma(\\vec{\\phi}_{ab})}
 
-        where :math:`| \\vec v |` represents the sum of absolute values of each
-        element of vector :math:`\\vec v`.
+        where :math:`\\sigma(\\vec v)` is the standard deviation of all elements of
+        vector :math:`\\vec v`.
 
-        The total relative direct synergistic contribution of features
+        The total average interaction of features
         :math:`f_i` and :math:`f_j` is
-        :math:`\\mathrm{syn}^{\\mathrm{direct}}_{ij} \
-            + \\mathrm{syn}^{\\mathrm{direct}}_{ji} \
-            = 2\\mathrm{syn}^{\\mathrm{direct}}_{ij}`.
+        :math:`\\mathrm{si}_{ij} \
+            + \\mathrm{si}_{ji} \
+            = 2\\mathrm{si}_{ij}`.
 
-        The residual, non-synergistic contribution of feature :math:`f_i` is
-        :math:`\\mathrm{syn}_{ii}`
+        :math:`\\mathrm{si}_{ii}` is the residual, non-synergistic contribution
+        of feature :math:`f_i`
 
         The matrix returned by this method is a diagonal matrix
 
         .. math::
 
-            \\newcommand\\syn[1]{\\mathrm{syn}_{#1}}
+            \\newcommand\\si[1]{\\mathrm{si}_{#1}}
             \\newcommand\\nan{\\mathit{nan}}
-            \\syn{} = \\begin{pmatrix}
-                \\syn{11} & \\nan & \\nan & \\dots & \\nan \\\\
-                2\\syn{21} & \\syn{22} & \\nan & \\dots & \\nan \\\\
-                2\\syn{31} & 2\\syn{32} & \\syn{33} & \\dots & \\nan \\\\
+            \\si{} = \\begin{pmatrix}
+                \\si{11} & \\nan & \\nan & \\dots & \\nan \\\\
+                2\\si{21} & \\si{22} & \\nan & \\dots & \\nan \\\\
+                2\\si{31} & 2\\si{32} & \\si{33} & \\dots & \\nan \\\\
                 \\vdots & \\vdots & \\vdots & \\ddots & \\vdots \\\\
-                2\\syn{n1} & 2\\syn{n2} & 2\\syn{n3} & \\dots & \\syn{nn} \\\\
+                2\\si{n1} & 2\\si{n2} & 2\\si{n3} & \\dots & \\si{nn} \\\\
             \\end{pmatrix}
 
-        with :math:`\\sum_{a=1}^n \\sum_{b=a}^n \\mathrm{syn}_{ab} = 1`
+        with :math:`\\sum_{a=1}^n \\sum_{b=a}^n \\mathrm{si}_{ab} = 1`
 
-        :return: feature synergy matrix as a data frame of shape \
+        :return: average shap interaction values as a data frame of shape \
             (n_features, n_targets * n_features)
         """
 
