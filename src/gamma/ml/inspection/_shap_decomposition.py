@@ -316,7 +316,7 @@ class ShapInteractionDecomposer(FittableMixin[ShapInteractionValuesCalculator]):
         # var(phi[i]) + var(phi_i[j])
         # Sum of covariances per feature pair (this is a diagonal matrix)
         # shape: (n_targets, n_features, n_features)
-        var_psi_ij_plus_psi_ji = var_psi_ij + _transpose(var_psi_ij)
+        var_psi_ij_plus_var_psi_ji = var_psi_ij + _transpose(var_psi_ij)
 
         # 2 * cov(psi[i, j], psi[j, i])
         # shape: (n_targets, n_features, n_features)
@@ -324,36 +324,50 @@ class ShapInteractionDecomposer(FittableMixin[ShapInteractionValuesCalculator]):
         # of the equivalence vector (see next step below)
         cov_psi_ij_psi_ji_double = 2 * cov_psi_ij_psi_ji
 
-        # 2 * std(epsilon[i])
+        # std(psi[i, j] + psi[j, i])
+        # shape: (n_targets, n_features, n_features)
+        # the length of the sum of vectors psi[i, j] and psi[j, i]
+        # we need this as part of the formula to calculate epsilon_ij (see below)
+
+        std_psi_ij_plus_psi_ji = np.sqrt(
+            var_psi_ij_plus_var_psi_ji + cov_psi_ij_psi_ji_double
+        )
+
+        # std(psi[i, j] - psi[j, i])
+        # shape: (n_targets, n_features, n_features)
+        # the length of the difference of vectors psi[i, j] and psi[j, i]
+        # we need this as part of the formula to calculate epsilon_ij (see below)
+
+        std_psi_ij_minus_psi_ji = np.sqrt(
+            var_psi_ij_plus_var_psi_ji - cov_psi_ij_psi_ji_double
+        )
+
+        # 2 * std(epsilon[i, j])
         # shape: (n_targets, n_features)
         # twice the standard deviation (= length) of equivalence vector;
         # this is the total contribution made by phi[i] and phi[j] where both features
         # independently use redundant information
 
-        double_std_epsilon_i = np.sqrt(
-            var_psi_ij_plus_psi_ji + cov_psi_ij_psi_ji_double
-        ) - np.sqrt(var_psi_ij_plus_psi_ji - cov_psi_ij_psi_ji_double)
+        double_std_epsilon_ij = std_psi_ij_plus_psi_ji - std_psi_ij_minus_psi_ji
 
         #
         # SHAP independence
         #
 
-        # std(psi[i, j], psi[j, i])
-        # shape: (n_targets, n_features, n_features)
-        # the length of the sum of vectors psi[i, j] and psi[j, i]
-        # we need this as part of the formula to calculate tau_i (see below)
-
-        std_psi_ij_plus_psi_ji = np.sqrt(var_psi_ij_plus_psi_ji + 2 * cov_psi_ij_psi_ji)
-
         # var(epsilon[i, j])
-        var_epsilon_ij = double_std_epsilon_i * double_std_epsilon_i / 4
+        var_epsilon_ij = double_std_epsilon_ij * double_std_epsilon_ij / 4
+
+        # ratio of length of 2*e over length of (psi[i, j] + psi[j, i])
+        # shape: (n_targets, n_features, n_features)
+        # we need this for the next step
+        double_e_psi_ratio = 1 - std_psi_ij_minus_psi_ji / std_psi_ij_plus_psi_ji
 
         # 2 * cov(psi[i, j], epsilon[i, j])
         # shape: (n_targets, n_features, n_features)
         # we need this as part of the formula to calculate tau_i (see next step below)
-        double_cov_psi_ij_epsilon_ij = (
-            double_std_epsilon_i / std_psi_ij_plus_psi_ji
-        ) * (var_psi_ij + cov_psi_ij_psi_ji)
+        double_cov_psi_ij_epsilon_ij = double_e_psi_ratio * (
+            var_psi_ij + cov_psi_ij_psi_ji
+        )
 
         # std(tau_ij)
         # the standard deviation (= length) of the independence vector
@@ -366,7 +380,7 @@ class ShapInteractionDecomposer(FittableMixin[ShapInteractionValuesCalculator]):
         #
 
         synergy_ij = zeta_i_j + _transpose(zeta_i_j)
-        equivalence_ij = np.abs(double_std_epsilon_i)
+        equivalence_ij = np.abs(double_std_epsilon_ij)
         independence_ij = std_tau_ij + _transpose(std_tau_ij)
         total_ij = synergy_ij + equivalence_ij + independence_ij
 
