@@ -400,7 +400,7 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF
 
     @property
     def _n_targets(self) -> int:
-        return self.crossfit.training_sample.n_targets
+        return self.training_sample.n_targets
 
     @property
     def _features(self) -> pd.Index:
