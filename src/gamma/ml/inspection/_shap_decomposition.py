@@ -49,16 +49,15 @@ class ShapInteractionDecomposer(FittableMixin[ShapInteractionValuesCalculator]):
             if min_direct_synergy is None
             else min_direct_synergy
         )
-        self.synergy_: Optional[np.ndarray] = None
-        self.equivalence_: Optional[np.ndarray] = None
-        self.independence_: Optional[np.ndarray] = None
+        self.synergy_rel_: Optional[np.ndarray] = None
+        self.equivalence_rel_: Optional[np.ndarray] = None
         self.index_: Optional[pd.Index] = None
         self.columns_: Optional[pd.Index] = None
 
     @property
     def is_fitted(self) -> bool:
         f"""{FittableMixin.is_fitted.__doc__}"""
-        return self.synergy_ is not None
+        return self.synergy_rel_ is not None
 
     @property
     def synergy(self) -> pd.DataFrame:
@@ -66,39 +65,26 @@ class ShapInteractionDecomposer(FittableMixin[ShapInteractionValuesCalculator]):
         The matrix of total relative synergy (direct and indirect) for all feature
         pairs.
 
-        Values range between 0.0 (no synergy) and 1.0 (full synergy).
-        :attr:`.synergy`, :attr:`.equivalence`, and :attr:`.independence` add up to 1.0.
+        Values range between 0.0 (fully autonomous contributions) and 1.0
+        (fully synergistic contributions).
 
         Raises an error if this interaction decomposer has not been fitted.
         """
         self._ensure_fitted()
-        return self._to_frame(self.synergy_)
+        return self._to_frame(self.synergy_rel_)
 
     @property
     def equivalence(self) -> pd.DataFrame:
         """
         The matrix of total relative equivalence for all feature pairs.
 
-        Values range between 0.0 (no equivalence) and 1.0 (full equivalence).
-        :attr:`.synergy`, :attr:`.equivalence`, and :attr:`.independence` add up to 1.0.
+        Values range between 0.0 (fully unique contributions) and 1.0
+        (fully equivalent contributions).
 
         Raises an error if this interaction decomposer has not been fitted.
         """
         self._ensure_fitted()
-        return self._to_frame(self.equivalence_)
-
-    @property
-    def independence(self) -> pd.DataFrame:
-        """
-        The matrix of total relative independence for all feature pairs.
-
-        Values range between 0.0 (no independence) and 1.0 (full independence).
-        :attr:`.synergy`, :attr:`.equivalence`, and :attr:`.independence` add up to 1.0.
-
-        Raises an error if this interaction decomposer has not been fitted.
-        """
-        self._ensure_fitted()
-        return self._to_frame(self.independence_)
+        return self._to_frame(self.equivalence_rel_)
 
     def fit(self, im_calculator: ShapInteractionValuesCalculator, **fit_params) -> None:
         """
@@ -108,7 +94,7 @@ class ShapInteractionDecomposer(FittableMixin[ShapInteractionValuesCalculator]):
         """
 
         # reset fit in case we get an exception along the way
-        self.synergy_ = self.equivalence_ = self.independence_ = None
+        self.synergy_rel_ = self.equivalence_rel_ = None
         self.index_ = self.columns_ = None
 
         if len(fit_params) > 0:
@@ -146,7 +132,13 @@ class ShapInteractionDecomposer(FittableMixin[ShapInteractionValuesCalculator]):
 
             return v.swapaxes(1, 2)
 
-        # phi_ij
+        def _sqrt(v: np.ndarray) -> np.ndarray:
+            # we clip values < 0 as these could happen in isolated cases due to
+            # rounding errors
+
+            return np.sqrt(np.clip(v, 0, None))
+
+        # phi[i, j]
         # shape: (n_targets, n_features, n_features, n_observations)
         # the vector of interaction values for every target and feature pairing
         phi_ij = np.transpose(
@@ -154,7 +146,7 @@ class ShapInteractionDecomposer(FittableMixin[ShapInteractionValuesCalculator]):
             axes=(2, 1, 3, 0),
         )
 
-        # phi_i
+        # phi[i]
         # shape: (n_targets, n_features, n_observations)
         phi_i = phi_ij.sum(axis=2)
 
@@ -166,30 +158,30 @@ class ShapInteractionDecomposer(FittableMixin[ShapInteractionValuesCalculator]):
         # Feature synergy (direct and indirect)
         #
 
-        # var_phi_ij, std_phi_ij
+        # var(phi[i, j]), std(phi[i, j])
         # shape: (n_targets, n_features, n_features)
         # variance and length (= standard deviation) of each feature interaction vector
         var_phi_ij = (phi_ij * phi_ij).mean(axis=3)
         std_phi_ij = np.sqrt(var_phi_ij)
 
-        # phi_ii
+        # phi[i, i]
         # shape: (n_targets, n_features, n_observations)
         # independent feature contributions;
         # this is the diagonal of phi_ij
         phi_ii = np.diagonal(phi_ij, axis1=1, axis2=2).swapaxes(1, 2)
 
-        # phi_i_ = phi_i - phi_ii
+        # phi'[i] = phi[i] - phi[i, i]
         # shape: (n_targets, n_features, n_observations)
         # the SHAP vectors per feature, minus the independent contributions
-        phi_i_ = phi_i - phi_ii
+        phi__i = phi_i - phi_ii
 
-        # std_phi_ij_relative
+        # std_phi_relative[i, j]
         # shape: (n_targets, n_features, n_features)
         # relative importance of phi[i, j] measured as the length of phi[i, j]
         # as percentage of the sum of lengths of all phi[..., ...]
-        std_phi_ij_relative = std_phi_ij / std_phi_ij.sum()
+        std_phi_relative_ij = std_phi_ij / std_phi_ij.sum()
 
-        # phi_ij_valid
+        # phi_valid[i, j]
         # shape: (n_targets, n_features, n_features)
         # boolean matrix indicating whether phi[i, j] is above the "noise" threshold,
         # i.e. whether we trust that doing calculations with phi[i, j] is sufficiently
@@ -198,9 +190,9 @@ class ShapInteractionDecomposer(FittableMixin[ShapInteractionValuesCalculator]):
         # deviate significantly if var(phi[i, j]) is only slightly off
 
         interaction_noise_threshold = self.min_direct_synergy
-        phi_ij_valid = std_phi_ij_relative >= interaction_noise_threshold
+        phi_valid_ij = std_phi_relative_ij >= interaction_noise_threshold
 
-        # s_i_j
+        # s[i, j]
         # shape: (n_targets, n_features, n_features)
         # s[i, j] = cov(phi'[i], phi[i, j) / var(phi[i, j]), for each target
         # this is the orthogonal projection of phi[i, j] onto phi'[i] and determines
@@ -211,11 +203,11 @@ class ShapInteractionDecomposer(FittableMixin[ShapInteractionValuesCalculator]):
         # noinspection SpellCheckingInspection
         s_i_j = np.divide(
             # cov(phi'[i], phi[i, j])
-            np.einsum("tio,tijo->tij", phi_i_, phi_ij) / n_observations,
+            np.einsum("tio,tijo->tij", phi__i, phi_ij) / n_observations,
             # var(phi[i, j])
             var_phi_ij,
             out=np.ones_like(var_phi_ij),
-            where=phi_ij_valid,
+            where=phi_valid_ij,
         )
 
         # issue warning messages for edge cases
@@ -229,31 +221,35 @@ class ShapInteractionDecomposer(FittableMixin[ShapInteractionValuesCalculator]):
         def _relative_direct_synergy(_t: int, _i: int, _j: int) -> str:
             return (
                 f"phi[{features[_i]}, {features[_j]}] has "
-                f"{std_phi_ij_relative[_t, _i, _j] * 100:.3g}% "
-                f"relative SHAP contribution; "
-                f"consider increasing the minimal direct synergy threshold (currently "
+                f"{std_phi_relative_ij[_t, _i, _j] * 100:.3g}% "
+                "relative SHAP contribution; "
+                "consider increasing the minimal direct synergy threshold (currently "
                 f"{interaction_noise_threshold * 100:.3g}%). "
             )
 
-        for t, i, j in np.argwhere(s_i_j < 1):
-            if i != j:
-                print(
-                    f"contravariant indirect synergy {_for_target(t)}"
-                    f"phi[{features[i]}, {features[j]}]: "
-                    f"indirect synergy calculated as {(s_i_j[t, i, j] - 1) * 100:.3g}% "
-                    f"of direct synergy; setting indirect synergy to 0. "
-                    f"{_relative_direct_synergy(t,i, j)}"
-                )
+        def _test_synergy_feasibility() -> None:
+            for _t, _i, _j in np.argwhere(s_i_j < 1):
+                if _i != _j:
+                    log.warning(
+                        f"contravariant indirect synergy {_for_target(_t)}"
+                        f"phi[{features[_i]}, {features[_j]}]: "
+                        "indirect synergy calculated as "
+                        f"{(s_i_j[_t, _i, _j] - 1) * 100:.3g}% "
+                        "of direct synergy; setting indirect synergy to 0. "
+                        f"{_relative_direct_synergy(_t,_i, _j)}"
+                    )
 
-        for t, i, j in np.argwhere(s_i_j > np.log2(n_features)):
-            if i != j:
-                print(
-                    f"high indirect synergy {_for_target(t)}"
-                    f"phi[{features[i]}, {features[j]}]: "
-                    f"total of direct and indirect synergy is "
-                    f"{(s_i_j[t, i, j] - 1) * 100:.3g}% of direct synergy. "
-                    f"{_relative_direct_synergy(t,i, j)}"
-                )
+            for _t, _i, _j in np.argwhere(s_i_j > np.log2(n_features)):
+                if _i != _j:
+                    log.warning(
+                        f"high indirect synergy {_for_target(_t)}"
+                        f"phi[{features[_i]}, {features[_j]}]: "
+                        "total of direct and indirect synergy is "
+                        f"{(s_i_j[_t, _i, _j] - 1) * 100:.3g}% of direct synergy. "
+                        f"{_relative_direct_synergy(_t,_i, _j)}"
+                    )
+
+        _test_synergy_feasibility()
 
         # ensure that s[i, j] is at least 1.0
         # (a warning will have been issued during the checks above for s[i, j] < 1)
@@ -269,19 +265,19 @@ class ShapInteractionDecomposer(FittableMixin[ShapInteractionValuesCalculator]):
         # shape: (n_targets, n_features, n_features)
         s_j_i = _transpose(s_i_j)
 
-        # zeta[i, j]
+        # zeta[i, j] = zeta[j, i] = (s[i, j] + s[j, i]) * phi[i, j]
         # total SHAP synergy, comprising both direct and indirect synergy
         # shape: (n_targets, n_features, n_features)
-        zeta_i_j = std_phi_ij * s_i_j
+        std_zeta_ij_plus_zeta_ji = (s_i_j + s_j_i) * std_phi_ij
 
         #
-        # SHAP equivalence
+        # SHAP independence
         #
 
         # cov(phi[i], phi[i, j])
         # covariance matrix of shap vectors with pairwise synergies
         # shape: (n_targets, n_features, n_features)
-        cov_phi_i_phi_i_j = (
+        cov_phi_i_phi_ij = (
             np.einsum("...io,...ijo->...ij", phi_i, phi_ij) / n_observations
         )
 
@@ -294,23 +290,22 @@ class ShapInteractionDecomposer(FittableMixin[ShapInteractionValuesCalculator]):
 
         cov_psi_ij_psi_ji = (
             cov_phi_i_phi_j
-            - s_j_i * cov_phi_i_phi_i_j
-            - s_i_j * _transpose(cov_phi_i_phi_i_j)
+            - s_j_i * cov_phi_i_phi_ij
+            - s_i_j * _transpose(cov_phi_i_phi_ij)
             + s_j_i * s_i_j * var_phi_ij
         )
 
         # var(phi[i])
         # variances of SHAP vectors
-        # shape: (n_targets, n_features)
-        var_phi_i = np.diagonal(cov_phi_i_phi_j, axis1=1, axis2=2)
+        # shape: (n_targets, n_features, 1)
+        # i.e. adding a second, empty feature dimension to enable correct broadcasting
+        var_phi_ix = np.diagonal(cov_phi_i_phi_j, axis1=1, axis2=2)[:, :, np.newaxis]
 
         # var(psi[i, j])
         # variances of SHAP vectors minus total synergy
         # shape: (n_targets, n_features, n_features)
         var_psi_ij = (
-            var_phi_i[:, :, np.newaxis]
-            - 2 * s_i_j * cov_phi_i_phi_i_j
-            + s_i_j * s_i_j * var_phi_ij
+            var_phi_ix - 2 * s_i_j * cov_phi_i_phi_ij + s_i_j * s_i_j * var_phi_ij
         )
 
         # var(phi[i]) + var(phi_i[j])
@@ -322,79 +317,138 @@ class ShapInteractionDecomposer(FittableMixin[ShapInteractionValuesCalculator]):
         # shape: (n_targets, n_features, n_features)
         # this is an intermediate result to calculate the standard deviation
         # of the equivalence vector (see next step below)
-        cov_psi_ij_psi_ji_double = 2 * cov_psi_ij_psi_ji
+        cov_psi_ij_psi_ji_2x = 2 * cov_psi_ij_psi_ji
 
         # std(psi[i, j] + psi[j, i])
+        # where psi[i, j] = phi[i] - zeta[i, j]
         # shape: (n_targets, n_features, n_features)
-        # the length of the sum of vectors psi[i, j] and psi[j, i]
-        # we need this as part of the formula to calculate epsilon_ij (see below)
+        # variances of SHAP vectors minus total synergy
+        # or, the length of the sum of vectors psi[i, j] and psi[j, i]
+        # this quantifies the autonomous contributions of features i and j, i.e.,
+        # without synergizing
+        # we also need this as part of the formula to calculate epsilon_ij (see below)
 
-        std_psi_ij_plus_psi_ji = np.sqrt(
-            var_psi_ij_plus_var_psi_ji + cov_psi_ij_psi_ji_double
+        std_psi_ij_plus_psi_ji = _sqrt(
+            var_psi_ij_plus_var_psi_ji + cov_psi_ij_psi_ji_2x
         )
+
+        #
+        # SHAP equivalence
+        #
 
         # std(psi[i, j] - psi[j, i])
         # shape: (n_targets, n_features, n_features)
         # the length of the difference of vectors psi[i, j] and psi[j, i]
         # we need this as part of the formula to calculate epsilon_ij (see below)
 
-        std_psi_ij_minus_psi_ji = np.sqrt(
-            var_psi_ij_plus_var_psi_ji - cov_psi_ij_psi_ji_double
+        std_psi_ij_minus_psi_ji = _sqrt(
+            var_psi_ij_plus_var_psi_ji - cov_psi_ij_psi_ji_2x
         )
 
-        # 2 * std(epsilon[i, j])
+        # 2 * std(epsilon[i, j]) = 2 * std(epsilon[j, i])
         # shape: (n_targets, n_features)
         # twice the standard deviation (= length) of equivalence vector;
         # this is the total contribution made by phi[i] and phi[j] where both features
         # independently use redundant information
 
-        double_std_epsilon_ij = std_psi_ij_plus_psi_ji - std_psi_ij_minus_psi_ji
+        std_epsilon_ij_2x = std_psi_ij_plus_psi_ji - std_psi_ij_minus_psi_ji
 
         #
         # SHAP independence
         #
 
-        # var(epsilon[i, j])
-        var_epsilon_ij = double_std_epsilon_ij * double_std_epsilon_ij / 4
+        # 4 * var(epsilon[i, j]), var(epsilon[i, j])
+        # shape: (n_targets, n_features, n_features)
+        var_epsilon_ij_4x = std_epsilon_ij_2x * std_epsilon_ij_2x
 
         # ratio of length of 2*e over length of (psi[i, j] + psi[j, i])
         # shape: (n_targets, n_features, n_features)
         # we need this for the next step
-        double_e_psi_ratio = 1 - std_psi_ij_minus_psi_ji / std_psi_ij_plus_psi_ji
+        epsilon_psi_ratio_2x = 1 - std_psi_ij_minus_psi_ji / std_psi_ij_plus_psi_ji
 
         # 2 * cov(psi[i, j], epsilon[i, j])
         # shape: (n_targets, n_features, n_features)
         # we need this as part of the formula to calculate tau_i (see next step below)
-        double_cov_psi_ij_epsilon_ij = double_e_psi_ratio * (
+        cov_psi_ij_epsilon_ij_2x = epsilon_psi_ratio_2x * (
             var_psi_ij + cov_psi_ij_psi_ji
         )
 
         # std(tau_ij)
+        # where tau_ij = psi_ij + psi_ji - 2 * epsilon_ij
+        # shape: (n_targets, n_features, n_features)
         # the standard deviation (= length) of the independence vector
-        # where tau_ij = psi_ij - epsilon_ij
-        std_tau_ij = np.sqrt(var_psi_ij + var_epsilon_ij - double_cov_psi_ij_epsilon_ij)
+
+        std_tau_ij_plus_tau_ji = _sqrt(
+            var_psi_ij
+            + _transpose(var_psi_ij)
+            + var_epsilon_ij_4x
+            + 2
+            * (
+                cov_psi_ij_psi_ji
+                - cov_psi_ij_epsilon_ij_2x
+                - _transpose(cov_psi_ij_epsilon_ij_2x)
+            )
+        )
+
+        #
+        # SHAP uniqueness
+        #
+
+        # 2 * cov(phi[i], epsilon[i, j])
+        # shape: (n_targets, n_features, n_features)
+        # intermediate result to calculate upsilon[i, j], see next step
+
+        cov_phi_i_epsilon_ij_2x = epsilon_psi_ratio_2x * (
+            var_phi_ix + cov_phi_i_phi_j - (s_i_j + s_j_i) * cov_phi_i_phi_ij
+        )
+
+        # std(upsilon[i, j])
+        # where upsilon[i, j] = phi[i] + phi[j] - 2 * epsilon[i, j]
+        # shape: (n_targets, n_features, n_features)
+        # this is the sum of complementary contributions of feature i and feature j,
+        # i.e., deducting the equivalent contributions
+
+        std_upsilon_ij_plus_upsilon_ji = _sqrt(
+            var_phi_ix
+            + var_phi_ix.swapaxes(1, 2)
+            + var_epsilon_ij_4x
+            + 2
+            * (
+                cov_phi_i_phi_j
+                - cov_phi_i_epsilon_ij_2x
+                - _transpose(cov_phi_i_epsilon_ij_2x)
+            )
+        )
 
         #
         # SHAP decompositon as relative contributions of
         # synergy, equivalence, and independence
         #
 
-        synergy_ij = zeta_i_j + _transpose(zeta_i_j)
-        equivalence_ij = np.abs(double_std_epsilon_ij)
-        independence_ij = std_tau_ij + _transpose(std_tau_ij)
-        total_ij = synergy_ij + equivalence_ij + independence_ij
+        synergy_ij = std_zeta_ij_plus_zeta_ji
+        autonomy_ij = std_psi_ij_plus_psi_ji
+        equivalence_ij = np.abs(std_epsilon_ij_2x)
+        uniqueness_ij = std_upsilon_ij_plus_upsilon_ji
+        independence_ij = std_tau_ij_plus_tau_ji
 
         # we should have the right shape for all resulting matrices
-        for matrix in synergy_ij, equivalence_ij, independence_ij, total_ij:
+        for matrix in (
+            synergy_ij,
+            equivalence_ij,
+            autonomy_ij,
+            uniqueness_ij,
+            independence_ij,
+        ):
             assert matrix.shape == (n_targets, n_features, n_features)
 
         # assign results as an atomic operation, so we don't have a semi-fitted
         # outcome in case an exception is raised in this final step
+        # NOTE: we do not store independence so technically it could be removed from
+        # the code above
 
-        self.synergy_, self.equivalence_, self.independence_ = (
-            synergy_ij / total_ij,
-            equivalence_ij / total_ij,
-            independence_ij / total_ij,
+        self.synergy_rel_, self.equivalence_rel_ = (
+            synergy_ij / (synergy_ij + autonomy_ij),
+            equivalence_ij / (equivalence_ij + uniqueness_ij),
         )
         self.index_ = features
         self.columns_ = im.columns
