@@ -126,7 +126,7 @@ class BaseShapCalculator(
         self, crossfit: LearnerCrossfit[T_LearnerPipelineDF]
     ) -> pd.DataFrame:
         explainer_factory = self._explainer_factory
-        features_out: pd.Index = crossfit.base_estimator.features_out.rename(
+        features_out: pd.Index = crossfit.pipeline.features_out.rename(
             Sample.COL_FEATURE
         )
 

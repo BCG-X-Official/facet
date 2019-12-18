@@ -9,7 +9,6 @@ import numpy as np
 import pandas as pd
 from sklearn.model_selection import BaseCrossValidator
 from sklearn.utils import check_random_state
-
 from gamma.common import deprecated
 
 __all__ = ["BootstrapCV", "CircularCV", "StationaryBootstrapCV"]
