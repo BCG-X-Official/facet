@@ -72,10 +72,10 @@ class BaseShapCalculator(
             verbose=verbose,
         )
         self._explainer_factory = explainer_factory
-        self._shap: Optional[pd.DataFrame] = None
-        self._n_observations: Optional[int] = None
-        self._n_features: Optional[int] = None
-        self._n_targets: Optional[int] = None
+        self.shap_: Optional[pd.DataFrame] = None
+        self.n_observations_: Optional[int] = None
+        self.n_features_: Optional[int] = None
+        self.n_targets_: Optional[int] = None
 
     def fit(
         self: T_Self, crossfit: LearnerCrossfit[T_LearnerPipelineDF], **fit_params
@@ -87,16 +87,16 @@ class BaseShapCalculator(
         """
 
         # reset fit in case we get an exception along the way
-        self._shap = None
+        self.shap_ = None
 
         training_sample = crossfit.training_sample
-        self._n_observations = len(training_sample)
-        self._n_features = training_sample.n_features
-        self._n_targets = training_sample.n_targets
+        self.n_observations_ = len(training_sample)
+        self.n_features_ = training_sample.n_features
+        self.n_targets_ = training_sample.n_targets
 
         # calculate shap values and re-order the observation index to match the
         # sequence in the original training sample
-        self._shap = self._consolidate_splits(
+        self.shap_ = self._consolidate_splits(
             self._shap_all_splits(crossfit=crossfit),
             observation_index=training_sample.index,
         )
@@ -106,7 +106,7 @@ class BaseShapCalculator(
     # noinspection PyMissingOrEmptyDocstring
     @property
     def is_fitted(self) -> bool:
-        return self._shap is not None
+        return self.shap_ is not None
 
     is_fitted.__doc__ = FittableMixin.is_fitted.__doc__
 
@@ -120,13 +120,13 @@ class BaseShapCalculator(
         calculation, see documentation for implementations of this base class.
         """
         self._ensure_fitted()
-        return self._shap
+        return self.shap_
 
     def _shap_all_splits(
         self, crossfit: LearnerCrossfit[T_LearnerPipelineDF]
     ) -> pd.DataFrame:
         explainer_factory = self._explainer_factory
-        features_out: pd.Index = crossfit.base_estimator.features_out.rename(
+        features_out: pd.Index = crossfit.pipeline.features_out.rename(
             Sample.COL_FEATURE
         )
 
@@ -212,7 +212,7 @@ class BaseShapCalculator(
             return pd.MultiIndex.from_product((targets, features))
 
 
-class ShapMatrixCalculator(
+class ShapValuesCalculator(
     BaseShapCalculator[T_LearnerPipelineDF], ABC, Generic[T_LearnerPipelineDF]
 ):
     """
@@ -246,14 +246,14 @@ class ShapMatrixCalculator(
     ) -> pd.DataFrame:
         x_oob = BaseShapCalculator._x_oob(model, training_sample, oob_split)
 
-        # calculate the shap values (returned as an ndarray)
+        # calculate the shap values (returned as an array)
         shap_values: np.ndarray = explainer_factory_fn(
             model.final_estimator.root_estimator, x_oob
         ).shap_values(x_oob)
 
         if isinstance(shap_values, np.ndarray):
             # if we have a single target *and* no classification, the explainer will
-            # have returned a single tensor as an ndarray
+            # have returned a single tensor as an array
             shap_values: List[np.ndarray] = [shap_values]
 
         # convert to a data frame per target (different logic depending on whether
@@ -281,7 +281,7 @@ class ShapMatrixCalculator(
             )
 
 
-class InteractionMatrixCalculator(
+class ShapInteractionValuesCalculator(
     BaseShapCalculator[T_LearnerPipelineDF], ABC, Generic[T_LearnerPipelineDF]
 ):
     """
@@ -299,10 +299,10 @@ class InteractionMatrixCalculator(
         """
         self._ensure_fitted()
 
-        n_observations = self._n_observations
-        n_features = self._n_features
-        n_targets = self._n_targets
-        interaction_matrix = self._shap
+        n_observations = self.n_observations_
+        n_features = self.n_features_
+        n_targets = self.n_targets_
+        interaction_matrix = self.shap_
 
         return pd.DataFrame(
             np.diagonal(
@@ -338,7 +338,7 @@ class InteractionMatrixCalculator(
     ) -> pd.DataFrame:
         x_oob = BaseShapCalculator._x_oob(model, training_sample, oob_split)
 
-        # calculate the im values (returned as an ndarray)
+        # calculate the im values (returned as an array)
         explainer = explainer_factory_fn(model.final_estimator.root_estimator, x_oob)
 
         try:
@@ -355,7 +355,7 @@ class InteractionMatrixCalculator(
 
         if isinstance(shap_interaction_tensors, np.ndarray):
             # if we have a single target *and* no classification, the explainer will
-            # have returned a single tensor as an ndarray, so we wrap it in a list
+            # have returned a single tensor as an array, so we wrap it in a list
             shap_interaction_tensors: List[np.ndarray] = [shap_interaction_tensors]
 
         interaction_matrix_per_target: List[pd.DataFrame] = [
@@ -386,7 +386,7 @@ class InteractionMatrixCalculator(
             )
 
 
-class RegressorShapMatrixCalculator(ShapMatrixCalculator):
+class RegressorShapValuesCalculator(ShapValuesCalculator):
     """
     Calculates SHAP matrices for regression models.
     """
@@ -405,7 +405,7 @@ class RegressorShapMatrixCalculator(ShapMatrixCalculator):
         ]
 
 
-class RegressorInteractionMatrixCalculator(InteractionMatrixCalculator):
+class RegressorShapInteractionValuesCalculator(ShapInteractionValuesCalculator):
     """
     Calculates SHAP interaction matrices for regression models.
     """
@@ -430,7 +430,7 @@ class RegressorInteractionMatrixCalculator(InteractionMatrixCalculator):
         ]
 
 
-class ClassifierShapMatrixCalculator(ShapMatrixCalculator):
+class ClassifierShapValuesCalculator(ShapValuesCalculator):
     """
     Calculates SHAP matrices for classification models.
     """
@@ -476,7 +476,7 @@ class ClassifierShapMatrixCalculator(ShapMatrixCalculator):
         ]
 
 
-class ClassifierInteractionMatrixCalculator(InteractionMatrixCalculator):
+class ClassifierShapInteractionValuesCalculator(ShapInteractionValuesCalculator):
     """
     Calculates SHAP interaction matrices for classification models.
     """
