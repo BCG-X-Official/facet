@@ -4,12 +4,13 @@ Core implementation of :mod:`gamma.ml.selection`
 
 import logging
 import re
-from abc import ABC, abstractmethod
+from abc import ABC
 from collections import defaultdict
 from itertools import chain
 from typing import *
 
 import numpy as np
+from numpy.random.mtrand import RandomState
 from sklearn.model_selection import BaseCrossValidator, GridSearchCV
 
 from gamma.common.fit import FittableMixin
@@ -221,15 +222,16 @@ class BaseLearnerRanker(
         verbose: int = 0,
     ) -> None:
         """
-        :param grid: :class:`~gamma.ml.ParameterGrid` to be ranked (either single grid or \
-            an iterable of multiple grids)
+        :param grid: :class:`~gamma.ml.ParameterGrid` to be ranked \
+            (either a single grid, or an iterable of multiple grids)
         :param cv: a cross validator (e.g., \
             :class:`~gamma.ml.validation.BootstrapCV`)
         :param scoring: a scorer to use when doing CV within GridSearch, defaults to \
             :meth:`.default_ranking_scorer`
         :param ranking_scorer: scoring function used for ranking across crossfit, \
             taking mean and standard deviation of the ranking scores_for_split and \
-            returning the overall ranking score (default: :meth:`.default_ranking_scorer`)
+            returning the overall ranking score \
+            (default: :meth:`.default_ranking_scorer`)
         :param ranking_metric: the scoring to be used for pipeline ranking, \
             given as a name to be used to look up the right Scoring object in the \
             LearnerEvaluation.scoring dictionary (default: 'test_score').
@@ -309,6 +311,8 @@ class BaseLearnerRanker(
     def best_model_crossfit(
         self,
         cv: Optional[BaseCrossValidator] = None,
+        shuffle_features: Optional[bool] = None,
+        random_state: Union[int, RandomState, None] = None,
         n_jobs: Optional[int] = None,
         shared_memory: Optional[bool] = None,
         pre_dispatch: Optional[str] = None,
@@ -320,6 +324,10 @@ class BaseLearnerRanker(
 
         :param cv: the cross-validator to use for generating the crossfit (default: \
             use this ranker's cross-validator)
+        :param shuffle_features: if `True`, shuffle column order of features for every \
+            crossfit (default: use crossfit default behaviour)
+        :param random_state: optional random seed or random state for shuffling the \
+            feature column order
         :param n_jobs: number of threads to use \
             (default: inherit this ranker's setting)
         :param shared_memory: whether to use threading with shared memory \
@@ -330,13 +338,15 @@ class BaseLearnerRanker(
             (default: inherit this ranker's setting)
         """
 
-        return self._make_crossfit(
+        return LearnerCrossfit(
             pipeline=self._best_pipeline(),
             cv=self._cv if cv is None else cv,
+            shuffle_features=shuffle_features,
+            random_state=random_state,
             n_jobs=self.n_jobs if n_jobs is None else n_jobs,
-            shared_memory=self.shared_memory
-            if shared_memory is None
-            else shared_memory,
+            shared_memory=(
+                self.shared_memory if shared_memory is None else shared_memory
+            ),
             pre_dispatch=self.pre_dispatch if pre_dispatch is None else pre_dispatch,
             verbose=self.verbose if verbose is None else verbose,
         ).fit(sample=self._sample, **self._fit_params)
@@ -396,18 +406,6 @@ class BaseLearnerRanker(
         # return the unfitted model with the best parametrisation
         self._ensure_fitted()
         return self._ranking[0].pipeline
-
-    @abstractmethod
-    def _make_crossfit(
-        self,
-        pipeline: T_LearnerPipelineDF,
-        cv: BaseCrossValidator,
-        n_jobs: int,
-        shared_memory: bool,
-        pre_dispatch: str,
-        verbose: int,
-    ) -> T_LearnerCrossfit:
-        pass
 
     def _rank_learners(self, sample: Sample, **fit_params) -> None:
 
@@ -550,24 +548,6 @@ class RegressorRanker(
 
     __doc__ = cast(str, BaseLearnerRanker.__doc__).replace("learner", "regressor")
 
-    def _make_crossfit(
-        self,
-        pipeline: T_RegressorPipelineDF,
-        cv: BaseCrossValidator,
-        n_jobs: int,
-        shared_memory: bool,
-        pre_dispatch: str,
-        verbose: int,
-    ) -> LearnerCrossfit[T_RegressorPipelineDF]:
-        return LearnerCrossfit(
-            base_learner=pipeline,
-            cv=cv,
-            n_jobs=self.n_jobs,
-            shared_memory=self.shared_memory,
-            pre_dispatch=self.pre_dispatch,
-            verbose=self.verbose,
-        )
-
 
 class ClassifierRanker(
     BaseLearnerRanker[T_ClassifierPipelineDF, LearnerCrossfit[T_ClassifierPipelineDF]],
@@ -576,21 +556,3 @@ class ClassifierRanker(
     """[inheriting doc string of base class]"""
 
     __doc__ = cast(str, BaseLearnerRanker.__doc__).replace("learner", "classifier")
-
-    def _make_crossfit(
-        self,
-        pipeline: T_ClassifierPipelineDF,
-        cv: BaseCrossValidator,
-        n_jobs,
-        shared_memory,
-        pre_dispatch,
-        verbose,
-    ) -> LearnerCrossfit[T_ClassifierPipelineDF]:
-        return LearnerCrossfit(
-            base_learner=pipeline,
-            cv=cv,
-            n_jobs=self.n_jobs,
-            shared_memory=self.shared_memory,
-            pre_dispatch=self.pre_dispatch,
-            verbose=self.verbose,
-        )

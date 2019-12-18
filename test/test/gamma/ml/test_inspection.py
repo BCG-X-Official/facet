@@ -40,8 +40,8 @@ N_SPLITS = K_FOLDS * 2
 
 def test_model_inspection(n_jobs, boston_sample: Sample) -> None:
     # checksums for the model inspection test - one for the LGBM, one for the SVR
-    checksums_shap = (17573313757033027070, 8162147391624654332)
-    checksum_corr_matrix = (13028973179387096991, 12822260854294120055)
+    checksums_shap = (17573313757033027070, 13285572916961982080)
+    checksum_corr_matrix = (13028973179387096991, 18397646897559448061)
     checksum_learner_scores = -218.87516793944133
     checksum_learner_ranks = "0972fa60fd9beb2c1f8be21324506f4d"
 
@@ -109,7 +109,7 @@ def test_model_inspection(n_jobs, boston_sample: Sample) -> None:
     ):
 
         pipeline: RegressorPipelineDF = model_evaluation.pipeline
-        model_fit = LearnerCrossfit(base_learner=pipeline, cv=test_cv).fit(
+        model_fit = LearnerCrossfit(pipeline=pipeline, cv=test_cv, random_state=42).fit(
             sample=test_sample
         )
 
@@ -117,9 +117,9 @@ def test_model_inspection(n_jobs, boston_sample: Sample) -> None:
             crossfit=model_fit, explainer_factory=factory
         )
         # make and check shap value matrix
-        shap_matrix = model_inspector.shap_matrix()
+        shap_matrix = model_inspector.shap_values()
 
-        # the length of rows in shap_matrix should be equal to the unique observation
+        # the length of rows in shap_values should be equal to the unique observation
         # indices we have had in the predictions_df
         assert len(shap_matrix) == len(test_sample)
 
@@ -131,7 +131,7 @@ def test_model_inspection(n_jobs, boston_sample: Sample) -> None:
         )
 
         # correlated shap matrix: feature dependencies
-        corr_matrix: pd.DataFrame = model_inspector.feature_dependency_matrix()
+        corr_matrix: pd.DataFrame = model_inspector.feature_association_matrix()
 
         # check number of rows
         assert len(corr_matrix) == len(test_sample.feature_columns)
@@ -152,7 +152,7 @@ def test_model_inspection(n_jobs, boston_sample: Sample) -> None:
             == checksum_corr_matrix[model_index]
         )
 
-        linkage_tree = model_inspector.feature_dependency_linkage()
+        linkage_tree = model_inspector.feature_association_linkage()
 
         DendrogramDrawer(style=DendrogramReportStyle()).draw(
             data=linkage_tree, title="Test"
@@ -167,17 +167,17 @@ def test_model_inspection_with_encoding(
     n_jobs,
 ) -> None:
     # define checksums for this test
-    checksum_shap = 10690277977123826530
-    checksum_corr_matrix = 13928052446824900831
+    checksum_shap = 3533151003136279125
+    checksum_corr_matrix = 2280660998565980993
 
     checksum_learner_scores = -7.8631
     checksum_learner_ranks = "2d763e35c03b309994f6c8585cacb035"
 
     # define the circular cross validator with just 5 splits (to speed up testing)
-    circular_cv = CircularCV(test_ratio=0.20, n_splits=5)
+    cv = CircularCV(test_ratio=0.20, n_splits=5)
 
     ranker: RegressorRanker = RegressorRanker(
-        grid=regressor_grids, cv=circular_cv, scoring="r2", n_jobs=n_jobs
+        grid=regressor_grids, cv=cv, scoring="r2", n_jobs=n_jobs
     ).fit(sample=sample)
 
     log.debug(f"\n{ranker.summary_report(max_learners=10)}")
@@ -198,12 +198,12 @@ def test_model_inspection_with_encoding(
     ][0]
 
     validation_model = LearnerCrossfit(
-        base_learner=validation.pipeline, cv=circular_cv, n_jobs=n_jobs
+        pipeline=validation.pipeline, cv=cv, random_state=42, n_jobs=n_jobs
     ).fit(sample=sample)
 
     mi = RegressorInspector(crossfit=validation_model)
 
-    shap_matrix = mi.shap_matrix()
+    shap_matrix = mi.shap_values()
 
     # check actual values using checksum:
     assert (
@@ -212,7 +212,7 @@ def test_model_inspection_with_encoding(
     )
 
     # correlated shap matrix: feature dependencies
-    corr_matrix: pd.DataFrame = mi.feature_dependency_matrix()
+    corr_matrix: pd.DataFrame = mi.feature_association_matrix()
 
     # check actual values using checksum:
     assert (
@@ -221,7 +221,7 @@ def test_model_inspection_with_encoding(
     )
 
     # cluster feature importances
-    _linkage = mi.feature_dependency_linkage()
+    _linkage = mi.feature_association_linkage()
 
     #  test the ModelInspector with a custom ExplainerFactory:
     def _ef(estimator: BaseEstimator, data: pd.DataFrame) -> Explainer:
@@ -239,9 +239,9 @@ def test_model_inspection_with_encoding(
             return KernelExplainer(model=estimator.predict, data=data)
 
     mi2 = RegressorInspector(crossfit=validation_model, explainer_factory=_ef)
-    mi2.shap_matrix()
+    mi2.shap_values()
 
-    linkage_tree = mi2.feature_dependency_linkage()
+    linkage_tree = mi2.feature_association_linkage()
     print()
     DendrogramDrawer(style=DendrogramReportStyle()).draw(
         data=linkage_tree, title="Test"
@@ -254,8 +254,8 @@ def test_model_inspection_classifier(n_jobs, iris_sample: Sample) -> None:
     warnings.filterwarnings("ignore", message="You are accessing a training score")
 
     # define checksums for this test
-    checksum_shap = 10929025296667090237
-    checksum_corr_matrix = 4203011765388277947
+    checksum_shap = 6629520117757454166
+    checksum_corr_matrix = 11698715255607208353
     checksum_learner_scores = 2.0
     checksum_learner_ranks = "a8fe61f0f98c078fbcf427ad344c1749"
 
@@ -294,11 +294,11 @@ def test_model_inspection_classifier(n_jobs, iris_sample: Sample) -> None:
         first_n_learners=10,
     )
 
-    crossfit = model_ranker.best_model_crossfit()
+    crossfit = model_ranker.best_model_crossfit(random_state=42)
 
     model_inspector = ClassifierInspector(crossfit=crossfit)
     # make and check shap value matrix
-    shap_matrix = model_inspector.shap_matrix()
+    shap_matrix = model_inspector.shap_values()
 
     # check actual values using checksum:
     assert (
@@ -306,12 +306,12 @@ def test_model_inspection_classifier(n_jobs, iris_sample: Sample) -> None:
         == checksum_shap
     )
 
-    # the length of rows in shap_matrix should be equal to the unique observation
+    # the length of rows in shap_values should be equal to the unique observation
     # indices we have had in the predictions_df
     assert len(shap_matrix) == len(test_sample)
 
     # correlated shap matrix: feature dependencies
-    corr_matrix: pd.DataFrame = model_inspector.feature_dependency_matrix()
+    corr_matrix: pd.DataFrame = model_inspector.feature_association_matrix()
     log.info(corr_matrix)
     # check number of rows
     assert len(corr_matrix) == len(test_sample.feature_columns)
@@ -328,7 +328,7 @@ def test_model_inspection_classifier(n_jobs, iris_sample: Sample) -> None:
         == checksum_corr_matrix
     )
 
-    linkage_tree = model_inspector.feature_dependency_linkage()
+    linkage_tree = model_inspector.feature_association_linkage()
     print()
     DendrogramDrawer(style=DendrogramReportStyle()).draw(
         data=linkage_tree, title="Test"
