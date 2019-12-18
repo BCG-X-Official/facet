@@ -32,7 +32,7 @@ def test_univariate_simulation(
 
     # use a pre-optimised model
     crossfit = LearnerCrossfit(
-        base_learner=RegressorPipelineDF(
+        pipeline=RegressorPipelineDF(
             preprocessing=simple_preprocessor,
             regressor=LGBMRegressorDF(
                 max_depth=10, min_split_gain=0.2, num_leaves=50, random_state=42
