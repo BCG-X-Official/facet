@@ -1,3 +1,6 @@
+"""
+Tests for gamma.ml.validation
+"""
 import warnings
 
 import numpy as np
@@ -8,53 +11,55 @@ import pytest
 from sklearn import datasets, svm, tree
 from sklearn.model_selection import GridSearchCV
 
-from gamma.ml.validation import CircularCV
+from gamma.ml.validation import BootstrapCV
 
 
-def test_circular_cv_init(batch_table: pd.DataFrame) -> None:
+def test_bootstrap_cv_init(batch_table: pd.DataFrame) -> None:
     # filter out warnings triggered by sk-learn/numpy
 
     warnings.filterwarnings("ignore", message="numpy.dtype size changed")
     warnings.filterwarnings("ignore", message="numpy.ufunc size changed")
 
     # check erroneous inputs
-    #   - test_ratio = 0
+    #   - n_splits = 0
     with pytest.raises(expected_exception=ValueError):
-        CircularCV(test_ratio=0.0)
+        BootstrapCV(n_splits=0)
 
-    #   - test_ratio < 0
+    #   - n_splits < 0
     with pytest.raises(expected_exception=ValueError):
-        CircularCV(test_ratio=-0.0001)
-
-    #   - test_ratio > 1
-    with pytest.raises(expected_exception=ValueError):
-        CircularCV(test_ratio=1.00001)
+        BootstrapCV(n_splits=-1)
 
 
 def test_get_train_test_splits_as_indices() -> None:
 
-    test_splits = 200
-    test_X = np.arange(0, 1000, 1)
+    n_test_splits = 200
+    test_x = np.arange(0, 1000, 1)
 
-    my_cv = CircularCV(test_ratio=0.2, n_splits=test_splits)
+    my_cv = BootstrapCV(n_splits=n_test_splits, random_state=42)
 
-    list_of_test_splits = list(my_cv._iter_test_indices(test_X))
+    def _generate_splits():
+        return list(test for _, test in my_cv.split(X=test_x))
+
+    list_of_test_splits = _generate_splits()
 
     # assert we get right amount of splits
-    assert len(list_of_test_splits) == test_splits
+    assert len(list_of_test_splits) == n_test_splits
 
-    # check correct ratio of test/train
-    for test_set in list_of_test_splits:
-        assert 0.19 < float(len(test_set) / len(test_X) < 0.21)
+    # check average ratio of test/train
+    average_test_size = (
+        sum(len(test_set) for test_set in list_of_test_splits) / n_test_splits
+    )
 
-    list_of_test_splits_2 = list(my_cv._iter_test_indices(test_X))
+    assert 0.35 < average_test_size / len(test_x) < 0.37
+
+    list_of_test_splits_2 = _generate_splits()
 
     assert len(list_of_test_splits) == len(
         list_of_test_splits_2
-    ), "The number of splits should be stable!"
+    ), "the number of splits should be stable"
 
     for f1, f2 in zip(list_of_test_splits, list_of_test_splits_2):
-        assert np.array_equal(f1, f2), "Split indices should be stable!"
+        assert np.array_equal(f1, f2), "split indices should be stable"
 
 
 def test_circular_cv_with_sk_learn() -> None:
@@ -67,7 +72,7 @@ def test_circular_cv_with_sk_learn() -> None:
     iris = datasets.load_iris()
 
     # define a yield-engine circular CV:
-    my_cv = CircularCV(test_ratio=0.21, n_splits=50)
+    my_cv = BootstrapCV(n_splits=50)
 
     # define parameters and pipeline
     parameters = {"kernel": ("linear", "rbf"), "C": [1, 10]}

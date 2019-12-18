@@ -11,7 +11,7 @@ from pandas.core.util.hashing import hash_pandas_object
 from shap import KernelExplainer, TreeExplainer
 from shap.explainers.explainer import Explainer
 from sklearn.base import BaseEstimator
-from sklearn.model_selection import BaseCrossValidator, RepeatedKFold
+from sklearn.model_selection import BaseCrossValidator, KFold, RepeatedKFold
 
 from gamma.ml import Sample
 from gamma.ml.crossfit import LearnerCrossfit
@@ -22,7 +22,6 @@ from gamma.ml.inspection import (
     tree_explainer_factory,
 )
 from gamma.ml.selection import ClassifierRanker, ParameterGrid, RegressorRanker
-from gamma.ml.validation import CircularCV
 from gamma.sklearndf import TransformerDF
 from gamma.sklearndf.classification import RandomForestClassifierDF
 from gamma.sklearndf.pipeline import ClassifierPipelineDF, RegressorPipelineDF
@@ -167,14 +166,13 @@ def test_model_inspection_with_encoding(
     n_jobs,
 ) -> None:
     # define checksums for this test
-    checksum_shap = 3533151003136279125
-    checksum_corr_matrix = 2280660998565980993
+    checksum_shap = 18085752998272939418
+    checksum_corr_matrix = 12333781666566651819
 
-    checksum_learner_scores = -7.8631
-    checksum_learner_ranks = "2d763e35c03b309994f6c8585cacb035"
+    checksum_learner_scores = -7.939242
+    checksum_learner_ranks = "5e4b373d56a53647c9483a5606235c9a"
 
-    # define the circular cross validator with just 5 splits (to speed up testing)
-    cv = CircularCV(test_ratio=0.20, n_splits=5)
+    cv = KFold(n_splits=K_FOLDS, random_state=42)
 
     ranker: RegressorRanker = RegressorRanker(
         grid=regressor_grids, cv=cv, scoring="r2", n_jobs=n_jobs
