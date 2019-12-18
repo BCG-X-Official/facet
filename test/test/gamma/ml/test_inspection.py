@@ -40,8 +40,8 @@ N_SPLITS = K_FOLDS * 2
 
 def test_model_inspection(n_jobs, boston_sample: Sample) -> None:
     # checksums for the model inspection test - one for the LGBM, one for the SVR
-    checksums_shap = (17573313757033027070, 8162147391624654332)
-    checksum_corr_matrix = (13028973179387096991, 12822260854294120055)
+    checksums_shap = (17573313757033027070, 13285572916961982080)
+    checksum_corr_matrix = (13028973179387096991, 18397646897559448061)
     checksum_learner_scores = -218.87516793944133
     checksum_learner_ranks = "0972fa60fd9beb2c1f8be21324506f4d"
 
@@ -109,7 +109,7 @@ def test_model_inspection(n_jobs, boston_sample: Sample) -> None:
     ):
 
         pipeline: RegressorPipelineDF = model_evaluation.pipeline
-        model_fit = LearnerCrossfit(base_learner=pipeline, cv=test_cv).fit(
+        model_fit = LearnerCrossfit(pipeline=pipeline, cv=test_cv, random_state=42).fit(
             sample=test_sample
         )
 
@@ -167,8 +167,8 @@ def test_model_inspection_with_encoding(
     n_jobs,
 ) -> None:
     # define checksums for this test
-    checksum_shap = 10690277977123826530
-    checksum_corr_matrix = 13928052446824900831
+    checksum_shap = 3533151003136279125
+    checksum_corr_matrix = 2280660998565980993
 
     checksum_learner_scores = -7.8631
     checksum_learner_ranks = "2d763e35c03b309994f6c8585cacb035"
@@ -198,7 +198,7 @@ def test_model_inspection_with_encoding(
     ][0]
 
     validation_model = LearnerCrossfit(
-        base_learner=validation.pipeline, cv=circular_cv, n_jobs=n_jobs
+        pipeline=validation.pipeline, cv=circular_cv, random_state=42, n_jobs=n_jobs
     ).fit(sample=sample)
 
     mi = RegressorInspector(crossfit=validation_model)
@@ -254,8 +254,8 @@ def test_model_inspection_classifier(n_jobs, iris_sample: Sample) -> None:
     warnings.filterwarnings("ignore", message="You are accessing a training score")
 
     # define checksums for this test
-    checksum_shap = 10929025296667090237
-    checksum_corr_matrix = 4203011765388277947
+    checksum_shap = 6629520117757454166
+    checksum_corr_matrix = 11698715255607208353
     checksum_learner_scores = 2.0
     checksum_learner_ranks = "a8fe61f0f98c078fbcf427ad344c1749"
 
@@ -294,7 +294,7 @@ def test_model_inspection_classifier(n_jobs, iris_sample: Sample) -> None:
         first_n_learners=10,
     )
 
-    crossfit = model_ranker.best_model_crossfit()
+    crossfit = model_ranker.best_model_crossfit(random_state=42)
 
     model_inspector = ClassifierInspector(crossfit=crossfit)
     # make and check shap value matrix

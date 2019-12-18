@@ -399,7 +399,7 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF
 
     @property
     def _features(self) -> pd.Index:
-        return self.crossfit.base_estimator.features_out.rename(Sample.COL_FEATURE)
+        return self.crossfit.pipeline.features_out.rename(Sample.COL_FEATURE)
 
     @property
     def _n_features(self) -> int:
