@@ -58,7 +58,7 @@ class LearnerCrossfit(
         :param base_learner: predictive pipeline to be fitted
         :param cv: the cross validator generating the train splits
         :param shuffle_features: if `True`, shuffle column order of features for every \
-            crossfit (default: `False`)
+            crossfit (default: `True`)
         :param random_state: optional random seed or random state for shuffling the \
             feature column order
         {ParallelizableMixin.__init__.__doc__}
@@ -72,19 +72,13 @@ class LearnerCrossfit(
         self.base_estimator = base_learner  #: the learner being trained
         self.cv = cv  #: the cross validator
         self.shuffle_features: bool = (
-            False if shuffle_features is None else shuffle_features
+            True if shuffle_features is None else shuffle_features
         )
         self.random_state = random_state
 
         self._model_by_split: Optional[List[T_LearnerDF]] = None
         self._training_sample: Optional[Sample] = None
         self._feature_order_by_split: Optional[List[np.ndarray]] = None
-
-        if shuffle_features is None:
-            log.warning(
-                "default value of shuffle_features will change to False to True in "
-                "release 1.2.0; we recommend that you set this parameter explicitly."
-            )
 
     def fit(self: T_Self, sample: Sample, **fit_params) -> T_Self:
         """
