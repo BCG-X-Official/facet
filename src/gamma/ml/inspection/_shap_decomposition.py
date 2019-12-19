@@ -56,8 +56,10 @@ class ShapInteractionDecomposer(FittableMixin[ShapInteractionValuesCalculator]):
 
     @property
     def is_fitted(self) -> bool:
-        f"""{FittableMixin.is_fitted.__doc__}"""
+        """[inherit docstring from parent class]"""
         return self.synergy_rel_ is not None
+
+    is_fitted.__doc__ = FittableMixin.is_fitted.__doc__
 
     @property
     def synergy(self) -> pd.DataFrame:
@@ -155,7 +157,7 @@ class ShapInteractionDecomposer(FittableMixin[ShapInteractionValuesCalculator]):
         cov_phi_i_phi_j = _cov(phi_i, phi_i)
 
         #
-        # Feature synergy (direct and indirect)
+        # Feature synergy (direct and indirect): zeta[i, j]
         #
 
         # var(phi[i, j]), std(phi[i, j])
@@ -170,10 +172,10 @@ class ShapInteractionDecomposer(FittableMixin[ShapInteractionValuesCalculator]):
         # this is the diagonal of phi_ij
         phi_ii = np.diagonal(phi_ij, axis1=1, axis2=2).swapaxes(1, 2)
 
-        # phi'[i] = phi[i] - phi[i, i]
+        # psi[i] = phi[i] - phi[i, i]
         # shape: (n_targets, n_features, n_observations)
         # the SHAP vectors per feature, minus the independent contributions
-        phi__i = phi_i - phi_ii
+        psi_i = phi_i - phi_ii
 
         # std_phi_relative[i, j]
         # shape: (n_targets, n_features, n_features)
@@ -194,16 +196,16 @@ class ShapInteractionDecomposer(FittableMixin[ShapInteractionValuesCalculator]):
 
         # s[i, j]
         # shape: (n_targets, n_features, n_features)
-        # s[i, j] = cov(phi'[i], phi[i, j) / var(phi[i, j]), for each target
-        # this is the orthogonal projection of phi[i, j] onto phi'[i] and determines
+        # s[i, j] = cov(psi[i], phi[i, j) / var(phi[i, j]), for each target
+        # this is the orthogonal projection of phi[i, j] onto psi[i] and determines
         # the multiplier of std(phi[i, j]) (i.e., direct synergy) to obtain
-        # the total direct and indirect synergy of phi'[i] with phi'[j], i.e.,
+        # the total direct and indirect synergy of psi[i] with psi[j], i.e.,
         # std(phi[i, j]) * s[i, j]
 
         # noinspection SpellCheckingInspection
         s_i_j = np.divide(
-            # cov(phi'[i], phi[i, j])
-            np.einsum("tio,tijo->tij", phi__i, phi_ij) / n_observations,
+            # cov(psi[i], phi[i, j])
+            np.einsum("tio,tijo->tij", psi_i, phi_ij) / n_observations,
             # var(phi[i, j])
             var_phi_ij,
             out=np.ones_like(var_phi_ij),
@@ -271,7 +273,7 @@ class ShapInteractionDecomposer(FittableMixin[ShapInteractionValuesCalculator]):
         std_zeta_ij_plus_zeta_ji = (s_i_j + s_j_i) * std_phi_ij
 
         #
-        # SHAP independence
+        # SHAP autonomy: tau[i, j]
         #
 
         # cov(phi[i], phi[i, j])
@@ -281,14 +283,14 @@ class ShapInteractionDecomposer(FittableMixin[ShapInteractionValuesCalculator]):
             np.einsum("...io,...ijo->...ij", phi_i, phi_ij) / n_observations
         )
 
-        # cov(psi[i, j], psi[j, i])
-        # where psi[i, j] = phi[i] - s[i, j] * phi[i, j]
+        # cov(tau[i, j], tau[j, i])
+        # where tau[i, j] = phi[i] - s[i, j] * phi[i, j]
         # shape: (n_observations, n_targets, n_features)
-        # matrix of covariances for psi vectors for all pairings of features
-        # the psi[i, j] vector is the phi[i] SHAP contribution vector where the synergy
+        # matrix of covariances for tau vectors for all pairings of features
+        # the tau[i, j] vector is the phi[i] SHAP contribution vector where the synergy
         # effects (direct and indirect) with feature j have been deducted
 
-        cov_psi_ij_psi_ji = (
+        cov_tau_ij_tau_ji = (
             cov_phi_i_phi_j
             - s_j_i * cov_phi_i_phi_ij
             - s_i_j * _transpose(cov_phi_i_phi_ij)
@@ -301,48 +303,48 @@ class ShapInteractionDecomposer(FittableMixin[ShapInteractionValuesCalculator]):
         # i.e. adding a second, empty feature dimension to enable correct broadcasting
         var_phi_ix = np.diagonal(cov_phi_i_phi_j, axis1=1, axis2=2)[:, :, np.newaxis]
 
-        # var(psi[i, j])
+        # var(tau[i, j])
         # variances of SHAP vectors minus total synergy
         # shape: (n_targets, n_features, n_features)
-        var_psi_ij = (
+        var_tau_ij = (
             var_phi_ix - 2 * s_i_j * cov_phi_i_phi_ij + s_i_j * s_i_j * var_phi_ij
         )
 
         # var(phi[i]) + var(phi_i[j])
         # Sum of covariances per feature pair (this is a diagonal matrix)
         # shape: (n_targets, n_features, n_features)
-        var_psi_ij_plus_var_psi_ji = var_psi_ij + _transpose(var_psi_ij)
+        var_tau_ij_plus_var_tau_ji = var_tau_ij + _transpose(var_tau_ij)
 
-        # 2 * cov(psi[i, j], psi[j, i])
+        # 2 * cov(tau[i, j], tau[j, i])
         # shape: (n_targets, n_features, n_features)
         # this is an intermediate result to calculate the standard deviation
         # of the equivalence vector (see next step below)
-        cov_psi_ij_psi_ji_2x = 2 * cov_psi_ij_psi_ji
+        cov_tau_ij_tau_ji_2x = 2 * cov_tau_ij_tau_ji
 
-        # std(psi[i, j] + psi[j, i])
-        # where psi[i, j] = phi[i] - zeta[i, j]
+        # std(tau[i, j] + tau[j, i])
+        # where tau[i, j] = phi[i] - zeta[i, j]
         # shape: (n_targets, n_features, n_features)
         # variances of SHAP vectors minus total synergy
-        # or, the length of the sum of vectors psi[i, j] and psi[j, i]
+        # or, the length of the sum of vectors tau[i, j] and tau[j, i]
         # this quantifies the autonomous contributions of features i and j, i.e.,
         # without synergizing
         # we also need this as part of the formula to calculate epsilon_ij (see below)
 
-        std_psi_ij_plus_psi_ji = _sqrt(
-            var_psi_ij_plus_var_psi_ji + cov_psi_ij_psi_ji_2x
+        std_tau_ij_plus_tau_ji = _sqrt(
+            var_tau_ij_plus_var_tau_ji + cov_tau_ij_tau_ji_2x
         )
 
         #
-        # SHAP equivalence
+        # SHAP equivalence: epsilon[i, j]
         #
 
-        # std(psi[i, j] - psi[j, i])
+        # std(tau[i, j] - tau[j, i])
         # shape: (n_targets, n_features, n_features)
-        # the length of the difference of vectors psi[i, j] and psi[j, i]
+        # the length of the difference of vectors tau[i, j] and tau[j, i]
         # we need this as part of the formula to calculate epsilon_ij (see below)
 
-        std_psi_ij_minus_psi_ji = _sqrt(
-            var_psi_ij_plus_var_psi_ji - cov_psi_ij_psi_ji_2x
+        std_tau_ij_minus_tau_ji = _sqrt(
+            var_tau_ij_plus_var_tau_ji - cov_tau_ij_tau_ji_2x
         )
 
         # 2 * std(epsilon[i, j]) = 2 * std(epsilon[j, i])
@@ -351,54 +353,54 @@ class ShapInteractionDecomposer(FittableMixin[ShapInteractionValuesCalculator]):
         # this is the total contribution made by phi[i] and phi[j] where both features
         # independently use redundant information
 
-        std_epsilon_ij_2x = std_psi_ij_plus_psi_ji - std_psi_ij_minus_psi_ji
+        std_epsilon_ij_2x = std_tau_ij_plus_tau_ji - std_tau_ij_minus_tau_ji
 
         #
-        # SHAP independence
+        # SHAP independence: nu[i, j]
         #
 
         # 4 * var(epsilon[i, j]), var(epsilon[i, j])
         # shape: (n_targets, n_features, n_features)
         var_epsilon_ij_4x = std_epsilon_ij_2x * std_epsilon_ij_2x
 
-        # ratio of length of 2*e over length of (psi[i, j] + psi[j, i])
+        # ratio of length of 2*e over length of (tau[i, j] + tau[j, i])
         # shape: (n_targets, n_features, n_features)
         # we need this for the next step
-        epsilon_psi_ratio_2x = 1 - std_psi_ij_minus_psi_ji / std_psi_ij_plus_psi_ji
+        epsilon_tau_ratio_2x = 1 - std_tau_ij_minus_tau_ji / std_tau_ij_plus_tau_ji
 
-        # 2 * cov(psi[i, j], epsilon[i, j])
+        # 2 * cov(tau[i, j], epsilon[i, j])
         # shape: (n_targets, n_features, n_features)
-        # we need this as part of the formula to calculate tau_i (see next step below)
-        cov_psi_ij_epsilon_ij_2x = epsilon_psi_ratio_2x * (
-            var_psi_ij + cov_psi_ij_psi_ji
+        # we need this as part of the formula to calculate nu_i (see next step below)
+        cov_tau_ij_epsilon_ij_2x = epsilon_tau_ratio_2x * (
+            var_tau_ij + cov_tau_ij_tau_ji
         )
 
-        # std(tau_ij)
-        # where tau_ij = psi_ij + psi_ji - 2 * epsilon_ij
+        # std(nu_ij)
+        # where nu_ij = tau_ij + tau_ji - 2 * epsilon_ij
         # shape: (n_targets, n_features, n_features)
         # the standard deviation (= length) of the independence vector
 
-        std_tau_ij_plus_tau_ji = _sqrt(
-            var_psi_ij
-            + _transpose(var_psi_ij)
+        std_nu_ij_plus_nu_ji = _sqrt(
+            var_tau_ij
+            + _transpose(var_tau_ij)
             + var_epsilon_ij_4x
             + 2
             * (
-                cov_psi_ij_psi_ji
-                - cov_psi_ij_epsilon_ij_2x
-                - _transpose(cov_psi_ij_epsilon_ij_2x)
+                cov_tau_ij_tau_ji
+                - cov_tau_ij_epsilon_ij_2x
+                - _transpose(cov_tau_ij_epsilon_ij_2x)
             )
         )
 
         #
-        # SHAP uniqueness
+        # SHAP uniqueness: upsilon[i, j]
         #
 
         # 2 * cov(phi[i], epsilon[i, j])
         # shape: (n_targets, n_features, n_features)
         # intermediate result to calculate upsilon[i, j], see next step
 
-        cov_phi_i_epsilon_ij_2x = epsilon_psi_ratio_2x * (
+        cov_phi_i_epsilon_ij_2x = epsilon_tau_ratio_2x * (
             var_phi_ix + cov_phi_i_phi_j - (s_i_j + s_j_i) * cov_phi_i_phi_ij
         )
 
@@ -426,10 +428,10 @@ class ShapInteractionDecomposer(FittableMixin[ShapInteractionValuesCalculator]):
         #
 
         synergy_ij = std_zeta_ij_plus_zeta_ji
-        autonomy_ij = std_psi_ij_plus_psi_ji
+        autonomy_ij = std_tau_ij_plus_tau_ji
         equivalence_ij = np.abs(std_epsilon_ij_2x)
         uniqueness_ij = std_upsilon_ij_plus_upsilon_ji
-        independence_ij = std_tau_ij_plus_tau_ji
+        independence_ij = std_nu_ij_plus_nu_ji
 
         # we should have the right shape for all resulting matrices
         for matrix in (
