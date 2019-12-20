@@ -3,18 +3,207 @@ Decomposition of SHAP contribution scores (i.e, SHAP importance) of all possible
 of features into additive components for synergy, equivalence, and independence.
 """
 import logging
+from abc import ABC, abstractmethod
 from typing import *
 
 import numpy as np
 import pandas as pd
 
 from gamma.common.fit import FittableMixin
-from gamma.ml.inspection._shap import ShapInteractionValuesCalculator
+from gamma.ml.inspection._shap import (
+    BaseShapCalculator,
+    ShapInteractionValuesCalculator,
+    ShapValuesCalculator,
+)
 
 log = logging.getLogger(__name__)
 
+T_ShapCalculator = TypeVar("T_ShapCalculator", bound=BaseShapCalculator)
 
-class ShapInteractionDecomposer(FittableMixin[ShapInteractionValuesCalculator]):
+
+class BaseShapDecomposer(
+    FittableMixin[T_ShapCalculator], ABC, Generic[T_ShapCalculator]
+):
+    """
+    Decomposes SHAP interaction scores (i.e, SHAP importance) of all possible parings
+    of features into additive components and calculates a matrix of scores for all
+    feature pairings.
+    """
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.index_: Optional[pd.Index] = None
+        self.columns_: Optional[pd.Index] = None
+
+    @property
+    def is_fitted(self) -> bool:
+        """[inherit docstring from parent class]"""
+        return self.index_ is not None
+
+    is_fitted.__doc__ = FittableMixin.is_fitted.__doc__
+
+    def fit(self, shap_calculator: BaseShapCalculator, **fit_params) -> None:
+        """
+        Calculate the SHAP decomposition for the shap values produced by the
+        given interaction shap values calculator.
+        :param shap_calculator: the fitted calculator from which to get the shap values
+        """
+        successful = False
+        try:
+            if len(fit_params) > 0:
+                raise ValueError(
+                    f'unsupported fit parameters: {", ".join(fit_params.values())}'
+                )
+
+            shap_values = shap_calculator.shap_values
+
+            self._fit(
+                shap_values=shap_values,
+                features=shap_calculator.features_,
+                targets=shap_calculator.targets_,
+            )
+
+            self.index_ = pd.Index(shap_calculator.features_)
+            self.columns_ = shap_values.columns
+
+            successful = True
+
+        finally:
+            # reset fit in case we get an exception along the way
+            if not successful:
+                self._reset_fit()
+
+    @abstractmethod
+    def _fit(
+        self, shap_values: pd.DataFrame, features: List[str], targets: List[str]
+    ) -> None:
+        pass
+
+    def _reset_fit(self) -> None:
+        # revert status of this object to not fitted
+        self.index_ = self.columns_ = None
+
+    def _to_frame(self, matrix: np.ndarray) -> pd.DataFrame:
+        # takes an array of shape (n_targets, n_features, n_features) and transforms it
+        # into a data frame of shape (n_features, n_targets * n_features)
+        index = self.index_
+        columns = self.columns_
+        return pd.DataFrame(
+            matrix.swapaxes(0, 1).reshape(len(index), len(columns)),
+            index=index,
+            columns=columns,
+        )
+
+
+class ShapValueDecomposer(BaseShapDecomposer[ShapValuesCalculator]):
+    """
+    Decomposes SHAP vectors (i.e, SHAP importance) of all possible parings
+    of features into additive components for association and independence.
+    SHAP interaction scores are calculated as the standard deviation of the individual
+    interactions per observation. Using this metric, rather than the mean of absolute
+    interactions, allows us to calculate the decomposition without ever constructing
+    the decompositions of the actual SHAP vectors across observations.
+    """
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.association_rel_: Optional[np.ndarray] = None
+
+    @property
+    def association(self) -> pd.DataFrame:
+        """
+        The matrix of relative association for all feature pairs.
+
+        Values range between 0.0 (fully associated contributions) and 1.0
+        (fully independent contributions).
+
+        Raises an error if this SHAP value decomposer has not been fitted.
+        """
+        self._ensure_fitted()
+        return self._to_frame(self.association_rel_)
+
+    def _fit(
+        self, shap_values: pd.DataFrame, features: List[str], targets: List[str]
+    ) -> None:
+        #
+        # basic definitions
+        #
+
+        columns: Union[pd.Index, pd.MultiIndex] = shap_values.columns
+
+        if columns.nlevels == 1:
+            n_targets = 1
+            features: pd.Index = columns
+        else:
+            targets, features = columns.levels
+            n_targets = len(targets)
+
+        n_features = len(features)
+        n_observations = len(shap_values)
+
+        # phi[i]
+        # shape: (n_targets, n_features, n_observations)
+        # the vector of shap values for every target and feature
+        phi_i = np.transpose(
+            shap_values.values.reshape((n_observations, n_targets, n_features)),
+            axes=(1, 2, 0),
+        )
+
+        #
+        # SHAP association: alpha[i, j]
+        #
+
+        # covariance matrix of shap vectors
+        # shape: (n_targets, n_features, n_features)
+        cov_phi_i_phi_j = _cov(phi_i, phi_i)
+        cov_phi_i_phi_j_2x = 2 * cov_phi_i_phi_j
+
+        # variance of shap vectors
+        var_phi_i = np.diagonal(cov_phi_i_phi_j, axis1=1, axis2=2)
+        var_phi_i_plus_var_phi_j = (
+            var_phi_i[:, :, np.newaxis] + var_phi_i[:, np.newaxis, :]
+        )
+
+        # std(phi[i] + phi[j])
+        # shape: (n_targets, n_features)
+        # variances of SHAP vectors minus total synergy
+        # or, the length of the sum of vectors phi[i] and phi[j]
+        # this quantifies the joint contributions of features i and j
+        # we also need this as part of the formula to calculate alpha_ij (see below)
+        std_phi_i_plus_phi_j = _sqrt(var_phi_i_plus_var_phi_j + cov_phi_i_phi_j_2x)
+
+        # std(phi[i] - phi[j])
+        # shape: (n_targets, n_features)
+        # the length of the difference of vectors phi[i] and phi[j]
+        # we need this as part of the formula to calculate alpha_ij (see below)
+        std_phi_i_minus_phi_j = _sqrt(var_phi_i_plus_var_phi_j - cov_phi_i_phi_j_2x)
+
+        # 2 * std(alpha[i, j]) = 2 * std(alpha[j, i])
+        # shape: (n_targets, n_features)
+        # twice the standard deviation (= length) of equivalence vector;
+        # this is the total contribution made by phi[i] and phi[j] where both features
+        # independently use redundant information
+
+        std_alpha_ij_2x = std_phi_i_plus_phi_j - std_phi_i_minus_phi_j
+        #
+        # SHAP decompositon as relative contributions of
+        # synergy, equivalence, and independence
+        #
+
+        association_ij = np.abs(std_alpha_ij_2x)
+
+        # we should have the right shape for all resulting matrices
+        assert association_ij.shape == (n_targets, n_features, n_features)
+        self.association_rel_ = association_ij / std_phi_i_plus_phi_j
+
+    def _reset_fit(self) -> None:
+        super()._reset_fit()
+        self.association_rel_ = None
+
+
+class ShapInteractionValueDecomposer(
+    BaseShapDecomposer[ShapInteractionValuesCalculator]
+):
     """
     Decomposes SHAP interaction scores (i.e, SHAP importance) of all possible parings
     of features into additive components for synergy, equivalence, and independence.
@@ -39,27 +228,19 @@ class ShapInteractionDecomposer(FittableMixin[ShapInteractionValuesCalculator]):
             i.e, the relative share of the synergy contribution \
             :math:`\\sigma_{\\vec{\\phi_{ij}}}`. \
         """
-        f"""\
-            (default: {ShapInteractionDecomposer.DEFAULT_MIN_DIRECT_SYNERGY}, \
-            i.e., {ShapInteractionDecomposer.DEFAULT_MIN_DIRECT_SYNERGY * 100.0:g}%)
-        """
         super().__init__()
         self.min_direct_synergy = (
-            ShapInteractionDecomposer.DEFAULT_MIN_DIRECT_SYNERGY
+            ShapInteractionValueDecomposer.DEFAULT_MIN_DIRECT_SYNERGY
             if min_direct_synergy is None
             else min_direct_synergy
         )
         self.synergy_rel_: Optional[np.ndarray] = None
         self.equivalence_rel_: Optional[np.ndarray] = None
-        self.index_: Optional[pd.Index] = None
-        self.columns_: Optional[pd.Index] = None
 
-    @property
-    def is_fitted(self) -> bool:
-        """[inherit docstring from parent class]"""
-        return self.synergy_rel_ is not None
-
-    is_fitted.__doc__ = FittableMixin.is_fitted.__doc__
+    __init__.__doc__ += f"""\
+            (default: {DEFAULT_MIN_DIRECT_SYNERGY}, i.e., \
+            {DEFAULT_MIN_DIRECT_SYNERGY * 100.0:g}%)
+        """
 
     @property
     def synergy(self) -> pd.DataFrame:
@@ -88,63 +269,24 @@ class ShapInteractionDecomposer(FittableMixin[ShapInteractionValuesCalculator]):
         self._ensure_fitted()
         return self._to_frame(self.equivalence_rel_)
 
-    def fit(self, im_calculator: ShapInteractionValuesCalculator, **fit_params) -> None:
-        """
-        Calculate the SHAP decomposition for the interaction matrix produced by the
-        given interaction matrix calculator.
-        :param im_calculator: the calculator from which to get the interaction matrix
-        """
-
-        # reset fit in case we get an exception along the way
-        self.synergy_rel_ = self.equivalence_rel_ = None
-        self.index_ = self.columns_ = None
-
-        if len(fit_params) > 0:
-            raise ValueError(
-                f'unsupported fit parameters: {", ".join(fit_params.values())}'
-            )
-
+    def _fit(
+        self, shap_values: pd.DataFrame, features: List[str], targets: List[str]
+    ) -> None:
         #
         # basic definitions
         #
 
-        im: pd.DataFrame = im_calculator.matrix
-        n_features = im_calculator.n_features_
-        n_targets = im_calculator.n_targets_
-        n_observations = im_calculator.n_observations_
-        if n_targets == 1:
-            targets: Optional[pd.Index] = None
-            features: pd.Index = im.columns
-        else:
-            targets, features = im.columns.levels
-
-        def _cov(u: np.ndarray, v: np.ndarray) -> np.ndarray:
-            # calculate covariance matrix of two vectors, assuming µ=0 for both
-            # input shape for u and v is (n_targets, n_features)
-            # output shape is (n_targets, n_features, n_features)
-
-            assert u.shape == (n_targets, n_features, n_observations)
-            assert v.shape == (n_targets, n_features, n_observations)
-
-            return np.matmul(u, v.swapaxes(1, 2)) / n_observations
-
-        def _transpose(v: np.ndarray) -> np.ndarray:
-            # transpose a feature matrix for all targets
-            assert v.shape == (n_targets, n_features, n_features)
-
-            return v.swapaxes(1, 2)
-
-        def _sqrt(v: np.ndarray) -> np.ndarray:
-            # we clip values < 0 as these could happen in isolated cases due to
-            # rounding errors
-
-            return np.sqrt(np.clip(v, 0, None))
+        n_features = len(features)
+        n_targets = len(targets)
+        n_observations = len(shap_values.index.levels[0])
 
         # phi[i, j]
         # shape: (n_targets, n_features, n_features, n_observations)
         # the vector of interaction values for every target and feature pairing
         phi_ij = np.transpose(
-            im.values.reshape((n_observations, n_features, n_targets, n_features)),
+            shap_values.values.reshape(
+                (n_observations, n_features, n_targets, n_features)
+            ),
             axes=(2, 1, 3, 0),
         )
 
@@ -185,7 +327,7 @@ class ShapInteractionDecomposer(FittableMixin[ShapInteractionValuesCalculator]):
 
         # phi_valid[i, j]
         # shape: (n_targets, n_features, n_features)
-        # boolean matrix indicating whether phi[i, j] is above the "noise" threshold,
+        # boolean values indicating whether phi[i, j] is above the "noise" threshold,
         # i.e. whether we trust that doing calculations with phi[i, j] is sufficiently
         # accurate. phi[i, j] with small variances should not be used because we divide
         # by that variance to determine the multiple for indirect synergy, which can
@@ -452,8 +594,10 @@ class ShapInteractionDecomposer(FittableMixin[ShapInteractionValuesCalculator]):
             synergy_ij / (synergy_ij + autonomy_ij),
             equivalence_ij / (equivalence_ij + uniqueness_ij),
         )
-        self.index_ = features
-        self.columns_ = im.columns
+
+    def _reset_fit(self) -> None:
+        super()._reset_fit()
+        self.synergy_rel_ = self.equivalence_rel_ = None
 
     def _to_frame(self, matrix: np.ndarray) -> pd.DataFrame:
         # takes an array of shape (n_targets, n_features, n_features) and transforms it
@@ -465,3 +609,28 @@ class ShapInteractionDecomposer(FittableMixin[ShapInteractionValuesCalculator]):
             index=index,
             columns=columns,
         )
+
+
+def _cov(u: np.ndarray, v: np.ndarray) -> np.ndarray:
+    # calculate covariance matrix of two vectors, assuming µ=0 for both
+    # input shape for u and v is (n_targets, n_features, n_observations)
+    # output shape is (n_targets, n_features, n_features, n_observations)
+
+    assert u.shape == v.shape
+    assert u.ndim == 3
+
+    return np.matmul(u, v.swapaxes(1, 2)) / u.shape[2]
+
+
+def _transpose(v: np.ndarray) -> np.ndarray:
+    # transpose a feature matrix for all targets
+    assert v.ndim == 3
+
+    return v.swapaxes(1, 2)
+
+
+def _sqrt(v: np.ndarray) -> np.ndarray:
+    # we clip values < 0 as these could happen in isolated cases due to
+    # rounding errors
+
+    return np.sqrt(np.clip(v, 0, None))
