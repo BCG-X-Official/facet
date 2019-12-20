@@ -25,7 +25,7 @@ from gamma.ml.inspection._shap import (
     ShapInteractionValuesCalculator,
     ShapValuesCalculator,
 )
-from gamma.ml.inspection._shap_decomposition import ShapInteractionDecomposer
+from gamma.ml.inspection._shap_decomposition import ShapInteractionValueDecomposer
 from gamma.sklearndf import BaseLearnerDF
 from gamma.sklearndf.pipeline import (
     BaseLearnerPipelineDF,
@@ -109,7 +109,7 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF
             if explainer_factory is not None
             else tree_explainer_factory
         )
-        self._shap_interaction_decomposer = ShapInteractionDecomposer(
+        self._shap_interaction_decomposer = ShapInteractionValueDecomposer(
             min_direct_synergy=min_direct_synergy
         )
         self.n_jobs = n_jobs
@@ -141,7 +141,7 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF
     __init__.__doc__ = (
         __init__.__doc__.replace(
             "<DEFAULT_MIN_DIRECT_SYNERGY>",
-            str(ShapInteractionDecomposer.DEFAULT_MIN_DIRECT_SYNERGY),
+            str(ShapInteractionValueDecomposer.DEFAULT_MIN_DIRECT_SYNERGY),
         )
         + ParallelizableMixin.__init__.__doc__
     )
@@ -162,28 +162,28 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF
 
     def shap_values(self) -> pd.DataFrame:
         """
-        Calculate the SHAP matrix for all splits.
+        Calculate the SHAP values for all splits.
 
         Each row is an observation in a specific test split, and each column is a
         feature. Values are the SHAP values per observation, calculated as the mean
         SHAP value across all splits that contain the observation.
 
-        :return: shap matrix as a data frame
+        :return: shap values as a data frame
         """
-        return self._fitted_shap_values_calculator().matrix
+        return self._fitted_shap_values_calculator().shap_values
 
     def shap_interaction_values(self) -> pd.DataFrame:
         """
-        Calculate the SHAP interaction matrix for all splits.
+        Calculate the SHAP interaction values for all splits.
 
         Each row is an observation in a specific test split, and each column is a
         combination of two features. Values are the SHAP interaction values per
         observation, calculated as the mean SHAP interaction value across all splits
         that contain the observation.
 
-        :return: SHAP interaction matrix as a data frame
+        :return: SHAP interaction values as a data frame
         """
-        return self._fitted_shap_interaction_values_calculator().matrix
+        return self._fitted_shap_interaction_values_calculator().shap_values
 
     def feature_importance(
         self, *, marginal: bool = False
@@ -236,7 +236,7 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF
 
     def feature_association_matrix(self) -> pd.DataFrame:
         """
-        Calculate the Pearson correlation matrix of the shap matrix.
+        Calculate the Pearson correlation matrix of the shap values.
 
         :return: data frame with column and index given by the feature names,
           and values as the Pearson correlations of the shap values of features
@@ -493,7 +493,7 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF
             self._shap_interaction_values_calculator.fit(crossfit=self.crossfit)
         return self._shap_interaction_values_calculator
 
-    def _fitted_interaction_decomposer(self) -> ShapInteractionDecomposer:
+    def _fitted_interaction_decomposer(self) -> ShapInteractionValueDecomposer:
         if not self._shap_interaction_decomposer.is_fitted:
             self._shap_interaction_decomposer.fit(
                 self._fitted_shap_interaction_values_calculator()
@@ -507,9 +507,9 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF
         n_targets: int = self._n_targets
         n_features: int = self._n_features
 
-        # get the shap matrix as an array of shape
+        # get the shap values as an array of shape
         # (n_targets, n_observations, n_features);
-        # this is achieved by re-shaping the shap matrix to get the additional "target"
+        # this is achieved by re-shaping the shap values to get the additional "target"
         # dimension, then swapping the target and observation dimensions
         shap_matrix_per_target = (
             self.shap_values()
