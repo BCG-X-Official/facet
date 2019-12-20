@@ -54,18 +54,21 @@ def check_ranking(
     :return: None
     """
 
-    assert sum(
+    checksum_scores_actual = sum(
         [learner_eval.ranking_score for learner_eval in ranking[:first_n_learners]]
-    ) == pytest.approx(checksum_scores)
-
-    assert (
-        hashlib.md5(
-            "".join(
-                [
-                    str(learner_eval.pipeline.final_estimator)
-                    for learner_eval in ranking[:first_n_learners]
-                ]
-            ).encode("UTF-8")
-        ).hexdigest()
-        == checksum_learners
     )
+    assert checksum_scores_actual == pytest.approx(
+        checksum_scores
+    ), f"unexpected checksum_scores={checksum_scores_actual}"
+
+    checksum_learners_actual = hashlib.md5(
+        "".join(
+            [
+                str(learner_eval.pipeline.final_estimator)
+                for learner_eval in ranking[:first_n_learners]
+            ]
+        ).encode("UTF-8")
+    ).hexdigest()
+    assert (
+        checksum_learners_actual == checksum_learners
+    ), f"unexpected checksum_learners={checksum_learners_actual}"
