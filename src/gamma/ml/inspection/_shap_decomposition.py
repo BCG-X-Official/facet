@@ -129,15 +129,7 @@ class ShapValueDecomposer(BaseShapDecomposer[ShapValuesCalculator]):
         # basic definitions
         #
 
-        columns: Union[pd.Index, pd.MultiIndex] = shap_values.columns
-
-        if columns.nlevels == 1:
-            n_targets = 1
-            features: pd.Index = columns
-        else:
-            targets, features = columns.levels
-            n_targets = len(targets)
-
+        n_targets = len(targets)
         n_features = len(features)
         n_observations = len(shap_values)
 
