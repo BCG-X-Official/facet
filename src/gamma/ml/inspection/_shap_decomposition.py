@@ -387,7 +387,7 @@ class ShapInteractionValueDecomposer(
                         "indirect synergy calculated as "
                         f"{(s_i_j[_t, _i, _j] - 1) * 100:.3g}% "
                         "of direct synergy; setting indirect synergy to 0. "
-                        f"{_relative_direct_synergy(_t,_i, _j)}"
+                        f"{_relative_direct_synergy(_t, _i, _j)}"
                     )
 
             for _t, _i, _j in np.argwhere(s_i_j > np.log2(n_features)):
@@ -397,7 +397,7 @@ class ShapInteractionValueDecomposer(
                         f"phi[{features[_i]}, {features[_j]}]: "
                         "total of direct and indirect synergy is "
                         f"{(s_i_j[_t, _i, _j] - 1) * 100:.3g}% of direct synergy. "
-                        f"{_relative_direct_synergy(_t,_i, _j)}"
+                        f"{_relative_direct_synergy(_t, _i, _j)}"
                     )
 
         _test_synergy_feasibility()
@@ -652,11 +652,11 @@ def _cov(u: np.ndarray, v: np.ndarray) -> np.ndarray:
         return np.matmul(u, v.swapaxes(1, 2)) / u.shape[2]
 
 
-def _transpose(v: np.ndarray) -> np.ndarray:
+def _transpose(m: np.ndarray) -> np.ndarray:
     # transpose a feature matrix for all targets
-    assert v.ndim == 3
+    assert m.ndim == 3
 
-    return v.swapaxes(1, 2)
+    return m.swapaxes(1, 2)
 
 
 def _sqrt(v: np.ndarray) -> np.ndarray:
