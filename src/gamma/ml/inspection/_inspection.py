@@ -2,6 +2,7 @@
 Core implementation of :mod:`gamma.ml.inspection`
 """
 import logging
+import warnings
 from abc import ABC, abstractmethod
 from typing import *
 
@@ -25,7 +26,10 @@ from gamma.ml.inspection._shap import (
     ShapInteractionValuesCalculator,
     ShapValuesCalculator,
 )
-from gamma.ml.inspection._shap_decomposition import ShapInteractionValueDecomposer
+from gamma.ml.inspection._shap_decomposition import (
+    ShapInteractionValueDecomposer,
+    ShapValueDecomposer,
+)
 from gamma.sklearndf import BaseLearnerDF
 from gamma.sklearndf.pipeline import (
     BaseLearnerPipelineDF,
@@ -122,7 +126,12 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF
             )
         # fmt: on
 
-        self._feature_dependency_matrix: Optional[pd.DataFrame] = None
+        self._shap_decomposer = ShapValueDecomposer()
+        self._shap_interaction_decomposer = ShapInteractionValueDecomposer(
+            min_direct_synergy=min_direct_synergy
+        )
+
+        self._feature_association_matrix: Optional[pd.DataFrame] = None
 
     # noinspection PyTypeChecker
     __init__.__doc__ = (
@@ -221,21 +230,36 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF
 
         return feature_importance_sr
 
-    def feature_association_matrix(self) -> pd.DataFrame:
+    @staticmethod
+    def __warn_about_shap_correlation_method() -> None:
+        warnings.warn(
+            "SHAP correlation method for feature association is deprecated and "
+            "will be removed in the next release",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+
+    def feature_association_matrix(self, shap_correlation_method=False) -> pd.DataFrame:
         """
         Calculate the Pearson correlation matrix of the shap values.
 
         :return: data frame with column and index given by the feature names,
           and values as the Pearson correlations of the shap values of features
         """
-        if self._feature_dependency_matrix is None:
-            self._feature_dependency_matrix = self._feature_matrix_to_df(
-                self._association_matrix()
+        if shap_correlation_method:
+            # noinspection PyDeprecation
+            self.__warn_about_shap_correlation_method()
+            return self._feature_matrix_to_df(self._shap_correlation_matrix())
+
+        if self._feature_association_matrix is None:
+            self._feature_association_matrix = (
+                self._fitted_shap_decomposer().association
             )
+        return self._feature_association_matrix
 
-        return self._feature_dependency_matrix
-
-    def feature_association_linkage(self) -> Union[LinkageTree, List[LinkageTree]]:
+    def feature_association_linkage(
+        self, shap_correlation_method=False
+    ) -> Union[LinkageTree, List[LinkageTree]]:
         """
         Calculate the :class:`.LinkageTree` based on the
         :meth:`.feature_association_matrix`.
@@ -243,8 +267,14 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF
         :return: linkage tree for the shap clustering dendrogram; \
             list of linkage trees if the base estimator is a multi-output model
         """
+        if shap_correlation_method:
+            # noinspection PyDeprecation
+            self.__warn_about_shap_correlation_method()
+            association_matrix = self._shap_correlation_matrix()
+        else:
+            association_matrix = self._fitted_shap_decomposer().association_rel_
         return self._linkage_from_affinity_matrix(
-            feature_affinity_matrix=self._association_matrix()
+            feature_affinity_matrix=association_matrix
         )
 
     def feature_synergy_matrix(self) -> pd.DataFrame:
@@ -260,7 +290,7 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF
         :return: feature synergy matrix as a data frame of shape \
             (n_features, n_targets * n_features)
         """
-        return self._fitted_interaction_decomposer().synergy
+        return self._fitted_shap_interaction_decomposer().synergy
 
     def feature_equivalence_matrix(self) -> pd.DataFrame:
         """
@@ -274,7 +304,7 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF
         :return: feature equivalence matrix as a data frame of shape \
             (n_features, n_targets * n_features)
         """
-        return self._fitted_interaction_decomposer().equivalence
+        return self._fitted_shap_interaction_decomposer().equivalence
 
     def feature_equivalence_linkage(self) -> Union[LinkageTree, List[LinkageTree]]:
         """
@@ -284,7 +314,7 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF
         :return: linkage tree for the shap clustering dendrogram; \
             list of linkage trees if the base estimator is a multi-output model
         """
-        equivalence_array = self._fitted_interaction_decomposer().equivalence_rel_
+        equivalence_array = self._fitted_shap_interaction_decomposer().equivalence_rel_
         return self._linkage_from_affinity_matrix(
             feature_affinity_matrix=equivalence_array
         )
@@ -480,14 +510,19 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF
             self._shap_interaction_values_calculator.fit(crossfit=self.crossfit)
         return self._shap_interaction_values_calculator
 
-    def _fitted_interaction_decomposer(self) -> ShapInteractionValueDecomposer:
+    def _fitted_shap_decomposer(self) -> ShapValueDecomposer:
+        if not self._shap_decomposer.is_fitted:
+            self._shap_decomposer.fit(self._fitted_shap_values_calculator())
+        return self._shap_decomposer
+
+    def _fitted_shap_interaction_decomposer(self) -> ShapInteractionValueDecomposer:
         if not self._shap_interaction_decomposer.is_fitted:
             self._shap_interaction_decomposer.fit(
                 self._fitted_shap_interaction_values_calculator()
             )
         return self._shap_interaction_decomposer
 
-    def _association_matrix(self) -> np.ndarray:
+    def _shap_correlation_matrix(self) -> np.ndarray:
         # return an array with a pearson correlation matrix of the shap matrix
         # for each target, with shape (n_targets, n_features, n_features)
 
