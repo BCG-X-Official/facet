@@ -64,13 +64,6 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF
     Inspect a pipeline through its SHAP values.
     """
 
-    __slots__ = [
-        "_crossfit",
-        "_shap_matrix",
-        "_feature_dependency_matrix",
-        "_explainer_factory",
-    ]
-
     COL_IMPORTANCE = "importance"
     COL_IMPORTANCE_MARGINAL = "marginal importance"
 
@@ -109,12 +102,6 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF
             if explainer_factory is not None
             else tree_explainer_factory
         )
-        self._shap_interaction_decomposer = ShapInteractionValueDecomposer(
-            min_direct_synergy=min_direct_synergy
-        )
-        self.n_jobs = n_jobs
-        self.shared_memory = shared_memory
-        self.verbose = verbose
 
         self._shap_values_calculator = self._shap_values_calculator_cls()(
             explainer_factory=self._explainer_factory,
@@ -685,19 +672,3 @@ def kernel_explainer_factory(model: BaseLearnerDF, data: pd.DataFrame) -> Explai
     :return: :class:`shap.TreeExplainer` if the estimator is compatible
     """
     return KernelExplainer(model=model.predict, data=data)
-
-
-def _covariance_per_row(a: np.ndarray, b: np.ndarray) -> np.ndarray:
-    # calculate the pair-wise variance of 2D matrices a and b
-    # a and b must have the same shape (n_rows, n_columns)
-    # returns a vector of pairwise covariances of shape (n_rows)
-
-    assert a.ndim == b.ndim == 2, "args a and b are 2D matrices"
-    assert a.shape == b.shape, "args a and b have the same shape"
-
-    # row-wise mean of input arrays, and subtract from input arrays themselves
-    a_ma = a - a.mean(-1, keepdims=True)
-    b_mb = b - b.mean(-1, keepdims=True)
-
-    # calculate pair-wise covariance for each row of a and b
-    return np.einsum("ij,ij->i", a_ma, b_mb) / a.shape[1]
