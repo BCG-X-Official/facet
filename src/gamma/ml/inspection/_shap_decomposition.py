@@ -597,15 +597,22 @@ class ShapInteractionValueDecomposer(
         ):
             assert matrix.shape == (n_targets, n_features, n_features)
 
-        # assign results as an atomic operation, so we don't have a semi-fitted
-        # outcome in case an exception is raised in this final step
+        # calculate relative synergy and equivalence (ranging from 0.0 to 1.0)
         # NOTE: we do not store independence so technically it could be removed from
         # the code above
+        synergy_rel = synergy_ij / (synergy_ij + autonomy_ij)
+        equivalence_rel = equivalence_ij / (equivalence_ij + uniqueness_ij)
 
-        self.synergy_rel_, self.equivalence_rel_ = (
-            synergy_ij / (synergy_ij + autonomy_ij),
-            equivalence_ij / (equivalence_ij + uniqueness_ij),
-        )
+        # we define synergy and equivalence of features with themselves as 1.0
+        def _set_diagonal_to_one(_m: np.ndarray) -> None:
+            for _t in _m:
+                np.fill_diagonal(_t, 1.0)
+
+        _set_diagonal_to_one(synergy_rel)
+        _set_diagonal_to_one(equivalence_rel)
+
+        self.synergy_rel_ = synergy_rel
+        self.equivalence_rel_ = equivalence_rel
 
     def _reset_fit(self) -> None:
         super()._reset_fit()
