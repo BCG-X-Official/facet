@@ -20,6 +20,12 @@ log = logging.getLogger(__name__)
 
 T_ShapCalculator = TypeVar("T_ShapCalculator", bound=BaseShapCalculator)
 
+_PAIRWISE_PARTIAL_SUMMATION = False
+#: if `True`, optimize numpy arrays to ensure pairwise partial summation.
+#: But given that we will add floats of the same order of magnitude and only up
+#: to a few thousand of them in the base case, the loss of accuracy with regular
+#: (sequential) summation will be negligible in practice
+
 
 class BaseShapDecomposer(
     FittableMixin[T_ShapCalculator], ABC, Generic[T_ShapCalculator]
@@ -129,24 +135,18 @@ class ShapValueDecomposer(BaseShapDecomposer[ShapValuesCalculator]):
         # basic definitions
         #
 
-        columns: Union[pd.Index, pd.MultiIndex] = shap_values.columns
-
-        if columns.nlevels == 1:
-            n_targets = 1
-            features: pd.Index = columns
-        else:
-            targets, features = columns.levels
-            n_targets = len(targets)
-
+        n_targets = len(targets)
         n_features = len(features)
         n_observations = len(shap_values)
 
         # phi[i]
         # shape: (n_targets, n_features, n_observations)
         # the vector of shap values for every target and feature
-        phi_i = np.transpose(
-            shap_values.values.reshape((n_observations, n_targets, n_features)),
-            axes=(1, 2, 0),
+        phi_i = _ensure_last_axis_is_fast(
+            np.transpose(
+                shap_values.values.reshape((n_observations, n_targets, n_features)),
+                axes=(1, 2, 0),
+            )
         )
 
         #
@@ -179,17 +179,14 @@ class ShapValueDecomposer(BaseShapDecomposer[ShapValuesCalculator]):
         std_phi_i_minus_phi_j = _sqrt(var_phi_i_plus_var_phi_j - cov_phi_i_phi_j_2x)
 
         # 2 * std(alpha[i, j]) = 2 * std(alpha[j, i])
-        # shape: (n_targets, n_features)
+        # shape: (n_targets, n_features, n_features)
         # twice the standard deviation (= length) of equivalence vector;
         # this is the total contribution made by phi[i] and phi[j] where both features
         # independently use redundant information
-
         std_alpha_ij_2x = std_phi_i_plus_phi_j - std_phi_i_minus_phi_j
-        #
-        # SHAP decompositon as relative contributions of
-        # synergy, equivalence, and independence
-        #
 
+        # SHAP association
+        # shape: (n_targets, n_features, n_features)
         association_ij = np.abs(std_alpha_ij_2x)
 
         # we should have the right shape for all resulting matrices
@@ -283,16 +280,20 @@ class ShapInteractionValueDecomposer(
         # phi[i, j]
         # shape: (n_targets, n_features, n_features, n_observations)
         # the vector of interaction values for every target and feature pairing
-        phi_ij = np.transpose(
-            shap_values.values.reshape(
-                (n_observations, n_features, n_targets, n_features)
-            ),
-            axes=(2, 1, 3, 0),
+        # for improved numerical precision, we ensure the last axis is the fast axis
+        # i.e. stride size equals item size (see documentation for numpy.sum)
+        phi_ij = _ensure_last_axis_is_fast(
+            np.transpose(
+                shap_values.values.reshape(
+                    (n_observations, n_features, n_targets, n_features)
+                ),
+                axes=(2, 1, 3, 0),
+            )
         )
 
         # phi[i]
         # shape: (n_targets, n_features, n_observations)
-        phi_i = phi_ij.sum(axis=2)
+        phi_i = _ensure_last_axis_is_fast(phi_ij.sum(axis=2))
 
         # covariance matrix of shap vectors
         # shape: (n_targets, n_features, n_features)
@@ -305,7 +306,9 @@ class ShapInteractionValueDecomposer(
         # var(phi[i, j]), std(phi[i, j])
         # shape: (n_targets, n_features, n_features)
         # variance and length (= standard deviation) of each feature interaction vector
-        var_phi_ij = (phi_ij * phi_ij).mean(axis=3)
+        var_phi_ij = (
+            _ensure_last_axis_is_fast(phi_ij * phi_ij).sum(axis=-1) / n_observations
+        )
         std_phi_ij = np.sqrt(var_phi_ij)
 
         # phi[i, i]
@@ -317,7 +320,7 @@ class ShapInteractionValueDecomposer(
         # psi[i] = phi[i] - phi[i, i]
         # shape: (n_targets, n_features, n_observations)
         # the SHAP vectors per feature, minus the independent contributions
-        psi_i = phi_i - phi_ii
+        psi_i = _ensure_last_axis_is_fast(phi_i - phi_ii)
 
         # std_phi_relative[i, j]
         # shape: (n_targets, n_features, n_features)
@@ -344,10 +347,14 @@ class ShapInteractionValueDecomposer(
         # the total direct and indirect synergy of psi[i] with psi[j], i.e.,
         # std(phi[i, j]) * s[i, j]
 
+        if _PAIRWISE_PARTIAL_SUMMATION:
+            raise NotImplementedError(
+                "max precision Einstein summation not yet implemented"
+            )
         # noinspection SpellCheckingInspection
         s_i_j = np.divide(
             # cov(psi[i], phi[i, j])
-            np.einsum("tio,tijo->tij", psi_i, phi_ij) / n_observations,
+            np.einsum("tio,tijo->tij", psi_i, phi_ij, optimize=True) / n_observations,
             # var(phi[i, j])
             var_phi_ij,
             out=np.ones_like(var_phi_ij),
@@ -421,6 +428,11 @@ class ShapInteractionValueDecomposer(
         # cov(phi[i], phi[i, j])
         # covariance matrix of shap vectors with pairwise synergies
         # shape: (n_targets, n_features, n_features)
+
+        if _PAIRWISE_PARTIAL_SUMMATION:
+            raise NotImplementedError(
+                "max precision Einstein summation not yet implemented"
+            )
         cov_phi_i_phi_ij = (
             np.einsum("...io,...ijo->...ij", phi_i, phi_ij) / n_observations
         )
@@ -611,6 +623,14 @@ class ShapInteractionValueDecomposer(
         )
 
 
+def _ensure_last_axis_is_fast(v: np.ndarray) -> np.ndarray:
+    if _PAIRWISE_PARTIAL_SUMMATION:
+        if v.strides[-1] != v.itemsize:
+            v = v.copy()
+        assert v.strides[-1] == v.itemsize
+    return v
+
+
 def _cov(u: np.ndarray, v: np.ndarray) -> np.ndarray:
     # calculate covariance matrix of two vectors, assuming µ=0 for both
     # input shape for u and v is (n_targets, n_features, n_observations)
@@ -619,7 +639,10 @@ def _cov(u: np.ndarray, v: np.ndarray) -> np.ndarray:
     assert u.shape == v.shape
     assert u.ndim == 3
 
-    return np.matmul(u, v.swapaxes(1, 2)) / u.shape[2]
+    if _PAIRWISE_PARTIAL_SUMMATION:
+        raise NotImplementedError("max precision matmul not yet implemented")
+    else:
+        return np.matmul(u, v.swapaxes(1, 2)) / u.shape[2]
 
 
 def _transpose(v: np.ndarray) -> np.ndarray:
