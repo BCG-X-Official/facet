@@ -130,7 +130,9 @@ def test_model_inspection(n_jobs, boston_sample: Sample) -> None:
         )
 
         # correlated shap matrix: feature dependencies
-        corr_matrix: pd.DataFrame = model_inspector.feature_association_matrix()
+        corr_matrix: pd.DataFrame = model_inspector.feature_association_matrix(
+            shap_correlation_method=True
+        )
 
         # check number of rows
         assert len(corr_matrix) == len(test_sample.feature_columns)
@@ -210,7 +212,9 @@ def test_model_inspection_with_encoding(
     )
 
     # correlated shap matrix: feature dependencies
-    corr_matrix: pd.DataFrame = mi.feature_association_matrix()
+    corr_matrix: pd.DataFrame = mi.feature_association_matrix(
+        shap_correlation_method=True
+    )
 
     # check actual values using checksum:
     assert (
@@ -309,7 +313,9 @@ def test_model_inspection_classifier(n_jobs, iris_sample: Sample) -> None:
     assert len(shap_matrix) == len(test_sample)
 
     # correlated shap matrix: feature dependencies
-    corr_matrix: pd.DataFrame = model_inspector.feature_association_matrix()
+    corr_matrix: pd.DataFrame = model_inspector.feature_association_matrix(
+        shap_correlation_method=True
+    )
     log.info(corr_matrix)
     # check number of rows
     assert len(corr_matrix) == len(test_sample.feature_columns)
