@@ -213,7 +213,7 @@ class ShapInteractionValueDecomposer(
     the decompositions of the actual SHAP vectors across observations.
     """
 
-    DEFAULT_MIN_DIRECT_SYNERGY = 0.005
+    DEFAULT_MIN_DIRECT_SYNERGY = 0.01
 
     def __init__(self, min_direct_synergy: Optional[float] = None) -> None:
         """
