@@ -81,7 +81,7 @@ class BaseShapDecomposer(
 
     @abstractmethod
     def _fit(
-        self, shap_values: pd.DataFrame, features: List[str], targets: List[str]
+        self, shap_values: pd.DataFrame, features: Sequence[str], targets: Sequence[str]
     ) -> None:
         pass
 
@@ -129,7 +129,7 @@ class ShapValueDecomposer(BaseShapDecomposer[ShapValuesCalculator]):
         return self._to_frame(self.association_rel_)
 
     def _fit(
-        self, shap_values: pd.DataFrame, features: List[str], targets: List[str]
+        self, shap_values: pd.DataFrame, features: Sequence[str], targets: Sequence[str]
     ) -> None:
         #
         # basic definitions
