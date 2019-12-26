@@ -230,15 +230,6 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF
 
         return feature_importance_sr
 
-    @staticmethod
-    def __warn_about_shap_correlation_method() -> None:
-        warnings.warn(
-            "SHAP correlation method for feature association is deprecated and "
-            "will be removed in the next release",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-
     def feature_association_matrix(self, shap_correlation_method=False) -> pd.DataFrame:
         """
         Calculate the Pearson correlation matrix of the shap values.
@@ -592,6 +583,15 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF
         Deprecated. Use :meth:`.shap_interaction_values` instead.
         """
         return self.shap_interaction_values()
+
+    @staticmethod
+    def __warn_about_shap_correlation_method() -> None:
+        warnings.warn(
+            "SHAP correlation method for feature association is deprecated and "
+            "will be removed in the next release",
+            DeprecationWarning,
+            stacklevel=2,
+        )
 
 
 class RegressorInspector(
