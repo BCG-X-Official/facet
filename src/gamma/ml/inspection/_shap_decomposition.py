@@ -191,7 +191,10 @@ class ShapValueDecomposer(BaseShapDecomposer[ShapValuesCalculator]):
 
         # we should have the right shape for all resulting matrices
         assert association_ij.shape == (n_targets, n_features, n_features)
-        self.association_rel_ = association_ij / std_phi_i_plus_phi_j
+
+        self.association_rel_ = _ensure_diagonality(
+            association_ij / std_phi_i_plus_phi_j
+        )
 
     def _reset_fit(self) -> None:
         super()._reset_fit()
@@ -267,7 +270,7 @@ class ShapInteractionValueDecomposer(
         return self._to_frame(self.equivalence_rel_)
 
     def _fit(
-        self, shap_values: pd.DataFrame, features: List[str], targets: List[str]
+        self, shap_values: pd.DataFrame, features: Sequence[str], targets: Sequence[str]
     ) -> None:
         #
         # basic definitions
@@ -598,18 +601,15 @@ class ShapInteractionValueDecomposer(
             assert matrix.shape == (n_targets, n_features, n_features)
 
         # calculate relative synergy and equivalence (ranging from 0.0 to 1.0)
+        # both matrices are symmetric, but we ensure perfect symmetry by removing
+        # potential round-off errors
         # NOTE: we do not store independence so technically it could be removed from
         # the code above
-        synergy_rel = synergy_ij / (synergy_ij + autonomy_ij)
-        equivalence_rel = equivalence_ij / (equivalence_ij + uniqueness_ij)
 
-        # we define synergy and equivalence of features with themselves as 1.0
-        def _set_diagonal_to_one(_m: np.ndarray) -> None:
-            for _t in _m:
-                np.fill_diagonal(_t, 1.0)
-
-        _set_diagonal_to_one(synergy_rel)
-        _set_diagonal_to_one(equivalence_rel)
+        synergy_rel = _ensure_diagonality(synergy_ij / (synergy_ij + autonomy_ij))
+        equivalence_rel = _ensure_diagonality(
+            equivalence_ij / (equivalence_ij + uniqueness_ij)
+        )
 
         self.synergy_rel_ = synergy_rel
         self.equivalence_rel_ = equivalence_rel
@@ -628,6 +628,24 @@ class ShapInteractionValueDecomposer(
             index=index,
             columns=columns,
         )
+
+
+def _ensure_diagonality(matrix: np.ndarray) -> np.ndarray:
+    # matrix shape: (n_targets, n_features, n_features)
+
+    # remove potential floating point round-off errors
+    matrix = (matrix + _transpose(matrix)) / 2
+
+    # fixes per target
+    for m in matrix:
+        # replace nan values with 0.0 = no association when correlation is undefined
+        np.nan_to_num(m, copy=False)
+
+        # set the matrix diagonals to 1.0 = full association of each feature with
+        # itself
+        np.fill_diagonal(m, 1.0)
+
+    return matrix
 
 
 def _ensure_last_axis_is_fast(v: np.ndarray) -> np.ndarray:
