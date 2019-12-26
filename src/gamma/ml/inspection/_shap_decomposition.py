@@ -65,11 +65,11 @@ class BaseShapDecomposer(
 
             self._fit(
                 shap_values=shap_values,
-                features=shap_calculator.features_,
-                targets=shap_calculator.targets_,
+                features=shap_calculator.feature_index_,
+                targets=shap_calculator.target_columns_,
             )
 
-            self.index_ = pd.Index(shap_calculator.features_)
+            self.index_: pd.Index = shap_calculator.feature_index_
             self.columns_ = shap_values.columns
 
             successful = True
