@@ -73,8 +73,8 @@ class BaseShapCalculator(
         )
         self._explainer_factory = explainer_factory
         self.shap_: Optional[pd.DataFrame] = None
-        self.features_: Optional[List[str]] = None
-        self.targets_: Optional[List[str]] = None
+        self.feature_index_: Optional[pd.Index] = None
+        self.target_columns_: Optional[List[str]] = None
         self.n_observations_: Optional[int] = None
 
     def fit(
@@ -90,8 +90,8 @@ class BaseShapCalculator(
         self.shap_ = None
 
         training_sample = crossfit.training_sample
-        self.features_ = training_sample.feature_columns
-        self.targets_ = training_sample.target_columns
+        self.feature_index_ = crossfit.pipeline.features_out.rename(Sample.COL_FEATURE)
+        self.target_columns_ = training_sample.target_columns
         self.n_observations_ = len(training_sample)
 
         # calculate shap values and re-order the observation index to match the
@@ -126,10 +126,6 @@ class BaseShapCalculator(
         self, crossfit: LearnerCrossfit[T_LearnerPipelineDF]
     ) -> pd.DataFrame:
         explainer_factory = self._explainer_factory
-        features_out: pd.Index = crossfit.pipeline.features_out.rename(
-            Sample.COL_FEATURE
-        )
-
         training_sample = crossfit.training_sample
 
         with self._parallel() as parallel:
@@ -138,7 +134,7 @@ class BaseShapCalculator(
                     model,
                     training_sample,
                     oob_split,
-                    features_out,
+                    self.feature_index_,
                     explainer_factory,
                     self._raw_shap_to_df,
                 )
@@ -300,8 +296,8 @@ class ShapInteractionValuesCalculator(
         self._ensure_fitted()
 
         n_observations = self.n_observations_
-        n_features = len(self.features_)
-        n_targets = len(self.targets_)
+        n_features = len(self.feature_index_)
+        n_targets = len(self.target_columns_)
         interaction_matrix = self.shap_
 
         return pd.DataFrame(
