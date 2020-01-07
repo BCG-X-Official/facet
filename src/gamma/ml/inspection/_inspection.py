@@ -2,6 +2,7 @@
 Core implementation of :mod:`gamma.ml.inspection`
 """
 import logging
+import warnings
 from abc import ABC, abstractmethod
 from typing import *
 
@@ -25,7 +26,10 @@ from gamma.ml.inspection._shap import (
     ShapInteractionValuesCalculator,
     ShapValuesCalculator,
 )
-from gamma.ml.inspection._shap_decomposition import ShapInteractionValueDecomposer
+from gamma.ml.inspection._shap_decomposition import (
+    ShapInteractionValueDecomposer,
+    ShapValueDecomposer,
+)
 from gamma.sklearndf import BaseLearnerDF
 from gamma.sklearndf.pipeline import (
     BaseLearnerPipelineDF,
@@ -63,13 +67,6 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF
     """
     Inspect a pipeline through its SHAP values.
     """
-
-    __slots__ = [
-        "_crossfit",
-        "_shap_matrix",
-        "_feature_dependency_matrix",
-        "_explainer_factory",
-    ]
 
     COL_IMPORTANCE = "importance"
     COL_IMPORTANCE_MARGINAL = "marginal importance"
@@ -109,12 +106,6 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF
             if explainer_factory is not None
             else tree_explainer_factory
         )
-        self._shap_interaction_decomposer = ShapInteractionValueDecomposer(
-            min_direct_synergy=min_direct_synergy
-        )
-        self.n_jobs = n_jobs
-        self.shared_memory = shared_memory
-        self.verbose = verbose
 
         self._shap_values_calculator = self._shap_values_calculator_cls()(
             explainer_factory=self._explainer_factory,
@@ -135,7 +126,12 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF
             )
         # fmt: on
 
-        self._feature_dependency_matrix: Optional[pd.DataFrame] = None
+        self._shap_decomposer = ShapValueDecomposer()
+        self._shap_interaction_decomposer = ShapInteractionValueDecomposer(
+            min_direct_synergy=min_direct_synergy
+        )
+
+        self._feature_association_matrix: Optional[pd.DataFrame] = None
 
     # noinspection PyTypeChecker
     __init__.__doc__ = (
@@ -186,14 +182,13 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF
         return self._fitted_shap_interaction_values_calculator().shap_values
 
     def feature_importance(
-        self, *, marginal: bool = False
+        self,
+        # todo: re-introduce "marginal" parameter once the implementation is complete
+        # *, marginal: bool = False
     ) -> Union[pd.Series, pd.DataFrame]:
         """
-        Feature importance computed using absolute value of shap values.
-
-        :param marginal: if `True` calculate marginal feature importance, i.e., \
-            the relative loss in SHAP contribution when the feature is removed \
-            and all other features remain in place (default: `False`)
+        Feature importance computed using relative absolute shap contributions across
+        all observations.
 
         :return: importance of each feature as its mean absolute SHAP contribution, \
           normalised to a total 100%. Returned as a series of length n_features for \
@@ -205,7 +200,13 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF
 
         total_importance: float = mean_abs_importance.sum()
 
-        if marginal:
+        # noinspection PyUnusedLocal
+        def _marginal() -> pd.Series:
+            # if `True` calculate marginal feature importance, i.e., \
+            #     the relative loss in SHAP contribution when the feature is removed \
+            #     and all other features remain in place (default: `False`)
+            # todo: update marginal feature importance calculation to also consider
+            #       feature dependency
 
             diagonals = self._fitted_shap_interaction_values_calculator().diagonals()
 
@@ -215,15 +216,14 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF
             ).abs().mean()
 
             # noinspection PyTypeChecker
-            feature_importance_sr = cast(
+            return cast(
                 pd.Series, mean_abs_importance_marginal / total_importance
             ).rename(BaseLearnerInspector.COL_IMPORTANCE_MARGINAL)
 
-        else:
-            # noinspection PyTypeChecker
-            feature_importance_sr = cast(
-                pd.Series, mean_abs_importance / total_importance
-            ).rename(BaseLearnerInspector.COL_IMPORTANCE)
+        # noinspection PyTypeChecker
+        feature_importance_sr = cast(
+            pd.Series, mean_abs_importance / total_importance
+        ).rename(BaseLearnerInspector.COL_IMPORTANCE)
 
         if self._n_targets > 1:
             assert (
@@ -234,21 +234,27 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF
 
         return feature_importance_sr
 
-    def feature_association_matrix(self) -> pd.DataFrame:
+    def feature_association_matrix(self, shap_correlation_method=False) -> pd.DataFrame:
         """
         Calculate the Pearson correlation matrix of the shap values.
 
         :return: data frame with column and index given by the feature names,
           and values as the Pearson correlations of the shap values of features
         """
-        if self._feature_dependency_matrix is None:
-            self._feature_dependency_matrix = self._feature_matrix_to_df(
-                self._association_matrix()
+        if shap_correlation_method:
+            # noinspection PyDeprecation
+            self.__warn_about_shap_correlation_method()
+            return self._feature_matrix_to_df(self._shap_correlation_matrix())
+
+        if self._feature_association_matrix is None:
+            self._feature_association_matrix = (
+                self._fitted_shap_decomposer().association
             )
+        return self._feature_association_matrix
 
-        return self._feature_dependency_matrix
-
-    def feature_association_linkage(self) -> Union[LinkageTree, List[LinkageTree]]:
+    def feature_association_linkage(
+        self, shap_correlation_method=False
+    ) -> Union[LinkageTree, List[LinkageTree]]:
         """
         Calculate the :class:`.LinkageTree` based on the
         :meth:`.feature_association_matrix`.
@@ -256,8 +262,14 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF
         :return: linkage tree for the shap clustering dendrogram; \
             list of linkage trees if the base estimator is a multi-output model
         """
+        if shap_correlation_method:
+            # noinspection PyDeprecation
+            self.__warn_about_shap_correlation_method()
+            association_matrix = self._shap_correlation_matrix()
+        else:
+            association_matrix = self._fitted_shap_decomposer().association_rel_
         return self._linkage_from_affinity_matrix(
-            feature_affinity_matrix=self._association_matrix()
+            feature_affinity_matrix=association_matrix
         )
 
     def feature_synergy_matrix(self) -> pd.DataFrame:
@@ -273,7 +285,7 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF
         :return: feature synergy matrix as a data frame of shape \
             (n_features, n_targets * n_features)
         """
-        return self._fitted_interaction_decomposer().synergy
+        return self._fitted_shap_interaction_decomposer().synergy
 
     def feature_equivalence_matrix(self) -> pd.DataFrame:
         """
@@ -287,7 +299,7 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF
         :return: feature equivalence matrix as a data frame of shape \
             (n_features, n_targets * n_features)
         """
-        return self._fitted_interaction_decomposer().equivalence
+        return self._fitted_shap_interaction_decomposer().equivalence
 
     def feature_equivalence_linkage(self) -> Union[LinkageTree, List[LinkageTree]]:
         """
@@ -297,7 +309,7 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF
         :return: linkage tree for the shap clustering dendrogram; \
             list of linkage trees if the base estimator is a multi-output model
         """
-        equivalence_array = self._fitted_interaction_decomposer().equivalence_rel_
+        equivalence_array = self._fitted_shap_interaction_decomposer().equivalence_rel_
         return self._linkage_from_affinity_matrix(
             feature_affinity_matrix=equivalence_array
         )
@@ -493,14 +505,19 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF
             self._shap_interaction_values_calculator.fit(crossfit=self.crossfit)
         return self._shap_interaction_values_calculator
 
-    def _fitted_interaction_decomposer(self) -> ShapInteractionValueDecomposer:
+    def _fitted_shap_decomposer(self) -> ShapValueDecomposer:
+        if not self._shap_decomposer.is_fitted:
+            self._shap_decomposer.fit(self._fitted_shap_values_calculator())
+        return self._shap_decomposer
+
+    def _fitted_shap_interaction_decomposer(self) -> ShapInteractionValueDecomposer:
         if not self._shap_interaction_decomposer.is_fitted:
             self._shap_interaction_decomposer.fit(
                 self._fitted_shap_interaction_values_calculator()
             )
         return self._shap_interaction_decomposer
 
-    def _association_matrix(self) -> np.ndarray:
+    def _shap_correlation_matrix(self) -> np.ndarray:
         # return an array with a pearson correlation matrix of the shap matrix
         # for each target, with shape (n_targets, n_features, n_features)
 
@@ -570,6 +587,15 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF
         Deprecated. Use :meth:`.shap_interaction_values` instead.
         """
         return self.shap_interaction_values()
+
+    @staticmethod
+    def __warn_about_shap_correlation_method() -> None:
+        warnings.warn(
+            "SHAP correlation method for feature association is deprecated and "
+            "will be removed in the next release",
+            DeprecationWarning,
+            stacklevel=2,
+        )
 
 
 class RegressorInspector(
@@ -685,19 +711,3 @@ def kernel_explainer_factory(model: BaseLearnerDF, data: pd.DataFrame) -> Explai
     :return: :class:`shap.TreeExplainer` if the estimator is compatible
     """
     return KernelExplainer(model=model.predict, data=data)
-
-
-def _covariance_per_row(a: np.ndarray, b: np.ndarray) -> np.ndarray:
-    # calculate the pair-wise variance of 2D matrices a and b
-    # a and b must have the same shape (n_rows, n_columns)
-    # returns a vector of pairwise covariances of shape (n_rows)
-
-    assert a.ndim == b.ndim == 2, "args a and b are 2D matrices"
-    assert a.shape == b.shape, "args a and b have the same shape"
-
-    # row-wise mean of input arrays, and subtract from input arrays themselves
-    a_ma = a - a.mean(-1, keepdims=True)
-    b_mb = b - b.mean(-1, keepdims=True)
-
-    # calculate pair-wise covariance for each row of a and b
-    return np.einsum("ij,ij->i", a_ma, b_mb) / a.shape[1]
