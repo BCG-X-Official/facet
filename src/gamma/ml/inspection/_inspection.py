@@ -182,14 +182,13 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF
         return self._fitted_shap_interaction_values_calculator().shap_values
 
     def feature_importance(
-        self, *, marginal: bool = False
+        self,
+        # todo: re-introduce "marginal" parameter once the implementation is complete
+        # *, marginal: bool = False
     ) -> Union[pd.Series, pd.DataFrame]:
         """
-        Feature importance computed using absolute value of shap values.
-
-        :param marginal: if `True` calculate marginal feature importance, i.e., \
-            the relative loss in SHAP contribution when the feature is removed \
-            and all other features remain in place (default: `False`)
+        Feature importance computed using relative absolute shap contributions across
+        all observations.
 
         :return: importance of each feature as its mean absolute SHAP contribution, \
           normalised to a total 100%. Returned as a series of length n_features for \
@@ -201,7 +200,13 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF
 
         total_importance: float = mean_abs_importance.sum()
 
-        if marginal:
+        # noinspection PyUnusedLocal
+        def _marginal() -> pd.Series:
+            # if `True` calculate marginal feature importance, i.e., \
+            #     the relative loss in SHAP contribution when the feature is removed \
+            #     and all other features remain in place (default: `False`)
+            # todo: update marginal feature importance calculation to also consider
+            #       feature dependency
 
             diagonals = self._fitted_shap_interaction_values_calculator().diagonals()
 
@@ -211,15 +216,14 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF
             ).abs().mean()
 
             # noinspection PyTypeChecker
-            feature_importance_sr = cast(
+            return cast(
                 pd.Series, mean_abs_importance_marginal / total_importance
             ).rename(BaseLearnerInspector.COL_IMPORTANCE_MARGINAL)
 
-        else:
-            # noinspection PyTypeChecker
-            feature_importance_sr = cast(
-                pd.Series, mean_abs_importance / total_importance
-            ).rename(BaseLearnerInspector.COL_IMPORTANCE)
+        # noinspection PyTypeChecker
+        feature_importance_sr = cast(
+            pd.Series, mean_abs_importance / total_importance
+        ).rename(BaseLearnerInspector.COL_IMPORTANCE)
 
         if self._n_targets > 1:
             assert (
