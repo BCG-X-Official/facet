@@ -65,11 +65,11 @@ class BaseShapDecomposer(
 
             self._fit(
                 shap_values=shap_values,
-                features=shap_calculator.features_,
-                targets=shap_calculator.targets_,
+                features=shap_calculator.feature_index_,
+                targets=shap_calculator.target_columns_,
             )
 
-            self.index_ = pd.Index(shap_calculator.features_)
+            self.index_: pd.Index = shap_calculator.feature_index_
             self.columns_ = shap_values.columns
 
             successful = True
@@ -81,7 +81,7 @@ class BaseShapDecomposer(
 
     @abstractmethod
     def _fit(
-        self, shap_values: pd.DataFrame, features: List[str], targets: List[str]
+        self, shap_values: pd.DataFrame, features: Sequence[str], targets: Sequence[str]
     ) -> None:
         pass
 
@@ -129,7 +129,7 @@ class ShapValueDecomposer(BaseShapDecomposer[ShapValuesCalculator]):
         return self._to_frame(self.association_rel_)
 
     def _fit(
-        self, shap_values: pd.DataFrame, features: List[str], targets: List[str]
+        self, shap_values: pd.DataFrame, features: Sequence[str], targets: Sequence[str]
     ) -> None:
         #
         # basic definitions
@@ -191,7 +191,10 @@ class ShapValueDecomposer(BaseShapDecomposer[ShapValuesCalculator]):
 
         # we should have the right shape for all resulting matrices
         assert association_ij.shape == (n_targets, n_features, n_features)
-        self.association_rel_ = association_ij / std_phi_i_plus_phi_j
+
+        self.association_rel_ = _ensure_diagonality(
+            association_ij / std_phi_i_plus_phi_j
+        )
 
     def _reset_fit(self) -> None:
         super()._reset_fit()
@@ -210,7 +213,7 @@ class ShapInteractionValueDecomposer(
     the decompositions of the actual SHAP vectors across observations.
     """
 
-    DEFAULT_MIN_DIRECT_SYNERGY = 0.005
+    DEFAULT_MIN_DIRECT_SYNERGY = 0.01
 
     def __init__(self, min_direct_synergy: Optional[float] = None) -> None:
         """
@@ -267,7 +270,7 @@ class ShapInteractionValueDecomposer(
         return self._to_frame(self.equivalence_rel_)
 
     def _fit(
-        self, shap_values: pd.DataFrame, features: List[str], targets: List[str]
+        self, shap_values: pd.DataFrame, features: Sequence[str], targets: Sequence[str]
     ) -> None:
         #
         # basic definitions
@@ -387,7 +390,7 @@ class ShapInteractionValueDecomposer(
                         "indirect synergy calculated as "
                         f"{(s_i_j[_t, _i, _j] - 1) * 100:.3g}% "
                         "of direct synergy; setting indirect synergy to 0. "
-                        f"{_relative_direct_synergy(_t,_i, _j)}"
+                        f"{_relative_direct_synergy(_t, _i, _j)}"
                     )
 
             for _t, _i, _j in np.argwhere(s_i_j > np.log2(n_features)):
@@ -397,7 +400,7 @@ class ShapInteractionValueDecomposer(
                         f"phi[{features[_i]}, {features[_j]}]: "
                         "total of direct and indirect synergy is "
                         f"{(s_i_j[_t, _i, _j] - 1) * 100:.3g}% of direct synergy. "
-                        f"{_relative_direct_synergy(_t,_i, _j)}"
+                        f"{_relative_direct_synergy(_t, _i, _j)}"
                     )
 
         _test_synergy_feasibility()
@@ -597,15 +600,19 @@ class ShapInteractionValueDecomposer(
         ):
             assert matrix.shape == (n_targets, n_features, n_features)
 
-        # assign results as an atomic operation, so we don't have a semi-fitted
-        # outcome in case an exception is raised in this final step
+        # calculate relative synergy and equivalence (ranging from 0.0 to 1.0)
+        # both matrices are symmetric, but we ensure perfect symmetry by removing
+        # potential round-off errors
         # NOTE: we do not store independence so technically it could be removed from
         # the code above
 
-        self.synergy_rel_, self.equivalence_rel_ = (
-            synergy_ij / (synergy_ij + autonomy_ij),
-            equivalence_ij / (equivalence_ij + uniqueness_ij),
+        synergy_rel = _ensure_diagonality(synergy_ij / (synergy_ij + autonomy_ij))
+        equivalence_rel = _ensure_diagonality(
+            equivalence_ij / (equivalence_ij + uniqueness_ij)
         )
+
+        self.synergy_rel_ = synergy_rel
+        self.equivalence_rel_ = equivalence_rel
 
     def _reset_fit(self) -> None:
         super()._reset_fit()
@@ -621,6 +628,24 @@ class ShapInteractionValueDecomposer(
             index=index,
             columns=columns,
         )
+
+
+def _ensure_diagonality(matrix: np.ndarray) -> np.ndarray:
+    # matrix shape: (n_targets, n_features, n_features)
+
+    # remove potential floating point round-off errors
+    matrix = (matrix + _transpose(matrix)) / 2
+
+    # fixes per target
+    for m in matrix:
+        # replace nan values with 0.0 = no association when correlation is undefined
+        np.nan_to_num(m, copy=False)
+
+        # set the matrix diagonals to 1.0 = full association of each feature with
+        # itself
+        np.fill_diagonal(m, 1.0)
+
+    return matrix
 
 
 def _ensure_last_axis_is_fast(v: np.ndarray) -> np.ndarray:
@@ -645,11 +670,11 @@ def _cov(u: np.ndarray, v: np.ndarray) -> np.ndarray:
         return np.matmul(u, v.swapaxes(1, 2)) / u.shape[2]
 
 
-def _transpose(v: np.ndarray) -> np.ndarray:
+def _transpose(m: np.ndarray) -> np.ndarray:
     # transpose a feature matrix for all targets
-    assert v.ndim == 3
+    assert m.ndim == 3
 
-    return v.swapaxes(1, 2)
+    return m.swapaxes(1, 2)
 
 
 def _sqrt(v: np.ndarray) -> np.ndarray:
