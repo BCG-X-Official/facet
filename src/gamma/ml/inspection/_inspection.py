@@ -14,6 +14,7 @@ from shap import KernelExplainer, TreeExplainer
 from shap.explainers.explainer import Explainer
 
 from gamma.common import deprecated
+from gamma.common.fit import FittableMixin
 from gamma.common.parallelization import ParallelizableMixin
 from gamma.ml import Sample
 from gamma.ml.crossfit import LearnerCrossfit
@@ -23,6 +24,7 @@ from gamma.ml.inspection._shap import (
     ExplainerFactory,
     RegressorShapInteractionValuesCalculator,
     RegressorShapValuesCalculator,
+    ShapCalculator,
     ShapInteractionValuesCalculator,
     ShapValuesCalculator,
 )
@@ -53,6 +55,7 @@ __all__ = [
 # Type variables
 #
 
+T_Self = TypeVar("T_Self", bound="BaseLearnerInspector")
 T_LearnerPipelineDF = TypeVar("T_LearnerPipelineDF", bound=BaseLearnerPipelineDF)
 T_RegressorPipelineDF = TypeVar("T_RegressorPipelineDF", bound=RegressorPipelineDF)
 T_ClassifierPipelineDF = TypeVar("T_ClassifierPipelineDF", bound=ClassifierPipelineDF)
@@ -63,7 +66,12 @@ T_ClassifierPipelineDF = TypeVar("T_ClassifierPipelineDF", bound=ClassifierPipel
 #
 
 
-class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF]):
+class BaseLearnerInspector(
+    FittableMixin[LearnerCrossfit[T_LearnerPipelineDF]],
+    ParallelizableMixin,
+    ABC,
+    Generic[T_LearnerPipelineDF],
+):
     """
     Inspect a pipeline through its SHAP values.
     """
@@ -73,9 +81,9 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF
 
     def __init__(
         self,
-        crossfit: LearnerCrossfit[T_LearnerPipelineDF],
         *,
         explainer_factory: Optional[ExplainerFactory] = None,
+        shap_interaction: bool = True,
         min_direct_synergy: Optional[float] = None,
         n_jobs: Optional[int] = None,
         shared_memory: Optional[bool] = None,
@@ -83,12 +91,17 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF
         verbose: Optional[int] = None,
     ) -> None:
         """
-        :param crossfit: predictor containing the information about the
-          pipeline, the data (a Sample object), the cross-validation and crossfit.
         :param explainer_factory: optional function that creates a shap Explainer \
             (default: :func:``.tree_explainer_factory``)
+        :param shap_interaction: if `True`, calculate SHAP interaction values, else \
+            only calculate SHAP contribution values.\
+            SHAP interaction values are needed to determine feature synergy and \
+            equivalence; otherwise only SHAP association can be calculated.\
+            (default: `True`)
         :param min_direct_synergy: minimum direct synergy to consider a feature pair \
-            for calculation of indirect synergy (default: <DEFAULT_MIN_DIRECT_SYNERGY>)
+            for calculation of indirect synergy. \
+            Only relevant if parameter `shap_interaction` is `True`. \
+            (default: <DEFAULT_MIN_DIRECT_SYNERGY>)
         """
         super().__init__(
             n_jobs=n_jobs,
@@ -97,42 +110,19 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF
             verbose=verbose,
         )
 
-        if not crossfit.is_fitted:
-            raise ValueError("arg crossfit expected to be fitted")
-
-        self._crossfit = crossfit
         self._explainer_factory = (
             explainer_factory
             if explainer_factory is not None
             else tree_explainer_factory
         )
+        self._shap_interaction = shap_interaction
+        self._min_direct_synergy = min_direct_synergy
 
-        self._shap_values_calculator = self._shap_values_calculator_cls()(
-            explainer_factory=self._explainer_factory,
-            n_jobs=self.n_jobs,
-            shared_memory=self.shared_memory,
-            pre_dispatch=self.pre_dispatch,
-            verbose=self.verbose,
-        )
+        self._crossfit: Optional[LearnerCrossfit[T_LearnerPipelineDF]] = None
+        self._shap_calculator: Optional[ShapCalculator] = None
+        self._shap_decomposer: Optional[ShapValueDecomposer] = None
 
-        # fmt: off
-        self._shap_interaction_values_calculator = \
-            self._shap_interaction_values_calculator_cls()(
-                explainer_factory=self._explainer_factory,
-                n_jobs=self.n_jobs,
-                shared_memory=self.shared_memory,
-                pre_dispatch=self.pre_dispatch,
-                verbose=self.verbose,
-            )
-        # fmt: on
-
-        self._shap_decomposer = ShapValueDecomposer()
-        self._shap_interaction_decomposer = ShapInteractionValueDecomposer(
-            min_direct_synergy=min_direct_synergy
-        )
-
-        self._feature_association_matrix: Optional[pd.DataFrame] = None
-
+    # dynamically complete the __init__ docstring
     # noinspection PyTypeChecker
     __init__.__doc__ = (
         __init__.__doc__.replace(
@@ -142,11 +132,58 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF
         + ParallelizableMixin.__init__.__doc__
     )
 
+    def fit(
+        self: T_Self, crossfit: LearnerCrossfit[T_LearnerPipelineDF], **fit_params
+    ) -> T_Self:
+        """
+        :param crossfit: crossfit of the model to be inspected
+        :return: `self`
+        """
+        if not crossfit.is_fitted:
+            raise ValueError("arg crossfit needs to be fitted")
+
+        if self._shap_interaction:
+            shap_calculator = self._shap_interaction_values_calculator_cls()(
+                explainer_factory=self._explainer_factory,
+                n_jobs=self.n_jobs,
+                shared_memory=self.shared_memory,
+                pre_dispatch=self.pre_dispatch,
+                verbose=self.verbose,
+            )
+            shap_decomposer = ShapInteractionValueDecomposer(
+                min_direct_synergy=self._min_direct_synergy
+            )
+
+        else:
+            shap_calculator = self._shap_values_calculator_cls()(
+                explainer_factory=self._explainer_factory,
+                n_jobs=self.n_jobs,
+                shared_memory=self.shared_memory,
+                pre_dispatch=self.pre_dispatch,
+                verbose=self.verbose,
+            )
+            shap_decomposer = ShapValueDecomposer()
+
+        shap_calculator.fit(crossfit=crossfit)
+        shap_decomposer.fit(shap_calculator=shap_calculator)
+
+        self._shap_calculator = shap_calculator
+        self._shap_decomposer = shap_decomposer
+        self._crossfit = crossfit
+
+        return self
+
+    @property
+    def is_fitted(self) -> bool:
+        """`True` if this inspector is fitted, else `False`"""
+        return self._crossfit is not None
+
     @property
     def crossfit(self) -> LearnerCrossfit[T_LearnerPipelineDF]:
         """
         CV fit of the pipeline being examined by this inspector.
         """
+        self._ensure_fitted()
         return self._crossfit
 
     @property
@@ -154,6 +191,7 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF
         """
         The training sample used for model inspection.
         """
+        self._ensure_fitted()
         return self.crossfit.training_sample
 
     def shap_values(self) -> pd.DataFrame:
@@ -166,7 +204,8 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF
 
         :return: shap values as a data frame
         """
-        return self._fitted_shap_values_calculator().shap_values
+        self._ensure_fitted()
+        return self._shap_calculator.shap_values
 
     def shap_interaction_values(self) -> pd.DataFrame:
         """
@@ -179,7 +218,8 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF
 
         :return: SHAP interaction values as a data frame
         """
-        return self._fitted_shap_interaction_values_calculator().shap_values
+        self._ensure_fitted()
+        return self._shap_interaction_values_calculator.shap_interaction_values
 
     def feature_importance(
         self,
@@ -205,10 +245,11 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF
             # if `True` calculate marginal feature importance, i.e., \
             #     the relative loss in SHAP contribution when the feature is removed \
             #     and all other features remain in place (default: `False`)
+
             # todo: update marginal feature importance calculation to also consider
             #       feature dependency
 
-            diagonals = self._fitted_shap_interaction_values_calculator().diagonals()
+            diagonals = self._shap_interaction_values_calculator.diagonals()
 
             # noinspection PyTypeChecker
             mean_abs_importance_marginal: pd.Series = (
@@ -241,16 +282,13 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF
         :return: data frame with column and index given by the feature names,
           and values as the Pearson correlations of the shap values of features
         """
+        self._ensure_fitted()
         if shap_correlation_method:
             # noinspection PyDeprecation
             self.__warn_about_shap_correlation_method()
             return self._feature_matrix_to_df(self._shap_correlation_matrix())
 
-        if self._feature_association_matrix is None:
-            self._feature_association_matrix = (
-                self._fitted_shap_decomposer().association
-            )
-        return self._feature_association_matrix
+        return self._shap_decomposer.association
 
     def feature_association_linkage(
         self, shap_correlation_method=False
@@ -262,12 +300,13 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF
         :return: linkage tree for the shap clustering dendrogram; \
             list of linkage trees if the base estimator is a multi-output model
         """
+        self._ensure_fitted()
         if shap_correlation_method:
             # noinspection PyDeprecation
             self.__warn_about_shap_correlation_method()
             association_matrix = self._shap_correlation_matrix()
         else:
-            association_matrix = self._fitted_shap_decomposer().association_rel_
+            association_matrix = self._shap_decomposer.association_rel_
         return self._linkage_from_affinity_matrix(
             feature_affinity_matrix=association_matrix
         )
@@ -285,7 +324,8 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF
         :return: feature synergy matrix as a data frame of shape \
             (n_features, n_targets * n_features)
         """
-        return self._fitted_shap_interaction_decomposer().synergy
+        self._ensure_fitted()
+        return self._shap_interaction_decomposer.synergy
 
     def feature_equivalence_matrix(self) -> pd.DataFrame:
         """
@@ -299,7 +339,8 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF
         :return: feature equivalence matrix as a data frame of shape \
             (n_features, n_targets * n_features)
         """
-        return self._fitted_shap_interaction_decomposer().equivalence
+        self._ensure_fitted()
+        return self._shap_interaction_decomposer.equivalence
 
     def feature_equivalence_linkage(self) -> Union[LinkageTree, List[LinkageTree]]:
         """
@@ -309,9 +350,9 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF
         :return: linkage tree for the shap clustering dendrogram; \
             list of linkage trees if the base estimator is a multi-output model
         """
-        equivalence_array = self._fitted_shap_interaction_decomposer().equivalence_rel_
+        self._ensure_fitted()
         return self._linkage_from_affinity_matrix(
-            feature_affinity_matrix=equivalence_array
+            feature_affinity_matrix=self._shap_interaction_decomposer.equivalence_rel_
         )
 
     def feature_interaction_matrix(self) -> pd.DataFrame:
@@ -493,29 +534,23 @@ class BaseLearnerInspector(ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF
             max_distance=1.0,
         )
 
-    def _fitted_shap_values_calculator(self) -> ShapValuesCalculator:
-        if not self._shap_values_calculator.is_fitted:
-            self._shap_values_calculator.fit(crossfit=self.crossfit)
-        return self._shap_values_calculator
-
-    def _fitted_shap_interaction_values_calculator(
-        self
-    ) -> ShapInteractionValuesCalculator:
-        if not self._shap_interaction_values_calculator.is_fitted:
-            self._shap_interaction_values_calculator.fit(crossfit=self.crossfit)
-        return self._shap_interaction_values_calculator
-
-    def _fitted_shap_decomposer(self) -> ShapValueDecomposer:
-        if not self._shap_decomposer.is_fitted:
-            self._shap_decomposer.fit(self._fitted_shap_values_calculator())
-        return self._shap_decomposer
-
-    def _fitted_shap_interaction_decomposer(self) -> ShapInteractionValueDecomposer:
-        if not self._shap_interaction_decomposer.is_fitted:
-            self._shap_interaction_decomposer.fit(
-                self._fitted_shap_interaction_values_calculator()
+    def _ensure_shap_interaction(self) -> None:
+        if not self._shap_interaction:
+            raise RuntimeError(
+                "SHAP interaction values have not been calculated. "
+                "Create an inspector with parameter 'shap_interaction=True' to "
+                "enable calculations involving SHAP interaction values."
             )
-        return self._shap_interaction_decomposer
+
+    @property
+    def _shap_interaction_values_calculator(self) -> ShapInteractionValuesCalculator:
+        self._ensure_shap_interaction()
+        return cast(ShapInteractionValuesCalculator, self._shap_calculator)
+
+    @property
+    def _shap_interaction_decomposer(self) -> ShapInteractionValueDecomposer:
+        self._ensure_shap_interaction()
+        return cast(ShapInteractionValueDecomposer, self._shap_decomposer)
 
     def _shap_correlation_matrix(self) -> np.ndarray:
         # return an array with a pearson correlation matrix of the shap matrix
@@ -607,7 +642,6 @@ class RegressorInspector(
 
     def __init__(
         self,
-        crossfit: LearnerCrossfit[T_RegressorPipelineDF],
         *,
         explainer_factory: Optional[ExplainerFactory] = None,
         n_jobs: Optional[int] = None,
@@ -615,12 +649,9 @@ class RegressorInspector(
         verbose: Optional[int] = None,
     ) -> None:
         """
-        :param crossfit: regressor containing the information about the pipeline, \
-            the data (a Sample object), the cross-validation and crossfit.
         :param explainer_factory: calibration that returns a shap Explainer
         """
         super().__init__(
-            crossfit=crossfit,
             explainer_factory=explainer_factory,
             n_jobs=n_jobs,
             shared_memory=shared_memory,
@@ -651,7 +682,6 @@ class ClassifierInspector(
 
     def __init__(
         self,
-        crossfit: LearnerCrossfit[T_ClassifierPipelineDF],
         *,
         explainer_factory: Optional[ExplainerFactory] = None,
         n_jobs: Optional[int] = None,
@@ -659,12 +689,9 @@ class ClassifierInspector(
         verbose: Optional[int] = None,
     ) -> None:
         """
-        :param crossfit: classifier containing the information about the pipeline, \
-            the data (a Sample object), the cross-validation and crossfit.
         :param explainer_factory: function that returns a shap Explainer
         """
         super().__init__(
-            crossfit=crossfit,
             explainer_factory=explainer_factory,
             n_jobs=n_jobs,
             shared_memory=shared_memory,
