@@ -3,22 +3,17 @@ Decomposition of SHAP contribution scores (i.e, SHAP importance) of all possible
 of features into additive components for synergy, equivalence, and independence.
 """
 import logging
-from abc import ABC, abstractmethod
 from typing import *
 
 import numpy as np
 import pandas as pd
 
 from gamma.common.fit import FittableMixin
-from gamma.ml.inspection._shap import (
-    BaseShapCalculator,
-    ShapInteractionValuesCalculator,
-    ShapValuesCalculator,
-)
+from gamma.ml.inspection._shap import ShapCalculator, ShapInteractionValuesCalculator
 
 log = logging.getLogger(__name__)
 
-T_ShapCalculator = TypeVar("T_ShapCalculator", bound=BaseShapCalculator)
+T_Self = TypeVar("T_Self")
 
 _PAIRWISE_PARTIAL_SUMMATION = False
 #: if `True`, optimize numpy arrays to ensure pairwise partial summation.
@@ -27,19 +22,21 @@ _PAIRWISE_PARTIAL_SUMMATION = False
 #: (sequential) summation will be negligible in practice
 
 
-class BaseShapDecomposer(
-    FittableMixin[T_ShapCalculator], ABC, Generic[T_ShapCalculator]
-):
+class ShapValueDecomposer(FittableMixin[ShapCalculator]):
     """
-    Decomposes SHAP interaction scores (i.e, SHAP importance) of all possible parings
-    of features into additive components and calculates a matrix of scores for all
-    feature pairings.
+    Decomposes SHAP vectors (i.e., SHAP contribution) of all possible parings
+    of features into additive components for association and independence.
+    SHAP contribution scores are calculated as the standard deviation of the individual
+    interactions per observation. Using this metric, rather than the mean of absolute
+    interactions, allows us to calculate the decomposition without ever constructing
+    the decompositions of the actual SHAP vectors across observations.
     """
 
     def __init__(self) -> None:
         super().__init__()
         self.index_: Optional[pd.Index] = None
         self.columns_: Optional[pd.Index] = None
+        self.association_rel_: Optional[np.ndarray] = None
 
     @property
     def is_fitted(self) -> bool:
@@ -48,10 +45,10 @@ class BaseShapDecomposer(
 
     is_fitted.__doc__ = FittableMixin.is_fitted.__doc__
 
-    def fit(self, shap_calculator: BaseShapCalculator, **fit_params) -> None:
+    def fit(self: T_Self, shap_calculator: ShapCalculator, **fit_params) -> T_Self:
         """
         Calculate the SHAP decomposition for the shap values produced by the
-        given interaction shap values calculator.
+        given SHAP calculator.
         :param shap_calculator: the fitted calculator from which to get the shap values
         """
         successful = False
@@ -61,16 +58,10 @@ class BaseShapDecomposer(
                     f'unsupported fit parameters: {", ".join(fit_params.values())}'
                 )
 
-            shap_values = shap_calculator.shap_values
-
-            self._fit(
-                shap_values=shap_values,
-                features=shap_calculator.feature_index_,
-                targets=shap_calculator.target_columns_,
-            )
+            self._fit(shap_calculator=shap_calculator)
 
             self.index_: pd.Index = shap_calculator.feature_index_
-            self.columns_ = shap_values.columns
+            self.columns_ = shap_calculator.shap_columns
 
             successful = True
 
@@ -79,41 +70,7 @@ class BaseShapDecomposer(
             if not successful:
                 self._reset_fit()
 
-    @abstractmethod
-    def _fit(
-        self, shap_values: pd.DataFrame, features: Sequence[str], targets: Sequence[str]
-    ) -> None:
-        pass
-
-    def _reset_fit(self) -> None:
-        # revert status of this object to not fitted
-        self.index_ = self.columns_ = None
-
-    def _to_frame(self, matrix: np.ndarray) -> pd.DataFrame:
-        # takes an array of shape (n_targets, n_features, n_features) and transforms it
-        # into a data frame of shape (n_features, n_targets * n_features)
-        index = self.index_
-        columns = self.columns_
-        return pd.DataFrame(
-            matrix.swapaxes(0, 1).reshape(len(index), len(columns)),
-            index=index,
-            columns=columns,
-        )
-
-
-class ShapValueDecomposer(BaseShapDecomposer[ShapValuesCalculator]):
-    """
-    Decomposes SHAP vectors (i.e, SHAP importance) of all possible parings
-    of features into additive components for association and independence.
-    SHAP interaction scores are calculated as the standard deviation of the individual
-    interactions per observation. Using this metric, rather than the mean of absolute
-    interactions, allows us to calculate the decomposition without ever constructing
-    the decompositions of the actual SHAP vectors across observations.
-    """
-
-    def __init__(self) -> None:
-        super().__init__()
-        self.association_rel_: Optional[np.ndarray] = None
+        return self
 
     @property
     def association(self) -> pd.DataFrame:
@@ -128,15 +85,14 @@ class ShapValueDecomposer(BaseShapDecomposer[ShapValuesCalculator]):
         self._ensure_fitted()
         return self._to_frame(self.association_rel_)
 
-    def _fit(
-        self, shap_values: pd.DataFrame, features: Sequence[str], targets: Sequence[str]
-    ) -> None:
+    def _fit(self: T_Self, shap_calculator: ShapCalculator) -> None:
         #
         # basic definitions
         #
 
-        n_targets = len(targets)
-        n_features = len(features)
+        shap_values = shap_calculator.shap_values
+        n_targets = len(shap_calculator.target_columns_)
+        n_features = len(shap_calculator.feature_index_)
         n_observations = len(shap_values)
 
         # phi[i]
@@ -192,18 +148,29 @@ class ShapValueDecomposer(BaseShapDecomposer[ShapValuesCalculator]):
         # we should have the right shape for all resulting matrices
         assert association_ij.shape == (n_targets, n_features, n_features)
 
-        self.association_rel_ = _ensure_diagonality(
-            association_ij / std_phi_i_plus_phi_j
-        )
+        with np.errstate(divide="ignore", invalid="ignore"):
+            self.association_rel_ = _ensure_diagonality(
+                association_ij / std_phi_i_plus_phi_j
+            )
 
     def _reset_fit(self) -> None:
-        super()._reset_fit()
+        # revert status of this object to not fitted
+        self.index_ = self.columns_ = None
         self.association_rel_ = None
 
+    def _to_frame(self, matrix: np.ndarray) -> pd.DataFrame:
+        # takes an array of shape (n_targets, n_features, n_features) and transforms it
+        # into a data frame of shape (n_features, n_targets * n_features)
+        index = self.index_
+        columns = self.columns_
+        return pd.DataFrame(
+            matrix.swapaxes(0, 1).reshape(len(index), len(columns)),
+            index=index,
+            columns=columns,
+        )
 
-class ShapInteractionValueDecomposer(
-    BaseShapDecomposer[ShapInteractionValuesCalculator]
-):
+
+class ShapInteractionValueDecomposer(ShapValueDecomposer):
     """
     Decomposes SHAP interaction scores (i.e, SHAP importance) of all possible parings
     of features into additive components for synergy, equivalence, and independence.
@@ -242,6 +209,16 @@ class ShapInteractionValueDecomposer(
             {DEFAULT_MIN_DIRECT_SYNERGY * 100.0:g}%)
         """
 
+    def fit(
+        self: T_Self, shap_calculator: ShapInteractionValuesCalculator, **fit_params
+    ) -> T_Self:
+        """
+        Calculate the SHAP decomposition for the shap values produced by the
+        given SHAP interaction values calculator.
+        :param shap_calculator: the fitted calculator from which to get the shap values
+        """
+        return super().fit(shap_calculator=shap_calculator, **fit_params)
+
     @property
     def synergy(self) -> pd.DataFrame:
         """
@@ -269,13 +246,16 @@ class ShapInteractionValueDecomposer(
         self._ensure_fitted()
         return self._to_frame(self.equivalence_rel_)
 
-    def _fit(
-        self, shap_values: pd.DataFrame, features: Sequence[str], targets: Sequence[str]
-    ) -> None:
+    def _fit(self, shap_calculator: ShapInteractionValuesCalculator) -> None:
+        super()._fit(shap_calculator)
+
         #
         # basic definitions
         #
 
+        shap_values = shap_calculator.shap_interaction_values
+        features = shap_calculator.feature_index_
+        targets = shap_calculator.target_columns_
         n_features = len(features)
         n_targets = len(targets)
         n_observations = len(shap_values.index.levels[0])
@@ -329,7 +309,8 @@ class ShapInteractionValueDecomposer(
         # shape: (n_targets, n_features, n_features)
         # relative importance of phi[i, j] measured as the length of phi[i, j]
         # as percentage of the sum of lengths of all phi[..., ...]
-        std_phi_relative_ij = std_phi_ij / std_phi_ij.sum()
+        with np.errstate(divide="ignore", invalid="ignore"):
+            std_phi_relative_ij = std_phi_ij / std_phi_ij.sum()
 
         # phi_valid[i, j]
         # shape: (n_targets, n_features, n_features)
@@ -523,7 +504,8 @@ class ShapInteractionValueDecomposer(
         # ratio of length of 2*e over length of (tau[i, j] + tau[j, i])
         # shape: (n_targets, n_features, n_features)
         # we need this for the next step
-        epsilon_tau_ratio_2x = 1 - std_tau_ij_minus_tau_ji / std_tau_ij_plus_tau_ji
+        with np.errstate(divide="ignore", invalid="ignore"):
+            epsilon_tau_ratio_2x = 1 - std_tau_ij_minus_tau_ji / std_tau_ij_plus_tau_ji
 
         # 2 * cov(tau[i, j], epsilon[i, j])
         # shape: (n_targets, n_features, n_features)
@@ -606,28 +588,19 @@ class ShapInteractionValueDecomposer(
         # NOTE: we do not store independence so technically it could be removed from
         # the code above
 
-        synergy_rel = _ensure_diagonality(synergy_ij / (synergy_ij + autonomy_ij))
-        equivalence_rel = _ensure_diagonality(
-            equivalence_ij / (equivalence_ij + uniqueness_ij)
-        )
+        with np.errstate(divide="ignore", invalid="ignore"):
+            synergy_rel = _ensure_diagonality(synergy_ij / (synergy_ij + autonomy_ij))
+            equivalence_rel = _ensure_diagonality(
+                equivalence_ij / (equivalence_ij + uniqueness_ij)
+            )
 
         self.synergy_rel_ = synergy_rel
         self.equivalence_rel_ = equivalence_rel
 
     def _reset_fit(self) -> None:
+        # revert status of this object to not fitted
         super()._reset_fit()
         self.synergy_rel_ = self.equivalence_rel_ = None
-
-    def _to_frame(self, matrix: np.ndarray) -> pd.DataFrame:
-        # takes an array of shape (n_targets, n_features, n_features) and transforms it
-        # into a data frame of shape (n_features, n_targets * n_features)
-        index = self.index_
-        columns = self.columns_
-        return pd.DataFrame(
-            matrix.swapaxes(0, 1).reshape(len(index), len(columns)),
-            index=index,
-            columns=columns,
-        )
 
 
 def _ensure_diagonality(matrix: np.ndarray) -> np.ndarray:

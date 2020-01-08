@@ -42,7 +42,7 @@ ShapToDataFrameFunction = Callable[
 #
 
 
-class BaseShapCalculator(
+class ShapCalculator(
     FittableMixin[LearnerCrossfit[T_LearnerPipelineDF]],
     ParallelizableMixin,
     ABC,
@@ -111,16 +111,24 @@ class BaseShapCalculator(
     is_fitted.__doc__ = FittableMixin.is_fitted.__doc__
 
     @property
+    @abstractmethod
     def shap_values(self) -> pd.DataFrame:
         """
-        The resulting consolidated as a data frame, aggregated to averaged SHAP
-        values per observation.
+        The resulting consolidated shap values as a data frame,
+        aggregated to averaged SHAP contributions per feature and observation.
 
-        The format of the data frame varies depending on the nature of the SHAP
-        calculation, see documentation for implementations of this base class.
+        :return: SHAP contribution values with shape \
+            (n_observations, n_targets * n_features).
         """
-        self._ensure_fitted()
-        return self.shap_
+        pass
+
+    @property
+    @abstractmethod
+    def shap_columns(self) -> pd.Index:
+        """
+        The column index of the data frame returned by :meth:`.shap_values`
+        """
+        pass
 
     def _shap_all_splits(
         self, crossfit: LearnerCrossfit[T_LearnerPipelineDF]
@@ -199,24 +207,28 @@ class BaseShapCalculator(
         """
         pass
 
-    @staticmethod
-    def _make_column_index(targets: Optional[pd.Index], features: pd.Index):
-        # make a (multi) index from an optional target index and a feature index
-        if targets is None:
-            return features
-        else:
-            return pd.MultiIndex.from_product((targets, features))
-
 
 class ShapValuesCalculator(
-    BaseShapCalculator[T_LearnerPipelineDF], ABC, Generic[T_LearnerPipelineDF]
+    ShapCalculator[T_LearnerPipelineDF], ABC, Generic[T_LearnerPipelineDF]
 ):
     """
-    Base class for SHAP values calculations.
-
-    The :attr:`.shap_values` property returns SHAP values with shape
-    (n_observations, n_targets * n_features).
+    Base class for calculating SHAP contribution values.
     """
+
+    # noinspection PyMissingOrEmptyDocstring
+    @property
+    def shap_values(self) -> pd.DataFrame:
+        self._ensure_fitted()
+        return self.shap_
+
+    shap_values.__doc__ = ShapCalculator.shap_values.__doc__
+
+    # noinspection PyMissingOrEmptyDocstring
+    @property
+    def shap_columns(self) -> pd.Index:
+        return self.shap_.columns
+
+    shap_columns.__doc__ = ShapCalculator.shap_columns.__doc__
 
     def _consolidate_splits(
         self, shap_all_splits_df: pd.DataFrame, observation_index: pd.Index
@@ -240,7 +252,7 @@ class ShapValuesCalculator(
         explainer_factory_fn: ExplainerFactory,
         shap_matrix_for_split_to_df_fn: ShapToDataFrameFunction,
     ) -> pd.DataFrame:
-        x_oob = BaseShapCalculator._x_oob(model, training_sample, oob_split)
+        x_oob = ShapCalculator._x_oob(model, training_sample, oob_split)
 
         # calculate the shap values (returned as an array)
         shap_values: np.ndarray = explainer_factory_fn(
@@ -278,20 +290,45 @@ class ShapValuesCalculator(
 
 
 class ShapInteractionValuesCalculator(
-    BaseShapCalculator[T_LearnerPipelineDF], ABC, Generic[T_LearnerPipelineDF]
+    ShapCalculator[T_LearnerPipelineDF], ABC, Generic[T_LearnerPipelineDF]
 ):
     """
-    Base class for SHAP interaction values calculations.
-
-    The :attr:`.shap_values` property returns SHAP values with shape
-    (n_observations * n_features, n_targets * n_features), i.e., for each observation
-    and target we get the feature interaction values of size n_features * n_features.
+    Base class for calculating SHAP interaction values.
     """
+
+    # noinspection PyMissingOrEmptyDocstring
+    @property
+    def shap_values(self) -> pd.DataFrame:
+        return self.shap_interaction_values.sum(level=0)
+
+    shap_values.__doc__ = ShapCalculator.shap_values.__doc__
+
+    @property
+    def shap_interaction_values(self) -> pd.DataFrame:
+        """
+        The resulting consolidated shap interaction values as a data frame,
+        aggregated to averaged SHAP interaction values per observation.
+        """
+        self._ensure_fitted()
+        return self.shap_
+
+    @property
+    def shap_columns(self) -> pd.Index:
+        """
+        The column index of the data frame returned by :meth:`.shap_values`
+        and :meth:`.shap_interaction_values`
+        """
+        return self.shap_.columns
 
     def diagonals(self) -> pd.DataFrame:
         """
         The diagonals of all SHAP interaction matrices, of shape
         (n_observations, n_targets * n_features)
+
+        :return: SHAP interaction values with shape \
+            (n_observations * n_features, n_targets * n_features), i.e., for each \
+            observation and target we get the feature interaction values of size \
+            n_features * n_features.
         """
         self._ensure_fitted()
 
@@ -332,7 +369,7 @@ class ShapInteractionValuesCalculator(
         explainer_factory_fn: ExplainerFactory,
         interaction_matrix_for_split_to_df_fn: ShapToDataFrameFunction,
     ) -> pd.DataFrame:
-        x_oob = BaseShapCalculator._x_oob(model, training_sample, oob_split)
+        x_oob = ShapCalculator._x_oob(model, training_sample, oob_split)
 
         # calculate the im values (returned as an array)
         explainer = explainer_factory_fn(model.final_estimator.root_estimator, x_oob)
@@ -460,7 +497,7 @@ class ClassifierShapValuesCalculator(ShapValuesCalculator):
         # following:
         assert np.allclose(
             raw_shap_tensors[0], -raw_shap_tensors[1]
-        ), "shap_values(class 0) == -shap_values(class 1)"
+        ), "raw_shap_tensors(class 0) == -raw_shap_tensors(class 1)"
 
         # all good: proceed with SHAP values for class 0:
         raw_shap_matrix = raw_shap_tensors[0]
