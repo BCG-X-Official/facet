@@ -21,7 +21,12 @@ from gamma.ml.inspection import (
     RegressorInspector,
     tree_explainer_factory,
 )
-from gamma.ml.selection import ClassifierRanker, ParameterGrid, RegressorRanker
+from gamma.ml.selection import (
+    ClassifierRanker,
+    LearnerEvaluation,
+    ParameterGrid,
+    RegressorRanker,
+)
 from gamma.sklearndf import TransformerDF
 from gamma.sklearndf.classification import RandomForestClassifierDF
 from gamma.sklearndf.pipeline import ClassifierPipelineDF, RegressorPipelineDF
@@ -108,13 +113,15 @@ def test_model_inspection(n_jobs, boston_sample: Sample) -> None:
     ):
 
         pipeline: RegressorPipelineDF = model_evaluation.pipeline
-        model_fit = LearnerCrossfit(pipeline=pipeline, cv=test_cv, random_state=42).fit(
-            sample=test_sample
-        )
+        model_fit: LearnerCrossfit[RegressorPipelineDF] = LearnerCrossfit(
+            pipeline=pipeline, cv=test_cv, random_state=42
+        ).fit(sample=test_sample)
 
+        # noinspection PyTypeChecker
         model_inspector = RegressorInspector(
-            crossfit=model_fit, explainer_factory=factory
-        )
+            explainer_factory=factory, shap_interaction=False
+        ).fit(crossfit=model_fit)
+
         # make and check shap value matrix
         shap_matrix = model_inspector.shap_values()
 
@@ -191,17 +198,20 @@ def test_model_inspection_with_encoding(
 
     # we get the best model_evaluation which is a LGBM - for the sake of test
     # performance
-    validation = [
+    validation: LearnerEvaluation[RegressorPipelineDF] = [
         validation
         for validation in ranker.ranking()
         if isinstance(validation.pipeline.regressor, LGBMRegressorDF)
     ][0]
 
-    validation_model = LearnerCrossfit(
-        pipeline=validation.pipeline, cv=cv, random_state=42, n_jobs=n_jobs
+    pipeline: RegressorPipelineDF = validation.pipeline
+
+    validation_model: LearnerCrossfit[RegressorPipelineDF] = LearnerCrossfit(
+        pipeline=pipeline, cv=cv, random_state=42, n_jobs=n_jobs
     ).fit(sample=sample)
 
-    mi = RegressorInspector(crossfit=validation_model)
+    # noinspection PyTypeChecker
+    mi = RegressorInspector().fit(crossfit=validation_model)
 
     shap_matrix = mi.shap_values()
 
@@ -222,7 +232,7 @@ def test_model_inspection_with_encoding(
         == checksum_corr_matrix
     )
 
-    # cluster feature importances
+    # cluster associated features
     _linkage = mi.feature_association_linkage()
 
     #  test the ModelInspector with a custom ExplainerFactory:
@@ -240,7 +250,10 @@ def test_model_inspection_with_encoding(
             # noinspection PyUnresolvedReferences
             return KernelExplainer(model=estimator.predict, data=data)
 
-    mi2 = RegressorInspector(crossfit=validation_model, explainer_factory=_ef)
+    # noinspection PyTypeChecker
+    mi2 = RegressorInspector(explainer_factory=_ef, shap_interaction=False).fit(
+        crossfit=validation_model
+    )
     mi2.shap_values()
 
     linkage_tree = mi2.feature_association_linkage()
@@ -298,7 +311,7 @@ def test_model_inspection_classifier(n_jobs, iris_sample: Sample) -> None:
 
     crossfit = model_ranker.best_model_crossfit(random_state=42)
 
-    model_inspector = ClassifierInspector(crossfit=crossfit)
+    model_inspector = ClassifierInspector(shap_interaction=False).fit(crossfit=crossfit)
     # make and check shap value matrix
     shap_matrix = model_inspector.shap_values()
 
