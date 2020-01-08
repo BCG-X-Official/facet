@@ -640,26 +640,6 @@ class RegressorInspector(
     Inspect a regression pipeline through its SHAP values.
     """
 
-    def __init__(
-        self,
-        *,
-        explainer_factory: Optional[ExplainerFactory] = None,
-        n_jobs: Optional[int] = None,
-        shared_memory: Optional[bool] = None,
-        verbose: Optional[int] = None,
-    ) -> None:
-        """
-        :param explainer_factory: calibration that returns a shap Explainer
-        """
-        super().__init__(
-            explainer_factory=explainer_factory,
-            n_jobs=n_jobs,
-            shared_memory=shared_memory,
-            verbose=verbose,
-        )
-
-    __init__.__doc__ += ParallelizableMixin.__init__.__doc__
-
     @staticmethod
     def _shap_values_calculator_cls() -> Type[ShapValuesCalculator]:
         return RegressorShapValuesCalculator
@@ -677,28 +657,8 @@ class ClassifierInspector(
     """
     Inspect a classification pipeline through its SHAP values.
 
-    Currently only binary, single-output classification problems are supported.
+    Currently only binary, single-output classifiers are supported.
     """
-
-    def __init__(
-        self,
-        *,
-        explainer_factory: Optional[ExplainerFactory] = None,
-        n_jobs: Optional[int] = None,
-        shared_memory: Optional[bool] = None,
-        verbose: Optional[int] = None,
-    ) -> None:
-        """
-        :param explainer_factory: function that returns a shap Explainer
-        """
-        super().__init__(
-            explainer_factory=explainer_factory,
-            n_jobs=n_jobs,
-            shared_memory=shared_memory,
-            verbose=verbose,
-        )
-
-    __init__.__doc__ += ParallelizableMixin.__init__.__doc__
 
     @staticmethod
     def _shap_values_calculator_cls() -> Type[ShapValuesCalculator]:
