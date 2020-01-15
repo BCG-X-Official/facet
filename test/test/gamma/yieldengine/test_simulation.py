@@ -39,6 +39,7 @@ def test_univariate_simulation(
             ),
         ),
         cv=StationaryBootstrapCV(n_splits=N_SPLITS, random_state=42),
+        shuffle_features=False,
     ).fit(sample=sample)
 
     simulator = UnivariateUpliftSimulator(
