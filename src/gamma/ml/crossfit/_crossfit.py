@@ -11,7 +11,7 @@ from numpy.random.mtrand import RandomState
 from sklearn.model_selection import BaseCrossValidator
 from sklearn.utils import check_random_state
 
-from gamma.common.fit import FittableMixin
+from gamma.common.fit import FittableMixin, T_Self
 from gamma.common.parallelization import ParallelizableMixin
 from gamma.ml import Sample
 from gamma.sklearndf.pipeline import (
@@ -24,7 +24,6 @@ log = logging.getLogger(__name__)
 
 __all__ = ["LearnerCrossfit"]
 
-T_Self = TypeVar("T", bound="LearnerCrossfit")
 T_LearnerPipelineDF = TypeVar("T_LearnerPipelineDF", bound=BaseLearnerPipelineDF)
 T_ClassifierPipelineDF = TypeVar("T_ClassifierPipelineDF", bound=ClassifierPipelineDF)
 T_RegressorPipelineDF = TypeVar("T_RegressorPipelineDF", bound=RegressorPipelineDF)
@@ -101,8 +100,10 @@ class LearnerCrossfit(
             of the base estimator
         :return: `self`
         """
-        self_typed: LearnerCrossfit = self  # support better type hinting in PyCharm
-        pipeline = self_typed.pipeline
+
+        self: LearnerCrossfit  # support type hinting in PyCharm
+
+        pipeline = self.pipeline
 
         features: pd.DataFrame = sample.features
         target = sample.target
@@ -114,11 +115,11 @@ class LearnerCrossfit(
 
         feature_sequence_iter: Iterator[Tuple[Optional[pd.Index]]]
 
-        if self_typed.shuffle_features:
+        if self.shuffle_features:
             # we are shuffling features, so we create an infinite iterator
             # that creates a new random permutation of feature indices on each
             # iteration
-            random_state = check_random_state(self_typed.random_state)
+            random_state = check_random_state(self.random_state)
             # noinspection PyTypeChecker
             feature_sequence_iter = iter(
                 lambda: (
@@ -132,9 +133,9 @@ class LearnerCrossfit(
             # noinspection PyTypeChecker
             feature_sequence_iter = iter(lambda: (None,), None)
 
-        with self_typed._parallel() as parallel:
-            self._model_by_split: List[T_LearnerPipelineDF] = parallel(
-                self_typed._delayed(LearnerCrossfit._fit_model_for_split)(
+        with self._parallel() as parallel:
+            model_by_split: List[T_LearnerPipelineDF] = parallel(
+                self._delayed(LearnerCrossfit._fit_model_for_split)(
                     pipeline.clone(),
                     features.iloc[train_indices],
                     target.iloc[train_indices],
@@ -142,11 +143,12 @@ class LearnerCrossfit(
                     **fit_params,
                 )
                 for (feature_sequence,), (train_indices, _) in zip(
-                    feature_sequence_iter, self_typed.cv.split(features, target)
+                    feature_sequence_iter, self.cv.split(features, target)
                 )
             )
+            self._model_by_split = model_by_split
 
-        self_typed._training_sample = sample
+        self._training_sample = sample
 
         return self
 

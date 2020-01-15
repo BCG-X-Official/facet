@@ -14,7 +14,7 @@ from shap import KernelExplainer, TreeExplainer
 from shap.explainers.explainer import Explainer
 
 from gamma.common import deprecated
-from gamma.common.fit import FittableMixin
+from gamma.common.fit import FittableMixin, T_Self
 from gamma.common.parallelization import ParallelizableMixin
 from gamma.ml import Sample
 from gamma.ml.crossfit import LearnerCrossfit
@@ -55,7 +55,6 @@ __all__ = [
 # Type variables
 #
 
-T_Self = TypeVar("T_Self", bound="BaseLearnerInspector")
 T_LearnerPipelineDF = TypeVar("T_LearnerPipelineDF", bound=BaseLearnerPipelineDF)
 T_RegressorPipelineDF = TypeVar("T_RegressorPipelineDF", bound=RegressorPipelineDF)
 T_ClassifierPipelineDF = TypeVar("T_ClassifierPipelineDF", bound=ClassifierPipelineDF)
@@ -141,6 +140,8 @@ class BaseLearnerInspector(
         """
         if not crossfit.is_fitted:
             raise ValueError("arg crossfit needs to be fitted")
+
+        self: BaseLearnerInspector  # support type hinting in PyCharm
 
         if self._shap_interaction:
             shap_calculator = self._shap_interaction_values_calculator_cls()(
