@@ -11,7 +11,7 @@ import pandas as pd
 from shap.explainers.explainer import Explainer
 from sklearn.base import BaseEstimator
 
-from gamma.common.fit import FittableMixin
+from gamma.common.fit import FittableMixin, T_Self
 from gamma.common.parallelization import ParallelizableMixin
 from gamma.ml import Sample
 from gamma.ml.crossfit import LearnerCrossfit
@@ -24,7 +24,6 @@ log = logging.getLogger(__name__)
 #
 
 T_LearnerPipelineDF = TypeVar("T_LearnerPipelineDF", bound=BaseLearnerPipelineDF)
-T_Self = TypeVar("T_Self")
 
 #
 # Type definitions
@@ -85,6 +84,9 @@ class ShapCalculator(
 
         :return: self
         """
+
+        # noinspection PyMethodFirstArgAssignment
+        self: ShapCalculator  # support type hinting in PyCharm
 
         # reset fit in case we get an exception along the way
         self.shap_ = None

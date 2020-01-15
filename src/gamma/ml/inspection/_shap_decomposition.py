@@ -8,12 +8,10 @@ from typing import *
 import numpy as np
 import pandas as pd
 
-from gamma.common.fit import FittableMixin
+from gamma.common.fit import FittableMixin, T_Self
 from gamma.ml.inspection._shap import ShapCalculator, ShapInteractionValuesCalculator
 
 log = logging.getLogger(__name__)
-
-T_Self = TypeVar("T_Self")
 
 _PAIRWISE_PARTIAL_SUMMATION = False
 #: if `True`, optimize numpy arrays to ensure pairwise partial summation.
@@ -51,6 +49,9 @@ class ShapValueDecomposer(FittableMixin[ShapCalculator]):
         given SHAP calculator.
         :param shap_calculator: the fitted calculator from which to get the shap values
         """
+
+        self: ShapValueDecomposer  # support type hinting in PyCharm
+
         successful = False
         try:
             if len(fit_params) > 0:
@@ -60,7 +61,7 @@ class ShapValueDecomposer(FittableMixin[ShapCalculator]):
 
             self._fit(shap_calculator=shap_calculator)
 
-            self.index_: pd.Index = shap_calculator.feature_index_
+            self.index_ = shap_calculator.feature_index_
             self.columns_ = shap_calculator.shap_columns
 
             successful = True

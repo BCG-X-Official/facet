@@ -13,7 +13,7 @@ import numpy as np
 from numpy.random.mtrand import RandomState
 from sklearn.model_selection import BaseCrossValidator, GridSearchCV
 
-from gamma.common.fit import FittableMixin
+from gamma.common.fit import FittableMixin, T_Self
 from gamma.common.parallelization import ParallelizableMixin
 from gamma.ml import Sample
 from gamma.ml.crossfit import LearnerCrossfit
@@ -43,8 +43,6 @@ T_RegressorPipelineDF = TypeVar("T_RegressorPipelineDF", bound=RegressorPipeline
 T_ClassifierPipelineDF = TypeVar("T_ClassifierPipelineDF", bound=ClassifierPipelineDF)
 
 T_LearnerCrossfit = TypeVar("T_Crossfit", bound=LearnerCrossfit[T_LearnerPipelineDF])
-
-T = TypeVar("T")
 
 #
 # Class definitions
@@ -277,7 +275,7 @@ class BaseLearnerRanker(
         """
         return scoring.mean() - 2 * scoring.std()
 
-    def fit(self: T, sample: Sample, **fit_params) -> T:
+    def fit(self: T_Self, sample: Sample, **fit_params) -> T_Self:
         """
         Rank the candidate learners and their hyper-parameter combinations using the
         given sample.
@@ -285,7 +283,8 @@ class BaseLearnerRanker(
         :param sample: sample with which to fit the candidate learners from the grid(s)
         :param fit_params: any fit parameters to pass on to the learner's fit method
         """
-        cast(BaseLearnerRanker, self)._rank_learners(sample=sample, **fit_params)
+        self: BaseLearnerRanker  # support type hinting in PyCharm
+        self._rank_learners(sample=sample, **fit_params)
         return self
 
     @property
