@@ -1,6 +1,6 @@
 """
 Decomposition of SHAP contribution scores (i.e, SHAP importance) of all possible parings
-of features into additive components for synergy, equivalence, and independence.
+of features into additive components for synergy, redundancy, and independence.
 """
 import logging
 from typing import *
@@ -136,7 +136,7 @@ class ShapValueDecomposer(FittableMixin[ShapCalculator]):
 
         # 2 * std(alpha[i, j]) = 2 * std(alpha[j, i])
         # shape: (n_targets, n_features, n_features)
-        # twice the standard deviation (= length) of equivalence vector;
+        # twice the standard deviation (= length) of the redundancy vector;
         # this is the total contribution made by phi[i] and phi[j] where both features
         # independently use redundant information
         std_alpha_ij_2x = std_phi_i_plus_phi_j - std_phi_i_minus_phi_j
@@ -173,7 +173,7 @@ class ShapValueDecomposer(FittableMixin[ShapCalculator]):
 class ShapInteractionValueDecomposer(ShapValueDecomposer):
     """
     Decomposes SHAP interaction scores (i.e, SHAP importance) of all possible parings
-    of features into additive components for synergy, equivalence, and independence.
+    of features into additive components for synergy, redundancy, and independence.
     SHAP interaction scores are calculated as the standard deviation of the individual
     interactions per observation. Using this metric, rather than the mean of absolute
     interactions, allows us to calculate the decomposition without ever constructing
@@ -202,7 +202,7 @@ class ShapInteractionValueDecomposer(ShapValueDecomposer):
             else min_direct_synergy
         )
         self.synergy_rel_: Optional[np.ndarray] = None
-        self.equivalence_rel_: Optional[np.ndarray] = None
+        self.redundancy_rel_: Optional[np.ndarray] = None
 
     __init__.__doc__ += f"""\
             (default: {DEFAULT_MIN_DIRECT_SYNERGY}, i.e., \
@@ -234,17 +234,17 @@ class ShapInteractionValueDecomposer(ShapValueDecomposer):
         return self._to_frame(self.synergy_rel_)
 
     @property
-    def equivalence(self) -> pd.DataFrame:
+    def redundancy(self) -> pd.DataFrame:
         """
-        The matrix of total relative equivalence for all feature pairs.
+        The matrix of total relative redundancy for all feature pairs.
 
         Values range between 0.0 (fully unique contributions) and 1.0
-        (fully equivalent contributions).
+        (fully redundant contributions).
 
         Raises an error if this interaction decomposer has not been fitted.
         """
         self._ensure_fitted()
-        return self._to_frame(self.equivalence_rel_)
+        return self._to_frame(self.redundancy_rel_)
 
     def _fit(self, shap_calculator: ShapInteractionValuesCalculator) -> None:
         super()._fit(shap_calculator)
@@ -396,7 +396,7 @@ class ShapInteractionValueDecomposer(ShapValueDecomposer):
             np.fill_diagonal(s_i_j_for_target, val=np.nan)
 
         # s[j, i]
-        # transpose of s[i, j]; we need this later for calculating SHAP equivalence
+        # transpose of s[i, j]; we need this later for calculating SHAP redundancy
         # shape: (n_targets, n_features, n_features)
         s_j_i = _transpose(s_i_j)
 
@@ -456,7 +456,7 @@ class ShapInteractionValueDecomposer(ShapValueDecomposer):
         # 2 * cov(tau[i, j], tau[j, i])
         # shape: (n_targets, n_features, n_features)
         # this is an intermediate result to calculate the standard deviation
-        # of the equivalence vector (see next step below)
+        # of the redundancy vector (see next step below)
         cov_tau_ij_tau_ji_2x = 2 * cov_tau_ij_tau_ji
 
         # std(tau[i, j] + tau[j, i])
@@ -473,7 +473,7 @@ class ShapInteractionValueDecomposer(ShapValueDecomposer):
         )
 
         #
-        # SHAP equivalence: epsilon[i, j]
+        # SHAP redundancy: epsilon[i, j]
         #
 
         # std(tau[i, j] - tau[j, i])
@@ -487,7 +487,7 @@ class ShapInteractionValueDecomposer(ShapValueDecomposer):
 
         # 2 * std(epsilon[i, j]) = 2 * std(epsilon[j, i])
         # shape: (n_targets, n_features)
-        # twice the standard deviation (= length) of equivalence vector;
+        # twice the standard deviation (= length) of redundancy vector;
         # this is the total contribution made by phi[i] and phi[j] where both features
         # independently use redundant information
 
@@ -547,7 +547,7 @@ class ShapInteractionValueDecomposer(ShapValueDecomposer):
         # where upsilon[i, j] = phi[i] + phi[j] - 2 * epsilon[i, j]
         # shape: (n_targets, n_features, n_features)
         # this is the sum of complementary contributions of feature i and feature j,
-        # i.e., deducting the equivalent contributions
+        # i.e., deducting the redundant contributions
 
         std_upsilon_ij_plus_upsilon_ji = _sqrt(
             var_phi_ix
@@ -563,26 +563,26 @@ class ShapInteractionValueDecomposer(ShapValueDecomposer):
 
         #
         # SHAP decompositon as relative contributions of
-        # synergy, equivalence, and independence
+        # synergy, redundancy, and independence
         #
 
         synergy_ij = std_zeta_ij_plus_zeta_ji
         autonomy_ij = std_tau_ij_plus_tau_ji
-        equivalence_ij = np.abs(std_epsilon_ij_2x)
+        redundancy_ij = np.abs(std_epsilon_ij_2x)
         uniqueness_ij = std_upsilon_ij_plus_upsilon_ji
         independence_ij = std_nu_ij_plus_nu_ji
 
         # we should have the right shape for all resulting matrices
         for matrix in (
             synergy_ij,
-            equivalence_ij,
+            redundancy_ij,
             autonomy_ij,
             uniqueness_ij,
             independence_ij,
         ):
             assert matrix.shape == (n_targets, n_features, n_features)
 
-        # calculate relative synergy and equivalence (ranging from 0.0 to 1.0)
+        # calculate relative synergy and redundancy (ranging from 0.0 to 1.0)
         # both matrices are symmetric, but we ensure perfect symmetry by removing
         # potential round-off errors
         # NOTE: we do not store independence so technically it could be removed from
@@ -590,17 +590,17 @@ class ShapInteractionValueDecomposer(ShapValueDecomposer):
 
         with np.errstate(divide="ignore", invalid="ignore"):
             synergy_rel = _ensure_diagonality(synergy_ij / (synergy_ij + autonomy_ij))
-            equivalence_rel = _ensure_diagonality(
-                equivalence_ij / (equivalence_ij + uniqueness_ij)
+            redundancy_rel = _ensure_diagonality(
+                redundancy_ij / (redundancy_ij + uniqueness_ij)
             )
 
         self.synergy_rel_ = synergy_rel
-        self.equivalence_rel_ = equivalence_rel
+        self.redundancy_rel_ = redundancy_rel
 
     def _reset_fit(self) -> None:
         # revert status of this object to not fitted
         super()._reset_fit()
-        self.synergy_rel_ = self.equivalence_rel_ = None
+        self.synergy_rel_ = self.redundancy_rel_ = None
 
 
 def _ensure_diagonality(matrix: np.ndarray) -> np.ndarray:

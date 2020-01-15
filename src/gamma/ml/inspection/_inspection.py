@@ -96,7 +96,7 @@ class BaseLearnerInspector(
         :param shap_interaction: if `True`, calculate SHAP interaction values, else \
             only calculate SHAP contribution values.\
             SHAP interaction values are needed to determine feature synergy and \
-            equivalence; otherwise only SHAP association can be calculated.\
+            redundancy; otherwise only SHAP association can be calculated.\
             (default: `True`)
         :param min_direct_synergy: minimum direct synergy to consider a feature pair \
             for calculation of indirect synergy. \
@@ -327,32 +327,32 @@ class BaseLearnerInspector(
         self._ensure_fitted()
         return self._shap_interaction_decomposer.synergy
 
-    def feature_equivalence_matrix(self) -> pd.DataFrame:
+    def feature_redundancy_matrix(self) -> pd.DataFrame:
         """
-        For each pairing of features, calculate the relative share of their equivalent
+        For each pairing of features, calculate the relative share of their redundant
         contribution to the model prediction.
 
-        The equivalent contribution of a pair of features ranges between 0.0
-        (no equivalence - both features contribute fully independently) and 1.0
-        (full equivalence - the information used by either feature is fully redundant).
+        The redundant contribution of a pair of features ranges between 0.0
+        (no redundancy - both features contribute fully independently) and 1.0
+        (full redundancy - the information used by either feature is fully redundant).
 
-        :return: feature equivalence matrix as a data frame of shape \
+        :return: feature redundancy matrix as a data frame of shape \
             (n_features, n_targets * n_features)
         """
         self._ensure_fitted()
-        return self._shap_interaction_decomposer.equivalence
+        return self._shap_interaction_decomposer.redundancy
 
-    def feature_equivalence_linkage(self) -> Union[LinkageTree, List[LinkageTree]]:
+    def feature_redundancy_linkage(self) -> Union[LinkageTree, List[LinkageTree]]:
         """
         Calculate the :class:`.LinkageTree` based on the
-        :meth:`.feature_equivalence_matrix`.
+        :meth:`.feature_redundancy_matrix`.
 
         :return: linkage tree for the shap clustering dendrogram; \
             list of linkage trees if the base estimator is a multi-output model
         """
         self._ensure_fitted()
         return self._linkage_from_affinity_matrix(
-            feature_affinity_matrix=self._shap_interaction_decomposer.equivalence_rel_
+            feature_affinity_matrix=self._shap_interaction_decomposer.redundancy_rel_
         )
 
     def feature_interaction_matrix(self) -> pd.DataFrame:
