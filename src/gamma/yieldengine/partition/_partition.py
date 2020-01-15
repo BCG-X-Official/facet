@@ -9,7 +9,7 @@ from typing import *
 import numpy as np
 import pandas as pd
 
-from gamma.common.fit import FittableMixin
+from gamma.common.fit import FittableMixin, T_Self
 
 log = logging.getLogger(__name__)
 
@@ -26,7 +26,6 @@ __all__ = [
 
 DEFAULT_MAX_PARTITIONS = 20
 
-T = TypeVar("T")
 T_Value = TypeVar("T_Value")
 T_Number = TypeVar("T_Number", int, float)
 
@@ -50,7 +49,7 @@ class Partitioner(FittableMixin[Sequence[T_Value]], ABC, Generic[T_Value]):
         return self._max_partitions
 
     @abstractmethod
-    def fit(self: T, values: Sequence[T_Value], **fit_params) -> T:
+    def fit(self: T_Self, values: Sequence[T_Value], **fit_params) -> T_Self:
         """
         Calculate the partitioning for the given values.
         :param values: the values to partition
@@ -159,14 +158,17 @@ class RangePartitioner(Partitioner[T_Number], ABC, Generic[T_Number]):
 
     # noinspection PyMissingOrEmptyDocstring
     def fit(
-        self: T,
+        self: T_Self,
         values: Sequence[T_Value],
         lower_bound: Optional[T_Number] = None,
         upper_bound: Optional[T_Number] = None,
         **fit_params,
-    ) -> T:
+    ) -> T_Self:
         # we inherit the docstring from the super method
         # (see statement following this method declaration)
+
+        self: RangePartitioner  # support type hinting in PyCharm
+
         lower_bound = self._lower_bound
         upper_bound = self._upper_bound
 
@@ -408,9 +410,11 @@ class CategoryPartitioner(Partitioner[T_Value]):
         self._partitions = None
 
     # noinspection PyMissingOrEmptyDocstring
-    def fit(self: T, values: Sequence[T_Value], **fit_params) -> T:
+    def fit(self: T_Self, values: Sequence[T_Value], **fit_params) -> T_Self:
         # we inherit the docstring from the super method
         # (see statement following this method declaration)
+
+        self: CategoryPartitioner  # support type hinting in PyCharm
 
         value_counts = pd.Series(data=values).value_counts(ascending=False)
         max_partitions = self.max_partitions
