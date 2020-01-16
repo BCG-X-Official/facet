@@ -30,6 +30,7 @@ class Sample:
     def __init__(
         self,
         observations: pd.DataFrame,
+        *,
         target: Union[str, Sequence[str]],
         features: Optional[Sequence[str]] = None,
     ) -> None:
