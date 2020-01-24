@@ -11,30 +11,40 @@ from numpy.random.mtrand import RandomState
 from sklearn.model_selection import BaseCrossValidator
 from sklearn.utils import check_random_state
 
-from gamma.common.fit import FittableMixin
+from gamma.common.fit import FittableMixin, T_Self
 from gamma.common.parallelization import ParallelizableMixin
 from gamma.ml import Sample
-from gamma.sklearndf import BaseLearnerDF, ClassifierDF, RegressorDF
+from gamma.sklearndf.pipeline import (
+    BaseLearnerPipelineDF,
+    ClassifierPipelineDF,
+    RegressorPipelineDF,
+)
 
 log = logging.getLogger(__name__)
 
 __all__ = ["LearnerCrossfit"]
 
-T_Self = TypeVar("T", bound="LearnerCrossfit")
-T_LearnerDF = TypeVar("T_LearnerDF", bound=BaseLearnerDF)
-T_ClassifierDF = TypeVar("T_ClassifierDF", bound=ClassifierDF)
-T_RegressorDF = TypeVar("T_RegressorDF", bound=RegressorDF)
+T_LearnerPipelineDF = TypeVar("T_LearnerPipelineDF", bound=BaseLearnerPipelineDF)
+T_ClassifierPipelineDF = TypeVar("T_ClassifierPipelineDF", bound=ClassifierPipelineDF)
+T_RegressorPipelineDF = TypeVar("T_RegressorPipelineDF", bound=RegressorPipelineDF)
+
+_INDEX_SENTINEL = pd.Index([])
 
 
 class LearnerCrossfit(
-    FittableMixin[Sample], ParallelizableMixin, ABC, Generic[T_LearnerDF]
+    FittableMixin[Sample], ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF]
 ):
     """
-    Fits a learner to all train splits of a given cross-validation strategy.
+    Fits a learner pipeline to all train splits of a given cross-validation strategy,
+    and with optional feature shuffling.
+
+    Feature shuffling is active by default, so that every model is trained on a random
+    permutation of the feature columns to avoid favouring one of several similar
+    features based on column sequence.
     """
 
     __slots__ = [
-        "base_estimator",
+        "pipeline",
         "cv",
         "n_jobs",
         "shared_memory",
@@ -44,7 +54,7 @@ class LearnerCrossfit(
 
     def __init__(
         self,
-        base_learner: T_LearnerDF,
+        pipeline: T_LearnerPipelineDF,
         cv: BaseCrossValidator,
         *,
         shuffle_features: Optional[bool] = None,
@@ -54,14 +64,13 @@ class LearnerCrossfit(
         pre_dispatch: Optional[Union[str, int]] = None,
         verbose: Optional[int] = None,
     ) -> None:
-        f"""
-        :param base_learner: predictive pipeline to be fitted
+        """
+        :param pipeline: learner pipeline to be fitted
         :param cv: the cross validator generating the train splits
         :param shuffle_features: if `True`, shuffle column order of features for every \
-            crossfit (default: `False`)
+            crossfit (default: `True`)
         :param random_state: optional random seed or random state for shuffling the \
             feature column order
-        {ParallelizableMixin.__init__.__doc__}
         """
         super().__init__(
             n_jobs=n_jobs,
@@ -69,22 +78,18 @@ class LearnerCrossfit(
             pre_dispatch=pre_dispatch,
             verbose=verbose,
         )
-        self.base_estimator = base_learner  #: the learner being trained
+        self.pipeline = pipeline  #: the learner pipeline being trained
         self.cv = cv  #: the cross validator
         self.shuffle_features: bool = (
-            False if shuffle_features is None else shuffle_features
+            True if shuffle_features is None else shuffle_features
         )
         self.random_state = random_state
 
-        self._model_by_split: Optional[List[T_LearnerDF]] = None
+        self._model_by_split: Optional[List[T_LearnerPipelineDF]] = None
         self._training_sample: Optional[Sample] = None
         self._feature_order_by_split: Optional[List[np.ndarray]] = None
 
-        if shuffle_features is None:
-            log.warning(
-                "default value of shuffle_features will change to False to True in "
-                "release 1.2.0; we recommend that you set this parameter explicitly."
-            )
+    __init__.__doc__ += ParallelizableMixin.__init__.__doc__
 
     def fit(self: T_Self, sample: Sample, **fit_params) -> T_Self:
         """
@@ -95,41 +100,55 @@ class LearnerCrossfit(
             of the base estimator
         :return: `self`
         """
-        self_typed: LearnerCrossfit = self  # support better type hinting in PyCharm
-        base_estimator = self_typed.base_estimator
+
+        self: LearnerCrossfit  # support type hinting in PyCharm
+
+        pipeline = self.pipeline
 
         features: pd.DataFrame = sample.features
-        feature_columns = features.columns
-        n_features = len(feature_columns)
         target = sample.target
-        if self_typed.shuffle_features:
+        pipeline.fit(X=features, y=target, **fit_params)
+
+        # we get the features that the learner receives after the preprocessing step
+        learner_features = pipeline.features_out
+        n_learner_features = len(learner_features)
+
+        feature_sequence_iter: Iterator[Tuple[Optional[pd.Index]]]
+
+        if self.shuffle_features:
             # we are shuffling features, so we create an infinite iterator
             # that creates a new random permutation of feature indices on each
             # iteration
-            random_state = check_random_state(self_typed.random_state)
-            feature_sequence = iter(lambda: random_state.permutation(n_features), [])
+            random_state = check_random_state(self.random_state)
+            # noinspection PyTypeChecker
+            feature_sequence_iter = iter(
+                lambda: (
+                    learner_features[random_state.permutation(n_learner_features)],
+                ),
+                None,
+            )
         else:
             # we are not shuffling features, hence we create an infinite iterator of
             # always the same slice that preserves the existing feature sequence
-            original_feature_sequence = slice(None)
-            feature_sequence = iter(lambda: original_feature_sequence, slice(0))
+            # noinspection PyTypeChecker
+            feature_sequence_iter = iter(lambda: (None,), None)
 
-        base_estimator.fit(X=features, y=target, **fit_params)
-
-        with self_typed._parallel() as parallel:
-            self._model_by_split: List[T_LearnerDF] = parallel(
-                self_typed._delayed(LearnerCrossfit._fit_model_for_split)(
-                    base_estimator.clone(),
-                    features.iloc[train_indices, feature_sequence],
+        with self._parallel() as parallel:
+            model_by_split: List[T_LearnerPipelineDF] = parallel(
+                self._delayed(LearnerCrossfit._fit_model_for_split)(
+                    pipeline.clone(),
+                    features.iloc[train_indices],
                     target.iloc[train_indices],
+                    feature_sequence,
                     **fit_params,
                 )
-                for feature_sequence, (train_indices, _) in zip(
-                    feature_sequence, self_typed.cv.split(features, target)
+                for (feature_sequence,), (train_indices, _) in zip(
+                    feature_sequence_iter, self.cv.split(features, target)
                 )
             )
+            self._model_by_split = model_by_split
 
-        self_typed._training_sample = sample
+        self._training_sample = sample
 
         return self
 
@@ -154,7 +173,7 @@ class LearnerCrossfit(
             X=self._training_sample.features, y=self._training_sample.target
         )
 
-    def models(self) -> Iterator[T_LearnerDF]:
+    def models(self) -> Iterator[T_LearnerPipelineDF]:
         """Iterator of all models fitted on the cross-validation train splits."""
         self._ensure_fitted()
         return iter(self._model_by_split)
@@ -168,16 +187,10 @@ class LearnerCrossfit(
     # noinspection PyPep8Naming
     @staticmethod
     def _fit_model_for_split(
-        estimator: T_LearnerDF,
+        pipeline: T_LearnerPipelineDF,
         X: pd.DataFrame,
         y: Union[pd.Series, pd.DataFrame],
+        feature_sequence: pd.Index,
         **fit_params,
-    ) -> T_LearnerDF:
-        """
-        Fit a pipeline using a sample.
-
-        :param estimator:  the :class:`gamma.ml.ModelPipelineDF` to fit
-        :param train_sample: data used to fit the pipeline
-        :return: fitted pipeline for the split
-        """
-        return estimator.fit(X=X, y=y, **fit_params)
+    ) -> T_LearnerPipelineDF:
+        return pipeline.fit(X=X, y=y, feature_sequence=feature_sequence, **fit_params)

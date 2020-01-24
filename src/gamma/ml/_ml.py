@@ -30,8 +30,9 @@ class Sample:
     def __init__(
         self,
         observations: pd.DataFrame,
+        *,
         target: Union[str, Sequence[str]],
-        features: Sequence[str] = None,
+        features: Optional[Sequence[str]] = None,
     ) -> None:
         """
         :param observations: the raw observed data as a pandas data frame
@@ -56,46 +57,49 @@ class Sample:
         if observations is None or not isinstance(observations, pd.DataFrame):
             raise ValueError("arg observations is not a DataFrame")
 
-        index = observations.index
+        observations_index = observations.index
 
-        if index.nlevels != 1:
+        if observations_index.nlevels != 1:
             raise ValueError(
-                f"index of arg observations has {index.nlevels} levels, "
+                f"index of arg observations has {observations_index.nlevels} levels, "
                 "but is required to have 1 level"
             )
 
         # make sure the index has a name
         # (but don't change the original observations data frame)
-        if index.name is None:
+        if observations_index.name is None:
             observations = observations.copy(deep=False)
-            observations.index = index.rename(Sample.COL_OBSERVATION)
+            observations.index = observations_index.rename(Sample.COL_OBSERVATION)
 
         self._observations = observations
 
         multi_target = is_list_like(target)
 
+        # declare feature and target lists as list of strings
+        feature_list: List[str]
+        target_list: List[str]
+
         if multi_target:
             _ensure_columns_exist(column_type="target", columns=target)
-            if not isinstance(target, pd.Index):
-                target: pd.Index = pd.Index(target)
+            target_list = list(target)
         else:
             if target not in self._observations.columns:
                 raise KeyError(
                     f'arg target="{target}" is not a column in the observations table'
                 )
+            target_list = [target]
 
-        self._target: Union[str, pd.Index] = target
+        self._target = target_list
 
         if features is None:
-            features: pd.Index = observations.columns.drop(labels=target)
+            feature_list = observations.columns.drop(labels=target_list).to_list()
         else:
             _ensure_columns_exist(column_type="feature", columns=features)
-            if not isinstance(features, pd.Index):
-                features: pd.Index = pd.Index(features)
+            feature_list = list(features)
 
             # ensure features and target(s) do not overlap
             if multi_target:
-                shared = target.intersection(features)
+                shared = set(target_list).intersection(feature_list)
                 if len(shared) > 0:
                     raise KeyError(
                         f'targets {", ".join(shared)} are also included in the features'
@@ -104,7 +108,7 @@ class Sample:
                 if target in features:
                     raise KeyError(f"target {target} is also included in the features")
 
-        self._features = features
+        self._features = feature_list
 
     @property
     def index(self) -> pd.Index:
@@ -114,16 +118,16 @@ class Sample:
         return self._observations.index
 
     @property
-    def feature_columns(self) -> pd.Index:
+    def feature_columns(self) -> List[str]:
         """
-        Column index of all features in this sample.
+        List of all features in this sample.
         """
         return self._features
 
     @property
-    def target_columns(self) -> Union[str, pd.Index]:
+    def target_columns(self) -> List[str]:
         """
-        Name of the target column, of column index of all targets if this sample has
+        List of of all targets of this sample
         multiple targets.
         """
         return self._target
@@ -149,13 +153,16 @@ class Sample:
          Returned as a series if there is only a single target, or as a data frame if
          there are multiple targets
         """
-        targets: Union[pd.Series, pd.DataFrame] = self._observations.loc[
-            :, self._target
-        ]
-        if isinstance(targets, pd.DataFrame):
-            columns = targets.columns
-            if columns.name is None:
-                targets.columns = columns.rename(Sample.COL_TARGET)
+        target = self.target_columns
+
+        if len(target) == 1:
+            return self._observations.loc[:, target[0]]
+
+        targets: pd.DataFrame = self._observations.loc[:, target]
+
+        columns = targets.columns
+        if columns.name is None:
+            targets.columns = columns.rename(Sample.COL_TARGET, inplace=True)
 
         return targets
 
@@ -235,7 +242,7 @@ class Sample:
 
         return subsample
 
-    def drop_features(self, features: Sequence[str]) -> "Sample":
+    def drop_features(self, features: Collection[str]) -> "Sample":
         """
         Return a new sample, dropping the features with the given names.
 
@@ -243,7 +250,10 @@ class Sample:
         :return: copy of this sample, containing only the features not included in the \
             given names
         """
-        return self.select_features(self._features.drop(features))
+        features = set(features)
+        return self.select_features(
+            [feature for feature in self._features if feature not in features]
+        )
 
     def replace_features(self, features: pd.DataFrame) -> "Sample":
         """
