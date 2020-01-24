@@ -19,4 +19,5 @@ Implements the following subpackages:
 import gamma.common.licensing as _licensing
 from ._ml import Sample
 
+__version__ = "1.2.0"
 _licensing.check_license(__package__)
