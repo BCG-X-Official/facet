@@ -11,7 +11,7 @@ import pandas as pd
 from shap.explainers.explainer import Explainer
 from sklearn.base import BaseEstimator
 
-from gamma.common.fit import FittableMixin
+from gamma.common.fit import FittableMixin, T_Self
 from gamma.common.parallelization import ParallelizableMixin
 from gamma.ml import Sample
 from gamma.ml.crossfit import LearnerCrossfit
@@ -24,7 +24,6 @@ log = logging.getLogger(__name__)
 #
 
 T_LearnerPipelineDF = TypeVar("T_LearnerPipelineDF", bound=BaseLearnerPipelineDF)
-T_Self = TypeVar("T_Self")
 
 #
 # Type definitions
@@ -42,7 +41,7 @@ ShapToDataFrameFunction = Callable[
 #
 
 
-class BaseShapCalculator(
+class ShapCalculator(
     FittableMixin[LearnerCrossfit[T_LearnerPipelineDF]],
     ParallelizableMixin,
     ABC,
@@ -72,10 +71,10 @@ class BaseShapCalculator(
             verbose=verbose,
         )
         self._explainer_factory = explainer_factory
-        self._shap: Optional[pd.DataFrame] = None
-        self._n_observations: Optional[int] = None
-        self._n_features: Optional[int] = None
-        self._n_targets: Optional[int] = None
+        self.shap_: Optional[pd.DataFrame] = None
+        self.feature_index_: Optional[pd.Index] = None
+        self.target_columns_: Optional[List[str]] = None
+        self.n_observations_: Optional[int] = None
 
     def fit(
         self: T_Self, crossfit: LearnerCrossfit[T_LearnerPipelineDF], **fit_params
@@ -86,17 +85,20 @@ class BaseShapCalculator(
         :return: self
         """
 
+        # noinspection PyMethodFirstArgAssignment
+        self: ShapCalculator  # support type hinting in PyCharm
+
         # reset fit in case we get an exception along the way
-        self._shap = None
+        self.shap_ = None
 
         training_sample = crossfit.training_sample
-        self._n_observations = len(training_sample)
-        self._n_features = training_sample.n_features
-        self._n_targets = training_sample.n_targets
+        self.feature_index_ = crossfit.pipeline.features_out.rename(Sample.COL_FEATURE)
+        self.target_columns_ = training_sample.target_columns
+        self.n_observations_ = len(training_sample)
 
         # calculate shap values and re-order the observation index to match the
         # sequence in the original training sample
-        self._shap = self._consolidate_splits(
+        self.shap_ = self._consolidate_splits(
             self._shap_all_splits(crossfit=crossfit),
             observation_index=training_sample.index,
         )
@@ -106,30 +108,34 @@ class BaseShapCalculator(
     # noinspection PyMissingOrEmptyDocstring
     @property
     def is_fitted(self) -> bool:
-        return self._shap is not None
+        return self.shap_ is not None
 
     is_fitted.__doc__ = FittableMixin.is_fitted.__doc__
 
     @property
-    def matrix(self) -> pd.DataFrame:
+    @abstractmethod
+    def shap_values(self) -> pd.DataFrame:
         """
-        The resulting consolidated as a data frame, aggregated to one averaged SHAP
-        matrix per observation.
+        The resulting consolidated shap values as a data frame,
+        aggregated to averaged SHAP contributions per feature and observation.
 
-        The format of the data frame varies depending on the nature of the SHAP
-        calculation, see documentation for implementations of this base class.
+        :return: SHAP contribution values with shape \
+            (n_observations, n_targets * n_features).
         """
-        self._ensure_fitted()
-        return self._shap
+        pass
+
+    @property
+    @abstractmethod
+    def shap_columns(self) -> pd.Index:
+        """
+        The column index of the data frame returned by :meth:`.shap_values`
+        """
+        pass
 
     def _shap_all_splits(
         self, crossfit: LearnerCrossfit[T_LearnerPipelineDF]
     ) -> pd.DataFrame:
         explainer_factory = self._explainer_factory
-        features_out: pd.Index = crossfit.base_estimator.features_out.rename(
-            Sample.COL_FEATURE
-        )
-
         training_sample = crossfit.training_sample
 
         with self._parallel() as parallel:
@@ -138,7 +144,7 @@ class BaseShapCalculator(
                     model,
                     training_sample,
                     oob_split,
-                    features_out,
+                    self.feature_index_,
                     explainer_factory,
                     self._raw_shap_to_df,
                 )
@@ -199,33 +205,37 @@ class BaseShapCalculator(
         :param observations: the ids used for indexing the explained observations
         :param features_in_split: the features in the current split, \
             explained by the SHAP explainer
-        :return: SHAP matrix of a single split as data frame
+        :return: SHAP values of a single split as data frame
         """
         pass
 
-    @staticmethod
-    def _make_column_index(targets: Optional[pd.Index], features: pd.Index):
-        # make a (multi) index from an optional target index and a feature index
-        if targets is None:
-            return features
-        else:
-            return pd.MultiIndex.from_product((targets, features))
 
-
-class ShapMatrixCalculator(
-    BaseShapCalculator[T_LearnerPipelineDF], ABC, Generic[T_LearnerPipelineDF]
+class ShapValuesCalculator(
+    ShapCalculator[T_LearnerPipelineDF], ABC, Generic[T_LearnerPipelineDF]
 ):
     """
-    Base class for SHAP matrix calculations.
-
-    The :attr:`.matrix` property returns a SHAP matrix of shape
-    (n_observations, n_targets * n_features).
+    Base class for calculating SHAP contribution values.
     """
+
+    # noinspection PyMissingOrEmptyDocstring
+    @property
+    def shap_values(self) -> pd.DataFrame:
+        self._ensure_fitted()
+        return self.shap_
+
+    shap_values.__doc__ = ShapCalculator.shap_values.__doc__
+
+    # noinspection PyMissingOrEmptyDocstring
+    @property
+    def shap_columns(self) -> pd.Index:
+        return self.shap_.columns
+
+    shap_columns.__doc__ = ShapCalculator.shap_columns.__doc__
 
     def _consolidate_splits(
         self, shap_all_splits_df: pd.DataFrame, observation_index: pd.Index
     ) -> pd.DataFrame:
-        # Group SHAP matrix by observation ID, aggregate SHAP values using mean(),
+        # Group SHAP values by observation ID, aggregate SHAP values using mean(),
         # then restore the original order of observations
         mean_per_split = shap_all_splits_df.groupby(
             level=0, sort=False, observed=True
@@ -244,16 +254,16 @@ class ShapMatrixCalculator(
         explainer_factory_fn: ExplainerFactory,
         shap_matrix_for_split_to_df_fn: ShapToDataFrameFunction,
     ) -> pd.DataFrame:
-        x_oob = BaseShapCalculator._x_oob(model, training_sample, oob_split)
+        x_oob = ShapCalculator._x_oob(model, training_sample, oob_split)
 
-        # calculate the shap values (returned as an ndarray)
+        # calculate the shap values (returned as an array)
         shap_values: np.ndarray = explainer_factory_fn(
             model.final_estimator.root_estimator, x_oob
         ).shap_values(x_oob)
 
         if isinstance(shap_values, np.ndarray):
             # if we have a single target *and* no classification, the explainer will
-            # have returned a single tensor as an ndarray
+            # have returned a single tensor as an array
             shap_values: List[np.ndarray] = [shap_values]
 
         # convert to a data frame per target (different logic depending on whether
@@ -276,33 +286,58 @@ class ShapMatrixCalculator(
             return pd.concat(
                 shap_values_df_per_target,
                 axis=1,
-                keys=training_sample.target_columns.values,
+                keys=training_sample.target_columns,
                 names=[Sample.COL_TARGET],
             )
 
 
-class InteractionMatrixCalculator(
-    BaseShapCalculator[T_LearnerPipelineDF], ABC, Generic[T_LearnerPipelineDF]
+class ShapInteractionValuesCalculator(
+    ShapCalculator[T_LearnerPipelineDF], ABC, Generic[T_LearnerPipelineDF]
 ):
     """
-    Base class for SHAP interaction matrix calculations.
-
-    The :attr:`.matrix` property returns a SHAP matrix of shape
-    (n_observations * n_features, n_targets * n_features), i.e., for each observation
-    and target we get a feature interaction matrix of size n_features * n_features.
+    Base class for calculating SHAP interaction values.
     """
+
+    # noinspection PyMissingOrEmptyDocstring
+    @property
+    def shap_values(self) -> pd.DataFrame:
+        return self.shap_interaction_values.sum(level=0)
+
+    shap_values.__doc__ = ShapCalculator.shap_values.__doc__
+
+    @property
+    def shap_interaction_values(self) -> pd.DataFrame:
+        """
+        The resulting consolidated shap interaction values as a data frame,
+        aggregated to averaged SHAP interaction values per observation.
+        """
+        self._ensure_fitted()
+        return self.shap_
+
+    @property
+    def shap_columns(self) -> pd.Index:
+        """
+        The column index of the data frame returned by :meth:`.shap_values`
+        and :meth:`.shap_interaction_values`
+        """
+        return self.shap_.columns
 
     def diagonals(self) -> pd.DataFrame:
         """
         The diagonals of all SHAP interaction matrices, of shape
         (n_observations, n_targets * n_features)
+
+        :return: SHAP interaction values with shape \
+            (n_observations * n_features, n_targets * n_features), i.e., for each \
+            observation and target we get the feature interaction values of size \
+            n_features * n_features.
         """
         self._ensure_fitted()
 
-        n_observations = self._n_observations
-        n_features = self._n_features
-        n_targets = self._n_targets
-        interaction_matrix = self._shap
+        n_observations = self.n_observations_
+        n_features = len(self.feature_index_)
+        n_targets = len(self.target_columns_)
+        interaction_matrix = self.shap_
 
         return pd.DataFrame(
             np.diagonal(
@@ -319,7 +354,7 @@ class InteractionMatrixCalculator(
     def _consolidate_splits(
         self, shap_all_splits_df: pd.DataFrame, observation_index: pd.Index
     ) -> pd.DataFrame:
-        # Group SHAP matrix by observation ID and feature, and aggregate using mean()
+        # Group SHAP values by observation ID and feature, and aggregate using mean()
         # return shap_all_splits_df
         return (
             shap_all_splits_df.groupby(level=(0, 1), sort=False, observed=True)
@@ -336,9 +371,9 @@ class InteractionMatrixCalculator(
         explainer_factory_fn: ExplainerFactory,
         interaction_matrix_for_split_to_df_fn: ShapToDataFrameFunction,
     ) -> pd.DataFrame:
-        x_oob = BaseShapCalculator._x_oob(model, training_sample, oob_split)
+        x_oob = ShapCalculator._x_oob(model, training_sample, oob_split)
 
-        # calculate the im values (returned as an ndarray)
+        # calculate the im values (returned as an array)
         explainer = explainer_factory_fn(model.final_estimator.root_estimator, x_oob)
 
         try:
@@ -355,7 +390,7 @@ class InteractionMatrixCalculator(
 
         if isinstance(shap_interaction_tensors, np.ndarray):
             # if we have a single target *and* no classification, the explainer will
-            # have returned a single tensor as an ndarray, so we wrap it in a list
+            # have returned a single tensor as an array, so we wrap it in a list
             shap_interaction_tensors: List[np.ndarray] = [shap_interaction_tensors]
 
         interaction_matrix_per_target: List[pd.DataFrame] = [
@@ -371,7 +406,7 @@ class InteractionMatrixCalculator(
         ]
 
         # if we have a single target, use the data frame for that target;
-        # else, concatenate the matrix data frame for all targets horizontally
+        # else, concatenate the values data frame for all targets horizontally
         # and add a top level to the column index indicating each target
         if len(interaction_matrix_per_target) == 1:
             assert training_sample.n_targets == 1
@@ -386,7 +421,7 @@ class InteractionMatrixCalculator(
             )
 
 
-class RegressorShapMatrixCalculator(ShapMatrixCalculator):
+class RegressorShapValuesCalculator(ShapValuesCalculator):
     """
     Calculates SHAP matrices for regression models.
     """
@@ -405,7 +440,7 @@ class RegressorShapMatrixCalculator(ShapMatrixCalculator):
         ]
 
 
-class RegressorInteractionMatrixCalculator(InteractionMatrixCalculator):
+class RegressorShapInteractionValuesCalculator(ShapInteractionValuesCalculator):
     """
     Calculates SHAP interaction matrices for regression models.
     """
@@ -430,7 +465,7 @@ class RegressorInteractionMatrixCalculator(InteractionMatrixCalculator):
         ]
 
 
-class ClassifierShapMatrixCalculator(ShapMatrixCalculator):
+class ClassifierShapValuesCalculator(ShapValuesCalculator):
     """
     Calculates SHAP matrices for classification models.
     """
@@ -464,7 +499,7 @@ class ClassifierShapMatrixCalculator(ShapMatrixCalculator):
         # following:
         assert np.allclose(
             raw_shap_tensors[0], -raw_shap_tensors[1]
-        ), "shap_values(class 0) == -shap_values(class 1)"
+        ), "raw_shap_tensors(class 0) == -raw_shap_tensors(class 1)"
 
         # all good: proceed with SHAP values for class 0:
         raw_shap_matrix = raw_shap_tensors[0]
@@ -476,7 +511,7 @@ class ClassifierShapMatrixCalculator(ShapMatrixCalculator):
         ]
 
 
-class ClassifierInteractionMatrixCalculator(InteractionMatrixCalculator):
+class ClassifierShapInteractionValuesCalculator(ShapInteractionValuesCalculator):
     """
     Calculates SHAP interaction matrices for classification models.
     """
