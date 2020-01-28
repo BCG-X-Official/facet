@@ -114,7 +114,7 @@ def test_model_inspection(n_jobs, boston_sample: Sample) -> None:
 
         pipeline: RegressorPipelineDF = model_evaluation.pipeline
         model_fit: LearnerCrossfit[RegressorPipelineDF] = LearnerCrossfit(
-            pipeline=pipeline, cv=test_cv, random_state=42
+            pipeline=pipeline, cv=test_cv, shuffle_features=True, random_state=42
         ).fit(sample=test_sample)
 
         # noinspection PyTypeChecker
@@ -207,7 +207,7 @@ def test_model_inspection_with_encoding(
     pipeline: RegressorPipelineDF = validation.pipeline
 
     validation_model: LearnerCrossfit[RegressorPipelineDF] = LearnerCrossfit(
-        pipeline=pipeline, cv=cv, random_state=42, n_jobs=n_jobs
+        pipeline=pipeline, cv=cv, shuffle_features=True, random_state=42, n_jobs=n_jobs
     ).fit(sample=sample)
 
     # noinspection PyTypeChecker
@@ -309,7 +309,7 @@ def test_model_inspection_classifier(n_jobs, iris_sample: Sample) -> None:
         first_n_learners=10,
     )
 
-    crossfit = model_ranker.best_model_crossfit(random_state=42)
+    crossfit = model_ranker.best_model_crossfit(shuffle_features=True, random_state=42)
 
     model_inspector = ClassifierInspector(shap_interaction=False).fit(crossfit=crossfit)
     # make and check shap value matrix
