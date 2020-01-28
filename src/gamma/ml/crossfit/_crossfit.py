@@ -68,7 +68,7 @@ class LearnerCrossfit(
         :param pipeline: learner pipeline to be fitted
         :param cv: the cross validator generating the train splits
         :param shuffle_features: if `True`, shuffle column order of features for every \
-            crossfit (default: `True`)
+            crossfit (default: `False`)
         :param random_state: optional random seed or random state for shuffling the \
             feature column order
         """
@@ -81,7 +81,7 @@ class LearnerCrossfit(
         self.pipeline = pipeline  #: the learner pipeline being trained
         self.cv = cv  #: the cross validator
         self.shuffle_features: bool = (
-            True if shuffle_features is None else shuffle_features
+            False if shuffle_features is None else shuffle_features
         )
         self.random_state = random_state
 
