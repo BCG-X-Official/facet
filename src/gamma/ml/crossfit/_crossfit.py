@@ -78,7 +78,7 @@ class LearnerCrossfit(
             pre_dispatch=pre_dispatch,
             verbose=verbose,
         )
-        self.pipeline = pipeline  #: the learner pipeline being trained
+        self.pipeline = pipeline.clone()  #: the learner pipeline being trained
         self.cv = cv  #: the cross validator
         self.shuffle_features: bool = (
             True if shuffle_features is None else shuffle_features
