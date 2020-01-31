@@ -14,7 +14,7 @@ from scipy.spatial.distance import squareform
 from shap import KernelExplainer, TreeExplainer
 from shap.explainers.explainer import Explainer
 
-from gamma.common import deprecated
+from gamma.common import deprecated, deprecation_warning
 from gamma.common.fit import FittableMixin, T_Self
 from gamma.common.parallelization import ParallelizableMixin
 from gamma.ml import Sample
@@ -184,9 +184,14 @@ class BaseLearnerInspector(
                 raise ValueError(
                     "cannot specify a crossfit and a model or sample at the same time"
                 )
-
-        if not crossfit.is_fitted:
-            raise ValueError("arg crossfit needs to be fitted")
+            deprecation_warning(
+                "Fitting a model inspector with a crossfit is deprecated and will be "
+                "removed in a future release. "
+                "Pass a learner pipeline and a sample instead.",
+                stacklevel=2,
+            )
+            if not crossfit.is_fitted:
+                raise ValueError("arg crossfit needs to be fitted")
 
         if self._shap_interaction:
             shap_calculator = self._shap_interaction_values_calculator_cls()(
