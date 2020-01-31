@@ -142,7 +142,7 @@ class BaseLearnerInspector(
         pipeline: Optional[T_LearnerPipelineDF] = None,
         sample: Optional[Sample] = None,
         *,
-        crossfit: Optional[LearnerCrossfit[T_LearnerPipelineDF]],
+        crossfit: Optional[LearnerCrossfit[T_LearnerPipelineDF]] = None,
         **fit_params,
     ) -> T_Self:
         """
