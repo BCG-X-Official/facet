@@ -381,7 +381,7 @@ class ShapInteractionValueDecomposer(ShapValueDecomposer):
                         f"high indirect synergy {_for_target(_t)}"
                         f"phi[{features[_i]}, {features[_j]}]: "
                         "total of direct and indirect synergy is "
-                        f"{(s_i_j[_t, _i, _j] - 1) * 100:.3g}% of direct synergy. "
+                        f"{s_i_j[_t, _i, _j] * 100:.3g}% of direct synergy. "
                         f"{_relative_direct_synergy(_t, _i, _j)}"
                     )
 
