@@ -266,16 +266,21 @@ class Sample:
         :return: the resulting, new sample object
         """
         target = self.target
+        target_columns = self.target_columns
 
         if not features.index.isin(self.index).all():
             raise ValueError(
                 "index of arg features contains items that do not exist in this sample"
             )
 
-        return Sample(
-            observations=features.join(target),
-            target=target.name if isinstance(target, pd.Series) else target.columns,
-        )
+        for target_column in target_columns:
+            if target_column in features.columns:
+                raise ValueError(
+                    f'feature "{target_column}" in arg features has the same name as a '
+                    "target column"
+                )
+
+        return Sample(observations=features.join(target), target=target_columns)
 
     def __len__(self) -> int:
         """
