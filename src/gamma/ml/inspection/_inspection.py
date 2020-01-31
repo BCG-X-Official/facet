@@ -166,7 +166,8 @@ class BaseLearnerInspector(
         if crossfit is None:
             if pipeline is None or sample is None:
                 raise ValueError(
-                    "either a learner and a sample, or a crossfit must be specified"
+                    "either a learner pipeline and a sample, "
+                    "or a crossfit must be specified"
                 )
             else:
                 crossfit = LearnerCrossfit(
