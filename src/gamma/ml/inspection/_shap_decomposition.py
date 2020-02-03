@@ -348,40 +348,43 @@ class ShapInteractionValueDecomposer(ShapValueDecomposer):
 
         # issue warning messages for edge cases
 
+        def _feature(_i: int) -> str:
+            return f'"{features[_i]}"'
+
         def _for_target(_t: int) -> str:
             if targets is None:
                 return ""
             else:
-                return f'for target "{targets[_t]}" and '
+                return f' for target "{targets[_t]}"'
 
         def _relative_direct_synergy(_t: int, _i: int, _j: int) -> str:
             return (
                 f"phi[{features[_i]}, {features[_j]}] has "
                 f"{std_phi_relative_ij[_t, _i, _j] * 100:.3g}% "
                 "relative SHAP contribution; "
-                "consider increasing the minimal direct synergy threshold (currently "
+                "consider increasing the interaction noise threshold (currently "
                 f"{interaction_noise_threshold * 100:.3g}%). "
             )
 
         def _test_synergy_feasibility() -> None:
             for _t, _i, _j in np.argwhere(s_i_j < 1):
                 if _i != _j:
-                    log.warning(
-                        f"contravariant indirect synergy {_for_target(_t)}"
-                        f"phi[{features[_i]}, {features[_j]}]: "
+                    log.debug(
+                        "contravariant indirect synergy "
+                        f"between {_feature(_i)} and {_feature(_j)}{_for_target(_t)}: "
                         "indirect synergy calculated as "
                         f"{(s_i_j[_t, _i, _j] - 1) * 100:.3g}% "
                         "of direct synergy; setting indirect synergy to 0. "
                         f"{_relative_direct_synergy(_t, _i, _j)}"
                     )
 
-            for _t, _i, _j in np.argwhere(s_i_j > np.log2(n_features)):
+            for _t, _i, _j in np.argwhere(s_i_j - 1 > np.log2(n_features)):
                 if _i != _j:
                     log.warning(
-                        f"high indirect synergy {_for_target(_t)}"
-                        f"phi[{features[_i]}, {features[_j]}]: "
-                        "total of direct and indirect synergy is "
-                        f"{(s_i_j[_t, _i, _j] - 1) * 100:.3g}% of direct synergy. "
+                        "high indirect synergy "
+                        f"between {_feature(_i)} and {_feature(_j)}{_for_target(_t)}: "
+                        "total synergy is "
+                        f"{s_i_j[_t, _i, _j] * 100:.3g}% of direct synergy. "
                         f"{_relative_direct_synergy(_t, _i, _j)}"
                     )
 

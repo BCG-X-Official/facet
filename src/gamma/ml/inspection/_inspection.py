@@ -8,12 +8,13 @@ from typing import *
 
 import numpy as np
 import pandas as pd
+from numpy.random.mtrand import RandomState
 from scipy.cluster.hierarchy import linkage
 from scipy.spatial.distance import squareform
 from shap import KernelExplainer, TreeExplainer
 from shap.explainers.explainer import Explainer
 
-from gamma.common import deprecated
+from gamma.common import deprecated, deprecation_warning
 from gamma.common.fit import FittableMixin, T_Self
 from gamma.common.parallelization import ParallelizableMixin
 from gamma.ml import Sample
@@ -32,6 +33,7 @@ from gamma.ml.inspection._shap_decomposition import (
     ShapInteractionValueDecomposer,
     ShapValueDecomposer,
 )
+from gamma.ml.validation import FullSampleCV
 from gamma.sklearndf import BaseLearnerDF
 from gamma.sklearndf.pipeline import (
     BaseLearnerPipelineDF,
@@ -83,7 +85,9 @@ class BaseLearnerInspector(
         *,
         explainer_factory: Optional[ExplainerFactory] = None,
         shap_interaction: bool = True,
+        n_fits: int = None,
         min_direct_synergy: Optional[float] = None,
+        random_state: Union[int, RandomState, None] = None,
         n_jobs: Optional[int] = None,
         shared_memory: Optional[bool] = None,
         pre_dispatch: Optional[Union[str, int]] = None,
@@ -115,7 +119,9 @@ class BaseLearnerInspector(
             else tree_explainer_factory
         )
         self._shap_interaction = shap_interaction
+        self._n_fits = 1 if n_fits is None else n_fits
         self._min_direct_synergy = min_direct_synergy
+        self._random_state = random_state
 
         self._crossfit: Optional[LearnerCrossfit[T_LearnerPipelineDF]] = None
         self._shap_calculator: Optional[ShapCalculator] = None
@@ -132,16 +138,61 @@ class BaseLearnerInspector(
     )
 
     def fit(
-        self: T_Self, crossfit: LearnerCrossfit[T_LearnerPipelineDF], **fit_params
+        self: T_Self,
+        pipeline: Optional[T_LearnerPipelineDF] = None,
+        sample: Optional[Sample] = None,
+        *,
+        crossfit: Optional[LearnerCrossfit[T_LearnerPipelineDF]] = None,
+        **fit_params,
     ) -> T_Self:
         """
-        :param crossfit: crossfit of the model to be inspected
+        Fit the inspector with the given model.
+
+        Instead of passing a model, a fitted crossfit can be passed which will be used
+        to create averaged SHAP explanations for each observation across all
+        fits.
+        Exactly one of the model or crossfit parameters must be specified;
+        if none or both are given then a `ValueError` will be raised.
+
+        :param pipeline: learner pipeline to be inspected
+        :param sample: the observations to be explained during model inspection
+        :param crossfit: crossfit of the model to be inspected (deprecated)
+        :param fit_params: optional keywords arguments to be passed on to the model's
         :return: `self`
         """
-        if not crossfit.is_fitted:
-            raise ValueError("arg crossfit needs to be fitted")
 
         self: BaseLearnerInspector  # support type hinting in PyCharm
+
+        if crossfit is None:
+            if pipeline is None or sample is None:
+                raise ValueError(
+                    "either a learner pipeline and a sample, "
+                    "or a crossfit must be specified"
+                )
+            else:
+                crossfit = LearnerCrossfit(
+                    pipeline=pipeline,
+                    cv=FullSampleCV(n_splits=self._n_fits),
+                    shuffle_features=self._n_fits > 1,
+                    random_state=self._random_state,
+                    n_jobs=self.n_jobs,
+                    shared_memory=self.shared_memory,
+                    pre_dispatch=self.pre_dispatch,
+                    verbose=self.verbose,
+                ).fit(sample=sample, **fit_params)
+        else:
+            if pipeline is not None or sample is not None:
+                raise ValueError(
+                    "cannot specify a crossfit and a model or sample at the same time"
+                )
+            deprecation_warning(
+                "Fitting a model inspector with a crossfit is deprecated and will be "
+                "removed in a future release. "
+                "Pass a learner pipeline and a sample instead.",
+                stacklevel=2,
+            )
+            if not crossfit.is_fitted:
+                raise ValueError("arg crossfit needs to be fitted")
 
         if self._shap_interaction:
             shap_calculator = self._shap_interaction_values_calculator_cls()(
