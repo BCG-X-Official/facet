@@ -378,7 +378,7 @@ class ShapInteractionValueDecomposer(ShapValueDecomposer):
                         f"{_relative_direct_synergy(_t, _i, _j)}"
                     )
 
-            for _t, _i, _j in np.argwhere(s_i_j > np.log2(n_features)):
+            for _t, _i, _j in np.argwhere(s_i_j - 1 > np.log2(n_features)):
                 if _i != _j:
                     log.warning(
                         "high indirect synergy "
