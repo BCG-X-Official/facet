@@ -369,7 +369,7 @@ class ShapInteractionValueDecomposer(ShapValueDecomposer):
         def _test_synergy_feasibility() -> None:
             for _t, _i, _j in np.argwhere(s_i_j < 1):
                 if _i != _j:
-                    log.warning(
+                    log.debug(
                         "contravariant indirect synergy "
                         f"between {_feature(_i)} and {_feature(_j)}{_for_target(_t)}: "
                         "indirect synergy calculated as "
