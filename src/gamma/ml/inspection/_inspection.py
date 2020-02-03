@@ -662,11 +662,10 @@ class BaseLearnerInspector(
 
     @staticmethod
     def __warn_about_shap_correlation_method() -> None:
-        warnings.warn(
+        deprecation_warning(
             "SHAP correlation method for feature association is deprecated and "
             "will be removed in the next release",
-            DeprecationWarning,
-            stacklevel=2,
+            stacklevel=3,
         )
 
 
