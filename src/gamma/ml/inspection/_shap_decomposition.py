@@ -383,7 +383,7 @@ class ShapInteractionValueDecomposer(ShapValueDecomposer):
                     log.warning(
                         "high indirect synergy "
                         f"between {_feature(_i)} and {_feature(_j)}{_for_target(_t)}: "
-                        "total of direct and indirect synergy is "
+                        "total synergy is "
                         f"{s_i_j[_t, _i, _j] * 100:.3g}% of direct synergy. "
                         f"{_relative_direct_synergy(_t, _i, _j)}"
                     )
