@@ -443,16 +443,16 @@ class ShapInteractionValueDecomposer(ShapValueDecomposer):
         # variances of SHAP vectors
         # shape: (n_targets, n_features, 1)
         # i.e. adding a second, empty feature dimension to enable correct broadcasting
-        var_phi_ix = np.diagonal(cov_phi_i_phi_j, axis1=1, axis2=2)[:, :, np.newaxis]
+        var_phi_i = np.diagonal(cov_phi_i_phi_j, axis1=1, axis2=2)[:, :, np.newaxis]
 
         # var(tau[i, j])
         # variances of SHAP vectors minus total synergy
         # shape: (n_targets, n_features, n_features)
         var_tau_ij = (
-            var_phi_ix - 2 * s_i_j * cov_phi_i_phi_ij + s_i_j * s_i_j * var_phi_ij
+            var_phi_i - 2 * s_i_j * cov_phi_i_phi_ij + s_i_j * s_i_j * var_phi_ij
         )
 
-        # var(phi[i]) + var(phi_i[j])
+        # var(phi[i]) + var(phi[j])
         # Sum of covariances per feature pair (this is a diagonal matrix)
         # shape: (n_targets, n_features, n_features)
         var_tau_ij_plus_var_tau_ji = var_tau_ij + _transpose(var_tau_ij)
@@ -544,18 +544,18 @@ class ShapInteractionValueDecomposer(ShapValueDecomposer):
         # intermediate result to calculate upsilon[i, j], see next step
 
         cov_phi_i_epsilon_ij_2x = epsilon_tau_ratio_2x * (
-            var_phi_ix + cov_phi_i_phi_j - (s_i_j + s_j_i) * cov_phi_i_phi_ij
+            var_phi_i + cov_phi_i_phi_j - (s_i_j + s_j_i) * cov_phi_i_phi_ij
         )
 
-        # std(upsilon[i, j])
-        # where upsilon[i, j] = phi[i] + phi[j] - 2 * epsilon[i, j]
+        # std(upsilon[i, j] + upsilon[j, i])
+        # where upsilon[i, j] + + upsilon[j, i] = phi[i] + phi[j] - 2 * epsilon[i, j]
         # shape: (n_targets, n_features, n_features)
         # this is the sum of complementary contributions of feature i and feature j,
         # i.e., deducting the redundant contributions
 
         std_upsilon_ij_plus_upsilon_ji = _sqrt(
-            var_phi_ix
-            + var_phi_ix.swapaxes(1, 2)
+            var_phi_i
+            + var_phi_i.swapaxes(1, 2)
             + var_epsilon_ij_4x
             + 2
             * (
