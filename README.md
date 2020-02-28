@@ -9,16 +9,17 @@ ML related operations
 - `gamma.ml.viz` Drawer and styles for Dendrograms, OOP model of a scipy linkage matrix
 
 # Installation
-The pip-project `gamma-ml` can be installed using:
-- `pip install git+ssh://git@git.sourceai.io/BCG/gamma-ml.git#egg=gamma.ml`
- (*latest version*)
- - Check [this page](./../../releases) for available releases and use 
- `pip install git+ssh://git@git.sourceai.io/BCG/gamma-ml.git@[VERSION-TAG]#egg=gamma.ml`
- to install a specific version. E.g. to install `1.0.0` use:
- `pip install git+ssh://git@git.sourceai.io/BCG/gamma-ml.git@1.0.0#egg=gamma.ml`
+Latest stable conda package `gamma-ml` can be installed using:
+`conda install -c https://machine-1511619-alpha:bcggamma2019@artifactory.gamma.bcg.com/artifactory/api/conda/local-conda-1511619-alpha-01 gamma-ml`
 
-Ensure that you have set up a working SSH key on git.sourceai.io!
-
+Or add the alpha channel and this package to your `environment.yml`:
+```
+channels:
+  - conda-forge
+  - https://machine-1511619-alpha:bcggamma2019@artifactory.gamma.bcg.com/artifactory/api/conda/local-conda-1511619-alpha-01
+dependencies:
+    - gamma-ml
+```
 # Documentation
 Documentation for all of alpha's Python projects is available at: 
 https://git.sourceai.io/pages/alpha/alpha/
