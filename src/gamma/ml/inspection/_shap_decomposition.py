@@ -78,8 +78,8 @@ class ShapValueDecomposer(FittableMixin[ShapCalculator]):
         """
         The matrix of relative association for all feature pairs.
 
-        Values range between 0.0 (fully associated contributions) and 1.0
-        (fully independent contributions).
+        Values range between 0.0 (fully independent contributions) and 1.0
+        (fully associated contributions).
 
         Raises an error if this SHAP value decomposer has not been fitted.
         """
