@@ -10,7 +10,7 @@ import pandas as pd
 from sklearn.model_selection import BaseCrossValidator
 from sklearn.utils import check_random_state
 
-__all__ = ["BootstrapCV", "StationaryBootstrapCV", "FullSampleCV"]
+__all__ = ["BootstrapCV", "StationaryBootstrapCV", "FullSampleValidator"]
 
 
 class _BaseBootstrapCV(BaseCrossValidator):
@@ -198,16 +198,20 @@ class StationaryBootstrapCV(_BaseBootstrapCV):
         return train
 
 
-class FullSampleCV(BaseCrossValidator):
+class FullSampleValidator(BaseCrossValidator):
     """
-    A trivial cross-validator where every test/train split has the full sample both in
+    A trivial validator where every test/train split has the full sample both in
     test and in train.
 
     This can be useful to construct a :class:`~gamma.ml.crossfit.LearnerCrossfit` which
     only shuffles the feature order across fits.
     """
 
-    def __init__(self, n_splits: int = 100):
+    def __init__(self, n_splits: int = 1):
+        """
+        :param n_splits: number of identical, full-sample "splits" to generate \
+            (default: 1)
+        """
         self.n_splits = n_splits
 
     # noinspection PyPep8Naming
