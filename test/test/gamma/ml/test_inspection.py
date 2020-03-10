@@ -45,7 +45,7 @@ N_SPLITS = K_FOLDS * 2
 def test_model_inspection(n_jobs, boston_sample: Sample) -> None:
     # checksums for the model inspection test - one for the LGBM, one for the SVR
     checksums_shap = (17573313757033027070, 13285572916961982080)
-    checksum_corr_matrix = (13028973179387096991, 18397646897559448061)
+    checksum_association_matrix = (3042268689643595419, 11367664364506397399)
     checksum_learner_scores = -218.87516793944133
     checksum_learner_ranks = "0972fa60fd9beb2c1f8be21324506f4d"
 
@@ -137,9 +137,7 @@ def test_model_inspection(n_jobs, boston_sample: Sample) -> None:
         )
 
         # correlated shap matrix: feature dependencies
-        corr_matrix: pd.DataFrame = model_inspector.feature_association_matrix(
-            shap_correlation_method=True
-        )
+        corr_matrix: pd.DataFrame = model_inspector.feature_association_matrix()
 
         # check number of rows
         assert len(corr_matrix) == len(test_sample.feature_columns)
@@ -157,7 +155,7 @@ def test_model_inspection(n_jobs, boston_sample: Sample) -> None:
         # check actual values using checksum:
         assert (
             np.sum(hash_pandas_object(corr_matrix.round(decimals=4)).values)
-            == checksum_corr_matrix[model_index]
+            == checksum_association_matrix[model_index]
         )
 
         linkage_tree = model_inspector.feature_association_linkage()
@@ -176,7 +174,7 @@ def test_model_inspection_with_encoding(
 ) -> None:
     # define checksums for this test
     checksum_shap = 18085752998272939418
-    checksum_corr_matrix = 12333781666566651819
+    checksum_association_matrix = 6630816057490214231
 
     checksum_learner_scores = -7.939242
     checksum_learner_ranks = "5e4b373d56a53647c9483a5606235c9a"
@@ -222,14 +220,12 @@ def test_model_inspection_with_encoding(
     )
 
     # correlated shap matrix: feature dependencies
-    corr_matrix: pd.DataFrame = mi.feature_association_matrix(
-        shap_correlation_method=True
-    )
+    corr_matrix: pd.DataFrame = mi.feature_association_matrix()
 
     # check actual values using checksum:
     assert (
         np.sum(hash_pandas_object(corr_matrix.round(decimals=4)).values)
-        == checksum_corr_matrix
+        == checksum_association_matrix
     )
 
     # cluster associated features
@@ -270,7 +266,7 @@ def test_model_inspection_classifier(n_jobs, iris_sample: Sample) -> None:
 
     # define checksums for this test
     checksum_shap = 6629520117757454166
-    checksum_corr_matrix = 11698715255607208353
+    checksum_association_matrix = 3314569924031490295
     checksum_learner_scores = 2.0
     checksum_learner_ranks = "a8fe61f0f98c078fbcf427ad344c1749"
 
@@ -331,9 +327,7 @@ def test_model_inspection_classifier(n_jobs, iris_sample: Sample) -> None:
     assert len(shap_matrix) == len(test_sample)
 
     # correlated shap matrix: feature dependencies
-    corr_matrix: pd.DataFrame = model_inspector.feature_association_matrix(
-        shap_correlation_method=True
-    )
+    corr_matrix: pd.DataFrame = model_inspector.feature_association_matrix()
     log.info(corr_matrix)
     # check number of rows
     assert len(corr_matrix) == len(test_sample.feature_columns)
@@ -347,7 +341,7 @@ def test_model_inspection_classifier(n_jobs, iris_sample: Sample) -> None:
     # check actual values using checksum:
     assert (
         np.sum(hash_pandas_object(corr_matrix.round(decimals=4)).values)
-        == checksum_corr_matrix
+        == checksum_association_matrix
     )
 
     linkage_tree = model_inspector.feature_association_linkage()
