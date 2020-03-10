@@ -2,7 +2,6 @@
 Core implementation of :mod:`gamma.ml.inspection`
 """
 import logging
-import warnings
 from abc import ABC, abstractmethod
 from typing import *
 
@@ -14,7 +13,6 @@ from scipy.spatial.distance import squareform
 from shap import KernelExplainer, TreeExplainer
 from shap.explainers.explainer import Explainer
 
-from gamma.common import deprecation_warning
 from gamma.common.fit import FittableMixin, T_Self
 from gamma.common.parallelization import ParallelizableMixin
 from gamma.ml import Sample
@@ -33,7 +31,6 @@ from gamma.ml.inspection._shap_decomposition import (
     ShapInteractionValueDecomposer,
     ShapValueDecomposer,
 )
-from gamma.ml.validation import FullSampleCV
 from gamma.sklearndf import BaseLearnerDF
 from gamma.sklearndf.pipeline import (
     BaseLearnerPipelineDF,
@@ -80,10 +77,8 @@ class BaseLearnerInspector(
     def __init__(
         self,
         *,
-        pipeline: Union[T_LearnerPipelineDF, LearnerCrossfit[T_LearnerPipelineDF]],
         explainer_factory: Optional[ExplainerFactory] = None,
         shap_interaction: bool = True,
-        n_fits: int = None,
         min_direct_synergy: Optional[float] = None,
         random_state: Union[int, RandomState, None] = None,
         n_jobs: Optional[int] = None,
@@ -92,7 +87,6 @@ class BaseLearnerInspector(
         verbose: Optional[int] = None,
     ) -> None:
         """
-        :param pipeline: the learner pipeline to be inspected
         :param explainer_factory: optional function that creates a shap Explainer \
             (default: :func:``.tree_explainer_factory``)
         :param shap_interaction: if `True`, calculate SHAP interaction values, else \
@@ -112,30 +106,18 @@ class BaseLearnerInspector(
             verbose=verbose,
         )
 
-        self._pipeline = pipeline
         self._explainer_factory = (
             explainer_factory
             if explainer_factory is not None
             else tree_explainer_factory
         )
         self._shap_interaction = shap_interaction
-        self._n_fits = 1 if n_fits is None else n_fits
         self._min_direct_synergy = min_direct_synergy
         self._random_state = random_state
 
         self._crossfit: Optional[LearnerCrossfit[T_LearnerPipelineDF]] = None
         self._shap_calculator: Optional[ShapCalculator] = None
         self._shap_decomposer: Optional[ShapValueDecomposer] = None
-
-        if isinstance(pipeline, LearnerCrossfit):
-            deprecation_warning(
-                "Using a model inspector with a crossfit is deprecated and will be "
-                "removed in a future release. Instead, pass a learner pipeline then "
-                "fit the inspector with a sample.",
-                stacklevel=2,
-            )
-            if not pipeline.is_fitted:
-                raise ValueError("crossfit in arg pipeline is not fitted")
 
     # dynamically complete the __init__ docstring
     # noinspection PyTypeChecker
@@ -147,37 +129,19 @@ class BaseLearnerInspector(
         + ParallelizableMixin.__init__.__doc__
     )
 
-    def fit(self: T_Self, sample: Sample, **fit_params) -> T_Self:
+    def fit(self: T_Self, crossfit: LearnerCrossfit, **fit_params) -> T_Self:
         """
         Fit the inspector with the given sample.
 
-        :param sample: the observations to be explained during model inspection
-        :param fit_params: optional keywords arguments to be passed on to the model's
+        :param crossfit: the model crossfit to be explained during model inspection
+        :param fit_params: additional keyword arguments (ignored)
         :return: `self`
         """
 
         self: BaseLearnerInspector  # support type hinting in PyCharm
 
-        pipeline = self._pipeline
-        if isinstance(pipeline, LearnerCrossfit):
-            if sample is not None:
-                warnings.warn(
-                    "ignoring arg sample: model inspector was initialised "
-                    "with a crossfit",
-                    stacklevel=2,
-                )
-            crossfit = pipeline
-        else:
-            crossfit = LearnerCrossfit(
-                pipeline=pipeline,
-                cv=FullSampleCV(n_splits=self._n_fits),
-                shuffle_features=self._n_fits > 1,
-                random_state=self._random_state,
-                n_jobs=self.n_jobs,
-                shared_memory=self.shared_memory,
-                pre_dispatch=self.pre_dispatch,
-                verbose=self.verbose,
-            ).fit(sample=sample, **fit_params)
+        if not crossfit.is_fitted:
+            raise ValueError("crossfit in arg pipeline is not fitted")
 
         if self._shap_interaction:
             shap_calculator = self._shap_interaction_values_calculator_cls()(
