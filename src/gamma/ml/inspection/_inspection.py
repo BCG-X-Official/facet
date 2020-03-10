@@ -14,7 +14,7 @@ from scipy.spatial.distance import squareform
 from shap import KernelExplainer, TreeExplainer
 from shap.explainers.explainer import Explainer
 
-from gamma.common import deprecated, deprecation_warning
+from gamma.common import deprecation_warning
 from gamma.common.fit import FittableMixin, T_Self
 from gamma.common.parallelization import ParallelizableMixin
 from gamma.ml import Sample
@@ -312,7 +312,7 @@ class BaseLearnerInspector(
 
         return feature_importance_sr
 
-    def feature_association_matrix(self, shap_correlation_method=False) -> pd.DataFrame:
+    def feature_association_matrix(self) -> pd.DataFrame:
         """
         Calculate the Pearson correlation matrix of the shap values.
 
@@ -320,16 +320,10 @@ class BaseLearnerInspector(
           and values as the Pearson correlations of the shap values of features
         """
         self._ensure_fitted()
-        if shap_correlation_method:
-            # noinspection PyDeprecation
-            self.__warn_about_shap_correlation_method()
-            return self._feature_matrix_to_df(self._shap_correlation_matrix())
 
         return self._shap_decomposer.association
 
-    def feature_association_linkage(
-        self, shap_correlation_method=False
-    ) -> Union[LinkageTree, List[LinkageTree]]:
+    def feature_association_linkage(self) -> Union[LinkageTree, List[LinkageTree]]:
         """
         Calculate the :class:`.LinkageTree` based on the
         :meth:`.feature_association_matrix`.
@@ -338,14 +332,8 @@ class BaseLearnerInspector(
             list of linkage trees if the base estimator is a multi-output model
         """
         self._ensure_fitted()
-        if shap_correlation_method:
-            # noinspection PyDeprecation
-            self.__warn_about_shap_correlation_method()
-            association_matrix = self._shap_correlation_matrix()
-        else:
-            association_matrix = self._shap_decomposer.association_rel_
         return self._linkage_from_affinity_matrix(
-            feature_affinity_matrix=association_matrix
+            feature_affinity_matrix=self._shap_decomposer.association_rel_
         )
 
     def feature_synergy_matrix(self) -> pd.DataFrame:
@@ -589,45 +577,6 @@ class BaseLearnerInspector(
         self._ensure_shap_interaction()
         return cast(ShapInteractionValueDecomposer, self._shap_decomposer)
 
-    def _shap_correlation_matrix(self) -> np.ndarray:
-        # return an array with a pearson correlation matrix of the shap matrix
-        # for each target, with shape (n_targets, n_features, n_features)
-
-        n_targets: int = self._n_targets
-        n_features: int = self._n_features
-
-        # get the shap values as an array of shape
-        # (n_targets, n_observations, n_features);
-        # this is achieved by re-shaping the shap values to get the additional "target"
-        # dimension, then swapping the target and observation dimensions
-        shap_matrix_per_target = (
-            self.shap_values()
-            .values.reshape((-1, n_targets, n_features))
-            .swapaxes(0, 1)
-        )
-
-        def _ensure_diagonality(matrix: np.ndarray) -> np.ndarray:
-            # remove potential floating point errors
-            matrix = (matrix + matrix.T) / 2
-
-            # replace nan values with 0.0 = no association when correlation is undefined
-            np.nan_to_num(matrix, copy=False)
-
-            # set the matrix diagonals to 1.0 = full association of each feature with
-            # itself
-            np.fill_diagonal(matrix, 1.0)
-
-            return matrix
-
-        # calculate the shap correlation matrix for each target, and stack matrices
-        # horizontally
-        return np.array(
-            [
-                _ensure_diagonality(np.corrcoef(shap_for_target, rowvar=False))
-                for shap_for_target in shap_matrix_per_target
-            ]
-        )
-
     @staticmethod
     @abstractmethod
     def _shap_values_calculator_cls() -> Type[ShapValuesCalculator]:
@@ -639,34 +588,6 @@ class BaseLearnerInspector(
         ShapInteractionValuesCalculator
     ]:
         pass
-
-    @deprecated(
-        message="Use method shap_values instead. "
-        "This method will be removed in a future release."
-    )
-    def shap_matrix(self) -> pd.DataFrame:
-        """
-        Deprecated. Use :meth:`.shap_values` instead.
-        """
-        return self.shap_values()
-
-    @deprecated(
-        message="Use method shap_interaction_values instead. "
-        "This method will be removed in a future release."
-    )
-    def interaction_matrix(self) -> pd.DataFrame:
-        """
-        Deprecated. Use :meth:`.shap_interaction_values` instead.
-        """
-        return self.shap_interaction_values()
-
-    @staticmethod
-    def __warn_about_shap_correlation_method() -> None:
-        deprecation_warning(
-            "SHAP correlation method for feature association is deprecated and "
-            "will be removed in the next release",
-            stacklevel=3,
-        )
 
 
 class RegressorInspector(
