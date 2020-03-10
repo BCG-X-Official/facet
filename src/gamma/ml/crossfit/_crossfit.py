@@ -4,8 +4,8 @@ Core implementation of :mod:`gamma.ml.crossfit`
 import logging
 from abc import ABC
 from typing import *
+from copy import copy
 
-import numpy as np
 import pandas as pd
 from numpy.random.mtrand import RandomState
 from sklearn.model_selection import BaseCrossValidator
@@ -87,7 +87,6 @@ class LearnerCrossfit(
 
         self._model_by_split: Optional[List[T_LearnerPipelineDF]] = None
         self._training_sample: Optional[Sample] = None
-        self._feature_order_by_split: Optional[List[np.ndarray]] = None
 
     __init__.__doc__ += ParallelizableMixin.__init__.__doc__
 
@@ -146,11 +145,34 @@ class LearnerCrossfit(
                     feature_sequence_iter, self.cv.split(features, target)
                 )
             )
-            self._model_by_split = model_by_split
 
+        self._model_by_split = model_by_split
         self._training_sample = sample
 
         return self
+
+    def resize(self: T_Self, n_splits: int) -> T_Self:
+        """
+        Reduce the size of this crossfit by removing a subset of the fits.
+        :param n_splits: the number of fits to keep. Must be lower than the number of
+            fits
+        :return:
+        """
+        self: LearnerCrossfit
+
+        # ensure that arg n_split has a valid value
+        if n_splits > self.get_n_splits():
+            raise ValueError(
+                f"arg n_splits={n_splits} must not be greater than the number of splits"
+                f"in the original crossfit ({self.get_n_splits()} splits)"
+            )
+        elif n_splits < 1:
+            raise ValueError(f"arg n_splits={n_splits} must be a positive integer")
+
+        # copy self and only keep the specified number of fits
+        new_crossfit = copy(self)
+        new_crossfit._model_by_split = self._model_by_split[:n_splits]
+        return new_crossfit
 
     @property
     def is_fitted(self) -> bool:
@@ -169,8 +191,17 @@ class LearnerCrossfit(
         :return: an iterator of all train/test splits used by this crossfit
         """
         self._ensure_fitted()
-        return self.cv.split(
-            X=self._training_sample.features, y=self._training_sample.target
+
+        # ensure we do not return more splits than we have fitted models
+        # this is relevant if this is a resized learner crossfit
+        return (
+            s
+            for s, _ in zip(
+                self.cv.split(
+                    X=self._training_sample.features, y=self._training_sample.target
+                ),
+                self._model_by_split,
+            )
         )
 
     def models(self) -> Iterator[T_LearnerPipelineDF]:
