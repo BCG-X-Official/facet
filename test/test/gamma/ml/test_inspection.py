@@ -297,7 +297,12 @@ def test_model_inspection_classifier(n_jobs, iris_sample: Sample) -> None:
     )
 
     model_ranker = ClassifierRanker(
-        grid=models, cv=test_cv, scoring="f1_macro", n_jobs=n_jobs
+        grid=models,
+        cv=test_cv,
+        scoring="f1_macro",
+        shuffle_features=True,
+        random_state=42,
+        n_jobs=n_jobs,
     ).fit(sample=test_sample)
 
     log.debug(f"\n{model_ranker.summary_report(max_learners=10)}")
@@ -309,7 +314,7 @@ def test_model_inspection_classifier(n_jobs, iris_sample: Sample) -> None:
         first_n_learners=10,
     )
 
-    crossfit = model_ranker.best_model_crossfit(shuffle_features=True, random_state=42)
+    crossfit = model_ranker.best_model_crossfit
 
     model_inspector = ClassifierInspector(shap_interaction=False).fit(crossfit=crossfit)
     # make and check shap value matrix

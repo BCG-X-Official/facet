@@ -214,6 +214,8 @@ class BaseLearnerRanker(
         ] = None,
         ranking_scorer: Callable[[float, float], float] = None,
         ranking_metric: str = "test_score",
+        shuffle_features: Optional[bool] = None,
+        random_state: Union[int, RandomState, None] = None,
         n_jobs: Optional[int] = None,
         shared_memory: bool = False,
         pre_dispatch: str = "2*n_jobs",
@@ -225,7 +227,7 @@ class BaseLearnerRanker(
         :param cv: a cross validator (e.g., \
             :class:`~gamma.ml.validation.BootstrapCV`)
         :param scoring: a scorer to use when doing CV within GridSearch, defaults to \
-            :meth:`.default_ranking_scorer`
+            `None`
         :param ranking_scorer: scoring function used for ranking across crossfit, \
             taking mean and standard deviation of the ranking scores_for_split and \
             returning the overall ranking score \
@@ -233,6 +235,10 @@ class BaseLearnerRanker(
         :param ranking_metric: the scoring to be used for pipeline ranking, \
             given as a name to be used to look up the right Scoring object in the \
             LearnerEvaluation.scoring dictionary (default: 'test_score').
+        :param shuffle_features: if `True`, shuffle column order of features for every \
+            crossfit (default: `False`)
+        :param random_state: optional random seed or random state for shuffling the \
+            feature column order
         :param n_jobs: number of jobs to use in parallel; \
             if `None`, use joblib default (default: `None`).
         :param shared_memory: if `True` use threads in the parallel runs. If `False` \
@@ -257,6 +263,8 @@ class BaseLearnerRanker(
             else ranking_scorer
         )
         self._ranking_metric = ranking_metric
+        self._shuffle_features = shuffle_features
+        self._random_state = random_state
 
         # initialise state
         self._sample: Optional[Sample] = None
@@ -307,47 +315,22 @@ class BaseLearnerRanker(
         """
         return self._best_pipeline().fit(X=self._sample.features, y=self._sample.target)
 
-    def best_model_crossfit(
-        self,
-        cv: Optional[BaseCrossValidator] = None,
-        shuffle_features: Optional[bool] = None,
-        random_state: Union[int, RandomState, None] = None,
-        n_jobs: Optional[int] = None,
-        shared_memory: Optional[bool] = None,
-        pre_dispatch: Optional[str] = None,
-        verbose: Optional[int] = None,
-    ) -> T_LearnerCrossfit:
+    @property
+    def best_model_crossfit(self,) -> T_LearnerCrossfit:
         """
         The crossfit for the best model, fitted with the same sample and fit
         parameters used to fit this ranker.
-
-        :param cv: the cross-validator to use for generating the crossfit (default: \
-            use this ranker's cross-validator)
-        :param shuffle_features: if `True`, shuffle column order of features for every \
-            crossfit (default: use crossfit default behaviour)
-        :param random_state: optional random seed or random state for shuffling the \
-            feature column order
-        :param n_jobs: number of threads to use \
-            (default: inherit this ranker's setting)
-        :param shared_memory: whether to use threading with shared memory \
-            (default: inherit this ranker's setting)
-        :param pre_dispatch: maximum number of the data to make \
-            (default: inherit this ranker's setting)
-        :param verbose: verbosity of parallel processing \
-            (default: inherit this ranker's setting)
         """
 
         return LearnerCrossfit(
             pipeline=self._best_pipeline(),
-            cv=self._cv if cv is None else cv,
-            shuffle_features=shuffle_features,
-            random_state=random_state,
-            n_jobs=self.n_jobs if n_jobs is None else n_jobs,
-            shared_memory=(
-                self.shared_memory if shared_memory is None else shared_memory
-            ),
-            pre_dispatch=self.pre_dispatch if pre_dispatch is None else pre_dispatch,
-            verbose=self.verbose if verbose is None else verbose,
+            cv=self._cv,
+            shuffle_features=self._shuffle_features,
+            random_state=self._random_state,
+            n_jobs=self.n_jobs,
+            shared_memory=self.shared_memory,
+            pre_dispatch=self.pre_dispatch,
+            verbose=self.verbose,
         ).fit(sample=self._sample, **self._fit_params)
 
     def summary_report(self, max_learners: Optional[int] = None) -> str:
