@@ -19,6 +19,11 @@ from gamma.sklearndf.pipeline import BaseLearnerPipelineDF
 
 log = logging.getLogger(__name__)
 
+
+# if True, use the full available sample to calculate SHAP values; otherwise only
+# use the train sample of each fold
+_EXPLAIN_FULL_SAMPLE = True
+
 #
 # Type variables
 #
@@ -32,7 +37,7 @@ T_LearnerPipelineDF = TypeVar("T_LearnerPipelineDF", bound=BaseLearnerPipelineDF
 ExplainerFactory = Callable[[BaseEstimator, pd.DataFrame], Explainer]
 
 ShapToDataFrameFunction = Callable[
-    [List[np.ndarray], np.ndarray, pd.Index], List[pd.DataFrame]
+    [List[np.ndarray], Optional[np.ndarray], pd.Index], List[pd.DataFrame]
 ]
 
 
@@ -143,7 +148,7 @@ class ShapCalculator(
                 self._delayed(self._shap_for_split)(
                     model,
                     training_sample,
-                    oob_split,
+                    None if _EXPLAIN_FULL_SAMPLE else oob_split,
                     self.feature_index_,
                     explainer_factory,
                     self._raw_shap_to_df,
@@ -165,7 +170,7 @@ class ShapCalculator(
     def _shap_for_split(
         model: BaseLearnerPipelineDF,
         training_sample: Sample,
-        oob_split: np.ndarray,
+        oob_split: Optional[np.ndarray],
         features_out: pd.Index,
         explainer_factory_fn: ExplainerFactory,
         shap_matrix_for_split_to_df_fn: ShapToDataFrameFunction,
@@ -174,13 +179,19 @@ class ShapCalculator(
 
     @staticmethod
     def _x_oob(
-        model: BaseLearnerPipelineDF, training_sample: Sample, oob_split: np.ndarray
+        model: BaseLearnerPipelineDF,
+        training_sample: Sample,
+        oob_split: Optional[np.ndarray],
     ) -> pd.DataFrame:
         # get the out-of-bag subsample of the training sample, with feature columns
         # in the sequence that was used to fit the learner
 
         # get the features of all out-of-bag observations
-        x_oob = training_sample.subsample(loc=oob_split).features
+        x_oob = (
+            training_sample.features
+            if oob_split is None
+            else training_sample.subsample(loc=oob_split).features
+        )
 
         # pre-process the features
         if model.preprocessing is not None:
@@ -195,7 +206,7 @@ class ShapCalculator(
     @abstractmethod
     def _raw_shap_to_df(
         raw_shap_tensors: List[np.ndarray],
-        observations: np.ndarray,
+        observations: Union[pd.Index, np.ndarray],
         features_in_split: pd.Index,
     ) -> List[pd.DataFrame]:
         """
@@ -249,7 +260,7 @@ class ShapValuesCalculator(
     def _shap_for_split(
         model: BaseLearnerPipelineDF,
         training_sample: Sample,
-        oob_split: np.ndarray,
+        oob_split: Optional[np.ndarray],
         features_out: pd.Index,
         explainer_factory_fn: ExplainerFactory,
         shap_matrix_for_split_to_df_fn: ShapToDataFrameFunction,
@@ -272,7 +283,9 @@ class ShapValuesCalculator(
         shap_values_df_per_target: List[pd.DataFrame] = [
             shap.reindex(columns=features_out, copy=False, fill_value=0.0)
             for shap in shap_matrix_for_split_to_df_fn(
-                shap_values, oob_split, x_oob.columns
+                shap_values,
+                x_oob.index if oob_split is None else oob_split,
+                x_oob.columns,
             )
         ]
 
@@ -366,7 +379,7 @@ class ShapInteractionValuesCalculator(
     def _shap_for_split(
         model: BaseLearnerPipelineDF,
         training_sample: Sample,
-        oob_split: np.ndarray,
+        oob_split: Optional[np.ndarray],
         features_out: pd.Index,
         explainer_factory_fn: ExplainerFactory,
         interaction_matrix_for_split_to_df_fn: ShapToDataFrameFunction,
@@ -395,13 +408,20 @@ class ShapInteractionValuesCalculator(
 
         interaction_matrix_per_target: List[pd.DataFrame] = [
             im.reindex(
-                index=pd.MultiIndex.from_product((oob_split, features_out)),
+                index=pd.MultiIndex.from_product(
+                    (
+                        training_sample.index if oob_split is None else oob_split,
+                        features_out,
+                    )
+                ),
                 columns=features_out,
                 copy=False,
                 fill_value=0.0,
             )
             for im in interaction_matrix_for_split_to_df_fn(
-                shap_interaction_tensors, oob_split, x_oob.columns
+                shap_interaction_tensors,
+                x_oob.index if oob_split is None else oob_split,
+                x_oob.columns,
             )
         ]
 
@@ -429,7 +449,7 @@ class RegressorShapValuesCalculator(ShapValuesCalculator):
     @staticmethod
     def _raw_shap_to_df(
         raw_shap_tensors: List[np.ndarray],
-        observations: np.ndarray,
+        observations: Union[pd.Index, np.ndarray],
         features_in_split: pd.Index,
     ) -> List[pd.DataFrame]:
         return [
@@ -448,7 +468,7 @@ class RegressorShapInteractionValuesCalculator(ShapInteractionValuesCalculator):
     @staticmethod
     def _raw_shap_to_df(
         raw_shap_tensors: List[np.ndarray],
-        observations: np.ndarray,
+        observations: Union[pd.Index, np.ndarray],
         features_in_split: pd.Index,
     ) -> List[pd.DataFrame]:
         row_index = pd.MultiIndex.from_product((observations, features_in_split))
@@ -473,7 +493,7 @@ class ClassifierShapValuesCalculator(ShapValuesCalculator):
     @staticmethod
     def _raw_shap_to_df(
         raw_shap_tensors: List[np.ndarray],
-        observations: np.ndarray,
+        observations: Union[pd.Index, np.ndarray],
         features_in_split: pd.Index,
     ) -> List[pd.DataFrame]:
         # todo: adapt this function (and override others) to support non-binary
@@ -519,7 +539,7 @@ class ClassifierShapInteractionValuesCalculator(ShapInteractionValuesCalculator)
     @staticmethod
     def _raw_shap_to_df(
         raw_shap_tensors: List[np.ndarray],
-        observations: np.ndarray,
+        observations: Union[pd.Index, np.ndarray],
         features_in_split: pd.Index,
     ) -> List[pd.DataFrame]:
         raise NotImplementedError(
