@@ -19,11 +19,6 @@ from gamma.sklearndf.pipeline import BaseLearnerPipelineDF
 
 log = logging.getLogger(__name__)
 
-
-# if True, use the full available sample to calculate SHAP values; otherwise only
-# use the train sample of each fold
-_EXPLAIN_FULL_SAMPLE = True
-
 #
 # Type variables
 #
@@ -64,17 +59,23 @@ class ShapCalculator(
         self,
         explainer_factory: ExplainerFactory,
         *,
+        explain_full_sample: bool = True,
         n_jobs: Optional[int] = None,
         shared_memory: Optional[bool] = None,
         pre_dispatch: Optional[Union[str, int]] = None,
         verbose: Optional[int] = None,
     ) -> None:
+        """
+        :param explain_full_sample: if `True`, calculate SHAP values for full sample,
+            otherwise only use oob sample for each crossfit
+        """
         super().__init__(
             n_jobs=n_jobs,
             shared_memory=shared_memory,
             pre_dispatch=pre_dispatch,
             verbose=verbose,
         )
+        self.explain_full_sample = explain_full_sample
         self._explainer_factory = explainer_factory
         self.shap_: Optional[pd.DataFrame] = None
         self.feature_index_: Optional[pd.Index] = None
@@ -148,7 +149,7 @@ class ShapCalculator(
                 self._delayed(self._shap_for_split)(
                     model,
                     training_sample,
-                    None if _EXPLAIN_FULL_SAMPLE else oob_split,
+                    None if self.explain_full_sample else oob_split,
                     self.feature_index_,
                     explainer_factory,
                     self._raw_shap_to_df,
