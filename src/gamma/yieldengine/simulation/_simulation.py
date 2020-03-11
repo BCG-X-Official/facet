@@ -25,6 +25,8 @@ T_CrossFit = TypeVar("T_CrossFit", bound=LearnerCrossfit)
 T_RegressorDF = TypeVar("T_RegressorDF", bound=RegressorDF)
 T_ClassifierDF = TypeVar("T_ClassifierDF", bound=ClassifierDF)
 
+# if True, use the full available sample to carry out simulations; otherwise only
+# use the train sample of each fold
 _SIMULATE_FULL_SAMPLE = True
 
 
