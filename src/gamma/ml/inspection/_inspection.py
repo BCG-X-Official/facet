@@ -592,7 +592,7 @@ def tree_explainer_factory(model: BaseLearnerDF, data: pd.DataFrame) -> Explaine
     i.e. is tree-based.
 
     :param model: estimator from which we want to compute shap values
-    :param data: (ignored)
+    :param data: background dataset (ignored)
     :return: :class:`shap.TreeExplainer` if the estimator is compatible
     """
     return TreeExplainer(model=model)
@@ -606,7 +606,7 @@ def kernel_explainer_factory(model: BaseLearnerDF, data: pd.DataFrame) -> Explai
     i.e. is tree-based.
 
     :param model: estimator from which we want to compute shap values
-    :param data: data used to compute the shap values
+    :param data: background dataset
     :return: :class:`shap.TreeExplainer` if the estimator is compatible
     """
     return KernelExplainer(model=model.predict, data=data)
