@@ -223,56 +223,47 @@ class BaseLearnerInspector(
         return self._shap_interaction_values_calculator.shap_interaction_values
 
     def feature_importance(
-        self,
-        # todo: re-introduce "marginal" parameter once the implementation is complete
-        # *, marginal: bool = False
+        self, *, method: str = "rms"
     ) -> Union[pd.Series, pd.DataFrame]:
         """
         Feature importance computed using relative absolute shap contributions across
         all observations.
 
+        :param method: method for calculating feature importance. Supported methods \
+            are `rms` (root of mean squares, default) and `mav` (mean absolute values)
         :return: importance of each feature as its mean absolute SHAP contribution, \
           normalised to a total 100%. Returned as a series of length n_features for \
           single-target models, and as a data frame of shape (n_features, n_targets) \
           for multi-target models
         """
+
+        methods = ["rms", "mav"]
+        if method not in methods:
+            raise ValueError(
+                f'arg method="{method}" must be one of {{{", ".join(methods)}}}'
+            )
+
         shap_matrix = self.shap_values()
-        mean_abs_importance: pd.Series = shap_matrix.abs().mean()
+        abs_importance: pd.Series
+        if method == "rms":
+            abs_importance = shap_matrix.pow(2).mean().pow(0.5)
+        elif method == "mav":
+            abs_importance = shap_matrix.abs().mean()
+        else:
+            raise ValueError(f"unknown method: {method}")
 
-        total_importance: float = mean_abs_importance.sum()
+        total_importance: float = abs_importance.sum()
 
-        # noinspection PyUnusedLocal
-        def _marginal() -> pd.Series:
-            # if `True` calculate marginal feature importance, i.e., \
-            #     the relative loss in SHAP contribution when the feature is removed \
-            #     and all other features remain in place (default: `False`)
-
-            # todo: update marginal feature importance calculation to also consider
-            #       feature dependency
-
-            diagonals = self._shap_interaction_values_calculator.diagonals()
-
-            # noinspection PyTypeChecker
-            mean_abs_importance_marginal: pd.Series = (
-                cast(pd.DataFrame, shap_matrix * 2) - diagonals
-            ).abs().mean()
-
-            # noinspection PyTypeChecker
-            return cast(
-                pd.Series, mean_abs_importance_marginal / total_importance
-            ).rename(BaseLearnerInspector.COL_IMPORTANCE_MARGINAL)
-
-        # noinspection PyTypeChecker
-        feature_importance_sr = cast(
-            pd.Series, mean_abs_importance / total_importance
+        feature_importance_sr: pd.Series = abs_importance.divide(
+            total_importance
         ).rename(BaseLearnerInspector.COL_IMPORTANCE)
 
         if self._n_targets > 1:
             assert (
-                mean_abs_importance.index.nlevels == 2
+                abs_importance.index.nlevels == 2
             ), "2 index levels in place for multi-output models"
 
-            feature_importance_sr: pd.DataFrame = mean_abs_importance.unstack(level=0)
+            feature_importance_sr: pd.DataFrame = abs_importance.unstack(level=0)
 
         return feature_importance_sr
 
