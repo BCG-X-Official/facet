@@ -204,7 +204,8 @@ class FullSampleValidator(BaseCrossValidator):
     test and in train.
 
     This can be useful to construct a :class:`~gamma.ml.crossfit.LearnerCrossfit` which
-    only shuffles the feature order across fits.
+    only shuffles the feature order across fits, or to inspect a single model fitted
+    on the full sample for fast indicative results.
     """
 
     def __init__(self, n_splits: int = 1):
