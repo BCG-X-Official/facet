@@ -2,7 +2,6 @@
 Core implementation of :mod:`gamma.ml.inspection`
 """
 import logging
-import warnings
 from abc import ABC, abstractmethod
 from typing import *
 
@@ -14,7 +13,6 @@ from scipy.spatial.distance import squareform
 from shap import KernelExplainer, TreeExplainer
 from shap.explainers.explainer import Explainer
 
-from gamma.common import deprecated, deprecation_warning
 from gamma.common.fit import FittableMixin, T_Self
 from gamma.common.parallelization import ParallelizableMixin
 from gamma.ml import Sample
@@ -33,7 +31,6 @@ from gamma.ml.inspection._shap_decomposition import (
     ShapInteractionValueDecomposer,
     ShapValueDecomposer,
 )
-from gamma.ml.validation import FullSampleCV
 from gamma.sklearndf import BaseLearnerDF
 from gamma.sklearndf.pipeline import (
     BaseLearnerPipelineDF,
@@ -80,10 +77,8 @@ class BaseLearnerInspector(
     def __init__(
         self,
         *,
-        pipeline: Union[T_LearnerPipelineDF, LearnerCrossfit[T_LearnerPipelineDF]],
         explainer_factory: Optional[ExplainerFactory] = None,
         shap_interaction: bool = True,
-        n_fits: int = None,
         min_direct_synergy: Optional[float] = None,
         random_state: Union[int, RandomState, None] = None,
         n_jobs: Optional[int] = None,
@@ -92,7 +87,6 @@ class BaseLearnerInspector(
         verbose: Optional[int] = None,
     ) -> None:
         """
-        :param pipeline: the learner pipeline to be inspected
         :param explainer_factory: optional function that creates a shap Explainer \
             (default: :func:``.tree_explainer_factory``)
         :param shap_interaction: if `True`, calculate SHAP interaction values, else \
@@ -112,30 +106,18 @@ class BaseLearnerInspector(
             verbose=verbose,
         )
 
-        self._pipeline = pipeline
         self._explainer_factory = (
             explainer_factory
             if explainer_factory is not None
             else tree_explainer_factory
         )
         self._shap_interaction = shap_interaction
-        self._n_fits = 1 if n_fits is None else n_fits
         self._min_direct_synergy = min_direct_synergy
         self._random_state = random_state
 
         self._crossfit: Optional[LearnerCrossfit[T_LearnerPipelineDF]] = None
         self._shap_calculator: Optional[ShapCalculator] = None
         self._shap_decomposer: Optional[ShapValueDecomposer] = None
-
-        if isinstance(pipeline, LearnerCrossfit):
-            deprecation_warning(
-                "Using a model inspector with a crossfit is deprecated and will be "
-                "removed in a future release. Instead, pass a learner pipeline then "
-                "fit the inspector with a sample.",
-                stacklevel=2,
-            )
-            if not pipeline.is_fitted:
-                raise ValueError("crossfit in arg pipeline is not fitted")
 
     # dynamically complete the __init__ docstring
     # noinspection PyTypeChecker
@@ -147,37 +129,19 @@ class BaseLearnerInspector(
         + ParallelizableMixin.__init__.__doc__
     )
 
-    def fit(self: T_Self, sample: Sample, **fit_params) -> T_Self:
+    def fit(self: T_Self, crossfit: LearnerCrossfit, **fit_params) -> T_Self:
         """
         Fit the inspector with the given sample.
 
-        :param sample: the observations to be explained during model inspection
-        :param fit_params: optional keywords arguments to be passed on to the model's
+        :param crossfit: the model crossfit to be explained during model inspection
+        :param fit_params: additional keyword arguments (ignored)
         :return: `self`
         """
 
         self: BaseLearnerInspector  # support type hinting in PyCharm
 
-        pipeline = self._pipeline
-        if isinstance(pipeline, LearnerCrossfit):
-            if sample is not None:
-                warnings.warn(
-                    "ignoring arg sample: model inspector was initialised "
-                    "with a crossfit",
-                    stacklevel=2,
-                )
-            crossfit = pipeline
-        else:
-            crossfit = LearnerCrossfit(
-                pipeline=pipeline,
-                cv=FullSampleCV(n_splits=self._n_fits),
-                shuffle_features=self._n_fits > 1,
-                random_state=self._random_state,
-                n_jobs=self.n_jobs,
-                shared_memory=self.shared_memory,
-                pre_dispatch=self.pre_dispatch,
-                verbose=self.verbose,
-            ).fit(sample=sample, **fit_params)
+        if not crossfit.is_fitted:
+            raise ValueError("crossfit in arg pipeline is not fitted")
 
         if self._shap_interaction:
             shap_calculator = self._shap_interaction_values_calculator_cls()(
@@ -259,60 +223,51 @@ class BaseLearnerInspector(
         return self._shap_interaction_values_calculator.shap_interaction_values
 
     def feature_importance(
-        self,
-        # todo: re-introduce "marginal" parameter once the implementation is complete
-        # *, marginal: bool = False
+        self, *, method: str = "rms"
     ) -> Union[pd.Series, pd.DataFrame]:
         """
         Feature importance computed using relative absolute shap contributions across
         all observations.
 
+        :param method: method for calculating feature importance. Supported methods \
+            are `rms` (root of mean squares, default) and `mav` (mean absolute values)
         :return: importance of each feature as its mean absolute SHAP contribution, \
           normalised to a total 100%. Returned as a series of length n_features for \
           single-target models, and as a data frame of shape (n_features, n_targets) \
           for multi-target models
         """
+
+        methods = ["rms", "mav"]
+        if method not in methods:
+            raise ValueError(
+                f'arg method="{method}" must be one of {{{", ".join(methods)}}}'
+            )
+
         shap_matrix = self.shap_values()
-        mean_abs_importance: pd.Series = shap_matrix.abs().mean()
+        abs_importance: pd.Series
+        if method == "rms":
+            abs_importance = shap_matrix.pow(2).mean().pow(0.5)
+        elif method == "mav":
+            abs_importance = shap_matrix.abs().mean()
+        else:
+            raise ValueError(f"unknown method: {method}")
 
-        total_importance: float = mean_abs_importance.sum()
+        total_importance: float = abs_importance.sum()
 
-        # noinspection PyUnusedLocal
-        def _marginal() -> pd.Series:
-            # if `True` calculate marginal feature importance, i.e., \
-            #     the relative loss in SHAP contribution when the feature is removed \
-            #     and all other features remain in place (default: `False`)
-
-            # todo: update marginal feature importance calculation to also consider
-            #       feature dependency
-
-            diagonals = self._shap_interaction_values_calculator.diagonals()
-
-            # noinspection PyTypeChecker
-            mean_abs_importance_marginal: pd.Series = (
-                cast(pd.DataFrame, shap_matrix * 2) - diagonals
-            ).abs().mean()
-
-            # noinspection PyTypeChecker
-            return cast(
-                pd.Series, mean_abs_importance_marginal / total_importance
-            ).rename(BaseLearnerInspector.COL_IMPORTANCE_MARGINAL)
-
-        # noinspection PyTypeChecker
-        feature_importance_sr = cast(
-            pd.Series, mean_abs_importance / total_importance
+        feature_importance_sr: pd.Series = abs_importance.divide(
+            total_importance
         ).rename(BaseLearnerInspector.COL_IMPORTANCE)
 
         if self._n_targets > 1:
             assert (
-                mean_abs_importance.index.nlevels == 2
+                abs_importance.index.nlevels == 2
             ), "2 index levels in place for multi-output models"
 
-            feature_importance_sr: pd.DataFrame = mean_abs_importance.unstack(level=0)
+            feature_importance_sr: pd.DataFrame = abs_importance.unstack(level=0)
 
         return feature_importance_sr
 
-    def feature_association_matrix(self, shap_correlation_method=False) -> pd.DataFrame:
+    def feature_association_matrix(self) -> pd.DataFrame:
         """
         Calculate the Pearson correlation matrix of the shap values.
 
@@ -320,16 +275,10 @@ class BaseLearnerInspector(
           and values as the Pearson correlations of the shap values of features
         """
         self._ensure_fitted()
-        if shap_correlation_method:
-            # noinspection PyDeprecation
-            self.__warn_about_shap_correlation_method()
-            return self._feature_matrix_to_df(self._shap_correlation_matrix())
 
         return self._shap_decomposer.association
 
-    def feature_association_linkage(
-        self, shap_correlation_method=False
-    ) -> Union[LinkageTree, List[LinkageTree]]:
+    def feature_association_linkage(self) -> Union[LinkageTree, List[LinkageTree]]:
         """
         Calculate the :class:`.LinkageTree` based on the
         :meth:`.feature_association_matrix`.
@@ -338,14 +287,8 @@ class BaseLearnerInspector(
             list of linkage trees if the base estimator is a multi-output model
         """
         self._ensure_fitted()
-        if shap_correlation_method:
-            # noinspection PyDeprecation
-            self.__warn_about_shap_correlation_method()
-            association_matrix = self._shap_correlation_matrix()
-        else:
-            association_matrix = self._shap_decomposer.association_rel_
         return self._linkage_from_affinity_matrix(
-            feature_affinity_matrix=association_matrix
+            feature_affinity_matrix=self._shap_decomposer.association_rel_
         )
 
     def feature_synergy_matrix(self) -> pd.DataFrame:
@@ -589,45 +532,6 @@ class BaseLearnerInspector(
         self._ensure_shap_interaction()
         return cast(ShapInteractionValueDecomposer, self._shap_decomposer)
 
-    def _shap_correlation_matrix(self) -> np.ndarray:
-        # return an array with a pearson correlation matrix of the shap matrix
-        # for each target, with shape (n_targets, n_features, n_features)
-
-        n_targets: int = self._n_targets
-        n_features: int = self._n_features
-
-        # get the shap values as an array of shape
-        # (n_targets, n_observations, n_features);
-        # this is achieved by re-shaping the shap values to get the additional "target"
-        # dimension, then swapping the target and observation dimensions
-        shap_matrix_per_target = (
-            self.shap_values()
-            .values.reshape((-1, n_targets, n_features))
-            .swapaxes(0, 1)
-        )
-
-        def _ensure_diagonality(matrix: np.ndarray) -> np.ndarray:
-            # remove potential floating point errors
-            matrix = (matrix + matrix.T) / 2
-
-            # replace nan values with 0.0 = no association when correlation is undefined
-            np.nan_to_num(matrix, copy=False)
-
-            # set the matrix diagonals to 1.0 = full association of each feature with
-            # itself
-            np.fill_diagonal(matrix, 1.0)
-
-            return matrix
-
-        # calculate the shap correlation matrix for each target, and stack matrices
-        # horizontally
-        return np.array(
-            [
-                _ensure_diagonality(np.corrcoef(shap_for_target, rowvar=False))
-                for shap_for_target in shap_matrix_per_target
-            ]
-        )
-
     @staticmethod
     @abstractmethod
     def _shap_values_calculator_cls() -> Type[ShapValuesCalculator]:
@@ -639,34 +543,6 @@ class BaseLearnerInspector(
         ShapInteractionValuesCalculator
     ]:
         pass
-
-    @deprecated(
-        message="Use method shap_values instead. "
-        "This method will be removed in a future release."
-    )
-    def shap_matrix(self) -> pd.DataFrame:
-        """
-        Deprecated. Use :meth:`.shap_values` instead.
-        """
-        return self.shap_values()
-
-    @deprecated(
-        message="Use method shap_interaction_values instead. "
-        "This method will be removed in a future release."
-    )
-    def interaction_matrix(self) -> pd.DataFrame:
-        """
-        Deprecated. Use :meth:`.shap_interaction_values` instead.
-        """
-        return self.shap_interaction_values()
-
-    @staticmethod
-    def __warn_about_shap_correlation_method() -> None:
-        deprecation_warning(
-            "SHAP correlation method for feature association is deprecated and "
-            "will be removed in the next release",
-            stacklevel=3,
-        )
 
 
 class RegressorInspector(
@@ -716,7 +592,7 @@ def tree_explainer_factory(model: BaseLearnerDF, data: pd.DataFrame) -> Explaine
     i.e. is tree-based.
 
     :param model: estimator from which we want to compute shap values
-    :param data: (ignored)
+    :param data: background dataset (ignored)
     :return: :class:`shap.TreeExplainer` if the estimator is compatible
     """
     return TreeExplainer(model=model)
@@ -730,7 +606,7 @@ def kernel_explainer_factory(model: BaseLearnerDF, data: pd.DataFrame) -> Explai
     i.e. is tree-based.
 
     :param model: estimator from which we want to compute shap values
-    :param data: data used to compute the shap values
+    :param data: background dataset
     :return: :class:`shap.TreeExplainer` if the estimator is compatible
     """
     return KernelExplainer(model=model.predict, data=data)
