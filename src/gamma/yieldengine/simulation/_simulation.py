@@ -25,6 +25,10 @@ T_CrossFit = TypeVar("T_CrossFit", bound=LearnerCrossfit)
 T_RegressorDF = TypeVar("T_RegressorDF", bound=RegressorDF)
 T_ClassifierDF = TypeVar("T_ClassifierDF", bound=ClassifierDF)
 
+# if True, use the full available sample to carry out simulations; otherwise only
+# use the train sample of each fold
+_SIMULATE_FULL_SAMPLE = True
+
 
 class UnivariateSimulation(Generic[T_Number]):
     """
@@ -353,12 +357,14 @@ class UnivariateUpliftSimulator(
                 self._delayed(UnivariateUpliftSimulator._simulate_values_for_split)(
                     model=model,
                     subsample_features=_compact_data_frame(
-                        sample.subsample(iloc=test_indices).features
+                        sample.features
+                        if _SIMULATE_FULL_SAMPLE
+                        else sample.subsample(iloc=train_indices).features
                     ),
                     feature_name=feature_name,
                     simulated_values=simulated_values,
                 )
-                for (model, (_, test_indices)) in zip(
+                for (model, (train_indices, _)) in zip(
                     self.crossfit.models(), self.crossfit.splits()
                 )
             )

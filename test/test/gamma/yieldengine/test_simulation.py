@@ -65,9 +65,9 @@ def test_univariate_simulation(
     absolute_target_change_sr = res.loc[
         :, UnivariateUpliftSimulator._COL_ABSOLUTE_TARGET_CHANGE
     ]
-    assert absolute_target_change_sr.min() == approx(-0.7316366998749118)
-    assert absolute_target_change_sr.mean() == approx(-0.09974330639733585)
-    assert absolute_target_change_sr.max() == approx(0.6741931812285031)
+    assert absolute_target_change_sr.min() == approx(-0.7282927117948859)
+    assert absolute_target_change_sr.mean() == approx(-0.0870004327894347)
+    assert absolute_target_change_sr.max() == approx(0.804310573391561)
 
     aggregated_results = simulator._aggregate_simulation_results(results_per_split=res)
     log.debug(aggregated_results)
@@ -81,25 +81,25 @@ def test_univariate_simulation(
     )
     expected_data = {
         "percentile_10": [
-            -0.6818825099675685,
-            -0.007029585576065488,
-            0.0538630336704145,
-            0.0538630336704145,
-            0.06007108162896415,
+            -0.6004228916492564,
+            0.027750755748968466,
+            0.052682663898563936,
+            0.052682663898563936,
+            0.13982249635328545,
         ],
         "percentile_50": [
-            -0.3355583717195465,
-            0.3669534874333582,
-            0.3669534874333582,
-            0.3669534874333582,
-            0.37881715617286993,
+            -0.25439493925730616,
+            0.2918181523488208,
+            0.2918181523488208,
+            0.2918181523488208,
+            0.30152469018852557,
         ],
         "percentile_90": [
-            -0.011813212687955503,
-            0.5806558851769821,
-            0.5806558851769821,
-            0.5806558851769821,
-            0.5790936685270693,
+            -0.0976467669962471,
+            0.6926482832226767,
+            0.6926482832226767,
+            0.6926482832226767,
+            0.69154399500297,
         ],
     }
 
