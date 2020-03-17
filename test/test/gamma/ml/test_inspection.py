@@ -175,13 +175,24 @@ def test_model_inspection_with_encoding(
     sample: Sample,
     simple_preprocessor: TransformerDF,
     n_jobs,
+    fast_execution: bool,
 ) -> None:
-    # define checksums for this test
-    checksum_shap = 4647247706471413882
-    checksum_association_matrix = 7913166565570533555
 
-    checksum_learner_scores = -7.939242
-    checksum_learner_ranks = "5e4b373d56a53647c9483a5606235c9a"
+    if fast_execution:
+        sample = sample.subsample(iloc=slice(100))
+        # define checksums for this test
+        checksum_shap = 16212594514483871543
+        checksum_association_matrix = 8969182771326710805
+
+        checksum_learner_scores = -3.723311
+        checksum_learner_ranks = "6a3cfb540e56298cdccebc5c72dae7aa"
+    else:
+        # define checksums for this test
+        checksum_shap = 4647247706471413882
+        checksum_association_matrix = 7913166565570533555
+
+        checksum_learner_scores = -7.939242
+        checksum_learner_ranks = "5e4b373d56a53647c9483a5606235c9a"
 
     cv = KFold(n_splits=K_FOLDS, random_state=42)
 

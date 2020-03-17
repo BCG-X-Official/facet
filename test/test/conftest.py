@@ -1,4 +1,5 @@
 import logging
+import os
 import warnings
 from typing import *
 
@@ -56,6 +57,11 @@ def iris_target() -> str:
 @pytest.fixture
 def n_jobs() -> int:
     return -3
+
+
+@pytest.fixture
+def fast_execution() -> bool:
+    return os.environ.get("FAST_EXECUTION", "0") == "1"
 
 
 @pytest.fixture
