@@ -2,7 +2,7 @@
 Core implementation of :mod:`gamma.yieldengine.simulation`
 """
 
-from abc import ABC, abstractmethod
+from abc import ABCMeta, abstractmethod
 from typing import *
 
 import numpy as np
@@ -117,7 +117,9 @@ class UnivariateSimulation(Generic[T_Number]):
         return self._max_percentile
 
 
-class BaseUnivariateSimulator(ParallelizableMixin, ABC, Generic[T_CrossFit]):
+class BaseUnivariateSimulator(
+    ParallelizableMixin, Generic[T_CrossFit], metaclass=ABCMeta
+):
     """
     Estimates the average change in outcome for a range of values for a given feature,
     using cross-validated crossfit for all observations in a given data sample.
