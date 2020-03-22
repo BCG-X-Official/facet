@@ -3,7 +3,7 @@ Core implementation of :mod:`gamma.yieldengine.partition`
 """
 import logging
 import math
-from abc import ABC, abstractmethod
+from abc import ABCMeta, abstractmethod
 from typing import *
 
 import numpy as np
@@ -30,7 +30,9 @@ T_Value = TypeVar("T_Value")
 T_Number = TypeVar("T_Number", int, float)
 
 
-class Partitioner(FittableMixin[Sequence[T_Value]], ABC, Generic[T_Value]):
+class Partitioner(
+    FittableMixin[Sequence[T_Value]], Generic[T_Value], metaclass=ABCMeta
+):
     """Partition a set of values, for use in visualizations and simulations."""
 
     def __init__(self, max_partitions: int = None):
@@ -86,7 +88,7 @@ class Partitioner(FittableMixin[Sequence[T_Value]], ABC, Generic[T_Value]):
         pass
 
 
-class RangePartitioner(Partitioner[T_Number], ABC, Generic[T_Number]):
+class RangePartitioner(Partitioner[T_Number], Generic[T_Number], metaclass=ABCMeta):
     """
     Partition numerical values in successive intervals of the same length.
 
