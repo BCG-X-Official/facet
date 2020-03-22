@@ -2,7 +2,7 @@
 Core implementation of :mod:`gamma.ml.inspection`
 """
 import logging
-from abc import ABC, abstractmethod
+from abc import ABCMeta, abstractmethod
 from typing import *
 
 import numpy as np
@@ -65,7 +65,10 @@ T_ClassifierPipelineDF = TypeVar("T_ClassifierPipelineDF", bound=ClassifierPipel
 
 
 class BaseLearnerInspector(
-    FittableMixin[Sample], ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF]
+    FittableMixin[Sample],
+    ParallelizableMixin,
+    Generic[T_LearnerPipelineDF],
+    metaclass=ABCMeta,
 ):
     """
     Inspect features interactions in a learner pipeline through SHAP values.
