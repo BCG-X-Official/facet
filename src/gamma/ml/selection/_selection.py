@@ -3,9 +3,11 @@ Core implementation of :mod:`gamma.ml.selection`
 """
 
 import logging
+import operator
 import re
 from abc import ABC
 from collections import defaultdict
+from functools import reduce
 from itertools import chain
 from typing import *
 
@@ -49,7 +51,7 @@ T_LearnerCrossfit = TypeVar("T_Crossfit", bound=LearnerCrossfit[T_LearnerPipelin
 #
 
 
-class ParameterGrid(Generic[T_LearnerPipelineDF]):
+class ParameterGrid(Sequence[Dict[str, Any]], Generic[T_LearnerPipelineDF]):
     """
     A grid of hyper-parameters for pipeline tuning.
 
@@ -65,21 +67,21 @@ class ParameterGrid(Generic[T_LearnerPipelineDF]):
     def __init__(
         self,
         pipeline: T_LearnerPipelineDF,
-        learner_parameters: Dict[str, Sequence[Any]],
-        preprocessing_parameters: Optional[Dict[str, Sequence[Any]]] = None,
+        learner_parameters: Dict[str, Sequence],
+        preprocessing_parameters: Optional[Dict[str, Sequence]] = None,
     ) -> None:
         self._pipeline = pipeline
         self._learner_parameters = learner_parameters
         self._preprocessing_parameters = preprocessing_parameters
 
         def _prefix_parameter_names(
-            parameters: Dict[str, Any], prefix: str
-        ) -> List[Tuple[str, Any]]:
-            return [
-                (f"{prefix}__{param}", value) for param, value in parameters.items()
-            ]
+            parameters: Dict[str, Sequence], prefix: str
+        ) -> Iterable[Tuple[str, Any]]:
+            return (
+                (f"{prefix}__{param}", values) for param, values in parameters.items()
+            )
 
-        grid_parameters: Iterable[Tuple[str, Any]] = _prefix_parameter_names(
+        grid_parameters: Iterable[Tuple[str, Sequence]] = _prefix_parameter_names(
             parameters=learner_parameters, prefix=pipeline.final_estimator_name
         )
         if preprocessing_parameters is not None:
@@ -91,7 +93,8 @@ class ParameterGrid(Generic[T_LearnerPipelineDF]):
                 ),
             )
 
-        self._grid = dict(grid_parameters)
+        self._grid_parameters: List[Tuple[str, Sequence]] = list(grid_parameters)
+        self._grid_dict: Dict[str, Sequence] = dict(self._grid_parameters)
 
     @property
     def pipeline(self) -> T_LearnerPipelineDF:
@@ -114,7 +117,73 @@ class ParameterGrid(Generic[T_LearnerPipelineDF]):
     @property
     def parameters(self) -> Dict[str, Sequence[Any]]:
         """The parameter grid for the pipeline representing the entire pipeline."""
-        return self._grid
+        return self._grid_dict
+
+    def __iter__(self) -> Iterable[Dict[str, Any]]:
+        grid = self._grid_parameters
+        params: List[Tuple[str, Any]] = [("", None) for _ in grid]
+
+        def _iter_parameter(param_index: int):
+            if param_index < 0:
+                yield dict(params)
+            else:
+                name, values = grid[param_index]
+                for value in values:
+                    params[param_index] = (name, value)
+                    yield from _iter_parameter(param_index=param_index - 1)
+
+        yield from _iter_parameter(len(grid) - 1)
+
+    def __getitem__(
+        self, pos: Union[int, slice]
+    ) -> Union[Dict[str, Sequence], Sequence[Dict[str, Sequence]]]:
+
+        _len = len(self)
+
+        def _get(i: int) -> Dict[str, Sequence]:
+            assert i >= 0
+
+            parameters = self._grid_parameters
+            result: Dict[str, Sequence] = {}
+
+            for name, values in parameters:
+                n_values = len(values)
+                result[name] = values[i % n_values]
+                i //= n_values
+
+            assert i == 0
+
+            return result
+
+        def _clip(i: int, i_max: int) -> int:
+            if i < 0:
+                return max(_len + i, 0)
+            else:
+                return min(i, i_max)
+
+        if isinstance(pos, slice):
+            print(pos)
+            return [
+                _get(i)
+                for i in range(
+                    _clip(pos.start or 0, _len - 1),
+                    _clip(pos.stop or _len, _len),
+                    pos.step or 1,
+                )
+            ]
+        else:
+            if pos < -_len or pos >= _len:
+                raise ValueError(f"index out of bounds: {pos}")
+            return _get(_len + pos if pos < 0 else pos)
+
+    def __len__(self) -> int:
+        return reduce(
+            operator.mul,
+            (
+                len(values_for_parameter)
+                for values_for_parameter in self._grid_dict.values()
+            ),
+        )
 
 
 class Scoring:
