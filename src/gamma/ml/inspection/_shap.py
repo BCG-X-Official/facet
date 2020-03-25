@@ -3,7 +3,7 @@ Helper classes for SHAP calculations
 """
 
 import logging
-from abc import ABC, abstractmethod
+from abc import ABCMeta, abstractmethod
 from typing import *
 
 import numpy as np
@@ -44,8 +44,8 @@ ShapToDataFrameFunction = Callable[
 class ShapCalculator(
     FittableMixin[LearnerCrossfit[T_LearnerPipelineDF]],
     ParallelizableMixin,
-    ABC,
     Generic[T_LearnerPipelineDF],
+    metaclass=ABCMeta,
 ):
     """
     Base class for all SHAP calculators.
@@ -223,7 +223,7 @@ class ShapCalculator(
 
 
 class ShapValuesCalculator(
-    ShapCalculator[T_LearnerPipelineDF], ABC, Generic[T_LearnerPipelineDF]
+    ShapCalculator[T_LearnerPipelineDF], Generic[T_LearnerPipelineDF], metaclass=ABCMeta
 ):
     """
     Base class for calculating SHAP contribution values.
@@ -306,7 +306,7 @@ class ShapValuesCalculator(
 
 
 class ShapInteractionValuesCalculator(
-    ShapCalculator[T_LearnerPipelineDF], ABC, Generic[T_LearnerPipelineDF]
+    ShapCalculator[T_LearnerPipelineDF], Generic[T_LearnerPipelineDF], metaclass=ABCMeta
 ):
     """
     Base class for calculating SHAP interaction values.
