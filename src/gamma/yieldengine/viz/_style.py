@@ -19,7 +19,7 @@ uplift.
 """
 
 import logging
-from abc import ABC, abstractmethod
+from abc import ABCMeta, abstractmethod
 from typing import *
 
 from matplotlib.axes import Axes
@@ -34,7 +34,7 @@ from gamma.yieldengine.partition import T_Number, T_Value
 log = logging.getLogger(__name__)
 
 
-class SimulationStyle(DrawStyle, ABC):
+class SimulationStyle(DrawStyle, metaclass=ABCMeta):
     """
     The abstract simulation style known to the simulation drawer.
     """
