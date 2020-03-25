@@ -179,7 +179,6 @@ def test_model_inspection_with_encoding(
 ) -> None:
 
     if fast_execution:
-        sample = sample.subsample(iloc=slice(100))
         # define checksums for this test
         checksum_shap = 16212594514483871543
         checksum_association_matrix = 8969182771326710805
