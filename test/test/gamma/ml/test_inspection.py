@@ -44,9 +44,57 @@ def cv() -> BaseCrossValidator:
     return KFold(n_splits=K_FOLDS, random_state=42)
 
 
+@pytest.fixture
+def regressor_ranker(
+    cv: BaseCrossValidator,
+    regressor_grids: List[ParameterGrid],
+    sample: Sample,
+    n_jobs: int,
+) -> RegressorRanker:
+    return RegressorRanker(
+        grid=regressor_grids, cv=cv, scoring="r2", n_jobs=n_jobs
+    ).fit(sample=sample)
+
+
+@pytest.fixture
+def best_lgbm_crossfit(
+    regressor_ranker: RegressorRanker,
+    cv: BaseCrossValidator,
+    sample: Sample,
+    n_jobs: int,
+) -> LearnerCrossfit[RegressorPipelineDF]:
+    # we get the best model_evaluation which is a LGBM - for the sake of test
+    # performance
+    best_lgbm_evaluation: LearnerEvaluation[RegressorPipelineDF] = [
+        evaluation
+        for evaluation in regressor_ranker.ranking()
+        if isinstance(evaluation.pipeline.regressor, LGBMRegressorDF)
+    ][0]
+
+    best_lgbm_regressor: RegressorPipelineDF = best_lgbm_evaluation.pipeline
+
+    return LearnerCrossfit(
+        pipeline=best_lgbm_regressor,
+        cv=cv,
+        shuffle_features=True,
+        random_state=42,
+        n_jobs=n_jobs,
+    ).fit(sample=sample)
+
+
+@pytest.fixture
+def regressor_inspector(
+    best_lgbm_crossfit: LearnerCrossfit[RegressorPipelineDF], n_jobs: int
+) -> RegressorInspector:
+    return RegressorInspector(n_jobs=n_jobs).fit(crossfit=best_lgbm_crossfit)
+
+
 def test_model_inspection(
     batch_table: pd.DataFrame,
     regressor_grids: Sequence[ParameterGrid],
+    regressor_ranker: RegressorRanker,
+    best_lgbm_crossfit: LearnerCrossfit[RegressorPipelineDF],
+    regressor_inspector: RegressorInspector,
     cv: BaseCrossValidator,
     sample: Sample,
     simple_preprocessor: TransformerDF,
@@ -68,41 +116,16 @@ def test_model_inspection(
         checksum_learner_scores = -7.939242
         checksum_learner_ranks = "5e4b373d56a53647c9483a5606235c9a"
 
-    ranker: RegressorRanker = RegressorRanker(
-        grid=regressor_grids, cv=cv, scoring="r2", n_jobs=n_jobs
-    ).fit(sample=sample)
-
-    log.debug(f"\n{ranker.summary_report(max_learners=10)}")
+    log.debug(f"\n{regressor_ranker.summary_report(max_learners=10)}")
 
     check_ranking(
-        ranking=ranker.ranking(),
+        ranking=regressor_ranker.ranking(),
         checksum_scores=checksum_learner_scores,
         checksum_learners=checksum_learner_ranks,
         first_n_learners=10,
     )
 
-    # we get the best model_evaluation which is a LGBM - for the sake of test
-    # performance
-    best_lgbm_evaluation: LearnerEvaluation[RegressorPipelineDF] = [
-        evaluation
-        for evaluation in ranker.ranking()
-        if isinstance(evaluation.pipeline.regressor, LGBMRegressorDF)
-    ][0]
-
-    best_lgbm_regressor: RegressorPipelineDF = best_lgbm_evaluation.pipeline
-
-    best_lgbm_crossfit: LearnerCrossfit[RegressorPipelineDF] = LearnerCrossfit(
-        pipeline=best_lgbm_regressor,
-        cv=cv,
-        shuffle_features=True,
-        random_state=42,
-        n_jobs=n_jobs,
-    ).fit(sample=sample)
-
-    # noinspection PyTypeChecker
-    inspector = RegressorInspector().fit(crossfit=best_lgbm_crossfit)
-
-    shap_values = inspector.shap_values()
+    shap_values = regressor_inspector.shap_values()
 
     # the length of rows in shap_values should be equal to the unique observation
     # indices we have had in the predictions_df
@@ -115,7 +138,7 @@ def test_model_inspection(
     )
 
     # correlated shap matrix: feature dependencies
-    association_matrix: pd.DataFrame = inspector.feature_association_matrix()
+    association_matrix: pd.DataFrame = regressor_inspector.feature_association_matrix()
 
     # determine number of unique features across the models in the crossfit
     n_features = len(
@@ -129,8 +152,8 @@ def test_model_inspection(
     for matrix, matrix_name in zip(
         (
             association_matrix,
-            inspector.feature_synergy_matrix(),
-            inspector.feature_redundancy_matrix(),
+            regressor_inspector.feature_synergy_matrix(),
+            regressor_inspector.feature_redundancy_matrix(),
         ),
         ("association", "synergy", "redundancy"),
     ):
@@ -154,7 +177,7 @@ def test_model_inspection(
     )
 
     # cluster associated features
-    _linkage = inspector.feature_association_linkage()
+    _linkage = regressor_inspector.feature_association_linkage()
 
     #  test the ModelInspector with a custom ExplainerFactory:
     def _ef(estimator: BaseEstimator, data: pd.DataFrame) -> Explainer:
