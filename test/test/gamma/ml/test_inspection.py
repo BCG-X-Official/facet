@@ -14,7 +14,7 @@ from pandas.core.util.hashing import hash_pandas_object
 from shap import KernelExplainer, TreeExplainer
 from shap.explainers.explainer import Explainer
 from sklearn.base import BaseEstimator
-from sklearn.model_selection import BaseCrossValidator, KFold, RepeatedKFold
+from sklearn.model_selection import BaseCrossValidator, KFold
 
 from gamma.ml import Sample
 from gamma.ml.crossfit import LearnerCrossfit
@@ -35,20 +35,13 @@ from test.gamma.ml import check_ranking
 log = logging.getLogger(__name__)
 
 K_FOLDS: int = 5
-TEST_RATIO = 1 / K_FOLDS
-N_SPLITS = K_FOLDS * 2
 
 
 # noinspection PyMissingOrEmptyDocstring
 @pytest.fixture
 def cv() -> BaseCrossValidator:
     # define a CV
-
     return KFold(n_splits=K_FOLDS, random_state=42)
-
-    # return RepeatedKFold(
-    #     n_splits=K_FOLDS, n_repeats=N_SPLITS // K_FOLDS, random_state=42
-    # )
 
 
 def test_model_inspection(
@@ -60,7 +53,6 @@ def test_model_inspection(
     n_jobs: int,
     fast_execution: bool,
 ) -> None:
-
     if fast_execution:
         # define checksums for this test
         checksum_shap = 16212594514483871543
@@ -75,8 +67,6 @@ def test_model_inspection(
 
         checksum_learner_scores = -7.939242
         checksum_learner_ranks = "5e4b373d56a53647c9483a5606235c9a"
-
-    cv = KFold(n_splits=K_FOLDS, random_state=42)
 
     ranker: RegressorRanker = RegressorRanker(
         grid=regressor_grids, cv=cv, scoring="r2", n_jobs=n_jobs
@@ -193,22 +183,18 @@ def test_model_inspection(
     DendrogramDrawer(style="text").draw(data=linkage_tree, title="Test")
 
 
-def test_model_inspection_classifier(iris_sample: Sample, n_jobs: int) -> None:
+def test_model_inspection_classifier(
+    iris_sample: Sample, cv: BaseCrossValidator, n_jobs: int
+) -> None:
     warnings.filterwarnings("ignore", message="numpy.dtype size changed")
     warnings.filterwarnings("ignore", message="numpy.ufunc size changed")
     warnings.filterwarnings("ignore", message="You are accessing a training score")
 
     # define checksums for this test
-    checksum_shap = 15368358757519854540
-    checksum_association_matrix = 6657370911440512515
+    checksum_shap = 5207601201651574496
+    checksum_association_matrix = 5535519327633455357
     checksum_learner_scores = 2.0
     checksum_learner_ranks = "a8fe61f0f98c078fbcf427ad344c1749"
-
-    # define a CV:
-    # noinspection PyTypeChecker
-    test_cv: BaseCrossValidator = RepeatedKFold(
-        n_splits=K_FOLDS, n_repeats=N_SPLITS // K_FOLDS, random_state=42
-    )
 
     # define parameters and crossfit
     models = [
@@ -228,7 +214,7 @@ def test_model_inspection_classifier(iris_sample: Sample, n_jobs: int) -> None:
 
     model_ranker = ClassifierRanker(
         grid=models,
-        cv=test_cv,
+        cv=cv,
         scoring="f1_macro",
         shuffle_features=True,
         random_state=42,
