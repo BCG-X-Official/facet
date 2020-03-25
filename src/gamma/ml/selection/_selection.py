@@ -4,7 +4,7 @@ Core implementation of :mod:`gamma.ml.selection`
 
 import logging
 import re
-from abc import ABC
+from abc import ABCMeta
 from collections import defaultdict
 from itertools import chain
 from typing import *
@@ -169,8 +169,8 @@ class LearnerEvaluation(Generic[T_LearnerPipelineDF]):
 class BaseLearnerRanker(
     ParallelizableMixin,
     FittableMixin[Sample],
-    ABC,
     Generic[T_LearnerPipelineDF, T_LearnerCrossfit],
+    metaclass=ABCMeta,
 ):
     """
     Rank different parametrisations of one or more learners using cross-validation.
