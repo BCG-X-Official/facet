@@ -135,7 +135,9 @@ def regressor_grids(simple_preprocessor: TransformerDF) -> List[ParameterGrid]:
 
 
 @pytest.fixture
-def sample(batch_table: pd.DataFrame, inputfile_config: Dict[str, Any]) -> Sample:
+def sample(
+    batch_table: pd.DataFrame, inputfile_config: Dict[str, Any], fast_execution: bool
+) -> Sample:
     # drop columns that should not take part in pipeline
     batch_table = batch_table.drop(columns=["Date", "Batch Id"])
 
@@ -143,6 +145,9 @@ def sample(batch_table: pd.DataFrame, inputfile_config: Dict[str, Any]) -> Sampl
     batch_table = batch_table.replace([np.inf, -np.inf], np.nan).dropna(
         axis=1, how="all"
     )
+
+    if fast_execution:
+        batch_table = batch_table.iloc[:100, :]
 
     sample = Sample(
         observations=batch_table, target=inputfile_config["yield_column_name"]

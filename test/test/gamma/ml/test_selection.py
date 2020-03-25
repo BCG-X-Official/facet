@@ -22,11 +22,19 @@ log = logging.getLogger(__name__)
 
 
 def test_model_ranker(
-    batch_table: pd.DataFrame, regressor_grids, sample: Sample, n_jobs
+    batch_table: pd.DataFrame,
+    regressor_grids,
+    sample: Sample,
+    n_jobs: int,
+    fast_execution: bool,
 ) -> None:
 
-    checksum_learner_scores = 4.994168961240268
-    checksum_learner_ranks = "97a4b0f59f52daab7b6d223075267548"
+    if fast_execution:
+        checksum_learner_scores = 0.6564979111725892
+        checksum_learner_ranks = "18289de6477e5e9c200fed61ecec727f"
+    else:
+        checksum_learner_scores = 4.994168961240268
+        checksum_learner_ranks = "97a4b0f59f52daab7b6d223075267548"
 
     # define the circular cross validator with just 5 splits (to speed up testing)
     cv = BootstrapCV(n_splits=5, random_state=42)
