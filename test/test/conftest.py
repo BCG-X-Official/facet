@@ -2,7 +2,6 @@ import logging
 import os
 import warnings
 from typing import *
-from typing import List
 
 import numpy as np
 import pandas as pd
@@ -26,9 +25,7 @@ from gamma.sklearndf.regression import (
     SVRDF,
 )
 from gamma.sklearndf.regression.extra import LGBMRegressorDF
-from test import read_test_config
 from test.gamma.ml import make_simple_transformer
-from test.paths import TEST_DATA_CSV
 
 logging.basicConfig(level=logging.DEBUG)
 log = logging.getLogger(__name__)
@@ -41,11 +38,6 @@ warnings.filterwarnings(
 )
 
 K_FOLDS: int = 5
-
-
-@pytest.fixture
-def inputfile_config() -> Dict[str, Any]:
-    return read_test_config(section="inputfile")
 
 
 @pytest.fixture
@@ -66,38 +58,6 @@ def n_jobs() -> int:
 @pytest.fixture
 def fast_execution() -> bool:
     return os.environ.get("FAST_EXECUTION", "0") == "1"
-
-
-@pytest.fixture
-def batch_table(inputfile_config: Dict[str, Any]) -> pd.DataFrame:
-
-    return pd.read_csv(
-        filepath_or_buffer=TEST_DATA_CSV,
-        delimiter=inputfile_config["delimiter"],
-        header=inputfile_config["header"],
-        decimal=inputfile_config["decimal"],
-    )
-
-
-@pytest.fixture
-def sample(
-    batch_table: pd.DataFrame, inputfile_config: Dict[str, Any], fast_execution: bool
-) -> Sample:
-    # drop columns that should not take part in pipeline
-    batch_table = batch_table.drop(columns=["Date", "Batch Id"])
-
-    # replace values of +/- infinite with n/a, then drop all n/a columns:
-    batch_table = batch_table.replace([np.inf, -np.inf], np.nan).dropna(
-        axis=1, how="all"
-    )
-
-    if fast_execution:
-        batch_table = batch_table.iloc[:100, :]
-
-    sample = Sample(
-        observations=batch_table, target=inputfile_config["yield_column_name"]
-    )
-    return sample
 
 
 @pytest.fixture
@@ -230,8 +190,11 @@ def boston_df(boston_target: str) -> pd.DataFrame:
 
 
 @pytest.fixture
-def boston_sample(boston_df: pd.DataFrame, boston_target: str) -> Sample:
-    return Sample(observations=boston_df, target=boston_target)
+def sample(boston_df: pd.DataFrame, boston_target: str, fast_execution: bool) -> Sample:
+    return Sample(
+        observations=boston_df.iloc[:100, :] if fast_execution else boston_df,
+        target=boston_target,
+    )
 
 
 @pytest.fixture
