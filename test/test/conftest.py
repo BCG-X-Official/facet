@@ -2,17 +2,19 @@ import logging
 import os
 import warnings
 from typing import *
+from typing import List
 
 import numpy as np
 import pandas as pd
-
-# noinspection PyPackageRequirements
 import pytest
 from sklearn import datasets
+from sklearn.model_selection import BaseCrossValidator, KFold
 from sklearn.utils import Bunch
 
 from gamma.ml import Sample
-from gamma.ml.selection import ParameterGrid
+from gamma.ml.crossfit import LearnerCrossfit
+from gamma.ml.inspection import RegressorInspector
+from gamma.ml.selection import LearnerEvaluation, ParameterGrid, RegressorRanker
 from gamma.sklearndf import TransformerDF
 from gamma.sklearndf.pipeline import RegressorPipelineDF
 from gamma.sklearndf.regression import (
@@ -37,6 +39,8 @@ logging.getLogger("shap").setLevel(logging.WARNING)
 warnings.filterwarnings(
     "ignore", message=r"Starting from version 2", category=UserWarning
 )
+
+K_FOLDS: int = 5
 
 
 @pytest.fixture
@@ -73,6 +77,33 @@ def batch_table(inputfile_config: Dict[str, Any]) -> pd.DataFrame:
         header=inputfile_config["header"],
         decimal=inputfile_config["decimal"],
     )
+
+
+@pytest.fixture
+def sample(
+    batch_table: pd.DataFrame, inputfile_config: Dict[str, Any], fast_execution: bool
+) -> Sample:
+    # drop columns that should not take part in pipeline
+    batch_table = batch_table.drop(columns=["Date", "Batch Id"])
+
+    # replace values of +/- infinite with n/a, then drop all n/a columns:
+    batch_table = batch_table.replace([np.inf, -np.inf], np.nan).dropna(
+        axis=1, how="all"
+    )
+
+    if fast_execution:
+        batch_table = batch_table.iloc[:100, :]
+
+    sample = Sample(
+        observations=batch_table, target=inputfile_config["yield_column_name"]
+    )
+    return sample
+
+
+@pytest.fixture
+def cv() -> BaseCrossValidator:
+    # define a CV
+    return KFold(n_splits=K_FOLDS, random_state=42)
 
 
 @pytest.fixture
@@ -135,24 +166,48 @@ def regressor_grids(simple_preprocessor: TransformerDF) -> List[ParameterGrid]:
 
 
 @pytest.fixture
-def sample(
-    batch_table: pd.DataFrame, inputfile_config: Dict[str, Any], fast_execution: bool
-) -> Sample:
-    # drop columns that should not take part in pipeline
-    batch_table = batch_table.drop(columns=["Date", "Batch Id"])
+def regressor_ranker(
+    cv: BaseCrossValidator,
+    regressor_grids: List[ParameterGrid],
+    sample: Sample,
+    n_jobs: int,
+) -> RegressorRanker:
+    return RegressorRanker(
+        grid=regressor_grids, cv=cv, scoring="r2", n_jobs=n_jobs
+    ).fit(sample=sample)
 
-    # replace values of +/- infinite with n/a, then drop all n/a columns:
-    batch_table = batch_table.replace([np.inf, -np.inf], np.nan).dropna(
-        axis=1, how="all"
-    )
 
-    if fast_execution:
-        batch_table = batch_table.iloc[:100, :]
+@pytest.fixture
+def best_lgbm_crossfit(
+    regressor_ranker: RegressorRanker,
+    cv: BaseCrossValidator,
+    sample: Sample,
+    n_jobs: int,
+) -> LearnerCrossfit[RegressorPipelineDF]:
+    # we get the best model_evaluation which is a LGBM - for the sake of test
+    # performance
+    best_lgbm_evaluation: LearnerEvaluation[RegressorPipelineDF] = [
+        evaluation
+        for evaluation in regressor_ranker.ranking()
+        if isinstance(evaluation.pipeline.regressor, LGBMRegressorDF)
+    ][0]
 
-    sample = Sample(
-        observations=batch_table, target=inputfile_config["yield_column_name"]
-    )
-    return sample
+    best_lgbm_regressor: RegressorPipelineDF = best_lgbm_evaluation.pipeline
+
+    return LearnerCrossfit(
+        pipeline=best_lgbm_regressor,
+        cv=cv,
+        shuffle_features=True,
+        random_state=42,
+        n_jobs=n_jobs,
+    ).fit(sample=sample)
+
+
+@pytest.fixture
+def regressor_inspector(
+    best_lgbm_crossfit: LearnerCrossfit[RegressorPipelineDF], n_jobs: int
+) -> RegressorInspector:
+    return RegressorInspector(n_jobs=n_jobs).fit(crossfit=best_lgbm_crossfit)
 
 
 @pytest.fixture
