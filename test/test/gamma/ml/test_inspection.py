@@ -9,84 +9,26 @@ from typing import *
 
 import numpy as np
 import pandas as pd
-import pytest
 from pandas.core.util.hashing import hash_pandas_object
 from shap import KernelExplainer, TreeExplainer
 from shap.explainers.explainer import Explainer
 from sklearn.base import BaseEstimator
-from sklearn.model_selection import BaseCrossValidator, KFold
+from sklearn.model_selection import BaseCrossValidator
 
 from gamma.ml import Sample
 from gamma.ml.crossfit import LearnerCrossfit
 from gamma.ml.inspection import ClassifierInspector, RegressorInspector
-from gamma.ml.selection import (
-    ClassifierRanker,
-    LearnerEvaluation,
-    ParameterGrid,
-    RegressorRanker,
-)
+from gamma.ml.selection import ClassifierRanker, ParameterGrid, RegressorRanker
 from gamma.sklearndf import TransformerDF
 from gamma.sklearndf.classification import RandomForestClassifierDF
 from gamma.sklearndf.pipeline import ClassifierPipelineDF, RegressorPipelineDF
-from gamma.sklearndf.regression.extra import LGBMRegressorDF
 from gamma.viz.dendrogram import DendrogramDrawer, DendrogramReportStyle
 from test.gamma.ml import check_ranking
 
 log = logging.getLogger(__name__)
 
-K_FOLDS: int = 5
-
 
 # noinspection PyMissingOrEmptyDocstring
-@pytest.fixture
-def cv() -> BaseCrossValidator:
-    # define a CV
-    return KFold(n_splits=K_FOLDS, random_state=42)
-
-
-@pytest.fixture
-def regressor_ranker(
-    cv: BaseCrossValidator,
-    regressor_grids: List[ParameterGrid],
-    sample: Sample,
-    n_jobs: int,
-) -> RegressorRanker:
-    return RegressorRanker(
-        grid=regressor_grids, cv=cv, scoring="r2", n_jobs=n_jobs
-    ).fit(sample=sample)
-
-
-@pytest.fixture
-def best_lgbm_crossfit(
-    regressor_ranker: RegressorRanker,
-    cv: BaseCrossValidator,
-    sample: Sample,
-    n_jobs: int,
-) -> LearnerCrossfit[RegressorPipelineDF]:
-    # we get the best model_evaluation which is a LGBM - for the sake of test
-    # performance
-    best_lgbm_evaluation: LearnerEvaluation[RegressorPipelineDF] = [
-        evaluation
-        for evaluation in regressor_ranker.ranking()
-        if isinstance(evaluation.pipeline.regressor, LGBMRegressorDF)
-    ][0]
-
-    best_lgbm_regressor: RegressorPipelineDF = best_lgbm_evaluation.pipeline
-
-    return LearnerCrossfit(
-        pipeline=best_lgbm_regressor,
-        cv=cv,
-        shuffle_features=True,
-        random_state=42,
-        n_jobs=n_jobs,
-    ).fit(sample=sample)
-
-
-@pytest.fixture
-def regressor_inspector(
-    best_lgbm_crossfit: LearnerCrossfit[RegressorPipelineDF], n_jobs: int
-) -> RegressorInspector:
-    return RegressorInspector(n_jobs=n_jobs).fit(crossfit=best_lgbm_crossfit)
 
 
 def test_model_inspection(
