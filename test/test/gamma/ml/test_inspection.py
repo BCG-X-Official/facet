@@ -32,7 +32,6 @@ log = logging.getLogger(__name__)
 
 
 def test_model_inspection(
-    batch_table: pd.DataFrame,
     regressor_grids: Sequence[ParameterGrid],
     regressor_ranker: RegressorRanker,
     best_lgbm_crossfit: LearnerCrossfit[RegressorPipelineDF],
@@ -45,18 +44,18 @@ def test_model_inspection(
 ) -> None:
     if fast_execution:
         # define checksums for this test
-        checksum_shap = 16212594514483871543
-        checksum_association_matrix = 8969182771326710805
+        checksum_shap = 7678718855667032507
+        checksum_association_matrix = 10115687136244898795
 
-        checksum_learner_scores = -3.723311
-        checksum_learner_ranks = "6a3cfb540e56298cdccebc5c72dae7aa"
+        checksum_learner_scores = 1.5365912783588438
+        checksum_learner_ranks = "ac87a8cbf8b279746707a2af8b66a7ac"
     else:
         # define checksums for this test
-        checksum_shap = 4647247706471413882
-        checksum_association_matrix = 7913166565570533555
+        checksum_shap = 1956741545033811954
+        checksum_association_matrix = 17649175683562206263
 
-        checksum_learner_scores = -7.939242
-        checksum_learner_ranks = "5e4b373d56a53647c9483a5606235c9a"
+        checksum_learner_scores = 0.6056819340325851
+        checksum_learner_ranks = "4251e104ce7d1834f2b3b6ab5bb5ceab"
 
     log.debug(f"\n{regressor_ranker.summary_report(max_learners=10)}")
 
