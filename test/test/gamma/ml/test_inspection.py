@@ -78,7 +78,7 @@ def test_model_inspection(
         == checksum_shap
     )
 
-    # correlated shap matrix: feature dependencies
+    # Shap decomposition matrices (feature dependencies)
     association_matrix: pd.DataFrame = regressor_inspector.feature_association_matrix()
 
     # determine number of unique features across the models in the crossfit
@@ -89,7 +89,8 @@ def test_model_inspection(
         )
     )
 
-    # check that dimensions of pairwise feature matrices are equal to # of features
+    # check that dimensions of pairwise feature matrices are equal to # of features,
+    # and value ranges:
     for matrix, matrix_name in zip(
         (
             association_matrix,
@@ -102,14 +103,14 @@ def test_model_inspection(
         assert len(matrix) == n_features, f"rows in {matrix_full_name}"
         assert len(matrix.columns) == n_features, f"columns in {matrix_full_name}"
 
-    # check correlation values
-    for c in association_matrix.columns:
-        assert (
-            -1.0
-            <= association_matrix.fillna(0).loc[:, c].min()
-            <= association_matrix.fillna(0).loc[:, c].max()
-            <= 1.0
-        )
+        # check values
+        for c in matrix.columns:
+            assert (
+                0.0
+                <= matrix.fillna(0).loc[:, c].min()
+                <= matrix.fillna(0).loc[:, c].max()
+                <= 1.0
+            ), f"Values of [0.0, 1.0] in {matrix_full_name}"
 
     # check actual values using checksum:
     assert (
@@ -210,21 +211,21 @@ def test_model_inspection_classifier(
     # indices we have had in the predictions_df
     assert len(shap_matrix) == len(test_sample)
 
-    # correlated shap matrix: feature dependencies
-    corr_matrix: pd.DataFrame = model_inspector.feature_association_matrix()
-    log.info(corr_matrix)
+    # Shap decomposition matrices (feature dependencies)
+    feature_associations: pd.DataFrame = model_inspector.feature_association_matrix()
+    log.info(feature_associations)
     # check number of rows
-    assert len(corr_matrix) == len(test_sample.feature_columns)
-    assert len(corr_matrix.columns) == len(test_sample.feature_columns)
+    assert len(feature_associations) == len(test_sample.feature_columns)
+    assert len(feature_associations.columns) == len(test_sample.feature_columns)
 
-    # check correlation values
-    for c in corr_matrix.columns:
-        c_corr = corr_matrix.loc[:, c]
-        assert -1.0 <= c_corr.min() <= c_corr.max() <= 1.0
+    # check association values
+    for c in feature_associations.columns:
+        fa = feature_associations.loc[:, c]
+        assert 0.0 <= fa.min() <= fa.max() <= 1.0
 
     # check actual values using checksum:
     assert (
-        np.sum(hash_pandas_object(corr_matrix.round(decimals=4)).values)
+        np.sum(hash_pandas_object(feature_associations.round(decimals=4)).values)
         == checksum_association_matrix
     )
 
