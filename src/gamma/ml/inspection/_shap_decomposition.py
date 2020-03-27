@@ -96,10 +96,10 @@ class ShapValueDecomposer(FittableMixin[ShapCalculator]):
         n_features = len(shap_calculator.feature_index_)
         n_observations = len(shap_values)
 
-        # phi[i]
+        # p[i] = phi_i
         # shape: (n_targets, n_features, n_observations)
         # the vector of shap values for every target and feature
-        phi_i = _ensure_last_axis_is_fast(
+        p_i = _ensure_last_axis_is_fast(
             np.transpose(
                 shap_values.values.reshape((n_observations, n_targets, n_features)),
                 axes=(1, 2, 0),
@@ -107,51 +107,49 @@ class ShapValueDecomposer(FittableMixin[ShapCalculator]):
         )
 
         #
-        # SHAP association: alpha[i, j]
+        # SHAP association: ass[i, j]
         #
 
         # covariance matrix of shap vectors
         # shape: (n_targets, n_features, n_features)
-        cov_phi_i_phi_j = _cov(phi_i, phi_i)
-        cov_phi_i_phi_j_2x = 2 * cov_phi_i_phi_j
+        cov_p_i_p_j = _cov(p_i, p_i)
+        cov_p_i_p_j_2x = 2 * cov_p_i_p_j
 
         # variance of shap vectors
-        var_phi_i = np.diagonal(cov_phi_i_phi_j, axis1=1, axis2=2)
-        var_phi_i_plus_var_phi_j = (
-            var_phi_i[:, :, np.newaxis] + var_phi_i[:, np.newaxis, :]
-        )
+        var_p_i = np.diagonal(cov_p_i_p_j, axis1=1, axis2=2)
+        var_p_i_plus_var_p_j = var_p_i[:, :, np.newaxis] + var_p_i[:, np.newaxis, :]
 
-        # std(phi[i] + phi[j])
+        # std(p[i] + p[j])
         # shape: (n_targets, n_features)
         # variances of SHAP vectors minus total synergy
-        # or, the length of the sum of vectors phi[i] and phi[j]
+        # or, the length of the sum of vectors p[i] and p[j]
         # this quantifies the joint contributions of features i and j
-        # we also need this as part of the formula to calculate alpha_ij (see below)
-        std_phi_i_plus_phi_j = _sqrt(var_phi_i_plus_var_phi_j + cov_phi_i_phi_j_2x)
+        # we also need this as part of the formula to calculate ass_ij (see below)
+        std_p_i_plus_p_j = _sqrt(var_p_i_plus_var_p_j + cov_p_i_p_j_2x)
 
-        # std(phi[i] - phi[j])
+        # std(p[i] - p[j])
         # shape: (n_targets, n_features)
         # the length of the difference of vectors phi[i] and phi[j]
         # we need this as part of the formula to calculate alpha_ij (see below)
-        std_phi_i_minus_phi_j = _sqrt(var_phi_i_plus_var_phi_j - cov_phi_i_phi_j_2x)
+        std_p_i_minus_p_j = _sqrt(var_p_i_plus_var_p_j - cov_p_i_p_j_2x)
 
-        # 2 * std(alpha[i, j]) = 2 * std(alpha[j, i])
+        # 2 * std(ass[i, j]) = 2 * std(ass[j, i])
         # shape: (n_targets, n_features, n_features)
         # twice the standard deviation (= length) of the redundancy vector;
-        # this is the total contribution made by phi[i] and phi[j] where both features
+        # this is the total contribution made by p[i] and p[j] where both features
         # independently use redundant information
-        std_alpha_ij_2x = std_phi_i_plus_phi_j - std_phi_i_minus_phi_j
+        std_ass_ij_2x = std_p_i_plus_p_j - std_p_i_minus_p_j
 
         # SHAP association
         # shape: (n_targets, n_features, n_features)
-        association_ij = np.abs(std_alpha_ij_2x)
+        association_ij = np.abs(std_ass_ij_2x)
 
         # we should have the right shape for all resulting matrices
         assert association_ij.shape == (n_targets, n_features, n_features)
 
         with np.errstate(divide="ignore", invalid="ignore"):
             self.association_rel_ = _ensure_diagonality(
-                association_ij / std_phi_i_plus_phi_j
+                association_ij / std_p_i_plus_p_j
             )
 
     def _reset_fit(self) -> None:
@@ -261,12 +259,12 @@ class ShapInteractionValueDecomposer(ShapValueDecomposer):
         n_targets = len(targets)
         n_observations = len(shap_values.index.levels[0])
 
-        # phi[i, j]
+        # p[i, j]
         # shape: (n_targets, n_features, n_features, n_observations)
         # the vector of interaction values for every target and feature pairing
         # for improved numerical precision, we ensure the last axis is the fast axis
         # i.e. stride size equals item size (see documentation for numpy.sum)
-        phi_ij = _ensure_last_axis_is_fast(
+        p_ij = _ensure_last_axis_is_fast(
             np.transpose(
                 shap_values.values.reshape(
                     (n_observations, n_features, n_targets, n_features)
@@ -275,43 +273,41 @@ class ShapInteractionValueDecomposer(ShapValueDecomposer):
             )
         )
 
-        # phi[i]
+        # p[i]
         # shape: (n_targets, n_features, n_observations)
-        phi_i = _ensure_last_axis_is_fast(phi_ij.sum(axis=2))
+        p_i = _ensure_last_axis_is_fast(p_ij.sum(axis=2))
 
         # covariance matrix of shap vectors
         # shape: (n_targets, n_features, n_features)
-        cov_phi_i_phi_j = _cov(phi_i, phi_i)
+        cov_p_i_p_j = _cov(p_i, p_i)
 
         #
         # Feature synergy (direct and indirect): zeta[i, j]
         #
 
-        # var(phi[i, j]), std(phi[i, j])
+        # var(p[i, j]), std(p[i, j])
         # shape: (n_targets, n_features, n_features)
         # variance and length (= standard deviation) of each feature interaction vector
-        var_phi_ij = (
-            _ensure_last_axis_is_fast(phi_ij * phi_ij).sum(axis=-1) / n_observations
-        )
-        std_phi_ij = np.sqrt(var_phi_ij)
+        var_p_ij = _ensure_last_axis_is_fast(p_ij * p_ij).sum(axis=-1) / n_observations
+        std_p_ij = np.sqrt(var_p_ij)
 
-        # phi[i, i]
+        # p[i, i]
         # shape: (n_targets, n_features, n_observations)
         # independent feature contributions;
         # this is the diagonal of phi_ij
-        phi_ii = np.diagonal(phi_ij, axis1=1, axis2=2).swapaxes(1, 2)
+        p_ii = np.diagonal(p_ij, axis1=1, axis2=2).swapaxes(1, 2)
 
-        # psi[i] = phi[i] - phi[i, i]
+        # p'[i] = p[i] - p[i, i]
         # shape: (n_targets, n_features, n_observations)
         # the SHAP vectors per feature, minus the independent contributions
-        psi_i = _ensure_last_axis_is_fast(phi_i - phi_ii)
+        p_prime_i = _ensure_last_axis_is_fast(p_i - p_ii)
 
-        # std_phi_relative[i, j]
+        # std_p_relative[i, j]
         # shape: (n_targets, n_features, n_features)
-        # relative importance of phi[i, j] measured as the length of phi[i, j]
-        # as percentage of the sum of lengths of all phi[..., ...]
+        # relative importance of p[i, j] measured as the length of p[i, j]
+        # as percentage of the sum of lengths of all p[..., ...]
         with np.errstate(divide="ignore", invalid="ignore"):
-            std_phi_relative_ij = std_phi_ij / std_phi_ij.sum()
+            std_p_relative_ij = std_p_ij / std_p_ij.sum()
 
         # phi_valid[i, j]
         # shape: (n_targets, n_features, n_features)
@@ -322,28 +318,28 @@ class ShapInteractionValueDecomposer(ShapValueDecomposer):
         # deviate significantly if var(phi[i, j]) is only slightly off
 
         interaction_noise_threshold = self.min_direct_synergy
-        phi_valid_ij = std_phi_relative_ij >= interaction_noise_threshold
+        p_valid_ij = std_p_relative_ij >= interaction_noise_threshold
 
-        # s[i, j]
+        # k[i, j]
         # shape: (n_targets, n_features, n_features)
-        # s[i, j] = cov(psi[i], phi[i, j) / var(phi[i, j]), for each target
-        # this is the orthogonal projection of phi[i, j] onto psi[i] and determines
-        # the multiplier of std(phi[i, j]) (i.e., direct synergy) to obtain
-        # the total direct and indirect synergy of psi[i] with psi[j], i.e.,
-        # std(phi[i, j]) * s[i, j]
+        # k[i, j] = cov(p'[i], p[i, j]) / var(p[i, j]), for each target
+        # this is the orthogonal projection of p[i, j] onto p'[i] and determines
+        # the multiplier of std(p[i, j]) (i.e., direct synergy) to obtain
+        # the total direct and indirect synergy of p'[i] with p'[j], i.e.,
+        # * k[i, j] * std(p[i, j])
 
         if _PAIRWISE_PARTIAL_SUMMATION:
             raise NotImplementedError(
                 "max precision Einstein summation not yet implemented"
             )
         # noinspection SpellCheckingInspection
-        s_i_j = np.divide(
+        k_ij = np.divide(
             # cov(psi[i], phi[i, j])
-            np.einsum("tio,tijo->tij", psi_i, phi_ij, optimize=True) / n_observations,
+            np.einsum("tio,tijo->tij", p_prime_i, p_ij, optimize=True) / n_observations,
             # var(phi[i, j])
-            var_phi_ij,
-            out=np.ones_like(var_phi_ij),
-            where=phi_valid_ij,
+            var_p_ij,
+            out=np.ones_like(var_p_ij),
+            where=p_valid_ij,
         )
 
         # issue warning messages for edge cases
@@ -360,31 +356,31 @@ class ShapInteractionValueDecomposer(ShapValueDecomposer):
         def _relative_direct_synergy(_t: int, _i: int, _j: int) -> str:
             return (
                 f"phi[{features[_i]}, {features[_j]}] has "
-                f"{std_phi_relative_ij[_t, _i, _j] * 100:.3g}% "
+                f"{std_p_relative_ij[_t, _i, _j] * 100:.3g}% "
                 "relative SHAP contribution; "
                 "consider increasing the interaction noise threshold (currently "
                 f"{interaction_noise_threshold * 100:.3g}%). "
             )
 
         def _test_synergy_feasibility() -> None:
-            for _t, _i, _j in np.argwhere(s_i_j < 1):
+            for _t, _i, _j in np.argwhere(k_ij < 1):
                 if _i != _j:
                     log.debug(
                         "contravariant indirect synergy "
                         f"between {_feature(_i)} and {_feature(_j)}{_for_target(_t)}: "
                         "indirect synergy calculated as "
-                        f"{(s_i_j[_t, _i, _j] - 1) * 100:.3g}% "
+                        f"{(k_ij[_t, _i, _j] - 1) * 100:.3g}% "
                         "of direct synergy; setting indirect synergy to 0. "
                         f"{_relative_direct_synergy(_t, _i, _j)}"
                     )
 
-            for _t, _i, _j in np.argwhere(s_i_j - 1 > np.log2(n_features)):
+            for _t, _i, _j in np.argwhere(k_ij - 1 > np.log2(n_features)):
                 if _i != _j:
                     log.warning(
                         "high indirect synergy "
                         f"between {_feature(_i)} and {_feature(_j)}{_for_target(_t)}: "
                         "total synergy is "
-                        f"{s_i_j[_t, _i, _j] * 100:.3g}% of direct synergy. "
+                        f"{k_ij[_t, _i, _j] * 100:.3g}% of direct synergy. "
                         f"{_relative_direct_synergy(_t, _i, _j)}"
                     )
 
@@ -393,27 +389,27 @@ class ShapInteractionValueDecomposer(ShapValueDecomposer):
         # ensure that s[i, j] is at least 1.0
         # (a warning will have been issued during the checks above for s[i, j] < 1)
         # i.e. we don't allow total synergy to be less than direct synergy
-        s_i_j = np.clip(s_i_j, 1.0, None)
+        k_ij = np.clip(k_ij, 1.0, None)
 
         # fill the diagonal(s) with nan since these values are meaningless
-        for s_i_j_for_target in s_i_j:
-            np.fill_diagonal(s_i_j_for_target, val=np.nan)
+        for k_ij_for_target in k_ij:
+            np.fill_diagonal(k_ij_for_target, val=np.nan)
 
         # s[j, i]
         # transpose of s[i, j]; we need this later for calculating SHAP redundancy
         # shape: (n_targets, n_features, n_features)
-        s_j_i = _transpose(s_i_j)
+        k_ji = _transpose(k_ij)
 
-        # zeta[i, j] = zeta[j, i] = (s[i, j] + s[j, i]) * phi[i, j]
+        # syn[i, j] = syn[j, i] = (k[i, j] + k[j, i]) * p[i, j]
         # total SHAP synergy, comprising both direct and indirect synergy
         # shape: (n_targets, n_features, n_features)
-        std_zeta_ij_plus_zeta_ji = (s_i_j + s_j_i) * std_phi_ij
+        std_syn_ij_plus_syn_ji = (k_ij + k_ji) * std_p_ij
 
         #
-        # SHAP autonomy: tau[i, j]
+        # SHAP autonomy: aut[i, j]
         #
 
-        # cov(phi[i], phi[i, j])
+        # cov(p[i], p[i, j])
         # covariance matrix of shap vectors with pairwise synergies
         # shape: (n_targets, n_features, n_features)
 
@@ -421,148 +417,137 @@ class ShapInteractionValueDecomposer(ShapValueDecomposer):
             raise NotImplementedError(
                 "max precision Einstein summation not yet implemented"
             )
-        cov_phi_i_phi_ij = (
-            np.einsum("...io,...ijo->...ij", phi_i, phi_ij) / n_observations
-        )
+        cov_p_i_p_ij = np.einsum("...io,...ijo->...ij", p_i, p_ij) / n_observations
 
-        # cov(tau[i, j], tau[j, i])
-        # where tau[i, j] = phi[i] - s[i, j] * phi[i, j]
+        # cov(aut[i, j], aut[j, i])
+        # where aut[i, j] = p[i] - k[i, j] * p[i, j]
         # shape: (n_observations, n_targets, n_features)
         # matrix of covariances for tau vectors for all pairings of features
-        # the tau[i, j] vector is the phi[i] SHAP contribution vector where the synergy
+        # the aut[i, j] vector is the p[i] SHAP contribution vector where the synergy
         # effects (direct and indirect) with feature j have been deducted
 
-        cov_tau_ij_tau_ji = (
-            cov_phi_i_phi_j
-            - s_j_i * cov_phi_i_phi_ij
-            - s_i_j * _transpose(cov_phi_i_phi_ij)
-            + s_j_i * s_i_j * var_phi_ij
+        cov_aut_ij_aut_ji = (
+            cov_p_i_p_j
+            - k_ji * cov_p_i_p_ij
+            - k_ij * _transpose(cov_p_i_p_ij)
+            + k_ji * k_ij * var_p_ij
         )
 
-        # var(phi[i])
+        # var(p[i])
         # variances of SHAP vectors
         # shape: (n_targets, n_features, 1)
         # i.e. adding a second, empty feature dimension to enable correct broadcasting
-        var_phi_i = np.diagonal(cov_phi_i_phi_j, axis1=1, axis2=2)[:, :, np.newaxis]
+        var_p_i = np.diagonal(cov_p_i_p_j, axis1=1, axis2=2)[:, :, np.newaxis]
 
-        # var(tau[i, j])
+        # var(aut[i, j])
         # variances of SHAP vectors minus total synergy
         # shape: (n_targets, n_features, n_features)
-        var_tau_ij = (
-            var_phi_i - 2 * s_i_j * cov_phi_i_phi_ij + s_i_j * s_i_j * var_phi_ij
-        )
+        var_aut_ij = var_p_i - 2 * k_ij * cov_p_i_p_ij + k_ij * k_ij * var_p_ij
 
-        # var(phi[i]) + var(phi[j])
+        # var(aut[i]) + var(aut[j])
         # Sum of covariances per feature pair (this is a diagonal matrix)
         # shape: (n_targets, n_features, n_features)
-        var_tau_ij_plus_var_tau_ji = var_tau_ij + _transpose(var_tau_ij)
+        var_aut_ij_plus_var_aut_ji = var_aut_ij + _transpose(var_aut_ij)
 
-        # 2 * cov(tau[i, j], tau[j, i])
+        # 2 * cov(aut[i, j], aut[j, i])
         # shape: (n_targets, n_features, n_features)
         # this is an intermediate result to calculate the standard deviation
         # of the redundancy vector (see next step below)
-        cov_tau_ij_tau_ji_2x = 2 * cov_tau_ij_tau_ji
+        cov_aut_ij_aut_ji_2x = 2 * cov_aut_ij_aut_ji
 
-        # std(tau[i, j] + tau[j, i])
-        # where tau[i, j] = phi[i] - zeta[i, j]
+        # std(aut[i, j] + aut[j, i])
+        # where aut[i, j] = p[i] - syn[i, j]
         # shape: (n_targets, n_features, n_features)
         # variances of SHAP vectors minus total synergy
-        # or, the length of the sum of vectors tau[i, j] and tau[j, i]
+        # or, the length of the sum of vectors aut[i, j] and aut[j, i]
         # this quantifies the autonomous contributions of features i and j, i.e.,
         # without synergizing
-        # we also need this as part of the formula to calculate epsilon_ij (see below)
+        # we also need this as part of the formula to calculate red_ij (see below)
 
-        std_tau_ij_plus_tau_ji = _sqrt(
-            var_tau_ij_plus_var_tau_ji + cov_tau_ij_tau_ji_2x
+        std_aut_ij_plus_aut_ji = _sqrt(
+            var_aut_ij_plus_var_aut_ji + cov_aut_ij_aut_ji_2x
         )
 
         #
-        # SHAP redundancy: epsilon[i, j]
+        # SHAP redundancy: red[i, j]
         #
 
-        # std(tau[i, j] - tau[j, i])
+        # std(aut[i, j] - aut[j, i])
         # shape: (n_targets, n_features, n_features)
-        # the length of the difference of vectors tau[i, j] and tau[j, i]
+        # the length of the difference of vectors aut[i, j] and aut[j, i]
         # we need this as part of the formula to calculate epsilon_ij (see below)
 
-        std_tau_ij_minus_tau_ji = _sqrt(
-            var_tau_ij_plus_var_tau_ji - cov_tau_ij_tau_ji_2x
+        std_aut_ij_minus_aut_ji = _sqrt(
+            var_aut_ij_plus_var_aut_ji - cov_aut_ij_aut_ji_2x
         )
 
-        # 2 * std(epsilon[i, j]) = 2 * std(epsilon[j, i])
+        # 2 * std(red[i, j]) = 2 * std(red[j, i])
         # shape: (n_targets, n_features)
         # twice the standard deviation (= length) of redundancy vector;
-        # this is the total contribution made by phi[i] and phi[j] where both features
+        # this is the total contribution made by p[i] and p[j] where both features
         # independently use redundant information
 
-        std_epsilon_ij_2x = std_tau_ij_plus_tau_ji - std_tau_ij_minus_tau_ji
+        std_red_ij_2x = std_aut_ij_plus_aut_ji - std_aut_ij_minus_aut_ji
 
         #
-        # SHAP independence: nu[i, j]
+        # SHAP independence: ind[i, j]
         #
 
-        # 4 * var(epsilon[i, j]), var(epsilon[i, j])
+        # 4 * var(red[i, j]), var(red[i, j])
         # shape: (n_targets, n_features, n_features)
-        var_epsilon_ij_4x = std_epsilon_ij_2x * std_epsilon_ij_2x
+        var_red_ij_4x = std_red_ij_2x * std_red_ij_2x
 
-        # ratio of length of 2*e over length of (tau[i, j] + tau[j, i])
+        # ratio of length of 2*e over length of (aut[i, j] + aut[j, i])
         # shape: (n_targets, n_features, n_features)
         # we need this for the next step
         with np.errstate(divide="ignore", invalid="ignore"):
-            epsilon_tau_ratio_2x = 1 - std_tau_ij_minus_tau_ji / std_tau_ij_plus_tau_ji
+            red_aut_ratio_2x = 1 - std_aut_ij_minus_aut_ji / std_aut_ij_plus_aut_ji
 
         # 2 * cov(tau[i, j], epsilon[i, j])
         # shape: (n_targets, n_features, n_features)
         # we need this as part of the formula to calculate nu_i (see next step below)
-        cov_tau_ij_epsilon_ij_2x = epsilon_tau_ratio_2x * (
-            var_tau_ij + cov_tau_ij_tau_ji
-        )
+        cov_aut_ij_red_ij_2x = red_aut_ratio_2x * (var_aut_ij + cov_aut_ij_aut_ji)
 
-        # std(nu_ij)
-        # where nu_ij = tau_ij + tau_ji - 2 * epsilon_ij
+        # std(ind_ij)
+        # where ind_ij = aut_ij + aut_ji - 2 * red_ij
         # shape: (n_targets, n_features, n_features)
         # the standard deviation (= length) of the independence vector
 
-        std_nu_ij_plus_nu_ji = _sqrt(
-            var_tau_ij
-            + _transpose(var_tau_ij)
-            + var_epsilon_ij_4x
+        std_ind_ij_plus_ind_ji = _sqrt(
+            var_aut_ij
+            + _transpose(var_aut_ij)
+            + var_red_ij_4x
             + 2
             * (
-                cov_tau_ij_tau_ji
-                - cov_tau_ij_epsilon_ij_2x
-                - _transpose(cov_tau_ij_epsilon_ij_2x)
+                cov_aut_ij_aut_ji
+                - cov_aut_ij_red_ij_2x
+                - _transpose(cov_aut_ij_red_ij_2x)
             )
         )
 
         #
-        # SHAP uniqueness: upsilon[i, j]
+        # SHAP uniqueness: uni[i, j]
         #
 
-        # 2 * cov(phi[i], epsilon[i, j])
+        # 2 * cov(p[i], red[i, j])
         # shape: (n_targets, n_features, n_features)
         # intermediate result to calculate upsilon[i, j], see next step
 
-        cov_phi_i_epsilon_ij_2x = epsilon_tau_ratio_2x * (
-            var_phi_i + cov_phi_i_phi_j - (s_i_j + s_j_i) * cov_phi_i_phi_ij
+        cov_p_i_red_ij_2x = red_aut_ratio_2x * (
+            var_p_i + cov_p_i_p_j - (k_ij + k_ji) * cov_p_i_p_ij
         )
 
-        # std(upsilon[i, j] + upsilon[j, i])
-        # where upsilon[i, j] + + upsilon[j, i] = phi[i] + phi[j] - 2 * epsilon[i, j]
+        # std(uni[i, j] + uni[j, i])
+        # where uni[i, j] + + uni[j, i] = p[i] + p[j] - 2 * red[i, j]
         # shape: (n_targets, n_features, n_features)
         # this is the sum of complementary contributions of feature i and feature j,
         # i.e., deducting the redundant contributions
 
-        std_upsilon_ij_plus_upsilon_ji = _sqrt(
-            var_phi_i
-            + var_phi_i.swapaxes(1, 2)
-            + var_epsilon_ij_4x
-            + 2
-            * (
-                cov_phi_i_phi_j
-                - cov_phi_i_epsilon_ij_2x
-                - _transpose(cov_phi_i_epsilon_ij_2x)
-            )
+        std_uni_ij_plus_uni_ji = _sqrt(
+            var_p_i
+            + var_p_i.swapaxes(1, 2)
+            + var_red_ij_4x
+            + 2 * (cov_p_i_p_j - cov_p_i_red_ij_2x - _transpose(cov_p_i_red_ij_2x))
         )
 
         #
@@ -570,11 +555,11 @@ class ShapInteractionValueDecomposer(ShapValueDecomposer):
         # synergy, redundancy, and independence
         #
 
-        synergy_ij = std_zeta_ij_plus_zeta_ji
-        autonomy_ij = std_tau_ij_plus_tau_ji
-        redundancy_ij = np.abs(std_epsilon_ij_2x)
-        uniqueness_ij = std_upsilon_ij_plus_upsilon_ji
-        independence_ij = std_nu_ij_plus_nu_ji
+        synergy_ij = std_syn_ij_plus_syn_ji
+        autonomy_ij = std_aut_ij_plus_aut_ji
+        redundancy_ij = np.abs(std_red_ij_2x)
+        uniqueness_ij = std_uni_ij_plus_uni_ji
+        independence_ij = std_ind_ij_plus_ind_ji
 
         # we should have the right shape for all resulting matrices
         for matrix in (
