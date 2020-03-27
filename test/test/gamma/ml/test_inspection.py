@@ -1,7 +1,9 @@
 """
 Model inspector tests.
 """
+import functools
 import logging
+import operator
 import warnings
 from typing import *
 
@@ -11,240 +13,113 @@ from pandas.core.util.hashing import hash_pandas_object
 from shap import KernelExplainer, TreeExplainer
 from shap.explainers.explainer import Explainer
 from sklearn.base import BaseEstimator
-from sklearn.model_selection import BaseCrossValidator, KFold, RepeatedKFold
+from sklearn.model_selection import BaseCrossValidator
 
 from gamma.ml import Sample
 from gamma.ml.crossfit import LearnerCrossfit
-from gamma.ml.inspection import (
-    ClassifierInspector,
-    RegressorInspector,
-    tree_explainer_factory,
-)
-from gamma.ml.selection import (
-    ClassifierRanker,
-    LearnerEvaluation,
-    ParameterGrid,
-    RegressorRanker,
-)
+from gamma.ml.inspection import ClassifierInspector, RegressorInspector
+from gamma.ml.selection import ClassifierRanker, ParameterGrid, RegressorRanker
 from gamma.sklearndf import TransformerDF
 from gamma.sklearndf.classification import RandomForestClassifierDF
 from gamma.sklearndf.pipeline import ClassifierPipelineDF, RegressorPipelineDF
-from gamma.sklearndf.regression import SVRDF
-from gamma.sklearndf.regression.extra import LGBMRegressorDF
 from gamma.viz.dendrogram import DendrogramDrawer, DendrogramReportStyle
 from test.gamma.ml import check_ranking
 
 log = logging.getLogger(__name__)
 
-K_FOLDS: int = 5
-TEST_RATIO = 1 / K_FOLDS
-N_SPLITS = K_FOLDS * 2
+
+# noinspection PyMissingOrEmptyDocstring
 
 
-def test_model_inspection(n_jobs, boston_sample: Sample) -> None:
-    # checksums for the model inspection test - one for the LGBM, one for the SVR
-    checksums_shap = [16680557582580274087, 13285572916961982080]
-    checksum_association_matrix = [1747157116269656139, 11367664364506397399]
-    checksum_learner_scores = -218.87516793944133
-    checksum_learner_ranks = "0972fa60fd9beb2c1f8be21324506f4d"
-
-    warnings.filterwarnings("ignore", message="numpy.dtype size changed")
-    warnings.filterwarnings("ignore", message="numpy.ufunc size changed")
-    warnings.filterwarnings("ignore", message="You are accessing a training score")
-
-    # define a CV:
-    # noinspection PyTypeChecker
-    test_cv: BaseCrossValidator = RepeatedKFold(
-        n_splits=K_FOLDS, n_repeats=N_SPLITS // K_FOLDS, random_state=42
-    )
-
-    # define parameter grid
-    grid = [
-        ParameterGrid(
-            pipeline=(
-                RegressorPipelineDF(regressor=SVRDF(gamma="scale"), preprocessing=None)
-            ),
-            learner_parameters={"kernel": ("linear", "rbf"), "C": [1, 10]},
-        ),
-        ParameterGrid(
-            pipeline=RegressorPipelineDF(
-                regressor=LGBMRegressorDF(), preprocessing=None
-            ),
-            learner_parameters={
-                "max_depth": (1, 2, 5),
-                "min_split_gain": (0.1, 0.2, 0.5),
-                "num_leaves": (2, 3),
-            },
-        ),
-    ]
-
-    # use first 100 rows only, since KernelExplainer is very slow...
-
-    test_sample: Sample = boston_sample.subsample(iloc=slice(100))
-
-    ranker = RegressorRanker(
-        grid=grid, cv=test_cv, scoring="neg_mean_squared_error", n_jobs=n_jobs
-    ).fit(sample=test_sample)
-
-    log.debug(f"\n{ranker.summary_report(max_learners=10)}")
-
-    check_ranking(
-        ranking=ranker.ranking(),
-        checksum_scores=checksum_learner_scores,
-        checksum_learners=checksum_learner_ranks,
-        first_n_learners=10,
-    )
-
-    ranking = ranker.ranking()
-
-    # consider: model_with_type(...) function for ModelRanking
-    _best_svr = [
-        model for model in ranking if isinstance(model.pipeline.regressor, SVRDF)
-    ][0]
-    best_lgbm = [
-        model_evaluation
-        for model_evaluation in ranking
-        if isinstance(model_evaluation.pipeline.regressor, LGBMRegressorDF)
-    ][0]
-
-    for model_index, (model_evaluation, factory) in enumerate(
-        [
-            (best_lgbm, tree_explainer_factory),
-            # todo: re-enable testing the kernel explainer factory once we have
-            #       a valid approach for the background dataset
-            # (_best_svr, kernel_explainer_factory)
-        ]
-    ):
-
-        pipeline: RegressorPipelineDF = model_evaluation.pipeline
-        model_fit: LearnerCrossfit[RegressorPipelineDF] = LearnerCrossfit(
-            pipeline=pipeline, cv=test_cv, shuffle_features=True, random_state=42
-        ).fit(sample=test_sample)
-
-        # noinspection PyTypeChecker
-        model_inspector = RegressorInspector(
-            explainer_factory=factory, shap_interaction=False
-        ).fit(crossfit=model_fit)
-
-        # make and check shap value matrix
-        shap_matrix = model_inspector.shap_values()
-
-        # the length of rows in shap_values should be equal to the unique observation
-        # indices we have had in the predictions_df
-        assert len(shap_matrix) == len(test_sample)
-
-        # check actual values using checksum:
-        #
-        assert (
-            np.sum(hash_pandas_object(shap_matrix.round(decimals=4)).values)
-            == checksums_shap[model_index]
-        )
-
-        # correlated shap matrix: feature dependencies
-        corr_matrix: pd.DataFrame = model_inspector.feature_association_matrix()
-
-        # check number of rows
-        assert len(corr_matrix) == len(test_sample.feature_columns)
-        assert len(corr_matrix.columns) == len(test_sample.feature_columns)
-
-        # check correlation values
-        for c in corr_matrix.columns:
-            assert (
-                -1.0
-                <= corr_matrix.fillna(0).loc[:, c].min()
-                <= corr_matrix.fillna(0).loc[:, c].max()
-                <= 1.0
-            )
-
-        # check actual values using checksum:
-        assert (
-            np.sum(hash_pandas_object(corr_matrix.round(decimals=4)).values)
-            == checksum_association_matrix[model_index]
-        )
-
-        linkage_tree = model_inspector.feature_association_linkage()
-
-        DendrogramDrawer(style=DendrogramReportStyle()).draw(
-            data=linkage_tree, title="Test"
-        )
-
-
-def test_model_inspection_with_encoding(
-    batch_table: pd.DataFrame,
+def test_model_inspection(
     regressor_grids: Sequence[ParameterGrid],
+    regressor_ranker: RegressorRanker,
+    best_lgbm_crossfit: LearnerCrossfit[RegressorPipelineDF],
+    regressor_inspector: RegressorInspector,
+    cv: BaseCrossValidator,
     sample: Sample,
     simple_preprocessor: TransformerDF,
-    n_jobs,
+    n_jobs: int,
     fast_execution: bool,
 ) -> None:
-
     if fast_execution:
-        sample = sample.subsample(iloc=slice(100))
         # define checksums for this test
-        checksum_shap = 16212594514483871543
-        checksum_association_matrix = 8969182771326710805
+        checksum_shap = 7678718855667032507
+        checksum_association_matrix = 10115687136244898795
 
-        checksum_learner_scores = -3.723311
-        checksum_learner_ranks = "6a3cfb540e56298cdccebc5c72dae7aa"
+        checksum_learner_scores = 1.5365912783588438
+        checksum_learner_ranks = "ac87a8cbf8b279746707a2af8b66a7ac"
     else:
         # define checksums for this test
-        checksum_shap = 4647247706471413882
-        checksum_association_matrix = 7913166565570533555
+        checksum_shap = 1956741545033811954
+        checksum_association_matrix = 17649175683562206263
 
-        checksum_learner_scores = -7.939242
-        checksum_learner_ranks = "5e4b373d56a53647c9483a5606235c9a"
+        checksum_learner_scores = 0.6056819340325851
+        checksum_learner_ranks = "4251e104ce7d1834f2b3b6ab5bb5ceab"
 
-    cv = KFold(n_splits=K_FOLDS, random_state=42)
-
-    ranker: RegressorRanker = RegressorRanker(
-        grid=regressor_grids, cv=cv, scoring="r2", n_jobs=n_jobs
-    ).fit(sample=sample)
-
-    log.debug(f"\n{ranker.summary_report(max_learners=10)}")
+    log.debug(f"\n{regressor_ranker.summary_report(max_learners=10)}")
 
     check_ranking(
-        ranking=ranker.ranking(),
+        ranking=regressor_ranker.ranking(),
         checksum_scores=checksum_learner_scores,
         checksum_learners=checksum_learner_ranks,
         first_n_learners=10,
     )
 
-    # we get the best model_evaluation which is a LGBM - for the sake of test
-    # performance
-    validation: LearnerEvaluation[RegressorPipelineDF] = [
-        validation
-        for validation in ranker.ranking()
-        if isinstance(validation.pipeline.regressor, LGBMRegressorDF)
-    ][0]
+    shap_values = regressor_inspector.shap_values()
 
-    pipeline: RegressorPipelineDF = validation.pipeline
-
-    validation_model: LearnerCrossfit[RegressorPipelineDF] = LearnerCrossfit(
-        pipeline=pipeline, cv=cv, shuffle_features=True, random_state=42, n_jobs=n_jobs
-    ).fit(sample=sample)
-
-    # noinspection PyTypeChecker
-    mi = RegressorInspector().fit(crossfit=validation_model)
-
-    shap_matrix = mi.shap_values()
+    # the length of rows in shap_values should be equal to the unique observation
+    # indices we have had in the predictions_df
+    assert len(shap_values) == len(sample)
 
     # check actual values using checksum:
     assert (
-        np.sum(hash_pandas_object(shap_matrix.round(decimals=4)).values)
+        np.sum(hash_pandas_object(shap_values.round(decimals=4)).values)
         == checksum_shap
     )
 
-    # correlated shap matrix: feature dependencies
-    corr_matrix: pd.DataFrame = mi.feature_association_matrix()
+    # Shap decomposition matrices (feature dependencies)
+    association_matrix: pd.DataFrame = regressor_inspector.feature_association_matrix()
+
+    # determine number of unique features across the models in the crossfit
+    n_features = len(
+        functools.reduce(
+            operator.or_,
+            (set(model.features_out) for model in best_lgbm_crossfit.models()),
+        )
+    )
+
+    # check that dimensions of pairwise feature matrices are equal to # of features,
+    # and value ranges:
+    for matrix, matrix_name in zip(
+        (
+            association_matrix,
+            regressor_inspector.feature_synergy_matrix(),
+            regressor_inspector.feature_redundancy_matrix(),
+        ),
+        ("association", "synergy", "redundancy"),
+    ):
+        matrix_full_name = f"feature {matrix_name} matrix"
+        assert len(matrix) == n_features, f"rows in {matrix_full_name}"
+        assert len(matrix.columns) == n_features, f"columns in {matrix_full_name}"
+
+        # check values
+        for c in matrix.columns:
+            assert (
+                0.0
+                <= matrix.fillna(0).loc[:, c].min()
+                <= matrix.fillna(0).loc[:, c].max()
+                <= 1.0
+            ), f"Values of [0.0, 1.0] in {matrix_full_name}"
 
     # check actual values using checksum:
     assert (
-        np.sum(hash_pandas_object(corr_matrix.round(decimals=4)).values)
+        np.sum(hash_pandas_object(association_matrix.round(decimals=4)).values)
         == checksum_association_matrix
     )
 
     # cluster associated features
-    _linkage = mi.feature_association_linkage()
+    _linkage = regressor_inspector.feature_association_linkage()
 
     #  test the ModelInspector with a custom ExplainerFactory:
     def _ef(estimator: BaseEstimator, data: pd.DataFrame) -> Explainer:
@@ -262,34 +137,29 @@ def test_model_inspection_with_encoding(
             return KernelExplainer(model=estimator.predict, data=data)
 
     # noinspection PyTypeChecker
-    mi2 = RegressorInspector(explainer_factory=_ef, shap_interaction=False).fit(
-        crossfit=validation_model
+    inspector_2 = RegressorInspector(explainer_factory=_ef, shap_interaction=False).fit(
+        crossfit=best_lgbm_crossfit
     )
-    mi2.shap_values()
+    inspector_2.shap_values()
 
-    linkage_tree = mi2.feature_association_linkage()
+    linkage_tree = inspector_2.feature_association_linkage()
+
     print()
-    DendrogramDrawer(style=DendrogramReportStyle()).draw(
-        data=linkage_tree, title="Test"
-    )
+    DendrogramDrawer(style="text").draw(data=linkage_tree, title="Test")
 
 
-def test_model_inspection_classifier(n_jobs, iris_sample: Sample) -> None:
+def test_model_inspection_classifier(
+    iris_sample: Sample, cv: BaseCrossValidator, n_jobs: int
+) -> None:
     warnings.filterwarnings("ignore", message="numpy.dtype size changed")
     warnings.filterwarnings("ignore", message="numpy.ufunc size changed")
     warnings.filterwarnings("ignore", message="You are accessing a training score")
 
     # define checksums for this test
-    checksum_shap = 15368358757519854540
-    checksum_association_matrix = 6657370911440512515
+    checksum_shap = 5207601201651574496
+    checksum_association_matrix = 5535519327633455357
     checksum_learner_scores = 2.0
     checksum_learner_ranks = "a8fe61f0f98c078fbcf427ad344c1749"
-
-    # define a CV:
-    # noinspection PyTypeChecker
-    test_cv: BaseCrossValidator = RepeatedKFold(
-        n_splits=K_FOLDS, n_repeats=N_SPLITS // K_FOLDS, random_state=42
-    )
 
     # define parameters and crossfit
     models = [
@@ -309,7 +179,7 @@ def test_model_inspection_classifier(n_jobs, iris_sample: Sample) -> None:
 
     model_ranker = ClassifierRanker(
         grid=models,
-        cv=test_cv,
+        cv=cv,
         scoring="f1_macro",
         shuffle_features=True,
         random_state=42,
@@ -341,25 +211,26 @@ def test_model_inspection_classifier(n_jobs, iris_sample: Sample) -> None:
     # indices we have had in the predictions_df
     assert len(shap_matrix) == len(test_sample)
 
-    # correlated shap matrix: feature dependencies
-    corr_matrix: pd.DataFrame = model_inspector.feature_association_matrix()
-    log.info(corr_matrix)
+    # Shap decomposition matrices (feature dependencies)
+    feature_associations: pd.DataFrame = model_inspector.feature_association_matrix()
+    log.info(feature_associations)
     # check number of rows
-    assert len(corr_matrix) == len(test_sample.feature_columns)
-    assert len(corr_matrix.columns) == len(test_sample.feature_columns)
+    assert len(feature_associations) == len(test_sample.feature_columns)
+    assert len(feature_associations.columns) == len(test_sample.feature_columns)
 
-    # check correlation values
-    for c in corr_matrix.columns:
-        c_corr = corr_matrix.loc[:, c]
-        assert -1.0 <= c_corr.min() <= c_corr.max() <= 1.0
+    # check association values
+    for c in feature_associations.columns:
+        fa = feature_associations.loc[:, c]
+        assert 0.0 <= fa.min() <= fa.max() <= 1.0
 
     # check actual values using checksum:
     assert (
-        np.sum(hash_pandas_object(corr_matrix.round(decimals=4)).values)
+        np.sum(hash_pandas_object(feature_associations.round(decimals=4)).values)
         == checksum_association_matrix
     )
 
     linkage_tree = model_inspector.feature_association_linkage()
+
     print()
     DendrogramDrawer(style=DendrogramReportStyle()).draw(
         data=linkage_tree, title="Test"
