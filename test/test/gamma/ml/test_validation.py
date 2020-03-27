@@ -14,7 +14,7 @@ from sklearn.model_selection import GridSearchCV
 from gamma.ml.validation import BootstrapCV
 
 
-def test_bootstrap_cv_init(batch_table: pd.DataFrame) -> None:
+def test_bootstrap_cv_init() -> None:
     # filter out warnings triggered by sk-learn/numpy
 
     warnings.filterwarnings("ignore", message="numpy.dtype size changed")
