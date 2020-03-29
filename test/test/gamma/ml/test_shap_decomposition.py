@@ -9,28 +9,16 @@ from typing import *
 import numpy as np
 import pandas as pd
 from pandas.core.util.hashing import hash_pandas_object
-from sklearn.model_selection import BaseCrossValidator
 
-from gamma.ml import Sample
 from gamma.ml.crossfit import LearnerCrossfit
 from gamma.ml.inspection import RegressorInspector
-from gamma.ml.selection import ParameterGrid, RegressorRanker
-from gamma.sklearndf import TransformerDF
 from gamma.sklearndf.pipeline import RegressorPipelineDF
 
 log = logging.getLogger(__name__)
 
 
 def test_shap_decomposition(
-    regressor_grids: Sequence[ParameterGrid],
-    regressor_ranker: RegressorRanker,
-    best_lgbm_crossfit: LearnerCrossfit[RegressorPipelineDF],
-    regressor_inspector: RegressorInspector,
-    cv: BaseCrossValidator,
-    sample: Sample,
-    simple_preprocessor: TransformerDF,
-    n_jobs: int,
-    fast_execution: bool,
+    regressor_inspector: RegressorInspector, fast_execution: bool
 ) -> None:
 
     # noinspection PyPep8Naming
@@ -130,14 +118,8 @@ def test_shap_decomposition(
 
 
 def test_shap_decomposition_matrices(
-    regressor_grids: Sequence[ParameterGrid],
-    regressor_ranker: RegressorRanker,
     best_lgbm_crossfit: LearnerCrossfit[RegressorPipelineDF],
     regressor_inspector: RegressorInspector,
-    cv: BaseCrossValidator,
-    sample: Sample,
-    simple_preprocessor: TransformerDF,
-    n_jobs: int,
     fast_execution: bool,
 ) -> None:
     # define checksums for this test
@@ -145,8 +127,6 @@ def test_shap_decomposition_matrices(
         checksum_association_matrix = 10115687136244898795
     else:
         checksum_association_matrix = 17649175683562206263
-
-    log.debug(f"\n{regressor_ranker.summary_report(max_learners=10)}")
 
     # Shap decomposition matrices (feature dependencies)
     association_matrix: pd.DataFrame = regressor_inspector.feature_association_matrix()
