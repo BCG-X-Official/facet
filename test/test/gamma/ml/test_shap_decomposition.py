@@ -1,10 +1,14 @@
 """
 Test shap decomposition calculations
 """
+import functools
 import logging
+import operator
 from typing import *
 
 import numpy as np
+import pandas as pd
+from pandas.core.util.hashing import hash_pandas_object
 from sklearn.model_selection import BaseCrossValidator
 
 from gamma.ml import Sample
@@ -123,6 +127,69 @@ def test_shap_decomposition(
         assert np.isclose(red_matrix.loc[j, i], red_rel)
         assert np.isclose(syn_matrix.loc[i, j], syn_rel)
         assert np.isclose(syn_matrix.loc[j, i], syn_rel)
+
+
+def test_shap_decomposition_matrices(
+    regressor_grids: Sequence[ParameterGrid],
+    regressor_ranker: RegressorRanker,
+    best_lgbm_crossfit: LearnerCrossfit[RegressorPipelineDF],
+    regressor_inspector: RegressorInspector,
+    cv: BaseCrossValidator,
+    sample: Sample,
+    simple_preprocessor: TransformerDF,
+    n_jobs: int,
+    fast_execution: bool,
+) -> None:
+    # define checksums for this test
+    if fast_execution:
+        checksum_association_matrix = 10115687136244898795
+    else:
+        checksum_association_matrix = 17649175683562206263
+
+    log.debug(f"\n{regressor_ranker.summary_report(max_learners=10)}")
+
+    # Shap decomposition matrices (feature dependencies)
+    association_matrix: pd.DataFrame = regressor_inspector.feature_association_matrix()
+
+    # determine number of unique features across the models in the crossfit
+    n_features = len(
+        functools.reduce(
+            operator.or_,
+            (set(model.features_out) for model in best_lgbm_crossfit.models()),
+        )
+    )
+
+    # check that dimensions of pairwise feature matrices are equal to # of features,
+    # and value ranges:
+    for matrix, matrix_name in zip(
+        (
+            association_matrix,
+            regressor_inspector.feature_synergy_matrix(),
+            regressor_inspector.feature_redundancy_matrix(),
+        ),
+        ("association", "synergy", "redundancy"),
+    ):
+        matrix_full_name = f"feature {matrix_name} matrix"
+        assert len(matrix) == n_features, f"rows in {matrix_full_name}"
+        assert len(matrix.columns) == n_features, f"columns in {matrix_full_name}"
+
+        # check values
+        for c in matrix.columns:
+            assert (
+                0.0
+                <= matrix.fillna(0).loc[:, c].min()
+                <= matrix.fillna(0).loc[:, c].max()
+                <= 1.0
+            ), f"Values of [0.0, 1.0] in {matrix_full_name}"
+
+    # check actual values using checksum:
+    assert (
+        np.sum(hash_pandas_object(association_matrix.round(decimals=4)).values)
+        == checksum_association_matrix
+    )
+
+    # cluster associated features
+    _linkage = regressor_inspector.feature_association_linkage()
 
 
 #
