@@ -340,20 +340,20 @@ class BaseLearnerInspector(
 
     def feature_interaction_matrix(self) -> pd.DataFrame:
         """
-        Calculate average shap interaction values for all feature pairings.
+        Calculate relative shap interaction values for all feature pairings.
 
         Shap interactions quantify direct interactions between pairs of features.
         For a quantification of overall interaction (including indirect interactions
         among more than two features), see :meth:`.feature_synergy_matrix`.
 
-        The average values are normalised to add up to 1.0, and each value ranges
+        The relative values are normalised to add up to 1.0, and each value ranges
         between 0.0 and 1.0.
 
-        For features :math:`f_i` and :math:`f_j`, the average shap interaction is
-        calculated as
+        For features :math:`f_i` and :math:`f_j`, relative feature interaction
+        :math:`I` is calculated as
 
         .. math::
-            \\mathrm{si}_{ij} = \\frac
+            I_{ij} = \\frac
                 {\\sigma(\\vec{\\phi}_{ij})}
                 {\\sum_{a=1}^n \\sum_{b=1}^n \\sigma(\\vec{\\phi}_{ab})}
 
@@ -362,28 +362,28 @@ class BaseLearnerInspector(
 
         The total average interaction of features
         :math:`f_i` and :math:`f_j` is
-        :math:`\\mathrm{si}_{ij} \
-            + \\mathrm{si}_{ji} \
-            = 2\\mathrm{si}_{ij}`.
+        :math:`I_{ij} \
+            + I_{ji} \
+            = 2 I_{ij}`.
 
-        :math:`\\mathrm{si}_{ii}` is the residual, non-synergistic contribution
+        :math:`I_{ii}` is the residual, non-synergistic contribution
         of feature :math:`f_i`
 
         The matrix returned by this method is a diagonal matrix
 
         .. math::
 
-            \\newcommand\\si[1]{\\mathrm{si}_{#1}}
+            \\newcommand\\fi[1]{I_{#1}}
             \\newcommand\\nan{\\mathit{nan}}
-            \\si{} = \\begin{pmatrix}
-                \\si{11} & \\nan & \\nan & \\dots & \\nan \\\\
-                2\\si{21} & \\si{22} & \\nan & \\dots & \\nan \\\\
-                2\\si{31} & 2\\si{32} & \\si{33} & \\dots & \\nan \\\\
+            \\fi{} = \\begin{pmatrix}
+                \\fi{11} & \\nan & \\nan & \\dots & \\nan \\\\
+                2\\fi{21} & \\fi{22} & \\nan & \\dots & \\nan \\\\
+                2\\fi{31} & 2\\fi{32} & \\fi{33} & \\dots & \\nan \\\\
                 \\vdots & \\vdots & \\vdots & \\ddots & \\vdots \\\\
-                2\\si{n1} & 2\\si{n2} & 2\\si{n3} & \\dots & \\si{nn} \\\\
+                2\\fi{n1} & 2\\fi{n2} & 2\\fi{n3} & \\dots & \\fi{nn} \\\\
             \\end{pmatrix}
 
-        with :math:`\\sum_{a=1}^n \\sum_{b=a}^n \\mathrm{si}_{ab} = 1`
+        with :math:`\\sum_{a=1}^n \\sum_{b=a}^n I_{ab} = 1`
 
         :return: average shap interaction values as a data frame of shape \
             (n_features, n_targets * n_features)
