@@ -77,6 +77,9 @@ class BaseLearnerInspector(
     COL_IMPORTANCE = "importance"
     COL_IMPORTANCE_MARGINAL = "marginal importance"
 
+    CONSOLIDATION_METHOD_MEAN = ShapCalculator.CONSOLIDATION_METHOD_MEAN
+    CONSOLIDATION_METHOD_STD = ShapCalculator.CONSOLIDATION_METHOD_STD
+
     def __init__(
         self,
         *,
@@ -198,7 +201,9 @@ class BaseLearnerInspector(
         self._ensure_fitted()
         return self.crossfit.training_sample
 
-    def shap_values(self) -> pd.DataFrame:
+    def shap_values(
+        self, consolidate: Optional[str] = CONSOLIDATION_METHOD_MEAN
+    ) -> pd.DataFrame:
         """
         Calculate the SHAP values for all splits.
 
@@ -206,12 +211,18 @@ class BaseLearnerInspector(
         feature. Values are the SHAP values per observation, calculated as the mean
         SHAP value across all splits that contain the observation.
 
+        :param consolidate: consolidate SHAP values across splits; \
+            permissible values are `"mean"` (calculate the mean), `"std"` \
+            (calculate the standard deviation), or `None` to prevent consolidation \
+            (default: `"mean"`)
         :return: shap values as a data frame
         """
         self._ensure_fitted()
-        return self._shap_calculator.shap_values
+        return self._shap_calculator.get_shap_values(consolidate=consolidate)
 
-    def shap_interaction_values(self) -> pd.DataFrame:
+    def shap_interaction_values(
+        self, consolidate: Optional[str] = CONSOLIDATION_METHOD_MEAN
+    ) -> pd.DataFrame:
         """
         Calculate the SHAP interaction values for all splits.
 
@@ -220,10 +231,16 @@ class BaseLearnerInspector(
         observation, calculated as the mean SHAP interaction value across all splits
         that contain the observation.
 
+        :param consolidate: consolidate SHAP values across splits; \
+            permissible values are `"mean"` (calculate the mean), `"std"` \
+            (calculate the standard deviation), or `None` to prevent consolidation \
+            (default: `"mean"`)
         :return: SHAP interaction values as a data frame
         """
         self._ensure_fitted()
-        return self._shap_interaction_values_calculator.shap_interaction_values
+        return self._shap_interaction_values_calculator.get_shap_interaction_values(
+            consolidate=consolidate
+        )
 
     def feature_importance(
         self, *, method: str = "rms"
@@ -396,7 +413,7 @@ class BaseLearnerInspector(
         # (n_observations, n_targets, n_features, n_features)
         # where the innermost feature x feature arrays are symmetrical
         im_matrix_per_observation_and_target = (
-            self.shap_interaction_values()
+            self.shap_interaction_values(consolidate=None)
             .values.reshape((-1, n_features, n_targets, n_features))
             .swapaxes(1, 2)
         )

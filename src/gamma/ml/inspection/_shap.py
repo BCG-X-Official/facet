@@ -17,7 +17,9 @@ from gamma.ml import Sample
 from gamma.ml.crossfit import LearnerCrossfit
 from gamma.sklearndf.pipeline import BaseLearnerPipelineDF
 
+
 log = logging.getLogger(__name__)
+
 
 #
 # Type variables
@@ -32,7 +34,7 @@ T_LearnerPipelineDF = TypeVar("T_LearnerPipelineDF", bound=BaseLearnerPipelineDF
 ExplainerFactory = Callable[[BaseEstimator, pd.DataFrame], Explainer]
 
 ShapToDataFrameFunction = Callable[
-    [List[np.ndarray], Optional[np.ndarray], pd.Index], List[pd.DataFrame]
+    [List[np.ndarray], pd.Index, pd.Index], List[pd.DataFrame]
 ]
 
 
@@ -54,6 +56,11 @@ class ShapCalculator(
     samples across splits of a crossfit, then consolidates and aggregates results
     in a data frame.
     """
+
+    COL_SPLIT = "split"
+
+    CONSOLIDATION_METHOD_MEAN = "mean"
+    CONSOLIDATION_METHOD_STD = "std"
 
     def __init__(
         self,
@@ -104,9 +111,17 @@ class ShapCalculator(
 
         # calculate shap values and re-order the observation index to match the
         # sequence in the original training sample
-        self.shap_ = self._consolidate_splits(
-            self._shap_all_splits(crossfit=crossfit),
-            observation_index=training_sample.index,
+        shap_all_splits_df: pd.DataFrame = self._shap_all_splits(crossfit=crossfit)
+
+        assert shap_all_splits_df.index.nlevels > 1
+        assert shap_all_splits_df.index.names[1] == training_sample.index.name
+
+        self.shap_ = shap_all_splits_df.reindex(
+            index=training_sample.index.intersection(
+                shap_all_splits_df.index.levels[1], sort=False
+            ),
+            level=1,
+            copy=False,
         )
 
         return self
@@ -118,13 +133,13 @@ class ShapCalculator(
 
     is_fitted.__doc__ = FittableMixin.is_fitted.__doc__
 
-    @property
     @abstractmethod
-    def shap_values(self) -> pd.DataFrame:
+    def get_shap_values(self, consolidate: Optional[str] = None) -> pd.DataFrame:
         """
         The resulting consolidated shap values as a data frame,
         aggregated to averaged SHAP contributions per feature and observation.
 
+        :param consolidate: consolidation method, or `None` for no consolidation
         :return: SHAP contribution values with shape \
             (n_observations, n_targets * n_features).
         """
@@ -158,13 +173,38 @@ class ShapCalculator(
                     crossfit.models(), crossfit.splits()
                 )
             )
-        return pd.concat(shap_df_per_split)
+        return pd.concat(
+            shap_df_per_split,
+            keys=range(len(shap_df_per_split)),
+            names=[ShapCalculator.COL_SPLIT],
+        )
 
-    @abstractmethod
+    @staticmethod
     def _consolidate_splits(
-        self, shap_all_splits_df: pd.DataFrame, observation_index: pd.Index
+        shap_all_splits_df: pd.DataFrame, method: Optional[str]
     ) -> pd.DataFrame:
-        pass
+        # Group SHAP values by observation ID, aggregate SHAP values using mean or std,
+        # then restore the original order of observations
+
+        if method is None:
+            return shap_all_splits_df
+
+        index = shap_all_splits_df.index
+        n_levels = index.nlevels
+
+        assert n_levels > 1
+        assert index.names[0] == ShapCalculator.COL_SPLIT
+
+        level = 1 if n_levels == 2 else tuple(range(1, n_levels))
+
+        if method == ShapCalculator.CONSOLIDATION_METHOD_MEAN:
+            shap_consolidated = shap_all_splits_df.mean(level=level)
+        elif method == ShapCalculator.CONSOLIDATION_METHOD_STD:
+            shap_consolidated = shap_all_splits_df.std(level=level)
+        else:
+            raise ValueError(f"unknown consolidation method: {method}")
+
+        return shap_consolidated
 
     @staticmethod
     @abstractmethod
@@ -199,7 +239,7 @@ class ShapCalculator(
             x_oob = model.preprocessing.transform(x_oob)
 
         # re-index the features to fit the sequence that was used to fit the learner
-        x_oob = x_oob.reindex(columns=model.final_estimator.features_in, copy=False)
+        x_oob = x_oob.reindex(columns=model.features_out, copy=False)
 
         return x_oob
 
@@ -207,7 +247,7 @@ class ShapCalculator(
     @abstractmethod
     def _raw_shap_to_df(
         raw_shap_tensors: List[np.ndarray],
-        observations: Union[pd.Index, np.ndarray],
+        observations: pd.Index,
         features_in_split: pd.Index,
     ) -> List[pd.DataFrame]:
         """
@@ -230,12 +270,13 @@ class ShapValuesCalculator(
     """
 
     # noinspection PyMissingOrEmptyDocstring
-    @property
-    def shap_values(self) -> pd.DataFrame:
+    def get_shap_values(self, consolidate: Optional[str] = None) -> pd.DataFrame:
         self._ensure_fitted()
-        return self.shap_
+        return ShapCalculator._consolidate_splits(
+            shap_all_splits_df=self.shap_, method=consolidate
+        )
 
-    shap_values.__doc__ = ShapCalculator.shap_values.__doc__
+    get_shap_values.__doc__ = ShapCalculator.get_shap_values.__doc__
 
     # noinspection PyMissingOrEmptyDocstring
     @property
@@ -243,19 +284,6 @@ class ShapValuesCalculator(
         return self.shap_.columns
 
     shap_columns.__doc__ = ShapCalculator.shap_columns.__doc__
-
-    def _consolidate_splits(
-        self, shap_all_splits_df: pd.DataFrame, observation_index: pd.Index
-    ) -> pd.DataFrame:
-        # Group SHAP values by observation ID, aggregate SHAP values using mean(),
-        # then restore the original order of observations
-        mean_per_split = shap_all_splits_df.groupby(
-            level=0, sort=False, observed=True
-        ).mean()
-        return mean_per_split.reindex(
-            index=observation_index.intersection(mean_per_split.index, sort=False),
-            copy=False,
-        )
 
     @staticmethod
     def _shap_for_split(
@@ -285,7 +313,9 @@ class ShapValuesCalculator(
             shap.reindex(columns=features_out, copy=False, fill_value=0.0)
             for shap in shap_matrix_for_split_to_df_fn(
                 shap_values,
-                x_oob.index if oob_split is None else oob_split,
+                x_oob.index
+                if oob_split is None
+                else pd.Index(oob_split, name=training_sample.index.name),
                 x_oob.columns,
             )
         ]
@@ -313,20 +343,25 @@ class ShapInteractionValuesCalculator(
     """
 
     # noinspection PyMissingOrEmptyDocstring
-    @property
-    def shap_values(self) -> pd.DataFrame:
-        return self.shap_interaction_values.sum(level=0)
+    def get_shap_values(self, consolidate: Optional[str] = None) -> pd.DataFrame:
+        self._ensure_fitted()
+        return ShapCalculator._consolidate_splits(
+            shap_all_splits_df=self.shap_.sum(level=(0, 1)), method=consolidate
+        )
 
-    shap_values.__doc__ = ShapCalculator.shap_values.__doc__
+    get_shap_values.__doc__ = ShapCalculator.get_shap_values.__doc__
 
-    @property
-    def shap_interaction_values(self) -> pd.DataFrame:
+    def get_shap_interaction_values(
+        self, consolidate: Optional[str] = None
+    ) -> pd.DataFrame:
         """
         The resulting consolidated shap interaction values as a data frame,
         aggregated to averaged SHAP interaction values per observation.
         """
         self._ensure_fitted()
-        return self.shap_
+        return ShapCalculator._consolidate_splits(
+            shap_all_splits_df=self.shap_, method=consolidate
+        )
 
     @property
     def shap_columns(self) -> pd.Index:
@@ -365,17 +400,6 @@ class ShapInteractionValuesCalculator(
             columns=interaction_matrix.columns,
         )
 
-    def _consolidate_splits(
-        self, shap_all_splits_df: pd.DataFrame, observation_index: pd.Index
-    ) -> pd.DataFrame:
-        # Group SHAP values by observation ID and feature, and aggregate using mean()
-        # return shap_all_splits_df
-        return (
-            shap_all_splits_df.groupby(level=(0, 1), sort=False, observed=True)
-            .mean()
-            .reindex(index=observation_index, level=0)
-        )
-
     @staticmethod
     def _shap_for_split(
         model: BaseLearnerPipelineDF,
@@ -410,10 +434,11 @@ class ShapInteractionValuesCalculator(
         interaction_matrix_per_target: List[pd.DataFrame] = [
             im.reindex(
                 index=pd.MultiIndex.from_product(
-                    (
+                    iterables=(
                         training_sample.index if oob_split is None else oob_split,
                         features_out,
-                    )
+                    ),
+                    names=(training_sample.index.name, features_out.name),
                 ),
                 columns=features_out,
                 copy=False,
@@ -421,7 +446,9 @@ class ShapInteractionValuesCalculator(
             )
             for im in interaction_matrix_for_split_to_df_fn(
                 shap_interaction_tensors,
-                x_oob.index if oob_split is None else oob_split,
+                x_oob.index
+                if oob_split is None
+                else pd.Index(oob_split, name=training_sample.index.name),
                 x_oob.columns,
             )
         ]
@@ -450,7 +477,7 @@ class RegressorShapValuesCalculator(ShapValuesCalculator):
     @staticmethod
     def _raw_shap_to_df(
         raw_shap_tensors: List[np.ndarray],
-        observations: Union[pd.Index, np.ndarray],
+        observations: pd.Index,
         features_in_split: pd.Index,
     ) -> List[pd.DataFrame]:
         return [
@@ -469,10 +496,13 @@ class RegressorShapInteractionValuesCalculator(ShapInteractionValuesCalculator):
     @staticmethod
     def _raw_shap_to_df(
         raw_shap_tensors: List[np.ndarray],
-        observations: Union[pd.Index, np.ndarray],
+        observations: pd.Index,
         features_in_split: pd.Index,
     ) -> List[pd.DataFrame]:
-        row_index = pd.MultiIndex.from_product((observations, features_in_split))
+        row_index = pd.MultiIndex.from_product(
+            iterables=(observations, features_in_split),
+            names=(observations.name, features_in_split.name),
+        )
 
         return [
             pd.DataFrame(
@@ -494,7 +524,7 @@ class ClassifierShapValuesCalculator(ShapValuesCalculator):
     @staticmethod
     def _raw_shap_to_df(
         raw_shap_tensors: List[np.ndarray],
-        observations: Union[pd.Index, np.ndarray],
+        observations: pd.Index,
         features_in_split: pd.Index,
     ) -> List[pd.DataFrame]:
         # todo: adapt this function (and override others) to support non-binary
@@ -540,7 +570,7 @@ class ClassifierShapInteractionValuesCalculator(ShapInteractionValuesCalculator)
     @staticmethod
     def _raw_shap_to_df(
         raw_shap_tensors: List[np.ndarray],
-        observations: Union[pd.Index, np.ndarray],
+        observations: pd.Index,
         features_in_split: pd.Index,
     ) -> List[pd.DataFrame]:
         raise NotImplementedError(
