@@ -9,6 +9,7 @@ from typing import *
 
 import numpy as np
 import pandas as pd
+import pytest
 from pandas.core.util.hashing import hash_pandas_object
 from shap import KernelExplainer, TreeExplainer
 from shap.explainers.explainer import Explainer
@@ -45,14 +46,14 @@ def test_model_inspection(
     if fast_execution:
         # define checksums for this test
         checksum_shap = 7678718855667032507
-        checksum_association_matrix = 10115687136244898795
+        checksum_association_matrix = 9809426601817939301
 
         checksum_learner_scores = 1.5365912783588438
         checksum_learner_ranks = "ac87a8cbf8b279746707a2af8b66a7ac"
     else:
         # define checksums for this test
         checksum_shap = 1956741545033811954
-        checksum_association_matrix = 17649175683562206263
+        checksum_association_matrix = 3257206269538165205
 
         checksum_learner_scores = 0.6056819340325851
         checksum_learner_ranks = "4251e104ce7d1834f2b3b6ab5bb5ceab"
@@ -66,28 +67,64 @@ def test_model_inspection(
         first_n_learners=10,
     )
 
-    shap_values = regressor_inspector.shap_values()
+    # determine number of unique features across the models in the crossfit
+    features = functools.reduce(
+        operator.or_, (set(model.features_out) for model in best_lgbm_crossfit.models())
+    )
+
+    # using an invalid consolidation method raises an exception
+    with pytest.raises(ValueError, match="unknown consolidation method: invalid"):
+        regressor_inspector.shap_values(consolidate="invalid")
+
+    shap_values_raw = regressor_inspector.shap_values(consolidate=None)
+    shap_values_mean = regressor_inspector.shap_values()
+    shap_values_std = regressor_inspector.shap_values(consolidate="std")
+
+    # method shap_values without parameter is equal to "mean" consolidation
+    assert shap_values_mean.equals(regressor_inspector.shap_values(consolidate="mean"))
 
     # the length of rows in shap_values should be equal to the unique observation
     # indices we have had in the predictions_df
-    assert len(shap_values) == len(sample)
+    assert len(shap_values_mean) == len(sample)
+
+    # index names
+    assert shap_values_mean.index.names == [Sample.COL_OBSERVATION]
+    assert shap_values_mean.columns.names == [Sample.COL_FEATURE]
+    assert shap_values_std.index.names == [Sample.COL_OBSERVATION]
+    assert shap_values_std.columns.names == [Sample.COL_FEATURE]
+    assert shap_values_raw.index.names == [
+        RegressorInspector.COL_SPLIT,
+        Sample.COL_OBSERVATION,
+    ]
+    assert shap_values_raw.columns.names == [Sample.COL_FEATURE]
+
+    # column index
+    assert set(shap_values_mean.columns) == features
+
+    # check that the SHAP values add up to the predictions
+    mean_predictions = shap_values_mean.sum(axis=1)
+    shap_totals_raw = shap_values_raw.sum(axis=1)
+
+    for split_id, model in enumerate(best_lgbm_crossfit.models()):
+        # for each model in the crossfit, calculate the difference between total
+        # SHAP values and prediction for every observation. This is always the same
+        # constant value, so `mad` (mean absolute deviation) is zero
+
+        shap_minus_pred = shap_totals_raw.xs(key=split_id, level=0) - model.predict(
+            X=sample.features
+        )
+        assert (
+            round(shap_minus_pred.mad(), 12) == 0.0
+        ), f"predictions matching total SHAP for split {split_id}"
 
     # check actual values using checksum:
     assert (
-        np.sum(hash_pandas_object(shap_values.round(decimals=4)).values)
+        np.sum(hash_pandas_object(shap_values_mean.round(decimals=4)).values)
         == checksum_shap
     )
 
     # Shap decomposition matrices (feature dependencies)
     association_matrix: pd.DataFrame = regressor_inspector.feature_association_matrix()
-
-    # determine number of unique features across the models in the crossfit
-    n_features = len(
-        functools.reduce(
-            operator.or_,
-            (set(model.features_out) for model in best_lgbm_crossfit.models()),
-        )
-    )
 
     # check that dimensions of pairwise feature matrices are equal to # of features,
     # and value ranges:
@@ -100,6 +137,7 @@ def test_model_inspection(
         ("association", "synergy", "redundancy"),
     ):
         matrix_full_name = f"feature {matrix_name} matrix"
+        n_features = len(features)
         assert len(matrix) == n_features, f"rows in {matrix_full_name}"
         assert len(matrix.columns) == n_features, f"columns in {matrix_full_name}"
 
@@ -157,7 +195,7 @@ def test_model_inspection_classifier(
 
     # define checksums for this test
     checksum_shap = 5207601201651574496
-    checksum_association_matrix = 5535519327633455357
+    checksum_association_matrix = 9372980311547724331
     checksum_learner_scores = 2.0
     checksum_learner_ranks = "a8fe61f0f98c078fbcf427ad344c1749"
 
