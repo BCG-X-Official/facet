@@ -76,6 +76,7 @@ class BaseLearnerInspector(
 
     COL_IMPORTANCE = "importance"
     COL_IMPORTANCE_MARGINAL = "marginal importance"
+    COL_SPLIT = ShapCalculator.COL_SPLIT
 
     CONSOLIDATION_METHOD_MEAN = ShapCalculator.CONSOLIDATION_METHOD_MEAN
     CONSOLIDATION_METHOD_STD = ShapCalculator.CONSOLIDATION_METHOD_STD
