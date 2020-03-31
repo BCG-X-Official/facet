@@ -17,7 +17,6 @@ from gamma.ml import Sample
 from gamma.ml.crossfit import LearnerCrossfit
 from gamma.sklearndf.pipeline import BaseLearnerPipelineDF
 
-
 log = logging.getLogger(__name__)
 
 
@@ -239,7 +238,7 @@ class ShapCalculator(
             x_oob = model.preprocessing.transform(x_oob)
 
         # re-index the features to fit the sequence that was used to fit the learner
-        x_oob = x_oob.reindex(columns=model.features_out, copy=False)
+        x_oob = x_oob.reindex(columns=model.final_estimator.features_in, copy=False)
 
         return x_oob
 
