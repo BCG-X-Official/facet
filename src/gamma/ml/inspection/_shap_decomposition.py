@@ -91,7 +91,7 @@ class ShapValueDecomposer(FittableMixin[ShapCalculator]):
         # basic definitions
         #
 
-        shap_values = shap_calculator.shap_values
+        shap_values = shap_calculator.get_shap_values(consolidate=None)
         n_targets = len(shap_calculator.target_columns_)
         n_features = len(shap_calculator.feature_index_)
         n_observations = len(shap_values)
@@ -252,12 +252,12 @@ class ShapInteractionValueDecomposer(ShapValueDecomposer):
         # basic definitions
         #
 
-        shap_values = shap_calculator.shap_interaction_values
+        shap_values = shap_calculator.get_shap_interaction_values(consolidate=None)
         features = shap_calculator.feature_index_
         targets = shap_calculator.target_columns_
         n_features = len(features)
         n_targets = len(targets)
-        n_observations = len(shap_values.index.levels[0])
+        n_observations = shap_values.shape[0] // n_features
 
         # p[i, j]
         # shape: (n_targets, n_features, n_features, n_observations)

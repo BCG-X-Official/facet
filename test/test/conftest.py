@@ -1,4 +1,6 @@
+import functools
 import logging
+import operator
 import os
 import warnings
 from typing import *
@@ -161,6 +163,16 @@ def best_lgbm_crossfit(
         random_state=42,
         n_jobs=n_jobs,
     ).fit(sample=sample)
+
+
+@pytest.fixture
+def feature_names(best_lgbm_crossfit: LearnerCrossfit[RegressorPipelineDF]) -> Set[str]:
+    """
+    all unique features across the models in the crossfit, after preprocessing
+    """
+    return functools.reduce(
+        operator.or_, (set(model.features_out) for model in best_lgbm_crossfit.models())
+    )
 
 
 @pytest.fixture
