@@ -2,9 +2,9 @@
 Core implementation of :mod:`gamma.ml.crossfit`
 """
 import logging
-from abc import ABC
-from typing import *
+from abc import ABCMeta
 from copy import copy
+from typing import *
 
 import pandas as pd
 from numpy.random.mtrand import RandomState
@@ -32,7 +32,10 @@ _INDEX_SENTINEL = pd.Index([])
 
 
 class LearnerCrossfit(
-    FittableMixin[Sample], ParallelizableMixin, ABC, Generic[T_LearnerPipelineDF]
+    FittableMixin[Sample],
+    ParallelizableMixin,
+    Generic[T_LearnerPipelineDF],
+    metaclass=ABCMeta,
 ):
     """
     Fits a learner pipeline to all train splits of a given cross-validation strategy,

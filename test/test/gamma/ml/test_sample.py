@@ -3,57 +3,57 @@ import pandas as pd
 
 # noinspection PyPackageRequirements
 import pytest
-from sklearn.utils import delayed, Parallel
+from joblib import Parallel, delayed
 
 from gamma.ml import Sample
 
 
-# checks various erroneous inputs
-def test_sample_init(batch_table: pd.DataFrame) -> None:
+def test_sample_init(boston_df: pd.DataFrame, boston_target: str) -> None:
+    # check handling of various invalid inputs
+
     # 1. sample parameter
     # 1.1 None
     with pytest.raises(ValueError):
         # noinspection PyTypeChecker
-        Sample(observations=None, target="target")
+        Sample(observations=None, target=boston_target)
 
     # 1.2 not a DF
     with pytest.raises(ValueError):
         # noinspection PyTypeChecker
-        Sample(observations=[], target="target")
+        Sample(observations=[], target=boston_target)
 
     # 2. no features and no target specified
     with pytest.raises(KeyError):
         # noinspection PyTypeChecker
-        Sample(observations=batch_table, target=None)
+        Sample(observations=boston_df, target=None)
 
     # store list of feature columns:
-    f_columns = list(batch_table.columns)
-    f_columns.remove("Yield")
+    f_columns = list(boston_df.columns)
+    f_columns.remove(boston_target)
 
     # 2.1 invalid feature column specified
     with pytest.raises(KeyError):
-        f_columns_false = f_columns.copy()
-        f_columns_false.append("doesnt_exist")
-        Sample(observations=batch_table, features=f_columns_false, target="Yield")
+        f_columns_invalid = f_columns.copy()
+        f_columns_invalid.append("doesnt_exist")
+        Sample(observations=boston_df, features=f_columns_invalid, target=boston_target)
 
     # 2.2 invalid target column specified
     with pytest.raises(KeyError):
-        Sample(observations=batch_table, target="doesnt_exist", features=f_columns)
+        Sample(observations=boston_df, target="doesnt_exist", features=f_columns)
 
     # 3. column is target and also feature
     with pytest.raises(KeyError):
-        f_columns_false = f_columns.copy()
-        f_columns_false.append("Yield")
+        f_columns_invalid = f_columns.copy()
+        f_columns_invalid.append(boston_target)
+        Sample(observations=boston_df, features=f_columns_invalid, target=boston_target)
 
-        Sample(observations=batch_table, features=f_columns_false, target="Yield")
 
-
-def test_sample(batch_table: pd.DataFrame) -> None:
+def test_sample(boston_df: pd.DataFrame, boston_target: str) -> None:
     # define various assertions we want to test:
     def run_assertions(s: Sample):
-        assert s.target.name == "Yield"
-        assert "Yield" not in s.feature_columns
-        assert len(s.feature_columns) == len(batch_table.columns) - 1
+        assert s.target.name == boston_target
+        assert boston_target not in s.feature_columns
+        assert len(s.feature_columns) == len(boston_df.columns) - 1
 
         assert type(s.target) == pd.Series
         assert type(s.features) == pd.DataFrame
@@ -61,28 +61,25 @@ def test_sample(batch_table: pd.DataFrame) -> None:
         assert len(s.target) == len(s.features)
 
     # test explicit setting of both target & features
-    feature_columns = list(batch_table.drop(columns="Yield").columns)
-    s = Sample(observations=batch_table, target="Yield", features=feature_columns)
+    feature_columns = list(boston_df.drop(columns=boston_target).columns)
+    s = Sample(observations=boston_df, target=boston_target, features=feature_columns)
 
     # _rank_learners the checks on s:
     run_assertions(s)
 
     # test implicit setting of features by only giving the target
-    s2 = Sample(observations=batch_table, target="Yield")
+    s2 = Sample(observations=boston_df, target=boston_target)
 
     # _rank_learners the checks on s2:
     run_assertions(s2)
 
     # test numerical features
     features_numerical = s.features.select_dtypes(np.number).columns
-    assert (
-        "Step4 Fermentation Sensor Data Phase2 Pressure Val04 (mbar)"
-        in features_numerical
-    )
+    assert "LSTAT" in features_numerical
 
     # test categorical features
     features_non_numerical = s.features.select_dtypes(object).columns
-    assert "Step4 RawMat Internal Compound01 QC (id)" in features_non_numerical
+    assert len(features_non_numerical) == 0
 
     # assert feature completeness
     assert (
@@ -95,7 +92,7 @@ def test_sample(batch_table: pd.DataFrame) -> None:
     )
 
     # test length
-    assert len(s) == len(batch_table)
+    assert len(s) == len(boston_df)
 
     # test select_observations
     sub = s2.subsample(iloc=[0, 1, 2, 3])
