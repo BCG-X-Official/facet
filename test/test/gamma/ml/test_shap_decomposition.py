@@ -1,9 +1,7 @@
 """
 Test shap decomposition calculations
 """
-import functools
 import logging
-import operator
 from typing import *
 
 import numpy as np
@@ -25,13 +23,13 @@ def test_shap_decomposition(
     def _calculate_relative_syn_and_red(
         feature_x: str, feature_y: str, is_indirect_syn_valid: bool
     ) -> Tuple[float, float]:
-        iv = regressor_inspector.shap_interaction_values()
+        iv = regressor_inspector.shap_interaction_values(consolidate=None)
         # Get 3 components for each feature:
         # S = interaction SHAP
         # A, B = independent SHAP
         # U, V = sum of interactions with 3rd variables
-        iv_x = iv.xs(feature_x, level=1)
-        iv_y = iv.xs(feature_y, level=1)
+        iv_x = iv.xs(feature_x, level=-1)
+        iv_y = iv.xs(feature_y, level=-1)
         X = iv_x.sum(axis=1).rename("X")
         Y = iv_y.sum(axis=1).rename("Y")
         A = iv_x.loc[:, feature_x]
@@ -119,25 +117,18 @@ def test_shap_decomposition(
 
 def test_shap_decomposition_matrices(
     best_lgbm_crossfit: LearnerCrossfit[RegressorPipelineDF],
+    feature_names: Set[str],
     regressor_inspector: RegressorInspector,
     fast_execution: bool,
 ) -> None:
     # define checksums for this test
     if fast_execution:
-        checksum_association_matrix = 10115687136244898795
+        checksum_association_matrix = 9809426601817939301
     else:
-        checksum_association_matrix = 17649175683562206263
+        checksum_association_matrix = 3257206269538165205
 
     # Shap decomposition matrices (feature dependencies)
     association_matrix: pd.DataFrame = regressor_inspector.feature_association_matrix()
-
-    # determine number of unique features across the models in the crossfit
-    n_features = len(
-        functools.reduce(
-            operator.or_,
-            (set(model.features_out) for model in best_lgbm_crossfit.models()),
-        )
-    )
 
     # check that dimensions of pairwise feature matrices are equal to # of features,
     # and value ranges:
@@ -150,6 +141,7 @@ def test_shap_decomposition_matrices(
         ("association", "synergy", "redundancy"),
     ):
         matrix_full_name = f"feature {matrix_name} matrix"
+        n_features = len(feature_names)
         assert len(matrix) == n_features, f"rows in {matrix_full_name}"
         assert len(matrix.columns) == n_features, f"columns in {matrix_full_name}"
 
