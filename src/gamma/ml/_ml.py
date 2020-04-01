@@ -45,7 +45,7 @@ class Sample:
         def _ensure_columns_exist(column_type: str, columns: Iterable[str]):
             # check if all provided feature names actually exist in the observations df
             missing_columns = [
-                name for name in columns if not observations.columns.contains(key=name)
+                name for name in columns if name not in observations.columns
             ]
             if len(missing_columns) > 0:
                 missing_columns_list = '", "'.join(missing_columns)

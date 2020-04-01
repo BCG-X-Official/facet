@@ -75,11 +75,15 @@ def test_parameter_grid() -> None:
 
 
 def test_model_ranker(
-    batch_table: pd.DataFrame, regressor_grids, sample: Sample, n_jobs
+    regressor_grids, sample: Sample, n_jobs: int, fast_execution: bool
 ) -> None:
 
-    checksum_learner_scores = 4.994168961240268
-    checksum_learner_ranks = "97a4b0f59f52daab7b6d223075267548"
+    if fast_execution:
+        checksum_learner_scores = 6.665605570980783
+        checksum_learner_ranks = "ddbee9ae9284164c8b44ba8fe601e903"
+    else:
+        checksum_learner_scores = 8.164197829110956
+        checksum_learner_ranks = "3dd654554097cef927d320254c993248"
 
     # define the circular cross validator with just 5 splits (to speed up testing)
     cv = BootstrapCV(n_splits=5, random_state=42)
@@ -92,13 +96,9 @@ def test_model_ranker(
     ranking = ranker.ranking()
     assert len(ranking) > 0
     assert isinstance(ranking[0], LearnerEvaluation)
-    assert (
-        ranking[0].ranking_score
-        >= ranking[1].ranking_score
-        >= ranking[2].ranking_score
-        >= ranking[3].ranking_score
-        >= ranking[4].ranking_score
-        >= ranking[-1].ranking_score
+    assert all(
+        ranking_hi.ranking_score >= ranking_lo.ranking_score
+        for ranking_hi, ranking_lo in zip(ranking, ranking[1:])
     )
 
     # check if parameters set for estimators actually match expected:
