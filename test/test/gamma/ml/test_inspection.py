@@ -34,6 +34,7 @@ def test_model_inspection(
     regressor_grids: Sequence[ParameterGrid],
     regressor_ranker: RegressorRanker,
     best_lgbm_crossfit: LearnerCrossfit[RegressorPipelineDF],
+    feature_names: Set[str],
     regressor_inspector: RegressorInspector,
     cv: BaseCrossValidator,
     sample: Sample,
@@ -44,13 +45,11 @@ def test_model_inspection(
     # define checksums for this test
     if fast_execution:
         checksum_shap = 7678718855667032507
-        checksum_association_matrix = 9809426601817939301
 
         checksum_learner_scores = 1.5365912783588438
         checksum_learner_ranks = "ac87a8cbf8b279746707a2af8b66a7ac"
     else:
         checksum_shap = 1956741545033811954
-        checksum_association_matrix = 3257206269538165205
 
         checksum_learner_scores = 0.6056819340325851
         checksum_learner_ranks = "4251e104ce7d1834f2b3b6ab5bb5ceab"
@@ -62,11 +61,6 @@ def test_model_inspection(
         checksum_scores=checksum_learner_scores,
         checksum_learners=checksum_learner_ranks,
         first_n_learners=10,
-    )
-
-    # determine number of unique features across the models in the crossfit
-    features = functools.reduce(
-        operator.or_, (set(model.features_out) for model in best_lgbm_crossfit.models())
     )
 
     # using an invalid consolidation method raises an exception
@@ -96,7 +90,7 @@ def test_model_inspection(
     assert shap_values_raw.columns.names == [Sample.COL_FEATURE]
 
     # column index
-    assert set(shap_values_mean.columns) == features
+    assert set(shap_values_mean.columns) == feature_names
 
     # check that the SHAP values add up to the predictions
     mean_predictions = shap_values_mean.sum(axis=1)
@@ -119,42 +113,6 @@ def test_model_inspection(
         np.sum(hash_pandas_object(shap_values_mean.round(decimals=4)).values)
         == checksum_shap
     )
-
-    # Shap decomposition matrices (feature dependencies)
-    association_matrix: pd.DataFrame = regressor_inspector.feature_association_matrix()
-
-    # check that dimensions of pairwise feature matrices are equal to # of features,
-    # and value ranges:
-    for matrix, matrix_name in zip(
-        (
-            association_matrix,
-            regressor_inspector.feature_synergy_matrix(),
-            regressor_inspector.feature_redundancy_matrix(),
-        ),
-        ("association", "synergy", "redundancy"),
-    ):
-        matrix_full_name = f"feature {matrix_name} matrix"
-        n_features = len(features)
-        assert len(matrix) == n_features, f"rows in {matrix_full_name}"
-        assert len(matrix.columns) == n_features, f"columns in {matrix_full_name}"
-
-        # check values
-        for c in matrix.columns:
-            assert (
-                0.0
-                <= matrix.fillna(0).loc[:, c].min()
-                <= matrix.fillna(0).loc[:, c].max()
-                <= 1.0
-            ), f"Values of [0.0, 1.0] in {matrix_full_name}"
-
-    # check actual values using checksum:
-    assert (
-        np.sum(hash_pandas_object(association_matrix.round(decimals=4)).values)
-        == checksum_association_matrix
-    )
-
-    # cluster associated features
-    _linkage = regressor_inspector.feature_association_linkage()
 
     #  test the ModelInspector with a custom ExplainerFactory:
     def _ef(estimator: BaseEstimator, data: pd.DataFrame) -> Explainer:
