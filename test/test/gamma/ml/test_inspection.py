@@ -1,9 +1,7 @@
 """
 Model inspector tests.
 """
-import functools
 import logging
-import operator
 import warnings
 from typing import *
 
@@ -43,15 +41,14 @@ def test_model_inspection(
     n_jobs: int,
     fast_execution: bool,
 ) -> None:
+    # define checksums for this test
     if fast_execution:
-        # define checksums for this test
         checksum_shap = 7678718855667032507
         checksum_association_matrix = 9809426601817939301
 
         checksum_learner_scores = 1.5365912783588438
         checksum_learner_ranks = "ac87a8cbf8b279746707a2af8b66a7ac"
     else:
-        # define checksums for this test
         checksum_shap = 1956741545033811954
         checksum_association_matrix = 3257206269538165205
 
