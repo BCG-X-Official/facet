@@ -282,9 +282,9 @@ class BaseLearnerRanker(
         shuffle_features: Optional[bool] = None,
         random_state: Union[int, RandomState, None] = None,
         n_jobs: Optional[int] = None,
-        shared_memory: bool = False,
-        pre_dispatch: str = "2*n_jobs",
-        verbose: int = 0,
+        shared_memory: Optional[bool] = None,
+        pre_dispatch: Optional[Union[str, int]] = None,
+        verbose: Optional[int] = None,
     ) -> None:
         """
         :param grid: :class:`~gamma.ml.ParameterGrid` to be ranked \
@@ -304,14 +304,6 @@ class BaseLearnerRanker(
             crossfit (default: `False`)
         :param random_state: optional random seed or random state for shuffling the \
             feature column order
-        :param n_jobs: number of jobs to use in parallel; \
-            if `None`, use joblib default (default: `None`).
-        :param shared_memory: if `True` use threads in the parallel runs. If `False` \
-            use multiprocessing (default: `False`).
-        :param pre_dispatch: number of batches to pre-dispatch; \
-            if `None`, use joblib default (default: `None`).
-        :param verbose: verbosity level used in the parallel computation; \
-            if `None`, use joblib default (default: `None`).
         """
         super().__init__(
             n_jobs=n_jobs,
@@ -338,6 +330,9 @@ class BaseLearnerRanker(
         self._sample: Optional[Sample] = None
         self._fit_params: Optional[Dict[str, Any]] = None
         self._ranking: Optional[List[LearnerEvaluation]] = None
+
+    # add parameter documentation of ParallelizableMixin
+    __init__.__doc__ += ParallelizableMixin.__init__.__doc__
 
     @staticmethod
     def default_ranking_scorer(scoring: Scoring) -> float:
