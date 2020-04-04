@@ -46,8 +46,6 @@ T_LearnerPipelineDF = TypeVar("T_LearnerPipelineDF", bound=BaseLearnerPipelineDF
 T_RegressorPipelineDF = TypeVar("T_RegressorPipelineDF", bound=RegressorPipelineDF)
 T_ClassifierPipelineDF = TypeVar("T_ClassifierPipelineDF", bound=ClassifierPipelineDF)
 
-T_LearnerCrossfit = TypeVar("T_Crossfit", bound=LearnerCrossfit[T_LearnerPipelineDF])
-
 #
 # Type definitions
 #
@@ -238,7 +236,7 @@ class LearnerEvaluation(Generic[T_LearnerPipelineDF]):
 class BaseLearnerRanker(
     ParallelizableMixin,
     FittableMixin[Sample],
-    Generic[T_LearnerPipelineDF, T_LearnerCrossfit],
+    Generic[T_LearnerPipelineDF],
     metaclass=ABCMeta,
 ):
     """
@@ -361,8 +359,7 @@ class BaseLearnerRanker(
         :param sample: sample with which to fit the candidate learners from the grid(s)
         :param fit_params: any fit parameters to pass on to the learner's fit method
         """
-        # support type hinting in PyCharm
-        self: BaseLearnerRanker[T_LearnerPipelineDF, T_LearnerCrossfit]
+        self: BaseLearnerRanker[T_LearnerPipelineDF]  # support type hinting in PyCharm
 
         ranking: List[LearnerEvaluation[T_LearnerPipelineDF]] = self._rank_learners(
             sample=sample, **fit_params
@@ -397,7 +394,7 @@ class BaseLearnerRanker(
 
     @property
     @abstractmethod
-    def best_model_crossfit(self) -> T_LearnerCrossfit:
+    def best_model_crossfit(self) -> LearnerCrossfit[T_LearnerPipelineDF]:
         """
         The crossfit for the best model, fitted with the same sample and fit
         parameters used to fit this ranker.
@@ -468,8 +465,7 @@ class BaseLearnerRanker(
 
 
 class LearnerRanker(
-    BaseLearnerRanker[T_LearnerPipelineDF, T_LearnerCrossfit],
-    Generic[T_LearnerPipelineDF, T_LearnerCrossfit],
+    BaseLearnerRanker[T_LearnerPipelineDF], Generic[T_LearnerPipelineDF]
 ):
     """
     Native implementation of grid search
@@ -479,7 +475,7 @@ class LearnerRanker(
 
     # noinspection PyMissingOrEmptyDocstring
     @property
-    def best_model_crossfit(self) -> T_LearnerCrossfit:
+    def best_model_crossfit(self) -> LearnerCrossfit[T_LearnerPipelineDF]:
         return self._best_crossfit
 
     best_model_crossfit.__doc__ = BaseLearnerRanker.best_model_crossfit.__doc__
@@ -503,7 +499,7 @@ class LearnerRanker(
 
         ranking: List[LearnerEvaluation[T_LearnerPipelineDF]] = []
         best_score: float = -math.inf
-        best_crossfit: Optional[T_LearnerCrossfit] = None
+        best_crossfit: Optional[LearnerCrossfit[T_LearnerPipelineDF]] = None
 
         for pipeline, parameters in configurations:
             crossfit = LearnerCrossfit(
@@ -538,8 +534,7 @@ class LearnerRanker(
 
 
 class SklearnGridsearcher(
-    BaseLearnerRanker[T_LearnerPipelineDF, T_LearnerCrossfit],
-    Generic[T_LearnerPipelineDF, T_LearnerCrossfit],
+    BaseLearnerRanker[T_LearnerPipelineDF], Generic[T_LearnerPipelineDF]
 ):
     """
     A grid searcher using scikit-learn's grid searcher class
@@ -549,7 +544,7 @@ class SklearnGridsearcher(
 
     # noinspection PyMissingOrEmptyDocstring
     @property
-    def best_model_crossfit(self,) -> T_LearnerCrossfit:
+    def best_model_crossfit(self,) -> LearnerCrossfit[T_LearnerPipelineDF]:
         return LearnerCrossfit(
             pipeline=self._best_pipeline(),
             cv=self._cv,
@@ -693,8 +688,7 @@ class SklearnGridsearcher(
 
 
 class RegressorRanker(
-    SklearnGridsearcher[T_RegressorPipelineDF, LearnerCrossfit[T_RegressorPipelineDF]],
-    Generic[T_RegressorPipelineDF],
+    SklearnGridsearcher[T_RegressorPipelineDF], Generic[T_RegressorPipelineDF]
 ):
     """[inheriting doc string of base class]"""
 
@@ -702,10 +696,7 @@ class RegressorRanker(
 
 
 class ClassifierRanker(
-    SklearnGridsearcher[
-        T_ClassifierPipelineDF, LearnerCrossfit[T_ClassifierPipelineDF]
-    ],
-    Generic[T_ClassifierPipelineDF],
+    SklearnGridsearcher[T_ClassifierPipelineDF], Generic[T_ClassifierPipelineDF]
 ):
     """[inheriting doc string of base class]"""
 
