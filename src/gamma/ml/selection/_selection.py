@@ -392,22 +392,13 @@ class BaseLearnerRanker(
         return self._best_pipeline().fit(X=self._sample.features, y=self._sample.target)
 
     @property
-    def best_model_crossfit(self,) -> T_LearnerCrossfit:
+    @abstractmethod
+    def best_model_crossfit(self) -> T_LearnerCrossfit:
         """
         The crossfit for the best model, fitted with the same sample and fit
         parameters used to fit this ranker.
         """
-
-        return LearnerCrossfit(
-            pipeline=self._best_pipeline(),
-            cv=self._cv,
-            shuffle_features=self._shuffle_features,
-            random_state=self._random_state,
-            n_jobs=self.n_jobs,
-            shared_memory=self.shared_memory,
-            pre_dispatch=self.pre_dispatch,
-            verbose=self.verbose,
-        ).fit(sample=self._sample, **self._fit_params)
+        pass
 
     def summary_report(self, max_learners: Optional[int] = None) -> str:
         """
@@ -493,6 +484,22 @@ class SklearnGridsearcher(
     """
 
     _COL_PARAMETERS = "params"
+
+    # noinspection PyMissingOrEmptyDocstring
+    @property
+    def best_model_crossfit(self,) -> T_LearnerCrossfit:
+        return LearnerCrossfit(
+            pipeline=self._best_pipeline(),
+            cv=self._cv,
+            shuffle_features=self._shuffle_features,
+            random_state=self._random_state,
+            n_jobs=self.n_jobs,
+            shared_memory=self.shared_memory,
+            pre_dispatch=self.pre_dispatch,
+            verbose=self.verbose,
+        ).fit(sample=self._sample, **self._fit_params)
+
+    best_model_crossfit.__doc__ = BaseLearnerRanker.best_model_crossfit.__doc__
 
     def _rank_learners(
         self, sample: Sample, **fit_params
