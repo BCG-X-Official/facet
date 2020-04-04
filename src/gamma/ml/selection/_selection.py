@@ -5,16 +5,13 @@ Core implementation of :mod:`gamma.ml.selection`
 import logging
 import math
 import operator
-import re
-from abc import ABCMeta, abstractmethod
-from collections import defaultdict
 from functools import reduce
 from itertools import chain
 from typing import *
 
 import pandas as pd
 from numpy.random.mtrand import RandomState
-from sklearn.model_selection import BaseCrossValidator, GridSearchCV
+from sklearn.model_selection import BaseCrossValidator
 
 from gamma.common import deprecation_warning
 from gamma.common.fit import FittableMixin, T_Self
@@ -34,7 +31,6 @@ __all__ = [
     "ParameterGrid",
     "Scorer",
     "LearnerEvaluation",
-    "BaseLearnerRanker",
     "LearnerRanker",
     "RegressorRanker",
     "ClassifierRanker",
@@ -235,11 +231,8 @@ class LearnerEvaluation(Generic[T_LearnerPipelineDF]):
         self.ranking_score = ranking_score
 
 
-class BaseLearnerRanker(
-    ParallelizableMixin,
-    FittableMixin[Sample],
-    Generic[T_LearnerPipelineDF],
-    metaclass=ABCMeta,
+class LearnerRanker(
+    ParallelizableMixin, FittableMixin[Sample], Generic[T_LearnerPipelineDF]
 ):
     """
     Rank different parametrisations of one or more learners using cross-validation.
@@ -252,17 +245,7 @@ class BaseLearnerRanker(
     sample.
     """
 
-    __slots__ = [
-        "_grids",
-        "_sample",
-        "_scoring",
-        "_cv",
-        "_searchers",
-        "_pipeline",
-        "_ranking_scorer",
-        "_ranking_metric",
-        "_ranking",
-    ]
+    TEST_SCORE_NAME = "test_score"
 
     def __init__(
         self,
@@ -320,7 +303,7 @@ class BaseLearnerRanker(
         self._cv = cv
         self._scoring = scoring
         self._ranking_scorer = (
-            BaseLearnerRanker.default_ranking_scorer
+            LearnerRanker.default_ranking_scorer
             if ranking_scorer is None
             else ranking_scorer
         )
@@ -356,7 +339,7 @@ class BaseLearnerRanker(
         :param sample: sample with which to fit the candidate learners from the grid(s)
         :param fit_params: any fit parameters to pass on to the learner's fit method
         """
-        self: BaseLearnerRanker[T_LearnerPipelineDF]  # support type hinting in PyCharm
+        self: LearnerRanker[T_LearnerPipelineDF]  # support type hinting in PyCharm
 
         ranking: List[LearnerEvaluation[T_LearnerPipelineDF]] = self._rank_learners(
             sample=sample, **fit_params
@@ -387,16 +370,17 @@ class BaseLearnerRanker(
         """
         The pipeline which obtained the best ranking score, fitted on the entire sample
         """
+        self._ensure_fitted()
         return self._best_pipeline().fit(X=self._sample.features, y=self._sample.target)
 
     @property
-    @abstractmethod
     def best_model_crossfit(self) -> LearnerCrossfit[T_LearnerPipelineDF]:
         """
         The crossfit for the best model, fitted with the same sample and fit
         parameters used to fit this ranker.
         """
-        pass
+        self._ensure_fitted()
+        return self._best_crossfit
 
     def summary_report(self, max_learners: Optional[int] = None) -> str:
         """
@@ -454,31 +438,6 @@ class BaseLearnerRanker(
         self._ensure_fitted()
         return self._ranking[0].pipeline
 
-    @abstractmethod
-    def _rank_learners(
-        self, sample: Sample, **fit_params
-    ) -> List[LearnerEvaluation[T_LearnerPipelineDF]]:
-        pass
-
-
-class LearnerRanker(
-    BaseLearnerRanker[T_LearnerPipelineDF], Generic[T_LearnerPipelineDF]
-):
-    """
-    Native implementation of grid search
-    """
-
-    __doc__ = BaseLearnerRanker.__doc__
-
-    TEST_SCORE_NAME = "test_score"
-
-    # noinspection PyMissingOrEmptyDocstring
-    @property
-    def best_model_crossfit(self) -> LearnerCrossfit[T_LearnerPipelineDF]:
-        return self._best_crossfit
-
-    best_model_crossfit.__doc__ = BaseLearnerRanker.best_model_crossfit.__doc__
-
     def _rank_learners(
         self, sample: Sample, **fit_params
     ) -> List[LearnerEvaluation[T_LearnerPipelineDF]]:
@@ -530,160 +489,6 @@ class LearnerRanker(
 
         self._best_crossfit = best_crossfit
         return ranking
-
-
-class SklearnGridsearcher(
-    BaseLearnerRanker[T_LearnerPipelineDF], Generic[T_LearnerPipelineDF]
-):
-    """
-    A grid searcher using scikit-learn's grid searcher class
-    """
-
-    _COL_PARAMETERS = "params"
-
-    # noinspection PyMissingOrEmptyDocstring
-    @property
-    def best_model_crossfit(self,) -> LearnerCrossfit[T_LearnerPipelineDF]:
-        return LearnerCrossfit(
-            pipeline=self._best_pipeline(),
-            cv=self._cv,
-            shuffle_features=self._shuffle_features,
-            random_state=self._random_state,
-            n_jobs=self.n_jobs,
-            shared_memory=self.shared_memory,
-            pre_dispatch=self.pre_dispatch,
-            verbose=self.verbose,
-        ).fit(sample=self._sample, **self._fit_params)
-
-    best_model_crossfit.__doc__ = BaseLearnerRanker.best_model_crossfit.__doc__
-
-    def _rank_learners(
-        self, sample: Sample, **fit_params
-    ) -> List[LearnerEvaluation[T_LearnerPipelineDF]]:
-
-        if len(fit_params) > 0:
-            log.warning(
-                "Ignoring arg fit_params: current ranker implementation uses "
-                "GridSearchCV which does not support fit_params"
-            )
-
-        ranking_scorer = self._ranking_scorer
-
-        # construct searchers
-        searchers: List[Tuple[GridSearchCV, ParameterGrid]] = [
-            (
-                GridSearchCV(
-                    estimator=grid.pipeline,
-                    param_grid=grid.parameters,
-                    scoring=self._scoring,
-                    n_jobs=self.n_jobs,
-                    iid=False,
-                    refit=False,
-                    cv=self._cv,
-                    verbose=self.verbose,
-                    pre_dispatch=self.pre_dispatch,
-                    return_train_score=False,
-                ),
-                grid,
-            )
-            for grid in self._grids
-        ]
-
-        for searcher, _ in searchers:
-            searcher.fit(X=sample.features, y=sample.target)
-
-        #
-        # consolidate results of all searchers into "results"
-        #
-
-        def _scoring(
-            cv_results: Mapping[str, Sequence[float]]
-        ) -> List[Dict[str, Scoring]]:
-            """
-            Convert ``cv_results_`` into a mapping with :class:`Scoring` values.
-
-            Helper function;  for each pipeline in the grid returns a tuple of test
-            scores_for_split across all splits.
-            The length of the tuple is equal to the number of splits that were tested
-            The test scores_for_split are sorted in the order the splits were tested.
-
-            :param cv_results: a :attr:`sklearn.GridSearchCV.cv_results_` attribute
-            :return: a list of test scores per scored pipeline; each list entry maps \
-                score types (as str) to a :class:`Scoring` of scores per split. The \
-                i-th element of this list is typically of the form \
-                ``{'train_score': model_scoring1, 'test_score': model_scoring2,...}``
-            """
-
-            # the splits are stored in the cv_results using keys 'split0...'
-            # through 'split<nn>...'
-            # match these dictionary keys in cv_results; ignore all other keys
-            matches_for_split_x_metric: List[Tuple[str, Match]] = [
-                (key, re.fullmatch(r"split(\d+)_((train|test)_[a-zA-Z0-9]+)", key))
-                for key in cv_results.keys()
-            ]
-
-            # extract the integer indices from the matched results keys
-            # create tuples (metric, split_index, scores_per_model_for_split),
-            # e.g., ('test_r2', 0, [0.34, 0.23, ...])
-            metric_x_split_index_x_scores_per_model: List[
-                Tuple[str, int, Sequence[float]]
-            ] = sorted(
-                (
-                    (match.group(2), int(match.group(1)), cv_results[key])
-                    for key, match in matches_for_split_x_metric
-                    if match is not None
-                ),
-                key=lambda x: x[1],  # sort by split_id so we can later collect scores
-                # in the correct sequence
-            )
-
-            # Group results per pipeline, result is a list where each item contains the
-            # scoring for one pipeline. Each scoring is a dictionary, mapping each
-            # metric to a list of scores for the different splits.
-            n_models = len(cv_results[SklearnGridsearcher._COL_PARAMETERS])
-
-            scores_per_model_per_metric_per_split: List[Dict[str, List[float]]] = [
-                defaultdict(list) for _ in range(n_models)
-            ]
-
-            for (
-                metric,
-                split_ix,
-                split_score_per_model,
-            ) in metric_x_split_index_x_scores_per_model:
-                for model_ix, split_score in enumerate(split_score_per_model):
-                    scores_per_model_per_metric_per_split[model_ix][metric].append(
-                        split_score
-                    )
-            # Now in general, the i-th element of scores_per_model_per_metric_per_split
-            # is a dict
-            # {'train_score': [a_0,...,a_(n-1)], 'test_score': [b_0,..,b_(n-1)]} where
-            # a_j (resp. b_j) is the train (resp. test) score for pipeline i in split j
-
-            return [
-                {
-                    metric: Scoring(split_scores=scores_per_split)
-                    for metric, scores_per_split in scores_per_metric_per_split.items()
-                }
-                for scores_per_metric_per_split in scores_per_model_per_metric_per_split
-            ]
-
-        ranking_metric = self._ranking_metric
-        return [
-            LearnerEvaluation(
-                pipeline=grid.pipeline.clone().set_params(**params),
-                parameters=params,
-                scoring=scoring,
-                # compute the final score using the function defined above:
-                ranking_score=ranking_scorer(scoring[ranking_metric]),
-            )
-            for searcher, grid in searchers
-            # we read and iterate over these 3 attributes from cv_results_:
-            for params, scoring in zip(
-                searcher.cv_results_[SklearnGridsearcher._COL_PARAMETERS],
-                _scoring(searcher.cv_results_),
-            )
-        ]
 
 
 class DeprecatedRanker(
@@ -742,7 +547,7 @@ class RegressorRanker(
 ):
     """[inheriting doc string of base class]"""
 
-    __doc__ = cast(str, BaseLearnerRanker.__doc__).replace("learner", "regressor")
+    __doc__ = cast(str, LearnerRanker.__doc__).replace("learner", "regressor")
 
 
 class ClassifierRanker(
@@ -750,4 +555,4 @@ class ClassifierRanker(
 ):
     """[inheriting doc string of base class]"""
 
-    __doc__ = cast(str, BaseLearnerRanker.__doc__).replace("learner", "classifier")
+    __doc__ = cast(str, LearnerRanker.__doc__).replace("learner", "classifier")
