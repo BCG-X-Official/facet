@@ -3,6 +3,7 @@ Core implementation of :mod:`gamma.ml.selection`
 """
 
 import logging
+import math
 import operator
 import re
 from abc import ABCMeta, abstractmethod
@@ -11,7 +12,6 @@ from functools import reduce
 from itertools import chain
 from typing import *
 
-import numpy as np
 import pandas as pd
 from numpy.random.mtrand import RandomState
 from sklearn.model_selection import BaseCrossValidator, GridSearchCV
@@ -19,7 +19,7 @@ from sklearn.model_selection import BaseCrossValidator, GridSearchCV
 from gamma.common.fit import FittableMixin, T_Self
 from gamma.common.parallelization import ParallelizableMixin
 from gamma.ml import Sample
-from gamma.ml.crossfit import LearnerCrossfit
+from gamma.ml.crossfit import LearnerCrossfit, Scoring
 from gamma.sklearndf import BaseLearnerDF
 from gamma.sklearndf.pipeline import (
     BaseLearnerPipelineDF,
@@ -32,7 +32,6 @@ log = logging.getLogger(__name__)
 __all__ = [
     "ParameterGrid",
     "Scorer",
-    "Scoring",
     "LearnerEvaluation",
     "BaseLearnerRanker",
     "RegressorRanker",
@@ -207,28 +206,6 @@ class ParameterGrid(Sequence[Dict[str, Any]], Generic[T_LearnerPipelineDF]):
                 for values_for_parameter in self._grid_dict.values()
             ),
         )
-
-
-class Scoring:
-    """"
-    Basic statistics on the scoring across all cross validation splits of a pipeline.
-
-    :param split_scores: scores of all cross validation splits for a pipeline
-    """
-
-    def __init__(self, split_scores: Iterable[float]):
-        self._split_scores = np.array(split_scores)
-
-    def __getitem__(self, item: Union[int, slice]) -> Union[float, np.ndarray]:
-        return self._split_scores[item]
-
-    def mean(self) -> float:
-        """:return: mean of the split scores"""
-        return self._split_scores.mean()
-
-    def std(self) -> float:
-        """:return: standard deviation of the split scores"""
-        return self._split_scores.std()
 
 
 class LearnerEvaluation(Generic[T_LearnerPipelineDF]):

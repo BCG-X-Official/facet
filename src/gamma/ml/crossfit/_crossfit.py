@@ -6,8 +6,10 @@ from abc import ABCMeta
 from copy import copy
 from typing import *
 
+import numpy as np
 import pandas as pd
 from numpy.random.mtrand import RandomState
+from sklearn.metrics import check_scoring
 from sklearn.model_selection import BaseCrossValidator
 from sklearn.utils import check_random_state
 
@@ -22,13 +24,36 @@ from gamma.sklearndf.pipeline import (
 
 log = logging.getLogger(__name__)
 
-__all__ = ["LearnerCrossfit"]
+__all__ = ["LearnerCrossfit", "Scoring"]
 
 T_LearnerPipelineDF = TypeVar("T_LearnerPipelineDF", bound=BaseLearnerPipelineDF)
 T_ClassifierPipelineDF = TypeVar("T_ClassifierPipelineDF", bound=ClassifierPipelineDF)
 T_RegressorPipelineDF = TypeVar("T_RegressorPipelineDF", bound=RegressorPipelineDF)
 
 _INDEX_SENTINEL = pd.Index([])
+
+
+class Scoring:
+    """"
+    Basic statistics on the scoring across all cross validation splits of a pipeline.
+
+    :param split_scores: scores of all cross validation splits for a pipeline
+    """
+
+    def __init__(self, split_scores: Sequence[float]):
+        self._split_scores = np.array(split_scores)
+        assert self._split_scores.dtype == float
+
+    def __getitem__(self, item: Union[int, slice]) -> Union[float, np.ndarray]:
+        return self._split_scores[item]
+
+    def mean(self) -> float:
+        """:return: mean of the split scores"""
+        return self._split_scores.mean()
+
+    def std(self) -> float:
+        """:return: standard deviation of the split scores"""
+        return self._split_scores.std()
 
 
 class LearnerCrossfit(
