@@ -475,8 +475,66 @@ class LearnerRanker(
     Native implementation of grid search
     """
 
-    def _rank_learners(self, sample: Sample, **fit_params) -> None:
-        pass
+    TEST_SCORE_NAME = "test_score"
+
+    # noinspection PyMissingOrEmptyDocstring
+    @property
+    def best_model_crossfit(self) -> T_LearnerCrossfit:
+        return self._best_crossfit
+
+    best_model_crossfit.__doc__ = BaseLearnerRanker.best_model_crossfit.__doc__
+
+    def _rank_learners(
+        self, sample: Sample, **fit_params
+    ) -> List[LearnerEvaluation[T_LearnerPipelineDF]]:
+        ranking_scorer = self._ranking_scorer
+
+        ranking_metric = self._ranking_metric
+        if ranking_metric is not None and ranking_metric != self.TEST_SCORE_NAME:
+            raise ValueError(
+                f"unsupported ranking metric {ranking_metric}. Use None instead."
+            )
+
+        configurations = (
+            (grid.pipeline.clone().set_params(**parameters), parameters)
+            for grid in self._grids
+            for parameters in grid
+        )
+
+        ranking: List[LearnerEvaluation[T_LearnerPipelineDF]] = []
+        best_score: float = -math.inf
+        best_crossfit: Optional[T_LearnerCrossfit] = None
+
+        for pipeline, parameters in configurations:
+            crossfit = LearnerCrossfit(
+                pipeline=pipeline,
+                cv=self._cv,
+                shuffle_features=self._shuffle_features,
+                random_state=self._random_state,
+                n_jobs=self.n_jobs,
+                shared_memory=self.shared_memory,
+                pre_dispatch=self.pre_dispatch,
+                verbose=self.verbose,
+            ).fit(sample=sample, **fit_params)
+
+            pipeline_scoring: Scoring = crossfit.score(self._scoring)
+            ranking_score = ranking_scorer(pipeline_scoring)
+
+            ranking.append(
+                LearnerEvaluation(
+                    pipeline=pipeline,
+                    parameters=parameters,
+                    scoring={self.TEST_SCORE_NAME: pipeline_scoring},
+                    ranking_score=ranking_score,
+                )
+            )
+
+            if ranking_score > best_score:
+                best_score = ranking_score
+                best_crossfit = crossfit
+
+        self._best_crossfit = best_crossfit
+        return ranking
 
 
 class SklearnGridsearcher(
