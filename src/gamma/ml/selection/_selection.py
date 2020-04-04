@@ -321,11 +321,14 @@ class BaseLearnerRanker(
             pre_dispatch=pre_dispatch,
             verbose=verbose,
         )
-        self._grids = list(grid) if isinstance(grid, Iterable) else [grid]
+
+        self._grids: List[ParameterGrid] = list(grid) if isinstance(
+            grid, Iterable
+        ) else [grid]
         self._cv = cv
         self._scoring = scoring
         self._ranking_scorer = (
-            SklearnGridsearcher.default_ranking_scorer
+            BaseLearnerRanker.default_ranking_scorer
             if ranking_scorer is None
             else ranking_scorer
         )
@@ -358,7 +361,8 @@ class BaseLearnerRanker(
         :param sample: sample with which to fit the candidate learners from the grid(s)
         :param fit_params: any fit parameters to pass on to the learner's fit method
         """
-        self: SklearnGridsearcher  # support type hinting in PyCharm
+        # support type hinting in PyCharm
+        self: BaseLearnerRanker[T_LearnerPipelineDF, T_LearnerCrossfit]
 
         ranking: List[LearnerEvaluation[T_LearnerPipelineDF]] = self._rank_learners(
             sample=sample, **fit_params
