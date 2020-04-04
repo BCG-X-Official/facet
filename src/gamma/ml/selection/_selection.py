@@ -16,6 +16,7 @@ import pandas as pd
 from numpy.random.mtrand import RandomState
 from sklearn.model_selection import BaseCrossValidator, GridSearchCV
 
+from gamma.common import deprecation_warning
 from gamma.common.fit import FittableMixin, T_Self
 from gamma.common.parallelization import ParallelizableMixin
 from gamma.ml import Sample
@@ -466,6 +467,8 @@ class LearnerRanker(
     Native implementation of grid search
     """
 
+    __doc__ = BaseLearnerRanker.__doc__
+
     TEST_SCORE_NAME = "test_score"
 
     # noinspection PyMissingOrEmptyDocstring
@@ -682,8 +685,59 @@ class SklearnGridsearcher(
         ]
 
 
+class DeprecatedRanker(
+    LearnerRanker[T_RegressorPipelineDF], Generic[T_RegressorPipelineDF]
+):
+    """[inheriting doc string of base class]"""
+
+    __doc__ = LearnerRanker.__doc__
+
+    def __init__(
+        self,
+        grid: Union[
+            ParameterGrid[T_LearnerPipelineDF],
+            Iterable[ParameterGrid[T_LearnerPipelineDF]],
+        ],
+        cv: Optional[BaseCrossValidator],
+        scoring: Union[
+            str,
+            Callable[[float, float], float],
+            List[str],
+            Tuple[str],
+            Dict[str, Callable[[float, float], float]],
+            None,
+        ] = None,
+        ranking_scorer: Callable[[float, float], float] = None,
+        ranking_metric: str = "test_score",
+        shuffle_features: Optional[bool] = None,
+        random_state: Union[int, RandomState, None] = None,
+        n_jobs: Optional[int] = None,
+        shared_memory: Optional[bool] = None,
+        pre_dispatch: Optional[Union[str, int]] = None,
+        verbose: Optional[int] = None,
+    ) -> None:
+        deprecation_warning(
+            f"Class {type(self).__name__} will be removed in the next release. "
+            f"Use class LearnerRanker instead.",
+            stacklevel=2,
+        )
+        super().__init__(
+            grid=grid,
+            cv=cv,
+            scoring=scoring,
+            ranking_scorer=ranking_scorer,
+            ranking_metric=ranking_metric,
+            shuffle_features=shuffle_features,
+            random_state=random_state,
+            n_jobs=n_jobs,
+            shared_memory=shared_memory,
+            pre_dispatch=pre_dispatch,
+            verbose=verbose,
+        )
+
+
 class RegressorRanker(
-    SklearnGridsearcher[T_RegressorPipelineDF], Generic[T_RegressorPipelineDF]
+    DeprecatedRanker[T_RegressorPipelineDF], Generic[T_RegressorPipelineDF]
 ):
     """[inheriting doc string of base class]"""
 
@@ -691,7 +745,7 @@ class RegressorRanker(
 
 
 class ClassifierRanker(
-    SklearnGridsearcher[T_ClassifierPipelineDF], Generic[T_ClassifierPipelineDF]
+    DeprecatedRanker[T_ClassifierPipelineDF], Generic[T_ClassifierPipelineDF]
 ):
     """[inheriting doc string of base class]"""
 
