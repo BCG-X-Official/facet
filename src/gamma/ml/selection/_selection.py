@@ -359,7 +359,16 @@ class BaseLearnerRanker(
         :param fit_params: any fit parameters to pass on to the learner's fit method
         """
         self: SklearnGridsearcher  # support type hinting in PyCharm
-        self._rank_learners(sample=sample, **fit_params)
+
+        ranking: List[LearnerEvaluation[T_LearnerPipelineDF]] = self._rank_learners(
+            sample=sample, **fit_params
+        )
+        ranking.sort(key=lambda le: le.ranking_score, reverse=True)
+
+        self._sample = sample
+        self._fit_params = fit_params
+        self._ranking = ranking
+
         return self
 
     @property
@@ -457,7 +466,9 @@ class BaseLearnerRanker(
         return self._ranking[0].pipeline
 
     @abstractmethod
-    def _rank_learners(self, sample: Sample, **fit_params) -> None:
+    def _rank_learners(
+        self, sample: Sample, **fit_params
+    ) -> List[LearnerEvaluation[T_LearnerPipelineDF]]:
         pass
 
 
@@ -483,7 +494,9 @@ class SklearnGridsearcher(
 
     _COL_PARAMETERS = "params"
 
-    def _rank_learners(self, sample: Sample, **fit_params) -> None:
+    def _rank_learners(
+        self, sample: Sample, **fit_params
+    ) -> List[LearnerEvaluation[T_LearnerPipelineDF]]:
 
         if len(fit_params) > 0:
             log.warning(
@@ -593,7 +606,7 @@ class SklearnGridsearcher(
             ]
 
         ranking_metric = self._ranking_metric
-        ranking = [
+        return [
             LearnerEvaluation(
                 pipeline=grid.pipeline.clone().set_params(**params),
                 parameters=params,
@@ -608,12 +621,6 @@ class SklearnGridsearcher(
                 _scoring(searcher.cv_results_),
             )
         ]
-
-        ranking.sort(key=lambda validation: validation.ranking_score, reverse=True)
-
-        self._sample = sample
-        self._fit_params = fit_params
-        self._ranking = ranking
 
 
 class RegressorRanker(
