@@ -461,7 +461,7 @@ class BaseLearnerRanker(
         pass
 
 
-class NativeGridSearcher(
+class LearnerRanker(
     BaseLearnerRanker[T_LearnerPipelineDF, T_LearnerCrossfit],
     Generic[T_LearnerPipelineDF, T_LearnerCrossfit],
 ):
