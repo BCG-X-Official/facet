@@ -35,6 +35,7 @@ __all__ = [
     "Scorer",
     "LearnerEvaluation",
     "BaseLearnerRanker",
+    "LearnerRanker",
     "RegressorRanker",
     "ClassifierRanker",
 ]

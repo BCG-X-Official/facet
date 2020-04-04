@@ -15,7 +15,7 @@ from sklearn.utils import Bunch
 from gamma.ml import Sample
 from gamma.ml.crossfit import LearnerCrossfit
 from gamma.ml.inspection import RegressorInspector
-from gamma.ml.selection import LearnerEvaluation, ParameterGrid, RegressorRanker
+from gamma.ml.selection import LearnerEvaluation, LearnerRanker, ParameterGrid
 from gamma.ml.validation import BootstrapCV
 from gamma.sklearndf import TransformerDF
 from gamma.sklearndf.pipeline import RegressorPipelineDF
@@ -136,16 +136,22 @@ def regressor_grids(simple_preprocessor: TransformerDF) -> List[ParameterGrid]:
 
 @pytest.fixture
 def regressor_ranker(
-    cv_kfold, regressor_grids: List[ParameterGrid], sample: Sample, n_jobs: int
-) -> RegressorRanker:
-    return RegressorRanker(
+    cv_kfold,
+    regressor_grids: List[ParameterGrid[RegressorPipelineDF]],
+    sample: Sample,
+    n_jobs: int,
+) -> LearnerRanker[RegressorPipelineDF]:
+    return LearnerRanker(
         grid=regressor_grids, cv=cv_kfold, scoring="r2", n_jobs=n_jobs
     ).fit(sample=sample)
 
 
 @pytest.fixture
 def best_lgbm_crossfit(
-    regressor_ranker: RegressorRanker, cv_kfold, sample: Sample, n_jobs: int
+    regressor_ranker: LearnerRanker[RegressorPipelineDF],
+    cv_kfold,
+    sample: Sample,
+    n_jobs: int,
 ) -> LearnerCrossfit[RegressorPipelineDF]:
     # we get the best model_evaluation which is a LGBM - for the sake of test
     # performance
