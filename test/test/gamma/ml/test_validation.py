@@ -4,7 +4,6 @@ Tests for gamma.ml.validation
 import warnings
 
 import numpy as np
-import pandas as pd
 
 # noinspection PyPackageRequirements
 import pytest
@@ -62,7 +61,7 @@ def test_get_train_test_splits_as_indices() -> None:
         assert np.array_equal(f1, f2), "split indices should be stable"
 
 
-def test_circular_cv_with_sk_learn() -> None:
+def test_bootstrap_cv_with_sk_learn() -> None:
     # filter out warnings triggerd by sk-learn/numpy
 
     warnings.filterwarnings("ignore", message="numpy.dtype size changed")

@@ -1,7 +1,4 @@
-import hashlib
-from typing import List, Sequence
-
-import pytest
+from typing import *
 
 from gamma.ml.selection import LearnerEvaluation
 from gamma.sklearndf import TransformerDF
@@ -40,35 +37,37 @@ def make_simple_transformer(
 
 def check_ranking(
     ranking: List[LearnerEvaluation],
-    checksum_scores: float,
-    checksum_learners: str,
-    first_n_learners: int = 10,
+    expected_scores: Sequence[float],
+    expected_learners: Sequence[type],
+    expected_parameters: Mapping[int, Mapping[str, Any]],
 ) -> None:
     """
     Test helper to check rankings produced by gamma.ml rankers
 
     :param ranking: a list of LearnerEvaluations
-    :param checksum_scores: the expected checksum of learner scores
-    :param checksum_learners: the expected checksum of learners string reprs
-    :param first_n_learners: the number of learners to check
+    :param expected_scores: expected ranking scores, rounded to 3 decimal places
+    :param expected_learners: expected learner classes
+    :param expected_parameters: expected learner parameters
     :return: None
     """
 
-    checksum_scores_actual = sum(
-        [learner_eval.ranking_score for learner_eval in ranking[:first_n_learners]]
-    )
-    assert checksum_scores_actual == pytest.approx(
-        checksum_scores
-    ), f"unexpected checksum_scores={checksum_scores_actual}"
+    for rank, (learner_eval, score_expected, learner_expected) in enumerate(
+        zip(ranking, expected_scores, expected_learners)
+    ):
+        score_actual = round(learner_eval.ranking_score, 3)
+        assert score_actual == score_expected, (
+            f"unexpected score for learner at rank #{rank}: "
+            f"{score_actual} instead of {score_expected}"
+        )
+        learner_actual = learner_eval.pipeline.final_estimator
+        assert type(learner_actual) == learner_expected, (
+            f"unexpected class for learner at rank #{rank}: "
+            f"{type(learner_actual)} instead of {learner_expected}"
+        )
 
-    checksum_learners_actual = hashlib.md5(
-        "".join(
-            [
-                str(learner_eval.pipeline.final_estimator)
-                for learner_eval in ranking[:first_n_learners]
-            ]
-        ).encode("UTF-8")
-    ).hexdigest()
-    assert (
-        checksum_learners_actual == checksum_learners
-    ), f"unexpected checksum_learners={checksum_learners_actual}"
+    for rank, parameters_expected in expected_parameters.items():
+        parameters_actual = ranking[rank].parameters
+        assert parameters_actual == parameters_expected, (
+            f"unexpected parameters for learner at rank #{rank}: "
+            f"{parameters_actual} instead of {parameters_expected}"
+        )
