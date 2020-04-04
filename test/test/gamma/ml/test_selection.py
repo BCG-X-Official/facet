@@ -21,6 +21,12 @@ from gamma.ml.selection import (
 from gamma.ml.validation import BootstrapCV
 from gamma.sklearndf.classification import SVCDF
 from gamma.sklearndf.pipeline import ClassifierPipelineDF
+from gamma.sklearndf.regression import (
+    AdaBoostRegressorDF,
+    LinearRegressionDF,
+    RandomForestRegressorDF,
+)
+from gamma.sklearndf.regression.extra import LGBMRegressorDF
 from test.gamma.ml import check_ranking
 
 log = logging.getLogger(__name__)
@@ -79,11 +85,64 @@ def test_model_ranker(
 ) -> None:
 
     if fast_execution:
-        checksum_learner_scores = 6.665605570980783
-        checksum_learner_ranks = "ddbee9ae9284164c8b44ba8fe601e903"
+        expected_scores = [
+            0.745,
+            0.742,
+            0.7,
+            0.689,
+            0.675,
+            0.675,
+            0.61,
+            0.61,
+            0.61,
+            0.61,
+        ]
+        expected_learners = [
+            RandomForestRegressorDF,
+            RandomForestRegressorDF,
+            AdaBoostRegressorDF,
+            AdaBoostRegressorDF,
+            LinearRegressionDF,
+            LinearRegressionDF,
+            LGBMRegressorDF,
+            LGBMRegressorDF,
+            LGBMRegressorDF,
+            LGBMRegressorDF,
+        ]
+        expected_parameters = {
+            0: dict(regressor__n_estimators=80, regressor__random_state=42),
+            1: dict(regressor__n_estimators=50, regressor__random_state=42),
+            2: dict(regressor__n_estimators=50, regressor__random_state=42),
+            3: dict(regressor__n_estimators=80, regressor__random_state=42),
+        }
     else:
-        checksum_learner_scores = 8.164197829110956
-        checksum_learner_ranks = "3dd654554097cef927d320254c993248"
+        expected_scores = [
+            0.817,
+            0.817,
+            0.817,
+            0.817,
+            0.817,
+            0.817,
+            0.815,
+            0.815,
+            0.815,
+            0.815,
+        ]
+        expected_learners = [LGBMRegressorDF] * 10
+        expected_parameters = {
+            0: dict(
+                regressor__max_depth=5,
+                regressor__min_split_gain=0.2,
+                regressor__num_leaves=50,
+                regressor__random_state=42,
+            ),
+            6: dict(
+                regressor__max_depth=10,
+                regressor__min_split_gain=0.1,
+                regressor__num_leaves=50,
+                regressor__random_state=42,
+            ),
+        }
 
     # define the circular cross validator with just 5 splits (to speed up testing)
     cv = BootstrapCV(n_splits=5, random_state=42)
@@ -91,9 +150,13 @@ def test_model_ranker(
     ranker = RegressorRanker(
         grid=regressor_grids, cv=cv, scoring="r2", n_jobs=n_jobs
     ).fit(sample=sample)
+
+    log.debug(f"\n{ranker.summary_report(max_learners=10)}")
+
     assert isinstance(ranker.best_model_crossfit, LearnerCrossfit)
 
     ranking = ranker.ranking()
+
     assert len(ranking) > 0
     assert isinstance(ranking[0], LearnerEvaluation)
     assert all(
@@ -102,22 +165,26 @@ def test_model_ranker(
     )
 
     # check if parameters set for estimators actually match expected:
-    for validation in ranker.ranking():
-        assert set(validation.pipeline.get_params()).issubset(
-            validation.pipeline.get_params()
-        )
+    for evaluation in ranker.ranking():
+        pipeline_parameters = evaluation.pipeline.get_params()
+        for name, value in evaluation.parameters.items():
+            assert (
+                name in pipeline_parameters
+            ), f"paramater {name} is a parameter in evaluation.pipeline"
+            assert (
+                pipeline_parameters[name] == value
+            ), f"evaluation.pipeline.{name} is set to {value}"
 
     check_ranking(
         ranking=ranker.ranking(),
-        checksum_scores=checksum_learner_scores,
-        checksum_learners=checksum_learner_ranks,
-        first_n_learners=10,
+        expected_scores=expected_scores,
+        expected_learners=expected_learners,
+        expected_parameters=expected_parameters,
     )
 
 
 def test_model_ranker_no_preprocessing(n_jobs) -> None:
-    checksum_learner_scores = 3.6520651615505493
-    checksum_learner_ranks = "616a57e7656951a9109bf425be50ee34"
+    expected_learner_scores = [0.943, 0.913, 0.913, 0.884]
 
     warnings.filterwarnings("ignore", message="numpy.dtype size changed")
     warnings.filterwarnings("ignore", message="numpy.ufunc size changed")
@@ -132,7 +199,7 @@ def test_model_ranker_no_preprocessing(n_jobs) -> None:
             pipeline=ClassifierPipelineDF(
                 classifier=SVCDF(gamma="scale"), preprocessing=None
             ),
-            learner_parameters={"kernel": ("linear", "rbf"), "C": [1, 10]},
+            learner_parameters={"kernel": ["linear", "rbf"], "C": [1, 10]},
         )
     ]
 
@@ -152,9 +219,12 @@ def test_model_ranker_no_preprocessing(n_jobs) -> None:
 
     check_ranking(
         ranking=model_ranker.ranking(),
-        checksum_scores=checksum_learner_scores,
-        checksum_learners=checksum_learner_ranks,
-        first_n_learners=10,
+        expected_scores=expected_learner_scores,
+        expected_learners=[SVCDF] * 4,
+        expected_parameters={
+            0: dict(classifier__C=10, classifier__kernel="linear"),
+            3: dict(classifier__C=1, classifier__kernel="rbf"),
+        },
     )
 
     assert (
