@@ -179,6 +179,43 @@ class LearnerCrossfit(
 
         return self
 
+    def score(
+        self,
+        scoring: Union[str, Callable[[float, float], float], None] = None,
+        train_scores: bool = False,
+    ) -> Scoring:
+        """
+        Score all models in this crossfit using the given scoring
+        :param scoring: scoring to use to score the models (see \
+            :meth:`~sklearn.metrics.scorer.check_scoring` for details)
+        :param train_scores: if `True`, calculate train scores instead of test scores \
+            (default: `False`)
+        :return: the resulting scoring
+        """
+
+        if not isinstance(scoring, str) and isinstance(scoring, Container):
+            raise NotImplementedError(
+                "Multi-metric scoring is not supported, use a single scorer instead. "
+                f"arg scoring={scoring} was passed."
+            )
+
+        scorer = check_scoring(estimator=self.pipeline.final_estimator, scoring=scoring)
+
+        scoring_samples = (
+            self._training_sample.subsample(
+                iloc=train_split if train_scores else test_split
+            )
+            for train_split, test_split in self.splits()
+        )
+
+        with self._parallel() as parallel:
+            split_scores: Sequence[float] = parallel(
+                self._delayed(scorer)(model, test_sample.features, test_sample.target)
+                for model, test_sample in zip(self.models(), scoring_samples)
+            )
+
+        return Scoring(split_scores=split_scores)
+
     def resize(self: T_Self, n_splits: int) -> T_Self:
         """
         Reduce the size of this crossfit by removing a subset of the fits.
@@ -236,42 +273,6 @@ class LearnerCrossfit(
         """Iterator of all models fitted on the cross-validation train splits."""
         self._ensure_fitted()
         return iter(self._model_by_split)
-
-    def score(
-        self,
-        scoring: Union[str, Callable[[float, float], float], None] = None,
-        train_scores: bool = False,
-    ) -> Scoring:
-        """
-        Score all models in this crossfit using the given scoring
-        :param scoring: scoring to use to score the models (see \
-            :meth:`~sklearn.metrics.scorer.check_scoring` for details)
-        :param train_scores: if `True`, calculate train scores instead of test scores \
-            (default: `False`)
-        :return: the resulting scoring
-        """
-
-        if not isinstance(scoring, str) and isinstance(scoring, Container):
-            raise NotImplementedError(
-                "Multi-metric scoring is not supported, use a single scorer instead. "
-                f"arg scoring={scoring} was passed."
-            )
-
-        scorer = check_scoring(estimator=self.pipeline.final_estimator, scoring=scoring)
-
-        scoring_samples = (
-            self._training_sample.subsample(
-                iloc=train_split if train_scores else test_split
-            )
-            for train_split, test_split in self.splits()
-        )
-
-        return Scoring(
-            split_scores=[
-                scorer(model, test_sample.features, test_sample.target)
-                for model, test_sample in zip(self.models(), scoring_samples)
-            ]
-        )
 
     @property
     def training_sample(self) -> Sample:
