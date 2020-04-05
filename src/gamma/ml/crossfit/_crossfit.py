@@ -208,12 +208,13 @@ class LearnerCrossfit(
             for train_split, test_split in self.splits()
         )
 
-        return Scoring(
-            split_scores=[
-                scorer(model, test_sample.features, test_sample.target)
+        with self._parallel() as parallel:
+            split_scores: Sequence[float] = parallel(
+                self._delayed(scorer)(model, test_sample.features, test_sample.target)
                 for model, test_sample in zip(self.models(), scoring_samples)
-            ]
-        )
+            )
+
+        return Scoring(split_scores=split_scores)
 
     def resize(self: T_Self, n_splits: int) -> T_Self:
         """
