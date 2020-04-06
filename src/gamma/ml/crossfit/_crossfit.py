@@ -232,7 +232,7 @@ class LearnerCrossfit(
     def _fit_score(
         self,
         _sample: Optional[Sample] = None,
-        _scoring: Union[str, Callable[[float, float], float], None] = None,
+        _scoring: Union[str, Callable[[float, float], float], None] = __NO_SCORING,
         _train_scores: bool = False,
         _sample_weight: Optional[pd.Series] = None,
         **fit_params,
@@ -240,6 +240,8 @@ class LearnerCrossfit(
 
         do_fit = _sample is not None
         do_score = _scoring is not LearnerCrossfit.__NO_SCORING
+
+        assert do_fit or do_score, "at least one of fitting or scoring is enabled"
 
         pipeline = self.pipeline
 
