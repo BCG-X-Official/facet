@@ -483,9 +483,12 @@ class LearnerRanker(
                 shared_memory=self.shared_memory,
                 pre_dispatch=self.pre_dispatch,
                 verbose=self.verbose,
-            ).fit(sample=sample, **fit_params)
+            )
 
-            pipeline_scoring: Scoring = crossfit.score(self._scoring)
+            pipeline_scoring: Scoring = crossfit.fit_score(
+                sample=sample, scoring=self._scoring, **fit_params
+            )
+
             ranking_score = ranking_scorer(pipeline_scoring)
 
             ranking.append(
