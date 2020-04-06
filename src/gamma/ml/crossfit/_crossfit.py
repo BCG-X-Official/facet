@@ -74,6 +74,23 @@ class Scoring:
         return self._split_scores.std()
 
 
+class _FitScoreParameters(NamedTuple):
+    pipeline: T_LearnerPipelineDF
+
+    # fit parameters
+    train_features: Optional[pd.DataFrame]
+    train_feature_sequence: Optional[pd.Index]
+    train_target: Union[pd.Series, pd.DataFrame, None]
+    train_weight: Optional[pd.Series]
+
+    # score parameters
+    scorer: Optional[Scorer]
+    score_train_split: bool
+    test_features: Optional[pd.DataFrame]
+    test_target: Union[pd.Series, pd.DataFrame, None]
+    test_weight: Optional[pd.Series]
+
+
 class LearnerCrossfit(
     FittableMixin[Sample],
     ParallelizableMixin,
@@ -97,6 +114,8 @@ class LearnerCrossfit(
         "verbose",
         "_model_by_split",
     ]
+
+    __NO_SCORING = "<no scoring>"
 
     def __init__(
         self,
@@ -148,52 +167,7 @@ class LearnerCrossfit(
 
         self: LearnerCrossfit  # support type hinting in PyCharm
 
-        pipeline = self.pipeline
-
-        features: pd.DataFrame = sample.features
-        target = sample.target
-        pipeline.fit(X=features, y=target, **fit_params)
-
-        # we get the features that the learner receives after the preprocessing step
-        learner_features = pipeline.features_out
-        n_learner_features = len(learner_features)
-
-        feature_sequence_iter: Iterator[Tuple[Optional[pd.Index]]]
-
-        if self.shuffle_features:
-            # we are shuffling features, so we create an infinite iterator
-            # that creates a new random permutation of feature indices on each
-            # iteration
-            random_state = check_random_state(self.random_state)
-            # noinspection PyTypeChecker
-            feature_sequence_iter = iter(
-                lambda: (
-                    learner_features[random_state.permutation(n_learner_features)],
-                ),
-                None,
-            )
-        else:
-            # we are not shuffling features, hence we create an infinite iterator of
-            # always the same slice that preserves the existing feature sequence
-            # noinspection PyTypeChecker
-            feature_sequence_iter = iter(lambda: (None,), None)
-
-        with self._parallel() as parallel:
-            model_by_split: List[T_LearnerPipelineDF] = parallel(
-                self._delayed(LearnerCrossfit._fit_model_for_split)(
-                    pipeline.clone(),
-                    features.iloc[train_indices],
-                    target.iloc[train_indices],
-                    feature_sequence,
-                    **fit_params,
-                )
-                for (feature_sequence,), (train_indices, _) in zip(
-                    feature_sequence_iter, self.cv.split(features, target)
-                )
-            )
-
-        self._model_by_split = model_by_split
-        self._training_sample = sample
+        self._fit_score(_sample=sample, **fit_params)
 
         return self
 
@@ -201,38 +175,154 @@ class LearnerCrossfit(
         self,
         scoring: Union[str, Callable[[float, float], float], None] = None,
         train_scores: bool = False,
+        sample_weight: Optional[pd.Series] = None,
     ) -> Scoring:
         """
-        Score all models in this crossfit using the given scoring
+        Score all models in this crossfit using the given scoring function
+
         :param scoring: scoring to use to score the models (see \
             :meth:`~sklearn.metrics.scorer.check_scoring` for details)
         :param train_scores: if `True`, calculate train scores instead of test scores \
             (default: `False`)
+        :param sample_weight: optional weights for all observations in the training \
+            sample used to fit this crossfit
         :return: the resulting scoring
         """
 
-        if not isinstance(scoring, str) and isinstance(scoring, Container):
-            raise NotImplementedError(
-                "Multi-metric scoring is not supported, use a single scorer instead. "
-                f"arg scoring={scoring} was passed."
-            )
-
-        scorer = check_scoring(estimator=self.pipeline.final_estimator, scoring=scoring)
-
-        scoring_samples = (
-            self._training_sample.subsample(
-                iloc=train_split if train_scores else test_split
-            )
-            for train_split, test_split in self.splits()
+        return self._fit_score(
+            _scoring=scoring, _train_scores=train_scores, _sample_weight=sample_weight
         )
 
+    def fit_score(
+        self,
+        sample: Sample,
+        scoring: Union[str, Callable[[float, float], float], None] = None,
+        train_scores: bool = False,
+        sample_weight: Optional[pd.Series] = None,
+        **fit_params,
+    ) -> Scoring:
+        """
+        Fit and score the base estimator.
+
+        First, fit the base estimator to the full sample, and fit a clone of the base
+        estimator to each of the train splits generated by the cross-validator.
+
+        Then, score all models in this crossfit using the given scoring function.
+
+        :param sample: the sample to fit the estimators to
+        :param fit_params: optional fit parameters, to be passed on to the fit method \
+            of the base estimator
+        :param scoring: scoring to use to score the models (see \
+            :meth:`~sklearn.metrics.scorer.check_scoring` for details)
+        :param train_scores: if `True`, calculate train scores instead of test scores \
+            (default: `False`)
+        :param sample_weight: optional weights for all observations in the sample
+
+        :return: the resulting scoring
+        """
+        return self._fit_score(
+            _sample=sample,
+            _scoring=scoring,
+            _train_scores=train_scores,
+            _sample_weight=sample_weight,
+            **fit_params,
+        )
+
+    # noinspection PyPep8Naming
+    def _fit_score(
+        self,
+        _sample: Optional[Sample] = None,
+        _scoring: Union[str, Callable[[float, float], float], None] = None,
+        _train_scores: bool = False,
+        _sample_weight: Optional[pd.Series] = None,
+        **fit_params,
+    ) -> Optional[Scoring]:
+
+        do_fit = _sample is not None
+        do_score = _scoring is not LearnerCrossfit.__NO_SCORING
+
+        pipeline = self.pipeline
+
+        if not do_fit:
+            _sample = self.training_sample
+
+        features = _sample.features
+        target = _sample.target
+
+        if do_fit:
+            pipeline.fit(X=features, y=target, **fit_params)
+
+        # prepare scoring
+
+        scorer: Optional[Scorer]
+
+        if do_score:
+            if not isinstance(_scoring, str) and isinstance(_scoring, Container):
+                raise ValueError(
+                    "Multi-metric scoring is not supported, "
+                    "use a single scorer instead. "
+                    f"Arg scoring={_scoring} was passed."
+                )
+
+            scorer = check_scoring(
+                estimator=self.pipeline.final_estimator, scoring=_scoring
+            )
+        else:
+            scorer = None
+
+        def _generate_parameters() -> Iterator[_FitScoreParameters]:
+            learner_features = pipeline.features_out
+            n_learner_features = len(learner_features)
+            test_scores = do_score and not _train_scores
+            models = iter(lambda: None, 0) if do_fit else self.models()
+            random_state = check_random_state(self.random_state)
+            weigh_samples = _sample_weight is not None
+
+            for (train, test), model in zip(
+                self.cv.split(X=features, y=target), models
+            ):
+                yield _FitScoreParameters(
+                    pipeline=pipeline.clone() if do_fit else model,
+                    train_features=features.iloc[train]
+                    if do_fit or _train_scores
+                    else None,
+                    train_feature_sequence=learner_features[
+                        random_state.permutation(n_learner_features)
+                    ]
+                    if do_fit and self.shuffle_features
+                    else None,
+                    train_target=target.iloc[train] if do_fit else None,
+                    train_weight=_sample_weight.iloc[train]
+                    if weigh_samples and (do_fit or _train_scores)
+                    else None,
+                    scorer=scorer,
+                    score_train_split=_train_scores,
+                    test_features=features.iloc[test] if test_scores else None,
+                    test_target=target.iloc[test] if test_scores else None,
+                    test_weight=_sample_weight.iloc[test]
+                    if weigh_samples and test_scores
+                    else None,
+                )
+
         with self._parallel() as parallel:
-            split_scores: Sequence[float] = parallel(
-                self._delayed(scorer)(model, test_sample.features, test_sample.target)
-                for model, test_sample in zip(self.models(), scoring_samples)
+            model_and_score_by_split: List[
+                Tuple[T_LearnerPipelineDF, Optional[float]]
+            ] = parallel(
+                self._delayed(LearnerCrossfit._fit_and_score_model_for_split)(
+                    parameters, **fit_params
+                )
+                for parameters in _generate_parameters()
             )
 
-        return Scoring(split_scores=split_scores)
+        model_by_split, scores = (
+            list(items) for items in zip(*model_and_score_by_split)
+        )
+
+        if do_fit:
+            self._model_by_split = model_by_split
+            self._training_sample = _sample
+
+        return Scoring(split_scores=scores) if do_score else None
 
     def resize(self: T_Self, n_splits: int) -> T_Self:
         """
@@ -300,11 +390,34 @@ class LearnerCrossfit(
 
     # noinspection PyPep8Naming
     @staticmethod
-    def _fit_model_for_split(
-        pipeline: T_LearnerPipelineDF,
-        X: pd.DataFrame,
-        y: Union[pd.Series, pd.DataFrame],
-        feature_sequence: pd.Index,
-        **fit_params,
-    ) -> T_LearnerPipelineDF:
-        return pipeline.fit(X=X, y=y, feature_sequence=feature_sequence, **fit_params)
+    def _fit_and_score_model_for_split(
+        parameters: _FitScoreParameters, **fit_params
+    ) -> Tuple[Optional[T_LearnerPipelineDF], Optional[float]]:
+        do_fit = parameters.train_target is not None
+        do_score = parameters.scorer is not None
+
+        if do_fit:
+            pipeline = parameters.pipeline.fit(
+                X=parameters.train_features,
+                y=parameters.train_target,
+                feature_sequence=parameters.train_feature_sequence,
+                **fit_params,
+            )
+        else:
+            pipeline = parameters.pipeline
+
+        score: Optional[float]
+        if do_score:
+            score = parameters.scorer(
+                pipeline,
+                parameters.train_features
+                if parameters.score_train_split
+                else parameters.test_features,
+                parameters.train_target
+                if parameters.score_train_split
+                else parameters.test_target,
+            )
+        else:
+            score = None
+
+        return pipeline if do_fit else None, score
