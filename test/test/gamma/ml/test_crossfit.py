@@ -11,9 +11,6 @@ from test.gamma.ml import check_ranking
 log = logging.getLogger(__name__)
 
 
-N_SPLITS = 10
-
-
 def test_prediction_classifier(
     iris_sample: Sample, cv_bootstrap: BootstrapCV, n_jobs: int
 ) -> None:
