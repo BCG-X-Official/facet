@@ -3,20 +3,22 @@ Core implementation of :mod:`gamma.ml.selection`
 """
 
 import logging
+import math
+import operator
 import re
-from abc import ABCMeta
+from abc import ABCMeta, abstractmethod
 from collections import defaultdict
+from functools import reduce
 from itertools import chain
 from typing import *
 
-import numpy as np
 from numpy.random.mtrand import RandomState
 from sklearn.model_selection import BaseCrossValidator, GridSearchCV
 
 from gamma.common.fit import FittableMixin, T_Self
 from gamma.common.parallelization import ParallelizableMixin
 from gamma.ml import Sample
-from gamma.ml.crossfit import LearnerCrossfit
+from gamma.ml.crossfit import LearnerCrossfit, Scoring
 from gamma.sklearndf.pipeline import (
     BaseLearnerPipelineDF,
     ClassifierPipelineDF,
@@ -27,7 +29,6 @@ log = logging.getLogger(__name__)
 
 __all__ = [
     "ParameterGrid",
-    "Scoring",
     "LearnerEvaluation",
     "BaseLearnerRanker",
     "RegressorRanker",
@@ -42,14 +43,12 @@ T_LearnerPipelineDF = TypeVar("T_LearnerPipelineDF", bound=BaseLearnerPipelineDF
 T_RegressorPipelineDF = TypeVar("T_RegressorPipelineDF", bound=RegressorPipelineDF)
 T_ClassifierPipelineDF = TypeVar("T_ClassifierPipelineDF", bound=ClassifierPipelineDF)
 
-T_LearnerCrossfit = TypeVar("T_Crossfit", bound=LearnerCrossfit[T_LearnerPipelineDF])
-
 #
 # Class definitions
 #
 
 
-class ParameterGrid(Generic[T_LearnerPipelineDF]):
+class ParameterGrid(Sequence[Dict[str, Any]], Generic[T_LearnerPipelineDF]):
     """
     A grid of hyper-parameters for pipeline tuning.
 
@@ -65,21 +64,21 @@ class ParameterGrid(Generic[T_LearnerPipelineDF]):
     def __init__(
         self,
         pipeline: T_LearnerPipelineDF,
-        learner_parameters: Dict[str, Sequence[Any]],
-        preprocessing_parameters: Optional[Dict[str, Sequence[Any]]] = None,
+        learner_parameters: Dict[str, Sequence],
+        preprocessing_parameters: Optional[Dict[str, Sequence]] = None,
     ) -> None:
         self._pipeline = pipeline
         self._learner_parameters = learner_parameters
         self._preprocessing_parameters = preprocessing_parameters
 
         def _prefix_parameter_names(
-            parameters: Dict[str, Any], prefix: str
-        ) -> List[Tuple[str, Any]]:
-            return [
-                (f"{prefix}__{param}", value) for param, value in parameters.items()
-            ]
+            parameters: Dict[str, Sequence], prefix: str
+        ) -> Iterable[Tuple[str, Any]]:
+            return (
+                (f"{prefix}__{param}", values) for param, values in parameters.items()
+            )
 
-        grid_parameters: Iterable[Tuple[str, Any]] = _prefix_parameter_names(
+        grid_parameters: Iterable[Tuple[str, Sequence]] = _prefix_parameter_names(
             parameters=learner_parameters, prefix=pipeline.final_estimator_name
         )
         if preprocessing_parameters is not None:
@@ -91,7 +90,8 @@ class ParameterGrid(Generic[T_LearnerPipelineDF]):
                 ),
             )
 
-        self._grid = dict(grid_parameters)
+        self._grid_parameters: List[Tuple[str, Sequence]] = list(grid_parameters)
+        self._grid_dict: Dict[str, Sequence] = dict(self._grid_parameters)
 
     @property
     def pipeline(self) -> T_LearnerPipelineDF:
@@ -114,29 +114,73 @@ class ParameterGrid(Generic[T_LearnerPipelineDF]):
     @property
     def parameters(self) -> Dict[str, Sequence[Any]]:
         """The parameter grid for the pipeline representing the entire pipeline."""
-        return self._grid
+        return self._grid_dict
 
+    def __iter__(self) -> Iterable[Dict[str, Any]]:
+        grid = self._grid_parameters
+        params: List[Tuple[str, Any]] = [("", None) for _ in grid]
 
-class Scoring:
-    """"
-    Basic statistics on the scoring across all cross validation splits of a pipeline.
+        def _iter_parameter(param_index: int):
+            if param_index < 0:
+                yield dict(params)
+            else:
+                name, values = grid[param_index]
+                for value in values:
+                    params[param_index] = (name, value)
+                    yield from _iter_parameter(param_index=param_index - 1)
 
-    :param split_scores: scores of all cross validation splits for a pipeline
-    """
+        yield from _iter_parameter(len(grid) - 1)
 
-    def __init__(self, split_scores: Iterable[float]):
-        self._split_scores = np.array(split_scores)
+    def __getitem__(
+        self, pos: Union[int, slice]
+    ) -> Union[Dict[str, Sequence], Sequence[Dict[str, Sequence]]]:
 
-    def __getitem__(self, item: Union[int, slice]) -> Union[float, np.ndarray]:
-        return self._split_scores[item]
+        _len = len(self)
 
-    def mean(self) -> float:
-        """:return: mean of the split scores"""
-        return self._split_scores.mean()
+        def _get(i: int) -> Dict[str, Sequence]:
+            assert i >= 0
 
-    def std(self) -> float:
-        """:return: standard deviation of the split scores"""
-        return self._split_scores.std()
+            parameters = self._grid_parameters
+            result: Dict[str, Sequence] = {}
+
+            for name, values in parameters:
+                n_values = len(values)
+                result[name] = values[i % n_values]
+                i //= n_values
+
+            assert i == 0
+
+            return result
+
+        def _clip(i: int, i_max: int) -> int:
+            if i < 0:
+                return max(_len + i, 0)
+            else:
+                return min(i, i_max)
+
+        if isinstance(pos, slice):
+            print(pos)
+            return [
+                _get(i)
+                for i in range(
+                    _clip(pos.start or 0, _len - 1),
+                    _clip(pos.stop or _len, _len),
+                    pos.step or 1,
+                )
+            ]
+        else:
+            if pos < -_len or pos >= _len:
+                raise ValueError(f"index out of bounds: {pos}")
+            return _get(_len + pos if pos < 0 else pos)
+
+    def __len__(self) -> int:
+        return reduce(
+            operator.mul,
+            (
+                len(values_for_parameter)
+                for values_for_parameter in self._grid_dict.values()
+            ),
+        )
 
 
 class LearnerEvaluation(Generic[T_LearnerPipelineDF]):
@@ -169,7 +213,7 @@ class LearnerEvaluation(Generic[T_LearnerPipelineDF]):
 class BaseLearnerRanker(
     ParallelizableMixin,
     FittableMixin[Sample],
-    Generic[T_LearnerPipelineDF, T_LearnerCrossfit],
+    Generic[T_LearnerPipelineDF],
     metaclass=ABCMeta,
 ):
     """
@@ -195,8 +239,6 @@ class BaseLearnerRanker(
         "_ranking",
     ]
 
-    _COL_PARAMETERS = "params"
-
     def __init__(
         self,
         grid: Union[
@@ -217,9 +259,9 @@ class BaseLearnerRanker(
         shuffle_features: Optional[bool] = None,
         random_state: Union[int, RandomState, None] = None,
         n_jobs: Optional[int] = None,
-        shared_memory: bool = False,
-        pre_dispatch: str = "2*n_jobs",
-        verbose: int = 0,
+        shared_memory: Optional[bool] = None,
+        pre_dispatch: Optional[Union[str, int]] = None,
+        verbose: Optional[int] = None,
     ) -> None:
         """
         :param grid: :class:`~gamma.ml.ParameterGrid` to be ranked \
@@ -239,14 +281,6 @@ class BaseLearnerRanker(
             crossfit (default: `False`)
         :param random_state: optional random seed or random state for shuffling the \
             feature column order
-        :param n_jobs: number of jobs to use in parallel; \
-            if `None`, use joblib default (default: `None`).
-        :param shared_memory: if `True` use threads in the parallel runs. If `False` \
-            use multiprocessing (default: `False`).
-        :param pre_dispatch: number of batches to pre-dispatch; \
-            if `None`, use joblib default (default: `None`).
-        :param verbose: verbosity level used in the parallel computation; \
-            if `None`, use joblib default (default: `None`).
         """
         super().__init__(
             n_jobs=n_jobs,
@@ -254,7 +288,10 @@ class BaseLearnerRanker(
             pre_dispatch=pre_dispatch,
             verbose=verbose,
         )
-        self._grids = list(grid) if isinstance(grid, Iterable) else [grid]
+
+        self._grids: List[ParameterGrid] = list(grid) if isinstance(
+            grid, Iterable
+        ) else [grid]
         self._cv = cv
         self._scoring = scoring
         self._ranking_scorer = (
@@ -270,6 +307,9 @@ class BaseLearnerRanker(
         self._sample: Optional[Sample] = None
         self._fit_params: Optional[Dict[str, Any]] = None
         self._ranking: Optional[List[LearnerEvaluation]] = None
+
+    # add parameter documentation of ParallelizableMixin
+    __init__.__doc__ += ParallelizableMixin.__init__.__doc__
 
     @staticmethod
     def default_ranking_scorer(scoring: Scoring) -> float:
@@ -291,8 +331,17 @@ class BaseLearnerRanker(
         :param sample: sample with which to fit the candidate learners from the grid(s)
         :param fit_params: any fit parameters to pass on to the learner's fit method
         """
-        self: BaseLearnerRanker  # support type hinting in PyCharm
-        self._rank_learners(sample=sample, **fit_params)
+        self: BaseLearnerRanker[T_LearnerPipelineDF]  # support type hinting in PyCharm
+
+        ranking: List[LearnerEvaluation[T_LearnerPipelineDF]] = self._rank_learners(
+            sample=sample, **fit_params
+        )
+        ranking.sort(key=lambda le: le.ranking_score, reverse=True)
+
+        self._sample = sample
+        self._fit_params = fit_params
+        self._ranking = ranking
+
         return self
 
     @property
@@ -316,22 +365,13 @@ class BaseLearnerRanker(
         return self._best_pipeline().fit(X=self._sample.features, y=self._sample.target)
 
     @property
-    def best_model_crossfit(self,) -> T_LearnerCrossfit:
+    @abstractmethod
+    def best_model_crossfit(self) -> LearnerCrossfit[T_LearnerPipelineDF]:
         """
         The crossfit for the best model, fitted with the same sample and fit
         parameters used to fit this ranker.
         """
-
-        return LearnerCrossfit(
-            pipeline=self._best_pipeline(),
-            cv=self._cv,
-            shuffle_features=self._shuffle_features,
-            random_state=self._random_state,
-            n_jobs=self.n_jobs,
-            shared_memory=self.shared_memory,
-            pre_dispatch=self.pre_dispatch,
-            verbose=self.verbose,
-        ).fit(sample=self._sample, **self._fit_params)
+        pass
 
     def summary_report(self, max_learners: Optional[int] = None) -> str:
         """
@@ -389,7 +429,113 @@ class BaseLearnerRanker(
         self._ensure_fitted()
         return self._ranking[0].pipeline
 
-    def _rank_learners(self, sample: Sample, **fit_params) -> None:
+    @abstractmethod
+    def _rank_learners(
+        self, sample: Sample, **fit_params
+    ) -> List[LearnerEvaluation[T_LearnerPipelineDF]]:
+        pass
+
+
+class LearnerRanker(
+    BaseLearnerRanker[T_LearnerPipelineDF], Generic[T_LearnerPipelineDF]
+):
+    """
+    Native implementation of grid search
+    """
+
+    TEST_SCORE_NAME = "test_score"
+
+    # noinspection PyMissingOrEmptyDocstring
+    @property
+    def best_model_crossfit(self) -> LearnerCrossfit[T_LearnerPipelineDF]:
+        return self._best_crossfit
+
+    best_model_crossfit.__doc__ = BaseLearnerRanker.best_model_crossfit.__doc__
+
+    def _rank_learners(
+        self, sample: Sample, **fit_params
+    ) -> List[LearnerEvaluation[T_LearnerPipelineDF]]:
+        ranking_scorer = self._ranking_scorer
+
+        ranking_metric = self._ranking_metric
+        if ranking_metric is not None and ranking_metric != self.TEST_SCORE_NAME:
+            raise ValueError(
+                f"unsupported ranking metric {ranking_metric}. Use None instead."
+            )
+
+        configurations = (
+            (grid.pipeline.clone().set_params(**parameters), parameters)
+            for grid in self._grids
+            for parameters in grid
+        )
+
+        ranking: List[LearnerEvaluation[T_LearnerPipelineDF]] = []
+        best_score: float = -math.inf
+        best_crossfit: Optional[LearnerCrossfit[T_LearnerPipelineDF]] = None
+
+        for pipeline, parameters in configurations:
+            crossfit = LearnerCrossfit(
+                pipeline=pipeline,
+                cv=self._cv,
+                shuffle_features=self._shuffle_features,
+                random_state=self._random_state,
+                n_jobs=self.n_jobs,
+                shared_memory=self.shared_memory,
+                pre_dispatch=self.pre_dispatch,
+                verbose=self.verbose,
+            )
+
+            pipeline_scoring: Scoring = crossfit.fit_score(
+                sample=sample, scoring=self._scoring, **fit_params
+            )
+
+            ranking_score = ranking_scorer(pipeline_scoring)
+
+            ranking.append(
+                LearnerEvaluation(
+                    pipeline=pipeline,
+                    parameters=parameters,
+                    scoring={self.TEST_SCORE_NAME: pipeline_scoring},
+                    ranking_score=ranking_score,
+                )
+            )
+
+            if ranking_score > best_score:
+                best_score = ranking_score
+                best_crossfit = crossfit
+
+        self._best_crossfit = best_crossfit
+        return ranking
+
+
+class SklearnGridsearcher(
+    BaseLearnerRanker[T_LearnerPipelineDF], Generic[T_LearnerPipelineDF]
+):
+    """
+    A grid searcher using scikit-learn's grid searcher class
+    """
+
+    _COL_PARAMETERS = "params"
+
+    # noinspection PyMissingOrEmptyDocstring
+    @property
+    def best_model_crossfit(self,) -> LearnerCrossfit[T_LearnerPipelineDF]:
+        return LearnerCrossfit(
+            pipeline=self._best_pipeline(),
+            cv=self._cv,
+            shuffle_features=self._shuffle_features,
+            random_state=self._random_state,
+            n_jobs=self.n_jobs,
+            shared_memory=self.shared_memory,
+            pre_dispatch=self.pre_dispatch,
+            verbose=self.verbose,
+        ).fit(sample=self._sample, **self._fit_params)
+
+    best_model_crossfit.__doc__ = BaseLearnerRanker.best_model_crossfit.__doc__
+
+    def _rank_learners(
+        self, sample: Sample, **fit_params
+    ) -> List[LearnerEvaluation[T_LearnerPipelineDF]]:
 
         if len(fit_params) > 0:
             log.warning(
@@ -406,13 +552,11 @@ class BaseLearnerRanker(
                     estimator=grid.pipeline,
                     param_grid=grid.parameters,
                     scoring=self._scoring,
-                    n_jobs=self.n_jobs,
                     iid=False,
                     refit=False,
                     cv=self._cv,
-                    verbose=self.verbose,
-                    pre_dispatch=self.pre_dispatch,
                     return_train_score=False,
+                    **self._parallel_kwargs,
                 ),
                 grid,
             )
@@ -470,7 +614,7 @@ class BaseLearnerRanker(
             # Group results per pipeline, result is a list where each item contains the
             # scoring for one pipeline. Each scoring is a dictionary, mapping each
             # metric to a list of scores for the different splits.
-            n_models = len(cv_results[BaseLearnerRanker._COL_PARAMETERS])
+            n_models = len(cv_results[SklearnGridsearcher._COL_PARAMETERS])
 
             scores_per_model_per_metric_per_split: List[Dict[str, List[float]]] = [
                 defaultdict(list) for _ in range(n_models)
@@ -499,7 +643,7 @@ class BaseLearnerRanker(
             ]
 
         ranking_metric = self._ranking_metric
-        ranking = [
+        return [
             LearnerEvaluation(
                 pipeline=grid.pipeline.clone().set_params(**params),
                 parameters=params,
@@ -510,21 +654,14 @@ class BaseLearnerRanker(
             for searcher, grid in searchers
             # we read and iterate over these 3 attributes from cv_results_:
             for params, scoring in zip(
-                searcher.cv_results_[BaseLearnerRanker._COL_PARAMETERS],
+                searcher.cv_results_[SklearnGridsearcher._COL_PARAMETERS],
                 _scoring(searcher.cv_results_),
             )
         ]
 
-        ranking.sort(key=lambda validation: validation.ranking_score, reverse=True)
-
-        self._sample = sample
-        self._fit_params = fit_params
-        self._ranking = ranking
-
 
 class RegressorRanker(
-    BaseLearnerRanker[T_RegressorPipelineDF, LearnerCrossfit[T_RegressorPipelineDF]],
-    Generic[T_RegressorPipelineDF],
+    SklearnGridsearcher[T_RegressorPipelineDF], Generic[T_RegressorPipelineDF]
 ):
     """[inheriting doc string of base class]"""
 
@@ -532,8 +669,7 @@ class RegressorRanker(
 
 
 class ClassifierRanker(
-    BaseLearnerRanker[T_ClassifierPipelineDF, LearnerCrossfit[T_ClassifierPipelineDF]],
-    Generic[T_ClassifierPipelineDF],
+    SklearnGridsearcher[T_ClassifierPipelineDF], Generic[T_ClassifierPipelineDF]
 ):
     """[inheriting doc string of base class]"""
 
