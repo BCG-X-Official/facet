@@ -4,6 +4,7 @@ Tests for module gamma.ml.selection
 
 import logging
 import warnings
+from typing import *
 
 import numpy as np
 import pandas as pd
@@ -12,15 +13,10 @@ from sklearn import datasets
 
 from gamma.ml import Sample
 from gamma.ml.crossfit import LearnerCrossfit
-from gamma.ml.selection import (
-    ClassifierRanker,
-    LearnerEvaluation,
-    ParameterGrid,
-    RegressorRanker,
-)
+from gamma.ml.selection import LearnerEvaluation, LearnerRanker, ParameterGrid
 from gamma.ml.validation import BootstrapCV
 from gamma.sklearndf.classification import SVCDF
-from gamma.sklearndf.pipeline import ClassifierPipelineDF
+from gamma.sklearndf.pipeline import ClassifierPipelineDF, RegressorPipelineDF
 from gamma.sklearndf.regression import (
     AdaBoostRegressorDF,
     LinearRegressionDF,
@@ -81,7 +77,10 @@ def test_parameter_grid() -> None:
 
 
 def test_model_ranker(
-    regressor_grids, sample: Sample, n_jobs: int, fast_execution: bool
+    regressor_grids: List[ParameterGrid[RegressorPipelineDF]],
+    sample: Sample,
+    n_jobs: int,
+    fast_execution: bool,
 ) -> None:
 
     if fast_execution:
@@ -147,7 +146,7 @@ def test_model_ranker(
     # define the circular cross validator with just 5 splits (to speed up testing)
     cv = BootstrapCV(n_splits=5, random_state=42)
 
-    ranker = RegressorRanker(
+    ranker: LearnerRanker[RegressorPipelineDF] = LearnerRanker(
         grid=regressor_grids, cv=cv, scoring="r2", n_jobs=n_jobs
     ).fit(sample=sample)
 
@@ -211,7 +210,7 @@ def test_model_ranker_no_preprocessing(n_jobs) -> None:
     )
     test_sample: Sample = Sample(observations=test_data, target="target")
 
-    model_ranker: ClassifierRanker = ClassifierRanker(
+    model_ranker: LearnerRanker[ClassifierPipelineDF[SVCDF]] = LearnerRanker(
         grid=models, cv=cv, n_jobs=n_jobs
     ).fit(sample=test_sample)
 

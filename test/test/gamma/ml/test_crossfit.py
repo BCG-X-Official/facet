@@ -2,16 +2,13 @@ import logging
 import warnings
 
 from gamma.ml import Sample
-from gamma.ml.selection import ClassifierRanker, ParameterGrid
+from gamma.ml.selection import LearnerRanker, ParameterGrid
 from gamma.ml.validation import BootstrapCV
 from gamma.sklearndf.classification import RandomForestClassifierDF
 from gamma.sklearndf.pipeline import ClassifierPipelineDF
 from test.gamma.ml import check_ranking
 
 log = logging.getLogger(__name__)
-
-
-N_SPLITS = 10
 
 
 def test_prediction_classifier(
@@ -33,9 +30,13 @@ def test_prediction_classifier(
         )
     ]
 
-    model_ranker = ClassifierRanker(
+    model_ranker: LearnerRanker[
+        ClassifierPipelineDF[RandomForestClassifierDF]
+    ] = LearnerRanker(
         grid=models, cv=cv_bootstrap, scoring="f1_macro", n_jobs=n_jobs, random_state=42
-    ).fit(sample=iris_sample)
+    ).fit(
+        sample=iris_sample
+    )
 
     log.debug(f"\n{model_ranker.summary_report(max_learners=10)}")
 
