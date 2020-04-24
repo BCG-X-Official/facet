@@ -16,7 +16,7 @@ from sklearn.base import BaseEstimator
 from gamma.ml import Sample
 from gamma.ml.crossfit import LearnerCrossfit
 from gamma.ml.inspection import ClassifierInspector, RegressorInspector
-from gamma.ml.selection import ClassifierRanker, ParameterGrid, RegressorRanker
+from gamma.ml.selection import LearnerRanker, ParameterGrid
 from gamma.ml.validation import BootstrapCV
 from gamma.sklearndf import TransformerDF
 from gamma.sklearndf.classification import RandomForestClassifierDF
@@ -38,8 +38,8 @@ log = logging.getLogger(__name__)
 
 
 def test_model_inspection(
-    regressor_grids: Sequence[ParameterGrid],
-    regressor_ranker: RegressorRanker,
+    regressor_grids: Sequence[ParameterGrid[RegressorPipelineDF]],
+    regressor_ranker: LearnerRanker[RegressorPipelineDF],
     best_lgbm_crossfit: LearnerCrossfit[RegressorPipelineDF],
     feature_names: Set[str],
     regressor_inspector: RegressorInspector,
@@ -232,14 +232,18 @@ def test_model_inspection_classifier(
         loc=iris_sample.target.isin(iris_sample.target.unique()[:2])
     )
 
-    model_ranker = ClassifierRanker(
+    model_ranker: LearnerRanker[
+        ClassifierPipelineDF[RandomForestClassifierDF]
+    ] = LearnerRanker(
         grid=models,
         cv=cv_bootstrap,
         scoring="f1_macro",
         # shuffle_features=True,
         random_state=42,
         n_jobs=n_jobs,
-    ).fit(sample=test_sample)
+    ).fit(
+        sample=test_sample
+    )
 
     log.debug(f"\n{model_ranker.summary_report(max_learners=10)}")
 
