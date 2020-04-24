@@ -16,6 +16,7 @@ from gamma.ml import Sample
 from gamma.ml.crossfit import LearnerCrossfit
 from gamma.ml.inspection import RegressorInspector
 from gamma.ml.selection import LearnerEvaluation, ParameterGrid, RegressorRanker
+from gamma.ml.validation import BootstrapCV
 from gamma.sklearndf import TransformerDF
 from gamma.sklearndf.pipeline import RegressorPipelineDF
 from gamma.sklearndf.regression import (
@@ -63,9 +64,15 @@ def fast_execution() -> bool:
 
 
 @pytest.fixture
-def cv() -> BaseCrossValidator:
+def cv_kfold() -> BaseCrossValidator:
     # define a CV
-    return KFold(n_splits=K_FOLDS, random_state=42)
+    return KFold(n_splits=K_FOLDS)
+
+
+@pytest.fixture
+def cv_bootstrap() -> BaseCrossValidator:
+    # define a CV
+    return BootstrapCV(n_splits=K_FOLDS, random_state=42)
 
 
 @pytest.fixture
@@ -129,22 +136,16 @@ def regressor_grids(simple_preprocessor: TransformerDF) -> List[ParameterGrid]:
 
 @pytest.fixture
 def regressor_ranker(
-    cv: BaseCrossValidator,
-    regressor_grids: List[ParameterGrid],
-    sample: Sample,
-    n_jobs: int,
+    cv_kfold, regressor_grids: List[ParameterGrid], sample: Sample, n_jobs: int
 ) -> RegressorRanker:
     return RegressorRanker(
-        grid=regressor_grids, cv=cv, scoring="r2", n_jobs=n_jobs
+        grid=regressor_grids, cv=cv_kfold, scoring="r2", n_jobs=n_jobs
     ).fit(sample=sample)
 
 
 @pytest.fixture
 def best_lgbm_crossfit(
-    regressor_ranker: RegressorRanker,
-    cv: BaseCrossValidator,
-    sample: Sample,
-    n_jobs: int,
+    regressor_ranker: RegressorRanker, cv_kfold, sample: Sample, n_jobs: int
 ) -> LearnerCrossfit[RegressorPipelineDF]:
     # we get the best model_evaluation which is a LGBM - for the sake of test
     # performance
@@ -158,7 +159,7 @@ def best_lgbm_crossfit(
 
     return LearnerCrossfit(
         pipeline=best_lgbm_regressor,
-        cv=cv,
+        cv=cv_kfold,
         shuffle_features=True,
         random_state=42,
         n_jobs=n_jobs,
@@ -219,8 +220,8 @@ def iris_df(iris_target: str) -> pd.DataFrame:
     )
 
     # replace target numericals with actual class labels
-    iris_df.loc[:, iris_target] = iris_df.loc[:, iris_target].apply(
-        lambda x: iris.target_names[int(x)]
+    iris_df.loc[:, iris_target] = (
+        iris_df.loc[:, iris_target].astype(int).map(dict(enumerate(iris.target_names)))
     )
 
     return iris_df

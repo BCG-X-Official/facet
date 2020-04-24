@@ -12,15 +12,22 @@ from pandas.core.util.hashing import hash_pandas_object
 from shap import KernelExplainer, TreeExplainer
 from shap.explainers.explainer import Explainer
 from sklearn.base import BaseEstimator
-from sklearn.model_selection import BaseCrossValidator
 
 from gamma.ml import Sample
 from gamma.ml.crossfit import LearnerCrossfit
 from gamma.ml.inspection import ClassifierInspector, RegressorInspector
 from gamma.ml.selection import ClassifierRanker, ParameterGrid, RegressorRanker
+from gamma.ml.validation import BootstrapCV
 from gamma.sklearndf import TransformerDF
 from gamma.sklearndf.classification import RandomForestClassifierDF
 from gamma.sklearndf.pipeline import ClassifierPipelineDF, RegressorPipelineDF
+from gamma.sklearndf.regression import (
+    AdaBoostRegressorDF,
+    ExtraTreeRegressorDF,
+    LinearRegressionDF,
+    RandomForestRegressorDF,
+)
+from gamma.sklearndf.regression.extra import LGBMRegressorDF
 from gamma.viz.dendrogram import DendrogramDrawer, DendrogramReportStyle
 from test.gamma.ml import check_ranking
 
@@ -36,7 +43,7 @@ def test_model_inspection(
     best_lgbm_crossfit: LearnerCrossfit[RegressorPipelineDF],
     feature_names: Set[str],
     regressor_inspector: RegressorInspector,
-    cv: BaseCrossValidator,
+    cv_kfold,
     sample: Sample,
     simple_preprocessor: TransformerDF,
     n_jobs: int,
@@ -46,21 +53,77 @@ def test_model_inspection(
     if fast_execution:
         checksum_shap = 7678718855667032507
 
-        checksum_learner_scores = 1.5365912783588438
-        checksum_learner_ranks = "ac87a8cbf8b279746707a2af8b66a7ac"
+        expected_scores = [
+            0.418,
+            0.4,
+            0.386,
+            0.385,
+            0.122,
+            0.122,
+            -0.074,
+            -0.074,
+            -0.074,
+            -0.074,
+        ]
+        expected_regressors = [
+            AdaBoostRegressorDF,
+            AdaBoostRegressorDF,
+            RandomForestRegressorDF,
+            RandomForestRegressorDF,
+            LinearRegressionDF,
+            LinearRegressionDF,
+            LGBMRegressorDF,
+            LGBMRegressorDF,
+            LGBMRegressorDF,
+            LGBMRegressorDF,
+        ]
+        expected_parameters = {
+            0: dict(regressor__n_estimators=80, regressor__random_state=42),
+            1: dict(regressor__n_estimators=50, regressor__random_state=42),
+            2: dict(regressor__n_estimators=80, regressor__random_state=42),
+            3: dict(regressor__n_estimators=50, regressor__random_state=42),
+        }
     else:
         checksum_shap = 1956741545033811954
 
-        checksum_learner_scores = 0.6056819340325851
-        checksum_learner_ranks = "4251e104ce7d1834f2b3b6ab5bb5ceab"
+        expected_scores = [
+            0.202,
+            0.160,
+            0.111,
+            0.056,
+            0.031,
+            0.010,
+            0.010,
+            0.010,
+            0.007,
+            0.007,
+        ]
+        expected_regressors = [
+            AdaBoostRegressorDF,
+            AdaBoostRegressorDF,
+            RandomForestRegressorDF,
+            RandomForestRegressorDF,
+            ExtraTreeRegressorDF,
+            LGBMRegressorDF,
+            LGBMRegressorDF,
+            LGBMRegressorDF,
+            LGBMRegressorDF,
+            LGBMRegressorDF,
+        ]
+        expected_parameters = {
+            0: dict(regressor__n_estimators=50, regressor__random_state=42),
+            1: dict(regressor__n_estimators=80, regressor__random_state=42),
+            2: dict(regressor__n_estimators=80, regressor__random_state=42),
+            3: dict(regressor__n_estimators=50, regressor__random_state=42),
+        }
 
     log.debug(f"\n{regressor_ranker.summary_report(max_learners=10)}")
 
     check_ranking(
         ranking=regressor_ranker.ranking(),
-        checksum_scores=checksum_learner_scores,
-        checksum_learners=checksum_learner_ranks,
-        first_n_learners=10,
+        expected_scores=expected_scores,
+        expected_learners=expected_regressors,
+        expected_parameters=expected_parameters,
     )
 
     # using an invalid consolidation method raises an exception
@@ -142,39 +205,38 @@ def test_model_inspection(
 
 
 def test_model_inspection_classifier(
-    iris_sample: Sample, cv: BaseCrossValidator, n_jobs: int
+    iris_sample: Sample, cv_bootstrap: BootstrapCV, n_jobs: int
 ) -> None:
     warnings.filterwarnings("ignore", message="numpy.dtype size changed")
     warnings.filterwarnings("ignore", message="numpy.ufunc size changed")
     warnings.filterwarnings("ignore", message="You are accessing a training score")
 
     # define checksums for this test
-    checksum_shap = 5207601201651574496
-    checksum_association_matrix = 9372980311547724331
-    checksum_learner_scores = 2.0
-    checksum_learner_ranks = "a8fe61f0f98c078fbcf427ad344c1749"
+    checksum_shap = 16811895885973514240
+    checksum_association_matrix = 2376971889351401631
+    expected_learner_scores = [1.0, 1.0, 0.946, 0.891]
 
     # define parameters and crossfit
     models = [
         ParameterGrid(
             pipeline=ClassifierPipelineDF(
-                classifier=RandomForestClassifierDF(), preprocessing=None
+                classifier=RandomForestClassifierDF(random_state=42), preprocessing=None
             ),
-            learner_parameters={"n_estimators": [50, 80], "random_state": [42]},
+            learner_parameters={"n_estimators": [10, 50], "min_samples_leaf": [16, 32]},
         )
     ]
 
     # pipeline inspector does only support binary classification - hence
     # filter the test_sample down to only 2 target classes:
     test_sample: Sample = iris_sample.subsample(
-        loc=iris_sample.target.isin(iris_sample.target.unique()[0:2])
+        loc=iris_sample.target.isin(iris_sample.target.unique()[:2])
     )
 
     model_ranker = ClassifierRanker(
         grid=models,
-        cv=cv,
+        cv=cv_bootstrap,
         scoring="f1_macro",
-        shuffle_features=True,
+        # shuffle_features=True,
         random_state=42,
         n_jobs=n_jobs,
     ).fit(sample=test_sample)
@@ -183,9 +245,12 @@ def test_model_inspection_classifier(
 
     check_ranking(
         ranking=model_ranker.ranking(),
-        checksum_scores=checksum_learner_scores,
-        checksum_learners=checksum_learner_ranks,
-        first_n_learners=10,
+        expected_scores=expected_learner_scores,
+        expected_learners=[RandomForestClassifierDF] * 4,
+        expected_parameters={
+            2: dict(classifier__min_samples_leaf=32, classifier__n_estimators=50),
+            3: dict(classifier__min_samples_leaf=32, classifier__n_estimators=10),
+        },
     )
 
     crossfit = model_ranker.best_model_crossfit
