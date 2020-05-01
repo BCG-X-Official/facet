@@ -21,19 +21,17 @@ def test_prediction_classifier(
     warnings.filterwarnings("ignore", message="You are accessing a training score")
 
     # define parameters and crossfit
-    models = [
-        ParameterGrid(
-            pipeline=ClassifierPipelineDF(
-                classifier=RandomForestClassifierDF(random_state=42), preprocessing=None
-            ),
-            learner_parameters={"min_samples_leaf": [16, 32], "n_estimators": [50, 80]},
-        )
-    ]
+    grid = ParameterGrid(
+        pipeline=ClassifierPipelineDF(
+            classifier=RandomForestClassifierDF(random_state=42), preprocessing=None
+        ),
+        learner_parameters={"min_samples_leaf": [16, 32], "n_estimators": [50, 80]},
+    )
 
     model_ranker: LearnerRanker[
         ClassifierPipelineDF[RandomForestClassifierDF]
     ] = LearnerRanker(
-        grid=models, cv=cv_bootstrap, scoring="f1_macro", n_jobs=n_jobs, random_state=42
+        grid=grid, cv=cv_bootstrap, scoring="f1_macro", n_jobs=n_jobs, random_state=42
     ).fit(
         sample=iris_sample
     )
