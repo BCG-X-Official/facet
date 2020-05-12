@@ -44,14 +44,14 @@ class Sample:
 
         def _ensure_columns_exist(column_type: str, columns: Iterable[str]):
             # check if all provided feature names actually exist in the observations df
+            available_columns: pd.Index = observations.columns
             missing_columns = [
-                name for name in columns if name not in observations.columns
+                name for name in columns if name not in available_columns
             ]
-            if len(missing_columns) > 0:
-                missing_columns_list = '", "'.join(missing_columns)
+            if missing_columns:
                 raise KeyError(
                     f"observations table is missing {column_type} columns "
-                    f'{", ".join(missing_columns_list)}'
+                    f"{', '.join(missing_columns)}"
                 )
 
         if observations is None or not isinstance(observations, pd.DataFrame):
