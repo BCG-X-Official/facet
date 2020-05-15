@@ -274,9 +274,9 @@ class LearnerRanker(
             verbose=verbose,
         )
 
-        self._grids: List[ParameterGrid] = list(grid) if isinstance(
-            grid, Iterable
-        ) else [grid]
+        self._grids: [ParameterGrid] = [grid] if isinstance(
+            grid, ParameterGrid
+        ) else list(grid)
         self._cv = cv
         self._scoring = scoring
         self._ranking_scorer = (
