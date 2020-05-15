@@ -274,7 +274,7 @@ class LearnerRanker(
             verbose=verbose,
         )
 
-        self._grids: [ParameterGrid] = [grid] if isinstance(
+        self._grids: List[ParameterGrid] = [grid] if isinstance(
             grid, ParameterGrid
         ) else list(grid)
         self._cv = cv
