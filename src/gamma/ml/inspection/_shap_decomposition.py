@@ -96,7 +96,7 @@ class ShapValueDecomposer(FittableMixin[ShapCalculator]):
         n_features = len(shap_calculator.feature_index_)
         n_observations = len(shap_values)
 
-        # p[i] = phi_i
+        # p[i] = p_i
         # shape: (n_targets, n_features, n_observations)
         # the vector of shap values for every target and feature
         p_i = _ensure_last_axis_is_fast(
@@ -129,8 +129,8 @@ class ShapValueDecomposer(FittableMixin[ShapCalculator]):
 
         # std(p[i] - p[j])
         # shape: (n_targets, n_features)
-        # the length of the difference of vectors phi[i] and phi[j]
-        # we need this as part of the formula to calculate alpha_ij (see below)
+        # the length of the difference of vectors p[i] and p[j]
+        # we need this as part of the formula to calculate ass_ij (see below)
         std_p_i_minus_p_j = _sqrt(var_p_i_plus_var_p_j - cov_p_i_p_j_2x)
 
         # 2 * std(ass[i, j]) = 2 * std(ass[j, i])
@@ -294,7 +294,7 @@ class ShapInteractionValueDecomposer(ShapValueDecomposer):
         # p[i, i]
         # shape: (n_targets, n_features, n_observations)
         # independent feature contributions;
-        # this is the diagonal of phi_ij
+        # this is the diagonal of p_ij
         p_ii = np.diagonal(p_ij, axis1=1, axis2=2).swapaxes(1, 2)
 
         # p'[i] = p[i] - p[i, i]
@@ -309,13 +309,13 @@ class ShapInteractionValueDecomposer(ShapValueDecomposer):
         with np.errstate(divide="ignore", invalid="ignore"):
             std_p_relative_ij = std_p_ij / std_p_ij.sum()
 
-        # phi_valid[i, j]
+        # p_valid[i, j]
         # shape: (n_targets, n_features, n_features)
-        # boolean values indicating whether phi[i, j] is above the "noise" threshold,
-        # i.e. whether we trust that doing calculations with phi[i, j] is sufficiently
-        # accurate. phi[i, j] with small variances should not be used because we divide
+        # boolean values indicating whether p[i, j] is above the "noise" threshold,
+        # i.e. whether we trust that doing calculations with p[i, j] is sufficiently
+        # accurate. p[i, j] with small variances should not be used because we divide
         # by that variance to determine the multiple for indirect synergy, which can
-        # deviate significantly if var(phi[i, j]) is only slightly off
+        # deviate significantly if var(p[i, j]) is only slightly off
 
         interaction_noise_threshold = self.min_direct_synergy
         p_valid_ij = std_p_relative_ij >= interaction_noise_threshold
@@ -334,9 +334,9 @@ class ShapInteractionValueDecomposer(ShapValueDecomposer):
             )
         # noinspection SpellCheckingInspection
         k_ij = np.divide(
-            # cov(psi[i], phi[i, j])
+            # cov(p'[i], p[i, j])
             np.einsum("tio,tijo->tij", p_prime_i, p_ij, optimize=True) / n_observations,
-            # var(phi[i, j])
+            # var(p[i, j])
             var_p_ij,
             out=np.ones_like(var_p_ij),
             where=p_valid_ij,
@@ -355,7 +355,7 @@ class ShapInteractionValueDecomposer(ShapValueDecomposer):
 
         def _relative_direct_synergy(_t: int, _i: int, _j: int) -> str:
             return (
-                f"phi[{features[_i]}, {features[_j]}] has "
+                f"p[{features[_i]}, {features[_j]}] has "
                 f"{std_p_relative_ij[_t, _i, _j] * 100:.3g}% "
                 "relative SHAP contribution; "
                 "consider increasing the interaction noise threshold (currently "
@@ -475,7 +475,7 @@ class ShapInteractionValueDecomposer(ShapValueDecomposer):
         # std(aut[i, j] - aut[j, i])
         # shape: (n_targets, n_features, n_features)
         # the length of the difference of vectors aut[i, j] and aut[j, i]
-        # we need this as part of the formula to calculate epsilon_ij (see below)
+        # we need this as part of the formula to calculate red_ij (see below)
 
         std_aut_ij_minus_aut_ji = _sqrt(
             var_aut_ij_plus_var_aut_ji - cov_aut_ij_aut_ji_2x
@@ -503,7 +503,7 @@ class ShapInteractionValueDecomposer(ShapValueDecomposer):
         with np.errstate(divide="ignore", invalid="ignore"):
             red_aut_ratio_2x = 1 - std_aut_ij_minus_aut_ji / std_aut_ij_plus_aut_ji
 
-        # 2 * cov(tau[i, j], epsilon[i, j])
+        # 2 * cov(aut[i, j], red[i, j])
         # shape: (n_targets, n_features, n_features)
         # we need this as part of the formula to calculate nu_i (see next step below)
         cov_aut_ij_red_ij_2x = red_aut_ratio_2x * (var_aut_ij + cov_aut_ij_aut_ji)
