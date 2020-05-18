@@ -12,7 +12,7 @@ from typing import *
 from numpy.random.mtrand import RandomState
 from sklearn.model_selection import BaseCrossValidator
 
-from gamma.common import deprecation_warning
+from gamma.common import deprecation_warning, to_tuple
 from gamma.common.fit import FittableMixin, T_Self
 from gamma.common.parallelization import ParallelizableMixin
 from gamma.ml import Sample
@@ -274,9 +274,9 @@ class LearnerRanker(
             verbose=verbose,
         )
 
-        self._grids: List[ParameterGrid] = list(grid) if isinstance(
-            grid, Iterable
-        ) else [grid]
+        self._grids: Tuple[ParameterGrid, ...] = to_tuple(
+            grid, element_type=ParameterGrid
+        )
         self._cv = cv
         self._scoring = scoring
         self._ranking_scorer = (
