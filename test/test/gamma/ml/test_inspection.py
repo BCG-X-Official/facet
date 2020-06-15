@@ -21,13 +21,6 @@ from gamma.ml.validation import BootstrapCV
 from gamma.sklearndf import TransformerDF
 from gamma.sklearndf.classification import RandomForestClassifierDF
 from gamma.sklearndf.pipeline import ClassifierPipelineDF, RegressorPipelineDF
-from gamma.sklearndf.regression import (
-    AdaBoostRegressorDF,
-    ExtraTreeRegressorDF,
-    LinearRegressionDF,
-    RandomForestRegressorDF,
-)
-from gamma.sklearndf.regression.extra import LGBMRegressorDF
 from gamma.viz.dendrogram import DendrogramDrawer, DendrogramReportStyle
 from test.gamma.ml import check_ranking
 
@@ -65,24 +58,6 @@ def test_model_inspection(
             -0.074,
             -0.074,
         ]
-        expected_regressors = [
-            AdaBoostRegressorDF,
-            AdaBoostRegressorDF,
-            RandomForestRegressorDF,
-            RandomForestRegressorDF,
-            LinearRegressionDF,
-            LinearRegressionDF,
-            LGBMRegressorDF,
-            LGBMRegressorDF,
-            LGBMRegressorDF,
-            LGBMRegressorDF,
-        ]
-        expected_parameters = {
-            0: dict(regressor__n_estimators=80, regressor__random_state=42),
-            1: dict(regressor__n_estimators=50, regressor__random_state=42),
-            2: dict(regressor__n_estimators=80, regressor__random_state=42),
-            3: dict(regressor__n_estimators=50, regressor__random_state=42),
-        }
     else:
         checksum_shap = 1956741545033811954
 
@@ -98,32 +73,14 @@ def test_model_inspection(
             0.007,
             0.007,
         ]
-        expected_regressors = [
-            AdaBoostRegressorDF,
-            AdaBoostRegressorDF,
-            RandomForestRegressorDF,
-            RandomForestRegressorDF,
-            ExtraTreeRegressorDF,
-            LGBMRegressorDF,
-            LGBMRegressorDF,
-            LGBMRegressorDF,
-            LGBMRegressorDF,
-            LGBMRegressorDF,
-        ]
-        expected_parameters = {
-            0: dict(regressor__n_estimators=50, regressor__random_state=42),
-            1: dict(regressor__n_estimators=80, regressor__random_state=42),
-            2: dict(regressor__n_estimators=80, regressor__random_state=42),
-            3: dict(regressor__n_estimators=50, regressor__random_state=42),
-        }
 
     log.debug(f"\n{regressor_ranker.summary_report(max_learners=10)}")
 
     check_ranking(
         ranking=regressor_ranker.ranking(),
         expected_scores=expected_scores,
-        expected_learners=expected_regressors,
-        expected_parameters=expected_parameters,
+        expected_learners=None,
+        expected_parameters=None,
     )
 
     # using an invalid consolidation method raises an exception
