@@ -4,12 +4,10 @@ Helper classes for SHAP calculations
 
 import logging
 from abc import ABCMeta, abstractmethod
-from distutils import version
 from typing import *
 
 import numpy as np
 import pandas as pd
-import shap
 from shap.explainers.explainer import Explainer
 from sklearn.base import BaseEstimator
 
@@ -296,23 +294,10 @@ class ShapValuesCalculator(
         shap_matrix_for_split_to_df_fn: ShapToDataFrameFunction,
     ) -> pd.DataFrame:
         x_oob = ShapCalculator._x_oob(model, training_sample, oob_split)
-
         # calculate the shap values (returned as an array)
-        explainer = explainer_factory_fn(model.final_estimator.root_estimator, x_oob)
-
-        if version.LooseVersion(shap.__version__) >= "0.32" and isinstance(
-            explainer, shap.TreeExplainer
-        ):
-            log.info(
-                f"Version of shap is {shap.__version__} - "
-                f"setting check_additivity=False"
-            )
-            shap_values: np.ndarray = explainer.shap_values(
-                x_oob, check_additivity=False
-            )
-        else:
-            shap_values: np.ndarray = explainer.shap_values(x_oob)
-
+        shap_values: np.ndarray = explainer_factory_fn(
+            model.final_estimator.root_estimator, x_oob
+        ).shap_values(x_oob)
         if isinstance(shap_values, np.ndarray):
             # if we have a single target *and* no classification, the explainer will
             # have returned a single tensor as an array
