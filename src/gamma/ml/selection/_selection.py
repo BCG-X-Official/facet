@@ -275,7 +275,7 @@ class LearnerRanker(
         )
 
         self._grids: Tuple[ParameterGrid, ...] = to_tuple(
-            grid, element_type=ParameterGrid
+            grid, element_type=ParameterGrid, arg_name="grid"
         )
         self._cv = cv
         self._scoring = scoring
