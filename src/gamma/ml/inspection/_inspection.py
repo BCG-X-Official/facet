@@ -1,12 +1,15 @@
 """
 Core implementation of :mod:`gamma.ml.inspection`
 """
+import functools
 import logging
 from abc import ABCMeta, abstractmethod
+from distutils import version
 from typing import *
 
 import numpy as np
 import pandas as pd
+import shap
 from numpy.random.mtrand import RandomState
 from scipy.cluster.hierarchy import linkage
 from scipy.spatial.distance import squareform
@@ -616,7 +619,18 @@ def tree_explainer_factory(model: BaseLearnerDF, data: pd.DataFrame) -> Explaine
     :param data: background dataset (ignored)
     :return: :class:`shap.TreeExplainer` if the estimator is compatible
     """
-    return TreeExplainer(model=model)
+    if version.LooseVersion(shap.__version__) >= "0.32":
+        log.debug(
+            f"shap version is {shap.__version__} -> "
+            f"setting check_additivity=False; "
+            f"see: github.gamma.bcg.com/BCG/gamma-ml/issues/68"
+        )
+        te = TreeExplainer(model=model)
+
+        te.shap_values = functools.partial(te.shap_values, check_additivity=False)
+        return te
+    else:
+        return TreeExplainer(model=model)
 
 
 def kernel_explainer_factory(model: BaseLearnerDF, data: pd.DataFrame) -> Explainer:
