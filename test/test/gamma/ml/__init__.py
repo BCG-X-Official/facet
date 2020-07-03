@@ -1,5 +1,7 @@
 from typing import *
 
+import pytest
+
 from gamma.ml.selection import LearnerEvaluation
 from gamma.sklearndf import TransformerDF
 from gamma.sklearndf.transformation import (
@@ -38,8 +40,8 @@ def make_simple_transformer(
 def check_ranking(
     ranking: List[LearnerEvaluation],
     expected_scores: Sequence[float],
-    expected_learners: Sequence[type],
-    expected_parameters: Mapping[int, Mapping[str, Any]],
+    expected_learners: Optional[Sequence[type]],
+    expected_parameters: Optional[Mapping[int, Mapping[str, Any]]],
 ) -> None:
     """
     Test helper to check rankings produced by gamma.ml rankers
@@ -51,23 +53,28 @@ def check_ranking(
     :return: None
     """
 
+    if expected_learners is None:
+        expected_learners = [None] * len(ranking)
+
     for rank, (learner_eval, score_expected, learner_expected) in enumerate(
         zip(ranking, expected_scores, expected_learners)
     ):
         score_actual = round(learner_eval.ranking_score, 3)
-        assert score_actual == score_expected, (
+        assert pytest.approx(score_actual, abs=0.1) == score_expected, (
             f"unexpected score for learner at rank #{rank}: "
             f"{score_actual} instead of {score_expected}"
         )
-        learner_actual = learner_eval.pipeline.final_estimator
-        assert type(learner_actual) == learner_expected, (
-            f"unexpected class for learner at rank #{rank}: "
-            f"{type(learner_actual)} instead of {learner_expected}"
-        )
+        if learner_expected is not None:
+            learner_actual = learner_eval.pipeline.final_estimator
+            assert type(learner_actual) == learner_expected, (
+                f"unexpected class for learner at rank #{rank}: "
+                f"{type(learner_actual)} instead of {learner_expected}"
+            )
 
-    for rank, parameters_expected in expected_parameters.items():
-        parameters_actual = ranking[rank].parameters
-        assert parameters_actual == parameters_expected, (
-            f"unexpected parameters for learner at rank #{rank}: "
-            f"{parameters_actual} instead of {parameters_expected}"
-        )
+    if expected_parameters is not None:
+        for rank, parameters_expected in expected_parameters.items():
+            parameters_actual = ranking[rank].parameters
+            assert parameters_actual == parameters_expected, (
+                f"unexpected parameters for learner at rank #{rank}: "
+                f"{parameters_actual} instead of {parameters_expected}"
+            )

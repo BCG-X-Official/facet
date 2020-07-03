@@ -294,12 +294,10 @@ class ShapValuesCalculator(
         shap_matrix_for_split_to_df_fn: ShapToDataFrameFunction,
     ) -> pd.DataFrame:
         x_oob = ShapCalculator._x_oob(model, training_sample, oob_split)
-
         # calculate the shap values (returned as an array)
         shap_values: np.ndarray = explainer_factory_fn(
             model.final_estimator.root_estimator, x_oob
         ).shap_values(x_oob)
-
         if isinstance(shap_values, np.ndarray):
             # if we have a single target *and* no classification, the explainer will
             # have returned a single tensor as an array

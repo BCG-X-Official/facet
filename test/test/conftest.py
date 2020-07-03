@@ -60,7 +60,7 @@ def n_jobs() -> int:
 
 @pytest.fixture
 def fast_execution() -> bool:
-    return os.environ.get("FAST_EXECUTION", "0") == "1"
+    return os.environ.get("FAST_EXECUTION", "1") == "1"
 
 
 @pytest.fixture
