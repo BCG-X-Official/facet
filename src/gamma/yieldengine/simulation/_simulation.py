@@ -329,24 +329,18 @@ class UnivariateUpliftSimulator(
         """
         Run a simulation on a feature.
 
-        For each combination of split_id and feature value the uplift (in % as a
-        number between -1 and 1) of the target is computed. It is the uplift between
-        crossfit on the sample where the `feature` column is set to the
-        given value, compared to the crossfit on the original sample.
+        For each combination of split_id and feature value, compute the mean uplift as a
+        ratio of the mean actual target (where 0.0 corresponds to no uplift/change, and
+        1.0 corresponds to a 100% uplift).
+
+        The uplift is calculated based on the mean predicted target when substituting
+        a given fixed value for the feature being simulated.
 
         :param feature_name: name of the feature to use in the simulation
         :param simulated_values: values to use in the simulation
         :return: data frame with three columns: `split_id`, `parameter_value` and
           `relative_target_change`.
         """
-
-        def _compact_data_frame(df: pd.DataFrame):
-            # helper method to ensure a data frame is not a view, to minimise memory
-            # requirements before passing on for parallel processing
-            if df.values.base is df.values:
-                return df
-            else:
-                return df.copy(deep=True)
 
         crossfit = self.crossfit
         sample = crossfit.training_sample
@@ -358,10 +352,10 @@ class UnivariateUpliftSimulator(
             result: List[List[float]] = parallel(
                 self._delayed(UnivariateUpliftSimulator._simulate_values_for_split)(
                     model=model,
-                    subsample_features=_compact_data_frame(
-                        sample.features
+                    subsample=(
+                        sample
                         if _SIMULATE_FULL_SAMPLE
-                        else sample.subsample(iloc=train_indices).features
+                        else sample.subsample(iloc=train_indices)
                     ),
                     feature_name=feature_name,
                     simulated_values=simulated_values,
@@ -393,25 +387,26 @@ class UnivariateUpliftSimulator(
     @staticmethod
     def _simulate_values_for_split(
         model: T_RegressorDF,
-        subsample_features: pd.DataFrame,
+        subsample: Sample,
         feature_name: str,
         simulated_values: Sequence[Any],
     ) -> List[float]:
         # for a list of values to be simulated, return a list of absolute target changes
-        feature_dtype = subsample_features.loc[:, feature_name].dtype
+
+        features = subsample.features
+        feature_dtype = features.loc[:, feature_name].dtype
+
+        actual_outcomes = subsample.target
 
         def _absolute_target_change(value: Any) -> float:
             # replace the simulated column with a constant value
-            synthetic_subsample_features = subsample_features.assign(
+            synthetic_subsample_features = features.assign(
                 **{feature_name: value}
             ).astype({feature_name: feature_dtype})
 
-            predictions_for_split_hist = model.predict(X=subsample_features)
             predictions_for_split_syn = model.predict(X=synthetic_subsample_features)
 
-            return predictions_for_split_syn.mean(
-                axis=0
-            ) - predictions_for_split_hist.mean(axis=0)
+            return predictions_for_split_syn.mean(axis=0) - actual_outcomes.mean(axis=0)
 
         return [_absolute_target_change(value) for value in simulated_values]
 
