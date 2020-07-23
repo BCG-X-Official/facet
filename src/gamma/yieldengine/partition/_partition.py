@@ -175,10 +175,10 @@ class RangePartitioner(Partitioner[T_Number], Generic[T_Number], metaclass=ABCMe
         upper_bound = self._upper_bound
 
         if lower_bound is None:
-            lower_bound = np.min(values)
+            lower_bound = np.quantile(values, q=0.025)
 
         if upper_bound is None:
-            upper_bound = np.max(values)
+            upper_bound = np.quantile(values, q=0.975)
             if upper_bound < lower_bound:
                 upper_bound = lower_bound
         elif upper_bound < lower_bound:
