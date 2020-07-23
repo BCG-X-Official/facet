@@ -1,15 +1,14 @@
 import logging
-from typing import *
 
 import pandas as pd
-from pandas.util.testing import assert_frame_equal
+import pytest
+from pandas.util.testing import assert_frame_equal, assert_series_equal
 
 # noinspection PyPackageRequirements
 from pytest import approx
 
 from gamma.ml import Sample
 from gamma.ml.crossfit import LearnerCrossfit
-from gamma.ml.selection import ParameterGrid
 from gamma.ml.validation import StationaryBootstrapCV
 from gamma.sklearndf import TransformerDF
 from gamma.sklearndf.pipeline import RegressorPipelineDF
@@ -22,16 +21,12 @@ log = logging.getLogger(__name__)
 N_SPLITS = 10
 
 
-def test_univariate_simulation(
-    batch_table: pd.DataFrame,
-    regressor_grids: Iterable[ParameterGrid],
-    sample: Sample,
-    simple_preprocessor: TransformerDF,
-    n_jobs,
-) -> None:
-
+@pytest.fixture
+def crossfit(
+    sample: Sample, simple_preprocessor: TransformerDF, n_jobs: int
+) -> LearnerCrossfit:
     # use a pre-optimised model
-    crossfit = LearnerCrossfit(
+    return LearnerCrossfit(
         pipeline=RegressorPipelineDF(
             preprocessing=simple_preprocessor,
             regressor=LGBMRegressorDF(
@@ -40,9 +35,15 @@ def test_univariate_simulation(
         ),
         cv=StationaryBootstrapCV(n_splits=N_SPLITS, random_state=42),
         shuffle_features=False,
+        n_jobs=n_jobs,
     ).fit(sample=sample)
 
-    simulator = UnivariateUpliftSimulator(
+
+@pytest.fixture
+def uplift_simulator(
+    crossfit: LearnerCrossfit, n_jobs: int
+) -> UnivariateUpliftSimulator:
+    return UnivariateUpliftSimulator(
         crossfit=crossfit,
         min_percentile=10,
         max_percentile=90,
@@ -50,9 +51,39 @@ def test_univariate_simulation(
         verbose=50,
     )
 
+
+def test_actuals_simulation(uplift_simulator: UnivariateUpliftSimulator) -> None:
+
+    assert_series_equal(
+        uplift_simulator.simulate_actuals(),
+        pd.Series(
+            index=pd.RangeIndex(10, name="crossfit_id"),
+            data=[
+                0.0022346580154160023,
+                0.002617709072003871,
+                0.0007107764530731586,
+                -0.005023988425882142,
+                0.004010384123196653,
+                0.006379100635514501,
+                0.0005625736529850656,
+                -0.0018641287749763258,
+                0.0038418237873085737,
+                -0.0025806445857182725,
+            ],
+            name="relative deviations of mean predictions from mean targets",
+        ),
+    )
+
+
+def test_univariate_uplift_simulation(
+    uplift_simulator: UnivariateUpliftSimulator
+) -> None:
+
     parameterized_feature = "Step4-6 RawMat Vendor Compound08 Purity (#)"
 
-    res = simulator._simulate_feature_with_values(
+    sample = uplift_simulator.crossfit.training_sample
+
+    res = uplift_simulator._simulate_feature_with_values(
         feature_name=parameterized_feature,
         simulated_values=ContinuousRangePartitioner()
         .fit(values=sample.features.loc[:, parameterized_feature])
@@ -65,11 +96,13 @@ def test_univariate_simulation(
     absolute_target_change_sr = res.loc[
         :, UnivariateUpliftSimulator._COL_ABSOLUTE_TARGET_CHANGE
     ]
-    assert absolute_target_change_sr.min() == approx(-0.7282927117948859)
-    assert absolute_target_change_sr.mean() == approx(-0.0870004327894347)
-    assert absolute_target_change_sr.max() == approx(0.804310573391561)
+    assert absolute_target_change_sr.min() == approx(-0.6453681553897965)
+    assert absolute_target_change_sr.mean() == approx(-0.05250827061702283)
+    assert absolute_target_change_sr.max() == approx(0.8872351297966503)
 
-    aggregated_results = simulator._aggregate_simulation_results(results_per_split=res)
+    aggregated_results = uplift_simulator._aggregate_simulation_results(
+        results_per_crossfit=res
+    )
     log.debug(aggregated_results)
 
     # test the first five rows of aggregated_results
@@ -81,25 +114,25 @@ def test_univariate_simulation(
     )
     expected_data = {
         "percentile_10": [
-            -0.6004228916492564,
-            0.027750755748968466,
-            0.052682663898563936,
-            0.052682663898563936,
-            0.13982249635328545,
+            -0.47985361959947925,
+            -0.1236605280451073,
+            -0.01637965080466941,
+            -0.01637965080466941,
+            -0.0006339046007731496,
         ],
         "percentile_50": [
-            -0.25439493925730616,
-            0.2918181523488208,
-            0.2918181523488208,
-            0.2918181523488208,
-            0.30152469018852557,
+            -0.2851650197904405,
+            0.39945412023171656,
+            0.39945412023171656,
+            0.39945412023171656,
+            0.41147488809989596,
         ],
         "percentile_90": [
-            -0.0976467669962471,
-            0.6926482832226767,
-            0.6926482832226767,
-            0.6926482832226767,
-            0.69154399500297,
+            -0.09558476689426461,
+            0.8104729183863626,
+            0.8104729183863626,
+            0.8104729183863626,
+            0.8093686301666558,
         ],
     }
 
