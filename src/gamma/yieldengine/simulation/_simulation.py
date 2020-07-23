@@ -4,6 +4,7 @@ Core implementation of :mod:`gamma.yieldengine.simulation`
 
 from abc import ABCMeta, abstractmethod
 from typing import *
+from typing import List
 
 import numpy as np
 import pandas as pd
@@ -285,6 +286,9 @@ class UnivariateUpliftSimulator(
     Univariate simulation for target uplift based on a regression model.
     """
 
+    COL_DEVIATION_OF_MEAN_PREDICTION = (
+        "relative deviations of mean predictions vs. mean targets"
+    )
     _COL_SPLIT_ID = "split_id"
     _COL_PARAMETER_VALUE = "parameter_value"
     _COL_ABSOLUTE_TARGET_CHANGE = "absolute_target_change"
@@ -301,9 +305,8 @@ class UnivariateUpliftSimulator(
         """
 
         sample = self.crossfit.training_sample
-        target = sample.target
 
-        if not isinstance(target, pd.Series):
+        if not isinstance(sample.target, pd.Series):
             raise NotImplementedError("multi-target simulations are not supported")
 
         simulated_values = partitioner.fit(sample.features.loc[:, name]).partitions()
@@ -314,13 +317,59 @@ class UnivariateUpliftSimulator(
         )
         return UnivariateSimulation(
             feature=name,
-            target=target.name,
+            target=sample.target.name,
             partitioning=partitioner,
             median_change=predicted_change.iloc[:, 1].values,
             min_change=predicted_change.iloc[:, 0].values,
             max_change=predicted_change.iloc[:, 2].values,
             min_percentile=self._min_percentile,
             max_percentile=self._max_percentile,
+        )
+
+    def simulate_actuals(self) -> pd.Series:
+        """
+        Simulate yield by predicting the outcome based on the actual feature values
+        across all crossfits, then for each crossfit determine the relative deviation
+        of the mean predicted targets from the mean actual targets.
+
+        This yields a distribution of relative deviations across all crossfits.
+        0 means no deviation, and 0.01 means that the mean predicted target is 1% higher
+        than the mean actual targets of a given crossfit.
+        The breadth and offset of this distribution is an indication of how the bias of
+        the model underlying the simulation contributes to the uncertainty of
+        simulations produced with method :meth:`.simulate_features`.
+
+        :return: series mapping split IDs to mean actual/mean predicted target deltas
+        """
+
+        sample = self.crossfit.training_sample
+
+        if not isinstance(sample.target, pd.Series):
+            raise NotImplementedError("multi-target simulations are not supported")
+
+        with self._parallel() as parallel:
+            result: List[float] = parallel(
+                self._delayed(
+                    UnivariateUpliftSimulator._deviation_of_mean_prediction_for_split
+                )(
+                    model=model,
+                    subsample=(
+                        sample
+                        if _SIMULATE_FULL_SAMPLE
+                        else sample.subsample(iloc=test_indices)
+                    ),
+                )
+                for (model, (_, test_indices)) in zip(
+                    self.crossfit.models(), self.crossfit.splits()
+                )
+            )
+
+        return pd.Series(
+            index=pd.RangeIndex(
+                len(result), name=UnivariateUpliftSimulator._COL_SPLIT_ID
+            ),
+            data=result,
+            name=UnivariateUpliftSimulator.COL_DEVIATION_OF_MEAN_PREDICTION,
         )
 
     def _simulate_feature_with_values(
@@ -342,8 +391,7 @@ class UnivariateUpliftSimulator(
           `relative_target_change`.
         """
 
-        crossfit = self.crossfit
-        sample = crossfit.training_sample
+        sample = self.crossfit.training_sample
 
         if feature_name not in sample.features.columns:
             raise ValueError(f"Feature '{feature_name}' not in sample")
@@ -355,12 +403,12 @@ class UnivariateUpliftSimulator(
                     subsample=(
                         sample
                         if _SIMULATE_FULL_SAMPLE
-                        else sample.subsample(iloc=train_indices)
+                        else sample.subsample(iloc=test_indices)
                     ),
                     feature_name=feature_name,
                     simulated_values=simulated_values,
                 )
-                for (model, (train_indices, _)) in zip(
+                for (model, (_, test_indices)) in zip(
                     self.crossfit.models(), self.crossfit.splits()
                 )
             )
@@ -389,7 +437,7 @@ class UnivariateUpliftSimulator(
         model: T_RegressorDF,
         subsample: Sample,
         feature_name: str,
-        simulated_values: Sequence[Any],
+        simulated_values: Optional[Sequence[Any]],
     ) -> List[float]:
         # for a list of values to be simulated, return a list of absolute target changes
 
@@ -409,6 +457,17 @@ class UnivariateUpliftSimulator(
             return predictions_for_split_syn.mean(axis=0) - actual_outcomes.mean(axis=0)
 
         return [_absolute_target_change(value) for value in simulated_values]
+
+    @staticmethod
+    def _deviation_of_mean_prediction_for_split(
+        model: T_RegressorDF, subsample: Sample
+    ) -> float:
+        # return difference between actual and predicted target
+        return (
+            model.predict(X=subsample.features).mean(axis=0)
+            / subsample.target.mean(axis=0)
+            - 1.0
+        )
 
     def _aggregate_simulation_results(
         self, results_per_split: pd.DataFrame
