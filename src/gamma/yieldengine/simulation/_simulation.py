@@ -378,12 +378,9 @@ class UnivariateUpliftSimulator(
         """
         Run a simulation on a feature.
 
-        For each combination of split_id and feature value, compute the mean uplift as a
-        ratio of the mean actual target (where 0.0 corresponds to no uplift/change, and
-        1.0 corresponds to a 100% uplift).
-
-        The uplift is calculated based on the mean predicted target when substituting
-        a given fixed value for the feature being simulated.
+        For each combination of split_id and feature value, compute the mean predicted
+        uplift as the difference of the mean predicted target from the mean actual
+        target, when substituting a given fixed value for the feature being simulated.
 
         :param feature_name: name of the feature to use in the simulation
         :param simulated_values: values to use in the simulation
