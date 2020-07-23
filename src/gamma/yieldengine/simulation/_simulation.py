@@ -14,21 +14,23 @@ from gamma.ml import Sample
 from gamma.ml.crossfit import LearnerCrossfit
 from gamma.sklearndf import ClassifierDF, RegressorDF
 from gamma.yieldengine.partition import Partitioner, T_Number
-
-__all__ = [
-    "UnivariateSimulation",
-    "BaseUnivariateSimulator",
-    "UnivariateUpliftSimulator",
-    "UnivariateProbabilitySimulator",
-]
+from gamma.common import inheritdoc, AllTracker
 
 T_CrossFit = TypeVar("T_CrossFit", bound=LearnerCrossfit)
 T_RegressorDF = TypeVar("T_RegressorDF", bound=RegressorDF)
 T_ClassifierDF = TypeVar("T_ClassifierDF", bound=ClassifierDF)
 
+
 # if True, use the full available sample to carry out simulations; otherwise only
 # use the train sample of each fold
 _SIMULATE_FULL_SAMPLE = True
+
+__all__ = [
+    "UnivariateSimulation",
+    "BaseUnivariateSimulator",
+    "UnivariateUpliftSimulator",
+]
+__tracker = AllTracker(globals())
 
 
 class UnivariateSimulation(Generic[T_Number]):
@@ -125,12 +127,14 @@ class BaseUnivariateSimulator(
     Estimates the average change in outcome for a range of values for a given feature,
     using cross-validated crossfit for all observations in a given data sample.
 
-    Determines confidence intervals for the predicted changes using multiple
-    crossfit for individual data points from different cross-validation splits.
-
-    Works both with estimating the average change for target variables of regressors,
-    or probabilities of binary classifiers.
+    Determines confidence intervals for the predicted changes by repeating the
+    simulations across multiple crossfits.
     """
+
+    COL_CROSSFIT_ID = "crossfit_id"
+    COL_DEVIATION_OF_MEAN_PREDICTION = (
+        "relative deviations of mean predictions from mean targets"
+    )
 
     def __init__(
         self,
@@ -197,6 +201,25 @@ class BaseUnivariateSimulator(
         return self._max_percentile
 
     @abstractmethod
+    def simulate_actuals(self) -> pd.Series:
+        """
+        Simulate yield by predicting the outcome based on the actual feature values
+        across multiple crossfits; for each crossfit determine the relative deviation
+        of the mean predicted target from the mean actual target.
+
+        This yields a distribution of relative deviations across all crossfits.
+        For any of the crossfits, 0 indicates no deviation, and, for example, 0.01
+        indicates that the mean predicted target is 1% higher than the mean actual
+        targets of a given crossfit.
+        The breadth and offset of this distribution is an indication of how the bias of
+        the model underlying the simulation contributes to the uncertainty of
+        simulations produced with method :meth:`.simulate_features`.
+
+        :return: series mapping crossfit IDs to mean actual/mean predicted target deltas
+        """
+        pass
+
+    @abstractmethod
     def simulate_feature(self, name: str, partitioner: Partitioner):
         """
         Simulate the average impact on the target when fixing the value of the given
@@ -208,7 +231,8 @@ class BaseUnivariateSimulator(
         pass
 
 
-class UnivariateProbabilitySimulator(
+@inheritdoc(match="[see superclass]")
+class _UnivariateProbabilitySimulator(
     BaseUnivariateSimulator[LearnerCrossfit[T_ClassifierDF]], Generic[T_ClassifierDF]
 ):
     """
@@ -224,6 +248,13 @@ class UnivariateProbabilitySimulator(
         :param name: the feature to run the simulation for
         :param partitioner: the partitioner of feature values to run simulations for
         """
+        raise NotImplementedError(
+            "simulation of average change in probability will be included in a future "
+            "release"
+        )
+
+    def simulate_actuals(self) -> pd.Series:
+        """[see superclass]"""
         raise NotImplementedError(
             "simulation of average change in probability will be included in a future "
             "release"
@@ -262,23 +293,22 @@ class UnivariateProbabilitySimulator(
         Predict all values in the test set.
 
         The result is a data frame with one row per prediction, indexed by the
-        observations in the sample and the split id (index level ``COL_SPLIT_ID``),
+        observations in the sample and the crossfit id (index level ``COL_CROSSFIT_ID``),
         and with columns ``COL_PREDICTION` (the predicted value for the
-        given observation and split), and ``COL_TARGET`` (the actual target)
+        given observation and crossfit), and ``COL_TARGET`` (the actual target)
 
         Note that there can be multiple prediction rows per observation if the test
-        splits overlap.
-
-        :return: the data frame with the crossfit per observation and test split
+        splits of the crossfits overlap.
         """
 
-        for split_id, (model, (_, test_indices)) in enumerate(
+        for crossfit_id, (model, (_, test_indices)) in enumerate(
             zip(self.crossfit.models(), self.crossfit.splits())
         ):
             test_features = sample.features.iloc[test_indices, :]
             yield method(model, test_features)
 
 
+@inheritdoc(match="[see superclass")
 class UnivariateUpliftSimulator(
     BaseUnivariateSimulator[LearnerCrossfit[T_RegressorDF]], Generic[T_RegressorDF]
 ):
@@ -286,10 +316,6 @@ class UnivariateUpliftSimulator(
     Univariate simulation for target uplift based on a regression model.
     """
 
-    COL_DEVIATION_OF_MEAN_PREDICTION = (
-        "relative deviations of mean predictions vs. mean targets"
-    )
-    _COL_SPLIT_ID = "split_id"
     _COL_PARAMETER_VALUE = "parameter_value"
     _COL_ABSOLUTE_TARGET_CHANGE = "absolute_target_change"
 
@@ -311,7 +337,7 @@ class UnivariateUpliftSimulator(
 
         simulated_values = partitioner.fit(sample.features.loc[:, name]).partitions()
         predicted_change = self._aggregate_simulation_results(
-            results_per_split=self._simulate_feature_with_values(
+            results_per_crossfit=self._simulate_feature_with_values(
                 feature_name=name, simulated_values=simulated_values
             )
         )
@@ -327,20 +353,7 @@ class UnivariateUpliftSimulator(
         )
 
     def simulate_actuals(self) -> pd.Series:
-        """
-        Simulate yield by predicting the outcome based on the actual feature values
-        across all crossfits, then for each crossfit determine the relative deviation
-        of the mean predicted targets from the mean actual targets.
-
-        This yields a distribution of relative deviations across all crossfits.
-        0 means no deviation, and 0.01 means that the mean predicted target is 1% higher
-        than the mean actual targets of a given crossfit.
-        The breadth and offset of this distribution is an indication of how the bias of
-        the model underlying the simulation contributes to the uncertainty of
-        simulations produced with method :meth:`.simulate_features`.
-
-        :return: series mapping split IDs to mean actual/mean predicted target deltas
-        """
+        """[see superclass]"""
 
         sample = self.crossfit.training_sample
 
@@ -366,10 +379,10 @@ class UnivariateUpliftSimulator(
 
         return pd.Series(
             index=pd.RangeIndex(
-                len(result), name=UnivariateUpliftSimulator._COL_SPLIT_ID
+                len(result), name=BaseUnivariateSimulator.COL_CROSSFIT_ID
             ),
             data=result,
-            name=UnivariateUpliftSimulator.COL_DEVIATION_OF_MEAN_PREDICTION,
+            name=BaseUnivariateSimulator.COL_DEVIATION_OF_MEAN_PREDICTION,
         )
 
     def _simulate_feature_with_values(
@@ -378,13 +391,13 @@ class UnivariateUpliftSimulator(
         """
         Run a simulation on a feature.
 
-        For each combination of split_id and feature value, compute the mean predicted
+        For each combination of crossfit and feature value, compute the mean predicted
         uplift as the difference of the mean predicted target from the mean actual
         target, when substituting a given fixed value for the feature being simulated.
 
         :param feature_name: name of the feature to use in the simulation
         :param simulated_values: values to use in the simulation
-        :return: data frame with three columns: `split_id`, `parameter_value` and
+        :return: data frame with three columns: `crossfit_id`, `parameter_value` and
           `relative_target_change`.
         """
 
@@ -410,23 +423,23 @@ class UnivariateUpliftSimulator(
                 )
             )
 
-        col_split_id = UnivariateUpliftSimulator._COL_SPLIT_ID
+        col_crossfit_id = UnivariateUpliftSimulator.COL_CROSSFIT_ID
         col_parameter_value = UnivariateUpliftSimulator._COL_PARAMETER_VALUE
         col_absolute_target_change = (
             UnivariateUpliftSimulator._COL_ABSOLUTE_TARGET_CHANGE
         )
 
         return pd.concat(
-            [
+            (
                 pd.DataFrame(
                     {
-                        col_split_id: split_id,
+                        col_crossfit_id: crossfit_id,
                         col_parameter_value: simulated_values,
                         col_absolute_target_change: absolute_target_changes,
                     }
                 )
-                for split_id, absolute_target_changes in enumerate(result)
-            ]
+                for crossfit_id, absolute_target_changes in enumerate(result)
+            )
         )
 
     @staticmethod
@@ -467,7 +480,7 @@ class UnivariateUpliftSimulator(
         )
 
     def _aggregate_simulation_results(
-        self, results_per_split: pd.DataFrame
+        self, results_per_crossfit: pd.DataFrame
     ) -> pd.DataFrame:
         """
         Aggregate uplift values computed by `simulate_feature`.
@@ -475,10 +488,10 @@ class UnivariateUpliftSimulator(
         For each parameter value, the percentile of uplift values (in the
         `relative_yield_change` column) are computed.
 
-        :param results_per_split: data frame with columns `split_id`, `parameter_value`\
-          and `relative_yield_change`
+        :param results_per_crossfit: data frame with columns
+            `crossfit_id`, `parameter_value`, and `relative_yield_change`
         :return: data frame with 3 columns `percentile_<min>`, `percentile_50`,
-          `percentile<max>` where min/max are the min and max percentiles
+          `percentile_<max>` where min/max are the min and max percentiles
         """
 
         def percentile(n: int) -> Callable[[float], float]:
@@ -497,7 +510,7 @@ class UnivariateUpliftSimulator(
             return percentile_
 
         return (
-            results_per_split.drop(columns=UnivariateUpliftSimulator._COL_SPLIT_ID)
+            results_per_crossfit.drop(columns=UnivariateUpliftSimulator.COL_CROSSFIT_ID)
             .groupby(
                 by=UnivariateUpliftSimulator._COL_PARAMETER_VALUE,
                 observed=True,
@@ -510,3 +523,6 @@ class UnivariateUpliftSimulator(
                 ]
             )
         )
+
+
+__tracker.validate()
