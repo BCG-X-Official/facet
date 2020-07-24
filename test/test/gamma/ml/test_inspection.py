@@ -214,7 +214,7 @@ def test_binary_classifier_ranking(
         ClassifierPipelineDF[RandomForestClassifierDF]
     ]
 ) -> None:
-    expected_learner_scores = [1.0, 1.0, 0.946, 0.891]
+    expected_learner_scores = [0.858, 0.835, 0.784, 0.689]
 
     log.debug(f"\n{iris_classifier_ranker.summary_report(max_learners=10)}")
     check_ranking(
@@ -240,8 +240,12 @@ def test_model_inspection_classifier(
     warnings.filterwarnings("ignore", message="You are accessing a training score")
 
     # define checksums for this test
-    checksum_shap = 16811895885973514240
-    checksum_association_matrix = 2376971889351401631
+    checksum_shap = 4149000024927268877
+    checksum_matrices = {
+        "synergy": None,
+        "redundancy": None,
+        "association": 9024604747537243391,
+    }
     model_inspector = ClassifierInspector(shap_interaction=False, n_jobs=n_jobs).fit(
         crossfit=iris_classifier_crossfit
     )
@@ -261,19 +265,10 @@ def test_model_inspection_classifier(
     # Shap decomposition matrices (feature dependencies)
     feature_associations: pd.DataFrame = model_inspector.feature_association_matrix()
 
-    # check number of rows
-    assert len(feature_associations) == len(iris_sample_binary.feature_columns)
-    assert len(feature_associations.columns) == len(iris_sample_binary.feature_columns)
-
-    # check association values
-    for c in feature_associations.columns:
-        fa = feature_associations.loc[:, c]
-        assert 0.0 <= fa.min() <= fa.max() <= 1.0
-
-    # check actual values using checksum:
-    assert (
-        np.sum(hash_pandas_object(feature_associations.round(decimals=4)).values)
-        == checksum_association_matrix
+    _check_feature_dependency_matrices(
+        model_inspector=model_inspector,
+        feature_names=iris_sample_binary.feature_columns,
+        **checksum_matrices,
     )
 
     linkage_tree = model_inspector.feature_association_linkage()
@@ -296,8 +291,12 @@ def test_model_inspection_classifier_interaction(
     warnings.filterwarnings("ignore", message="You are accessing a training score")
 
     # define checksums for this test
-    checksum_shap = 14210456333660507525
-    checksum_synergy_matrix = 11962811188865322601
+    checksum_shap = 11537888084826694975
+    checksum_matrices = {
+        "synergy": 18268622212148004967,
+        "redundancy": 2146036076598277859,
+        "association": 10618889851519629191,
+    }
     model_inspector = ClassifierInspector(n_jobs=n_jobs).fit(
         crossfit=iris_classifier_crossfit
     )
@@ -314,12 +313,13 @@ def test_model_inspection_classifier_interaction(
     assert (
         model_inspector_no_interaction.shap_values()
         - shap_interaction_matrix.groupby(by="observation").sum()
-    ).abs().max().max() < 0.006
+    ).abs().max().max() < 0.015
 
     # the length of rows in shap_values should be equal to the number of observations,
     # times the number of features
+    feature_names = iris_sample_binary.feature_columns
     assert len(shap_interaction_matrix) == (
-        len(iris_sample_binary) * len(iris_sample_binary.feature_columns)
+        len(iris_sample_binary) * len(feature_names)
     )
 
     # check actual values using checksum:
@@ -328,22 +328,10 @@ def test_model_inspection_classifier_interaction(
         == checksum_shap
     )
 
-    # Shap decomposition matrices (feature dependencies)
-    feature_synergies: pd.DataFrame = model_inspector.feature_synergy_matrix()
-
-    # check number of rows
-    assert len(feature_synergies) == len(iris_sample_binary.feature_columns)
-    assert len(feature_synergies.columns) == len(iris_sample_binary.feature_columns)
-
-    # check association values
-    for c in feature_synergies.columns:
-        fa = feature_synergies.loc[:, c]
-        assert 0.0 <= fa.min() <= fa.max() <= 1.0
-
-    # check actual values using checksum:
-    assert (
-        np.sum(hash_pandas_object(feature_synergies.round(decimals=4)).values)
-        == checksum_synergy_matrix
+    _check_feature_dependency_matrices(
+        model_inspector=model_inspector,
+        feature_names=feature_names,
+        **checksum_matrices,
     )
 
     linkage_tree = model_inspector.feature_redundancy_linkage()
@@ -351,4 +339,47 @@ def test_model_inspection_classifier_interaction(
     print()
     DendrogramDrawer(style=DendrogramReportStyle()).draw(
         data=linkage_tree, title="Iris (binary) feature redundancy linkage"
+    )
+
+
+def _check_feature_dependency_matrices(
+    model_inspector: ClassifierInspector,
+    feature_names: Sequence[str],
+    **checksums_expected: Optional[int],
+):
+    # Shap decomposition matrices (feature dependencies)
+    matrix_functions = {
+        "synergy": model_inspector.feature_synergy_matrix,
+        "redundancy": model_inspector.feature_redundancy_matrix,
+        "association": model_inspector.feature_association_matrix,
+    }
+    for matrix_type, matrix_function in matrix_functions.items():
+        checksum_expected = checksums_expected[matrix_type]
+        if checksum_expected:
+            _check_feature_relationship_matrix(
+                matrix=matrix_function(),
+                checksum_expected=checksum_expected,
+                feature_names=feature_names,
+            )
+        else:
+            with pytest.raises(
+                RuntimeError, match="SHAP interaction values have not been calculated"
+            ):
+                matrix_function()
+
+
+def _check_feature_relationship_matrix(
+    matrix: pd.DataFrame, checksum_expected: int, feature_names: Sequence[str]
+):
+    # check number of rows
+    assert len(matrix) == len(feature_names)
+    assert len(matrix.columns) == len(feature_names)
+
+    # check association values
+    for c in matrix.columns:
+        fa = matrix.loc[:, c]
+        assert 0.0 <= fa.min() <= fa.max() <= 1.0
+    # check actual values using checksum:
+    assert (
+        np.sum(hash_pandas_object(matrix.round(decimals=4)).values) == checksum_expected
     )
