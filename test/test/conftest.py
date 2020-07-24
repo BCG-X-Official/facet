@@ -235,4 +235,13 @@ def iris_df(iris_target: str) -> pd.DataFrame:
 
 @pytest.fixture
 def iris_sample(iris_df: pd.DataFrame, iris_target: str) -> Sample:
+    # the iris dataset
     return Sample(observations=iris_df, target=iris_target)
+
+
+@pytest.fixture
+def iris_sample_binary(iris_sample: Sample) -> Sample:
+    # the iris dataset, retaining only two categories so we can do binary classification
+    return iris_sample.subsample(
+        loc=iris_sample.target.isin(iris_sample.target.unique()[:2])
+    )
