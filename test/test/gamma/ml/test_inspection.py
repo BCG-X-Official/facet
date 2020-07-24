@@ -27,10 +27,43 @@ from gamma.sklearndf.pipeline import ClassifierPipelineDF, RegressorPipelineDF
 from gamma.viz.dendrogram import DendrogramDrawer, DendrogramReportStyle
 from test.gamma.ml import check_ranking
 
+# noinspection PyMissingOrEmptyDocstring
+
 log = logging.getLogger(__name__)
 
 
-# noinspection PyMissingOrEmptyDocstring
+@pytest.fixture
+def iris_classifier_ranker(
+    cv_bootstrap: BootstrapCV, iris_sample_binary: Sample, n_jobs: int
+) -> LearnerRanker[ClassifierPipelineDF[RandomForestClassifierDF]]:
+    # define parameters and crossfit
+    models = [
+        ParameterGrid(
+            pipeline=ClassifierPipelineDF(
+                classifier=RandomForestClassifierDF(random_state=42), preprocessing=None
+            ),
+            learner_parameters={"n_estimators": [10, 50], "min_samples_leaf": [16, 32]},
+        )
+    ]
+    # pipeline inspector does only support binary classification - hence
+    # filter the test_sample down to only 2 target classes:
+    return LearnerRanker(
+        grid=models,
+        cv=cv_bootstrap,
+        scoring="f1_macro",
+        # shuffle_features=True,
+        random_state=42,
+        n_jobs=n_jobs,
+    ).fit(sample=iris_sample_binary)
+
+
+@pytest.fixture
+def iris_classifier_crossfit(
+    iris_classifier_ranker: LearnerRanker[
+        ClassifierPipelineDF[RandomForestClassifierDF]
+    ]
+) -> LearnerCrossfit[ClassifierPipelineDF[RandomForestClassifierDF]]:
+    return iris_classifier_ranker.best_model_crossfit
 
 
 def test_model_inspection(
@@ -176,51 +209,16 @@ def test_model_inspection(
     DendrogramDrawer(style="text").draw(data=linkage_tree, title="Test")
 
 
-def test_model_inspection_classifier(
-    iris_sample: Sample, cv_bootstrap: BootstrapCV, n_jobs: int
+def test_binary_classifier_ranking(
+    iris_classifier_ranker: LearnerRanker[
+        ClassifierPipelineDF[RandomForestClassifierDF]
+    ]
 ) -> None:
-    warnings.filterwarnings("ignore", message="numpy.dtype size changed")
-    warnings.filterwarnings("ignore", message="numpy.ufunc size changed")
-    warnings.filterwarnings("ignore", message="You are accessing a training score")
-
-    # define checksums for this test
-    checksum_shap = 16811895885973514240
-    checksum_association_matrix = 2376971889351401631
     expected_learner_scores = [1.0, 1.0, 0.946, 0.891]
 
-    # define parameters and crossfit
-    models = [
-        ParameterGrid(
-            pipeline=ClassifierPipelineDF(
-                classifier=RandomForestClassifierDF(random_state=42), preprocessing=None
-            ),
-            learner_parameters={"n_estimators": [10, 50], "min_samples_leaf": [16, 32]},
-        )
-    ]
-
-    # pipeline inspector does only support binary classification - hence
-    # filter the test_sample down to only 2 target classes:
-    test_sample: Sample = iris_sample.subsample(
-        loc=iris_sample.target.isin(iris_sample.target.unique()[:2])
-    )
-
-    model_ranker: LearnerRanker[
-        ClassifierPipelineDF[RandomForestClassifierDF]
-    ] = LearnerRanker(
-        grid=models,
-        cv=cv_bootstrap,
-        scoring="f1_macro",
-        # shuffle_features=True,
-        random_state=42,
-        n_jobs=n_jobs,
-    ).fit(
-        sample=test_sample
-    )
-
-    log.debug(f"\n{model_ranker.summary_report(max_learners=10)}")
-
+    log.debug(f"\n{iris_classifier_ranker.summary_report(max_learners=10)}")
     check_ranking(
-        ranking=model_ranker.ranking(),
+        ranking=iris_classifier_ranker.ranking(),
         expected_scores=expected_learner_scores,
         expected_learners=[RandomForestClassifierDF] * 4,
         expected_parameters={
@@ -229,10 +227,23 @@ def test_model_inspection_classifier(
         },
     )
 
-    crossfit = model_ranker.best_model_crossfit
 
+def test_model_inspection_classifier(
+    iris_sample_binary: Sample,
+    iris_classifier_crossfit: LearnerCrossfit[
+        ClassifierPipelineDF[RandomForestClassifierDF]
+    ],
+    n_jobs: int,
+) -> None:
+    warnings.filterwarnings("ignore", message="numpy.dtype size changed")
+    warnings.filterwarnings("ignore", message="numpy.ufunc size changed")
+    warnings.filterwarnings("ignore", message="You are accessing a training score")
+
+    # define checksums for this test
+    checksum_shap = 16811895885973514240
+    checksum_association_matrix = 2376971889351401631
     model_inspector = ClassifierInspector(shap_interaction=False, n_jobs=n_jobs).fit(
-        crossfit=crossfit
+        crossfit=iris_classifier_crossfit
     )
     # make and check shap value matrix
     shap_matrix = model_inspector.shap_values()
@@ -245,14 +256,14 @@ def test_model_inspection_classifier(
 
     # the length of rows in shap_values should be equal to the unique observation
     # indices we have had in the predictions_df
-    assert len(shap_matrix) == len(test_sample)
+    assert len(shap_matrix) == len(iris_sample_binary)
 
     # Shap decomposition matrices (feature dependencies)
     feature_associations: pd.DataFrame = model_inspector.feature_association_matrix()
-    log.info(feature_associations)
+
     # check number of rows
-    assert len(feature_associations) == len(test_sample.feature_columns)
-    assert len(feature_associations.columns) == len(test_sample.feature_columns)
+    assert len(feature_associations) == len(iris_sample_binary.feature_columns)
+    assert len(feature_associations.columns) == len(iris_sample_binary.feature_columns)
 
     # check association values
     for c in feature_associations.columns:
@@ -269,5 +280,75 @@ def test_model_inspection_classifier(
 
     print()
     DendrogramDrawer(style=DendrogramReportStyle()).draw(
-        data=linkage_tree, title="Test"
+        data=linkage_tree, title="Iris (binary) feature association linkage"
+    )
+
+
+def test_model_inspection_classifier_interaction(
+    iris_sample_binary: Sample,
+    iris_classifier_crossfit: LearnerCrossfit[
+        ClassifierPipelineDF[RandomForestClassifierDF]
+    ],
+    n_jobs: int,
+) -> None:
+    warnings.filterwarnings("ignore", message="numpy.dtype size changed")
+    warnings.filterwarnings("ignore", message="numpy.ufunc size changed")
+    warnings.filterwarnings("ignore", message="You are accessing a training score")
+
+    # define checksums for this test
+    checksum_shap = 14210456333660507525
+    checksum_synergy_matrix = 11962811188865322601
+    model_inspector = ClassifierInspector(n_jobs=n_jobs).fit(
+        crossfit=iris_classifier_crossfit
+    )
+    model_inspector_no_interaction = ClassifierInspector(
+        shap_interaction=False, n_jobs=n_jobs
+    ).fit(crossfit=iris_classifier_crossfit)
+    # calculate shap interaction values
+    shap_interaction_matrix = model_inspector.shap_interaction_values()
+
+    # shap interaction values add up to shap values
+    # we have to live with differences of up to 0.006, given the different results
+    # returned for SHAP values and SHAP interaction values
+    # todo: review accuracy after implementing use of a background dataset
+    assert (
+        model_inspector_no_interaction.shap_values()
+        - shap_interaction_matrix.groupby(by="observation").sum()
+    ).abs().max().max() < 0.006
+
+    # the length of rows in shap_values should be equal to the number of observations,
+    # times the number of features
+    assert len(shap_interaction_matrix) == (
+        len(iris_sample_binary) * len(iris_sample_binary.feature_columns)
+    )
+
+    # check actual values using checksum:
+    assert (
+        np.sum(hash_pandas_object(shap_interaction_matrix.round(decimals=4)).values)
+        == checksum_shap
+    )
+
+    # Shap decomposition matrices (feature dependencies)
+    feature_synergies: pd.DataFrame = model_inspector.feature_synergy_matrix()
+
+    # check number of rows
+    assert len(feature_synergies) == len(iris_sample_binary.feature_columns)
+    assert len(feature_synergies.columns) == len(iris_sample_binary.feature_columns)
+
+    # check association values
+    for c in feature_synergies.columns:
+        fa = feature_synergies.loc[:, c]
+        assert 0.0 <= fa.min() <= fa.max() <= 1.0
+
+    # check actual values using checksum:
+    assert (
+        np.sum(hash_pandas_object(feature_synergies.round(decimals=4)).values)
+        == checksum_synergy_matrix
+    )
+
+    linkage_tree = model_inspector.feature_redundancy_linkage()
+
+    print()
+    DendrogramDrawer(style=DendrogramReportStyle()).draw(
+        data=linkage_tree, title="Iris (binary) feature redundancy linkage"
     )
