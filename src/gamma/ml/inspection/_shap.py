@@ -532,7 +532,7 @@ class ClassifierShapValuesCalculator(ShapValuesCalculator):
 
         n_arrays = len(raw_shap_tensors)
 
-        # we decided to support only binary classification == 2 classes:
+        # we currently support only binary classification == 2 classes:
         assert n_arrays == 2, (
             "classification pipeline inspection only supports binary classifiers, "
             f"but SHAP analysis returned values for {n_arrays} classes"
@@ -540,7 +540,7 @@ class ClassifierShapValuesCalculator(ShapValuesCalculator):
 
         # in the binary classification case, we will proceed with SHAP values
         # for class 0, since values for class 1 will just be the same
-        # values times (*-1)  (the opposite probability)
+        # values times (*-1)  (the opposite delta probability)
 
         # to ensure the values are returned as expected above,
         # and no information of class 1 is discarded, assert the
@@ -570,6 +570,46 @@ class ClassifierShapInteractionValuesCalculator(ShapInteractionValuesCalculator)
         observations: pd.Index,
         features_in_split: pd.Index,
     ) -> List[pd.DataFrame]:
-        raise NotImplementedError(
-            "interaction matrices for classifiers are not yet implemented"
+        # todo: adapt this function (and override others) to support non-binary
+        #   classification
+
+        # the shap explainer returned an array [obs x features] for each of the
+        # target-classes
+
+        n_arrays = len(raw_shap_tensors)
+
+        # we currently support only binary classification == 2 classes:
+        assert n_arrays == 2, (
+            "classification pipeline inspection only supports binary classifiers, "
+            f"but SHAP analysis returned values for {n_arrays} classes"
         )
+
+        # in the binary classification case, we will proceed with SHAP values
+        # for class 0, since values for class 1 will just be the same
+        # values times (*-1)  (the opposite delta probability)
+
+        # to ensure the values are returned as expected above,
+        # and no information of class 1 is discarded, assert the
+        # following:
+        assert np.allclose(
+            raw_shap_tensors[0], -raw_shap_tensors[1]
+        ), "raw_shap_tensors(class 0) == -raw_shap_tensors(class 1)"
+
+        # all good: proceed with SHAP values for class 0:
+        raw_shap_interaction_matrix = raw_shap_tensors[0]
+
+        # each row is indexed by an observation and a feature
+        row_index = pd.MultiIndex.from_product(
+            iterables=(observations, features_in_split),
+            names=(observations.name, features_in_split.name),
+        )
+
+        return [
+            pd.DataFrame(
+                data=raw_shap_interaction_matrix.reshape(
+                    (-1, raw_shap_interaction_matrix.shape[2])
+                ),
+                index=row_index,
+                columns=features_in_split,
+            )
+        ]
