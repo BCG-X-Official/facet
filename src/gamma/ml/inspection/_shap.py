@@ -65,7 +65,7 @@ class ShapCalculator(
         self,
         explainer_factory: ExplainerFactory,
         *,
-        explain_full_sample: bool = True,
+        explain_full_sample: bool,
         n_jobs: Optional[int] = None,
         shared_memory: Optional[bool] = None,
         pre_dispatch: Optional[Union[str, int]] = None,
