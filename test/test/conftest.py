@@ -55,7 +55,7 @@ def iris_target() -> str:
 
 @pytest.fixture
 def n_jobs() -> int:
-    return -3
+    return -1
 
 
 @pytest.fixture
