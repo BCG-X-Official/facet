@@ -230,7 +230,7 @@ class ShapCalculator(
         x_oob = (
             training_sample.features
             if oob_split is None
-            else training_sample.subsample(loc=oob_split).features
+            else training_sample.subsample(iloc=oob_split).features
         )
 
         # pre-process the features
@@ -309,11 +309,7 @@ class ShapValuesCalculator(
         shap_values_df_per_target: List[pd.DataFrame] = [
             shap.reindex(columns=features_out, copy=False, fill_value=0.0)
             for shap in shap_matrix_for_split_to_df_fn(
-                shap_values,
-                x_oob.index
-                if oob_split is None
-                else pd.Index(oob_split, name=training_sample.index.name),
-                x_oob.columns,
+                shap_values, x_oob.index, x_oob.columns
             )
         ]
 
