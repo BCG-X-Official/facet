@@ -65,7 +65,7 @@ class ShapCalculator(
         self,
         explainer_factory: ExplainerFactory,
         *,
-        explain_full_sample: bool = True,
+        explain_full_sample: bool,
         n_jobs: Optional[int] = None,
         shared_memory: Optional[bool] = None,
         pre_dispatch: Optional[Union[str, int]] = None,
@@ -230,7 +230,7 @@ class ShapCalculator(
         x_oob = (
             training_sample.features
             if oob_split is None
-            else training_sample.subsample(loc=oob_split).features
+            else training_sample.subsample(iloc=oob_split).features
         )
 
         # pre-process the features
@@ -309,11 +309,7 @@ class ShapValuesCalculator(
         shap_values_df_per_target: List[pd.DataFrame] = [
             shap.reindex(columns=features_out, copy=False, fill_value=0.0)
             for shap in shap_matrix_for_split_to_df_fn(
-                shap_values,
-                x_oob.index
-                if oob_split is None
-                else pd.Index(oob_split, name=training_sample.index.name),
-                x_oob.columns,
+                shap_values, x_oob.index, x_oob.columns
             )
         ]
 
@@ -419,9 +415,9 @@ class ShapInteractionValuesCalculator(
                 "Explainer does not implement method shap_interaction_values"
             )
 
-        shap_interaction_tensors: Union[
-            np.ndarray, List[np.ndarray]
-        ] = shap_interaction_values_fn(x_oob)
+        shap_interaction_tensors: Union[np.ndarray, List[np.ndarray]] = (
+            shap_interaction_values_fn(x_oob)
+        )
 
         if isinstance(shap_interaction_tensors, np.ndarray):
             # if we have a single target *and* no classification, the explainer will
@@ -532,7 +528,7 @@ class ClassifierShapValuesCalculator(ShapValuesCalculator):
 
         n_arrays = len(raw_shap_tensors)
 
-        # we decided to support only binary classification == 2 classes:
+        # we currently support only binary classification == 2 classes:
         assert n_arrays == 2, (
             "classification pipeline inspection only supports binary classifiers, "
             f"but SHAP analysis returned values for {n_arrays} classes"
@@ -540,7 +536,7 @@ class ClassifierShapValuesCalculator(ShapValuesCalculator):
 
         # in the binary classification case, we will proceed with SHAP values
         # for class 0, since values for class 1 will just be the same
-        # values times (*-1)  (the opposite probability)
+        # values times (*-1)  (the opposite delta probability)
 
         # to ensure the values are returned as expected above,
         # and no information of class 1 is discarded, assert the
@@ -570,6 +566,46 @@ class ClassifierShapInteractionValuesCalculator(ShapInteractionValuesCalculator)
         observations: pd.Index,
         features_in_split: pd.Index,
     ) -> List[pd.DataFrame]:
-        raise NotImplementedError(
-            "interaction matrices for classifiers are not yet implemented"
+        # todo: adapt this function (and override others) to support non-binary
+        #   classification
+
+        # the shap explainer returned an array [obs x features] for each of the
+        # target-classes
+
+        n_arrays = len(raw_shap_tensors)
+
+        # we currently support only binary classification == 2 classes:
+        assert n_arrays == 2, (
+            "classification pipeline inspection only supports binary classifiers, "
+            f"but SHAP analysis returned values for {n_arrays} classes"
         )
+
+        # in the binary classification case, we will proceed with SHAP values
+        # for class 0, since values for class 1 will just be the same
+        # values times (*-1)  (the opposite delta probability)
+
+        # to ensure the values are returned as expected above,
+        # and no information of class 1 is discarded, assert the
+        # following:
+        assert np.allclose(
+            raw_shap_tensors[0], -raw_shap_tensors[1]
+        ), "raw_shap_tensors(class 0) == -raw_shap_tensors(class 1)"
+
+        # all good: proceed with SHAP values for class 0:
+        raw_shap_interaction_matrix = raw_shap_tensors[0]
+
+        # each row is indexed by an observation and a feature
+        row_index = pd.MultiIndex.from_product(
+            iterables=(observations, features_in_split),
+            names=(observations.name, features_in_split.name),
+        )
+
+        return [
+            pd.DataFrame(
+                data=raw_shap_interaction_matrix.reshape(
+                    (-1, raw_shap_interaction_matrix.shape[2])
+                ),
+                index=row_index,
+                columns=features_in_split,
+            )
+        ]

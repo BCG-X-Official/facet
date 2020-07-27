@@ -12,6 +12,7 @@ import pandas as pd
 import pytest
 import shap
 from pandas.core.util.hashing import hash_pandas_object
+from pandas.util.testing import assert_frame_equal
 from shap import KernelExplainer, TreeExplainer
 from shap.explainers.explainer import Explainer
 from sklearn.base import BaseEstimator
@@ -27,10 +28,68 @@ from gamma.sklearndf.pipeline import ClassifierPipelineDF, RegressorPipelineDF
 from gamma.viz.dendrogram import DendrogramDrawer, DendrogramReportStyle
 from test.gamma.ml import check_ranking
 
+# noinspection PyMissingOrEmptyDocstring
+
 log = logging.getLogger(__name__)
 
 
-# noinspection PyMissingOrEmptyDocstring
+@pytest.fixture
+def iris_classifier_ranker(
+    cv_bootstrap: BootstrapCV, iris_sample_binary: Sample, n_jobs: int
+) -> LearnerRanker[ClassifierPipelineDF[RandomForestClassifierDF]]:
+    # define parameters and crossfit
+    models = [
+        ParameterGrid(
+            pipeline=ClassifierPipelineDF(
+                classifier=RandomForestClassifierDF(random_state=42), preprocessing=None
+            ),
+            learner_parameters={"n_estimators": [10, 50], "min_samples_leaf": [16, 32]},
+        )
+    ]
+    # pipeline inspector does only support binary classification - hence
+    # filter the test_sample down to only 2 target classes:
+    return LearnerRanker(
+        grid=models,
+        cv=cv_bootstrap,
+        scoring="f1_macro",
+        # shuffle_features=True,
+        random_state=42,
+        n_jobs=n_jobs,
+    ).fit(sample=iris_sample_binary)
+
+
+@pytest.fixture
+def iris_classifier_ranker_dual_target(
+    cv_bootstrap: BootstrapCV, iris_sample_binary_dual_target: Sample, n_jobs: int
+) -> LearnerRanker[ClassifierPipelineDF[RandomForestClassifierDF]]:
+    # define parameters and crossfit
+    models = [
+        ParameterGrid(
+            pipeline=ClassifierPipelineDF(
+                classifier=RandomForestClassifierDF(random_state=42), preprocessing=None
+            ),
+            learner_parameters={"n_estimators": [10, 50], "min_samples_leaf": [16, 32]},
+        )
+    ]
+    # pipeline inspector does only support binary classification - hence
+    # filter the test_sample down to only 2 target classes:
+    return LearnerRanker(
+        grid=models,
+        cv=cv_bootstrap,
+        scoring="f1_macro",
+        # shuffle_features=True,
+        random_state=42,
+        n_jobs=n_jobs,
+    ).fit(sample=iris_sample_binary_dual_target)
+
+
+@pytest.fixture
+def iris_classifier_crossfit(
+    iris_classifier_ranker: LearnerRanker[
+        ClassifierPipelineDF[RandomForestClassifierDF]
+    ]
+) -> LearnerCrossfit[ClassifierPipelineDF[RandomForestClassifierDF]]:
+    return iris_classifier_ranker.best_model_crossfit
 
 
 def test_model_inspection(
@@ -176,51 +235,16 @@ def test_model_inspection(
     DendrogramDrawer(style="text").draw(data=linkage_tree, title="Test")
 
 
-def test_model_inspection_classifier(
-    iris_sample: Sample, cv_bootstrap: BootstrapCV, n_jobs: int
-) -> None:
-    warnings.filterwarnings("ignore", message="numpy.dtype size changed")
-    warnings.filterwarnings("ignore", message="numpy.ufunc size changed")
-    warnings.filterwarnings("ignore", message="You are accessing a training score")
-
-    # define checksums for this test
-    checksum_shap = 16811895885973514240
-    checksum_association_matrix = 2376971889351401631
-    expected_learner_scores = [1.0, 1.0, 0.946, 0.891]
-
-    # define parameters and crossfit
-    models = [
-        ParameterGrid(
-            pipeline=ClassifierPipelineDF(
-                classifier=RandomForestClassifierDF(random_state=42), preprocessing=None
-            ),
-            learner_parameters={"n_estimators": [10, 50], "min_samples_leaf": [16, 32]},
-        )
-    ]
-
-    # pipeline inspector does only support binary classification - hence
-    # filter the test_sample down to only 2 target classes:
-    test_sample: Sample = iris_sample.subsample(
-        loc=iris_sample.target.isin(iris_sample.target.unique()[:2])
-    )
-
-    model_ranker: LearnerRanker[
+def test_binary_classifier_ranking(
+    iris_classifier_ranker: LearnerRanker[
         ClassifierPipelineDF[RandomForestClassifierDF]
-    ] = LearnerRanker(
-        grid=models,
-        cv=cv_bootstrap,
-        scoring="f1_macro",
-        # shuffle_features=True,
-        random_state=42,
-        n_jobs=n_jobs,
-    ).fit(
-        sample=test_sample
-    )
+    ]
+) -> None:
+    expected_learner_scores = [0.858, 0.835, 0.784, 0.689]
 
-    log.debug(f"\n{model_ranker.summary_report(max_learners=10)}")
-
+    log.debug(f"\n{iris_classifier_ranker.summary_report(max_learners=10)}")
     check_ranking(
-        ranking=model_ranker.ranking(),
+        ranking=iris_classifier_ranker.ranking(),
         expected_scores=expected_learner_scores,
         expected_learners=[RandomForestClassifierDF] * 4,
         expected_parameters={
@@ -229,45 +253,218 @@ def test_model_inspection_classifier(
         },
     )
 
-    crossfit = model_ranker.best_model_crossfit
+
+def test_model_inspection_classifier(
+    iris_sample_binary: Sample,
+    iris_classifier_crossfit: LearnerCrossfit[
+        ClassifierPipelineDF[RandomForestClassifierDF]
+    ],
+    n_jobs: int,
+) -> None:
+    warnings.filterwarnings("ignore", message="numpy.dtype size changed")
+    warnings.filterwarnings("ignore", message="numpy.ufunc size changed")
+    warnings.filterwarnings("ignore", message="You are accessing a training score")
 
     model_inspector = ClassifierInspector(shap_interaction=False, n_jobs=n_jobs).fit(
-        crossfit=crossfit
+        crossfit=iris_classifier_crossfit
     )
-    # make and check shap value matrix
-    shap_matrix = model_inspector.shap_values()
 
-    # check actual values using checksum:
-    assert (
-        np.sum(hash_pandas_object(shap_matrix.round(decimals=4)).values)
-        == checksum_shap
+    # calculate the shap value matrix, without any consolidation
+    shap_values = model_inspector.shap_values(consolidate=None)
+
+    # do the shap values add up to predictions minus a constant value?
+    _validate_shap_values_against_predictions(
+        shap_values=shap_values, crossfit=iris_classifier_crossfit
     )
+
+    shap_matrix_mean = model_inspector.shap_values()
+
+    # is the consolidation correct?
+    assert_frame_equal(shap_matrix_mean, shap_values.mean(level=1))
 
     # the length of rows in shap_values should be equal to the unique observation
     # indices we have had in the predictions_df
-    assert len(shap_matrix) == len(test_sample)
+    assert len(shap_matrix_mean) == len(iris_sample_binary)
 
     # Shap decomposition matrices (feature dependencies)
-    feature_associations: pd.DataFrame = model_inspector.feature_association_matrix()
-    log.info(feature_associations)
-    # check number of rows
-    assert len(feature_associations) == len(test_sample.feature_columns)
-    assert len(feature_associations.columns) == len(test_sample.feature_columns)
-
-    # check association values
-    for c in feature_associations.columns:
-        fa = feature_associations.loc[:, c]
-        assert 0.0 <= fa.min() <= fa.max() <= 1.0
-
-    # check actual values using checksum:
-    assert (
-        np.sum(hash_pandas_object(feature_associations.round(decimals=4)).values)
-        == checksum_association_matrix
+    _check_feature_dependency_matrices(
+        model_inspector=model_inspector,
+        feature_names=iris_sample_binary.feature_columns,
+        synergy=None,
+        redundancy=None,
+        association=(
+            [1.0, 0.001, 0.204, 0.176, 0.001, 1.0, 0.002, 0.005]
+            + [0.204, 0.002, 1.0, 0.645, 0.176, 0.005, 0.645, 1.0]
+        ),
     )
 
     linkage_tree = model_inspector.feature_association_linkage()
 
     print()
     DendrogramDrawer(style=DendrogramReportStyle()).draw(
-        data=linkage_tree, title="Test"
+        data=linkage_tree, title="Iris (binary) feature association linkage"
     )
+
+
+def _validate_shap_values_against_predictions(
+    shap_values: pd.DataFrame, crossfit: LearnerCrossfit[ClassifierPipelineDF]
+):
+    # calculate the matching predictions, so we can check if the SHAP values add up
+    # correctly
+    predicted_probabilities_per_split = [
+        model.predict_proba(crossfit.training_sample.features.iloc[test_split, :])
+        for model, (_, test_split) in zip(crossfit.models(), crossfit.splits())
+    ]
+    for split, predicted_probabilities in enumerate(predicted_probabilities_per_split):
+        # for each observation, we expect to get the constant "expected probability"
+        # value by deducting the SHAP values for all features from the predicted
+        # probability
+        expected_probability = (
+            predicted_probabilities.iloc[:, [0]]
+            .join(-shap_values.xs(split, level=0).sum(axis=1).rename("shap"))
+            .sum(axis=1)
+        )
+        min = expected_probability.min()
+        max = expected_probability.max()
+        assert min == pytest.approx(
+            max
+        ), "expected probability is the same for all explanations"
+        assert 0.4 <= min <= 0.6, "expected class probability is roughly 50%"
+
+
+def test_model_inspection_classifier_interaction(
+    iris_sample_binary: Sample,
+    iris_classifier_crossfit: LearnerCrossfit[
+        ClassifierPipelineDF[RandomForestClassifierDF]
+    ],
+    n_jobs: int,
+) -> None:
+    warnings.filterwarnings("ignore", message="numpy.dtype size changed")
+    warnings.filterwarnings("ignore", message="numpy.ufunc size changed")
+    warnings.filterwarnings("ignore", message="You are accessing a training score")
+
+    model_inspector = ClassifierInspector(n_jobs=n_jobs).fit(
+        crossfit=iris_classifier_crossfit
+    )
+    model_inspector_no_interaction = ClassifierInspector(
+        shap_interaction=False, n_jobs=n_jobs
+    ).fit(crossfit=iris_classifier_crossfit)
+
+    # calculate shap interaction values
+    shap_interaction_values = model_inspector.shap_interaction_values()
+
+    # calculate shap values from interaction values
+    shap_values = shap_interaction_values.groupby(by="observation").sum()
+
+    # shap interaction values add up to shap values
+    # we have to live with differences of up to 0.006, given the different results
+    # returned for SHAP values and SHAP interaction values
+    # todo: review accuracy after implementing use of a background dataset
+    assert (
+        model_inspector_no_interaction.shap_values() - shap_values
+    ).abs().max().max() < 0.015
+
+    # the column names of the shap value data frames are the feature names
+    feature_columns = iris_sample_binary.feature_columns
+    assert shap_values.columns.to_list() == feature_columns
+    assert shap_interaction_values.columns.to_list() == feature_columns
+
+    # the length of rows in shap_values should be equal to the number of observations
+    assert len(shap_values) == len(iris_sample_binary)
+
+    # the length of rows in shap_interaction_values should be equal to the number of
+    # observations, times the number of features
+    assert len(shap_interaction_values) == (
+        len(iris_sample_binary) * len(feature_columns)
+    )
+
+    # do the shap values add up to predictions minus a constant value?
+    _validate_shap_values_against_predictions(
+        shap_values=model_inspector.shap_interaction_values(consolidate=None)
+        .groupby(level=[0, 1])
+        .sum(),
+        crossfit=iris_classifier_crossfit,
+    )
+
+    _check_feature_dependency_matrices(
+        model_inspector=model_inspector,
+        feature_names=feature_columns,
+        synergy=(
+            [1.0, 0.018, 0.061, 0.059, 0.018, 1.0, 0.015, 0.015]
+            + [0.061, 0.015, 1.0, 0.011, 0.059, 0.015, 0.011, 1.0]
+        ),
+        redundancy=(
+            [1.0, 0.007, 0.221, 0.179, 0.007, 1.0, 0.003, 0.005]
+            + [0.221, 0.003, 1.0, 0.651, 0.179, 0.005, 0.651, 1.0]
+        ),
+        association=(
+            [1.0, 0.001, 0.204, 0.176, 0.001, 1.0, 0.002, 0.005]
+            + [0.204, 0.002, 1.0, 0.645, 0.176, 0.005, 0.645, 1.0]
+        ),
+    )
+
+    linkage_tree = model_inspector.feature_redundancy_linkage()
+
+    print()
+    DendrogramDrawer(style=DendrogramReportStyle()).draw(
+        data=linkage_tree, title="Iris (binary) feature redundancy linkage"
+    )
+
+
+def test_model_inspection_classifier_interaction_dual_target(
+    iris_sample_binary_dual_target: Sample,
+    iris_classifier_ranker_dual_target: LearnerRanker[
+        ClassifierPipelineDF[RandomForestClassifierDF]
+    ],
+    n_jobs: int,
+) -> None:
+    iris_classifier_crossfit_dual_target = (
+        iris_classifier_ranker_dual_target.best_model_crossfit
+    )
+
+    with pytest.raises(
+        ValueError,
+        match="only single-output classifiers are supported.*target.*target2",
+    ):
+        ClassifierInspector(n_jobs=n_jobs).fit(
+            crossfit=iris_classifier_crossfit_dual_target
+        )
+
+
+def _check_feature_dependency_matrices(
+    model_inspector: ClassifierInspector,
+    feature_names: Sequence[str],
+    **matrices_expected: Optional[Sequence[float]],
+):
+    # Shap decomposition matrices (feature dependencies)
+    matrix_functions = {
+        "synergy": model_inspector.feature_synergy_matrix,
+        "redundancy": model_inspector.feature_redundancy_matrix,
+        "association": model_inspector.feature_association_matrix,
+    }
+    for matrix_type, matrix_function in matrix_functions.items():
+        matrix_expected = matrices_expected[matrix_type]
+        if matrix_expected:
+            _check_feature_relationship_matrix(
+                matrix=matrix_function(),
+                matrix_expected=matrix_expected,
+                feature_names=feature_names,
+            )
+        else:
+            with pytest.raises(
+                RuntimeError, match="SHAP interaction values have not been calculated"
+            ):
+                matrix_function()
+
+
+def _check_feature_relationship_matrix(
+    matrix: pd.DataFrame, matrix_expected: Sequence[float], feature_names: Sequence[str]
+):
+    # check number of rows
+    assert len(matrix) == len(feature_names)
+    assert len(matrix.columns) == len(feature_names)
+
+    # check association values
+    assert 0.0 <= matrix.min().min() <= matrix.max().max() <= 1.0
+
+    assert matrix.values.ravel() == pytest.approx(matrix_expected, abs=1e-2)

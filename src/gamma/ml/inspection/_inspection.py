@@ -155,6 +155,7 @@ class BaseLearnerInspector(
 
         if self._shap_interaction:
             shap_calculator = self._shap_interaction_values_calculator_cls()(
+                explain_full_sample=True,
                 explainer_factory=self._explainer_factory,
                 n_jobs=self.n_jobs,
                 shared_memory=self.shared_memory,
@@ -167,6 +168,7 @@ class BaseLearnerInspector(
 
         else:
             shap_calculator = self._shap_values_calculator_cls()(
+                explain_full_sample=True,
                 explainer_factory=self._explainer_factory,
                 n_jobs=self.n_jobs,
                 shared_memory=self.shared_memory,
@@ -593,8 +595,18 @@ class ClassifierInspector(
     """
     Inspect a classification pipeline through its SHAP values.
 
-    Currently only binary, single-output classifiers are supported.
+    Based on limitations of the underlying SHAP packages, only single-output classifiers
+    (binary or multi-class) are supported.
     """
+
+    def fit(self: T_Self, crossfit: LearnerCrossfit, **fit_params) -> T_Self:
+        if len(crossfit.training_sample.target_columns) != 1:
+            raise ValueError(
+                "only single-output classifiers are supported (binary or multi-class), "
+                "but given classifier was fitted on multiple columns "
+                f"{crossfit.training_sample.target_columns}"
+            )
+        return super().fit(crossfit=crossfit, **fit_params)
 
     @staticmethod
     def _shap_values_calculator_cls() -> Type[ShapValuesCalculator]:
