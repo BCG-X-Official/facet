@@ -141,7 +141,7 @@ class Sample:
 
         columns = features.columns
         if columns.name is None:
-            features.columns = columns.rename(Sample.COL_FEATURE)
+            features = features.rename_axis(columns=Sample.COL_FEATURE)
 
         return features
 
@@ -162,7 +162,7 @@ class Sample:
 
         columns = targets.columns
         if columns.name is None:
-            targets.columns = columns.rename(Sample.COL_TARGET, inplace=True)
+            targets = targets.rename_axis(columns=Sample.COL_TARGET)
 
         return targets
 
