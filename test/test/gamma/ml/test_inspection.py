@@ -34,7 +34,7 @@ log = logging.getLogger(__name__)
 
 
 @pytest.fixture
-def iris_classifier_ranker(
+def iris_classifier_ranker_binary(
     cv_bootstrap: BootstrapCV, iris_sample_binary: Sample, n_jobs: int
 ) -> LearnerRanker[ClassifierPipelineDF[RandomForestClassifierDF]]:
     # define parameters and crossfit
@@ -85,11 +85,9 @@ def iris_classifier_ranker_dual_target(
 
 @pytest.fixture
 def iris_classifier_crossfit(
-    iris_classifier_ranker: LearnerRanker[
-        ClassifierPipelineDF[RandomForestClassifierDF]
-    ]
+    iris_classifier_ranker_binary
 ) -> LearnerCrossfit[ClassifierPipelineDF[RandomForestClassifierDF]]:
-    return iris_classifier_ranker.best_model_crossfit
+    return iris_classifier_ranker_binary.best_model_crossfit
 
 
 def test_model_inspection(
@@ -235,16 +233,12 @@ def test_model_inspection(
     DendrogramDrawer(style="text").draw(data=linkage_tree, title="Test")
 
 
-def test_binary_classifier_ranking(
-    iris_classifier_ranker: LearnerRanker[
-        ClassifierPipelineDF[RandomForestClassifierDF]
-    ]
-) -> None:
+def test_binary_classifier_ranking(iris_classifier_ranker_binary) -> None:
     expected_learner_scores = [0.858, 0.835, 0.784, 0.689]
 
-    log.debug(f"\n{iris_classifier_ranker.summary_report(max_learners=10)}")
+    log.debug(f"\n{iris_classifier_ranker_binary.summary_report(max_learners=10)}")
     check_ranking(
-        ranking=iris_classifier_ranker.ranking(),
+        ranking=iris_classifier_ranker_binary.ranking(),
         expected_scores=expected_learner_scores,
         expected_learners=[RandomForestClassifierDF] * 4,
         expected_parameters={
