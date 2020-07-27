@@ -285,25 +285,29 @@ class LearnerCrossfit(
             ):
                 yield _FitScoreParameters(
                     pipeline=pipeline.clone() if do_fit else model,
-                    train_features=features.iloc[train]
-                    if do_fit or _train_scores
-                    else None,
-                    train_feature_sequence=learner_features[
-                        random_state.permutation(n_learner_features)
-                    ]
-                    if do_fit and self.shuffle_features
-                    else None,
+                    train_features=(
+                        features.iloc[train] if do_fit or _train_scores else None
+                    ),
+                    train_feature_sequence=(
+                        learner_features[random_state.permutation(n_learner_features)]
+                        if do_fit and self.shuffle_features
+                        else None
+                    ),
                     train_target=target.iloc[train] if do_fit else None,
-                    train_weight=_sample_weight.iloc[train]
-                    if weigh_samples and (do_fit or _train_scores)
-                    else None,
+                    train_weight=(
+                        _sample_weight.iloc[train]
+                        if weigh_samples and (do_fit or _train_scores)
+                        else None
+                    ),
                     scorer=scorer,
                     score_train_split=_train_scores,
                     test_features=features.iloc[test] if test_scores else None,
                     test_target=target.iloc[test] if test_scores else None,
-                    test_weight=_sample_weight.iloc[test]
-                    if weigh_samples and test_scores
-                    else None,
+                    test_weight=(
+                        _sample_weight.iloc[test]
+                        if weigh_samples and test_scores
+                        else None
+                    ),
                 )
 
         with self._parallel() as parallel:
