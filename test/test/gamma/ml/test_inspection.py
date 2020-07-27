@@ -59,6 +59,31 @@ def iris_classifier_ranker(
 
 
 @pytest.fixture
+def iris_classifier_ranker_dual_target(
+    cv_bootstrap: BootstrapCV, iris_sample_binary_dual_target: Sample, n_jobs: int
+) -> LearnerRanker[ClassifierPipelineDF[RandomForestClassifierDF]]:
+    # define parameters and crossfit
+    models = [
+        ParameterGrid(
+            pipeline=ClassifierPipelineDF(
+                classifier=RandomForestClassifierDF(random_state=42), preprocessing=None
+            ),
+            learner_parameters={"n_estimators": [10, 50], "min_samples_leaf": [16, 32]},
+        )
+    ]
+    # pipeline inspector does only support binary classification - hence
+    # filter the test_sample down to only 2 target classes:
+    return LearnerRanker(
+        grid=models,
+        cv=cv_bootstrap,
+        scoring="f1_macro",
+        # shuffle_features=True,
+        random_state=42,
+        n_jobs=n_jobs,
+    ).fit(sample=iris_sample_binary_dual_target)
+
+
+@pytest.fixture
 def iris_classifier_crossfit(
     iris_classifier_ranker: LearnerRanker[
         ClassifierPipelineDF[RandomForestClassifierDF]
