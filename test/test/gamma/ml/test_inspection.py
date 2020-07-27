@@ -12,6 +12,7 @@ import pandas as pd
 import pytest
 import shap
 from pandas.core.util.hashing import hash_pandas_object
+from pandas.util.testing import assert_frame_equal
 from shap import KernelExplainer, TreeExplainer
 from shap.explainers.explainer import Explainer
 from sklearn.base import BaseEstimator
@@ -239,36 +240,37 @@ def test_model_inspection_classifier(
     warnings.filterwarnings("ignore", message="numpy.ufunc size changed")
     warnings.filterwarnings("ignore", message="You are accessing a training score")
 
-    # define checksums for this test
-    checksum_shap = 4149000024927268877
-    checksum_matrices = {
-        "synergy": None,
-        "redundancy": None,
-        "association": 9024604747537243391,
-    }
     model_inspector = ClassifierInspector(shap_interaction=False, n_jobs=n_jobs).fit(
         crossfit=iris_classifier_crossfit
     )
-    # make and check shap value matrix
-    shap_matrix = model_inspector.shap_values()
 
-    # check actual values using checksum:
-    assert (
-        np.sum(hash_pandas_object(shap_matrix.round(decimals=4)).values)
-        == checksum_shap
+    # calculate the shap value matrix, without any consolidation
+    shap_values = model_inspector.shap_values(consolidate=None)
+
+    # do the shap values add up to predictions minus a constant value?
+    _validate_shap_values_against_predictions(
+        shap_values=shap_values, crossfit=iris_classifier_crossfit
     )
+
+    shap_matrix_mean = model_inspector.shap_values()
+
+    # is the consolidation correct?
+    assert_frame_equal(shap_matrix_mean, shap_values.mean(level=1))
 
     # the length of rows in shap_values should be equal to the unique observation
     # indices we have had in the predictions_df
-    assert len(shap_matrix) == len(iris_sample_binary)
+    assert len(shap_matrix_mean) == len(iris_sample_binary)
 
     # Shap decomposition matrices (feature dependencies)
-    feature_associations: pd.DataFrame = model_inspector.feature_association_matrix()
-
     _check_feature_dependency_matrices(
         model_inspector=model_inspector,
         feature_names=iris_sample_binary.feature_columns,
-        **checksum_matrices,
+        synergy=None,
+        redundancy=None,
+        association=(
+            [1.0, 0.001, 0.204, 0.176, 0.001, 1.0, 0.002, 0.005]
+            + [0.204, 0.002, 1.0, 0.645, 0.176, 0.005, 0.645, 1.0]
+        ),
     )
 
     linkage_tree = model_inspector.feature_association_linkage()
@@ -277,6 +279,32 @@ def test_model_inspection_classifier(
     DendrogramDrawer(style=DendrogramReportStyle()).draw(
         data=linkage_tree, title="Iris (binary) feature association linkage"
     )
+
+
+def _validate_shap_values_against_predictions(
+    shap_values: pd.DataFrame, crossfit: LearnerCrossfit[ClassifierPipelineDF]
+):
+    # calculate the matching predictions, so we can check if the SHAP values add up
+    # correctly
+    predicted_probabilities_per_split = [
+        model.predict_proba(crossfit.training_sample.features.iloc[test_split, :])
+        for model, (_, test_split) in zip(crossfit.models(), crossfit.splits())
+    ]
+    for split, predicted_probabilities in enumerate(predicted_probabilities_per_split):
+        # for each observation, we expect to get the constant "expected probability"
+        # value by deducting the SHAP values for all features from the predicted
+        # probability
+        expected_probability = (
+            predicted_probabilities.iloc[:, [0]]
+            .join(-shap_values.xs(split, level=0).sum(axis=1).rename("shap"))
+            .sum(axis=1)
+        )
+        min = expected_probability.min()
+        max = expected_probability.max()
+        assert min == pytest.approx(
+            max
+        ), "expected probability is the same for all explanations"
+        assert 0.4 <= min <= 0.6, "expected class probability is roughly 50%"
 
 
 def test_model_inspection_classifier_interaction(
@@ -290,48 +318,64 @@ def test_model_inspection_classifier_interaction(
     warnings.filterwarnings("ignore", message="numpy.ufunc size changed")
     warnings.filterwarnings("ignore", message="You are accessing a training score")
 
-    # define checksums for this test
-    checksum_shap = 11537888084826694975
-    checksum_matrices = {
-        "synergy": 18268622212148004967,
-        "redundancy": 2146036076598277859,
-        "association": 10618889851519629191,
-    }
     model_inspector = ClassifierInspector(n_jobs=n_jobs).fit(
         crossfit=iris_classifier_crossfit
     )
     model_inspector_no_interaction = ClassifierInspector(
         shap_interaction=False, n_jobs=n_jobs
     ).fit(crossfit=iris_classifier_crossfit)
+
     # calculate shap interaction values
-    shap_interaction_matrix = model_inspector.shap_interaction_values()
+    shap_interaction_values = model_inspector.shap_interaction_values()
+
+    # calculate shap values from interaction values
+    shap_values = shap_interaction_values.groupby(by="observation").sum()
 
     # shap interaction values add up to shap values
     # we have to live with differences of up to 0.006, given the different results
     # returned for SHAP values and SHAP interaction values
     # todo: review accuracy after implementing use of a background dataset
     assert (
-        model_inspector_no_interaction.shap_values()
-        - shap_interaction_matrix.groupby(by="observation").sum()
+        model_inspector_no_interaction.shap_values() - shap_values
     ).abs().max().max() < 0.015
 
-    # the length of rows in shap_values should be equal to the number of observations,
-    # times the number of features
-    feature_names = iris_sample_binary.feature_columns
-    assert len(shap_interaction_matrix) == (
-        len(iris_sample_binary) * len(feature_names)
+    # the column names of the shap value data frames are the feature names
+    feature_columns = iris_sample_binary.feature_columns
+    assert shap_values.columns.to_list() == feature_columns
+    assert shap_interaction_values.columns.to_list() == feature_columns
+
+    # the length of rows in shap_values should be equal to the number of observations
+    assert len(shap_values) == len(iris_sample_binary)
+
+    # the length of rows in shap_interaction_values should be equal to the number of
+    # observations, times the number of features
+    assert len(shap_interaction_values) == (
+        len(iris_sample_binary) * len(feature_columns)
     )
 
-    # check actual values using checksum:
-    assert (
-        np.sum(hash_pandas_object(shap_interaction_matrix.round(decimals=4)).values)
-        == checksum_shap
+    # do the shap values add up to predictions minus a constant value?
+    _validate_shap_values_against_predictions(
+        shap_values=model_inspector.shap_interaction_values(consolidate=None)
+        .groupby(level=[0, 1])
+        .sum(),
+        crossfit=iris_classifier_crossfit,
     )
 
     _check_feature_dependency_matrices(
         model_inspector=model_inspector,
-        feature_names=feature_names,
-        **checksum_matrices,
+        feature_names=feature_columns,
+        synergy=(
+            [1.0, 0.018, 0.061, 0.059, 0.018, 1.0, 0.015, 0.015]
+            + [0.061, 0.015, 1.0, 0.011, 0.059, 0.015, 0.011, 1.0]
+        ),
+        redundancy=(
+            [1.0, 0.007, 0.221, 0.179, 0.007, 1.0, 0.003, 0.005]
+            + [0.221, 0.003, 1.0, 0.651, 0.179, 0.005, 0.651, 1.0]
+        ),
+        association=(
+            [1.0, 0.001, 0.204, 0.176, 0.001, 1.0, 0.002, 0.005]
+            + [0.204, 0.002, 1.0, 0.645, 0.176, 0.005, 0.645, 1.0]
+        ),
     )
 
     linkage_tree = model_inspector.feature_redundancy_linkage()
@@ -342,10 +386,30 @@ def test_model_inspection_classifier_interaction(
     )
 
 
+def test_model_inspection_classifier_interaction_dual_target(
+    iris_sample_binary_dual_target: Sample,
+    iris_classifier_ranker_dual_target: LearnerRanker[
+        ClassifierPipelineDF[RandomForestClassifierDF]
+    ],
+    n_jobs: int,
+) -> None:
+    iris_classifier_crossfit_dual_target = (
+        iris_classifier_ranker_dual_target.best_model_crossfit
+    )
+
+    with pytest.raises(
+        ValueError,
+        match="only single-output classifiers are supported.*target.*target2",
+    ):
+        ClassifierInspector(n_jobs=n_jobs).fit(
+            crossfit=iris_classifier_crossfit_dual_target
+        )
+
+
 def _check_feature_dependency_matrices(
     model_inspector: ClassifierInspector,
     feature_names: Sequence[str],
-    **checksums_expected: Optional[int],
+    **matrices_expected: Optional[Sequence[float]],
 ):
     # Shap decomposition matrices (feature dependencies)
     matrix_functions = {
@@ -354,11 +418,11 @@ def _check_feature_dependency_matrices(
         "association": model_inspector.feature_association_matrix,
     }
     for matrix_type, matrix_function in matrix_functions.items():
-        checksum_expected = checksums_expected[matrix_type]
-        if checksum_expected:
+        matrix_expected = matrices_expected[matrix_type]
+        if matrix_expected:
             _check_feature_relationship_matrix(
                 matrix=matrix_function(),
-                checksum_expected=checksum_expected,
+                matrix_expected=matrix_expected,
                 feature_names=feature_names,
             )
         else:
@@ -369,17 +433,13 @@ def _check_feature_dependency_matrices(
 
 
 def _check_feature_relationship_matrix(
-    matrix: pd.DataFrame, checksum_expected: int, feature_names: Sequence[str]
+    matrix: pd.DataFrame, matrix_expected: Sequence[float], feature_names: Sequence[str]
 ):
     # check number of rows
     assert len(matrix) == len(feature_names)
     assert len(matrix.columns) == len(feature_names)
 
     # check association values
-    for c in matrix.columns:
-        fa = matrix.loc[:, c]
-        assert 0.0 <= fa.min() <= fa.max() <= 1.0
-    # check actual values using checksum:
-    assert (
-        np.sum(hash_pandas_object(matrix.round(decimals=4)).values) == checksum_expected
-    )
+    assert 0.0 <= matrix.min().min() <= matrix.max().max() <= 1.0
+
+    assert matrix.values.ravel() == pytest.approx(matrix_expected, abs=1e-2)
