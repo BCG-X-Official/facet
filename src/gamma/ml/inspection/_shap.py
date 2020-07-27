@@ -419,9 +419,9 @@ class ShapInteractionValuesCalculator(
                 "Explainer does not implement method shap_interaction_values"
             )
 
-        shap_interaction_tensors: Union[
-            np.ndarray, List[np.ndarray]
-        ] = shap_interaction_values_fn(x_oob)
+        shap_interaction_tensors: Union[np.ndarray, List[np.ndarray]] = (
+            shap_interaction_values_fn(x_oob)
+        )
 
         if isinstance(shap_interaction_tensors, np.ndarray):
             # if we have a single target *and* no classification, the explainer will
