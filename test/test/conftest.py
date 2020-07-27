@@ -245,3 +245,17 @@ def iris_sample_binary(iris_sample: Sample) -> Sample:
     return iris_sample.subsample(
         loc=iris_sample.target.isin(["virginica", "versicolor"])
     )
+
+
+@pytest.fixture
+def iris_sample_binary_dual_target(iris_sample_binary: Sample) -> Sample:
+    # the iris dataset, retaining only two categories so we can do binary classification
+    target = pd.Series(
+        index=iris_sample_binary.index,
+        data=pd.Categorical(iris_sample_binary.target).codes,
+        name="target",
+    )
+    return Sample(
+        iris_sample_binary.features.join(target).join(target.rename("target2")),
+        target=[*iris_sample_binary.target_columns, "target2"],
+    )
