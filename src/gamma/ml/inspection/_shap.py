@@ -86,6 +86,7 @@ class ShapCalculator(
         self._explainer_factory = explainer_factory
         self.shap_: Optional[pd.DataFrame] = None
         self.feature_index_: Optional[pd.Index] = None
+        self.target_columns_: Optional[List[str]] = None
         self.n_observations_: Optional[int] = None
 
     def fit(
