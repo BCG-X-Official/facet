@@ -64,12 +64,10 @@ class ShapValueDecomposer(FittableMixin[ShapCalculator]):
             self.index_ = shap_calculator.feature_index_
             self.columns_ = shap_calculator.shap_columns
 
-            successful = True
-
-        finally:
+        except Exception:
             # reset fit in case we get an exception along the way
-            if not successful:
-                self._reset_fit()
+            self._reset_fit()
+            raise
 
         return self
 

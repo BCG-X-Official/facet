@@ -1,3 +1,4 @@
+import warnings
 from typing import *
 
 import pytest
@@ -78,3 +79,9 @@ def check_ranking(
                 f"unexpected parameters for learner at rank #{rank}: "
                 f"{parameters_actual} instead of {parameters_expected}"
             )
+
+
+def disable_warnings() -> None:
+    warnings.filterwarnings("ignore", message="numpy.dtype size changed")
+    warnings.filterwarnings("ignore", message="numpy.ufunc size changed")
+    warnings.filterwarnings("ignore", message=r".*version 2\.2\.1.*Apple Clang")
