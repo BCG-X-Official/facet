@@ -3,7 +3,6 @@ Tests for module gamma.ml.selection
 """
 
 import logging
-import warnings
 from typing import *
 
 import numpy as np
@@ -23,9 +22,11 @@ from gamma.sklearndf.regression import (
     RandomForestRegressorDF,
 )
 from gamma.sklearndf.regression.extra import LGBMRegressorDF
-from test.gamma.ml import check_ranking
+from test.gamma.ml import check_ranking, disable_warnings
 
 log = logging.getLogger(__name__)
+
+disable_warnings()
 
 
 def test_parameter_grid() -> None:
@@ -183,11 +184,8 @@ def test_model_ranker(
 
 
 def test_model_ranker_no_preprocessing(n_jobs) -> None:
-    expected_learner_scores = [0.943, 0.913, 0.913, 0.884]
 
-    warnings.filterwarnings("ignore", message="numpy.dtype size changed")
-    warnings.filterwarnings("ignore", message="numpy.ufunc size changed")
-    warnings.filterwarnings("ignore", message="You are accessing a training score")
+    expected_learner_scores = [0.943, 0.913, 0.913, 0.884]
 
     # define a yield-engine circular CV:
     cv = BootstrapCV(n_splits=5, random_state=42)
