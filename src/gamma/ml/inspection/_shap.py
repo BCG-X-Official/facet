@@ -15,7 +15,11 @@ from gamma.common.fit import FittableMixin, T_Self
 from gamma.common.parallelization import ParallelizableMixin
 from gamma.ml import Sample
 from gamma.ml.crossfit import LearnerCrossfit
-from gamma.sklearndf.pipeline import BaseLearnerPipelineDF
+from gamma.sklearndf.pipeline import (
+    BaseLearnerPipelineDF,
+    ClassifierPipelineDF,
+    RegressorPipelineDF,
+)
 
 log = logging.getLogger(__name__)
 
@@ -85,7 +89,6 @@ class ShapCalculator(
         self._explainer_factory = explainer_factory
         self.shap_: Optional[pd.DataFrame] = None
         self.feature_index_: Optional[pd.Index] = None
-        self.target_columns_: Optional[List[str]] = None
         self.n_observations_: Optional[int] = None
 
     def fit(
@@ -105,7 +108,7 @@ class ShapCalculator(
 
         training_sample = crossfit.training_sample
         self.feature_index_ = crossfit.pipeline.features_out.rename(Sample.COL_FEATURE)
-        self.target_columns_ = training_sample.target_columns
+        self.target_columns_ = self._output_names(crossfit=crossfit)
         self.n_observations_ = len(training_sample)
 
         # calculate shap values and re-order the observation index to match the
@@ -152,6 +155,17 @@ class ShapCalculator(
         """
         pass
 
+    @property
+    @abstractmethod
+    def _multi_output_type(self) -> str:
+        pass
+
+    @abstractmethod
+    def _multi_output_names(
+        self, model: T_LearnerPipelineDF, sample: Sample
+    ) -> List[str]:
+        pass
+
     def _shap_all_splits(
         self, crossfit: LearnerCrossfit[T_LearnerPipelineDF]
     ) -> pd.DataFrame:
@@ -159,24 +173,38 @@ class ShapCalculator(
         training_sample = crossfit.training_sample
 
         with self._parallel() as parallel:
-            shap_df_per_split = parallel(
+            shap_df_per_split: List[pd.DataFrame] = parallel(
                 self._delayed(self._shap_for_split)(
                     model,
-                    training_sample,
-                    None if self.explain_full_sample else oob_split,
+                    sample,
                     self.feature_index_,
                     explainer_factory,
                     self._raw_shap_to_df,
+                    self._multi_output_type,
+                    self._multi_output_names(model=model, sample=sample),
                 )
-                for model, (_train_split, oob_split) in zip(
-                    crossfit.models(), crossfit.splits()
+                for model, sample in zip(
+                    crossfit.models(),
+                    (
+                        # if we explain full samples, we get samples from an
+                        # infinite iterator of the full training sample
+                        iter(lambda: training_sample, None)
+                        if self.explain_full_sample
+                        # otherwise we iterate over the test splits of each crossfit
+                        else (
+                            training_sample.subsample(iloc=oob_split)
+                            for _, oob_split in crossfit.splits()
+                        )
+                    ),
                 )
             )
-        return pd.concat(
-            shap_df_per_split,
-            keys=range(len(shap_df_per_split)),
-            names=[ShapCalculator.COL_SPLIT],
-        )
+
+        return self._concatenate_splits(shap_df_per_split=shap_df_per_split)
+
+    @staticmethod
+    @abstractmethod
+    def _concatenate_splits(shap_df_per_split: List[pd.DataFrame]) -> pd.DataFrame:
+        pass
 
     @staticmethod
     def _consolidate_splits(
@@ -209,38 +237,31 @@ class ShapCalculator(
     @abstractmethod
     def _shap_for_split(
         model: BaseLearnerPipelineDF,
-        training_sample: Sample,
-        oob_split: Optional[np.ndarray],
+        sample: Sample,
         features_out: pd.Index,
         explainer_factory_fn: ExplainerFactory,
         shap_matrix_for_split_to_df_fn: ShapToDataFrameFunction,
+        multi_output_type: str,
+        multi_output_names: Sequence[str],
     ) -> pd.DataFrame:
         pass
 
     @staticmethod
-    def _x_oob(
-        model: BaseLearnerPipelineDF,
-        training_sample: Sample,
-        oob_split: Optional[np.ndarray],
+    def _preprocessed_features(
+        model: BaseLearnerPipelineDF, sample: Sample
     ) -> pd.DataFrame:
         # get the out-of-bag subsample of the training sample, with feature columns
         # in the sequence that was used to fit the learner
 
         # get the features of all out-of-bag observations
-        x_oob = (
-            training_sample.features
-            if oob_split is None
-            else training_sample.subsample(iloc=oob_split).features
-        )
+        x = sample.features
 
         # pre-process the features
         if model.preprocessing is not None:
-            x_oob = model.preprocessing.transform(x_oob)
+            x = model.preprocessing.transform(x)
 
         # re-index the features to fit the sequence that was used to fit the learner
-        x_oob = x_oob.reindex(columns=model.final_estimator.features_in, copy=False)
-
-        return x_oob
+        return x.reindex(columns=model.final_estimator.features_in, copy=False)
 
     @staticmethod
     @abstractmethod
@@ -258,6 +279,11 @@ class ShapCalculator(
             explained by the SHAP explainer
         :return: SHAP values of a single split as data frame
         """
+        pass
+
+    @staticmethod
+    @abstractmethod
+    def _output_names(crossfit: LearnerCrossfit[T_LearnerPipelineDF]) -> List[str]:
         pass
 
 
@@ -287,17 +313,18 @@ class ShapValuesCalculator(
     @staticmethod
     def _shap_for_split(
         model: BaseLearnerPipelineDF,
-        training_sample: Sample,
-        oob_split: Optional[np.ndarray],
+        sample: Sample,
         features_out: pd.Index,
         explainer_factory_fn: ExplainerFactory,
         shap_matrix_for_split_to_df_fn: ShapToDataFrameFunction,
+        multi_output_type: str,
+        multi_output_names: Sequence[str],
     ) -> pd.DataFrame:
-        x_oob = ShapCalculator._x_oob(model, training_sample, oob_split)
+        x = ShapCalculator._preprocessed_features(model, sample)
         # calculate the shap values (returned as an array)
         shap_values: np.ndarray = explainer_factory_fn(
-            model.final_estimator.root_estimator, x_oob
-        ).shap_values(x_oob)
+            model.final_estimator.root_estimator, x
+        ).shap_values(x)
         if isinstance(shap_values, np.ndarray):
             # if we have a single target *and* no classification, the explainer will
             # have returned a single tensor as an array
@@ -306,25 +333,26 @@ class ShapValuesCalculator(
         # convert to a data frame per target (different logic depending on whether
         # we have a regressor or a classifier, implemented by method
         # shap_matrix_for_split_to_df_fn)
-        shap_values_df_per_target: List[pd.DataFrame] = [
+        shap_values_df_per_output: List[pd.DataFrame] = [
             shap.reindex(columns=features_out, copy=False, fill_value=0.0)
-            for shap in shap_matrix_for_split_to_df_fn(
-                shap_values, x_oob.index, x_oob.columns
-            )
+            for shap in shap_matrix_for_split_to_df_fn(shap_values, x.index, x.columns)
         ]
 
         # if we have a single target, return the data frame for that target;
         # else, add a top level to the column index indicating each target
 
-        if len(shap_values_df_per_target) == 1:
-            return shap_values_df_per_target[0]
+        if len(shap_values_df_per_output) == 1:
+            return shap_values_df_per_output[0]
         else:
-            assert training_sample.n_targets > 1
+            assert len(shap_values_df_per_output) == len(multi_output_names), (
+                f"shap yielded {len(shap_values_df_per_output)} outputs; expected "
+                f"{len(multi_output_names)} outputs for names {multi_output_names}"
+            )
             return pd.concat(
-                shap_values_df_per_target,
+                shap_values_df_per_output,
                 axis=1,
-                keys=training_sample.target_columns,
-                names=[Sample.COL_TARGET],
+                keys=multi_output_names,
+                names=[multi_output_type, features_out.name],
             )
 
 
@@ -378,17 +406,18 @@ class ShapInteractionValuesCalculator(
 
         n_observations = self.n_observations_
         n_features = len(self.feature_index_)
-        n_targets = len(self.target_columns_)
         interaction_matrix = self.shap_
 
         return pd.DataFrame(
             np.diagonal(
                 interaction_matrix.values.reshape(
-                    (n_observations, n_features, n_targets, n_features)
+                    (n_observations, n_features, -1, n_features)
+                    # observations x features x targets x features
                 ),
                 axis1=1,
                 axis2=3,
-            ).reshape((n_observations, n_targets * n_features)),
+            ).reshape((n_observations, -1)),
+            # observations x (targets * features)
             index=interaction_matrix.index.levels[0],
             columns=interaction_matrix.columns,
         )
@@ -396,16 +425,17 @@ class ShapInteractionValuesCalculator(
     @staticmethod
     def _shap_for_split(
         model: BaseLearnerPipelineDF,
-        training_sample: Sample,
-        oob_split: Optional[np.ndarray],
+        sample: Sample,
         features_out: pd.Index,
         explainer_factory_fn: ExplainerFactory,
-        interaction_matrix_for_split_to_df_fn: ShapToDataFrameFunction,
+        shap_matrix_for_split_to_df_fn: ShapToDataFrameFunction,
+        multi_output_type: str,
+        multi_output_names: Sequence[str],
     ) -> pd.DataFrame:
-        x_oob = ShapCalculator._x_oob(model, training_sample, oob_split)
+        x = ShapCalculator._preprocessed_features(model, sample)
 
         # calculate the im values (returned as an array)
-        explainer = explainer_factory_fn(model.final_estimator.root_estimator, x_oob)
+        explainer = explainer_factory_fn(model.final_estimator.root_estimator, x)
 
         try:
             # noinspection PyUnresolvedReferences
@@ -416,7 +446,7 @@ class ShapInteractionValuesCalculator(
             )
 
         shap_interaction_tensors: Union[np.ndarray, List[np.ndarray]] = (
-            shap_interaction_values_fn(x_oob)
+            shap_interaction_values_fn(x)
         )
 
         if isinstance(shap_interaction_tensors, np.ndarray):
@@ -424,47 +454,73 @@ class ShapInteractionValuesCalculator(
             # have returned a single tensor as an array, so we wrap it in a list
             shap_interaction_tensors: List[np.ndarray] = [shap_interaction_tensors]
 
-        interaction_matrix_per_target: List[pd.DataFrame] = [
+        assert len(multi_output_names) == len(
+            shap_interaction_tensors
+        ), f"{len(shap_interaction_tensors)} outputs named {multi_output_names}"
+
+        interaction_matrix_per_output: List[pd.DataFrame] = [
             im.reindex(
                 index=pd.MultiIndex.from_product(
-                    iterables=(
-                        training_sample.index if oob_split is None else oob_split,
-                        features_out,
-                    ),
-                    names=(training_sample.index.name, features_out.name),
+                    iterables=(x.index, features_out),
+                    names=(x.index.name, features_out.name),
                 ),
                 columns=features_out,
                 copy=False,
                 fill_value=0.0,
             )
-            for im in interaction_matrix_for_split_to_df_fn(
-                shap_interaction_tensors,
-                x_oob.index
-                if oob_split is None
-                else pd.Index(oob_split, name=training_sample.index.name),
-                x_oob.columns,
+            for im in shap_matrix_for_split_to_df_fn(
+                shap_interaction_tensors, x.index, x.columns
             )
         ]
 
-        # if we have a single target, use the data frame for that target;
-        # else, concatenate the values data frame for all targets horizontally
+        # if we have a single output, use the data frame for that target;
+        # else, concatenate the values data frame for all outputs horizontally
         # and add a top level to the column index indicating each target
-        if len(interaction_matrix_per_target) == 1:
-            assert training_sample.n_targets == 1
-            return interaction_matrix_per_target[0]
+        if len(interaction_matrix_per_output) == 1:
+            return interaction_matrix_per_output[0]
         else:
-            assert training_sample.n_targets > 1
             return pd.concat(
-                interaction_matrix_per_target,
+                interaction_matrix_per_output,
                 axis=1,
-                keys=training_sample.target_columns,
-                names=[Sample.COL_TARGET],
+                keys=multi_output_names,
+                names=[multi_output_type, features_out.name],
             )
 
 
-class RegressorShapValuesCalculator(ShapValuesCalculator):
+class RegressorShapCalculator(ShapCalculator[RegressorPipelineDF], metaclass=ABCMeta):
     """
-    Calculates SHAP matrices for regression models.
+    Calculates SHAP (interaction) values for regression models.
+    """
+
+    COL_TARGET = Sample.COL_TARGET
+
+    @staticmethod
+    def _output_names(crossfit: LearnerCrossfit[RegressorPipelineDF]) -> List[str]:
+        return crossfit.training_sample.target_columns
+
+    @property
+    def _multi_output_type(self) -> str:
+        return RegressorShapCalculator.COL_TARGET
+
+    def _multi_output_names(
+        self, model: RegressorPipelineDF, sample: Sample
+    ) -> List[str]:
+        return sample.target_columns
+
+    @staticmethod
+    def _concatenate_splits(shap_df_per_split: List[pd.DataFrame]) -> pd.DataFrame:
+        return pd.concat(
+            shap_df_per_split,
+            keys=range(len(shap_df_per_split)),
+            names=[ShapCalculator.COL_SPLIT],
+        )
+
+
+class RegressorShapValuesCalculator(
+    RegressorShapCalculator, ShapValuesCalculator[RegressorPipelineDF]
+):
+    """
+    Calculates SHAP values for regression models.
     """
 
     @staticmethod
@@ -481,7 +537,9 @@ class RegressorShapValuesCalculator(ShapValuesCalculator):
         ]
 
 
-class RegressorShapInteractionValuesCalculator(ShapInteractionValuesCalculator):
+class RegressorShapInteractionValuesCalculator(
+    RegressorShapCalculator, ShapInteractionValuesCalculator[RegressorPipelineDF]
+):
     """
     Calculates SHAP interaction matrices for regression models.
     """
@@ -509,7 +567,73 @@ class RegressorShapInteractionValuesCalculator(ShapInteractionValuesCalculator):
         ]
 
 
-class ClassifierShapValuesCalculator(ShapValuesCalculator):
+class ClassifierShapCalculator(ShapCalculator[ClassifierPipelineDF], metaclass=ABCMeta):
+    """
+    Calculates SHAP (interaction) values for classification models.
+    """
+
+    COL_CLASS = "class"
+
+    @staticmethod
+    def _output_names(crossfit: LearnerCrossfit[ClassifierPipelineDF]) -> List[str]:
+        assert (
+            len(crossfit.training_sample.target_columns) == 1
+        ), "classification model is single-output"
+        classifier_df = crossfit.pipeline.final_estimator
+        assert classifier_df.is_fitted, "classifier used in crossfit must be fitted"
+        try:
+            # noinspection PyUnresolvedReferences
+            output_names = classifier_df.classes_
+        except Exception as cause:
+            raise AssertionError(
+                "classifier used in crossfit must define classes_ atttribute"
+            ) from cause
+
+        n_outputs = len(output_names)
+
+        if n_outputs == 1:
+            raise RuntimeError(
+                "cannot explain a (sub)sample with one single category "
+                f"{repr(output_names[0])}: "
+                "consider using a stratified cross-validation strategy"
+            )
+
+        elif n_outputs == 2:
+            # for binary classifiers, we will generate only output for the first class
+            # as the probabilities for the second class are trivially linked to class 1
+            return output_names[:1]
+
+        else:
+            return output_names
+
+    @property
+    def _multi_output_type(self) -> str:
+        return ClassifierShapCalculator.COL_CLASS
+
+    def _multi_output_names(
+        self, model: ClassifierPipelineDF, sample: Sample
+    ) -> List[str]:
+        assert isinstance(
+            sample.target, pd.Series
+        ), "only single-output classifiers are currently supported"
+        root_classifier = model.final_estimator.root_estimator
+        # noinspection PyUnresolvedReferences
+        return [str(class_) for class_ in root_classifier.classes_]
+
+    @staticmethod
+    def _concatenate_splits(shap_df_per_split: List[pd.DataFrame]) -> pd.DataFrame:
+        # todo: determine complete list of classes and reindex all column indices
+        #   (only when dealing with multi-class)
+        return pd.concat(
+            shap_df_per_split,
+            keys=range(len(shap_df_per_split)),
+            names=[ShapCalculator.COL_SPLIT],
+        )
+
+
+class ClassifierShapValuesCalculator(
+    ClassifierShapCalculator, ShapValuesCalculator[ClassifierPipelineDF]
+):
     """
     Calculates SHAP matrices for classification models.
     """
@@ -520,42 +644,38 @@ class ClassifierShapValuesCalculator(ShapValuesCalculator):
         observations: pd.Index,
         features_in_split: pd.Index,
     ) -> List[pd.DataFrame]:
-        # todo: adapt this function (and override others) to support non-binary
-        #   classification
-
         # the shap explainer returned an array [obs x features] for each of the
         # target-classes
 
         n_arrays = len(raw_shap_tensors)
 
-        # we currently support only binary classification == 2 classes:
-        assert n_arrays == 2, (
-            "classification pipeline inspection only supports binary classifiers, "
-            f"but SHAP analysis returned values for {n_arrays} classes"
-        )
+        if n_arrays == 2:
+            # in the binary classification case, we will proceed with SHAP values
+            # for class 0 only, since values for class 1 will just be the same
+            # values times (*-1)  (the opposite delta probability)
 
-        # in the binary classification case, we will proceed with SHAP values
-        # for class 0, since values for class 1 will just be the same
-        # values times (*-1)  (the opposite delta probability)
+            # to ensure the values are returned as expected above,
+            # and no information of class 1 is discarded, assert the
+            # following:
+            assert np.allclose(raw_shap_tensors[0], -raw_shap_tensors[1]), (
+                "shap values of binary classifiers must add up to 0.0 "
+                "for each observation and feature"
+            )
 
-        # to ensure the values are returned as expected above,
-        # and no information of class 1 is discarded, assert the
-        # following:
-        assert np.allclose(
-            raw_shap_tensors[0], -raw_shap_tensors[1]
-        ), "raw_shap_tensors(class 0) == -raw_shap_tensors(class 1)"
-
-        # all good: proceed with SHAP values for class 0:
-        raw_shap_matrix = raw_shap_tensors[0]
+            # all good: proceed with SHAP values for class 0:
+            raw_shap_tensors = raw_shap_tensors[:1]
 
         return [
             pd.DataFrame(
                 data=raw_shap_matrix, index=observations, columns=features_in_split
             )
+            for raw_shap_matrix in raw_shap_tensors
         ]
 
 
-class ClassifierShapInteractionValuesCalculator(ShapInteractionValuesCalculator):
+class ClassifierShapInteractionValuesCalculator(
+    ClassifierShapCalculator, ShapInteractionValuesCalculator[ClassifierPipelineDF]
+):
     """
     Calculates SHAP interaction matrices for classification models.
     """
@@ -566,33 +686,26 @@ class ClassifierShapInteractionValuesCalculator(ShapInteractionValuesCalculator)
         observations: pd.Index,
         features_in_split: pd.Index,
     ) -> List[pd.DataFrame]:
-        # todo: adapt this function (and override others) to support non-binary
-        #   classification
-
         # the shap explainer returned an array [obs x features] for each of the
         # target-classes
 
         n_arrays = len(raw_shap_tensors)
 
-        # we currently support only binary classification == 2 classes:
-        assert n_arrays == 2, (
-            "classification pipeline inspection only supports binary classifiers, "
-            f"but SHAP analysis returned values for {n_arrays} classes"
-        )
+        if n_arrays == 2:
+            # in the binary classification case, we will proceed with SHAP values
+            # for class 0, since values for class 1 will just be the same
+            # values times (*-1)  (the opposite delta probability)
 
-        # in the binary classification case, we will proceed with SHAP values
-        # for class 0, since values for class 1 will just be the same
-        # values times (*-1)  (the opposite delta probability)
+            # to ensure the values are returned as expected above,
+            # and no information of class 1 is discarded, assert the
+            # following:
+            assert np.allclose(raw_shap_tensors[0], -raw_shap_tensors[1]), (
+                "shap interaction values of binary classifiers must add up to 0.0 "
+                "for each observation and feature pair"
+            )
 
-        # to ensure the values are returned as expected above,
-        # and no information of class 1 is discarded, assert the
-        # following:
-        assert np.allclose(
-            raw_shap_tensors[0], -raw_shap_tensors[1]
-        ), "raw_shap_tensors(class 0) == -raw_shap_tensors(class 1)"
-
-        # all good: proceed with SHAP values for class 0:
-        raw_shap_interaction_matrix = raw_shap_tensors[0]
+            # all good: proceed with SHAP values for class 0:
+            raw_shap_tensors = raw_shap_tensors[:1]
 
         # each row is indexed by an observation and a feature
         row_index = pd.MultiIndex.from_product(
@@ -608,4 +721,5 @@ class ClassifierShapInteractionValuesCalculator(ShapInteractionValuesCalculator)
                 index=row_index,
                 columns=features_in_split,
             )
+            for raw_shap_interaction_matrix in raw_shap_tensors
         ]
