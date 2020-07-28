@@ -504,21 +504,29 @@ class BaseLearnerInspector(
         # (1 = closest, 0 = most distant)
         # return a linkage tree if there is only one output, else return a list of
         # linkage trees
-        n_outputs = feature_affinity_matrix.shape[0]
-        if n_outputs == 1:
+
+        feature_importance = self.feature_importance(method="rms")
+
+        if len(feature_affinity_matrix) == 1:
+            # we have only a single output
+            # feature importance is already a series
             return self._linkage_from_affinity_matrix_for_output(
-                feature_affinity_matrix[0]
+                feature_affinity_matrix[0], feature_importance
             )
+
         else:
             return [
                 self._linkage_from_affinity_matrix_for_output(
-                    feature_affinity_matrix[i]
+                    feature_affinity_for_output, feature_importance_for_output
                 )
-                for i in range(n_outputs)
+                for feature_affinity_for_output, (
+                    _,
+                    feature_importance_for_output,
+                ) in zip(feature_affinity_matrix, feature_importance.iteritems())
             ]
 
     def _linkage_from_affinity_matrix_for_output(
-        self, feature_affinity_matrix: np.ndarray
+        self, feature_affinity_matrix: np.ndarray, feature_importance: pd.Series
     ) -> LinkageTree:
         # calculate the linkage tree from the a given output in a feature distance
         # matrix;
@@ -535,18 +543,11 @@ class BaseLearnerInspector(
         # Select only the features that appear in the distance matrix, and in the
         # correct order
 
-        feature_importance = self.feature_importance()
-        n_outputs = len(self.outputs)
-
         # build and return the linkage tree
         return LinkageTree(
             scipy_linkage_matrix=linkage_matrix,
             leaf_labels=feature_importance.index,
-            leaf_weights=(
-                feature_importance.values[n_outputs]
-                if n_outputs > 1
-                else feature_importance.values
-            ),
+            leaf_weights=feature_importance.values,
             max_distance=1.0,
         )
 
