@@ -143,8 +143,10 @@ class LearnerCrossfit(
             pre_dispatch=pre_dispatch,
             verbose=verbose,
         )
-        self.pipeline = pipeline.clone()  #: the learner pipeline being trained
+        #: the learner pipeline being trained
+        self.pipeline: T_LearnerPipelineDF = pipeline.clone()
         self.cv = cv  #: the cross validator
+        #: if :code:`True`, shuffle feature order for each crossfit
         self.shuffle_features: bool = (
             False if shuffle_features is None else shuffle_features
         )
