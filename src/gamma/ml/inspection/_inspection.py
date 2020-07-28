@@ -16,6 +16,7 @@ from scipy.spatial.distance import squareform
 from shap import KernelExplainer, TreeExplainer
 from shap.explainers.explainer import Explainer
 
+from gamma.common import inheritdoc
 from gamma.common.fit import FittableMixin, T_Self
 from gamma.common.parallelization import ParallelizableMixin
 from gamma.ml import Sample
@@ -80,9 +81,6 @@ class BaseLearnerInspector(
     COL_IMPORTANCE = "importance"
     COL_IMPORTANCE_MARGINAL = "marginal importance"
     COL_SPLIT = ShapCalculator.COL_SPLIT
-
-    CONSOLIDATION_METHOD_MEAN = ShapCalculator.CONSOLIDATION_METHOD_MEAN
-    CONSOLIDATION_METHOD_STD = ShapCalculator.CONSOLIDATION_METHOD_STD
 
     def __init__(
         self,
@@ -228,9 +226,7 @@ class BaseLearnerInspector(
         """
         return self.crossfit.pipeline.features_out.to_list()
 
-    def shap_values(
-        self, consolidate: Optional[str] = CONSOLIDATION_METHOD_MEAN
-    ) -> pd.DataFrame:
+    def shap_values(self, consolidate: Optional[str] = "mean") -> pd.DataFrame:
         """
         Calculate the SHAP values for all splits.
 
@@ -248,7 +244,7 @@ class BaseLearnerInspector(
         return self._shap_calculator.get_shap_values(consolidate=consolidate)
 
     def shap_interaction_values(
-        self, consolidate: Optional[str] = CONSOLIDATION_METHOD_MEAN
+        self, consolidate: Optional[str] = "mean"
     ) -> pd.DataFrame:
         """
         Calculate the SHAP interaction values for all splits.

@@ -62,9 +62,6 @@ class ShapCalculator(
 
     COL_SPLIT = "split"
 
-    CONSOLIDATION_METHOD_MEAN = "mean"
-    CONSOLIDATION_METHOD_STD = "std"
-
     def __init__(
         self,
         explainer_factory: ExplainerFactory,
@@ -224,9 +221,9 @@ class ShapCalculator(
 
         level = 1 if n_levels == 2 else tuple(range(1, n_levels))
 
-        if method == ShapCalculator.CONSOLIDATION_METHOD_MEAN:
+        if method == "mean":
             shap_consolidated = shap_all_splits_df.mean(level=level)
-        elif method == ShapCalculator.CONSOLIDATION_METHOD_STD:
+        elif method == "std":
             shap_consolidated = shap_all_splits_df.std(level=level)
         else:
             raise ValueError(f"unknown consolidation method: {method}")
