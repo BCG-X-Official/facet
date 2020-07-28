@@ -1,12 +1,11 @@
 import logging
-import warnings
 
 from gamma.ml import Sample
 from gamma.ml.selection import LearnerRanker, ParameterGrid
 from gamma.ml.validation import BootstrapCV
 from gamma.sklearndf.classification import RandomForestClassifierDF
 from gamma.sklearndf.pipeline import ClassifierPipelineDF
-from test.gamma.ml import check_ranking
+from test.gamma.ml import check_ranking, disable_warnings
 
 log = logging.getLogger(__name__)
 
@@ -14,11 +13,9 @@ log = logging.getLogger(__name__)
 def test_prediction_classifier(
     iris_sample: Sample, cv_bootstrap: BootstrapCV, n_jobs: int
 ) -> None:
-    expected_learner_scores = [0.889, 0.889, 0.853, 0.815]
+    disable_warnings()
 
-    warnings.filterwarnings("ignore", message="numpy.dtype size changed")
-    warnings.filterwarnings("ignore", message="numpy.ufunc size changed")
-    warnings.filterwarnings("ignore", message="You are accessing a training score")
+    expected_learner_scores = [0.889, 0.889, 0.853, 0.815]
 
     # define parameters and crossfit
     grid = ParameterGrid(
