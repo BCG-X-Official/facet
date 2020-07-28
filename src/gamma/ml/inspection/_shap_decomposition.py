@@ -90,16 +90,16 @@ class ShapValueDecomposer(FittableMixin[ShapCalculator]):
         #
 
         shap_values = shap_calculator.get_shap_values(consolidate=None)
-        n_targets = len(shap_calculator.target_columns_)
+        n_outputs = len(shap_calculator.output_names_)
         n_features = len(shap_calculator.feature_index_)
         n_observations = len(shap_values)
 
         # p[i] = p_i
-        # shape: (n_targets, n_features, n_observations)
-        # the vector of shap values for every target and feature
+        # shape: (n_outputs, n_features, n_observations)
+        # the vector of shap values for every output and feature
         p_i = _ensure_last_axis_is_fast(
             np.transpose(
-                shap_values.values.reshape((n_observations, n_targets, n_features)),
+                shap_values.values.reshape((n_observations, n_outputs, n_features)),
                 axes=(1, 2, 0),
             )
         )
@@ -109,7 +109,7 @@ class ShapValueDecomposer(FittableMixin[ShapCalculator]):
         #
 
         # covariance matrix of shap vectors
-        # shape: (n_targets, n_features, n_features)
+        # shape: (n_outputs, n_features, n_features)
         cov_p_i_p_j = _cov(p_i, p_i)
         cov_p_i_p_j_2x = 2 * cov_p_i_p_j
 
@@ -118,7 +118,7 @@ class ShapValueDecomposer(FittableMixin[ShapCalculator]):
         var_p_i_plus_var_p_j = var_p_i[:, :, np.newaxis] + var_p_i[:, np.newaxis, :]
 
         # std(p[i] + p[j])
-        # shape: (n_targets, n_features)
+        # shape: (n_outputs, n_features)
         # variances of SHAP vectors minus total synergy
         # or, the length of the sum of vectors p[i] and p[j]
         # this quantifies the joint contributions of features i and j
@@ -126,24 +126,24 @@ class ShapValueDecomposer(FittableMixin[ShapCalculator]):
         std_p_i_plus_p_j = _sqrt(var_p_i_plus_var_p_j + cov_p_i_p_j_2x)
 
         # std(p[i] - p[j])
-        # shape: (n_targets, n_features)
+        # shape: (n_outputs, n_features)
         # the length of the difference of vectors p[i] and p[j]
         # we need this as part of the formula to calculate ass_ij (see below)
         std_p_i_minus_p_j = _sqrt(var_p_i_plus_var_p_j - cov_p_i_p_j_2x)
 
         # 2 * std(ass[i, j]) = 2 * std(ass[j, i])
-        # shape: (n_targets, n_features, n_features)
+        # shape: (n_outputs, n_features, n_features)
         # twice the standard deviation (= length) of the redundancy vector;
         # this is the total contribution made by p[i] and p[j] where both features
         # independently use redundant information
         std_ass_ij_2x = std_p_i_plus_p_j - std_p_i_minus_p_j
 
         # SHAP association
-        # shape: (n_targets, n_features, n_features)
+        # shape: (n_outputs, n_features, n_features)
         association_ij = np.abs(std_ass_ij_2x)
 
         # we should have the right shape for all resulting matrices
-        assert association_ij.shape == (n_targets, n_features, n_features)
+        assert association_ij.shape == (n_outputs, n_features, n_features)
 
         with np.errstate(divide="ignore", invalid="ignore"):
             self.association_rel_ = _ensure_diagonality(
@@ -156,8 +156,8 @@ class ShapValueDecomposer(FittableMixin[ShapCalculator]):
         self.association_rel_ = None
 
     def _to_frame(self, matrix: np.ndarray) -> pd.DataFrame:
-        # takes an array of shape (n_targets, n_features, n_features) and transforms it
-        # into a data frame of shape (n_features, n_targets * n_features)
+        # takes an array of shape (n_outputs, n_features, n_features) and transforms it
+        # into a data frame of shape (n_features, n_outputs * n_features)
         index = self.index_
         columns = self.columns_
         return pd.DataFrame(
@@ -252,31 +252,31 @@ class ShapInteractionValueDecomposer(ShapValueDecomposer):
 
         shap_values = shap_calculator.get_shap_interaction_values(consolidate=None)
         features = shap_calculator.feature_index_
-        targets = shap_calculator.target_columns_
+        outputs = shap_calculator.output_names_
         n_features = len(features)
-        n_targets = len(targets)
+        n_outputs = len(outputs)
         n_observations = shap_values.shape[0] // n_features
 
         # p[i, j]
-        # shape: (n_targets, n_features, n_features, n_observations)
-        # the vector of interaction values for every target and feature pairing
+        # shape: (n_outputs, n_features, n_features, n_observations)
+        # the vector of interaction values for every output and feature pairing
         # for improved numerical precision, we ensure the last axis is the fast axis
         # i.e. stride size equals item size (see documentation for numpy.sum)
         p_ij = _ensure_last_axis_is_fast(
             np.transpose(
                 shap_values.values.reshape(
-                    (n_observations, n_features, n_targets, n_features)
+                    (n_observations, n_features, n_outputs, n_features)
                 ),
                 axes=(2, 1, 3, 0),
             )
         )
 
         # p[i]
-        # shape: (n_targets, n_features, n_observations)
+        # shape: (n_outputs, n_features, n_observations)
         p_i = _ensure_last_axis_is_fast(p_ij.sum(axis=2))
 
         # covariance matrix of shap vectors
-        # shape: (n_targets, n_features, n_features)
+        # shape: (n_outputs, n_features, n_features)
         cov_p_i_p_j = _cov(p_i, p_i)
 
         #
@@ -284,31 +284,31 @@ class ShapInteractionValueDecomposer(ShapValueDecomposer):
         #
 
         # var(p[i, j]), std(p[i, j])
-        # shape: (n_targets, n_features, n_features)
+        # shape: (n_outputs, n_features, n_features)
         # variance and length (= standard deviation) of each feature interaction vector
         var_p_ij = _ensure_last_axis_is_fast(p_ij * p_ij).sum(axis=-1) / n_observations
         std_p_ij = np.sqrt(var_p_ij)
 
         # p[i, i]
-        # shape: (n_targets, n_features, n_observations)
+        # shape: (n_outputs, n_features, n_observations)
         # independent feature contributions;
         # this is the diagonal of p_ij
         p_ii = np.diagonal(p_ij, axis1=1, axis2=2).swapaxes(1, 2)
 
         # p'[i] = p[i] - p[i, i]
-        # shape: (n_targets, n_features, n_observations)
+        # shape: (n_outputs, n_features, n_observations)
         # the SHAP vectors per feature, minus the independent contributions
         p_prime_i = _ensure_last_axis_is_fast(p_i - p_ii)
 
         # std_p_relative[i, j]
-        # shape: (n_targets, n_features, n_features)
+        # shape: (n_outputs, n_features, n_features)
         # relative importance of p[i, j] measured as the length of p[i, j]
         # as percentage of the sum of lengths of all p[..., ...]
         with np.errstate(divide="ignore", invalid="ignore"):
             std_p_relative_ij = std_p_ij / std_p_ij.sum()
 
         # p_valid[i, j]
-        # shape: (n_targets, n_features, n_features)
+        # shape: (n_outputs, n_features, n_features)
         # boolean values indicating whether p[i, j] is above the "noise" threshold,
         # i.e. whether we trust that doing calculations with p[i, j] is sufficiently
         # accurate. p[i, j] with small variances should not be used because we divide
@@ -319,8 +319,8 @@ class ShapInteractionValueDecomposer(ShapValueDecomposer):
         p_valid_ij = std_p_relative_ij >= interaction_noise_threshold
 
         # k[i, j]
-        # shape: (n_targets, n_features, n_features)
-        # k[i, j] = cov(p'[i], p[i, j]) / var(p[i, j]), for each target
+        # shape: (n_outputs, n_features, n_features)
+        # k[i, j] = cov(p'[i], p[i, j]) / var(p[i, j]), for each output
         # this is the orthogonal projection of p[i, j] onto p'[i] and determines
         # the multiplier of std(p[i, j]) (i.e., direct synergy) to obtain
         # the total direct and indirect synergy of p'[i] with p'[j], i.e.,
@@ -345,11 +345,11 @@ class ShapInteractionValueDecomposer(ShapValueDecomposer):
         def _feature(_i: int) -> str:
             return f'"{features[_i]}"'
 
-        def _for_target(_t: int) -> str:
-            if targets is None:
+        def _for_output(_t: int) -> str:
+            if outputs is None:
                 return ""
             else:
-                return f' for target "{targets[_t]}"'
+                return f' for output "{outputs[_t]}"'
 
         def _relative_direct_synergy(_t: int, _i: int, _j: int) -> str:
             return (
@@ -365,7 +365,7 @@ class ShapInteractionValueDecomposer(ShapValueDecomposer):
                 if _i != _j:
                     log.debug(
                         "contravariant indirect synergy "
-                        f"between {_feature(_i)} and {_feature(_j)}{_for_target(_t)}: "
+                        f"between {_feature(_i)} and {_feature(_j)}{_for_output(_t)}: "
                         "indirect synergy calculated as "
                         f"{(k_ij[_t, _i, _j] - 1) * 100:.3g}% "
                         "of direct synergy; setting indirect synergy to 0. "
@@ -376,7 +376,7 @@ class ShapInteractionValueDecomposer(ShapValueDecomposer):
                 if _i != _j:
                     log.warning(
                         "high indirect synergy "
-                        f"between {_feature(_i)} and {_feature(_j)}{_for_target(_t)}: "
+                        f"between {_feature(_i)} and {_feature(_j)}{_for_output(_t)}: "
                         "total synergy is "
                         f"{k_ij[_t, _i, _j] * 100:.3g}% of direct synergy. "
                         f"{_relative_direct_synergy(_t, _i, _j)}"
@@ -390,17 +390,17 @@ class ShapInteractionValueDecomposer(ShapValueDecomposer):
         k_ij = np.clip(k_ij, 1.0, None)
 
         # fill the diagonal(s) with nan since these values are meaningless
-        for k_ij_for_target in k_ij:
-            np.fill_diagonal(k_ij_for_target, val=np.nan)
+        for k_ij_for_output in k_ij:
+            np.fill_diagonal(k_ij_for_output, val=np.nan)
 
         # s[j, i]
         # transpose of s[i, j]; we need this later for calculating SHAP redundancy
-        # shape: (n_targets, n_features, n_features)
+        # shape: (n_outputs, n_features, n_features)
         k_ji = _transpose(k_ij)
 
         # syn[i, j] = syn[j, i] = (k[i, j] + k[j, i]) * p[i, j]
         # total SHAP synergy, comprising both direct and indirect synergy
-        # shape: (n_targets, n_features, n_features)
+        # shape: (n_outputs, n_features, n_features)
         std_syn_ij_plus_syn_ji = (k_ij + k_ji) * std_p_ij
 
         #
@@ -409,7 +409,7 @@ class ShapInteractionValueDecomposer(ShapValueDecomposer):
 
         # cov(p[i], p[i, j])
         # covariance matrix of shap vectors with pairwise synergies
-        # shape: (n_targets, n_features, n_features)
+        # shape: (n_outputs, n_features, n_features)
 
         if _PAIRWISE_PARTIAL_SUMMATION:
             raise NotImplementedError(
@@ -419,7 +419,7 @@ class ShapInteractionValueDecomposer(ShapValueDecomposer):
 
         # cov(aut[i, j], aut[j, i])
         # where aut[i, j] = p[i] - k[i, j] * p[i, j]
-        # shape: (n_observations, n_targets, n_features)
+        # shape: (n_observations, n_outputs, n_features)
         # matrix of covariances for tau vectors for all pairings of features
         # the aut[i, j] vector is the p[i] SHAP contribution vector where the synergy
         # effects (direct and indirect) with feature j have been deducted
@@ -433,29 +433,29 @@ class ShapInteractionValueDecomposer(ShapValueDecomposer):
 
         # var(p[i])
         # variances of SHAP vectors
-        # shape: (n_targets, n_features, 1)
+        # shape: (n_outputs, n_features, 1)
         # i.e. adding a second, empty feature dimension to enable correct broadcasting
         var_p_i = np.diagonal(cov_p_i_p_j, axis1=1, axis2=2)[:, :, np.newaxis]
 
         # var(aut[i, j])
         # variances of SHAP vectors minus total synergy
-        # shape: (n_targets, n_features, n_features)
+        # shape: (n_outputs, n_features, n_features)
         var_aut_ij = var_p_i - 2 * k_ij * cov_p_i_p_ij + k_ij * k_ij * var_p_ij
 
         # var(aut[i]) + var(aut[j])
         # Sum of covariances per feature pair (this is a diagonal matrix)
-        # shape: (n_targets, n_features, n_features)
+        # shape: (n_outputs, n_features, n_features)
         var_aut_ij_plus_var_aut_ji = var_aut_ij + _transpose(var_aut_ij)
 
         # 2 * cov(aut[i, j], aut[j, i])
-        # shape: (n_targets, n_features, n_features)
+        # shape: (n_outputs, n_features, n_features)
         # this is an intermediate result to calculate the standard deviation
         # of the redundancy vector (see next step below)
         cov_aut_ij_aut_ji_2x = 2 * cov_aut_ij_aut_ji
 
         # std(aut[i, j] + aut[j, i])
         # where aut[i, j] = p[i] - syn[i, j]
-        # shape: (n_targets, n_features, n_features)
+        # shape: (n_outputs, n_features, n_features)
         # variances of SHAP vectors minus total synergy
         # or, the length of the sum of vectors aut[i, j] and aut[j, i]
         # this quantifies the autonomous contributions of features i and j, i.e.,
@@ -471,7 +471,7 @@ class ShapInteractionValueDecomposer(ShapValueDecomposer):
         #
 
         # std(aut[i, j] - aut[j, i])
-        # shape: (n_targets, n_features, n_features)
+        # shape: (n_outputs, n_features, n_features)
         # the length of the difference of vectors aut[i, j] and aut[j, i]
         # we need this as part of the formula to calculate red_ij (see below)
 
@@ -480,7 +480,7 @@ class ShapInteractionValueDecomposer(ShapValueDecomposer):
         )
 
         # 2 * std(red[i, j]) = 2 * std(red[j, i])
-        # shape: (n_targets, n_features)
+        # shape: (n_outputs, n_features)
         # twice the standard deviation (= length) of redundancy vector;
         # this is the total contribution made by p[i] and p[j] where both features
         # independently use redundant information
@@ -492,23 +492,23 @@ class ShapInteractionValueDecomposer(ShapValueDecomposer):
         #
 
         # 4 * var(red[i, j]), var(red[i, j])
-        # shape: (n_targets, n_features, n_features)
+        # shape: (n_outputs, n_features, n_features)
         var_red_ij_4x = std_red_ij_2x * std_red_ij_2x
 
         # ratio of length of 2*e over length of (aut[i, j] + aut[j, i])
-        # shape: (n_targets, n_features, n_features)
+        # shape: (n_outputs, n_features, n_features)
         # we need this for the next step
         with np.errstate(divide="ignore", invalid="ignore"):
             red_aut_ratio_2x = 1 - std_aut_ij_minus_aut_ji / std_aut_ij_plus_aut_ji
 
         # 2 * cov(aut[i, j], red[i, j])
-        # shape: (n_targets, n_features, n_features)
+        # shape: (n_outputs, n_features, n_features)
         # we need this as part of the formula to calculate nu_i (see next step below)
         cov_aut_ij_red_ij_2x = red_aut_ratio_2x * (var_aut_ij + cov_aut_ij_aut_ji)
 
         # std(ind_ij)
         # where ind_ij = aut_ij + aut_ji - 2 * red_ij
-        # shape: (n_targets, n_features, n_features)
+        # shape: (n_outputs, n_features, n_features)
         # the standard deviation (= length) of the independence vector
 
         std_ind_ij_plus_ind_ji = _sqrt(
@@ -528,7 +528,7 @@ class ShapInteractionValueDecomposer(ShapValueDecomposer):
         #
 
         # 2 * cov(p[i], red[i, j])
-        # shape: (n_targets, n_features, n_features)
+        # shape: (n_outputs, n_features, n_features)
         # intermediate result to calculate upsilon[i, j], see next step
 
         cov_p_i_red_ij_2x = red_aut_ratio_2x * (
@@ -537,7 +537,7 @@ class ShapInteractionValueDecomposer(ShapValueDecomposer):
 
         # std(uni[i, j] + uni[j, i])
         # where uni[i, j] + + uni[j, i] = p[i] + p[j] - 2 * red[i, j]
-        # shape: (n_targets, n_features, n_features)
+        # shape: (n_outputs, n_features, n_features)
         # this is the sum of complementary contributions of feature i and feature j,
         # i.e., deducting the redundant contributions
 
@@ -567,7 +567,7 @@ class ShapInteractionValueDecomposer(ShapValueDecomposer):
             uniqueness_ij,
             independence_ij,
         ):
-            assert matrix.shape == (n_targets, n_features, n_features)
+            assert matrix.shape == (n_outputs, n_features, n_features)
 
         # calculate relative synergy and redundancy (ranging from 0.0 to 1.0)
         # both matrices are symmetric, but we ensure perfect symmetry by removing
@@ -591,12 +591,12 @@ class ShapInteractionValueDecomposer(ShapValueDecomposer):
 
 
 def _ensure_diagonality(matrix: np.ndarray) -> np.ndarray:
-    # matrix shape: (n_targets, n_features, n_features)
+    # matrix shape: (n_outputs, n_features, n_features)
 
     # remove potential floating point round-off errors
     matrix = (matrix + _transpose(matrix)) / 2
 
-    # fixes per target
+    # fixes per output
     for m in matrix:
         # replace nan values with 0.0 = no association when correlation is undefined
         np.nan_to_num(m, copy=False)
@@ -618,8 +618,8 @@ def _ensure_last_axis_is_fast(v: np.ndarray) -> np.ndarray:
 
 def _cov(u: np.ndarray, v: np.ndarray) -> np.ndarray:
     # calculate covariance matrix of two vectors, assuming µ=0 for both
-    # input shape for u and v is (n_targets, n_features, n_observations)
-    # output shape is (n_targets, n_features, n_features, n_observations)
+    # input shape for u and v is (n_outputs, n_features, n_observations)
+    # output shape is (n_outputs, n_features, n_features, n_observations)
 
     assert u.shape == v.shape
     assert u.ndim == 3
@@ -631,7 +631,7 @@ def _cov(u: np.ndarray, v: np.ndarray) -> np.ndarray:
 
 
 def _transpose(m: np.ndarray) -> np.ndarray:
-    # transpose a feature matrix for all targets
+    # transpose a feature matrix for all outputs
     assert m.ndim == 3
 
     return m.swapaxes(1, 2)

@@ -86,7 +86,7 @@ class ShapCalculator(
         self._explainer_factory = explainer_factory
         self.shap_: Optional[pd.DataFrame] = None
         self.feature_index_: Optional[pd.Index] = None
-        self.target_columns_: Optional[List[str]] = None
+        self.output_names_: Optional[List[str]] = None
         self.n_observations_: Optional[int] = None
 
     def fit(
@@ -106,7 +106,7 @@ class ShapCalculator(
 
         training_sample = crossfit.training_sample
         self.feature_index_ = crossfit.pipeline.features_out.rename(Sample.COL_FEATURE)
-        self.target_columns_ = self._output_names(crossfit=crossfit)
+        self.output_names_ = self._output_names(crossfit=crossfit)
         self.n_observations_ = len(training_sample)
 
         # calculate shap values and re-order the observation index to match the
@@ -141,7 +141,7 @@ class ShapCalculator(
 
         :param consolidate: consolidation method, or `None` for no consolidation
         :return: SHAP contribution values with shape \
-            (n_observations, n_targets * n_features).
+            (n_observations, n_outputs * n_features).
         """
         pass
 
@@ -324,11 +324,11 @@ class ShapValuesCalculator(
             model.final_estimator.root_estimator, x
         ).shap_values(x)
         if isinstance(shap_values, np.ndarray):
-            # if we have a single target *and* no classification, the explainer will
+            # if we have a single output *and* no classification, the explainer will
             # have returned a single tensor as an array
             shap_values: List[np.ndarray] = [shap_values]
 
-        # convert to a data frame per target (different logic depending on whether
+        # convert to a data frame per output (different logic depending on whether
         # we have a regressor or a classifier, implemented by method
         # shap_matrix_for_split_to_df_fn)
         shap_values_df_per_output: List[pd.DataFrame] = [
@@ -336,8 +336,8 @@ class ShapValuesCalculator(
             for shap in shap_matrix_for_split_to_df_fn(shap_values, x.index, x.columns)
         ]
 
-        # if we have a single target, return the data frame for that target;
-        # else, add a top level to the column index indicating each target
+        # if we have a single output, return the data frame for that output;
+        # else, add a top level to the column index indicating each output
 
         if len(shap_values_df_per_output) == 1:
             return shap_values_df_per_output[0]
@@ -393,11 +393,11 @@ class ShapInteractionValuesCalculator(
     def diagonals(self) -> pd.DataFrame:
         """
         The diagonals of all SHAP interaction matrices, of shape
-        (n_observations, n_targets * n_features)
+        (n_observations, n_outputs * n_features)
 
         :return: SHAP interaction values with shape \
-            (n_observations * n_features, n_targets * n_features), i.e., for each \
-            observation and target we get the feature interaction values of size \
+            (n_observations * n_features, n_outputs * n_features), i.e., for each \
+            observation and output we get the feature interaction values of size \
             n_features * n_features.
         """
         self._ensure_fitted()
@@ -410,12 +410,12 @@ class ShapInteractionValuesCalculator(
             np.diagonal(
                 interaction_matrix.values.reshape(
                     (n_observations, n_features, -1, n_features)
-                    # observations x features x targets x features
+                    # observations x features x outputs x features
                 ),
                 axis1=1,
                 axis2=3,
             ).reshape((n_observations, -1)),
-            # observations x (targets * features)
+            # observations x (outputs * features)
             index=interaction_matrix.index.levels[0],
             columns=interaction_matrix.columns,
         )
@@ -448,7 +448,7 @@ class ShapInteractionValuesCalculator(
         )
 
         if isinstance(shap_interaction_tensors, np.ndarray):
-            # if we have a single target *and* no classification, the explainer will
+            # if we have a single output *and* no classification, the explainer will
             # have returned a single tensor as an array, so we wrap it in a list
             shap_interaction_tensors: List[np.ndarray] = [shap_interaction_tensors]
 
@@ -471,9 +471,9 @@ class ShapInteractionValuesCalculator(
             )
         ]
 
-        # if we have a single output, use the data frame for that target;
+        # if we have a single output, use the data frame for that output;
         # else, concatenate the values data frame for all outputs horizontally
-        # and add a top level to the column index indicating each target
+        # and add a top level to the column index indicating each output
         if len(interaction_matrix_per_output) == 1:
             return interaction_matrix_per_output[0]
         else:
@@ -490,15 +490,13 @@ class RegressorShapCalculator(ShapCalculator[RegressorPipelineDF], metaclass=ABC
     Calculates SHAP (interaction) values for regression models.
     """
 
-    COL_TARGET = Sample.COL_TARGET
-
     @staticmethod
     def _output_names(crossfit: LearnerCrossfit[RegressorPipelineDF]) -> List[str]:
         return crossfit.training_sample.target_columns
 
     @property
     def _multi_output_type(self) -> str:
-        return RegressorShapCalculator.COL_TARGET
+        return Sample.COL_TARGET
 
     def _multi_output_names(
         self, model: RegressorPipelineDF, sample: Sample
@@ -644,8 +642,7 @@ class ClassifierShapValuesCalculator(
         observations: pd.Index,
         features_in_split: pd.Index,
     ) -> List[pd.DataFrame]:
-        # the shap explainer returned an array [obs x features] for each of the
-        # target-classes
+        # return a list of data frame [obs x features], one for each of the outputs
 
         n_arrays = len(raw_shap_tensors)
 
@@ -686,8 +683,8 @@ class ClassifierShapInteractionValuesCalculator(
         observations: pd.Index,
         features_in_split: pd.Index,
     ) -> List[pd.DataFrame]:
-        # the shap explainer returned an array [obs x features] for each of the
-        # target-classes
+        # return a list of data frame [(obs x features) x features],
+        # one for each of the outputs
 
         n_arrays = len(raw_shap_tensors)
 
