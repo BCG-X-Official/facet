@@ -16,6 +16,7 @@ from scipy.spatial.distance import squareform
 from shap import KernelExplainer, TreeExplainer
 from shap.explainers.explainer import Explainer
 
+from gamma.common import inheritdoc
 from gamma.common.fit import FittableMixin, T_Self
 from gamma.common.parallelization import ParallelizableMixin
 from gamma.ml import Sample
@@ -80,9 +81,6 @@ class BaseLearnerInspector(
     COL_IMPORTANCE = "importance"
     COL_IMPORTANCE_MARGINAL = "marginal importance"
     COL_SPLIT = ShapCalculator.COL_SPLIT
-
-    CONSOLIDATION_METHOD_MEAN = ShapCalculator.CONSOLIDATION_METHOD_MEAN
-    CONSOLIDATION_METHOD_STD = ShapCalculator.CONSOLIDATION_METHOD_STD
 
     def __init__(
         self,
@@ -214,9 +212,11 @@ class BaseLearnerInspector(
         The names of the outputs explained by this inspector.
 
         For regressors, this corresponds to the number of targets.
+
         For binary classifiers, this is a single class, since the SHAP values of the
         second class can be trivially derived as the negation of SHAP values of the
         first class.
+
         For multi-class classifiers, this is the list of all classes.
         """
         pass
@@ -228,9 +228,7 @@ class BaseLearnerInspector(
         """
         return self.crossfit.pipeline.features_out.to_list()
 
-    def shap_values(
-        self, consolidate: Optional[str] = CONSOLIDATION_METHOD_MEAN
-    ) -> pd.DataFrame:
+    def shap_values(self, consolidate: Optional[str] = "mean") -> pd.DataFrame:
         """
         Calculate the SHAP values for all splits.
 
@@ -248,7 +246,7 @@ class BaseLearnerInspector(
         return self._shap_calculator.get_shap_values(consolidate=consolidate)
 
     def shap_interaction_values(
-        self, consolidate: Optional[str] = CONSOLIDATION_METHOD_MEAN
+        self, consolidate: Optional[str] = "mean"
     ) -> pd.DataFrame:
         """
         Calculate the SHAP interaction values for all splits.
@@ -525,8 +523,9 @@ class BaseLearnerInspector(
                 ) in zip(feature_affinity_matrix, feature_importance.iteritems())
             ]
 
+    @staticmethod
     def _linkage_from_affinity_matrix_for_output(
-        self, feature_affinity_matrix: np.ndarray, feature_importance: pd.Series
+        feature_affinity_matrix: np.ndarray, feature_importance: pd.Series
     ) -> LinkageTree:
         # calculate the linkage tree from the a given output in a feature distance
         # matrix;
@@ -591,6 +590,7 @@ class RegressorInspector(
 
     @property
     def outputs(self) -> List[str]:
+        """The number of targets explained by this regressor inspector"""
         return self.crossfit.training_sample.target_columns
 
     @staticmethod
@@ -604,6 +604,7 @@ class RegressorInspector(
         return RegressorShapInteractionValuesCalculator
 
 
+@inheritdoc(match="[see superclass]")
 class ClassifierInspector(
     BaseLearnerInspector[T_ClassifierPipelineDF], Generic[T_ClassifierPipelineDF]
 ):
@@ -616,6 +617,15 @@ class ClassifierInspector(
 
     @property
     def outputs(self) -> List[str]:
+        """
+        The names of the outputs explained by this inspector.
+
+        For binary classifiers, this is a single class, since the SHAP values of the
+        second class can be trivially derived as the negation of SHAP values of the
+        first class.
+
+        For multi-class classifiers, this is the list of all classes.
+        """
         classifier_df: ClassifierDF = self.crossfit.pipeline.final_estimator
         try:
             # noinspection PyUnresolvedReferences
@@ -630,6 +640,7 @@ class ClassifierInspector(
             ) from cause
 
     def fit(self: T_Self, crossfit: LearnerCrossfit, **fit_params) -> T_Self:
+        """[see superclass]"""
         if len(crossfit.training_sample.target_columns) != 1:
             raise ValueError(
                 "only single-output classifiers are supported (binary or multi-class), "
