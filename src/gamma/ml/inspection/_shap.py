@@ -199,9 +199,10 @@ class ShapCalculator(
 
         return self._concatenate_splits(shap_df_per_split=shap_df_per_split)
 
-    @staticmethod
     @abstractmethod
-    def _concatenate_splits(shap_df_per_split: List[pd.DataFrame]) -> pd.DataFrame:
+    def _concatenate_splits(
+        self, shap_df_per_split: List[pd.DataFrame]
+    ) -> pd.DataFrame:
         pass
 
     @staticmethod
@@ -503,8 +504,9 @@ class RegressorShapCalculator(ShapCalculator[RegressorPipelineDF], metaclass=ABC
     ) -> List[str]:
         return sample.target_columns
 
-    @staticmethod
-    def _concatenate_splits(shap_df_per_split: List[pd.DataFrame]) -> pd.DataFrame:
+    def _concatenate_splits(
+        self, shap_df_per_split: List[pd.DataFrame]
+    ) -> pd.DataFrame:
         return pd.concat(
             shap_df_per_split,
             keys=range(len(shap_df_per_split)),
@@ -618,15 +620,34 @@ class ClassifierShapCalculator(ShapCalculator[ClassifierPipelineDF], metaclass=A
         # noinspection PyUnresolvedReferences
         return [str(class_) for class_ in root_classifier.classes_]
 
-    @staticmethod
-    def _concatenate_splits(shap_df_per_split: List[pd.DataFrame]) -> pd.DataFrame:
-        # todo: determine complete list of classes and reindex all column indices
-        #   (only when dealing with multi-class)
-        return pd.concat(
-            shap_df_per_split,
-            keys=range(len(shap_df_per_split)),
-            names=[ShapCalculator.COL_SPLIT],
-        )
+    def _concatenate_splits(
+        self, shap_df_per_split: List[pd.DataFrame]
+    ) -> pd.DataFrame:
+        output_names = self.output_names_
+
+        index_names = [ShapCalculator.COL_SPLIT, *shap_df_per_split[0].index.names]
+
+        split_keys = range(len(shap_df_per_split))
+        if len(output_names) == 1:
+            return pd.concat(shap_df_per_split, keys=split_keys, names=index_names)
+
+        else:
+            # for multi-class classifiers, ensure that all data frames include
+            # columns for all classes (even if a class was missing in any split)
+
+            columns = pd.MultiIndex.from_product(
+                iterables=[output_names, self.feature_index_],
+                names=[self._multi_output_type, self.feature_index_.name],
+            )
+
+            return pd.concat(
+                [
+                    shap_df.reindex(columns=columns, fill_value=0.0)
+                    for shap_df in shap_df_per_split
+                ],
+                keys=split_keys,
+                names=index_names,
+            )
 
 
 class ClassifierShapValuesCalculator(
