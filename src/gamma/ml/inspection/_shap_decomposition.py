@@ -52,7 +52,6 @@ class ShapValueDecomposer(FittableMixin[ShapCalculator]):
 
         self: ShapValueDecomposer  # support type hinting in PyCharm
 
-        successful = False
         try:
             if len(fit_params) > 0:
                 raise ValueError(
