@@ -339,12 +339,13 @@ def test_model_inspection_classifier_multi_class(
         ),
     )
 
-    # linkage_trees = model_inspector.feature_association_linkage()
-    #
-    # print()
-    # DendrogramDrawer(style=DendrogramReportStyle()).draw(
-    #     data=linkage_trees, title="Iris (binary) feature association linkage"
-    # )
+    linkage_trees = model_inspector.feature_association_linkage()
+
+    for output, linkage_tree in zip(model_inspector.outputs, linkage_trees):
+        print()
+        DendrogramDrawer(style=DendrogramReportStyle()).draw(
+            data=linkage_tree, title=f"Iris feature association linkage: {output}"
+        )
 
 
 def _validate_shap_values_against_predictions(
