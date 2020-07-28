@@ -34,7 +34,7 @@ from gamma.ml.inspection._shap_decomposition import (
     ShapInteractionValueDecomposer,
     ShapValueDecomposer,
 )
-from gamma.sklearndf import BaseLearnerDF
+from gamma.sklearndf import BaseLearnerDF, ClassifierDF
 from gamma.sklearndf.pipeline import (
     BaseLearnerPipelineDF,
     ClassifierPipelineDF,
@@ -207,6 +207,27 @@ class BaseLearnerInspector(
         self._ensure_fitted()
         return self.crossfit.training_sample
 
+    @property
+    @abstractmethod
+    def outputs(self) -> List[str]:
+        """
+        The names of the outputs explained by this inspector.
+
+        For regressors, this corresponds to the number of targets.
+        For binary classifiers, this is a single class, since the SHAP values of the
+        second class can be trivially derived as the negation of SHAP values of the
+        first class.
+        For multi-class classifiers, this is the list of all classes.
+        """
+        pass
+
+    @property
+    def features(self) -> List[str]:
+        """
+        The names of the features used to fit the learner explained by this inspector.
+        """
+        return self.crossfit.pipeline.features_out.to_list()
+
     def shap_values(
         self, consolidate: Optional[str] = CONSOLIDATION_METHOD_MEAN
     ) -> pd.DataFrame:
@@ -259,8 +280,8 @@ class BaseLearnerInspector(
             are `rms` (root of mean squares, default) and `mav` (mean absolute values)
         :return: importance of each feature as its mean absolute SHAP contribution, \
           normalised to a total 100%. Returned as a series of length n_features for \
-          single-target models, and as a data frame of shape (n_features, n_targets) \
-          for multi-target models
+          single-output models, and as a data frame of shape (n_features, n_outputs) \
+          for multi-output models
         """
 
         methods = ["rms", "mav"]
@@ -284,7 +305,7 @@ class BaseLearnerInspector(
             total_importance
         ).rename(BaseLearnerInspector.COL_IMPORTANCE)
 
-        if self._n_targets > 1:
+        if len(self.outputs) > 1:
             assert (
                 abs_importance.index.nlevels == 2
             ), "2 index levels in place for multi-output models"
@@ -313,7 +334,7 @@ class BaseLearnerInspector(
             list of linkage trees if the base estimator is a multi-output model
         """
         self._ensure_fitted()
-        return self._linkage_from_affinity_matrix(
+        return self._linkages_from_affinity_matrices(
             feature_affinity_matrix=self._shap_decomposer.association_rel_
         )
 
@@ -328,7 +349,7 @@ class BaseLearnerInspector(
         contribution).
 
         :return: feature synergy matrix as a data frame of shape \
-            (n_features, n_targets * n_features)
+            (n_features, n_outputs * n_features)
         """
         self._ensure_fitted()
         return self._shap_interaction_decomposer.synergy
@@ -343,7 +364,7 @@ class BaseLearnerInspector(
         (full redundancy - the information used by either feature is fully redundant).
 
         :return: feature redundancy matrix as a data frame of shape \
-            (n_features, n_targets * n_features)
+            (n_features, n_outputs * n_features)
         """
         self._ensure_fitted()
         return self._shap_interaction_decomposer.redundancy
@@ -357,7 +378,7 @@ class BaseLearnerInspector(
             list of linkage trees if the base estimator is a multi-output model
         """
         self._ensure_fitted()
-        return self._linkage_from_affinity_matrix(
+        return self._linkages_from_affinity_matrices(
             feature_affinity_matrix=self._shap_interaction_decomposer.redundancy_rel_
         )
 
@@ -409,33 +430,33 @@ class BaseLearnerInspector(
         with :math:`\\sum_{a=1}^n \\sum_{b=a}^n I_{ab} = 1`
 
         :return: average shap interaction values as a data frame of shape \
-            (n_features, n_targets * n_features)
+            (n_features, n_outputs * n_features)
         """
 
-        n_features = self._n_features
-        n_targets = self._n_targets
+        n_features = len(self.features)
+        n_outputs = len(self.outputs)
 
         # get a feature interaction array with shape
-        # (n_observations, n_targets, n_features, n_features)
+        # (n_observations, n_outputs, n_features, n_features)
         # where the innermost feature x feature arrays are symmetrical
-        im_matrix_per_observation_and_target = (
+        im_matrix_per_observation_and_output = (
             self.shap_interaction_values(consolidate=None)
-            .values.reshape((-1, n_features, n_targets, n_features))
+            .values.reshape((-1, n_features, n_outputs, n_features))
             .swapaxes(1, 2)
         )
 
-        # calculate the average interactions for each target and feature/feature
+        # calculate the average interactions for each output and feature/feature
         # interaction, based on the standard deviation assuming a mean of 0.0.
-        # The resulting matrix has shape (n_targets, n_features, n_features)
+        # The resulting matrix has shape (n_outputs, n_features, n_features)
         interaction_matrix = np.sqrt(
             (
-                im_matrix_per_observation_and_target
-                * im_matrix_per_observation_and_target
+                im_matrix_per_observation_and_output
+                * im_matrix_per_observation_and_output
             ).mean(axis=0)
         )
-        assert interaction_matrix.shape == (n_targets, n_features, n_features)
+        assert interaction_matrix.shape == (n_outputs, n_features, n_features)
 
-        # we normalise the synergy matrix for each target to a total of 1.0
+        # we normalise the synergy matrix for each output to a total of 1.0
         interaction_matrix /= interaction_matrix.sum()
 
         # the total interaction effect for features i and j is the total of matrix
@@ -452,73 +473,60 @@ class BaseLearnerInspector(
         # create a data frame from the feature matrix
         return self._feature_matrix_to_df(interaction_matrix)
 
-    @property
-    def _n_targets(self) -> int:
-        return self.training_sample.n_targets
-
-    @property
-    def _features(self) -> pd.Index:
-        return self.crossfit.pipeline.features_out.rename(Sample.COL_FEATURE)
-
-    @property
-    def _n_features(self) -> int:
-        return len(self._features)
-
     def _feature_matrix_to_df(self, matrix: np.ndarray) -> pd.DataFrame:
-        # transform a matrix of shape (n_targets, n_features, n_features)
+        # transform a matrix of shape (n_outputs, n_features, n_features)
         # to a data frame
 
-        n_features = self._n_features
-        n_targets = self._n_targets
+        n_features = len(self.features)
+        n_outputs = len(self.outputs)
 
-        assert matrix.shape == (n_targets, n_features, n_features)
+        assert matrix.shape == (n_outputs, n_features, n_features)
 
-        # transform to 2D shape (n_features, n_targets * n_features)
-        matrix_2d = matrix.swapaxes(0, 1).reshape((n_features, n_targets * n_features))
+        # transform to 2D shape (n_features, n_outputs * n_features)
+        matrix_2d = matrix.swapaxes(0, 1).reshape((n_features, n_outputs * n_features))
 
         # convert array to data frame with appropriate indices
         matrix_df = pd.DataFrame(
-            data=matrix_2d, columns=self.shap_values().columns, index=self._features
+            data=matrix_2d,
+            columns=self.shap_values().columns,
+            index=self.crossfit.pipeline.features_out.rename(Sample.COL_FEATURE),
         )
 
-        assert matrix_df.shape == (n_features, n_targets * n_features)
+        assert matrix_df.shape == (n_features, n_outputs * n_features)
 
         return matrix_df
 
-    def _linkage_from_affinity_matrix(
+    def _linkages_from_affinity_matrices(
         self, feature_affinity_matrix: np.ndarray
     ) -> Union[LinkageTree, List[LinkageTree]]:
-        # calculate the linkage trees for all targets in a feature distance matrix;
-        # matrix has shape (n_targets, n_features, n_features) with values ranging from
+        # calculate the linkage trees for all outputs in a feature distance matrix;
+        # matrix has shape (n_outputs, n_features, n_features) with values ranging from
         # (1 = closest, 0 = most distant)
-        # return a linkage tree if there is only one target, else return a list of
+        # return a linkage tree if there is only one output, else return a list of
         # linkage trees
-        n_targets = feature_affinity_matrix.shape[0]
-        if n_targets == 1:
-            return self._linkage_from_affinity_matrix_for_target(
-                feature_affinity_matrix, target=0
+        n_outputs = feature_affinity_matrix.shape[0]
+        if n_outputs == 1:
+            return self._linkage_from_affinity_matrix_for_output(
+                feature_affinity_matrix[0]
             )
         else:
             return [
-                self._linkage_from_affinity_matrix_for_target(
-                    feature_affinity_matrix, target=i
+                self._linkage_from_affinity_matrix_for_output(
+                    feature_affinity_matrix[i]
                 )
-                for i in range(n_targets)
+                for i in range(n_outputs)
             ]
 
-    def _linkage_from_affinity_matrix_for_target(
-        self, feature_affinity_matrix: np.ndarray, target: int
+    def _linkage_from_affinity_matrix_for_output(
+        self, feature_affinity_matrix: np.ndarray
     ) -> LinkageTree:
-        # calculate the linkage tree from the a given target in a feature distance
+        # calculate the linkage tree from the a given output in a feature distance
         # matrix;
-        # matrix has shape (n_targets, n_features, n_features) with values ranging from
+        # matrix has shape (n_features, n_features) with values ranging from
         # (1 = closest, 0 = most distant)
-        # arg target is an integer index
 
         # compress the distance matrix (required by SciPy)
-        compressed_distance_vector = squareform(
-            1 - abs(feature_affinity_matrix[target])
-        )
+        compressed_distance_vector = squareform(1 - abs(feature_affinity_matrix))
 
         # calculate the linkage matrix
         linkage_matrix = linkage(y=compressed_distance_vector, method="single")
@@ -528,15 +536,17 @@ class BaseLearnerInspector(
         # correct order
 
         feature_importance = self.feature_importance()
-        n_targets = self._n_targets
+        n_outputs = len(self.outputs)
 
         # build and return the linkage tree
         return LinkageTree(
             scipy_linkage_matrix=linkage_matrix,
             leaf_labels=feature_importance.index,
-            leaf_weights=feature_importance.values[n_targets]
-            if n_targets > 1
-            else feature_importance.values,
+            leaf_weights=(
+                feature_importance.values[n_outputs]
+                if n_outputs > 1
+                else feature_importance.values
+            ),
             max_distance=1.0,
         )
 
@@ -578,6 +588,10 @@ class RegressorInspector(
     Inspect a regression pipeline through its SHAP values.
     """
 
+    @property
+    def outputs(self) -> List[str]:
+        return self.crossfit.training_sample.target_columns
+
     @staticmethod
     def _shap_values_calculator_cls() -> Type[ShapValuesCalculator]:
         return RegressorShapValuesCalculator
@@ -598,6 +612,21 @@ class ClassifierInspector(
     Based on limitations of the underlying SHAP packages, only single-output classifiers
     (binary or multi-class) are supported.
     """
+
+    @property
+    def outputs(self) -> List[str]:
+        classifier_df: ClassifierDF = self.crossfit.pipeline.final_estimator
+        try:
+            # noinspection PyUnresolvedReferences
+            classes = classifier_df.classes_
+            # for binary classifiers, we will only produce SHAP values for the first
+            # class (since they would only be mirrored by the second class)
+            return classes[:1] if len(classes) == 2 else classes
+        except AttributeError as cause:
+            raise TypeError(
+                f"underlying {type(classifier_df.__name__)} "
+                "does not implement 'classes_' attribute: "
+            ) from cause
 
     def fit(self: T_Self, crossfit: LearnerCrossfit, **fit_params) -> T_Self:
         if len(crossfit.training_sample.target_columns) != 1:
