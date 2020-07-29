@@ -167,7 +167,7 @@ class BaseLearnerInspector(
 
         if self._shap_interaction:
             shap_calculator = self._shap_interaction_values_calculator_cls()(
-                explain_full_sample=True,
+                explain_full_sample=False,
                 explainer_factory=self._explainer_factory,
                 n_jobs=self.n_jobs,
                 shared_memory=self.shared_memory,
@@ -180,7 +180,7 @@ class BaseLearnerInspector(
 
         else:
             shap_calculator = self._shap_values_calculator_cls()(
-                explain_full_sample=True,
+                explain_full_sample=False,
                 explainer_factory=self._explainer_factory,
                 n_jobs=self.n_jobs,
                 shared_memory=self.shared_memory,
