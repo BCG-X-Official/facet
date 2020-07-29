@@ -5,7 +5,7 @@ from gamma.ml.selection import LearnerRanker, ParameterGrid
 from gamma.ml.validation import BootstrapCV
 from gamma.sklearndf.classification import RandomForestClassifierDF
 from gamma.sklearndf.pipeline import ClassifierPipelineDF
-from test.gamma.ml import check_ranking, disable_warnings
+from test.gamma.ml import check_ranking
 
 log = logging.getLogger(__name__)
 
@@ -13,9 +13,8 @@ log = logging.getLogger(__name__)
 def test_prediction_classifier(
     iris_sample: Sample, cv_bootstrap: BootstrapCV, n_jobs: int
 ) -> None:
-    disable_warnings()
 
-    expected_learner_scores = [0.889, 0.889, 0.853, 0.815]
+    expected_learner_scores = [0.889, 0.889, 0.65, 0.648]
 
     # define parameters and crossfit
     grid = ParameterGrid(

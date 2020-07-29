@@ -1,4 +1,3 @@
-import warnings
 from typing import *
 
 import pytest
@@ -61,9 +60,9 @@ def check_ranking(
         zip(ranking, expected_scores, expected_learners)
     ):
         score_actual = round(learner_eval.ranking_score, 3)
-        assert pytest.approx(score_actual, abs=0.1) == score_expected, (
-            f"unexpected score for learner at rank #{rank}: "
-            f"{score_actual} instead of {score_expected}"
+        assert score_actual == pytest.approx(score_expected, abs=0.1), (
+            f"unexpected score for learner at rank #{rank + 1}: "
+            f"got {score_actual} but expected {score_expected}"
         )
         if learner_expected is not None:
             learner_actual = learner_eval.pipeline.final_estimator
@@ -79,9 +78,3 @@ def check_ranking(
                 f"unexpected parameters for learner at rank #{rank}: "
                 f"{parameters_actual} instead of {parameters_expected}"
             )
-
-
-def disable_warnings() -> None:
-    warnings.filterwarnings("ignore", message="numpy.dtype size changed")
-    warnings.filterwarnings("ignore", message="numpy.ufunc size changed")
-    warnings.filterwarnings("ignore", message=r".*version 2\.2\.1.*Apple Clang")

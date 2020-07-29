@@ -22,11 +22,9 @@ from gamma.sklearndf.regression import (
     RandomForestRegressorDF,
 )
 from gamma.sklearndf.regression.extra import LGBMRegressorDF
-from test.gamma.ml import check_ranking, disable_warnings
+from test.gamma.ml import check_ranking
 
 log = logging.getLogger(__name__)
-
-disable_warnings()
 
 
 def test_parameter_grid() -> None:
