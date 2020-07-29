@@ -9,7 +9,6 @@ from typing import *
 import numpy as np
 import pandas as pd
 from shap.explainers.explainer import Explainer
-from sklearn.base import BaseEstimator
 
 from gamma.common.fit import FittableMixin, T_Self
 from gamma.common.parallelization import ParallelizableMixin
@@ -20,6 +19,7 @@ from gamma.sklearndf.pipeline import (
     ClassifierPipelineDF,
     RegressorPipelineDF,
 )
+from ._explainer import ExplainerFactory
 
 log = logging.getLogger(__name__)
 
@@ -34,7 +34,6 @@ T_LearnerPipelineDF = TypeVar("T_LearnerPipelineDF", bound=BaseLearnerPipelineDF
 # Type definitions
 #
 
-ExplainerFactory = Callable[[BaseEstimator, pd.DataFrame], Explainer]
 
 ShapToDataFrameFunction = Callable[
     [List[np.ndarray], pd.Index, pd.Index], List[pd.DataFrame]
@@ -167,19 +166,36 @@ class ShapCalculator(
     def _shap_all_splits(
         self, crossfit: LearnerCrossfit[T_LearnerPipelineDF]
     ) -> pd.DataFrame:
-        explainer_factory = self._explainer_factory
+        crossfit: LearnerCrossfit[BaseLearnerPipelineDF]
+
         training_sample = crossfit.training_sample
+
+        # prepare the background dataset
+        background_dataset = training_sample.features
+        pipeline = crossfit.pipeline
+        if pipeline.preprocessing:
+            background_dataset = pipeline.preprocessing.transform(X=background_dataset)
 
         with self._parallel() as parallel:
             shap_df_per_split: List[pd.DataFrame] = parallel(
                 self._delayed(self._shap_for_split)(
                     model,
                     sample,
+                    self._explainer_factory.make_explainer(
+                        model=model.final_estimator,
+                        # we re-index the columns of the background dataset to match
+                        # the column sequence of the model (in case feature order
+                        # was shuffled)
+                        data=background_dataset.reindex(
+                            columns=model.final_estimator.features_in, copy=False
+                        )
+                        if crossfit.shuffle_features
+                        else background_dataset,
+                    ),
                     self.feature_index_,
-                    explainer_factory,
                     self._raw_shap_to_df,
                     self._multi_output_type,
-                    self._multi_output_names(model=model, sample=sample),
+                    self._multi_output_names(model=model, sample=training_sample),
                 )
                 for model, sample in zip(
                     crossfit.models(),
@@ -237,13 +253,47 @@ class ShapCalculator(
     def _shap_for_split(
         model: BaseLearnerPipelineDF,
         sample: Sample,
+        explainer: Explainer,
         features_out: pd.Index,
-        explainer_factory_fn: ExplainerFactory,
         shap_matrix_for_split_to_df_fn: ShapToDataFrameFunction,
         multi_output_type: str,
         multi_output_names: Sequence[str],
     ) -> pd.DataFrame:
         pass
+
+    @staticmethod
+    def _preprocessed_features_and_explainer(
+        model: BaseLearnerPipelineDF,
+        sample: Sample,
+        split: Optional[Tuple[Sequence[int], Sequence[int]]],
+        explainer_factory: ExplainerFactory,
+    ) -> Tuple[pd.DataFrame, Explainer]:
+        # get the out-of-bag subsample of the training sample, with feature columns
+        # in the sequence that was used to fit the learner
+
+        def _preprocess(_sample: Sample) -> pd.DataFrame:
+            # get the features of all out-of-bag observations
+            x = _sample.features
+
+            # pre-process the features
+            if model.preprocessing is not None:
+                x = model.preprocessing.transform(x)
+
+            # re-index the features to fit the sequence that was used to fit the learner
+            return x.reindex(columns=model.final_estimator.features_in, copy=False)
+
+        if split:
+            background_dataset = _preprocess(sample.subsample(iloc=split[0]))
+            preprocessed = _preprocess(sample.subsample(iloc=split[1]))
+        else:
+            background_dataset = preprocessed = _preprocess(sample)
+
+        return (
+            preprocessed,
+            explainer_factory.make_explainer(
+                model=model.final_estimator, data=background_dataset
+            ),
+        )
 
     @staticmethod
     def _preprocessed_features(
@@ -313,17 +363,16 @@ class ShapValuesCalculator(
     def _shap_for_split(
         model: BaseLearnerPipelineDF,
         sample: Sample,
+        explainer: Explainer,
         features_out: pd.Index,
-        explainer_factory_fn: ExplainerFactory,
         shap_matrix_for_split_to_df_fn: ShapToDataFrameFunction,
         multi_output_type: str,
         multi_output_names: Sequence[str],
     ) -> pd.DataFrame:
-        x = ShapCalculator._preprocessed_features(model, sample)
+        x = ShapCalculator._preprocessed_features(model=model, sample=sample)
+
         # calculate the shap values (returned as an array)
-        shap_values: np.ndarray = explainer_factory_fn(
-            model.final_estimator.root_estimator, x
-        ).shap_values(x)
+        shap_values: np.ndarray = explainer.shap_values(x)
         if isinstance(shap_values, np.ndarray):
             # if we have a single output *and* no classification, the explainer will
             # have returned a single tensor as an array
@@ -425,17 +474,15 @@ class ShapInteractionValuesCalculator(
     def _shap_for_split(
         model: BaseLearnerPipelineDF,
         sample: Sample,
+        explainer: Explainer,
         features_out: pd.Index,
-        explainer_factory_fn: ExplainerFactory,
         shap_matrix_for_split_to_df_fn: ShapToDataFrameFunction,
         multi_output_type: str,
         multi_output_names: Sequence[str],
     ) -> pd.DataFrame:
-        x = ShapCalculator._preprocessed_features(model, sample)
+        x = ShapCalculator._preprocessed_features(model=model, sample=sample)
 
         # calculate the im values (returned as an array)
-        explainer = explainer_factory_fn(model.final_estimator.root_estimator, x)
-
         try:
             # noinspection PyUnresolvedReferences
             shap_interaction_values_fn = explainer.shap_interaction_values
