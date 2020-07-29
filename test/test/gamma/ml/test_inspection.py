@@ -1,38 +1,34 @@
 """
 Model inspector tests.
 """
-import functools
 import logging
 import warnings
-from distutils import version
 from typing import *
 
 import numpy as np
 import pandas as pd
 import pytest
-import shap
-from pandas.core.util.hashing import hash_pandas_object
 from pandas.util.testing import assert_frame_equal
-from shap import KernelExplainer, TreeExplainer
-from shap.explainers.explainer import Explainer
-from sklearn.base import BaseEstimator
-from sklearn.model_selection import BaseCrossValidator
+from sklearn.model_selection import BaseCrossValidator, KFold
 
 from gamma.ml import Sample
 from gamma.ml.crossfit import LearnerCrossfit
-from gamma.ml.inspection import ClassifierInspector, RegressorInspector
+from gamma.ml.inspection import (
+    ClassifierInspector,
+    KernelExplainerFactory,
+    RegressorInspector,
+)
 from gamma.ml.selection import LearnerRanker, ParameterGrid
 from gamma.ml.validation import BootstrapCV
 from gamma.sklearndf import TransformerDF
 from gamma.sklearndf.classification import RandomForestClassifierDF
 from gamma.sklearndf.pipeline import ClassifierPipelineDF, RegressorPipelineDF
 from gamma.viz.dendrogram import DendrogramDrawer, DendrogramReportStyle
-from test.gamma.ml import check_ranking, disable_warnings
+from test.gamma.ml import check_ranking
 
 # noinspection PyMissingOrEmptyDocstring
 
 log = logging.getLogger(__name__)
-disable_warnings()
 
 
 @pytest.fixture
@@ -80,7 +76,7 @@ def test_model_inspection(
     best_lgbm_crossfit: LearnerCrossfit[RegressorPipelineDF],
     feature_names: Set[str],
     regressor_inspector: RegressorInspector,
-    cv_kfold,
+    cv_kfold: KFold,
     sample: Sample,
     simple_preprocessor: TransformerDF,
     n_jobs: int,
@@ -89,14 +85,7 @@ def test_model_inspection(
 
     # define checksums for this test
     if fast_execution:
-        checksum_shap = 7678718855667032507
-
-        expected_scores = [
-            0.418,
-            0.4,
-            0.386,
-            0.385,
-            0.122,
+        expected_scores = [0.418, 0.4, 0.386, 0.385, 0.122] + [
             0.122,
             -0.074,
             -0.074,
@@ -104,14 +93,7 @@ def test_model_inspection(
             -0.074,
         ]
     else:
-        checksum_shap = 1956741545033811954
-
-        expected_scores = [
-            0.202,
-            0.160,
-            0.111,
-            0.056,
-            0.031,
+        expected_scores = [0.202, 0.160, 0.111, 0.056, 0.031] + [
             0.010,
             0.010,
             0.010,
@@ -133,11 +115,11 @@ def test_model_inspection(
         regressor_inspector.shap_values(consolidate="invalid")
 
     shap_values_raw = regressor_inspector.shap_values(consolidate=None)
-    shap_values_mean = regressor_inspector.shap_values()
+    shap_values_mean = regressor_inspector.shap_values(consolidate="mean")
     shap_values_std = regressor_inspector.shap_values(consolidate="std")
 
     # method shap_values without parameter is equal to "mean" consolidation
-    assert shap_values_mean.equals(regressor_inspector.shap_values(consolidate="mean"))
+    assert_frame_equal(shap_values_mean, regressor_inspector.shap_values())
 
     # the length of rows in shap_values should be equal to the unique observation
     # indices we have had in the predictions_df
@@ -148,17 +130,15 @@ def test_model_inspection(
     assert shap_values_mean.columns.names == [Sample.COL_FEATURE]
     assert shap_values_std.index.names == [Sample.COL_OBSERVATION]
     assert shap_values_std.columns.names == [Sample.COL_FEATURE]
-    assert shap_values_raw.index.names == [
-        RegressorInspector.COL_SPLIT,
-        Sample.COL_OBSERVATION,
-    ]
+    assert shap_values_raw.index.names == (
+        [RegressorInspector.COL_SPLIT, Sample.COL_OBSERVATION]
+    )
     assert shap_values_raw.columns.names == [Sample.COL_FEATURE]
 
     # column index
     assert set(shap_values_mean.columns) == feature_names
 
     # check that the SHAP values add up to the predictions
-    mean_predictions = shap_values_mean.sum(axis=1)
     shap_totals_raw = shap_values_raw.sum(axis=1)
 
     for split_id, model in enumerate(best_lgbm_crossfit.models()):
@@ -166,49 +146,18 @@ def test_model_inspection(
         # SHAP values and prediction for every observation. This is always the same
         # constant value, so `mad` (mean absolute deviation) is zero
 
-        shap_minus_pred = shap_totals_raw.xs(key=split_id, level=0) - model.predict(
+        shap_minus_pred = shap_totals_raw.xs(key=split_id) - model.predict(
             X=sample.features
         )
         assert (
             round(shap_minus_pred.mad(), 12) == 0.0
         ), f"predictions matching total SHAP for split {split_id}"
 
-    # check actual values using checksum:
-    assert (
-        np.sum(hash_pandas_object(shap_values_mean.round(decimals=4)).values)
-        == checksum_shap
-    )
+    #  test the ModelInspector with a KernelExplainer:
 
-    #  test the ModelInspector with a custom ExplainerFactory:
-    def _ef(estimator: BaseEstimator, data: pd.DataFrame) -> Explainer:
-
-        try:
-            te = TreeExplainer(
-                model=estimator, feature_dependence="independent", data=data
-            )
-
-            if version.LooseVersion(shap.__version__) >= "0.32":
-                log.debug(
-                    f"Version of shap is {shap.__version__} - "
-                    f"setting check_additivity=False"
-                )
-                te.shap_values = functools.partial(
-                    te.shap_values, check_additivity=False
-                )
-                return te
-            else:
-                return te
-        except Exception as e:
-            log.debug(
-                f"failed to instantiate shap.TreeExplainer:{str(e)},"
-                "using shap.KernelExplainer as fallback"
-            )
-            # noinspection PyUnresolvedReferences
-            return KernelExplainer(model=estimator.predict, data=data)
-
-    # noinspection PyTypeChecker
     inspector_2 = RegressorInspector(
-        explainer_factory=_ef, shap_interaction=False, n_jobs=n_jobs
+        explainer_factory=KernelExplainerFactory(link="identity", data_size_limit=20),
+        n_jobs=n_jobs,
     ).fit(crossfit=best_lgbm_crossfit)
     inspector_2.shap_values()
 
@@ -220,7 +169,7 @@ def test_model_inspection(
 
 def test_binary_classifier_ranking(iris_classifier_ranker_binary) -> None:
 
-    expected_learner_scores = [0.858, 0.835, 0.784, 0.689]
+    expected_learner_scores = [0.858, 0.82, 0.546, 0.287]
 
     log.debug(f"\n{iris_classifier_ranker_binary.summary_report(max_learners=10)}")
     check_ranking(
@@ -234,10 +183,10 @@ def test_binary_classifier_ranking(iris_classifier_ranker_binary) -> None:
     )
 
 
+# noinspection DuplicatedCode
 def test_model_inspection_classifier_binary(
     iris_sample_binary: Sample, iris_classifier_crossfit_binary, n_jobs: int
 ) -> None:
-    disable_warnings()
 
     model_inspector = ClassifierInspector(shap_interaction=False, n_jobs=n_jobs).fit(
         crossfit=iris_classifier_crossfit_binary
@@ -261,16 +210,17 @@ def test_model_inspection_classifier_binary(
     assert len(shap_matrix_mean) == len(iris_sample_binary)
 
     # Shap decomposition matrices (feature dependencies)
-    _check_feature_dependency_matrices(
-        model_inspector=model_inspector,
-        feature_names=iris_sample_binary.feature_columns,
-        n_classes=1,
-        synergy=None,
-        redundancy=None,
-        association=(
-            [1.0, 0.001, 0.204, 0.176, 0.001, 1.0, 0.002, 0.005]
-            + [0.204, 0.002, 1.0, 0.645, 0.176, 0.005, 0.645, 1.0]
+
+    assert model_inspector.feature_association_matrix().values == pytest.approx(
+        np.array(
+            [
+                [1.0, 0.005, 0.197, 0.168],
+                [0.005, 1.0, 0.002, 0.004],
+                [0.197, 0.002, 1.0, 0.644],
+                [0.168, 0.004, 0.644, 1.0],
+            ]
         ),
+        abs=0.02,
     )
 
     linkage_tree = model_inspector.feature_association_linkage()
@@ -281,6 +231,7 @@ def test_model_inspection_classifier_binary(
     )
 
 
+# noinspection DuplicatedCode
 def test_model_inspection_classifier_multi_class(
     iris_sample: Sample,
     iris_classifier_crossfit_multi_class: LearnerCrossfit[ClassifierPipelineDF],
@@ -309,34 +260,51 @@ def test_model_inspection_classifier_multi_class(
     assert len(shap_matrix_mean) == len(iris_sample)
 
     # Shap decomposition matrices (feature dependencies)
-    _check_feature_dependency_matrices(
-        model_inspector=model_inspector,
-        feature_names=iris_sample.feature_columns,
-        n_classes=3,
-        synergy=(
-            [1.0, 0.06, 0.065, 0.042, 1.0, 0.079, 0.113, 0.125]
-            + [1.0, 0.01, 0.062, 0.095, 0.06, 1.0, 0.019, 0.017]
-            + [0.079, 1.0, 0.025, 0.019, 0.01, 1.0, 0.017, 0.003]
-            + [0.065, 0.019, 1.0, 0.102, 0.113, 0.025, 1.0, 0.252]
-            + [0.062, 0.017, 1.0, 0.153, 0.042, 0.017, 0.102, 1.0]
-            + [0.125, 0.019, 0.252, 1.0, 0.095, 0.003, 0.153, 1.0]
+
+    assert model_inspector.feature_synergy_matrix().values == pytest.approx(
+        np.array(
+            [
+                [1.0, 0.039, 0.042, 0.03, 1.0, 0.057]
+                + [0.125, 0.113, 1.0, 0.027, 0.093, 0.088],
+                [0.039, 1.0, 0.013, 0.015, 0.057, 1.0]
+                + [0.018, 0.027, 0.027, 1.0, 0.014, 0.018],
+                [0.042, 0.013, 1.0, 0.055, 0.125, 0.018]
+                + [1.0, 0.244, 0.093, 0.014, 1.0, 0.166],
+                [0.03, 0.015, 0.055, 1.0, 0.113, 0.027]
+                + [0.244, 1.0, 0.088, 0.018, 0.166, 1.0],
+            ]
         ),
-        redundancy=(
-            [1.0, 0.133, 0.443, 0.416, 1.0, 0.13, 0.187, 0.16]
-            + [1.0, 0.01, 0.375, 0.422, 0.133, 1.0, 0.072, 0.067]
-            + [0.13, 1.0, 0.045, 0.064, 0.01, 1.0, 0.004, 0.004]
-            + [0.443, 0.072, 1.0, 0.861, 0.187, 0.045, 1.0, 0.497]
-            + [0.375, 0.004, 1.0, 0.685, 0.416, 0.067, 0.861, 1.0]
-            + [0.16, 0.064, 0.497, 1.0, 0.422, 0.004, 0.685, 1.0]
+        abs=0.02,
+    )
+    assert model_inspector.feature_redundancy_matrix().values == pytest.approx(
+        np.array(
+            [
+                [1.0, 0.072, 0.478, 0.45, 1.0, 0.111]
+                + [0.162, 0.157, 1.0, 0.006, 0.358, 0.339],
+                [0.072, 1.0, 0.049, 0.047, 0.111, 1.0]
+                + [0.036, 0.041, 0.006, 1.0, 0.002, 0.001],
+                [0.478, 0.049, 1.0, 0.901, 0.162, 0.036]
+                + [1.0, 0.504, 0.358, 0.002, 1.0, 0.693],
+                [0.45, 0.047, 0.901, 1.0, 0.157, 0.041]
+                + [0.504, 1.0, 0.339, 0.001, 0.693, 1.0],
+            ]
         ),
-        association=(
-            [1.0, 0.122, 0.444, 0.418, 1.0, 0.13, 0.256, 0.249]
-            + [1.0, 0.009, 0.366, 0.412, 0.122, 1.0, 0.075, 0.072]
-            + [0.13, 1.0, 0.054, 0.069, 0.009, 1.0, 0.005, 0.004]
-            + [0.444, 0.075, 1.0, 0.924, 0.256, 0.054, 1.0, 0.712]
-            + [0.366, 0.005, 1.0, 0.695, 0.418, 0.072, 0.924, 1.0]
-            + [0.249, 0.069, 0.712, 1.0, 0.412, 0.004, 0.695, 1.0]
+        abs=0.02,
+    )
+    assert model_inspector.feature_association_matrix().values == pytest.approx(
+        np.array(
+            [
+                [1.0, 0.062, 0.471, 0.447, 1.0, 0.102]
+                + [0.238, 0.236, 1.0, 0.006, 0.344, 0.33],
+                [0.062, 1.0, 0.05, 0.049, 0.102, 1.0]
+                + [0.041, 0.046, 0.006, 1.0, 0.002, 0.003],
+                [0.471, 0.05, 1.0, 0.923, 0.238, 0.041]
+                + [1.0, 0.709, 0.344, 0.002, 1.0, 0.705],
+                [0.447, 0.049, 0.923, 1.0, 0.236, 0.046]
+                + [0.709, 1.0, 0.33, 0.003, 0.705, 1.0],
+            ]
         ),
+        abs=0.02,
     )
 
     linkage_trees = model_inspector.feature_association_linkage()
@@ -379,8 +347,8 @@ def _validate_shap_values_against_predictions(
             assert min == pytest.approx(
                 max
             ), "expected probability is the same for all explanations"
-            assert expected_proba_range * 0.75 <= min <= expected_proba_range / 0.75, (
-                "expected class probability is roughly "
+            assert expected_proba_range * 0.6 <= min <= expected_proba_range / 0.6, (
+                "expected class probability is roughly in the range of "
                 f"{expected_proba_range * 100:.0f}%"
             )
 
@@ -461,22 +429,40 @@ def test_model_inspection_classifier_interaction(
         crossfit=iris_classifier_crossfit_binary,
     )
 
-    _check_feature_dependency_matrices(
-        model_inspector=model_inspector,
-        feature_names=feature_columns,
-        n_classes=1,
-        synergy=(
-            [1.0, 0.018, 0.061, 0.059, 0.018, 1.0, 0.015, 0.015]
-            + [0.061, 0.015, 1.0, 0.011, 0.059, 0.015, 0.011, 1.0]
+    assert model_inspector.feature_synergy_matrix().values == pytest.approx(
+        np.array(
+            [
+                [1.0, 0.013, 0.061, 0.038],
+                [0.013, 1.0, 0.014, 0.017],
+                [0.061, 0.014, 1.0, 0.013],
+                [0.038, 0.017, 0.013, 1.0],
+            ]
         ),
-        redundancy=(
-            [1.0, 0.007, 0.221, 0.179, 0.007, 1.0, 0.003, 0.005]
-            + [0.221, 0.003, 1.0, 0.651, 0.179, 0.005, 0.651, 1.0]
+        abs=0.02,
+    )
+
+    assert model_inspector.feature_redundancy_matrix().values == pytest.approx(
+        np.array(
+            [
+                [1.0, 0.006, 0.207, 0.177],
+                [0.006, 1.0, 0.002, 0.002],
+                [0.207, 0.002, 1.0, 0.651],
+                [0.177, 0.002, 0.651, 1.0],
+            ]
         ),
-        association=(
-            [1.0, 0.001, 0.204, 0.176, 0.001, 1.0, 0.002, 0.005]
-            + [0.204, 0.002, 1.0, 0.645, 0.176, 0.005, 0.645, 1.0]
+        abs=0.02,
+    )
+
+    assert model_inspector.feature_association_matrix().values == pytest.approx(
+        np.array(
+            [
+                [1.0, 0.005, 0.197, 0.168],
+                [0.005, 1.0, 0.002, 0.004],
+                [0.197, 0.002, 1.0, 0.644],
+                [0.168, 0.004, 0.644, 1.0],
+            ]
         ),
+        abs=0.02,
     )
 
     linkage_tree = model_inspector.feature_redundancy_linkage()
@@ -529,46 +515,3 @@ def _fit_learner_ranker(
         random_state=42,
         n_jobs=n_jobs,
     ).fit(sample=sample)
-
-
-def _check_feature_dependency_matrices(
-    model_inspector: ClassifierInspector,
-    feature_names: Sequence[str],
-    n_classes: int,
-    **matrices_expected: Optional[Sequence[float]],
-):
-    # Shap decomposition matrices (feature dependencies)
-    matrix_functions = {
-        "synergy": model_inspector.feature_synergy_matrix,
-        "redundancy": model_inspector.feature_redundancy_matrix,
-        "association": model_inspector.feature_association_matrix,
-    }
-    for matrix_type, matrix_function in matrix_functions.items():
-        matrix_expected = matrices_expected[matrix_type]
-        if matrix_expected:
-            _check_feature_relationship_matrix(
-                matrix=matrix_function(),
-                matrix_expected=matrix_expected,
-                feature_names=feature_names,
-                n_classes=n_classes,
-            )
-        else:
-            with pytest.raises(
-                RuntimeError, match="SHAP interaction values have not been calculated"
-            ):
-                matrix_function()
-
-
-def _check_feature_relationship_matrix(
-    matrix: pd.DataFrame,
-    matrix_expected: Sequence[float],
-    feature_names: Sequence[str],
-    n_classes: int,
-):
-    # check number of rows
-    assert matrix.shape == (len(feature_names), len(feature_names) * n_classes)
-
-    # check association values
-    assert 0.0 <= matrix.min().min() <= matrix.max().max() <= 1.0
-
-    assert matrix.values.ravel() == pytest.approx(matrix_expected, abs=1e-2)

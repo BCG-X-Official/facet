@@ -2,7 +2,6 @@ import functools
 import logging
 import operator
 import os
-import warnings
 from typing import *
 
 import numpy as np
@@ -36,11 +35,9 @@ log = logging.getLogger(__name__)
 # disable SHAP debugging messages
 logging.getLogger("shap").setLevel(logging.WARNING)
 
-warnings.filterwarnings(
-    "ignore", message=r"Starting from version 2", category=UserWarning
-)
 
-K_FOLDS: int = 5
+K_FOLDS = 5
+N_BOOTSTRAPS = 30
 
 
 @pytest.fixture
@@ -64,7 +61,7 @@ def fast_execution() -> bool:
 
 
 @pytest.fixture
-def cv_kfold() -> BaseCrossValidator:
+def cv_kfold() -> KFold:
     # define a CV
     return KFold(n_splits=K_FOLDS)
 
@@ -72,7 +69,7 @@ def cv_kfold() -> BaseCrossValidator:
 @pytest.fixture
 def cv_bootstrap() -> BaseCrossValidator:
     # define a CV
-    return BootstrapCV(n_splits=K_FOLDS, random_state=42)
+    return BootstrapCV(n_splits=N_BOOTSTRAPS, random_state=42)
 
 
 @pytest.fixture
@@ -136,7 +133,7 @@ def regressor_grids(simple_preprocessor: TransformerDF) -> List[ParameterGrid]:
 
 @pytest.fixture
 def regressor_ranker(
-    cv_kfold,
+    cv_kfold: KFold,
     regressor_grids: List[ParameterGrid[RegressorPipelineDF]],
     sample: Sample,
     n_jobs: int,
@@ -149,7 +146,7 @@ def regressor_ranker(
 @pytest.fixture
 def best_lgbm_crossfit(
     regressor_ranker: LearnerRanker[RegressorPipelineDF],
-    cv_kfold,
+    cv_kfold: KFold,
     sample: Sample,
     n_jobs: int,
 ) -> LearnerCrossfit[RegressorPipelineDF]:
