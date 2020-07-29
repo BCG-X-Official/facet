@@ -1,27 +1,34 @@
 """
 Core implementation of :mod:`gamma.ml.inspection`
 """
-import functools
 import logging
 from abc import ABCMeta, abstractmethod
-from distutils import version
 from typing import *
 
 import numpy as np
 import pandas as pd
-import shap
 from numpy.random.mtrand import RandomState
 from scipy.cluster.hierarchy import linkage
 from scipy.spatial.distance import squareform
-from shap import KernelExplainer, TreeExplainer
-from shap.explainers.explainer import Explainer
 
 from gamma.common import inheritdoc
 from gamma.common.fit import FittableMixin, T_Self
 from gamma.common.parallelization import ParallelizableMixin
 from gamma.ml import Sample
 from gamma.ml.crossfit import LearnerCrossfit
-from gamma.ml.inspection._shap import (
+from gamma.ml.inspection._shap_decomposition import (
+    ShapInteractionValueDecomposer,
+    ShapValueDecomposer,
+)
+from gamma.sklearndf import ClassifierDF
+from gamma.sklearndf.pipeline import (
+    BaseLearnerPipelineDF,
+    ClassifierPipelineDF,
+    RegressorPipelineDF,
+)
+from gamma.viz.dendrogram import LinkageTree
+from ._explainer import TreeExplainerFactory
+from ._shap import (
     ClassifierShapInteractionValuesCalculator,
     ClassifierShapValuesCalculator,
     ExplainerFactory,
@@ -31,23 +38,10 @@ from gamma.ml.inspection._shap import (
     ShapInteractionValuesCalculator,
     ShapValuesCalculator,
 )
-from gamma.ml.inspection._shap_decomposition import (
-    ShapInteractionValueDecomposer,
-    ShapValueDecomposer,
-)
-from gamma.sklearndf import BaseLearnerDF, ClassifierDF
-from gamma.sklearndf.pipeline import (
-    BaseLearnerPipelineDF,
-    ClassifierPipelineDF,
-    RegressorPipelineDF,
-)
-from gamma.viz.dendrogram import LinkageTree
 
 log = logging.getLogger(__name__)
 
 __all__ = [
-    "kernel_explainer_factory",
-    "tree_explainer_factory",
     "ExplainerFactory",
     "BaseLearnerInspector",
     "ClassifierInspector",
@@ -82,6 +76,13 @@ class BaseLearnerInspector(
     COL_IMPORTANCE_MARGINAL = "marginal importance"
     COL_SPLIT = ShapCalculator.COL_SPLIT
 
+    #: The default explainer factory used by this inspector.
+    #: This is a tree explainer using the tree_path_dependent method for
+    #: feature perturbation, so we can calculate SHAP interaction values
+    DEFAULT_EXPLAINER_FACTORY = TreeExplainerFactory(
+        feature_perturbation="tree_path_dependent"
+    )
+
     def __init__(
         self,
         *,
@@ -114,11 +115,24 @@ class BaseLearnerInspector(
             verbose=verbose,
         )
 
-        self._explainer_factory = (
-            explainer_factory
-            if explainer_factory is not None
-            else tree_explainer_factory
-        )
+        if explainer_factory:
+            if not explainer_factory.explains_raw_output:
+                raise ValueError(
+                    "arg explainer_factory is not configured to explain raw output"
+                )
+        else:
+            explainer_factory = self.DEFAULT_EXPLAINER_FACTORY
+            assert explainer_factory.explains_raw_output
+
+        if shap_interaction and not explainer_factory.supports_shap_interaction_values:
+            log.warning(
+                "ignoring arg shap_interaction=True: "
+                "explainers made by arg explainer_factory do not support "
+                "SHAP interaction values"
+            )
+            shap_interaction = False
+
+        self._explainer_factory = explainer_factory
         self._shap_interaction = shap_interaction
         self._min_direct_synergy = min_direct_synergy
         self._random_state = random_state
@@ -153,7 +167,7 @@ class BaseLearnerInspector(
 
         if self._shap_interaction:
             shap_calculator = self._shap_interaction_values_calculator_cls()(
-                explain_full_sample=True,
+                explain_full_sample=False,
                 explainer_factory=self._explainer_factory,
                 n_jobs=self.n_jobs,
                 shared_memory=self.shared_memory,
@@ -166,7 +180,7 @@ class BaseLearnerInspector(
 
         else:
             shap_calculator = self._shap_values_calculator_cls()(
-                explain_full_sample=True,
+                explain_full_sample=False,
                 explainer_factory=self._explainer_factory,
                 n_jobs=self.n_jobs,
                 shared_memory=self.shared_memory,
@@ -658,43 +672,3 @@ class ClassifierInspector(
         ShapInteractionValuesCalculator
     ]:
         return ClassifierShapInteractionValuesCalculator
-
-
-# noinspection PyUnusedLocal
-def tree_explainer_factory(model: BaseLearnerDF, data: pd.DataFrame) -> Explainer:
-    """
-    Return the  explainer :class:`shap.Explainer` used to compute the shap values.
-
-    Try to return :class:`shap.TreeExplainer` if ``self.estimator`` is compatible,
-    i.e. is tree-based.
-
-    :param model: estimator from which we want to compute shap values
-    :param data: background dataset (ignored)
-    :return: :class:`shap.TreeExplainer` if the estimator is compatible
-    """
-    if version.LooseVersion(shap.__version__) >= "0.32":
-        log.debug(
-            f"shap version is {shap.__version__} -> "
-            f"setting check_additivity=False; "
-            f"see: github.gamma.bcg.com/BCG/gamma-ml/issues/68"
-        )
-        te = TreeExplainer(model=model)
-
-        te.shap_values = functools.partial(te.shap_values, check_additivity=False)
-        return te
-    else:
-        return TreeExplainer(model=model)
-
-
-def kernel_explainer_factory(model: BaseLearnerDF, data: pd.DataFrame) -> Explainer:
-    """
-    Return the  explainer :class:`shap.Explainer` used to compute the shap values.
-
-    Try to return :class:`shap.TreeExplainer` if ``self.estimator`` is compatible,
-    i.e. is tree-based.
-
-    :param model: estimator from which we want to compute shap values
-    :param data: background dataset
-    :return: :class:`shap.TreeExplainer` if the estimator is compatible
-    """
-    return KernelExplainer(model=model.predict, data=data)
