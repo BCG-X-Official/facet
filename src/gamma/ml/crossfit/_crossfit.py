@@ -425,6 +425,7 @@ class LearnerCrossfit(
                 parameters.train_target
                 if parameters.score_train_split
                 else parameters.test_target,
+                fit_params.get("sample_weight", None),
             )
         else:
             score = None
