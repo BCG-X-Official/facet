@@ -19,7 +19,7 @@ from gamma.ml.inspection import (
     RegressorInspector,
 )
 from gamma.ml.selection import LearnerRanker, ParameterGrid
-from gamma.ml.validation import BootstrapCV
+from gamma.ml.validation import BootstrapCV, StratifiedBootstrapCV
 from gamma.sklearndf import TransformerDF
 from gamma.sklearndf.classification import RandomForestClassifierDF
 from gamma.sklearndf.pipeline import ClassifierPipelineDF, RegressorPipelineDF
@@ -33,18 +33,22 @@ log = logging.getLogger(__name__)
 
 @pytest.fixture
 def iris_classifier_ranker_binary(
-    iris_sample_binary: Sample, cv_bootstrap: BootstrapCV, n_jobs: int
+    iris_sample_binary: Sample,
+    cv_stratified_bootstrap: StratifiedBootstrapCV,
+    n_jobs: int,
 ) -> LearnerRanker[ClassifierPipelineDF[RandomForestClassifierDF]]:
     return _fit_learner_ranker(
-        sample=iris_sample_binary, cv=cv_bootstrap, n_jobs=n_jobs
+        sample=iris_sample_binary, cv=cv_stratified_bootstrap, n_jobs=n_jobs
     )
 
 
 @pytest.fixture
 def iris_classifier_ranker_multi_class(
-    iris_sample: Sample, cv_bootstrap: BootstrapCV, n_jobs: int
+    iris_sample: Sample, cv_stratified_bootstrap: StratifiedBootstrapCV, n_jobs: int
 ) -> LearnerRanker[ClassifierPipelineDF[RandomForestClassifierDF]]:
-    return _fit_learner_ranker(sample=iris_sample, cv=cv_bootstrap, n_jobs=n_jobs)
+    return _fit_learner_ranker(
+        sample=iris_sample, cv=cv_stratified_bootstrap, n_jobs=n_jobs
+    )
 
 
 @pytest.fixture
@@ -214,10 +218,10 @@ def test_model_inspection_classifier_binary(
     assert model_inspector.feature_association_matrix().values == pytest.approx(
         np.array(
             [
-                [1.0, 0.005, 0.197, 0.168],
-                [0.005, 1.0, 0.002, 0.004],
-                [0.197, 0.002, 1.0, 0.644],
-                [0.168, 0.004, 0.644, 1.0],
+                [1.0, 0.01, 0.137, 0.12],
+                [0.01, 1.0, 0.006, 0.004],
+                [0.137, 0.006, 1.0, 0.655],
+                [0.12, 0.004, 0.655, 1.0],
             ]
         ),
         abs=0.02,
@@ -264,14 +268,14 @@ def test_model_inspection_classifier_multi_class(
     assert model_inspector.feature_synergy_matrix().values == pytest.approx(
         np.array(
             [
-                [1.0, 0.039, 0.042, 0.03, 1.0, 0.057]
-                + [0.125, 0.113, 1.0, 0.027, 0.093, 0.088],
-                [0.039, 1.0, 0.013, 0.015, 0.057, 1.0]
-                + [0.018, 0.027, 0.027, 1.0, 0.014, 0.018],
-                [0.042, 0.013, 1.0, 0.055, 0.125, 0.018]
-                + [1.0, 0.244, 0.093, 0.014, 1.0, 0.166],
-                [0.03, 0.015, 0.055, 1.0, 0.113, 0.027]
-                + [0.244, 1.0, 0.088, 0.018, 0.166, 1.0],
+                [1.0, 0.098, 0.088, 0.067, 1.0, 0.135]
+                + [0.139, 0.127, 1.0, 0.053, 0.108, 0.108],
+                [0.098, 1.0, 0.021, 0.022, 0.135, 1.0]
+                + [0.031, 0.034, 0.053, 1.0, 0.027, 0.029],
+                [0.088, 0.021, 1.0, 0.026, 0.139, 0.031]
+                + [1.0, 0.207, 0.108, 0.027, 1.0, 0.167],
+                [0.067, 0.022, 0.026, 1.0, 0.127, 0.034]
+                + [0.207, 1.0, 0.108, 0.029, 0.167, 1.0],
             ]
         ),
         abs=0.02,
@@ -279,14 +283,14 @@ def test_model_inspection_classifier_multi_class(
     assert model_inspector.feature_redundancy_matrix().values == pytest.approx(
         np.array(
             [
-                [1.0, 0.072, 0.478, 0.45, 1.0, 0.111]
-                + [0.162, 0.157, 1.0, 0.006, 0.358, 0.339],
-                [0.072, 1.0, 0.049, 0.047, 0.111, 1.0]
-                + [0.036, 0.041, 0.006, 1.0, 0.002, 0.001],
-                [0.478, 0.049, 1.0, 0.901, 0.162, 0.036]
-                + [1.0, 0.504, 0.358, 0.002, 1.0, 0.693],
-                [0.45, 0.047, 0.901, 1.0, 0.157, 0.041]
-                + [0.504, 1.0, 0.339, 0.001, 0.693, 1.0],
+                [1.0, 0.126, 0.418, 0.402, 1.0, 0.13]
+                + [0.152, 0.141, 1.0, 0.013, 0.312, 0.313],
+                [0.126, 1.0, 0.052, 0.05, 0.13, 1.0]
+                + [0.031, 0.031, 0.013, 1.0, 0.001, 0.004],
+                [0.418, 0.052, 1.0, 0.947, 0.152, 0.031]
+                + [1.0, 0.614, 0.312, 0.001, 1.0, 0.786],
+                [0.402, 0.05, 0.947, 1.0, 0.141, 0.031]
+                + [0.614, 1.0, 0.313, 0.004, 0.786, 1.0],
             ]
         ),
         abs=0.02,
@@ -294,14 +298,14 @@ def test_model_inspection_classifier_multi_class(
     assert model_inspector.feature_association_matrix().values == pytest.approx(
         np.array(
             [
-                [1.0, 0.062, 0.471, 0.447, 1.0, 0.102]
-                + [0.238, 0.236, 1.0, 0.006, 0.344, 0.33],
-                [0.062, 1.0, 0.05, 0.049, 0.102, 1.0]
-                + [0.041, 0.046, 0.006, 1.0, 0.002, 0.003],
-                [0.471, 0.05, 1.0, 0.923, 0.238, 0.041]
-                + [1.0, 0.709, 0.344, 0.002, 1.0, 0.705],
-                [0.447, 0.049, 0.923, 1.0, 0.236, 0.046]
-                + [0.709, 1.0, 0.33, 0.003, 0.705, 1.0],
+                [1.0, 0.078, 0.374, 0.372, 1.0, 0.079]
+                + [0.207, 0.203, 1.0, 0.014, 0.295, 0.291],
+                [0.078, 1.0, 0.053, 0.051, 0.079, 1.0]
+                + [0.035, 0.042, 0.014, 1.0, 0.001, 0.001],
+                [0.374, 0.053, 1.0, 0.957, 0.207, 0.035]
+                + [1.0, 0.743, 0.295, 0.001, 1.0, 0.736],
+                [0.372, 0.051, 0.957, 1.0, 0.203, 0.042]
+                + [0.743, 1.0, 0.291, 0.001, 0.736, 1.0],
             ]
         ),
         abs=0.02,
@@ -379,16 +383,16 @@ def _validate_shap_values_against_predictions(
                 _check_probabilities(class_probabilities, shap_for_split_and_class)
 
 
+# noinspection DuplicatedCode
 def test_model_inspection_classifier_interaction(
     iris_sample_binary: Sample, iris_classifier_crossfit_binary, n_jobs: int
 ) -> None:
-    warnings.filterwarnings("ignore", message="numpy.dtype size changed")
-    warnings.filterwarnings("ignore", message="numpy.ufunc size changed")
     warnings.filterwarnings("ignore", message="You are accessing a training score")
 
     model_inspector = ClassifierInspector(n_jobs=n_jobs).fit(
         crossfit=iris_classifier_crossfit_binary
     )
+
     model_inspector_no_interaction = ClassifierInspector(
         shap_interaction=False, n_jobs=n_jobs
     ).fit(crossfit=iris_classifier_crossfit_binary)
@@ -400,7 +404,7 @@ def test_model_inspection_classifier_interaction(
     shap_values = shap_interaction_values.groupby(by="observation").sum()
 
     # shap interaction values add up to shap values
-    # we have to live with differences of up to 0.006, given the different results
+    # we have to live with differences of up to 0.02, given the different results
     # returned for SHAP values and SHAP interaction values
     # todo: review accuracy after implementing use of a background dataset
     assert (
@@ -432,10 +436,10 @@ def test_model_inspection_classifier_interaction(
     assert model_inspector.feature_synergy_matrix().values == pytest.approx(
         np.array(
             [
-                [1.0, 0.013, 0.061, 0.038],
-                [0.013, 1.0, 0.014, 0.017],
-                [0.061, 0.014, 1.0, 0.013],
-                [0.038, 0.017, 0.013, 1.0],
+                [1.0, 0.081, 0.107, 0.125],
+                [0.081, 1.0, 0.028, 0.033],
+                [0.107, 0.028, 1.0, 0.108],
+                [0.125, 0.033, 0.108, 1.0],
             ]
         ),
         abs=0.02,
@@ -444,10 +448,10 @@ def test_model_inspection_classifier_interaction(
     assert model_inspector.feature_redundancy_matrix().values == pytest.approx(
         np.array(
             [
-                [1.0, 0.006, 0.207, 0.177],
-                [0.006, 1.0, 0.002, 0.002],
-                [0.207, 0.002, 1.0, 0.651],
-                [0.177, 0.002, 0.651, 1.0],
+                [1.0, 0.025, 0.172, 0.186],
+                [0.025, 1.0, 0.006, 0.012],
+                [0.172, 0.006, 1.0, 0.761],
+                [0.186, 0.012, 0.761, 1.0],
             ]
         ),
         abs=0.02,
@@ -456,10 +460,10 @@ def test_model_inspection_classifier_interaction(
     assert model_inspector.feature_association_matrix().values == pytest.approx(
         np.array(
             [
-                [1.0, 0.005, 0.197, 0.168],
-                [0.005, 1.0, 0.002, 0.004],
-                [0.197, 0.002, 1.0, 0.644],
-                [0.168, 0.004, 0.644, 1.0],
+                [1.0, 0.01, 0.137, 0.12],
+                [0.01, 1.0, 0.006, 0.004],
+                [0.137, 0.006, 1.0, 0.655],
+                [0.12, 0.004, 0.655, 1.0],
             ]
         ),
         abs=0.02,
