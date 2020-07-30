@@ -68,7 +68,7 @@ def check_ranking(
             learner_actual = learner_eval.pipeline.final_estimator
             assert type(learner_actual) == learner_expected, (
                 f"unexpected class for learner at rank #{rank}: "
-                f"{type(learner_actual)} instead of {learner_expected}"
+                f"got {type(learner_actual)} but expected {learner_expected}"
             )
 
     if expected_parameters is not None:
@@ -76,5 +76,5 @@ def check_ranking(
             parameters_actual = ranking[rank].parameters
             assert parameters_actual == parameters_expected, (
                 f"unexpected parameters for learner at rank #{rank}: "
-                f"{parameters_actual} instead of {parameters_expected}"
+                f"got {parameters_actual} but expected {parameters_expected}"
             )
