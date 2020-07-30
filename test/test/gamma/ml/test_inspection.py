@@ -13,11 +13,7 @@ from sklearn.model_selection import BaseCrossValidator, KFold
 
 from gamma.ml import Sample
 from gamma.ml.crossfit import LearnerCrossfit
-from gamma.ml.inspection import (
-    ClassifierInspector,
-    KernelExplainerFactory,
-    RegressorInspector,
-)
+from gamma.ml.inspection import KernelExplainerFactory, LearnerInspector
 from gamma.ml.selection import LearnerRanker, ParameterGrid
 from gamma.ml.validation import BootstrapCV, StratifiedBootstrapCV
 from gamma.sklearndf import TransformerDF
@@ -79,7 +75,7 @@ def test_model_inspection(
     regressor_ranker: LearnerRanker[RegressorPipelineDF],
     best_lgbm_crossfit: LearnerCrossfit[RegressorPipelineDF],
     feature_names: Set[str],
-    regressor_inspector: RegressorInspector,
+    regressor_inspector: LearnerInspector,
     cv_kfold: KFold,
     sample: Sample,
     simple_preprocessor: TransformerDF,
@@ -135,7 +131,7 @@ def test_model_inspection(
     assert shap_values_std.index.names == [Sample.COL_OBSERVATION]
     assert shap_values_std.columns.names == [Sample.COL_FEATURE]
     assert shap_values_raw.index.names == (
-        [RegressorInspector.COL_SPLIT, Sample.COL_OBSERVATION]
+        [LearnerInspector.COL_SPLIT, Sample.COL_OBSERVATION]
     )
     assert shap_values_raw.columns.names == [Sample.COL_FEATURE]
 
@@ -159,7 +155,7 @@ def test_model_inspection(
 
     #  test the ModelInspector with a KernelExplainer:
 
-    inspector_2 = RegressorInspector(
+    inspector_2 = LearnerInspector(
         explainer_factory=KernelExplainerFactory(link="identity", data_size_limit=20),
         n_jobs=n_jobs,
     ).fit(crossfit=best_lgbm_crossfit)
@@ -192,7 +188,7 @@ def test_model_inspection_classifier_binary(
     iris_sample_binary: Sample, iris_classifier_crossfit_binary, n_jobs: int
 ) -> None:
 
-    model_inspector = ClassifierInspector(shap_interaction=False, n_jobs=n_jobs).fit(
+    model_inspector = LearnerInspector(shap_interaction=False, n_jobs=n_jobs).fit(
         crossfit=iris_classifier_crossfit_binary
     )
 
@@ -242,7 +238,7 @@ def test_model_inspection_classifier_multi_class(
     n_jobs: int,
 ) -> None:
 
-    model_inspector = ClassifierInspector(shap_interaction=True, n_jobs=n_jobs).fit(
+    model_inspector = LearnerInspector(shap_interaction=True, n_jobs=n_jobs).fit(
         crossfit=iris_classifier_crossfit_multi_class
     )
 
@@ -389,11 +385,11 @@ def test_model_inspection_classifier_interaction(
 ) -> None:
     warnings.filterwarnings("ignore", message="You are accessing a training score")
 
-    model_inspector = ClassifierInspector(n_jobs=n_jobs).fit(
+    model_inspector = LearnerInspector(n_jobs=n_jobs).fit(
         crossfit=iris_classifier_crossfit_binary
     )
 
-    model_inspector_no_interaction = ClassifierInspector(
+    model_inspector_no_interaction = LearnerInspector(
         shap_interaction=False, n_jobs=n_jobs
     ).fit(crossfit=iris_classifier_crossfit_binary)
 
@@ -490,9 +486,9 @@ def test_model_inspection_classifier_interaction_dual_target(
 
     with pytest.raises(
         ValueError,
-        match="only single-output classifiers are supported.*target.*target2",
+        match="only single-output classifiers .* are supported.*target.*target2",
     ):
-        ClassifierInspector(n_jobs=n_jobs).fit(
+        LearnerInspector(n_jobs=n_jobs).fit(
             crossfit=iris_classifier_crossfit_dual_target
         )
 

@@ -13,7 +13,7 @@ from sklearn.utils import Bunch
 
 from gamma.ml import Sample
 from gamma.ml.crossfit import LearnerCrossfit
-from gamma.ml.inspection import RegressorInspector
+from gamma.ml.inspection import LearnerInspector
 from gamma.ml.selection import LearnerEvaluation, LearnerRanker, ParameterGrid
 from gamma.ml.validation import BootstrapCV, StratifiedBootstrapCV
 from gamma.sklearndf import TransformerDF
@@ -188,8 +188,8 @@ def feature_names(best_lgbm_crossfit: LearnerCrossfit[RegressorPipelineDF]) -> S
 @pytest.fixture
 def regressor_inspector(
     best_lgbm_crossfit: LearnerCrossfit[RegressorPipelineDF], n_jobs: int
-) -> RegressorInspector:
-    return RegressorInspector(n_jobs=n_jobs).fit(crossfit=best_lgbm_crossfit)
+) -> LearnerInspector:
+    return LearnerInspector(n_jobs=n_jobs).fit(crossfit=best_lgbm_crossfit)
 
 
 @pytest.fixture
