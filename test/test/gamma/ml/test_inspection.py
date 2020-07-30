@@ -169,7 +169,7 @@ def test_model_inspection(
 
 def test_binary_classifier_ranking(iris_classifier_ranker_binary) -> None:
 
-    expected_learner_scores = [0.858, 0.82, 0.546, 0.287]
+    expected_learner_scores = [0.872, 0.868, 0.866, 0.859]
 
     log.debug(f"\n{iris_classifier_ranker_binary.summary_report(max_learners=10)}")
     check_ranking(
@@ -177,8 +177,8 @@ def test_binary_classifier_ranking(iris_classifier_ranker_binary) -> None:
         expected_scores=expected_learner_scores,
         expected_learners=[RandomForestClassifierDF] * 4,
         expected_parameters={
-            2: dict(classifier__min_samples_leaf=32, classifier__n_estimators=50),
-            3: dict(classifier__min_samples_leaf=32, classifier__n_estimators=10),
+            2: dict(classifier__min_samples_leaf=4, classifier__n_estimators=10),
+            3: dict(classifier__min_samples_leaf=8, classifier__n_estimators=10),
         },
     )
 
@@ -502,7 +502,7 @@ def _fit_learner_ranker(
             pipeline=ClassifierPipelineDF(
                 classifier=RandomForestClassifierDF(random_state=42), preprocessing=None
             ),
-            learner_parameters={"n_estimators": [10, 50], "min_samples_leaf": [16, 32]},
+            learner_parameters={"n_estimators": [10, 50], "min_samples_leaf": [4, 8]},
         )
     ]
     # pipeline inspector does only support binary classification - hence
