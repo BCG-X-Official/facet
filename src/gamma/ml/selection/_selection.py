@@ -12,7 +12,7 @@ from typing import *
 from numpy.random.mtrand import RandomState
 from sklearn.model_selection import BaseCrossValidator
 
-from gamma.common import deprecation_warning, to_tuple
+from gamma.common import to_tuple
 from gamma.common.fit import FittableMixin, T_Self
 from gamma.common.parallelization import ParallelizableMixin
 from gamma.ml import Sample
@@ -25,13 +25,7 @@ from gamma.sklearndf.pipeline import (
 
 log = logging.getLogger(__name__)
 
-__all__ = [
-    "ParameterGrid",
-    "LearnerEvaluation",
-    "LearnerRanker",
-    "RegressorRanker",
-    "ClassifierRanker",
-]
+__all__ = ["ParameterGrid", "LearnerEvaluation", "LearnerRanker"]
 
 #
 # Type variables
@@ -190,8 +184,8 @@ class LearnerEvaluation(Generic[T_LearnerPipelineDF]):
     :param parameters: the hyper-parameters selected for the learner during grid \
         search, as a mapping of parameter names to parameter values
     :param scoring: maps score names to :class:`~gamma.ml.Scoring` instances
-    :param ranking_score: overall score determined by the 's ranking \
-        metric, used for ranking all crossfit
+    :param ranking_score: overall score determined by the ranking \
+        metric, used for ranking all crossfits
     """
 
     def __init__(
@@ -469,70 +463,3 @@ class LearnerRanker(
 
         self._best_crossfit = best_crossfit
         return ranking
-
-
-class DeprecatedRanker(
-    LearnerRanker[T_RegressorPipelineDF], Generic[T_RegressorPipelineDF]
-):
-    """[inheriting doc string of base class]"""
-
-    __doc__ = LearnerRanker.__doc__
-
-    def __init__(
-        self,
-        grid: Union[
-            ParameterGrid[T_LearnerPipelineDF],
-            Iterable[ParameterGrid[T_LearnerPipelineDF]],
-        ],
-        cv: Optional[BaseCrossValidator],
-        scoring: Union[
-            str,
-            Callable[[float, float], float],
-            List[str],
-            Tuple[str],
-            Dict[str, Callable[[float, float], float]],
-            None,
-        ] = None,
-        ranking_scorer: Callable[[float, float], float] = None,
-        ranking_metric: str = "test_score",
-        shuffle_features: Optional[bool] = None,
-        random_state: Union[int, RandomState, None] = None,
-        n_jobs: Optional[int] = None,
-        shared_memory: Optional[bool] = None,
-        pre_dispatch: Optional[Union[str, int]] = None,
-        verbose: Optional[int] = None,
-    ) -> None:
-        deprecation_warning(
-            f"Class {type(self).__name__} will be removed in the next release. "
-            f"Use class LearnerRanker instead.",
-            stacklevel=2,
-        )
-        super().__init__(
-            grid=grid,
-            cv=cv,
-            scoring=scoring,
-            ranking_scorer=ranking_scorer,
-            ranking_metric=ranking_metric,
-            shuffle_features=shuffle_features,
-            random_state=random_state,
-            n_jobs=n_jobs,
-            shared_memory=shared_memory,
-            pre_dispatch=pre_dispatch,
-            verbose=verbose,
-        )
-
-
-class RegressorRanker(
-    DeprecatedRanker[T_RegressorPipelineDF], Generic[T_RegressorPipelineDF]
-):
-    """[inheriting doc string of base class]"""
-
-    __doc__ = cast(str, LearnerRanker.__doc__).replace("learner", "regressor")
-
-
-class ClassifierRanker(
-    DeprecatedRanker[T_ClassifierPipelineDF], Generic[T_ClassifierPipelineDF]
-):
-    """[inheriting doc string of base class]"""
-
-    __doc__ = cast(str, LearnerRanker.__doc__).replace("learner", "classifier")
