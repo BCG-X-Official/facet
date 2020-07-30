@@ -43,7 +43,7 @@ Scorer = Callable[
         # target values for X
         Union[pd.Series, pd.DataFrame],
         # sample weights
-        pd.Series,
+        Optional[pd.Series],
     ],
     # result of applying score function to estimator applied to X
     float,
@@ -332,27 +332,27 @@ class LearnerCrossfit(
 
         return Scoring(split_scores=scores) if do_score else None
 
-    def resize(self: T_Self, n_splits: int) -> T_Self:
+    def resize(self: T_Self, n_fits: int) -> T_Self:
         """
         Reduce the size of this crossfit by removing a subset of the fits.
-        :param n_splits: the number of fits to keep. Must be lower than the number of
+        :param n_fits: the number of fits to keep. Must be lower than the number of \
             fits
         :return:
         """
         self: LearnerCrossfit
 
         # ensure that arg n_split has a valid value
-        if n_splits > self.get_n_splits():
+        if n_fits > self.n_fits:
             raise ValueError(
-                f"arg n_splits={n_splits} must not be greater than the number of splits"
-                f"in the original crossfit ({self.get_n_splits()} splits)"
+                f"arg n_fits={n_fits} must not be greater than the number of fits"
+                f"in the original crossfit ({self.n_fits} fits)"
             )
-        elif n_splits < 1:
-            raise ValueError(f"arg n_splits={n_splits} must be a positive integer")
+        elif n_fits < 1:
+            raise ValueError(f"arg n_fits={n_fits} must be a positive integer")
 
         # copy self and only keep the specified number of fits
         new_crossfit = copy(self)
-        new_crossfit._model_by_split = self._model_by_split[:n_splits]
+        new_crossfit._model_by_split = self._model_by_split[:n_fits]
         return new_crossfit
 
     @property
@@ -360,9 +360,10 @@ class LearnerCrossfit(
         """`True` if the delegate estimator is fitted, else `False`"""
         return self._training_sample is not None
 
-    def get_n_splits(self) -> int:
+    @property
+    def n_fits(self) -> int:
         """
-        Number of splits used for this crossfit.
+        The number of fits in this crossfit.
         """
         self._ensure_fitted()
         return len(self._model_by_split)
@@ -429,3 +430,6 @@ class LearnerCrossfit(
             score = None
 
         return pipeline if do_fit else None, score
+
+    def __len__(self) -> int:
+        return self.n_fits
