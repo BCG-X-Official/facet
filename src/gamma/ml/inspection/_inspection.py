@@ -2,7 +2,6 @@
 Core implementation of :mod:`gamma.ml.inspection`
 """
 import logging
-from abc import ABCMeta, abstractmethod
 from typing import *
 
 import numpy as np
@@ -11,7 +10,7 @@ from numpy.random.mtrand import RandomState
 from scipy.cluster.hierarchy import linkage
 from scipy.spatial.distance import squareform
 
-from gamma.common import inheritdoc
+from gamma.common import AllTracker
 from gamma.common.fit import FittableMixin, T_Self
 from gamma.common.parallelization import ParallelizableMixin
 from gamma.ml import Sample
@@ -20,12 +19,8 @@ from gamma.ml.inspection._shap_decomposition import (
     ShapInteractionValueDecomposer,
     ShapValueDecomposer,
 )
-from gamma.sklearndf import ClassifierDF
-from gamma.sklearndf.pipeline import (
-    BaseLearnerPipelineDF,
-    ClassifierPipelineDF,
-    RegressorPipelineDF,
-)
+from gamma.sklearndf import BaseLearnerDF, ClassifierDF, RegressorDF
+from gamma.sklearndf.pipeline import BaseLearnerPipelineDF
 from gamma.viz.dendrogram import LinkageTree
 from ._explainer import TreeExplainerFactory
 from ._shap import (
@@ -36,40 +31,31 @@ from ._shap import (
     RegressorShapValuesCalculator,
     ShapCalculator,
     ShapInteractionValuesCalculator,
-    ShapValuesCalculator,
 )
 
 log = logging.getLogger(__name__)
 
-__all__ = [
-    "ExplainerFactory",
-    "BaseLearnerInspector",
-    "ClassifierInspector",
-    "RegressorInspector",
-]
+__all__ = ["LearnerInspector"]
 
 #
 # Type variables
 #
 
 T_LearnerPipelineDF = TypeVar("T_LearnerPipelineDF", bound=BaseLearnerPipelineDF)
-T_RegressorPipelineDF = TypeVar("T_RegressorPipelineDF", bound=RegressorPipelineDF)
-T_ClassifierPipelineDF = TypeVar("T_ClassifierPipelineDF", bound=ClassifierPipelineDF)
 
 
 #
 # Class definitions
 #
 
+__tracker = AllTracker(globals())
 
-class BaseLearnerInspector(
-    FittableMixin[Sample],
-    ParallelizableMixin,
-    Generic[T_LearnerPipelineDF],
-    metaclass=ABCMeta,
+
+class LearnerInspector(
+    FittableMixin[Sample], ParallelizableMixin, Generic[T_LearnerPipelineDF]
 ):
     """
-    Inspect features interactions in a learner pipeline through SHAP values.
+    Inspect feature interactions in a learner pipeline through SHAP values.
     """
 
     COL_IMPORTANCE = "importance"
@@ -160,13 +146,40 @@ class BaseLearnerInspector(
         :return: `self`
         """
 
-        self: BaseLearnerInspector  # support type hinting in PyCharm
+        self: LearnerInspector  # support type hinting in PyCharm
 
         if not crossfit.is_fitted:
             raise ValueError("crossfit in arg pipeline is not fitted")
 
+        learner: BaseLearnerDF = crossfit.pipeline.final_estimator
+
+        if isinstance(learner, ClassifierDF):
+            if len(crossfit.training_sample.target_columns) != 1:
+                raise ValueError(
+                    "only single-output classifiers (binary or multi-class) are "
+                    "supported, but the classifier in the given crossfit has been "
+                    "fitted on multiple columns "
+                    f"{crossfit.training_sample.target_columns}"
+                )
+
+            is_classifier = True
+
+        elif isinstance(learner, RegressorDF):
+            is_classifier = False
+
+        else:
+            raise TypeError(
+                "learner in given crossfit must be a classifier or a regressor,"
+                f"but is a {type(learner).__name__}"
+            )
+
         if self._shap_interaction:
-            shap_calculator = self._shap_interaction_values_calculator_cls()(
+            shap_calculator_type = (
+                ClassifierShapInteractionValuesCalculator
+                if is_classifier
+                else RegressorShapInteractionValuesCalculator
+            )
+            shap_calculator = shap_calculator_type(
                 explain_full_sample=False,
                 explainer_factory=self._explainer_factory,
                 n_jobs=self.n_jobs,
@@ -179,7 +192,12 @@ class BaseLearnerInspector(
             )
 
         else:
-            shap_calculator = self._shap_values_calculator_cls()(
+            shap_calculator_type = (
+                ClassifierShapValuesCalculator
+                if is_classifier
+                else RegressorShapValuesCalculator
+            )
+            shap_calculator = shap_calculator_type(
                 explain_full_sample=False,
                 explainer_factory=self._explainer_factory,
                 n_jobs=self.n_jobs,
@@ -220,7 +238,6 @@ class BaseLearnerInspector(
         return self.crossfit.training_sample
 
     @property
-    @abstractmethod
     def outputs(self) -> List[str]:
         """
         The names of the outputs explained by this inspector.
@@ -233,7 +250,26 @@ class BaseLearnerInspector(
 
         For multi-class classifiers, this is the list of all classes.
         """
-        pass
+
+        self._ensure_fitted()
+
+        estimator_df: BaseLearnerDF = self.crossfit.pipeline.final_estimator
+
+        if isinstance(estimator_df, ClassifierDF):
+            try:
+                # noinspection PyUnresolvedReferences
+                classes = estimator_df.classes_
+                # for binary classifiers, we will only produce SHAP values for the first
+                # class (since they would only be mirrored by the second class)
+                return classes[:1] if len(classes) == 2 else classes
+            except AttributeError as cause:
+                raise TypeError(
+                    f"underlying {type(estimator_df.__name__)} "
+                    "does not implement 'classes_' attribute: "
+                ) from cause
+
+        else:
+            return self.crossfit.training_sample.target_columns
 
     @property
     def features(self) -> List[str]:
@@ -315,7 +351,7 @@ class BaseLearnerInspector(
 
         feature_importance_sr: pd.Series = abs_importance.divide(
             total_importance
-        ).rename(BaseLearnerInspector.COL_IMPORTANCE)
+        ).rename(LearnerInspector.COL_IMPORTANCE)
 
         if len(self.outputs) > 1:
             assert (
@@ -582,93 +618,5 @@ class BaseLearnerInspector(
         self._ensure_shap_interaction()
         return cast(ShapInteractionValueDecomposer, self._shap_decomposer)
 
-    @staticmethod
-    @abstractmethod
-    def _shap_values_calculator_cls() -> Type[ShapValuesCalculator]:
-        pass
 
-    @staticmethod
-    @abstractmethod
-    def _shap_interaction_values_calculator_cls() -> Type[
-        ShapInteractionValuesCalculator
-    ]:
-        pass
-
-
-class RegressorInspector(
-    BaseLearnerInspector[T_RegressorPipelineDF], Generic[T_RegressorPipelineDF]
-):
-    """
-    Inspect a regression pipeline through its SHAP values.
-    """
-
-    @property
-    def outputs(self) -> List[str]:
-        """The number of targets explained by this regressor inspector"""
-        return self.crossfit.training_sample.target_columns
-
-    @staticmethod
-    def _shap_values_calculator_cls() -> Type[ShapValuesCalculator]:
-        return RegressorShapValuesCalculator
-
-    @staticmethod
-    def _shap_interaction_values_calculator_cls() -> Type[
-        ShapInteractionValuesCalculator
-    ]:
-        return RegressorShapInteractionValuesCalculator
-
-
-@inheritdoc(match="[see superclass]")
-class ClassifierInspector(
-    BaseLearnerInspector[T_ClassifierPipelineDF], Generic[T_ClassifierPipelineDF]
-):
-    """
-    Inspect a classification pipeline through its SHAP values.
-
-    Based on limitations of the underlying SHAP packages, only single-output classifiers
-    (binary or multi-class) are supported.
-    """
-
-    @property
-    def outputs(self) -> List[str]:
-        """
-        The names of the outputs explained by this inspector.
-
-        For binary classifiers, this is a single class, since the SHAP values of the
-        second class can be trivially derived as the negation of SHAP values of the
-        first class.
-
-        For multi-class classifiers, this is the list of all classes.
-        """
-        classifier_df: ClassifierDF = self.crossfit.pipeline.final_estimator
-        try:
-            # noinspection PyUnresolvedReferences
-            classes = classifier_df.classes_
-            # for binary classifiers, we will only produce SHAP values for the first
-            # class (since they would only be mirrored by the second class)
-            return classes[:1] if len(classes) == 2 else classes
-        except AttributeError as cause:
-            raise TypeError(
-                f"underlying {type(classifier_df.__name__)} "
-                "does not implement 'classes_' attribute: "
-            ) from cause
-
-    def fit(self: T_Self, crossfit: LearnerCrossfit, **fit_params) -> T_Self:
-        """[see superclass]"""
-        if len(crossfit.training_sample.target_columns) != 1:
-            raise ValueError(
-                "only single-output classifiers are supported (binary or multi-class), "
-                "but given classifier was fitted on multiple columns "
-                f"{crossfit.training_sample.target_columns}"
-            )
-        return super().fit(crossfit=crossfit, **fit_params)
-
-    @staticmethod
-    def _shap_values_calculator_cls() -> Type[ShapValuesCalculator]:
-        return ClassifierShapValuesCalculator
-
-    @staticmethod
-    def _shap_interaction_values_calculator_cls() -> Type[
-        ShapInteractionValuesCalculator
-    ]:
-        return ClassifierShapInteractionValuesCalculator
+__tracker.validate()

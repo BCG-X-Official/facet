@@ -9,14 +9,14 @@ import pandas as pd
 import pytest
 
 from gamma.ml.crossfit import LearnerCrossfit
-from gamma.ml.inspection import RegressorInspector
+from gamma.ml.inspection import LearnerInspector
 from gamma.sklearndf.pipeline import RegressorPipelineDF
 
 log = logging.getLogger(__name__)
 
 
 def test_shap_decomposition(
-    regressor_inspector: RegressorInspector, fast_execution: bool
+    regressor_inspector: LearnerInspector, fast_execution: bool
 ) -> None:
 
     # noinspection PyPep8Naming
@@ -118,7 +118,7 @@ def test_shap_decomposition(
 def test_shap_decomposition_matrices(
     best_lgbm_crossfit: LearnerCrossfit[RegressorPipelineDF],
     feature_names: Set[str],
-    regressor_inspector: RegressorInspector,
+    regressor_inspector: LearnerInspector,
     fast_execution: bool,
 ) -> None:
     # Shap decomposition matrices (feature dependencies)
