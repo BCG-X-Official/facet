@@ -15,7 +15,7 @@ from gamma.ml import Sample
 from gamma.ml.crossfit import LearnerCrossfit
 from gamma.ml.inspection import RegressorInspector
 from gamma.ml.selection import LearnerEvaluation, LearnerRanker, ParameterGrid
-from gamma.ml.validation import BootstrapCV
+from gamma.ml.validation import BootstrapCV, StratifiedBootstrapCV
 from gamma.sklearndf import TransformerDF
 from gamma.sklearndf.pipeline import RegressorPipelineDF
 from gamma.sklearndf.regression import (
@@ -70,6 +70,12 @@ def cv_kfold() -> KFold:
 def cv_bootstrap() -> BaseCrossValidator:
     # define a CV
     return BootstrapCV(n_splits=N_BOOTSTRAPS, random_state=42)
+
+
+@pytest.fixture
+def cv_stratified_bootstrap() -> BaseCrossValidator:
+    # define a CV
+    return StratifiedBootstrapCV(n_splits=N_BOOTSTRAPS, random_state=42)
 
 
 @pytest.fixture
