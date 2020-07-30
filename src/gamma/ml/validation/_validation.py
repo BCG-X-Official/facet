@@ -2,7 +2,7 @@
 Core implementation of :mod:`gamma.ml.validation`
 """
 
-from abc import abstractmethod
+from abc import ABCMeta, abstractmethod
 from typing import *
 
 import numpy as np
@@ -10,14 +10,17 @@ import pandas as pd
 from sklearn.model_selection import BaseCrossValidator
 from sklearn.utils import check_random_state
 
-__all__ = ["BootstrapCV", "StationaryBootstrapCV", "FullSampleValidator"]
+__all__ = [
+    "BootstrapCV",
+    "StratifiedBootstrapCV",
+    "StationaryBootstrapCV",
+    "FullSampleValidator",
+]
 
 
-class _BaseBootstrapCV(BaseCrossValidator):
+class _BaseBootstrapCV(BaseCrossValidator, metaclass=ABCMeta):
     """
-    Base class for bootstrap cross-validators. Do not instantiate this class directly.
-    :param n_splits: Number of splits to generate (default: 100)
-    :param random_state: random state to initialise the random generator with (optional)
+    Base class for bootstrap cross-validators.
     """
 
     def __init__(
@@ -25,6 +28,11 @@ class _BaseBootstrapCV(BaseCrossValidator):
         n_splits: int = 100,
         random_state: Optional[Union[int, np.random.RandomState]] = None,
     ):
+        """
+        :param n_splits: Number of splits to generate (default: 50)
+        :param random_state: random state to initialise the random generator with \
+            (optional)
+        """
         if n_splits < 1:
             raise ValueError(f"arg n_splits={n_splits} must be a positive integer")
         self.n_splits = n_splits
@@ -51,7 +59,7 @@ class _BaseBootstrapCV(BaseCrossValidator):
     def split(
         self,
         X: Union[np.ndarray, pd.DataFrame],
-        y: Union[np.ndarray, pd.Series, pd.DataFrame] = None,
+        y: Union[np.ndarray, pd.Series, pd.DataFrame, None] = None,
         groups: Sequence = None,
     ) -> Generator[Tuple[np.ndarray, np.ndarray], None, None]:
         """
@@ -75,8 +83,8 @@ class _BaseBootstrapCV(BaseCrossValidator):
         indices = np.arange(n)
         for i in range(self.n_splits):
             while True:
-                train = self._select_train_indices(n, rs)
-                test_mask = np.ones(len(indices), dtype=bool)
+                train = self._select_train_indices(n_samples=n, random_state=rs, y=y)
+                test_mask = np.ones(n, dtype=bool)
                 test_mask[train] = False
                 test = indices[test_mask]
                 # make sure test is not empty, else sample another train set
@@ -86,9 +94,13 @@ class _BaseBootstrapCV(BaseCrossValidator):
 
     @abstractmethod
     def _select_train_indices(
-        self, n_samples: int, random_state: np.random.RandomState
+        self,
+        n_samples: int,
+        random_state: np.random.RandomState,
+        y: Union[np.ndarray, pd.Series, pd.DataFrame, None],
     ) -> np.ndarray:
         """
+        :param y:
         :param n_samples: number of indices to sample
         :param random_state: random state object to be used for random sampling
         :return: an array of integer indices with shape `[n_samples]`
@@ -112,21 +124,53 @@ class BootstrapCV(_BaseBootstrapCV):
     Permissible as the `cv` argument of :class:`sklearn.model_selection.GridSearchCV`
     object.
 
-    :param n_splits: Number of splits to generate (default: 50)
-    :param random_state: random state to initialise the random generator with (optional)
     """
 
-    def __init__(
-        self,
-        n_splits: int = 100,
-        random_state: Optional[Union[int, np.random.RandomState]] = None,
-    ) -> None:
-        super().__init__(n_splits=n_splits, random_state=random_state)
-
     def _select_train_indices(
-        self, n_samples: int, random_state: np.random.RandomState
+        self,
+        n_samples: int,
+        random_state: np.random.RandomState,
+        y: Union[np.ndarray, pd.Series, pd.DataFrame, None],
     ) -> np.ndarray:
         return random_state.randint(n_samples, size=n_samples)
+
+
+class StratifiedBootstrapCV(_BaseBootstrapCV):
+    """
+    Stratified bootstrapping cross-validation.
+
+    Generates CV splits by random sampling with replacement. The resulting train set
+    is the same size as the total sample; the test set consists of all samples not
+    included in the training set.
+
+    Sampling is stratified based on a series or 1d array of group labels in the
+    target vector.
+    Bootstrapping is carried out separately for each group.
+    """
+
+    def _select_train_indices(
+        self,
+        n_samples: int,
+        random_state: np.random.RandomState,
+        y: Union[np.ndarray, pd.Series, pd.DataFrame, None],
+    ) -> np.ndarray:
+        if y is None:
+            raise ValueError("arg y must be specified")
+        if not (
+            isinstance(y, pd.Series) or (isinstance(y, np.ndarray) and y.ndim == 1)
+        ):
+            raise ValueError("arg y must be a Series or a 1d numpy array")
+
+        return (
+            pd.Series(np.arange(len(y)))
+            .groupby(by=y.values if isinstance(y, pd.Series) else y)
+            .apply(
+                lambda group: group.sample(
+                    n=len(group), replace=True, random_state=random_state
+                )
+            )
+            .values
+        )
 
 
 class StationaryBootstrapCV(_BaseBootstrapCV):
@@ -172,7 +216,10 @@ class StationaryBootstrapCV(_BaseBootstrapCV):
         self.mean_block_size = mean_block_size
 
     def _select_train_indices(
-        self, n_samples: int, random_state: np.random.RandomState
+        self,
+        n_samples: int,
+        random_state: np.random.RandomState,
+        y: Union[np.ndarray, pd.Series, pd.DataFrame, None],
     ) -> np.ndarray:
 
         mean_block_size = self.mean_block_size
