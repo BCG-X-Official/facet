@@ -294,7 +294,7 @@ class _UnivariateProbabilitySimulator(
 
         The result is a data frame with one row per prediction, indexed by the
         observations in the sample and the crossfit id (index level ``COL_CROSSFIT_ID``),
-        and with columns ``COL_PREDICTION` (the predicted value for the
+        and with columns ```COL_PREDICTION`` (the predicted value for the
         given observation and crossfit), and ``COL_TARGET`` (the actual target)
 
         Note that there can be multiple prediction rows per observation if the test
@@ -397,8 +397,8 @@ class UnivariateUpliftSimulator(
 
         :param feature_name: name of the feature to use in the simulation
         :param simulated_values: values to use in the simulation
-        :return: data frame with three columns: `crossfit_id`, `parameter_value` and
-          `relative_target_change`.
+        :return: data frame with three columns: ``crossfit_id``, ``parameter_value`` and
+          ``relative_target_change``.
         """
 
         sample = self.crossfit.training_sample
@@ -483,15 +483,15 @@ class UnivariateUpliftSimulator(
         self, results_per_crossfit: pd.DataFrame
     ) -> pd.DataFrame:
         """
-        Aggregate uplift values computed by `simulate_feature`.
+        Aggregate uplift values computed by ``simulate_feature``.
 
         For each parameter value, the percentile of uplift values (in the
-        `relative_yield_change` column) are computed.
+        ``relative_yield_change`` column) are computed.
 
         :param results_per_crossfit: data frame with columns
-            `crossfit_id`, `parameter_value`, and `relative_yield_change`
-        :return: data frame with 3 columns `percentile_<min>`, `percentile_50`,
-          `percentile_<max>` where min/max are the min and max percentiles
+            ``crossfit_id``, ``parameter_value``, and ``relative_yield_change``
+        :return: data frame with 3 columns ``percentile_<min>``, ``percentile_50``,
+          ``percentile_<max>`` where min/max are the min and max percentiles
         """
 
         def percentile(n: int) -> Callable[[float], float]:
