@@ -84,14 +84,14 @@ class LearnerInspector(
         """
         :param explainer_factory: optional function that creates a shap Explainer \
             (default: :func:``.tree_explainer_factory``)
-        :param shap_interaction: if `True`, calculate SHAP interaction values, else \
+        :param shap_interaction: if ``True``, calculate SHAP interaction values, else \
             only calculate SHAP contribution values.\
             SHAP interaction values are needed to determine feature synergy and \
             redundancy; otherwise only SHAP association can be calculated.\
-            (default: `True`)
+            (default: ``True``)
         :param min_direct_synergy: minimum direct synergy to consider a feature pair \
             for calculation of indirect synergy. \
-            Only relevant if parameter `shap_interaction` is `True`. \
+            Only relevant if parameter ``shap_interaction`` is ``True``. \
             (default: <DEFAULT_MIN_DIRECT_SYNERGY>)
         """
         super().__init__(
@@ -143,7 +143,7 @@ class LearnerInspector(
 
         :param crossfit: the model crossfit to be explained during model inspection
         :param fit_params: additional keyword arguments (ignored)
-        :return: `self`
+        :return: ``self``
         """
 
         self: LearnerInspector  # support type hinting in PyCharm
@@ -218,7 +218,7 @@ class LearnerInspector(
 
     @property
     def is_fitted(self) -> bool:
-        """`True` if this inspector is fitted, else `False`"""
+        """``True`` if this inspector is fitted, else ``False``"""
         return self._crossfit is not None
 
     @property
@@ -287,9 +287,9 @@ class LearnerInspector(
         SHAP value across all splits that contain the observation.
 
         :param consolidate: consolidate SHAP values across splits; \
-            permissible values are `"mean"` (calculate the mean), `"std"` \
-            (calculate the standard deviation), or `None` to prevent consolidation \
-            (default: `"mean"`)
+            permissible values are ``"mean"`` (calculate the mean), ``"std"`` \
+            (calculate the standard deviation), or ``None`` to prevent consolidation \
+            (default: ``"mean"``)
         :return: shap values as a data frame
         """
         self._ensure_fitted()
@@ -307,9 +307,9 @@ class LearnerInspector(
         that contain the observation.
 
         :param consolidate: consolidate SHAP values across splits; \
-            permissible values are `"mean"` (calculate the mean), `"std"` \
-            (calculate the standard deviation), or `None` to prevent consolidation \
-            (default: `"mean"`)
+            permissible values are ``"mean"`` (calculate the mean), ``"std"`` \
+            (calculate the standard deviation), or ``None`` to prevent consolidation \
+            (default: ``"mean"``)
         :return: SHAP interaction values as a data frame
         """
         self._ensure_fitted()
@@ -325,7 +325,7 @@ class LearnerInspector(
         all observations.
 
         :param method: method for calculating feature importance. Supported methods \
-            are `rms` (root of mean squares, default) and `mav` (mean absolute values)
+            are ``rms`` (root of mean squares, default) and ``mav`` (mean absolute values)
         :return: importance of each feature as its mean absolute SHAP contribution, \
           normalised to a total 100%. Returned as a series of length n_features for \
           single-output models, and as a data frame of shape (n_features, n_outputs) \

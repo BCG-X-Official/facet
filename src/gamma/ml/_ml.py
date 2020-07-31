@@ -14,7 +14,7 @@ class Sample:
     """
     A set of observations comprising features, and one or more target variables.
 
-    A `Sample` object is helpful to keep features and targets aligned and to keep
+    A ``Sample`` object is helpful to keep features and targets aligned and to keep
     ML code more readable. It provides basic methods for accessing features and targets,
     and for selecting subsets of features and observations.
 
@@ -196,8 +196,8 @@ class Sample:
         """
         Return a new sample with a subset of this sample's observations.
 
-        Select observations either by indices (`loc` parameter), or integer indices
-        (`iloc` parameter). Exactly one of both parameters must be provided when
+        Select observations either by indices (``loc`` parameter), or integer indices
+        (``iloc`` parameter). Exactly one of both parameters must be provided when
         calling this method, not both or none.
 
         :param loc: indices of observations to select
@@ -260,7 +260,7 @@ class Sample:
         Return a new sample using the given features, and the target variable(s) of \
         this sample.
 
-        The index of the `features` argument must be a subset of, or equal to, the row \
+        The index of the ``features`` argument must be a subset of, or equal to, the row \
         index of this sample.
         :param features: the features to use for the new sample
         :return: the resulting, new sample object
