@@ -9,6 +9,7 @@ from typing import *
 import numpy as np
 import pandas as pd
 from numpy.random.mtrand import RandomState
+from sklearn.base import BaseEstimator
 from sklearn.metrics import check_scoring
 from sklearn.model_selection import BaseCrossValidator
 from sklearn.utils import check_random_state
@@ -16,7 +17,7 @@ from sklearn.utils import check_random_state
 from gamma.common.fit import FittableMixin, T_Self
 from gamma.common.parallelization import ParallelizableMixin
 from gamma.ml import Sample
-from gamma.sklearndf import BaseLearnerDF
+from gamma.sklearndf import BaseLearnerDF, TransformerDF
 from gamma.sklearndf.pipeline import (
     BaseLearnerPipelineDF,
     ClassifierPipelineDF,
@@ -37,7 +38,7 @@ _INDEX_SENTINEL = pd.Index([])
 Scorer = Callable[
     [
         # trained learner to use for scoring
-        BaseLearnerDF,
+        BaseEstimator,
         # test data that will be fed to the learner
         pd.DataFrame,
         # target values for X
@@ -269,7 +270,7 @@ class LearnerCrossfit(
                 )
 
             scorer = check_scoring(
-                estimator=self.pipeline.final_estimator, scoring=_scoring
+                estimator=self.pipeline.final_estimator.root_estimator, scoring=_scoring
             )
         else:
             scorer = None
@@ -405,6 +406,8 @@ class LearnerCrossfit(
         do_fit = parameters.train_target is not None
         do_score = parameters.scorer is not None
 
+        pipeline: BaseLearnerPipelineDF
+
         if do_fit:
             pipeline = parameters.pipeline.fit(
                 X=parameters.train_features,
@@ -412,21 +415,33 @@ class LearnerCrossfit(
                 feature_sequence=parameters.train_feature_sequence,
                 **fit_params,
             )
+
         else:
             pipeline = parameters.pipeline
 
         score: Optional[float]
+
         if do_score:
+            preprocessing: TransformerDF = pipeline.preprocessing
+            learner: BaseLearnerDF = pipeline.final_estimator
+
+            if parameters.score_train_split:
+                features = parameters.train_features
+                target = parameters.train_target
+            else:
+                features = parameters.test_features
+                target = parameters.test_target
+
+            if preprocessing:
+                features = preprocessing.transform(X=features)
+
             score = parameters.scorer(
-                pipeline,
-                parameters.train_features
-                if parameters.score_train_split
-                else parameters.test_features,
-                parameters.train_target
-                if parameters.score_train_split
-                else parameters.test_target,
+                learner.root_estimator,
+                features,
+                target,
                 fit_params.get("sample_weight", None),
             )
+
         else:
             score = None
 
