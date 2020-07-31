@@ -145,7 +145,7 @@ class RangePartitioner(Partitioner[T_Number], Generic[T_Number], metaclass=ABCMe
         """
         The lower bound of the partitioning.
 
-        `Null` if no explicit lower bound is set.
+        ``Null`` if no explicit lower bound is set.
         """
         return self._lower_bound
 
@@ -154,7 +154,7 @@ class RangePartitioner(Partitioner[T_Number], Generic[T_Number], metaclass=ABCMe
         """
         The upper bound of the partitioning.
 
-        `Null` if no explicit upper bound is set.
+        ``Null`` if no explicit upper bound is set.
         """
         return self._upper_bound
 
@@ -216,7 +216,7 @@ class RangePartitioner(Partitioner[T_Number], Generic[T_Number], metaclass=ABCMe
     fit.__doc__ = Partitioner.fit.__doc__
 
     def is_fitted(self) -> bool:
-        """`True` if this partitioner is fitted, else `False`"""
+        """``True`` if this partitioner is fitted, else ``False``"""
         return self._frequencies is not None
 
     def partitions(self) -> Sequence[T_Number]:
@@ -426,7 +426,7 @@ class CategoryPartitioner(Partitioner[T_Value]):
         return self
 
     def is_fitted(self) -> bool:
-        """`True` if this partitioner is fitted, else `False`"""
+        """``True`` if this partitioner is fitted, else ``False``"""
         return self._frequencies is not None
 
     def partitions(self) -> Sequence[T_Value]:
