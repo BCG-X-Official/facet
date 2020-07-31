@@ -206,7 +206,7 @@ class LearnerRanker(
     ParallelizableMixin, FittableMixin[Sample], Generic[T_LearnerPipelineDF]
 ):
     """
-    Rank different parametrisations of one or more learners using cross-validation.
+    Rank different parametrizations of one or more learners using cross-validation.
 
     Given a list of :class:`~gamma.ml.ParameterGrid`, a cross-validation splitter and a
     scoring function, performs a grid search to find the pipeline and
@@ -248,7 +248,7 @@ class LearnerRanker(
         :param cv: a cross validator (e.g., \
             :class:`~gamma.ml.validation.BootstrapCV`)
         :param scoring: a scorer to use when doing CV within GridSearch, defaults to \
-            `None`
+            ``None``
         :param ranking_scorer: scoring function used for ranking across crossfit, \
             taking mean and standard deviation of the ranking scores_for_split and \
             returning the overall ranking score \
@@ -256,8 +256,8 @@ class LearnerRanker(
         :param ranking_metric: the scoring to be used for pipeline ranking, \
             given as a name to be used to look up the right Scoring object in the \
             LearnerEvaluation.scoring dictionary (default: 'test_score').
-        :param shuffle_features: if `True`, shuffle column order of features for every \
-            crossfit (default: `False`)
+        :param shuffle_features: if ``True``, shuffle column order of features for every \
+            crossfit (default: ``False``)
         :param random_state: optional random seed or random state for shuffling the \
             feature column order
         """
@@ -325,7 +325,7 @@ class LearnerRanker(
 
     @property
     def is_fitted(self) -> bool:
-        """`True` if this ranker is fitted, `False` otherwise."""
+        """``True`` if this ranker is fitted, ``False`` otherwise."""
         return self._sample is not None
 
     def ranking(self) -> List[LearnerEvaluation[T_LearnerPipelineDF]]:
