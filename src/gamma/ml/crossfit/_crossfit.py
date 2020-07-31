@@ -132,9 +132,9 @@ class LearnerCrossfit(
     ) -> None:
         """
         :param pipeline: learner pipeline to be fitted
-        :param cv: the cross validator generating the train splits
-        :param shuffle_features: if `True`, shuffle column order of features for every \
-            crossfit (default: `False`)
+        :param cv: the cross-validator generating the train splits
+        :param shuffle_features: if ``True``, shuffle column order of features for \
+            every crossfit (default: ``False``)
         :param random_state: optional random seed or random state for shuffling the \
             feature column order
         """
@@ -165,7 +165,7 @@ class LearnerCrossfit(
         :param sample: the sample to fit the estimators to
         :param fit_params: optional fit parameters, to be passed on to the fit method \
             of the base estimator
-        :return: `self`
+        :return: ``self``
         """
 
         self: LearnerCrossfit  # support type hinting in PyCharm
@@ -185,8 +185,8 @@ class LearnerCrossfit(
 
         :param scoring: scoring to use to score the models (see \
             :meth:`~sklearn.metrics.scorer.check_scoring` for details)
-        :param train_scores: if `True`, calculate train scores instead of test scores \
-            (default: `False`)
+        :param train_scores: if ``True``, calculate train scores instead of test scores \
+            (default: ``False``)
         :param sample_weight: optional weights for all observations in the training \
             sample used to fit this crossfit
         :return: the resulting scoring
@@ -217,8 +217,8 @@ class LearnerCrossfit(
             of the base estimator
         :param scoring: scoring to use to score the models (see \
             :meth:`~sklearn.metrics.scorer.check_scoring` for details)
-        :param train_scores: if `True`, calculate train scores instead of test scores \
-            (default: `False`)
+        :param train_scores: if ``True``, calculate train scores instead of test scores \
+            (default: ``False``)
         :param sample_weight: optional weights for all observations in the sample
 
         :return: the resulting scoring
@@ -265,8 +265,8 @@ class LearnerCrossfit(
             if not isinstance(_scoring, str) and isinstance(_scoring, Container):
                 raise ValueError(
                     "Multi-metric scoring is not supported, "
-                    "use a single scorer instead. "
-                    f"Arg scoring={_scoring} was passed."
+                    "use a single scorer instead; "
+                    f"arg scoring={_scoring} was passed"
                 )
 
             scorer = check_scoring(
@@ -358,7 +358,7 @@ class LearnerCrossfit(
 
     @property
     def is_fitted(self) -> bool:
-        """`True` if the delegate estimator is fitted, else `False`"""
+        """``True`` if the delegate estimator is fitted, else ``False``"""
         return self._training_sample is not None
 
     @property
