@@ -16,7 +16,7 @@ from gamma.common import to_tuple
 from gamma.common.fit import FittableMixin, T_Self
 from gamma.common.parallelization import ParallelizableMixin
 from gamma.ml import Sample
-from gamma.ml.crossfit import LearnerCrossfit, Scoring
+from gamma.ml.crossfit import CrossfitScores, LearnerCrossfit
 from gamma.sklearndf.pipeline import (
     BaseLearnerPipelineDF,
     ClassifierPipelineDF,
@@ -183,7 +183,7 @@ class LearnerEvaluation(Generic[T_LearnerPipelineDF]):
     :param pipeline: the unfitted learner pipeline
     :param parameters: the hyper-parameters selected for the learner during grid \
         search, as a mapping of parameter names to parameter values
-    :param scoring: maps score names to :class:`~gamma.ml.Scoring` instances
+    :param scoring: maps score names to :class:`~gamma.ml.CrossfitScores` instances
     :param ranking_score: overall score determined by the ranking \
         metric, used for ranking all crossfits
     """
@@ -192,7 +192,7 @@ class LearnerEvaluation(Generic[T_LearnerPipelineDF]):
         self,
         pipeline: T_LearnerPipelineDF,
         parameters: Mapping[str, Any],
-        scoring: Mapping[str, Scoring],
+        scoring: Mapping[str, CrossfitScores],
         ranking_score: float,
     ) -> None:
         super().__init__()
@@ -254,7 +254,7 @@ class LearnerRanker(
             returning the overall ranking score \
             (default: :meth:`.default_ranking_scorer`)
         :param ranking_metric: the scoring to be used for pipeline ranking, \
-            given as a name to be used to look up the right Scoring object in the \
+            given as a name to be used to look up the right CrossfitScores object in the \
             LearnerEvaluation.scoring dictionary (default: 'test_score').
         :param shuffle_features: if ``True``, shuffle column order of features for every \
             crossfit (default: ``False``)
@@ -291,7 +291,7 @@ class LearnerRanker(
     __init__.__doc__ += ParallelizableMixin.__init__.__doc__
 
     @staticmethod
-    def default_ranking_scorer(scoring: Scoring) -> float:
+    def default_ranking_scorer(scores: CrossfitScores) -> float:
         """
         The default function to determine the pipeline's rank: ``mean - 2 * std``.
 
@@ -300,7 +300,7 @@ class LearnerRanker(
         :param scoring: the :class:`Scoring` with validation scores for a given split
         :return: score to be used for pipeline ranking
         """
-        return scoring.mean() - 2 * scoring.std()
+        return scores.mean() - 2 * scores.std()
 
     def fit(self: T_Self, sample: Sample, **fit_params) -> T_Self:
         """
@@ -377,7 +377,7 @@ class LearnerRanker(
                 ]
             )
 
-        def _score_summary(scoring_dict: Mapping[str, Scoring]) -> str:
+        def _score_summary(scoring_dict: Mapping[str, CrossfitScores]) -> str:
             return ", ".join(
                 [
                     f"{score}_mean={scoring.mean():9.3g}, "
@@ -442,7 +442,7 @@ class LearnerRanker(
                 verbose=self.verbose,
             )
 
-            pipeline_scoring: Scoring = crossfit.fit_score(
+            pipeline_scoring: CrossfitScores = crossfit.fit_score(
                 sample=sample, scoring=self._scoring, **fit_params
             )
 
