@@ -126,14 +126,14 @@ def test_model_inspection(
     assert len(shap_values_mean) == len(sample)
 
     # index names
-    assert shap_values_mean.index.names == [Sample.COL_OBSERVATION]
-    assert shap_values_mean.columns.names == [Sample.COL_FEATURE]
-    assert shap_values_std.index.names == [Sample.COL_OBSERVATION]
-    assert shap_values_std.columns.names == [Sample.COL_FEATURE]
+    assert shap_values_mean.index.names == [Sample.IDX_OBSERVATION]
+    assert shap_values_mean.columns.names == [Sample.IDX_FEATURE]
+    assert shap_values_std.index.names == [Sample.IDX_OBSERVATION]
+    assert shap_values_std.columns.names == [Sample.IDX_FEATURE]
     assert shap_values_raw.index.names == (
-        [LearnerInspector.COL_SPLIT, Sample.COL_OBSERVATION]
+        [LearnerInspector.COL_SPLIT, Sample.IDX_OBSERVATION]
     )
-    assert shap_values_raw.columns.names == [Sample.COL_FEATURE]
+    assert shap_values_raw.columns.names == [Sample.IDX_FEATURE]
 
     # column index
     assert set(shap_values_mean.columns) == feature_names

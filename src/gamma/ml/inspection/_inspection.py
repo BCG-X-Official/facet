@@ -537,7 +537,7 @@ class LearnerInspector(
         matrix_df = pd.DataFrame(
             data=matrix_2d,
             columns=self.shap_values().columns,
-            index=self.crossfit.pipeline.features_out.rename(Sample.COL_FEATURE),
+            index=self.crossfit.pipeline.features_out.rename(Sample.IDX_FEATURE),
         )
 
         assert matrix_df.shape == (n_features, n_outputs * n_features)
