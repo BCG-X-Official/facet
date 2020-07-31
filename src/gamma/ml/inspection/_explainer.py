@@ -1,5 +1,5 @@
 """
-Factories for SHAP explainers from the :code:`shap` package
+Factories for SHAP explainers from the ``shap`` package
 """
 import functools
 import logging
@@ -38,16 +38,16 @@ class ExplainerFactory(metaclass=ABCMeta):
     @abstractmethod
     def explains_raw_output(self) -> bool:
         """
-        :code:`True` if explainers made by this factory explain raw model output,
-        :code:`False` otherwise
+        ``True`` if explainers made by this factory explain raw model output,
+        ``False`` otherwise
         """
 
     @property
     @abstractmethod
     def supports_shap_interaction_values(self) -> bool:
         """
-        :code:`True` if explainers made by this factory allow for calculating SHAP
-        interaction values, :code:`False` otherwise.
+        ``True`` if explainers made by this factory allow for calculating SHAP
+        interaction values, ``False`` otherwise.
         """
 
     @abstractmethod
@@ -81,7 +81,7 @@ class TreeExplainerFactory(ExplainerFactory):
         :param model_output: (optional) override the default model output parameter
         :param feature_perturbation: (optional) override the default \
             feature_perturbation parameter
-        :param use_background_dataset: if :code:`False`, don't pass the background \
+        :param use_background_dataset: if ``False``, don't pass the background \
             dataset on to the tree explainer even if a background dataset is passed \
             to :meth:`.make_explainer`
         """
@@ -139,7 +139,7 @@ class TreeExplainerFactory(ExplainerFactory):
         return explainer
 
 
-@inheritdoc(match="[see superclass]")
+#@inheritdoc(match="[see superclass]")
 class KernelExplainerFactory(ExplainerFactory):
     """
     A factory class constructing class:`~shap.KernelExplainer` objects.
@@ -154,12 +154,12 @@ class KernelExplainerFactory(ExplainerFactory):
         """
         :param link: (optional) override the default link parameter
         :param l1_reg: (optional) override the default l1_reg parameter of method \
-            :meth:`~shap.KernelExplainer.shap_values`; pass :code:`None` to use the \
+            :meth:`~shap.KernelExplainer.shap_values`; pass ``None`` to use the \
             default value used by :meth:`~shap.KernelExplainer.shap_values`
         :param data_size_limit: (optional) maximum number of observations to use as \
             the background data set; larger data sets will be down-sampled using \
             method :meth:`~shap.kmeans`. \
-            Pass :code:`None` to prevent down-sampling the background data set.
+            Pass ``None`` to prevent down-sampling the background data set.
         """
         super().__init__()
         validate_type(link, expected_type=str, optional=True, name="arg link")

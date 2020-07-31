@@ -13,11 +13,11 @@ from gamma.ml.inspection._shap import ShapCalculator, ShapInteractionValuesCalcu
 
 log = logging.getLogger(__name__)
 
-_PAIRWISE_PARTIAL_SUMMATION = False
-#: if `True`, optimize numpy arrays to ensure pairwise partial summation.
+#: if ``True``, optimize numpy arrays to ensure pairwise partial summation.
 #: But given that we will add floats of the same order of magnitude and only up
 #: to a few thousand of them in the base case, the loss of accuracy with regular
 #: (sequential) summation will be negligible in practice
+_PAIRWISE_PARTIAL_SUMMATION = False
 
 
 class ShapValueDecomposer(FittableMixin[ShapCalculator]):

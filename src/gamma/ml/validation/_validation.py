@@ -103,7 +103,7 @@ class _BaseBootstrapCV(BaseCrossValidator, metaclass=ABCMeta):
         :param y:
         :param n_samples: number of indices to sample
         :param random_state: random state object to be used for random sampling
-        :return: an array of integer indices with shape `[n_samples]`
+        :return: an array of integer indices with shape ``[n_samples]``
         """
         pass
 
@@ -121,7 +121,7 @@ class BootstrapCV(_BaseBootstrapCV):
     is the same size as the total sample; the test set consists of all samples not
     included in the training set.
 
-    Permissible as the `cv` argument of :class:`sklearn.model_selection.GridSearchCV`
+    Permissible as the ``cv`` argument of :class:`sklearn.model_selection.GridSearchCV`
     object.
 
     """
@@ -182,12 +182,12 @@ class StationaryBootstrapCV(_BaseBootstrapCV):
 
     Intended for use with time series that satisfy the stationarity requirement.
 
-    Permissible as the `cv` argument of :class:`sklearn.model_selection.GridSearchCV`
+    Permissible as the ``cv`` argument of :class:`sklearn.model_selection.GridSearchCV`
     object.
 
     :param n_splits: Number of splits to generate (default: 50)
     :param mean_block_size: mean size of coherent blocks to sample.\
-        If an `int`, use this as the absolute number of blocks. If a `float`, must be \
+        If an ``int``, use this as the absolute number of blocks. If a ``float``, must be \
         in the range (0.0, 1.0) and denotes a block size relative to the total number \
         samples. (default: 0.5)
     :param random_state: random state to initialise the random generator with (optional)

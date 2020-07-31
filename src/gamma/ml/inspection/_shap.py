@@ -54,7 +54,7 @@ class ShapCalculator(
     """
     Base class for all SHAP calculators.
 
-    A SHAP calculator uses the `shap` package to calculate SHAP tensors for oob
+    A SHAP calculator uses the ``shap`` package to calculate SHAP tensors for oob
     samples across splits of a crossfit, then consolidates and aggregates results
     in a data frame.
     """
@@ -72,7 +72,7 @@ class ShapCalculator(
         verbose: Optional[int] = None,
     ) -> None:
         """
-        :param explain_full_sample: if `True`, calculate SHAP values for full sample,
+        :param explain_full_sample: if ``True``, calculate SHAP values for full sample,
             otherwise only use oob sample for each crossfit
         """
         super().__init__(
@@ -138,7 +138,7 @@ class ShapCalculator(
         The resulting consolidated shap values as a data frame,
         aggregated to averaged SHAP contributions per feature and observation.
 
-        :param consolidate: consolidation method, or `None` for no consolidation
+        :param consolidate: consolidation method, or ``None`` for no consolidation
         :return: SHAP contribution values with shape \
             (n_observations, n_outputs * n_features).
         """
