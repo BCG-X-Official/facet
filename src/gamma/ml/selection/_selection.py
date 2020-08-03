@@ -208,7 +208,7 @@ class LearnerRanker(
     """
     Rank different parametrizations of one or more learners using cross-validation.
 
-    Given a list of :class:`~gamma.ml.ParameterGrid`, a cross-validation splitter and a
+    Given a list of :class:`.ParameterGrid`, a cross-validation splitter and a
     scoring function, performs a grid search to find the pipeline and
     hyper-parameters with the best score across all cross-validation splits.
 
@@ -297,8 +297,8 @@ class LearnerRanker(
 
         Its output is used to rank different parametrizations of one or more learners.
 
-        :param scoring: the :class:`Scoring` with validation scores for a given split
-        :return: score to be used for pipeline ranking
+        :param scores: the validation scores for all crossfits
+        :return: scalar score to be used for ranking the pipeline
         """
         return scores.mean() - 2 * scores.std()
 
