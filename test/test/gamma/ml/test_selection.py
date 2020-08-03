@@ -12,7 +12,7 @@ from sklearn import datasets
 
 from gamma.ml import Sample
 from gamma.ml.crossfit import LearnerCrossfit
-from gamma.ml.selection import LearnerEvaluation, LearnerRanker, ParameterGrid
+from gamma.ml.selection import LearnerEvaluation, LearnerGrid, LearnerRanker
 from gamma.ml.validation import BootstrapCV
 from gamma.sklearndf.classification import SVCDF
 from gamma.sklearndf.pipeline import ClassifierPipelineDF, RegressorPipelineDF
@@ -29,7 +29,7 @@ log = logging.getLogger(__name__)
 
 def test_parameter_grid() -> None:
 
-    grid = ParameterGrid(
+    grid = LearnerGrid(
         pipeline=ClassifierPipelineDF(classifier=SVCDF(gamma="scale")),
         learner_parameters={"a": [1, 2, 3], "b": [11, 12], "c": [21, 22]},
     )
@@ -76,7 +76,7 @@ def test_parameter_grid() -> None:
 
 
 def test_model_ranker(
-    regressor_grids: List[ParameterGrid[RegressorPipelineDF]],
+    regressor_grids: List[LearnerGrid[RegressorPipelineDF]],
     sample: Sample,
     n_jobs: int,
     fast_execution: bool,
@@ -190,7 +190,7 @@ def test_model_ranker_no_preprocessing(n_jobs) -> None:
 
     # define parameters and pipeline
     models = [
-        ParameterGrid(
+        LearnerGrid(
             pipeline=ClassifierPipelineDF(
                 classifier=SVCDF(gamma="scale"), preprocessing=None
             ),

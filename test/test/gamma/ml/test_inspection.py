@@ -14,7 +14,7 @@ from sklearn.model_selection import BaseCrossValidator, KFold
 from gamma.ml import Sample
 from gamma.ml.crossfit import LearnerCrossfit
 from gamma.ml.inspection import KernelExplainerFactory, LearnerInspector
-from gamma.ml.selection import LearnerRanker, ParameterGrid
+from gamma.ml.selection import LearnerGrid, LearnerRanker
 from gamma.ml.validation import BootstrapCV, StratifiedBootstrapCV
 from gamma.sklearndf import TransformerDF
 from gamma.sklearndf.classification import RandomForestClassifierDF
@@ -71,7 +71,7 @@ def iris_classifier_crossfit_multi_class(
 
 
 def test_model_inspection(
-    regressor_grids: Sequence[ParameterGrid[RegressorPipelineDF]],
+    regressor_grids: Sequence[LearnerGrid[RegressorPipelineDF]],
     regressor_ranker: LearnerRanker[RegressorPipelineDF],
     best_lgbm_crossfit: LearnerCrossfit[RegressorPipelineDF],
     feature_names: Set[str],
@@ -498,7 +498,7 @@ def _fit_learner_ranker(
 ) -> LearnerRanker[ClassifierPipelineDF[RandomForestClassifierDF]]:
     # define parameters and crossfit
     models = [
-        ParameterGrid(
+        LearnerGrid(
             pipeline=ClassifierPipelineDF(
                 classifier=RandomForestClassifierDF(random_state=42), preprocessing=None
             ),
