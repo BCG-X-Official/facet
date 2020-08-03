@@ -2,7 +2,7 @@ from typing import *
 
 import pytest
 
-from gamma.ml.selection import LearnerEvaluation
+from gamma.ml.selection import LearnerScores
 from gamma.sklearndf import TransformerDF
 from gamma.sklearndf.transformation import (
     ColumnTransformerDF,
@@ -38,7 +38,7 @@ def make_simple_transformer(
 
 
 def check_ranking(
-    ranking: List[LearnerEvaluation],
+    ranking: List[LearnerScores],
     expected_scores: Sequence[float],
     expected_learners: Optional[Sequence[type]],
     expected_parameters: Optional[Mapping[int, Mapping[str, Any]]],

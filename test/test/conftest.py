@@ -14,7 +14,7 @@ from sklearn.utils import Bunch
 from gamma.ml import Sample
 from gamma.ml.crossfit import LearnerCrossfit
 from gamma.ml.inspection import LearnerInspector
-from gamma.ml.selection import LearnerEvaluation, LearnerGrid, LearnerRanker
+from gamma.ml.selection import LearnerGrid, LearnerRanker, LearnerScores
 from gamma.ml.validation import BootstrapCV, StratifiedBootstrapCV
 from gamma.sklearndf import TransformerDF
 from gamma.sklearndf.pipeline import RegressorPipelineDF
@@ -158,7 +158,7 @@ def best_lgbm_crossfit(
 ) -> LearnerCrossfit[RegressorPipelineDF]:
     # we get the best model_evaluation which is a LGBM - for the sake of test
     # performance
-    best_lgbm_evaluation: LearnerEvaluation[RegressorPipelineDF] = [
+    best_lgbm_evaluation: LearnerScores[RegressorPipelineDF] = [
         evaluation
         for evaluation in regressor_ranker.ranking()
         if isinstance(evaluation.pipeline.regressor, LGBMRegressorDF)

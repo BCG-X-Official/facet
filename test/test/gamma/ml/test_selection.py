@@ -12,7 +12,7 @@ from sklearn import datasets
 
 from gamma.ml import Sample
 from gamma.ml.crossfit import LearnerCrossfit
-from gamma.ml.selection import LearnerEvaluation, LearnerGrid, LearnerRanker
+from gamma.ml.selection import LearnerGrid, LearnerRanker, LearnerScores
 from gamma.ml.validation import BootstrapCV
 from gamma.sklearndf.classification import SVCDF
 from gamma.sklearndf.pipeline import ClassifierPipelineDF, RegressorPipelineDF
@@ -156,7 +156,7 @@ def test_model_ranker(
     ranking = ranker.ranking()
 
     assert len(ranking) > 0
-    assert isinstance(ranking[0], LearnerEvaluation)
+    assert isinstance(ranking[0], LearnerScores)
     assert all(
         ranking_hi.ranking_score >= ranking_lo.ranking_score
         for ranking_hi, ranking_lo in zip(ranking, ranking[1:])
