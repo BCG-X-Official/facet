@@ -7,6 +7,7 @@ import math
 import operator
 from functools import reduce
 from itertools import chain
+from types import MappingProxyType
 from typing import *
 
 from numpy.random.mtrand import RandomState
@@ -17,11 +18,7 @@ from gamma.common.fit import FittableMixin, T_Self
 from gamma.common.parallelization import ParallelizableMixin
 from gamma.ml import Sample
 from gamma.ml.crossfit import CrossfitScores, LearnerCrossfit
-from gamma.sklearndf.pipeline import (
-    BaseLearnerPipelineDF,
-    ClassifierPipelineDF,
-    RegressorPipelineDF,
-)
+from gamma.sklearndf.pipeline import ClassifierPipelineDF, RegressorPipelineDF
 
 log = logging.getLogger(__name__)
 
@@ -31,7 +28,9 @@ __all__ = ["LearnerEvaluation", "LearnerGrid", "LearnerRanker"]
 # Type variables
 #
 
-T_LearnerPipelineDF = TypeVar("T_LearnerPipelineDF", bound=BaseLearnerPipelineDF)
+T_LearnerPipelineDF = TypeVar(
+    "T_LearnerPipelineDF", RegressorPipelineDF, ClassifierPipelineDF
+)
 T_RegressorPipelineDF = TypeVar("T_RegressorPipelineDF", bound=RegressorPipelineDF)
 T_ClassifierPipelineDF = TypeVar("T_ClassifierPipelineDF", bound=ClassifierPipelineDF)
 
@@ -42,10 +41,10 @@ T_ClassifierPipelineDF = TypeVar("T_ClassifierPipelineDF", bound=ClassifierPipel
 
 class LearnerGrid(Sequence[Dict[str, Any]], Generic[T_LearnerPipelineDF]):
     """
-    A grid of hyper-parameters for pipeline tuning.
+    A grid of hyper-parameters for tuning a learner pipeline.
 
-    :param pipeline: the :class:`ModelPipelineDF` to which the hyper-parameters will \
-        be applied
+    :param pipeline: the :class:`.RegressorPipelineDF` or \
+        :class:`.ClassifierPipelineDF` to which the hyper-parameters will be applied
     :param learner_parameters: the hyper-parameter grid in which to search for the \
         optimal parameter values for the pipeline's final estimator
     :param preprocessing_parameters: the hyper-parameter grid in which to search for \
@@ -59,9 +58,7 @@ class LearnerGrid(Sequence[Dict[str, Any]], Generic[T_LearnerPipelineDF]):
         learner_parameters: Dict[str, Sequence],
         preprocessing_parameters: Optional[Dict[str, Sequence]] = None,
     ) -> None:
-        self._pipeline = pipeline
-        self._learner_parameters = learner_parameters
-        self._preprocessing_parameters = preprocessing_parameters
+        self.pipeline = pipeline
 
         def _prefix_parameter_names(
             parameters: Dict[str, Sequence], prefix: str
@@ -73,6 +70,7 @@ class LearnerGrid(Sequence[Dict[str, Any]], Generic[T_LearnerPipelineDF]):
         grid_parameters: Iterable[Tuple[str, Sequence]] = _prefix_parameter_names(
             parameters=learner_parameters, prefix=pipeline.final_estimator_name
         )
+
         if preprocessing_parameters is not None:
             grid_parameters = chain(
                 grid_parameters,
@@ -86,27 +84,9 @@ class LearnerGrid(Sequence[Dict[str, Any]], Generic[T_LearnerPipelineDF]):
         self._grid_dict: Dict[str, Sequence] = dict(self._grid_parameters)
 
     @property
-    def pipeline(self) -> T_LearnerPipelineDF:
-        """
-        The :class:`~gamma.ml.EstimatorPipelineDF` for which to optimise the
-        parameters.
-        """
-        return self._pipeline
-
-    @property
-    def learner_parameters(self) -> Dict[str, Sequence[Any]]:
-        """The parameter grid for the estimator."""
-        return self._learner_parameters
-
-    @property
-    def preprocessing_parameters(self) -> Optional[Dict[str, Sequence[Any]]]:
-        """The parameter grid for the preprocessor."""
-        return self._preprocessing_parameters
-
-    @property
-    def parameters(self) -> Dict[str, Sequence[Any]]:
+    def parameters(self) -> Mapping[str, Sequence[Any]]:
         """The parameter grid for the pipeline representing the entire pipeline."""
-        return self._grid_dict
+        return MappingProxyType(self._grid_dict)
 
     def __iter__(self) -> Iterable[Dict[str, Any]]:
         grid = self._grid_parameters
