@@ -25,7 +25,7 @@ from gamma.sklearndf.pipeline import (
 
 log = logging.getLogger(__name__)
 
-__all__ = ["ParameterGrid", "LearnerEvaluation", "LearnerRanker"]
+__all__ = ["LearnerEvaluation", "LearnerGrid", "LearnerRanker"]
 
 #
 # Type variables
@@ -40,7 +40,7 @@ T_ClassifierPipelineDF = TypeVar("T_ClassifierPipelineDF", bound=ClassifierPipel
 #
 
 
-class ParameterGrid(Sequence[Dict[str, Any]], Generic[T_LearnerPipelineDF]):
+class LearnerGrid(Sequence[Dict[str, Any]], Generic[T_LearnerPipelineDF]):
     """
     A grid of hyper-parameters for pipeline tuning.
 
@@ -221,8 +221,7 @@ class LearnerRanker(
     def __init__(
         self,
         grid: Union[
-            ParameterGrid[T_LearnerPipelineDF],
-            Iterable[ParameterGrid[T_LearnerPipelineDF]],
+            LearnerGrid[T_LearnerPipelineDF], Iterable[LearnerGrid[T_LearnerPipelineDF]]
         ],
         cv: Optional[BaseCrossValidator],
         scoring: Union[
@@ -243,7 +242,7 @@ class LearnerRanker(
         verbose: Optional[int] = None,
     ) -> None:
         """
-        :param grid: :class:`~gamma.ml.ParameterGrid` to be ranked \
+        :param grid: :class:`~gamma.ml.LearnerGrid` to be ranked \
             (either a single grid, or an iterable of multiple grids)
         :param cv: a cross validator (e.g., \
             :class:`~gamma.ml.validation.BootstrapCV`)
@@ -268,8 +267,8 @@ class LearnerRanker(
             verbose=verbose,
         )
 
-        self._grids: Tuple[ParameterGrid, ...] = to_tuple(
-            grid, element_type=ParameterGrid, arg_name="grid"
+        self._grids: Tuple[LearnerGrid, ...] = to_tuple(
+            grid, element_type=LearnerGrid, arg_name="grid"
         )
         self._cv = cv
         self._scoring = scoring

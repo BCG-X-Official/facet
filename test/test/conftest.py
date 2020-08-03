@@ -14,7 +14,7 @@ from sklearn.utils import Bunch
 from gamma.ml import Sample
 from gamma.ml.crossfit import LearnerCrossfit
 from gamma.ml.inspection import LearnerInspector
-from gamma.ml.selection import LearnerEvaluation, LearnerRanker, ParameterGrid
+from gamma.ml.selection import LearnerEvaluation, LearnerGrid, LearnerRanker
 from gamma.ml.validation import BootstrapCV, StratifiedBootstrapCV
 from gamma.sklearndf import TransformerDF
 from gamma.sklearndf.pipeline import RegressorPipelineDF
@@ -79,11 +79,11 @@ def cv_stratified_bootstrap() -> BaseCrossValidator:
 
 
 @pytest.fixture
-def regressor_grids(simple_preprocessor: TransformerDF) -> List[ParameterGrid]:
+def regressor_grids(simple_preprocessor: TransformerDF) -> List[LearnerGrid]:
     random_state = {f"random_state": [42]}
 
     return [
-        ParameterGrid(
+        LearnerGrid(
             pipeline=RegressorPipelineDF(
                 preprocessing=simple_preprocessor, regressor=LGBMRegressorDF()
             ),
@@ -94,19 +94,19 @@ def regressor_grids(simple_preprocessor: TransformerDF) -> List[ParameterGrid]:
                 **random_state,
             },
         ),
-        ParameterGrid(
+        LearnerGrid(
             pipeline=RegressorPipelineDF(
                 preprocessing=simple_preprocessor, regressor=AdaBoostRegressorDF()
             ),
             learner_parameters={"n_estimators": [50, 80], **random_state},
         ),
-        ParameterGrid(
+        LearnerGrid(
             pipeline=RegressorPipelineDF(
                 preprocessing=simple_preprocessor, regressor=RandomForestRegressorDF()
             ),
             learner_parameters={"n_estimators": [50, 80], **random_state},
         ),
-        ParameterGrid(
+        LearnerGrid(
             pipeline=RegressorPipelineDF(
                 preprocessing=simple_preprocessor, regressor=DecisionTreeRegressorDF()
             ),
@@ -116,19 +116,19 @@ def regressor_grids(simple_preprocessor: TransformerDF) -> List[ParameterGrid]:
                 **random_state,
             },
         ),
-        ParameterGrid(
+        LearnerGrid(
             pipeline=RegressorPipelineDF(
                 preprocessing=simple_preprocessor, regressor=ExtraTreeRegressorDF()
             ),
             learner_parameters={"max_depth": [5, 10, 12], **random_state},
         ),
-        ParameterGrid(
+        LearnerGrid(
             pipeline=RegressorPipelineDF(
                 preprocessing=simple_preprocessor, regressor=SVRDF()
             ),
             learner_parameters={"gamma": [0.5, 1], "C": [50, 100]},
         ),
-        ParameterGrid(
+        LearnerGrid(
             pipeline=RegressorPipelineDF(
                 preprocessing=simple_preprocessor, regressor=LinearRegressionDF()
             ),
@@ -140,7 +140,7 @@ def regressor_grids(simple_preprocessor: TransformerDF) -> List[ParameterGrid]:
 @pytest.fixture
 def regressor_ranker(
     cv_kfold: KFold,
-    regressor_grids: List[ParameterGrid[RegressorPipelineDF]],
+    regressor_grids: List[LearnerGrid[RegressorPipelineDF]],
     sample: Sample,
     n_jobs: int,
 ) -> LearnerRanker[RegressorPipelineDF]:
