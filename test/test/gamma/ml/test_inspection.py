@@ -14,7 +14,7 @@ from sklearn.model_selection import BaseCrossValidator, KFold
 from gamma.ml import Sample
 from gamma.ml.crossfit import LearnerCrossfit
 from gamma.ml.inspection import KernelExplainerFactory, LearnerInspector
-from gamma.ml.selection import LearnerRanker, ParameterGrid
+from gamma.ml.selection import LearnerGrid, LearnerRanker
 from gamma.ml.validation import BootstrapCV, StratifiedBootstrapCV
 from gamma.sklearndf import TransformerDF
 from gamma.sklearndf.classification import RandomForestClassifierDF
@@ -71,7 +71,7 @@ def iris_classifier_crossfit_multi_class(
 
 
 def test_model_inspection(
-    regressor_grids: Sequence[ParameterGrid[RegressorPipelineDF]],
+    regressor_grids: Sequence[LearnerGrid[RegressorPipelineDF]],
     regressor_ranker: LearnerRanker[RegressorPipelineDF],
     best_lgbm_crossfit: LearnerCrossfit[RegressorPipelineDF],
     feature_names: Set[str],
@@ -126,14 +126,14 @@ def test_model_inspection(
     assert len(shap_values_mean) == len(sample)
 
     # index names
-    assert shap_values_mean.index.names == [Sample.COL_OBSERVATION]
-    assert shap_values_mean.columns.names == [Sample.COL_FEATURE]
-    assert shap_values_std.index.names == [Sample.COL_OBSERVATION]
-    assert shap_values_std.columns.names == [Sample.COL_FEATURE]
+    assert shap_values_mean.index.names == [Sample.IDX_OBSERVATION]
+    assert shap_values_mean.columns.names == [Sample.IDX_FEATURE]
+    assert shap_values_std.index.names == [Sample.IDX_OBSERVATION]
+    assert shap_values_std.columns.names == [Sample.IDX_FEATURE]
     assert shap_values_raw.index.names == (
-        [LearnerInspector.COL_SPLIT, Sample.COL_OBSERVATION]
+        [LearnerInspector.COL_SPLIT, Sample.IDX_OBSERVATION]
     )
-    assert shap_values_raw.columns.names == [Sample.COL_FEATURE]
+    assert shap_values_raw.columns.names == [Sample.IDX_FEATURE]
 
     # column index
     assert set(shap_values_mean.columns) == feature_names
@@ -497,8 +497,8 @@ def _fit_learner_ranker(
     sample: Sample, cv: BaseCrossValidator, n_jobs: int
 ) -> LearnerRanker[ClassifierPipelineDF[RandomForestClassifierDF]]:
     # define parameters and crossfit
-    models = [
-        ParameterGrid(
+    grids = [
+        LearnerGrid(
             pipeline=ClassifierPipelineDF(
                 classifier=RandomForestClassifierDF(random_state=42), preprocessing=None
             ),
@@ -508,7 +508,7 @@ def _fit_learner_ranker(
     # pipeline inspector does only support binary classification - hence
     # filter the test_sample down to only 2 target classes:
     return LearnerRanker(
-        grid=models,
+        grids=grids,
         cv=cv,
         scoring="f1_macro",
         # shuffle_features=True,

@@ -12,7 +12,7 @@ from sklearn import datasets
 
 from gamma.ml import Sample
 from gamma.ml.crossfit import LearnerCrossfit
-from gamma.ml.selection import LearnerEvaluation, LearnerRanker, ParameterGrid
+from gamma.ml.selection import LearnerGrid, LearnerRanker, LearnerScores
 from gamma.ml.validation import BootstrapCV
 from gamma.sklearndf.classification import SVCDF
 from gamma.sklearndf.pipeline import ClassifierPipelineDF, RegressorPipelineDF
@@ -29,7 +29,7 @@ log = logging.getLogger(__name__)
 
 def test_parameter_grid() -> None:
 
-    grid = ParameterGrid(
+    grid = LearnerGrid(
         pipeline=ClassifierPipelineDF(classifier=SVCDF(gamma="scale")),
         learner_parameters={"a": [1, 2, 3], "b": [11, 12], "c": [21, 22]},
     )
@@ -76,7 +76,7 @@ def test_parameter_grid() -> None:
 
 
 def test_model_ranker(
-    regressor_grids: List[ParameterGrid[RegressorPipelineDF]],
+    regressor_grids: List[LearnerGrid[RegressorPipelineDF]],
     sample: Sample,
     n_jobs: int,
     fast_execution: bool,
@@ -146,7 +146,7 @@ def test_model_ranker(
     cv = BootstrapCV(n_splits=5, random_state=42)
 
     ranker: LearnerRanker[RegressorPipelineDF] = LearnerRanker(
-        grid=regressor_grids, cv=cv, scoring="r2", n_jobs=n_jobs
+        grids=regressor_grids, cv=cv, scoring="r2", n_jobs=n_jobs
     ).fit(sample=sample)
 
     log.debug(f"\n{ranker.summary_report(max_learners=10)}")
@@ -156,7 +156,7 @@ def test_model_ranker(
     ranking = ranker.ranking()
 
     assert len(ranking) > 0
-    assert isinstance(ranking[0], LearnerEvaluation)
+    assert isinstance(ranking[0], LearnerScores)
     assert all(
         ranking_hi.ranking_score >= ranking_lo.ranking_score
         for ranking_hi, ranking_lo in zip(ranking, ranking[1:])
@@ -190,7 +190,7 @@ def test_model_ranker_no_preprocessing(n_jobs) -> None:
 
     # define parameters and pipeline
     models = [
-        ParameterGrid(
+        LearnerGrid(
             pipeline=ClassifierPipelineDF(
                 classifier=SVCDF(gamma="scale"), preprocessing=None
             ),
@@ -207,7 +207,7 @@ def test_model_ranker_no_preprocessing(n_jobs) -> None:
     test_sample: Sample = Sample(observations=test_data, target="target")
 
     model_ranker: LearnerRanker[ClassifierPipelineDF[SVCDF]] = LearnerRanker(
-        grid=models, cv=cv, n_jobs=n_jobs
+        grids=models, cv=cv, n_jobs=n_jobs
     ).fit(sample=test_sample)
 
     log.debug(f"\n{model_ranker.summary_report(max_learners=10)}")

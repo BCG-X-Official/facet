@@ -104,7 +104,7 @@ class ShapCalculator(
         self.shap_ = None
 
         training_sample = crossfit.training_sample
-        self.feature_index_ = crossfit.pipeline.features_out.rename(Sample.COL_FEATURE)
+        self.feature_index_ = crossfit.pipeline.features_out.rename(Sample.IDX_FEATURE)
         self.output_names_ = self._output_names(crossfit=crossfit)
         self.n_observations_ = len(training_sample)
 
@@ -544,7 +544,7 @@ class RegressorShapCalculator(ShapCalculator[RegressorPipelineDF], metaclass=ABC
 
     @property
     def _multi_output_type(self) -> str:
-        return Sample.COL_TARGET
+        return Sample.IDX_TARGET
 
     def _multi_output_names(
         self, model: RegressorPipelineDF, sample: Sample

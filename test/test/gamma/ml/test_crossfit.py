@@ -1,7 +1,7 @@
 import logging
 
 from gamma.ml import Sample
-from gamma.ml.selection import LearnerRanker, ParameterGrid
+from gamma.ml.selection import LearnerGrid, LearnerRanker
 from gamma.ml.validation import StratifiedBootstrapCV
 from gamma.sklearndf.classification import RandomForestClassifierDF
 from gamma.sklearndf.pipeline import ClassifierPipelineDF
@@ -17,7 +17,7 @@ def test_prediction_classifier(
     expected_learner_scores = [0.889, 0.886, 0.885, 0.879]
 
     # define parameters and crossfit
-    grid = ParameterGrid(
+    grids = LearnerGrid(
         pipeline=ClassifierPipelineDF(
             classifier=RandomForestClassifierDF(random_state=42), preprocessing=None
         ),
@@ -27,7 +27,7 @@ def test_prediction_classifier(
     model_ranker: LearnerRanker[
         ClassifierPipelineDF[RandomForestClassifierDF]
     ] = LearnerRanker(
-        grid=grid,
+        grids=grids,
         cv=cv_stratified_bootstrap,
         scoring="f1_macro",
         n_jobs=n_jobs,
