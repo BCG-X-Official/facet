@@ -17,7 +17,7 @@ def test_prediction_classifier(
     expected_learner_scores = [0.889, 0.886, 0.885, 0.879]
 
     # define parameters and crossfit
-    grid = LearnerGrid(
+    grids = LearnerGrid(
         pipeline=ClassifierPipelineDF(
             classifier=RandomForestClassifierDF(random_state=42), preprocessing=None
         ),
@@ -27,7 +27,7 @@ def test_prediction_classifier(
     model_ranker: LearnerRanker[
         ClassifierPipelineDF[RandomForestClassifierDF]
     ] = LearnerRanker(
-        grid=grid,
+        grids=grids,
         cv=cv_stratified_bootstrap,
         scoring="f1_macro",
         n_jobs=n_jobs,

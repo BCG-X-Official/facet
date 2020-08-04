@@ -145,7 +145,7 @@ def regressor_ranker(
     n_jobs: int,
 ) -> LearnerRanker[RegressorPipelineDF]:
     return LearnerRanker(
-        grid=regressor_grids, cv=cv_kfold, scoring="r2", n_jobs=n_jobs
+        grids=regressor_grids, cv=cv_kfold, scoring="r2", n_jobs=n_jobs
     ).fit(sample=sample)
 
 

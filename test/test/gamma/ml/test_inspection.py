@@ -497,7 +497,7 @@ def _fit_learner_ranker(
     sample: Sample, cv: BaseCrossValidator, n_jobs: int
 ) -> LearnerRanker[ClassifierPipelineDF[RandomForestClassifierDF]]:
     # define parameters and crossfit
-    models = [
+    grids = [
         LearnerGrid(
             pipeline=ClassifierPipelineDF(
                 classifier=RandomForestClassifierDF(random_state=42), preprocessing=None
@@ -508,7 +508,7 @@ def _fit_learner_ranker(
     # pipeline inspector does only support binary classification - hence
     # filter the test_sample down to only 2 target classes:
     return LearnerRanker(
-        grid=models,
+        grids=grids,
         cv=cv,
         scoring="f1_macro",
         # shuffle_features=True,
