@@ -14,6 +14,7 @@ from sklearn.metrics import check_scoring
 from sklearn.model_selection import BaseCrossValidator
 from sklearn.utils import check_random_state
 
+from gamma.common import inheritdoc
 from gamma.common.fit import FittableMixin, T_Self
 from gamma.common.parallelization import ParallelizableMixin
 from gamma.ml import Sample
@@ -61,6 +62,8 @@ class CrossfitScores:
     Scores for individual fits can be accessed by iteration, or by indexing
     (``[…]`` notation).
 
+    Supports :func:`.len`, returning the number of fits in this crossfit.
+
     :param scores: list or 1d array of scores for all crossfits of a pipeline
     """
 
@@ -106,6 +109,7 @@ class _FitScoreParameters(NamedTuple):
     test_weight: Optional[pd.Series]
 
 
+@inheritdoc(match="[see superclass]")
 class LearnerCrossfit(
     FittableMixin[Sample],
     ParallelizableMixin,
@@ -358,8 +362,8 @@ class LearnerCrossfit(
     def resize(self: T_Self, n_fits: int) -> T_Self:
         """
         Reduce the size of this crossfit by removing a subset of the fits.
-        :param n_fits: the number of fits to keep. Must be lower than the number of \
-            fits
+        :param n_fits: the number of fits to keep. Must be lower, or equal to, the \
+            current number of fits
         :return:
         """
         self: LearnerCrossfit
@@ -380,7 +384,7 @@ class LearnerCrossfit(
 
     @property
     def is_fitted(self) -> bool:
-        """``True`` if the delegate estimator is fitted, else ``False``"""
+        """[see superclass]"""
         return self._training_sample is not None
 
     @property
@@ -410,7 +414,9 @@ class LearnerCrossfit(
         )
 
     def models(self) -> Iterator[T_LearnerPipelineDF]:
-        """Iterator of all models fitted on the cross-validation train splits."""
+        """
+        :return: an iterator of all models fitted on the cross-validation train splits
+        """
         self._ensure_fitted()
         return iter(self._model_by_split)
 
