@@ -1,10 +1,10 @@
 """
-ModelPipelineDF selection and hyperparameter optimisation.
+Model selection and hyperparameter optimisation.
 
-:class:`ParameterGrid` encapsulates a :class:`gamma.ml.ModelPipelineDF` and a grid of
+:class:`.LearnerGrid` encapsulates a :class:`.BaseLearnerPipelineDF` and a grid of
 hyperparameters.
 
-:class:`BaseLearnerRanker` selects the best pipeline and parametrisation based on the
-pipeline and hyperparameter choices provided as a list of :class:`ModelGrid`.
+:class:`.LearnerRanker` selects the best pipeline and parametrisation based on the
+pipeline and hyperparameter choices provided as a list of :class:`.LearnerGrid`.
 """
 from ._selection import *
