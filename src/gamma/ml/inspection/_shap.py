@@ -59,7 +59,8 @@ class ShapCalculator(
     in a data frame.
     """
 
-    COL_SPLIT = "split"
+    #: name of index level indicating the split ID
+    IDX_SPLIT = "split"
 
     def __init__(
         self,
@@ -235,7 +236,7 @@ class ShapCalculator(
         n_levels = index.nlevels
 
         assert n_levels > 1
-        assert index.names[0] == ShapCalculator.COL_SPLIT
+        assert index.names[0] == ShapCalculator.IDX_SPLIT
 
         level = 1 if n_levels == 2 else tuple(range(1, n_levels))
 
@@ -557,7 +558,7 @@ class RegressorShapCalculator(ShapCalculator[RegressorPipelineDF], metaclass=ABC
         return pd.concat(
             shap_df_per_split,
             keys=range(len(shap_df_per_split)),
-            names=[ShapCalculator.COL_SPLIT],
+            names=[ShapCalculator.IDX_SPLIT],
         )
 
 
@@ -672,7 +673,7 @@ class ClassifierShapCalculator(ShapCalculator[ClassifierPipelineDF], metaclass=A
     ) -> pd.DataFrame:
         output_names = self.output_names_
 
-        index_names = [ShapCalculator.COL_SPLIT, *shap_df_per_split[0].index.names]
+        index_names = [ShapCalculator.IDX_SPLIT, *shap_df_per_split[0].index.names]
 
         split_keys = range(len(shap_df_per_split))
         if len(output_names) == 1:
