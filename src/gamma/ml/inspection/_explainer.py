@@ -31,7 +31,7 @@ __tracker = AllTracker(globals())
 
 class ExplainerFactory(metaclass=ABCMeta):
     """
-    A factory class for constructing :class:`~shap.Explainer` objects.
+    A factory for constructing :class:`~shap.Explainer` objects.
     """
 
     @property
@@ -68,7 +68,7 @@ class ExplainerFactory(metaclass=ABCMeta):
 @inheritdoc(match="[see superclass]")
 class TreeExplainerFactory(ExplainerFactory):
     """
-    A factory class constructing class:`~shap.TreeExplainer` objects.
+    A factory constructing class:`~shap.TreeExplainer` objects.
     """
 
     def __init__(
@@ -139,10 +139,10 @@ class TreeExplainerFactory(ExplainerFactory):
         return explainer
 
 
-#@inheritdoc(match="[see superclass]")
+# @inheritdoc(match="[see superclass]")
 class KernelExplainerFactory(ExplainerFactory):
     """
-    A factory class constructing class:`~shap.KernelExplainer` objects.
+    A factory constructing class:`~shap.KernelExplainer` objects.
     """
 
     def __init__(
