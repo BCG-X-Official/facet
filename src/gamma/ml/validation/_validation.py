@@ -29,7 +29,7 @@ class _BaseBootstrapCV(BaseCrossValidator, metaclass=ABCMeta):
         random_state: Optional[Union[int, np.random.RandomState]] = None,
     ):
         """
-        :param n_splits: Number of splits to generate (default: 50)
+        :param n_splits: Number of splits to generate (default: 100)
         :param random_state: random state to initialise the random generator with \
             (optional)
         """
@@ -117,13 +117,12 @@ class BootstrapCV(_BaseBootstrapCV):
     """
     Bootstrapping cross-validation.
 
-    Generates CV splits by random sampling with replacement. The resulting train set
-    is the same size as the total sample; the test set consists of all samples not
-    included in the training set.
+    Generates CV splits by random sampling with replacement.
+    The resulting training set is the same size as the total sample;
+    the test set consists of all samples not included in the training set.
 
     Permissible as the ``cv`` argument of :class:`sklearn.model_selection.GridSearchCV`
     object.
-
     """
 
     def _select_train_indices(
@@ -139,9 +138,9 @@ class StratifiedBootstrapCV(_BaseBootstrapCV):
     """
     Stratified bootstrapping cross-validation.
 
-    Generates CV splits by random sampling with replacement. The resulting train set
-    is the same size as the total sample; the test set consists of all samples not
-    included in the training set.
+    Generates CV splits by random sampling with replacement.
+    The resulting training set is the same size as the total sample;
+    the test set consists of all samples not included in the training set.
 
     Sampling is stratified based on a series or 1d array of group labels in the
     target vector.
@@ -182,10 +181,7 @@ class StationaryBootstrapCV(_BaseBootstrapCV):
 
     Intended for use with time series that satisfy the stationarity requirement.
 
-    Permissible as the ``cv`` argument of :class:`sklearn.model_selection.GridSearchCV`
-    object.
-
-    :param n_splits: Number of splits to generate (default: 50)
+    :param n_splits: Number of splits to generate (default: 100)
     :param mean_block_size: mean size of coherent blocks to sample.\
         If an ``int``, use this as the absolute number of blocks. If a ``float``, must be \
         in the range (0.0, 1.0) and denotes a block size relative to the total number \
