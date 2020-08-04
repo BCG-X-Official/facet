@@ -146,7 +146,7 @@ def test_model_ranker(
     cv = BootstrapCV(n_splits=5, random_state=42)
 
     ranker: LearnerRanker[RegressorPipelineDF] = LearnerRanker(
-        grid=regressor_grids, cv=cv, scoring="r2", n_jobs=n_jobs
+        grids=regressor_grids, cv=cv, scoring="r2", n_jobs=n_jobs
     ).fit(sample=sample)
 
     log.debug(f"\n{ranker.summary_report(max_learners=10)}")
@@ -207,7 +207,7 @@ def test_model_ranker_no_preprocessing(n_jobs) -> None:
     test_sample: Sample = Sample(observations=test_data, target="target")
 
     model_ranker: LearnerRanker[ClassifierPipelineDF[SVCDF]] = LearnerRanker(
-        grid=models, cv=cv, n_jobs=n_jobs
+        grids=models, cv=cv, n_jobs=n_jobs
     ).fit(sample=test_sample)
 
     log.debug(f"\n{model_ranker.summary_report(max_learners=10)}")

@@ -13,7 +13,7 @@ from typing import *
 from numpy.random.mtrand import RandomState
 from sklearn.model_selection import BaseCrossValidator
 
-from gamma.common import to_tuple
+from gamma.common import inheritdoc, to_tuple
 from gamma.common.fit import FittableMixin, T_Self
 from gamma.common.parallelization import ParallelizableMixin
 from gamma.ml import Sample
@@ -194,6 +194,7 @@ class LearnerScores(Generic[T_LearnerPipelineDF]):
         self.ranking_score = ranking_score
 
 
+@inheritdoc(match="[see superclass")
 class LearnerRanker(
     ParallelizableMixin, FittableMixin[Sample], Generic[T_LearnerPipelineDF]
 ):
@@ -209,7 +210,7 @@ class LearnerRanker(
 
     def __init__(
         self,
-        grid: Union[
+        grids: Union[
             LearnerGrid[T_LearnerPipelineDF], Iterable[LearnerGrid[T_LearnerPipelineDF]]
         ],
         cv: Optional[BaseCrossValidator],
@@ -221,7 +222,7 @@ class LearnerRanker(
             Dict[str, Callable[[float, float], float]],
             None,
         ] = None,
-        ranking_scorer: Callable[[float, float], float] = None,
+        ranking_scorer: Callable[[CrossfitScores], float] = None,
         shuffle_features: Optional[bool] = None,
         random_state: Union[int, RandomState, None] = None,
         n_jobs: Optional[int] = None,
@@ -230,16 +231,17 @@ class LearnerRanker(
         verbose: Optional[int] = None,
     ) -> None:
         """
-        :param grid: :class:`~gamma.ml.LearnerGrid` to be ranked \
+        :param grids: learner grids to be ranked \
             (either a single grid, or an iterable of multiple grids)
         :param cv: a cross validator (e.g., \
             :class:`~gamma.ml.validation.BootstrapCV`)
         :param scoring: a scorer to use when doing CV within GridSearch, defaults to \
             ``None``
-        :param ranking_scorer: scoring function used for ranking across crossfit, \
-            taking mean and standard deviation of the ranking scores_for_split and \
-            returning the overall ranking score \
-            (default: :meth:`.default_ranking_scorer`)
+        :param ranking_scorer: a function to calculate a scalar score for every \
+            crossfit, taking a :class:`.CrossfitScore` and returning a float. \
+            The resulting score is used to rank all crossfits (highest score is best). \
+            Defaults to :meth:`.default_ranking_scorer`, calculating \
+            `mean(scores) - 2 * std(scores)`.
         :param shuffle_features: if ``True``, shuffle column order of features for \
             every crossfit (default: ``False``)
         :param random_state: optional random seed or random state for shuffling the \
@@ -252,21 +254,20 @@ class LearnerRanker(
             verbose=verbose,
         )
 
-        self._grids: Tuple[LearnerGrid, ...] = to_tuple(
-            grid, element_type=LearnerGrid, arg_name="grid"
+        self.grids: Tuple[LearnerGrid, ...] = to_tuple(
+            grids, element_type=LearnerGrid, arg_name="grids"
         )
-        self._cv = cv
-        self._scoring = scoring
-        self._ranking_scorer = (
+        self.cv = cv
+        self.scoring = scoring
+        self.ranking_scorer = (
             LearnerRanker.default_ranking_scorer
             if ranking_scorer is None
             else ranking_scorer
         )
-        self._shuffle_features = shuffle_features
-        self._random_state = random_state
+        self.shuffle_features = shuffle_features
+        self.random_state = random_state
 
         # initialise state
-        self._fit_params: Optional[Dict[str, Any]] = None
         self._ranking: Optional[List[LearnerScores]] = None
         self._best_model: Optional[T_LearnerPipelineDF] = None
 
@@ -276,21 +277,25 @@ class LearnerRanker(
     @staticmethod
     def default_ranking_scorer(scores: CrossfitScores) -> float:
         """
-        The default function to determine the pipeline's rank: ``mean - 2 * std``.
+        The default function used to rank pipelines.
 
-        Its output is used to rank different parametrizations of one or more learners.
+        Calculates `mean(scores) - 2 * std(scores)`, i.e., ranks pipelines by a
+        (pessimistic) lower bound of the expected score.
 
-        :param scores: the validation scores for all crossfits
-        :return: scalar score to be used for ranking the pipeline
+        :param scores: the scores for all crossfits
+        :return: scalar score for ranking the pipeline
         """
         return scores.mean() - 2 * scores.std()
 
     def fit(self: T_Self, sample: Sample, **fit_params) -> T_Self:
         """
-        Rank the candidate learners and their hyper-parameter combinations using the
-        given sample.
+        Rank the candidate learners and their hyper-parameter combinations using
+        crossfits from the given sample.
 
-        :param sample: sample with which to fit the candidate learners from the grid(s)
+        Other than the scikit-learn implementation of grid search, arbitrary parameters
+        can be passed on to the learner pipeline(s) to be fitted, e.g., sample weights
+
+        :param sample: the sample from which to fit the crossfits
         :param fit_params: any fit parameters to pass on to the learner's fit method
         """
         self: LearnerRanker[T_LearnerPipelineDF]  # support type hinting in PyCharm
@@ -300,7 +305,6 @@ class LearnerRanker(
         )
         ranking.sort(key=lambda le: le.ranking_score, reverse=True)
 
-        self._fit_params = fit_params
         self._ranking = ranking
         self._best_model = self._ranking[0].pipeline.fit(
             X=sample.features, y=sample.target
@@ -310,13 +314,13 @@ class LearnerRanker(
 
     @property
     def is_fitted(self) -> bool:
-        """``True`` if this ranker is fitted, ``False`` otherwise."""
+        """[see superclass]"""
         return self._ranking is not None
 
     def ranking(self) -> List[LearnerScores[T_LearnerPipelineDF]]:
         """
-        :return a ranking of all learners that were evaluated based on the parameter
-        grids passed to this ranker, in descending order of the ranking score.
+        :return a ranking of all learners that were evaluated by this ranker,
+        in descending order of the ranking score.
         """
         self._ensure_fitted()
         return self._ranking.copy()
@@ -324,7 +328,7 @@ class LearnerRanker(
     @property
     def best_model(self) -> T_LearnerPipelineDF:
         """
-        The pipeline which obtained the best ranking score, fitted on the entire sample
+        The pipeline which obtained the best ranking score, fitted on the entire sample.
         """
         self._ensure_fitted()
         return self._best_model
@@ -332,21 +336,20 @@ class LearnerRanker(
     @property
     def best_model_crossfit(self) -> LearnerCrossfit[T_LearnerPipelineDF]:
         """
-        The crossfit for the best model, fitted with the same sample and fit
-        parameters used to fit this ranker.
+        The crossfit which obtained the best ranking score.
         """
         self._ensure_fitted()
         return self._best_crossfit
 
     def summary_report(self, max_learners: Optional[int] = None) -> str:
         """
-        Return a human-readable report of learner validation results, sorted by
-        ranking score in descending order.
+        A human-readable report of the learner evaluations, sorted by ranking score in
+        descending order.
 
         :param max_learners: maximum number of learners to include in the report \
             (optional)
 
-        :return: a summary string of the pipeline ranking
+        :return: a multi-line string with a summary of the pipeline ranking
         """
 
         self._ensure_fitted()
@@ -382,11 +385,11 @@ class LearnerRanker(
     def _rank_learners(
         self, sample: Sample, **fit_params
     ) -> List[LearnerScores[T_LearnerPipelineDF]]:
-        ranking_scorer = self._ranking_scorer
+        ranking_scorer = self.ranking_scorer
 
         configurations = (
             (grid.pipeline.clone().set_params(**parameters), parameters)
-            for grid in self._grids
+            for grid in self.grids
             for parameters in grid
         )
 
@@ -397,9 +400,9 @@ class LearnerRanker(
         for pipeline, parameters in configurations:
             crossfit = LearnerCrossfit(
                 pipeline=pipeline,
-                cv=self._cv,
-                shuffle_features=self._shuffle_features,
-                random_state=self._random_state,
+                cv=self.cv,
+                shuffle_features=self.shuffle_features,
+                random_state=self.random_state,
                 n_jobs=self.n_jobs,
                 shared_memory=self.shared_memory,
                 pre_dispatch=self.pre_dispatch,
@@ -407,7 +410,7 @@ class LearnerRanker(
             )
 
             pipeline_scoring: CrossfitScores = crossfit.fit_score(
-                sample=sample, scoring=self._scoring, **fit_params
+                sample=sample, scoring=self.scoring, **fit_params
             )
 
             ranking_score = ranking_scorer(pipeline_scoring)
