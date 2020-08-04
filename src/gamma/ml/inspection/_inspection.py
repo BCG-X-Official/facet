@@ -6,11 +6,10 @@ from typing import *
 
 import numpy as np
 import pandas as pd
-from numpy.random.mtrand import RandomState
 from scipy.cluster.hierarchy import linkage
 from scipy.spatial.distance import squareform
 
-from gamma.common import AllTracker
+from gamma.common import AllTracker, inheritdoc
 from gamma.common.fit import FittableMixin, T_Self
 from gamma.common.parallelization import ParallelizableMixin
 from gamma.ml import Sample
@@ -51,16 +50,41 @@ T_LearnerPipelineDF = TypeVar("T_LearnerPipelineDF", bound=BaseLearnerPipelineDF
 __tracker = AllTracker(globals())
 
 
+@inheritdoc(match="[see superclass]")
 class LearnerInspector(
     FittableMixin[Sample], ParallelizableMixin, Generic[T_LearnerPipelineDF]
 ):
     """
-    Inspect feature interactions in a learner pipeline through SHAP values.
+    Explain regressors and classifiers based on SHAP values.
+
+    Focus is on explaining the overall model as well as individual observations.
+    Given that SHAP values are estimations, this inspector operates based on crossfits
+    to enable estimations of the uncertainty of SHAP values.
+
+    Available inspection methods are:
+
+    - SHAP values (mean or standard deviation across crossfits)
+    - SHAP interaction values (mean or standard deviation across crossfits)
+    - feature importance derived from SHAP values (either as mean absolute values \
+      or as the root of mean squares)
+    - (pairwise) feature interaction matrix (direct feature interaction quantified by \
+      SHAP interaction values)
+    - (pairwise) feature redundancy matrix (requires availability of SHAP interaction \
+      values)
+    - (pairwise) feature synergy matrix (requires availability of SHAP interaction \
+      values)
+    - (pairwise) feature association matrix (combined effect of redundancy and \
+      synergy, if no SHAP interaction values are available)
+    - feature redundancy linkage (to visualize clusters of redundant features in a \
+      dendrogram)
+    - feature synergy linkage (to visualize clusters of synergistic features in a \
+      dendrogram)
+    - feature association linkage (to visualize clusters of associated features in a \
+      dendrogram)
     """
 
+    #: name for "feature importance" series or column
     COL_IMPORTANCE = "importance"
-    COL_IMPORTANCE_MARGINAL = "marginal importance"
-    COL_SPLIT = ShapCalculator.COL_SPLIT
 
     #: The default explainer factory used by this inspector.
     #: This is a tree explainer using the tree_path_dependent method for
@@ -75,7 +99,6 @@ class LearnerInspector(
         explainer_factory: Optional[ExplainerFactory] = None,
         shap_interaction: bool = True,
         min_direct_synergy: Optional[float] = None,
-        random_state: Union[int, RandomState, None] = None,
         n_jobs: Optional[int] = None,
         shared_memory: Optional[bool] = None,
         pre_dispatch: Optional[Union[str, int]] = None,
@@ -87,11 +110,15 @@ class LearnerInspector(
         :param shap_interaction: if ``True``, calculate SHAP interaction values, else \
             only calculate SHAP contribution values.\
             SHAP interaction values are needed to determine feature synergy and \
-            redundancy; otherwise only SHAP association can be calculated.\
+            redundancy. \
             (default: ``True``)
         :param min_direct_synergy: minimum direct synergy to consider a feature pair \
-            for calculation of indirect synergy. \
-            Only relevant if parameter ``shap_interaction`` is ``True``. \
+            for calculation of indirect synergy, \
+            only relevant if parameter ``shap_interaction`` is ``True``. \
+            This effectively acts as a noise threshold given the approximate nature of \
+            SHAP calculations. \
+            Consider increasing this value if you see warnings about contravariant \
+            indirect synergy when fitting this inspector. \
             (default: <DEFAULT_MIN_DIRECT_SYNERGY>)
         """
         super().__init__(
@@ -121,7 +148,6 @@ class LearnerInspector(
         self._explainer_factory = explainer_factory
         self._shap_interaction = shap_interaction
         self._min_direct_synergy = min_direct_synergy
-        self._random_state = random_state
 
         self._crossfit: Optional[LearnerCrossfit[T_LearnerPipelineDF]] = None
         self._shap_calculator: Optional[ShapCalculator] = None
@@ -139,10 +165,14 @@ class LearnerInspector(
 
     def fit(self: T_Self, crossfit: LearnerCrossfit, **fit_params) -> T_Self:
         """
-        Fit the inspector with the given sample.
+        Fit the inspector with the given crossfit.
 
-        :param crossfit: the model crossfit to be explained during model inspection
-        :param fit_params: additional keyword arguments (ignored)
+        This will calculate SHAP values and, if enabled in the underlying SHAP
+        explainer, also SHAP interaction values.
+
+        :param crossfit: the model crossfit to be explained by this model inspector
+        :param fit_params: additional keyword arguments (ignored; accepted for \
+            compatibility with :class:`.FittableMixin`)
         :return: ``self``
         """
 
@@ -218,13 +248,13 @@ class LearnerInspector(
 
     @property
     def is_fitted(self) -> bool:
-        """``True`` if this inspector is fitted, else ``False``"""
+        """[see superclass]"""
         return self._crossfit is not None
 
     @property
     def crossfit(self) -> LearnerCrossfit[T_LearnerPipelineDF]:
         """
-        CV fit of the pipeline being examined by this inspector.
+        The crossfit with which this inspector was fitted.
         """
         self._ensure_fitted()
         return self._crossfit
@@ -232,7 +262,7 @@ class LearnerInspector(
     @property
     def training_sample(self) -> Sample:
         """
-        The training sample used for model inspection.
+        The training sample of the crossfit with which this inspector was fitted.
         """
         self._ensure_fitted()
         return self.crossfit.training_sample
@@ -242,13 +272,13 @@ class LearnerInspector(
         """
         The names of the outputs explained by this inspector.
 
-        For regressors, this corresponds to the number of targets.
+        For regressors, these are the names of the target columns.
 
-        For binary classifiers, this is a single class, since the SHAP values of the
-        second class can be trivially derived as the negation of SHAP values of the
-        first class.
+        For binary classifiers, this is a list of length 1 with the name of a single
+        class, since the SHAP values of the second class can be trivially derived as
+        the negation of the SHAP values of the first class.
 
-        For multi-class classifiers, this is the list of all classes.
+        For non-binary classifiers, this is the list of all classes.
         """
 
         self._ensure_fitted()
@@ -274,23 +304,36 @@ class LearnerInspector(
     @property
     def features(self) -> List[str]:
         """
-        The names of the features used to fit the learner explained by this inspector.
+        The names of the features used to fit the learner pipeline explained by this
+        inspector.
         """
         return self.crossfit.pipeline.features_out.to_list()
 
     def shap_values(self, consolidate: Optional[str] = "mean") -> pd.DataFrame:
         """
-        Calculate the SHAP values for all splits.
+        Calculate the SHAP values for all observations and features.
 
-        Each row is an observation in a specific test split, and each column is a
-        feature. Values are the SHAP values per observation, calculated as the mean
-        SHAP value across all splits that contain the observation.
+        Returns a data frame of SHAP values where each row corresponds to an
+        observation, and each column corresponds to a feature.
+
+        By default, one SHAP value is returned for each observation and feature; this
+        value is calculated as the mean SHAP value across all crossfits.
+
+        The ``consolidate`` argument can be used to disable or change the consolidation
+        of SHAP values:
+
+        - passing ``consolidate=None`` will disable SHAP value consolidation, \
+          generating one row for every crossfit and observation (identified by
+          a hierarchical index with two levels)
+        - passing ``consolidate="std"`` will calculate the standard deviation of SHAP \
+          values across all crossfits, as the basis for determining the uncertainty \
+          of SHAP calculations
 
         :param consolidate: consolidate SHAP values across splits; \
             permissible values are ``"mean"`` (calculate the mean), ``"std"`` \
             (calculate the standard deviation), or ``None`` to prevent consolidation \
             (default: ``"mean"``)
-        :return: shap values as a data frame
+        :return: a data frame with SHAP values
         """
         self._ensure_fitted()
         return self._shap_calculator.get_shap_values(consolidate=consolidate)
@@ -299,18 +342,32 @@ class LearnerInspector(
         self, consolidate: Optional[str] = "mean"
     ) -> pd.DataFrame:
         """
-        Calculate the SHAP interaction values for all splits.
+        Calculate the SHAP interaction values for all observations and pairs of
+        features.
 
-        Each row is an observation in a specific test split, and each column is a
-        combination of two features. Values are the SHAP interaction values per
-        observation, calculated as the mean SHAP interaction value across all splits
-        that contain the observation.
+        Returns a data frame of SHAP interaction values where each row corresponds to an
+        observation and a feature (identified by a hierarchical index with two levels),
+        and each column corresponds to a feature.
 
-        :param consolidate: consolidate SHAP values across splits; \
+        By default, one SHAP interaction value is returned for each observation and
+        feature pairing; this value is calculated as the mean SHAP interaction value
+        across all crossfits.
+
+        The ``consolidate`` argument can be used to disable or change the consolidation
+        of SHAP interaction values:
+
+        - passing ``consolidate=None`` will disable SHAP interaction value \
+          consolidation, generating one row for every crossfit, observation and \
+          feature (identified by a hierarchical index with three levels)
+        - passing ``consolidate="std"`` will calculate the standard deviation of SHAP \
+          interaction values across all crossfits, as the basis for determining the \
+          uncertainty of SHAP calculations
+
+        :param consolidate: consolidate SHAP interaction values across splits; \
             permissible values are ``"mean"`` (calculate the mean), ``"std"`` \
             (calculate the standard deviation), or ``None`` to prevent consolidation \
             (default: ``"mean"``)
-        :return: SHAP interaction values as a data frame
+        :return: a data frame with SHAP interaction values
         """
         self._ensure_fitted()
         return self._shap_interaction_values_calculator.get_shap_interaction_values(
@@ -321,15 +378,15 @@ class LearnerInspector(
         self, *, method: str = "rms"
     ) -> Union[pd.Series, pd.DataFrame]:
         """
-        Feature importance computed using relative absolute shap contributions across
-        all observations.
+        Calculate the relative importance of each feature based on SHAP values.
+
+        The importance values of all features always add up to ``1.0``.
 
         :param method: method for calculating feature importance. Supported methods \
-            are ``rms`` (root of mean squares, default) and ``mav`` (mean absolute values)
-        :return: importance of each feature as its mean absolute SHAP contribution, \
-          normalised to a total 100%. Returned as a series of length n_features for \
-          single-output models, and as a data frame of shape (n_features, n_outputs) \
-          for multi-output models
+            are ``rms`` (root of mean squares, default) and ``mav`` (mean absolute \
+            values)
+        :return: a series of length `n_features` for single-output models, or a \
+            data frame of shape (n_features, n_outputs) for multi-output models
         """
 
         methods = ["rms", "mav"]
@@ -338,7 +395,7 @@ class LearnerInspector(
                 f'arg method="{method}" must be one of {{{", ".join(methods)}}}'
             )
 
-        shap_matrix = self.shap_values()
+        shap_matrix = self.shap_values(consolidate="mean")
         abs_importance: pd.Series
         if method == "rms":
             abs_importance = shap_matrix.pow(2).mean().pow(0.5)
@@ -349,25 +406,46 @@ class LearnerInspector(
 
         total_importance: float = abs_importance.sum()
 
-        feature_importance_sr: pd.Series = abs_importance.divide(
-            total_importance
-        ).rename(LearnerInspector.COL_IMPORTANCE)
+        feature_importance: Union[pd.Series, pd.DataFrame]
+
+        feature_importance = abs_importance.divide(total_importance).rename(
+            LearnerInspector.COL_IMPORTANCE
+        )
 
         if len(self.outputs) > 1:
             assert (
                 abs_importance.index.nlevels == 2
             ), "2 index levels in place for multi-output models"
 
-            feature_importance_sr: pd.DataFrame = abs_importance.unstack(level=0)
+            feature_importance: pd.DataFrame = abs_importance.unstack(level=0)
 
-        return feature_importance_sr
+        return feature_importance
 
     def feature_association_matrix(self) -> pd.DataFrame:
         """
-        Calculate the Pearson correlation matrix of the shap values.
+        Calculate the feature association matrix.
 
-        :return: data frame with column and index given by the feature names,
-          and values as the Pearson correlations of the shap values of features
+        This yields a symmetrical matrix where each row and column represents one
+        feature, and the values at the intersections are the pairwise feature
+        associations, ranging from `0.0` (no association) to `1.0` (full association).
+
+        The association of a feature with itself is defined as `1.0`.
+
+        Feature association is the combined effect of feature redundancy and feature
+        synergy (see methods :meth:`.feature_redundancy_matrix` and
+        :meth:`feature_synergy_matrix`).
+
+        While it is preferable to assess redundancy and synergy separately, association
+        can be calculated using only SHAP values, and thus can be used as a fallback
+        if no SHAP interaction values are available.
+
+        In the case of multi-target regression and non-binary classification, returns
+        a data frame with one matrix per output, stacked horizontally, and with a
+        hiearchical column index (target/class name on level 1, and feature name on
+        level 2).
+
+        :return: feature association matrix as a data frame of shape \
+            `(n_features, n_outputs * n_features)`
         """
         self._ensure_fitted()
 
@@ -375,11 +453,16 @@ class LearnerInspector(
 
     def feature_association_linkage(self) -> Union[LinkageTree, List[LinkageTree]]:
         """
-        Calculate the :class:`.LinkageTree` based on the
-        :meth:`.feature_association_matrix`.
+        Calculate a linkage tree based on the :meth:`.feature_association_matrix`.
 
-        :return: linkage tree for the shap clustering dendrogram; \
-            list of linkage trees if the base estimator is a multi-output model
+        The linkage tree can be used to render a dendrogram indicating clusters of
+        associated features.
+
+        In the case of multi-target regression and non-binary classification, returns
+        a list of linkage trees per target or class.
+
+        :return: linkage tree of feature associations; list of linkage trees \
+            for multi-target regressors or non-binary classifiers
         """
         self._ensure_fitted()
         return self._linkages_from_affinity_matrices(
@@ -388,42 +471,70 @@ class LearnerInspector(
 
     def feature_synergy_matrix(self) -> pd.DataFrame:
         """
-        For each pairing of features, calculate the relative share of their synergistic
-        contribution to the model prediction.
+        Calculate the feature synergy matrix.
 
-        The synergistic contribution of a pair of features ranges between 0.0
-        (no synergy - both features contribute fully autonomously) and 1.0
-        (full synergy - both features combine all of their information into a joint
-        contribution).
+        This yields a symmetrical matrix where each row and column represents one
+        feature, and the values at the intersections are the pairwise feature synergies,
+        ranging from `0.0` (no synergy - both features contribute to predictions fully
+        autonomously of each other) to `1.0` (full synergy, both features rely on
+        combining all of their information to achieve any contribution to predictions).
+
+        The synergy of a feature with itself is defined as `1.0`.
+
+        Feature synergy calculations require SHAP interaction values; if only SHAP
+        values are available consider calculating feature associations instead
+        (see :meth:`.feature_association_matrix`).
+
+        In the case of multi-target regression and non-binary classification, returns
+        a data frame with one matrix per output, stacked horizontally, and with a
+        hiearchical column index (target/class name on level 1, and feature name on
+        level 2).
 
         :return: feature synergy matrix as a data frame of shape \
-            (n_features, n_outputs * n_features)
+            `(n_features, n_outputs * n_features)`
         """
         self._ensure_fitted()
         return self._shap_interaction_decomposer.synergy
 
     def feature_redundancy_matrix(self) -> pd.DataFrame:
         """
-        For each pairing of features, calculate the relative share of their redundant
-        contribution to the model prediction.
+        Calculate the feature redundancy matrix.
 
-        The redundant contribution of a pair of features ranges between 0.0
-        (no redundancy - both features contribute fully independently) and 1.0
-        (full redundancy - the information used by either feature is fully redundant).
+        This yields a symmetrical matrix where each row and column represents one
+        feature, and the values at the intersections are the pairwise feature
+        redundancies, ranging from `0.0` (no redundancy - both features contribute to
+        predictions fully independently of each other) to `1.0` (full redundancy, either
+        feature can replace the other feature without loss of predictive power).
+
+        The redundancy of a feature with itself is defined as `1.0`.
+
+        Feature redundancy calculations require SHAP interaction values; if only SHAP
+        values are available consider calculating feature associations instead
+        (see :meth:`.feature_association_matrix`).
+
+        In the case of multi-target regression and non-binary classification, returns
+        a data frame with one matrix per output, stacked horizontally, and with a
+        hiearchical column index (target/class name on level 1, and feature name on
+        level 2).
 
         :return: feature redundancy matrix as a data frame of shape \
-            (n_features, n_outputs * n_features)
+            `(n_features, n_outputs * n_features)`
         """
         self._ensure_fitted()
         return self._shap_interaction_decomposer.redundancy
 
     def feature_redundancy_linkage(self) -> Union[LinkageTree, List[LinkageTree]]:
         """
-        Calculate the :class:`.LinkageTree` based on the
-        :meth:`.feature_redundancy_matrix`.
+        Calculate a linkage tree based on the :meth:`.feature_redundancyt_matrix`.
 
-        :return: linkage tree for the shap clustering dendrogram; \
-            list of linkage trees if the base estimator is a multi-output model
+        The linkage tree can be used to render a dendrogram indicating clusters of
+        redundant features.
+
+        In the case of multi-target regression and non-binary classification, returns
+        a list of linkage trees per target or class.
+
+        :return: linkage tree of feature redundancies; list of linkage trees \
+            for multi-target regressors or non-binary classifiers
         """
         self._ensure_fitted()
         return self._linkages_from_affinity_matrices(
@@ -436,7 +547,7 @@ class LearnerInspector(
 
         Shap interactions quantify direct interactions between pairs of features.
         For a quantification of overall interaction (including indirect interactions
-        among more than two features), see :meth:`.feature_synergy_matrix`.
+        across more than two features), see :meth:`.feature_synergy_matrix`.
 
         The relative values are normalised to add up to 1.0, and each value ranges
         between 0.0 and 1.0.
@@ -477,7 +588,12 @@ class LearnerInspector(
 
         with :math:`\\sum_{a=1}^n \\sum_{b=a}^n I_{ab} = 1`
 
-        :return: average shap interaction values as a data frame of shape \
+        In the case of multi-target regression and non-binary classification, returns
+        a data frame with one matrix per output, stacked horizontally, and with a
+        hiearchical column index (target/class name on level 1, and feature name on
+        level 2).
+
+        :return: relative shap interaction values as a data frame of shape \
             (n_features, n_outputs * n_features)
         """
 
