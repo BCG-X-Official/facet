@@ -99,10 +99,10 @@ def test_sample(boston_df: pd.DataFrame, boston_target: str) -> None:
     assert len(sub) == 4
 
     # test select features
-    sample_features = s2.select_features(features=s2.feature_columns[0:10])
+    sample_features = s2.keep(features=s2.feature_columns[0:10])
 
     with pytest.raises(ValueError):
-        sample_features = s2.select_features(features=["does not exist"])
+        sample_features = s2.keep(features=["does not exist"])
 
     # test that s.features is a deterministic operation that does not depend on the
     # global python environment variable PYTHONHASHSEED

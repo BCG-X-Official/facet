@@ -1,9 +1,8 @@
 import logging
-import warnings
 
 from gamma.ml import Sample
-from gamma.ml.selection import LearnerRanker, ParameterGrid
-from gamma.ml.validation import BootstrapCV
+from gamma.ml.selection import LearnerGrid, LearnerRanker
+from gamma.ml.validation import StratifiedBootstrapCV
 from gamma.sklearndf.classification import RandomForestClassifierDF
 from gamma.sklearndf.pipeline import ClassifierPipelineDF
 from test.gamma.ml import check_ranking
@@ -12,16 +11,13 @@ log = logging.getLogger(__name__)
 
 
 def test_prediction_classifier(
-    iris_sample: Sample, cv_bootstrap: BootstrapCV, n_jobs: int
+    iris_sample: Sample, cv_stratified_bootstrap: StratifiedBootstrapCV, n_jobs: int
 ) -> None:
-    expected_learner_scores = [0.889, 0.889, 0.853, 0.815]
 
-    warnings.filterwarnings("ignore", message="numpy.dtype size changed")
-    warnings.filterwarnings("ignore", message="numpy.ufunc size changed")
-    warnings.filterwarnings("ignore", message="You are accessing a training score")
+    expected_learner_scores = [0.889, 0.886, 0.885, 0.879]
 
     # define parameters and crossfit
-    grid = ParameterGrid(
+    grids = LearnerGrid(
         pipeline=ClassifierPipelineDF(
             classifier=RandomForestClassifierDF(random_state=42), preprocessing=None
         ),
@@ -31,7 +27,11 @@ def test_prediction_classifier(
     model_ranker: LearnerRanker[
         ClassifierPipelineDF[RandomForestClassifierDF]
     ] = LearnerRanker(
-        grid=grid, cv=cv_bootstrap, scoring="f1_macro", n_jobs=n_jobs, random_state=42
+        grids=grids,
+        cv=cv_stratified_bootstrap,
+        scoring="f1_macro",
+        n_jobs=n_jobs,
+        random_state=42,
     ).fit(
         sample=iris_sample
     )
