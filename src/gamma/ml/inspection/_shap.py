@@ -664,7 +664,7 @@ class ClassifierShapCalculator(ShapCalculator[ClassifierPipelineDF], metaclass=A
         assert isinstance(
             sample.target, pd.Series
         ), "only single-output classifiers are currently supported"
-        root_classifier = model.final_estimator.root_estimator
+        root_classifier = model.final_estimator.native_estimator
         # noinspection PyUnresolvedReferences
         return [str(class_) for class_ in root_classifier.classes_]
 

@@ -296,7 +296,8 @@ class LearnerCrossfit(
                 )
 
             scorer = check_scoring(
-                estimator=self.pipeline.final_estimator.root_estimator, scoring=_scoring
+                estimator=self.pipeline.final_estimator.native_estimator,
+                scoring=_scoring,
             )
         else:
             scorer = None
@@ -464,7 +465,7 @@ class LearnerCrossfit(
                 features = preprocessing.transform(X=features)
 
             score = parameters.scorer(
-                learner.root_estimator,
+                learner.native_estimator,
                 features,
                 target,
                 fit_params.get("sample_weight", None),
