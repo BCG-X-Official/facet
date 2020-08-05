@@ -3,7 +3,6 @@ Tests for module gamma.ml.selection
 """
 
 import logging
-import warnings
 from typing import *
 
 import numpy as np
@@ -13,7 +12,7 @@ from sklearn import datasets
 
 from gamma.ml import Sample
 from gamma.ml.crossfit import LearnerCrossfit
-from gamma.ml.selection import LearnerEvaluation, LearnerRanker, ParameterGrid
+from gamma.ml.selection import LearnerGrid, LearnerRanker, LearnerScores
 from gamma.ml.validation import BootstrapCV
 from gamma.sklearndf.classification import SVCDF
 from gamma.sklearndf.pipeline import ClassifierPipelineDF, RegressorPipelineDF
@@ -30,7 +29,7 @@ log = logging.getLogger(__name__)
 
 def test_parameter_grid() -> None:
 
-    grid = ParameterGrid(
+    grid = LearnerGrid(
         pipeline=ClassifierPipelineDF(classifier=SVCDF(gamma="scale")),
         learner_parameters={"a": [1, 2, 3], "b": [11, 12], "c": [21, 22]},
     )
@@ -77,77 +76,34 @@ def test_parameter_grid() -> None:
 
 
 def test_model_ranker(
-    regressor_grids: List[ParameterGrid[RegressorPipelineDF]],
-    sample: Sample,
-    n_jobs: int,
-    fast_execution: bool,
+    regressor_grids: List[LearnerGrid[RegressorPipelineDF]], sample: Sample, n_jobs: int
 ) -> None:
 
-    if fast_execution:
-        expected_scores = [
-            0.745,
-            0.742,
-            0.7,
-            0.689,
-            0.675,
-            0.675,
-            0.61,
-            0.61,
-            0.61,
-            0.61,
-        ]
-        expected_learners = [
-            RandomForestRegressorDF,
-            RandomForestRegressorDF,
-            AdaBoostRegressorDF,
-            AdaBoostRegressorDF,
-            LinearRegressionDF,
-            LinearRegressionDF,
-            LGBMRegressorDF,
-            LGBMRegressorDF,
-            LGBMRegressorDF,
-            LGBMRegressorDF,
-        ]
-        expected_parameters = {
-            0: dict(regressor__n_estimators=80, regressor__random_state=42),
-            1: dict(regressor__n_estimators=50, regressor__random_state=42),
-            2: dict(regressor__n_estimators=50, regressor__random_state=42),
-            3: dict(regressor__n_estimators=80, regressor__random_state=42),
-        }
-    else:
-        expected_scores = [
-            0.817,
-            0.817,
-            0.817,
-            0.817,
-            0.817,
-            0.817,
-            0.815,
-            0.815,
-            0.815,
-            0.815,
-        ]
-        expected_learners = [LGBMRegressorDF] * 10
-        expected_parameters = {
-            0: dict(
-                regressor__max_depth=5,
-                regressor__min_split_gain=0.2,
-                regressor__num_leaves=50,
-                regressor__random_state=42,
-            ),
-            6: dict(
-                regressor__max_depth=10,
-                regressor__min_split_gain=0.1,
-                regressor__num_leaves=50,
-                regressor__random_state=42,
-            ),
-        }
+    expected_scores = [0.745, 0.742, 0.7, 0.689, 0.675, 0.675, 0.61, 0.61, 0.61, 0.61]
+    expected_learners = [
+        RandomForestRegressorDF,
+        RandomForestRegressorDF,
+        AdaBoostRegressorDF,
+        AdaBoostRegressorDF,
+        LinearRegressionDF,
+        LinearRegressionDF,
+        LGBMRegressorDF,
+        LGBMRegressorDF,
+        LGBMRegressorDF,
+        LGBMRegressorDF,
+    ]
+    expected_parameters = {
+        0: dict(regressor__n_estimators=80, regressor__random_state=42),
+        1: dict(regressor__n_estimators=50, regressor__random_state=42),
+        2: dict(regressor__n_estimators=50, regressor__random_state=42),
+        3: dict(regressor__n_estimators=80, regressor__random_state=42),
+    }
 
     # define the circular cross validator with just 5 splits (to speed up testing)
     cv = BootstrapCV(n_splits=5, random_state=42)
 
     ranker: LearnerRanker[RegressorPipelineDF] = LearnerRanker(
-        grid=regressor_grids, cv=cv, scoring="r2", n_jobs=n_jobs
+        grids=regressor_grids, cv=cv, scoring="r2", n_jobs=n_jobs
     ).fit(sample=sample)
 
     log.debug(f"\n{ranker.summary_report(max_learners=10)}")
@@ -157,7 +113,7 @@ def test_model_ranker(
     ranking = ranker.ranking()
 
     assert len(ranking) > 0
-    assert isinstance(ranking[0], LearnerEvaluation)
+    assert isinstance(ranking[0], LearnerScores)
     assert all(
         ranking_hi.ranking_score >= ranking_lo.ranking_score
         for ranking_hi, ranking_lo in zip(ranking, ranking[1:])
@@ -183,18 +139,15 @@ def test_model_ranker(
 
 
 def test_model_ranker_no_preprocessing(n_jobs) -> None:
-    expected_learner_scores = [0.943, 0.913, 0.913, 0.884]
 
-    warnings.filterwarnings("ignore", message="numpy.dtype size changed")
-    warnings.filterwarnings("ignore", message="numpy.ufunc size changed")
-    warnings.filterwarnings("ignore", message="You are accessing a training score")
+    expected_learner_scores = [0.943, 0.913, 0.913, 0.884]
 
     # define a yield-engine circular CV:
     cv = BootstrapCV(n_splits=5, random_state=42)
 
     # define parameters and pipeline
     models = [
-        ParameterGrid(
+        LearnerGrid(
             pipeline=ClassifierPipelineDF(
                 classifier=SVCDF(gamma="scale"), preprocessing=None
             ),
@@ -211,7 +164,7 @@ def test_model_ranker_no_preprocessing(n_jobs) -> None:
     test_sample: Sample = Sample(observations=test_data, target="target")
 
     model_ranker: LearnerRanker[ClassifierPipelineDF[SVCDF]] = LearnerRanker(
-        grid=models, cv=cv, n_jobs=n_jobs
+        grids=models, cv=cv, n_jobs=n_jobs
     ).fit(sample=test_sample)
 
     log.debug(f"\n{model_ranker.summary_report(max_learners=10)}")

@@ -2,7 +2,7 @@ from typing import *
 
 import pytest
 
-from gamma.ml.selection import LearnerEvaluation
+from gamma.ml.selection import LearnerScores
 from gamma.sklearndf import TransformerDF
 from gamma.sklearndf.transformation import (
     ColumnTransformerDF,
@@ -38,7 +38,7 @@ def make_simple_transformer(
 
 
 def check_ranking(
-    ranking: List[LearnerEvaluation],
+    ranking: List[LearnerScores],
     expected_scores: Sequence[float],
     expected_learners: Optional[Sequence[type]],
     expected_parameters: Optional[Mapping[int, Mapping[str, Any]]],
@@ -60,15 +60,15 @@ def check_ranking(
         zip(ranking, expected_scores, expected_learners)
     ):
         score_actual = round(learner_eval.ranking_score, 3)
-        assert pytest.approx(score_actual, abs=0.1) == score_expected, (
-            f"unexpected score for learner at rank #{rank}: "
-            f"{score_actual} instead of {score_expected}"
+        assert score_actual == pytest.approx(score_expected, abs=0.1), (
+            f"unexpected score for learner at rank #{rank + 1}: "
+            f"got {score_actual} but expected {score_expected}"
         )
         if learner_expected is not None:
             learner_actual = learner_eval.pipeline.final_estimator
             assert type(learner_actual) == learner_expected, (
                 f"unexpected class for learner at rank #{rank}: "
-                f"{type(learner_actual)} instead of {learner_expected}"
+                f"got {type(learner_actual)} but expected {learner_expected}"
             )
 
     if expected_parameters is not None:
@@ -76,5 +76,5 @@ def check_ranking(
             parameters_actual = ranking[rank].parameters
             assert parameters_actual == parameters_expected, (
                 f"unexpected parameters for learner at rank #{rank}: "
-                f"{parameters_actual} instead of {parameters_expected}"
+                f"got {parameters_actual} but expected {parameters_expected}"
             )

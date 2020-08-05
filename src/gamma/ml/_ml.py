@@ -12,20 +12,32 @@ from gamma.common import is_list_like
 
 class Sample:
     """
-    A set of observations comprising features, and one or more target variables.
+    A collection of observations, comprising features as well as one or more target
+    variables.
 
-    A `Sample` object is helpful to keep features and targets aligned and to keep
-    ML code more readable. It provides basic methods for accessing features and targets,
-    and for selecting subsets of features and observations.
+    A :class:`.Sample` object serves to keep features and targets aligned, thus keeping
+    modeling code more readable.
+    It provides basic methods for accessing features and targets, and for selecting
+    subsets of features and of observations.
 
-    The underlying data structure is a pandas data frame.
+    The underlying data structure is a pandas :class:`.DataFrame`.
+
+    Supports :func:`.len`, returning the number of observations in this sample.
     """
 
     __slots__ = ["_observations", "_target", "_features"]
 
-    COL_OBSERVATION = "observation"
-    COL_TARGET = "target"
-    COL_FEATURE = "feature"
+    #: default name for the observations index (= row index)
+    #: of the underlying data frame
+    IDX_OBSERVATION = "observation"
+
+    #: default name for the feature index (= column index)
+    #: used when returning a features table
+    IDX_FEATURE = "feature"
+
+    #: default name for the target series or target index (= column index)
+    #: used when returning the targets
+    IDX_TARGET = "target"
 
     def __init__(
         self,
@@ -35,10 +47,11 @@ class Sample:
         features: Optional[Sequence[str]] = None,
     ) -> None:
         """
-        :param observations: the raw observed data as a pandas data frame
+        :param observations: a table of observational data; \
+            each row represents one observation
         :param target: one or more names of columns representing the target variable(s)
         :param features: optional sequence of strings naming the columns that \
-            represent feature variables; if not stated then all non-target columns are
+            represent features; if omitted, all non-target columns are
             considered features
         """
 
@@ -69,7 +82,7 @@ class Sample:
         # (but don't change the original observations data frame)
         if observations_index.name is None:
             observations = observations.copy(deep=False)
-            observations.index = observations_index.rename(Sample.COL_OBSERVATION)
+            observations.index = observations_index.rename(Sample.IDX_OBSERVATION)
 
         self._observations = observations
 
@@ -113,45 +126,43 @@ class Sample:
     @property
     def index(self) -> pd.Index:
         """
-        Row index of all observations in this sample.
+        Row index of all observations in this sample
         """
         return self._observations.index
 
     @property
     def feature_columns(self) -> List[str]:
         """
-        List of all features in this sample.
+        The column names of all features in this sample
         """
         return self._features
 
     @property
     def target_columns(self) -> List[str]:
         """
-        List of of all targets of this sample
-        multiple targets.
+        The column names of all targets in this sample
         """
         return self._target
 
     @property
     def features(self) -> pd.DataFrame:
         """
-        The features for all observations.
+        The features for all observations
         """
         features: pd.DataFrame = self._observations.loc[:, self._features]
 
-        columns = features.columns
-        if columns.name is None:
-            features = features.rename_axis(columns=Sample.COL_FEATURE)
+        if features.columns.name is None:
+            features = features.rename_axis(columns=Sample.IDX_FEATURE)
 
         return features
 
     @property
     def target(self) -> Union[pd.Series, pd.DataFrame]:
         """
-        The target variables for all observations.
+        The target variable(s) for all observations.
 
-         Returned as a series if there is only a single target, or as a data frame if
-         there are multiple targets
+        Returned as a series if there is only a single target, or as a data frame if
+        there are multiple targets.
         """
         target = self.target_columns
 
@@ -162,30 +173,9 @@ class Sample:
 
         columns = targets.columns
         if columns.name is None:
-            targets = targets.rename_axis(columns=Sample.COL_TARGET)
+            targets = targets.rename_axis(columns=Sample.IDX_TARGET)
 
         return targets
-
-    @property
-    def n_features(self) -> int:
-        """
-        The number of features in this sample
-        """
-        return len(self._features)
-
-    @property
-    def n_targets(self) -> int:
-        """
-        The number of targets in this sample
-        """
-        return len(self._target) if isinstance(self._target, pd.Index) else 1
-
-    @property
-    def n_observations(self) -> int:
-        """
-        The number of observations in this sample
-        """
-        return len(self._observations)
 
     def subsample(
         self,
@@ -196,14 +186,14 @@ class Sample:
         """
         Return a new sample with a subset of this sample's observations.
 
-        Select observations either by indices (`loc` parameter), or integer indices
-        (`iloc` parameter). Exactly one of both parameters must be provided when
+        Select observations either by indices (``loc``), or integer indices
+        (``iloc``). Exactly one of both arguments must be provided when
         calling this method, not both or none.
 
         :param loc: indices of observations to select
         :param iloc: integer indices of observations to select
-        :return: copy of this sample, comprising only the observations at the given \
-            index locations
+        :return: copy of this sample, comprising only the observations in the given \
+            rows
         """
         subsample = copy(self)
         if iloc is None:
@@ -219,7 +209,7 @@ class Sample:
             )
         return subsample
 
-    def select_features(self, features: Sequence[str]) -> "Sample":
+    def keep(self, features: Sequence[str]) -> "Sample":
         """
         Return a new sample which only includes the features with the given names.
 
@@ -242,48 +232,17 @@ class Sample:
 
         return subsample
 
-    def drop_features(self, features: Collection[str]) -> "Sample":
+    def drop(self, features: Collection[str]) -> "Sample":
         """
-        Return a new sample, dropping the features with the given names.
+        Return a copy of this sample, dropping the features with the given names.
 
         :param features: names of the features to be dropped
-        :return: copy of this sample, containing only the features not included in the \
-            given names
+        :return: copy of this sample, excluding the features with the given names
         """
         features = set(features)
-        return self.select_features(
-            [feature for feature in self._features if feature not in features]
+        return self.keep(
+            features=[feature for feature in self._features if feature not in features]
         )
 
-    def replace_features(self, features: pd.DataFrame) -> "Sample":
-        """
-        Return a new sample using the given features, and the target variable(s) of \
-        this sample.
-
-        The index of the `features` argument must be a subset of, or equal to, the row \
-        index of this sample.
-        :param features: the features to use for the new sample
-        :return: the resulting, new sample object
-        """
-        target = self.target
-        target_columns = self.target_columns
-
-        if not features.index.isin(self.index).all():
-            raise ValueError(
-                "index of arg features contains items that do not exist in this sample"
-            )
-
-        for target_column in target_columns:
-            if target_column in features.columns:
-                raise ValueError(
-                    f'feature "{target_column}" in arg features has the same name as a '
-                    "target column"
-                )
-
-        return Sample(observations=features.join(target), target=target_columns)
-
     def __len__(self) -> int:
-        """
-        :return: the number of observations in this sample
-        """
-        return self.n_observations
+        return len(self._observations)

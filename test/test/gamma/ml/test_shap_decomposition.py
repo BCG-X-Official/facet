@@ -6,18 +6,16 @@ from typing import *
 
 import numpy as np
 import pandas as pd
-from pandas.core.util.hashing import hash_pandas_object
+import pytest
 
 from gamma.ml.crossfit import LearnerCrossfit
-from gamma.ml.inspection import RegressorInspector
+from gamma.ml.inspection import LearnerInspector
 from gamma.sklearndf.pipeline import RegressorPipelineDF
 
 log = logging.getLogger(__name__)
 
 
-def test_shap_decomposition(
-    regressor_inspector: RegressorInspector, fast_execution: bool
-) -> None:
+def test_shap_decomposition(regressor_inspector: LearnerInspector) -> None:
 
     # noinspection PyPep8Naming
     def _calculate_relative_syn_and_red(
@@ -82,11 +80,11 @@ def test_shap_decomposition(
         return syn / (syn + aut), red / (red + uni)
 
     for i, j, indirect_syn in [
-        ("LSTAT", "RM", not fast_execution),
+        ("LSTAT", "RM", False),
         ("LSTAT", "DIS", True),
-        ("LSTAT", "AGE", not fast_execution),
-        ("LSTAT", "NOX", not fast_execution),
-        ("LSTAT", "CRIM", True),
+        ("LSTAT", "AGE", False),
+        ("LSTAT", "NOX", False),
+        ("LSTAT", "CRIM", False),
         ("RM", "DIS", False),
         ("RM", "AGE", False),
         ("RM", "NOX", False),
@@ -118,15 +116,8 @@ def test_shap_decomposition(
 def test_shap_decomposition_matrices(
     best_lgbm_crossfit: LearnerCrossfit[RegressorPipelineDF],
     feature_names: Set[str],
-    regressor_inspector: RegressorInspector,
-    fast_execution: bool,
+    regressor_inspector: LearnerInspector,
 ) -> None:
-    # define checksums for this test
-    if fast_execution:
-        checksum_association_matrix = 9809426601817939301
-    else:
-        checksum_association_matrix = 3257206269538165205
-
     # Shap decomposition matrices (feature dependencies)
     association_matrix: pd.DataFrame = regressor_inspector.feature_association_matrix()
 
@@ -154,10 +145,38 @@ def test_shap_decomposition_matrices(
                 <= 1.0
             ), f"Values of [0.0, 1.0] in {matrix_full_name}"
 
-    # check actual values using checksum:
-    assert (
-        np.sum(hash_pandas_object(association_matrix.round(decimals=4)).values)
-        == checksum_association_matrix
+    # check actual values:
+    assert association_matrix.values == pytest.approx(
+        np.array(
+            [
+                [1.0, 0.043, 0.436, 0.0, 0.239, 0.092]
+                + [0.192, 0.156, 0.009, 0.022, 0.035, 0.008, 0.081],
+                [0.043, 1.0, 0.225, 0.0, 0.063, 0.062]
+                + [0.017, 0.41, 0.024, 0.022, 0.049, 0.204, 0.037],
+                [0.436, 0.225, 1.0, 0.0, 0.123, 0.207]
+                + [0.15, 0.044, 0.069, 0.225, 0.241, 0.149, 0.209],
+                [0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                [0.239, 0.063, 0.123, 0.0, 1.0, 0.051]
+                + [0.018, 0.227, 0.306, 0.095, 0.15, 0.026, 0.029],
+                [0.092, 0.062, 0.207, 0.0, 0.051, 1.0]
+                + [0.088, 0.005, 0.096, 0.14, 0.027, 0.058, 0.49],
+                [0.192, 0.017, 0.15, 0.0, 0.018, 0.088]
+                + [1.0, 0.128, 0.015, 0.269, 0.14, 0.096, 0.295],
+                [0.156, 0.41, 0.044, 0.0, 0.227, 0.005]
+                + [0.128, 1.0, 0.255, 0.158, 0.273, 0.132, 0.023],
+                [0.009, 0.024, 0.069, 0.0, 0.306, 0.096]
+                + [0.015, 0.255, 1.0, 0.223, 0.188, 0.035, 0.054],
+                [0.022, 0.022, 0.225, 0.0, 0.095, 0.14]
+                + [0.269, 0.158, 0.223, 1.0, 0.284, 0.182, 0.097],
+                [0.035, 0.049, 0.241, 0.0, 0.15, 0.027]
+                + [0.14, 0.273, 0.188, 0.284, 1.0, 0.027, 0.031],
+                [0.008, 0.204, 0.149, 0.0, 0.026, 0.058]
+                + [0.096, 0.132, 0.035, 0.182, 0.027, 1.0, 0.057],
+                [0.081, 0.037, 0.209, 0.0, 0.029, 0.49]
+                + [0.295, 0.023, 0.054, 0.097, 0.031, 0.057, 1.0],
+            ]
+        ),
+        abs=0.02,
     )
 
     # cluster associated features

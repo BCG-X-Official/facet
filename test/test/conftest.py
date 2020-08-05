@@ -1,8 +1,6 @@
 import functools
 import logging
 import operator
-import os
-import warnings
 from typing import *
 
 import numpy as np
@@ -14,9 +12,9 @@ from sklearn.utils import Bunch
 
 from gamma.ml import Sample
 from gamma.ml.crossfit import LearnerCrossfit
-from gamma.ml.inspection import RegressorInspector
-from gamma.ml.selection import LearnerEvaluation, LearnerRanker, ParameterGrid
-from gamma.ml.validation import BootstrapCV
+from gamma.ml.inspection import LearnerInspector
+from gamma.ml.selection import LearnerGrid, LearnerRanker, LearnerScores
+from gamma.ml.validation import BootstrapCV, StratifiedBootstrapCV
 from gamma.sklearndf import TransformerDF
 from gamma.sklearndf.pipeline import RegressorPipelineDF
 from gamma.sklearndf.regression import (
@@ -36,11 +34,9 @@ log = logging.getLogger(__name__)
 # disable SHAP debugging messages
 logging.getLogger("shap").setLevel(logging.WARNING)
 
-warnings.filterwarnings(
-    "ignore", message=r"Starting from version 2", category=UserWarning
-)
 
-K_FOLDS: int = 5
+K_FOLDS = 5
+N_BOOTSTRAPS = 30
 
 
 @pytest.fixture
@@ -59,12 +55,7 @@ def n_jobs() -> int:
 
 
 @pytest.fixture
-def fast_execution() -> bool:
-    return os.environ.get("FAST_EXECUTION", "1") == "1"
-
-
-@pytest.fixture
-def cv_kfold() -> BaseCrossValidator:
+def cv_kfold() -> KFold:
     # define a CV
     return KFold(n_splits=K_FOLDS)
 
@@ -72,15 +63,21 @@ def cv_kfold() -> BaseCrossValidator:
 @pytest.fixture
 def cv_bootstrap() -> BaseCrossValidator:
     # define a CV
-    return BootstrapCV(n_splits=K_FOLDS, random_state=42)
+    return BootstrapCV(n_splits=N_BOOTSTRAPS, random_state=42)
 
 
 @pytest.fixture
-def regressor_grids(simple_preprocessor: TransformerDF) -> List[ParameterGrid]:
+def cv_stratified_bootstrap() -> BaseCrossValidator:
+    # define a CV
+    return StratifiedBootstrapCV(n_splits=N_BOOTSTRAPS, random_state=42)
+
+
+@pytest.fixture
+def regressor_grids(simple_preprocessor: TransformerDF) -> List[LearnerGrid]:
     random_state = {f"random_state": [42]}
 
     return [
-        ParameterGrid(
+        LearnerGrid(
             pipeline=RegressorPipelineDF(
                 preprocessing=simple_preprocessor, regressor=LGBMRegressorDF()
             ),
@@ -91,19 +88,19 @@ def regressor_grids(simple_preprocessor: TransformerDF) -> List[ParameterGrid]:
                 **random_state,
             },
         ),
-        ParameterGrid(
+        LearnerGrid(
             pipeline=RegressorPipelineDF(
                 preprocessing=simple_preprocessor, regressor=AdaBoostRegressorDF()
             ),
             learner_parameters={"n_estimators": [50, 80], **random_state},
         ),
-        ParameterGrid(
+        LearnerGrid(
             pipeline=RegressorPipelineDF(
                 preprocessing=simple_preprocessor, regressor=RandomForestRegressorDF()
             ),
             learner_parameters={"n_estimators": [50, 80], **random_state},
         ),
-        ParameterGrid(
+        LearnerGrid(
             pipeline=RegressorPipelineDF(
                 preprocessing=simple_preprocessor, regressor=DecisionTreeRegressorDF()
             ),
@@ -113,19 +110,19 @@ def regressor_grids(simple_preprocessor: TransformerDF) -> List[ParameterGrid]:
                 **random_state,
             },
         ),
-        ParameterGrid(
+        LearnerGrid(
             pipeline=RegressorPipelineDF(
                 preprocessing=simple_preprocessor, regressor=ExtraTreeRegressorDF()
             ),
             learner_parameters={"max_depth": [5, 10, 12], **random_state},
         ),
-        ParameterGrid(
+        LearnerGrid(
             pipeline=RegressorPipelineDF(
                 preprocessing=simple_preprocessor, regressor=SVRDF()
             ),
             learner_parameters={"gamma": [0.5, 1], "C": [50, 100]},
         ),
-        ParameterGrid(
+        LearnerGrid(
             pipeline=RegressorPipelineDF(
                 preprocessing=simple_preprocessor, regressor=LinearRegressionDF()
             ),
@@ -136,26 +133,26 @@ def regressor_grids(simple_preprocessor: TransformerDF) -> List[ParameterGrid]:
 
 @pytest.fixture
 def regressor_ranker(
-    cv_kfold,
-    regressor_grids: List[ParameterGrid[RegressorPipelineDF]],
+    cv_kfold: KFold,
+    regressor_grids: List[LearnerGrid[RegressorPipelineDF]],
     sample: Sample,
     n_jobs: int,
 ) -> LearnerRanker[RegressorPipelineDF]:
     return LearnerRanker(
-        grid=regressor_grids, cv=cv_kfold, scoring="r2", n_jobs=n_jobs
+        grids=regressor_grids, cv=cv_kfold, scoring="r2", n_jobs=n_jobs
     ).fit(sample=sample)
 
 
 @pytest.fixture
 def best_lgbm_crossfit(
     regressor_ranker: LearnerRanker[RegressorPipelineDF],
-    cv_kfold,
+    cv_kfold: KFold,
     sample: Sample,
     n_jobs: int,
 ) -> LearnerCrossfit[RegressorPipelineDF]:
     # we get the best model_evaluation which is a LGBM - for the sake of test
     # performance
-    best_lgbm_evaluation: LearnerEvaluation[RegressorPipelineDF] = [
+    best_lgbm_evaluation: LearnerScores[RegressorPipelineDF] = [
         evaluation
         for evaluation in regressor_ranker.ranking()
         if isinstance(evaluation.pipeline.regressor, LGBMRegressorDF)
@@ -185,8 +182,8 @@ def feature_names(best_lgbm_crossfit: LearnerCrossfit[RegressorPipelineDF]) -> S
 @pytest.fixture
 def regressor_inspector(
     best_lgbm_crossfit: LearnerCrossfit[RegressorPipelineDF], n_jobs: int
-) -> RegressorInspector:
-    return RegressorInspector(n_jobs=n_jobs).fit(crossfit=best_lgbm_crossfit)
+) -> LearnerInspector:
+    return LearnerInspector(n_jobs=n_jobs).fit(crossfit=best_lgbm_crossfit)
 
 
 @pytest.fixture
@@ -209,11 +206,8 @@ def boston_df(boston_target: str) -> pd.DataFrame:
 
 
 @pytest.fixture
-def sample(boston_df: pd.DataFrame, boston_target: str, fast_execution: bool) -> Sample:
-    return Sample(
-        observations=boston_df.iloc[:100, :] if fast_execution else boston_df,
-        target=boston_target,
-    )
+def sample(boston_df: pd.DataFrame, boston_target: str) -> Sample:
+    return Sample(observations=boston_df.iloc[:100, :], target=boston_target)
 
 
 @pytest.fixture
