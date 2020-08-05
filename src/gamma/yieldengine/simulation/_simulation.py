@@ -9,12 +9,12 @@ from typing import List
 import numpy as np
 import pandas as pd
 
+from gamma.common import AllTracker, inheritdoc
 from gamma.common.parallelization import ParallelizableMixin
 from gamma.ml import Sample
 from gamma.ml.crossfit import LearnerCrossfit
 from gamma.sklearndf import ClassifierDF, RegressorDF
 from gamma.yieldengine.partition import Partitioner, T_Number
-from gamma.common import inheritdoc, AllTracker
 
 T_CrossFit = TypeVar("T_CrossFit", bound=LearnerCrossfit)
 T_RegressorDF = TypeVar("T_RegressorDF", bound=RegressorDF)
@@ -261,24 +261,27 @@ class _UnivariateProbabilitySimulator(
         )
 
     def _probabilities_oob(
-        self, sample: Sample
+        self, sample: Sample, **predict_params
     ) -> Generator[Union[pd.DataFrame, List[pd.DataFrame]], None, None]:
         yield from self._classification_oob(
-            sample=sample, method=lambda model, x: model.predict_proba(x)
+            sample=sample,
+            method=lambda model, x: model.predict_proba(x, **predict_params),
         )
 
     def _log_probabilities_oob(
-        self, sample: Sample
+        self, sample: Sample, **predict_params
     ) -> Generator[Union[pd.DataFrame, List[pd.DataFrame]], None, None]:
         yield from self._classification_oob(
-            sample=sample, method=lambda model, x: model.predict_log_proba(x)
+            sample=sample,
+            method=lambda model, x: model.predict_log_proba(x, **predict_params),
         )
 
     def _decision_function(
-        self, sample: Sample
+        self, sample: Sample, **predict_params
     ) -> Generator[Union[pd.Series, pd.DataFrame], None, None]:
         yield from self._classification_oob(
-            sample=sample, method=lambda model, x: model.decision_function(x)
+            sample=sample,
+            method=lambda model, x: model.decision_function(x, **predict_params),
         )
 
     def _classification_oob(
@@ -294,7 +297,7 @@ class _UnivariateProbabilitySimulator(
 
         The result is a data frame with one row per prediction, indexed by the
         observations in the sample and the crossfit id (index level ``COL_CROSSFIT_ID``),
-        and with columns ``COL_PREDICTION` (the predicted value for the
+        and with columns ```COL_PREDICTION`` (the predicted value for the
         given observation and crossfit), and ``COL_TARGET`` (the actual target)
 
         Note that there can be multiple prediction rows per observation if the test
@@ -397,8 +400,8 @@ class UnivariateUpliftSimulator(
 
         :param feature_name: name of the feature to use in the simulation
         :param simulated_values: values to use in the simulation
-        :return: data frame with three columns: `crossfit_id`, `parameter_value` and
-          `relative_target_change`.
+        :return: data frame with three columns: ``crossfit_id``, ``parameter_value`` and
+          ``relative_target_change``.
         """
 
         sample = self.crossfit.training_sample
@@ -483,15 +486,15 @@ class UnivariateUpliftSimulator(
         self, results_per_crossfit: pd.DataFrame
     ) -> pd.DataFrame:
         """
-        Aggregate uplift values computed by `simulate_feature`.
+        Aggregate uplift values computed by ``simulate_feature``.
 
         For each parameter value, the percentile of uplift values (in the
-        `relative_yield_change` column) are computed.
+        ``relative_yield_change`` column) are computed.
 
         :param results_per_crossfit: data frame with columns
-            `crossfit_id`, `parameter_value`, and `relative_yield_change`
-        :return: data frame with 3 columns `percentile_<min>`, `percentile_50`,
-          `percentile_<max>` where min/max are the min and max percentiles
+            ``crossfit_id``, ``parameter_value``, and ``relative_yield_change``
+        :return: data frame with 3 columns ``percentile_<min>``, ``percentile_50``,
+          ``percentile_<max>`` where min/max are the min and max percentiles
         """
 
         def percentile(n: int) -> Callable[[float], float]:

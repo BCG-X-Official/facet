@@ -1,16 +1,3 @@
-#
-# NOT FOR CLIENT USE!
-#
-# This is a pre-release library under development. Handling of IP rights is still
-# being investigated. To avoid causing any potential IP disputes or issues, DO NOT USE
-# ANY OF THIS CODE ON A CLIENT PROJECT, not even in modified form.
-#
-# Please direct any queries to any of:
-# - Jan Ittner
-# - Jörg Schneider
-# - Florent Martin
-#
-
 """
 Simulation drawer.
 
@@ -47,7 +34,7 @@ class SimulationDrawer(Drawer[UnivariateSimulation, SimulationStyle]):
     :param style: the style of the dendrogram; either as a
         :class:`~gamma.yieldengine.viz.SimulationStyle` instance, or as the name of a \
         default style. Permissible names are "matplot" for a style supporting \
-        Matplotlib, and "text" for a text-only report to stdout (default: `"matplot"`)
+        Matplotlib, and "text" for a text-only report to stdout (default: ``"matplot"``)
     :param histogram: if ``True``, plot the histogram of observed values for the \
         feature being simulated; if ``False`` do not plot the histogram (default: \
         ``True``).
