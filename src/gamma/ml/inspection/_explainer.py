@@ -13,7 +13,7 @@ from shap.explainers.explainer import Explainer
 from sklearn.base import BaseEstimator
 
 from gamma.common import AllTracker, inheritdoc, validate_type
-from gamma.sklearndf import BaseLearnerDF, ClassifierDF, RegressorDF
+from gamma.sklearndf import ClassifierDF, LearnerDF, RegressorDF
 
 _EARLIEST_SUPPORTED_VERSION = version.LooseVersion("0.34")
 
@@ -51,7 +51,7 @@ class ExplainerFactory(metaclass=ABCMeta):
         """
 
     @abstractmethod
-    def make_explainer(self, model: BaseLearnerDF, data: pd.DataFrame) -> Explainer:
+    def make_explainer(self, model: LearnerDF, data: pd.DataFrame) -> Explainer:
         """
         Construct a new :class:`~shap.Explainer` to compute shap values.
 
@@ -110,7 +110,7 @@ class TreeExplainerFactory(ExplainerFactory):
         return self.feature_perturbation == "tree_path_dependent"
 
     def make_explainer(
-        self, model: BaseLearnerDF, data: Optional[pd.DataFrame] = None
+        self, model: LearnerDF, data: Optional[pd.DataFrame] = None
     ) -> Explainer:
         """
         Construct a new :class:`~shap.TreeExplainer` to compute shap values.
@@ -177,7 +177,7 @@ class KernelExplainerFactory(ExplainerFactory):
         """[see superclass]"""
         return False
 
-    def make_explainer(self, model: BaseLearnerDF, data: pd.DataFrame) -> Explainer:
+    def make_explainer(self, model: LearnerDF, data: pd.DataFrame) -> Explainer:
         """
         Construct a new :class:`~shap.KernelExplainer` to compute shap values.
 

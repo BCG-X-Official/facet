@@ -18,10 +18,10 @@ from gamma.common import inheritdoc
 from gamma.common.fit import FittableMixin, T_Self
 from gamma.common.parallelization import ParallelizableMixin
 from gamma.ml import Sample
-from gamma.sklearndf import BaseLearnerDF, TransformerDF
+from gamma.sklearndf import LearnerDF, TransformerDF
 from gamma.sklearndf.pipeline import (
-    BaseLearnerPipelineDF,
     ClassifierPipelineDF,
+    LearnerPipelineDF,
     RegressorPipelineDF,
 )
 
@@ -29,7 +29,7 @@ log = logging.getLogger(__name__)
 
 __all__ = ["CrossfitScores", "LearnerCrossfit", "Scorer"]
 
-T_LearnerPipelineDF = TypeVar("T_LearnerPipelineDF", bound=BaseLearnerPipelineDF)
+T_LearnerPipelineDF = TypeVar("T_LearnerPipelineDF", bound=LearnerPipelineDF)
 T_ClassifierPipelineDF = TypeVar("T_ClassifierPipelineDF", bound=ClassifierPipelineDF)
 T_RegressorPipelineDF = TypeVar("T_RegressorPipelineDF", bound=RegressorPipelineDF)
 
@@ -435,7 +435,7 @@ class LearnerCrossfit(
         do_fit = parameters.train_target is not None
         do_score = parameters.scorer is not None
 
-        pipeline: BaseLearnerPipelineDF
+        pipeline: LearnerPipelineDF
 
         if do_fit:
             pipeline = parameters.pipeline.fit(
@@ -452,7 +452,7 @@ class LearnerCrossfit(
 
         if do_score:
             preprocessing: TransformerDF = pipeline.preprocessing
-            learner: BaseLearnerDF = pipeline.final_estimator
+            learner: LearnerDF = pipeline.final_estimator
 
             if parameters.score_train_split:
                 features = parameters.train_features
