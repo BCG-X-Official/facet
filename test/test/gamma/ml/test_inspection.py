@@ -80,26 +80,16 @@ def test_model_inspection(
     sample: Sample,
     simple_preprocessor: TransformerDF,
     n_jobs: int,
-    fast_execution: bool,
 ) -> None:
 
     # define checksums for this test
-    if fast_execution:
-        expected_scores = [0.418, 0.4, 0.386, 0.385, 0.122] + [
-            0.122,
-            -0.074,
-            -0.074,
-            -0.074,
-            -0.074,
-        ]
-    else:
-        expected_scores = [0.202, 0.160, 0.111, 0.056, 0.031] + [
-            0.010,
-            0.010,
-            0.010,
-            0.007,
-            0.007,
-        ]
+    expected_scores = [0.418, 0.4, 0.386, 0.385, 0.122] + [
+        0.122,
+        -0.074,
+        -0.074,
+        -0.074,
+        -0.074,
+    ]
 
     log.debug(f"\n{regressor_ranker.summary_report(max_learners=10)}")
 

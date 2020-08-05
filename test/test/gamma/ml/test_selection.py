@@ -76,71 +76,28 @@ def test_parameter_grid() -> None:
 
 
 def test_model_ranker(
-    regressor_grids: List[LearnerGrid[RegressorPipelineDF]],
-    sample: Sample,
-    n_jobs: int,
-    fast_execution: bool,
+    regressor_grids: List[LearnerGrid[RegressorPipelineDF]], sample: Sample, n_jobs: int
 ) -> None:
 
-    if fast_execution:
-        expected_scores = [
-            0.745,
-            0.742,
-            0.7,
-            0.689,
-            0.675,
-            0.675,
-            0.61,
-            0.61,
-            0.61,
-            0.61,
-        ]
-        expected_learners = [
-            RandomForestRegressorDF,
-            RandomForestRegressorDF,
-            AdaBoostRegressorDF,
-            AdaBoostRegressorDF,
-            LinearRegressionDF,
-            LinearRegressionDF,
-            LGBMRegressorDF,
-            LGBMRegressorDF,
-            LGBMRegressorDF,
-            LGBMRegressorDF,
-        ]
-        expected_parameters = {
-            0: dict(regressor__n_estimators=80, regressor__random_state=42),
-            1: dict(regressor__n_estimators=50, regressor__random_state=42),
-            2: dict(regressor__n_estimators=50, regressor__random_state=42),
-            3: dict(regressor__n_estimators=80, regressor__random_state=42),
-        }
-    else:
-        expected_scores = [
-            0.817,
-            0.817,
-            0.817,
-            0.817,
-            0.817,
-            0.817,
-            0.815,
-            0.815,
-            0.815,
-            0.815,
-        ]
-        expected_learners = [LGBMRegressorDF] * 10
-        expected_parameters = {
-            0: dict(
-                regressor__max_depth=5,
-                regressor__min_split_gain=0.2,
-                regressor__num_leaves=50,
-                regressor__random_state=42,
-            ),
-            6: dict(
-                regressor__max_depth=10,
-                regressor__min_split_gain=0.1,
-                regressor__num_leaves=50,
-                regressor__random_state=42,
-            ),
-        }
+    expected_scores = [0.745, 0.742, 0.7, 0.689, 0.675, 0.675, 0.61, 0.61, 0.61, 0.61]
+    expected_learners = [
+        RandomForestRegressorDF,
+        RandomForestRegressorDF,
+        AdaBoostRegressorDF,
+        AdaBoostRegressorDF,
+        LinearRegressionDF,
+        LinearRegressionDF,
+        LGBMRegressorDF,
+        LGBMRegressorDF,
+        LGBMRegressorDF,
+        LGBMRegressorDF,
+    ]
+    expected_parameters = {
+        0: dict(regressor__n_estimators=80, regressor__random_state=42),
+        1: dict(regressor__n_estimators=50, regressor__random_state=42),
+        2: dict(regressor__n_estimators=50, regressor__random_state=42),
+        3: dict(regressor__n_estimators=80, regressor__random_state=42),
+    }
 
     # define the circular cross validator with just 5 splits (to speed up testing)
     cv = BootstrapCV(n_splits=5, random_state=42)

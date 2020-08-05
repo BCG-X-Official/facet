@@ -15,9 +15,7 @@ from gamma.sklearndf.pipeline import RegressorPipelineDF
 log = logging.getLogger(__name__)
 
 
-def test_shap_decomposition(
-    regressor_inspector: LearnerInspector, fast_execution: bool
-) -> None:
+def test_shap_decomposition(regressor_inspector: LearnerInspector) -> None:
 
     # noinspection PyPep8Naming
     def _calculate_relative_syn_and_red(
@@ -82,10 +80,10 @@ def test_shap_decomposition(
         return syn / (syn + aut), red / (red + uni)
 
     for i, j, indirect_syn in [
-        ("LSTAT", "RM", not fast_execution),
+        ("LSTAT", "RM", False),
         ("LSTAT", "DIS", True),
-        ("LSTAT", "AGE", not fast_execution),
-        ("LSTAT", "NOX", not fast_execution),
+        ("LSTAT", "AGE", False),
+        ("LSTAT", "NOX", False),
         ("LSTAT", "CRIM", False),
         ("RM", "DIS", False),
         ("RM", "AGE", False),
@@ -119,7 +117,6 @@ def test_shap_decomposition_matrices(
     best_lgbm_crossfit: LearnerCrossfit[RegressorPipelineDF],
     feature_names: Set[str],
     regressor_inspector: LearnerInspector,
-    fast_execution: bool,
 ) -> None:
     # Shap decomposition matrices (feature dependencies)
     association_matrix: pd.DataFrame = regressor_inspector.feature_association_matrix()
