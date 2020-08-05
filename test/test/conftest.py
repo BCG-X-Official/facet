@@ -1,7 +1,6 @@
 import functools
 import logging
 import operator
-import os
 from typing import *
 
 import numpy as np
@@ -53,11 +52,6 @@ def iris_target() -> str:
 @pytest.fixture
 def n_jobs() -> int:
     return -1
-
-
-@pytest.fixture
-def fast_execution() -> bool:
-    return os.environ.get("FAST_EXECUTION", "1") == "1"
 
 
 @pytest.fixture
@@ -212,11 +206,8 @@ def boston_df(boston_target: str) -> pd.DataFrame:
 
 
 @pytest.fixture
-def sample(boston_df: pd.DataFrame, boston_target: str, fast_execution: bool) -> Sample:
-    return Sample(
-        observations=boston_df.iloc[:100, :] if fast_execution else boston_df,
-        target=boston_target,
-    )
+def sample(boston_df: pd.DataFrame, boston_target: str) -> Sample:
+    return Sample(observations=boston_df.iloc[:100, :], target=boston_target)
 
 
 @pytest.fixture
