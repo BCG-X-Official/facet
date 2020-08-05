@@ -18,8 +18,8 @@ from gamma.ml.inspection._shap_decomposition import (
     ShapInteractionValueDecomposer,
     ShapValueDecomposer,
 )
-from gamma.sklearndf import BaseLearnerDF, ClassifierDF, RegressorDF
-from gamma.sklearndf.pipeline import BaseLearnerPipelineDF
+from gamma.sklearndf import ClassifierDF, LearnerDF, RegressorDF
+from gamma.sklearndf.pipeline import LearnerPipelineDF
 from gamma.viz.dendrogram import LinkageTree
 from ._explainer import TreeExplainerFactory
 from ._shap import (
@@ -40,7 +40,7 @@ __all__ = ["LearnerInspector"]
 # Type variables
 #
 
-T_LearnerPipelineDF = TypeVar("T_LearnerPipelineDF", bound=BaseLearnerPipelineDF)
+T_LearnerPipelineDF = TypeVar("T_LearnerPipelineDF", bound=LearnerPipelineDF)
 
 
 #
@@ -181,7 +181,7 @@ class LearnerInspector(
         if not crossfit.is_fitted:
             raise ValueError("crossfit in arg pipeline is not fitted")
 
-        learner: BaseLearnerDF = crossfit.pipeline.final_estimator
+        learner: LearnerDF = crossfit.pipeline.final_estimator
 
         if isinstance(learner, ClassifierDF):
             if len(crossfit.training_sample.target_columns) != 1:
@@ -283,7 +283,7 @@ class LearnerInspector(
 
         self._ensure_fitted()
 
-        estimator_df: BaseLearnerDF = self.crossfit.pipeline.final_estimator
+        estimator_df: LearnerDF = self.crossfit.pipeline.final_estimator
 
         if isinstance(estimator_df, ClassifierDF):
             try:
