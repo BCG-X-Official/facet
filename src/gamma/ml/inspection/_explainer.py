@@ -121,7 +121,7 @@ class TreeExplainerFactory(ExplainerFactory):
         """
 
         explainer = shap.TreeExplainer(
-            model=model.root_estimator,
+            model=model.native_estimator,
             data=data if self.use_background_dataset else None,
             **self._remove_null_kwargs(
                 dict(
@@ -186,7 +186,7 @@ class KernelExplainerFactory(ExplainerFactory):
         :return: the new explainer object
         """
 
-        model_root_estimator: BaseEstimator = model.root_estimator
+        model_root_estimator: BaseEstimator = model.native_estimator
 
         try:
             if isinstance(model, RegressorDF):
