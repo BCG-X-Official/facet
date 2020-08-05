@@ -15,8 +15,8 @@ from gamma.common.parallelization import ParallelizableMixin
 from gamma.ml import Sample
 from gamma.ml.crossfit import LearnerCrossfit
 from gamma.sklearndf.pipeline import (
-    BaseLearnerPipelineDF,
     ClassifierPipelineDF,
+    LearnerPipelineDF,
     RegressorPipelineDF,
 )
 from ._explainer import ExplainerFactory
@@ -28,7 +28,7 @@ log = logging.getLogger(__name__)
 # Type variables
 #
 
-T_LearnerPipelineDF = TypeVar("T_LearnerPipelineDF", bound=BaseLearnerPipelineDF)
+T_LearnerPipelineDF = TypeVar("T_LearnerPipelineDF", bound=LearnerPipelineDF)
 
 #
 # Type definitions
@@ -167,7 +167,7 @@ class ShapCalculator(
     def _shap_all_splits(
         self, crossfit: LearnerCrossfit[T_LearnerPipelineDF]
     ) -> pd.DataFrame:
-        crossfit: LearnerCrossfit[BaseLearnerPipelineDF]
+        crossfit: LearnerCrossfit[LearnerPipelineDF]
 
         training_sample = crossfit.training_sample
 
@@ -252,7 +252,7 @@ class ShapCalculator(
     @staticmethod
     @abstractmethod
     def _shap_for_split(
-        model: BaseLearnerPipelineDF,
+        model: LearnerPipelineDF,
         sample: Sample,
         explainer: Explainer,
         features_out: pd.Index,
@@ -264,7 +264,7 @@ class ShapCalculator(
 
     @staticmethod
     def _preprocessed_features_and_explainer(
-        model: BaseLearnerPipelineDF,
+        model: LearnerPipelineDF,
         sample: Sample,
         split: Optional[Tuple[Sequence[int], Sequence[int]]],
         explainer_factory: ExplainerFactory,
@@ -298,7 +298,7 @@ class ShapCalculator(
 
     @staticmethod
     def _preprocessed_features(
-        model: BaseLearnerPipelineDF, sample: Sample
+        model: LearnerPipelineDF, sample: Sample
     ) -> pd.DataFrame:
         # get the out-of-bag subsample of the training sample, with feature columns
         # in the sequence that was used to fit the learner
@@ -362,7 +362,7 @@ class ShapValuesCalculator(
 
     @staticmethod
     def _shap_for_split(
-        model: BaseLearnerPipelineDF,
+        model: LearnerPipelineDF,
         sample: Sample,
         explainer: Explainer,
         features_out: pd.Index,
@@ -473,7 +473,7 @@ class ShapInteractionValuesCalculator(
 
     @staticmethod
     def _shap_for_split(
-        model: BaseLearnerPipelineDF,
+        model: LearnerPipelineDF,
         sample: Sample,
         explainer: Explainer,
         features_out: pd.Index,
@@ -664,7 +664,7 @@ class ClassifierShapCalculator(ShapCalculator[ClassifierPipelineDF], metaclass=A
         assert isinstance(
             sample.target, pd.Series
         ), "only single-output classifiers are currently supported"
-        root_classifier = model.final_estimator.root_estimator
+        root_classifier = model.final_estimator.native_estimator
         # noinspection PyUnresolvedReferences
         return [str(class_) for class_ in root_classifier.classes_]
 
