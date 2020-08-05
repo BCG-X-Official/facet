@@ -9,12 +9,12 @@ from typing import List
 import numpy as np
 import pandas as pd
 
+from gamma.common import AllTracker, inheritdoc
 from gamma.common.parallelization import ParallelizableMixin
 from gamma.ml import Sample
 from gamma.ml.crossfit import LearnerCrossfit
 from gamma.sklearndf import ClassifierDF, RegressorDF
 from gamma.yieldengine.partition import Partitioner, T_Number
-from gamma.common import inheritdoc, AllTracker
 
 T_CrossFit = TypeVar("T_CrossFit", bound=LearnerCrossfit)
 T_RegressorDF = TypeVar("T_RegressorDF", bound=RegressorDF)
@@ -261,24 +261,27 @@ class _UnivariateProbabilitySimulator(
         )
 
     def _probabilities_oob(
-        self, sample: Sample
+        self, sample: Sample, **predict_params
     ) -> Generator[Union[pd.DataFrame, List[pd.DataFrame]], None, None]:
         yield from self._classification_oob(
-            sample=sample, method=lambda model, x: model.predict_proba(x)
+            sample=sample,
+            method=lambda model, x: model.predict_proba(x, **predict_params),
         )
 
     def _log_probabilities_oob(
-        self, sample: Sample
+        self, sample: Sample, **predict_params
     ) -> Generator[Union[pd.DataFrame, List[pd.DataFrame]], None, None]:
         yield from self._classification_oob(
-            sample=sample, method=lambda model, x: model.predict_log_proba(x)
+            sample=sample,
+            method=lambda model, x: model.predict_log_proba(x, **predict_params),
         )
 
     def _decision_function(
-        self, sample: Sample
+        self, sample: Sample, **predict_params
     ) -> Generator[Union[pd.Series, pd.DataFrame], None, None]:
         yield from self._classification_oob(
-            sample=sample, method=lambda model, x: model.decision_function(x)
+            sample=sample,
+            method=lambda model, x: model.decision_function(x, **predict_params),
         )
 
     def _classification_oob(
