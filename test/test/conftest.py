@@ -9,13 +9,12 @@ import pytest
 from sklearn import datasets
 from sklearn.model_selection import BaseCrossValidator, KFold
 from sklearn.utils import Bunch
-from test.gamma.ml import make_simple_transformer
 
-from gamma.ml import Sample
-from gamma.ml.crossfit import LearnerCrossfit
-from gamma.ml.inspection import LearnerInspector
-from gamma.ml.selection import LearnerGrid, LearnerRanker, LearnerScores
-from gamma.ml.validation import BootstrapCV, StratifiedBootstrapCV
+from facet import Sample
+from facet.crossfit import LearnerCrossfit
+from facet.inspection import LearnerInspector
+from facet.selection import LearnerGrid, LearnerRanker, LearnerScores
+from facet.validation import BootstrapCV, StratifiedBootstrapCV
 from sklearndf import TransformerDF
 from sklearndf.pipeline import RegressorPipelineDF
 from sklearndf.regression import (
@@ -27,6 +26,7 @@ from sklearndf.regression import (
     SVRDF,
 )
 from sklearndf.regression.extra import LGBMRegressorDF
+from .facet import make_simple_transformer
 
 logging.basicConfig(level=logging.DEBUG)
 log = logging.getLogger(__name__)
