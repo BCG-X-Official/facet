@@ -387,8 +387,8 @@ class ShapInteractionValueDecomposer(ShapValueDecomposer):
 
         _test_synergy_feasibility()
 
-        # ensure that s[i, j] is at least 1.0
-        # (a warning will have been issued during the checks above for s[i, j] < 1)
+        # ensure that k[i, j] is at least 1.0
+        # (a warning will have been issued during the checks above for k[i, j] < 1)
         # i.e. we don't allow total synergy to be less than direct synergy
         k_ij = np.clip(k_ij, 1.0, None)
 
@@ -396,8 +396,8 @@ class ShapInteractionValueDecomposer(ShapValueDecomposer):
         for k_ij_for_output in k_ij:
             np.fill_diagonal(k_ij_for_output, val=np.nan)
 
-        # s[j, i]
-        # transpose of s[i, j]; we need this later for calculating SHAP redundancy
+        # k[j, i]
+        # transpose of k[i, j]; we need this later for calculating SHAP redundancy
         # shape: (n_outputs, n_features, n_features)
         k_ji = _transpose(k_ij)
 
