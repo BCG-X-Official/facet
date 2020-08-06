@@ -470,7 +470,7 @@ class LearnerInspector(
             feature_affinity_matrix=self._shap_decomposer.association_rel_
         )
 
-    def feature_synergy_matrix(self) -> pd.DataFrame:
+    def feature_synergy_matrix(self, symmetrical: bool = True) -> pd.DataFrame:
         """
         Calculate the feature synergy matrix.
 
@@ -488,16 +488,20 @@ class LearnerInspector(
 
         In the case of multi-target regression and non-binary classification, returns
         a data frame with one matrix per output, stacked horizontally, and with a
-        hiearchical column index (target/class name on level 1, and feature name on
+        hierarchical column index (target/class name on level 1, and feature name on
         level 2).
 
+        :param symmetrical: if ``True``, return a symmetrical matrix quantifying \
+            mutual synergy; if ``False``, return an asymmetrical matrix quantifying \
+            unilateral redundancy of the features represented by rows with the \
+            features represented by columns
         :return: feature synergy matrix as a data frame of shape \
             `(n_features, n_outputs * n_features)`
         """
         self._ensure_fitted()
-        return self._shap_interaction_decomposer.synergy
+        return self._shap_interaction_decomposer.synergy(symmetrical=symmetrical)
 
-    def feature_redundancy_matrix(self) -> pd.DataFrame:
+    def feature_redundancy_matrix(self, symmetrical: bool = True) -> pd.DataFrame:
         """
         Calculate the feature redundancy matrix.
 
@@ -515,14 +519,18 @@ class LearnerInspector(
 
         In the case of multi-target regression and non-binary classification, returns
         a data frame with one matrix per output, stacked horizontally, and with a
-        hiearchical column index (target/class name on level 1, and feature name on
+        hierarchical column index (target/class name on level 1, and feature name on
         level 2).
 
+        :param symmetrical: if ``True``, return a symmetrical matrix quantifying \
+            mutual redundancy; if ``False``, return an asymmetrical matrix quantifying \
+            unilateral redundancy of the features represented by rows with the \
+            features represented by columns
         :return: feature redundancy matrix as a data frame of shape \
             `(n_features, n_outputs * n_features)`
         """
         self._ensure_fitted()
-        return self._shap_interaction_decomposer.redundancy
+        return self._shap_interaction_decomposer.redundancy(symmetrical=symmetrical)
 
     def feature_redundancy_linkage(self) -> Union[LinkageTree, List[LinkageTree]]:
         """
