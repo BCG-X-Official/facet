@@ -1,5 +1,5 @@
 """
-Core implementation of :mod:`gamma.ml.inspection`
+Core implementation of :mod:`facet.inspection`
 """
 import logging
 from typing import *

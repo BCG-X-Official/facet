@@ -1,5 +1,5 @@
 """
-Core implementation of :mod:`gamma.ml.selection`
+Core implementation of :mod:`facet.selection`
 """
 
 import logging
@@ -235,7 +235,7 @@ class LearnerRanker(
         :param grids: learner grids to be ranked \
             (either a single grid, or an iterable of multiple grids)
         :param cv: a cross validator (e.g., \
-            :class:`~gamma.ml.validation.BootstrapCV`)
+            :class:`.BootstrapCV`)
         :param scoring: a scorer to use when doing CV within GridSearch, defaults to \
             ``None``
         :param ranking_scorer: a function to calculate a scalar score for every \

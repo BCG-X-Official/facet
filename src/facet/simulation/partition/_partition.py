@@ -1,5 +1,5 @@
 """
-Core implementation of :mod:`gamma.yieldengine.partition`
+Core implementation of :mod:`facet.simulation.partition`
 """
 import logging
 import math

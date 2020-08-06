@@ -44,7 +44,7 @@ def check_ranking(
     expected_parameters: Optional[Mapping[int, Mapping[str, Any]]],
 ) -> None:
     """
-    Test helper to check rankings produced by gamma.ml rankers
+    Test helper to check rankings produced by learner rankers
 
     :param ranking: a list of LearnerEvaluations
     :param expected_scores: expected ranking scores, rounded to 3 decimal places
