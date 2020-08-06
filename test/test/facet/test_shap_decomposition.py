@@ -20,7 +20,7 @@ def test_shap_decomposition(regressor_inspector: LearnerInspector) -> None:
     # noinspection PyPep8Naming
     def _calculate_relative_syn_and_red(
         feature_x: str, feature_y: str, is_indirect_syn_valid: bool
-    ) -> Tuple[float, float]:
+    ) -> Tuple[float, float, float, float]:
         iv = regressor_inspector.shap_interaction_values(consolidate=None)
         # Get 3 components for each feature:
         # S = interaction SHAP
@@ -57,6 +57,7 @@ def test_shap_decomposition(regressor_inspector: LearnerInspector) -> None:
         X_ = X - S - Su
         Y_ = Y - S - Sv
         AUT = X_ + Y_
+        AUT_asym = X_
         R_ = AUT / 2
         dXY = std(X_ - Y_)
         dR = std(R_)
@@ -70,14 +71,26 @@ def test_shap_decomposition(regressor_inspector: LearnerInspector) -> None:
             covX_R_Y_R=round(cov(X_ - R, Y_ - R), 15),
         )
         SYN = 2 * S + Su + Sv
+        SYN_asym = S + Su
         RED = 2 * R
+        RED_asym = R
         UNI = X + Y - RED
+        UNI_asym = X - RED_asym
         syn = std(SYN)
         aut = std(AUT)
         red = std(RED)
         uni = std(UNI)
+        syn_asym = std(SYN_asym)
+        aut_asym = std(AUT_asym)
+        red_asym = std(RED_asym)
+        uni_asym = std(UNI_asym)
         print_list(syn=syn, aut=aut, red=red, uni=uni)
-        return syn / (syn + aut), red / (red + uni)
+        return (
+            syn / (syn + aut),
+            red / (red + uni),
+            syn_asym / (syn_asym + aut_asym),
+            red_asym / (red_asym + uni_asym),
+        )
 
     for i, j, indirect_syn in [
         ("LSTAT", "RM", False),
@@ -92,18 +105,26 @@ def test_shap_decomposition(regressor_inspector: LearnerInspector) -> None:
     ]:
         print(f"\ncomparing features X={i} and Y={j}")
 
-        syn_rel, red_rel = _calculate_relative_syn_and_red(
+        syn_rel, red_rel, syn_rel_asym, red_rel_asym = _calculate_relative_syn_and_red(
             feature_x=i, feature_y=j, is_indirect_syn_valid=indirect_syn
         )
 
         syn_matrix = regressor_inspector.feature_synergy_matrix()
         red_matrix = regressor_inspector.feature_redundancy_matrix()
+        syn_matrix_asym = regressor_inspector.feature_synergy_matrix(symmetrical=False)
+        red_matrix_asym = regressor_inspector.feature_redundancy_matrix(
+            symmetrical=False
+        )
 
         print_list(
             syn_rel=syn_rel,
             red_rel=red_rel,
+            syn_rel_asym=syn_rel_asym,
+            red_rel_asym=red_rel_asym,
             syn_matrix=syn_matrix.loc[i, j],
             red_matrix=red_matrix.loc[i, j],
+            syn_matrix_asym=syn_matrix_asym.loc[i, j],
+            red_matrix_asym=red_matrix_asym.loc[i, j],
             percentage=True,
         )
 
@@ -111,6 +132,8 @@ def test_shap_decomposition(regressor_inspector: LearnerInspector) -> None:
         assert np.isclose(red_matrix.loc[j, i], red_rel)
         assert np.isclose(syn_matrix.loc[i, j], syn_rel)
         assert np.isclose(syn_matrix.loc[j, i], syn_rel)
+        assert np.isclose(red_matrix_asym.loc[i, j], red_rel_asym)
+        assert np.isclose(syn_matrix_asym.loc[i, j], syn_rel_asym)
 
 
 def test_shap_decomposition_matrices(
