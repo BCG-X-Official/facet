@@ -9,7 +9,7 @@ import numpy as np
 import pandas as pd
 
 from gamma.ml.inspection._shap import ShapCalculator, ShapInteractionValuesCalculator
-from pytools.common.fit import FittableMixin, T_Self
+from pytools.common.fit import FittableMixin
 
 log = logging.getLogger(__name__)
 
@@ -18,6 +18,9 @@ log = logging.getLogger(__name__)
 #: to a few thousand of them in the base case, the loss of accuracy with regular
 #: (sequential) summation will be negligible in practice
 _PAIRWISE_PARTIAL_SUMMATION = False
+
+
+T = TypeVar("T")
 
 
 class ShapValueDecomposer(FittableMixin[ShapCalculator]):
@@ -43,7 +46,7 @@ class ShapValueDecomposer(FittableMixin[ShapCalculator]):
 
     is_fitted.__doc__ = FittableMixin.is_fitted.__doc__
 
-    def fit(self: T_Self, shap_calculator: ShapCalculator, **fit_params) -> T_Self:
+    def fit(self: T, shap_calculator: ShapCalculator, **fit_params) -> T:
         """
         Calculate the SHAP decomposition for the shap values produced by the
         given SHAP calculator.
@@ -83,7 +86,7 @@ class ShapValueDecomposer(FittableMixin[ShapCalculator]):
         self._ensure_fitted()
         return self._to_frame(self.association_rel_)
 
-    def _fit(self: T_Self, shap_calculator: ShapCalculator) -> None:
+    def _fit(self, shap_calculator: ShapCalculator) -> None:
         #
         # basic definitions
         #
@@ -207,8 +210,8 @@ class ShapInteractionValueDecomposer(ShapValueDecomposer):
         """
 
     def fit(
-        self: T_Self, shap_calculator: ShapInteractionValuesCalculator, **fit_params
-    ) -> T_Self:
+        self: T, shap_calculator: ShapInteractionValuesCalculator, **fit_params
+    ) -> T:
         """
         Calculate the SHAP decomposition for the shap values produced by the
         given SHAP interaction values calculator.

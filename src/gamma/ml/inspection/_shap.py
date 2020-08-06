@@ -12,7 +12,7 @@ from shap.explainers.explainer import Explainer
 
 from gamma.ml import Sample
 from gamma.ml.crossfit import LearnerCrossfit
-from pytools.common.fit import FittableMixin, T_Self
+from pytools.common.fit import FittableMixin
 from pytools.common.parallelization import ParallelizableMixin
 from sklearndf.pipeline import (
     ClassifierPipelineDF,
@@ -28,6 +28,7 @@ log = logging.getLogger(__name__)
 # Type variables
 #
 
+T = TypeVar("T")
 T_LearnerPipelineDF = TypeVar("T_LearnerPipelineDF", bound=LearnerPipelineDF)
 
 #
@@ -89,9 +90,7 @@ class ShapCalculator(
         self.output_names_: Optional[List[str]] = None
         self.n_observations_: Optional[int] = None
 
-    def fit(
-        self: T_Self, crossfit: LearnerCrossfit[T_LearnerPipelineDF], **fit_params
-    ) -> T_Self:
+    def fit(self: T, crossfit: LearnerCrossfit[T_LearnerPipelineDF], **fit_params) -> T:
         """
         Calculate the SHAP values.
 

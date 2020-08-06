@@ -9,7 +9,7 @@ from typing import *
 import numpy as np
 import pandas as pd
 
-from pytools.common.fit import FittableMixin, T_Self
+from pytools.common.fit import FittableMixin
 
 log = logging.getLogger(__name__)
 
@@ -26,6 +26,7 @@ __all__ = [
 
 DEFAULT_MAX_PARTITIONS = 20
 
+T = TypeVar("T")
 T_Value = TypeVar("T_Value")
 T_Number = TypeVar("T_Number", int, float)
 
@@ -51,7 +52,7 @@ class Partitioner(
         return self._max_partitions
 
     @abstractmethod
-    def fit(self: T_Self, values: Sequence[T_Value], **fit_params) -> T_Self:
+    def fit(self: T, values: Sequence[T_Value], **fit_params) -> T:
         """
         Calculate the partitioning for the given values.
         :param values: the values to partition
@@ -160,12 +161,12 @@ class RangePartitioner(Partitioner[T_Number], Generic[T_Number], metaclass=ABCMe
 
     # noinspection PyMissingOrEmptyDocstring
     def fit(
-        self: T_Self,
+        self: T,
         values: Sequence[T_Value],
         lower_bound: Optional[T_Number] = None,
         upper_bound: Optional[T_Number] = None,
         **fit_params,
-    ) -> T_Self:
+    ) -> T:
         # we inherit the docstring from the super method
         # (see statement following this method declaration)
 
@@ -412,7 +413,7 @@ class CategoryPartitioner(Partitioner[T_Value]):
         self._partitions = None
 
     # noinspection PyMissingOrEmptyDocstring
-    def fit(self: T_Self, values: Sequence[T_Value], **fit_params) -> T_Self:
+    def fit(self: T, values: Sequence[T_Value], **fit_params) -> T:
         # we inherit the docstring from the super method
         # (see statement following this method declaration)
 

@@ -16,7 +16,7 @@ from sklearn.model_selection import BaseCrossValidator
 from gamma.ml import Sample
 from gamma.ml.crossfit import CrossfitScores, LearnerCrossfit
 from pytools.common import inheritdoc, to_tuple
-from pytools.common.fit import FittableMixin, T_Self
+from pytools.common.fit import FittableMixin
 from pytools.common.parallelization import ParallelizableMixin
 from sklearndf.pipeline import ClassifierPipelineDF, RegressorPipelineDF
 
@@ -28,6 +28,7 @@ __all__ = ["LearnerScores", "LearnerGrid", "LearnerRanker"]
 # Type variables
 #
 
+T = TypeVar("T")
 T_LearnerPipelineDF = TypeVar(
     "T_LearnerPipelineDF", RegressorPipelineDF, ClassifierPipelineDF
 )
@@ -287,7 +288,7 @@ class LearnerRanker(
         """
         return scores.mean() - 2 * scores.std()
 
-    def fit(self: T_Self, sample: Sample, **fit_params) -> T_Self:
+    def fit(self: T, sample: Sample, **fit_params) -> T:
         """
         Rank the candidate learners and their hyper-parameter combinations using
         crossfits from the given sample.
