@@ -499,7 +499,7 @@ class ShapInteractionValueDecomposer(ShapValueDecomposer):
         # this is the total contribution made by p[i] and p[j] where both features
         # independently use redundant information
 
-        std_red_ij_2x = std_aut_ij_plus_aut_ji - std_aut_ij_minus_aut_ji
+        std_red_ij_2x = np.abs(std_aut_ij_plus_aut_ji - std_aut_ij_minus_aut_ji)
 
         # std(red[i, j])
         std_red_ij = std_red_ij_2x / 2
@@ -579,7 +579,7 @@ class ShapInteractionValueDecomposer(ShapValueDecomposer):
 
         synergy_ij = std_syn_ij_plus_syn_ji
         autonomy_ij = std_aut_ij_plus_aut_ji
-        redundancy_ij = np.abs(std_red_ij_2x)
+        redundancy_ij = std_red_ij_2x
         uniqueness_ij = std_uni_ij_plus_uni_ji
         independence_ij = std_ind_ij_plus_ind_ji
 
