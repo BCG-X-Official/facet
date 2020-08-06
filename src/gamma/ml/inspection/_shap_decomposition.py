@@ -529,14 +529,14 @@ class ShapInteractionValueDecomposer(ShapValueDecomposer):
 
         # 2 * cov(p[i], red[i, j])
         # shape: (n_outputs, n_features, n_features)
-        # intermediate result to calculate upsilon[i, j], see next step
+        # intermediate result to calculate uni[i, j], see next step
 
         cov_p_i_red_ij_2x = red_aut_ratio_2x * (
             var_p_i + cov_p_i_p_j - (k_ij + k_ji) * cov_p_i_p_ij
         )
 
         # std(uni[i, j] + uni[j, i])
-        # where uni[i, j] + + uni[j, i] = p[i] + p[j] - 2 * red[i, j]
+        # where uni[i, j] + uni[j, i] = p[i] + p[j] - 2 * red[i, j]
         # shape: (n_outputs, n_features, n_features)
         # this is the sum of complementary contributions of feature i and feature j,
         # i.e., deducting the redundant contributions
