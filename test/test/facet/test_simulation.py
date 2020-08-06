@@ -56,20 +56,13 @@ def test_actuals_simulation(uplift_simulator: UnivariateUpliftSimulator) -> None
         uplift_simulator.simulate_actuals(),
         pd.Series(
             index=pd.RangeIndex(10, name="crossfit_id"),
-            data=[
-                0.0022346580154160023,
-                0.002617709072003871,
-                0.0007107764530731586,
-                -0.005023988425882142,
-                0.004010384123196653,
-                0.006379100635514501,
-                0.0005625736529850656,
-                -0.0018641287749763258,
-                0.0038418237873085737,
-                -0.0025806445857182725,
-            ],
+            data=(
+                [0.0155072, 0.0280131, -0.0342100, 0.0155648, 0.0131959]
+                + [-0.0486192, -0.0378004, 0.0068394, -0.0034286, 0.0202970]
+            ),
             name="relative deviations of mean predictions from mean targets",
         ),
+        check_less_precise=True,
     )
 
 
@@ -77,64 +70,60 @@ def test_univariate_uplift_simulation(
     uplift_simulator: UnivariateUpliftSimulator
 ) -> None:
 
-    parameterized_feature = "Step4-6 RawMat Vendor Compound08 Purity (#)"
+    parameterized_feature = "LSTAT"
 
     sample = uplift_simulator.crossfit.training_sample
 
     res = uplift_simulator._simulate_feature_with_values(
         feature_name=parameterized_feature,
-        simulated_values=ContinuousRangePartitioner()
+        simulated_values=ContinuousRangePartitioner(max_partitions=10)
         .fit(values=sample.features.loc[:, parameterized_feature])
         .partitions(),
     )
 
-    log.debug(res)
     # test aggregated values
     # the values on the right were computed from correct runs
     absolute_target_change_sr = res.loc[
         :, UnivariateUpliftSimulator._COL_ABSOLUTE_TARGET_CHANGE
     ]
-    assert absolute_target_change_sr.min() == approx(-0.6453681553897965)
-    assert absolute_target_change_sr.mean() == approx(-0.05250827061702283)
-    assert absolute_target_change_sr.max() == approx(0.8872351297966503)
+    assert absolute_target_change_sr.min() == approx(-4.087962)
+    assert absolute_target_change_sr.mean() == approx(-0.557341)
+    assert absolute_target_change_sr.max() == approx(4.408145)
 
     aggregated_results = uplift_simulator._aggregate_simulation_results(
         results_per_crossfit=res
     )
-    log.debug(aggregated_results)
 
     # test the first five rows of aggregated_results
     # the values were computed from a correct run
 
     index = pd.Index(
-        data=[29.0, 29.5, 30.0, 30.5, 31.0],
+        data=[5.0, 10.0, 15.0, 20.0, 25.0],
         name=UnivariateUpliftSimulator._COL_PARAMETER_VALUE,
     )
     expected_data = {
         "percentile_10": [
-            -0.47985361959947925,
-            -0.1236605280451073,
-            -0.01637965080466941,
-            -0.01637965080466941,
-            -0.0006339046007731496,
+            1.4028263372030223,
+            -1.2328655768628771,
+            -2.429197093534011,
+            -2.7883113485337208,
+            -2.7883113485337208,
         ],
         "percentile_50": [
-            -0.2851650197904405,
-            0.39945412023171656,
-            0.39945412023171656,
-            0.39945412023171656,
-            0.41147488809989596,
+            2.823081148237401,
+            -0.6058660149256365,
+            -1.2271310084526288,
+            -1.2290430384093156,
+            -1.2290430384093156,
         ],
         "percentile_90": [
-            -0.09558476689426461,
-            0.8104729183863626,
-            0.8104729183863626,
-            0.8104729183863626,
-            0.8093686301666558,
+            4.344860956307991,
+            -0.2709598031049908,
+            -0.63686624357766,
+            -0.7253268617768278,
+            -0.7253268617768278,
         ],
     }
 
     expected_df = pd.DataFrame(data=expected_data, index=index)
-    assert_frame_equal(aggregated_results.loc[index], expected_df)
-
-    log.debug(f"\n{aggregated_results}")
+    assert_frame_equal(aggregated_results, expected_df)
