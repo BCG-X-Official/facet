@@ -9,15 +9,16 @@ import pytest
 from sklearn import datasets
 from sklearn.model_selection import BaseCrossValidator, KFold
 from sklearn.utils import Bunch
+from test.gamma.ml import make_simple_transformer
 
 from gamma.ml import Sample
 from gamma.ml.crossfit import LearnerCrossfit
 from gamma.ml.inspection import LearnerInspector
 from gamma.ml.selection import LearnerGrid, LearnerRanker, LearnerScores
 from gamma.ml.validation import BootstrapCV, StratifiedBootstrapCV
-from gamma.sklearndf import TransformerDF
-from gamma.sklearndf.pipeline import RegressorPipelineDF
-from gamma.sklearndf.regression import (
+from sklearndf import TransformerDF
+from sklearndf.pipeline import RegressorPipelineDF
+from sklearndf.regression import (
     AdaBoostRegressorDF,
     DecisionTreeRegressorDF,
     ExtraTreeRegressorDF,
@@ -25,8 +26,7 @@ from gamma.sklearndf.regression import (
     RandomForestRegressorDF,
     SVRDF,
 )
-from gamma.sklearndf.regression.extra import LGBMRegressorDF
-from test.gamma.ml import make_simple_transformer
+from sklearndf.regression.extra import LGBMRegressorDF
 
 logging.basicConfig(level=logging.DEBUG)
 log = logging.getLogger(__name__)

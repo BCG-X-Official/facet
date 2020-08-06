@@ -3,8 +3,8 @@ from typing import *
 import pytest
 
 from gamma.ml.selection import LearnerScores
-from gamma.sklearndf import TransformerDF
-from gamma.sklearndf.transformation import (
+from sklearndf import TransformerDF
+from sklearndf.transformation import (
     ColumnTransformerDF,
     OneHotEncoderDF,
     SimpleImputerDF,

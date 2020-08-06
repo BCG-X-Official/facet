@@ -10,7 +10,7 @@ import pytest
 
 from gamma.ml.crossfit import LearnerCrossfit
 from gamma.ml.inspection import LearnerInspector
-from gamma.sklearndf.pipeline import RegressorPipelineDF
+from sklearndf.pipeline import RegressorPipelineDF
 
 log = logging.getLogger(__name__)
 

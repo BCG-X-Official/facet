@@ -1,11 +1,12 @@
 import logging
 
+from test.gamma.ml import check_ranking
+
 from gamma.ml import Sample
 from gamma.ml.selection import LearnerGrid, LearnerRanker
 from gamma.ml.validation import StratifiedBootstrapCV
-from gamma.sklearndf.classification import RandomForestClassifierDF
-from gamma.sklearndf.pipeline import ClassifierPipelineDF
-from test.gamma.ml import check_ranking
+from sklearndf.classification import RandomForestClassifierDF
+from sklearndf.pipeline import ClassifierPipelineDF
 
 log = logging.getLogger(__name__)
 

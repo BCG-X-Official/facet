@@ -12,8 +12,8 @@ import shap
 from shap.explainers.explainer import Explainer
 from sklearn.base import BaseEstimator
 
-from gamma.common import AllTracker, inheritdoc, validate_type
-from gamma.sklearndf import ClassifierDF, LearnerDF, RegressorDF
+from pytools.common import AllTracker, inheritdoc, validate_type
+from sklearndf import ClassifierDF, LearnerDF, RegressorDF
 
 _EARLIEST_SUPPORTED_VERSION = version.LooseVersion("0.34")
 

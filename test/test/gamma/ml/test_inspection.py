@@ -16,10 +16,10 @@ from gamma.ml.crossfit import LearnerCrossfit
 from gamma.ml.inspection import KernelExplainerFactory, LearnerInspector
 from gamma.ml.selection import LearnerGrid, LearnerRanker
 from gamma.ml.validation import BootstrapCV, StratifiedBootstrapCV
-from gamma.sklearndf import TransformerDF
-from gamma.sklearndf.classification import RandomForestClassifierDF
-from gamma.sklearndf.pipeline import ClassifierPipelineDF, RegressorPipelineDF
-from gamma.viz.dendrogram import DendrogramDrawer, DendrogramReportStyle
+from pytools.viz.dendrogram import DendrogramDrawer, DendrogramReportStyle
+from sklearndf import TransformerDF
+from sklearndf.classification import RandomForestClassifierDF
+from sklearndf.pipeline import ClassifierPipelineDF, RegressorPipelineDF
 from test.gamma.ml import check_ranking
 
 # noinspection PyMissingOrEmptyDocstring

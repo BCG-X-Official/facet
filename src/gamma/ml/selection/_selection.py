@@ -13,12 +13,12 @@ from typing import *
 from numpy.random.mtrand import RandomState
 from sklearn.model_selection import BaseCrossValidator
 
-from gamma.common import inheritdoc, to_tuple
-from gamma.common.fit import FittableMixin, T_Self
-from gamma.common.parallelization import ParallelizableMixin
 from gamma.ml import Sample
 from gamma.ml.crossfit import CrossfitScores, LearnerCrossfit
-from gamma.sklearndf.pipeline import ClassifierPipelineDF, RegressorPipelineDF
+from pytools.common import inheritdoc, to_tuple
+from pytools.common.fit import FittableMixin, T_Self
+from pytools.common.parallelization import ParallelizableMixin
+from sklearndf.pipeline import ClassifierPipelineDF, RegressorPipelineDF
 
 log = logging.getLogger(__name__)
 
