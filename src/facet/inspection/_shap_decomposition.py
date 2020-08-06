@@ -408,7 +408,7 @@ class ShapInteractionValueDecomposer(ShapValueDecomposer):
         # shape: (n_outputs, n_features, n_features)
         k_ji = _transpose(k_ij)
 
-        # syn[i, j] = syn[j, i] = (k[i, j] + k[j, i]) * p[i, j]
+        # syn[i, j] + syn[j, i] = (k[i, j] + k[j, i]) * p[i, j]
         # total SHAP synergy, comprising both direct and indirect synergy
         # shape: (n_outputs, n_features, n_features)
         std_syn_ij_plus_syn_ji = (k_ij + k_ji) * std_p_ij
@@ -493,6 +493,7 @@ class ShapInteractionValueDecomposer(ShapValueDecomposer):
         )
 
         # 2 * std(red[i, j]) = 2 * std(red[j, i])
+        #   = std(aut[i, j] + aut[j, i]) - std(aut[i, j] - aut[j, i])
         # shape: (n_outputs, n_features)
         # twice the standard deviation (= length) of redundancy vector;
         # this is the total contribution made by p[i] and p[j] where both features
