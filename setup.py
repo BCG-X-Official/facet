@@ -3,7 +3,7 @@ Pip package definition
 """
 from os import path
 
-from setuptools import find_namespace_packages, setup
+from setuptools import find_packages, setup
 
 here = path.abspath(path.dirname(__file__))
 # Get the long description from the README file
@@ -22,19 +22,19 @@ setup(
     # There are some restrictions on what makes a valid project name
     # specification here:
     # https://packaging.python.org/specifications/core-metadata/#name
-    name="gamma-ml",
+    name="facet",
     # Versions should comply with PEP 440:
     # https://www.python.org/dev/peps/pep-0440/
     #
     # For a discussion on single-sourcing the version across setup.py and the
     # project code, see
     # https://packaging.python.org/en/latest/single_source_version.html
-    version="1.3.0rc1",  # Required
+    version="1.0",
     # This is a one-line description or tagline of what your project does. This
     # corresponds to the "Summary" metadata field:
     # https://packaging.python.org/specifications/core-metadata/#summary
     description=(
-        "Enhanced machine learning workflow including model tuning and model selection"
+        "Enhanced ML workflow for model validation, tuning, explanation, and simulation"
     ),
     # This is an optional longer description of your project that represents
     # the body of text which users will see when they visit PyPI.
@@ -60,7 +60,7 @@ setup(
     #
     # This field corresponds to the "Home-Page" metadata field:
     # https://packaging.python.org/specifications/core-metadata/#home-page-optional
-    url="https://git.sourceai.io/alpha/gamma-ml",  # Optional
+    url="https://github.com/bcggamma/facet",  # Optional
     # This should be your name or the name of the organization which owns the
     # project.
     # author='The Python Packaging Authority',  # Optional
@@ -109,10 +109,8 @@ setup(
     #
     #   py_modules=["my_module"],
     #
-    # packages=find_packages(exclude=['contrib', 'docs', 'tests']),  # Required
-    packages=find_namespace_packages(where="src"),
+    packages=find_packages(where="src"),
     package_dir={"": "src"},
-    namespace_packages=["gamma"],
     # Specify which Python versions you support. In contrast to the
     # 'Programming Language' classifiers above, 'pip install' will check this
     # and refuse to install the project if the version does not match. If you
@@ -125,17 +123,9 @@ setup(
     #
     # For an analysis of "install_requires" vs pip's requirements files see:
     # https://packaging.python.org/en/latest/requirements.html
-    install_requires=[
-        "pandas>=0.24,<0.25",
-        "numpy>=1.16,<1.17",
-        "matplotlib>=3.0.0,<3.1.0",
-        "scipy>=1.2,<1.3",
-        "shap>=0.28,<0.29",
-        "scikit-learn>=0.21,<0.22",
-        "gamma-common @ git+ssh://git@git.sourceai.io/BCG/gamma-common.git@1.1.0#egg=gamma.common",
-        "gamma-sklearndf @ git+ssh://git@git.sourceai.io/BCG/gamma-sklearndf.git@1.1.0#egg=gamma.sklearndf",
-        "gamma-viz @ git+ssh://git@git.sourceai.io/BCG/gamma-viz.git@1.1.0#egg=gamma.viz",
-    ],
+    #
+    # we don't list requirements here as we use conda not pip
+    install_requires=[],
     dependency_links=[],
     # Optional
     # List additional groups of dependencies here (e.g. development
