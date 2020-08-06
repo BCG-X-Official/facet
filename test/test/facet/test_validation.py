@@ -1,5 +1,5 @@
 """
-Tests for gamma.ml.validation
+Tests for module facet.validation
 """
 import warnings
 from typing import *

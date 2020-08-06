@@ -1,5 +1,5 @@
 """
-Core implementation of :mod:`gamma.ml.crossfit`
+Core implementation of :mod:`facet.crossfit`
 """
 import logging
 from abc import ABCMeta

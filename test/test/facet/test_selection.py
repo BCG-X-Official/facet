@@ -1,5 +1,5 @@
 """
-Tests for module gamma.ml.selection
+Tests for module facet.selection
 """
 
 import logging

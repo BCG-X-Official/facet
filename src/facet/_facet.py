@@ -1,5 +1,5 @@
 """
-Core implementation of :mod:`gamma.ml`
+Core implementation of :mod:`facet`
 """
 
 from copy import copy

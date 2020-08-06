@@ -8,11 +8,10 @@ this graph there is a histogram of the feature values.
 
 from typing import *
 
-from pytools.viz import Drawer
-from ._style import SimulationMatplotStyle, SimulationReportStyle, SimulationStyle
-
 from facet.simulation import UnivariateSimulation
 from facet.simulation.partition import T_Number
+from pytools.viz import Drawer
+from ._style import SimulationMatplotStyle, SimulationReportStyle, SimulationStyle
 
 
 class _SimulationSeries(NamedTuple):
@@ -29,7 +28,7 @@ class SimulationDrawer(Drawer[UnivariateSimulation, SimulationStyle]):
     Simulation drawer with high/low confidence intervals.
 
     :param style: the style of the dendrogram; either as a
-        :class:`~gamma.yieldengine.viz.SimulationStyle` instance, or as the name of a \
+        :class:`.SimulationStyle` instance, or as the name of a \
         default style. Permissible names are "matplot" for a style supporting \
         Matplotlib, and "text" for a text-only report to stdout (default: ``"matplot"``)
     :param histogram: if ``True``, plot the histogram of observed values for the \

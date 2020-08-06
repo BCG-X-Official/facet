@@ -1,5 +1,5 @@
 """
-Core implementation of :mod:`gamma.yieldengine.simulation`
+Core implementation of :mod:`facet.simulation`
 """
 
 from abc import ABCMeta, abstractmethod

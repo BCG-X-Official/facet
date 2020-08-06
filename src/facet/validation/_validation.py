@@ -1,5 +1,5 @@
 """
-Core implementation of :mod:`gamma.ml.validation`
+Core implementation of :mod:`facet.validation`
 """
 
 from abc import ABCMeta, abstractmethod
@@ -246,7 +246,7 @@ class FullSampleValidator(BaseCrossValidator):
     A trivial validator where every test/train split has the full sample both in
     test and in train.
 
-    This can be useful to construct a :class:`~gamma.ml.crossfit.LearnerCrossfit` which
+    This can be useful to construct a :class:`.LearnerCrossfit` which
     only shuffles the feature order across fits, or to inspect a single model fitted
     on the full sample for fast indicative results.
     """
