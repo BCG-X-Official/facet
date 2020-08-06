@@ -1,0 +1,37 @@
+name: facet-develop
+channels:
+  - conda-forge
+  - astropy
+dependencies:
+  - conda-build
+  - conda-verify
+  - black >= 19.3
+  - boruta_py = 0.3.*
+  - docutils
+  - joblib = 0.13.*
+  - jupyter >= 1.0
+  - lightgbm = 2.3.*
+  - matplotlib = 3.1.*
+  - nbsphinx=0.4.*
+  - numpy = 1.16.*
+  - pandas = 0.24.*
+  - pip >= 19.1
+  - pluggy = 0.13.*
+  - pytest = 5.2.0
+  - pytest-cov = 2.8.*
+  - python = 3.7.*
+  - pyyaml = 5.1.*
+  - rsa = 4.0.*
+  - scikit-learn = 0.21.*
+  - scipy = 1.2.*
+  - shap = 0.34.*
+  - sphinx = 3.1.*
+  - sphinx-autodoc-typehints = 1.11.*
+  - sphinx-automodapi = 0.12.*
+  - sphinx_rtd_theme = 0.5.*
+  - xlrd = 1.2.*
+  - yaml = 0.1.*
+  - pip:
+      - pre_commit == 1.16.*
+      - punch.py==1.6.*
+      - typing-inspect == 0.4.*
