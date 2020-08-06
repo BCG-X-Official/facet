@@ -10,11 +10,11 @@ from pytest import approx
 from gamma.ml import Sample
 from gamma.ml.crossfit import LearnerCrossfit
 from gamma.ml.validation import StationaryBootstrapCV
-from gamma.sklearndf import TransformerDF
-from gamma.sklearndf.pipeline import RegressorPipelineDF
-from gamma.sklearndf.regression.extra import LGBMRegressorDF
 from gamma.yieldengine.partition import ContinuousRangePartitioner
 from gamma.yieldengine.simulation import UnivariateUpliftSimulator
+from sklearndf import TransformerDF
+from sklearndf.pipeline import RegressorPipelineDF
+from sklearndf.regression.extra import LGBMRegressorDF
 
 log = logging.getLogger(__name__)
 

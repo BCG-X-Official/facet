@@ -10,11 +10,11 @@ import numpy as np
 import pandas as pd
 from shap.explainers.explainer import Explainer
 
-from gamma.common.fit import FittableMixin, T_Self
-from gamma.common.parallelization import ParallelizableMixin
 from gamma.ml import Sample
 from gamma.ml.crossfit import LearnerCrossfit
-from gamma.sklearndf.pipeline import (
+from pytools.common.fit import FittableMixin, T_Self
+from pytools.common.parallelization import ParallelizableMixin
+from sklearndf.pipeline import (
     ClassifierPipelineDF,
     LearnerPipelineDF,
     RegressorPipelineDF,

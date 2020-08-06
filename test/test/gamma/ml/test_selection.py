@@ -9,20 +9,20 @@ import numpy as np
 import pandas as pd
 import pytest
 from sklearn import datasets
+from test.gamma.ml import check_ranking
 
 from gamma.ml import Sample
 from gamma.ml.crossfit import LearnerCrossfit
 from gamma.ml.selection import LearnerGrid, LearnerRanker, LearnerScores
 from gamma.ml.validation import BootstrapCV
-from gamma.sklearndf.classification import SVCDF
-from gamma.sklearndf.pipeline import ClassifierPipelineDF, RegressorPipelineDF
-from gamma.sklearndf.regression import (
+from sklearndf.classification import SVCDF
+from sklearndf.pipeline import ClassifierPipelineDF, RegressorPipelineDF
+from sklearndf.regression import (
     AdaBoostRegressorDF,
     LinearRegressionDF,
     RandomForestRegressorDF,
 )
-from gamma.sklearndf.regression.extra import LGBMRegressorDF
-from test.gamma.ml import check_ranking
+from sklearndf.regression.extra import LGBMRegressorDF
 
 log = logging.getLogger(__name__)
 

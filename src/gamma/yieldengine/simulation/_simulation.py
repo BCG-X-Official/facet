@@ -9,12 +9,12 @@ from typing import List
 import numpy as np
 import pandas as pd
 
-from gamma.common import AllTracker, inheritdoc
-from gamma.common.parallelization import ParallelizableMixin
 from gamma.ml import Sample
 from gamma.ml.crossfit import LearnerCrossfit
-from gamma.sklearndf import ClassifierDF, RegressorDF
 from gamma.yieldengine.partition import Partitioner, T_Number
+from pytools.common import AllTracker, inheritdoc
+from pytools.common.parallelization import ParallelizableMixin
+from sklearndf import ClassifierDF, RegressorDF
 
 T_CrossFit = TypeVar("T_CrossFit", bound=LearnerCrossfit)
 T_RegressorDF = TypeVar("T_RegressorDF", bound=RegressorDF)

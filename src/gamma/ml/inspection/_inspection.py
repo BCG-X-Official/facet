@@ -6,21 +6,21 @@ from typing import *
 
 import numpy as np
 import pandas as pd
+from pytools.viz.dendrogram import LinkageTree
 from scipy.cluster.hierarchy import linkage
 from scipy.spatial.distance import squareform
 
-from gamma.common import AllTracker, inheritdoc
-from gamma.common.fit import FittableMixin, T_Self
-from gamma.common.parallelization import ParallelizableMixin
 from gamma.ml import Sample
 from gamma.ml.crossfit import LearnerCrossfit
 from gamma.ml.inspection._shap_decomposition import (
     ShapInteractionValueDecomposer,
     ShapValueDecomposer,
 )
-from gamma.sklearndf import ClassifierDF, LearnerDF, RegressorDF
-from gamma.sklearndf.pipeline import LearnerPipelineDF
-from gamma.viz.dendrogram import LinkageTree
+from pytools.common import AllTracker, inheritdoc
+from pytools.common.fit import FittableMixin, T_Self
+from pytools.common.parallelization import ParallelizableMixin
+from sklearndf import ClassifierDF, LearnerDF, RegressorDF
+from sklearndf.pipeline import LearnerPipelineDF
 from ._explainer import TreeExplainerFactory
 from ._shap import (
     ClassifierShapInteractionValuesCalculator,

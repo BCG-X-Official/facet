@@ -18,8 +18,7 @@ Implements the following subpackages:
 # todo: explain the basic workflow in the docstring:
 #       LearnerRanker --> LearnerCrossfit --> LearnerInspector
 
-import gamma.common.licensing as _licensing
+
 from ._ml import Sample
 
 __version__ = "1.3.0rc1"
-_licensing.check_license(__package__)

@@ -8,8 +8,8 @@ from typing import *
 import numpy as np
 import pandas as pd
 
-from gamma.common.fit import FittableMixin, T_Self
 from gamma.ml.inspection._shap import ShapCalculator, ShapInteractionValuesCalculator
+from pytools.common.fit import FittableMixin, T_Self
 
 log = logging.getLogger(__name__)
 
