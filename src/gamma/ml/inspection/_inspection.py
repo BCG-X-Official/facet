@@ -6,7 +6,6 @@ from typing import *
 
 import numpy as np
 import pandas as pd
-from pytools.viz.dendrogram import LinkageTree
 from scipy.cluster.hierarchy import linkage
 from scipy.spatial.distance import squareform
 
@@ -17,8 +16,9 @@ from gamma.ml.inspection._shap_decomposition import (
     ShapValueDecomposer,
 )
 from pytools.common import AllTracker, inheritdoc
-from pytools.common.fit import FittableMixin, T_Self
+from pytools.common.fit import FittableMixin
 from pytools.common.parallelization import ParallelizableMixin
+from pytools.viz.dendrogram import LinkageTree
 from sklearndf import ClassifierDF, LearnerDF, RegressorDF
 from sklearndf.pipeline import LearnerPipelineDF
 from ._explainer import TreeExplainerFactory
@@ -40,6 +40,7 @@ __all__ = ["LearnerInspector"]
 # Type variables
 #
 
+T = TypeVar("T")
 T_LearnerPipelineDF = TypeVar("T_LearnerPipelineDF", bound=LearnerPipelineDF)
 
 
@@ -163,7 +164,7 @@ class LearnerInspector(
         + ParallelizableMixin.__init__.__doc__
     )
 
-    def fit(self: T_Self, crossfit: LearnerCrossfit, **fit_params) -> T_Self:
+    def fit(self: T, crossfit: LearnerCrossfit, **fit_params) -> T:
         """
         Fit the inspector with the given crossfit.
 
