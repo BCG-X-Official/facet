@@ -148,8 +148,8 @@ class ShapValueDecomposer(FittableMixin[ShapCalculator]):
         assert association_ij.shape == (n_outputs, n_features, n_features)
 
         with np.errstate(divide="ignore", invalid="ignore"):
-            self.association_rel_ = _ensure_diagonality(
-                association_ij / std_p_i_plus_p_j
+            self.association_rel_ = _fill_nans(
+                _ensure_diagonality(association_ij / std_p_i_plus_p_j)
             )
 
     def _reset_fit(self) -> None:
@@ -601,14 +601,18 @@ class ShapInteractionValueDecomposer(ShapValueDecomposer):
         # the code above
 
         with np.errstate(divide="ignore", invalid="ignore"):
-            self.synergy_rel_ = _ensure_diagonality(
-                synergy_ij / (synergy_ij + autonomy_ij)
+            self.synergy_rel_ = _fill_nans(
+                _ensure_diagonality(synergy_ij / (synergy_ij + autonomy_ij))
             )
-            self.redundancy_rel_ = _ensure_diagonality(
-                redundancy_ij / (redundancy_ij + uniqueness_ij)
+            self.redundancy_rel_ = _fill_nans(
+                _ensure_diagonality(redundancy_ij / (redundancy_ij + uniqueness_ij))
             )
-            self.synergy_rel_asymmetric_ = std_syn_ij / (std_syn_ij + std_aut_ij)
-            self.redundancy_rel_asymmetric_ = std_red_ij / (std_red_ij + std_uni_ij)
+            self.synergy_rel_asymmetric_ = _fill_nans(
+                std_syn_ij / (std_syn_ij + std_aut_ij)
+            )
+            self.redundancy_rel_asymmetric_ = _fill_nans(
+                std_red_ij / (std_red_ij + std_uni_ij)
+            )
 
     def _reset_fit(self) -> None:
         # revert status of this object to not fitted
@@ -623,16 +627,18 @@ def _ensure_diagonality(matrix: np.ndarray) -> np.ndarray:
     # matrix shape: (n_outputs, n_features, n_features)
 
     # remove potential floating point round-off errors
-    matrix = (matrix + _transpose(matrix)) / 2
+    return (matrix + _transpose(matrix)) / 2
 
-    # fixes per output
+
+def _fill_nans(matrix: np.ndarray) -> np.ndarray:
+    # apply fixes in-place for each output
     for m in matrix:
-        # replace nan values with 0.0 = no association when correlation is undefined
-        np.nan_to_num(m, copy=False)
-
         # set the matrix diagonals to 1.0 = full association of each feature with
         # itself
         np.fill_diagonal(m, 1.0)
+
+        # replace nan values with 0.0 = no association when correlation is undefined
+        np.nan_to_num(m, copy=False)
 
     return matrix
 
