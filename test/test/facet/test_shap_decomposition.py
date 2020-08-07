@@ -135,6 +135,21 @@ def test_shap_decomposition(regressor_inspector: LearnerInspector) -> None:
         assert np.isclose(red_matrix_asym.loc[i, j], red_rel_asym)
         assert np.isclose(syn_matrix_asym.loc[i, j], syn_rel_asym)
 
+        # check basic matrix properties
+
+        n_features = len(regressor_inspector.features)
+
+        for matrix in (syn_matrix, syn_matrix_asym, red_matrix, red_matrix_asym):
+            # matrix shape is n_features x n_features
+            assert matrix.shape == (n_features, n_features)
+
+            # values on the diagonal are all 1.0
+            for a in range(n_features):
+                assert matrix.iloc[a, a] == 1.0
+
+            # there are no nan values
+            assert matrix.notna().all().all()
+
 
 def test_shap_decomposition_matrices(
     best_lgbm_crossfit: LearnerCrossfit[RegressorPipelineDF],
