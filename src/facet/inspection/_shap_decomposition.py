@@ -148,8 +148,8 @@ class ShapValueDecomposer(FittableMixin[ShapCalculator]):
         assert association_ij.shape == (n_outputs, n_features, n_features)
 
         with np.errstate(divide="ignore", invalid="ignore"):
-            self.association_rel_ = _ensure_diagonality(
-                association_ij / std_p_i_plus_p_j
+            self.association_rel_ = _fill_nans(
+                _ensure_diagonality(association_ij / std_p_i_plus_p_j)
             )
 
     def _reset_fit(self) -> None:
@@ -203,6 +203,8 @@ class ShapInteractionValueDecomposer(ShapValueDecomposer):
         )
         self.synergy_rel_: Optional[np.ndarray] = None
         self.redundancy_rel_: Optional[np.ndarray] = None
+        self.synergy_rel_asymmetric_: Optional[np.ndarray] = None
+        self.redundancy_rel_asymmetric_: Optional[np.ndarray] = None
 
     __init__.__doc__ += f"""\
             (default: {DEFAULT_MIN_DIRECT_SYNERGY}, i.e., \
@@ -219,8 +221,7 @@ class ShapInteractionValueDecomposer(ShapValueDecomposer):
         """
         return super().fit(shap_calculator=shap_calculator, **fit_params)
 
-    @property
-    def synergy(self) -> pd.DataFrame:
+    def synergy(self, symmetrical: bool = True) -> pd.DataFrame:
         """
         The matrix of total relative synergy (direct and indirect) for all feature
         pairs.
@@ -231,10 +232,11 @@ class ShapInteractionValueDecomposer(ShapValueDecomposer):
         Raises an error if this interaction decomposer has not been fitted.
         """
         self._ensure_fitted()
-        return self._to_frame(self.synergy_rel_)
+        return self._to_frame(
+            self.synergy_rel_ if symmetrical else self.synergy_rel_asymmetric_
+        )
 
-    @property
-    def redundancy(self) -> pd.DataFrame:
+    def redundancy(self, symmetrical: bool = True) -> pd.DataFrame:
         """
         The matrix of total relative redundancy for all feature pairs.
 
@@ -244,7 +246,9 @@ class ShapInteractionValueDecomposer(ShapValueDecomposer):
         Raises an error if this interaction decomposer has not been fitted.
         """
         self._ensure_fitted()
-        return self._to_frame(self.redundancy_rel_)
+        return self._to_frame(
+            self.redundancy_rel_ if symmetrical else self.redundancy_rel_asymmetric_
+        )
 
     def _fit(self, shap_calculator: ShapInteractionValuesCalculator) -> None:
         super()._fit(shap_calculator)
@@ -387,8 +391,8 @@ class ShapInteractionValueDecomposer(ShapValueDecomposer):
 
         _test_synergy_feasibility()
 
-        # ensure that s[i, j] is at least 1.0
-        # (a warning will have been issued during the checks above for s[i, j] < 1)
+        # ensure that k[i, j] is at least 1.0
+        # (a warning will have been issued during the checks above for k[i, j] < 1)
         # i.e. we don't allow total synergy to be less than direct synergy
         k_ij = np.clip(k_ij, 1.0, None)
 
@@ -396,12 +400,15 @@ class ShapInteractionValueDecomposer(ShapValueDecomposer):
         for k_ij_for_output in k_ij:
             np.fill_diagonal(k_ij_for_output, val=np.nan)
 
-        # s[j, i]
-        # transpose of s[i, j]; we need this later for calculating SHAP redundancy
+        # syn[i, j] = k[i, j] * p[i, j]
+        std_syn_ij = k_ij * std_p_ij
+
+        # k[j, i]
+        # transpose of k[i, j]; we need this later for calculating SHAP redundancy
         # shape: (n_outputs, n_features, n_features)
         k_ji = _transpose(k_ij)
 
-        # syn[i, j] = syn[j, i] = (k[i, j] + k[j, i]) * p[i, j]
+        # syn[i, j] + syn[j, i] = (k[i, j] + k[j, i]) * p[i, j]
         # total SHAP synergy, comprising both direct and indirect synergy
         # shape: (n_outputs, n_features, n_features)
         std_syn_ij_plus_syn_ji = (k_ij + k_ji) * std_p_ij
@@ -445,6 +452,9 @@ class ShapInteractionValueDecomposer(ShapValueDecomposer):
         # shape: (n_outputs, n_features, n_features)
         var_aut_ij = var_p_i - 2 * k_ij * cov_p_i_p_ij + k_ij * k_ij * var_p_ij
 
+        # std(aut[i, j])
+        std_aut_ij = _sqrt(var_aut_ij)
+
         # var(aut[i]) + var(aut[j])
         # Sum of covariances per feature pair (this is a diagonal matrix)
         # shape: (n_outputs, n_features, n_features)
@@ -483,12 +493,16 @@ class ShapInteractionValueDecomposer(ShapValueDecomposer):
         )
 
         # 2 * std(red[i, j]) = 2 * std(red[j, i])
+        #   = std(aut[i, j] + aut[j, i]) - std(aut[i, j] - aut[j, i])
         # shape: (n_outputs, n_features)
         # twice the standard deviation (= length) of redundancy vector;
         # this is the total contribution made by p[i] and p[j] where both features
         # independently use redundant information
 
-        std_red_ij_2x = std_aut_ij_plus_aut_ji - std_aut_ij_minus_aut_ji
+        std_red_ij_2x = np.abs(std_aut_ij_plus_aut_ji - std_aut_ij_minus_aut_ji)
+
+        # std(red[i, j])
+        std_red_ij = std_red_ij_2x / 2
 
         #
         # SHAP independence: ind[i, j]
@@ -538,6 +552,13 @@ class ShapInteractionValueDecomposer(ShapValueDecomposer):
             var_p_i + cov_p_i_p_j - (k_ij + k_ji) * cov_p_i_p_ij
         )
 
+        # std(uni[i, j]) = std(p[i] - red[i, j])
+        # where uni[i, j] = p[i] - red[i, j]
+        # shape: (n_outputs, n_features, n_features)
+        # this is the sum of complementary contributions of feature i w.r.t. feature j,
+        # i.e., deducting the redundant contributions
+        std_uni_ij = _sqrt(var_p_i + var_red_ij_4x / 4 - cov_p_i_red_ij_2x)
+
         # std(uni[i, j] + uni[j, i])
         # where uni[i, j] + uni[j, i] = p[i] + p[j] - 2 * red[i, j]
         # shape: (n_outputs, n_features, n_features)
@@ -558,7 +579,7 @@ class ShapInteractionValueDecomposer(ShapValueDecomposer):
 
         synergy_ij = std_syn_ij_plus_syn_ji
         autonomy_ij = std_aut_ij_plus_aut_ji
-        redundancy_ij = np.abs(std_red_ij_2x)
+        redundancy_ij = std_red_ij_2x
         uniqueness_ij = std_uni_ij_plus_uni_ji
         independence_ij = std_ind_ij_plus_ind_ji
 
@@ -572,41 +593,52 @@ class ShapInteractionValueDecomposer(ShapValueDecomposer):
         ):
             assert matrix.shape == (n_outputs, n_features, n_features)
 
-        # calculate relative synergy and redundancy (ranging from 0.0 to 1.0)
-        # both matrices are symmetric, but we ensure perfect symmetry by removing
-        # potential round-off errors
-        # NOTE: we do not store independence so technically it could be removed from
+        # Calculate relative synergy and redundancy (ranging from 0.0 to 1.0),
+        # as a symmetric and an asymmetric measure.
+        # For the symmetric case, we ensure perfect symmetry by removing potential
+        # round-off errors
+        # NOTE: we do not store independence, so technically it could be removed from
         # the code above
 
         with np.errstate(divide="ignore", invalid="ignore"):
-            synergy_rel = _ensure_diagonality(synergy_ij / (synergy_ij + autonomy_ij))
-            redundancy_rel = _ensure_diagonality(
-                redundancy_ij / (redundancy_ij + uniqueness_ij)
+            self.synergy_rel_ = _fill_nans(
+                _ensure_diagonality(synergy_ij / (synergy_ij + autonomy_ij))
             )
-
-        self.synergy_rel_ = synergy_rel
-        self.redundancy_rel_ = redundancy_rel
+            self.redundancy_rel_ = _fill_nans(
+                _ensure_diagonality(redundancy_ij / (redundancy_ij + uniqueness_ij))
+            )
+            self.synergy_rel_asymmetric_ = _fill_nans(
+                std_syn_ij / (std_syn_ij + std_aut_ij)
+            )
+            self.redundancy_rel_asymmetric_ = _fill_nans(
+                std_red_ij / (std_red_ij + std_uni_ij)
+            )
 
     def _reset_fit(self) -> None:
         # revert status of this object to not fitted
         super()._reset_fit()
-        self.synergy_rel_ = self.redundancy_rel_ = None
+        self.synergy_rel_ = None
+        self.redundancy_rel_ = None
+        self.synergy_rel_asymmetric_ = None
+        self.redundancy_rel_asymmetric_ = None
 
 
 def _ensure_diagonality(matrix: np.ndarray) -> np.ndarray:
     # matrix shape: (n_outputs, n_features, n_features)
 
     # remove potential floating point round-off errors
-    matrix = (matrix + _transpose(matrix)) / 2
+    return (matrix + _transpose(matrix)) / 2
 
-    # fixes per output
+
+def _fill_nans(matrix: np.ndarray) -> np.ndarray:
+    # apply fixes in-place for each output
     for m in matrix:
-        # replace nan values with 0.0 = no association when correlation is undefined
-        np.nan_to_num(m, copy=False)
-
         # set the matrix diagonals to 1.0 = full association of each feature with
         # itself
         np.fill_diagonal(m, 1.0)
+
+        # replace nan values with 0.0 = no association when correlation is undefined
+        np.nan_to_num(m, copy=False)
 
     return matrix
 
