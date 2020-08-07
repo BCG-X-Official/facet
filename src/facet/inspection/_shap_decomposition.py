@@ -552,7 +552,7 @@ class ShapInteractionValueDecomposer(ShapValueDecomposer):
         )
 
         #
-        # SHAP decompositon as relative contributions of
+        # SHAP decomposition as relative contributions of
         # synergy, redundancy, and independence
         #
 
