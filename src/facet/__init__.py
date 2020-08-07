@@ -21,4 +21,4 @@ Implements the following subpackages:
 
 from ._facet import Sample
 
-__version__ = "1.0"
+__version__ = "1.0.0"
