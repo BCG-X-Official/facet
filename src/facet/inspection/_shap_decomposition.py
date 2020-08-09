@@ -9,7 +9,7 @@ import numpy as np
 import pandas as pd
 
 from facet.inspection._shap import ShapCalculator, ShapInteractionValuesCalculator
-from pytools.common.fit import FittableMixin
+from pytools.fit import FittableMixin
 
 log = logging.getLogger(__name__)
 

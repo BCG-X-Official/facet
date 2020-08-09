@@ -7,7 +7,7 @@ from typing import *
 
 import pandas as pd
 
-from pytools.common import is_list_like
+from pytools.api import is_list_like
 
 
 class Sample:

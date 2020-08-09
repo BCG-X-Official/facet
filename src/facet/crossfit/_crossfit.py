@@ -15,9 +15,9 @@ from sklearn.model_selection import BaseCrossValidator
 from sklearn.utils import check_random_state
 
 from facet import Sample
-from pytools.common import inheritdoc
-from pytools.common.fit import FittableMixin
-from pytools.common.parallelization import ParallelizableMixin
+from pytools.api import inheritdoc
+from pytools.fit import FittableMixin
+from pytools.parallelization import ParallelizableMixin
 from sklearndf import LearnerDF, TransformerDF
 from sklearndf.pipeline import (
     ClassifierPipelineDF,
