@@ -15,9 +15,9 @@ from sklearn.model_selection import BaseCrossValidator
 
 from facet import Sample
 from facet.crossfit import CrossfitScores, LearnerCrossfit
-from pytools.common import inheritdoc, to_tuple
-from pytools.common.fit import FittableMixin
-from pytools.common.parallelization import ParallelizableMixin
+from pytools.api import inheritdoc, to_tuple
+from pytools.fit import FittableMixin
+from pytools.parallelization import ParallelizableMixin
 from sklearndf.pipeline import ClassifierPipelineDF, RegressorPipelineDF
 
 log = logging.getLogger(__name__)

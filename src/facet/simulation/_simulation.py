@@ -9,8 +9,8 @@ from typing import List
 import numpy as np
 import pandas as pd
 
-from pytools.common import AllTracker, inheritdoc
-from pytools.common.parallelization import ParallelizableMixin
+from pytools.api import AllTracker, inheritdoc
+from pytools.parallelization import ParallelizableMixin
 from sklearndf import ClassifierDF, RegressorDF
 from .partition import Partitioner, T_Number
 from .. import Sample

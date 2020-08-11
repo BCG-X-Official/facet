@@ -15,9 +15,9 @@ from facet.inspection._shap_decomposition import (
     ShapInteractionValueDecomposer,
     ShapValueDecomposer,
 )
-from pytools.common import AllTracker, inheritdoc
-from pytools.common.fit import FittableMixin
-from pytools.common.parallelization import ParallelizableMixin
+from pytools.api import AllTracker, inheritdoc
+from pytools.fit import FittableMixin
+from pytools.parallelization import ParallelizableMixin
 from pytools.viz.dendrogram import LinkageTree
 from sklearndf import ClassifierDF, LearnerDF, RegressorDF
 from sklearndf.pipeline import LearnerPipelineDF

@@ -12,8 +12,8 @@ from shap.explainers.explainer import Explainer
 
 from facet import Sample
 from facet.crossfit import LearnerCrossfit
-from pytools.common.fit import FittableMixin
-from pytools.common.parallelization import ParallelizableMixin
+from pytools.fit import FittableMixin
+from pytools.parallelization import ParallelizableMixin
 from sklearndf.pipeline import (
     ClassifierPipelineDF,
     LearnerPipelineDF,
