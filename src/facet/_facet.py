@@ -57,7 +57,7 @@ class Sample:
             each row represents one observation
         :param target: one or more names of columns representing the target variable(s)
         :param features: optional sequence of strings naming the columns that \
-            represent features; if omitted, all non-target columns are
+            represent features; if omitted, all non-target and non-weight columns are
             considered features
         :param weight: optional name of a column representing the weight of each \
             observation
@@ -75,6 +75,8 @@ class Sample:
                     f"{', '.join(missing_columns)}"
                 )
 
+        # check that the observations are valid
+
         if observations is None or not isinstance(observations, pd.DataFrame):
             raise ValueError("arg observations is not a DataFrame")
 
@@ -86,8 +88,8 @@ class Sample:
                 "but is required to have 1 level"
             )
 
-        # declare feature and target lists as list of strings
-        feature_list: List[str]
+        # process the target(s)
+
         target_list: List[str]
 
         multi_target = is_list_like(target)
@@ -104,8 +106,28 @@ class Sample:
 
         self._target = target_list
 
+        # process the weight
+
+        if weight is not None:
+            if weight not in observations.columns:
+                raise KeyError(
+                    f'arg weight="{weight}" is not a column in the observations table'
+                )
+
+        self._weight = weight
+
+        # process the features
+
+        feature_list: List[str]
+
         if features is None:
-            feature_list = observations.columns.drop(labels=target_list).to_list()
+            if weight is not None:
+                _feature_index = observations.columns.drop(
+                    labels=[*target_list, weight]
+                )
+            else:
+                _feature_index = observations.columns.drop(labels=target_list)
+            feature_list = _feature_index.to_list()
         else:
             _ensure_columns_exist(column_type="feature", columns=features)
             feature_list = list(features)
@@ -123,19 +145,13 @@ class Sample:
 
         self._features = feature_list
 
-        if weight is not None:
-            if weight not in observations.columns:
-                raise KeyError(
-                    f'arg weight="{weight}" is not a column in the observations table'
-                )
-
-        self._weight = weight
-
         # make sure the index has a name
+
         if observations_index.name is None:
             observations = observations.rename_axis(index=Sample.IDX_OBSERVATION)
 
         # keep only the columns we need
+
         columns = [*feature_list, *target_list]
         if weight is not None and weight not in columns:
             columns.append(weight)

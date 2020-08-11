@@ -50,8 +50,8 @@ def test_prediction_classifier(
         expected_scores=expected_learner_scores,
         expected_learners=[RandomForestClassifierDF] * 4,
         expected_parameters={
-            2: dict(classifier__min_samples_leaf=32, classifier__n_estimators=80),
-            3: dict(classifier__min_samples_leaf=32, classifier__n_estimators=50),
+            2: dict(classifier__min_samples_leaf=32, classifier__n_estimators=50),
+            3: dict(classifier__min_samples_leaf=32, classifier__n_estimators=80),
         },
     )
 
