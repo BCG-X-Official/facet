@@ -25,7 +25,12 @@ class Sample:
     Supports :func:`.len`, returning the number of observations in this sample.
     """
 
-    __slots__ = ["_observations", "_target", "_features"]
+    __slots__ = ["_observations", "_target", "_features", "_weight"]
+
+    _observations: pd.DataFrame
+    _weight: Optional[str]
+    _features: List[str]
+    _target: List[str]
 
     #: default name for the observations index (= row index)
     #: of the underlying data frame
@@ -45,6 +50,7 @@ class Sample:
         *,
         target: Union[str, Sequence[str]],
         features: Optional[Sequence[str]] = None,
+        weight: Optional[str] = None,
     ) -> None:
         """
         :param observations: a table of observational data; \
@@ -53,6 +59,8 @@ class Sample:
         :param features: optional sequence of strings naming the columns that \
             represent features; if omitted, all non-target columns are
             considered features
+        :param weight: optional name of a column representing the weight of each \
+            observation
         """
 
         def _ensure_columns_exist(column_type: str, columns: Iterable[str]):
@@ -78,25 +86,17 @@ class Sample:
                 "but is required to have 1 level"
             )
 
-        # make sure the index has a name
-        # (but don't change the original observations data frame)
-        if observations_index.name is None:
-            observations = observations.copy(deep=False)
-            observations.index = observations_index.rename(Sample.IDX_OBSERVATION)
-
-        self._observations = observations
-
-        multi_target = is_list_like(target)
-
         # declare feature and target lists as list of strings
         feature_list: List[str]
         target_list: List[str]
+
+        multi_target = is_list_like(target)
 
         if multi_target:
             _ensure_columns_exist(column_type="target", columns=target)
             target_list = list(target)
         else:
-            if target not in self._observations.columns:
+            if target not in observations.columns:
                 raise KeyError(
                     f'arg target="{target}" is not a column in the observations table'
                 )
@@ -123,6 +123,25 @@ class Sample:
 
         self._features = feature_list
 
+        if weight is not None:
+            if weight not in observations.columns:
+                raise KeyError(
+                    f'arg weight="{weight}" is not a column in the observations table'
+                )
+
+        self._weight = weight
+
+        # make sure the index has a name
+        if observations_index.name is None:
+            observations = observations.rename_axis(index=Sample.IDX_OBSERVATION)
+
+        # keep only the columns we need
+        columns = [*feature_list, *target_list]
+        if weight is not None and weight not in columns:
+            columns += [weight]
+
+        self._observations = observations.loc[:, columns]
+
     @property
     def index(self) -> pd.Index:
         """
@@ -145,6 +164,13 @@ class Sample:
         return self._target
 
     @property
+    def weight_column(self) -> Optional[str]:
+        """
+        The column name of weights in this sample; ``None`` if no weights are defined.
+        """
+        return self._weight
+
+    @property
     def features(self) -> pd.DataFrame:
         """
         The features for all observations
@@ -161,7 +187,7 @@ class Sample:
         """
         The target variable(s) for all observations.
 
-        Returned as a series if there is only a single target, or as a data frame if
+        Represented as a series if there is only a single target, or as a data frame if
         there are multiple targets.
         """
         target = self.target_columns
@@ -172,10 +198,22 @@ class Sample:
         targets: pd.DataFrame = self._observations.loc[:, target]
 
         columns = targets.columns
-        if columns.name is None:
-            targets = targets.rename_axis(columns=Sample.IDX_TARGET)
 
-        return targets
+        if columns.name is None:
+            return targets.rename_axis(columns=Sample.IDX_TARGET)
+        else:
+            return targets
+
+    @property
+    def weight(self) -> Optional[pd.Series]:
+        """
+        A series indicating the weight for each observation; ``None`` if no weights
+        are defined.
+        """
+        if self._weight is not None:
+            return self._observations.loc[:, self._weight]
+        else:
+            return None
 
     def subsample(
         self,
@@ -224,11 +262,8 @@ class Sample:
         subsample = copy(self)
         subsample._features = features
 
-        target = self._target
-        if not is_list_like(target):
-            target = [target]
-
-        subsample._observations = self._observations.loc[:, [*features, *target]]
+        columns = [*features, *self._target, *([self._weight] if self._weight else [])]
+        subsample._observations = self._observations.loc[:, columns]
 
         return subsample
 

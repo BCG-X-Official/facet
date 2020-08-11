@@ -47,28 +47,39 @@ def test_sample_init(boston_df: pd.DataFrame, boston_target: str) -> None:
         f_columns_invalid.append(boston_target)
         Sample(observations=boston_df, features=f_columns_invalid, target=boston_target)
 
+    # 4. weight column is not defined
+    with pytest.raises(KeyError):
+        Sample(observations=boston_df, target=boston_target, weight="doesnt_exist")
+
 
 def test_sample(boston_df: pd.DataFrame, boston_target: str) -> None:
     # define various assertions we want to test:
     def run_assertions(s: Sample):
         assert s.target.name == boston_target
+        assert s.weight.name == boston_target
         assert boston_target not in s.feature_columns
         assert len(s.feature_columns) == len(boston_df.columns) - 1
 
         assert type(s.target) == pd.Series
+        assert type(s.weight) == pd.Series
         assert type(s.features) == pd.DataFrame
 
         assert len(s.target) == len(s.features)
 
-    # test explicit setting of both target & features
+    # test explicit setting of all fields
     feature_columns = list(boston_df.drop(columns=boston_target).columns)
-    s = Sample(observations=boston_df, target=boston_target, features=feature_columns)
+    s = Sample(
+        observations=boston_df,
+        target=boston_target,
+        features=feature_columns,
+        weight=boston_target,
+    )
 
     # _rank_learners the checks on s:
     run_assertions(s)
 
     # test implicit setting of features by only giving the target
-    s2 = Sample(observations=boston_df, target=boston_target)
+    s2 = Sample(observations=boston_df, target=boston_target, weight=boston_target)
 
     # _rank_learners the checks on s2:
     run_assertions(s2)
