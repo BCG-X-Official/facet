@@ -82,6 +82,9 @@ class LearnerInspector(
       dendrogram)
     - feature association linkage (to visualize clusters of associated features in a \
       dendrogram)
+
+    All inspections that aggregate across observations will respect sample weights, if
+    specified in the underlying training sample.
     """
 
     #: name for "feature importance" series or column
