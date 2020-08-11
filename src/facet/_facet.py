@@ -138,7 +138,7 @@ class Sample:
         # keep only the columns we need
         columns = [*feature_list, *target_list]
         if weight is not None and weight not in columns:
-            columns += [weight]
+            columns.append(weight)
 
         self._observations = observations.loc[:, columns]
 
@@ -262,7 +262,10 @@ class Sample:
         subsample = copy(self)
         subsample._features = features
 
-        columns = [*features, *self._target, *([self._weight] if self._weight else [])]
+        columns = [*features, *self._target]
+        weight = self._weight
+        if weight and weight not in columns:
+            columns.append(weight)
         subsample._observations = self._observations.loc[:, columns]
 
         return subsample
