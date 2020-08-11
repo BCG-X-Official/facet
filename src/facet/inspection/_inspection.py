@@ -632,15 +632,19 @@ class LearnerInspector(
             .swapaxes(1, 2)
         )
 
+        weight = self.training_sample.weight
+        if weight is not None:
+            # if sample weights are defined, convert them to an array
+            # and align the array with the dimensions of the feature interaction array
+            weight = weight.values.reshape(-1, 1, 1, 1)
+
         # calculate the average interactions for each output and feature/feature
         # interaction, based on the standard deviation assuming a mean of 0.0.
         # The resulting matrix has shape (n_outputs, n_features, n_features)
-        interaction_matrix = np.sqrt(
-            (
-                im_matrix_per_observation_and_output
-                * im_matrix_per_observation_and_output
-            ).mean(axis=0)
-        )
+        _interaction_squared = im_matrix_per_observation_and_output ** 2
+        if weight is not None:
+            _interaction_squared *= weight
+        interaction_matrix = np.sqrt(_interaction_squared.mean(axis=0))
         assert interaction_matrix.shape == (n_outputs, n_features, n_features)
 
         # we normalise the synergy matrix for each output to a total of 1.0
