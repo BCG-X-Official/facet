@@ -383,6 +383,9 @@ class LearnerInspector(
 
         The importance values of all features always add up to ``1.0``.
 
+        The calculation applies sample weights if specified in the underlying
+        :attr:`.training_sample`.
+
         :param method: method for calculating feature importance. Supported methods \
             are ``rms`` (root of mean squares, default) and ``mav`` (mean absolute \
             values)
@@ -397,11 +400,19 @@ class LearnerInspector(
             )
 
         shap_matrix = self.shap_values(consolidate="mean")
+        weight = self.training_sample.weight
+
         abs_importance: pd.Series
         if method == "rms":
-            abs_importance = shap_matrix.pow(2).mean().pow(0.5)
+            if weight is None:
+                abs_importance = shap_matrix.pow(2).mean().pow(0.5)
+            else:
+                abs_importance = shap_matrix.pow(2).mul(weight, axis=0).mean().pow(0.5)
         elif method == "mav":
-            abs_importance = shap_matrix.abs().mean()
+            if weight is None:
+                abs_importance = shap_matrix.abs().mean()
+            else:
+                abs_importance = shap_matrix.abs().mul(weight, axis=0).mean()
         else:
             raise ValueError(f"unknown method: {method}")
 
