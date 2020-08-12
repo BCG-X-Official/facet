@@ -129,6 +129,10 @@ class BaseUnivariateSimulator(
 
     Determines confidence intervals for the predicted changes by repeating the
     simulations across multiple crossfits.
+
+    Note that sample weights are not taken into account for simulations; each
+    observation has the same weight in the simulation even if different weights
+    have been specified for the sample.
     """
 
     COL_CROSSFIT_ID = "crossfit_id"
