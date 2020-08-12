@@ -632,11 +632,16 @@ class LearnerInspector(
             .swapaxes(1, 2)
         )
 
-        weight = self.training_sample.weight
-        if weight is not None:
+        # get the observation weights with shape
+        # (n_observations, n_outputs, n_features, n_features)
+        weight: Optional[np.ndarray]
+        _weight_sr = self.training_sample.weight
+        if _weight_sr is not None:
             # if sample weights are defined, convert them to an array
             # and align the array with the dimensions of the feature interaction array
-            weight = weight.values.reshape(-1, 1, 1, 1)
+            weight = _weight_sr.values.reshape((-1, 1, 1, 1))
+        else:
+            weight = None
 
         # calculate the average interactions for each output and feature/feature
         # interaction, based on the standard deviation assuming a mean of 0.0.
