@@ -1,0 +1,42 @@
+package:
+  name: gamma-facet
+  version: 1.0.0
+
+source:
+  git_url: https://github.com/konst-int-i/facet #todo: change to final
+  git_rev: develop #todo: change to refs/tags/{{PKG_VERSION}}
+
+build:
+  noarch: python
+  script: "python -m pip install . --no-deps --ignore-installed -vv "
+
+requirements:
+  host:
+    - pip
+    - python={{ environ.get('FACET_V_PYTHON_BUILD', '3.7') }}
+  run:
+    - python>=3.6,<3.8
+    - pandas{{ environ.get('FACET_V_PANDAS', '>=0.24') }}
+    - numpy{{ environ.get('FACET_V_NUMPY', '>=1.16') }}
+    - matplotlib{{ environ.get('FACET_V_MATPLOT', '>=3') }}
+    - shap{{ environ.get('FACET_V_SHAP', '>=0.34') }}
+    - scikit-learn{{ environ.get('FACET_V_SKLEARN', '>=0.21,<=0.22') }}
+    - gamma-pytools=1.0
+    - gamma-sklearndf=1.0
+    - pyyaml>=5
+test:
+  imports:
+    - facet
+    - facet.crossfit
+    - facet.inspection
+    - facet.selection
+    - facet.validation
+    - facet.simulation
+  requires:
+    - pytest=5.2
+  commands:
+    - python -c 'import facet;
+      import os;
+      assert facet__version__ == os.environ["PKG_VERSION"]'
+  # run the tests with the built conda environment:
+    - pytest -vs ${FACET_PATH}/facet/test
