@@ -7,18 +7,28 @@ SPHINXBUILD           = sphinx-build
 SOURCEDIR             = source
 BUILDDIR              = build
 TEMPLATEDIR           = "${SOURCEDIR}/_templates"
+#DOCSDIR               = ../docs
+#SCRIPTSDIR            = ../scripts
+#TUTORIALDIR           = "${SOURCEDIR}/tutorial"
+#QS_TUTORIALDIR        = "../../alpha-quickstart/tutorials"
+#TUTORIALBUILD         = "${SCRIPTSDIR}/transform_notebook.py"
 
 SPHINXOPTS            =
 SPHINXAPIDOCOPTS      = -e --implicit-namespaces -t ${TEMPLATEDIR} --no-toc -o $(SOURCEDIR) -f
 
-# export SPHINX_APIDOC_OPTIONS = ignore-module-all
-# members,undoc-members,inherited-members,no-show-inheritance,
+# export SPHINX_APIDOC_OPTIONS = members,undoc-members,inherited-members,no-show-inheritance
 
 # Put it first so that "make" without argument is like "make help".
 help:
 	@$(SPHINXBUILD) -M help "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
 
 .PHONY: help Makefile
+
+clean:
+	-rm -r "$(BUILDDIR)"
+#	-rm -r "$(SOURCEDIR)"/api
+#	-rm "$(SOURCEDIR)"/gamma.*.rst
+#	-rm "$(SOURCEDIR)"/*.automodsumm
 
 apidoc:
 	sphinx-apidoc ${SPHINXAPIDOCOPTS} ../src
@@ -31,15 +41,25 @@ build:
 	touch "$(BUILDDIR)"/html/.nojekyll
 
 	# clean up potentially pre-existing files in /docs and move build:
-	if [ -d "${DOCSDIR}" ]; then \
-	    rm -rf "${DOCSDIR}"/*.html "${DOCSDIR}"/*.js "${DOCSDIR}"/*.inv "${DOCSDIR}"/_* \
-	       "${DOCSDIR}"/api "${DOCSDIR}"/tutorial; \
-	fi
+	#if [ -d "${DOCSDIR}" ]; then \
+	#    rm -rf "${DOCSDIR}"/*.html "${DOCSDIR}"/*.js "${DOCSDIR}"/*.inv "${DOCSDIR}"/_* \
+	#       "${DOCSDIR}"/api "${DOCSDIR}"/tutorial; \
+	#fi
     # move the last build into /docs
-	if [ -d "../docs" ]; then mv "$(BUILDDIR)"/html/* ../docs/; fi
+	#if [ -d "../docs" ]; then mv "$(BUILDDIR)"/html/* ../docs/; fi
 
 
 html: apidoc build
+
+
+#tutorial:
+	# build the tutorial notebooks
+#	@$(TUTORIALBUILD) "${TUTORIALDIR}" "${QS_TUTORIALDIR}"
+#	mv "${QS_TUTORIALDIR}/quick_start.ipynb" "${QS_TUTORIALDIR}/1-quick_start.ipynb"
+#	mv "${QS_TUTORIALDIR}/sklearndf.ipynb" "${QS_TUTORIALDIR}/2-sklearndf.ipynb"
+#	mv "${QS_TUTORIALDIR}/model.ipynb" "${QS_TUTORIALDIR}/3-model.ipynb"
+#	mv "${QS_TUTORIALDIR}/simulation.ipynb" "${QS_TUTORIALDIR}/4-simulation.ipynb"
+
 
 # maybe not needed?
 html-gh-pages:
