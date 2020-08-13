@@ -37,6 +37,6 @@ test:
   commands:
     - python -c 'import facet;
       import os;
-      assert facet__version__ == os.environ["PKG_VERSION"]'
+      assert facet.__version__ == os.environ["PKG_VERSION"]'
   # run the tests with the built conda environment:
     - pytest -vs ${FACET_PATH}/facet/test
