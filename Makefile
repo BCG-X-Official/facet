@@ -1,5 +1,6 @@
-export CONDA_BLD_PATH=dist/conda
 FACET_PATH := $(abspath $(dir $(lastword $(MAKEFILE_LIST)))/../)
+FACET_PATH := $(shell echo "${FACET_PATH}" | sed -e 's/ //g')
+export CONDA_BLD_PATH=$(FACET_PATH)/facet/dist/conda
 
 # absolute paths to local conda "channels" with built packages:
 P_PYTOOLS=$(FACET_PATH)/pytools/dist/conda
