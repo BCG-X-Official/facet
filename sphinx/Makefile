@@ -14,7 +14,7 @@ TEMPLATEDIR           = "${SOURCEDIR}/_templates"
 #TUTORIALBUILD         = "${SCRIPTSDIR}/transform_notebook.py"
 
 SPHINXOPTS            =
-SPHINXAPIDOCOPTS      = -e --implicit-namespaces -t ${TEMPLATEDIR} --no-toc -o $(SOURCEDIR) -f
+SPHINXAPIDOCOPTS      = -e -t ${TEMPLATEDIR} --no-toc -o $(SOURCEDIR) -f
 
 # export SPHINX_APIDOC_OPTIONS = members,undoc-members,inherited-members,no-show-inheritance
 
