@@ -1,0 +1,52 @@
+trigger:
+- master
+- releases/*
+
+stages:
+  - stage: 'Setup_and_testing'
+    displayName: 'Setup & testing'
+
+    jobs:
+    - job:
+      displayName: 'Setup & testing'
+      pool:
+          vmImage: 'ubuntu-latest'
+      strategy:
+        matrix:
+          Python35:
+            python.version: '3.5'
+          Python38:
+            python.version: '3.8'
+
+      steps:
+        - task: UsePythonVersion@0
+          inputs:
+            versionSpec: '$(python.version)'
+          displayName: 'Use Python $(python.version)'
+
+        - checkout: self
+        - script: dir $(Build.SourcesDirectory)
+
+        - task: Bash@3
+          inputs:
+            targetType: 'inline'
+            script: |
+              eval "$(conda shell.bash hook)"
+              cd /home/vsts/work/1/s/
+              conda env create -f environment.yml
+              conda activate facet-develop
+              export PYTHONPATH=./src/
+              pip install pytest-azurepipelines
+              pytest test/test/
+          displayName: "Install env and run pytest"
+
+
+#        - task: Bash@3 TODO - include once packages are public
+#          inputs:
+#            targetType: 'inline'
+#            script: |
+#              eval "$(conda shell.bash hook)"
+#              conda activate facet-develop
+#              cd /home/vsts/work/1/s/pytools/
+#              make package
+#          displayName: "Build conda package"
