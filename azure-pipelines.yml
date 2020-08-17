@@ -1,3 +1,16 @@
+resources:
+  repositories:
+    - repository: pytools
+      type: github
+      endpoint: konst-int-i # todo - update to final github org
+      name: konst-int-i/pytools # todo - update to final github org
+      ref: develop
+    - repository: sklearndf
+      type: github
+      endpoint: konst-int-i
+      name: konst-int-i/sklearndf
+      ref: develop
+
 trigger:
 - master
 - releases/*
@@ -25,6 +38,8 @@ stages:
           displayName: 'Use Python $(python.version)'
 
         - checkout: self
+        - checkout: pytools
+        - checkout: sklearndf
         - script: dir $(Build.SourcesDirectory)
 
         - task: Bash@3
@@ -32,13 +47,21 @@ stages:
             targetType: 'inline'
             script: |
               eval "$(conda shell.bash hook)"
-              cd /home/vsts/work/1/s/
+              cd $(System.DefaultWorkingDirectory)/facet/
               conda env create -f environment.yml
               conda activate facet-develop
-              export PYTHONPATH=./src/
+              export $(System.DefaultWorkingDirectory)/facet/src/
+              cd $(System.DefaultWorkingDirectory)/pytools/
+              make package
+              cd $(System.DefaultWorkingDirectory)/sklearndf/
+              make package
+              cd $(System.DefaultWorkingDirectory)/facet/
+              make package
               pip install pytest-azurepipelines
-              pytest test/test/
-          displayName: "Install env and run pytest"
+              coverage run -m pytest test/test/
+              coverage xml
+              coverage html
+          displayName: "Build conda package and run tests"
 
 
 #        - task: Bash@3 TODO - include once packages are public
