@@ -63,13 +63,15 @@ stages:
               coverage html
           displayName: "Build conda package and run tests"
 
+        - task: PublishTestResults@2
+          condition: succeededOrFailed()
+          inputs:
+            testResultsFiles: '$(System.DefaultWorkingDirectory)/facet/*.xml'
+            searchFolder: '$(System.DefaultWorkingDirectory)/facet/'
+            testRunTitle: 'Publish test results'
 
-#        - task: Bash@3 TODO - include once packages are public
-#          inputs:
-#            targetType: 'inline'
-#            script: |
-#              eval "$(conda shell.bash hook)"
-#              conda activate facet-develop
-#              cd /home/vsts/work/1/s/pytools/
-#              make package
-#          displayName: "Build conda package"
+        - task: PublishCodeCoverageResults@1
+          inputs:
+            codeCoverageTool: Cobertura
+            summaryFileLocation: '$(System.DefaultWorkingDirectory)/facet/coverage.xml'
+            reportDirectory: '$(System.DefaultWorkingDirectory)/facet/htmlcov'
