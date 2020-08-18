@@ -33,7 +33,7 @@ goto end
 
 :html
 REM generate apidoc using docstrings
-sphinx-apidoc -e --no-toc -o %SOURCEDIR% -f ../src
+sphinx-apidoc -e --no-toc -o %SOURCEDIR%/api/ -f ../src
 
 REM run the sphinx build for html
 %SPHINXBUILD% -M %1 %SOURCEDIR% %BUILDDIR% %SPHINXOPTS%
