@@ -19,6 +19,7 @@ from typing import *
 
 import typing_inspect
 from sphinx.application import Sphinx
+import sphinx
 
 log = logging.getLogger(name=__name__)
 log.setLevel(logging.INFO)
@@ -52,6 +53,31 @@ _set_paths()
 
 log.info(f"sys.path = {sys.path}")
 
+
+# fix m2r error
+def monkeypatch(cls):
+    """ decorator to monkey-patch methods """
+
+    def decorator(f):
+        method = f.__name__
+        old_method = getattr(cls, method)
+        setattr(cls, method, lambda self, *args, **kwargs: f(old_method, self, *args, **kwargs))
+
+    return decorator
+
+
+# workaround until https://github.com/miyakogi/m2r/pull/55 is merged
+@monkeypatch(sphinx.registry.SphinxComponentRegistry)
+def add_source_parser(_old_add_source_parser, self, *args, **kwargs):
+    # signature is (parser: Type[Parser], **kwargs), but m2r expects
+    # the removed (str, parser: Type[Parser], **kwargs).
+    if isinstance(args[0], str):
+        args = args[1:]
+    return _old_add_source_parser(self, *args, **kwargs)
+
+
+
+
 # -- Project information -----------------------------------------------------
 
 project = 'Facet'
@@ -73,8 +99,8 @@ extensions = [
     "sphinx_autodoc_typehints",
     "sphinx_automodapi.automodapi",
     "sphinx_automodapi.smart_resolver",
+    "m2r"
 ]
-
 # -- Options for automodapi ------------------------------------------------------------
 
 # required by default to avoid generating duplicate documentation
@@ -121,6 +147,11 @@ intersphinx_mapping = {
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
 
+# source_parsers = {'.md': CommonMarkParser}
+
+source_suffix = ['.rst', '.md']
+# m2r_parse_relative_links = True
+
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
@@ -136,12 +167,14 @@ imgmath_use_preview = True
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = 'sphinx_rtd_theme'
+html_theme = 'pydata_sphinx_theme'
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
+html_logo = "_static/gamma_logo.jpg"
+latex_logo = html_logo
 
 # Class documentation to include docstrings both global to the class, and from __init__
 autoclass_content = "both"
