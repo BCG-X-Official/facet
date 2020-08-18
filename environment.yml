@@ -12,6 +12,7 @@ dependencies:
   - jupyter >= 1.0
   - lightgbm = 2.3.*
   - matplotlib = 3.1.*
+  - m2r = 0.2.*
   - nbsphinx=0.4.*
   - numpy = 1.16.*
   - pandas = 0.24.*
@@ -34,4 +35,5 @@ dependencies:
   - pip:
       - pre_commit == 1.16.*
       - punch.py==1.6.*
+      - pydata-sphinx-theme == 0.3.*
       - typing-inspect == 0.4.*
