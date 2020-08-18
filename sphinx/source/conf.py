@@ -55,8 +55,8 @@ log.info(f"sys.path = {sys.path}")
 # -- Project information -----------------------------------------------------
 
 project = 'Facet'
-copyright = '2020, Facet team'
-author = 'Facet team'
+copyright = '2020, The Boston Consulting Group (BCG)'
+author = 'BCG Gamma Facet Team'
 
 
 # -- General configuration ---------------------------------------------------
