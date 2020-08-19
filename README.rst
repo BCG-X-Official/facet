@@ -45,7 +45,7 @@ elements:
     Local explanations of features and their interactions make up a key
     component of understanding feature importance as well as feature interactions.
     This is based on a novel method which decomposes
-    [SHAP values](https://shap.readthedocs.io/en/latest/) into
+    `SHAP values <https://shap.readthedocs.io/en/latest/>`_ into
     three vectors representing **synergy**, **redundancy**, and **independence**.
 - **Simulation**:
     Use your trained model and the insights from the model inspection
@@ -136,7 +136,7 @@ effects of the variables that your model used for Training:
                                         title="Redundancy Matrix")
 
 .. image:: sphinx/source/_static/redundancy_matrix.png
-    :width: 500
+    :width: 300
 
 
 For feature synergy, we can get a similar picture
@@ -147,7 +147,7 @@ For feature synergy, we can get a similar picture
     MatrixDrawer(style="matplot%").draw(synergy_matrix, title="Synergy Matrix")
 
 .. image:: sphinx/source/_static/synergy_matrix.png
-    :width: 500
+    :width: 300
 
 Please see the API documentation for more detail.
 
@@ -187,10 +187,10 @@ Acknowledgements
 This package provides a layer on top of some popular building blocks for Machine
 Learning:
 
-- The `shap <https://github.com/slundberg/shap>`_ implementation is used to estimate the
-    shapley vectors which are being decomposed into the synergy, redundancy, and
-    independence vectors
+The `shap <https://github.com/slundberg/shap>`_ implementation is used to estimate the
+shapley vectors which are being decomposed into the synergy, redundancy, and
+independence vectors.
 
-- The `scikit-learn <https://github.com/scikit-learn/scikit-learn>`_ learners and
+The `scikit-learn <https://github.com/scikit-learn/scikit-learn>`_ learners and
 pipelining make up implementation of the underlying algorithms. Moreover, we tried
 to design the `facet` API to align with the scikit-learn API.
