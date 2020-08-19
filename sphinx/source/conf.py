@@ -77,7 +77,6 @@ def add_source_parser(_old_add_source_parser, self, *args, **kwargs):
 
 
 
-
 # -- Project information -----------------------------------------------------
 
 project = 'Facet'
