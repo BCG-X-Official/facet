@@ -8,6 +8,8 @@ Facet is an open source library to for human-explainable AI. It combines sophist
 model inspection and model-based simulation to enable better explanations of your 
 machine learning models.  
 
+TODO - add git badges
+
 
 ## Installation
 Facet supports both PyPI and Anaconda
@@ -18,7 +20,7 @@ Facet supports both PyPI and Anaconda
 conda install gamma-facet
 ```
 
-### Pip
+#### Pip
 ```commandline
 pip install gamma-facet
 ```
