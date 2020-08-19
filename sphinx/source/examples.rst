@@ -3,11 +3,16 @@
 Worked examples
 ====================
 
+
+
+
 Classifying pre-diabetes
 --------------------------------
+.. toctree::
+   :maxdepth: 2
 
-.. include::
-    tutorial/example-model-inspection
+   tutorial/example-model-inspection
+
 
 Classification on a simulated dataset
 ------------------------------------------------
