@@ -11,7 +11,7 @@ Classifying pre-diabetes
 .. toctree::
    :maxdepth: 2
 
-   tutorial/example-model-inspection
+   tutorial/Prediabetes_classification_with_Face
 
 
 Classification on a simulated dataset
