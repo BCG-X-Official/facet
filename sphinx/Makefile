@@ -8,10 +8,11 @@ SOURCEDIR             = source
 BUILDDIR              = build
 TEMPLATEDIR           = "${SOURCEDIR}/_templates"
 #DOCSDIR               = ../docs
-#SCRIPTSDIR            = ../scripts
-#TUTORIALDIR           = "${SOURCEDIR}/tutorial"
+SCRIPTSDIR            = "${SOURCEDIR}/scripts"
+TUTORIALDIR           = ../notebooks
+#TUTORIALDIR           = ${SOURCEDIR}/tutorial
 #QS_TUTORIALDIR        = "../../alpha-quickstart/tutorials"
-#TUTORIALBUILD         = "${SCRIPTSDIR}/transform_notebook.py"
+TUTORIALBUILD         = "${SCRIPTSDIR}/transform_notebook.py"
 
 SPHINXOPTS            =
 SPHINXAPIDOCOPTS      = -e -t ${TEMPLATEDIR} --no-toc -o $(SOURCEDIR)/api/ -f
@@ -52,10 +53,10 @@ build:
 html: apidoc build
 
 
-#tutorial:
+tutorial:
 	# build the tutorial notebooks
-#	@$(TUTORIALBUILD) "${TUTORIALDIR}" "${QS_TUTORIALDIR}"
-#	mv "${QS_TUTORIALDIR}/quick_start.ipynb" "${QS_TUTORIALDIR}/1-quick_start.ipynb"
+	@$(TUTORIALBUILD) "${TUTORIALDIR}"
+	mv "${TUTORIALDIR}/example-model-inspection.ipynb" "${TUTORIALDIR}/1-example-model-inspection.ipynb"
 #	mv "${QS_TUTORIALDIR}/sklearndf.ipynb" "${QS_TUTORIALDIR}/2-sklearndf.ipynb"
 #	mv "${QS_TUTORIALDIR}/model.ipynb" "${QS_TUTORIALDIR}/3-model.ipynb"
 #	mv "${QS_TUTORIALDIR}/simulation.ipynb" "${QS_TUTORIALDIR}/4-simulation.ipynb"
@@ -72,7 +73,7 @@ html-gh-pages:
 	cd .. && \
 	mv -fv "./sphinx/$(BUILDDIR)"/html/* ./  && \
 	mkdir -p _static/notebooks && \
-	python scripts/transform_notebook.py sphinx/source/tutorial/ _static/notebooks/ && \
+	python scripts/transform_notebook.py ../notebooks/ _static/notebooks/ && \
 	rm -rf sphinx data scripts && git add -A
 
 # Catch-all target: route all unknown targets to Sphinx using the new
