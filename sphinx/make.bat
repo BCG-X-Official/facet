@@ -8,6 +8,7 @@ if "%SPHINXBUILD%" == "" (
 )
 set SOURCEDIR=source
 set BUILDDIR=build
+set NOTEBOOK_EXAMPLES=..\notebooks
 REM say to apidoc which members to consider
 set SPHINX_APIDOC_OPTIONS=members,undoc-members,inherited-members
 
@@ -37,8 +38,10 @@ sphinx-apidoc -e --no-toc -o %SOURCEDIR%/api/ -f ../src
 
 REM run the sphinx build for html
 %SPHINXBUILD% -M %1 %SOURCEDIR% %BUILDDIR% %SPHINXOPTS%
+
 REM run sphinx for notebook
-REM %SPHINXBUILD% -b %1 -c %SOURCEDIR% %NOTEBOOK_QUICK_START% %BUILDDIR% %SPHINXOPTS%
+REM %SPHINXBUILD% -b %1 -c %SOURCEDIR% %NOTEBOOK_EXAMPLES% %BUILDDIR% %SPHINXOPTS%
+
 REM clean up potentially pre-existing files in /docs
 del /q /s ..\docs\* >nul
 for /d %%i in (..\docs\*) do rd /s /q "%%i"

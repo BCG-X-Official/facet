@@ -3,10 +3,16 @@
 Worked examples
 ====================
 
+
+
+
 Classifying pre-diabetes
 --------------------------------
+.. toctree::
+   :maxdepth: 2
 
-Notebook here
+   tutorial/Prediabetes_classification_with_Facet
+
 
 Classification on a simulated dataset
 ------------------------------------------------
