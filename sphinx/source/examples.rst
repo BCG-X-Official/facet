@@ -6,7 +6,8 @@ Worked examples
 Classifying pre-diabetes
 --------------------------------
 
-Notebook here
+.. include::
+    tutorial/example-model-inspection
 
 Classification on a simulated dataset
 ------------------------------------------------
