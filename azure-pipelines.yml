@@ -1,45 +1,35 @@
-resources:
+esources:
   repositories:
+    - repository: sklearndf
+      type: github
+      endpoint: konst-int-i # todo - update to final github org
+      name: konst-int-i/facet # todo - update to final github org
+      ref: develop # todo - update to stable release
     - repository: pytools
       type: github
       endpoint: konst-int-i # todo - update to final github org
       name: konst-int-i/pytools # todo - update to final github org
-      ref: develop
-    - repository: sklearndf
-      type: github
-      endpoint: konst-int-i
-      name: konst-int-i/sklearndf
-      ref: develop
-
-trigger:
-- master
-- releases/*
+      ref: develop # todo - update to stable release
 
 stages:
-  - stage: 'Setup_and_testing'
-    displayName: 'Setup & testing'
+  - stage: 'Quick_env_test'
+    displayName: 'Environment build & pytest'
 
     jobs:
     - job:
       displayName: 'Setup & testing'
+
       pool:
           vmImage: 'ubuntu-latest'
-      strategy:
-        matrix:
-          Python35:
-            python.version: '3.5'
-          Python38:
-            python.version: '3.8'
-
       steps:
         - task: UsePythonVersion@0
           inputs:
-            versionSpec: '$(python.version)'
-          displayName: 'Use Python $(python.version)'
+            versionSpec: '3.7'
+          displayName: 'Use Python 3.7'
 
         - checkout: self
-        - checkout: pytools
         - checkout: sklearndf
+        - checkout: pytools
         - script: dir $(Build.SourcesDirectory)
 
         - task: Bash@3
@@ -48,20 +38,19 @@ stages:
             script: |
               eval "$(conda shell.bash hook)"
               cd $(System.DefaultWorkingDirectory)/facet/
+              export PYTHONPATH=$(System.DefaultWorkingDirectory)/facet/src/
               conda env create -f environment.yml
               conda activate facet-develop
-              export $(System.DefaultWorkingDirectory)/facet/src/
               cd $(System.DefaultWorkingDirectory)/pytools/
-              make package
+              pip install -e .
               cd $(System.DefaultWorkingDirectory)/sklearndf/
-              make package
+              pip install -e .
               cd $(System.DefaultWorkingDirectory)/facet/
-              make package
               pip install pytest-azurepipelines
               coverage run -m pytest test/test/
               coverage xml
               coverage html
-          displayName: "Build conda package and run tests"
+          displayName: 'Pytest'
 
         - task: PublishTestResults@2
           condition: succeededOrFailed()
@@ -75,3 +64,72 @@ stages:
             codeCoverageTool: Cobertura
             summaryFileLocation: '$(System.DefaultWorkingDirectory)/facet/coverage.xml'
             reportDirectory: '$(System.DefaultWorkingDirectory)/facet/htmlcov'
+
+  # THOROUGH CONDA ENV BUILD TEST
+  # TESTING MATRIX OF PYTHON & SKLEARN VERSIONS
+  - stage: 'Conda_build_test'
+    dependsOn:
+      - 'Quick_env_test'
+    displayName: 'Test multiple conda environment builds'
+
+    jobs:
+    - job:
+      displayName: 'Setup & testing'
+
+      pool:
+          vmImage: 'ubuntu-latest'
+      strategy:
+        matrix:
+          Minimum dependencies:
+            FACET_V_PYTHON_BUILD: '3.6'
+            FACET_V_PANDAS: '==0.24'
+            FACET_V_SKLEARN: '==0.21.*'
+            FACET_V_JOBLIB: '==0.13'
+            FACET_V_NUMPY: '==1.16'
+            FACET_V_SHAP: '==0.34'
+          Maximum dependencies:
+            FACET_V_PYTHON_BUILD: '3.8'
+            FACET_V_SKLEARN: '==0.23'
+            FACET_V_PANDAS: '==1.0.0'
+            FACET_V_NUMPY: '=>1.16'
+            FACET_V_SHAP: '==0.35'
+          Unconstrained dependencies:
+            FACET_V_PYTHON_BUILD: '>=3.6'
+            FACET_V_PANDAS: '=>0.24'
+            FACET_V_SKLEARN: '=>0.21'
+            FACET_V_JOBLIB: '=>0.13'
+            FACET_V_NUMPY: '=>1.16'
+            FACET_V_SHAP: '=>0.34'
+
+      steps:
+        - task: UsePythonVersion@0
+          inputs:
+            versionSpec: '$(FACET_V_PYTHON_BUILD)'
+          displayName: 'Use Python $(FACET_V_PYTHON_BUILD)'
+
+        - checkout: self
+        - checkout: sklearndf
+        - checkout: pytools
+        - script: dir $(Build.SourcesDirectory)
+
+        - task: Bash@3
+          inputs:
+            targetType: 'inline'
+            script: |
+              eval "$(conda shell.bash hook)"
+              export PYTHONPATH=$(System.DefaultWorkingDirectory)/facet/src/
+              export FACET_V_PYTHON_BUILD=$(FACET_V_PYTHON_BUILD)
+              export FACET_V_PANDAS:$(FACET_V_PANDAS)
+              export FACET_V_SKLEARN=$(FACET_V_SKLEARN)
+              export FACET_V_JOBLIB=$(FACET_V_JOBLIB)
+              export FACET_V_NUMPY=$(FACET_V_NUMPY)
+              export FACET_V_SHAP=$(FACET_V_SHAP)
+              conda activate facet-develop
+              conda install -y conda-build
+              cd $(System.DefaultWorkingDirectory)/pytools/
+              make package
+              cd $(System.DefaultWorkingDirectory)/sklearndf/
+              make package
+              cd $(System.DefaultWorkingDirectory)/facet/
+              make package
+          displayName: "Build conda package"
