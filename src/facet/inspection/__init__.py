@@ -6,3 +6,8 @@ tree of a pipeline which has been fitted using cross-validation.
 """
 from ._explainer import *
 from ._inspection import *
+
+__all__ = ["LearnerInspector",
+           "ExplainerFactory",
+           "TreeExplainerFactory",
+           "KernelExplainerFactory"]

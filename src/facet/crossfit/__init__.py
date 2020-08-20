@@ -9,3 +9,5 @@ cross-validation calibration. The pipeline is fitted accordingly.
 """
 
 from ._crossfit import *
+
+__all__ = ["CrossfitScores", "LearnerCrossfit", "Scorer"]
