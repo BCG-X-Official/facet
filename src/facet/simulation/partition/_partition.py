@@ -24,7 +24,9 @@ T_Number = TypeVar("T_Number", int, float)
 class Partitioner(
     FittableMixin[Sequence[T_Value]], Generic[T_Value], metaclass=ABCMeta
 ):
-    """Partition a set of values, for use in visualizations and simulations."""
+    """
+    Partition a set of values, for use in visualizations and simulations.
+    """
 
     def __init__(self, max_partitions: int = None):
         if max_partitions is None:
@@ -71,7 +73,9 @@ class Partitioner(
     @property
     @abstractmethod
     def is_categorical(self) -> bool:
-        """```True``` if this is partitioner fits categorical values."""
+        """
+        ```True``` if this is partitioner fits categorical values.
+        """
         pass
 
     @abstractmethod
@@ -85,24 +89,19 @@ class RangePartitioner(Partitioner[T_Number], Generic[T_Number], metaclass=ABCMe
 
     The partitions are made of intervals which have all the same lengths. The
     interval length is computed based on
-    :attr:`max_partitions`, :attr:`lower_bound` and :attr:`upper_bound` by
-    :meth:`_step_size`.
+    :attr:`max_partitions`, :attr:`lower_bound` and :attr:`upper_bound`.
 
-    Each partition is an interval whose endpoints are multiple of the interval
+    Each partition is an interval whose endpoints are multiples of the interval
     length. The intervals satisfy the following conditions:
-    - :attr:`lower_bound` is in the first interval
-    - :attr:`upper_bound` is in the last interval
+
+    - :attr:`lower_bound` is within the first interval
+    - :attr:`upper_bound` is within the last interval
 
     For example, if the computed interval length is 0.2, some possible
     partitions would be:
     [3.2, 3.4), [3.4, 3.6), [3.6, 3.8), [4.0, 4.2), [4.4, 4.6), [4.6, 4.8]
 
     Implementations must define :meth:`_step_size` and :meth:`_partition_center_offset`.
-
-    :param max_partitions: the max number of partitions to make (default: 20);
-      should be at least 2
-    :param lower_bound: the lower bound of the elements in the partition
-    :param upper_bound: the upper bound of the elements in the partition
     """
 
     def __init__(
@@ -111,6 +110,12 @@ class RangePartitioner(Partitioner[T_Number], Generic[T_Number], metaclass=ABCMe
         lower_bound: Optional[T_Number] = None,
         upper_bound: Optional[T_Number] = None,
     ) -> None:
+        """
+        :param max_partitions: the max number of partitions to make \
+            (default: 20); should be at least 2
+        :param lower_bound: the lower bound of the elements in the partition
+        :param upper_bound: the upper bound of the elements in the partition
+        """
         super().__init__(max_partitions)
 
         if (
@@ -272,13 +277,13 @@ class RangePartitioner(Partitioner[T_Number], Generic[T_Number], metaclass=ABCMe
     @staticmethod
     @abstractmethod
     def _step_size(lower_bound: T_Number, upper_bound: T_Number) -> T_Number:
-        """Compute the step size (interval length) used in the partitions."""
+        # Compute the step size (interval length) used in the partitions
         pass
 
     @property
     @abstractmethod
     def _partition_center_offset(self) -> T_Number:
-        """Offset between center and endpoints of an interval."""
+        # Offset between center and endpoints of an interval
         pass
 
     def __len__(self) -> int:
@@ -294,22 +299,17 @@ class ContinuousRangePartitioner(RangePartitioner[float]):
     (..., 0.1, 0.2, 0.5, 1, 2, 5, 10, 20, 50, ...)
 
     The interval length is computed based on
-    :attr:`max_partitions`, :attr:`lower_bound` and :attr:`upper_bound` by
-    :meth:`_step_size`.
+    :attr:`max_partitions`, :attr:`lower_bound` and :attr:`upper_bound`.
 
-    Each partition is an interval whose endpoints are multiple of the interval
+    Each partition is an interval whose endpoints are multiples of the interval
     length. The rules used to determine these intervals are that:
-    - :attr:`lower_bound` is in the first interval
+
+    - :attr:`lower_bound` is within the first interval
     - :attr:`upper_bound` is in the last interval
 
     For example, if the computed interval length is 0.2, some possible
     partitions would be:
     [3.2, 3.4), [3.4, 3.6), [3.6, 3.8), [4.0, 4.2), [4.4, 4.6), [4.6, 4.8]
-
-    :param max_partitions: the max number of partitions to make (default = 20);
-      it should be greater or equal than 2
-    :param lower_bound: the lower bound of the elements in the partition
-    :param upper_bound: the upper bound of the elements in the partition
     """
 
     def __init__(
@@ -342,20 +342,13 @@ class IntegerRangePartitioner(RangePartitioner[int]):
     bounds of the intervals are all integer which are multiple of the interval length.
 
     The interval length is computed based on
-    :attr:`max_partitions`, :attr:`lower_bound` and :attr:`upper_bound` by
-    :meth:`_step_size`.
+    :attr:`max_partitions`, :attr:`lower_bound` and :attr:`upper_bound`.
 
-    Each partition is an interval whose endpoints are multiple of the interval
+    Each partition is an interval whose endpoints are multiples of the interval
     length. The rules used to determine these intervals are that:
-    - :attr:`lower_bound` is in the first interval
-    - :attr:`upper_bound` is in the last interval
 
-    Implementations must define :meth:`_step_size` and :meth:`_partition_center_offset`.
-
-    :param max_partitions: the max number of partitions to make (default = 20);
-      it should be greater or equal than 2
-    :param lower_bound: the lower bound of the elements in the partition
-    :param upper_bound: the upper bound of the elements in the partition
+    - :attr:`lower_bound` is within the first interval
+    - :attr:`upper_bound` is within the last interval
     """
 
     def __init__(
@@ -371,7 +364,6 @@ class IntegerRangePartitioner(RangePartitioner[int]):
         )
 
     def _step_size(self, lower_bound: int, upper_bound: int) -> int:
-        """Compute the step size of the central values."""
         return max(
             1,
             int(
@@ -392,8 +384,6 @@ class CategoryPartitioner(Partitioner[T_Value]):
 
     Partition the elements by their values, keeping only the :attr:`max_partitions`
     most frequent values.
-
-    :max_partitions: the maximum number of partitions
     """
 
     def __init__(self, max_partitions: int = DEFAULT_MAX_PARTITIONS) -> None:
@@ -439,7 +429,9 @@ class CategoryPartitioner(Partitioner[T_Value]):
 
     @property
     def is_categorical(self) -> bool:
-        """```True```"""
+        """
+        ```True```
+        """
         return True
 
     def __len__(self) -> int:
