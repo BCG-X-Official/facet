@@ -312,18 +312,6 @@ class ContinuousRangePartitioner(RangePartitioner[float]):
     [3.2, 3.4), [3.4, 3.6), [3.6, 3.8), [4.0, 4.2), [4.4, 4.6), [4.6, 4.8]
     """
 
-    def __init__(
-        self,
-        max_partitions: int = None,
-        lower_bound: Optional[T_Number] = None,
-        upper_bound: Optional[T_Number] = None,
-    ) -> None:
-        super().__init__(
-            max_partitions=max_partitions,
-            lower_bound=lower_bound,
-            upper_bound=upper_bound,
-        )
-
     def _step_size(self, lower_bound: float, upper_bound: float) -> float:
         return RangePartitioner._ceil_step(
             (upper_bound - lower_bound) / (self.max_partitions - 1)
@@ -350,18 +338,6 @@ class IntegerRangePartitioner(RangePartitioner[int]):
     - :attr:`lower_bound` is within the first interval
     - :attr:`upper_bound` is within the last interval
     """
-
-    def __init__(
-        self,
-        max_partitions: int = None,
-        lower_bound: Optional[T_Number] = None,
-        upper_bound: Optional[T_Number] = None,
-    ) -> None:
-        super().__init__(
-            max_partitions=max_partitions,
-            lower_bound=lower_bound,
-            upper_bound=upper_bound,
-        )
 
     def _step_size(self, lower_bound: int, upper_bound: int) -> int:
         return max(
