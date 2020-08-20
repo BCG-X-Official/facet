@@ -45,10 +45,15 @@ T_LearnerPipelineDF = TypeVar("T_LearnerPipelineDF", bound=LearnerPipelineDF)
 
 
 #
-# Class definitions
+# Ensure all symbols introduced below are included in __all__
 #
 
 __tracker = AllTracker(globals())
+
+
+#
+# Class definitions
+#
 
 
 @inheritdoc(match="[see superclass]")
