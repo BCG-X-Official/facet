@@ -1,4 +1,4 @@
-esources:
+resources:
   repositories:
     - repository: sklearndf
       type: github
