@@ -3,4 +3,4 @@
 Getting Started
 ============================
 
-.. include:: ./README.rst
+.. include:: ../../README.rst
