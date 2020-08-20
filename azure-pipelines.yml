@@ -3,7 +3,7 @@ resources:
     - repository: sklearndf
       type: github
       endpoint: konst-int-i # todo - update to final github org
-      name: konst-int-i/facet # todo - update to final github org
+      name: konst-int-i/sklearndf # todo - update to final github org
       ref: develop # todo - update to stable release
     - repository: pytools
       type: github
