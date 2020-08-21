@@ -8,13 +8,17 @@ Setup
 
 Python environment
 ~~~~~~~~~~~~~~~~~~~~~~
-There is a ``environment.yml`` provided in the repository root, which installs all required development
-dependencies in the ``facet-development`` environment.
+There is a ``environment.yml`` provided in the repository root, which installs all
+required development dependencies in the ``facet-development`` environment.
 
 .. code-block:: RST
 
-	conda env create -f environment.yml
-	conda activate facet-develop
+	./dev-setup.sh
+
+This command will:
+
+- Install the conda environment
+- Install pre-commit hooks
 
 Pytest
 ~~~~~~~~~~~~~~~
