@@ -26,14 +26,6 @@ class _SimulationSeries(NamedTuple):
 class SimulationDrawer(Drawer[UnivariateSimulation, SimulationStyle]):
     """
     Simulation drawer with high/low confidence intervals.
-
-    :param style: the style of the dendrogram; either as a
-        :class:`.SimulationStyle` instance, or as the name of a \
-        default style. Permissible names are "matplot" for a style supporting \
-        Matplotlib, and "text" for a text-only report to stdout (default: ``"matplot"``)
-    :param histogram: if ``True``, plot the histogram of observed values for the \
-        feature being simulated; if ``False`` do not plot the histogram (default: \
-        ``True``).
     """
 
     _STYLES = {"matplot": SimulationMatplotStyle, "text": SimulationReportStyle}
@@ -41,6 +33,16 @@ class SimulationDrawer(Drawer[UnivariateSimulation, SimulationStyle]):
     def __init__(
         self, style: Union[SimulationStyle, str] = "matplot", histogram: bool = True
     ) -> None:
+        """
+        :param style: the style of the dendrogram; either as a \
+            :class:`.SimulationStyle` instance, or as the name of a \
+            default style. Permissible names are ``"matplot"`` for a style supporting \
+            Matplotlib, and ``"text"`` for a text-only report to stdout \
+            (default: ``"matplot"``)
+        :param histogram: if ``True``, plot the histogram of observed values for the \
+            feature being simulated; if ``False`` do not plot the histogram (default: \
+            ``True``).
+        """
         super().__init__(style=style)
         self._histogram = histogram
 
