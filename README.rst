@@ -3,7 +3,7 @@ Facet
 
 by BCG Gamma
 
-.. image:: img/gamma_logo.jpg
+.. image:: _static/gamma_logo.jpg
 
 Facet is an open source library to for human-explainable AI. It combines sophisticated
 model inspection and model-based simulation to enable better explanations of your
@@ -134,7 +134,7 @@ effects of the variables that your model used for Training:
     MatrixDrawer(style="matplot%").draw(inspector.feature_redundancy_matrix(),
                                         title="Redundancy Matrix")
 
-.. image:: img/redundancy_matrix.png
+.. image:: _static/redundancy_matrix.png
     :width: 300
 
 
@@ -145,7 +145,7 @@ For feature synergy, we can get a similar picture
     synergy_matrix = inspector.feature_synergy_matrix()
     MatrixDrawer(style="matplot%").draw(synergy_matrix, title="Synergy Matrix")
 
-.. image:: img/synergy_matrix.png
+.. image:: _static/synergy_matrix.png
     :width: 300
 
 Please see the API documentation for more detail.
@@ -172,13 +172,13 @@ Simulation
         data=simulation, title=SIM_FEAT
     )
 
-.. image:: img/simulation_output.png
+.. image:: _static/simulation_output.png
 
 
 Development Guidelines
 ---------------------------
 
-TBD - link to long section in `documentation <>`_
+TBD - link to long section in documentation.
 
 Acknowledgements
 ---------------------------
