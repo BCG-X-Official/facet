@@ -16,8 +16,10 @@ Classifying pre-diabetes
 
 Classification on a simulated dataset
 ------------------------------------------------
+.. toctree::
+   :maxdepth: 2
 
-Notebook here
+   tutorial/Classification_simulation_example_Facet
 
 
 Predicting equipment wear
