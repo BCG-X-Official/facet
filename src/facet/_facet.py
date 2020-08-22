@@ -13,12 +13,12 @@ from pytools.api import is_list_like
 class Sample:
     """
     A collection of observations, comprising features as well as one or more target
-    variables.
+    variables and optional sample weights.
 
-    A :class:`.Sample` object serves to keep features and targets aligned, thus keeping
-    modeling code more readable.
-    It provides basic methods for accessing features and targets, and for selecting
-    subsets of features and of observations.
+    A :class:`.Sample` object serves to keep features, targets and weights aligned,
+    thus keeping modeling code more readable and robust.
+    It provides basic methods for accessing features, targets and weights, and
+    for selecting subsets of features and observations.
 
     The underlying data structure is a pandas :class:`.DataFrame`.
 
