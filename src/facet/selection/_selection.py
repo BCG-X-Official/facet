@@ -386,8 +386,13 @@ class LearnerRanker(
     ) -> List[LearnerScores[T_LearnerPipelineDF]]:
         ranking_scorer = self.ranking_scorer
 
-        configurations = (
-            (grid.pipeline.clone().set_params(**parameters), parameters)
+        configurations: Iterable[Tuple[T_LearnerPipelineDF, Dict[str, Any]]] = (
+            (
+                cast(T_LearnerPipelineDF, grid.pipeline.clone()).set_params(
+                    **parameters
+                ),
+                parameters,
+            )
             for grid in self.grids
             for parameters in grid
         )
