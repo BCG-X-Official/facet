@@ -170,9 +170,9 @@ class ShapCalculator(
         """
         pass
 
-    @property
+    @staticmethod
     @abstractmethod
-    def _multi_output_type(self) -> str:
+    def multi_output_type() -> str:
         pass
 
     @abstractmethod
@@ -212,7 +212,7 @@ class ShapCalculator(
                     ),
                     self.feature_index_,
                     self._raw_shap_to_df,
-                    self._multi_output_type,
+                    self.multi_output_type(),
                     self._multi_output_names(model=model, sample=training_sample),
                 )
                 for model, sample in zip(
@@ -560,8 +560,8 @@ class RegressorShapCalculator(ShapCalculator[RegressorPipelineDF], metaclass=ABC
     def _output_names(crossfit: LearnerCrossfit[RegressorPipelineDF]) -> List[str]:
         return crossfit.training_sample.target_columns
 
-    @property
-    def _multi_output_type(self) -> str:
+    @staticmethod
+    def multi_output_type() -> str:
         return Sample.IDX_TARGET
 
     def _multi_output_names(
@@ -671,8 +671,8 @@ class ClassifierShapCalculator(ShapCalculator[ClassifierPipelineDF], metaclass=A
         else:
             return output_names
 
-    @property
-    def _multi_output_type(self) -> str:
+    @staticmethod
+    def multi_output_type() -> str:
         return ClassifierShapCalculator.COL_CLASS
 
     def _multi_output_names(
@@ -702,7 +702,7 @@ class ClassifierShapCalculator(ShapCalculator[ClassifierPipelineDF], metaclass=A
 
             columns = pd.MultiIndex.from_product(
                 iterables=[output_names, self.feature_index_],
-                names=[self._multi_output_type, self.feature_index_.name],
+                names=[self.multi_output_type(), self.feature_index_.name],
             )
 
             return pd.concat(
