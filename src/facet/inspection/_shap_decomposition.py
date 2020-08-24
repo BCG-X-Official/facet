@@ -108,7 +108,7 @@ class ShapValueDecomposer(FittableMixin[ShapCalculator]):
         # basic definitions
         #
 
-        shap_values = shap_calculator.get_shap_values(consolidate=None)
+        shap_values = shap_calculator.get_shap_values(consolidate="mean")
         n_outputs = len(shap_calculator.output_names_)
         n_features = len(shap_calculator.feature_index_)
         n_observations = len(shap_values)
@@ -228,16 +228,6 @@ class ShapInteractionValueDecomposer(ShapValueDecomposer):
             {DEFAULT_MIN_DIRECT_SYNERGY * 100.0:g}%)
         """
 
-    def fit(
-        self: T, shap_calculator: ShapInteractionValuesCalculator, **fit_params
-    ) -> T:
-        """
-        Calculate the SHAP decomposition for the shap values produced by the
-        given SHAP interaction values calculator.
-        :param shap_calculator: the fitted calculator from which to get the shap values
-        """
-        return super().fit(shap_calculator=shap_calculator, **fit_params)
-
     def synergy(self, symmetrical: bool = True) -> pd.DataFrame:
         """
         The matrix of total relative synergy (direct and indirect) for all feature
@@ -274,7 +264,7 @@ class ShapInteractionValueDecomposer(ShapValueDecomposer):
         # basic definitions
         #
 
-        shap_values = shap_calculator.get_shap_interaction_values(consolidate=None)
+        shap_values = shap_calculator.get_shap_interaction_values(consolidate="mean")
         features = shap_calculator.feature_index_
         outputs = shap_calculator.output_names_
         n_features = len(features)
