@@ -321,7 +321,7 @@ def _validate_shap_values_against_predictions(
             predicted_probabilities, pd.DataFrame
         ), "predicted probabilities are single-output"
 
-        expected_proba_range = 1 / len(predicted_probabilities.columns)
+        expected_probability_range = 1 / len(predicted_probabilities.columns)
 
         def _check_probabilities(
             _class_probabilities: pd.DataFrame, _shap_for_split_and_class: pd.Series
@@ -330,14 +330,18 @@ def _validate_shap_values_against_predictions(
                 _shap_for_split_and_class
             ).sum(axis=1)
 
-            min = expected_probability.min()
-            max = expected_probability.max()
-            assert min == pytest.approx(
-                max
+            expected_probability_min = expected_probability.min()
+            expected_probability_max = expected_probability.max()
+            assert expected_probability_min == pytest.approx(
+                expected_probability_max
             ), "expected probability is the same for all explanations"
-            assert expected_proba_range * 0.6 <= min <= expected_proba_range / 0.6, (
+            assert (
+                expected_probability_range * 0.6
+                <= expected_probability_min
+                <= expected_probability_range / 0.6
+            ), (
                 "expected class probability is roughly in the range of "
-                f"{expected_proba_range * 100:.0f}%"
+                f"{expected_probability_range * 100:.0f}%"
             )
 
         if predicted_probabilities.shape[1] == 2:
@@ -352,8 +356,8 @@ def _validate_shap_values_against_predictions(
 
             for class_name in predicted_probabilities.columns:
                 # for each observation and class, we expect to get the constant
-                # "expected probability" value by deducting the SHAP values for all features
-                # from the predicted probability
+                # expected probability value by deducting the SHAP values for all
+                # features from the predicted probability
 
                 class_probabilities = predicted_probabilities.loc[:, [class_name]]
 
