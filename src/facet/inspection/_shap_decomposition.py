@@ -9,9 +9,12 @@ import numpy as np
 import pandas as pd
 
 from facet.inspection._shap import ShapCalculator, ShapInteractionValuesCalculator
+from pytools.api import AllTracker
 from pytools.fit import FittableMixin
 
 log = logging.getLogger(__name__)
+
+__all__ = ["ShapValueDecomposer", "ShapInteractionValueDecomposer"]
 
 #: if ``True``, optimize numpy arrays to ensure pairwise partial summation.
 #: But given that we will add floats of the same order of magnitude and only up
@@ -19,8 +22,22 @@ log = logging.getLogger(__name__)
 #: (sequential) summation will be negligible in practice
 _PAIRWISE_PARTIAL_SUMMATION = False
 
+#
+# Type variables
+#
 
 T = TypeVar("T")
+
+#
+# Ensure all symbols introduced below are included in __all__
+#
+
+__tracker = AllTracker(globals())
+
+
+#
+# Class definitions
+#
 
 
 class ShapValueDecomposer(FittableMixin[ShapCalculator]):
@@ -677,3 +694,6 @@ def _sqrt(v: np.ndarray) -> np.ndarray:
     # rounding errors
 
     return np.sqrt(np.clip(v, 0, None))
+
+
+__tracker.validate()

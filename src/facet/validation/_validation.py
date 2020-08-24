@@ -10,6 +10,26 @@ import pandas as pd
 from sklearn.model_selection import BaseCrossValidator
 from sklearn.utils import check_random_state
 
+from pytools.api import AllTracker
+
+__all__ = [
+    "BootstrapCV",
+    "StratifiedBootstrapCV",
+    "StationaryBootstrapCV",
+    "FullSampleValidator",
+]
+
+#
+# Ensure all symbols introduced below are included in __all__
+#
+
+__tracker = AllTracker(globals())
+
+
+#
+# Class definitions
+#
+
 
 class _BaseBootstrapCV(BaseCrossValidator, metaclass=ABCMeta):
     """
@@ -293,3 +313,6 @@ class FullSampleValidator(BaseCrossValidator):
     def _iter_test_indices(self, X=None, y=None, groups=None) -> Iterator:
         # adding this stub just so all abstract methods are implemented
         pass
+
+
+__tracker.validate()

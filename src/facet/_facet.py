@@ -7,7 +7,20 @@ from typing import *
 
 import pandas as pd
 
-from pytools.api import is_list_like
+from pytools.api import AllTracker, is_list_like
+
+__all__ = ["Sample"]
+
+#
+# Ensure all symbols introduced below are included in __all__
+#
+
+__tracker = AllTracker(globals())
+
+
+#
+# Class definitions
+#
 
 
 class Sample:
@@ -246,3 +259,6 @@ class Sample:
 
     def __len__(self) -> int:
         return len(self._observations)
+
+
+__tracker.validate()

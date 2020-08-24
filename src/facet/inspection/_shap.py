@@ -12,6 +12,7 @@ from shap.explainers.explainer import Explainer
 
 from facet import Sample
 from facet.crossfit import LearnerCrossfit
+from pytools.api import AllTracker
 from pytools.fit import FittableMixin
 from pytools.parallelization import ParallelizableMixin
 from sklearndf.pipeline import (
@@ -23,6 +24,17 @@ from ._explainer import ExplainerFactory
 
 log = logging.getLogger(__name__)
 
+__all__ = [
+    "ShapCalculator",
+    "ShapValuesCalculator",
+    "ShapInteractionValuesCalculator",
+    "RegressorShapCalculator",
+    "RegressorShapValuesCalculator",
+    "RegressorShapInteractionValuesCalculator",
+    "ClassifierShapCalculator",
+    "ClassifierShapValuesCalculator",
+    "ClassifierShapInteractionValuesCalculator",
+]
 
 #
 # Type variables
@@ -35,10 +47,16 @@ T_LearnerPipelineDF = TypeVar("T_LearnerPipelineDF", bound=LearnerPipelineDF)
 # Type definitions
 #
 
-
 ShapToDataFrameFunction = Callable[
     [List[np.ndarray], pd.Index, pd.Index], List[pd.DataFrame]
 ]
+
+
+#
+# Ensure all symbols introduced below are included in __all__
+#
+
+__tracker = AllTracker(globals())
 
 
 #
@@ -788,3 +806,6 @@ class ClassifierShapInteractionValuesCalculator(
             )
             for raw_shap_interaction_matrix in raw_shap_tensors
         ]
+
+
+__tracker.validate()

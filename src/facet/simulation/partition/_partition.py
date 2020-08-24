@@ -9,16 +9,39 @@ from typing import *
 import numpy as np
 import pandas as pd
 
+from pytools.api import AllTracker
 from pytools.fit import FittableMixin
 
 log = logging.getLogger(__name__)
 
+__all__ = [
+    "Partitioner",
+    "RangePartitioner",
+    "ContinuousRangePartitioner",
+    "IntegerRangePartitioner",
+    "CategoryPartitioner",
+]
 
-DEFAULT_MAX_PARTITIONS = 20
+
+#
+# Type variables
+#
+
 
 T = TypeVar("T")
 T_Value = TypeVar("T_Value")
 T_Number = TypeVar("T_Number", int, float)
+
+#
+# Ensure all symbols introduced below are included in __all__
+#
+
+__tracker = AllTracker(globals())
+
+
+#
+# Class definitions
+#
 
 
 class Partitioner(
@@ -28,13 +51,23 @@ class Partitioner(
     Partition a set of values, for use in visualizations and simulations.
     """
 
-    def __init__(self, max_partitions: int = None):
+    DEFAULT_MAX_PARTITIONS = 20
+
+    def __init__(self, max_partitions: Optional[int] = None):
+        """
+        :param max_partitions: the maximum number of partitions to generate; \
+            must be at least 2 (default: {DEFAULT_MAX_PARTITIONS})
+        """
         if max_partitions is None:
-            self._max_partitions = DEFAULT_MAX_PARTITIONS
+            self._max_partitions = Partitioner.DEFAULT_MAX_PARTITIONS
         elif max_partitions < 2:
             raise ValueError(f"arg max_partitions={max_partitions} must be at least 2")
         else:
             self._max_partitions = max_partitions
+
+    __init__.__doc__ = __init__.__doc__.replace(
+        "{DEFAULT_MAX_PARTITIONS}", repr(DEFAULT_MAX_PARTITIONS)
+    )
 
     @property
     def max_partitions(self) -> int:
@@ -362,9 +395,8 @@ class CategoryPartitioner(Partitioner[T_Value]):
     most frequent values.
     """
 
-    def __init__(self, max_partitions: int = DEFAULT_MAX_PARTITIONS) -> None:
+    def __init__(self, max_partitions: Optional[int] = None) -> None:
         super().__init__(max_partitions=max_partitions)
-        self._max_partitions = max_partitions
         self._frequencies = None
         self._partitions = None
 
@@ -412,3 +444,6 @@ class CategoryPartitioner(Partitioner[T_Value]):
 
     def __len__(self) -> int:
         return len(self._partitions)
+
+
+__tracker.validate()
