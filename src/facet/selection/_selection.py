@@ -15,12 +15,14 @@ from sklearn.model_selection import BaseCrossValidator
 
 from facet import Sample
 from facet.crossfit import CrossfitScores, LearnerCrossfit
-from pytools.api import inheritdoc, to_tuple
+from pytools.api import AllTracker, inheritdoc, to_tuple
 from pytools.fit import FittableMixin
 from pytools.parallelization import ParallelizableMixin
 from sklearndf.pipeline import ClassifierPipelineDF, RegressorPipelineDF
 
 log = logging.getLogger(__name__)
+
+__all__ = ["LearnerGrid", "LearnerScores", "LearnerRanker"]
 
 #
 # Type variables
@@ -32,6 +34,13 @@ T_LearnerPipelineDF = TypeVar(
 )
 T_RegressorPipelineDF = TypeVar("T_RegressorPipelineDF", bound=RegressorPipelineDF)
 T_ClassifierPipelineDF = TypeVar("T_ClassifierPipelineDF", bound=ClassifierPipelineDF)
+
+#
+# Ensure all symbols introduced below are included in __all__
+#
+
+__tracker = AllTracker(globals())
+
 
 #
 # Class definitions
@@ -386,8 +395,13 @@ class LearnerRanker(
     ) -> List[LearnerScores[T_LearnerPipelineDF]]:
         ranking_scorer = self.ranking_scorer
 
-        configurations = (
-            (grid.pipeline.clone().set_params(**parameters), parameters)
+        configurations: Iterable[Tuple[T_LearnerPipelineDF, Dict[str, Any]]] = (
+            (
+                cast(T_LearnerPipelineDF, grid.pipeline.clone()).set_params(
+                    **parameters
+                ),
+                parameters,
+            )
             for grid in self.grids
             for parameters in grid
         )
@@ -429,3 +443,6 @@ class LearnerRanker(
 
         self._best_crossfit = best_crossfit
         return ranking
+
+
+__tracker.validate()

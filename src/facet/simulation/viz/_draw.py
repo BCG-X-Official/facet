@@ -9,12 +9,32 @@ this graph there is a histogram of the feature values.
 from typing import *
 
 from facet.simulation import UnivariateSimulation
-from facet.simulation.partition import T_Number
+from pytools.api import AllTracker
 from pytools.viz import Drawer
 from ._style import SimulationMatplotStyle, SimulationReportStyle, SimulationStyle
 
+__all__ = ["SimulationDrawer"]
 
-class _SimulationSeries(NamedTuple):
+#
+# Type variables
+#
+
+
+T_Number = TypeVar("T_Number", int, float)
+
+#
+# Ensure all symbols introduced below are included in __all__
+#
+
+__tracker = AllTracker(globals())
+
+
+#
+# Class definitions
+#
+
+
+class _SimulationSeries(NamedTuple, Generic[T_Number]):
     # A set of aligned series representing the simulation result
     median_uplift: Sequence[T_Number]
     min_uplift: Sequence[T_Number]
@@ -26,14 +46,6 @@ class _SimulationSeries(NamedTuple):
 class SimulationDrawer(Drawer[UnivariateSimulation, SimulationStyle]):
     """
     Simulation drawer with high/low confidence intervals.
-
-    :param style: the style of the dendrogram; either as a
-        :class:`.SimulationStyle` instance, or as the name of a \
-        default style. Permissible names are "matplot" for a style supporting \
-        Matplotlib, and "text" for a text-only report to stdout (default: ``"matplot"``)
-    :param histogram: if ``True``, plot the histogram of observed values for the \
-        feature being simulated; if ``False`` do not plot the histogram (default: \
-        ``True``).
     """
 
     _STYLES = {"matplot": SimulationMatplotStyle, "text": SimulationReportStyle}
@@ -41,6 +53,16 @@ class SimulationDrawer(Drawer[UnivariateSimulation, SimulationStyle]):
     def __init__(
         self, style: Union[SimulationStyle, str] = "matplot", histogram: bool = True
     ) -> None:
+        """
+        :param style: the style of the dendrogram; either as a \
+            :class:`.SimulationStyle` instance, or as the name of a \
+            default style. Permissible names are ``"matplot"`` for a style supporting \
+            Matplotlib, and ``"text"`` for a text-only report to stdout \
+            (default: ``"matplot"``)
+        :param histogram: if ``True``, plot the histogram of observed values for the \
+            feature being simulated; if ``False`` do not plot the histogram (default: \
+            ``True``).
+        """
         super().__init__(style=style)
         self._histogram = histogram
 
@@ -108,3 +130,6 @@ class SimulationDrawer(Drawer[UnivariateSimulation, SimulationStyle]):
             )
         else:
             return simulation_series
+
+
+__tracker.validate()

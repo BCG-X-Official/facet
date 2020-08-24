@@ -9,16 +9,37 @@ import logging
 from abc import ABCMeta, abstractmethod
 from typing import *
 
-from pytools.viz import DrawStyle, MatplotStyle, TextStyle
-from pytools.viz.text import format_table
 from matplotlib.axes import Axes
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from mpl_toolkits.axes_grid1.axes_divider import AxesDivider
 from mpl_toolkits.axes_grid1.axes_size import Scaled
 
-from facet.simulation.partition import T_Number, T_Value
+from pytools.api import AllTracker
+from pytools.viz import DrawStyle, MatplotStyle, TextStyle
+from pytools.viz.text import format_table
 
 log = logging.getLogger(__name__)
+
+__all__ = ["SimulationStyle", "SimulationMatplotStyle", "SimulationReportStyle"]
+
+#
+# Type variables
+#
+
+
+T_Value = TypeVar("T_Value")
+T_Number = TypeVar("T_Number", int, float)
+
+#
+# Ensure all symbols introduced below are included in __all__
+#
+
+__tracker = AllTracker(globals())
+
+
+#
+# Class definitions
+#
 
 
 class SimulationStyle(DrawStyle, metaclass=ABCMeta):
@@ -367,3 +388,5 @@ class SimulationReportStyle(SimulationStyle, TextStyle):
             return self._PARTITION_TEXT_FORMAT
         else:
             return self._PARTITION_NUMBER_FORMAT
+
+__tracker.validate()
