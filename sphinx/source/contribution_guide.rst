@@ -22,35 +22,33 @@ This command will:
 
 Pytest
 ~~~~~~~~~~~~~~~
-Run ``pytest tests/`` from the facet root folder or use the PyCharm test runner. To measure coverage, use ``pytest --cov=src/facet tests/``. Note that the code coverage reports are also generated in the Azure Pipelines.
+Run ``pytest tests/`` from the facet root folder or use the PyCharm test runner.
+To measure coverage, use ``pytest --cov=src/facet tests/``. Note that the code coverage
+reports are also generated in the Azure Pipelines.
 
-Note that you will need to set the PYTHONPATH to the ``src/`` directory by running ``export PYTHONPATH=./src/`` from the repository root.
+Note that you will need to set the PYTHONPATH to the ``src/`` directory by running
+``export PYTHONPATH=./src/`` from the repository root.
 
 
 Sphinx Documentation
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-The generated Sphinx documentation of alpha is located at /docs. To build the documentation, ensure you have the following dependencies installed:
-
-- the Python packages sphinx=2.0.1 installed
-
-- pydata-sphinx-theme=0.3.1 installed
-
-- nbsphinx installed with ``conda install -c conda-forge nbsphinx=0.4.2``
-
-- sphinx-autodoc-typehints installed with ``conda install -c conda-forge sphinx-autodoc-typehints=1.6``
-
-- Activated the ``facet-develop`` Conda environment before building
+The generated Sphinx documentation of alpha is located at /docs. To build the
+documentation, ensure that you have activated the ``facet-develop``  environment
 
 Let us mention the following extensions used in the conf.py sphinx configuration script:
 
-- intersphinx (external links to other documentations built with sphins: sklearn, numpy...)
+- intersphinx (external links to other documentations built with sphinx: sklearn,
+numpy...)
 
-- viewcode to include source code in the docuemtation, and links to the source code from the objects documentation
+- Viewcode to include source code in the documentation, and links to the source code
+from the objects documentation
 
-To update, simply run ``make html`` from within /sphinx. By default make html only compiles files which have been modfified since last compilation. To force the compilation of the full documentation enter first ``make clean``.
+To update, simply run ``make html`` from within /sphinx. By default make html only
+compiles files which have been modified since last compilation. To force the
+compilation of the full documentation enter first ``make clean``.
 
-To publish the documenation - TODO - finish this section
+To publish the documentation - TODO - finish this section
 
 
 Git Guidelines
