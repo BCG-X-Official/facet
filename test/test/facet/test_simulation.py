@@ -55,7 +55,7 @@ def test_actuals_simulation(uplift_simulator: UnivariateUpliftSimulator) -> None
     assert_series_equal(
         uplift_simulator.simulate_actuals(),
         pd.Series(
-            index=pd.RangeIndex(10, name="crossfit_id"),
+            index=pd.RangeIndex(10, name="split_id"),
             data=(
                 [0.0155072, 0.0280131, -0.0342100, 0.0155648, 0.0131959]
                 + [-0.0486192, -0.0378004, 0.0068394, -0.0034286, 0.0202970]
@@ -74,33 +74,29 @@ def test_univariate_uplift_simulation(
 
     sample = uplift_simulator.crossfit.training_sample
 
-    res = uplift_simulator._simulate_feature_with_values(
-        feature_name=parameterized_feature,
-        simulated_values=ContinuousRangePartitioner(max_partitions=10)
-        .fit(values=sample.features.loc[:, parameterized_feature])
-        .partitions(),
+    absolute_target_change_sr: pd.Series = (
+        uplift_simulator._simulate_feature_with_values(
+            feature_name=parameterized_feature,
+            simulation_values=ContinuousRangePartitioner(max_partitions=10)
+            .fit(values=sample.features.loc[:, parameterized_feature])
+            .partitions(),
+        )
     )
 
     # test aggregated values
     # the values on the right were computed from correct runs
-    absolute_target_change_sr = res.loc[
-        :, UnivariateUpliftSimulator._COL_ABSOLUTE_TARGET_CHANGE
-    ]
     assert absolute_target_change_sr.min() == approx(-4.087962)
     assert absolute_target_change_sr.mean() == approx(-0.557341)
     assert absolute_target_change_sr.max() == approx(4.408145)
 
     aggregated_results = uplift_simulator._aggregate_simulation_results(
-        results_per_crossfit=res
+        results_per_split=absolute_target_change_sr
     )
 
     # test the first five rows of aggregated_results
     # the values were computed from a correct run
 
-    index = pd.Index(
-        data=[5.0, 10.0, 15.0, 20.0, 25.0],
-        name=UnivariateUpliftSimulator._COL_PARAMETER_VALUE,
-    )
+    index = pd.Index(data=[5.0, 10.0, 15.0, 20.0, 25.0])
     expected_data = {
         "percentile_10": [
             1.4028263372030223,
