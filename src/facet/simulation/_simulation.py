@@ -30,6 +30,7 @@ _SIMULATE_FULL_SAMPLE = True
 __all__ = [
     "UnivariateSimulation",
     "BaseUnivariateSimulator",
+    "UnivariateProbabilitySimulator",
     "UnivariateUpliftSimulator",
 ]
 
