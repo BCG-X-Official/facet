@@ -3,4 +3,4 @@
 Getting Started
 ============================
 
-.. mdinclude:: ../../README.md
+.. include:: ../../README.rst

@@ -7,18 +7,31 @@ from typing import *
 
 import pandas as pd
 
-from pytools.api import is_list_like
+from pytools.api import AllTracker, is_list_like
+
+__all__ = ["Sample"]
+
+#
+# Ensure all symbols introduced below are included in __all__
+#
+
+__tracker = AllTracker(globals())
+
+
+#
+# Class definitions
+#
 
 
 class Sample:
     """
     A collection of observations, comprising features as well as one or more target
-    variables.
+    variables and optional sample weights.
 
-    A :class:`.Sample` object serves to keep features and targets aligned, thus keeping
-    modeling code more readable.
-    It provides basic methods for accessing features and targets, and for selecting
-    subsets of features and of observations.
+    A :class:`.Sample` object serves to keep features, targets and weights aligned,
+    thus keeping modeling code more readable and robust.
+    It provides basic methods for accessing features, targets and weights, and
+    for selecting subsets of features and observations.
 
     The underlying data structure is a pandas :class:`.DataFrame`.
 
@@ -300,3 +313,6 @@ class Sample:
 
     def __len__(self) -> int:
         return len(self._observations)
+
+
+__tracker.validate()
