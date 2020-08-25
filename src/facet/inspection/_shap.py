@@ -106,7 +106,7 @@ class ShapCalculator(
         self.shap_: Optional[pd.DataFrame] = None
         self.feature_index_: Optional[pd.Index] = None
         self.output_names_: Optional[List[str]] = None
-        self.n_observations_: Optional[int] = None
+        self.sample_: Optional[Sample] = None
 
     def fit(self: T, crossfit: LearnerCrossfit[T_LearnerPipelineDF], **fit_params) -> T:
         """
@@ -124,7 +124,7 @@ class ShapCalculator(
         training_sample = crossfit.training_sample
         self.feature_index_ = crossfit.pipeline.features_out.rename(Sample.IDX_FEATURE)
         self.output_names_ = self._output_names(crossfit=crossfit)
-        self.n_observations_ = len(training_sample)
+        self.sample_ = training_sample
 
         # calculate shap values and re-order the observation index to match the
         # sequence in the original training sample
@@ -470,7 +470,7 @@ class ShapInteractionValuesCalculator(
         """
         self._ensure_fitted()
 
-        n_observations = self.n_observations_
+        n_observations = len(self.sample_)
         n_features = len(self.feature_index_)
         interaction_matrix = self.shap_
 

@@ -4,6 +4,7 @@ of features into additive components for synergy, redundancy, and independence.
 """
 import logging
 from typing import *
+from typing import Optional
 
 import numpy as np
 import pandas as pd
@@ -108,10 +109,22 @@ class ShapValueDecomposer(FittableMixin[ShapCalculator]):
         # basic definitions
         #
 
-        shap_values = shap_calculator.get_shap_values(consolidate=None)
-        n_outputs = len(shap_calculator.output_names_)
-        n_features = len(shap_calculator.feature_index_)
-        n_observations = len(shap_values)
+        shap_values: pd.DataFrame = shap_calculator.get_shap_values(consolidate=None)
+        n_outputs: int = len(shap_calculator.output_names_)
+        n_features: int = len(shap_calculator.feature_index_)
+        n_observations: int = len(shap_values)
+
+        # weights
+        # shape: (n_observations)
+        # return a 1d array of weights that aligns with the observations axis of the
+        # SHAP values tensor (axis 1)
+        weight: Optional[np.ndarray]
+
+        _weight_sr = shap_calculator.sample_.weight
+        if _weight_sr is not None:
+            weight = _weight_sr.loc[shap_values.index.get_level_values(1)].values
+        else:
+            weight = None
 
         # p[i] = p_i
         # shape: (n_outputs, n_features, n_observations)
@@ -129,7 +142,7 @@ class ShapValueDecomposer(FittableMixin[ShapCalculator]):
 
         # covariance matrix of shap vectors
         # shape: (n_outputs, n_features, n_features)
-        cov_p_i_p_j = _cov(p_i, p_i)
+        cov_p_i_p_j = _cov(p_i, weight)
         cov_p_i_p_j_2x = 2 * cov_p_i_p_j
 
         # variance of shap vectors
@@ -273,13 +286,31 @@ class ShapInteractionValueDecomposer(ShapValueDecomposer):
         #
         # basic definitions
         #
+        shap_values: pd.DataFrame = shap_calculator.get_shap_interaction_values(
+            consolidate=None
+        )
+        features: pd.Index = shap_calculator.feature_index_
+        outputs: List[str] = shap_calculator.output_names_
+        n_features: int = len(features)
+        n_outputs: int = len(outputs)
+        n_observations: int = shap_values.shape[0] // n_features
 
-        shap_values = shap_calculator.get_shap_interaction_values(consolidate=None)
-        features = shap_calculator.feature_index_
-        outputs = shap_calculator.output_names_
-        n_features = len(features)
-        n_outputs = len(outputs)
-        n_observations = shap_values.shape[0] // n_features
+        # weights
+        # shape: (n_observations)
+        # return a 1d array of weights that aligns with the observations axis of the
+        # SHAP values tensor (axis 1)
+        weight: Optional[np.ndarray]
+
+        _weight_sr = shap_calculator.sample_.weight
+        if _weight_sr is not None:
+            _observation_indices = shap_values.index.get_level_values(1).values.reshape(
+                (n_observations, n_features)
+            )[:, 0]
+            weight = _ensure_last_axis_is_fast(
+                _weight_sr.loc[_observation_indices].values
+            )
+        else:
+            weight = None
 
         # p[i, j]
         # shape: (n_outputs, n_features, n_features, n_observations)
@@ -301,7 +332,7 @@ class ShapInteractionValueDecomposer(ShapValueDecomposer):
 
         # covariance matrix of shap vectors
         # shape: (n_outputs, n_features, n_features)
-        cov_p_i_p_j = _cov(p_i, p_i)
+        cov_p_i_p_j = _cov(p_i, weight)
 
         #
         # Feature synergy (direct and indirect): zeta[i, j]
@@ -310,7 +341,9 @@ class ShapInteractionValueDecomposer(ShapValueDecomposer):
         # var(p[i, j]), std(p[i, j])
         # shape: (n_outputs, n_features, n_features)
         # variance and length (= standard deviation) of each feature interaction vector
-        var_p_ij = _ensure_last_axis_is_fast(p_ij * p_ij).sum(axis=-1) / n_observations
+        var_p_ij = np.average(
+            _ensure_last_axis_is_fast(p_ij ** 2), axis=-1, weights=weight
+        )
         std_p_ij = np.sqrt(var_p_ij)
 
         # p[i, i]
@@ -357,7 +390,17 @@ class ShapInteractionValueDecomposer(ShapValueDecomposer):
         # noinspection SpellCheckingInspection
         k_ij = np.divide(
             # cov(p'[i], p[i, j])
-            np.einsum("tio,tijo->tij", p_prime_i, p_ij, optimize=True) / n_observations,
+            np.einsum(
+                "tio,tijo->tij",
+                (
+                    p_prime_i
+                    if weight is None
+                    else p_prime_i * weight.reshape((1, 1, -1))
+                ),
+                p_ij,
+                optimize=True,
+            )
+            / (n_observations if weight is None else weight.sum()),
             # var(p[i, j])
             var_p_ij,
             out=np.ones_like(var_p_ij),
@@ -668,18 +711,26 @@ def _ensure_last_axis_is_fast(v: np.ndarray) -> np.ndarray:
     return v
 
 
-def _cov(u: np.ndarray, v: np.ndarray) -> np.ndarray:
+def _cov(vectors: np.ndarray, weight: np.ndarray) -> np.ndarray:
     # calculate covariance matrix of two vectors, assuming µ=0 for both
-    # input shape for u and v is (n_outputs, n_features, n_observations)
-    # output shape is (n_outputs, n_features, n_features, n_observations)
+    # input shape for arg vectors is (n_outputs, n_features, n_observations)
+    # input shape for arg weight is (n_observations)
+    # output shape is (n_outputs, n_features, n_features)
 
-    assert u.shape == v.shape
-    assert u.ndim == 3
+    assert vectors.ndim == 3
+    assert weight is None or vectors.shape[2:] == weight.shape
 
     if _PAIRWISE_PARTIAL_SUMMATION:
         raise NotImplementedError("max precision matmul not yet implemented")
+
+    if weight is None:
+        vectors_weighted = vectors
+        weight_total = vectors.shape[2]
     else:
-        return np.matmul(u, v.swapaxes(1, 2)) / u.shape[2]
+        vectors_weighted = vectors * weight.reshape((1, 1, -1))
+        weight_total = weight.sum()
+
+    return np.matmul(vectors_weighted, vectors.swapaxes(1, 2)) / weight_total
 
 
 def _transpose(m: np.ndarray) -> np.ndarray:

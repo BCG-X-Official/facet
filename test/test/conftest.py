@@ -230,7 +230,9 @@ def iris_df(iris_target: str) -> pd.DataFrame:
 @pytest.fixture
 def iris_sample(iris_df: pd.DataFrame, iris_target: str) -> Sample:
     # the iris dataset
-    return Sample(observations=iris_df, target=iris_target)
+    return Sample(
+        observations=iris_df.assign(weight=2.0), target=iris_target, weight="weight"
+    )
 
 
 @pytest.fixture
