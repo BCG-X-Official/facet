@@ -301,10 +301,12 @@ class ShapCalculator(
                 # have returned a single tensor as an array, so we wrap it in a list
                 shap_tensors = [shap_tensors]
 
-        assert n_outputs == len(shap_tensors), (
-            f"count of SHAP tensors (n={len(shap_tensors)}) "
-            f"must match number of outputs ({multi_output_names})"
-        )
+        if n_outputs != len(shap_tensors):
+            raise AssertionError(
+                f"count of SHAP tensors (n={len(shap_tensors)}) "
+                f"should match number of outputs ({multi_output_names})"
+            )
+
         return shap_tensors
 
     @staticmethod
