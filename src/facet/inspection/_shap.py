@@ -170,9 +170,9 @@ class ShapCalculator(
         """
         pass
 
-    @property
+    @staticmethod
     @abstractmethod
-    def _multi_output_type(self) -> str:
+    def multi_output_type() -> str:
         pass
 
     @abstractmethod
@@ -212,7 +212,7 @@ class ShapCalculator(
                     ),
                     self.feature_index_,
                     self._raw_shap_to_df,
-                    self._multi_output_type,
+                    self.multi_output_type(),
                     self._multi_output_names(model=model, sample=training_sample),
                 )
                 for model, sample in zip(
@@ -278,6 +278,36 @@ class ShapCalculator(
         multi_output_names: Sequence[str],
     ) -> pd.DataFrame:
         pass
+
+    @staticmethod
+    def _shap_tensors_to_list(
+        shap_tensors: Union[np.ndarray, Sequence[np.ndarray]],
+        multi_output_type: str,
+        multi_output_names: Sequence[str],
+    ):
+        n_outputs = len(multi_output_names)
+
+        if not isinstance(shap_tensors, List):
+            if (
+                n_outputs == 2
+                and multi_output_type == ClassifierShapCalculator.multi_output_type()
+            ):
+                # if we have a single output *and* binary classification, the explainer
+                # will have returned a single tensor for the positive class;
+                # the SHAP values for the negative class will have the opposite sign
+                shap_tensors = [-shap_tensors, shap_tensors]
+            else:
+                # if we have a single output *and* no classification, the explainer will
+                # have returned a single tensor as an array, so we wrap it in a list
+                shap_tensors = [shap_tensors]
+
+        if n_outputs != len(shap_tensors):
+            raise AssertionError(
+                f"count of SHAP tensors (n={len(shap_tensors)}) "
+                f"should match number of outputs ({multi_output_names})"
+            )
+
+        return shap_tensors
 
     @staticmethod
     def _preprocessed_features_and_explainer(
@@ -389,12 +419,12 @@ class ShapValuesCalculator(
     ) -> pd.DataFrame:
         x = ShapCalculator._preprocessed_features(model=model, sample=sample)
 
-        # calculate the shap values (returned as an array)
-        shap_values: np.ndarray = explainer.shap_values(x)
-        if isinstance(shap_values, np.ndarray):
-            # if we have a single output *and* no classification, the explainer will
-            # have returned a single tensor as an array
-            shap_values: List[np.ndarray] = [shap_values]
+        # calculate the shap values, and ensure the result is a list of arrays
+        shap_values: List[np.ndarray] = ShapCalculator._shap_tensors_to_list(
+            shap_tensors=explainer.shap_values(x),
+            multi_output_type=multi_output_type,
+            multi_output_names=multi_output_names,
+        )
 
         # convert to a data frame per output (different logic depending on whether
         # we have a regressor or a classifier, implemented by method
@@ -410,10 +440,6 @@ class ShapValuesCalculator(
         if len(shap_values_df_per_output) == 1:
             return shap_values_df_per_output[0]
         else:
-            assert len(shap_values_df_per_output) == len(multi_output_names), (
-                f"shap yielded {len(shap_values_df_per_output)} outputs; expected "
-                f"{len(multi_output_names)} outputs for names {multi_output_names}"
-            )
             return pd.concat(
                 shap_values_df_per_output,
                 axis=1,
@@ -509,18 +535,14 @@ class ShapInteractionValuesCalculator(
                 "Explainer does not implement method shap_interaction_values"
             )
 
-        shap_interaction_tensors: Union[np.ndarray, List[np.ndarray]] = (
-            shap_interaction_values_fn(x)
+        # calculate the shap interaction values; ensure the result is a list of arrays
+        shap_interaction_tensors: List[np.ndarray] = (
+            ShapCalculator._shap_tensors_to_list(
+                shap_tensors=shap_interaction_values_fn(x),
+                multi_output_type=multi_output_type,
+                multi_output_names=multi_output_names,
+            )
         )
-
-        if isinstance(shap_interaction_tensors, np.ndarray):
-            # if we have a single output *and* no classification, the explainer will
-            # have returned a single tensor as an array, so we wrap it in a list
-            shap_interaction_tensors: List[np.ndarray] = [shap_interaction_tensors]
-
-        assert len(multi_output_names) == len(
-            shap_interaction_tensors
-        ), f"{len(shap_interaction_tensors)} outputs named {multi_output_names}"
 
         interaction_matrix_per_output: List[pd.DataFrame] = [
             im.reindex(
@@ -560,8 +582,8 @@ class RegressorShapCalculator(ShapCalculator[RegressorPipelineDF], metaclass=ABC
     def _output_names(crossfit: LearnerCrossfit[RegressorPipelineDF]) -> List[str]:
         return crossfit.training_sample.target_columns
 
-    @property
-    def _multi_output_type(self) -> str:
+    @staticmethod
+    def multi_output_type() -> str:
         return Sample.IDX_TARGET
 
     def _multi_output_names(
@@ -671,8 +693,8 @@ class ClassifierShapCalculator(ShapCalculator[ClassifierPipelineDF], metaclass=A
         else:
             return output_names
 
-    @property
-    def _multi_output_type(self) -> str:
+    @staticmethod
+    def multi_output_type() -> str:
         return ClassifierShapCalculator.COL_CLASS
 
     def _multi_output_names(
@@ -702,7 +724,7 @@ class ClassifierShapCalculator(ShapCalculator[ClassifierPipelineDF], metaclass=A
 
             columns = pd.MultiIndex.from_product(
                 iterables=[output_names, self.feature_index_],
-                names=[self._multi_output_type, self.feature_index_.name],
+                names=[self.multi_output_type(), self.feature_index_.name],
             )
 
             return pd.concat(
