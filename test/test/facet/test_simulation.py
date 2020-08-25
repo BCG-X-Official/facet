@@ -43,8 +43,8 @@ def uplift_simulator(
 ) -> UnivariateUpliftSimulator:
     return UnivariateUpliftSimulator(
         crossfit=crossfit,
-        min_percentile=10,
-        max_percentile=90,
+        percentile_lower=10,
+        percentile_upper=90,
         n_jobs=n_jobs,
         verbose=50,
     )

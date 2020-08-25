@@ -89,8 +89,8 @@ class SimulationDrawer(Drawer[UnivariateSimulation, SimulationStyle]):
         self._style.draw_uplift(
             feature=data.feature,
             target=data.target,
-            min_percentile=data.min_percentile,
-            max_percentile=data.max_percentile,
+            min_percentile=data.percentile_lower,
+            max_percentile=data.percentile_upper,
             is_categorical_feature=data.partitioner.is_categorical,
             partitions=simulation_series.partitions,
             frequencies=simulation_series.frequencies,
@@ -116,9 +116,9 @@ class SimulationDrawer(Drawer[UnivariateSimulation, SimulationStyle]):
         # Otherwise, the simulation series are returned unchanged.
 
         simulation_series = _SimulationSeries(
-            simulation.median_change,
-            simulation.min_change,
-            simulation.max_change,
+            simulation.values_median,
+            simulation.values_lower,
+            simulation.values_upper,
             simulation.partitioner.partitions(),
             simulation.partitioner.frequencies(),
         )

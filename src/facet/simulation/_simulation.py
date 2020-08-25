@@ -49,91 +49,34 @@ __tracker = AllTracker(globals())
 #
 
 
-class UnivariateSimulation(Generic[T_Number]):
+class UnivariateSimulation(NamedTuple, Generic[T_Number]):
     """
     Summary result of a univariate simulation.
-
-    :param feature: name of the feature on which the simulation is made
-    :param target: name of the target
-    :param partitioning: the partition of ``feature`` used for the simulation
-    :param median_change: the median change values
-    :param min_change:  the low percentile change values
-    :param max_change: the high percentile change values
-    :param min_percentile: the percentile used to compute ``min_uplift``. Must be a
-      number between 0 and 100
-    :param max_percentile: the percentile used to compute ``max_uplift``. Must be a
-      number between 0 and 100
     """
 
-    def __init__(
-        self,
-        feature: str,
-        target: str,
-        partitioning: Partitioner,
-        median_change: Sequence[T_Number],
-        min_change: Sequence[T_Number],
-        max_change: Sequence[T_Number],
-        min_percentile: float,
-        max_percentile: float,
-    ):
-        self._feature = feature
-        self._target = target
-        self._partitioning = partitioning
-        self._median_change = median_change
-        self._min_change = min_change
-        self._max_change = max_change
-        self._min_percentile = min_percentile
-        self._max_percentile = max_percentile
+    #: name of the simulated feature
+    feature: str
 
-    @property
-    def feature(self) -> str:
-        """Name of the feature on which the simulation is made."""
-        return self._feature
+    #: name of the simulated target
+    target: str
 
-    @property
-    def target(self) -> str:
-        """Name of the target."""
-        return self._target
+    #: the partitioner used to run the simulation
+    partitioner: Partitioner
 
-    @property
-    def partitioner(self) -> Partitioner:
-        """The partitioner generating the feature values to be simulated."""
-        return self._partitioning
+    #: the median simulated values
+    values_median: Sequence[T_Number]
 
-    @property
-    def median_change(self) -> Sequence[T_Number]:
-        """Median average change determined by a simulation."""
-        return self._median_change
+    #: the low end of the confidence intervals for simulated values
+    values_lower: Sequence[T_Number]
 
-    @property
-    def min_change(self) -> Sequence[T_Number]:
-        """
-        Minimum average change, at the lower end of the confidence interval,
-        determined by a simulation.
-        """
-        return self._min_change
+    #: the high end of the confidence intervals for simulated values
+    values_upper: Sequence[T_Number]
 
-    @property
-    def max_change(self) -> Sequence[T_Number]:
-        """
-        Minimum average change, at the lower end of the confidence interval,
-        determined by a simulation.
-        """
-        return self._max_change
+    #: the percentile of the lower confidence interval
+    percentile_lower: float
 
-    @property
-    def min_percentile(self) -> float:
-        """
-        Percentile of the lower end of thw confidence interval.
-        """
-        return self._min_percentile
-
-    @property
-    def max_percentile(self) -> float:
-        """
-        Percentile of the upper end of thw confidence interval.
-        """
-        return self._max_percentile
+    #: the percentile of the upper confidence interval
+    percentile_upper: float
 
 
 class BaseUnivariateSimulator(
@@ -160,8 +103,8 @@ class BaseUnivariateSimulator(
         self,
         crossfit: T_CrossFit,
         *,
-        min_percentile: float = 2.5,
-        max_percentile: float = 97.5,
+        percentile_lower: float = 2.5,
+        percentile_upper: float = 97.5,
         n_jobs: Optional[int] = None,
         shared_memory: Optional[bool] = None,
         pre_dispatch: Optional[Union[str, int]] = None,
@@ -170,8 +113,8 @@ class BaseUnivariateSimulator(
         """
         :param crossfit: cross-validated crossfit of a model for all observations \
         in a given sample
-        :param min_percentile: lower bound of the confidence interval (default: 2.5)
-        :param max_percentile: upper bound of the confidence interval (default: 97.5)
+        :param percentile_lower: lower bound of the confidence interval (default: 2.5)
+        :param percentile_upper: upper bound of the confidence interval (default: 97.5)
         """
         super().__init__(
             n_jobs=n_jobs,
@@ -183,20 +126,20 @@ class BaseUnivariateSimulator(
         if not crossfit.is_fitted:
             raise ValueError("arg crossfit expected to be fitted")
 
-        if not 0 <= min_percentile <= 100:
+        if not 0 <= percentile_lower <= 100:
             raise ValueError(
-                f"arg min_percentile={min_percentile} must be in the range"
+                f"arg percentile_lower={percentile_lower} must be in the range"
                 "from 0 to 100"
             )
-        if not 0 <= max_percentile <= 100:
+        if not 0 <= percentile_upper <= 100:
             raise ValueError(
-                f"arg max_percentile={max_percentile} must be in the range"
+                f"arg percentile_upper={percentile_upper} must be in the range"
                 "from 0 to 1"
             )
 
         self.crossfit = crossfit
-        self.max_percentile = max_percentile
-        self.min_percentile = min_percentile
+        self.percentile_upper = percentile_upper
+        self.percentile_lower = percentile_lower
 
     # add parallelization parameters to __init__ docstring
     __init__.__doc__ += ParallelizableMixin.__init__.__doc__
@@ -266,7 +209,8 @@ class _UnivariateProbabilitySimulator(
         Predict all values in the test set.
 
         The result is a data frame with one row per prediction, indexed by the
-        observations in the sample and the crossfit id (index level ``COL_CROSSFIT_ID``),
+        observations in the sample and the crossfit id (index level \
+        ``COL_CROSSFIT_ID``),
         and with columns ```COL_PREDICTION`` (the predicted value for the
         given observation and crossfit), and ``COL_TARGET`` (the actual target)
 
@@ -316,12 +260,12 @@ class UnivariateUpliftSimulator(
         return UnivariateSimulation(
             feature=name,
             target=sample.target.name,
-            partitioning=partitioner,
-            median_change=predicted_change.iloc[:, 1].values,
-            min_change=predicted_change.iloc[:, 0].values,
-            max_change=predicted_change.iloc[:, 2].values,
-            min_percentile=self.min_percentile,
-            max_percentile=self.max_percentile,
+            partitioner=partitioner,
+            values_median=predicted_change.iloc[:, 1].values,
+            values_lower=predicted_change.iloc[:, 0].values,
+            values_upper=predicted_change.iloc[:, 2].values,
+            percentile_lower=self.percentile_lower,
+            percentile_upper=self.percentile_upper,
         )
 
     def simulate_actuals(self) -> pd.Series:
@@ -504,7 +448,10 @@ class UnivariateUpliftSimulator(
                 sort=False,
             )[UnivariateUpliftSimulator._COL_ABSOLUTE_TARGET_CHANGE]
             .agg(
-                [percentile(p) for p in (self.min_percentile, 50, self.max_percentile)]
+                [
+                    percentile(p)
+                    for p in (self.percentile_lower, 50, self.percentile_upper)
+                ]
             )
         )
 
