@@ -285,10 +285,15 @@ class ShapCalculator(
         multi_output_type: str,
         multi_output_names: Sequence[str],
     ):
+        n_outputs = len(multi_output_names)
+
         if not isinstance(shap_tensors, List):
-            if multi_output_type == ClassifierShapCalculator.multi_output_type():
-                # if we have a single output *and* classification, the explainer will
-                # have returned a single tensor for the positive class;
+            if (
+                n_outputs == 2
+                and multi_output_type == ClassifierShapCalculator.multi_output_type()
+            ):
+                # if we have a single output *and* binary classification, the explainer
+                # will have returned a single tensor for the positive class;
                 # the SHAP values for the negative class will have the opposite sign
                 shap_tensors = [-shap_tensors, shap_tensors]
             else:
@@ -296,7 +301,7 @@ class ShapCalculator(
                 # have returned a single tensor as an array, so we wrap it in a list
                 shap_tensors = [shap_tensors]
 
-        assert len(multi_output_names) == len(shap_tensors), (
+        assert n_outputs == len(shap_tensors), (
             f"count of SHAP tensors (n={len(shap_tensors)}) "
             f"must match number of outputs ({multi_output_names})"
         )
