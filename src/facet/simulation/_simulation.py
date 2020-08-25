@@ -195,64 +195,14 @@ class BaseUnivariateSimulator(
                 "from 0 to 1"
             )
 
-        self._crossfit = crossfit
-        self._max_percentile = max_percentile
-        self._min_percentile = min_percentile
+        self.crossfit = crossfit
+        self.max_percentile = max_percentile
+        self.min_percentile = min_percentile
 
     # add parallelization parameters to __init__ docstring
     __init__.__doc__ += ParallelizableMixin.__init__.__doc__
 
-    @property
-    def crossfit(self) -> T_CrossFit:
-        """The crossfit used for the simulation."""
-        return self._crossfit
 
-    @property
-    def min_percentile(self) -> float:
-        """
-        Percentile of the lower end of the confidence interval.
-        """
-        return self._min_percentile
-
-    @property
-    def max_percentile(self) -> float:
-        """
-        Percentile of the upper end of the confidence interval.
-        """
-        return self._max_percentile
-
-    @abstractmethod
-    def simulate_actuals(self) -> pd.Series:
-        """
-        Simulate yield by predicting the outcome based on the actual feature values
-        across multiple crossfits; for each crossfit determine the relative deviation
-        of the mean predicted target from the mean actual target.
-
-        This yields a distribution of relative deviations across all crossfits.
-        For any of the crossfits, 0 indicates no deviation, and, for example, 0.01
-        indicates that the mean predicted target is 1% higher than the mean actual
-        targets of a given crossfit.
-        The breadth and offset of this distribution is an indication of how the bias of
-        the model underlying the simulation contributes to the uncertainty of
-        simulations produced with method :meth:`.simulate_features`.
-
-        :return: series mapping crossfit IDs to mean actual/mean predicted target deltas
-        """
-        pass
-
-    @abstractmethod
-    def simulate_feature(self, name: str, partitioner: Partitioner):
-        """
-        Simulate the average impact on the target when fixing the value of the given
-        feature across all observations.
-
-        :param name: the feature to run the simulation for
-        :param partitioner: the partitioner of feature values to run simulations for
-        """
-        pass
-
-
-@inheritdoc(match="[see superclass]")
 class _UnivariateProbabilitySimulator(
     BaseUnivariateSimulator[LearnerCrossfit[T_ClassifierDF]], Generic[T_ClassifierDF]
 ):
@@ -372,8 +322,8 @@ class UnivariateUpliftSimulator(
             median_change=predicted_change.iloc[:, 1].values,
             min_change=predicted_change.iloc[:, 0].values,
             max_change=predicted_change.iloc[:, 2].values,
-            min_percentile=self._min_percentile,
-            max_percentile=self._max_percentile,
+            min_percentile=self.min_percentile,
+            max_percentile=self.max_percentile,
         )
 
     def simulate_actuals(self) -> pd.Series:
@@ -541,10 +491,7 @@ class UnivariateUpliftSimulator(
                 sort=False,
             )[UnivariateUpliftSimulator._COL_ABSOLUTE_TARGET_CHANGE]
             .agg(
-                [
-                    percentile(p)
-                    for p in (self._min_percentile, 50, self._max_percentile)
-                ]
+                [percentile(p) for p in (self.min_percentile, 50, self.max_percentile)]
             )
         )
 
