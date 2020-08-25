@@ -2,14 +2,13 @@
 Core implementation of :mod:`facet.simulation`
 """
 
-from abc import ABCMeta, abstractmethod
+from abc import ABCMeta
 from typing import *
-from typing import List
 
 import numpy as np
 import pandas as pd
 
-from pytools.api import AllTracker, inheritdoc
+from pytools.api import AllTracker
 from pytools.parallelization import ParallelizableMixin
 from sklearndf import ClassifierDF, RegressorDF
 from .partition import Partitioner
@@ -282,7 +281,6 @@ class _UnivariateProbabilitySimulator(
             yield method(model, test_features)
 
 
-@inheritdoc(match="[see superclass")
 class UnivariateUpliftSimulator(
     BaseUnivariateSimulator[LearnerCrossfit[T_RegressorDF]], Generic[T_RegressorDF]
 ):
@@ -327,7 +325,22 @@ class UnivariateUpliftSimulator(
         )
 
     def simulate_actuals(self) -> pd.Series:
-        """[see superclass]"""
+        """
+        Simulate yield by predicting the outcome based on the actual feature values
+        across multiple crossfits; for each crossfit determine the relative deviation
+        of the mean predicted target from the mean actual target.
+
+        This yields a distribution of relative deviations across all crossfits.
+        For any of the crossfits, 0 indicates no deviation, and, for example, 0.01
+        indicates that the mean predicted target is 1% higher than the mean actual
+        targets of a given crossfit.
+        The breadth and offset of this distribution is an indication of how the bias of
+        the model underlying the simulation contributes to the uncertainty of
+        simulations produced with method :meth:`.simulate_features`.
+
+        :return: series mapping crossfit IDs to deltas between mean actual values and \
+            mean predicted values
+        """
 
         sample = self.crossfit.training_sample
 
