@@ -762,10 +762,14 @@ class ClassifierShapValuesCalculator(
             # to ensure the values are returned as expected above,
             # and no information of class 1 is discarded, assert the
             # following:
-            assert np.allclose(raw_shap_tensors[0], -raw_shap_tensors[1]), (
-                "shap values of binary classifiers must add up to 0.0 "
-                "for each observation and feature"
-            )
+            if not np.allclose(raw_shap_tensors[0], -raw_shap_tensors[1]):
+                _raw_shap_tensor_totals = raw_shap_tensors[0] + raw_shap_tensors[1]
+                log.warning(
+                    "shap values of binary classifiers should add up to 0.0 "
+                    "for each observation and feature, but total shap values range "
+                    f"from {_raw_shap_tensor_totals.min():g} "
+                    f"to {_raw_shap_tensor_totals.max():g}"
+                )
 
             # all good: proceed with SHAP values for class 0:
             raw_shap_tensors = raw_shap_tensors[:1]
