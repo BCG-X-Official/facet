@@ -187,6 +187,7 @@ class LearnerCrossfit(
         )
         self.random_state = random_state
 
+        self._splits: Optional[List[Tuple[Sequence[int], Sequence[int]]]] = None
         self._model_by_split: Optional[List[T_LearnerPipelineDF]] = None
         self._sample: Optional[Sample] = None
 
@@ -316,6 +317,18 @@ class LearnerCrossfit(
         else:
             scorer = None
 
+        # calculate the splits: we need to preserve them as we cannot rely on the
+        # cross-validator being deterministic
+
+        if do_fit:
+            splits: List[Tuple[Sequence[int], Sequence[int]]] = list(
+                self.cv.split(X=features, y=target)
+            )
+        else:
+            splits = self._splits
+
+        # generate parameter objects for fitting and/or scoring each split
+
         def _generate_parameters() -> Iterator[_FitScoreParameters]:
             learner_features = pipeline.features_out
             n_learner_features = len(learner_features)
@@ -324,9 +337,7 @@ class LearnerCrossfit(
             random_state = check_random_state(self.random_state)
             weigh_samples = sample_weight is not None
 
-            for (train, test), model in zip(
-                self.cv.split(X=features, y=target), models
-            ):
+            for (train, test), model in zip(splits, models):
                 yield _FitScoreParameters(
                     pipeline=pipeline.clone() if do_fit else model,
                     train_features=(
@@ -369,6 +380,7 @@ class LearnerCrossfit(
         )
 
         if do_fit:
+            self._splits = splits
             self._model_by_split = model_by_split
             self._sample = _sample
 
@@ -418,13 +430,7 @@ class LearnerCrossfit(
 
         # ensure we do not return more splits than we have fitted models
         # this is relevant if this is a resized learner crossfit
-        return (
-            s
-            for s, _ in zip(
-                self.cv.split(X=self._sample.features, y=self._sample.target),
-                self._model_by_split,
-            )
-        )
+        return iter(self._splits[: self.n_fits])
 
     def models(self) -> Iterator[T_LearnerPipelineDF]:
         """
