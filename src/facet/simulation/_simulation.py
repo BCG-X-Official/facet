@@ -198,6 +198,51 @@ class BaseUnivariateSimulator(
             percentile_upper=self.percentile_upper,
         )
 
+    def simulate_actuals(self) -> pd.Series:
+        """
+        Run a simulation by predicting the outcome based on the actual feature values
+        across all splits of the crossfit.
+
+        In the case of regressors, for each split determine the relative deviation of
+        the mean predicted target from the mean actual target.
+        For any of the splits, 0 indicates no deviation, and, for example, 0.01
+        indicates that the mean predicted target is 1% higher than the mean actual
+        targets of a given split.
+
+        In the case of binary classifiers, for each split determine the mean predicted
+        probability of the positive class.
+
+        The breadth and offset of this actual simulation is an indication of how the
+        bias of the model underlying the simulation contributes to the uncertainty of
+        simulations produced with method :meth:`.simulate_features`.
+
+        :return: series mapping split IDs to simulation results based on actual \
+            feature values
+        """
+
+        sample = self.crossfit.training_sample
+
+        with self._parallel() as parallel:
+            result: List[float] = parallel(
+                self._delayed(self._simulate_actuals)(
+                    model=model,
+                    subsample=(
+                        sample
+                        if _SIMULATE_FULL_SAMPLE
+                        else sample.subsample(iloc=test_indices)
+                    ),
+                )
+                for (model, (_, test_indices)) in zip(
+                    self.crossfit.models(), self.crossfit.splits()
+                )
+            )
+
+        return pd.Series(
+            index=pd.RangeIndex(len(result), name=BaseUnivariateSimulator.COL_SPLIT_ID),
+            data=result,
+            name=BaseUnivariateSimulator.COL_DEVIATION_OF_MEAN_PREDICTION,
+        )
+
     @staticmethod
     @abstractmethod
     def _expected_pipeline_type() -> Type[T_LearnerPipelineDF]:
@@ -208,6 +253,11 @@ class BaseUnivariateSimulator(
     def _simulate(
         model: T_LearnerPipelineDF, x: pd.DataFrame, actual_outcomes: pd.Series
     ) -> float:
+        pass
+
+    @staticmethod
+    @abstractmethod
+    def _simulate_actuals(model: T_LearnerPipelineDF, subsample: Sample) -> float:
         pass
 
     def _simulate_feature_with_values(
@@ -338,57 +388,21 @@ class UnivariateProbabilitySimulator(BaseUnivariateSimulator[ClassifierPipelineD
             raise TypeError("only binary classifiers are supported")
         return probabilities.iloc[:, 1].mean()
 
+    @staticmethod
+    def _simulate_actuals(model: ClassifierPipelineDF, subsample: Sample) -> float:
+        # return relative difference between actual and predicted target
+        probabilities = model.predict_proba(X=subsample.features)
+
+        if probabilities.shape[1] != 2:
+            raise TypeError("only binary classifiers are supported")
+
+        return probabilities.iloc[:, 1].mean(axis=0)
+
 
 class UnivariateUpliftSimulator(BaseUnivariateSimulator[RegressorPipelineDF]):
     """
     Univariate simulation for target uplift based on a regression model.
     """
-
-    def simulate_actuals(self) -> pd.Series:
-        """
-        Simulate yield by predicting the outcome based on the actual feature values
-        across multiple crossfits; for each crossfit determine the relative deviation
-        of the mean predicted target from the mean actual target.
-
-        This yields a distribution of relative deviations across all crossfits.
-        For any of the crossfits, 0 indicates no deviation, and, for example, 0.01
-        indicates that the mean predicted target is 1% higher than the mean actual
-        targets of a given crossfit.
-        The breadth and offset of this distribution is an indication of how the bias of
-        the model underlying the simulation contributes to the uncertainty of
-        simulations produced with method :meth:`.simulate_features`.
-
-        :return: series mapping crossfit IDs to deltas between mean actual values and \
-            mean predicted values
-        """
-
-        sample = self.crossfit.training_sample
-
-        if not isinstance(sample.target, pd.Series):
-            raise NotImplementedError("multi-target simulations are not supported")
-
-        with self._parallel() as parallel:
-            result: List[float] = parallel(
-                self._delayed(
-                    UnivariateUpliftSimulator._deviation_of_mean_prediction_for_split
-                )(
-                    model=model,
-                    subsample=(
-                        sample
-                        if _SIMULATE_FULL_SAMPLE
-                        else sample.subsample(iloc=test_indices)
-                    ),
-                )
-                for (model, (_, test_indices)) in zip(
-                    self.crossfit.models(), self.crossfit.splits()
-                )
-            )
-
-        return pd.Series(
-            index=pd.RangeIndex(len(result), name=BaseUnivariateSimulator.COL_SPLIT_ID),
-            data=result,
-            name=BaseUnivariateSimulator.COL_DEVIATION_OF_MEAN_PREDICTION,
-        )
 
     @staticmethod
     def _expected_pipeline_type() -> Type[RegressorPipelineDF]:
@@ -401,10 +415,8 @@ class UnivariateUpliftSimulator(BaseUnivariateSimulator[RegressorPipelineDF]):
         return model.predict(x).mean(axis=0) - actual_outcomes.mean(axis=0)
 
     @staticmethod
-    def _deviation_of_mean_prediction_for_split(
-        model: LearnerDF, subsample: Sample
-    ) -> float:
-        # return difference between actual and predicted target
+    def _simulate_actuals(model: RegressorPipelineDF, subsample: Sample) -> float:
+        # return relative difference between actual and predicted target
         return (
             model.predict(X=subsample.features).mean(axis=0)
             / subsample.target.mean(axis=0)
