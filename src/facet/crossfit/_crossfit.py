@@ -188,7 +188,7 @@ class LearnerCrossfit(
         self.random_state = random_state
 
         self._model_by_split: Optional[List[T_LearnerPipelineDF]] = None
-        self._training_sample: Optional[Sample] = None
+        self._sample: Optional[Sample] = None
 
     __init__.__doc__ += ParallelizableMixin.__init__.__doc__
 
@@ -370,7 +370,7 @@ class LearnerCrossfit(
 
         if do_fit:
             self._model_by_split = model_by_split
-            self._training_sample = _sample
+            self._sample = _sample
 
         return CrossfitScores(scores=scores) if do_score else None
 
@@ -400,7 +400,7 @@ class LearnerCrossfit(
     @property
     def is_fitted(self) -> bool:
         """[see superclass]"""
-        return self._training_sample is not None
+        return self._sample is not None
 
     @property
     def n_fits(self) -> int:
@@ -421,9 +421,7 @@ class LearnerCrossfit(
         return (
             s
             for s, _ in zip(
-                self.cv.split(
-                    X=self._training_sample.features, y=self._training_sample.target
-                ),
+                self.cv.split(X=self._sample.features, y=self._sample.target),
                 self._model_by_split,
             )
         )
@@ -439,7 +437,7 @@ class LearnerCrossfit(
     def sample(self) -> Sample:
         """The sample used to train this crossfit."""
         self._ensure_fitted()
-        return self._training_sample
+        return self._sample
 
     # noinspection PyPep8Naming
     @staticmethod
