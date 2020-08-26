@@ -193,12 +193,12 @@ class LearnerInspector(
         learner: LearnerDF = crossfit.pipeline.final_estimator
 
         if isinstance(learner, ClassifierDF):
-            if len(crossfit.training_sample.target_columns) != 1:
+            if len(crossfit.sample.target_columns) != 1:
                 raise ValueError(
                     "only single-output classifiers (binary or multi-class) are "
                     "supported, but the classifier in the given crossfit has been "
                     "fitted on multiple columns "
-                    f"{crossfit.training_sample.target_columns}"
+                    f"{crossfit.sample.target_columns}"
                 )
 
             is_classifier = True
@@ -274,7 +274,7 @@ class LearnerInspector(
         The training sample of the crossfit with which this inspector was fitted.
         """
         self._ensure_fitted()
-        return self.crossfit.training_sample
+        return self.crossfit.sample
 
     @property
     def outputs(self) -> List[str]:
@@ -308,7 +308,7 @@ class LearnerInspector(
                 ) from cause
 
         else:
-            return self.crossfit.training_sample.target_columns
+            return self.crossfit.sample.target_columns
 
     @property
     def features(self) -> List[str]:
@@ -392,7 +392,7 @@ class LearnerInspector(
         The importance values of all features always add up to ``1.0``.
 
         The calculation applies sample weights if specified in the underlying
-        :attr:`.training_sample`.
+        :attr:`.sample`.
 
         :param method: method for calculating feature importance. Supported methods \
             are ``rms`` (root of mean squares, default) and ``mav`` (mean absolute \

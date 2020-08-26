@@ -289,7 +289,7 @@ class LearnerCrossfit(
             fit_params.update(sample_weight=sample_weight)
 
         if not do_fit:
-            _sample = self.training_sample
+            _sample = self.sample
 
         features = _sample.features
         target = _sample.target
@@ -436,7 +436,7 @@ class LearnerCrossfit(
         return iter(self._model_by_split)
 
     @property
-    def training_sample(self) -> Sample:
+    def sample(self) -> Sample:
         """The sample used to train this crossfit."""
         self._ensure_fitted()
         return self._training_sample

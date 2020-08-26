@@ -121,7 +121,7 @@ class ShapCalculator(
         # reset fit in case we get an exception along the way
         self.shap_ = None
 
-        training_sample = crossfit.training_sample
+        training_sample = crossfit.sample
         self.feature_index_ = crossfit.pipeline.features_out.rename(Sample.IDX_FEATURE)
         self.output_names_ = self._output_names(crossfit=crossfit)
         self.sample_ = training_sample
@@ -186,7 +186,7 @@ class ShapCalculator(
     ) -> pd.DataFrame:
         crossfit: LearnerCrossfit[LearnerPipelineDF]
 
-        training_sample = crossfit.training_sample
+        training_sample = crossfit.sample
 
         # prepare the background dataset
         background_dataset = training_sample.features
@@ -580,7 +580,7 @@ class RegressorShapCalculator(ShapCalculator[RegressorPipelineDF], metaclass=ABC
 
     @staticmethod
     def _output_names(crossfit: LearnerCrossfit[RegressorPipelineDF]) -> List[str]:
-        return crossfit.training_sample.target_columns
+        return crossfit.sample.target_columns
 
     @staticmethod
     def multi_output_type() -> str:
@@ -662,7 +662,7 @@ class ClassifierShapCalculator(ShapCalculator[ClassifierPipelineDF], metaclass=A
     @staticmethod
     def _output_names(crossfit: LearnerCrossfit[ClassifierPipelineDF]) -> List[str]:
         assert (
-            len(crossfit.training_sample.target_columns) == 1
+            len(crossfit.sample.target_columns) == 1
         ), "classification model is single-output"
         classifier_df = crossfit.pipeline.final_estimator
         assert classifier_df.is_fitted, "classifier used in crossfit must be fitted"
