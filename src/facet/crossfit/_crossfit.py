@@ -208,6 +208,9 @@ class LearnerCrossfit(
 
         self: LearnerCrossfit  # support type hinting in PyCharm
 
+        # un-fit this instance so we have a defined state in case of an exception
+        self._reset_fit()
+
         self._fit_score(_sample=sample, **fit_params)
 
         return self
@@ -257,6 +260,10 @@ class LearnerCrossfit(
 
         :return: the resulting scores
         """
+
+        # un-fit this instance so we have a defined state in case of an exception
+        self._reset_fit()
+
         return self._fit_score(
             _sample=sample, _scoring=scoring, _train_scores=train_scores, **fit_params
         )
@@ -413,6 +420,11 @@ class LearnerCrossfit(
     def is_fitted(self) -> bool:
         """[see superclass]"""
         return self._sample is not None
+
+    def _reset_fit(self) -> None:
+        self._sample = None
+        self._splits = None
+        self._model_by_split = None
 
     @property
     def n_fits(self) -> int:
