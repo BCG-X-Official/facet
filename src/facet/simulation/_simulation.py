@@ -206,9 +206,7 @@ class BaseUnivariateSimulator(
     @staticmethod
     @abstractmethod
     def _simulate(
-        model: T_LearnerPipelineDF,
-        x: pd.DataFrame,
-        actual_outcomes: Union[pd.Series, pd.DataFrame],
+        model: T_LearnerPipelineDF, x: pd.DataFrame, actual_outcomes: pd.Series
     ) -> float:
         pass
 
@@ -261,9 +259,7 @@ class BaseUnivariateSimulator(
         subsample: Sample,
         feature_name: str,
         simulated_values: Optional[Sequence[Any]],
-        simulate_fn: Callable[
-            [LearnerDF, pd.DataFrame, Union[pd.Series, pd.DataFrame]], float
-        ],
+        simulate_fn: Callable[[LearnerDF, pd.DataFrame, pd.Series], float],
     ) -> List[float]:
         # for a list of values to be simulated, return a list of absolute target changes
 
@@ -324,9 +320,7 @@ class BaseUnivariateSimulator(
         )
 
 
-class UnivariateProbabilitySimulator(
-    BaseUnivariateSimulator[LearnerCrossfit[ClassifierPipelineDF]]
-):
+class UnivariateProbabilitySimulator(BaseUnivariateSimulator[ClassifierPipelineDF]):
     """
     Univariate simulation for predicted probability based on a binary classifier.
     """
@@ -337,9 +331,7 @@ class UnivariateProbabilitySimulator(
 
     @staticmethod
     def _simulate(
-        model: T_LearnerPipelineDF,
-        x: pd.DataFrame,
-        actual_outcomes: Union[pd.Series, pd.DataFrame],
+        model: ClassifierPipelineDF, x: pd.DataFrame, actual_outcomes: pd.Series
     ) -> float:
         probabilities: pd.DataFrame = model.predict_proba(x)
         if probabilities.shape[1] != 2:
@@ -347,9 +339,7 @@ class UnivariateProbabilitySimulator(
         return probabilities.iloc[:, 1].mean()
 
 
-class UnivariateUpliftSimulator(
-    BaseUnivariateSimulator[LearnerCrossfit[RegressorPipelineDF]]
-):
+class UnivariateUpliftSimulator(BaseUnivariateSimulator[RegressorPipelineDF]):
     """
     Univariate simulation for target uplift based on a regression model.
     """
@@ -406,9 +396,7 @@ class UnivariateUpliftSimulator(
 
     @staticmethod
     def _simulate(
-        model: T_LearnerPipelineDF,
-        x: pd.DataFrame,
-        actual_outcomes: Union[pd.Series, pd.DataFrame],
+        model: RegressorPipelineDF, x: pd.DataFrame, actual_outcomes: pd.Series
     ) -> float:
         return model.predict(x).mean(axis=0) - actual_outcomes.mean(axis=0)
 
