@@ -45,10 +45,15 @@ T_LearnerPipelineDF = TypeVar("T_LearnerPipelineDF", bound=LearnerPipelineDF)
 
 
 #
-# Class definitions
+# Ensure all symbols introduced below are included in __all__
 #
 
 __tracker = AllTracker(globals())
+
+
+#
+# Class definitions
+#
 
 
 @inheritdoc(match="[see superclass]")
@@ -82,6 +87,9 @@ class LearnerInspector(
       dendrogram)
     - feature association linkage (to visualize clusters of associated features in a \
       dendrogram)
+
+    All inspections that aggregate across observations will respect sample weights, if
+    specified in the underlying training sample.
     """
 
     #: name for "feature importance" series or column
@@ -383,6 +391,9 @@ class LearnerInspector(
 
         The importance values of all features always add up to ``1.0``.
 
+        The calculation applies sample weights if specified in the underlying
+        :attr:`.training_sample`.
+
         :param method: method for calculating feature importance. Supported methods \
             are ``rms`` (root of mean squares, default) and ``mav`` (mean absolute \
             values)
@@ -397,11 +408,19 @@ class LearnerInspector(
             )
 
         shap_matrix = self.shap_values(consolidate="mean")
+        weight = self.training_sample.weight
+
         abs_importance: pd.Series
         if method == "rms":
-            abs_importance = shap_matrix.pow(2).mean().pow(0.5)
+            if weight is None:
+                abs_importance = shap_matrix.pow(2).mean().pow(0.5)
+            else:
+                abs_importance = shap_matrix.pow(2).mul(weight, axis=0).mean().pow(0.5)
         elif method == "mav":
-            abs_importance = shap_matrix.abs().mean()
+            if weight is None:
+                abs_importance = shap_matrix.abs().mean()
+            else:
+                abs_importance = shap_matrix.abs().mul(weight, axis=0).mean()
         else:
             raise ValueError(f"unknown method: {method}")
 
@@ -618,15 +637,24 @@ class LearnerInspector(
             .swapaxes(1, 2)
         )
 
+        # get the observation weights with shape
+        # (n_observations, n_outputs, n_features, n_features)
+        weight: Optional[np.ndarray]
+        _weight_sr = self.training_sample.weight
+        if _weight_sr is not None:
+            # if sample weights are defined, convert them to an array
+            # and align the array with the dimensions of the feature interaction array
+            weight = _weight_sr.values.reshape((-1, 1, 1, 1))
+        else:
+            weight = None
+
         # calculate the average interactions for each output and feature/feature
         # interaction, based on the standard deviation assuming a mean of 0.0.
         # The resulting matrix has shape (n_outputs, n_features, n_features)
-        interaction_matrix = np.sqrt(
-            (
-                im_matrix_per_observation_and_output
-                * im_matrix_per_observation_and_output
-            ).mean(axis=0)
-        )
+        _interaction_squared = im_matrix_per_observation_and_output ** 2
+        if weight is not None:
+            _interaction_squared *= weight
+        interaction_matrix = np.sqrt(_interaction_squared.mean(axis=0))
         assert interaction_matrix.shape == (n_outputs, n_features, n_features)
 
         # we normalise the synergy matrix for each output to a total of 1.0

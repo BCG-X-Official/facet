@@ -16,14 +16,3 @@ partitions are integers
 :class:`CategoryPartitioner` is adapted to categorical sets
 """
 from ._partition import *
-
-__all__ = [
-    "T_Number",
-    "T_Value",
-    "DEFAULT_MAX_PARTITIONS",
-    "Partitioner",
-    "RangePartitioner",
-    "ContinuousRangePartitioner",
-    "IntegerRangePartitioner",
-    "CategoryPartitioner",
-]

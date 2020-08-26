@@ -1,5 +1,7 @@
 import logging
 
+import pytest
+
 from facet import Sample
 from facet.selection import LearnerGrid, LearnerRanker
 from facet.validation import StratifiedBootstrapCV
@@ -32,9 +34,14 @@ def test_prediction_classifier(
         scoring="f1_macro",
         n_jobs=n_jobs,
         random_state=42,
-    ).fit(
-        sample=iris_sample
     )
+
+    model_ranker.fit(sample=iris_sample)
+
+    with pytest.raises(
+        ValueError, match="do not use arg sample_weight to pass sample weights"
+    ):
+        model_ranker.fit(sample=iris_sample, sample_weight=iris_sample.weight)
 
     log.debug(f"\n{model_ranker.summary_report(max_learners=10)}")
 

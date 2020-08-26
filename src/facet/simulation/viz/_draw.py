@@ -9,12 +9,32 @@ this graph there is a histogram of the feature values.
 from typing import *
 
 from facet.simulation import UnivariateSimulation
-from facet.simulation.partition import T_Number
+from pytools.api import AllTracker
 from pytools.viz import Drawer
 from ._style import SimulationMatplotStyle, SimulationReportStyle, SimulationStyle
 
+__all__ = ["SimulationDrawer"]
 
-class _SimulationSeries(NamedTuple):
+#
+# Type variables
+#
+
+
+T_Number = TypeVar("T_Number", int, float)
+
+#
+# Ensure all symbols introduced below are included in __all__
+#
+
+__tracker = AllTracker(globals())
+
+
+#
+# Class definitions
+#
+
+
+class _SimulationSeries(NamedTuple, Generic[T_Number]):
     # A set of aligned series representing the simulation result
     median_uplift: Sequence[T_Number]
     min_uplift: Sequence[T_Number]
@@ -110,3 +130,6 @@ class SimulationDrawer(Drawer[UnivariateSimulation, SimulationStyle]):
             )
         else:
             return simulation_series
+
+
+__tracker.validate()

@@ -12,7 +12,7 @@ import pandas as pd
 from pytools.api import AllTracker, inheritdoc
 from pytools.parallelization import ParallelizableMixin
 from sklearndf import ClassifierDF, RegressorDF
-from .partition import Partitioner, T_Number
+from .partition import Partitioner
 from .. import Sample
 from ..crossfit import LearnerCrossfit
 
@@ -30,7 +30,24 @@ __all__ = [
     "BaseUnivariateSimulator",
     "UnivariateUpliftSimulator",
 ]
+
+#
+# Type variables
+#
+
+
+T_Number = TypeVar("T_Number", int, float)
+
+#
+# Ensure all symbols introduced below are included in __all__
+#
+
 __tracker = AllTracker(globals())
+
+
+#
+# Class definitions
+#
 
 
 class UnivariateSimulation(Generic[T_Number]):
@@ -129,6 +146,10 @@ class BaseUnivariateSimulator(
 
     Determines confidence intervals for the predicted changes by repeating the
     simulations across multiple crossfits.
+
+    Note that sample weights are not taken into account for simulations; each
+    observation has the same weight in the simulation even if different weights
+    have been specified for the sample.
     """
 
     COL_CROSSFIT_ID = "crossfit_id"

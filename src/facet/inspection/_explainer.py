@@ -15,18 +15,32 @@ from sklearn.base import BaseEstimator
 from pytools.api import AllTracker, inheritdoc, validate_type
 from sklearndf import ClassifierDF, LearnerDF, RegressorDF
 
-_EARLIEST_SUPPORTED_VERSION = version.LooseVersion("0.34")
-
 log = logging.getLogger(__name__)
 
-if version.LooseVersion(shap.__version__) < _EARLIEST_SUPPORTED_VERSION:
+__all__ = ["ExplainerFactory", "TreeExplainerFactory", "KernelExplainerFactory"]
+
+#
+# Ensure we have a supported version of the shap package
+#
+
+_SHAP_EARLIEST_VERSION = version.LooseVersion("0.34")
+
+if version.LooseVersion(shap.__version__) < _SHAP_EARLIEST_VERSION:
     raise RuntimeError(
         f"shap package version {shap.__version__} is not supported; "
-        f"please upgrade to version {_EARLIEST_SUPPORTED_VERSION} or later"
+        f"please upgrade to version {_SHAP_EARLIEST_VERSION} or later"
     )
 
-__all__ = ["ExplainerFactory", "TreeExplainerFactory", "KernelExplainerFactory"]
+#
+# Ensure all symbols introduced below are included in __all__
+#
+
 __tracker = AllTracker(globals())
+
+
+#
+# Class definitions
+#
 
 
 class ExplainerFactory(metaclass=ABCMeta):
