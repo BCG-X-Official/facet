@@ -24,10 +24,6 @@ from ..crossfit import LearnerCrossfit
 
 log = logging.getLogger(__name__)
 
-# if True, use the full available sample to carry out simulations; otherwise only
-# use the train sample of each fold
-_SIMULATE_FULL_SAMPLE = True
-
 __all__ = [
     "UnivariateSimulation",
     "BaseUnivariateSimulator",
@@ -36,10 +32,19 @@ __all__ = [
 ]
 
 #
+# Constants
+#
+
+# if True, use the full available sample to carry out simulations; otherwise only
+# use the train sample of each fold
+_SIMULATE_FULL_SAMPLE = True
+
+
+#
 # Type variables
 #
 
-
+T_LearnerPipelineDF = TypeVar("T_LearnerPipelineDF", bound=LearnerPipelineDF)
 T_Number = TypeVar("T_Number", int, float)
 
 #
