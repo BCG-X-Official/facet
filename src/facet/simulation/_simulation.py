@@ -2,6 +2,7 @@
 Core implementation of :mod:`facet.simulation`
 """
 
+import logging
 from abc import ABCMeta, abstractmethod
 from typing import *
 from typing import Union
@@ -21,7 +22,7 @@ from .partition import Partitioner
 from .. import Sample
 from ..crossfit import LearnerCrossfit
 
-T_LearnerPipelineDF = TypeVar("T_LearnerPipelineDF", bound=LearnerPipelineDF)
+log = logging.getLogger(__name__)
 
 # if True, use the full available sample to carry out simulations; otherwise only
 # use the train sample of each fold
