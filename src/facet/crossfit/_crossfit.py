@@ -414,6 +414,7 @@ class LearnerCrossfit(
         # copy self and only keep the specified number of fits
         new_crossfit = copy(self)
         new_crossfit._model_by_split = self._model_by_split[:n_fits]
+        new_crossfit._splits = self._splits[:n_fits]
         return new_crossfit
 
     @property
@@ -442,7 +443,7 @@ class LearnerCrossfit(
 
         # ensure we do not return more splits than we have fitted models
         # this is relevant if this is a resized learner crossfit
-        return iter(self._splits[: self.n_fits])
+        return iter(self._splits)
 
     def models(self) -> Iterator[T_LearnerPipelineDF]:
         """
