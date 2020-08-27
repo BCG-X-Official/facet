@@ -24,11 +24,15 @@ Classification on a simulated dataset
 
 Predicting equipment wear
 ------------------------------------------------
+.. toctree::
+    :maxdepth: 2
 
-Notebook here
+    tutorial/Predictive_Maintenance_Regression_with_Facet
 
 
 
-Regression on a simulated dataset
-------------------------------------------------
-Notebook here
+Regression machine failures on a water well (simulated)
+-----------------------------------------------------------
+
+
+
