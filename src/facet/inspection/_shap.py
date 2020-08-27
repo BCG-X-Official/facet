@@ -186,10 +186,10 @@ class ShapCalculator(
     ) -> pd.DataFrame:
         crossfit: LearnerCrossfit[LearnerPipelineDF]
 
-        training_sample = crossfit.sample
+        sample = crossfit.sample
 
         # prepare the background dataset
-        background_dataset = training_sample.features
+        background_dataset = sample.features
         pipeline = crossfit.pipeline
         if pipeline.preprocessing:
             background_dataset = pipeline.preprocessing.transform(X=background_dataset)
@@ -213,18 +213,18 @@ class ShapCalculator(
                     self.feature_index_,
                     self._raw_shap_to_df,
                     self.multi_output_type(),
-                    self._multi_output_names(model=model, sample=training_sample),
+                    self._multi_output_names(model=model, sample=sample),
                 )
                 for model, sample in zip(
                     crossfit.models(),
                     (
                         # if we explain full samples, we get samples from an
                         # infinite iterator of the full training sample
-                        iter(lambda: training_sample, None)
+                        iter(lambda: sample, None)
                         if self.explain_full_sample
                         # otherwise we iterate over the test splits of each crossfit
                         else (
-                            training_sample.subsample(iloc=oob_split)
+                            sample.subsample(iloc=oob_split)
                             for _, oob_split in crossfit.splits()
                         )
                     ),
