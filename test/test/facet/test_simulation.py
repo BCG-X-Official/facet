@@ -72,7 +72,7 @@ def test_univariate_uplift_simulation(
 
     parameterized_feature = "LSTAT"
 
-    sample = uplift_simulator.crossfit.training_sample
+    sample = uplift_simulator.crossfit.sample
 
     res = uplift_simulator._simulate_feature_with_values(
         feature_name=parameterized_feature,

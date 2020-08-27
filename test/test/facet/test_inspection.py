@@ -342,7 +342,7 @@ def _validate_shap_values_against_predictions(
     # calculate the matching predictions, so we can check if the SHAP values add up
     # correctly
     predicted_probabilities_per_split: List[pd.DataFrame] = [
-        model.predict_proba(crossfit.training_sample.features.iloc[test_split, :])
+        model.predict_proba(crossfit.sample.features.iloc[test_split, :])
         for model, (_, test_split) in zip(crossfit.models(), crossfit.splits())
     ]
 
