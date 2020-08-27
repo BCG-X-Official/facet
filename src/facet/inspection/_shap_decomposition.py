@@ -121,7 +121,7 @@ class ShapValueDecomposer(FittableMixin[ShapCalculator]):
 
         _weight_sr = shap_calculator.sample_.weight
         if _weight_sr is not None:
-            weight = _weight_sr.loc[shap_values.index.get_level_values(1)].values
+            weight = _weight_sr.loc[shap_values.index].values
         else:
             weight = None
 
@@ -292,7 +292,7 @@ class ShapInteractionValueDecomposer(ShapValueDecomposer):
 
         _weight_sr = shap_calculator.sample_.weight
         if _weight_sr is not None:
-            _observation_indices = shap_values.index.get_level_values(1).values.reshape(
+            _observation_indices = shap_values.index.get_level_values(0).values.reshape(
                 (n_observations, n_features)
             )[:, 0]
             weight = _ensure_last_axis_is_fast(
