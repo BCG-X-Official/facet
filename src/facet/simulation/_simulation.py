@@ -146,6 +146,10 @@ class BaseUnivariateSimulator(
 
     Determines confidence intervals for the predicted changes by repeating the
     simulations across multiple crossfits.
+
+    Note that sample weights are not taken into account for simulations; each
+    observation has the same weight in the simulation even if different weights
+    have been specified for the sample.
     """
 
     COL_CROSSFIT_ID = "crossfit_id"
@@ -350,7 +354,7 @@ class UnivariateUpliftSimulator(
         :param partitioner: the partitioner of feature values to run simulations for
         """
 
-        sample = self.crossfit.training_sample
+        sample = self.crossfit.sample
 
         if not isinstance(sample.target, pd.Series):
             raise NotImplementedError("multi-target simulations are not supported")
@@ -375,7 +379,7 @@ class UnivariateUpliftSimulator(
     def simulate_actuals(self) -> pd.Series:
         """[see superclass]"""
 
-        sample = self.crossfit.training_sample
+        sample = self.crossfit.sample
 
         if not isinstance(sample.target, pd.Series):
             raise NotImplementedError("multi-target simulations are not supported")
@@ -421,7 +425,7 @@ class UnivariateUpliftSimulator(
           ``relative_target_change``.
         """
 
-        sample = self.crossfit.training_sample
+        sample = self.crossfit.sample
 
         if feature_name not in sample.features.columns:
             raise ValueError(f"Feature '{feature_name}' not in sample")

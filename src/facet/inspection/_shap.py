@@ -106,7 +106,7 @@ class ShapCalculator(
         self.shap_: Optional[pd.DataFrame] = None
         self.feature_index_: Optional[pd.Index] = None
         self.output_names_: Optional[List[str]] = None
-        self.n_observations_: Optional[int] = None
+        self.sample_: Optional[Sample] = None
 
     def fit(self: T, crossfit: LearnerCrossfit[T_LearnerPipelineDF], **fit_params) -> T:
         """
@@ -121,10 +121,10 @@ class ShapCalculator(
         # reset fit in case we get an exception along the way
         self.shap_ = None
 
-        training_sample = crossfit.training_sample
+        training_sample = crossfit.sample
         self.feature_index_ = crossfit.pipeline.features_out.rename(Sample.IDX_FEATURE)
         self.output_names_ = self._output_names(crossfit=crossfit)
-        self.n_observations_ = len(training_sample)
+        self.sample_ = training_sample
 
         # calculate shap values and re-order the observation index to match the
         # sequence in the original training sample
@@ -170,9 +170,9 @@ class ShapCalculator(
         """
         pass
 
-    @property
+    @staticmethod
     @abstractmethod
-    def _multi_output_type(self) -> str:
+    def multi_output_type() -> str:
         pass
 
     @abstractmethod
@@ -186,7 +186,7 @@ class ShapCalculator(
     ) -> pd.DataFrame:
         crossfit: LearnerCrossfit[LearnerPipelineDF]
 
-        training_sample = crossfit.training_sample
+        training_sample = crossfit.sample
 
         # prepare the background dataset
         background_dataset = training_sample.features
@@ -212,7 +212,7 @@ class ShapCalculator(
                     ),
                     self.feature_index_,
                     self._raw_shap_to_df,
-                    self._multi_output_type,
+                    self.multi_output_type(),
                     self._multi_output_names(model=model, sample=training_sample),
                 )
                 for model, sample in zip(
@@ -280,38 +280,34 @@ class ShapCalculator(
         pass
 
     @staticmethod
-    def _preprocessed_features_and_explainer(
-        model: LearnerPipelineDF,
-        sample: Sample,
-        split: Optional[Tuple[Sequence[int], Sequence[int]]],
-        explainer_factory: ExplainerFactory,
-    ) -> Tuple[pd.DataFrame, Explainer]:
-        # get the out-of-bag subsample of the training sample, with feature columns
-        # in the sequence that was used to fit the learner
+    def _shap_tensors_to_list(
+        shap_tensors: Union[np.ndarray, Sequence[np.ndarray]],
+        multi_output_type: str,
+        multi_output_names: Sequence[str],
+    ):
+        n_outputs = len(multi_output_names)
 
-        def _preprocess(_sample: Sample) -> pd.DataFrame:
-            # get the features of all out-of-bag observations
-            x = _sample.features
+        if not isinstance(shap_tensors, List):
+            if (
+                n_outputs == 2
+                and multi_output_type == ClassifierShapCalculator.multi_output_type()
+            ):
+                # if we have a single output *and* binary classification, the explainer
+                # will have returned a single tensor for the positive class;
+                # the SHAP values for the negative class will have the opposite sign
+                shap_tensors = [-shap_tensors, shap_tensors]
+            else:
+                # if we have a single output *and* no classification, the explainer will
+                # have returned a single tensor as an array, so we wrap it in a list
+                shap_tensors = [shap_tensors]
 
-            # pre-process the features
-            if model.preprocessing is not None:
-                x = model.preprocessing.transform(x)
+        if n_outputs != len(shap_tensors):
+            raise AssertionError(
+                f"count of SHAP tensors (n={len(shap_tensors)}) "
+                f"should match number of outputs ({multi_output_names})"
+            )
 
-            # re-index the features to fit the sequence that was used to fit the learner
-            return x.reindex(columns=model.final_estimator.features_in, copy=False)
-
-        if split:
-            background_dataset = _preprocess(sample.subsample(iloc=split[0]))
-            preprocessed = _preprocess(sample.subsample(iloc=split[1]))
-        else:
-            background_dataset = preprocessed = _preprocess(sample)
-
-        return (
-            preprocessed,
-            explainer_factory.make_explainer(
-                model=model.final_estimator, data=background_dataset
-            ),
-        )
+        return shap_tensors
 
     @staticmethod
     def _preprocessed_features(
@@ -389,12 +385,12 @@ class ShapValuesCalculator(
     ) -> pd.DataFrame:
         x = ShapCalculator._preprocessed_features(model=model, sample=sample)
 
-        # calculate the shap values (returned as an array)
-        shap_values: np.ndarray = explainer.shap_values(x)
-        if isinstance(shap_values, np.ndarray):
-            # if we have a single output *and* no classification, the explainer will
-            # have returned a single tensor as an array
-            shap_values: List[np.ndarray] = [shap_values]
+        # calculate the shap values, and ensure the result is a list of arrays
+        shap_values: List[np.ndarray] = ShapCalculator._shap_tensors_to_list(
+            shap_tensors=explainer.shap_values(x),
+            multi_output_type=multi_output_type,
+            multi_output_names=multi_output_names,
+        )
 
         # convert to a data frame per output (different logic depending on whether
         # we have a regressor or a classifier, implemented by method
@@ -410,10 +406,6 @@ class ShapValuesCalculator(
         if len(shap_values_df_per_output) == 1:
             return shap_values_df_per_output[0]
         else:
-            assert len(shap_values_df_per_output) == len(multi_output_names), (
-                f"shap yielded {len(shap_values_df_per_output)} outputs; expected "
-                f"{len(multi_output_names)} outputs for names {multi_output_names}"
-            )
             return pd.concat(
                 shap_values_df_per_output,
                 axis=1,
@@ -470,7 +462,7 @@ class ShapInteractionValuesCalculator(
         """
         self._ensure_fitted()
 
-        n_observations = self.n_observations_
+        n_observations = len(self.sample_)
         n_features = len(self.feature_index_)
         interaction_matrix = self.shap_
 
@@ -509,18 +501,14 @@ class ShapInteractionValuesCalculator(
                 "Explainer does not implement method shap_interaction_values"
             )
 
-        shap_interaction_tensors: Union[np.ndarray, List[np.ndarray]] = (
-            shap_interaction_values_fn(x)
+        # calculate the shap interaction values; ensure the result is a list of arrays
+        shap_interaction_tensors: List[np.ndarray] = (
+            ShapCalculator._shap_tensors_to_list(
+                shap_tensors=shap_interaction_values_fn(x),
+                multi_output_type=multi_output_type,
+                multi_output_names=multi_output_names,
+            )
         )
-
-        if isinstance(shap_interaction_tensors, np.ndarray):
-            # if we have a single output *and* no classification, the explainer will
-            # have returned a single tensor as an array, so we wrap it in a list
-            shap_interaction_tensors: List[np.ndarray] = [shap_interaction_tensors]
-
-        assert len(multi_output_names) == len(
-            shap_interaction_tensors
-        ), f"{len(shap_interaction_tensors)} outputs named {multi_output_names}"
 
         interaction_matrix_per_output: List[pd.DataFrame] = [
             im.reindex(
@@ -558,10 +546,10 @@ class RegressorShapCalculator(ShapCalculator[RegressorPipelineDF], metaclass=ABC
 
     @staticmethod
     def _output_names(crossfit: LearnerCrossfit[RegressorPipelineDF]) -> List[str]:
-        return crossfit.training_sample.target_columns
+        return crossfit.sample.target_columns
 
-    @property
-    def _multi_output_type(self) -> str:
+    @staticmethod
+    def multi_output_type() -> str:
         return Sample.IDX_TARGET
 
     def _multi_output_names(
@@ -640,7 +628,7 @@ class ClassifierShapCalculator(ShapCalculator[ClassifierPipelineDF], metaclass=A
     @staticmethod
     def _output_names(crossfit: LearnerCrossfit[ClassifierPipelineDF]) -> List[str]:
         assert (
-            len(crossfit.training_sample.target_columns) == 1
+            len(crossfit.sample.target_columns) == 1
         ), "classification model is single-output"
         classifier_df = crossfit.pipeline.final_estimator
         assert classifier_df.is_fitted, "classifier used in crossfit must be fitted"
@@ -671,8 +659,8 @@ class ClassifierShapCalculator(ShapCalculator[ClassifierPipelineDF], metaclass=A
         else:
             return output_names
 
-    @property
-    def _multi_output_type(self) -> str:
+    @staticmethod
+    def multi_output_type() -> str:
         return ClassifierShapCalculator.COL_CLASS
 
     def _multi_output_names(
@@ -702,7 +690,7 @@ class ClassifierShapCalculator(ShapCalculator[ClassifierPipelineDF], metaclass=A
 
             columns = pd.MultiIndex.from_product(
                 iterables=[output_names, self.feature_index_],
-                names=[self._multi_output_type, self.feature_index_.name],
+                names=[self.multi_output_type(), self.feature_index_.name],
             )
 
             return pd.concat(
@@ -740,10 +728,14 @@ class ClassifierShapValuesCalculator(
             # to ensure the values are returned as expected above,
             # and no information of class 1 is discarded, assert the
             # following:
-            assert np.allclose(raw_shap_tensors[0], -raw_shap_tensors[1]), (
-                "shap values of binary classifiers must add up to 0.0 "
-                "for each observation and feature"
-            )
+            if not np.allclose(raw_shap_tensors[0], -raw_shap_tensors[1]):
+                _raw_shap_tensor_totals = raw_shap_tensors[0] + raw_shap_tensors[1]
+                log.warning(
+                    "shap values of binary classifiers should add up to 0.0 "
+                    "for each observation and feature, but total shap values range "
+                    f"from {_raw_shap_tensor_totals.min():g} "
+                    f"to {_raw_shap_tensor_totals.max():g}"
+                )
 
             # all good: proceed with SHAP values for class 0:
             raw_shap_tensors = raw_shap_tensors[:1]
@@ -782,10 +774,14 @@ class ClassifierShapInteractionValuesCalculator(
             # to ensure the values are returned as expected above,
             # and no information of class 1 is discarded, assert the
             # following:
-            assert np.allclose(raw_shap_tensors[0], -raw_shap_tensors[1]), (
-                "shap interaction values of binary classifiers must add up to 0.0 "
-                "for each observation and feature pair"
-            )
+            if not np.allclose(raw_shap_tensors[0], -raw_shap_tensors[1]):
+                _raw_shap_tensor_totals = raw_shap_tensors[0] + raw_shap_tensors[1]
+                log.warning(
+                    "shap interaction values of binary classifiers must add up to 0.0 "
+                    "for each observation and feature pair, but total shap values range "
+                    f"from {_raw_shap_tensor_totals.min():g} "
+                    f"to {_raw_shap_tensor_totals.max():g}"
+                )
 
             # all good: proceed with SHAP values for class 0:
             raw_shap_tensors = raw_shap_tensors[:1]

@@ -9,6 +9,7 @@ import numpy as np
 import pandas as pd
 import pytest
 from pandas.util.testing import assert_frame_equal
+from sklearn.datasets import make_classification
 from sklearn.model_selection import BaseCrossValidator, KFold
 
 from facet import Sample
@@ -18,7 +19,10 @@ from facet.selection import LearnerGrid, LearnerRanker
 from facet.validation import BootstrapCV, StratifiedBootstrapCV
 from pytools.viz.dendrogram import DendrogramDrawer, DendrogramReportStyle
 from sklearndf import TransformerDF
-from sklearndf.classification import RandomForestClassifierDF
+from sklearndf.classification import (
+    GradientBoostingClassifierDF,
+    RandomForestClassifierDF,
+)
 from sklearndf.pipeline import ClassifierPipelineDF, RegressorPipelineDF
 from . import check_ranking
 
@@ -219,6 +223,33 @@ def test_model_inspection_classifier_binary(
     )
 
 
+def test_model_inspection_classifier_binary_single_shap_output():
+    # simulate some data
+    x, y = make_classification(
+        n_samples=200, n_features=5, n_informative=5, n_redundant=0, random_state=42
+    )
+    sim_df = pd.DataFrame(
+        np.hstack((x, y[:, np.newaxis])),
+        columns=[*(f"f{i}" for i in range(5)), "target"],
+    )
+
+    # create sample object
+    sample_df = Sample(observations=sim_df, target="target")
+
+    # fit the crossfit
+    crossfit = LearnerCrossfit(
+        pipeline=ClassifierPipelineDF(
+            classifier=GradientBoostingClassifierDF(random_state=42)
+        ),
+        cv=BootstrapCV(n_splits=5, random_state=42),
+        random_state=42,
+        n_jobs=-3,
+    ).fit(sample_df)
+
+    # fit the inspector
+    LearnerInspector(n_jobs=-3).fit(crossfit=crossfit)
+
+
 # noinspection DuplicatedCode
 def test_model_inspection_classifier_multi_class(
     iris_sample: Sample,
@@ -311,7 +342,7 @@ def _validate_shap_values_against_predictions(
     # calculate the matching predictions, so we can check if the SHAP values add up
     # correctly
     predicted_probabilities_per_split: List[pd.DataFrame] = [
-        model.predict_proba(crossfit.training_sample.features.iloc[test_split, :])
+        model.predict_proba(crossfit.sample.features.iloc[test_split, :])
         for model, (_, test_split) in zip(crossfit.models(), crossfit.splits())
     ]
 
