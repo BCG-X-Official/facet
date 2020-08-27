@@ -310,40 +310,6 @@ class ShapCalculator(
         return shap_tensors
 
     @staticmethod
-    def _preprocessed_features_and_explainer(
-        model: LearnerPipelineDF,
-        sample: Sample,
-        split: Optional[Tuple[Sequence[int], Sequence[int]]],
-        explainer_factory: ExplainerFactory,
-    ) -> Tuple[pd.DataFrame, Explainer]:
-        # get the out-of-bag subsample of the training sample, with feature columns
-        # in the sequence that was used to fit the learner
-
-        def _preprocess(_sample: Sample) -> pd.DataFrame:
-            # get the features of all out-of-bag observations
-            x = _sample.features
-
-            # pre-process the features
-            if model.preprocessing is not None:
-                x = model.preprocessing.transform(x)
-
-            # re-index the features to fit the sequence that was used to fit the learner
-            return x.reindex(columns=model.final_estimator.features_in, copy=False)
-
-        if split:
-            background_dataset = _preprocess(sample.subsample(iloc=split[0]))
-            preprocessed = _preprocess(sample.subsample(iloc=split[1]))
-        else:
-            background_dataset = preprocessed = _preprocess(sample)
-
-        return (
-            preprocessed,
-            explainer_factory.make_explainer(
-                model=model.final_estimator, data=background_dataset
-            ),
-        )
-
-    @staticmethod
     def _preprocessed_features(
         model: LearnerPipelineDF, sample: Sample
     ) -> pd.DataFrame:
