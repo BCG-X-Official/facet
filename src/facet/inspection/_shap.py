@@ -285,9 +285,22 @@ class ShapCalculator(
         multi_output_type: str,
         multi_output_names: Sequence[str],
     ):
+        def _validate_shap_tensor(shap_tensor: np.ndarray) -> None:
+            if np.isnan(np.sum(shap_tensor)):
+                raise AssertionError(
+                    "Output of SHAP explainer included NaN values. "
+                    "This should not happen; consider initialising the LearnerInspector "
+                    "with an ExplainerFactory that has a different configuration, or "
+                    "that makes SHAP explainers of a different type."
+                )
+
         n_outputs = len(multi_output_names)
 
-        if not isinstance(shap_tensors, List):
+        if isinstance(shap_tensors, List):
+            for shap_tensor in shap_tensors:
+                _validate_shap_tensor(shap_tensor)
+        else:
+            _validate_shap_tensor(shap_tensors)
             if (
                 n_outputs == 2
                 and multi_output_type == ClassifierShapCalculator.multi_output_type()
