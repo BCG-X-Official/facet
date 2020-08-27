@@ -778,8 +778,8 @@ class ClassifierShapInteractionValuesCalculator(
                 _raw_shap_tensor_totals = raw_shap_tensors[0] + raw_shap_tensors[1]
                 log.warning(
                     "shap interaction values of binary classifiers must add up to 0.0 "
-                    "for each observation and feature pair, but total shap values range "
-                    f"from {_raw_shap_tensor_totals.min():g} "
+                    "for each observation and feature pair, but total shap values "
+                    f"range from {_raw_shap_tensor_totals.min():g} "
                     f"to {_raw_shap_tensor_totals.max():g}"
                 )
 
