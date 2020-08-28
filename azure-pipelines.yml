@@ -2,13 +2,13 @@ resources:
   repositories:
     - repository: sklearndf
       type: github
-      endpoint: konst-int-i # todo - update to final github org
-      name: konst-int-i/sklearndf # todo - update to final github org
+      endpoint: BCG-Gamma
+      name: BCG-Gamma/sklearndf
       ref: develop # todo - update to stable release
     - repository: pytools
       type: github
-      endpoint: konst-int-i # todo - update to final github org
-      name: konst-int-i/pytools # todo - update to final github org
+      endpoint: BCG-Gamma
+      name: BCG-Gamma/pytools
       ref: develop # todo - update to stable release
 
 stages:
