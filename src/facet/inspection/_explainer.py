@@ -64,6 +64,14 @@ class ExplainerFactory(metaclass=ABCMeta):
         interaction values, ``False`` otherwise.
         """
 
+    @property
+    @abstractmethod
+    def uses_background_dataset(self) -> bool:
+        """
+        ``True`` if explainers made by this factory will use a background dataset
+        passed to methood :meth:`.make_explainer`, ``False`` otherwise.
+        """
+
     @abstractmethod
     def make_explainer(self, model: LearnerDF, data: pd.DataFrame) -> Explainer:
         """
@@ -122,6 +130,10 @@ class TreeExplainerFactory(ExplainerFactory):
     def supports_shap_interaction_values(self) -> bool:
         """[see superclass]"""
         return self.feature_perturbation == "tree_path_dependent"
+
+    @property
+    def uses_background_dataset(self) -> bool:
+        return self.use_background_dataset
 
     def make_explainer(
         self, model: LearnerDF, data: Optional[pd.DataFrame] = None
@@ -190,6 +202,10 @@ class KernelExplainerFactory(ExplainerFactory):
     def supports_shap_interaction_values(self) -> bool:
         """[see superclass]"""
         return False
+
+    @property
+    def uses_background_dataset(self) -> bool:
+        return True
 
     def make_explainer(self, model: LearnerDF, data: pd.DataFrame) -> Explainer:
         """
