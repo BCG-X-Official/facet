@@ -128,7 +128,7 @@ class TreeExplainerFactory(ExplainerFactory):
         )
         self.model_output = model_output
         self.feature_perturbation = feature_perturbation
-        self.use_background_dataset = use_background_dataset
+        self._uses_background_dataset = use_background_dataset
 
     @property
     def explains_raw_output(self) -> bool:
@@ -142,7 +142,7 @@ class TreeExplainerFactory(ExplainerFactory):
 
     @property
     def uses_background_dataset(self) -> bool:
-        return self.use_background_dataset
+        return self._uses_background_dataset
 
     def make_explainer(
         self, model: LearnerDF, data: Optional[pd.DataFrame] = None
@@ -159,7 +159,7 @@ class TreeExplainerFactory(ExplainerFactory):
 
         explainer = shap.TreeExplainer(
             model=model.native_estimator,
-            data=data if self.use_background_dataset else None,
+            data=data if self._uses_background_dataset else None,
             **self._remove_null_kwargs(
                 dict(
                     model_output=self.model_output,
