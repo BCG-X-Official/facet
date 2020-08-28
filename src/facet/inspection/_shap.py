@@ -422,6 +422,12 @@ class ShapValuesCalculator(
     ) -> pd.DataFrame:
         x = ShapCalculator._preprocessed_features(model=model, sample=sample)
 
+        if x.isna().values.any():
+            log.warning(
+                "preprocessed sample passed to SHAP explainer contains NaN values; "
+                "try to change preprocessing to impute all NaN values"
+            )
+
         # calculate the shap values, and ensure the result is a list of arrays
         shap_values: List[np.ndarray] = ShapCalculator._shap_tensors_to_list(
             shap_tensors=explainer.shap_values(x),
