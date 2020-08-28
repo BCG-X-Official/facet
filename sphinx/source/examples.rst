@@ -13,6 +13,13 @@ Classifying pre-diabetes
 
    tutorial/Prediabetes_classification_with_Facet
 
+Predictive Maintenance Regression
+------------------------------------------------
+.. toctree::
+    :maxdepth: 2
+
+    tutorial/Predictive_Maintenance_Regression_with_Facet
+
 
 Classification on a simulated dataset
 ------------------------------------------------
@@ -20,14 +27,6 @@ Classification on a simulated dataset
    :maxdepth: 2
 
    tutorial/Classification_simulation_example_Facet
-
-
-Predicting equipment wear
-------------------------------------------------
-.. toctree::
-    :maxdepth: 2
-
-    tutorial/Predictive_Maintenance_Regression_with_Facet
 
 
 
