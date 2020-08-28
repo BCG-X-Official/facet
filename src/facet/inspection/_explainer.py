@@ -73,7 +73,9 @@ class ExplainerFactory(metaclass=ABCMeta):
         """
 
     @abstractmethod
-    def make_explainer(self, model: LearnerDF, data: pd.DataFrame) -> Explainer:
+    def make_explainer(
+        self, model: LearnerDF, data: Optional[pd.DataFrame]
+    ) -> Explainer:
         """
         Construct a new :class:`~shap.Explainer` to compute shap values.
 
@@ -85,6 +87,13 @@ class ExplainerFactory(metaclass=ABCMeta):
     @staticmethod
     def _remove_null_kwargs(kwargs: Mapping[str, Any]) -> Dict[str, Any]:
         return {k: v for k, v in kwargs.items() if v is not None}
+
+    def _validate_background_dataset(self, data: Optional[pd.DataFrame]) -> None:
+        if data is None and self.uses_background_dataset:
+            raise ValueError(
+                "a background dataset is required to make an explainer with this "
+                "factory"
+            )
 
 
 @inheritdoc(match="[see superclass]")
@@ -145,6 +154,8 @@ class TreeExplainerFactory(ExplainerFactory):
         :param data: background dataset (optional)
         :return: the new explainer object
         """
+
+        self._validate_background_dataset(data=data)
 
         explainer = shap.TreeExplainer(
             model=model.native_estimator,
@@ -215,6 +226,8 @@ class KernelExplainerFactory(ExplainerFactory):
         :param data: background dataset
         :return: the new explainer object
         """
+
+        self._validate_background_dataset(data=data)
 
         model_root_estimator: BaseEstimator = model.native_estimator
 
