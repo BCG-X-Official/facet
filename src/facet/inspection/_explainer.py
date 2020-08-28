@@ -205,18 +205,18 @@ class KernelExplainerFactory(ExplainerFactory):
         try:
             if isinstance(model, RegressorDF):
                 # noinspection PyUnresolvedReferences
-                model = model_root_estimator.predict
+                model_fn = model_root_estimator.predict
             elif isinstance(model, ClassifierDF):
                 # noinspection PyUnresolvedReferences
-                model = model_root_estimator.predict_proba
+                model_fn = model_root_estimator.predict_proba
             else:
-                model = None
+                model_fn = None
         except AttributeError as cause:
             raise TypeError(
                 f"arg model does not support default prediction method: {cause}"
             ) from cause
 
-        if not model:
+        if not model_fn:
             raise TypeError(
                 "arg model is neither a regressor nor a classifier: "
                 f"{type(model).__name__}"
@@ -227,7 +227,7 @@ class KernelExplainerFactory(ExplainerFactory):
             data = shap.kmeans(data, data_size_limit, round_values=True)
 
         explainer = shap.KernelExplainer(
-            model=model, data=data, **self._remove_null_kwargs(dict(link=self.link))
+            model=model_fn, data=data, **self._remove_null_kwargs(dict(link=self.link))
         )
 
         if self.l1_reg is not None:
