@@ -14,7 +14,11 @@ from sklearn.model_selection import BaseCrossValidator, KFold
 
 from facet import Sample
 from facet.crossfit import LearnerCrossfit
-from facet.inspection import KernelExplainerFactory, LearnerInspector
+from facet.inspection import (
+    KernelExplainerFactory,
+    LearnerInspector,
+    TreeExplainerFactory,
+)
 from facet.selection import LearnerGrid, LearnerRanker
 from facet.validation import BootstrapCV, StratifiedBootstrapCV
 from pytools.viz.dendrogram import DendrogramDrawer, DendrogramReportStyle
@@ -404,16 +408,27 @@ def _validate_shap_values_against_predictions(
 
 # noinspection DuplicatedCode
 def test_model_inspection_classifier_interaction(
-    iris_sample_binary: Sample, iris_classifier_crossfit_binary, n_jobs: int
+    iris_sample_binary: Sample,
+    iris_classifier_crossfit_binary: LearnerCrossfit[
+        ClassifierPipelineDF[RandomForestClassifierDF]
+    ],
+    n_jobs: int,
 ) -> None:
     warnings.filterwarnings("ignore", message="You are accessing a training score")
 
-    model_inspector = LearnerInspector(n_jobs=n_jobs).fit(
-        crossfit=iris_classifier_crossfit_binary
-    )
+    model_inspector = LearnerInspector(
+        explainer_factory=TreeExplainerFactory(
+            feature_perturbation="tree_path_dependent", use_background_dataset=True
+        ),
+        n_jobs=n_jobs,
+    ).fit(crossfit=iris_classifier_crossfit_binary)
 
     model_inspector_no_interaction = LearnerInspector(
-        shap_interaction=False, n_jobs=n_jobs
+        shap_interaction=False,
+        explainer_factory=TreeExplainerFactory(
+            feature_perturbation="tree_path_dependent", use_background_dataset=True
+        ),
+        n_jobs=n_jobs,
     ).fit(crossfit=iris_classifier_crossfit_binary)
 
     # calculate shap interaction values

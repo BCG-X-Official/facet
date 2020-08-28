@@ -64,8 +64,18 @@ class ExplainerFactory(metaclass=ABCMeta):
         interaction values, ``False`` otherwise.
         """
 
+    @property
     @abstractmethod
-    def make_explainer(self, model: LearnerDF, data: pd.DataFrame) -> Explainer:
+    def uses_background_dataset(self) -> bool:
+        """
+        ``True`` if explainers made by this factory will use a background dataset
+        passed to methood :meth:`.make_explainer`, ``False`` otherwise.
+        """
+
+    @abstractmethod
+    def make_explainer(
+        self, model: LearnerDF, data: Optional[pd.DataFrame]
+    ) -> Explainer:
         """
         Construct a new :class:`~shap.Explainer` to compute shap values.
 
@@ -77,6 +87,13 @@ class ExplainerFactory(metaclass=ABCMeta):
     @staticmethod
     def _remove_null_kwargs(kwargs: Mapping[str, Any]) -> Dict[str, Any]:
         return {k: v for k, v in kwargs.items() if v is not None}
+
+    def _validate_background_dataset(self, data: Optional[pd.DataFrame]) -> None:
+        if data is None and self.uses_background_dataset:
+            raise ValueError(
+                "a background dataset is required to make an explainer with this "
+                "factory"
+            )
 
 
 @inheritdoc(match="[see superclass]")
@@ -111,7 +128,7 @@ class TreeExplainerFactory(ExplainerFactory):
         )
         self.model_output = model_output
         self.feature_perturbation = feature_perturbation
-        self.use_background_dataset = use_background_dataset
+        self._uses_background_dataset = use_background_dataset
 
     @property
     def explains_raw_output(self) -> bool:
@@ -122,6 +139,10 @@ class TreeExplainerFactory(ExplainerFactory):
     def supports_shap_interaction_values(self) -> bool:
         """[see superclass]"""
         return self.feature_perturbation == "tree_path_dependent"
+
+    @property
+    def uses_background_dataset(self) -> bool:
+        return self._uses_background_dataset
 
     def make_explainer(
         self, model: LearnerDF, data: Optional[pd.DataFrame] = None
@@ -134,9 +155,11 @@ class TreeExplainerFactory(ExplainerFactory):
         :return: the new explainer object
         """
 
+        self._validate_background_dataset(data=data)
+
         explainer = shap.TreeExplainer(
             model=model.native_estimator,
-            data=data if self.use_background_dataset else None,
+            data=data if self._uses_background_dataset else None,
             **self._remove_null_kwargs(
                 dict(
                     model_output=self.model_output,
@@ -191,6 +214,10 @@ class KernelExplainerFactory(ExplainerFactory):
         """[see superclass]"""
         return False
 
+    @property
+    def uses_background_dataset(self) -> bool:
+        return True
+
     def make_explainer(self, model: LearnerDF, data: pd.DataFrame) -> Explainer:
         """
         Construct a new :class:`~shap.KernelExplainer` to compute shap values.
@@ -200,23 +227,25 @@ class KernelExplainerFactory(ExplainerFactory):
         :return: the new explainer object
         """
 
+        self._validate_background_dataset(data=data)
+
         model_root_estimator: BaseEstimator = model.native_estimator
 
         try:
             if isinstance(model, RegressorDF):
                 # noinspection PyUnresolvedReferences
-                model = model_root_estimator.predict
+                model_fn = model_root_estimator.predict
             elif isinstance(model, ClassifierDF):
                 # noinspection PyUnresolvedReferences
-                model = model_root_estimator.predict_proba
+                model_fn = model_root_estimator.predict_proba
             else:
-                model = None
+                model_fn = None
         except AttributeError as cause:
             raise TypeError(
                 f"arg model does not support default prediction method: {cause}"
             ) from cause
 
-        if not model:
+        if not model_fn:
             raise TypeError(
                 "arg model is neither a regressor nor a classifier: "
                 f"{type(model).__name__}"
@@ -227,7 +256,7 @@ class KernelExplainerFactory(ExplainerFactory):
             data = shap.kmeans(data, data_size_limit, round_values=True)
 
         explainer = shap.KernelExplainer(
-            model=model, data=data, **self._remove_null_kwargs(dict(link=self.link))
+            model=model_fn, data=data, **self._remove_null_kwargs(dict(link=self.link))
         )
 
         if self.l1_reg is not None:
