@@ -189,10 +189,32 @@ class ShapCalculator(
         sample = crossfit.sample
 
         # prepare the background dataset
-        background_dataset = sample.features
-        pipeline = crossfit.pipeline
-        if pipeline.preprocessing:
-            background_dataset = pipeline.preprocessing.transform(X=background_dataset)
+
+        background_dataset: Optional[pd.DataFrame]
+
+        if self._explainer_factory.uses_background_dataset:
+            background_dataset = sample.features
+            pipeline = crossfit.pipeline
+            if pipeline.preprocessing:
+                background_dataset = pipeline.preprocessing.transform(
+                    X=background_dataset
+                )
+
+            background_dataset_notna = background_dataset.dropna()
+
+            if len(background_dataset_notna) != len(background_dataset):
+                n_original = len(background_dataset)
+                n_dropped = n_original - len(background_dataset_notna)
+                log.warning(
+                    f"{n_dropped} out of {n_original} observations in the sample "
+                    "contain NaN values after pre-processing and will not be included "
+                    "in the background dataset"
+                )
+
+                background_dataset = background_dataset_notna
+
+        else:
+            background_dataset = None
 
         with self._parallel() as parallel:
             shap_df_per_split: List[pd.DataFrame] = parallel(
@@ -203,12 +225,14 @@ class ShapCalculator(
                         model=model.final_estimator,
                         # we re-index the columns of the background dataset to match
                         # the column sequence of the model (in case feature order
-                        # was shuffled)
-                        data=background_dataset.reindex(
-                            columns=model.final_estimator.features_in, copy=False
-                        )
-                        if crossfit.shuffle_features
-                        else background_dataset,
+                        # was shuffled, or train split pre-processing removed columns)
+                        data=(
+                            None
+                            if background_dataset is None
+                            else background_dataset.reindex(
+                                columns=model.final_estimator.features_in, copy=False
+                            )
+                        ),
                     ),
                     self.feature_index_,
                     self._raw_shap_to_df,
