@@ -145,7 +145,7 @@ class BaseUnivariateSimulator(
         if not crossfit.is_fitted:
             raise ValueError("arg crossfit expected to be fitted")
 
-        if not isinstance(crossfit.training_sample.target, pd.Series):
+        if not isinstance(crossfit.sample.target, pd.Series):
             raise NotImplementedError("multi-output simulations are not supported")
 
         if not 0 <= percentile_lower <= 100:
