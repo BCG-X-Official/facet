@@ -52,6 +52,7 @@ class SimulationStyle(DrawStyle, metaclass=ABCMeta):
         self,
         feature: str,
         target: str,
+        values_label: str,
         values_median: Sequence[T_Number],
         values_min: Sequence[T_Number],
         values_max: Sequence[T_Number],
@@ -77,10 +78,6 @@ class SimulationStyle(DrawStyle, metaclass=ABCMeta):
         Draw frequencies histogram.
         """
         pass
-
-    @staticmethod
-    def _uplift_label(target_name: str) -> str:
-        return f"Mean predicted uplift ({target_name})"
 
     @staticmethod
     def _legend(
@@ -138,6 +135,7 @@ class SimulationMatplotStyle(MatplotStyle, SimulationStyle):
         """
         Draw the uplift graph.
 
+        :param values_label: label of the values axis
         :param feature: name of the simulated feature
         :param target: name of the target
         :param values_median: median uplift values
@@ -169,7 +167,7 @@ class SimulationMatplotStyle(MatplotStyle, SimulationStyle):
         ax.legend(handles, labels)
 
         # label the y axis
-        ax.set_ylabel(self._uplift_label(target_name=target))
+        ax.set_ylabel(values_label)
 
         # format and label the x axis
         ax.tick_params(
@@ -324,6 +322,7 @@ class SimulationReportStyle(SimulationStyle, TextStyle):
         self,
         feature: str,
         target: str,
+        values_label: str,
         values_median: Sequence[T_Number],
         values_min: Sequence[T_Number],
         values_max: Sequence[T_Number],

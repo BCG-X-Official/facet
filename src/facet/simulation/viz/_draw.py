@@ -89,6 +89,7 @@ class SimulationDrawer(Drawer[UnivariateSimulation, SimulationStyle]):
         self._style.draw_uplift(
             feature=data.feature,
             target=data.target,
+            values_label=data.values_label,
             values_median=simulation_series.values_median,
             values_min=simulation_series.values_min,
             values_max=simulation_series.values_max,

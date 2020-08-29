@@ -73,6 +73,9 @@ class UnivariateSimulation(NamedTuple, Generic[T_Number]):
     #: the partitioner used to run the simulation
     partitioner: Partitioner
 
+    #: the unit of the simulated values (e.g., uplift or class probability)
+    values_label: str
+
     #: the median simulated values
     values_median: Sequence[T_Number]
 
@@ -191,6 +194,7 @@ class BaseUnivariateSimulator(
             feature=name,
             target=sample.target.name,
             partitioner=partitioner,
+            values_label=self.values_label,
             values_median=simulation_results.iloc[:, 1].values,
             values_lower=simulation_results.iloc[:, 0].values,
             values_upper=simulation_results.iloc[:, 2].values,
@@ -242,6 +246,13 @@ class BaseUnivariateSimulator(
             data=result,
             name=BaseUnivariateSimulator.COL_DEVIATION_OF_MEAN_PREDICTION,
         )
+
+    @property
+    @abstractmethod
+    def values_label(self) -> str:
+        """
+        Designation for the values calculated in the simulation
+        """
 
     @staticmethod
     @abstractmethod
@@ -375,6 +386,21 @@ class UnivariateProbabilitySimulator(BaseUnivariateSimulator[ClassifierPipelineD
     Univariate simulation for predicted probability based on a binary classifier.
     """
 
+    @property
+    def values_label(self) -> str:
+        positive_class: str
+
+        classifier = self.crossfit.pipeline.final_estimator
+        try:
+            positive_class = classifier.classes_[-1]
+        except AttributeError:
+            log.warning(
+                f"{type(classifier).__name__} does not define classes_ attribute"
+            )
+            positive_class = "positive class"
+
+        return f"{positive_class} probability"
+
     @staticmethod
     def _expected_pipeline_type() -> Type[ClassifierPipelineDF]:
         return ClassifierPipelineDF
@@ -403,6 +429,10 @@ class UnivariateUpliftSimulator(BaseUnivariateSimulator[RegressorPipelineDF]):
     """
     Univariate simulation for target uplift based on a regression model.
     """
+
+    @property
+    def values_label(self) -> str:
+        return f"mean predicted uplift ({self.crossfit.sample.target_columns[0]})"
 
     @staticmethod
     def _expected_pipeline_type() -> Type[RegressorPipelineDF]:
