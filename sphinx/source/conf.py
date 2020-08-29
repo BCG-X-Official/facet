@@ -32,11 +32,7 @@ def _set_paths() -> None:
     import sys
     import os
 
-    module_paths = [
-        "facet",
-        "pytools",
-        "sklearndf",
-    ]
+    module_paths = ["facet", "pytools", "sklearndf"]
 
     if "cwd" not in globals():
         # noinspection PyGlobalUndefined
@@ -61,7 +57,11 @@ def monkeypatch(cls):
     def decorator(f):
         method = f.__name__
         old_method = getattr(cls, method)
-        setattr(cls, method, lambda self, *args, **kwargs: f(old_method, self, *args, **kwargs))
+        setattr(
+            cls,
+            method,
+            lambda self, *args, **kwargs: f(old_method, self, *args, **kwargs),
+        )
 
     return decorator
 
@@ -76,12 +76,11 @@ def add_source_parser(_old_add_source_parser, self, *args, **kwargs):
     return _old_add_source_parser(self, *args, **kwargs)
 
 
-
 # -- Project information -----------------------------------------------------
 
-project = 'Facet'
-copyright = '2020, The Boston Consulting Group (BCG)'
-author = 'BCG Gamma Facet Team'
+project = "Facet"
+copyright = "2020, The Boston Consulting Group (BCG)"
+author = "BCG Gamma Facet Team"
 
 
 # -- General configuration ---------------------------------------------------
@@ -121,11 +120,11 @@ autosummary_generate = True
 # always overwrite generated autosummaries with newly generated versions
 autosummary_generate_overwrite = True
 
-#autodoc_default_options = {
-    #"ignore-module-all": True,
-    # "inherited-members": True,
-    # "show-inheritance": False
-#}
+# autodoc_default_options = {
+# "ignore-module-all": True,
+# "inherited-members": True,
+# "show-inheritance": False
+# }
 
 nbsphinx_allow_errors = True
 nbsphinx_timeout = 60 * 15  # 15 minutes due to tutorial/model notebook
@@ -143,9 +142,9 @@ intersphinx_mapping = {
 }
 
 # Add any paths that contain templates here, relative to this directory.
-templates_path = ['_templates']
+templates_path = ["_templates"]
 
-source_suffix = ['.rst', '.md', '.ipynb']
+source_suffix = [".rst", ".md", ".ipynb"]
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
@@ -162,13 +161,13 @@ imgmath_use_preview = True
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = 'pydata_sphinx_theme'
+html_theme = "pydata_sphinx_theme"
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ['_static']
-html_logo = "_static/gamma_logo.jpg"
+html_static_path = ["_static"]
+html_logo = "_static/Gamma_Facet_Logo_RGB_LB.svg"
 latex_logo = html_logo
 
 # Class documentation to include docstrings both global to the class, and from __init__
@@ -313,3 +312,4 @@ def setup(app: Sphinx) -> None:
     :param app: the Sphinx application object
     """
     app.connect("autodoc-process-docstring", add_inheritance)
+    app.add_stylesheet("css/facet.css")

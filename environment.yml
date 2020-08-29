@@ -25,11 +25,13 @@ dependencies:
   - rsa = 4.0.*
   - scikit-learn = 0.23.*
   - scipy = 1.2.*
+  - seaborn = 0.10.*
   - shap = 0.34.*
   - sphinx = 3.1.*
   - sphinx-autodoc-typehints = 1.11.*
   - sphinx-automodapi = 0.12.*
   - sphinx_rtd_theme = 0.5.*
+  - tableone=0.7.*
   - xlrd = 1.2.*
   - yaml = 0.1.*
   - pip:

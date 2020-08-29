@@ -4,7 +4,6 @@ of features into additive components for synergy, redundancy, and independence.
 """
 import logging
 from typing import *
-from typing import Optional
 
 import numpy as np
 import pandas as pd
@@ -109,7 +108,7 @@ class ShapValueDecomposer(FittableMixin[ShapCalculator]):
         # basic definitions
         #
 
-        shap_values: pd.DataFrame = shap_calculator.get_shap_values(consolidate=None)
+        shap_values: pd.DataFrame = shap_calculator.get_shap_values(consolidate="mean")
         n_outputs: int = len(shap_calculator.output_names_)
         n_features: int = len(shap_calculator.feature_index_)
         n_observations: int = len(shap_values)
@@ -122,7 +121,7 @@ class ShapValueDecomposer(FittableMixin[ShapCalculator]):
 
         _weight_sr = shap_calculator.sample_.weight
         if _weight_sr is not None:
-            weight = _weight_sr.loc[shap_values.index.get_level_values(1)].values
+            weight = _weight_sr.loc[shap_values.index].values
         else:
             weight = None
 
@@ -241,16 +240,6 @@ class ShapInteractionValueDecomposer(ShapValueDecomposer):
             {DEFAULT_MIN_DIRECT_SYNERGY * 100.0:g}%)
         """
 
-    def fit(
-        self: T, shap_calculator: ShapInteractionValuesCalculator, **fit_params
-    ) -> T:
-        """
-        Calculate the SHAP decomposition for the shap values produced by the
-        given SHAP interaction values calculator.
-        :param shap_calculator: the fitted calculator from which to get the shap values
-        """
-        return super().fit(shap_calculator=shap_calculator, **fit_params)
-
     def synergy(self, symmetrical: bool = True) -> pd.DataFrame:
         """
         The matrix of total relative synergy (direct and indirect) for all feature
@@ -287,7 +276,7 @@ class ShapInteractionValueDecomposer(ShapValueDecomposer):
         # basic definitions
         #
         shap_values: pd.DataFrame = shap_calculator.get_shap_interaction_values(
-            consolidate=None
+            consolidate="mean"
         )
         features: pd.Index = shap_calculator.feature_index_
         outputs: List[str] = shap_calculator.output_names_
@@ -303,7 +292,7 @@ class ShapInteractionValueDecomposer(ShapValueDecomposer):
 
         _weight_sr = shap_calculator.sample_.weight
         if _weight_sr is not None:
-            _observation_indices = shap_values.index.get_level_values(1).values.reshape(
+            _observation_indices = shap_values.index.get_level_values(0).values.reshape(
                 (n_observations, n_features)
             )[:, 0]
             weight = _ensure_last_axis_is_fast(
