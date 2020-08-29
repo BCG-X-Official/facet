@@ -1,8 +1,5 @@
 """
-Simulation drawing styles
-
-:class:`SimulationMatplotStyle` draws some simulated low, middle and high prediction
-uplift.
+Drawing styles for simulation results.
 """
 
 import logging
@@ -14,7 +11,7 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 from mpl_toolkits.axes_grid1.axes_divider import AxesDivider
 from mpl_toolkits.axes_grid1.axes_size import Scaled
 
-from pytools.api import AllTracker
+from pytools.api import AllTracker, inheritdoc
 from pytools.viz import DrawStyle, MatplotStyle, TextStyle
 from pytools.viz.text import format_table
 
@@ -44,7 +41,7 @@ __tracker = AllTracker(globals())
 
 class SimulationStyle(DrawStyle, metaclass=ABCMeta):
     """
-    The abstract simulation style known to the simulation drawer.
+    Base class of styles used by :class:`.SimulationDrawer`.
     """
 
     @abstractmethod
@@ -64,6 +61,18 @@ class SimulationStyle(DrawStyle, metaclass=ABCMeta):
     ) -> None:
         """
         Draw the graph with the uplift curves: median, low and high percentiles.
+
+        :param feature: name of the simulated feature
+        :param target: name of the target for which output values were simulated
+        :param values_label: label of the values axis
+        :param values_median: median uplift values
+        :param values_min: low percentile uplift values
+        :param values_max: high percentile uplift values
+        :param percentile_lower: percentile used to compute values_min
+        :param percentile_upper: percentile used to compute values_max
+        :param partitions: the partitioning (center values) of the simulated feature
+        :param frequencies: observed frequencies for each partition
+        :param is_categorical_feature: ``True`` if the simulated feature is categorical
         """
         pass
 
@@ -75,7 +84,12 @@ class SimulationStyle(DrawStyle, metaclass=ABCMeta):
         is_categorical_feature: bool,
     ) -> None:
         """
-        Draw frequencies histogram.
+        Draw the histogram of observed value counts per partition.
+
+        :param partitions: the partitioning (center values) of the simulated feature
+        :param frequencies: observed frequencies for each partition
+        :param is_categorical_feature: ``True`` if the simulated feature is \
+            categorical, ``False`` otherwise
         """
         pass
 
@@ -92,20 +106,16 @@ class SimulationStyle(DrawStyle, metaclass=ABCMeta):
         )
 
 
+@inheritdoc(match="[see superclass]")
 class SimulationMatplotStyle(MatplotStyle, SimulationStyle):
     """
     Matplotlib Style for simulation chart.
 
-    Allows to plot two different graph:
+    Along the range of simulated feature values on the x axis, plots the median and
+    confidence intervals of the simulated target value.
 
-    - an uplift graph that shows on the x axis the simulated feature values,
-      and on the y axis the uplift prediction under the assumption that the simulated
-      feature takes the value given on the x axis. There are three curves on the
-      graph: for low, middle and high confidence
-
-    - a histogram graph of the feature simulated values
-
-    :param ax: the axes where the uplift graph is plotted
+    A bar chart below the plot shows a histogram of actually observed values near the
+    simulated values.
     """
 
     _COLOR_CONFIDENCE = "blue"
@@ -114,9 +124,6 @@ class SimulationMatplotStyle(MatplotStyle, SimulationStyle):
     _WIDTH_BARS = 0.8
 
     _HISTOGRAM_SIZE_RATIO = 1 / 3
-
-    def __init__(self, *, ax: Optional[Axes] = None) -> None:
-        super().__init__(ax=ax)
 
     def draw_uplift(
         self,
@@ -132,21 +139,7 @@ class SimulationMatplotStyle(MatplotStyle, SimulationStyle):
         frequencies: Sequence[int],
         is_categorical_feature: bool,
     ) -> None:
-        """
-        Draw the uplift graph.
-
-        :param values_label: label of the values axis
-        :param feature: name of the simulated feature
-        :param target: name of the target
-        :param values_median: median uplift values
-        :param values_min: low percentile uplift values
-        :param values_max: high percentile uplift values
-        :param percentile_lower: percentile used to compute values_min
-        :param percentile_upper: percentile used to compute values_max
-        :param partitions: partition (center) values
-        :param frequencies: frequencies corresponding to the partitions
-        :param is_categorical_feature: indicator of a categorical feature
-        """
+        """[see superclass]"""
 
         # draw the mean predicted uplift, showing median and confidence ranges for
         # each prediction
@@ -193,9 +186,7 @@ class SimulationMatplotStyle(MatplotStyle, SimulationStyle):
         frequencies: Sequence[int],
         is_categorical_feature: bool,
     ) -> None:
-        """
-        Draw frequencies histogram.
-        """
+        """[see superclass]"""
 
         # get histogram size and values (horizontally, we count bars from 0..n-1
         n_partitions = len(partitions)
@@ -286,9 +277,10 @@ class SimulationMatplotStyle(MatplotStyle, SimulationStyle):
             ax.spines[pos].set_visible(False)
 
 
+@inheritdoc(match="[see superclass]")
 class SimulationReportStyle(SimulationStyle, TextStyle):
     """
-    Simulation results as a text report
+    Renders simulation results as a text report.
     """
 
     # general format wih sufficient space for potential sign and "e" notation
@@ -313,9 +305,7 @@ class SimulationReportStyle(SimulationStyle, TextStyle):
         return f"> {len(heading)}.{SimulationReportStyle._NUM_PRECISION}g"
 
     def _drawing_start(self, title: str) -> None:
-        """
-        Print the report title.
-        """
+        # print the report title
         self.out.write(f"SIMULATION REPORT: {title}\n")
 
     def draw_uplift(
@@ -332,9 +322,8 @@ class SimulationReportStyle(SimulationStyle, TextStyle):
         frequencies: Sequence[int],
         is_categorical_feature: bool,
     ) -> None:
-        """
-        Print the uplift report.
-        """
+        """[see superclass]"""
+
         out = self.out
         self.out.write(f"\n{values_label}:\n\n")
         out.write(
@@ -361,12 +350,8 @@ class SimulationReportStyle(SimulationStyle, TextStyle):
         frequencies: Sequence[int],
         is_categorical_feature: bool,
     ) -> None:
-        """
-        Print the histogram report.
-        :param is_categorical_feature:
-        :param partitions:
-        :param frequencies:
-        """
+        """[see superclass]"""
+
         self.out.write("\nObserved frequencies:\n\n")
         self.out.write(
             format_table(
@@ -381,9 +366,7 @@ class SimulationReportStyle(SimulationStyle, TextStyle):
         )
 
     def _drawing_finalize(self) -> None:
-        """
-        Print two trailing line breaks.
-        """
+        # print two trailing line breaks
         self.out.write("\n")
 
     def _partition_format(self, is_categorical: bool) -> str:

@@ -10,7 +10,7 @@ from typing import Union
 import numpy as np
 import pandas as pd
 
-from pytools.api import AllTracker
+from pytools.api import AllTracker, inheritdoc
 from pytools.parallelization import ParallelizableMixin
 from sklearndf import LearnerDF
 from sklearndf.pipeline import (
@@ -73,22 +73,26 @@ class UnivariateSimulation(NamedTuple, Generic[T_Number]):
     #: the partitioner used to run the simulation
     partitioner: Partitioner
 
-    #: the unit of the simulated values (e.g., uplift or class probability)
+    #: the unit of the simulated outcomes (e.g., uplift or class probability)
     values_label: str
 
-    #: the median simulated values
+    #: the median of the distribution of simulation outcomes, for every partition
     values_median: Sequence[T_Number]
 
-    #: the low end of the confidence intervals for simulated values
+    #: the lower boundary of the confidence interval of simulated outcomes, for every
+    #: partition
     values_lower: Sequence[T_Number]
 
-    #: the high end of the confidence intervals for simulated values
+    #: the upper boundary of the confidence interval of simulated outcomes, for every
+    #: partition
     values_upper: Sequence[T_Number]
 
-    #: the percentile of the lower confidence interval
+    #: the percentile used to determine the lower confidence interval from the
+    #: distribution of simulated outcomes
     percentile_lower: float
 
-    #: the percentile of the upper confidence interval
+    #: the percentile used to determine the upper confidence interval from the
+    #: distribution of simulated outcomes
     percentile_upper: float
 
 
@@ -96,21 +100,11 @@ class BaseUnivariateSimulator(
     ParallelizableMixin, Generic[T_LearnerPipelineDF], metaclass=ABCMeta
 ):
     """
-    Estimates the average change in outcome for a range of values for a given feature,
-    using cross-validated crossfit for all observations in a given data sample.
-
-    Determines confidence intervals for the predicted changes by repeating the
-    simulations across multiple crossfits.
-
-    Note that sample weights are not taken into account for simulations; each
-    observation has the same weight in the simulation even if different weights
-    have been specified for the sample.
+    Base class for univariate simulations.
     """
 
     COL_SPLIT_ID = "split_id"
-    COL_DEVIATION_OF_MEAN_PREDICTION = (
-        "relative deviations of mean predictions from mean targets"
-    )
+    COL_VALUE = "value"
 
     def __init__(
         self,
@@ -244,7 +238,7 @@ class BaseUnivariateSimulator(
         return pd.Series(
             index=pd.RangeIndex(len(result), name=BaseUnivariateSimulator.COL_SPLIT_ID),
             data=result,
-            name=BaseUnivariateSimulator.COL_DEVIATION_OF_MEAN_PREDICTION,
+            name=BaseUnivariateSimulator.COL_VALUE,
         )
 
     @property
@@ -381,13 +375,37 @@ class BaseUnivariateSimulator(
         )
 
 
+@inheritdoc(match="[see superclass]")
 class UnivariateProbabilitySimulator(BaseUnivariateSimulator[ClassifierPipelineDF]):
     """
     Univariate simulation for predicted probability based on a binary classifier.
+
+    The simulation is carried out for one specific feature `x[i]` of a model, and for a
+    range of values `v[1]`, …, `v[n]` for `f`, determined by a :class:`.Partitioning`
+    object.
+
+    For each value `v[j]` of the partitioning, a :class:`Sample` of historical
+    observations is modified by assigning value `v[j]` for feature `x[i]` for all
+    observations, i.e., assuming that feature `x[i]` has the constant value `v[j]`.
+
+    Then all classifiers of a :class:`LearnerCrossfit` are used in turn to each predict
+    the probability of the positive class for all observations, and the mean probability
+    across all observations is calculated for each classifier, resulting in a
+    distribution of mean predicted probabilities for each value `v[j]`.
+
+    For each `v[j]`, the median and the lower and upper confidence bounds are retained.
+
+    Hence the result of the simulation is a series of `n` medians, lower and upper
+    confidence  bounds; one each for every value in the range of simulated values.
+
+    Note that sample weights are not taken into account for simulations; each
+    observation has the same weight in the simulation even if different weights
+    have been specified for the sample.
     """
 
     @property
     def values_label(self) -> str:
+        """[see superclass]"""
         positive_class: str
 
         classifier = self.crossfit.pipeline.final_estimator
@@ -425,13 +443,39 @@ class UnivariateProbabilitySimulator(BaseUnivariateSimulator[ClassifierPipelineD
         return probabilities.iloc[:, 1].mean(axis=0)
 
 
+@inheritdoc(match="[see superclass]")
 class UnivariateUpliftSimulator(BaseUnivariateSimulator[RegressorPipelineDF]):
     """
     Univariate simulation for target uplift based on a regression model.
+
+    The simulation is carried out for one specific feature `x[i]` of a model, and for a
+    range of values `v[1]`, …, `v[n]` for `f`, determined by a :class:`.Partitioning`
+    object.
+
+    For each value `v[j]` of the partitioning, a :class:`Sample` of historical
+    observations is modified by assigning value `v[j]` for feature `x[i]` for all
+    observations, i.e., assuming that feature `x[i]` has the constant value `v[j]`.
+
+    Then all regressors of a :class:`LearnerCrossfit` are used in turn to each predict
+    the target for all observations, and the mean difference of the predicted targets
+    from the actual (known) targets across all observations is calculated for each
+    regressor, resulting in a distribution of mean `uplift` amounts for each value
+    `v[j]`.
+
+    For each `v[j]`, the median uplift and the lower and upper confidence bounds are
+    retained.
+
+    Hence the result of the simulation is a series of `n` medians, lower and upper
+    confidence bounds; one each for every value in the range of simulated values.
+
+    Note that sample weights are not taken into account for simulations; each
+    observation has the same weight in the simulation even if different weights
+    have been specified for the sample.
     """
 
     @property
     def values_label(self) -> str:
+        """[see superclass]"""
         return f"mean predicted uplift ({self.crossfit.sample.target_columns[0]})"
 
     @staticmethod

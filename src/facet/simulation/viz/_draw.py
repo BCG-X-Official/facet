@@ -1,9 +1,5 @@
 """
-Simulation drawer.
-
-:class:`SimulationDrawer` draws a simulation plot with on the x axis the feature
-values in the simulation and on the y axis the associated prediction uplift. Below
-this graph there is a histogram of the feature values.
+Visualizations of simulation results.
 """
 
 from typing import *
@@ -45,7 +41,8 @@ class _SimulationSeries(NamedTuple, Generic[T_Number]):
 
 class SimulationDrawer(Drawer[UnivariateSimulation, SimulationStyle]):
     """
-    Simulation drawer with high/low confidence intervals.
+    Draws the result of a univariate simulation, represented by a
+    :class:`.UnivariateSimulation` object.
     """
 
     _STYLES = {"matplot": SimulationMatplotStyle, "text": SimulationReportStyle}
@@ -56,8 +53,8 @@ class SimulationDrawer(Drawer[UnivariateSimulation, SimulationStyle]):
         """
         :param style: the style of the dendrogram; either as a \
             :class:`.SimulationStyle` instance, or as the name of a \
-            default style. Permissible names are ``"matplot"`` for a style supporting \
-            Matplotlib, and ``"text"`` for a text-only report to stdout \
+            default style. Permissible names are ``"matplot"`` for a style based on \
+            `matplotlib`, and ``"text"`` for a text-based report to stdout \
             (default: ``"matplot"``)
         :param histogram: if ``True``, plot the histogram of observed values for the \
             feature being simulated; if ``False`` do not plot the histogram (default: \
@@ -70,8 +67,8 @@ class SimulationDrawer(Drawer[UnivariateSimulation, SimulationStyle]):
         """
         Draw the simulation chart.
         :param data: the univariate simulation to draw
-        :param title: the title of the chart (optional, defaults to a title \
-            stating the name of the simulated feature)
+        :param title: the title of the chart (optional, defaults to the name of the \
+            simulated feature)
         """
         if title is None:
             title = f"Simulation: {data.feature}"
