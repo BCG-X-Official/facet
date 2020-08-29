@@ -1,9 +1,7 @@
-Facet
-=========
-
-by BCG Gamma
-
-.. image:: _static/gamma_logo.jpg
+.. image:: _static/Gamma_Facet_Logo_RGB_LB.svg
+    :alt: GAMMA FACET
+    :width: 400
+    :class: padded-logo
 
 Facet is an open source library to for human-explainable AI. It combines sophisticated
 model inspection and model-based simulation to enable better explanations of your
