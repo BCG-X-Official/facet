@@ -52,11 +52,11 @@ class SimulationStyle(DrawStyle, metaclass=ABCMeta):
         self,
         feature: str,
         target: str,
-        median_uplift: Sequence[T_Number],
-        min_uplift: Sequence[T_Number],
-        max_uplift: Sequence[T_Number],
-        min_percentile: float,
-        max_percentile: float,
+        values_median: Sequence[T_Number],
+        values_min: Sequence[T_Number],
+        values_max: Sequence[T_Number],
+        percentile_lower: float,
+        percentile_upper: float,
         partitions: Sequence[Any],
         frequencies: Sequence[int],
         is_categorical_feature: bool,
@@ -83,13 +83,15 @@ class SimulationStyle(DrawStyle, metaclass=ABCMeta):
         return f"Mean predicted uplift ({target_name})"
 
     @staticmethod
-    def _legend(min_percentile: float, max_percentile: float) -> Tuple[str, str, str]:
+    def _legend(
+        percentile_lower: float, percentile_upper: float
+    ) -> Tuple[str, str, str]:
         # generate a triple with legend names for the min percentile, median, and max
         # percentile
         return (
-            f"{min_percentile}th percentile",
+            f"{percentile_lower}th percentile",
             "median",
-            f"{max_percentile}th " f"percentile",
+            f"{percentile_upper}th percentile",
         )
 
 
@@ -123,11 +125,12 @@ class SimulationMatplotStyle(MatplotStyle, SimulationStyle):
         self,
         feature: str,
         target: str,
-        median_uplift: Sequence[T_Number],
-        min_uplift: Sequence[T_Number],
-        max_uplift: Sequence[T_Number],
-        min_percentile: float,
-        max_percentile: float,
+        values_label: str,
+        values_median: Sequence[T_Number],
+        values_min: Sequence[T_Number],
+        values_max: Sequence[T_Number],
+        percentile_lower: float,
+        percentile_upper: float,
         partitions: Sequence[Any],
         frequencies: Sequence[int],
         is_categorical_feature: bool,
@@ -137,11 +140,11 @@ class SimulationMatplotStyle(MatplotStyle, SimulationStyle):
 
         :param feature: name of the simulated feature
         :param target: name of the target
-        :param median_uplift: median uplift values
-        :param min_uplift: low percentile uplift values
-        :param max_uplift: high percentile uplift values
-        :param min_percentile: percentile used to compute min_uplift
-        :param max_percentile: percentile used to compute max_uplift
+        :param values_median: median uplift values
+        :param values_min: low percentile uplift values
+        :param values_max: high percentile uplift values
+        :param percentile_lower: percentile used to compute values_min
+        :param percentile_upper: percentile used to compute values_max
         :param partitions: partition (center) values
         :param frequencies: frequencies corresponding to the partitions
         :param is_categorical_feature: indicator of a categorical feature
@@ -154,13 +157,13 @@ class SimulationMatplotStyle(MatplotStyle, SimulationStyle):
         else:
             x = partitions
         ax = self.ax
-        line_min, = ax.plot(x, min_uplift, color=self._COLOR_CONFIDENCE)
-        line_median, = ax.plot(x, median_uplift, color=self._COLOR_MEDIAN_UPLIFT)
-        line_max, = ax.plot(x, max_uplift, color=self._COLOR_CONFIDENCE)
+        line_min, = ax.plot(x, values_min, color=self._COLOR_CONFIDENCE)
+        line_median, = ax.plot(x, values_median, color=self._COLOR_MEDIAN_UPLIFT)
+        line_max, = ax.plot(x, values_max, color=self._COLOR_CONFIDENCE)
 
         # add a legend
         labels = self._legend(
-            min_percentile=min_percentile, max_percentile=max_percentile
+            percentile_lower=percentile_lower, percentile_upper=percentile_upper
         )
         handles = [line_max, line_median, line_min]
         ax.legend(handles, labels)
@@ -321,11 +324,11 @@ class SimulationReportStyle(SimulationStyle, TextStyle):
         self,
         feature: str,
         target: str,
-        median_uplift: Sequence[T_Number],
-        min_uplift: Sequence[T_Number],
-        max_uplift: Sequence[T_Number],
-        min_percentile: float,
-        max_percentile: float,
+        values_median: Sequence[T_Number],
+        values_min: Sequence[T_Number],
+        values_max: Sequence[T_Number],
+        percentile_lower: float,
+        percentile_upper: float,
         partitions: Sequence[Any],
         frequencies: Sequence[int],
         is_categorical_feature: bool,
@@ -334,20 +337,21 @@ class SimulationReportStyle(SimulationStyle, TextStyle):
         Print the uplift report.
         """
         out = self.out
-        self.out.write(f"\n{self._uplift_label(target_name=target)}:\n\n")
+        self.out.write(f"\n{values_label}:\n\n")
         out.write(
             format_table(
                 headings=[
                     self._PARTITION_HEADING,
                     *self._legend(
-                        min_percentile=min_percentile, max_percentile=max_percentile
+                        percentile_lower=percentile_lower,
+                        percentile_upper=percentile_upper,
                     ),
                 ],
                 formats=[
                     self._partition_format(is_categorical_feature),
                     *([self._NUM_FORMAT] * 3),
                 ],
-                data=list(zip(partitions, min_uplift, median_uplift, max_uplift)),
+                data=list(zip(partitions, values_min, values_median, values_max)),
                 alignment=["<", ">", ">", ">"],
             )
         )
@@ -388,5 +392,6 @@ class SimulationReportStyle(SimulationStyle, TextStyle):
             return self._PARTITION_TEXT_FORMAT
         else:
             return self._PARTITION_NUMBER_FORMAT
+
 
 __tracker.validate()

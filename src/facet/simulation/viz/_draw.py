@@ -36,9 +36,9 @@ __tracker = AllTracker(globals())
 
 class _SimulationSeries(NamedTuple, Generic[T_Number]):
     # A set of aligned series representing the simulation result
-    median_uplift: Sequence[T_Number]
-    min_uplift: Sequence[T_Number]
-    max_uplift: Sequence[T_Number]
+    values_median: Sequence[T_Number]
+    values_min: Sequence[T_Number]
+    values_max: Sequence[T_Number]
     partitions: Sequence[T_Number]
     frequencies: Sequence[T_Number]
 
@@ -89,14 +89,14 @@ class SimulationDrawer(Drawer[UnivariateSimulation, SimulationStyle]):
         self._style.draw_uplift(
             feature=data.feature,
             target=data.target,
-            min_percentile=data.percentile_lower,
-            max_percentile=data.percentile_upper,
-            is_categorical_feature=data.partitioner.is_categorical,
+            values_median=simulation_series.values_median,
+            values_min=simulation_series.values_min,
+            values_max=simulation_series.values_max,
+            percentile_lower=data.percentile_lower,
+            percentile_upper=data.percentile_upper,
             partitions=simulation_series.partitions,
             frequencies=simulation_series.frequencies,
-            median_uplift=simulation_series.median_uplift,
-            min_uplift=simulation_series.min_uplift,
-            max_uplift=simulation_series.max_uplift,
+            is_categorical_feature=data.partitioner.is_categorical,
         )
 
         if self._histogram:
