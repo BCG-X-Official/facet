@@ -72,7 +72,7 @@ def test_univariate_uplift_simulation(
 
     parameterized_feature = "LSTAT"
 
-    sample = uplift_simulator.crossfit.training_sample
+    sample = uplift_simulator.crossfit.sample
 
     absolute_target_change_sr: pd.Series = (
         uplift_simulator._simulate_feature_with_values(

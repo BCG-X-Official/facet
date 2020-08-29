@@ -121,7 +121,7 @@ class ShapCalculator(
         # reset fit in case we get an exception along the way
         self.shap_ = None
 
-        training_sample = crossfit.training_sample
+        training_sample = crossfit.sample
         self.feature_index_ = crossfit.pipeline.features_out.rename(Sample.IDX_FEATURE)
         self.output_names_ = self._output_names(crossfit=crossfit)
         self.sample_ = training_sample
@@ -186,13 +186,35 @@ class ShapCalculator(
     ) -> pd.DataFrame:
         crossfit: LearnerCrossfit[LearnerPipelineDF]
 
-        training_sample = crossfit.training_sample
+        sample = crossfit.sample
 
         # prepare the background dataset
-        background_dataset = training_sample.features
-        pipeline = crossfit.pipeline
-        if pipeline.preprocessing:
-            background_dataset = pipeline.preprocessing.transform(X=background_dataset)
+
+        background_dataset: Optional[pd.DataFrame]
+
+        if self._explainer_factory.uses_background_dataset:
+            background_dataset = sample.features
+            pipeline = crossfit.pipeline
+            if pipeline.preprocessing:
+                background_dataset = pipeline.preprocessing.transform(
+                    X=background_dataset
+                )
+
+            background_dataset_notna = background_dataset.dropna()
+
+            if len(background_dataset_notna) != len(background_dataset):
+                n_original = len(background_dataset)
+                n_dropped = n_original - len(background_dataset_notna)
+                log.warning(
+                    f"{n_dropped} out of {n_original} observations in the sample "
+                    "contain NaN values after pre-processing and will not be included "
+                    "in the background dataset"
+                )
+
+                background_dataset = background_dataset_notna
+
+        else:
+            background_dataset = None
 
         with self._parallel() as parallel:
             shap_df_per_split: List[pd.DataFrame] = parallel(
@@ -203,28 +225,30 @@ class ShapCalculator(
                         model=model.final_estimator,
                         # we re-index the columns of the background dataset to match
                         # the column sequence of the model (in case feature order
-                        # was shuffled)
-                        data=background_dataset.reindex(
-                            columns=model.final_estimator.features_in, copy=False
-                        )
-                        if crossfit.shuffle_features
-                        else background_dataset,
+                        # was shuffled, or train split pre-processing removed columns)
+                        data=(
+                            None
+                            if background_dataset is None
+                            else background_dataset.reindex(
+                                columns=model.final_estimator.features_in, copy=False
+                            )
+                        ),
                     ),
                     self.feature_index_,
                     self._raw_shap_to_df,
                     self.multi_output_type(),
-                    self._multi_output_names(model=model, sample=training_sample),
+                    self._multi_output_names(model=model, sample=sample),
                 )
                 for model, sample in zip(
                     crossfit.models(),
                     (
                         # if we explain full samples, we get samples from an
                         # infinite iterator of the full training sample
-                        iter(lambda: training_sample, None)
+                        iter(lambda: sample, None)
                         if self.explain_full_sample
                         # otherwise we iterate over the test splits of each crossfit
                         else (
-                            training_sample.subsample(iloc=oob_split)
+                            sample.subsample(iloc=oob_split)
                             for _, oob_split in crossfit.splits()
                         )
                     ),
@@ -285,9 +309,22 @@ class ShapCalculator(
         multi_output_type: str,
         multi_output_names: Sequence[str],
     ):
+        def _validate_shap_tensor(_t: np.ndarray) -> None:
+            if np.isnan(np.sum(_t)):
+                raise AssertionError(
+                    "Output of SHAP explainer included NaN values. "
+                    "This should not happen; consider initialising the "
+                    "LearnerInspector with an ExplainerFactory that has a different "
+                    "configuration, or that makes SHAP explainers of a different type."
+                )
+
         n_outputs = len(multi_output_names)
 
-        if not isinstance(shap_tensors, List):
+        if isinstance(shap_tensors, List):
+            for shap_tensor in shap_tensors:
+                _validate_shap_tensor(shap_tensor)
+        else:
+            _validate_shap_tensor(shap_tensors)
             if (
                 n_outputs == 2
                 and multi_output_type == ClassifierShapCalculator.multi_output_type()
@@ -308,40 +345,6 @@ class ShapCalculator(
             )
 
         return shap_tensors
-
-    @staticmethod
-    def _preprocessed_features_and_explainer(
-        model: LearnerPipelineDF,
-        sample: Sample,
-        split: Optional[Tuple[Sequence[int], Sequence[int]]],
-        explainer_factory: ExplainerFactory,
-    ) -> Tuple[pd.DataFrame, Explainer]:
-        # get the out-of-bag subsample of the training sample, with feature columns
-        # in the sequence that was used to fit the learner
-
-        def _preprocess(_sample: Sample) -> pd.DataFrame:
-            # get the features of all out-of-bag observations
-            x = _sample.features
-
-            # pre-process the features
-            if model.preprocessing is not None:
-                x = model.preprocessing.transform(x)
-
-            # re-index the features to fit the sequence that was used to fit the learner
-            return x.reindex(columns=model.final_estimator.features_in, copy=False)
-
-        if split:
-            background_dataset = _preprocess(sample.subsample(iloc=split[0]))
-            preprocessed = _preprocess(sample.subsample(iloc=split[1]))
-        else:
-            background_dataset = preprocessed = _preprocess(sample)
-
-        return (
-            preprocessed,
-            explainer_factory.make_explainer(
-                model=model.final_estimator, data=background_dataset
-            ),
-        )
 
     @staticmethod
     def _preprocessed_features(
@@ -418,6 +421,12 @@ class ShapValuesCalculator(
         multi_output_names: Sequence[str],
     ) -> pd.DataFrame:
         x = ShapCalculator._preprocessed_features(model=model, sample=sample)
+
+        if x.isna().values.any():
+            log.warning(
+                "preprocessed sample passed to SHAP explainer contains NaN values; "
+                "try to change preprocessing to impute all NaN values"
+            )
 
         # calculate the shap values, and ensure the result is a list of arrays
         shap_values: List[np.ndarray] = ShapCalculator._shap_tensors_to_list(
@@ -580,7 +589,7 @@ class RegressorShapCalculator(ShapCalculator[RegressorPipelineDF], metaclass=ABC
 
     @staticmethod
     def _output_names(crossfit: LearnerCrossfit[RegressorPipelineDF]) -> List[str]:
-        return crossfit.training_sample.target_columns
+        return crossfit.sample.target_columns
 
     @staticmethod
     def multi_output_type() -> str:
@@ -662,7 +671,7 @@ class ClassifierShapCalculator(ShapCalculator[ClassifierPipelineDF], metaclass=A
     @staticmethod
     def _output_names(crossfit: LearnerCrossfit[ClassifierPipelineDF]) -> List[str]:
         assert (
-            len(crossfit.training_sample.target_columns) == 1
+            len(crossfit.sample.target_columns) == 1
         ), "classification model is single-output"
         classifier_df = crossfit.pipeline.final_estimator
         assert classifier_df.is_fitted, "classifier used in crossfit must be fitted"
@@ -808,10 +817,14 @@ class ClassifierShapInteractionValuesCalculator(
             # to ensure the values are returned as expected above,
             # and no information of class 1 is discarded, assert the
             # following:
-            assert np.allclose(raw_shap_tensors[0], -raw_shap_tensors[1]), (
-                "shap interaction values of binary classifiers must add up to 0.0 "
-                "for each observation and feature pair"
-            )
+            if not np.allclose(raw_shap_tensors[0], -raw_shap_tensors[1]):
+                _raw_shap_tensor_totals = raw_shap_tensors[0] + raw_shap_tensors[1]
+                log.warning(
+                    "shap interaction values of binary classifiers must add up to 0.0 "
+                    "for each observation and feature pair, but total shap values "
+                    f"range from {_raw_shap_tensor_totals.min():g} "
+                    f"to {_raw_shap_tensor_totals.max():g}"
+                )
 
             # all good: proceed with SHAP values for class 0:
             raw_shap_tensors = raw_shap_tensors[:1]

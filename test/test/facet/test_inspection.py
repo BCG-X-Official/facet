@@ -14,7 +14,11 @@ from sklearn.model_selection import BaseCrossValidator, KFold
 
 from facet import Sample
 from facet.crossfit import LearnerCrossfit
-from facet.inspection import KernelExplainerFactory, LearnerInspector
+from facet.inspection import (
+    KernelExplainerFactory,
+    LearnerInspector,
+    TreeExplainerFactory,
+)
 from facet.selection import LearnerGrid, LearnerRanker
 from facet.validation import BootstrapCV, StratifiedBootstrapCV
 from pytools.viz.dendrogram import DendrogramDrawer, DendrogramReportStyle
@@ -206,10 +210,10 @@ def test_model_inspection_classifier_binary(
     assert model_inspector.feature_association_matrix().values == pytest.approx(
         np.array(
             [
-                [1.0, 0.01, 0.137, 0.12],
-                [0.01, 1.0, 0.006, 0.004],
-                [0.137, 0.006, 1.0, 0.655],
-                [0.12, 0.004, 0.655, 1.0],
+                [1.0, 0.028, 0.14, 0.128],
+                [0.028, 1.0, 0.005, 0.002],
+                [0.14, 0.005, 1.0, 0.681],
+                [0.128, 0.002, 0.681, 1.0],
             ]
         ),
         abs=0.02,
@@ -283,14 +287,14 @@ def test_model_inspection_classifier_multi_class(
     assert model_inspector.feature_synergy_matrix().values == pytest.approx(
         np.array(
             [
-                [1.0, 0.098, 0.088, 0.067, 1.0, 0.135]
-                + [0.139, 0.127, 1.0, 0.053, 0.108, 0.108],
-                [0.098, 1.0, 0.021, 0.022, 0.135, 1.0]
-                + [0.031, 0.034, 0.053, 1.0, 0.027, 0.029],
-                [0.088, 0.021, 1.0, 0.026, 0.139, 0.031]
-                + [1.0, 0.207, 0.108, 0.027, 1.0, 0.167],
-                [0.067, 0.022, 0.026, 1.0, 0.127, 0.034]
-                + [0.207, 1.0, 0.108, 0.029, 0.167, 1.0],
+                [1.0, 0.069, 0.081, 0.061, 1.0, 0.098]
+                + [0.13, 0.118, 1.0, 0.022, 0.101, 0.101],
+                [0.069, 1.0, 0.011, 0.012, 0.098, 1.0]
+                + [0.019, 0.022, 0.022, 1.0, 0.016, 0.018],
+                [0.081, 0.011, 1.0, 0.023, 0.13, 0.019]
+                + [1.0, 0.205, 0.101, 0.016, 1.0, 0.165],
+                [0.061, 0.012, 0.023, 1.0, 0.118, 0.022]
+                + [0.205, 1.0, 0.101, 0.018, 0.165, 1.0],
             ]
         ),
         abs=0.02,
@@ -298,14 +302,14 @@ def test_model_inspection_classifier_multi_class(
     assert model_inspector.feature_redundancy_matrix().values == pytest.approx(
         np.array(
             [
-                [1.0, 0.126, 0.418, 0.402, 1.0, 0.13]
-                + [0.152, 0.141, 1.0, 0.013, 0.312, 0.313],
-                [0.126, 1.0, 0.052, 0.05, 0.13, 1.0]
-                + [0.031, 0.031, 0.013, 1.0, 0.001, 0.004],
-                [0.418, 0.052, 1.0, 0.947, 0.152, 0.031]
-                + [1.0, 0.614, 0.312, 0.001, 1.0, 0.786],
-                [0.402, 0.05, 0.947, 1.0, 0.141, 0.031]
-                + [0.614, 1.0, 0.313, 0.004, 0.786, 1.0],
+                [1.0, 0.145, 0.418, 0.402, 1.0, 0.163]
+                + [0.149, 0.144, 1.0, 0.011, 0.322, 0.326],
+                [0.145, 1.0, 0.056, 0.053, 0.163, 1.0]
+                + [0.034, 0.033, 0.011, 1.0, 0.0, 0.004],
+                [0.418, 0.056, 1.0, 0.968, 0.149, 0.034]
+                + [1.0, 0.63, 0.322, 0.0, 1.0, 0.803],
+                [0.402, 0.053, 0.968, 1.0, 0.144, 0.033]
+                + [0.63, 1.0, 0.326, 0.004, 0.803, 1.0],
             ]
         ),
         abs=0.02,
@@ -313,14 +317,14 @@ def test_model_inspection_classifier_multi_class(
     assert model_inspector.feature_association_matrix().values == pytest.approx(
         np.array(
             [
-                [1.0, 0.078, 0.374, 0.372, 1.0, 0.079]
-                + [0.207, 0.203, 1.0, 0.014, 0.295, 0.291],
-                [0.078, 1.0, 0.053, 0.051, 0.079, 1.0]
-                + [0.035, 0.042, 0.014, 1.0, 0.001, 0.001],
-                [0.374, 0.053, 1.0, 0.957, 0.207, 0.035]
-                + [1.0, 0.743, 0.295, 0.001, 1.0, 0.736],
-                [0.372, 0.051, 0.957, 1.0, 0.203, 0.042]
-                + [0.743, 1.0, 0.291, 0.001, 0.736, 1.0],
+                [1.0, 0.098, 0.375, 0.373, 1.0, 0.109]
+                + [0.207, 0.205, 1.0, 0.013, 0.302, 0.301],
+                [0.098, 1.0, 0.056, 0.055, 0.109, 1.0]
+                + [0.038, 0.044, 0.013, 1.0, 0.0, 0.0],
+                [0.375, 0.056, 1.0, 0.982, 0.207, 0.038]
+                + [1.0, 0.764, 0.302, 0.0, 1.0, 0.755],
+                [0.373, 0.055, 0.982, 1.0, 0.205, 0.044]
+                + [0.764, 1.0, 0.301, 0.0, 0.755, 1.0],
             ]
         ),
         abs=0.02,
@@ -342,7 +346,7 @@ def _validate_shap_values_against_predictions(
     # calculate the matching predictions, so we can check if the SHAP values add up
     # correctly
     predicted_probabilities_per_split: List[pd.DataFrame] = [
-        model.predict_proba(crossfit.training_sample.features.iloc[test_split, :])
+        model.predict_proba(crossfit.sample.features.iloc[test_split, :])
         for model, (_, test_split) in zip(crossfit.models(), crossfit.splits())
     ]
 
@@ -352,7 +356,7 @@ def _validate_shap_values_against_predictions(
             predicted_probabilities, pd.DataFrame
         ), "predicted probabilities are single-output"
 
-        expected_proba_range = 1 / len(predicted_probabilities.columns)
+        expected_probability_range = 1 / len(predicted_probabilities.columns)
 
         def _check_probabilities(
             _class_probabilities: pd.DataFrame, _shap_for_split_and_class: pd.Series
@@ -361,14 +365,18 @@ def _validate_shap_values_against_predictions(
                 _shap_for_split_and_class
             ).sum(axis=1)
 
-            min = expected_probability.min()
-            max = expected_probability.max()
-            assert min == pytest.approx(
-                max
+            expected_probability_min = expected_probability.min()
+            expected_probability_max = expected_probability.max()
+            assert expected_probability_min == pytest.approx(
+                expected_probability_max
             ), "expected probability is the same for all explanations"
-            assert expected_proba_range * 0.6 <= min <= expected_proba_range / 0.6, (
+            assert (
+                expected_probability_range * 0.6
+                <= expected_probability_min
+                <= expected_probability_range / 0.6
+            ), (
                 "expected class probability is roughly in the range of "
-                f"{expected_proba_range * 100:.0f}%"
+                f"{expected_probability_range * 100:.0f}%"
             )
 
         if predicted_probabilities.shape[1] == 2:
@@ -383,8 +391,8 @@ def _validate_shap_values_against_predictions(
 
             for class_name in predicted_probabilities.columns:
                 # for each observation and class, we expect to get the constant
-                # "expected probability" value by deducting the SHAP values for all features
-                # from the predicted probability
+                # expected probability value by deducting the SHAP values for all
+                # features from the predicted probability
 
                 class_probabilities = predicted_probabilities.loc[:, [class_name]]
 
@@ -400,16 +408,27 @@ def _validate_shap_values_against_predictions(
 
 # noinspection DuplicatedCode
 def test_model_inspection_classifier_interaction(
-    iris_sample_binary: Sample, iris_classifier_crossfit_binary, n_jobs: int
+    iris_sample_binary: Sample,
+    iris_classifier_crossfit_binary: LearnerCrossfit[
+        ClassifierPipelineDF[RandomForestClassifierDF]
+    ],
+    n_jobs: int,
 ) -> None:
     warnings.filterwarnings("ignore", message="You are accessing a training score")
 
-    model_inspector = LearnerInspector(n_jobs=n_jobs).fit(
-        crossfit=iris_classifier_crossfit_binary
-    )
+    model_inspector = LearnerInspector(
+        explainer_factory=TreeExplainerFactory(
+            feature_perturbation="tree_path_dependent", use_background_dataset=True
+        ),
+        n_jobs=n_jobs,
+    ).fit(crossfit=iris_classifier_crossfit_binary)
 
     model_inspector_no_interaction = LearnerInspector(
-        shap_interaction=False, n_jobs=n_jobs
+        shap_interaction=False,
+        explainer_factory=TreeExplainerFactory(
+            feature_perturbation="tree_path_dependent", use_background_dataset=True
+        ),
+        n_jobs=n_jobs,
     ).fit(crossfit=iris_classifier_crossfit_binary)
 
     # calculate shap interaction values
@@ -451,10 +470,10 @@ def test_model_inspection_classifier_interaction(
     assert model_inspector.feature_synergy_matrix().values == pytest.approx(
         np.array(
             [
-                [1.0, 0.081, 0.107, 0.125],
-                [0.081, 1.0, 0.028, 0.033],
-                [0.107, 0.028, 1.0, 0.108],
-                [0.125, 0.033, 0.108, 1.0],
+                [1.0, 0.047, 0.101, 0.12],
+                [0.047, 1.0, 0.017, 0.021],
+                [0.101, 0.017, 1.0, 0.1],
+                [0.12, 0.021, 0.1, 1.0],
             ]
         ),
         abs=0.02,
@@ -463,10 +482,10 @@ def test_model_inspection_classifier_interaction(
     assert model_inspector.feature_redundancy_matrix().values == pytest.approx(
         np.array(
             [
-                [1.0, 0.025, 0.172, 0.186],
-                [0.025, 1.0, 0.006, 0.012],
-                [0.172, 0.006, 1.0, 0.761],
-                [0.186, 0.012, 0.761, 1.0],
+                [1.0, 0.039, 0.181, 0.206],
+                [0.039, 1.0, 0.005, 0.011],
+                [0.181, 0.005, 1.0, 0.792],
+                [0.206, 0.011, 0.792, 1.0],
             ]
         ),
         abs=0.02,
@@ -475,10 +494,10 @@ def test_model_inspection_classifier_interaction(
     assert model_inspector.feature_association_matrix().values == pytest.approx(
         np.array(
             [
-                [1.0, 0.01, 0.137, 0.12],
-                [0.01, 1.0, 0.006, 0.004],
-                [0.137, 0.006, 1.0, 0.655],
-                [0.12, 0.004, 0.655, 1.0],
+                [1.0, 0.028, 0.14, 0.128],
+                [0.028, 1.0, 0.005, 0.002],
+                [0.14, 0.005, 1.0, 0.681],
+                [0.128, 0.002, 0.681, 1.0],
             ]
         ),
         abs=0.02,

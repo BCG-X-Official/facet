@@ -176,7 +176,7 @@ class BaseUnivariateSimulator(
         :return a mapping of output names to simulation results
         """
 
-        sample = self.crossfit.training_sample
+        sample = self.crossfit.sample
 
         if not isinstance(sample.target, pd.Series):
             raise NotImplementedError("multi-output simulations are not supported")
@@ -220,7 +220,7 @@ class BaseUnivariateSimulator(
             feature values
         """
 
-        sample = self.crossfit.training_sample
+        sample = self.crossfit.sample
 
         with self._parallel() as parallel:
             result: List[float] = parallel(
@@ -275,7 +275,7 @@ class BaseUnivariateSimulator(
           ``simulation_result``.
         """
 
-        sample = self.crossfit.training_sample
+        sample = self.crossfit.sample
 
         if feature_name not in sample.features.columns:
             raise ValueError(f"Feature '{feature_name}' not in sample")
