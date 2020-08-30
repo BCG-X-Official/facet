@@ -41,12 +41,12 @@ N_BOOTSTRAPS = 30
 
 @pytest.fixture
 def boston_target() -> str:
-    return "target"
+    return "price"
 
 
 @pytest.fixture
 def iris_target() -> str:
-    return "target"
+    return "species"
 
 
 @pytest.fixture
