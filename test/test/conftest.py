@@ -12,7 +12,7 @@ from sklearn.utils import Bunch
 
 from facet import Sample
 from facet.crossfit import LearnerCrossfit
-from facet.inspection import LearnerInspector
+from facet.inspection import LearnerInspector, TreeExplainerFactory
 from facet.selection import LearnerGrid, LearnerRanker, LearnerScores
 from facet.validation import BootstrapCV, StratifiedBootstrapCV
 from sklearndf import TransformerDF
@@ -41,12 +41,12 @@ N_BOOTSTRAPS = 30
 
 @pytest.fixture
 def boston_target() -> str:
-    return "target"
+    return "price"
 
 
 @pytest.fixture
 def iris_target() -> str:
-    return "target"
+    return "species"
 
 
 @pytest.fixture
@@ -183,7 +183,12 @@ def feature_names(best_lgbm_crossfit: LearnerCrossfit[RegressorPipelineDF]) -> S
 def regressor_inspector(
     best_lgbm_crossfit: LearnerCrossfit[RegressorPipelineDF], n_jobs: int
 ) -> LearnerInspector:
-    return LearnerInspector(n_jobs=n_jobs).fit(crossfit=best_lgbm_crossfit)
+    return LearnerInspector(
+        explainer_factory=TreeExplainerFactory(
+            feature_perturbation="tree_path_dependent", use_background_dataset=True
+        ),
+        n_jobs=n_jobs,
+    ).fit(crossfit=best_lgbm_crossfit)
 
 
 @pytest.fixture
