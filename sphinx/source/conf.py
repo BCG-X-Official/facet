@@ -120,11 +120,13 @@ autosummary_generate = True
 # always overwrite generated autosummaries with newly generated versions
 autosummary_generate_overwrite = True
 
-# autodoc_default_options = {
-# "ignore-module-all": True,
-# "inherited-members": True,
-# "show-inheritance": False
-# }
+autodoc_default_options = {
+    "ignore-module-all": False,
+    "inherited-members": True,
+    "imported-members": True,
+    "show-inheritance": True,
+    "member-order": "groupwise",
+}
 
 nbsphinx_allow_errors = True
 nbsphinx_timeout = 60 * 15  # 15 minutes due to tutorial/model notebook
