@@ -5,7 +5,7 @@ by BCG Gamma
 
 .. image:: _static/gamma_logo.jpg
 
-Facet is an open source library to for human-explainable AI. It combines sophisticated
+Facet is an open source library for human-explainable AI. It combines sophisticated
 model inspection and model-based simulation to enable better explanations of your
 machine learning models.
 
