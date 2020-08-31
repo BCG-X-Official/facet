@@ -1,8 +1,10 @@
-# Configuration file for the Sphinx documentation builder.
-#
-# This file only contains a selection of the most common options. For a full
-# list see the documentation:
-# https://www.sphinx-doc.org/en/master/usage/configuration.html
+"""
+Configuration file for the Sphinx documentation builder.
+
+This file only contains a selection of the most common options. For a full
+list see the documentation:
+https://www.sphinx-doc.org/en/master/usage/configuration.html
+"""
 
 # -- Path setup --------------------------------------------------------------
 
@@ -19,7 +21,6 @@ from typing import *
 
 import typing_inspect
 from sphinx.application import Sphinx
-import sphinx
 
 log = logging.getLogger(name=__name__)
 log.setLevel(logging.INFO)
@@ -41,6 +42,7 @@ def _set_paths() -> None:
     print(f"working dir is '{os.getcwd()}'")
     for module_path in module_paths:
         if module_path not in sys.path:
+            # noinspection PyUnboundLocalVariable
             sys.path.insert(0, os.path.abspath(f"{cwd}/{os.pardir}/{module_path}/src"))
             print(f"added `{sys.path[0]}` to python paths")
 
@@ -50,35 +52,10 @@ _set_paths()
 log.info(f"sys.path = {sys.path}")
 
 
-# fix m2r error
-def monkeypatch(cls):
-    """ decorator to monkey-patch methods """
-
-    def decorator(f):
-        method = f.__name__
-        old_method = getattr(cls, method)
-        setattr(
-            cls,
-            method,
-            lambda self, *args, **kwargs: f(old_method, self, *args, **kwargs),
-        )
-
-    return decorator
-
-
-# workaround until https://github.com/miyakogi/m2r/pull/55 is merged
-@monkeypatch(sphinx.registry.SphinxComponentRegistry)
-def add_source_parser(_old_add_source_parser, self, *args, **kwargs):
-    # signature is (parser: Type[Parser], **kwargs), but m2r expects
-    # the removed (str, parser: Type[Parser], **kwargs).
-    if isinstance(args[0], str):
-        args = args[1:]
-    return _old_add_source_parser(self, *args, **kwargs)
-
-
 # -- Project information -----------------------------------------------------
 
 project = "Facet"
+# noinspection PyShadowingBuiltins
 copyright = "2020, The Boston Consulting Group (BCG)"
 author = "BCG Gamma Facet Team"
 
@@ -95,22 +72,7 @@ extensions = [
     "sphinx.ext.intersphinx",
     "sphinx.ext.viewcode",
     "sphinx_autodoc_typehints",
-    "sphinx_automodapi.automodapi",
-    "sphinx_automodapi.smart_resolver",
 ]
-# -- Options for automodapi ------------------------------------------------------------
-
-# required by default to avoid generating duplicate documentation
-numpydoc_show_class_members = False
-
-# document all members from superclasses
-automodsumm_inherited_members = True
-
-# draw class inheritance diagrams with GraphViz
-automodapi_inheritance_diagram = True
-
-# write generated rst files to disk (for debugging only - no impact on final output)
-automodsumm_writereprocessed = False
 
 # -- Options for autodoc / autosummary -------------------------------------------------
 
@@ -314,4 +276,4 @@ def setup(app: Sphinx) -> None:
     :param app: the Sphinx application object
     """
     app.connect("autodoc-process-docstring", add_inheritance)
-    app.add_stylesheet("css/facet.css")
+    app.add_css_file(filename="css/facet.css")
