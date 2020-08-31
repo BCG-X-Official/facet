@@ -249,14 +249,17 @@ def iris_sample_binary(iris_sample: Sample) -> Sample:
 
 
 @pytest.fixture
-def iris_sample_binary_dual_target(iris_sample_binary: Sample) -> Sample:
+def iris_sample_binary_dual_target(
+    iris_sample_binary: Sample, iris_target: str
+) -> Sample:
     # the iris dataset, retaining only two categories so we can do binary classification
     target = pd.Series(
         index=iris_sample_binary.index,
         data=pd.Categorical(iris_sample_binary.target).codes,
-        name="target",
+        name=iris_target,
     )
+    iris_target_2 = f"{iris_target}2"
     return Sample(
-        iris_sample_binary.features.join(target).join(target.rename("target2")),
-        target=[*iris_sample_binary.target_columns, "target2"],
+        iris_sample_binary.features.join(target).join(target.rename(iris_target_2)),
+        target=[*iris_sample_binary.target_columns, iris_target_2],
     )
