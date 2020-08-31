@@ -103,7 +103,7 @@ class SimulationStyle(DrawStyle, metaclass=ABCMeta):
         # percentile
         return (
             f"{percentile_lower}th percentile",
-            "median",
+            "Median",
             f"{percentile_upper}th percentile",
         )
 
@@ -309,7 +309,7 @@ class SimulationReportStyle(SimulationStyle, TextStyle):
 
     def _drawing_start(self, title: str) -> None:
         # print the report title
-        self.out.write(f"SIMULATION REPORT: {title}\n")
+        self.out.write(f"{title}\n")
 
     def draw_uplift(
         self,

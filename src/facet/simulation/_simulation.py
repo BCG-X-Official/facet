@@ -504,7 +504,7 @@ class UnivariateUpliftSimulator(BaseUnivariateSimulator[RegressorPipelineDF]):
     @property
     def values_label(self) -> str:
         """[see superclass]"""
-        return f"mean predicted uplift ({self.crossfit.sample.target_columns[0]})"
+        return f"Mean predicted uplift ({self.crossfit.sample.target_columns[0]})"
 
     @property
     def baseline(self) -> float:
