@@ -61,7 +61,7 @@ def test_actuals_simulation(uplift_simulator: UnivariateUpliftSimulator) -> None
                 [0.0155072, 0.0280131, -0.0342100, 0.0155648, 0.0131959]
                 + [-0.0486192, -0.0378004, 0.0068394, -0.0034286, 0.0202970]
             ),
-            name="relative deviations of mean predictions from mean targets",
+            name="value",
         ),
         check_less_precise=True,
     )
