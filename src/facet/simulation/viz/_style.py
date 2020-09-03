@@ -120,9 +120,9 @@ class SimulationMatplotStyle(MatplotStyle, SimulationStyle):
     simulated values.
     """
 
-    _COLOR_CONFIDENCE = "blue"
-    _COLOR_BARS = "silver"
-    _COLOR_MEDIAN_UPLIFT = "orange"
+    _COLOR_CONFIDENCE = "#74E0AC"
+    _COLOR_BARS = "#9A9A9A"
+    _COLOR_MEDIAN_UPLIFT = "#29BA74"
     _WIDTH_BARS = 0.8
 
     _HISTOGRAM_SIZE_RATIO = 1 / 3
