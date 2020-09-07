@@ -516,6 +516,7 @@ def test_model_inspection_classifier_interaction_dual_target(
     iris_classifier_ranker_dual_target: LearnerRanker[
         ClassifierPipelineDF[RandomForestClassifierDF]
     ],
+    iris_target: str,
     n_jobs: int,
 ) -> None:
     iris_classifier_crossfit_dual_target = (
@@ -524,7 +525,10 @@ def test_model_inspection_classifier_interaction_dual_target(
 
     with pytest.raises(
         ValueError,
-        match="only single-output classifiers .* are supported.*target.*target2",
+        match=(
+            f"only single-output classifiers .* are supported.*"
+            f"{iris_target}.*{iris_target}2"
+        ),
     ):
         LearnerInspector(n_jobs=n_jobs).fit(
             crossfit=iris_classifier_crossfit_dual_target

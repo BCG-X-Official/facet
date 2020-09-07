@@ -87,6 +87,9 @@ class UnivariateSimulation(NamedTuple, Generic[T_Number]):
     #: partition
     values_upper: Sequence[T_Number]
 
+    #: the mean of the actual observed outputs, acting as the baseline of the
+    values_baseline: T_Number
+
     #: the percentile used to determine the lower confidence interval from the
     #: distribution of simulated outcomes
     percentile_lower: float
@@ -192,6 +195,7 @@ class BaseUnivariateSimulator(
             values_median=simulation_results.iloc[:, 1].values,
             values_lower=simulation_results.iloc[:, 0].values,
             values_upper=simulation_results.iloc[:, 2].values,
+            values_baseline=self.baseline,
             percentile_lower=self.percentile_lower,
             percentile_upper=self.percentile_upper,
         )
@@ -246,6 +250,13 @@ class BaseUnivariateSimulator(
     def values_label(self) -> str:
         """
         Designation for the values calculated in the simulation
+        """
+
+    @property
+    @abstractmethod
+    def baseline(self) -> float:
+        """
+        The mean of actual observed outputs
         """
 
     @staticmethod
@@ -406,18 +417,35 @@ class UnivariateProbabilitySimulator(BaseUnivariateSimulator[ClassifierPipelineD
     @property
     def values_label(self) -> str:
         """[see superclass]"""
-        positive_class: str
+        return f"{self._positive_class()} probability"
 
+    def baseline(self) -> float:
+        """
+        Calculate the actual observed frequency of the positive class as the baseline
+        of the simulation
+        :return: observed frequency of the positive class
+        """
+        actual_target: pd.Series = self.crossfit.sample.target
+        assert isinstance(actual_target, pd.Series), "sample has one single target"
+
+        return actual_target.loc[actual_target == self._positive_class()] / len(
+            actual_target
+        )
+
+    def _positive_class(self) -> Any:
+        """
+        The label of the positive class of the binary classifier being simulated
+        """
         classifier = self.crossfit.pipeline.final_estimator
+
         try:
-            positive_class = classifier.classes_[-1]
+            return classifier.classes_[-1]
+
         except AttributeError:
             log.warning(
                 f"{type(classifier).__name__} does not define classes_ attribute"
             )
-            positive_class = "positive class"
-
-        return f"{positive_class} probability"
+            return "positive class"
 
     @staticmethod
     def _expected_pipeline_type() -> Type[ClassifierPipelineDF]:
@@ -476,7 +504,14 @@ class UnivariateUpliftSimulator(BaseUnivariateSimulator[RegressorPipelineDF]):
     @property
     def values_label(self) -> str:
         """[see superclass]"""
-        return f"mean predicted uplift ({self.crossfit.sample.target_columns[0]})"
+        return f"Mean predicted uplift ({self.crossfit.sample.target_columns[0]})"
+
+    @property
+    def baseline(self) -> float:
+        """
+        The baseline of uplift simulations is always ``0.0``
+        """
+        return 0.0
 
     @staticmethod
     def _expected_pipeline_type() -> Type[RegressorPipelineDF]:
