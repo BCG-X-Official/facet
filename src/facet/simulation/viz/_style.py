@@ -53,6 +53,7 @@ class SimulationStyle(DrawStyle, metaclass=ABCMeta):
         values_median: Sequence[T_Number],
         values_min: Sequence[T_Number],
         values_max: Sequence[T_Number],
+        values_baseline: T_Number,
         percentile_lower: float,
         percentile_upper: float,
         partitions: Sequence[Any],
@@ -68,6 +69,7 @@ class SimulationStyle(DrawStyle, metaclass=ABCMeta):
         :param values_median: median uplift values
         :param values_min: low percentile uplift values
         :param values_max: high percentile uplift values
+        :param values_baseline: the baseline of the simulationb
         :param percentile_lower: percentile used to compute values_min
         :param percentile_upper: percentile used to compute values_max
         :param partitions: the partitioning (center values) of the simulated feature
@@ -101,7 +103,7 @@ class SimulationStyle(DrawStyle, metaclass=ABCMeta):
         # percentile
         return (
             f"{percentile_lower}th percentile",
-            "median",
+            "Median",
             f"{percentile_upper}th percentile",
         )
 
@@ -118,9 +120,9 @@ class SimulationMatplotStyle(MatplotStyle, SimulationStyle):
     simulated values.
     """
 
-    _COLOR_CONFIDENCE = "blue"
-    _COLOR_BARS = "silver"
-    _COLOR_MEDIAN_UPLIFT = "orange"
+    _COLOR_CONFIDENCE = "#295e7e"
+    _COLOR_BARS = "#9a9a9a"
+    _COLOR_MEDIAN_UPLIFT = "#30c1d7"
     _WIDTH_BARS = 0.8
 
     _HISTOGRAM_SIZE_RATIO = 1 / 3
@@ -133,6 +135,7 @@ class SimulationMatplotStyle(MatplotStyle, SimulationStyle):
         values_median: Sequence[T_Number],
         values_min: Sequence[T_Number],
         values_max: Sequence[T_Number],
+        values_baseline: T_Number,
         percentile_lower: float,
         percentile_upper: float,
         partitions: Sequence[Any],
@@ -174,7 +177,7 @@ class SimulationMatplotStyle(MatplotStyle, SimulationStyle):
             ax.set_xticklabels(labels=partitions)
 
         # add a horizontal line at y=0
-        ax.axhline(y=0, linewidth=0.5)
+        ax.axhline(y=values_baseline, linewidth=0.5)
 
         # remove the top and right spines
         for pos in ["top", "right"]:
@@ -306,7 +309,7 @@ class SimulationReportStyle(SimulationStyle, TextStyle):
 
     def _drawing_start(self, title: str) -> None:
         # print the report title
-        self.out.write(f"SIMULATION REPORT: {title}\n")
+        self.out.write(f"{title}\n")
 
     def draw_uplift(
         self,
@@ -316,6 +319,7 @@ class SimulationReportStyle(SimulationStyle, TextStyle):
         values_median: Sequence[T_Number],
         values_min: Sequence[T_Number],
         values_max: Sequence[T_Number],
+        values_baseline: T_Number,
         percentile_lower: float,
         percentile_upper: float,
         partitions: Sequence[Any],
@@ -325,7 +329,7 @@ class SimulationReportStyle(SimulationStyle, TextStyle):
         """[see superclass]"""
 
         out = self.out
-        self.out.write(f"\n{values_label}:\n\n")
+        self.out.write(f"\n{values_label}:\n\nBaseline = {values_baseline}\n\n")
         out.write(
             format_table(
                 headings=[

@@ -90,6 +90,7 @@ class SimulationDrawer(Drawer[UnivariateSimulation, SimulationStyle]):
             values_median=simulation_series.values_median,
             values_min=simulation_series.values_min,
             values_max=simulation_series.values_max,
+            values_baseline=data.values_baseline,
             percentile_lower=data.percentile_lower,
             percentile_upper=data.percentile_upper,
             partitions=simulation_series.partitions,
