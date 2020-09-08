@@ -419,6 +419,7 @@ class UnivariateProbabilitySimulator(BaseUnivariateSimulator[ClassifierPipelineD
         """[see superclass]"""
         return f"{self._positive_class()} probability"
 
+    @property
     def baseline(self) -> float:
         """
         Calculate the actual observed frequency of the positive class as the baseline
