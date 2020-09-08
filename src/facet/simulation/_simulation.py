@@ -417,7 +417,7 @@ class UnivariateProbabilitySimulator(BaseUnivariateSimulator[ClassifierPipelineD
     @property
     def values_label(self) -> str:
         """[see superclass]"""
-        return f"{self._positive_class()} probability"
+        return f"probability({self._positive_class()})"
 
     @property
     def baseline(self) -> float:
