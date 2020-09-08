@@ -293,9 +293,6 @@ class LearnerCrossfit(
 
         pipeline = self.pipeline
 
-        if sample_weight is not None:
-            fit_params.update(sample_weight=sample_weight)
-
         if not do_fit:
             _sample = self.sample
 
@@ -303,7 +300,12 @@ class LearnerCrossfit(
         target = _sample.target
 
         if do_fit:
-            pipeline.fit(X=features, y=target, **fit_params)
+            if sample_weight is None:
+                pipeline.fit(X=features, y=target, **fit_params)
+            else:
+                pipeline.fit(
+                    X=features, y=target, sample_weight=sample_weight, **fit_params
+                )
 
         # prepare scoring
 
@@ -469,12 +471,11 @@ class LearnerCrossfit(
         pipeline: LearnerPipelineDF
 
         if do_fit:
-            if parameters.train_weight is not None:
-                fit_params.update(sample_weight=parameters.train_weight)
             pipeline = parameters.pipeline.fit(
                 X=parameters.train_features,
                 y=parameters.train_target,
                 feature_sequence=parameters.train_feature_sequence,
+                sample_weight=parameters.train_weight,
                 **fit_params,
             )
 
