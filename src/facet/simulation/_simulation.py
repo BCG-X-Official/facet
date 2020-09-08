@@ -417,8 +417,9 @@ class UnivariateProbabilitySimulator(BaseUnivariateSimulator[ClassifierPipelineD
     @property
     def values_label(self) -> str:
         """[see superclass]"""
-        return f"{self._positive_class()} probability"
+        return f"probability({self._positive_class()})"
 
+    @property
     def baseline(self) -> float:
         """
         Calculate the actual observed frequency of the positive class as the baseline
@@ -428,7 +429,7 @@ class UnivariateProbabilitySimulator(BaseUnivariateSimulator[ClassifierPipelineD
         actual_target: pd.Series = self.crossfit.sample.target
         assert isinstance(actual_target, pd.Series), "sample has one single target"
 
-        return actual_target.loc[actual_target == self._positive_class()] / len(
+        return actual_target.loc[actual_target == self._positive_class()].sum() / len(
             actual_target
         )
 
