@@ -280,7 +280,7 @@ class LearnerCrossfit(
 
         if sample_weight is not None:
             raise ValueError(
-                "do not use arg sample_weight to pass sample weights, "
+                "do not use arg sample_weight to pass sample weights; "
                 "specify a weight column in class Sample instead"
             )
 
