@@ -45,7 +45,7 @@ __tracker = AllTracker(globals())
 
 
 class Partitioner(
-    FittableMixin[Sequence[T_Value]], Generic[T_Value], metaclass=ABCMeta
+    FittableMixin[Iterable[T_Value]], Generic[T_Value], metaclass=ABCMeta
 ):
     """
     Abstract base class of all partitioners.
@@ -77,7 +77,7 @@ class Partitioner(
         return self._max_partitions
 
     @abstractmethod
-    def fit(self: T, values: Sequence[T_Value], **fit_params) -> T:
+    def fit(self: T, values: Iterable[T_Value], **fit_params) -> T:
         """
         Calculate the partitioning for the given observed values.
         :param values: a sequence of observed values as the empirical basis for \
@@ -177,7 +177,7 @@ class RangePartitioner(Partitioner[T_Number], Generic[T_Number], metaclass=ABCMe
     # noinspection PyMissingOrEmptyDocstring
     def fit(
         self: T,
-        values: Sequence[T_Value],
+        values: Iterable[T_Value],
         lower_bound: Optional[T_Number] = None,
         upper_bound: Optional[T_Number] = None,
         **fit_params,
@@ -186,14 +186,26 @@ class RangePartitioner(Partitioner[T_Number], Generic[T_Number], metaclass=ABCMe
 
         self: RangePartitioner  # support type hinting in PyCharm
 
+        # ensure arg values is an array
+        if not isinstance(values, np.ndarray):
+            if isinstance(values, pd.Series):
+                values = values.values
+            else:
+                if not isinstance(values, Sequence):
+                    try:
+                        values = iter(values)
+                    except TypeError:
+                        raise TypeError("arg values must be iterable")
+                values = np.array(values)
+
         lower_bound = self._lower_bound
         upper_bound = self._upper_bound
 
         if lower_bound is None:
-            lower_bound = np.quantile(values, q=0.025)
+            lower_bound = np.nanquantile(values, q=0.025)
 
         if upper_bound is None:
-            upper_bound = np.quantile(values, q=0.975)
+            upper_bound = np.nanquantile(values, q=0.975)
             if upper_bound < lower_bound:
                 upper_bound = lower_bound
         elif upper_bound < lower_bound:
@@ -213,19 +225,20 @@ class RangePartitioner(Partitioner[T_Number], Generic[T_Number], metaclass=ABCMe
             int(round((self._last_partition - self._first_partition) / self._step)) + 1
         )
 
-        def _frequencies() -> List[int]:
-            # Return the number of elements in each partitions
-            partition_indices = [
-                int(round(value - first_partition) / step) for value in values
-            ]
-            frequencies = [0] * n_partitions
-            for idx in partition_indices:
-                if 0 <= idx < n_partitions:
-                    frequencies[idx] += 1
+        # Return the number of elements in each partitions
 
-            return frequencies
+        # create the bins, starting with the lower bound of the first partition
+        partition_bins = (first_partition - step / 2) + np.arange(
+            n_partitions + 1
+        ) * step
+        partition_indices = np.digitize(values, bins=partition_bins)
 
-        self._frequencies = _frequencies()
+        # frequency counts will include left and right outliers, hence n_partitions + 2
+        # and we exclude the first and last element of the result
+        frequencies = np.bincount(partition_indices, minlength=n_partitions + 2)[1:-1]
+
+        self._frequencies = frequencies
+
         return self
 
     def is_fitted(self) -> bool:
@@ -396,7 +409,15 @@ class CategoryPartitioner(Partitioner[T_Value]):
 
         self: CategoryPartitioner  # support type hinting in PyCharm
 
-        value_counts = pd.Series(data=values).value_counts(ascending=False)
+        if not isinstance(values, pd.Series):
+            if not (isinstance(values, np.ndarray) or isinstance(values, Sequence)):
+                try:
+                    values = iter(values)
+                except TypeError:
+                    raise TypeError("arg values must be iterable")
+            values = pd.Series(data=values)
+
+        value_counts = values.value_counts(ascending=False)
         max_partitions = self.max_partitions
         self._partitions = value_counts.index.values[:max_partitions]
         self._frequencies = value_counts.values[:max_partitions]
