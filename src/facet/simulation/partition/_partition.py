@@ -251,9 +251,11 @@ class RangePartitioner(Partitioner[T_Number], Generic[T_Number], metaclass=ABCMe
 
         :return: for each partition, a central value representing the partition
         """
-        offset = self._first_partition
-        step = self._step
-        return [offset + (idx * step) for idx in range(self._n_partitions)]
+        return np.round(
+            self._first_partition + np.arange(self._n_partitions) * self._step,
+            # round to the nearest power of 10 of the step variable
+            int(-np.floor(np.log10(self._step))),
+        )
 
     def frequencies(self) -> Sequence[int]:
         """
