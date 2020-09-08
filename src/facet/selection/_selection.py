@@ -301,7 +301,7 @@ class LearnerRanker(
         crossfits from the given sample.
 
         Other than the scikit-learn implementation of grid search, arbitrary parameters
-        can be passed on to the learner pipeline(s) to be fitted, e.g., sample weights
+        can be passed on to the learner pipeline(s) to be fitted
 
         :param sample: the sample from which to fit the crossfits
         :param fit_params: any fit parameters to pass on to the learner's fit method
