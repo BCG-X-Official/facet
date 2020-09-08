@@ -429,7 +429,7 @@ class UnivariateProbabilitySimulator(BaseUnivariateSimulator[ClassifierPipelineD
         actual_target: pd.Series = self.crossfit.sample.target
         assert isinstance(actual_target, pd.Series), "sample has one single target"
 
-        return actual_target.loc[actual_target == self._positive_class()] / len(
+        return actual_target.loc[actual_target == self._positive_class()].sum() / len(
             actual_target
         )
 
