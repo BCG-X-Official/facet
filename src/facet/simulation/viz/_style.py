@@ -96,15 +96,14 @@ class SimulationStyle(DrawStyle, metaclass=ABCMeta):
         pass
 
     @staticmethod
-    def _legend(
-        percentile_lower: float, percentile_upper: float
-    ) -> Tuple[str, str, str]:
+    def _legend(percentile_lower: float, percentile_upper: float) -> Tuple[str, ...]:
         # generate a triple with legend names for the min percentile, median, and max
         # percentile
         return (
             f"{percentile_lower}th percentile",
             "Median",
             f"{percentile_upper}th percentile",
+            "Baseline",
         )
 
 
@@ -154,12 +153,14 @@ class SimulationMatplotStyle(MatplotStyle, SimulationStyle):
         line_min, = ax.plot(x, values_min, color=self._COLOR_CONFIDENCE)
         line_median, = ax.plot(x, values_median, color=self._COLOR_MEDIAN_UPLIFT)
         line_max, = ax.plot(x, values_max, color=self._COLOR_CONFIDENCE)
+        # add a horizontal line at y=0
+        line_base = ax.axhline(y=values_baseline, linewidth=0.5)
 
         # add a legend
         labels = self._legend(
             percentile_lower=percentile_lower, percentile_upper=percentile_upper
         )
-        handles = [line_max, line_median, line_min]
+        handles = (line_max, line_median, line_min, line_base)
         ax.legend(handles, labels)
 
         # label the y axis
@@ -175,9 +176,6 @@ class SimulationMatplotStyle(MatplotStyle, SimulationStyle):
         if is_categorical_feature or True:
             ax.set_xticks(x)
             ax.set_xticklabels(labels=partitions)
-
-        # add a horizontal line at y=0
-        ax.axhline(y=values_baseline, linewidth=0.5)
 
         # remove the top and right spines
         for pos in ["top", "right"]:
@@ -337,7 +335,7 @@ class SimulationReportStyle(SimulationStyle, TextStyle):
                     *self._legend(
                         percentile_lower=percentile_lower,
                         percentile_upper=percentile_upper,
-                    ),
+                    )[:3],
                 ],
                 formats=[
                     self._partition_format(is_categorical_feature),
