@@ -38,9 +38,11 @@ The generated Sphinx documentation for facet is located at ``sphinx/build/html``
 
 Before building ensure you have Activated the ``facet-develop`` Conda environment. The following extensions are used in the conf.py Sphinx configuration script:
 
-- intersphinx (external links to other documentations built with Sphinx: scikit-learn, numpy...)
+- `intersphinx <https://www.sphinx-doc.org/en/master/usage/extensions/intersphinx.html>`_ (external links to other documentations built with Sphinx: scikit-learn, numpy...)
 
-- viewcode to include source code in the documentation, and links to the source code from the objects documentation
+- `viewcode <https://www.sphinx-doc.org/en/master/usage/extensions/viewcode.html>`_ to include source code in the documentation, and links to the source code from the objects documentation
+
+- `imgmath <https://www.sphinx-doc.org/en/master/usage/extensions/math.html>`_ to render math expressions in doc strings. Note that a local latex installation is required (e.g., `MiKTeX <https://miktex.org/>`_ for Windows)
 
 To update the Sphinx documentation, run ``make html`` from within ``/sphinx``. By default this will only compile files that have been modified since the last compilation. To force compilation of the full documentation run ``make clean`` first.
 

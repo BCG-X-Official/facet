@@ -3,7 +3,7 @@
     :width: 400
     :class: padded-logo
 
-Facet is an open source library to for human-explainable AI. It combines sophisticated
+Facet is an open source library for human-explainable AI. It combines sophisticated
 model inspection and model-based simulation to enable better explanations of your
 machine learning models.
 
@@ -31,20 +31,24 @@ Pip
 Quickstart
 ----------------------
 
-Facet follows the design principle that holistic model explanations require two key
-elements:
+Facet is composed of the following key components:
 
-- **Pipelining & Model Ranking**:
+- **sklearndf**:
+    An augmented version of scikit-learn with enhanced support for pandas dataframes
+    and pipelining.
+
+- **Enhanced machine learning workflow**:
     Facet delivers a robust and fail-safe pipelining
     workflow which allows you to easily impute and select your features as well as
     ranking a grid of different models "competing" against each other
-- **Inspection**:
+
+- **Model Inspection**:
     Local explanations of features and their interactions make up a key
     component of understanding feature importance as well as feature interactions.
     This is based on a novel method which decomposes
     `SHAP values <https://shap.readthedocs.io/en/latest/>`_ into
     three vectors representing **synergy**, **redundancy**, and **independence**.
-- **Simulation**:
+- **Model Simulation**:
     Use your trained model and the insights from the model inspection
     to conduct a historical simulation of any feature on your target in order to
     identify local optima.
@@ -181,13 +185,14 @@ TBD - link to long section in documentation.
 Acknowledgements
 ---------------------------
 
-This package provides a layer on top of some popular building blocks for Machine
+GAMMA Facet is built on top of two popular packages for Machine
 Learning:
+
+The `scikit-learn <https://github.com/scikit-learn/scikit-learn>`_ learners and
+pipelining make up implementation of the underlying algorithms. Moreover, we tried
+to design the `facet` API to align with the scikit-learn API.
 
 The `shap <https://github.com/slundberg/shap>`_ implementation is used to estimate the
 shapley vectors which are being decomposed into the synergy, redundancy, and
 independence vectors.
 
-The `scikit-learn <https://github.com/scikit-learn/scikit-learn>`_ learners and
-pipelining make up implementation of the underlying algorithms. Moreover, we tried
-to design the `facet` API to align with the scikit-learn API.
