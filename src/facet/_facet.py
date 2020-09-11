@@ -311,6 +311,10 @@ class Sample:
         """
         features: Set[str] = to_set(features, element_type=str)
 
+        unknown = features.difference(self._features)
+        if unknown:
+            raise ValueError(f"unknown features in arg features: {unknown}")
+
         return self.keep(
             features=[feature for feature in self._features if feature not in features]
         )
