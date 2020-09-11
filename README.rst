@@ -122,11 +122,13 @@ Facet implements a number of model inspection methods for
 Fundamentally, facet enables post-hoc model inspection by breaking down the interaction
 effects of the variables that your model used for Training:
 
-- **Redundancy** identifies groups of variables that fully or partially duplicate each
-    other and do not deliver any additional information to the machine learning model.
-- **Synergy** provides visibility about how features contain complementary information
-    with respect to the target and team up to predict outcomes by combining their
-    information.
+- **Redundancy**
+  identifies groups of variables that fully or partially duplicate each
+  other and do not deliver any additional information to the machine learning model.
+- **Synergy**
+  provides visibility about how features contain complementary information
+  with respect to the target and team up to predict outcomes by combining their
+  information.
 
 .. code-block:: Python
 
