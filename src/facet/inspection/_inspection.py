@@ -604,14 +604,13 @@ class LearnerInspector(
 
         .. math::
 
-            \\newcommand\\fi[1]{I_{#1}}
             \\newcommand\\nan{\\mathit{nan}}
-            \\fi{} = \\begin{pmatrix}
-                \\fi{11} & \\nan & \\nan & \\dots & \\nan \\\\
-                2\\fi{21} & \\fi{22} & \\nan & \\dots & \\nan \\\\
-                2\\fi{31} & 2\\fi{32} & \\fi{33} & \\dots & \\nan \\\\
+            I_{} = \\begin{pmatrix}
+                I_{11} & \\nan & \\nan & \\dots & \\nan \\\\
+                2I_{21} & I_{22} & \\nan & \\dots & \\nan \\\\
+                2I_{31} & 2I_{32} & I_{33} & \\dots & \\nan \\\\
                 \\vdots & \\vdots & \\vdots & \\ddots & \\vdots \\\\
-                2\\fi{n1} & 2\\fi{n2} & 2\\fi{n3} & \\dots & \\fi{nn} \\\\
+                2I_{n1} & 2I_{n2} & 2I_{n3} & \\dots & I_{nn} \\\\
             \\end{pmatrix}
 
         with :math:`\\sum_{a=1}^n \\sum_{b=a}^n I_{ab} = 1`

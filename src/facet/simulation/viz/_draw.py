@@ -1,9 +1,5 @@
 """
-Simulation drawer.
-
-:class:`SimulationDrawer` draws a simulation plot with on the x axis the feature
-values in the simulation and on the y axis the associated prediction uplift. Below
-this graph there is a histogram of the feature values.
+Visualizations of simulation results.
 """
 
 from typing import *
@@ -36,16 +32,17 @@ __tracker = AllTracker(globals())
 
 class _SimulationSeries(NamedTuple, Generic[T_Number]):
     # A set of aligned series representing the simulation result
-    median_uplift: Sequence[T_Number]
-    min_uplift: Sequence[T_Number]
-    max_uplift: Sequence[T_Number]
+    values_median: Sequence[T_Number]
+    values_min: Sequence[T_Number]
+    values_max: Sequence[T_Number]
     partitions: Sequence[T_Number]
     frequencies: Sequence[T_Number]
 
 
 class SimulationDrawer(Drawer[UnivariateSimulation, SimulationStyle]):
     """
-    Simulation drawer with high/low confidence intervals.
+    Draws the result of a univariate simulation, represented by a
+    :class:`.UnivariateSimulation` object.
     """
 
     _STYLES = {"matplot": SimulationMatplotStyle, "text": SimulationReportStyle}
@@ -56,8 +53,8 @@ class SimulationDrawer(Drawer[UnivariateSimulation, SimulationStyle]):
         """
         :param style: the style of the dendrogram; either as a \
             :class:`.SimulationStyle` instance, or as the name of a \
-            default style. Permissible names are ``"matplot"`` for a style supporting \
-            Matplotlib, and ``"text"`` for a text-only report to stdout \
+            default style. Permissible names are ``"matplot"`` for a style based on \
+            `matplotlib`, and ``"text"`` for a text-based report to stdout \
             (default: ``"matplot"``)
         :param histogram: if ``True``, plot the histogram of observed values for the \
             feature being simulated; if ``False`` do not plot the histogram (default: \
@@ -70,8 +67,8 @@ class SimulationDrawer(Drawer[UnivariateSimulation, SimulationStyle]):
         """
         Draw the simulation chart.
         :param data: the univariate simulation to draw
-        :param title: the title of the chart (optional, defaults to a title \
-            stating the name of the simulated feature)
+        :param title: the title of the chart (optional, defaults to the name of the \
+            simulated feature)
         """
         if title is None:
             title = f"Simulation: {data.feature}"
@@ -89,14 +86,16 @@ class SimulationDrawer(Drawer[UnivariateSimulation, SimulationStyle]):
         self._style.draw_uplift(
             feature=data.feature,
             target=data.target,
-            min_percentile=data.min_percentile,
-            max_percentile=data.max_percentile,
-            is_categorical_feature=data.partitioner.is_categorical,
+            values_label=data.values_label,
+            values_median=simulation_series.values_median,
+            values_min=simulation_series.values_min,
+            values_max=simulation_series.values_max,
+            values_baseline=data.values_baseline,
+            percentile_lower=data.percentile_lower,
+            percentile_upper=data.percentile_upper,
             partitions=simulation_series.partitions,
             frequencies=simulation_series.frequencies,
-            median_uplift=simulation_series.median_uplift,
-            min_uplift=simulation_series.min_uplift,
-            max_uplift=simulation_series.max_uplift,
+            is_categorical_feature=data.partitioner.is_categorical,
         )
 
         if self._histogram:
@@ -116,9 +115,9 @@ class SimulationDrawer(Drawer[UnivariateSimulation, SimulationStyle]):
         # Otherwise, the simulation series are returned unchanged.
 
         simulation_series = _SimulationSeries(
-            simulation.median_change,
-            simulation.min_change,
-            simulation.max_change,
+            simulation.values_median,
+            simulation.values_lower,
+            simulation.values_upper,
             simulation.partitioner.partitions(),
             simulation.partitioner.frequencies(),
         )
