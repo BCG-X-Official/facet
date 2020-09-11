@@ -23,10 +23,6 @@ Predictive Maintenance Regression
 
 Classification on a simulated dataset
 ------------------------------------------------
-.. toctree::
-   :maxdepth: 2
-
-   tutorial/Classification_simulation_example_Facet
 
 
 
