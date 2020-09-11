@@ -6,12 +6,12 @@ Worked examples
 
 
 
-Classifying pre-diabetes
+Classification using FACET
 --------------------------------
 .. toctree::
    :maxdepth: 2
 
-   tutorial/Prediabetes_classification_with_Facet
+   tutorial/Classification_with_Facet
 
 Predictive Maintenance Regression
 ------------------------------------------------
