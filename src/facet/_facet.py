@@ -7,7 +7,7 @@ from typing import *
 
 import pandas as pd
 
-from pytools.api import AllTracker, is_list_like
+from pytools.api import AllTracker, is_list_like, to_list, to_set
 
 __all__ = ["Sample"]
 
@@ -276,13 +276,16 @@ class Sample:
             )
         return subsample
 
-    def keep(self, features: Sequence[str]) -> "Sample":
+    def keep(self, features: Union[str, Collection[str]]) -> "Sample":
         """
         Return a new sample which only includes the features with the given names.
 
-        :param features: names of the features to be selected
+        :param features: name(s) of the features to be selected
         :return: copy of this sample, containing only the features with the given names
         """
+
+        features: List[str] = to_list(features, element_type=str)
+
         if not set(features).issubset(self._features):
             raise ValueError(
                 "arg features is not a subset of the features in this sample"
@@ -299,14 +302,15 @@ class Sample:
 
         return subsample
 
-    def drop(self, features: Collection[str]) -> "Sample":
+    def drop(self, features: Union[str, Collection[str]]) -> "Sample":
         """
         Return a copy of this sample, dropping the features with the given names.
 
-        :param features: names of the features to be dropped
+        :param features: name(s) of the features to be dropped
         :return: copy of this sample, excluding the features with the given names
         """
-        features = set(features)
+        features: Set[str] = to_set(features, element_type=str)
+
         return self.keep(
             features=[feature for feature in self._features if feature not in features]
         )
