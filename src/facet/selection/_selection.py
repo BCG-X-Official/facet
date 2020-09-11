@@ -246,7 +246,7 @@ class LearnerRanker(
         :param scoring: a scorer to use when doing CV within GridSearch, defaults to \
             ``None``
         :param ranking_scorer: a function to calculate a scalar score for every \
-            crossfit, taking a :class:`.CrossfitScore` and returning a float. \
+            crossfit, taking a :class:`.CrossfitScores` and returning a float. \
             The resulting score is used to rank all crossfits (highest score is best). \
             Defaults to :meth:`.default_ranking_scorer`, calculating \
             `mean(scores) - 2 * std(scores)`.

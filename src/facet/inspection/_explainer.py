@@ -79,7 +79,7 @@ class ExplainerFactory(metaclass=ABCMeta):
         """
         Construct a new :class:`~shap.Explainer` to compute shap values.
 
-        :param model: learner for which to compute shap values
+        :param model: fitted learner for which to compute shap values
         :param data: background dataset (optional)
         :return: the new explainer object
         """
@@ -147,13 +147,7 @@ class TreeExplainerFactory(ExplainerFactory):
     def make_explainer(
         self, model: LearnerDF, data: Optional[pd.DataFrame] = None
     ) -> Explainer:
-        """
-        Construct a new :class:`~shap.TreeExplainer` to compute shap values.
-
-        :param model: learner for which to compute shap values
-        :param data: background dataset (optional)
-        :return: the new explainer object
-        """
+        """[see superclass]"""
 
         self._validate_background_dataset(data=data)
 
@@ -176,7 +170,7 @@ class TreeExplainerFactory(ExplainerFactory):
         return explainer
 
 
-# @inheritdoc(match="[see superclass]")
+@inheritdoc(match="[see superclass]")
 class KernelExplainerFactory(ExplainerFactory):
     """
     A factory constructing class:`~shap.KernelExplainer` objects.
@@ -219,13 +213,7 @@ class KernelExplainerFactory(ExplainerFactory):
         return True
 
     def make_explainer(self, model: LearnerDF, data: pd.DataFrame) -> Explainer:
-        """
-        Construct a new :class:`~shap.KernelExplainer` to compute shap values.
-
-        :param model: learner for which to compute shap values
-        :param data: background dataset
-        :return: the new explainer object
-        """
+        """[see superclass]"""
 
         self._validate_background_dataset(data=data)
 
