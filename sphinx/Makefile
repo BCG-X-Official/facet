@@ -50,7 +50,7 @@ build:
 	#if [ -d "../docs" ]; then mv "$(BUILDDIR)"/html/* ../docs/; fi
 
 
-html: apidoc build
+html: build # add apidoc as a dependence to generate separate files per package
 
 
 tutorial:
