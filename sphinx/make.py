@@ -92,7 +92,7 @@ html = MakeCommand(
     command="html",
     description="build facet Sphinx docs as HTML",
     python_target=fun_html,
-    depends_on=(clean, apidoc),
+    depends_on=(clean,),
 )
 
 available_cmds = (clean, apidoc, html)
