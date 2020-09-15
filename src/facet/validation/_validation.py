@@ -81,7 +81,7 @@ class _BaseBootstrapCV(BaseCrossValidator, metaclass=ABCMeta):
         :param X: features
         :param y: target
         :param groups: not used
-        :return a generator yielding `(train, test)` tuples where train and test are \
+        :return: a generator yielding `(train, test)` tuples where train and test are \
             numpy arrays with train/test indices
         """
 
@@ -302,7 +302,7 @@ class FullSampleValidator(BaseCrossValidator):
         :param X: features
         :param y: target
         :param groups: not used
-        :return a generator yielding `(train, test)` tuples where train and test are \
+        :return: a generator yielding `(train, test)` tuples where train and test are \
             numpy arrays with train/test indices
         """
         indices = np.arange(len(X))
