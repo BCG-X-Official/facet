@@ -191,6 +191,8 @@ Simulation
 
 .. image:: _static/simulation_output.png
 
+The notebook can be `downloaded here <../../notebooks/Boston_getting_started_example.ipynb>`_.
+
 
 Development Guidelines
 ---------------------------
