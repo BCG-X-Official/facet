@@ -26,7 +26,7 @@ Understanding synergy and redundancy through simulation
 .. toctree::
     :maxdepth: 2
 
-    tutorial/Predictive_Maintenance_Regression_with_Facet
+    tutorial/Classification_simulation_example_Facet
 
 
 Regression machine failures on a water well (simulated)
