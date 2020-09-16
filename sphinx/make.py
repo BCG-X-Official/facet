@@ -77,7 +77,7 @@ def fun_html():
         args=f"{CMD_SPHINXBUILD} {' '.join(sphinx_html_opts)}", shell=True, check=True
     )
     docs_notebooks_to_interactive(TUTORIALDIR, NOTEBOOKDIR)
-    docs_notebooks_to_interactive(AUXILIARYDIR, NOTEBOOKDIR)
+    # docs_notebooks_to_interactive(AUXILIARYDIR, NOTEBOOKDIR)
 
 
 # Define MakeCommands
