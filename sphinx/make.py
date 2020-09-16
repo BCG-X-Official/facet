@@ -4,6 +4,7 @@ import sys
 from typing import Callable, NamedTuple, Tuple
 import shutil
 import subprocess
+from source.scripts.transform_notebook import docs_notebooks_to_interactive
 
 pwd = os.path.realpath(os.path.dirname(__file__))
 
@@ -19,7 +20,8 @@ SOURCEAPIDIR = os.path.join(SOURCEDIR, "api")
 BUILDDIR = os.path.join(pwd, "build")
 TEMPLATEDIR = os.path.join(SOURCEDIR, "_templates")
 SCRIPTSDIR = os.path.join(SOURCEDIR, "scripts")
-TUTORIALDIR = os.path.join(SOURCEDIR, os.pardir, "notebooks")
+TUTORIALDIR = os.path.join(SOURCEDIR, "tutorial")
+NOTEBOOKDIR = os.path.join(FACET_SOURCEDIR, os.pardir, "notebooks")
 TUTORIALBUILD = os.path.join(SCRIPTSDIR, "transform_notebook.py")
 
 
@@ -73,6 +75,7 @@ def fun_html():
     subprocess.run(
         args=f"{CMD_SPHINXBUILD} {' '.join(sphinx_html_opts)}", shell=True, check=True
     )
+    docs_notebooks_to_interactive(TUTORIALDIR, NOTEBOOKDIR)
 
 
 # Define MakeCommands
