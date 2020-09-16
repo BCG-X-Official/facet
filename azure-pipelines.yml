@@ -72,7 +72,7 @@ stages:
   - stage: 'Conda_build_test'
     dependsOn:
       - 'Quick_env_test'
-    displayName: 'Test multiple conda environment builds'
+    displayName: 'Test conda environment builds'
 
     jobs:
     - job:
@@ -83,7 +83,7 @@ stages:
           vmImage: 'ubuntu-latest'
       strategy:
         matrix:
-          Maximum dependencies:
+          maximum_dependencies:
             FACET_V_PYTHON_BUILD: '3.8'
             FACET_V_SKLEARN: '==0.23'
             FACET_V_PANDAS: '==1.0.0'
@@ -131,20 +131,20 @@ stages:
         vmImage: 'ubuntu-latest'
       strategy:
         matrix:
-          Minimum dependencies:
+          minimum_dependencies:
             FACET_V_PYTHON_BUILD: '3.6'
             FACET_V_PANDAS: '==0.24'
             FACET_V_SKLEARN: '==0.21.*'
             FACET_V_JOBLIB: '==0.13'
             FACET_V_NUMPY: '==1.16'
             FACET_V_SHAP: '==0.34'
-          Maximum dependencies:
+          maximum_dependencies:
             FACET_V_PYTHON_BUILD: '3.8'
             FACET_V_SKLEARN: '==0.23'
             FACET_V_PANDAS: '==1.0.0'
             FACET_V_NUMPY: '=>1.16'
             FACET_V_SHAP: '==0.35'
-          Unconstrained dependencies:
+          unconstrained_dependencies:
             FACET_V_PYTHON_BUILD: '>=3.6'
             FACET_V_PANDAS: '=>0.24'
             FACET_V_SKLEARN: '=>0.21'
