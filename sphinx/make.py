@@ -16,6 +16,7 @@ CMD_SPHINXAPIDOC = "sphinx-apidoc"
 # todo: check which ones are eventually obsolete
 FACET_SOURCEDIR = os.path.join(pwd, os.pardir, "src")
 SOURCEDIR = os.path.join(pwd, "source")
+AUXILIARYDIR = os.path.join(pwd, "auxiliary")
 SOURCEAPIDIR = os.path.join(SOURCEDIR, "api")
 BUILDDIR = os.path.join(pwd, "build")
 TEMPLATEDIR = os.path.join(SOURCEDIR, "_templates")
@@ -76,6 +77,10 @@ def fun_html():
         args=f"{CMD_SPHINXBUILD} {' '.join(sphinx_html_opts)}", shell=True, check=True
     )
     docs_notebooks_to_interactive(TUTORIALDIR, NOTEBOOKDIR)
+    shutil.copy(
+        os.path.join(SCRIPTSDIR, "Boston_getting_started_example.ipynb"),
+        NOTEBOOKDIR
+    )
 
 
 # Define MakeCommands
