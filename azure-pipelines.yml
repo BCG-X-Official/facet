@@ -4,9 +4,7 @@ schedules:
   displayName: Nightly full build
   branches:
     include:
-    - master
     - develop
-    - release/*
 
 resources:
   repositories:
