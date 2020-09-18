@@ -10,11 +10,12 @@ from itertools import chain
 from types import MappingProxyType
 from typing import *
 
+import numpy as np
 from numpy.random.mtrand import RandomState
 from sklearn.model_selection import BaseCrossValidator
 
 from facet import Sample
-from facet.crossfit import CrossfitScores, LearnerCrossfit
+from facet.crossfit import LearnerCrossfit
 from pytools.api import AllTracker, inheritdoc, to_tuple
 from pytools.fit import FittableMixin
 from pytools.parallelization import ParallelizableMixin
@@ -175,7 +176,7 @@ class LearnerScores(Generic[T_LearnerPipelineDF]):
         self,
         pipeline: T_LearnerPipelineDF,
         parameters: Mapping[str, Any],
-        scores: CrossfitScores,
+        scores: np.ndarray,
         ranking_score: float,
     ) -> None:
         """
@@ -183,7 +184,7 @@ class LearnerScores(Generic[T_LearnerPipelineDF]):
         :param parameters: the hyper-parameters for which the learner pipeline was \
             scored, as a mapping of parameter names to parameter values
         :param scores: the scores of all crossfits of the learner pipeline
-        :param ranking_score: overall score determined by the ranking \
+        :param ranking_score: the aggregate score determined by the ranking \
             metric of the :class:`.LearnerRanker`, used for ranking the learners
         """
         super().__init__()
@@ -230,7 +231,7 @@ class LearnerRanker(
             Dict[str, Callable[[float, float], float]],
             None,
         ] = None,
-        ranking_scorer: Callable[[CrossfitScores], float] = None,
+        ranking_scorer: Callable[[np.ndarray], float] = None,
         shuffle_features: Optional[bool] = None,
         random_state: Union[int, RandomState, None] = None,
         n_jobs: Optional[int] = None,
@@ -283,7 +284,7 @@ class LearnerRanker(
     __init__.__doc__ += ParallelizableMixin.__init__.__doc__
 
     @staticmethod
-    def default_ranking_scorer(scores: CrossfitScores) -> float:
+    def default_ranking_scorer(scores: np.ndarray) -> float:
         """
         The default function used to rank pipelines.
 
@@ -325,10 +326,11 @@ class LearnerRanker(
         """[see superclass]"""
         return self._ranking is not None
 
+    @property
     def ranking(self) -> List[LearnerScores[T_LearnerPipelineDF]]:
         """
-        :return a ranking of all learners that were evaluated by this ranker,
-        in descending order of the ranking score.
+        A list of :class:`.LearnerScorings` for all learners evaluated by this ranker, \
+            in descending order of the ranking score.
         """
         self._ensure_fitted()
         return self._ranking.copy()
@@ -422,7 +424,7 @@ class LearnerRanker(
                 verbose=self.verbose,
             )
 
-            pipeline_scoring: CrossfitScores = crossfit.fit_score(
+            pipeline_scoring: np.ndarray = crossfit.fit_score(
                 sample=sample, scoring=self.scoring, **fit_params
             )
 

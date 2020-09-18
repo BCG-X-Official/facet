@@ -102,7 +102,7 @@ def test_model_inspection(
     log.debug(f"\n{regressor_ranker.summary_report(max_learners=10)}")
 
     check_ranking(
-        ranking=regressor_ranker.ranking(),
+        ranking=regressor_ranker.ranking,
         expected_scores=expected_scores,
         expected_learners=None,
         expected_parameters=None,
@@ -169,7 +169,7 @@ def test_binary_classifier_ranking(iris_classifier_ranker_binary) -> None:
 
     log.debug(f"\n{iris_classifier_ranker_binary.summary_report(max_learners=10)}")
     check_ranking(
-        ranking=iris_classifier_ranker_binary.ranking(),
+        ranking=iris_classifier_ranker_binary.ranking,
         expected_scores=expected_learner_scores,
         expected_learners=[RandomForestClassifierDF] * 4,
         expected_parameters={
@@ -227,7 +227,7 @@ def test_model_inspection_classifier_binary(
     )
 
 
-def test_model_inspection_classifier_binary_single_shap_output():
+def test_model_inspection_classifier_binary_single_shap_output() -> None:
     # simulate some data
     x, y = make_classification(
         n_samples=200, n_features=5, n_informative=5, n_redundant=0, random_state=42

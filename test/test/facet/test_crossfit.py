@@ -46,7 +46,7 @@ def test_prediction_classifier(
     log.debug(f"\n{model_ranker.summary_report(max_learners=10)}")
 
     check_ranking(
-        ranking=model_ranker.ranking(),
+        ranking=model_ranker.ranking,
         expected_scores=expected_learner_scores,
         expected_learners=[RandomForestClassifierDF] * 4,
         expected_parameters={

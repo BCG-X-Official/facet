@@ -154,7 +154,7 @@ def best_lgbm_crossfit(
     # performance
     best_lgbm_evaluation: LearnerScores[RegressorPipelineDF] = [
         evaluation
-        for evaluation in regressor_ranker.ranking()
+        for evaluation in regressor_ranker.ranking
         if isinstance(evaluation.pipeline.regressor, LGBMRegressorDF)
     ][0]
 
