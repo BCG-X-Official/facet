@@ -1,3 +1,13 @@
+# RUN TESTS AND FULL CONDA BUILD MATRIX EVERY NIGHT AT 4AM
+schedules:
+- cron: "0 4 * * *"
+  displayName: Nightly full build
+  branches:
+    include:
+    - master
+    - develop
+    - release/*
+
 resources:
   repositories:
     - repository: sklearndf
@@ -79,7 +89,8 @@ stages:
       displayName: 'Setup & testing: Single build'
       condition: |
         not(or(contains(variables['Build.SourceBranch'], 'refs/heads/release'),
-        eq(variables['Build.SourceBranch'], 'refs/heads/master')))
+        eq(variables['Build.SourceBranch'], 'refs/heads/master'),
+        eq(variables['Build.Reason'], 'Schedule')))
 
       pool:
           vmImage: 'ubuntu-latest'
@@ -129,7 +140,8 @@ stages:
       displayName: 'Setup & testing: Full build matrix'
       condition: |
         or(contains(variables['Build.SourceBranch'], 'refs/heads/release'),
-        eq(variables['Build.SourceBranch'], 'refs/heads/master'))
+        eq(variables['Build.SourceBranch'], 'refs/heads/master'),
+        eq(variables['Build.Reason'], 'Schedule'))
 
       pool:
         vmImage: 'ubuntu-latest'
