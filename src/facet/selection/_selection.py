@@ -332,7 +332,7 @@ class LearnerRanker(
             in descending order of the ranking score.
         """
         self._ensure_fitted()
-        return self._ranking.copy()
+        return self._ranking
 
     @property
     def best_model(self) -> T_LearnerPipelineDF:
