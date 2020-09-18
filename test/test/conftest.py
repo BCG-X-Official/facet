@@ -13,7 +13,7 @@ from sklearn.utils import Bunch
 from facet import Sample
 from facet.crossfit import LearnerCrossfit
 from facet.inspection import LearnerInspector, TreeExplainerFactory
-from facet.selection import LearnerGrid, LearnerRanker, LearnerScores
+from facet.selection import LearnerEvaluation, LearnerGrid, LearnerRanker
 from facet.validation import BootstrapCV, StratifiedBootstrapCV
 from sklearndf import TransformerDF
 from sklearndf.pipeline import RegressorPipelineDF
@@ -152,7 +152,7 @@ def best_lgbm_crossfit(
 ) -> LearnerCrossfit[RegressorPipelineDF]:
     # we get the best model_evaluation which is a LGBM - for the sake of test
     # performance
-    best_lgbm_evaluation: LearnerScores[RegressorPipelineDF] = [
+    best_lgbm_evaluation: LearnerEvaluation[RegressorPipelineDF] = [
         evaluation
         for evaluation in regressor_ranker.ranking
         if isinstance(evaluation.pipeline.regressor, LGBMRegressorDF)

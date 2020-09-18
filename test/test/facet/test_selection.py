@@ -12,7 +12,7 @@ from sklearn import datasets
 
 from facet import Sample
 from facet.crossfit import LearnerCrossfit
-from facet.selection import LearnerGrid, LearnerRanker, LearnerScores
+from facet.selection import LearnerEvaluation, LearnerGrid, LearnerRanker
 from facet.validation import BootstrapCV
 from sklearndf.classification import SVCDF
 from sklearndf.pipeline import ClassifierPipelineDF, RegressorPipelineDF
@@ -113,7 +113,7 @@ def test_model_ranker(
     ranking = ranker.ranking
 
     assert len(ranking) > 0
-    assert isinstance(ranking[0], LearnerScores)
+    assert isinstance(ranking[0], LearnerEvaluation)
     assert all(
         ranking_hi.ranking_score >= ranking_lo.ranking_score
         for ranking_hi, ranking_lo in zip(ranking, ranking[1:])
