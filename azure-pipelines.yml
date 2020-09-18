@@ -77,7 +77,9 @@ stages:
     jobs:
     - job:
       displayName: 'Setup & testing: Single build'
-      condition: not(contains(variables['build.sourceBranch'], 'refs/heads/release'))
+      condition: |
+        not(or(contains(variables['Build.SourceBranch'], 'refs/heads/release'),
+        eq(variables['Build.SourceBranch'], 'refs/heads/master')))
 
       pool:
           vmImage: 'ubuntu-latest'
@@ -125,7 +127,9 @@ stages:
 
     - job:
       displayName: 'Setup & testing: Full build matrix'
-      condition: contains(variables['build.sourceBranch'], 'refs/heads/release')
+      condition: |
+        or(contains(variables['Build.SourceBranch'], 'refs/heads/release'),
+        eq(variables['Build.SourceBranch'], 'refs/heads/master'))
 
       pool:
         vmImage: 'ubuntu-latest'
