@@ -223,14 +223,7 @@ class LearnerRanker(
             LearnerGrid[T_LearnerPipelineDF], Iterable[LearnerGrid[T_LearnerPipelineDF]]
         ],
         cv: Optional[BaseCrossValidator],
-        scoring: Union[
-            str,
-            Callable[[float, float], float],
-            List[str],
-            Tuple[str],
-            Dict[str, Callable[[float, float], float]],
-            None,
-        ] = None,
+        scoring: Union[str, Callable[[float, float], float], None] = None,
         ranking_scorer: Callable[[np.ndarray], float] = None,
         shuffle_features: Optional[bool] = None,
         random_state: Union[int, RandomState, None] = None,
@@ -244,8 +237,8 @@ class LearnerRanker(
             (either a single grid, or an iterable of multiple grids)
         :param cv: a cross validator (e.g., \
             :class:`.BootstrapCV`)
-        :param scoring: a scorer to use when doing CV within GridSearch, defaults to \
-            ``None``
+        :param scoring: a scoring function (by name or a callable) for evaluating \
+            learners (optional; use learner's default scorer if not specified here)
         :param ranking_scorer: a function to calculate a scalar score for every \
             crossfit, taking a :class:`.CrossfitScores` and returning a float. \
             The resulting score is used to rank all crossfits (highest score is best). \
@@ -262,6 +255,12 @@ class LearnerRanker(
             pre_dispatch=pre_dispatch,
             verbose=verbose,
         )
+
+        if scoring is not None and not (isinstance(scoring, str) or callable(scoring)):
+            raise TypeError(
+                "only a single scoring function is currently supported, "
+                f"but a {type(scoring).__name__} was given as arg scoring"
+            )
 
         self.grids: Tuple[LearnerGrid, ...] = to_tuple(
             grids, element_type=LearnerGrid, arg_name="grids"
