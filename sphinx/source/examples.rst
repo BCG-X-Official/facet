@@ -35,6 +35,9 @@ Understanding synergy and redundancy through simulation
 
 Regression machine failures on a water well (simulated)
 -----------------------------------------------------------
+.. toctree::
+    :maxdepth: 2
 
+    tutorial/Regression_Water_Drilling_Simulation_Example
 
 
