@@ -122,7 +122,7 @@ class ShapCalculator(
         self.shap_ = None
 
         training_sample = crossfit.sample
-        self.feature_index_ = crossfit.pipeline.features_out.rename(Sample.IDX_FEATURE)
+        self.feature_index_ = crossfit.pipeline.features_out_.rename(Sample.IDX_FEATURE)
         self.output_names_ = self._output_names(crossfit=crossfit)
         self.sample_ = training_sample
 
@@ -230,7 +230,7 @@ class ShapCalculator(
                             None
                             if background_dataset is None
                             else background_dataset.reindex(
-                                columns=model.final_estimator.features_in, copy=False
+                                columns=model.final_estimator.features_in_, copy=False
                             )
                         ),
                     ),
@@ -361,7 +361,7 @@ class ShapCalculator(
             x = model.preprocessing.transform(x)
 
         # re-index the features to fit the sequence that was used to fit the learner
-        return x.reindex(columns=model.final_estimator.features_in, copy=False)
+        return x.reindex(columns=model.final_estimator.features_in_, copy=False)
 
     @staticmethod
     @abstractmethod

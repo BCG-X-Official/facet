@@ -299,7 +299,7 @@ class LearnerCrossfit(
         # generate parameter objects for fitting and/or scoring each split
 
         def _generate_parameters() -> Iterator[_FitScoreParameters]:
-            learner_features = pipeline.features_out
+            learner_features = pipeline.features_out_
             n_learner_features = len(learner_features)
             test_scores = do_score and not _train_scores
             models = iter(lambda: None, 0) if do_fit else self.models()

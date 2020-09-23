@@ -175,7 +175,8 @@ def feature_names(best_lgbm_crossfit: LearnerCrossfit[RegressorPipelineDF]) -> S
     all unique features across the models in the crossfit, after preprocessing
     """
     return functools.reduce(
-        operator.or_, (set(model.features_out) for model in best_lgbm_crossfit.models())
+        operator.or_,
+        (set(model.features_out_) for model in best_lgbm_crossfit.models()),
     )
 
 
