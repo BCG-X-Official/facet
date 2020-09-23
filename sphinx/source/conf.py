@@ -122,7 +122,7 @@ exclude_patterns = ["*/.ipynb_checkpoints/*"]
 # -- Options for sphinx_autodoc_typehints ----------------------------------------------
 set_type_checking_flag = False
 typehints_fully_qualified = False
-always_document_param_types = True
+always_document_param_types = False
 
 # -- Options for Math output -----------------------------------------------------------
 
