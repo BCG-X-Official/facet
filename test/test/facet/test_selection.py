@@ -12,7 +12,7 @@ from sklearn import datasets
 
 from facet import Sample
 from facet.crossfit import LearnerCrossfit
-from facet.selection import LearnerGrid, LearnerRanker, LearnerScores
+from facet.selection import LearnerEvaluation, LearnerGrid, LearnerRanker
 from facet.validation import BootstrapCV
 from sklearndf.classification import SVCDF
 from sklearndf.pipeline import ClassifierPipelineDF, RegressorPipelineDF
@@ -110,17 +110,17 @@ def test_model_ranker(
 
     assert isinstance(ranker.best_model_crossfit, LearnerCrossfit)
 
-    ranking = ranker.ranking()
+    ranking = ranker.ranking
 
     assert len(ranking) > 0
-    assert isinstance(ranking[0], LearnerScores)
+    assert isinstance(ranking[0], LearnerEvaluation)
     assert all(
         ranking_hi.ranking_score >= ranking_lo.ranking_score
         for ranking_hi, ranking_lo in zip(ranking, ranking[1:])
     )
 
     # check if parameters set for estimators actually match expected:
-    for evaluation in ranker.ranking():
+    for evaluation in ranker.ranking:
         pipeline_parameters = evaluation.pipeline.get_params()
         for name, value in evaluation.parameters.items():
             assert (
@@ -131,7 +131,7 @@ def test_model_ranker(
             ), f"evaluation.pipeline.{name} is set to {value}"
 
     check_ranking(
-        ranking=ranker.ranking(),
+        ranking=ranker.ranking,
         expected_scores=expected_scores,
         expected_learners=expected_learners,
         expected_parameters=expected_parameters,
@@ -170,7 +170,7 @@ def test_model_ranker_no_preprocessing(n_jobs) -> None:
     log.debug(f"\n{model_ranker.summary_report(max_learners=10)}")
 
     check_ranking(
-        ranking=model_ranker.ranking(),
+        ranking=model_ranker.ranking,
         expected_scores=expected_learner_scores,
         expected_learners=[SVCDF] * 4,
         expected_parameters={
@@ -180,5 +180,5 @@ def test_model_ranker_no_preprocessing(n_jobs) -> None:
     )
 
     assert (
-        model_ranker.ranking()[0].ranking_score >= 0.8
+        model_ranker.ranking[0].ranking_score >= 0.8
     ), "expected a best performance of at least 0.8"

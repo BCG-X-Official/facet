@@ -2,7 +2,7 @@ from typing import *
 
 import pytest
 
-from facet.selection import LearnerScores
+from facet.selection import LearnerEvaluation
 from sklearndf import TransformerDF
 from sklearndf.transformation import (
     ColumnTransformerDF,
@@ -38,7 +38,7 @@ def make_simple_transformer(
 
 
 def check_ranking(
-    ranking: List[LearnerScores],
+    ranking: List[LearnerEvaluation],
     expected_scores: Sequence[float],
     expected_learners: Optional[Sequence[type]],
     expected_parameters: Optional[Mapping[int, Mapping[str, Any]]],
