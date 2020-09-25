@@ -411,3 +411,6 @@ TSWLatexianTemp*
 # exclude docs while they are not yet stable
 /docs/**
 !/docs/README.md
+
+# exclude notebooks directory: this is generated during build
+/notebooks/
