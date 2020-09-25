@@ -41,16 +41,74 @@ Of course, open-sourcing FACET would not have been possible without the support,
 contributions and perspectives of many fantastic people! FACET, many perspectives,
 okay that was the last geometry pun we promise.
 
-**BCG Gamma FACET developers, contributors and supporters**
+**FACET Team at BCG Gamma**
 
-(Photos to be added later - list not final or in any particular order!)
+.. raw:: html
 
-- Jan Ittner
-- Konstantin Hemker
-- Joerg Schneider
-- Ricardo Kennedy
-- Malo Grisard
-- Jason Bentley
-- Florent Martin
-- (list in progress)
+    <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    .column {
+      float: left;
+      width: 25%;
+      padding: 15px;
+    }
+
+    /* Clearfix (clear floats) */
+    .row::after {
+      content: "";
+      clear: both;
+      display: table;
+    }
+    </style>
+    </head>
+    <body>
+
+    <div class="row">
+      <div class="column">
+        <img src="_static/JBentley.jpg" style="width:100%">
+        <p>Jason Bentley</p>
+      </div>
+      <div class="column">
+        <img src="_static/MGrisard.jpg" style="width:100%">
+        <p>Malo Grisard</p>
+      </div>
+      <div class="column">
+        <img src="_static/KHemker.jpg" style="width:100%">
+        <p>Konstantin Hemker</p>
+      </div>
+      <div class="column">
+        <img src="_static/JIttner.jpg" style="width:100%">
+        <p>Jan Ittner</p>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="column">
+        <img src="_static/RKennedy.jpg" style="width:100%">
+        <p>Ricardo Kennedy</p>
+      </div>
+      <div class="column">
+        <img src="_static/FMartin.jpg" style="width:100%">
+        <p>Florent Martin</p>
+      </div>
+      <div class="column">
+        <img src="_static/JSchneider.jpg" style="width:100%">
+        <p>Joerg Schneider</p>
+      </div>
+      <div class="column">
+        <img src="" style="width:100%">
+        <p></p>
+      </div>
+    </div>
+
+    </body>
+
+
+
+
+
+
 
