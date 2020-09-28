@@ -11,7 +11,7 @@ def run_make() -> None:
     """
     Run the common make file available in the pytools repo
     """
-    cwd = os.path.dirname(__file__)
+    cwd = os.path.dirname(os.path.realpath(__file__))
     os.chdir(cwd)
 
     sys.path.append(os.path.normpath(os.path.join(cwd, os.pardir, os.pardir)))
