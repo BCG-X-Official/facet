@@ -55,72 +55,70 @@ Facet is composed of the following key components:
     identify local optima.
 
 
-Pipelining & Model Ranking
+Pipelining and Model Ranking
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: Python
 
+    # standard imports
     import pandas as pd
     from sklearn.datasets import load_boston
+    from sklearn.model_selection import RepeatedKFold
+
+    # some helpful imports from sklearndf
     from sklearndf.pipeline import RegressorPipelineDF
     from sklearndf.regression import RandomForestRegressorDF
 
-    # Relevant facet imports
+    # relevant FACET imports
     from facet import Sample
     from facet.selection import LearnerRanker, LearnerGrid
-    from facet.validation import BootstrapCV
 
-    # Load boston housing dataset
+    # load Boston housing dataset
     boston = load_boston()
-    TARGET = 'MEDIAN_HOUSE_PRICE'
-    df = pd.DataFrame(
-            data=boston.data,
-            columns=boston.feature_names).assign(MEDIAN_HOUSE_PRICE=boston.target)
-    sample = Sample(observations=df, target=TARGET)
-
-
-    rf_pipeline = RegressorPipelineDF(
-        regressor=RandomForestRegressorDF(random_state=42)
+    df = pd.DataFrame(data=boston.data, columns=boston.feature_names).assign(
+        MEDIAN_HOUSE_PRICE=boston.target
     )
 
-    # Define grid of models which are "competing" against each other
-    grid = [
+    # create FCAET sample object
+    boston_obs = Sample(observations=df, target="MEDIAN_HOUSE_PRICE")
+
+    # create pipeline for random forest regressor
+    rforest_reg = RegressorPipelineDF(regressor=RandomForestRegressorDF(random_state=42))
+
+    # define grid of models which are "competing" against each other
+    rforest_grid = [
         LearnerGrid(
-            pipeline=rf_pipeline,
-            learner_parameters={
-            "min_samples_leaf": [8, 11, 15]
-    }
+            pipeline=rforest_reg, learner_parameters={"min_samples_leaf": [8, 11, 15]}
         )
     ]
 
-    cv = BootstrapCV(n_splits=10, random_state=42)
+    # create repeated k-fold CV iterator
+    rkf_cv = RepeatedKFold(n_splits=5, n_repeats=10, random_state=42)
 
-    # Rank your models by performance
-    ranker = LearnerRanker(
-        grids=grid, cv=cv, n_jobs=-3
-    ).fit(sample=sample)
+    # rank your models by performance (default is variance explained)
+    ranker = LearnerRanker(grids=rforest_grid, cv=rkf_cv, n_jobs=-3).fit(sample=boston_obs)
 
-    # Get your summary report
-    ranker.summary_report()
+    # get summary report
+    print(ranker.summary_report())
 
 .. code-block:: RST
 
-    Rank  1: RandomForestRegressorDF, ranking_score=    0.673, scores_mean=    0.793,
-         scores_std=   0.0598, parameters={regressor__min_samples_leaf=8}
+    Rank  1: RandomForestRegressorDF, ranking_score=    0.722, scores_mean=    0.813,
+    scores_std=   0.0455, parameters={regressor__min_samples_leaf=8}
 
-    Rank  2: RandomForestRegressorDF, ranking_score=    0.666, scores_mean=     0.783,
-             scores_std=   0.0589, parameters={regressor__min_samples_leaf=11}
+    Rank  2: RandomForestRegressorDF, ranking_score=    0.707, scores_mean=    0.802,
+    scores_std=   0.0471, parameters={regressor__min_samples_leaf=11}
 
-    Rank  3: RandomForestRegressorDF, ranking_score=    0.659, scores_mean=    0.771,
-             scores_std=   0.0561, parameters={regressor__min_samples_leaf=15}
+    Rank  3: RandomForestRegressorDF, ranking_score=    0.693, scores_mean=    0.789,
+    scores_std=   0.0481, parameters={regressor__min_samples_leaf=15}
 
 Easy model inspection
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Facet implements a number of model inspection methods for
+Facet implements several model inspection methods for
 `scikit-learn <https://scikit-learn.org/stable/index.html>`_ base learners.
 Fundamentally, facet enables post-hoc model inspection by breaking down the interaction
-effects of the variables that your model used for Training:
+effects of the variables that your model used for training:
 
 - **Redundancy**
   identifies groups of variables that fully or partially duplicate each
@@ -132,13 +130,15 @@ effects of the variables that your model used for Training:
 
 .. code-block:: Python
 
+    # fit the model inspector
     from facet.inspection import LearnerInspector
-    from pytools.viz.matrix import MatrixDrawer
-
     inspector = LearnerInspector()
     inspector.fit(crossfit=ranker.best_model_crossfit)
-    MatrixDrawer(style="matplot%").draw(inspector.feature_redundancy_matrix(),
-                                        title="Redundancy Matrix")
+
+    # visualise redundancy as a matrix
+    from pytools.viz.matrix import MatrixDrawer
+    redundancy_matrix = inspector.feature_redundancy_matrix()
+    MatrixDrawer(style="matplot%").draw(redundancy_matrix, title="Redundancy Matrix")
 
 .. image:: _static/redundancy_matrix.png
     :width: 400
@@ -147,10 +147,10 @@ We can also better visualize redundancy as a dendrogram so we can identify clust
 
 .. code-block:: Python
 
+    # visualise redundancy using a dendrogram
     from pytools.viz.dendrogram import DendrogramDrawer
-
     redundancy = inspector.feature_redundancy_linkage()
-    DendrogramDrawer().draw(data=redundancy, title='Redundancy Dendrogram')
+    DendrogramDrawer().draw(data=redundancy, title="Redundancy Dendrogram")
 
 .. image:: _static/redundancy_dendrogram.png
     :width: 400
@@ -159,6 +159,7 @@ For feature synergy, we can get a similar picture
 
 .. code-block:: Python
 
+    # visualise synergy as a matrix
     synergy_matrix = inspector.feature_synergy_matrix()
     MatrixDrawer(style="matplot%").draw(synergy_matrix, title="Synergy Matrix")
 
@@ -173,23 +174,45 @@ Simulation
 
 .. code-block:: Python
 
+    # FACET imports
+    from facet.validation import BootstrapCV
+    from facet.crossfit import LearnerCrossfit
     from facet.simulation import UnivariateUpliftSimulator
     from facet.simulation.partition import ContinuousRangePartitioner
     from facet.simulation.viz import SimulationDrawer
 
-    SIM_FEAT = "LSTAT"
-    simulator = UnivariateUpliftSimulator(crossfit = ranker.best_model_crossfit, n_jobs=3)
+    # create bootstrap CV iterator
+    bscv = BootstrapCV(n_splits=1000, random_state=42)
 
-    # Split the simulation range into equal sized partitions
+    # create a bootstrap CV crossfit for simulation using best model
+    boot_crossfit = LearnerCrossfit(
+        pipeline=ranker.best_model.native_estimator,
+        cv=bscv,
+        n_jobs=-3,
+        verbose=False,
+    ).fit(sample=boston_obs)
+
+    SIM_FEAT = "LSTAT"
+    simulator = UnivariateUpliftSimulator(crossfit=ranker.best_model_crossfit, n_jobs=3)
+
+    # split the simulation range into equal sized partitions
     partitioner = ContinuousRangePartitioner()
 
-    simulation = simulator.simulate_feature(name=SIM_FEAT, partitioner = partitioner)
+    # run the simulation
+    simulation = simulator.simulate_feature(name=SIM_FEAT, partitioner=partitioner)
 
-    SimulationDrawer().draw(
-        data=simulation, title=SIM_FEAT
-    )
+    # visualise results
+    SimulationDrawer().draw(data=simulation, title=SIM_FEAT)
 
 .. image:: _static/simulation_output.png
+
+.. raw:: html
+
+    <p>Download the getting started tutorial and explore FACET for yourself by clicking
+    here:
+    <a href="https://mybinder.org" target="_blank">
+    <img src="https://mybinder.org/badge_logo.svg"></a>
+    </p>
 
 
 Development Guidelines
