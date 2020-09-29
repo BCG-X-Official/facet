@@ -23,9 +23,9 @@ resources:
       ref: develop # todo - update to stable release
 
 variables:
-  ${{ if eq(variables['System.PullRequest.TargetBranch'], '') }}:
+  ${{ if not(startsWith(variables['Build.SourceBranch'], 'refs/pull/')) }}:
     branchName: $[ replace(variables['Build.SourceBranch'], 'refs/heads/', '') ]
-  ${{ if ne(variables['System.PullRequest.TargetBranch'], '') }}:
+  ${{ if startsWith(variables['Build.SourceBranch'], 'refs/pull/') }}:
     branchName: $[ replace(variables['System.PullRequest.TargetBranch'], 'refs/heads/', '') ]
   master_or_release: >
     ${{ or(
