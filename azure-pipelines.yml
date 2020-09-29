@@ -53,13 +53,11 @@ stages:
                 cd $(Build.Repository.LocalPath)
                 git diff-index --quiet "origin/$(branchName)" conda-build
                 build_changed="$?"
-                echo "$build_changed"
                 if [ "$build_changed" = 1 ]; then
                 echo "conda build config has been changed"
                 else
                 echo "conda build config is unchanged"
                 fi
-                echo "$build_changed"
                 echo "##vso[task.setvariable variable=conda_build_config_changed;isOutput=true]$build_changed"
 
 
@@ -82,9 +80,6 @@ stages:
           vmImage: 'ubuntu-latest'
 
       steps:
-        - script: echo $(conda_build_config_changed)
-          name: echo_conda_build_config_changed
-
         - task: UsePythonVersion@0
           inputs:
             versionSpec: '3.7'
