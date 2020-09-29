@@ -1,6 +1,6 @@
 .. _api_docs:
 
-Facet API Reference
+FACET API Reference
 ============================
 
 .. automodule:: facet

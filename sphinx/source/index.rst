@@ -18,6 +18,8 @@ Table of contents
    api_docs
    contribution_guide
    faqs
+   about_us
+
 
 Indices and tables
 ==================
