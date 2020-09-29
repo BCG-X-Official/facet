@@ -51,13 +51,14 @@ stages:
               targetType: 'inline'
               script: |
                 cd $(Build.Repository.LocalPath)
-                git diff-index --quiet origin/develop conda-build
-                if [ "$?" = 1 ]; then
+                git diff-index --quiet "origin/$(branchName)" conda-build
+                build_changed="$?"
+                if [ "$build_changed" = 1 ]; then
                 echo "conda build config has been changed"
                 else
                 echo "conda build config is unchanged"
                 fi
-                echo "##vso[task.setvariable variable=conda_build_config_changed;isOutput=true]$?"
+                echo "##vso[task.setvariable variable=conda_build_config_changed;isOutput=true]$build_changed"
 
 
   - stage:
