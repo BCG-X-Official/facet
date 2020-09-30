@@ -26,6 +26,7 @@ from conf_base import *
 # ----- custom configuration -----
 
 set_config(
+    globals(),
     project="facet",
     modules=["facet", "pytools", "sklearndf"],
     html_logo="_static/Gamma_Facet_Logo_RGB_LB.svg",
