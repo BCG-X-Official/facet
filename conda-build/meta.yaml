@@ -37,4 +37,5 @@ test:
     - python -c 'import facet;
                  import os;
                  assert facet.__version__ == os.environ["PKG_VERSION"]'
+    - conda list
     - pytest -vs ${FACET_PATH}/sklearndf/test
