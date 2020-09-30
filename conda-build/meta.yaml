@@ -14,12 +14,13 @@ requirements:
     - pip
     - python={{ environ.get('FACET_V_PYTHON_BUILD', '3.8') }}
   run:
-    - python>=3.6,<4.0
-    - pandas{{ environ.get('FACET_V_PANDAS', '>=0.24') }}
-    - numpy{{ environ.get('FACET_V_NUMPY', '>=1.16') }}
-    - matplotlib{{ environ.get('FACET_V_MATPLOT', '>=3') }}
-    - shap{{ environ.get('FACET_V_SHAP', '>=0.34') }}
+    - python==3.8
+    - pandas{{ environ.get('FACET_V_PANDAS', '>=0.24,<=1.1') }}
+    - numpy{{ environ.get('FACET_V_NUMPY', '>=1.16,<=1.19') }}
+    - scipy{{ environ.get('FACET_V_SCIPY', '>=1.2,<=1.5') }}
+    - matplotlib{{ environ.get('FACET_V_MATPLOT', '==3') }}
     - scikit-learn{{ environ.get('FACET_V_SKLEARN', '>=0.21,<=0.23') }}
+    - shap{{ environ.get('FACET_V_SHAP', '>=0.34,<=0.35') }}
     - gamma-pytools=1.0
     - gamma-sklearndf=1.0
     - pyyaml>=5
@@ -34,8 +35,10 @@ test:
   requires:
     - pytest=5.2
   commands:
+    - conda list
     - python -c 'import facet;
                  import os;
                  assert facet.__version__ == os.environ["PKG_VERSION"]'
-    - conda list
+    - pytest -vs ${FACET_PATH}/pytools/test
     - pytest -vs ${FACET_PATH}/sklearndf/test
+    - pytest -vs ${FACET_PATH}/facet/test
