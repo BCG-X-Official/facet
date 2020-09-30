@@ -1,39 +1,38 @@
 name: facet-develop
 channels:
-  - conda-forge
   - astropy
+  - conda-forge
 dependencies:
+  - black = 19.*
+  - boruta_py = 0.3.*
   - conda-build
   - conda-verify
-  - black >= 19.3
-  - boruta_py >= 0.3.*
   - docutils
-  - joblib >= 0.13.*
+  - joblib = 0.13.*
   - jupyter >= 1.0
-  - lightgbm >= 2.3.*
-  - matplotlib >= 3.1.*
-  - m2r >= 0.2.*
-  - nbsphinx >= 0.4.*
-  - numpy >= 1.16.*
-  - pandas >= 0.24.*
+  - lightgbm = 3.0.*
+  - m2r = 0.2.*
+  - matplotlib = 3.1.*
+  - nbsphinx = 0.4.*
+  - numpy = 1.16.*
+  - pandas = 1.1.*
   - pip >= 19.1
-  - pluggy >= 0.13.*
-  - pytest >= 5.2.0
-  - pytest-cov >= 2.8.*
-  - python >=3.8,<4.0
-  - pyyaml >= 5.1.*
-  - scikit-learn = 0.23.*
-  - scipy >= 1.2.*
-  - seaborn >= 0.10.*
-  - shap >= 0.34.*
+  - pluggy = 0.13.*
+  - pytest = 5.2.*
+  - pytest-cov = 2.8.*
+  - python = 3.8.*
+  - pyyaml = 5.1.*
+  - scikit-learn >=0.23.1,<0.24
+  - scipy = 1.5.*
+  - seaborn = 0.11.*
+  - shap = 0.35.*
   - sphinx = 3.*
-  - sphinx-autodoc-typehints >= 1.11.*
-  - sphinx-automodapi >= 0.12.*
-  - sphinx_rtd_theme >= 0.5.*
-  - tableone >= 0.7.*
-  - typing_inspect >= 0.4
-  - xlrd >= 1.2.*
-  - yaml >= 0.1.*
+  - sphinx-autodoc-typehints = 1.*
+  - sphinx-automodapi = 0.12.*
+  - tableone = 0.7.*
+  - typing_inspect = 0.6.*
+  - xlrd = 1.2.*
+  - yaml = 0.1.*
   - pip:
       - pre_commit == 1.16.*
       - punch.py == 1.6.*
