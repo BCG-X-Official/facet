@@ -51,7 +51,7 @@ stages:
               targetType: 'inline'
               script: |
                 cd $(Build.Repository.LocalPath)
-                git diff-index --quiet "origin/$(branchName)" conda-build
+                git diff-index --exit-code "origin/$(branchName)" conda-build
                 build_changed="$?"
                 if [ "$build_changed" = 1 ]; then
                 echo "conda build config has been changed"
@@ -148,16 +148,17 @@ stages:
       strategy:
         matrix:
           maximum_dependencies:
-            FACET_V_PYTHON_BUILD: '==3.8'
-            FACET_V_PANDAS: '==1.1'
-            FACET_V_NUMPY: '==1.19'
-            FACET_V_SCIPY: '==1.5'
-            FACET_V_MATPLOT: '==3.3'
-            FACET_V_SKLEARN: '==0.23'
-            FACET_V_BORUTA: '==0.3'
-            FACET_V_LGBM: '==3.0'
-            FACET_V_JOBLIB: '==0.16'
-            FACET_V_SHAP: '==0.35'
+            FACET_V_PYTHON_BUILD: '=3.8.*'
+            FACET_V_PYTHON: '=3.8.5'
+            FACET_V_PANDAS: '=1.1.*'
+            FACET_V_NUMPY: '=1.19.*'
+            FACET_V_SCIPY: '=1.5.*'
+            FACET_V_MATPLOT: '=3.3.*'
+            FACET_V_SKLEARN: '>=0.23.1,<0.24'
+            FACET_V_BORUTA: '=0.3.*'
+            FACET_V_LGBM: '=3.0.*'
+            FACET_V_JOBLIB: '=0.16.*'
+            FACET_V_SHAP: '=0.35'
 
       steps:
         - task: UsePythonVersion@0
@@ -206,38 +207,41 @@ stages:
       strategy:
         matrix:
           minimum_dependencies:
-            FACET_V_PYTHON_BUILD: '==3.6'
-            FACET_V_PANDAS: '==0.24'
-            FACET_V_MATPLOT: '==3.1'
-            FACET_V_NUMPY: '==1.16'
-            FACET_V_SCIPY: '==1.2'
-            FACET_V_SKLEARN: '==0.21'
-            FACET_V_BORUTA: '==0.3'
-            FACET_V_LGBM: '==2.2'
-            FACET_V_JOBLIB: '==0.13'
-            FACET_V_SHAP: '==0.34'
+            FACET_V_PYTHON_BUILD: '=3.6.*'
+            FACET_V_PYTHON: '=3.6.*'
+            FACET_V_PANDAS: '=0.24.*'
+            FACET_V_MATPLOT: '=3.0.*'
+            FACET_V_NUMPY: '=1.16.*'
+            FACET_V_SCIPY: '=1.2.*'
+            FACET_V_SKLEARN: '=0.21.*'
+            FACET_V_BORUTA: '=0.3.*'
+            FACET_V_LGBM: '=2.2.*'
+            FACET_V_JOBLIB: '=0.13.*'
+            FACET_V_SHAP: '=0.34'
           maximum_dependencies:
-            FACET_V_PYTHON_BUILD: '==3.8'
-            FACET_V_PANDAS: '==1.1'
-            FACET_V_NUMPY: '==1.19'
-            FACET_V_SCIPY: '==1.5'
-            FACET_V_MATPLOT: '==3.3'
-            FACET_V_SKLEARN: '==0.23'
-            FACET_V_BORUTA: '==0.3'
-            FACET_V_LGBM: '==3.0'
-            FACET_V_JOBLIB: '==0.16'
-            FACET_V_SHAP: '==0.35'
+            FACET_V_PYTHON_BUILD: '=3.8.*'
+            FACET_V_PYTHON: '=3.8.5'
+            FACET_V_PANDAS: '=1.1.*'
+            FACET_V_NUMPY: '=1.19.*'
+            FACET_V_SCIPY: '=1.5.*'
+            FACET_V_MATPLOT: '=3.3.*'
+            FACET_V_SKLEARN: '>=0.23.1,<0.24'
+            FACET_V_BORUTA: '=0.3.*'
+            FACET_V_LGBM: '=3.0.*'
+            FACET_V_JOBLIB: '=0.16.*'
+            FACET_V_SHAP: '=0.35'
           unconstrained_dependencies:
             FACET_V_PYTHON_BUILD: '>=3.6,<4'
+            FACET_V_PYTHON: '>=3.6'
             FACET_V_PANDAS: '>=0.24'
             FACET_V_NUMPY: '>=1.16'
             FACET_V_SCIPY: '>=1.2'
-            FACET_V_MATPLOT: '>=3.1'
-            FACET_V_SKLEARN: '>=0.21'
+            FACET_V_MATPLOT: '>=3'
+            FACET_V_SKLEARN: '>=0.23.1'
             FACET_V_BORUTA: '>=0.3'
             FACET_V_LGBM: '>=2.2'
             FACET_V_JOBLIB: '>=0.13'
-            FACET_V_SHAP: '==0.35'
+            FACET_V_SHAP: '=0.35'
 
       steps:
         - task: UsePythonVersion@0

@@ -11,18 +11,16 @@ build:
 
 requirements:
   host:
-    - pip
-    - python={{ environ.get('FACET_V_PYTHON_BUILD', '3.8') }}
+    - pip>=19.1
+    - python{{ environ.get('FACET_V_PYTHON_BUILD', '=3.8.*') }}
   run:
-    - python==3.8
-    - pandas{{ environ.get('FACET_V_PANDAS', '>=0.24,<=1.1') }}
-    - numpy{{ environ.get('FACET_V_NUMPY', '>=1.16,<=1.19') }}
-    - scipy{{ environ.get('FACET_V_SCIPY', '>=1.2,<=1.5') }}
-    - matplotlib{{ environ.get('FACET_V_MATPLOT', '>=3.1,<=3.3') }}
-    - scikit-learn{{ environ.get('FACET_V_SKLEARN', '>=0.21,<=0.23') }}
-    - shap{{ environ.get('FACET_V_SHAP', '>=0.34,<=0.35') }}
-    - gamma-pytools=1.0
-    - gamma-sklearndf=1.0
+    - python{{ environ.get('FACET_V_PYTHON', '>=3.6,<4') }}
+    - pandas{{ environ.get('FACET_V_PANDAS', '>=0.24,<1.2') }}
+    - numpy{{ environ.get('FACET_V_NUMPY', '>=1.16,<1.20') }}
+    - matplotlib{{ environ.get('FACET_V_MATPLOT', '>=3.1,<3.4') }}
+    - scikit-learn{{ environ.get('FACET_V_SKLEARN', '>=0.21,<0.24') }}
+    - gamma-pytools=1.0.*
+    - gamma-sklearndf=1.0.*
     - pyyaml>=5
 test:
   imports:
@@ -33,7 +31,7 @@ test:
     - facet.validation
     - facet.simulation
   requires:
-    - pytest=5.2
+    - pytest=5.2.*
   commands:
     - conda list
     - python -c 'import facet;
