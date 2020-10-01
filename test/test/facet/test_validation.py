@@ -36,7 +36,7 @@ def test_get_train_test_splits_as_indices() -> None:
     my_cv = BootstrapCV(n_splits=n_test_splits, random_state=42)
 
     def _generate_splits() -> List[np.ndarray]:
-        return list(test for _, test in my_cv.split(X=test_x))
+        return [test_split for _, test_split in my_cv.split(X=test_x)]
 
     list_of_test_splits = _generate_splits()
 

@@ -10,23 +10,29 @@ from sklearn import datasets
 from sklearn.model_selection import BaseCrossValidator, KFold
 from sklearn.utils import Bunch
 
-from facet import Sample
-from facet.crossfit import LearnerCrossfit
-from facet.inspection import LearnerInspector, TreeExplainerFactory
-from facet.selection import LearnerEvaluation, LearnerGrid, LearnerRanker
-from facet.validation import BootstrapCV, StratifiedBootstrapCV
 from sklearndf import TransformerDF
 from sklearndf.pipeline import RegressorPipelineDF
 from sklearndf.regression import (
+    SVRDF,
     AdaBoostRegressorDF,
     DecisionTreeRegressorDF,
     ExtraTreeRegressorDF,
     LinearRegressionDF,
     RandomForestRegressorDF,
-    SVRDF,
 )
 from sklearndf.regression.extra import LGBMRegressorDF
-from .facet import make_simple_transformer
+from sklearndf.transformation import (
+    ColumnTransformerDF,
+    OneHotEncoderDF,
+    SimpleImputerDF,
+)
+
+from .facet import STEP_IMPUTE, STEP_ONE_HOT_ENCODE
+from facet import Sample
+from facet.crossfit import LearnerCrossfit
+from facet.inspection import LearnerInspector, TreeExplainerFactory
+from facet.selection import LearnerEvaluation, LearnerGrid, LearnerRanker
+from facet.validation import BootstrapCV, StratifiedBootstrapCV
 
 logging.basicConfig(level=logging.DEBUG)
 log = logging.getLogger(__name__)
@@ -74,7 +80,7 @@ def cv_stratified_bootstrap() -> BaseCrossValidator:
 
 @pytest.fixture
 def regressor_grids(simple_preprocessor: TransformerDF) -> List[LearnerGrid]:
-    random_state = {f"random_state": [42]}
+    random_state = {"random_state": [42]}
 
     return [
         LearnerGrid(
@@ -194,10 +200,27 @@ def regressor_inspector(
 
 @pytest.fixture
 def simple_preprocessor(sample: Sample) -> TransformerDF:
-    return make_simple_transformer(
-        impute_median_columns=sample.features.select_dtypes(np.number).columns,
-        one_hot_encode_columns=sample.features.select_dtypes(object).columns,
-    )
+    features = sample.features
+
+    column_transforms = []
+
+    numeric_columns = features.select_dtypes(np.number).columns
+    if numeric_columns is not None and len(numeric_columns) > 0:
+        column_transforms.append(
+            (STEP_IMPUTE, SimpleImputerDF(strategy="median"), numeric_columns)
+        )
+
+    category_columns = features.select_dtypes(object).columns
+    if category_columns is not None and len(category_columns) > 0:
+        column_transforms.append(
+            (
+                STEP_ONE_HOT_ENCODE,
+                OneHotEncoderDF(sparse=False, handle_unknown="ignore"),
+                category_columns,
+            )
+        )
+
+    return ColumnTransformerDF(transformers=column_transforms)
 
 
 @pytest.fixture

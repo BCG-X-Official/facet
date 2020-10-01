@@ -5,15 +5,16 @@ import pytest
 from pandas.util.testing import assert_frame_equal, assert_series_equal
 from pytest import approx
 
+from sklearndf import TransformerDF
+from sklearndf.pipeline import RegressorPipelineDF
+from sklearndf.regression.extra import LGBMRegressorDF
+
 from facet import Sample
 from facet.crossfit import LearnerCrossfit
 from facet.simulation import UnivariateUpliftSimulator
 from facet.simulation.partition import ContinuousRangePartitioner
 from facet.simulation.viz import SimulationDrawer
 from facet.validation import StationaryBootstrapCV
-from sklearndf import TransformerDF
-from sklearndf.pipeline import RegressorPipelineDF
-from sklearndf.regression.extra import LGBMRegressorDF
 
 log = logging.getLogger(__name__)
 
@@ -68,7 +69,7 @@ def test_actuals_simulation(uplift_simulator: UnivariateUpliftSimulator) -> None
 
 
 def test_univariate_uplift_simulation(
-    uplift_simulator: UnivariateUpliftSimulator
+    uplift_simulator: UnivariateUpliftSimulator,
 ) -> None:
 
     parameterized_feature = "LSTAT"

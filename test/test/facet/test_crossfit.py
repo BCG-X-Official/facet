@@ -2,12 +2,13 @@ import logging
 
 import pytest
 
+from sklearndf.classification import RandomForestClassifierDF
+from sklearndf.pipeline import ClassifierPipelineDF
+
+from . import check_ranking
 from facet import Sample
 from facet.selection import LearnerGrid, LearnerRanker
 from facet.validation import StratifiedBootstrapCV
-from sklearndf.classification import RandomForestClassifierDF
-from sklearndf.pipeline import ClassifierPipelineDF
-from . import check_ranking
 
 log = logging.getLogger(__name__)
 

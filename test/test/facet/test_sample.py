@@ -1,9 +1,8 @@
 import numpy as np
 import pandas as pd
-
-# noinspection PyPackageRequirements
 import pytest
 from joblib import Parallel, delayed
+from pandas.testing import assert_frame_equal
 
 from facet import Sample
 
@@ -110,10 +109,12 @@ def test_sample(boston_df: pd.DataFrame, boston_target: str) -> None:
     assert len(sub) == 4
 
     # test select features
-    sample_features = s2.keep(features=s2.feature_columns[0:10])
+    assert_frame_equal(
+        s2.keep(features=s2.feature_columns[:10]).features, s2.features.iloc[:, :10]
+    )
 
     with pytest.raises(ValueError):
-        sample_features = s2.keep(features=["does not exist"])
+        s2.keep(features=["does not exist"])
 
     # test that s.features is a deterministic operation that does not depend on the
     # global python environment variable PYTHONHASHSEED

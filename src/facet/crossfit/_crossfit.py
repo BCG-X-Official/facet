@@ -26,7 +26,6 @@ from sklearn.metrics import check_scoring
 from sklearn.model_selection import BaseCrossValidator
 from sklearn.utils import check_random_state
 
-from facet import Sample
 from pytools.api import AllTracker, inheritdoc
 from pytools.fit import FittableMixin
 from pytools.parallelization import ParallelizableMixin
@@ -36,6 +35,8 @@ from sklearndf.pipeline import (
     LearnerPipelineDF,
     RegressorPipelineDF,
 )
+
+from facet import Sample
 
 log = logging.getLogger(__name__)
 

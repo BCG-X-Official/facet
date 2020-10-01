@@ -12,6 +12,15 @@ from pandas.util.testing import assert_frame_equal
 from sklearn.datasets import make_classification
 from sklearn.model_selection import BaseCrossValidator, KFold
 
+from pytools.viz.dendrogram import DendrogramDrawer, DendrogramReportStyle
+from sklearndf import TransformerDF
+from sklearndf.classification import (
+    GradientBoostingClassifierDF,
+    RandomForestClassifierDF,
+)
+from sklearndf.pipeline import ClassifierPipelineDF, RegressorPipelineDF
+
+from . import check_ranking
 from facet import Sample
 from facet.crossfit import LearnerCrossfit
 from facet.inspection import (
@@ -21,14 +30,6 @@ from facet.inspection import (
 )
 from facet.selection import LearnerGrid, LearnerRanker
 from facet.validation import BootstrapCV, StratifiedBootstrapCV
-from pytools.viz.dendrogram import DendrogramDrawer, DendrogramReportStyle
-from sklearndf import TransformerDF
-from sklearndf.classification import (
-    GradientBoostingClassifierDF,
-    RandomForestClassifierDF,
-)
-from sklearndf.pipeline import ClassifierPipelineDF, RegressorPipelineDF
-from . import check_ranking
 
 # noinspection PyMissingOrEmptyDocstring
 
@@ -66,14 +67,14 @@ def iris_classifier_ranker_dual_target(
 
 @pytest.fixture
 def iris_classifier_crossfit_binary(
-    iris_classifier_ranker_binary: LearnerRanker[ClassifierPipelineDF]
+    iris_classifier_ranker_binary: LearnerRanker[ClassifierPipelineDF],
 ) -> LearnerCrossfit[ClassifierPipelineDF[RandomForestClassifierDF]]:
     return iris_classifier_ranker_binary.best_model_crossfit
 
 
 @pytest.fixture
 def iris_classifier_crossfit_multi_class(
-    iris_classifier_ranker_multi_class: LearnerRanker[ClassifierPipelineDF]
+    iris_classifier_ranker_multi_class: LearnerRanker[ClassifierPipelineDF],
 ) -> LearnerCrossfit[ClassifierPipelineDF[RandomForestClassifierDF]]:
     return iris_classifier_ranker_multi_class.best_model_crossfit
 

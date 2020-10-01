@@ -28,12 +28,13 @@ import numpy as np
 from numpy.random.mtrand import RandomState
 from sklearn.model_selection import BaseCrossValidator
 
-from facet import Sample
-from facet.crossfit import LearnerCrossfit
 from pytools.api import AllTracker, inheritdoc, to_tuple
 from pytools.fit import FittableMixin
 from pytools.parallelization import ParallelizableMixin
 from sklearndf.pipeline import ClassifierPipelineDF, RegressorPipelineDF
+
+from facet import Sample
+from facet.crossfit import LearnerCrossfit
 
 log = logging.getLogger(__name__)
 
@@ -342,7 +343,8 @@ class LearnerRanker(
     @property
     def ranking(self) -> List[LearnerEvaluation[T_LearnerPipelineDF]]:
         """
-        A list of :class:`.LearnerEvaluation` for all learners evaluated by this ranker, \
+        A list of :class:`.LearnerEvaluation` for all learners evaluated
+        by this ranker, \
             in descending order of the ranking score.
         """
         self._ensure_fitted()
@@ -390,7 +392,7 @@ class LearnerRanker(
 
         ranking = self._ranking[:max_learners] if max_learners else self._ranking
 
-        name_width = max([len(_model_name(ranked_model)) for ranked_model in ranking])
+        name_width = max(len(_model_name(ranked_model)) for ranked_model in ranking)
 
         return "\n".join(
             [
