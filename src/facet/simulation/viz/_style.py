@@ -150,9 +150,9 @@ class SimulationMatplotStyle(MatplotStyle, SimulationStyle):
         else:
             x = partitions
         ax = self.ax
-        line_min, = ax.plot(x, values_min, color=self._COLOR_CONFIDENCE)
-        line_median, = ax.plot(x, values_median, color=self._COLOR_MEDIAN_UPLIFT)
-        line_max, = ax.plot(x, values_max, color=self._COLOR_CONFIDENCE)
+        (line_min,) = ax.plot(x, values_min, color=self._COLOR_CONFIDENCE)
+        (line_median,) = ax.plot(x, values_median, color=self._COLOR_MEDIAN_UPLIFT)
+        (line_max,) = ax.plot(x, values_max, color=self._COLOR_CONFIDENCE)
         # add a horizontal line at y=0
         line_base = ax.axhline(y=values_baseline, linewidth=0.5)
 

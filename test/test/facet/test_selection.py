@@ -10,10 +10,6 @@ import pandas as pd
 import pytest
 from sklearn import datasets
 
-from facet import Sample
-from facet.crossfit import LearnerCrossfit
-from facet.selection import LearnerEvaluation, LearnerGrid, LearnerRanker
-from facet.validation import BootstrapCV
 from sklearndf.classification import SVCDF
 from sklearndf.pipeline import ClassifierPipelineDF, RegressorPipelineDF
 from sklearndf.regression import (
@@ -22,7 +18,12 @@ from sklearndf.regression import (
     RandomForestRegressorDF,
 )
 from sklearndf.regression.extra import LGBMRegressorDF
+
 from . import check_ranking
+from facet import Sample
+from facet.crossfit import LearnerCrossfit
+from facet.selection import LearnerEvaluation, LearnerGrid, LearnerRanker
+from facet.validation import BootstrapCV
 
 log = logging.getLogger(__name__)
 

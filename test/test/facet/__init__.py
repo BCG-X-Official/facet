@@ -2,13 +2,14 @@ from typing import Any, List, Mapping, Optional, Sequence
 
 import pytest
 
-from facet.selection import LearnerEvaluation
 from sklearndf import TransformerDF
 from sklearndf.transformation import (
     ColumnTransformerDF,
     OneHotEncoderDF,
     SimpleImputerDF,
 )
+
+from facet.selection import LearnerEvaluation
 
 STEP_IMPUTE = "impute"
 STEP_ONE_HOT_ENCODE = "one-hot-encode"

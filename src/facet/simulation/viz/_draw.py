@@ -13,10 +13,11 @@ from typing import (
     Union,
 )
 
-from facet.simulation import UnivariateSimulation
 from pytools.api import AllTracker
 from pytools.viz import Drawer
+
 from ._style import SimulationMatplotStyle, SimulationReportStyle, SimulationStyle
+from facet.simulation import UnivariateSimulation
 
 __all__ = ["SimulationDrawer"]
 

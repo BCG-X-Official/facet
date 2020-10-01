@@ -10,23 +10,24 @@ from sklearn import datasets
 from sklearn.model_selection import BaseCrossValidator, KFold
 from sklearn.utils import Bunch
 
-from facet import Sample
-from facet.crossfit import LearnerCrossfit
-from facet.inspection import LearnerInspector, TreeExplainerFactory
-from facet.selection import LearnerEvaluation, LearnerGrid, LearnerRanker
-from facet.validation import BootstrapCV, StratifiedBootstrapCV
 from sklearndf import TransformerDF
 from sklearndf.pipeline import RegressorPipelineDF
 from sklearndf.regression import (
+    SVRDF,
     AdaBoostRegressorDF,
     DecisionTreeRegressorDF,
     ExtraTreeRegressorDF,
     LinearRegressionDF,
     RandomForestRegressorDF,
-    SVRDF,
 )
 from sklearndf.regression.extra import LGBMRegressorDF
+
 from .facet import make_simple_transformer
+from facet import Sample
+from facet.crossfit import LearnerCrossfit
+from facet.inspection import LearnerInspector, TreeExplainerFactory
+from facet.selection import LearnerEvaluation, LearnerGrid, LearnerRanker
+from facet.validation import BootstrapCV, StratifiedBootstrapCV
 
 logging.basicConfig(level=logging.DEBUG)
 log = logging.getLogger(__name__)

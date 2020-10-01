@@ -8,9 +8,10 @@ import numpy as np
 import pandas as pd
 import pytest
 
+from sklearndf.pipeline import RegressorPipelineDF
+
 from facet.crossfit import LearnerCrossfit
 from facet.inspection import LearnerInspector
-from sklearndf.pipeline import RegressorPipelineDF
 
 log = logging.getLogger(__name__)
 

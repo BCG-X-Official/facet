@@ -28,12 +28,13 @@ import numpy as np
 from numpy.random.mtrand import RandomState
 from sklearn.model_selection import BaseCrossValidator
 
-from facet import Sample
-from facet.crossfit import LearnerCrossfit
 from pytools.api import AllTracker, inheritdoc, to_tuple
 from pytools.fit import FittableMixin
 from pytools.parallelization import ParallelizableMixin
 from sklearndf.pipeline import ClassifierPipelineDF, RegressorPipelineDF
+
+from facet import Sample
+from facet.crossfit import LearnerCrossfit
 
 log = logging.getLogger(__name__)
 

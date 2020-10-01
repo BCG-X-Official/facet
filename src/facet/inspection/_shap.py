@@ -10,8 +10,6 @@ import numpy as np
 import pandas as pd
 from shap.explainers.explainer import Explainer
 
-from facet import Sample
-from facet.crossfit import LearnerCrossfit
 from pytools.api import AllTracker
 from pytools.fit import FittableMixin
 from pytools.parallelization import ParallelizableMixin
@@ -20,7 +18,10 @@ from sklearndf.pipeline import (
     LearnerPipelineDF,
     RegressorPipelineDF,
 )
+
 from ._explainer import ExplainerFactory
+from facet import Sample
+from facet.crossfit import LearnerCrossfit
 
 log = logging.getLogger(__name__)
 
@@ -545,12 +546,12 @@ class ShapInteractionValuesCalculator(
             )
 
         # calculate the shap interaction values; ensure the result is a list of arrays
-        shap_interaction_tensors: List[np.ndarray] = (
-            ShapCalculator._shap_tensors_to_list(
-                shap_tensors=shap_interaction_values_fn(x),
-                multi_output_type=multi_output_type,
-                multi_output_names=multi_output_names,
-            )
+        shap_interaction_tensors: List[
+            np.ndarray
+        ] = ShapCalculator._shap_tensors_to_list(
+            shap_tensors=shap_interaction_values_fn(x),
+            multi_output_type=multi_output_type,
+            multi_output_names=multi_output_names,
         )
 
         interaction_matrix_per_output: List[pd.DataFrame] = [
