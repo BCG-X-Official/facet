@@ -111,6 +111,8 @@ def test_sample(boston_df: pd.DataFrame, boston_target: str) -> None:
 
     # test select features
     sample_features = s2.keep(features=s2.feature_columns[0:10])
+    # TODO what was the objective here? should we not compare the sample_features
+    #  with a manually built sample? or are we just testing that the function runs?
 
     with pytest.raises(ValueError):
         sample_features = s2.keep(features=["does not exist"])

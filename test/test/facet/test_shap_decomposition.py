@@ -39,7 +39,7 @@ def test_shap_decomposition(regressor_inspector: LearnerInspector) -> None:
         # calculate the "indirect" S, such that cov(U, S) == 0 and cov(V, S) == 0
         k_U = max(0.0, cov(S, U) / var(S)) if is_indirect_syn_valid else 0.0
         k_V = max(0.0, cov(S, V) / var(S)) if is_indirect_syn_valid else 0.0
-        print_list(**{f"cov(U, S) / var(S)": k_U, f"cov(V, S) / var(S)": k_V})
+        print_list(**{"cov(U, S) / var(S)": k_U, "cov(V, S) / var(S)": k_V})
         varS = var(S)
         Su = S if varS == 0 else S * k_U
         Sv = S if varS == 0 else S * k_V

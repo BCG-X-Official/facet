@@ -75,7 +75,7 @@ def cv_stratified_bootstrap() -> BaseCrossValidator:
 
 @pytest.fixture
 def regressor_grids(simple_preprocessor: TransformerDF) -> List[LearnerGrid]:
-    random_state = {f"random_state": [42]}
+    random_state = {"random_state": [42]}
 
     return [
         LearnerGrid(
