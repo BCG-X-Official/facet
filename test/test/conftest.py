@@ -21,8 +21,13 @@ from sklearndf.regression import (
     RandomForestRegressorDF,
 )
 from sklearndf.regression.extra import LGBMRegressorDF
+from sklearndf.transformation import (
+    ColumnTransformerDF,
+    OneHotEncoderDF,
+    SimpleImputerDF,
+)
 
-from .facet import make_simple_transformer
+from .facet import STEP_IMPUTE, STEP_ONE_HOT_ENCODE
 from facet import Sample
 from facet.crossfit import LearnerCrossfit
 from facet.inspection import LearnerInspector, TreeExplainerFactory
@@ -195,10 +200,27 @@ def regressor_inspector(
 
 @pytest.fixture
 def simple_preprocessor(sample: Sample) -> TransformerDF:
-    return make_simple_transformer(
-        impute_median_columns=sample.features.select_dtypes(np.number).columns,
-        one_hot_encode_columns=sample.features.select_dtypes(object).columns,
-    )
+    features = sample.features
+
+    column_transforms = []
+
+    numeric_columns = features.select_dtypes(np.number).columns
+    if numeric_columns is not None and len(numeric_columns) > 0:
+        column_transforms.append(
+            (STEP_IMPUTE, SimpleImputerDF(strategy="median"), numeric_columns)
+        )
+
+    category_columns = features.select_dtypes(object).columns
+    if category_columns is not None and len(category_columns) > 0:
+        column_transforms.append(
+            (
+                STEP_ONE_HOT_ENCODE,
+                OneHotEncoderDF(sparse=False, handle_unknown="ignore"),
+                category_columns,
+            )
+        )
+
+    return ColumnTransformerDF(transformers=column_transforms)
 
 
 @pytest.fixture
