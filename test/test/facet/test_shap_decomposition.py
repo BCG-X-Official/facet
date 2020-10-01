@@ -8,6 +8,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
+from pytools.viz.dendrogram import LinkageTree
 from sklearndf.pipeline import RegressorPipelineDF
 
 from facet.crossfit import LearnerCrossfit
@@ -219,7 +220,9 @@ def test_shap_decomposition_matrices(
     )
 
     # cluster associated features
-    _linkage = regressor_inspector.feature_association_linkage()
+    association_linkage = regressor_inspector.feature_association_linkage()
+
+    assert isinstance(association_linkage, LinkageTree)
 
 
 #
