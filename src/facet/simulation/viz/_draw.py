@@ -2,7 +2,16 @@
 Visualizations of simulation results.
 """
 
-from typing import *
+from typing import (
+    Generic,
+    Mapping,
+    NamedTuple,
+    Optional,
+    Sequence,
+    Type,
+    TypeVar,
+    Union,
+)
 
 from facet.simulation import UnivariateSimulation
 from pytools.api import AllTracker

@@ -4,7 +4,7 @@ Drawing styles for simulation results.
 
 import logging
 from abc import ABCMeta, abstractmethod
-from typing import *
+from typing import Any, Sequence, Tuple, TypeVar
 
 from matplotlib.axes import Axes
 from mpl_toolkits.axes_grid1 import make_axes_locatable

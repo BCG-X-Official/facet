@@ -2,7 +2,7 @@
 Tests for module facet.validation
 """
 import warnings
-from typing import *
+from typing import List
 
 import numpy as np
 import pytest

@@ -4,7 +4,7 @@ import logging
 import os
 import re
 from glob import glob
-from typing import *
+from typing import List, Tuple
 
 # noinspection PyPackageRequirements
 import pytest

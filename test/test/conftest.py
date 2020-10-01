@@ -1,7 +1,7 @@
 import functools
 import logging
 import operator
-from typing import *
+from typing import List, Set
 
 import numpy as np
 import pandas as pd

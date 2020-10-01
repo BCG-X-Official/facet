@@ -5,7 +5,7 @@ import functools
 import logging
 from abc import ABCMeta, abstractmethod
 from distutils import version
-from typing import *
+from typing import Any, Dict, Mapping, Optional
 
 import pandas as pd
 import shap

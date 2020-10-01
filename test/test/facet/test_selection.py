@@ -3,7 +3,7 @@ Tests for module facet.selection
 """
 
 import logging
-from typing import *
+from typing import List
 
 import numpy as np
 import pandas as pd

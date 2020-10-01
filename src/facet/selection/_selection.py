@@ -8,7 +8,21 @@ import operator
 from functools import reduce
 from itertools import chain
 from types import MappingProxyType
-from typing import *
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Generic,
+    Iterable,
+    List,
+    Mapping,
+    Optional,
+    Sequence,
+    Tuple,
+    TypeVar,
+    Union,
+    cast,
+)
 
 import numpy as np
 from numpy.random.mtrand import RandomState
