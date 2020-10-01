@@ -3,7 +3,7 @@ Core implementation of :mod:`facet`
 """
 
 from copy import copy
-from typing import *
+from typing import Any, Collection, Iterable, List, Optional, Sequence, Set, Union
 
 import pandas as pd
 

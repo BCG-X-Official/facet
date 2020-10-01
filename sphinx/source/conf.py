@@ -21,7 +21,7 @@ sys.path.append(
     )
 )
 
-from conf_base import *
+from conf_base import set_config
 
 # ----- custom configuration -----
 

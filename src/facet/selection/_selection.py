@@ -343,7 +343,8 @@ class LearnerRanker(
     @property
     def ranking(self) -> List[LearnerEvaluation[T_LearnerPipelineDF]]:
         """
-        A list of :class:`.LearnerEvaluation` for all learners evaluated by this ranker, \
+        A list of :class:`.LearnerEvaluation` for all learners evaluated
+        by this ranker, \
             in descending order of the ranking score.
         """
         self._ensure_fitted()
