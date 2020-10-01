@@ -4,7 +4,7 @@ Core implementation of :mod:`facet.simulation.partition`
 import logging
 import math
 from abc import ABCMeta, abstractmethod
-from typing import *
+from typing import Generic, Iterable, Optional, Sequence, Tuple, TypeVar
 
 import numpy as np
 import pandas as pd

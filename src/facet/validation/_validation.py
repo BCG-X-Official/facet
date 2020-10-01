@@ -3,7 +3,7 @@ Core implementation of :mod:`facet.validation`
 """
 
 from abc import ABCMeta, abstractmethod
-from typing import *
+from typing import Generator, Iterator, Optional, Sequence, Tuple, Union
 
 import numpy as np
 import pandas as pd

@@ -3,7 +3,7 @@ Model inspector tests.
 """
 import logging
 import warnings
-from typing import *
+from typing import List, Sequence, Set
 
 import numpy as np
 import pandas as pd

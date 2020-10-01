@@ -2,7 +2,7 @@
 Test shap decomposition calculations
 """
 import logging
-from typing import *
+from typing import Set, Tuple, Union
 
 import numpy as np
 import pandas as pd

@@ -4,8 +4,18 @@ Core implementation of :mod:`facet.simulation`
 
 import logging
 from abc import ABCMeta, abstractmethod
-from typing import *
-from typing import Union
+from typing import (
+    Any,
+    Callable,
+    Generic,
+    List,
+    NamedTuple,
+    Optional,
+    Sequence,
+    Type,
+    TypeVar,
+    Union,
+)
 
 import numpy as np
 import pandas as pd
@@ -470,6 +480,67 @@ class UnivariateProbabilitySimulator(BaseUnivariateSimulator[ClassifierPipelineD
             raise TypeError("only binary classifiers are supported")
 
         return probabilities.iloc[:, 1].mean(axis=0)
+
+
+@inheritdoc(match="[see superclass]")
+class _UnivariateTargetSimulator(BaseUnivariateSimulator[RegressorPipelineDF]):
+    """
+    Univariate simulation for absolute target values based on a regression model.
+
+    The simulation is carried out for one specific feature `x[i]` of a model, and for a
+    range of values `v[1]`, …, `v[n]` for `f`, determined by a :class:`.Partitioning`
+    object.
+
+    For each value `v[j]` of the partitioning, a :class:`Sample` of historical
+    observations is modified by assigning value `v[j]` for feature `x[i]` for all
+    observations, i.e., assuming that feature `x[i]` has the constant value `v[j]`.
+
+    Then all regressors of a :class:`LearnerCrossfit` are used in turn to each predict
+    the target for all observations, and the mean of the predicted targets is calculated
+    for each regressor and value `v[j]`. The outcome is a distribution of mean predicted
+    targets for each `v[j]`.
+
+    For each `v[j]`, the median and the lower and upper confidence bounds of that
+    distribution are retained.
+
+    Hence the result of the simulation is a series of `n` medians, lower and upper
+    confidence bounds; one each for every value in the range of simulated values.
+
+    Note that sample weights are not taken into account for simulations; each
+    observation has the same weight in the simulation even if different weights
+    have been specified for the sample.
+    """
+
+    @property
+    def values_label(self) -> str:
+        """[see superclass]"""
+        return f"Mean predicted uplift ({self.crossfit.sample.target_columns[0]})"
+
+    @property
+    def baseline(self) -> float:
+        """
+        The baseline of uplift simulations is always ``0.0``
+        """
+        return 0.0
+
+    @staticmethod
+    def _expected_pipeline_type() -> Type[RegressorPipelineDF]:
+        return RegressorPipelineDF
+
+    @staticmethod
+    def _simulate(
+        model: RegressorPipelineDF, x: pd.DataFrame, actual_outcomes: pd.Series
+    ) -> float:
+        return model.predict(x).mean(axis=0) - actual_outcomes.mean(axis=0)
+
+    @staticmethod
+    def _simulate_actuals(model: RegressorPipelineDF, subsample: Sample) -> float:
+        # return relative difference between actual and predicted target
+        return (
+            model.predict(X=subsample.features).mean(axis=0)
+            / subsample.target.mean(axis=0)
+            - 1.0
+        )
 
 
 @inheritdoc(match="[see superclass]")

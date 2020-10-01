@@ -2,7 +2,7 @@
 Core implementation of :mod:`facet.inspection`
 """
 import logging
-from typing import *
+from typing import Generic, List, Optional, TypeVar, Union, cast
 
 import numpy as np
 import pandas as pd

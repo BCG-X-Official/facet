@@ -4,7 +4,7 @@ Helper classes for SHAP calculations
 
 import logging
 from abc import ABCMeta, abstractmethod
-from typing import *
+from typing import Callable, Generic, List, Optional, Sequence, TypeVar, Union
 
 import numpy as np
 import pandas as pd

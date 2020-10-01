@@ -4,7 +4,19 @@ Core implementation of :mod:`facet.crossfit`
 import logging
 from abc import ABCMeta
 from copy import copy
-from typing import *
+from typing import (
+    Callable,
+    Container,
+    Generic,
+    Iterator,
+    List,
+    NamedTuple,
+    Optional,
+    Sequence,
+    Tuple,
+    TypeVar,
+    Union,
+)
 
 import numpy as np
 import pandas as pd

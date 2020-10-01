@@ -1,4 +1,4 @@
-from typing import *
+from typing import Any, List, Mapping, Optional, Sequence
 
 import pytest
 

@@ -3,7 +3,7 @@ Decomposition of SHAP contribution scores (i.e, SHAP importance) of all possible
 of features into additive components for synergy, redundancy, and independence.
 """
 import logging
-from typing import *
+from typing import List, Optional, TypeVar
 
 import numpy as np
 import pandas as pd
@@ -376,7 +376,7 @@ class ShapInteractionValueDecomposer(ShapValueDecomposer):
             raise NotImplementedError(
                 "max precision Einstein summation not yet implemented"
             )
-        # noinspection SpellCheckingInspection
+        # noinspection SpellCheckingInspection,PyTypeChecker
         k_ij = np.divide(
             # cov(p'[i], p[i, j])
             np.einsum(
