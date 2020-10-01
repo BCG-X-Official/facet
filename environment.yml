@@ -3,7 +3,7 @@ channels:
   - astropy
   - conda-forge
 dependencies:
-  - black = 19.*
+  - black = 20.8b1
   - boruta_py = 0.3.*
   - conda-build
   - conda-verify
