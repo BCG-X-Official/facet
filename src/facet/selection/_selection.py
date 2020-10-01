@@ -392,7 +392,7 @@ class LearnerRanker(
 
         ranking = self._ranking[:max_learners] if max_learners else self._ranking
 
-        name_width = max([len(_model_name(ranked_model)) for ranked_model in ranking])
+        name_width = max(len(_model_name(ranked_model)) for ranked_model in ranking)
 
         return "\n".join(
             [
