@@ -134,6 +134,7 @@ stages:
           inputs:
             targetType: 'inline'
             script: |
+              set -e
               eval "$(conda shell.bash hook)"
               cd $(System.DefaultWorkingDirectory)/facet/
               export PYTHONPATH=$(System.DefaultWorkingDirectory)/facet/src/
