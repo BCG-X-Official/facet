@@ -226,10 +226,9 @@ class LearnerRanker(
     Score and rank different parametrizations of one or more learners,
     using cross-validation.
 
-    Other than scikit-learn's native :class:`.GridSearchCV`, a learner ranker can
-    run a simultaneous grid search across multiple alternative learner pipelines,
-    allowing not only to optimize hyper-parameters, but also the choice of the
-    learner algorithm.
+    The learner ranker can run a simultaneous grid search across multiple alternative
+    learner pipelines, supporting the ability to optimize hyper-parameters and
+    select a learner algorithm.
     """
 
     def __init__(
