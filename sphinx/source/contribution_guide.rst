@@ -8,7 +8,7 @@ Setup
 
 Python environment
 ~~~~~~~~~~~~~~~~~~~~~~
-There is a ``environment.yml`` provided in the repository root, which installs all required development
+There is a ``environment.yml`` file provided in the repository root, which installs all required development
 dependencies in the ``facet-development`` environment.
 
 .. code-block:: RST
@@ -256,6 +256,8 @@ Conda Packages
 Build
 """"""""""""
 
+The section below explains how to transfer the facet codebase to a conda package.
+
 Useful references:
 
 - `Conda build tutorial <https://docs.conda.io/projects/conda-build/en/latest/user-guide/tutorials/building-conda-packages.html>`_
@@ -277,7 +279,7 @@ The ``package`` section indicates the name of the resulting Conda package and it
 .. code-block:: RST
 
 	package:
-		name: facet
+		name: gamma-facet
 		version: 1.0.0
 
 When setting the version for a build, ``punch`` will update the version here - all other
@@ -315,18 +317,19 @@ The **requirements** section specifies those dependencies that ``facet`` has:
 
 	requirements:
 		host:
-			- pip
-			- python={{ environ.get('FACET_V_PYTHON_BUILD', '3.7') }}
+			- pip>=19.1
+			- python={{ environ.get('FACET_V_PYTHON_BUILD', '3.8.*') }}
 		run:
-			- python>=3.6,<3.8
-			- pandas{{ environ.get('FACET_V_PANDAS', '>=0.24') }}
-			- numpy{{ environ.get('FACET_V_NUMPY', '>=1.16') }}
-			- matplotlib{{ environ.get('FACET_V_MATPLOT', '>=3') }}
-			- shap{{ environ.get('FACET_V_SHAP', '>=0.34') }}
-			- scikit-learn{{ environ.get('FACET_V_SKLEARN', '>=0.21,<=0.22') }}
-			- gamma-pytools=1.0
-			- gamma-sklearndf=1.0
-			- pyyaml>=5
+            - python{{ environ.get('FACET_V_PYTHON', '>=3.6,<4') }}
+            - pandas{{ environ.get('FACET_V_PANDAS', '>=0.24,<1.2') }}
+            - numpy{{ environ.get('FACET_V_NUMPY', '>=1.16,<1.20') }}
+            - scipy{{ environ.get('FACET_V_SCIPY', '>=1.2,<1.6') }}
+            - matplotlib{{ environ.get('FACET_V_MATPLOT', '>=3.1,<3.4') }}
+            - scikit-learn{{ environ.get('FACET_V_SKLEARN', '>=0.21,<0.24') }}
+            - shap{{ environ.get('FACET_V_SHAP', '>=0.34,<0.36') }}
+            - gamma-pytools=1.0.*
+            - gamma-sklearndf=1.0.*
+            - pyyaml>=5
 
 The ``host`` section defines solely what is needed to carry out the build: Python and
 pip.
@@ -351,11 +354,15 @@ build of the package:
         - facet.validation
         - facet.simulation
     requires:
-        - pytest=5.2
+        - pytest=5.2.*
     commands:
+        - conda list
         - python -c 'import facet;
-          import os;
-          assert facet.__version__ == os.environ["PKG_VERSION"]'
+                     import os;
+                     assert facet.__version__ == os.environ["PKG_VERSION"]'
+        - pytest -vs ${FACET_PATH}/pytools/test
+        - pytest -vs ${FACET_PATH}/sklearndf/test
+        - pytest -vs ${FACET_PATH}/facet/test
 
 In this case, we want to check that all required packages can be imported successfully
 and that the version of facet is aligned with the ``PKG_VERSION``.
@@ -389,7 +396,7 @@ If successful, the ``dist/conda`` folder should contain the built Conda packages
 Publishing
 """""""""""""""
 
-**TODO** - once published.
+**TODO** - once published (Add RTD process).
 
 
 PyPI packages
@@ -422,9 +429,38 @@ CI/CD
 
 This project uses `Azure Devops <https://dev.azure.com/>`_ for CI/CD pipelines.
 The pipelines are defined in the ``azure-pipelines.yml`` file and are divided into
-two main stages.
+three main stages.
 
-Stage 1 - Development environment build and testing
+Stage 1 - Code quality checks
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The "Code quality checks" stage checks that the code follows linting and formatting
+standards
+
+- Checks import sortin with ``ìsort``
+- Checks code formatting with ``black``
+- Checks code linting with flake8
+
+Flake8 is configured in the ``flake8.ini`` file to ignore a limited set of PEP8 standard
+errors as described below.
+
+.. code-block:: RST
+
+    W504,  # line break after binary operator
+    E402,  # module level import not at top of file
+    E731,  # do not assign a lambda expression, use a def
+    E741,  # ignore not easy to read variables like i l I etc
+    C408,  # Unnecessary (dict/list/tuple) call - rewrite as a literal
+    S001,  # found modulo formatter (incorrect picks up mod operations)
+
+    # Ignores below are added to prevent conflicts with Black formatter
+    E231,  # Missing whitespace after ',', ';', or ':'
+    E203,  # space before :
+    W503,  # line break before binary operator`
+
+
+
+Stage 2 - Development environment build and testing
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The "Environment build & Pytest" stage performs the following steps:
@@ -435,7 +471,7 @@ The "Environment build & Pytest" stage performs the following steps:
 - Runs ``pytest`` and generates the code coverage reports for Azure DevOps. Note that these can be viewed on the Pipeline summary page.
 
 
-Stage 2 - Matrix Strategy for Conda package build
+Stage 3 - Matrix Strategy for Conda package build
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The "Test multiple conda environment builds" stage performs the following steps:
