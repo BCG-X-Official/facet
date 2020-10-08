@@ -7,19 +7,24 @@ import os
 import sys
 
 
-def run_make() -> None:
+def make() -> None:
     """
     Run the common make file available in the pytools repo
     """
     cwd = os.path.dirname(os.path.realpath(__file__))
     os.chdir(cwd)
 
-    sys.path.append(os.path.normpath(os.path.join(cwd, os.pardir, os.pardir)))
+    sys.path.insert(
+        0,
+        os.path.normpath(
+            os.path.join(cwd, os.pardir, os.pardir, "pytools", "sphinx", "base")
+        ),
+    )
     # noinspection PyUnresolvedReferences
-    from pytools.sphinx.make import run_make
+    from make_base import make
 
-    run_make()
+    make(modules=["pytools", "sklearndf", "facet"])
 
 
 if __name__ == "__main__":
-    run_make()
+    make()
