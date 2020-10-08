@@ -1,4 +1,4 @@
-.. _examples:
+.. _tutorials:
 
 
 FACET Tutorials

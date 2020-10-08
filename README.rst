@@ -3,7 +3,7 @@
     :width: 400
     :class: padded-logo
 
-Facet is an open source library for human-explainable AI. It combines sophisticated
+`facet` is an open source library for human-explainable AI. It combines sophisticated
 model inspection and model-based simulation to enable better explanations of your
 machine learning models.
 
