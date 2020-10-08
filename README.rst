@@ -1,7 +1,6 @@
-.. image:: _static/Gamma_Facet_Logo_RGB_LB.svg
-    :alt: GAMMA FACET
-    :width: 400
-    :class: padded-logo
+.. image:: _static/facet_banner.png
+
+|
 
 `facet` is an open source library for human-explainable AI. It combines sophisticated
 model inspection and model-based simulation to enable better explanations of your

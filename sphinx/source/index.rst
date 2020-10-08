@@ -1,4 +1,4 @@
-.. image:: _static/sklearndf_logo.png
+.. image:: _static/facet_banner.png
 
 |
 
