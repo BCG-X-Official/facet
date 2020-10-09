@@ -107,7 +107,7 @@ def test_model_ranker(
         grids=regressor_grids, cv=cv, scoring="r2", n_jobs=n_jobs
     ).fit(sample=sample)
 
-    log.debug(f"\n{ranker.summary_report(max_learners=10)}")
+    log.debug(f"\n{ranker.summary_report()}")
 
     assert isinstance(ranker.best_model_crossfit, LearnerCrossfit)
 
@@ -168,7 +168,7 @@ def test_model_ranker_no_preprocessing(n_jobs) -> None:
         grids=models, cv=cv, n_jobs=n_jobs
     ).fit(sample=test_sample)
 
-    log.debug(f"\n{model_ranker.summary_report(max_learners=10)}")
+    log.debug(f"\n{model_ranker.summary_report()}")
 
     check_ranking(
         ranking=model_ranker.ranking,

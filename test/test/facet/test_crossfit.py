@@ -44,7 +44,7 @@ def test_prediction_classifier(
     ):
         model_ranker.fit(sample=iris_sample, sample_weight=iris_sample.weight)
 
-    log.debug(f"\n{model_ranker.summary_report(max_learners=10)}")
+    log.debug(f"\n{model_ranker.summary_report()}")
 
     check_ranking(
         ranking=model_ranker.ranking,

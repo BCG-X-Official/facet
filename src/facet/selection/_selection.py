@@ -25,6 +25,7 @@ from typing import (
 )
 
 import numpy as np
+import pandas as pd
 from numpy.random.mtrand import RandomState
 from sklearn.model_selection import BaseCrossValidator
 
@@ -365,46 +366,34 @@ class LearnerRanker(
         self._ensure_fitted()
         return self._best_crossfit
 
-    def summary_report(self, max_learners: Optional[int] = None) -> str:
+    def summary_report(self) -> pd.DataFrame:
         """
-        A human-readable report of the learner evaluations, sorted by ranking score in
-        descending order.
+        Create a summary table of the scores achieved by all learners in the grid
+        search, sorted by ranking score in descending order.
 
-        :param max_learners: maximum number of learners to include in the report \
-            (optional)
-
-        :return: a multi-line string with a summary of the pipeline ranking
+        :return: the summary report of the grid search as a data frame
         """
 
         self._ensure_fitted()
 
-        def _model_name(evaluation: LearnerEvaluation) -> str:
-            return type(evaluation.pipeline.final_estimator).__name__
-
-        def _parameters(params: Mapping[str, Iterable[Any]]) -> str:
-            return ",".join(
-                [
-                    f"{param_name}={param_value}"
-                    for param_name, param_value in params.items()
-                ]
-            )
-
-        ranking = self._ranking[:max_learners] if max_learners else self._ranking
-
-        name_width = max(len(_model_name(ranked_model)) for ranked_model in ranking)
-
-        return "\n".join(
+        return pd.DataFrame.from_records(
             [
-                f"Rank {rank + 1:2d}: "
-                f"{_model_name(evaluation):>{name_width}s}, "
-                f"ranking_score={evaluation.ranking_score:9.3g}, "
-                f"scores_mean={evaluation.scores.mean():9.3g}, "
-                f"scores_std={evaluation.scores.std():9.3g}, "
-                f"parameters={{{_parameters(evaluation.parameters)}}}"
-                "\n"
-                for rank, evaluation in enumerate(ranking)
-            ]
-        )
+                dict(
+                    type=type(evaluation.pipeline.final_estimator).__name__,
+                    ranking_score=evaluation.ranking_score,
+                    scores_mean=evaluation.scores.mean(),
+                    scores_std=evaluation.scores.std(),
+                    **evaluation.parameters,
+                )
+                for evaluation in (
+                    sorted(
+                        self._ranking,
+                        key=lambda evaluation: evaluation.ranking_score,
+                        reverse=True,
+                    )
+                )
+            ],
+        ).rename_axis(index="rank")
 
     def _rank_learners(
         self, sample: Sample, **fit_params
