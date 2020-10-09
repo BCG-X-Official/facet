@@ -6,7 +6,6 @@ from typing import Generic, List, NamedTuple, Optional, Sequence, TypeVar, Union
 
 import numpy as np
 import pandas as pd
-from pandas import DataFrame
 from scipy.cluster.hierarchy import linkage
 from scipy.spatial.distance import squareform
 
@@ -723,7 +722,7 @@ class LearnerInspector(
         :return: consolidated SHAP and feature values for use shap plots
         """
 
-        shap_values: DataFrame = self.shap_values(consolidate="mean")
+        shap_values: pd.DataFrame = self.shap_values(consolidate="mean")
         sample: Sample = self.crossfit.sample.subsample(loc=shap_values.index)
 
         output_names = self._shap_calculator.output_names_
