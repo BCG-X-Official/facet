@@ -2,10 +2,11 @@
 Core implementation of :mod:`facet.inspection`
 """
 import logging
-from typing import Generic, List, Optional, TypeVar, Union, cast
+from typing import Generic, List, NamedTuple, Optional, Sequence, TypeVar, Union, cast
 
 import numpy as np
 import pandas as pd
+from pandas import DataFrame
 from scipy.cluster.hierarchy import linkage
 from scipy.spatial.distance import squareform
 
@@ -35,8 +36,7 @@ from facet.inspection._shap_decomposition import (
 
 log = logging.getLogger(__name__)
 
-__all__ = ["LearnerInspector"]
-
+__all__ = ["ShapPlotData", "LearnerInspector"]
 #
 # Type variables
 #
@@ -55,6 +55,26 @@ __tracker = AllTracker(globals())
 #
 # Class definitions
 #
+
+
+class ShapPlotData(NamedTuple):
+    """
+    Data for use in SHAP plots provided by the SHAP package (:module:`shap`)
+    """
+
+    #: Names of all model outputs (singleton list for single-output models)
+    output_names: Sequence[str]
+
+    #: Matrix of SHAP values (# samples x # features)
+    #: or list of shap value matrices for multi-output models
+    shap_values: Union[np.ndarray, List[np.ndarray]]
+
+    #: Matrix of feature values (# samples x #features)
+    features: pd.DataFrame
+
+    #: Series of target values (# samples)
+    #: or matrix of target values for multi-output models (# samples x # outputs)
+    target: Union[pd.Series, pd.DataFrame]
 
 
 @inheritdoc(match="[see superclass]")
@@ -278,7 +298,7 @@ class LearnerInspector(
         return self.crossfit.sample
 
     @property
-    def outputs(self) -> List[str]:
+    def outputs(self) -> Sequence[str]:
         """
         The names of the outputs explained by this inspector.
 
@@ -396,13 +416,13 @@ class LearnerInspector(
         :attr:`.sample`.
 
         :param method: method for calculating feature importance. Supported methods \
-            are ``rms`` (root of mean squares, default) and ``mav`` (mean absolute \
-            values)
+            are ``rms`` (root of mean squares, default), ``mav`` (mean absolute \
+            values), ``std`` (standard deviation), and ``mad`` (mean absolute deviation)
         :return: a series of length `n_features` for single-output models, or a \
             data frame of shape (n_features, n_outputs) for multi-output models
         """
 
-        methods = ["rms", "mav"]
+        methods = ["rms", "mav", "std", "mad"]
         if method not in methods:
             raise ValueError(
                 f'arg method="{method}" must be one of {{{", ".join(methods)}}}'
@@ -673,6 +693,36 @@ class LearnerInspector(
 
         # create a data frame from the feature matrix
         return self._feature_matrix_to_df(interaction_matrix)
+
+    def shap_plot_data(self) -> ShapPlotData:
+        """
+        Consolidate SHAP values and corresponding feature values from this inspector
+        for use in SHAP plots offered by the :module:`shap` package.
+        Calculates mean shap values for each observation and feature, across all
+        splits for which SHAP values were calculated.
+
+        :return: consolidated SHAP and feature values for use shap plots
+        """
+
+        shap_values: DataFrame = self.shap_values(consolidate="mean")
+        sample: Sample = self.crossfit.sample.subsample(loc=shap_values.index)
+
+        output_names = self._shap_calculator.output_names_
+
+        if len(output_names) > 1:
+            shap_values_numpy = [
+                shap_values.xs(output_name, axis=1).values
+                for output_name in output_names
+            ]
+        else:
+            shap_values_numpy = shap_values.values
+
+        return ShapPlotData(
+            output_names=output_names,
+            shap_values=shap_values_numpy,
+            features=sample.features,
+            target=sample.target,
+        )
 
     def _feature_matrix_to_df(self, matrix: np.ndarray) -> pd.DataFrame:
         # transform a matrix of shape (n_outputs, n_features, n_features)
