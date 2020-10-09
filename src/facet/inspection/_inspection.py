@@ -415,12 +415,12 @@ class LearnerInspector(
 
         :param method: method for calculating feature importance. Supported methods \
             are ``rms`` (root of mean squares, default), ``mav`` (mean absolute \
-            values), ``std`` (standard deviation), and ``mad`` (mean absolute deviation)
+            values)
         :return: a series of length `n_features` for single-output models, or a \
             data frame of shape (n_features, n_outputs) for multi-output models
         """
 
-        methods = ["rms", "mav", "std", "mad"]
+        methods = ["rms", "mav"]
         if method not in methods:
             raise ValueError(
                 f'arg method="{method}" must be one of {{{", ".join(methods)}}}'
