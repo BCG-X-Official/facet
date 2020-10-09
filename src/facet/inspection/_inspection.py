@@ -17,11 +17,10 @@ from pytools.viz.dendrogram import LinkageTree
 from sklearndf import ClassifierDF, LearnerDF, RegressorDF
 from sklearndf.pipeline import LearnerPipelineDF
 
-from ._explainer import TreeExplainerFactory
+from ._explainer import ExplainerFactory, TreeExplainerFactory
 from ._shap import (
     ClassifierShapInteractionValuesCalculator,
     ClassifierShapValuesCalculator,
-    ExplainerFactory,
     RegressorShapInteractionValuesCalculator,
     RegressorShapValuesCalculator,
     ShapCalculator,
@@ -65,15 +64,15 @@ class ShapPlotData(NamedTuple):
     #: Names of all model outputs (singleton list for single-output models)
     output_names: Sequence[str]
 
-    #: Matrix of SHAP values (# samples x # features)
+    #: Matrix of SHAP values (# observations x # features)
     #: or list of shap value matrices for multi-output models
     shap_values: Union[np.ndarray, List[np.ndarray]]
 
-    #: Matrix of feature values (# samples x #features)
+    #: Matrix of feature values (# observations x #features)
     features: pd.DataFrame
 
-    #: Series of target values (# samples)
-    #: or matrix of target values for multi-output models (# samples x # outputs)
+    #: Series of target values (# observations)
+    #: or matrix of target values for multi-output models (# observations x # outputs)
     target: Union[pd.Series, pd.DataFrame]
 
 
@@ -482,7 +481,7 @@ class LearnerInspector(
 
         In the case of multi-target regression and non-binary classification, returns
         a data frame with one matrix per output, stacked horizontally, and with a
-        hiearchical column index (target/class name on level 1, and feature name on
+        hierarchical column index (target/class name on level 1, and feature name on
         level 2).
 
         :return: feature association matrix as a data frame of shape \
@@ -574,7 +573,7 @@ class LearnerInspector(
 
     def feature_redundancy_linkage(self) -> Union[LinkageTree, List[LinkageTree]]:
         """
-        Calculate a linkage tree based on the :meth:`.feature_redundancyt_matrix`.
+        Calculate a linkage tree based on the :meth:`.feature_redundancy_matrix`.
 
         The linkage tree can be used to render a dendrogram indicating clusters of
         redundant features.
@@ -638,7 +637,7 @@ class LearnerInspector(
 
         In the case of multi-target regression and non-binary classification, returns
         a data frame with one matrix per output, stacked horizontally, and with a
-        hiearchical column index (target/class name on level 1, and feature name on
+        hierarchical column index (target/class name on level 1, and feature name on
         level 2).
 
         :return: relative shap interaction values as a data frame of shape \
@@ -698,6 +697,26 @@ class LearnerInspector(
         """
         Consolidate SHAP values and corresponding feature values from this inspector
         for use in SHAP plots offered by the :module:`shap` package.
+
+        The _shap_ package provides functions for creating various SHAP plots.
+        Most of these functions require
+
+        - one or more SHAP value matrices as a single _numpy_ array, or a list of \
+            _numpy_ arrays of shape _(n_observations, n_features)_
+        - a feature matrix of shape _(n_observations, n_features)_, which can be \
+            provided as a data frame to preserve feature names
+
+        This method provides this data inside a :class:`.ShapPlotData` object, plus
+
+        - the names of all outputs (i.e., the target names in case of regression, \
+            or the class names in case of classification)
+        - corresponding target values as a series, or as a data frame in the case of \
+            multiple targets
+
+        This method also ensures that the rows of all arrays, frames, and series are
+        aligned, even if only a subset of the observations in the original sample was
+        used to calculate SHAP values.
+
         Calculates mean shap values for each observation and feature, across all
         splits for which SHAP values were calculated.
 
