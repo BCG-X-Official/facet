@@ -1,4 +1,4 @@
-.. image:: _static/sklearndf_logo.png
+.. image:: _static/facet_banner.png
 
 |
 
@@ -14,4 +14,5 @@ Table of contents
    tutorials
    contribution_guide
    faqs
+   about_us
    genindex
