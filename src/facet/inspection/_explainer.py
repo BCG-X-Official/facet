@@ -69,7 +69,7 @@ class ExplainerFactory(metaclass=ABCMeta):
     def uses_background_dataset(self) -> bool:
         """
         ``True`` if explainers made by this factory will use a background dataset
-        passed to methood :meth:`.make_explainer`, ``False`` otherwise.
+        passed to method :meth:`.make_explainer`, ``False`` otherwise.
         """
 
     @abstractmethod

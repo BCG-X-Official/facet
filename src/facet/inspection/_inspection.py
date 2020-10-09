@@ -554,7 +554,7 @@ class LearnerInspector(
 
     def feature_redundancy_linkage(self) -> Union[LinkageTree, List[LinkageTree]]:
         """
-        Calculate a linkage tree based on the :meth:`.feature_redundancyt_matrix`.
+        Calculate a linkage tree based on the :meth:`.feature_redundancy_matrix`.
 
         The linkage tree can be used to render a dendrogram indicating clusters of
         redundant features.
