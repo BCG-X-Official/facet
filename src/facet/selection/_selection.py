@@ -262,7 +262,7 @@ class LearnerRanker(
             crossfit, taking a :class:`.CrossfitScores` and returning a float. \
             The resulting score is used to rank all crossfits (highest score is best). \
             Defaults to :meth:`.default_ranking_scorer`, calculating \
-            `mean(scores) - 2 * std(scores)`.
+            `mean(scores) - 2 * std(scores, ddof=1)`.
         :param shuffle_features: if ``True``, shuffle column order of features for \
             every crossfit (default: ``False``)
         :param random_state: optional random seed or random state for shuffling the \
@@ -361,8 +361,7 @@ class LearnerRanker(
     def ranking(self) -> List[LearnerEvaluation[T_LearnerPipelineDF]]:
         """
         A list of :class:`.LearnerEvaluation` for all learners evaluated
-        by this ranker, \
-            in descending order of the ranking score.
+        by this ranker, in descending order of the ranking score.
         """
         self._ensure_fitted()
         return self._ranking
@@ -393,14 +392,20 @@ class LearnerRanker(
 
         self._ensure_fitted()
 
+        scoring_name = self.scoring_name
+        scores_mean_name = f"{scoring_name}_mean"
+        scores_std_name = f"{scoring_name}_std"
+
         return pd.DataFrame.from_records(
             [
                 dict(
                     type=type(evaluation.pipeline.final_estimator).__name__,
                     ranking_score=evaluation.ranking_score,
-                    scores_mean=evaluation.scores.mean(),
-                    scores_std=evaluation.scores.std(ddof=1),
-                    **evaluation.parameters,
+                    **{
+                        scores_mean_name: evaluation.scores.mean(),
+                        scores_std_name: evaluation.scores.std(ddof=1),
+                        **evaluation.parameters,
+                    },
                 )
                 for evaluation in (
                     sorted(
