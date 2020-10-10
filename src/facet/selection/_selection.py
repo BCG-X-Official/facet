@@ -306,13 +306,13 @@ class LearnerRanker(
         """
         The default function used to rank pipelines.
 
-        Calculates `mean(scores) - 2 * std(scores)`, i.e., ranks pipelines by a
+        Calculates `mean(scores) - 2 * std(scores, ddof=1)`, i.e., ranks pipelines by a
         (pessimistic) lower bound of the expected score.
 
         :param scores: the scores for all crossfits
         :return: scalar score for ranking the pipeline
         """
-        return scores.mean() - 2 * scores.std()
+        return scores.mean() - 2 * scores.std(ddof=1)
 
     def fit(self: T, sample: Sample, **fit_params) -> T:
         """
@@ -399,7 +399,7 @@ class LearnerRanker(
                     type=type(evaluation.pipeline.final_estimator).__name__,
                     ranking_score=evaluation.ranking_score,
                     scores_mean=evaluation.scores.mean(),
-                    scores_std=evaluation.scores.std(),
+                    scores_std=evaluation.scores.std(ddof=1),
                     **evaluation.parameters,
                 )
                 for evaluation in (
