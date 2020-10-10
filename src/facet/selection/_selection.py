@@ -341,6 +341,19 @@ class LearnerRanker(
         return self._ranking is not None
 
     @property
+    def scoring_name(self) -> str:
+        """
+        The name of the scoring function used to rank the learners.
+        """
+        scoring = self.scoring
+        if isinstance(scoring, str):
+            return scoring
+        elif callable(scoring):
+            return scoring.__name__
+        else:
+            return "score"
+
+    @property
     def ranking(self) -> List[LearnerEvaluation[T_LearnerPipelineDF]]:
         """
         A list of :class:`.LearnerEvaluation` for all learners evaluated
