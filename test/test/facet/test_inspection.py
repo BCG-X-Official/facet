@@ -346,7 +346,9 @@ def test_model_inspection_classifier_multi_class(
 
     linkage_trees = iris_inspector_multi_class.feature_association_linkage()
 
-    for output, linkage_tree in zip(iris_inspector_multi_class.outputs, linkage_trees):
+    for output, linkage_tree in zip(
+        iris_inspector_multi_class.output_names, linkage_trees
+    ):
         print()
         DendrogramDrawer(style=DendrogramReportStyle()).draw(
             data=linkage_tree, title=f"Iris feature association linkage: {output}"

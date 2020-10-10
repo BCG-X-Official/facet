@@ -296,7 +296,7 @@ class LearnerInspector(
         return self.crossfit.sample
 
     @property
-    def outputs(self) -> Sequence[str]:
+    def output_names(self) -> Sequence[str]:
         """
         The names of the outputs explained by this inspector.
 
@@ -451,7 +451,7 @@ class LearnerInspector(
             LearnerInspector.COL_IMPORTANCE
         )
 
-        if len(self.outputs) > 1:
+        if len(self.output_names) > 1:
             assert (
                 abs_importance.index.nlevels == 2
             ), "2 index levels in place for multi-output models"
@@ -644,7 +644,7 @@ class LearnerInspector(
         """
 
         n_features = len(self.features)
-        n_outputs = len(self.outputs)
+        n_outputs = len(self.output_names)
 
         # get a feature interaction array with shape
         # (n_observations, n_outputs, n_features, n_features)
@@ -747,7 +747,7 @@ class LearnerInspector(
         # to a data frame
 
         n_features = len(self.features)
-        n_outputs = len(self.outputs)
+        n_outputs = len(self.output_names)
 
         assert matrix.shape == (n_outputs, n_features, n_features)
 
