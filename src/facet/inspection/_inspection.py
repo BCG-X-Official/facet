@@ -310,24 +310,7 @@ class LearnerInspector(
         """
 
         self._ensure_fitted()
-
-        estimator_df: LearnerDF = self.crossfit.pipeline.final_estimator
-
-        if isinstance(estimator_df, ClassifierDF):
-            try:
-                # noinspection PyUnresolvedReferences
-                classes = estimator_df.classes_
-                # for binary classifiers, we will only produce SHAP values for the first
-                # class (since they would only be mirrored by the second class)
-                return classes[:1] if len(classes) == 2 else classes
-            except AttributeError as cause:
-                raise TypeError(
-                    f"underlying {type(estimator_df.__name__)} "
-                    "does not implement 'classes_' attribute: "
-                ) from cause
-
-        else:
-            return self.crossfit.sample.target_columns
+        return self._shap_calculator.output_names_
 
     @property
     def features(self) -> List[str]:
