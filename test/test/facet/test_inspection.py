@@ -557,8 +557,11 @@ def test_shap_plot_data(
 ) -> None:
     shap_plot_data = iris_inspector_multi_class.shap_plot_data()
     # noinspection SpellCheckingInspection
-    assert tuple(shap_plot_data.output_names) == ("setosa", "versicolor", "virginica")
-    shap_index = shap_plot_data.features.index
+    assert tuple(iris_inspector_multi_class.output_names) == (
+        "setosa",
+        "versicolor",
+        "virginica",
+    )
 
     features_shape = shap_plot_data.features.shape
     shap_values = shap_plot_data.shap_values
@@ -567,6 +570,7 @@ def test_shap_plot_data(
     assert all(isinstance(shap, np.ndarray) for shap in shap_values)
     assert all(shap.shape == features_shape for shap in shap_values)
 
+    shap_index = shap_plot_data.features.index
     assert_frame_equal(shap_plot_data.features, iris_sample.features.loc[shap_index])
     assert_series_equal(shap_plot_data.target, iris_sample.target.loc[shap_index])
 

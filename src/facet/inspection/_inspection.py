@@ -60,9 +60,6 @@ class ShapPlotData(NamedTuple):
     Data for use in SHAP plots provided by the SHAP package (:module:`shap`)
     """
 
-    #: Names of all model outputs (singleton list for single-output models)
-    output_names: Sequence[str]
-
     #: Matrix of SHAP values (# observations x # features)
     #: or list of shap value matrices for multi-output models
     shap_values: Union[np.ndarray, List[np.ndarray]]
@@ -708,7 +705,7 @@ class LearnerInspector(
         shap_values: pd.DataFrame = self.shap_values(consolidate="mean")
         sample: Sample = self.crossfit.sample.subsample(loc=shap_values.index)
 
-        output_names = self._shap_calculator.output_names_
+        output_names = self.output_names
 
         if len(output_names) > 1:
             shap_values_numpy = [
@@ -719,7 +716,6 @@ class LearnerInspector(
             shap_values_numpy = shap_values.values
 
         return ShapPlotData(
-            output_names=output_names,
             shap_values=shap_values_numpy,
             features=sample.features,
             target=sample.target,
