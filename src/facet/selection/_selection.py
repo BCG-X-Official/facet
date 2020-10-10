@@ -27,6 +27,7 @@ from typing import (
 import numpy as np
 import pandas as pd
 from numpy.random.mtrand import RandomState
+from scipy.stats import sem
 from sklearn.model_selection import BaseCrossValidator
 
 from pytools.api import AllTracker, inheritdoc, to_tuple
@@ -395,6 +396,7 @@ class LearnerRanker(
         scoring_name = self.scoring_name
         scores_mean_name = f"{scoring_name}_mean"
         scores_std_name = f"{scoring_name}_std"
+        scores_sem_name = f"{scoring_name}_sem"
 
         return pd.DataFrame.from_records(
             [
@@ -404,6 +406,7 @@ class LearnerRanker(
                     **{
                         scores_mean_name: evaluation.scores.mean(),
                         scores_std_name: evaluation.scores.std(ddof=1),
+                        scores_sem_name: sem(evaluation.scores, ddof=1),
                         **evaluation.parameters,
                     },
                 )
