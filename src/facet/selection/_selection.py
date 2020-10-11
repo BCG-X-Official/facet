@@ -368,7 +368,15 @@ class LearnerRanker(
         elif callable(scoring):
             return scoring.__name__
         else:
-            return "score"
+            learner_type = _learner_type(self.grids[0].pipeline)
+            if learner_type is RegressorPipelineDF:
+                return "r2_score"
+            elif learner_type is ClassifierPipelineDF:
+                return "accuracy_score"
+            else:
+                # default case - we should not end up here but adding this for forward
+                # compatibility
+                return "score"
 
     @property
     def ranking(self) -> List[LearnerEvaluation[T_LearnerPipelineDF]]:
