@@ -19,6 +19,7 @@ from typing import (
     Optional,
     Sequence,
     Tuple,
+    Type,
     TypeVar,
     Union,
     cast,
@@ -33,7 +34,11 @@ from sklearn.model_selection import BaseCrossValidator
 from pytools.api import AllTracker, inheritdoc, to_tuple
 from pytools.fit import FittableMixin
 from pytools.parallelization import ParallelizableMixin
-from sklearndf.pipeline import ClassifierPipelineDF, RegressorPipelineDF
+from sklearndf.pipeline import (
+    ClassifierPipelineDF,
+    LearnerPipelineDF,
+    RegressorPipelineDF,
+)
 
 from facet import Sample
 from facet.crossfit import LearnerCrossfit
@@ -65,7 +70,7 @@ __tracker = AllTracker(globals())
 #
 
 
-class LearnerGrid(Sequence[Dict[str, Any]], Generic[T_LearnerPipelineDF]):
+class LearnerGrid(Generic[T_LearnerPipelineDF]):
     """
     A grid of hyper-parameters for tuning a learner pipeline.
 
@@ -282,9 +287,16 @@ class LearnerRanker(
                 f"but a {type(scoring).__name__} was given as arg scoring"
             )
 
-        self.grids: Tuple[LearnerGrid, ...] = to_tuple(
+        grids_tuple: Tuple[LearnerGrid, ...] = to_tuple(
             grids, element_type=LearnerGrid, arg_name="grids"
         )
+        if len(grids_tuple) == 0:
+            raise ValueError("arg grids must specify at least one LearnerGrid")
+        learner_type = _learner_type(grids_tuple[0].pipeline)
+        if not all(isinstance(grid.pipeline, learner_type) for grid in grids_tuple[1:]):
+            raise ValueError("arg grids mixes regressor and classifier pipelines")
+
+        self.grids = grids_tuple
         self.cv = cv
         self.scoring = scoring
         self.ranking_scorer = (
@@ -476,6 +488,22 @@ class LearnerRanker(
 
         self._best_crossfit = best_crossfit
         return ranking
+
+
+def _learner_type(
+    pipeline: T_LearnerPipelineDF,
+) -> Type[Union[RegressorPipelineDF, ClassifierPipelineDF]]:
+    # determine whether a learner pipeline fits a regressor or a classifier
+    for learner_type in [RegressorPipelineDF, ClassifierPipelineDF]:
+        if isinstance(pipeline, learner_type):
+            return learner_type
+    if isinstance(pipeline, LearnerPipelineDF):
+        raise TypeError(f"unknown learner pipeline type: {type(learner_type).__name__}")
+    else:
+        raise TypeError(
+            "attribute grid.pipeline is not a learner pipeline: "
+            f"{type(learner_type).__name__}"
+        )
 
 
 __tracker.validate()

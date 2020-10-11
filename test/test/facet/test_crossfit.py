@@ -3,7 +3,8 @@ import logging
 import pytest
 
 from sklearndf.classification import RandomForestClassifierDF
-from sklearndf.pipeline import ClassifierPipelineDF
+from sklearndf.pipeline import ClassifierPipelineDF, RegressorPipelineDF
+from sklearndf.regression import RandomForestRegressorDF
 
 from . import check_ranking
 from facet import Sample
@@ -22,10 +23,29 @@ def test_prediction_classifier(
     # define parameters and crossfit
     grids = LearnerGrid(
         pipeline=ClassifierPipelineDF(
-            classifier=RandomForestClassifierDF(random_state=42), preprocessing=None
+            classifier=RandomForestClassifierDF(random_state=42)
         ),
         learner_parameters={"min_samples_leaf": [16, 32], "n_estimators": [50, 80]},
     )
+
+    # define an illegal grid list, mixing classification with regression
+    grids_illegal = [
+        grids,
+        LearnerGrid(
+            pipeline=RegressorPipelineDF(
+                regressor=RandomForestRegressorDF(random_state=42)
+            ),
+            learner_parameters={"min_samples_leaf": [16, 32], "n_estimators": [50, 80]},
+        ),
+    ]
+
+    with pytest.raises(
+        ValueError, match="^arg grids mixes regressor and classifier pipelines$"
+    ):
+        LearnerRanker(
+            grids=grids_illegal,
+            cv=cv_stratified_bootstrap,
+        )
 
     model_ranker: LearnerRanker[
         ClassifierPipelineDF[RandomForestClassifierDF]
