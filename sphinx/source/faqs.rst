@@ -4,29 +4,29 @@ FAQ
 ===
 
 Below you can find answers to commonly asked questions. If you don't see your answer
-there you could also try posting on `slackoverflow <https://stackoverflow.com/>`_.
+there you could also try posting on `stackoverflow <https://stackoverflow.com/>`_.
 
-1. What if I find a bug or have an idea for a new feature?
+1. **What if I find a bug or have an idea for a new feature?**
 
     For bug reports or feature requests please use our
     `GitHub issue tracker <https://github.com/BCG-Gamma/facet/issues>`_.
-    For any other enquiries please feel free to contact us at facet-mailing-list.com
+    For any other enquiries please feel free to contact us at our mailing list (add link).
 
-2. How does FACET's novel algorithm calculate feature redundancy and synergy?
+2. **How does FACET's novel algorithm calculate feature redundancy and synergy?**
 
     Please keep an eye out for our publication coming soon. In the meantime please feel
     free to explore the GammaScope article (add link) to get a good introduction to
     using the algorithm.
 
-3. How can I contribute?
+3. **How can I contribute?**
 
     We welcome contributors! If you have minor changes in mind that would like to
     contribute, please feel free to create a pull request and be sure to follow the
     developer guidelines. For large or extensive changes please feel free to open an
-    issue, or reach out to us at mailing list.com (add link) first to discuss.
+    issue, or reach out to us at our mailing list (add link) first to discuss.
 
-4. How can I perform standard plotting of SHAP values as done in the
-   `shap <https://github.com/slundberg/shap>`_ library?
+4. **How can I perform standard plotting of SHAP values as done in the**
+   `shap <https://github.com/slundberg/shap>`_ **library?**
 
     You can do this by creating an output of SHAP values from the fit LearnerInspector
     as in the example shown below.
@@ -45,8 +45,8 @@ there you could also try posting on `slackoverflow <https://stackoverflow.com/>`
 
 
 
-5. How can I extract CV performance metrics from the LearnerRanker to create my
-   own summaries or figures?
+5. **How can I extract CV performance metrics from the LearnerRanker to create my
+   own summaries or figures?**
 
     You can extract the desired information as a data frame from the fitted
     LearnerRanker object.
