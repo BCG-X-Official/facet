@@ -262,8 +262,10 @@ class LearnerRanker(
             (either a single grid, or an iterable of multiple grids)
         :param cv: a cross validator (e.g., \
             :class:`.BootstrapCV`)
-        :param scoring: a scoring function (by name or a callable) for evaluating \
-            learners (optional; use learner's default scorer if not specified here)
+        :param scoring: a scoring function (by name, or as a callable) for evaluating \
+            learners (optional; use learner's default scorer if not specified here). \
+            If passing a callable, the ``"score"`` will be used as the name of the
+            scoring function unless the callable defines a ``__name__`` attribute.
         :param ranking_scorer: a function to calculate a scalar score for every \
             crossfit, taking a :class:`.CrossfitScores` and returning a float. \
             The resulting score is used to rank all crossfits (highest score is best). \
@@ -366,7 +368,10 @@ class LearnerRanker(
         if isinstance(scoring, str):
             return scoring
         elif callable(scoring):
-            return scoring.__name__
+            try:
+                return scoring.__name__
+            except AttributeError:
+                return "score"
         else:
             learner_type = _learner_type(self.grids[0].pipeline)
             if learner_type is RegressorPipelineDF:
