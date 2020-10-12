@@ -418,23 +418,41 @@ class LearnerRanker(
 
         self._ensure_fitted()
 
-        scoring_name = self.scoring_name
-        scores_mean_name = f"{scoring_name}_mean"
-        scores_std_name = f"{scoring_name}_std"
-        scores_sem_name = f"{scoring_name}_sem"
+        # define the columns of the resulting data frame
 
-        return pd.DataFrame.from_records(
+        col_learner = "learner"
+        col_ranking_score = "ranking_score"
+        scoring_name = self.scoring_name
+        col_scores_mean = f"{scoring_name}__mean"
+        col_scores_std = f"{scoring_name}__std"
+        col_scores_sem = f"{scoring_name}__sem"
+
+        parameters: List[str] = []
+        for grid in self.grids:
+            # noinspection PyTypeChecker
+            parameters.extend(grid.parameters.keys() - parameters)
+
+        columns = [
+            col_learner,
+            col_ranking_score,
+            col_scores_mean,
+            col_scores_std,
+            col_scores_sem,
+            *parameters,
+        ]
+
+        # build te report
+
+        report = pd.DataFrame.from_records(
             [
-                dict(
-                    type=type(evaluation.pipeline.final_estimator).__name__,
-                    ranking_score=evaluation.ranking_score,
-                    **{
-                        scores_mean_name: evaluation.scores.mean(),
-                        scores_std_name: evaluation.scores.std(ddof=1),
-                        scores_sem_name: sem(evaluation.scores, ddof=1),
-                        **evaluation.parameters,
-                    },
-                )
+                {
+                    col_learner: type(evaluation.pipeline.final_estimator).__name__,
+                    col_ranking_score: evaluation.ranking_score,
+                    col_scores_mean: evaluation.scores.mean(),
+                    col_scores_std: evaluation.scores.std(ddof=1),
+                    col_scores_sem: sem(evaluation.scores, ddof=1),
+                    **evaluation.parameters,
+                }
                 for evaluation in (
                     sorted(
                         self._ranking,
@@ -443,7 +461,17 @@ class LearnerRanker(
                     )
                 )
             ],
+            columns=columns,
         ).rename_axis(index="rank")
+
+        # split column headers containing one or more "__",
+        # resulting in a column MultiIndex
+
+        report.columns = report.columns.str.split("__", expand=True).map(
+            lambda column: tuple(level if pd.notna(level) else "" for level in column)
+        )
+
+        return report
 
     def _rank_learners(
         self, sample: Sample, **fit_params
