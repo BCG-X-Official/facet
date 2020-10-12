@@ -100,7 +100,7 @@ def test_model_inspection(
         -0.074,
     ]
 
-    log.debug(f"\n{regressor_ranker.summary_report(max_learners=10)}")
+    log.debug(f"\n{regressor_ranker.summary_report()}")
 
     check_ranking(
         ranking=regressor_ranker.ranking,
@@ -168,7 +168,7 @@ def test_binary_classifier_ranking(iris_classifier_ranker_binary) -> None:
 
     expected_learner_scores = [0.872, 0.868, 0.866, 0.859]
 
-    log.debug(f"\n{iris_classifier_ranker_binary.summary_report(max_learners=10)}")
+    log.debug(f"\n{iris_classifier_ranker_binary.summary_report()}")
     check_ranking(
         ranking=iris_classifier_ranker_binary.ranking,
         expected_scores=expected_learner_scores,
