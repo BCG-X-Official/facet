@@ -60,8 +60,8 @@ class ExplainerFactory(metaclass=ABCMeta):
     @abstractmethod
     def supports_shap_interaction_values(self) -> bool:
         """
-        ``True`` if explainers made by this factory allow for calculating SHAP
-        interaction values, ``False`` otherwise.
+        ``True`` if explainers made by this factory allow for calculating
+        SHAP interaction values, ``False`` otherwise.
         """
 
     @property
