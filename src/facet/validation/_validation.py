@@ -195,13 +195,11 @@ class StationaryBootstrapCV(_BaseBootstrapCV):
 
     Intended for use with time series that satisfy the stationarity requirement.
 
-    :param n_splits: Number of splits to generate (default: 100)
     :param mean_block_size: mean size of coherent blocks to sample.\
         If an ``int``, use this as the absolute number of blocks. If a ``float``, must
         be \
         in the range (0.0, 1.0) and denotes a block size relative to the total number \
         samples. (default: 0.5)
-    :param random_state: random state to initialise the random generator with (optional)
     """
 
     def __init__(
