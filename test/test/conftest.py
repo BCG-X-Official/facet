@@ -40,6 +40,9 @@ log = logging.getLogger(__name__)
 # disable SHAP debugging messages
 logging.getLogger("shap").setLevel(logging.WARNING)
 
+# configure pandas text output
+pd.set_option("display.width", None)  # get display width from terminal
+pd.set_option("precision", 3)  # 3 digits precision for easier readability
 
 K_FOLDS = 5
 N_BOOTSTRAPS = 30

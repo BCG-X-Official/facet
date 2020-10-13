@@ -8,7 +8,7 @@ from typing import List, Sequence, Set
 import numpy as np
 import pandas as pd
 import pytest
-from pandas.util.testing import assert_frame_equal
+from pandas.util.testing import assert_frame_equal, assert_series_equal
 from sklearn.datasets import make_classification
 from sklearn.model_selection import BaseCrossValidator, KFold
 
@@ -79,6 +79,18 @@ def iris_classifier_crossfit_multi_class(
     return iris_classifier_ranker_multi_class.best_model_crossfit
 
 
+@pytest.fixture
+def iris_inspector_multi_class(
+    iris_classifier_crossfit_multi_class: LearnerCrossfit[
+        ClassifierPipelineDF[RandomForestClassifierDF]
+    ],
+    n_jobs: int,
+) -> LearnerInspector[ClassifierPipelineDF[RandomForestClassifierDF]]:
+    return LearnerInspector(shap_interaction=True, n_jobs=n_jobs).fit(
+        crossfit=iris_classifier_crossfit_multi_class
+    )
+
+
 def test_model_inspection(
     regressor_grids: Sequence[LearnerGrid[RegressorPipelineDF]],
     regressor_ranker: LearnerRanker[RegressorPipelineDF],
@@ -100,7 +112,7 @@ def test_model_inspection(
         -0.074,
     ]
 
-    log.debug(f"\n{regressor_ranker.summary_report(max_learners=10)}")
+    log.debug(f"\n{regressor_ranker.summary_report()}")
 
     check_ranking(
         ranking=regressor_ranker.ranking,
@@ -168,7 +180,7 @@ def test_binary_classifier_ranking(iris_classifier_ranker_binary) -> None:
 
     expected_learner_scores = [0.872, 0.868, 0.866, 0.859]
 
-    log.debug(f"\n{iris_classifier_ranker_binary.summary_report(max_learners=10)}")
+    log.debug(f"\n{iris_classifier_ranker_binary.summary_report()}")
     check_ranking(
         ranking=iris_classifier_ranker_binary.ranking,
         expected_scores=expected_learner_scores,
@@ -259,22 +271,19 @@ def test_model_inspection_classifier_binary_single_shap_output() -> None:
 def test_model_inspection_classifier_multi_class(
     iris_sample: Sample,
     iris_classifier_crossfit_multi_class: LearnerCrossfit[ClassifierPipelineDF],
+    iris_inspector_multi_class: LearnerInspector[ClassifierPipelineDF],
     n_jobs: int,
 ) -> None:
 
-    model_inspector = LearnerInspector(shap_interaction=True, n_jobs=n_jobs).fit(
-        crossfit=iris_classifier_crossfit_multi_class
-    )
-
     # calculate the shap value matrix, without any consolidation
-    shap_values = model_inspector.shap_values(consolidate=None)
+    shap_values = iris_inspector_multi_class.shap_values(consolidate=None)
 
     # do the shap values add up to predictions minus a constant value?
     _validate_shap_values_against_predictions(
         shap_values=shap_values, crossfit=iris_classifier_crossfit_multi_class
     )
 
-    shap_matrix_mean = model_inspector.shap_values()
+    shap_matrix_mean = iris_inspector_multi_class.shap_values()
 
     # is the consolidation correct?
     assert_frame_equal(shap_matrix_mean, shap_values.mean(level=1))
@@ -285,7 +294,7 @@ def test_model_inspection_classifier_multi_class(
 
     # Shap decomposition matrices (feature dependencies)
 
-    assert model_inspector.feature_synergy_matrix().values == pytest.approx(
+    assert iris_inspector_multi_class.feature_synergy_matrix().values == pytest.approx(
         np.array(
             [
                 [1.0, 0.069, 0.081, 0.061, 1.0, 0.098]
@@ -300,40 +309,46 @@ def test_model_inspection_classifier_multi_class(
         ),
         abs=0.02,
     )
-    assert model_inspector.feature_redundancy_matrix().values == pytest.approx(
-        np.array(
-            [
-                [1.0, 0.145, 0.418, 0.402, 1.0, 0.163]
-                + [0.149, 0.144, 1.0, 0.011, 0.322, 0.326],
-                [0.145, 1.0, 0.056, 0.053, 0.163, 1.0]
-                + [0.034, 0.033, 0.011, 1.0, 0.0, 0.004],
-                [0.418, 0.056, 1.0, 0.968, 0.149, 0.034]
-                + [1.0, 0.63, 0.322, 0.0, 1.0, 0.803],
-                [0.402, 0.053, 0.968, 1.0, 0.144, 0.033]
-                + [0.63, 1.0, 0.326, 0.004, 0.803, 1.0],
-            ]
-        ),
-        abs=0.02,
+    assert iris_inspector_multi_class.feature_redundancy_matrix().values == (
+        pytest.approx(
+            np.array(
+                [
+                    [1.0, 0.145, 0.418, 0.402, 1.0, 0.163]
+                    + [0.149, 0.144, 1.0, 0.011, 0.322, 0.326],
+                    [0.145, 1.0, 0.056, 0.053, 0.163, 1.0]
+                    + [0.034, 0.033, 0.011, 1.0, 0.0, 0.004],
+                    [0.418, 0.056, 1.0, 0.968, 0.149, 0.034]
+                    + [1.0, 0.63, 0.322, 0.0, 1.0, 0.803],
+                    [0.402, 0.053, 0.968, 1.0, 0.144, 0.033]
+                    + [0.63, 1.0, 0.326, 0.004, 0.803, 1.0],
+                ]
+            ),
+            abs=0.02,
+        )
     )
-    assert model_inspector.feature_association_matrix().values == pytest.approx(
-        np.array(
-            [
-                [1.0, 0.098, 0.375, 0.373, 1.0, 0.109]
-                + [0.207, 0.205, 1.0, 0.013, 0.302, 0.301],
-                [0.098, 1.0, 0.056, 0.055, 0.109, 1.0]
-                + [0.038, 0.044, 0.013, 1.0, 0.0, 0.0],
-                [0.375, 0.056, 1.0, 0.982, 0.207, 0.038]
-                + [1.0, 0.764, 0.302, 0.0, 1.0, 0.755],
-                [0.373, 0.055, 0.982, 1.0, 0.205, 0.044]
-                + [0.764, 1.0, 0.301, 0.0, 0.755, 1.0],
-            ]
-        ),
-        abs=0.02,
+    assert iris_inspector_multi_class.feature_association_matrix().values == (
+        pytest.approx(
+            np.array(
+                [
+                    [1.0, 0.098, 0.375, 0.373, 1.0, 0.109]
+                    + [0.207, 0.205, 1.0, 0.013, 0.302, 0.301],
+                    [0.098, 1.0, 0.056, 0.055, 0.109, 1.0]
+                    + [0.038, 0.044, 0.013, 1.0, 0.0, 0.0],
+                    [0.375, 0.056, 1.0, 0.982, 0.207, 0.038]
+                    + [1.0, 0.764, 0.302, 0.0, 1.0, 0.755],
+                    [0.373, 0.055, 0.982, 1.0, 0.205, 0.044]
+                    + [0.764, 1.0, 0.301, 0.0, 0.755, 1.0],
+                ]
+            ),
+            abs=0.02,
+        )
     )
 
-    linkage_trees = model_inspector.feature_association_linkage()
+    linkage_trees = iris_inspector_multi_class.feature_association_linkage()
 
-    for output, linkage_tree in zip(model_inspector.outputs, linkage_trees):
+    for output, linkage_tree in zip(
+        iris_inspector_multi_class.output_names, linkage_trees
+    ):
         print()
         DendrogramDrawer(style=DendrogramReportStyle()).draw(
             data=linkage_tree, title=f"Iris feature association linkage: {output}"
@@ -534,6 +549,30 @@ def test_model_inspection_classifier_interaction_dual_target(
         LearnerInspector(n_jobs=n_jobs).fit(
             crossfit=iris_classifier_crossfit_dual_target
         )
+
+
+def test_shap_plot_data(
+    iris_sample,
+    iris_inspector_multi_class: LearnerInspector[ClassifierPipelineDF],
+) -> None:
+    shap_plot_data = iris_inspector_multi_class.shap_plot_data()
+    # noinspection SpellCheckingInspection
+    assert tuple(iris_inspector_multi_class.output_names) == (
+        "setosa",
+        "versicolor",
+        "virginica",
+    )
+
+    features_shape = shap_plot_data.features.shape
+    shap_values = shap_plot_data.shap_values
+    assert isinstance(shap_values, list)
+    assert len(shap_values) == 3
+    assert all(isinstance(shap, np.ndarray) for shap in shap_values)
+    assert all(shap.shape == features_shape for shap in shap_values)
+
+    shap_index = shap_plot_data.features.index
+    assert_frame_equal(shap_plot_data.features, iris_sample.features.loc[shap_index])
+    assert_series_equal(shap_plot_data.target, iris_sample.target.loc[shap_index])
 
 
 def _fit_learner_ranker(

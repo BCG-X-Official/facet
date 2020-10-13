@@ -2,7 +2,7 @@
 Core implementation of :mod:`facet.inspection`
 """
 import logging
-from typing import Generic, List, Optional, TypeVar, Union, cast
+from typing import Generic, List, NamedTuple, Optional, Sequence, TypeVar, Union, cast
 
 import numpy as np
 import pandas as pd
@@ -16,11 +16,10 @@ from pytools.viz.dendrogram import LinkageTree
 from sklearndf import ClassifierDF, LearnerDF, RegressorDF
 from sklearndf.pipeline import LearnerPipelineDF
 
-from ._explainer import TreeExplainerFactory
+from ._explainer import ExplainerFactory, TreeExplainerFactory
 from ._shap import (
     ClassifierShapInteractionValuesCalculator,
     ClassifierShapValuesCalculator,
-    ExplainerFactory,
     RegressorShapInteractionValuesCalculator,
     RegressorShapValuesCalculator,
     ShapCalculator,
@@ -35,8 +34,7 @@ from facet.inspection._shap_decomposition import (
 
 log = logging.getLogger(__name__)
 
-__all__ = ["LearnerInspector"]
-
+__all__ = ["ShapPlotData", "LearnerInspector"]
 #
 # Type variables
 #
@@ -55,6 +53,23 @@ __tracker = AllTracker(globals())
 #
 # Class definitions
 #
+
+
+class ShapPlotData(NamedTuple):
+    """
+    Data for use in SHAP plots provided by the SHAP package (:module:`shap`)
+    """
+
+    #: Matrix of SHAP values (# observations x # features)
+    #: or list of shap value matrices for multi-output models
+    shap_values: Union[np.ndarray, List[np.ndarray]]
+
+    #: Matrix of feature values (# observations x #features)
+    features: pd.DataFrame
+
+    #: Series of target values (# observations)
+    #: or matrix of target values for multi-output models (# observations x # outputs)
+    target: Union[pd.Series, pd.DataFrame]
 
 
 @inheritdoc(match="[see superclass]")
@@ -278,7 +293,7 @@ class LearnerInspector(
         return self.crossfit.sample
 
     @property
-    def outputs(self) -> List[str]:
+    def output_names(self) -> Sequence[str]:
         """
         The names of the outputs explained by this inspector.
 
@@ -292,24 +307,7 @@ class LearnerInspector(
         """
 
         self._ensure_fitted()
-
-        estimator_df: LearnerDF = self.crossfit.pipeline.final_estimator
-
-        if isinstance(estimator_df, ClassifierDF):
-            try:
-                # noinspection PyUnresolvedReferences
-                classes = estimator_df.classes_
-                # for binary classifiers, we will only produce SHAP values for the first
-                # class (since they would only be mirrored by the second class)
-                return classes[:1] if len(classes) == 2 else classes
-            except AttributeError as cause:
-                raise TypeError(
-                    f"underlying {type(estimator_df.__name__)} "
-                    "does not implement 'classes_' attribute: "
-                ) from cause
-
-        else:
-            return self.crossfit.sample.target_columns
+        return self._shap_calculator.output_names_
 
     @property
     def features(self) -> List[str]:
@@ -396,7 +394,7 @@ class LearnerInspector(
         :attr:`.sample`.
 
         :param method: method for calculating feature importance. Supported methods \
-            are ``rms`` (root of mean squares, default) and ``mav`` (mean absolute \
+            are ``rms`` (root of mean squares, default), ``mav`` (mean absolute \
             values)
         :return: a series of length `n_features` for single-output models, or a \
             data frame of shape (n_features, n_outputs) for multi-output models
@@ -433,7 +431,7 @@ class LearnerInspector(
             LearnerInspector.COL_IMPORTANCE
         )
 
-        if len(self.outputs) > 1:
+        if len(self.output_names) > 1:
             assert (
                 abs_importance.index.nlevels == 2
             ), "2 index levels in place for multi-output models"
@@ -462,7 +460,7 @@ class LearnerInspector(
 
         In the case of multi-target regression and non-binary classification, returns
         a data frame with one matrix per output, stacked horizontally, and with a
-        hiearchical column index (target/class name on level 1, and feature name on
+        hierarchical column index (target/class name on level 1, and feature name on
         level 2).
 
         :return: feature association matrix as a data frame of shape \
@@ -618,7 +616,7 @@ class LearnerInspector(
 
         In the case of multi-target regression and non-binary classification, returns
         a data frame with one matrix per output, stacked horizontally, and with a
-        hiearchical column index (target/class name on level 1, and feature name on
+        hierarchical column index (target/class name on level 1, and feature name on
         level 2).
 
         :return: relative shap interaction values as a data frame of shape \
@@ -626,7 +624,7 @@ class LearnerInspector(
         """
 
         n_features = len(self.features)
-        n_outputs = len(self.outputs)
+        n_outputs = len(self.output_names)
 
         # get a feature interaction array with shape
         # (n_observations, n_outputs, n_features, n_features)
@@ -674,12 +672,61 @@ class LearnerInspector(
         # create a data frame from the feature matrix
         return self._feature_matrix_to_df(interaction_matrix)
 
+    def shap_plot_data(self) -> ShapPlotData:
+        """
+        Consolidate SHAP values and corresponding feature values from this inspector
+        for use in SHAP plots offered by the :module:`shap` package.
+
+        The _shap_ package provides functions for creating various SHAP plots.
+        Most of these functions require
+
+        - one or more SHAP value matrices as a single _numpy_ array, or a list of \
+            _numpy_ arrays of shape _(n_observations, n_features)_
+        - a feature matrix of shape _(n_observations, n_features)_, which can be \
+            provided as a data frame to preserve feature names
+
+        This method provides this data inside a :class:`.ShapPlotData` object, plus
+
+        - the names of all outputs (i.e., the target names in case of regression, \
+            or the class names in case of classification)
+        - corresponding target values as a series, or as a data frame in the case of \
+            multiple targets
+
+        This method also ensures that the rows of all arrays, frames, and series are
+        aligned, even if only a subset of the observations in the original sample was
+        used to calculate SHAP values.
+
+        Calculates mean shap values for each observation and feature, across all
+        splits for which SHAP values were calculated.
+
+        :return: consolidated SHAP and feature values for use shap plots
+        """
+
+        shap_values: pd.DataFrame = self.shap_values(consolidate="mean")
+        sample: Sample = self.crossfit.sample.subsample(loc=shap_values.index)
+
+        output_names = self.output_names
+
+        if len(output_names) > 1:
+            shap_values_numpy = [
+                shap_values.xs(output_name, axis=1).values
+                for output_name in output_names
+            ]
+        else:
+            shap_values_numpy = shap_values.values
+
+        return ShapPlotData(
+            shap_values=shap_values_numpy,
+            features=sample.features,
+            target=sample.target,
+        )
+
     def _feature_matrix_to_df(self, matrix: np.ndarray) -> pd.DataFrame:
         # transform a matrix of shape (n_outputs, n_features, n_features)
         # to a data frame
 
         n_features = len(self.features)
-        n_outputs = len(self.outputs)
+        n_outputs = len(self.output_names)
 
         assert matrix.shape == (n_outputs, n_features, n_features)
 

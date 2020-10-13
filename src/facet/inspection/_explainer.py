@@ -142,6 +142,7 @@ class TreeExplainerFactory(ExplainerFactory):
 
     @property
     def uses_background_dataset(self) -> bool:
+        """[see superclass]"""
         return self._uses_background_dataset
 
     def make_explainer(
@@ -210,6 +211,7 @@ class KernelExplainerFactory(ExplainerFactory):
 
     @property
     def uses_background_dataset(self) -> bool:
+        """[see superclass]"""
         return True
 
     def make_explainer(self, model: LearnerDF, data: pd.DataFrame) -> Explainer:
