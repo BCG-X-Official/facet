@@ -96,18 +96,10 @@ Enhanced machine learning workflow
     ranker = LearnerRanker(grids=rforest_grid, cv=rkf_cv, n_jobs=-3).fit(sample=boston_obs)
 
     # get summary report
-    print(ranker.summary_report())
+    ranker.summary_report()
 
-.. code-block:: RST
-
-    Rank  1: RandomForestRegressorDF, ranking_score=    0.722, scores_mean=    0.813,
-    scores_std=   0.0455, parameters={regressor__min_samples_leaf=8}
-
-    Rank  2: RandomForestRegressorDF, ranking_score=    0.707, scores_mean=    0.802,
-    scores_std=   0.0471, parameters={regressor__min_samples_leaf=11}
-
-    Rank  3: RandomForestRegressorDF, ranking_score=    0.693, scores_mean=    0.789,
-    scores_std=   0.0481, parameters={regressor__min_samples_leaf=15}
+.. image:: _static/ranker_summary.png
+    :width: 600
 
 Model Inspection
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -118,19 +110,20 @@ Fundamentally, facet enables post-hoc model inspection by breaking down the inte
 effects of the variables that your model used for training:
 
 - **Redundancy**
-  Redundancy represents how much information is shared between two features
-  contributions to the model predictions. For example, given features X and Y as
-  coordinates on a chess board, the colour of a square can only be predicted when
-  considering X and Y in combination. Redundancy is expressed as a percentage ranging
-  from 0% (full uniqueness) to 100% (full redundancy).
-
-- **Synergy**
-  Synergy represents how much the combined information of two features contributes to
-  the model predictions. For example, temperature and pressure in a pressure cooker are
+  represents how much information is shared between two features
+  contributions to the model predictionsFor example, temperature and pressure in a pressure cooker are
   redundant features for predicting cooking time since pressure will rise relative to
   the temperature, and vice versa. Therefore, knowing just one of either temperature or
-  pressure will likely enable the same predictive accuracy. Synergy is expressed as a
+  pressure will likely enable the same predictive accuracy. Redundancy is expressed as
+  a percentage ranging from 0% (full uniqueness) to 100% (full redundancy).
+
+- **Synergy**
+  represents how much the combined information of two features contributes to
+  the model predictions. For example, given features X and Y as
+  coordinates on a chess board, the colour of a square can only be predicted when
+  considering X and Y in combination. Synergy is expressed as a
   percentage ranging from 0% (full autonomy) to 100% (full synergy)
+
 
 
 .. code-block:: Python
@@ -146,7 +139,7 @@ effects of the variables that your model used for training:
     MatrixDrawer(style="matplot%").draw(redundancy_matrix, title="Redundancy Matrix")
 
 .. image:: _static/redundancy_matrix.png
-    :width: 400
+    :width: 600
 
 We can also better visualize redundancy as a dendrogram so we can identify clusters of features with redundancy.
 
@@ -158,7 +151,7 @@ We can also better visualize redundancy as a dendrogram so we can identify clust
     DendrogramDrawer().draw(data=redundancy, title="Redundancy Dendrogram")
 
 .. image:: _static/redundancy_dendrogram.png
-    :width: 400
+    :width: 600
 
 For feature synergy, we can get a similar picture
 
@@ -169,7 +162,7 @@ For feature synergy, we can get a similar picture
     MatrixDrawer(style="matplot%").draw(synergy_matrix, title="Synergy Matrix")
 
 .. image:: _static/synergy_matrix.png
-    :width: 400
+    :width: 600
 
 Please see the API documentation for more detail.
 
@@ -215,7 +208,7 @@ Model Simulation
 
     <p>Download the getting started tutorial and explore FACET for yourself by clicking
     here:
-    <a href="https://github.gamma.bcg.com/pages/facet/facet/tutorial/Classification_Water_Drilling_Simulation.html" target="_blank">
+    <a href="https://github.com/BCG-Gamma/facet/blob/develop/sphinx/auxiliary/Boston_getting_started_example.ipynb" target="_blank">
     <img src="https://mybinder.org/badge_logo.svg"></a>
     </p>
 
