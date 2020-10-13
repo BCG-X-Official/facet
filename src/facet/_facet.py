@@ -7,7 +7,7 @@ from typing import Any, Collection, Iterable, List, Optional, Sequence, Set, Uni
 
 import pandas as pd
 
-from pytools.api import AllTracker, is_list_like, to_list, to_set
+from pytools.api import AllTracker, to_list, to_set
 
 __all__ = ["Sample"]
 
@@ -61,15 +61,15 @@ class Sample:
         self,
         observations: pd.DataFrame,
         *,
-        target_names: Union[str, Sequence[str]],
+        target_name: Union[str, Sequence[str]],
         feature_names: Optional[Sequence[str]] = None,
         weight_name: Optional[str] = None,
     ) -> None:
         """
         :param observations: a table of observational data; \
             each row represents one observation
-        :param target_names: one or more names of columns representing the target \
-            variable(s)
+        :param target_name: the name of the column representing the target \
+            variable; or a list of names representing multiple targets
         :param feature_names: optional sequence of strings naming the columns that \
             represent features; if omitted, all non-target and non-weight columns are
             considered features
@@ -80,13 +80,13 @@ class Sample:
         def _ensure_columns_exist(column_type: str, columns: Iterable[str]):
             # check if all provided feature names actually exist in the observations df
             available_columns: pd.Index = observations.columns
-            missing_columns = [
+            missing_columns = {
                 name for name in columns if name not in available_columns
-            ]
+            }
             if missing_columns:
                 raise KeyError(
                     f"observations table is missing {column_type} columns "
-                    f"{', '.join(missing_columns)}"
+                    f"{missing_columns}"
                 )
 
         # check that the observations are valid
@@ -104,20 +104,11 @@ class Sample:
 
         # process the target(s)
 
-        targets_list: List[str]
+        targets_list: List[str] = to_list(
+            target_name, element_type=str, arg_name="target_name"
+        )
 
-        multi_target = is_list_like(target_names)
-
-        if multi_target:
-            _ensure_columns_exist(column_type="target_names", columns=target_names)
-            targets_list = list(target_names)
-        else:
-            if target_names not in observations.columns:
-                raise KeyError(
-                    f'arg target_names="{target_names}" '
-                    "is not a column in the observations table"
-                )
-            targets_list = [target_names]
+        _ensure_columns_exist(column_type="target", columns=targets_list)
 
         self._target_names = targets_list
 
@@ -146,20 +137,14 @@ class Sample:
             features_list = _feature_index.to_list()
         else:
             _ensure_columns_exist(column_type="feature", columns=feature_names)
-            features_list = list(feature_names)
+            features_list = to_list(
+                feature_names, element_type=str, arg_name="feature_names"
+            )
 
             # ensure features and target(s) do not overlap
-            if multi_target:
-                shared = set(targets_list).intersection(features_list)
-                if len(shared) > 0:
-                    raise KeyError(
-                        f"targets {shared} are also included in the features"
-                    )
-            else:
-                if target_names in feature_names:
-                    raise KeyError(
-                        f"target {target_names} is also included in the features"
-                    )
+            shared = set(targets_list).intersection(features_list)
+            if len(shared) > 0:
+                raise KeyError(f"targets {shared} are also included in the features")
 
         self._feature_names = features_list
 
@@ -191,16 +176,20 @@ class Sample:
         return self._feature_names
 
     @property
-    def target_names(self) -> List[str]:
+    def target_name(self) -> Union[str, List[str]]:
         """
-        The column names of all targets in this sample
+        The column name of the target in this sample, or a list of column names
+        if this sample has multiple targets
         """
-        return self._target_names
+        if len(self._target_names) == 1:
+            return self._target_names[0]
+        else:
+            return self._target_names
 
     @property
     def weight_name(self) -> Optional[str]:
         """
-        The column name of weights in this sample; ``None`` if no weights are defined.
+        The column name of weights in this sample; ``None`` if no weights are defined
         """
         return self._weight_name
 
@@ -224,7 +213,7 @@ class Sample:
         Represented as a series if there is only a single target, or as a data frame if
         there are multiple targets.
         """
-        target = self.target_names
+        target = self._target_names
 
         if len(target) == 1:
             return self._observations.loc[:, target[0]]

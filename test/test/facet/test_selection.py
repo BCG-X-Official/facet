@@ -162,7 +162,7 @@ def test_model_ranker_no_preprocessing(n_jobs) -> None:
         data=np.c_[iris["data"], iris["target"]],
         columns=[*iris["feature_names"], "target"],
     )
-    test_sample: Sample = Sample(observations=test_data, target_names="target")
+    test_sample: Sample = Sample(observations=test_data, target_name="target")
 
     model_ranker: LearnerRanker[ClassifierPipelineDF[SVCDF]] = LearnerRanker(
         grids=models, cv=cv, n_jobs=n_jobs

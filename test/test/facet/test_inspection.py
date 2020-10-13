@@ -251,7 +251,7 @@ def test_model_inspection_classifier_binary_single_shap_output() -> None:
     )
 
     # create sample object
-    sample_df = Sample(observations=sim_df, target_names="target")
+    sample_df = Sample(observations=sim_df, target_name="target")
 
     # fit the crossfit
     crossfit = LearnerCrossfit(
@@ -532,7 +532,7 @@ def test_model_inspection_classifier_interaction_dual_target(
     iris_classifier_ranker_dual_target: LearnerRanker[
         ClassifierPipelineDF[RandomForestClassifierDF]
     ],
-    iris_target: str,
+    iris_target_name,
     n_jobs: int,
 ) -> None:
     iris_classifier_crossfit_dual_target = (
@@ -543,7 +543,7 @@ def test_model_inspection_classifier_interaction_dual_target(
         ValueError,
         match=(
             f"only single-output classifiers .* are supported.*"
-            f"{iris_target}.*{iris_target}2"
+            f"{iris_target_name}.*{iris_target_name}2"
         ),
     ):
         LearnerInspector(n_jobs=n_jobs).fit(

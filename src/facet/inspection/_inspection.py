@@ -209,12 +209,12 @@ class LearnerInspector(
         learner: LearnerDF = crossfit.pipeline.final_estimator
 
         if isinstance(learner, ClassifierDF):
-            if len(crossfit.sample.target_names) != 1:
+            if isinstance(crossfit.sample.target_name, list):
                 raise ValueError(
                     "only single-output classifiers (binary or multi-class) are "
                     "supported, but the classifier in the given crossfit has been "
                     "fitted on multiple columns "
-                    f"{crossfit.sample.target_names}"
+                    f"{crossfit.sample.target_name}"
                 )
 
             is_classifier = True

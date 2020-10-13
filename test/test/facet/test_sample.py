@@ -14,17 +14,17 @@ def test_sample_init(boston_df: pd.DataFrame, boston_target: str) -> None:
     # 1.1 None
     with pytest.raises(ValueError):
         # noinspection PyTypeChecker
-        Sample(observations=None, target_names=boston_target)
+        Sample(observations=None, target_name=boston_target)
 
     # 1.2 not a DF
     with pytest.raises(ValueError):
         # noinspection PyTypeChecker
-        Sample(observations=[], target_names=boston_target)
+        Sample(observations=[], target_name=boston_target)
 
     # 2. no features and no target specified
-    with pytest.raises(KeyError):
+    with pytest.raises(TypeError):
         # noinspection PyTypeChecker
-        Sample(observations=boston_df, target_names=None)
+        Sample(observations=boston_df, target_name=None)
 
     # store list of feature columns:
     f_columns = list(boston_df.columns)
@@ -37,7 +37,7 @@ def test_sample_init(boston_df: pd.DataFrame, boston_target: str) -> None:
         Sample(
             observations=boston_df,
             feature_names=f_columns_invalid,
-            target_names=boston_target,
+            target_name=boston_target,
         )
 
     # 2.2 invalid target column specified
@@ -45,7 +45,7 @@ def test_sample_init(boston_df: pd.DataFrame, boston_target: str) -> None:
         Sample(
             observations=boston_df,
             feature_names=f_columns,
-            target_names="doesnt_exist",
+            target_name="doesnt_exist",
         )
 
     # 3. column is target and also feature
@@ -55,14 +55,14 @@ def test_sample_init(boston_df: pd.DataFrame, boston_target: str) -> None:
         Sample(
             observations=boston_df,
             feature_names=f_columns_invalid,
-            target_names=boston_target,
+            target_name=boston_target,
         )
 
     # 4. weight column is not defined
     with pytest.raises(KeyError):
         Sample(
             observations=boston_df,
-            target_names=boston_target,
+            target_name=boston_target,
             weight_name="doesnt_exist",
         )
 
@@ -85,7 +85,7 @@ def test_sample(boston_df: pd.DataFrame, boston_target: str) -> None:
     feature_columns = list(boston_df.drop(columns=boston_target).columns)
     s = Sample(
         observations=boston_df,
-        target_names=boston_target,
+        target_name=boston_target,
         feature_names=feature_columns,
         weight_name=boston_target,
     )
@@ -95,7 +95,7 @@ def test_sample(boston_df: pd.DataFrame, boston_target: str) -> None:
 
     # test implicit setting of features by only giving the target
     s2 = Sample(
-        observations=boston_df, target_names=boston_target, weight_name=boston_target
+        observations=boston_df, target_name=boston_target, weight_name=boston_target
     )
 
     # _rank_learners the checks on s2:

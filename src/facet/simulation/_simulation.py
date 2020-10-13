@@ -153,7 +153,7 @@ class BaseUnivariateSimulator(
         if not crossfit.is_fitted:
             raise ValueError("arg crossfit expected to be fitted")
 
-        if not isinstance(crossfit.sample.target, pd.Series):
+        if isinstance(crossfit.sample.target_name, list):
             raise NotImplementedError("multi-output simulations are not supported")
 
         if not 0 <= percentile_lower <= 100:
@@ -189,7 +189,7 @@ class BaseUnivariateSimulator(
 
         sample = self.crossfit.sample
 
-        if len(sample.target_names) > 1:
+        if isinstance(sample.target_name, list):
             raise NotImplementedError("multi-output simulations are not supported")
 
         simulation_values = partitioner.fit(sample.features.loc[:, name]).partitions()
@@ -200,7 +200,7 @@ class BaseUnivariateSimulator(
         )
         return UnivariateSimulation(
             feature=name,
-            target=sample.target_names[0],
+            target=sample.target_name,
             partitioner=partitioner,
             values_label=self.values_label,
             values_median=simulation_results.iloc[:, 1].values,
@@ -515,7 +515,7 @@ class _UnivariateTargetSimulator(BaseUnivariateSimulator[RegressorPipelineDF]):
     @property
     def values_label(self) -> str:
         """[see superclass]"""
-        return f"Mean predicted target ({self.crossfit.sample.target_names[0]})"
+        return f"Mean predicted target ({self.crossfit.sample.target_name})"
 
     @property
     def baseline(self) -> float:
@@ -577,7 +577,7 @@ class UnivariateUpliftSimulator(BaseUnivariateSimulator[RegressorPipelineDF]):
     @property
     def values_label(self) -> str:
         """[see superclass]"""
-        return f"Mean predicted uplift ({self.crossfit.sample.target_names[0]})"
+        return f"Mean predicted uplift ({self.crossfit.sample.target_name})"
 
     @property
     def baseline(self) -> float:
