@@ -4,7 +4,7 @@ import pytest
 from joblib import Parallel, delayed
 from pandas.testing import assert_frame_equal
 
-from facet import Sample
+from facet.data import Sample
 
 
 def test_sample_init(boston_df: pd.DataFrame, boston_target: str) -> None:

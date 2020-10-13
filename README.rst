@@ -69,7 +69,7 @@ Pipelining and Model Ranking
     from sklearndf.regression import RandomForestRegressorDF
 
     # relevant FACET imports
-    from facet import Sample
+    from facet.data import Sample
     from facet.selection import LearnerRanker, LearnerGrid
 
     # load Boston housing dataset

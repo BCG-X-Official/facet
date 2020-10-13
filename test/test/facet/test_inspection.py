@@ -21,8 +21,8 @@ from sklearndf.classification import (
 from sklearndf.pipeline import ClassifierPipelineDF, RegressorPipelineDF
 
 from . import check_ranking
-from facet import Sample
 from facet.crossfit import LearnerCrossfit
+from facet.data import Sample
 from facet.inspection import (
     KernelExplainerFactory,
     LearnerInspector,

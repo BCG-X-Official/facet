@@ -36,7 +36,7 @@ from sklearndf.pipeline import (
     RegressorPipelineDF,
 )
 
-from facet import Sample
+from facet.data import Sample
 
 log = logging.getLogger(__name__)
 

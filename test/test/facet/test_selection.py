@@ -20,8 +20,8 @@ from sklearndf.regression import (
 from sklearndf.regression.extra import LGBMRegressorDF
 
 from . import check_ranking
-from facet import Sample
 from facet.crossfit import LearnerCrossfit
+from facet.data import Sample
 from facet.selection import LearnerEvaluation, LearnerGrid, LearnerRanker
 from facet.validation import BootstrapCV
 

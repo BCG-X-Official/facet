@@ -1,7 +1,8 @@
 """
-Core implementation of :mod:`facet`
+Core implementation of :mod:`facet.data`
 """
 
+import logging
 from copy import copy
 from typing import Any, Collection, Iterable, List, Optional, Sequence, Set, Union
 
@@ -9,7 +10,10 @@ import pandas as pd
 
 from pytools.api import AllTracker, to_list, to_set
 
+log = logging.getLogger(__name__)
+
 __all__ = ["Sample"]
+
 
 #
 # Ensure all symbols introduced below are included in __all__

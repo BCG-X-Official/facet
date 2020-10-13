@@ -28,8 +28,8 @@ from sklearndf.transformation import (
 )
 
 from .facet import STEP_IMPUTE, STEP_ONE_HOT_ENCODE
-from facet import Sample
 from facet.crossfit import LearnerCrossfit
+from facet.data import Sample
 from facet.inspection import LearnerInspector, TreeExplainerFactory
 from facet.selection import LearnerEvaluation, LearnerGrid, LearnerRanker
 from facet.validation import BootstrapCV, StratifiedBootstrapCV

@@ -7,7 +7,7 @@ from sklearndf.pipeline import ClassifierPipelineDF, RegressorPipelineDF
 from sklearndf.regression import RandomForestRegressorDF
 
 from . import check_ranking
-from facet import Sample
+from facet.data import Sample
 from facet.selection import LearnerGrid, LearnerRanker
 from facet.validation import StratifiedBootstrapCV
 

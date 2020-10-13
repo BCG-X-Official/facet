@@ -20,8 +20,8 @@ from sklearndf.pipeline import (
 )
 
 from ._explainer import ExplainerFactory
-from facet import Sample
 from facet.crossfit import LearnerCrossfit
+from facet.data import Sample
 
 log = logging.getLogger(__name__)
 

@@ -25,8 +25,8 @@ from ._shap import (
     ShapCalculator,
     ShapInteractionValuesCalculator,
 )
-from facet import Sample
 from facet.crossfit import LearnerCrossfit
+from facet.data import Sample
 from facet.inspection._shap_decomposition import (
     ShapInteractionValueDecomposer,
     ShapValueDecomposer,
@@ -383,7 +383,7 @@ class LearnerInspector(
         )
 
     def feature_importance(
-        self, *, method: str = "rms"
+        self, *, method: str = "rms", ci: bool = False
     ) -> Union[pd.Series, pd.DataFrame]:
         """
         Calculate the relative importance of each feature based on SHAP values.
@@ -396,15 +396,14 @@ class LearnerInspector(
         :param method: method for calculating feature importance. Supported methods \
             are ``rms`` (root of mean squares, default), ``mav`` (mean absolute \
             values)
+        :param ci: use bootstrapping to calculate the confidence interval
         :return: a series of length `n_features` for single-output models, or a \
             data frame of shape (n_features, n_outputs) for multi-output models
         """
 
-        methods = ["rms", "mav"]
+        methods = {"rms", "mav"}
         if method not in methods:
-            raise ValueError(
-                f'arg method="{method}" must be one of {{{", ".join(methods)}}}'
-            )
+            raise ValueError(f'arg method="{method}" must be one of {methods}')
 
         shap_matrix = self.shap_values(consolidate="mean")
         weight = self.training_sample.weight
@@ -415,13 +414,12 @@ class LearnerInspector(
                 abs_importance = shap_matrix.pow(2).mean().pow(0.5)
             else:
                 abs_importance = shap_matrix.pow(2).mul(weight, axis=0).mean().pow(0.5)
-        elif method == "mav":
+        else:
+            assert method == "mav", f"method is in {methods}"
             if weight is None:
                 abs_importance = shap_matrix.abs().mean()
             else:
                 abs_importance = shap_matrix.abs().mul(weight, axis=0).mean()
-        else:
-            raise ValueError(f"unknown method: {method}")
 
         total_importance: float = abs_importance.sum()
 

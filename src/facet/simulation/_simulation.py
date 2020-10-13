@@ -29,8 +29,8 @@ from sklearndf.pipeline import (
     RegressorPipelineDF,
 )
 
-from .. import Sample
 from ..crossfit import LearnerCrossfit
+from ..data import Sample
 from .partition import Partitioner
 
 log = logging.getLogger(__name__)

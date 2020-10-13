@@ -9,8 +9,8 @@ from sklearndf import TransformerDF
 from sklearndf.pipeline import RegressorPipelineDF
 from sklearndf.regression.extra import LGBMRegressorDF
 
-from facet import Sample
 from facet.crossfit import LearnerCrossfit
+from facet.data import Sample
 from facet.simulation import UnivariateUpliftSimulator
 from facet.simulation.partition import ContinuousRangePartitioner
 from facet.simulation.viz import SimulationDrawer
