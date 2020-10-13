@@ -239,7 +239,7 @@ def boston_df(boston_target: str) -> pd.DataFrame:
 
 @pytest.fixture
 def sample(boston_df: pd.DataFrame, boston_target: str) -> Sample:
-    return Sample(observations=boston_df.iloc[:100, :], target=boston_target)
+    return Sample(observations=boston_df.iloc[:100, :], target_names=boston_target)
 
 
 @pytest.fixture
@@ -263,7 +263,9 @@ def iris_df(iris_target: str) -> pd.DataFrame:
 def iris_sample(iris_df: pd.DataFrame, iris_target: str) -> Sample:
     # the iris dataset
     return Sample(
-        observations=iris_df.assign(weight=2.0), target=iris_target, weight="weight"
+        observations=iris_df.assign(weight=2.0),
+        target_names=iris_target,
+        weight_name="weight",
     )
 
 
@@ -288,5 +290,5 @@ def iris_sample_binary_dual_target(
     iris_target_2 = f"{iris_target}2"
     return Sample(
         iris_sample_binary.features.join(target).join(target.rename(iris_target_2)),
-        target=[*iris_sample_binary.target_columns, iris_target_2],
+        target_names=[*iris_sample_binary.target_names, iris_target_2],
     )

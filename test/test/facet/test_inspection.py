@@ -251,7 +251,7 @@ def test_model_inspection_classifier_binary_single_shap_output() -> None:
     )
 
     # create sample object
-    sample_df = Sample(observations=sim_df, target="target")
+    sample_df = Sample(observations=sim_df, target_names="target")
 
     # fit the crossfit
     crossfit = LearnerCrossfit(
@@ -462,7 +462,7 @@ def test_model_inspection_classifier_interaction(
     ).abs().max().max() < 0.015
 
     # the column names of the shap value data frames are the feature names
-    feature_columns = iris_sample_binary.feature_columns
+    feature_columns = iris_sample_binary.feature_names
     assert shap_values.columns.to_list() == feature_columns
     assert shap_interaction_values.columns.to_list() == feature_columns
 

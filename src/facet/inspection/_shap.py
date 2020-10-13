@@ -590,7 +590,7 @@ class RegressorShapCalculator(ShapCalculator[RegressorPipelineDF], metaclass=ABC
 
     @staticmethod
     def _output_names(crossfit: LearnerCrossfit[RegressorPipelineDF]) -> List[str]:
-        return crossfit.sample.target_columns
+        return crossfit.sample.target_names
 
     @staticmethod
     def multi_output_type() -> str:
@@ -599,7 +599,7 @@ class RegressorShapCalculator(ShapCalculator[RegressorPipelineDF], metaclass=ABC
     def _multi_output_names(
         self, model: RegressorPipelineDF, sample: Sample
     ) -> List[str]:
-        return sample.target_columns
+        return sample.target_names
 
     def _concatenate_splits(
         self, shap_df_per_split: List[pd.DataFrame]
@@ -672,7 +672,7 @@ class ClassifierShapCalculator(ShapCalculator[ClassifierPipelineDF], metaclass=A
     @staticmethod
     def _output_names(crossfit: LearnerCrossfit[ClassifierPipelineDF]) -> List[str]:
         assert (
-            len(crossfit.sample.target_columns) == 1
+            len(crossfit.sample.target_names) == 1
         ), "classification model is single-output"
         classifier_df = crossfit.pipeline.final_estimator
         assert classifier_df.is_fitted, "classifier used in crossfit must be fitted"
