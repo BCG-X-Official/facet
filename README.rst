@@ -32,21 +32,19 @@ Quickstart
 
 Facet is composed of the following key components:
 
-- **sklearndf**:
-    An augmented version of scikit-learn with enhanced support for pandas dataframes
-    and pipelining.
-
 - **Enhanced machine learning workflow**:
     Facet delivers a robust and fail-safe pipelining
     workflow which allows you to easily impute and select your features as well as
-    ranking a grid of different models "competing" against each other
+    ranking a grid of different models "competing" against each other. Facet introduces
+    **sklearndf**, An augmented version of scikit-learn with enhanced support for pandas
+    dataframes and pipelining.
 
 - **Model Inspection**:
     Local explanations of features and their interactions make up a key
     component of understanding feature importance as well as feature interactions.
     This is based on a novel method which decomposes
     `SHAP values <https://shap.readthedocs.io/en/latest/>`_ into
-    three vectors representing **synergy**, **redundancy**, and **independence**.
+    three vectors representing **synergy** and **redundancy**.
 
 - **Model Simulation**:
     Use your trained model and the insights from the model inspection
@@ -54,7 +52,7 @@ Facet is composed of the following key components:
     identify local optima.
 
 
-Pipelining and Model Ranking
+Enhanced machine learning workflow
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: Python
@@ -111,11 +109,11 @@ Pipelining and Model Ranking
     Rank  3: RandomForestRegressorDF, ranking_score=    0.693, scores_mean=    0.789,
     scores_std=   0.0481, parameters={regressor__min_samples_leaf=15}
 
-Easy model inspection
+Model Inspection
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Facet implements several model inspection methods for
-`scikit-learn <https://scikit-learn.org/stable/index.html>`_ base learners.
+`scikit-learn <https://scikit-learn.org/stable/index.html>`_ estimators.
 Fundamentally, facet enables post-hoc model inspection by breaking down the interaction
 effects of the variables that your model used for training:
 
@@ -168,7 +166,7 @@ For feature synergy, we can get a similar picture
 Please see the API documentation for more detail.
 
 
-Simulation
+Model Simulation
 ~~~~~~~~~~~~~~~~~~
 
 .. code-block:: Python
@@ -209,7 +207,7 @@ Simulation
 
     <p>Download the getting started tutorial and explore FACET for yourself by clicking
     here:
-    <a href="https://mybinder.org" target="_blank">
+    <a href="https://github.gamma.bcg.com/pages/facet/facet/tutorial/Classification_Water_Drilling_Simulation.html" target="_blank">
     <img src="https://mybinder.org/badge_logo.svg"></a>
     </p>
 
