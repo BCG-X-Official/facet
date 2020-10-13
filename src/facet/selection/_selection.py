@@ -420,12 +420,12 @@ class LearnerRanker(
 
         # define the columns of the resulting data frame
 
-        col_learner = "learner"
         col_ranking_score = "ranking_score"
         scoring_name = self.scoring_name
         col_scores_mean = f"{scoring_name}__mean"
         col_scores_std = f"{scoring_name}__std"
         col_scores_sem = f"{scoring_name}__sem"
+        col_learner_type = f"{self.grids[0].pipeline.final_estimator_name}__type"
 
         parameters: List[str] = []
         for grid in self.grids:
@@ -433,11 +433,11 @@ class LearnerRanker(
             parameters.extend(grid.parameters.keys() - parameters)
 
         columns = [
-            col_learner,
             col_ranking_score,
             col_scores_mean,
             col_scores_std,
             col_scores_sem,
+            col_learner_type,
             *parameters,
         ]
 
@@ -446,11 +446,13 @@ class LearnerRanker(
         report = pd.DataFrame.from_records(
             [
                 {
-                    col_learner: type(evaluation.pipeline.final_estimator).__name__,
                     col_ranking_score: evaluation.ranking_score,
                     col_scores_mean: evaluation.scores.mean(),
                     col_scores_std: evaluation.scores.std(ddof=1),
                     col_scores_sem: sem(evaluation.scores, ddof=1),
+                    col_learner_type: type(
+                        evaluation.pipeline.final_estimator
+                    ).__name__,
                     **evaluation.parameters,
                 }
                 for evaluation in (
