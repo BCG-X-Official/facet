@@ -223,7 +223,8 @@ Model Simulation
 Development Guidelines
 ---------------------------
 
-TBD - link to long section in documentation.
+We would be more than happy would you wish to contribute to Facet. See our
+:ref:`contribution-guide`.
 
 Acknowledgements
 ---------------------------
