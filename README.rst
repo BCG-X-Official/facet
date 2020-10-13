@@ -36,7 +36,7 @@ Facet is composed of the following key components:
     Facet delivers a robust and fail-safe pipelining
     workflow which allows you to easily impute and select your features as well as
     ranking a grid of different models "competing" against each other. Facet introduces
-    **sklearndf**, An augmented version of scikit-learn with enhanced support for pandas
+    **sklearndf**, an augmented version of scikit-learn with enhanced support for pandas
     dataframes and pipelining.
 
 - **Model Inspection**:
@@ -44,7 +44,7 @@ Facet is composed of the following key components:
     component of understanding feature importance as well as feature interactions.
     This is based on a novel method which decomposes
     `SHAP values <https://shap.readthedocs.io/en/latest/>`_ into
-    three vectors representing **synergy** and **redundancy**.
+    two vectors representing **synergy** and **redundancy**.
 
 - **Model Simulation**:
     Use your trained model and the insights from the model inspection
