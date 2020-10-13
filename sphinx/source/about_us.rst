@@ -52,24 +52,24 @@ okay that was the last geometry pun we promise.
 +-------------------+-------------------+-------------------+-------------------+
 +-------------------+-------------------+-------------------+-------------------+
 
-.. |JasonB| image:: _static/team_contributors/Jason_Bentley.svg
+.. |JasonB| image:: _static/team_contributors/Jason_Bentley.jpg
     :class: team_pic
 
-.. |MaloG| image:: _static/team_contributors/Malo_Grisard.svg
+.. |MaloG| image:: _static/team_contributors/Malo_Grisard.jpg
     :class: team_pic
 
-.. |KonstantinH| image:: _static/team_contributors/Konstantin_Hemker.svg
+.. |KonstantinH| image:: _static/team_contributors/Konstantin_Hemker.jpg
     :class: team_pic
 
-.. |JanI| image:: _static/team_contributors/Jan_Ittner.svg
+.. |JanI| image:: _static/team_contributors/Jan_Ittner.jpg
     :class: team_pic
 
-.. |RicardoK| image:: _static/team_contributors/Ricardo_Kennedy.svg
+.. |RicardoK| image:: _static/team_contributors/Ricardo_Kennedy.jpg
     :class: team_pic
 
-.. |FlorentM| image:: _static/team_contributors/Florent_Martin.svg
+.. |FlorentM| image:: _static/team_contributors/Florent_Martin.jpg
     :class: team_pic
 
-.. |JoergS| image:: _static/team_contributors/Joerg_Schneider.svg
+.. |JoergS| image:: _static/team_contributors/Joerg_Schneider.jpg
     :class: team_pic
 
