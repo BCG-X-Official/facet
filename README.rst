@@ -118,12 +118,20 @@ Fundamentally, facet enables post-hoc model inspection by breaking down the inte
 effects of the variables that your model used for training:
 
 - **Redundancy**
-  identifies groups of variables that fully or partially duplicate each
-  other and do not deliver any additional information to the machine learning model.
+  Redundancy represents how much information is shared between two features
+  contributions to the model predictions. For example, given features X and Y as
+  coordinates on a chess board, the colour of a square can only be predicted when
+  considering X and Y in combination. Redundancy is expressed as a percentage ranging
+  from 0% (full uniqueness) to 100% (full redundancy).
+
 - **Synergy**
-  provides visibility about how features contain complementary information
-  with respect to the target and team up to predict outcomes by combining their
-  information.
+  Synergy represents how much the combined information of two features contributes to
+  the model predictions. For example, temperature and pressure in a pressure cooker are
+  redundant features for predicting cooking time since pressure will rise relative to
+  the temperature, and vice versa. Therefore, knowing just one of either temperature or
+  pressure will likely enable the same predictive accuracy. Synergy is expressed as a
+  percentage ranging from 0% (full autonomy) to 100% (full synergy)
+
 
 .. code-block:: Python
 
