@@ -126,7 +126,7 @@ def test_model_ranker(
         for name, value in evaluation.parameters.items():
             assert (
                 name in pipeline_parameters
-            ), f"paramater {name} is a parameter in evaluation.pipeline"
+            ), f"parameter {name} is a parameter in evaluation.pipeline"
             assert (
                 pipeline_parameters[name] == value
             ), f"evaluation.pipeline.{name} is set to {value}"
@@ -160,7 +160,7 @@ def test_model_ranker_no_preprocessing(n_jobs) -> None:
     iris = datasets.load_iris()
     test_data = pd.DataFrame(
         data=np.c_[iris["data"], iris["target"]],
-        columns=iris["feature_names"] + ["target"],
+        columns=[*iris["feature_names"], "target"],
     )
     test_sample: Sample = Sample(observations=test_data, target_names="target")
 

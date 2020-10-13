@@ -4,13 +4,13 @@ Helper classes for SHAP calculations
 
 import logging
 from abc import ABCMeta, abstractmethod
-from typing import Callable, Generic, List, Optional, Sequence, TypeVar, Union
+from typing import Callable, Generic, List, Optional, Sequence, TypeVar, Union, cast
 
 import numpy as np
 import pandas as pd
 from shap.explainers.explainer import Explainer
 
-from pytools.api import AllTracker
+from pytools.api import AllTracker, inheritdoc
 from pytools.fit import FittableMixin
 from pytools.parallelization import ParallelizableMixin
 from sklearndf.pipeline import (
@@ -124,7 +124,7 @@ class ShapCalculator(
 
         training_sample = crossfit.sample
         self.feature_index_ = crossfit.pipeline.features_out_.rename(Sample.IDX_FEATURE)
-        self.output_names_ = self._output_names(crossfit=crossfit)
+        self.output_names_ = self._get_output_names(crossfit=crossfit)
         self.sample_ = training_sample
 
         # calculate shap values and re-order the observation index to match the
@@ -136,7 +136,7 @@ class ShapCalculator(
 
         self.shap_ = shap_all_splits_df.reindex(
             index=training_sample.index.intersection(
-                shap_all_splits_df.index.levels[1], sort=False
+                cast(pd.MultiIndex, shap_all_splits_df.index).levels[1], sort=False
             ),
             level=1,
             copy=False,
@@ -174,6 +174,9 @@ class ShapCalculator(
     @staticmethod
     @abstractmethod
     def multi_output_type() -> str:
+        """
+        :return: a category name for the dimensions represented by multiple outputs
+        """
         pass
 
     @abstractmethod
@@ -201,18 +204,18 @@ class ShapCalculator(
                     X=background_dataset
                 )
 
-            background_dataset_notna = background_dataset.dropna()
+            background_dataset_not_na = background_dataset.dropna()
 
-            if len(background_dataset_notna) != len(background_dataset):
+            if len(background_dataset_not_na) != len(background_dataset):
                 n_original = len(background_dataset)
-                n_dropped = n_original - len(background_dataset_notna)
+                n_dropped = n_original - len(background_dataset_not_na)
                 log.warning(
                     f"{n_dropped} out of {n_original} observations in the sample "
                     "contain NaN values after pre-processing and will not be included "
                     "in the background dataset"
                 )
 
-                background_dataset = background_dataset_notna
+                background_dataset = background_dataset_not_na
 
         else:
             background_dataset = None
@@ -384,7 +387,7 @@ class ShapCalculator(
 
     @staticmethod
     @abstractmethod
-    def _output_names(crossfit: LearnerCrossfit[T_LearnerPipelineDF]) -> List[str]:
+    def _get_output_names(crossfit: LearnerCrossfit[T_LearnerPipelineDF]) -> List[str]:
         pass
 
 
@@ -520,7 +523,7 @@ class ShapInteractionValuesCalculator(
                 axis2=3,
             ).reshape((n_observations, -1)),
             # observations x (outputs * features)
-            index=interaction_matrix.index.levels[0],
+            index=cast(pd.MultiIndex, interaction_matrix.index).levels[0],
             columns=interaction_matrix.columns,
         )
 
@@ -583,17 +586,19 @@ class ShapInteractionValuesCalculator(
             )
 
 
+@inheritdoc(match="[see superclass]")
 class RegressorShapCalculator(ShapCalculator[RegressorPipelineDF], metaclass=ABCMeta):
     """
     Calculates SHAP (interaction) values for regression models.
     """
 
     @staticmethod
-    def _output_names(crossfit: LearnerCrossfit[RegressorPipelineDF]) -> List[str]:
+    def _get_output_names(crossfit: LearnerCrossfit[RegressorPipelineDF]) -> List[str]:
         return crossfit.sample.target_names
 
     @staticmethod
     def multi_output_type() -> str:
+        """[see superclass]"""
         return Sample.IDX_TARGET
 
     def _multi_output_names(
@@ -662,6 +667,7 @@ class RegressorShapInteractionValuesCalculator(
         ]
 
 
+@inheritdoc(match="[see superclass]")
 class ClassifierShapCalculator(ShapCalculator[ClassifierPipelineDF], metaclass=ABCMeta):
     """
     Calculates SHAP (interaction) values for classification models.
@@ -670,7 +676,9 @@ class ClassifierShapCalculator(ShapCalculator[ClassifierPipelineDF], metaclass=A
     COL_CLASS = "class"
 
     @staticmethod
-    def _output_names(crossfit: LearnerCrossfit[ClassifierPipelineDF]) -> List[str]:
+    def _get_output_names(
+        crossfit: LearnerCrossfit[ClassifierPipelineDF],
+    ) -> Sequence[str]:
         assert (
             len(crossfit.sample.target_names) == 1
         ), "classification model is single-output"
@@ -705,6 +713,7 @@ class ClassifierShapCalculator(ShapCalculator[ClassifierPipelineDF], metaclass=A
 
     @staticmethod
     def multi_output_type() -> str:
+        """[see superclass]"""
         return ClassifierShapCalculator.COL_CLASS
 
     def _multi_output_names(
@@ -754,6 +763,7 @@ class ClassifierShapValuesCalculator(
     Calculates SHAP matrices for classification models.
     """
 
+    # noinspection DuplicatedCode
     @staticmethod
     def _raw_shap_to_df(
         raw_shap_tensors: List[np.ndarray],
@@ -799,6 +809,7 @@ class ClassifierShapInteractionValuesCalculator(
     Calculates SHAP interaction matrices for classification models.
     """
 
+    # noinspection DuplicatedCode
     @staticmethod
     def _raw_shap_to_df(
         raw_shap_tensors: List[np.ndarray],
@@ -812,7 +823,7 @@ class ClassifierShapInteractionValuesCalculator(
 
         if n_arrays == 2:
             # in the binary classification case, we will proceed with SHAP values
-            # for class 0, since values for class 1 will just be the same
+            # for class 0 only, since values for class 1 will just be the same
             # values times (*-1)  (the opposite delta probability)
 
             # to ensure the values are returned as expected above,

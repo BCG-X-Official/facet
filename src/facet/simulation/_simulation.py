@@ -327,7 +327,7 @@ class BaseUnivariateSimulator(
 
         return pd.concat(
             pd.Series(index=simulation_values, data=result)
-            for split_id, result in enumerate(simulation_results)
+            for _, result in enumerate(simulation_results)
         )
 
     @staticmethod

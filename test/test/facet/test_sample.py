@@ -69,17 +69,17 @@ def test_sample_init(boston_df: pd.DataFrame, boston_target: str) -> None:
 
 def test_sample(boston_df: pd.DataFrame, boston_target: str) -> None:
     # define various assertions we want to test:
-    def run_assertions(s: Sample):
-        assert s.target.name == boston_target
-        assert s.weight.name == boston_target
-        assert boston_target not in s.feature_columns
-        assert len(s.feature_columns) == len(boston_df.columns) - 1
+    def run_assertions(sample: Sample):
+        assert sample.target.name == boston_target
+        assert sample.weight.name == boston_target
+        assert boston_target not in sample.feature_names
+        assert len(sample.feature_names) == len(boston_df.columns) - 1
 
-        assert type(s.target) == pd.Series
-        assert type(s.weight) == pd.Series
-        assert type(s.features) == pd.DataFrame
+        assert type(sample.target) == pd.Series
+        assert type(sample.weight) == pd.Series
+        assert type(sample.features) == pd.DataFrame
 
-        assert len(s.target) == len(s.features)
+        assert len(sample.target) == len(sample.features)
 
     # test explicit setting of all fields
     feature_columns = list(boston_df.drop(columns=boston_target).columns)
