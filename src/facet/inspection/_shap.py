@@ -234,7 +234,8 @@ class ShapCalculator(
                             None
                             if background_dataset is None
                             else background_dataset.reindex(
-                                columns=model.final_estimator.features_in_, copy=False
+                                columns=model.final_estimator.feature_names_in_,
+                                copy=False,
                             )
                         ),
                     ),
@@ -365,7 +366,7 @@ class ShapCalculator(
             x = model.preprocessing.transform(x)
 
         # re-index the features to fit the sequence that was used to fit the learner
-        return x.reindex(columns=model.final_estimator.features_in_, copy=False)
+        return x.reindex(columns=model.final_estimator.feature_names_in_, copy=False)
 
     @staticmethod
     @abstractmethod
