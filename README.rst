@@ -30,14 +30,16 @@ Pip
 Quickstart
 ----------------------
 
+
 Facet is composed of the following key components:
 
 - **Enhanced machine learning workflow**:
     Facet delivers a robust and fail-safe pipelining
     workflow which allows you to easily impute and select your features as well as
     ranking a grid of different models "competing" against each other. Facet introduces
-    **sklearndf**, an augmented version of scikit-learn with enhanced support for pandas
-    dataframes and pipelining.
+    **sklearndf**, an augmented version of
+    `scikit-learn <https://scikit-learn.org/stable/index.html>`_ with enhanced support
+    for pandas dataframes and pipelining.
 
 - **Model Inspection**:
     Local explanations of features and their interactions make up a key
