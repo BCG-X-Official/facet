@@ -208,7 +208,7 @@ Model Simulation
 
     <p>Download the getting started tutorial and explore FACET for yourself by clicking
     here:
-    <a href="https://github.com/BCG-Gamma/facet/blob/develop/sphinx/auxiliary/Boston_getting_started_example.ipynb" target="_blank">
+    <a href="https://mybinder.org/" target="_blank">
     <img src="https://mybinder.org/badge_logo.svg"></a>
     </p>
 
