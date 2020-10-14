@@ -1,5 +1,5 @@
 """
-Core implementation of :mod:`facet.data`
+Implementation of Facet's :class:`.Sample` class.
 """
 
 import logging

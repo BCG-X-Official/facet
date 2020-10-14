@@ -1,5 +1,5 @@
 """
-Implementation of :mod:`facet.data`
+Basic data management across Facet's machine learning workflow.
 """
 
 
