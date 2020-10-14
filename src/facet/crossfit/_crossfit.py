@@ -153,11 +153,20 @@ class LearnerCrossfit(
             verbose=verbose,
         )
 
+        if not isinstance(pipeline, LearnerPipelineDF):
+            raise TypeError("arg pipeline must be a LearnerPipelineDF")
         self.pipeline: T_LearnerPipelineDF = pipeline.clone()
+
+        if not isinstance(cv, BaseCrossValidator):
+            raise TypeError(
+                "arg cv must implement class sklearn.model_selection.BaseCrossValidator"
+            )
         self.cv = cv
+
         self.shuffle_features: bool = (
             False if shuffle_features is None else shuffle_features
         )
+
         self.random_state = random_state
 
         self._splits: Optional[List[Tuple[Sequence[int], Sequence[int]]]] = None
