@@ -75,14 +75,14 @@ def test_univariate_uplift_simulation(
     parameterized_feature = "LSTAT"
     partitioner = ContinuousRangePartitioner(max_partitions=10)
 
-    sample = uplift_simulator.crossfit.sample
+    sample = uplift_simulator.crossfit.sample_
 
     absolute_target_change_sr: pd.Series = (
         uplift_simulator._simulate_feature_with_values(
             feature_name=parameterized_feature,
             simulation_values=partitioner.fit(
                 values=sample.features.loc[:, parameterized_feature]
-            ).partitions(),
+            ).partitions_,
         )
     )
 

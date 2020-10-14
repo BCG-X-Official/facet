@@ -209,12 +209,12 @@ class LearnerInspector(
         learner: LearnerDF = crossfit.pipeline.final_estimator
 
         if isinstance(learner, ClassifierDF):
-            if isinstance(crossfit.sample.target_name, list):
+            if isinstance(crossfit.sample_.target_name, list):
                 raise ValueError(
                     "only single-output classifiers (binary or multi-class) are "
                     "supported, but the classifier in the given crossfit has been "
                     "fitted on multiple columns "
-                    f"{crossfit.sample.target_name}"
+                    f"{crossfit.sample_.target_name}"
                 )
 
             is_classifier = True
@@ -277,7 +277,7 @@ class LearnerInspector(
         return self._crossfit is not None
 
     @property
-    def crossfit(self) -> LearnerCrossfit[T_LearnerPipelineDF]:
+    def crossfit_(self) -> LearnerCrossfit[T_LearnerPipelineDF]:
         """
         The crossfit with which this inspector was fitted.
         """
@@ -285,15 +285,15 @@ class LearnerInspector(
         return self._crossfit
 
     @property
-    def training_sample(self) -> Sample:
+    def sample_(self) -> Sample:
         """
         The training sample of the crossfit with which this inspector was fitted.
         """
         self._ensure_fitted()
-        return self.crossfit.sample
+        return self._crossfit.sample_
 
     @property
-    def output_names(self) -> Sequence[str]:
+    def output_names_(self) -> Sequence[str]:
         """
         The names of the outputs explained by this inspector.
 
@@ -315,7 +315,7 @@ class LearnerInspector(
         The names of the features used to fit the learner pipeline explained by this
         inspector.
         """
-        return self.crossfit.pipeline.features_out_.to_list()
+        return self.crossfit_.pipeline.feature_names_out_.to_list()
 
     def shap_values(self, consolidate: Optional[str] = "mean") -> pd.DataFrame:
         """
@@ -406,7 +406,7 @@ class LearnerInspector(
             raise ValueError(f'arg method="{method}" must be one of {methods}')
 
         shap_matrix = self.shap_values(consolidate="mean")
-        weight = self.training_sample.weight
+        weight = self.sample_.weight
 
         abs_importance: pd.Series
         if method == "rms":
@@ -429,7 +429,7 @@ class LearnerInspector(
             LearnerInspector.COL_IMPORTANCE
         )
 
-        if len(self.output_names) > 1:
+        if len(self.output_names_) > 1:
             assert (
                 abs_importance.index.nlevels == 2
             ), "2 index levels in place for multi-output models"
@@ -622,7 +622,7 @@ class LearnerInspector(
         """
 
         n_features = len(self.features)
-        n_outputs = len(self.output_names)
+        n_outputs = len(self.output_names_)
 
         # get a feature interaction array with shape
         # (n_observations, n_outputs, n_features, n_features)
@@ -636,7 +636,7 @@ class LearnerInspector(
         # get the observation weights with shape
         # (n_observations, n_outputs, n_features, n_features)
         weight: Optional[np.ndarray]
-        _weight_sr = self.training_sample.weight
+        _weight_sr = self.sample_.weight
         if _weight_sr is not None:
             # if sample weights are defined, convert them to an array
             # and align the array with the dimensions of the feature interaction array
@@ -701,9 +701,9 @@ class LearnerInspector(
         """
 
         shap_values: pd.DataFrame = self.shap_values(consolidate="mean")
-        sample: Sample = self.crossfit.sample.subsample(loc=shap_values.index)
+        sample: Sample = self.crossfit_.sample_.subsample(loc=shap_values.index)
 
-        output_names = self.output_names
+        output_names = self.output_names_
 
         if len(output_names) > 1:
             shap_values_numpy = [
@@ -724,7 +724,7 @@ class LearnerInspector(
         # to a data frame
 
         n_features = len(self.features)
-        n_outputs = len(self.output_names)
+        n_outputs = len(self.output_names_)
 
         assert matrix.shape == (n_outputs, n_features, n_features)
 
@@ -735,7 +735,7 @@ class LearnerInspector(
         matrix_df = pd.DataFrame(
             data=matrix_2d,
             columns=self.shap_values().columns,
-            index=self.crossfit.pipeline.features_out_.rename(Sample.IDX_FEATURE),
+            index=self.crossfit_.pipeline.feature_names_out_.rename(Sample.IDX_FEATURE),
         )
 
         assert matrix_df.shape == (n_features, n_outputs * n_features)

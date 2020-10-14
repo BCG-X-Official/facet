@@ -153,7 +153,7 @@ class BaseUnivariateSimulator(
         if not crossfit.is_fitted:
             raise ValueError("arg crossfit expected to be fitted")
 
-        if isinstance(crossfit.sample.target_name, list):
+        if isinstance(crossfit.sample_.target_name, list):
             raise NotImplementedError("multi-output simulations are not supported")
 
         if not 0 <= percentile_lower <= 100:
@@ -187,12 +187,12 @@ class BaseUnivariateSimulator(
         :return a mapping of output names to simulation results
         """
 
-        sample = self.crossfit.sample
+        sample = self.crossfit.sample_
 
         if isinstance(sample.target_name, list):
             raise NotImplementedError("multi-output simulations are not supported")
 
-        simulation_values = partitioner.fit(sample.features.loc[:, name]).partitions()
+        simulation_values = partitioner.fit(sample.features.loc[:, name]).partitions_
         simulation_results = self._aggregate_simulation_results(
             results_per_split=self._simulate_feature_with_values(
                 feature_name=name, simulation_values=simulation_values
@@ -233,7 +233,7 @@ class BaseUnivariateSimulator(
             feature values
         """
 
-        sample = self.crossfit.sample
+        sample = self.crossfit.sample_
 
         with self._parallel() as parallel:
             result: List[float] = parallel(
@@ -302,7 +302,7 @@ class BaseUnivariateSimulator(
           ``simulation_result``.
         """
 
-        sample = self.crossfit.sample
+        sample = self.crossfit.sample_
 
         if feature_name not in sample.features.columns:
             raise ValueError(f"Feature '{feature_name}' not in sample")
@@ -437,7 +437,7 @@ class UnivariateProbabilitySimulator(BaseUnivariateSimulator[ClassifierPipelineD
         of the simulation
         :return: observed frequency of the positive class
         """
-        actual_target: pd.Series = self.crossfit.sample.target
+        actual_target: pd.Series = self.crossfit.sample_.target
         assert isinstance(actual_target, pd.Series), "sample has one single target"
 
         return actual_target.loc[actual_target == self._positive_class()].sum() / len(
@@ -515,7 +515,7 @@ class _UnivariateTargetSimulator(BaseUnivariateSimulator[RegressorPipelineDF]):
     @property
     def values_label(self) -> str:
         """[see superclass]"""
-        return f"Mean predicted target ({self.crossfit.sample.target_name})"
+        return f"Mean predicted target ({self.crossfit.sample_.target_name})"
 
     @property
     def baseline(self) -> float:
@@ -577,7 +577,7 @@ class UnivariateUpliftSimulator(BaseUnivariateSimulator[RegressorPipelineDF]):
     @property
     def values_label(self) -> str:
         """[see superclass]"""
-        return f"Mean predicted uplift ({self.crossfit.sample.target_name})"
+        return f"Mean predicted uplift ({self.crossfit.sample_.target_name})"
 
     @property
     def baseline(self) -> float:

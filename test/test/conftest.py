@@ -163,7 +163,7 @@ def best_lgbm_crossfit(
     # performance
     best_lgbm_evaluation: LearnerEvaluation[RegressorPipelineDF] = [
         evaluation
-        for evaluation in regressor_ranker.ranking
+        for evaluation in regressor_ranker.ranking_
         if isinstance(evaluation.pipeline.regressor, LGBMRegressorDF)
     ][0]
 
@@ -185,7 +185,7 @@ def feature_names(best_lgbm_crossfit: LearnerCrossfit[RegressorPipelineDF]) -> S
     """
     return functools.reduce(
         operator.or_,
-        (set(model.features_out_) for model in best_lgbm_crossfit.models()),
+        (set(model.feature_names_out_) for model in best_lgbm_crossfit.models()),
     )
 
 

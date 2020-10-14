@@ -69,14 +69,14 @@ def iris_classifier_ranker_dual_target(
 def iris_classifier_crossfit_binary(
     iris_classifier_ranker_binary: LearnerRanker[ClassifierPipelineDF],
 ) -> LearnerCrossfit[ClassifierPipelineDF[RandomForestClassifierDF]]:
-    return iris_classifier_ranker_binary.best_model_crossfit
+    return iris_classifier_ranker_binary.best_model_crossfit_
 
 
 @pytest.fixture
 def iris_classifier_crossfit_multi_class(
     iris_classifier_ranker_multi_class: LearnerRanker[ClassifierPipelineDF],
 ) -> LearnerCrossfit[ClassifierPipelineDF[RandomForestClassifierDF]]:
-    return iris_classifier_ranker_multi_class.best_model_crossfit
+    return iris_classifier_ranker_multi_class.best_model_crossfit_
 
 
 @pytest.fixture
@@ -115,7 +115,7 @@ def test_model_inspection(
     log.debug(f"\n{regressor_ranker.summary_report()}")
 
     check_ranking(
-        ranking=regressor_ranker.ranking,
+        ranking=regressor_ranker.ranking_,
         expected_scores=expected_scores,
         expected_learners=None,
         expected_parameters=None,
@@ -182,7 +182,7 @@ def test_binary_classifier_ranking(iris_classifier_ranker_binary) -> None:
 
     log.debug(f"\n{iris_classifier_ranker_binary.summary_report()}")
     check_ranking(
-        ranking=iris_classifier_ranker_binary.ranking,
+        ranking=iris_classifier_ranker_binary.ranking_,
         expected_scores=expected_learner_scores,
         expected_learners=[RandomForestClassifierDF] * 4,
         expected_parameters={
@@ -347,7 +347,7 @@ def test_model_inspection_classifier_multi_class(
     linkage_trees = iris_inspector_multi_class.feature_association_linkage()
 
     for output, linkage_tree in zip(
-        iris_inspector_multi_class.output_names, linkage_trees
+        iris_inspector_multi_class.output_names_, linkage_trees
     ):
         print()
         DendrogramDrawer(style=DendrogramReportStyle()).draw(
@@ -362,7 +362,7 @@ def _validate_shap_values_against_predictions(
     # calculate the matching predictions, so we can check if the SHAP values add up
     # correctly
     predicted_probabilities_per_split: List[pd.DataFrame] = [
-        model.predict_proba(crossfit.sample.features.iloc[test_split, :])
+        model.predict_proba(crossfit.sample_.features.iloc[test_split, :])
         for model, (_, test_split) in zip(crossfit.models(), crossfit.splits())
     ]
 
@@ -536,7 +536,7 @@ def test_model_inspection_classifier_interaction_dual_target(
     n_jobs: int,
 ) -> None:
     iris_classifier_crossfit_dual_target = (
-        iris_classifier_ranker_dual_target.best_model_crossfit
+        iris_classifier_ranker_dual_target.best_model_crossfit_
     )
 
     with pytest.raises(
@@ -557,7 +557,7 @@ def test_shap_plot_data(
 ) -> None:
     shap_plot_data = iris_inspector_multi_class.shap_plot_data()
     # noinspection SpellCheckingInspection
-    assert tuple(iris_inspector_multi_class.output_names) == (
+    assert tuple(iris_inspector_multi_class.output_names_) == (
         "setosa",
         "versicolor",
         "virginica",

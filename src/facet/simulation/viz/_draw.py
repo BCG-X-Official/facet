@@ -128,8 +128,8 @@ class SimulationDrawer(Drawer[UnivariateSimulation, SimulationStyle]):
             simulation.values_median,
             simulation.values_lower,
             simulation.values_upper,
-            simulation.partitioner.partitions(),
-            simulation.partitioner.frequencies(),
+            simulation.partitioner.partitions_,
+            simulation.partitioner.frequencies_,
         )
 
         if simulation.partitioner.is_categorical:

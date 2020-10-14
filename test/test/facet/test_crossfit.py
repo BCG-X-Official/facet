@@ -67,7 +67,7 @@ def test_prediction_classifier(
     log.debug(f"\n{model_ranker.summary_report()}")
 
     check_ranking(
-        ranking=model_ranker.ranking,
+        ranking=model_ranker.ranking_,
         expected_scores=expected_learner_scores,
         expected_learners=[RandomForestClassifierDF] * 4,
         expected_parameters={
@@ -77,6 +77,6 @@ def test_prediction_classifier(
     )
 
     # consider: model_with_type(...) function for ModelRanking
-    crossfit = model_ranker.best_model_crossfit
+    crossfit = model_ranker.best_model_crossfit_
 
     assert crossfit.is_fitted

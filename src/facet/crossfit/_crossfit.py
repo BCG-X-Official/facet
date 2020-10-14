@@ -166,6 +166,25 @@ class LearnerCrossfit(
 
     __init__.__doc__ += ParallelizableMixin.__init__.__doc__
 
+    @property
+    def is_fitted(self) -> bool:
+        """[see superclass]"""
+        return self._sample is not None
+
+    @property
+    def n_fits_(self) -> int:
+        """
+        The number of fits in this crossfit.
+        """
+        self._ensure_fitted()
+        return len(self._model_by_split)
+
+    @property
+    def sample_(self) -> Sample:
+        """The sample used to train this crossfit."""
+        self._ensure_fitted()
+        return self._sample
+
     def fit(self: T, sample: Sample, **fit_params) -> T:
         """
         Fit the underlying pipeline to the full sample, and fit clones of the pipeline
@@ -241,6 +260,47 @@ class LearnerCrossfit(
             _sample=sample, _scoring=scoring, _train_scores=train_scores, **fit_params
         )
 
+    def resize(self: T, n_fits: int) -> T:
+        """
+        Reduce the size of this crossfit by removing a subset of the fits.
+        :param n_fits: the number of fits to keep. Must be lower, or equal to, the \
+            current number of fits
+        :return:
+        """
+        self: LearnerCrossfit
+
+        # ensure that arg n_split has a valid value
+        if n_fits > self.n_fits_:
+            raise ValueError(
+                f"arg n_fits={n_fits} must not be greater than the number of fits"
+                f"in the original crossfit ({self.n_fits_} fits)"
+            )
+        elif n_fits < 1:
+            raise ValueError(f"arg n_fits={n_fits} must be a positive integer")
+
+        # copy self and only keep the specified number of fits
+        new_crossfit = copy(self)
+        new_crossfit._model_by_split = self._model_by_split[:n_fits]
+        new_crossfit._splits = self._splits[:n_fits]
+        return new_crossfit
+
+    def splits(self) -> Iterator[Tuple[Sequence[int], Sequence[int]]]:
+        """
+        :return: an iterator of all train/test splits used by this crossfit
+        """
+        self._ensure_fitted()
+
+        # ensure we do not return more splits than we have fitted models
+        # this is relevant if this is a resized learner crossfit
+        return iter(self._splits)
+
+    def models(self) -> Iterator[T_LearnerPipelineDF]:
+        """
+        :return: an iterator of all models fitted on the cross-validation train splits
+        """
+        self._ensure_fitted()
+        return iter(self._model_by_split)
+
     # noinspection PyPep8Naming
     def _fit_score(
         self,
@@ -267,7 +327,7 @@ class LearnerCrossfit(
         pipeline = self.pipeline
 
         if not do_fit:
-            _sample = self.sample
+            _sample = self.sample_
 
         features = _sample.features
         target = _sample.target
@@ -312,7 +372,7 @@ class LearnerCrossfit(
         # generate parameter objects for fitting and/or scoring each split
 
         def _generate_parameters() -> Iterator[_FitScoreParameters]:
-            learner_features = pipeline.features_out_
+            learner_features = pipeline.feature_names_out_
             n_learner_features = len(learner_features)
             test_scores = do_score and not _train_scores
             models = iter(lambda: None, 0) if do_fit else self.models()
@@ -366,70 +426,10 @@ class LearnerCrossfit(
 
         return np.array(scores) if do_score else None
 
-    def resize(self: T, n_fits: int) -> T:
-        """
-        Reduce the size of this crossfit by removing a subset of the fits.
-        :param n_fits: the number of fits to keep. Must be lower, or equal to, the \
-            current number of fits
-        :return:
-        """
-        self: LearnerCrossfit
-
-        # ensure that arg n_split has a valid value
-        if n_fits > self.n_fits:
-            raise ValueError(
-                f"arg n_fits={n_fits} must not be greater than the number of fits"
-                f"in the original crossfit ({self.n_fits} fits)"
-            )
-        elif n_fits < 1:
-            raise ValueError(f"arg n_fits={n_fits} must be a positive integer")
-
-        # copy self and only keep the specified number of fits
-        new_crossfit = copy(self)
-        new_crossfit._model_by_split = self._model_by_split[:n_fits]
-        new_crossfit._splits = self._splits[:n_fits]
-        return new_crossfit
-
-    @property
-    def is_fitted(self) -> bool:
-        """[see superclass]"""
-        return self._sample is not None
-
     def _reset_fit(self) -> None:
         self._sample = None
         self._splits = None
         self._model_by_split = None
-
-    @property
-    def n_fits(self) -> int:
-        """
-        The number of fits in this crossfit.
-        """
-        self._ensure_fitted()
-        return len(self._model_by_split)
-
-    def splits(self) -> Iterator[Tuple[Sequence[int], Sequence[int]]]:
-        """
-        :return: an iterator of all train/test splits used by this crossfit
-        """
-        self._ensure_fitted()
-
-        # ensure we do not return more splits than we have fitted models
-        # this is relevant if this is a resized learner crossfit
-        return iter(self._splits)
-
-    def models(self) -> Iterator[T_LearnerPipelineDF]:
-        """
-        :return: an iterator of all models fitted on the cross-validation train splits
-        """
-        self._ensure_fitted()
-        return iter(self._model_by_split)
-
-    @property
-    def sample(self) -> Sample:
-        """The sample used to train this crossfit."""
-        self._ensure_fitted()
-        return self._sample
 
     # noinspection PyPep8Naming
     @staticmethod
@@ -481,7 +481,7 @@ class LearnerCrossfit(
         return pipeline if do_fit else None, score
 
     def __len__(self) -> int:
-        return self.n_fits
+        return self.n_fits_
 
 
 __tracker.validate()
