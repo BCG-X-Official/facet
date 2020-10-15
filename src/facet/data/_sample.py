@@ -65,23 +65,23 @@ class Sample:
         self,
         observations: pd.DataFrame,
         *,
-        target_name: Union[str, Sequence[str]],
-        feature_names: Optional[Sequence[str]] = None,
+        target_name: Union[str, Iterable[str]],
+        feature_names: Optional[Iterable[str]] = None,
         weight_name: Optional[str] = None,
     ) -> None:
         """
         :param observations: a table of observational data; \
             each row represents one observation
         :param target_name: the name of the column representing the target \
-            variable; or a list of names representing multiple targets
-        :param feature_names: optional sequence of strings naming the columns that \
+            variable; or an iterable of names representing multiple targets
+        :param feature_names: optional iterable of strings naming the columns that \
             represent features; if omitted, all non-target and non-weight columns are
             considered features
         :param weight_name: optional name of a column representing the weight of each \
             observation
         """
 
-        def _ensure_columns_exist(column_type: str, columns: Iterable[str]):
+        def _ensure_columns_exist(column_type: str, columns: List[str]):
             # check if all provided feature names actually exist in the observations df
             available_columns: pd.Index = observations.columns
             missing_columns = {
@@ -111,7 +111,6 @@ class Sample:
         targets_list: List[str] = to_list(
             target_name, element_type=str, arg_name="target_name"
         )
-
         _ensure_columns_exist(column_type="target", columns=targets_list)
 
         self._target_names = targets_list
@@ -140,10 +139,10 @@ class Sample:
                 _feature_index = observations.columns.drop(labels=targets_list)
             features_list = _feature_index.to_list()
         else:
-            _ensure_columns_exist(column_type="feature", columns=feature_names)
             features_list = to_list(
                 feature_names, element_type=str, arg_name="feature_names"
             )
+            _ensure_columns_exist(column_type="feature", columns=features_list)
 
             # ensure features and target(s) do not overlap
             shared = set(targets_list).intersection(features_list)
