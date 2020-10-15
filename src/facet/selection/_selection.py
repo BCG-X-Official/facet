@@ -40,8 +40,8 @@ from sklearndf.pipeline import (
     RegressorPipelineDF,
 )
 
-from facet import Sample
 from facet.crossfit import LearnerCrossfit
+from facet.data import Sample
 
 log = logging.getLogger(__name__)
 
@@ -316,6 +316,60 @@ class LearnerRanker(
     # add parameter documentation of ParallelizableMixin
     __init__.__doc__ += ParallelizableMixin.__init__.__doc__
 
+    @property
+    def is_fitted(self) -> bool:
+        """[see superclass]"""
+        return self._ranking is not None
+
+    @property
+    def scoring_name(self) -> str:
+        """
+        The name of the scoring function used to rank the learners.
+        """
+        scoring = self.scoring
+        if isinstance(scoring, str):
+            return scoring
+        elif callable(scoring):
+            try:
+                return scoring.__name__
+            except AttributeError:
+                return "score"
+        else:
+            learner_type = _learner_type(self.grids[0].pipeline)
+            if learner_type is RegressorPipelineDF:
+                return "r2_score"
+            elif learner_type is ClassifierPipelineDF:
+                return "accuracy_score"
+            else:
+                # default case - we should not end up here but adding this for forward
+                # compatibility
+                return "score"
+
+    @property
+    def ranking_(self) -> List[LearnerEvaluation[T_LearnerPipelineDF]]:
+        """
+        A list of :class:`.LearnerEvaluation` for all learners evaluated
+        by this ranker, in descending order of the ranking score.
+        """
+        self._ensure_fitted()
+        return self._ranking
+
+    @property
+    def best_model_(self) -> T_LearnerPipelineDF:
+        """
+        The pipeline which obtained the best ranking score, fitted on the entire sample.
+        """
+        self._ensure_fitted()
+        return self._best_model
+
+    @property
+    def best_model_crossfit_(self) -> LearnerCrossfit[T_LearnerPipelineDF]:
+        """
+        The crossfit which obtained the best ranking score.
+        """
+        self._ensure_fitted()
+        return self._best_crossfit
+
     @staticmethod
     def default_ranking_scorer(scores: np.ndarray) -> float:
         """
@@ -353,60 +407,6 @@ class LearnerRanker(
         )
 
         return self
-
-    @property
-    def is_fitted(self) -> bool:
-        """[see superclass]"""
-        return self._ranking is not None
-
-    @property
-    def scoring_name(self) -> str:
-        """
-        The name of the scoring function used to rank the learners.
-        """
-        scoring = self.scoring
-        if isinstance(scoring, str):
-            return scoring
-        elif callable(scoring):
-            try:
-                return scoring.__name__
-            except AttributeError:
-                return "score"
-        else:
-            learner_type = _learner_type(self.grids[0].pipeline)
-            if learner_type is RegressorPipelineDF:
-                return "r2_score"
-            elif learner_type is ClassifierPipelineDF:
-                return "accuracy_score"
-            else:
-                # default case - we should not end up here but adding this for forward
-                # compatibility
-                return "score"
-
-    @property
-    def ranking(self) -> List[LearnerEvaluation[T_LearnerPipelineDF]]:
-        """
-        A list of :class:`.LearnerEvaluation` for all learners evaluated
-        by this ranker, in descending order of the ranking score.
-        """
-        self._ensure_fitted()
-        return self._ranking
-
-    @property
-    def best_model(self) -> T_LearnerPipelineDF:
-        """
-        The pipeline which obtained the best ranking score, fitted on the entire sample.
-        """
-        self._ensure_fitted()
-        return self._best_model
-
-    @property
-    def best_model_crossfit(self) -> LearnerCrossfit[T_LearnerPipelineDF]:
-        """
-        The crossfit which obtained the best ranking score.
-        """
-        self._ensure_fitted()
-        return self._best_crossfit
 
     def summary_report(self) -> pd.DataFrame:
         """

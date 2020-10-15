@@ -9,6 +9,4 @@ Please refer to the :ref:`tutorials` for examples of using FACET classes and fun
 """
 
 
-from ._facet import Sample
-
 __version__ = "1.0.0"

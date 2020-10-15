@@ -4,13 +4,13 @@ Helper classes for SHAP calculations
 
 import logging
 from abc import ABCMeta, abstractmethod
-from typing import Callable, Generic, List, Optional, Sequence, TypeVar, Union
+from typing import Callable, Generic, List, Optional, Sequence, TypeVar, Union, cast
 
 import numpy as np
 import pandas as pd
 from shap.explainers.explainer import Explainer
 
-from pytools.api import AllTracker
+from pytools.api import AllTracker, inheritdoc
 from pytools.fit import FittableMixin
 from pytools.parallelization import ParallelizableMixin
 from sklearndf.pipeline import (
@@ -20,8 +20,8 @@ from sklearndf.pipeline import (
 )
 
 from ._explainer import ExplainerFactory
-from facet import Sample
 from facet.crossfit import LearnerCrossfit
+from facet.data import Sample
 
 log = logging.getLogger(__name__)
 
@@ -65,6 +65,7 @@ __tracker = AllTracker(globals())
 #
 
 
+@inheritdoc(match="[see superclass]")
 class ShapCalculator(
     FittableMixin[LearnerCrossfit[T_LearnerPipelineDF]],
     ParallelizableMixin,
@@ -109,6 +110,11 @@ class ShapCalculator(
         self.output_names_: Optional[Sequence[str]] = None
         self.sample_: Optional[Sample] = None
 
+    @property
+    def is_fitted(self) -> bool:
+        """[see superclass]"""
+        return self.shap_ is not None
+
     def fit(self: T, crossfit: LearnerCrossfit[T_LearnerPipelineDF], **fit_params) -> T:
         """
         Calculate the SHAP values.
@@ -122,34 +128,29 @@ class ShapCalculator(
         # reset fit in case we get an exception along the way
         self.shap_ = None
 
-        training_sample = crossfit.sample
-        self.feature_index_ = crossfit.pipeline.features_out_.rename(Sample.IDX_FEATURE)
-        self.output_names_ = self._output_names(crossfit=crossfit)
+        training_sample = crossfit.sample_
+        self.feature_index_ = crossfit.pipeline.feature_names_out_.rename(
+            Sample.IDX_FEATURE
+        )
+        self.output_names_ = self._get_output_names(crossfit=crossfit)
         self.sample_ = training_sample
 
         # calculate shap values and re-order the observation index to match the
         # sequence in the original training sample
-        shap_all_splits_df: pd.DataFrame = self._shap_all_splits(crossfit=crossfit)
+        shap_all_splits_df: pd.DataFrame = self._get_shap_all_splits(crossfit=crossfit)
 
         assert shap_all_splits_df.index.nlevels > 1
         assert shap_all_splits_df.index.names[1] == training_sample.index.name
 
         self.shap_ = shap_all_splits_df.reindex(
             index=training_sample.index.intersection(
-                shap_all_splits_df.index.levels[1], sort=False
+                cast(pd.MultiIndex, shap_all_splits_df.index).levels[1], sort=False
             ),
             level=1,
             copy=False,
         )
 
         return self
-
-    # noinspection PyMissingOrEmptyDocstring
-    @property
-    def is_fitted(self) -> bool:
-        return self.shap_ is not None
-
-    is_fitted.__doc__ = FittableMixin.is_fitted.__doc__
 
     @abstractmethod
     def get_shap_values(self, consolidate: Optional[str] = None) -> pd.DataFrame:
@@ -163,31 +164,33 @@ class ShapCalculator(
         """
         pass
 
-    @property
     @abstractmethod
-    def shap_columns(self) -> pd.Index:
+    def get_shap_columns(self) -> pd.Index:
         """
-        The column index of the data frame returned by :meth:`.shap_values`
+        The column index of the data frame returned by :meth:`.get_shap_values`
         """
         pass
 
     @staticmethod
     @abstractmethod
-    def multi_output_type() -> str:
+    def get_multi_output_type() -> str:
+        """
+        :return: a category name for the dimensions represented by multiple outputs
+        """
         pass
 
     @abstractmethod
-    def _multi_output_names(
+    def _get_multi_output_names(
         self, model: T_LearnerPipelineDF, sample: Sample
     ) -> List[str]:
         pass
 
-    def _shap_all_splits(
+    def _get_shap_all_splits(
         self, crossfit: LearnerCrossfit[T_LearnerPipelineDF]
     ) -> pd.DataFrame:
         crossfit: LearnerCrossfit[LearnerPipelineDF]
 
-        sample = crossfit.sample
+        sample = crossfit.sample_
 
         # prepare the background dataset
 
@@ -201,25 +204,25 @@ class ShapCalculator(
                     X=background_dataset
                 )
 
-            background_dataset_notna = background_dataset.dropna()
+            background_dataset_not_na = background_dataset.dropna()
 
-            if len(background_dataset_notna) != len(background_dataset):
+            if len(background_dataset_not_na) != len(background_dataset):
                 n_original = len(background_dataset)
-                n_dropped = n_original - len(background_dataset_notna)
+                n_dropped = n_original - len(background_dataset_not_na)
                 log.warning(
                     f"{n_dropped} out of {n_original} observations in the sample "
                     "contain NaN values after pre-processing and will not be included "
                     "in the background dataset"
                 )
 
-                background_dataset = background_dataset_notna
+                background_dataset = background_dataset_not_na
 
         else:
             background_dataset = None
 
         with self._parallel() as parallel:
             shap_df_per_split: List[pd.DataFrame] = parallel(
-                self._delayed(self._shap_for_split)(
+                self._delayed(self._get_shap_for_split)(
                     model,
                     sample,
                     self._explainer_factory.make_explainer(
@@ -231,14 +234,15 @@ class ShapCalculator(
                             None
                             if background_dataset is None
                             else background_dataset.reindex(
-                                columns=model.final_estimator.features_in_, copy=False
+                                columns=model.final_estimator.feature_names_in_,
+                                copy=False,
                             )
                         ),
                     ),
                     self.feature_index_,
-                    self._raw_shap_to_df,
-                    self.multi_output_type(),
-                    self._multi_output_names(model=model, sample=sample),
+                    self._convert_raw_shap_to_df,
+                    self.get_multi_output_type(),
+                    self._get_multi_output_names(model=model, sample=sample),
                 )
                 for model, sample in zip(
                     crossfit.models(),
@@ -293,7 +297,7 @@ class ShapCalculator(
 
     @staticmethod
     @abstractmethod
-    def _shap_for_split(
+    def _get_shap_for_split(
         model: LearnerPipelineDF,
         sample: Sample,
         explainer: Explainer,
@@ -305,7 +309,7 @@ class ShapCalculator(
         pass
 
     @staticmethod
-    def _shap_tensors_to_list(
+    def _convert_shap_tensors_to_list(
         shap_tensors: Union[np.ndarray, Sequence[np.ndarray]],
         multi_output_type: str,
         multi_output_names: Sequence[str],
@@ -328,7 +332,8 @@ class ShapCalculator(
             _validate_shap_tensor(shap_tensors)
             if (
                 n_outputs == 2
-                and multi_output_type == ClassifierShapCalculator.multi_output_type()
+                and multi_output_type
+                == ClassifierShapCalculator.get_multi_output_type()
             ):
                 # if we have a single output *and* binary classification, the explainer
                 # will have returned a single tensor for the positive class;
@@ -348,9 +353,7 @@ class ShapCalculator(
         return shap_tensors
 
     @staticmethod
-    def _preprocessed_features(
-        model: LearnerPipelineDF, sample: Sample
-    ) -> pd.DataFrame:
+    def _preprocess_features(model: LearnerPipelineDF, sample: Sample) -> pd.DataFrame:
         # get the out-of-bag subsample of the training sample, with feature columns
         # in the sequence that was used to fit the learner
 
@@ -362,11 +365,11 @@ class ShapCalculator(
             x = model.preprocessing.transform(x)
 
         # re-index the features to fit the sequence that was used to fit the learner
-        return x.reindex(columns=model.final_estimator.features_in_, copy=False)
+        return x.reindex(columns=model.final_estimator.feature_names_in_, copy=False)
 
     @staticmethod
     @abstractmethod
-    def _raw_shap_to_df(
+    def _convert_raw_shap_to_df(
         raw_shap_tensors: List[np.ndarray],
         observations: pd.Index,
         features_in_split: pd.Index,
@@ -384,10 +387,11 @@ class ShapCalculator(
 
     @staticmethod
     @abstractmethod
-    def _output_names(crossfit: LearnerCrossfit[T_LearnerPipelineDF]) -> List[str]:
+    def _get_output_names(crossfit: LearnerCrossfit[T_LearnerPipelineDF]) -> List[str]:
         pass
 
 
+@inheritdoc(match="[see superclass]")
 class ShapValuesCalculator(
     ShapCalculator[T_LearnerPipelineDF], Generic[T_LearnerPipelineDF], metaclass=ABCMeta
 ):
@@ -395,24 +399,20 @@ class ShapValuesCalculator(
     Base class for calculating SHAP contribution values.
     """
 
-    # noinspection PyMissingOrEmptyDocstring
     def get_shap_values(self, consolidate: Optional[str] = None) -> pd.DataFrame:
+        """[see superclass]"""
         self._ensure_fitted()
         return ShapCalculator._consolidate_splits(
             shap_all_splits_df=self.shap_, method=consolidate
         )
 
-    get_shap_values.__doc__ = ShapCalculator.get_shap_values.__doc__
-
-    # noinspection PyMissingOrEmptyDocstring
     @property
-    def shap_columns(self) -> pd.Index:
+    def get_shap_columns(self) -> pd.Index:
+        """[see superclass]"""
         return self.shap_.columns
 
-    shap_columns.__doc__ = ShapCalculator.shap_columns.__doc__
-
     @staticmethod
-    def _shap_for_split(
+    def _get_shap_for_split(
         model: LearnerPipelineDF,
         sample: Sample,
         explainer: Explainer,
@@ -421,7 +421,7 @@ class ShapValuesCalculator(
         multi_output_type: str,
         multi_output_names: Sequence[str],
     ) -> pd.DataFrame:
-        x = ShapCalculator._preprocessed_features(model=model, sample=sample)
+        x = ShapCalculator._preprocess_features(model=model, sample=sample)
 
         if x.isna().values.any():
             log.warning(
@@ -430,7 +430,7 @@ class ShapValuesCalculator(
             )
 
         # calculate the shap values, and ensure the result is a list of arrays
-        shap_values: List[np.ndarray] = ShapCalculator._shap_tensors_to_list(
+        shap_values: List[np.ndarray] = ShapCalculator._convert_shap_tensors_to_list(
             shap_tensors=explainer.shap_values(x),
             multi_output_type=multi_output_type,
             multi_output_names=multi_output_names,
@@ -458,6 +458,7 @@ class ShapValuesCalculator(
             )
 
 
+@inheritdoc(match="[see superclass]")
 class ShapInteractionValuesCalculator(
     ShapCalculator[T_LearnerPipelineDF], Generic[T_LearnerPipelineDF], metaclass=ABCMeta
 ):
@@ -465,14 +466,12 @@ class ShapInteractionValuesCalculator(
     Base class for calculating SHAP interaction values.
     """
 
-    # noinspection PyMissingOrEmptyDocstring
     def get_shap_values(self, consolidate: Optional[str] = None) -> pd.DataFrame:
+        """[see superclass]"""
         self._ensure_fitted()
         return ShapCalculator._consolidate_splits(
             shap_all_splits_df=self.shap_.sum(level=(0, 1)), method=consolidate
         )
-
-    get_shap_values.__doc__ = ShapCalculator.get_shap_values.__doc__
 
     def get_shap_interaction_values(
         self, consolidate: Optional[str] = None
@@ -487,16 +486,16 @@ class ShapInteractionValuesCalculator(
         )
 
     @property
-    def shap_columns(self) -> pd.Index:
+    def get_shap_columns(self) -> pd.Index:
         """
         The column index of the data frame returned by :meth:`.shap_values`
         and :meth:`.shap_interaction_values`
         """
         return self.shap_.columns
 
-    def diagonals(self) -> pd.DataFrame:
+    def get_diagonals(self) -> pd.DataFrame:
         """
-        The diagonals of all SHAP interaction matrices, of shape
+        The get_diagonals of all SHAP interaction matrices, of shape
         (n_observations, n_outputs * n_features)
 
         :return: SHAP interaction values with shape \
@@ -520,12 +519,12 @@ class ShapInteractionValuesCalculator(
                 axis2=3,
             ).reshape((n_observations, -1)),
             # observations x (outputs * features)
-            index=interaction_matrix.index.levels[0],
+            index=cast(pd.MultiIndex, interaction_matrix.index).levels[0],
             columns=interaction_matrix.columns,
         )
 
     @staticmethod
-    def _shap_for_split(
+    def _get_shap_for_split(
         model: LearnerPipelineDF,
         sample: Sample,
         explainer: Explainer,
@@ -534,7 +533,7 @@ class ShapInteractionValuesCalculator(
         multi_output_type: str,
         multi_output_names: Sequence[str],
     ) -> pd.DataFrame:
-        x = ShapCalculator._preprocessed_features(model=model, sample=sample)
+        x = ShapCalculator._preprocess_features(model=model, sample=sample)
 
         # calculate the im values (returned as an array)
         try:
@@ -548,7 +547,7 @@ class ShapInteractionValuesCalculator(
         # calculate the shap interaction values; ensure the result is a list of arrays
         shap_interaction_tensors: List[
             np.ndarray
-        ] = ShapCalculator._shap_tensors_to_list(
+        ] = ShapCalculator._convert_shap_tensors_to_list(
             shap_tensors=shap_interaction_values_fn(x),
             multi_output_type=multi_output_type,
             multi_output_names=multi_output_names,
@@ -583,23 +582,27 @@ class ShapInteractionValuesCalculator(
             )
 
 
+@inheritdoc(match="[see superclass]")
 class RegressorShapCalculator(ShapCalculator[RegressorPipelineDF], metaclass=ABCMeta):
     """
     Calculates SHAP (interaction) values for regression models.
     """
 
     @staticmethod
-    def _output_names(crossfit: LearnerCrossfit[RegressorPipelineDF]) -> List[str]:
-        return crossfit.sample.target_columns
+    def _get_output_names(crossfit: LearnerCrossfit[RegressorPipelineDF]) -> List[str]:
+        # noinspection PyProtectedMember
+        return crossfit.sample_._target_names
 
     @staticmethod
-    def multi_output_type() -> str:
+    def get_multi_output_type() -> str:
+        """[see superclass]"""
         return Sample.IDX_TARGET
 
-    def _multi_output_names(
+    def _get_multi_output_names(
         self, model: RegressorPipelineDF, sample: Sample
     ) -> List[str]:
-        return sample.target_columns
+        # noinspection PyProtectedMember
+        return sample._target_names
 
     def _concatenate_splits(
         self, shap_df_per_split: List[pd.DataFrame]
@@ -619,7 +622,7 @@ class RegressorShapValuesCalculator(
     """
 
     @staticmethod
-    def _raw_shap_to_df(
+    def _convert_raw_shap_to_df(
         raw_shap_tensors: List[np.ndarray],
         observations: pd.Index,
         features_in_split: pd.Index,
@@ -640,7 +643,7 @@ class RegressorShapInteractionValuesCalculator(
     """
 
     @staticmethod
-    def _raw_shap_to_df(
+    def _convert_raw_shap_to_df(
         raw_shap_tensors: List[np.ndarray],
         observations: pd.Index,
         features_in_split: pd.Index,
@@ -662,6 +665,7 @@ class RegressorShapInteractionValuesCalculator(
         ]
 
 
+@inheritdoc(match="[see superclass]")
 class ClassifierShapCalculator(ShapCalculator[ClassifierPipelineDF], metaclass=ABCMeta):
     """
     Calculates SHAP (interaction) values for classification models.
@@ -670,9 +674,11 @@ class ClassifierShapCalculator(ShapCalculator[ClassifierPipelineDF], metaclass=A
     COL_CLASS = "class"
 
     @staticmethod
-    def _output_names(crossfit: LearnerCrossfit[ClassifierPipelineDF]) -> List[str]:
-        assert (
-            len(crossfit.sample.target_columns) == 1
+    def _get_output_names(
+        crossfit: LearnerCrossfit[ClassifierPipelineDF],
+    ) -> Sequence[str]:
+        assert not isinstance(
+            crossfit.sample_.target_name, list
         ), "classification model is single-output"
         classifier_df = crossfit.pipeline.final_estimator
         assert classifier_df.is_fitted, "classifier used in crossfit must be fitted"
@@ -704,10 +710,11 @@ class ClassifierShapCalculator(ShapCalculator[ClassifierPipelineDF], metaclass=A
             return output_names
 
     @staticmethod
-    def multi_output_type() -> str:
+    def get_multi_output_type() -> str:
+        """[see superclass]"""
         return ClassifierShapCalculator.COL_CLASS
 
-    def _multi_output_names(
+    def _get_multi_output_names(
         self, model: ClassifierPipelineDF, sample: Sample
     ) -> List[str]:
         assert isinstance(
@@ -734,7 +741,7 @@ class ClassifierShapCalculator(ShapCalculator[ClassifierPipelineDF], metaclass=A
 
             columns = pd.MultiIndex.from_product(
                 iterables=[output_names, self.feature_index_],
-                names=[self.multi_output_type(), self.feature_index_.name],
+                names=[self.get_multi_output_type(), self.feature_index_.name],
             )
 
             return pd.concat(
@@ -754,8 +761,9 @@ class ClassifierShapValuesCalculator(
     Calculates SHAP matrices for classification models.
     """
 
+    # noinspection DuplicatedCode
     @staticmethod
-    def _raw_shap_to_df(
+    def _convert_raw_shap_to_df(
         raw_shap_tensors: List[np.ndarray],
         observations: pd.Index,
         features_in_split: pd.Index,
@@ -799,8 +807,9 @@ class ClassifierShapInteractionValuesCalculator(
     Calculates SHAP interaction matrices for classification models.
     """
 
+    # noinspection DuplicatedCode
     @staticmethod
-    def _raw_shap_to_df(
+    def _convert_raw_shap_to_df(
         raw_shap_tensors: List[np.ndarray],
         observations: pd.Index,
         features_in_split: pd.Index,
@@ -812,7 +821,7 @@ class ClassifierShapInteractionValuesCalculator(
 
         if n_arrays == 2:
             # in the binary classification case, we will proceed with SHAP values
-            # for class 0, since values for class 1 will just be the same
+            # for class 0 only, since values for class 1 will just be the same
             # values times (*-1)  (the opposite delta probability)
 
             # to ensure the values are returned as expected above,
