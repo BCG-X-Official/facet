@@ -28,8 +28,8 @@ from sklearndf.transformation import (
 )
 
 from .facet import STEP_IMPUTE, STEP_ONE_HOT_ENCODE
-from facet import Sample
 from facet.crossfit import LearnerCrossfit
+from facet.data import Sample
 from facet.inspection import LearnerInspector, TreeExplainerFactory
 from facet.selection import LearnerEvaluation, LearnerGrid, LearnerRanker
 from facet.validation import BootstrapCV, StratifiedBootstrapCV
@@ -54,7 +54,7 @@ def boston_target() -> str:
 
 
 @pytest.fixture
-def iris_target() -> str:
+def iris_target_name() -> str:
     return "species"
 
 
@@ -163,7 +163,7 @@ def best_lgbm_crossfit(
     # performance
     best_lgbm_evaluation: LearnerEvaluation[RegressorPipelineDF] = [
         evaluation
-        for evaluation in regressor_ranker.ranking
+        for evaluation in regressor_ranker.ranking_
         if isinstance(evaluation.pipeline.regressor, LGBMRegressorDF)
     ][0]
 
@@ -185,7 +185,7 @@ def feature_names(best_lgbm_crossfit: LearnerCrossfit[RegressorPipelineDF]) -> S
     """
     return functools.reduce(
         operator.or_,
-        (set(model.features_out_) for model in best_lgbm_crossfit.models()),
+        (set(model.feature_names_out_) for model in best_lgbm_crossfit.models()),
     )
 
 
@@ -239,31 +239,36 @@ def boston_df(boston_target: str) -> pd.DataFrame:
 
 @pytest.fixture
 def sample(boston_df: pd.DataFrame, boston_target: str) -> Sample:
-    return Sample(observations=boston_df.iloc[:100, :], target=boston_target)
+    return Sample(observations=boston_df.iloc[:100, :], target_name=boston_target)
 
 
 @pytest.fixture
-def iris_df(iris_target: str) -> pd.DataFrame:
+def iris_df(iris_target_name: str) -> pd.DataFrame:
     #  load sklearn test-data and convert to pd
     iris: Bunch = datasets.load_iris()
 
     iris_df = pd.DataFrame(
-        data=np.c_[iris.data, iris.target], columns=[*iris.feature_names, iris_target]
+        data=np.c_[iris.data, iris.target],
+        columns=[*iris.feature_names, iris_target_name],
     )
 
     # replace target numericals with actual class labels
-    iris_df.loc[:, iris_target] = (
-        iris_df.loc[:, iris_target].astype(int).map(dict(enumerate(iris.target_names)))
+    iris_df.loc[:, iris_target_name] = (
+        iris_df.loc[:, iris_target_name]
+        .astype(int)
+        .map(dict(enumerate(iris.target_names)))
     )
 
     return iris_df
 
 
 @pytest.fixture
-def iris_sample(iris_df: pd.DataFrame, iris_target: str) -> Sample:
+def iris_sample(iris_df: pd.DataFrame, iris_target_name: str) -> Sample:
     # the iris dataset
     return Sample(
-        observations=iris_df.assign(weight=2.0), target=iris_target, weight="weight"
+        observations=iris_df.assign(weight=2.0),
+        target_name=iris_target_name,
+        weight_name="weight",
     )
 
 
@@ -277,16 +282,16 @@ def iris_sample_binary(iris_sample: Sample) -> Sample:
 
 @pytest.fixture
 def iris_sample_binary_dual_target(
-    iris_sample_binary: Sample, iris_target: str
+    iris_sample_binary: Sample, iris_target_name
 ) -> Sample:
     # the iris dataset, retaining only two categories so we can do binary classification
     target = pd.Series(
         index=iris_sample_binary.index,
         data=pd.Categorical(iris_sample_binary.target).codes,
-        name=iris_target,
+        name=iris_target_name,
     )
-    iris_target_2 = f"{iris_target}2"
+    iris_target_2 = f"{iris_target_name}2"
     return Sample(
         iris_sample_binary.features.join(target).join(target.rename(iris_target_2)),
-        target=[*iris_sample_binary.target_columns, iris_target_2],
+        target_name=[iris_sample_binary.target_name, iris_target_2],
     )

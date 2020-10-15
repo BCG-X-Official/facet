@@ -18,9 +18,7 @@ def test_discrete_partitioning() -> None:
             max_partitions=IntegerRangePartitioner.DEFAULT_MAX_PARTITIONS
         ).fit(values=values)
         # test correct number of partitions
-        assert len(dvp) <= IntegerRangePartitioner.DEFAULT_MAX_PARTITIONS
-        partitions = list(dvp.partitions())
-        assert len(dvp) == len(partitions)
+        assert len(dvp.partitions_) <= IntegerRangePartitioner.DEFAULT_MAX_PARTITIONS
 
 
 def test_continuous_partitioning() -> None:
@@ -35,6 +33,4 @@ def test_continuous_partitioning() -> None:
             max_partitions=ContinuousRangePartitioner.DEFAULT_MAX_PARTITIONS
         ).fit(values=values)
         # test correct number of partitions
-        assert len(cvp) <= ContinuousRangePartitioner.DEFAULT_MAX_PARTITIONS
-        partitions = list(cvp.partitions())
-        assert len(cvp) == len(partitions)
+        assert len(cvp.partitions_) <= ContinuousRangePartitioner.DEFAULT_MAX_PARTITIONS

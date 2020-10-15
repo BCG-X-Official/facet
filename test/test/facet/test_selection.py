@@ -20,8 +20,8 @@ from sklearndf.regression import (
 from sklearndf.regression.extra import LGBMRegressorDF
 
 from . import check_ranking
-from facet import Sample
 from facet.crossfit import LearnerCrossfit
+from facet.data import Sample
 from facet.selection import LearnerEvaluation, LearnerGrid, LearnerRanker
 from facet.validation import BootstrapCV
 
@@ -109,9 +109,9 @@ def test_model_ranker(
 
     log.debug(f"\n{ranker.summary_report()}")
 
-    assert isinstance(ranker.best_model_crossfit, LearnerCrossfit)
+    assert isinstance(ranker.best_model_crossfit_, LearnerCrossfit)
 
-    ranking = ranker.ranking
+    ranking = ranker.ranking_
 
     assert len(ranking) > 0
     assert isinstance(ranking[0], LearnerEvaluation)
@@ -121,18 +121,18 @@ def test_model_ranker(
     )
 
     # check if parameters set for estimators actually match expected:
-    for evaluation in ranker.ranking:
+    for evaluation in ranker.ranking_:
         pipeline_parameters = evaluation.pipeline.get_params()
         for name, value in evaluation.parameters.items():
             assert (
                 name in pipeline_parameters
-            ), f"paramater {name} is a parameter in evaluation.pipeline"
+            ), f"parameter {name} is a parameter in evaluation.pipeline"
             assert (
                 pipeline_parameters[name] == value
             ), f"evaluation.pipeline.{name} is set to {value}"
 
     check_ranking(
-        ranking=ranker.ranking,
+        ranking=ranker.ranking_,
         expected_scores=expected_scores,
         expected_learners=expected_learners,
         expected_parameters=expected_parameters,
@@ -160,9 +160,9 @@ def test_model_ranker_no_preprocessing(n_jobs) -> None:
     iris = datasets.load_iris()
     test_data = pd.DataFrame(
         data=np.c_[iris["data"], iris["target"]],
-        columns=iris["feature_names"] + ["target"],
+        columns=[*iris["feature_names"], "target"],
     )
-    test_sample: Sample = Sample(observations=test_data, target="target")
+    test_sample: Sample = Sample(observations=test_data, target_name="target")
 
     model_ranker: LearnerRanker[ClassifierPipelineDF[SVCDF]] = LearnerRanker(
         grids=models, cv=cv, n_jobs=n_jobs
@@ -171,7 +171,7 @@ def test_model_ranker_no_preprocessing(n_jobs) -> None:
     log.debug(f"\n{model_ranker.summary_report()}")
 
     check_ranking(
-        ranking=model_ranker.ranking,
+        ranking=model_ranker.ranking_,
         expected_scores=expected_learner_scores,
         expected_learners=[SVCDF] * 4,
         expected_parameters={
@@ -181,5 +181,5 @@ def test_model_ranker_no_preprocessing(n_jobs) -> None:
     )
 
     assert (
-        model_ranker.ranking[0].ranking_score >= 0.8
+        model_ranker.ranking_[0].ranking_score >= 0.8
     ), "expected a best performance of at least 0.8"

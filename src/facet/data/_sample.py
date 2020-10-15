@@ -1,15 +1,19 @@
 """
-Core implementation of :mod:`facet`
+Implementation of Facet's :class:`.Sample` class.
 """
 
+import logging
 from copy import copy
 from typing import Any, Collection, Iterable, List, Optional, Sequence, Set, Union
 
 import pandas as pd
 
-from pytools.api import AllTracker, is_list_like, to_list, to_set
+from pytools.api import AllTracker, to_list, to_set
+
+log = logging.getLogger(__name__)
 
 __all__ = ["Sample"]
+
 
 #
 # Ensure all symbols introduced below are included in __all__
@@ -38,12 +42,12 @@ class Sample:
     Supports :func:`.len`, returning the number of observations in this sample.
     """
 
-    __slots__ = ["_observations", "_target", "_features", "_weight"]
+    __slots__ = ["_observations", "_target_names", "_feature_names", "_weight_name"]
 
     _observations: pd.DataFrame
-    _weight: Optional[str]
-    _features: List[str]
-    _target: List[str]
+    _weight_name: Optional[str]
+    _feature_names: List[str]
+    _target_names: List[str]
 
     #: default name for the observations index (= row index)
     #: of the underlying data frame
@@ -61,31 +65,32 @@ class Sample:
         self,
         observations: pd.DataFrame,
         *,
-        target: Union[str, Sequence[str]],
-        features: Optional[Sequence[str]] = None,
-        weight: Optional[str] = None,
+        target_name: Union[str, Iterable[str]],
+        feature_names: Optional[Iterable[str]] = None,
+        weight_name: Optional[str] = None,
     ) -> None:
         """
         :param observations: a table of observational data; \
             each row represents one observation
-        :param target: one or more names of columns representing the target variable(s)
-        :param features: optional sequence of strings naming the columns that \
+        :param target_name: the name of the column representing the target \
+            variable; or an iterable of names representing multiple targets
+        :param feature_names: optional iterable of strings naming the columns that \
             represent features; if omitted, all non-target and non-weight columns are
             considered features
-        :param weight: optional name of a column representing the weight of each \
+        :param weight_name: optional name of a column representing the weight of each \
             observation
         """
 
-        def _ensure_columns_exist(column_type: str, columns: Iterable[str]):
+        def _ensure_columns_exist(column_type: str, columns: List[str]):
             # check if all provided feature names actually exist in the observations df
             available_columns: pd.Index = observations.columns
-            missing_columns = [
+            missing_columns = {
                 name for name in columns if name not in available_columns
-            ]
+            }
             if missing_columns:
                 raise KeyError(
                     f"observations table is missing {column_type} columns "
-                    f"{', '.join(missing_columns)}"
+                    f"{missing_columns}"
                 )
 
         # check that the observations are valid
@@ -103,60 +108,48 @@ class Sample:
 
         # process the target(s)
 
-        target_list: List[str]
+        targets_list: List[str] = to_list(
+            target_name, element_type=str, arg_name="target_name"
+        )
+        _ensure_columns_exist(column_type="target", columns=targets_list)
 
-        multi_target = is_list_like(target)
-
-        if multi_target:
-            _ensure_columns_exist(column_type="target", columns=target)
-            target_list = list(target)
-        else:
-            if target not in observations.columns:
-                raise KeyError(
-                    f'arg target="{target}" is not a column in the observations table'
-                )
-            target_list = [target]
-
-        self._target = target_list
+        self._target_names = targets_list
 
         # process the weight
 
-        if weight is not None:
-            if weight not in observations.columns:
+        if weight_name is not None:
+            if weight_name not in observations.columns:
                 raise KeyError(
-                    f'arg weight="{weight}" is not a column in the observations table'
+                    f'arg weight_name="{weight_name}" '
+                    "is not a column in the observations table"
                 )
 
-        self._weight = weight
+        self._weight_name = weight_name
 
         # process the features
 
-        feature_list: List[str]
+        features_list: List[str]
 
-        if features is None:
-            if weight is not None:
+        if feature_names is None:
+            if weight_name is not None:
                 _feature_index = observations.columns.drop(
-                    labels=[*target_list, weight]
+                    labels=[*targets_list, weight_name]
                 )
             else:
-                _feature_index = observations.columns.drop(labels=target_list)
-            feature_list = _feature_index.to_list()
+                _feature_index = observations.columns.drop(labels=targets_list)
+            features_list = _feature_index.to_list()
         else:
-            _ensure_columns_exist(column_type="feature", columns=features)
-            feature_list = list(features)
+            features_list = to_list(
+                feature_names, element_type=str, arg_name="feature_names"
+            )
+            _ensure_columns_exist(column_type="feature", columns=features_list)
 
             # ensure features and target(s) do not overlap
-            if multi_target:
-                shared = set(target_list).intersection(feature_list)
-                if len(shared) > 0:
-                    raise KeyError(
-                        f'targets {", ".join(shared)} are also included in the features'
-                    )
-            else:
-                if target in features:
-                    raise KeyError(f"target {target} is also included in the features")
+            shared = set(targets_list).intersection(features_list)
+            if len(shared) > 0:
+                raise KeyError(f"targets {shared} are also included in the features")
 
-        self._features = feature_list
+        self._feature_names = features_list
 
         # make sure the index has a name
 
@@ -165,11 +158,11 @@ class Sample:
 
         # keep only the columns we need
 
-        columns = [*feature_list, *target_list]
-        if weight is not None and weight not in columns:
-            columns.append(weight)
+        observation_columns = [*features_list, *targets_list]
+        if weight_name is not None and weight_name not in observation_columns:
+            observation_columns.append(weight_name)
 
-        self._observations = observations.loc[:, columns]
+        self._observations = observations.loc[:, observation_columns]
 
     @property
     def index(self) -> pd.Index:
@@ -179,32 +172,36 @@ class Sample:
         return self._observations.index
 
     @property
-    def feature_columns(self) -> List[str]:
+    def feature_names(self) -> List[str]:
         """
         The column names of all features in this sample
         """
-        return self._features
+        return self._feature_names
 
     @property
-    def target_columns(self) -> List[str]:
+    def target_name(self) -> Union[str, List[str]]:
         """
-        The column names of all targets in this sample
+        The column name of the target in this sample, or a list of column names
+        if this sample has multiple targets
         """
-        return self._target
+        if len(self._target_names) == 1:
+            return self._target_names[0]
+        else:
+            return self._target_names
 
     @property
-    def weight_column(self) -> Optional[str]:
+    def weight_name(self) -> Optional[str]:
         """
-        The column name of weights in this sample; ``None`` if no weights are defined.
+        The column name of weights in this sample; ``None`` if no weights are defined
         """
-        return self._weight
+        return self._weight_name
 
     @property
     def features(self) -> pd.DataFrame:
         """
         The features for all observations
         """
-        features: pd.DataFrame = self._observations.loc[:, self._features]
+        features: pd.DataFrame = self._observations.loc[:, self._feature_names]
 
         if features.columns.name is None:
             features = features.rename_axis(columns=Sample.IDX_FEATURE)
@@ -219,7 +216,7 @@ class Sample:
         Represented as a series if there is only a single target, or as a data frame if
         there are multiple targets.
         """
-        target = self.target_columns
+        target = self._target_names
 
         if len(target) == 1:
             return self._observations.loc[:, target[0]]
@@ -239,8 +236,8 @@ class Sample:
         A series indicating the weight for each observation; ``None`` if no weights
         are defined.
         """
-        if self._weight is not None:
-            return self._observations.loc[:, self._weight]
+        if self._weight_name is not None:
+            return self._observations.loc[:, self._weight_name]
         else:
             return None
 
@@ -276,47 +273,51 @@ class Sample:
             )
         return subsample
 
-    def keep(self, features: Union[str, Collection[str]]) -> "Sample":
+    def keep(self, *, feature_names: Union[str, Collection[str]]) -> "Sample":
         """
         Return a new sample which only includes the features with the given names.
 
-        :param features: name(s) of the features to be selected
+        :param feature_names: name(s) of the features to be selected
         :return: copy of this sample, containing only the features with the given names
         """
 
-        features: List[str] = to_list(features, element_type=str)
+        feature_names: List[str] = to_list(feature_names, element_type=str)
 
-        if not set(features).issubset(self._features):
+        if not set(feature_names).issubset(self._feature_names):
             raise ValueError(
-                "arg features is not a subset of the features in this sample"
+                "arg feature_names is not a subset of the features in this sample"
             )
 
         subsample = copy(self)
-        subsample._features = features
+        subsample._feature_names = feature_names
 
-        columns = [*features, *self._target]
-        weight = self._weight
+        columns = [*feature_names, *self._target_names]
+        weight = self._weight_name
         if weight and weight not in columns:
             columns.append(weight)
         subsample._observations = self._observations.loc[:, columns]
 
         return subsample
 
-    def drop(self, features: Union[str, Collection[str]]) -> "Sample":
+    def drop(self, *, feature_names: Union[str, Collection[str]]) -> "Sample":
         """
         Return a copy of this sample, dropping the features with the given names.
 
-        :param features: name(s) of the features to be dropped
+        :param feature_names: name(s) of the features to be dropped
         :return: copy of this sample, excluding the features with the given names
         """
-        features: Set[str] = to_set(features, element_type=str)
+        feature_names: Set[str] = to_set(feature_names, element_type=str)
 
-        unknown = features.difference(self._features)
+        unknown = feature_names.difference(self._feature_names)
         if unknown:
-            raise ValueError(f"unknown features in arg features: {unknown}")
+            raise ValueError(f"unknown features in arg feature_names: {unknown}")
 
         return self.keep(
-            features=[feature for feature in self._features if feature not in features]
+            feature_names=[
+                feature
+                for feature in self._feature_names
+                if feature not in feature_names
+            ]
         )
 
     def __len__(self) -> int:

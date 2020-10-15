@@ -9,8 +9,8 @@ from sklearndf import TransformerDF
 from sklearndf.pipeline import RegressorPipelineDF
 from sklearndf.regression.extra import LGBMRegressorDF
 
-from facet import Sample
 from facet.crossfit import LearnerCrossfit
+from facet.data import Sample
 from facet.simulation import UnivariateUpliftSimulator
 from facet.simulation.partition import ContinuousRangePartitioner
 from facet.simulation.viz import SimulationDrawer
@@ -75,14 +75,14 @@ def test_univariate_uplift_simulation(
     parameterized_feature = "LSTAT"
     partitioner = ContinuousRangePartitioner(max_partitions=10)
 
-    sample = uplift_simulator.crossfit.sample
+    sample = uplift_simulator.crossfit.sample_
 
     absolute_target_change_sr: pd.Series = (
         uplift_simulator._simulate_feature_with_values(
             feature_name=parameterized_feature,
             simulation_values=partitioner.fit(
                 values=sample.features.loc[:, parameterized_feature]
-            ).partitions(),
+            ).partitions_,
         )
     )
 

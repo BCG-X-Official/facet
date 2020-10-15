@@ -21,8 +21,8 @@ from sklearndf.classification import (
 from sklearndf.pipeline import ClassifierPipelineDF, RegressorPipelineDF
 
 from . import check_ranking
-from facet import Sample
 from facet.crossfit import LearnerCrossfit
+from facet.data import Sample
 from facet.inspection import (
     KernelExplainerFactory,
     LearnerInspector,
@@ -69,14 +69,14 @@ def iris_classifier_ranker_dual_target(
 def iris_classifier_crossfit_binary(
     iris_classifier_ranker_binary: LearnerRanker[ClassifierPipelineDF],
 ) -> LearnerCrossfit[ClassifierPipelineDF[RandomForestClassifierDF]]:
-    return iris_classifier_ranker_binary.best_model_crossfit
+    return iris_classifier_ranker_binary.best_model_crossfit_
 
 
 @pytest.fixture
 def iris_classifier_crossfit_multi_class(
     iris_classifier_ranker_multi_class: LearnerRanker[ClassifierPipelineDF],
 ) -> LearnerCrossfit[ClassifierPipelineDF[RandomForestClassifierDF]]:
-    return iris_classifier_ranker_multi_class.best_model_crossfit
+    return iris_classifier_ranker_multi_class.best_model_crossfit_
 
 
 @pytest.fixture
@@ -115,7 +115,7 @@ def test_model_inspection(
     log.debug(f"\n{regressor_ranker.summary_report()}")
 
     check_ranking(
-        ranking=regressor_ranker.ranking,
+        ranking=regressor_ranker.ranking_,
         expected_scores=expected_scores,
         expected_learners=None,
         expected_parameters=None,
@@ -182,7 +182,7 @@ def test_binary_classifier_ranking(iris_classifier_ranker_binary) -> None:
 
     log.debug(f"\n{iris_classifier_ranker_binary.summary_report()}")
     check_ranking(
-        ranking=iris_classifier_ranker_binary.ranking,
+        ranking=iris_classifier_ranker_binary.ranking_,
         expected_scores=expected_learner_scores,
         expected_learners=[RandomForestClassifierDF] * 4,
         expected_parameters={
@@ -251,7 +251,7 @@ def test_model_inspection_classifier_binary_single_shap_output() -> None:
     )
 
     # create sample object
-    sample_df = Sample(observations=sim_df, target="target")
+    sample_df = Sample(observations=sim_df, target_name="target")
 
     # fit the crossfit
     crossfit = LearnerCrossfit(
@@ -347,7 +347,7 @@ def test_model_inspection_classifier_multi_class(
     linkage_trees = iris_inspector_multi_class.feature_association_linkage()
 
     for output, linkage_tree in zip(
-        iris_inspector_multi_class.output_names, linkage_trees
+        iris_inspector_multi_class.output_names_, linkage_trees
     ):
         print()
         DendrogramDrawer(style=DendrogramReportStyle()).draw(
@@ -362,7 +362,7 @@ def _validate_shap_values_against_predictions(
     # calculate the matching predictions, so we can check if the SHAP values add up
     # correctly
     predicted_probabilities_per_split: List[pd.DataFrame] = [
-        model.predict_proba(crossfit.sample.features.iloc[test_split, :])
+        model.predict_proba(crossfit.sample_.features.iloc[test_split, :])
         for model, (_, test_split) in zip(crossfit.models(), crossfit.splits())
     ]
 
@@ -462,7 +462,7 @@ def test_model_inspection_classifier_interaction(
     ).abs().max().max() < 0.015
 
     # the column names of the shap value data frames are the feature names
-    feature_columns = iris_sample_binary.feature_columns
+    feature_columns = iris_sample_binary.feature_names
     assert shap_values.columns.to_list() == feature_columns
     assert shap_interaction_values.columns.to_list() == feature_columns
 
@@ -532,18 +532,18 @@ def test_model_inspection_classifier_interaction_dual_target(
     iris_classifier_ranker_dual_target: LearnerRanker[
         ClassifierPipelineDF[RandomForestClassifierDF]
     ],
-    iris_target: str,
+    iris_target_name,
     n_jobs: int,
 ) -> None:
     iris_classifier_crossfit_dual_target = (
-        iris_classifier_ranker_dual_target.best_model_crossfit
+        iris_classifier_ranker_dual_target.best_model_crossfit_
     )
 
     with pytest.raises(
         ValueError,
         match=(
             f"only single-output classifiers .* are supported.*"
-            f"{iris_target}.*{iris_target}2"
+            f"{iris_target_name}.*{iris_target_name}2"
         ),
     ):
         LearnerInspector(n_jobs=n_jobs).fit(
@@ -557,7 +557,7 @@ def test_shap_plot_data(
 ) -> None:
     shap_plot_data = iris_inspector_multi_class.shap_plot_data()
     # noinspection SpellCheckingInspection
-    assert tuple(iris_inspector_multi_class.output_names) == (
+    assert tuple(iris_inspector_multi_class.output_names_) == (
         "setosa",
         "versicolor",
         "virginica",
