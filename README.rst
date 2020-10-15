@@ -32,23 +32,23 @@ Pip
 Quickstart
 ----------------------
 
-Facet is composed of the following key components:
 
-- **sklearndf**:
-    An augmented version of scikit-learn with enhanced support for pandas dataframes
-    and pipelining.
+Facet is composed of the following key components:
 
 - **Enhanced machine learning workflow**:
     Facet delivers a robust and fail-safe pipelining
     workflow which allows you to easily impute and select your features as well as
-    ranking a grid of different models "competing" against each other
+    ranking a grid of different models "competing" against each other. Facet introduces
+    **sklearndf**, an augmented version of
+    `scikit-learn <https://scikit-learn.org/stable/index.html>`_ with enhanced support
+    for pandas dataframes and pipelining.
 
 - **Model Inspection**:
     Local explanations of features and their interactions make up a key
     component of understanding feature importance as well as feature interactions.
     This is based on a novel method which decomposes
     `SHAP values <https://shap.readthedocs.io/en/latest/>`_ into
-    three vectors representing **synergy**, **redundancy**, and **independence**.
+    two vectors representing **synergy** and **redundancy**.
 
 - **Model Simulation**:
     Use your trained model and the insights from the model inspection
@@ -56,7 +56,7 @@ Facet is composed of the following key components:
     identify local optima.
 
 
-Pipelining and Model Ranking
+Enhanced machine learning workflow
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: Python
@@ -100,34 +100,35 @@ Pipelining and Model Ranking
     ranker = LearnerRanker(grids=rforest_grid, cv=rkf_cv, n_jobs=-3).fit(sample=boston_obs)
 
     # get summary report
-    print(ranker.summary_report())
+    ranker.summary_report()
 
-.. code-block:: RST
+.. image:: _static/ranker_summary.png
+    :width: 600
 
-    Rank  1: RandomForestRegressorDF, ranking_score=    0.722, scores_mean=    0.813,
-    scores_std=   0.0455, parameters={regressor__min_samples_leaf=8}
-
-    Rank  2: RandomForestRegressorDF, ranking_score=    0.707, scores_mean=    0.802,
-    scores_std=   0.0471, parameters={regressor__min_samples_leaf=11}
-
-    Rank  3: RandomForestRegressorDF, ranking_score=    0.693, scores_mean=    0.789,
-    scores_std=   0.0481, parameters={regressor__min_samples_leaf=15}
-
-Easy model inspection
+Model Inspection
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Facet implements several model inspection methods for
-`scikit-learn <https://scikit-learn.org/stable/index.html>`_ base learners.
+`scikit-learn <https://scikit-learn.org/stable/index.html>`_ estimators.
 Fundamentally, facet enables post-hoc model inspection by breaking down the interaction
 effects of the variables that your model used for training:
 
 - **Redundancy**
-  identifies groups of variables that fully or partially duplicate each
-  other and do not deliver any additional information to the machine learning model.
+  represents how much information is shared between two features
+  contributions to the model predictionsFor example, temperature and pressure in a pressure cooker are
+  redundant features for predicting cooking time since pressure will rise relative to
+  the temperature, and vice versa. Therefore, knowing just one of either temperature or
+  pressure will likely enable the same predictive accuracy. Redundancy is expressed as
+  a percentage ranging from 0% (full uniqueness) to 100% (full redundancy).
+
 - **Synergy**
-  provides visibility about how features contain complementary information
-  with respect to the target and team up to predict outcomes by combining their
-  information.
+  represents how much the combined information of two features contributes to
+  the model predictions. For example, given features X and Y as
+  coordinates on a chess board, the colour of a square can only be predicted when
+  considering X and Y in combination. Synergy is expressed as a
+  percentage ranging from 0% (full autonomy) to 100% (full synergy)
+
+
 
 .. code-block:: Python
 
@@ -142,7 +143,7 @@ effects of the variables that your model used for training:
     MatrixDrawer(style="matplot%").draw(redundancy_matrix, title="Redundancy Matrix")
 
 .. image:: _static/redundancy_matrix.png
-    :width: 400
+    :width: 600
 
 We can also better visualize redundancy as a dendrogram so we can identify clusters of features with redundancy.
 
@@ -154,7 +155,7 @@ We can also better visualize redundancy as a dendrogram so we can identify clust
     DendrogramDrawer().draw(data=redundancy, title="Redundancy Dendrogram")
 
 .. image:: _static/redundancy_dendrogram.png
-    :width: 400
+    :width: 600
 
 For feature synergy, we can get a similar picture
 
@@ -165,12 +166,12 @@ For feature synergy, we can get a similar picture
     MatrixDrawer(style="matplot%").draw(synergy_matrix, title="Synergy Matrix")
 
 .. image:: _static/synergy_matrix.png
-    :width: 400
+    :width: 600
 
 Please see the API documentation for more detail.
 
 
-Simulation
+Model Simulation
 ~~~~~~~~~~~~~~~~~~
 
 .. code-block:: Python
@@ -211,7 +212,7 @@ Simulation
 
     <p>Download the getting started tutorial and explore FACET for yourself by clicking
     here:
-    <a href="https://mybinder.org" target="_blank">
+    <a href="https://mybinder.org/" target="_blank">
     <img src="https://mybinder.org/badge_logo.svg"></a>
     </p>
 
@@ -219,7 +220,8 @@ Simulation
 Development Guidelines
 ---------------------------
 
-TBD - link to long section in documentation.
+We would be more than happy would you wish to contribute to Facet. See our
+:ref:`contribution-guide`.
 
 Acknowledgements
 ---------------------------
