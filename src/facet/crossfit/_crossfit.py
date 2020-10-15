@@ -157,10 +157,8 @@ class LearnerCrossfit(
             raise TypeError("arg pipeline must be a LearnerPipelineDF")
         self.pipeline: T_LearnerPipelineDF = pipeline.clone()
 
-        if not isinstance(cv, BaseCrossValidator):
-            raise TypeError(
-                "arg cv must implement class sklearn.model_selection.BaseCrossValidator"
-            )
+        if not hasattr(cv, "split"):
+            raise TypeError("arg cv must implement splits")
         self.cv = cv
 
         self.shuffle_features: bool = (
