@@ -1,16 +1,11 @@
 """
-
-Welcome to the class and function reference of FACET to enhance your machine learning
-workflow for advanced model selection and inspection.
-
-
+This is the class and function reference of FACET for advanced model selection,
+inspection, and simulation.
+The figure below provides a high level overview of the workflow when using FACET, and
+for each step in the workflow, a brief description.
 .. image::
     ../_static/Facet_flow.svg
-
-
-Please refer to the tutorials for further information on the use of FACET classes and
-functions.
-
+Please refer to the :ref:`tutorials` for examples of using FACET classes and functions.
 """
 
 
