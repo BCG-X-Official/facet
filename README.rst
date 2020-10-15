@@ -80,7 +80,7 @@ Enhanced machine learning workflow
         MEDIAN_HOUSE_PRICE=boston.target
     )
 
-    # create FCAET sample object
+    # create FACET sample object
     boston_obs = Sample(observations=df, target="MEDIAN_HOUSE_PRICE")
 
     # create pipeline for random forest regressor
