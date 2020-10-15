@@ -115,7 +115,7 @@ effects of the variables that your model used for training:
 
 - **Redundancy**
   represents how much information is shared between two features
-  contributions to the model predictionsFor example, temperature and pressure in a pressure cooker are
+  contributions to the model predictions. For example, temperature and pressure in a pressure cooker are
   redundant features for predicting cooking time since pressure will rise relative to
   the temperature, and vice versa. Therefore, knowing just one of either temperature or
   pressure will likely enable the same predictive accuracy. Redundancy is expressed as
@@ -135,7 +135,7 @@ effects of the variables that your model used for training:
     # fit the model inspector
     from facet.inspection import LearnerInspector
     inspector = LearnerInspector()
-    inspector.fit(crossfit=ranker.best_model_crossfit)
+    inspector.fit(crossfit=ranker.best_model_crossfit_)
 
     # visualise redundancy as a matrix
     from pytools.viz.matrix import MatrixDrawer
@@ -188,14 +188,14 @@ Model Simulation
 
     # create a bootstrap CV crossfit for simulation using best model
     boot_crossfit = LearnerCrossfit(
-        pipeline=ranker.best_model.native_estimator,
+        pipeline=ranker.best_model_,
         cv=bscv,
         n_jobs=-3,
         verbose=False,
     ).fit(sample=boston_obs)
 
     SIM_FEAT = "LSTAT"
-    simulator = UnivariateUpliftSimulator(crossfit=ranker.best_model_crossfit, n_jobs=3)
+    simulator = UnivariateUpliftSimulator(crossfit=ranker.best_model_crossfit_, n_jobs=3)
 
     # split the simulation range into equal sized partitions
     partitioner = ContinuousRangePartitioner()
