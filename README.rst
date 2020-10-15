@@ -115,7 +115,7 @@ effects of the variables that your model used for training:
 
 - **Redundancy**
   represents how much information is shared between two features
-  contributions to the model predictionsFor example, temperature and pressure in a pressure cooker are
+  contributions to the model predictions. For example, temperature and pressure in a pressure cooker are
   redundant features for predicting cooking time since pressure will rise relative to
   the temperature, and vice versa. Therefore, knowing just one of either temperature or
   pressure will likely enable the same predictive accuracy. Redundancy is expressed as
