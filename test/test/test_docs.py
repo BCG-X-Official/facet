@@ -206,22 +206,22 @@ def test_docstrings(all_script_objects) -> None:
                 [name for name, obj in inner_methods if docstr_missing(name, obj)]
             )
 
-    log.info(
-        f"The following classes lack-docstrings:{str(classes_with_missing_docstr)}"
-    )
+    if classes_with_missing_docstr:
+        log.info(f"The following classes lack-docstrings:{classes_with_missing_docstr}")
 
-    log.info(
-        f"The following functions lack-docstrings:{str(functions_with_missing_docstr)}"
-    )
+    if functions_with_missing_docstr:
+        log.info(
+            f"The following functions lack-docstrings:{functions_with_missing_docstr}"
+        )
 
-    log.info(
-        f"The following methods lack-docstrings:{str(methods_with_missing_docstr)}"
-    )
+    if methods_with_missing_docstr:
+        log.info(f"The following methods lack-docstrings:{methods_with_missing_docstr}")
 
-    log.info(
-        f"The following methods have inconsistently described parameters:"
-        f"{str(inconsistent_parameters)}"
-    )
+    if inconsistent_parameters:
+        log.info(
+            f"The following methods have inconsistently described parameters:"
+            f"{inconsistent_parameters}"
+        )
 
     assert len(classes_with_missing_docstr) == 0
     assert len(functions_with_missing_docstr) == 0
