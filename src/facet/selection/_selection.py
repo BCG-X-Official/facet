@@ -229,7 +229,7 @@ class LearnerEvaluation(Generic[T_LearnerPipelineDF]):
         self.ranking_score = ranking_score
 
 
-@inheritdoc(match="[see superclass")
+@inheritdoc(match="[see superclass]")
 class LearnerRanker(
     ParallelizableMixin, FittableMixin[Sample], Generic[T_LearnerPipelineDF]
 ):
