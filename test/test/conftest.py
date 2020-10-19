@@ -27,6 +27,7 @@ from sklearndf.transformation import (
     SimpleImputerDF,
 )
 
+import facet
 from .facet import STEP_IMPUTE, STEP_ONE_HOT_ENCODE
 from facet.crossfit import LearnerCrossfit
 from facet.data import Sample
@@ -36,6 +37,9 @@ from facet.validation import BootstrapCV, StratifiedBootstrapCV
 
 logging.basicConfig(level=logging.DEBUG)
 log = logging.getLogger(__name__)
+
+# print the FACET logo
+print(facet.__logo__)
 
 # disable SHAP debugging messages
 logging.getLogger("shap").setLevel(logging.WARNING)
