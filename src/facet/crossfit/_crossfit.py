@@ -158,7 +158,9 @@ class LearnerCrossfit(
         self.pipeline: T_LearnerPipelineDF = pipeline.clone()
 
         if not hasattr(cv, "split"):
-            raise TypeError("arg cv must implement splits")
+            raise TypeError(
+                "arg cv must be a cross-validator implementing method split()"
+            )
         self.cv = cv
 
         self.shuffle_features: bool = (
