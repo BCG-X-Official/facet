@@ -17,7 +17,7 @@ from pytools.api import AllTracker
 from pytools.viz import Drawer
 
 from ._style import SimulationMatplotStyle, SimulationReportStyle, SimulationStyle
-from facet.simulation import UnivariateSimulation
+from facet.simulation import UnivariateSimulationResult
 
 __all__ = ["SimulationDrawer"]
 
@@ -49,10 +49,10 @@ class _SimulationSeries(NamedTuple, Generic[T_Number]):
     frequencies: Sequence[T_Number]
 
 
-class SimulationDrawer(Drawer[UnivariateSimulation, SimulationStyle]):
+class SimulationDrawer(Drawer[UnivariateSimulationResult, SimulationStyle]):
     """
     Draws the result of a univariate simulation, represented by a
-    :class:`.UnivariateSimulation` object.
+    :class:`.UnivariateSimulationResult` object.
     """
 
     _STYLES = {"matplot": SimulationMatplotStyle, "text": SimulationReportStyle}
@@ -73,7 +73,9 @@ class SimulationDrawer(Drawer[UnivariateSimulation, SimulationStyle]):
         super().__init__(style=style)
         self._histogram = histogram
 
-    def draw(self, data: UnivariateSimulation, title: Optional[str] = None) -> None:
+    def draw(
+        self, data: UnivariateSimulationResult, title: Optional[str] = None
+    ) -> None:
         """
         Draw the simulation chart.
         :param data: the univariate simulation to draw
@@ -88,7 +90,7 @@ class SimulationDrawer(Drawer[UnivariateSimulation, SimulationStyle]):
     def _get_style_dict(cls) -> Mapping[str, Type[SimulationStyle]]:
         return SimulationDrawer._STYLES
 
-    def _draw(self, data: UnivariateSimulation) -> None:
+    def _draw(self, data: UnivariateSimulationResult) -> None:
         # draw the simulation chart
         simulation_series = self._get_simulation_series(simulation=data)
 
@@ -117,7 +119,9 @@ class SimulationDrawer(Drawer[UnivariateSimulation, SimulationStyle]):
             )
 
     @staticmethod
-    def _get_simulation_series(simulation: UnivariateSimulation) -> _SimulationSeries:
+    def _get_simulation_series(
+        simulation: UnivariateSimulationResult,
+    ) -> _SimulationSeries:
         # return the simulation series for median uplift, min uplift, max uplift,
         # partitions and frequencies
         # If the partitioning of the simulation is categorical, the series are

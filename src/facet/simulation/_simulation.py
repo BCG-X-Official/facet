@@ -36,7 +36,7 @@ from .partition import Partitioner
 log = logging.getLogger(__name__)
 
 __all__ = [
-    "UnivariateSimulation",
+    "UnivariateSimulationResult",
     "BaseUnivariateSimulator",
     "UnivariateProbabilitySimulator",
     "UnivariateUpliftSimulator",
@@ -70,7 +70,7 @@ __tracker = AllTracker(globals())
 #
 
 
-class UnivariateSimulation(NamedTuple, Generic[T_Number]):
+class UnivariateSimulationResult(NamedTuple, Generic[T_Number]):
     """
     Summary result of a univariate simulation.
     """
@@ -176,7 +176,7 @@ class BaseUnivariateSimulator(
 
     def simulate_feature(
         self, name: str, partitioner: Partitioner
-    ) -> UnivariateSimulation:
+    ) -> UnivariateSimulationResult:
         """
         Simulate the average target uplift when fixing the value of the given feature
         across all observations.
@@ -198,7 +198,7 @@ class BaseUnivariateSimulator(
                 feature_name=name, simulation_values=simulation_values
             )
         )
-        return UnivariateSimulation(
+        return UnivariateSimulationResult(
             feature=name,
             target=sample.target_name,
             partitioner=partitioner,
