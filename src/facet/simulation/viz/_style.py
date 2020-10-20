@@ -13,7 +13,12 @@ from mpl_toolkits.axes_grid1.axes_size import Scaled
 
 from pytools.api import AllTracker, inheritdoc
 from pytools.viz import DrawStyle, MatplotStyle, TextStyle
-from pytools.viz.colors import RGBA_DARK_BLUE, RGBA_LIGHT_BLUE, RGBA_LIGHT_GREEN
+from pytools.viz.colors import (
+    RGBA_DARK_BLUE,
+    RGBA_GREY,
+    RGBA_LIGHT_BLUE,
+    RGBA_LIGHT_GREEN,
+)
 from pytools.viz.text import format_table
 
 log = logging.getLogger(__name__)
@@ -121,8 +126,9 @@ class SimulationMatplotStyle(MatplotStyle, SimulationStyle):
     """
 
     _COLOR_CONFIDENCE_INTERVAL = RGBA_DARK_BLUE
-    _COLOR_BARS = RGBA_LIGHT_GREEN
     _COLOR_MEDIAN = RGBA_LIGHT_BLUE
+    _COLOR_BASELINE = RGBA_LIGHT_GREEN
+    _COLOR_BARS = RGBA_GREY
     _WIDTH_BARS = 0.8
 
     _HISTOGRAM_SIZE_RATIO = 1 / 3
@@ -154,8 +160,10 @@ class SimulationMatplotStyle(MatplotStyle, SimulationStyle):
         (line_min,) = ax.plot(x, values_min, color=self._COLOR_CONFIDENCE_INTERVAL)
         (line_median,) = ax.plot(x, values_median, color=self._COLOR_MEDIAN)
         (line_max,) = ax.plot(x, values_max, color=self._COLOR_CONFIDENCE_INTERVAL)
-        # add a horizontal line at y=0
-        line_base = ax.axhline(y=values_baseline, linewidth=0.5)
+        # add a horizontal line at the baseline
+        line_base = ax.axhline(
+            y=values_baseline, linewidth=0.5, color=self._COLOR_CONFIDENCE_BASELINE
+        )
 
         # add a legend
         labels = self._legend(
