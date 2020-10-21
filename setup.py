@@ -5,7 +5,7 @@ import os
 
 from setuptools import find_packages, setup
 
-from src.pytools import __version__
+from src.facet import __version__
 
 here = os.path.dirname(os.path.realpath(__file__))
 # Get the long description from the README file
