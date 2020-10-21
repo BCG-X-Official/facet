@@ -19,6 +19,7 @@ from facet.simulation import (
     IDX_PARTITION,
     IDX_SPLIT,
     UnivariateSimulationResult,
+    UnivariateTargetSimulator,
     UnivariateUpliftSimulator,
 )
 from facet.simulation.partition import ContinuousRangePartitioner
@@ -49,6 +50,18 @@ def crossfit(
 
 
 @pytest.fixture
+def target_simulator(
+    crossfit: LearnerCrossfit, n_jobs: int
+) -> UnivariateTargetSimulator:
+    return UnivariateTargetSimulator(
+        crossfit=crossfit,
+        confidence_level=0.8,
+        n_jobs=n_jobs,
+        verbose=50,
+    )
+
+
+@pytest.fixture
 def uplift_simulator(
     crossfit: LearnerCrossfit, n_jobs: int
 ) -> UnivariateUpliftSimulator:
@@ -60,6 +73,67 @@ def uplift_simulator(
     )
 
 
+def test_univariate_target_simulation(
+    target_simulator: UnivariateTargetSimulator,
+) -> None:
+
+    parameterized_feature = "LSTAT"
+    partitioner = ContinuousRangePartitioner(max_partitions=10)
+
+    simulation_result: UnivariateSimulationResult = target_simulator.simulate_feature(
+        feature_name=parameterized_feature,
+        partitioner=partitioner,
+    )
+
+    absolute_target_change_df: pd.DataFrame = simulation_result.outputs
+
+    values = absolute_target_change_df.values
+
+    # test aggregated values
+    # the values on the right were computed from correct runs
+    assert values.min() == approx(18.221038)
+    assert values.mean() == approx(21.751659)
+    assert values.max() == approx(26.717145)
+
+    # test the first five rows of aggregated_results
+    # the values were computed from a correct run
+
+    index = pd.Index(data=[5.0, 10.0, 15.0, 20.0, 25.0], name=IDX_PARTITION)
+
+    assert_series_equal(
+        simulation_result.outputs_lower_bound(),
+        pd.Series(
+            [23.711826, 21.076134, 19.879803, 19.520689, 19.520689],
+            name=COL_LOWER_BOUND,
+            index=index,
+        ),
+    )
+
+    assert_series_equal(
+        simulation_result.outputs_median(),
+        pd.Series(
+            [25.132081, 21.703134, 21.081869, 21.079957, 21.079957],
+            name=COL_MEDIAN,
+            index=index,
+        ),
+    )
+
+    assert_series_equal(
+        simulation_result.outputs_upper_bound(),
+        pd.Series(
+            [26.653861, 22.038040, 21.672134, 21.583673, 21.583673],
+            name=COL_UPPER_BOUND,
+            index=index,
+        ),
+    )
+
+    SimulationDrawer(style="text").draw(
+        data=target_simulator.simulate_feature(
+            feature_name=parameterized_feature, partitioner=partitioner
+        )
+    )
+
+
 def test_actuals_simulation(uplift_simulator: UnivariateUpliftSimulator) -> None:
 
     assert_series_equal(
@@ -67,8 +141,8 @@ def test_actuals_simulation(uplift_simulator: UnivariateUpliftSimulator) -> None
         pd.Series(
             index=pd.RangeIndex(10, name=IDX_SPLIT),
             data=(
-                [0.0155072, 0.0280131, -0.0342100, 0.0155648, 0.0131959]
-                + [-0.0486192, -0.0378004, 0.0068394, -0.0034286, 0.0202970]
+                [0.345951, 0.624943, -0.76319, 0.3472346, 0.294388]
+                + [-1.084646, -0.843289, 0.1525806, -0.0764880, 0.4528048]
             ),
             name=COL_OUTPUT,
         ),
