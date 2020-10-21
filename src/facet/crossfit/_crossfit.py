@@ -181,7 +181,7 @@ class LearnerCrossfit(
         return self._sample is not None
 
     @property
-    def n_fits_(self) -> int:
+    def n_splits_(self) -> int:
         """
         The number of fits in this crossfit.
         """
@@ -279,10 +279,10 @@ class LearnerCrossfit(
         self: LearnerCrossfit
 
         # ensure that arg n_split has a valid value
-        if n_fits > self.n_fits_:
+        if n_fits > self.n_splits_:
             raise ValueError(
                 f"arg n_fits={n_fits} must not be greater than the number of fits"
-                f"in the original crossfit ({self.n_fits_} fits)"
+                f"in the original crossfit ({self.n_splits_} fits)"
             )
         elif n_fits < 1:
             raise ValueError(f"arg n_fits={n_fits} must be a positive integer")
@@ -490,7 +490,7 @@ class LearnerCrossfit(
         return pipeline if do_fit else None, score
 
     def __len__(self) -> int:
-        return self.n_fits_
+        return self.n_splits_
 
 
 __tracker.validate()
