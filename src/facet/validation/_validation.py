@@ -13,6 +13,7 @@ from sklearn.utils import check_random_state
 from pytools.api import AllTracker
 
 __all__ = [
+    "BaseBootstrapCV",
     "BootstrapCV",
     "StratifiedBootstrapCV",
     "StationaryBootstrapCV",
@@ -31,7 +32,7 @@ __tracker = AllTracker(globals())
 #
 
 
-class _BaseBootstrapCV(BaseCrossValidator, metaclass=ABCMeta):
+class BaseBootstrapCV(BaseCrossValidator, metaclass=ABCMeta):
     """
     Base class for bootstrap cross-validators.
     """
@@ -127,7 +128,7 @@ class _BaseBootstrapCV(BaseCrossValidator, metaclass=ABCMeta):
         pass
 
 
-class BootstrapCV(_BaseBootstrapCV):
+class BootstrapCV(BaseBootstrapCV):
     """
     Bootstrapping cross-validation.
 
@@ -148,7 +149,7 @@ class BootstrapCV(_BaseBootstrapCV):
         return random_state.randint(n_samples, size=n_samples)
 
 
-class StratifiedBootstrapCV(_BaseBootstrapCV):
+class StratifiedBootstrapCV(BaseBootstrapCV):
     """
     Stratified bootstrapping cross-validation.
 
@@ -186,7 +187,7 @@ class StratifiedBootstrapCV(_BaseBootstrapCV):
         )
 
 
-class StationaryBootstrapCV(_BaseBootstrapCV):
+class StationaryBootstrapCV(BaseBootstrapCV):
     """
     Bootstrap for stationary time series, based on Politis and Romano (1994).
 
