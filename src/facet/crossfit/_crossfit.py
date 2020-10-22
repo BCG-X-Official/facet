@@ -326,8 +326,6 @@ class LearnerCrossfit(
                 "specify a weight column in class Sample instead"
             )
 
-        sample_weight = _sample.weight
-
         do_fit = _sample is not None
         do_score = _scoring is not LearnerCrossfit.__NO_SCORING
 
@@ -337,6 +335,8 @@ class LearnerCrossfit(
 
         if not do_fit:
             _sample = self.sample_
+
+        sample_weight = _sample.weight
 
         features = _sample.features
         target = _sample.target
