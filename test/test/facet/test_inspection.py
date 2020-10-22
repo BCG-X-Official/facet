@@ -8,7 +8,7 @@ from typing import List, Sequence, Set
 import numpy as np
 import pandas as pd
 import pytest
-from pandas.util.testing import assert_frame_equal, assert_series_equal
+from pandas.testing import assert_frame_equal, assert_series_equal
 from sklearn.datasets import make_classification
 from sklearn.model_selection import BaseCrossValidator, KFold
 
@@ -20,7 +20,7 @@ from sklearndf.classification import (
 )
 from sklearndf.pipeline import ClassifierPipelineDF, RegressorPipelineDF
 
-from . import check_ranking
+from ..conftest import check_ranking
 from facet.crossfit import LearnerCrossfit
 from facet.data import Sample
 from facet.inspection import (

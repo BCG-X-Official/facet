@@ -1,7 +1,7 @@
 import functools
 import logging
 import operator
-from typing import List, Set
+from typing import Any, List, Mapping, Optional, Sequence, Set
 
 import numpy as np
 import pandas as pd
@@ -27,7 +27,7 @@ from sklearndf.transformation import (
     SimpleImputerDF,
 )
 
-from .facet import STEP_IMPUTE, STEP_ONE_HOT_ENCODE
+import facet
 from facet.crossfit import LearnerCrossfit
 from facet.data import Sample
 from facet.inspection import LearnerInspector, TreeExplainerFactory
@@ -36,6 +36,9 @@ from facet.validation import BootstrapCV, StratifiedBootstrapCV
 
 logging.basicConfig(level=logging.DEBUG)
 log = logging.getLogger(__name__)
+
+# print the FACET logo
+print(facet.__logo__)
 
 # disable SHAP debugging messages
 logging.getLogger("shap").setLevel(logging.WARNING)
@@ -46,6 +49,9 @@ pd.set_option("precision", 3)  # 3 digits precision for easier readability
 
 K_FOLDS = 5
 N_BOOTSTRAPS = 30
+
+STEP_IMPUTE = "impute"
+STEP_ONE_HOT_ENCODE = "one-hot-encode"
 
 
 @pytest.fixture
@@ -295,3 +301,46 @@ def iris_sample_binary_dual_target(
         iris_sample_binary.features.join(target).join(target.rename(iris_target_2)),
         target_name=[iris_sample_binary.target_name, iris_target_2],
     )
+
+
+def check_ranking(
+    ranking: List[LearnerEvaluation],
+    expected_scores: Sequence[float],
+    expected_learners: Optional[Sequence[type]],
+    expected_parameters: Optional[Mapping[int, Mapping[str, Any]]],
+) -> None:
+    """
+    Test helper to check rankings produced by learner rankers
+
+    :param ranking: a list of LearnerEvaluations
+    :param expected_scores: expected ranking scores, rounded to 3 decimal places
+    :param expected_learners: expected learner classes
+    :param expected_parameters: expected learner parameters
+    :return: None
+    """
+
+    if expected_learners is None:
+        expected_learners = [None] * len(ranking)
+
+    for rank, (learner_eval, score_expected, learner_expected) in enumerate(
+        zip(ranking, expected_scores, expected_learners)
+    ):
+        score_actual = round(learner_eval.ranking_score, 3)
+        assert score_actual == pytest.approx(score_expected, abs=0.1), (
+            f"unexpected score for learner at rank #{rank + 1}: "
+            f"got {score_actual} but expected {score_expected}"
+        )
+        if learner_expected is not None:
+            learner_actual = learner_eval.pipeline.final_estimator
+            assert type(learner_actual) == learner_expected, (
+                f"unexpected class for learner at rank #{rank}: "
+                f"got {type(learner_actual)} but expected {learner_expected}"
+            )
+
+    if expected_parameters is not None:
+        for rank, parameters_expected in expected_parameters.items():
+            parameters_actual = ranking[rank].parameters
+            assert parameters_actual == parameters_expected, (
+                f"unexpected parameters for learner at rank #{rank}: "
+                f"got {parameters_actual} but expected {parameters_expected}"
+            )

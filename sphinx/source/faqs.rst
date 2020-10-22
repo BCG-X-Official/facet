@@ -10,7 +10,7 @@ there you could also try posting on `stackoverflow <https://stackoverflow.com/>`
 
     For bug reports or feature requests please use our
     `GitHub issue tracker <https://github.com/BCG-Gamma/facet/issues>`_.
-    For any other enquiries please feel free to contact us at our mailing list (add link).
+    For any other enquiries please feel free to contact us at FacetTeam <at> bcg <dot> com.
 
 2. **How does FACET's novel algorithm calculate feature redundancy and synergy?**
 
@@ -23,7 +23,7 @@ there you could also try posting on `stackoverflow <https://stackoverflow.com/>`
     We welcome contributors! If you have minor changes in mind that would like to
     contribute, please feel free to create a pull request and be sure to follow the
     developer guidelines. For large or extensive changes please feel free to open an
-    issue, or reach out to us at our mailing list (add link) first to discuss.
+    issue, or reach out to us at FacetTeam <at> bcg <dot> com to discuss.
 
 4. **How can I perform standard plotting of SHAP values as done in the**
    `shap <https://github.com/slundberg/shap>`_ **library?**
