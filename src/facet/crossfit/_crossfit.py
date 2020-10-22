@@ -269,28 +269,28 @@ class LearnerCrossfit(
             _sample=sample, _scoring=scoring, _train_scores=train_scores, **fit_params
         )
 
-    def resize(self: T, n_fits: int) -> T:
+    def resize(self: T, n_splits: int) -> T:
         """
         Reduce the size of this crossfit by removing a subset of the fits.
-        :param n_fits: the number of fits to keep. Must be lower, or equal to, the \
+        :param n_splits: the number of fits to keep. Must be lower, or equal to, the \
             current number of fits
         :return:
         """
         self: LearnerCrossfit
 
         # ensure that arg n_split has a valid value
-        if n_fits > self.n_splits_:
+        if n_splits > self.n_splits_:
             raise ValueError(
-                f"arg n_fits={n_fits} must not be greater than the number of fits"
+                f"arg n_splits={n_splits} must not be greater than the number of fits"
                 f"in the original crossfit ({self.n_splits_} fits)"
             )
-        elif n_fits < 1:
-            raise ValueError(f"arg n_fits={n_fits} must be a positive integer")
+        elif n_splits < 1:
+            raise ValueError(f"arg n_splits={n_splits} must be a positive integer")
 
         # copy self and only keep the specified number of fits
         new_crossfit = copy(self)
-        new_crossfit._model_by_split = self._model_by_split[:n_fits]
-        new_crossfit._splits = self._splits[:n_fits]
+        new_crossfit._model_by_split = self._model_by_split[:n_splits]
+        new_crossfit._splits = self._splits[:n_splits]
         return new_crossfit
 
     def splits(self) -> Iterator[Tuple[Sequence[int], Sequence[int]]]:
