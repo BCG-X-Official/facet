@@ -1,5 +1,6 @@
 import logging
 
+import numpy as np
 import pytest
 
 from sklearndf.classification import RandomForestClassifierDF
@@ -80,3 +81,8 @@ def test_prediction_classifier(
     crossfit = model_ranker.best_model_crossfit_
 
     assert crossfit.is_fitted
+
+    accuracy_scores_per_split: np.ndarray = crossfit.score(scoring="accuracy")
+    assert (
+        (accuracy_scores_per_split > 0.9) & (accuracy_scores_per_split <= 1.0)
+    ).all()
