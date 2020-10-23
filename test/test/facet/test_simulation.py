@@ -162,7 +162,6 @@ def test_actuals_simulation(uplift_simulator: UnivariateUpliftSimulator) -> None
             ),
             name=COL_OUTPUT,
         ),
-        check_less_precise=True,
     )
 
 

@@ -310,23 +310,28 @@ class BaseUnivariateSimulator(
         )
 
     def simulate_actuals(self) -> pd.Series:
-        """
-        Run a simulation by predicting the outputs based on the actual feature values
-        across all splits of the crossfit.
+        r"""
+        For each test split :math:`\mathrm{T}_i` in this simulator's
+        :attr:`.crossfit`, predict the outputs for all test samples given their actual
+        feature values, and calculate the absolute deviation from the mean of all actual
+        outputs of the entire sample
+        :math:`\frac{1}{n}\sum_{j \in \mathrm{T}_i}\hat y_j - \bar y`
 
-        The spread and offset of this actual simulation is an indication of how the
-        bias of the model underlying the simulation contributes to the uncertainty of
-        simulations produced with method :meth:`.simulate_features`.
+        The spread and offset of these deviations can serve as an indication of how the
+        bias of the model contributes to the uncertainty of simulations produced with
+        method :meth:`.simulate_features`.
 
-        :return: series mapping split IDs to simulation results based on actual \
-            feature values
+        :return: series mapping split IDs to deviations of simulated mean outputs
         """
 
         sample = self.crossfit.sample_
+        y_mean = self.expected_output()
 
         with self._parallel() as parallel:
             result: List[float] = parallel(
-                self._delayed(self._simulate)(model=model, x=subsample.features)
+                self._delayed(self._simulate_actuals)(
+                    model, subsample.features, y_mean, self._simulate
+                )
                 for (model, (_, test_indices)) in zip(
                     self.crossfit.models(), self.crossfit.splits()
                 )
@@ -415,7 +420,7 @@ class BaseUnivariateSimulator(
         subsample: Sample,
         feature_name: str,
         simulated_values: Optional[Sequence[Any]],
-        simulate_fn: Callable[[LearnerDF, pd.DataFrame, float], float],
+        simulate_fn: Callable[[LearnerDF, pd.DataFrame], float],
     ) -> np.ndarray:
         # for a list of values to be simulated, return a list of absolute target changes
 
@@ -440,6 +445,15 @@ class BaseUnivariateSimulator(
                 for value in simulated_values
             ]
         )
+
+    @staticmethod
+    def _simulate_actuals(
+        model: LearnerDF,
+        x: pd.DataFrame,
+        y_mean: float,
+        simulate_fn: Callable[[LearnerDF, pd.DataFrame], float],
+    ):
+        return simulate_fn(model, x) - y_mean
 
 
 @inheritdoc(match="[see superclass]")
@@ -606,11 +620,6 @@ class UnivariateUpliftSimulator(_UnivariateRegressionSimulator):
         :return: 0.0
         """
         return 0.0
-
-    def simulate_actuals(self) -> pd.Series:
-        """[see superclass]"""
-        # noinspection PyTypeChecker
-        return super().simulate_actuals() - self.expected_output()
 
     def simulate_feature(
         self, feature_name: str, *, partitioner: Partitioner[T_Partition]
