@@ -229,9 +229,7 @@ stages:
               conda install -y conda-build
 
               cd $(System.DefaultWorkingDirectory)/facet/
-              condabuild/make.py pytools
-              condabuild/make.py sklearndf
-              condabuild/make.py facet
+              condabuild/make.py all
 
           displayName: "Build conda package"
 
@@ -307,8 +305,6 @@ stages:
               conda install -y conda-build
 
               cd $(System.DefaultWorkingDirectory)/facet/
-              condabuild/make.py pytools
-              condabuild/make.py sklearndf
-              condabuild/make.py facet
+              condabuild/make.py all
 
           displayName: "Build & test conda package"
