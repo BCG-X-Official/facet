@@ -1,6 +1,6 @@
 .. _getting-started:
 
-Getting Started with
+Getting started with
 ====================
 
 .. include:: ../../README.rst
