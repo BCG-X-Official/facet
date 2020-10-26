@@ -29,8 +29,9 @@ __all__ = [
 
 
 T = TypeVar("T")
-T_Value = TypeVar("T_Value")
-T_Number = TypeVar("T_Number", int, float)
+
+T_Values = TypeVar("T_Values")
+T_Values_Numeric = TypeVar("T_Values_Numeric", int, float)
 
 #
 # Ensure all symbols introduced below are included in __all__
@@ -45,7 +46,9 @@ __tracker = AllTracker(globals())
 
 
 class Partitioner(
-    FittableMixin[Iterable[T_Value]], Generic[T_Value], metaclass=ABCMeta
+    FittableMixin[Iterable[T_Values]],
+    Generic[T_Values],
+    metaclass=ABCMeta,
 ):
     """
     Abstract base class of all partitioners.
@@ -78,7 +81,7 @@ class Partitioner(
 
     @property
     @abstractmethod
-    def partitions_(self) -> Sequence[T_Value]:
+    def partitions_(self) -> Sequence[T_Values]:
         """
         Return central values of the partitions.
 
@@ -104,7 +107,7 @@ class Partitioner(
         """
 
     @abstractmethod
-    def fit(self: T, values: Iterable[T_Value], **fit_params) -> T:
+    def fit(self: T, values: Iterable[T_Values], **fit_params) -> T:
         """
         Calculate the partitioning for the given observed values.
         :param values: a sequence of observed values as the empirical basis for \
@@ -114,7 +117,9 @@ class Partitioner(
 
 
 @inheritdoc(match="[see superclass]")
-class RangePartitioner(Partitioner[T_Number], Generic[T_Number], metaclass=ABCMeta):
+class RangePartitioner(
+    Partitioner[T_Values_Numeric], Generic[T_Values_Numeric], metaclass=ABCMeta
+):
     """
     Abstract base class for numerical partitioners.
     """
@@ -122,8 +127,8 @@ class RangePartitioner(Partitioner[T_Number], Generic[T_Number], metaclass=ABCMe
     def __init__(
         self,
         max_partitions: int = None,
-        lower_bound: Optional[T_Number] = None,
-        upper_bound: Optional[T_Number] = None,
+        lower_bound: Optional[T_Values_Numeric] = None,
+        upper_bound: Optional[T_Values_Numeric] = None,
     ) -> None:
         """
         :param max_partitions: the maximum number of partitions to make \
@@ -145,13 +150,15 @@ class RangePartitioner(Partitioner[T_Number], Generic[T_Number], metaclass=ABCMe
         self._lower_bound = lower_bound
         self._upper_bound = upper_bound
 
-        self._step: Optional[T_Number] = None
+        self._step: Optional[T_Values_Numeric] = None
         self._frequencies: Optional[Sequence[int]] = None
-        self._partitions: Optional[Sequence[T_Number]] = None
-        self._partition_bounds: Optional[Sequence[Tuple[T_Number, T_Number]]] = None
+        self._partitions: Optional[Sequence[T_Values_Numeric]] = None
+        self._partition_bounds: Optional[
+            Sequence[Tuple[T_Values_Numeric, T_Values_Numeric]]
+        ] = None
 
     @property
-    def lower_bound(self) -> T_Number:
+    def lower_bound(self) -> T_Values_Numeric:
         """
         The lower bound of the partitioning.
 
@@ -160,7 +167,7 @@ class RangePartitioner(Partitioner[T_Number], Generic[T_Number], metaclass=ABCMe
         return self._lower_bound
 
     @property
-    def upper_bound(self) -> T_Number:
+    def upper_bound(self) -> T_Values_Numeric:
         """
         The upper bound of the partitioning.
 
@@ -176,13 +183,15 @@ class RangePartitioner(Partitioner[T_Number], Generic[T_Number], metaclass=ABCMe
         return False
 
     @property
-    def partitions_(self) -> Sequence[T_Number]:
+    def partitions_(self) -> Sequence[T_Values_Numeric]:
         """[see superclass]"""
         self._ensure_fitted()
         return self._partitions
 
     @property
-    def partition_bounds_(self) -> Sequence[Tuple[T_Number, T_Number]]:
+    def partition_bounds_(
+        self,
+    ) -> Sequence[Tuple[T_Values_Numeric, T_Values_Numeric]]:
         """
         Return the endpoints of the intervals that delineate each partitions.
 
@@ -194,7 +203,7 @@ class RangePartitioner(Partitioner[T_Number], Generic[T_Number], metaclass=ABCMe
         return self._partition_bounds
 
     @property
-    def partition_width_(self) -> T_Number:
+    def partition_width_(self) -> T_Values_Numeric:
         """
         The width of each partition
         """
@@ -210,9 +219,9 @@ class RangePartitioner(Partitioner[T_Number], Generic[T_Number], metaclass=ABCMe
     # noinspection PyMissingOrEmptyDocstring
     def fit(
         self: T,
-        values: Iterable[T_Value],
-        lower_bound: Optional[T_Number] = None,
-        upper_bound: Optional[T_Number] = None,
+        values: Iterable[T_Values],
+        lower_bound: Optional[T_Values_Numeric] = None,
+        upper_bound: Optional[T_Values_Numeric] = None,
         **fit_params,
     ) -> T:
         """[see superclass]"""
@@ -303,13 +312,15 @@ class RangePartitioner(Partitioner[T_Number], Generic[T_Number], metaclass=ABCMe
 
     @staticmethod
     @abstractmethod
-    def _step_size(lower_bound: T_Number, upper_bound: T_Number) -> T_Number:
+    def _step_size(
+        lower_bound: T_Values_Numeric, upper_bound: T_Values_Numeric
+    ) -> T_Values_Numeric:
         # Compute the step size (interval length) used in the partitions
         pass
 
     @property
     @abstractmethod
-    def _partition_center_offset(self) -> T_Number:
+    def _partition_center_offset(self) -> T_Values_Numeric:
         # Offset between center and endpoints of an interval
         pass
 
@@ -380,7 +391,7 @@ class IntegerRangePartitioner(RangePartitioner[int]):
 
 
 @inheritdoc(match="[see superclass]")
-class CategoryPartitioner(Partitioner[T_Value]):
+class CategoryPartitioner(Partitioner[T_Values]):
     """
     Partition categorical values.
 
@@ -406,7 +417,7 @@ class CategoryPartitioner(Partitioner[T_Value]):
         return True
 
     @property
-    def partitions_(self) -> Sequence[T_Value]:
+    def partitions_(self) -> Sequence[T_Values]:
         """[see superclass]"""
         self._ensure_fitted()
         return self._partitions
@@ -418,7 +429,7 @@ class CategoryPartitioner(Partitioner[T_Value]):
         return self._frequencies
 
     # noinspection PyMissingOrEmptyDocstring
-    def fit(self: T, values: Sequence[T_Value], **fit_params) -> T:
+    def fit(self: T, values: Sequence[T_Values], **fit_params) -> T:
         """[see superclass]"""
 
         self: CategoryPartitioner  # support type hinting in PyCharm

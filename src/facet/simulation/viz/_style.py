@@ -30,8 +30,7 @@ __all__ = ["SimulationStyle", "SimulationMatplotStyle", "SimulationReportStyle"]
 #
 
 
-T_Value = TypeVar("T_Value")
-T_Number = TypeVar("T_Number", int, float)
+T_Partition = TypeVar("T_Partition")
 
 #
 # Ensure all symbols introduced below are included in __all__
@@ -53,15 +52,14 @@ class SimulationStyle(DrawStyle, metaclass=ABCMeta):
     @abstractmethod
     def draw_uplift(
         self,
-        feature: str,
-        target: str,
-        values_label: str,
-        values_median: Sequence[T_Number],
-        values_min: Sequence[T_Number],
-        values_max: Sequence[T_Number],
-        values_baseline: T_Number,
-        percentile_lower: float,
-        percentile_upper: float,
+        feature_name: str,
+        output_name: str,
+        output_unit: str,
+        outputs_median: Sequence[float],
+        outputs_lower_bound: Sequence[float],
+        outputs_upper_bound: Sequence[float],
+        baseline: float,
+        confidence_level: float,
         partitions: Sequence[Any],
         frequencies: Sequence[int],
         is_categorical_feature: bool,
@@ -69,18 +67,18 @@ class SimulationStyle(DrawStyle, metaclass=ABCMeta):
         """
         Draw the graph with the uplift curves: median, low and high percentiles.
 
-        :param feature: name of the simulated feature
-        :param target: name of the target for which output values were simulated
-        :param values_label: label of the values axis
-        :param values_median: median uplift values
-        :param values_min: low percentile uplift values
-        :param values_max: high percentile uplift values
-        :param values_baseline: the baseline of the simulationb
-        :param percentile_lower: percentile used to compute values_min
-        :param percentile_upper: percentile used to compute values_max
-        :param partitions: the partitioning (center values) of the simulated feature
-        :param frequencies: observed frequencies for each partition
-        :param is_categorical_feature: ``True`` if the simulated feature is categorical
+        :param feature_name: name of the simulated feature
+        :param output_name: name of the target for which output values were simulated
+        :param output_unit: the unit of the output axis
+        :param outputs_median: the medians of the simulated outputs
+        :param outputs_lower_bound: the lower CI bounds of the simulated outputs
+        :param outputs_upper_bound: the upper CI bounds of the simulated outputs
+        :param baseline: the baseline of the simulation
+        :param confidence_level: the confidence level used to calculate the CI bounds
+        :param partitions: the central or categorical values representing the partitions
+        :param frequencies: observed frequencies of the partitions
+        :param is_categorical_feature: ``True`` if the simulated feature is \
+            categorical; ``False`` otherwise
         """
         pass
 
@@ -102,13 +100,14 @@ class SimulationStyle(DrawStyle, metaclass=ABCMeta):
         pass
 
     @staticmethod
-    def _legend(percentile_lower: float, percentile_upper: float) -> Tuple[str, ...]:
+    def _legend(confidence_level: float) -> Tuple[str, ...]:
         # generate a triple with legend names for the min percentile, median, and max
         # percentile
+        tail_percentile = (100.0 - confidence_level * 100.0) / 2
         return (
-            f"{percentile_lower}th percentile",
+            f"{tail_percentile}th percentile",
             "Median",
-            f"{percentile_upper}th percentile",
+            f"{100.0 - tail_percentile}th percentile",
             "Baseline",
         )
 
@@ -135,15 +134,14 @@ class SimulationMatplotStyle(MatplotStyle, SimulationStyle):
 
     def draw_uplift(
         self,
-        feature: str,
-        target: str,
-        values_label: str,
-        values_median: Sequence[T_Number],
-        values_min: Sequence[T_Number],
-        values_max: Sequence[T_Number],
-        values_baseline: T_Number,
-        percentile_lower: float,
-        percentile_upper: float,
+        feature_name: str,
+        output_name: str,
+        output_unit: str,
+        outputs_median: Sequence[float],
+        outputs_lower_bound: Sequence[float],
+        outputs_upper_bound: Sequence[float],
+        baseline: float,
+        confidence_level: float,
         partitions: Sequence[Any],
         frequencies: Sequence[int],
         is_categorical_feature: bool,
@@ -157,23 +155,25 @@ class SimulationMatplotStyle(MatplotStyle, SimulationStyle):
         else:
             x = partitions
         ax = self.ax
-        (line_min,) = ax.plot(x, values_min, color=self._COLOR_CONFIDENCE_INTERVAL)
-        (line_median,) = ax.plot(x, values_median, color=self._COLOR_MEDIAN)
-        (line_max,) = ax.plot(x, values_max, color=self._COLOR_CONFIDENCE_INTERVAL)
+        (line_min,) = ax.plot(
+            x, outputs_lower_bound, color=self._COLOR_CONFIDENCE_INTERVAL
+        )
+        (line_median,) = ax.plot(x, outputs_median, color=self._COLOR_MEDIAN)
+        (line_max,) = ax.plot(
+            x, outputs_upper_bound, color=self._COLOR_CONFIDENCE_INTERVAL
+        )
         # add a horizontal line at the baseline
         line_base = ax.axhline(
-            y=values_baseline, linewidth=0.5, color=self._COLOR_CONFIDENCE_BASELINE
+            y=baseline, linewidth=0.5, color=self._COLOR_CONFIDENCE_BASELINE
         )
 
         # add a legend
-        labels = self._legend(
-            percentile_lower=percentile_lower, percentile_upper=percentile_upper
-        )
+        labels = self._legend(confidence_level=confidence_level)
         handles = (line_max, line_median, line_min, line_base)
         ax.legend(handles, labels)
 
         # label the y axis
-        ax.set_ylabel(values_label)
+        ax.set_ylabel(output_unit)
 
         # format and label the x axis
         ax.tick_params(
@@ -192,7 +192,7 @@ class SimulationMatplotStyle(MatplotStyle, SimulationStyle):
 
     def draw_histogram(
         self,
-        partitions: Sequence[T_Value],
+        partitions: Sequence[T_Partition],
         frequencies: Sequence[int],
         is_categorical_feature: bool,
     ) -> None:
@@ -320,15 +320,14 @@ class SimulationReportStyle(SimulationStyle, TextStyle):
 
     def draw_uplift(
         self,
-        feature: str,
-        target: str,
-        values_label: str,
-        values_median: Sequence[T_Number],
-        values_min: Sequence[T_Number],
-        values_max: Sequence[T_Number],
-        values_baseline: T_Number,
-        percentile_lower: float,
-        percentile_upper: float,
+        feature_name: str,
+        output_name: str,
+        output_unit: str,
+        outputs_median: Sequence[float],
+        outputs_lower_bound: Sequence[float],
+        outputs_upper_bound: Sequence[float],
+        baseline: float,
+        confidence_level: float,
         partitions: Sequence[Any],
         frequencies: Sequence[int],
         is_categorical_feature: bool,
@@ -336,28 +335,34 @@ class SimulationReportStyle(SimulationStyle, TextStyle):
         """[see superclass]"""
 
         out = self.out
-        self.out.write(f"\n{values_label}:\n\nBaseline = {values_baseline}\n\n")
+        self.out.write(f"\n{output_unit}:\n\nBaseline = {baseline}\n\n")
         out.write(
             format_table(
                 headings=[
                     self._PARTITION_HEADING,
                     *self._legend(
-                        percentile_lower=percentile_lower,
-                        percentile_upper=percentile_upper,
+                        confidence_level=confidence_level,
                     )[:3],
                 ],
                 formats=[
                     self._partition_format(is_categorical_feature),
                     *([self._NUM_FORMAT] * 3),
                 ],
-                data=list(zip(partitions, values_min, values_median, values_max)),
+                data=list(
+                    zip(
+                        partitions,
+                        outputs_lower_bound,
+                        outputs_median,
+                        outputs_upper_bound,
+                    )
+                ),
                 alignment=["<", ">", ">", ">"],
             )
         )
 
     def draw_histogram(
         self,
-        partitions: Sequence[T_Value],
+        partitions: Sequence[T_Partition],
         frequencies: Sequence[int],
         is_categorical_feature: bool,
     ) -> None:

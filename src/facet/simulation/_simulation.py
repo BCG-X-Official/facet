@@ -9,7 +9,6 @@ from typing import (
     Callable,
     Generic,
     List,
-    NamedTuple,
     Optional,
     Sequence,
     Type,
@@ -31,11 +30,18 @@ from sklearndf.pipeline import (
 
 from ..crossfit import LearnerCrossfit
 from ..data import Sample
+from ..validation import BaseBootstrapCV
 from .partition import Partitioner
 
 log = logging.getLogger(__name__)
 
 __all__ = [
+    "IDX_SPLIT",
+    "IDX_PARTITION",
+    "COL_OUTPUT",
+    "COL_MEDIAN",
+    "COL_LOWER_BOUND",
+    "COL_UPPER_BOUND",
     "UnivariateSimulationResult",
     "BaseUnivariateSimulator",
     "UnivariateProbabilitySimulator",
@@ -50,13 +56,12 @@ __all__ = [
 # use the train sample of each fold
 _SIMULATE_FULL_SAMPLE = True
 
-
 #
 # Type variables
 #
 
 T_LearnerPipelineDF = TypeVar("T_LearnerPipelineDF", bound=LearnerPipelineDF)
-T_Number = TypeVar("T_Number", int, float)
+T_Partition = TypeVar("T_Partition")
 
 #
 # Ensure all symbols introduced below are included in __all__
@@ -66,48 +71,139 @@ __tracker = AllTracker(globals())
 
 
 #
+# Constants
+#
+
+#: the name of the row index of attribute :attr:`.output`, denoting splits
+IDX_SPLIT = "split"
+
+#: the name of the column index of attribute :attr:`.output`, denoting partitions
+#: represented by their central values or by a category
+IDX_PARTITION = "partition"
+
+#: the name of a series of simulated outputs
+COL_OUTPUT = "output"
+
+#: the name of a series of median simulated values per partition
+COL_MEDIAN = "median"
+
+#: the name of a series of lower CI bounds of simulated values per partition
+COL_LOWER_BOUND = "lower_bound"
+
+#: the name of a series of upper CI bounds of simulated values per partition
+COL_UPPER_BOUND = "upper_bound"
+
+
+#
 # Class definitions
 #
 
 
-class UnivariateSimulationResult(NamedTuple, Generic[T_Number]):
+class UnivariateSimulationResult(Generic[T_Partition]):
     """
     Summary result of a univariate simulation.
     """
 
     #: name of the simulated feature
-    feature: str
+    feature_name: str
 
-    #: name of the simulated target
-    target: str
+    #: name of the target for which outputs are simulated
+    output_name: str
 
-    #: the partitioner used to run the simulation
+    #: the unit of the simulated outputs (e.g., uplift or class probability)
+    output_unit: str
+
+    #: the average observed actual output, acting as the baseline of the simulation
+    baseline: float
+
+    #: the width :math:`\alpha` of the confidence interval \
+    #: determined by bootstrapping, with :math:`0 < \alpha < 1`
+    confidence_level: float
+
+    #: the partitioner used to generate feature values to be simulated
     partitioner: Partitioner
 
-    #: the unit of the simulated outcomes (e.g., uplift or class probability)
-    values_label: str
+    #: matrix of simulated outcomes, with columns representing partitions
+    #: and rows representing bootstrap splits used to fit variations of the model
+    outputs: pd.DataFrame
 
-    #: the median of the distribution of simulation outcomes, for every partition
-    values_median: Sequence[T_Number]
+    def __init__(
+        self,
+        *,
+        feature_name: str,
+        output_name: str,
+        output_unit: str,
+        baseline: float,
+        confidence_level: float,
+        partitioner: Partitioner,
+        outputs: pd.DataFrame,
+    ) -> None:
+        """
+        :param feature_name: name of the simulated feature
+        :param output_name: name of the target for which outputs are simulated
+        :param output_unit: the unit of the simulated outputs \
+            (e.g., uplift or class probability)
+        :param baseline: the average observed actual output, acting as the baseline \
+            of the simulation
+        :param confidence_level: the width of the confidence interval determined by \
+            bootstrapping, ranging between 0.0 and 1.0 (exclusive)
+        :param outputs: matrix of simulated outcomes, with columns representing \
+            partitions and rows representing bootstrap splits used to fit variations \
+            of the model
+        """
+        super().__init__()
 
-    #: the lower boundary of the confidence interval of simulated outcomes, for every
-    #: partition
-    values_lower: Sequence[T_Number]
+        assert (
+            outputs.index.name == IDX_SPLIT
+        ), f"name of row index of arg outputs is {IDX_SPLIT}"
+        assert (
+            outputs.columns.name == IDX_PARTITION
+        ), f"name of column index of arg outputs is {IDX_PARTITION}"
+        assert (
+            0.0 < confidence_level < 1.0
+        ), f"confidence_level={confidence_level} ranges between 0.0 and 1.0 (exclusive)"
 
-    #: the upper boundary of the confidence interval of simulated outcomes, for every
-    #: partition
-    values_upper: Sequence[T_Number]
+        self.feature_name = feature_name
+        self.output_name = output_name
+        self.output_unit = output_unit
+        self.baseline = baseline
+        self.confidence_level = confidence_level
+        self.partitioner = partitioner
+        self.outputs = outputs
 
-    #: the mean of the actual observed outputs, acting as the baseline of the
-    values_baseline: T_Number
+    def outputs_median(self) -> pd.Series:
+        """
+        Calculate the medians of the distribution of simulation outcomes,
+        for every partition
 
-    #: the percentile used to determine the lower confidence interval from the
-    #: distribution of simulated outcomes
-    percentile_lower: float
+        :return: a series of medians, indexed by the central values of the partitions \
+            for which the simulation was run
+        """
+        return self.outputs.median().rename(COL_MEDIAN)
 
-    #: the percentile used to determine the upper confidence interval from the
-    #: distribution of simulated outcomes
-    percentile_upper: float
+    def outputs_lower_bound(self) -> pd.Series:
+        """
+        Calculate the lower CI bounds of the distribution of simulation outcomes,
+        for every partition
+
+        :return: a series of medians, indexed by the central values of the partitions \
+            for which the simulation was run
+        """
+        return self.outputs.quantile(q=(1.0 - self.confidence_level) / 2.0).rename(
+            COL_LOWER_BOUND
+        )
+
+    def outputs_upper_bound(self) -> pd.Series:
+        """
+        Calculate the lower CI bounds of the distribution of simulation outcomes,
+        for every partition
+
+        :return: a series of medians, indexed by the central values of the partitions \
+            for which the simulation was run
+        """
+        return self.outputs.quantile(
+            q=1.0 - (1.0 - self.confidence_level) / 2.0
+        ).rename(COL_UPPER_BOUND)
 
 
 class BaseUnivariateSimulator(
@@ -117,15 +213,11 @@ class BaseUnivariateSimulator(
     Base class for univariate simulations.
     """
 
-    COL_SPLIT_ID = "split_id"
-    COL_VALUE = "value"
-
     def __init__(
         self,
         crossfit: LearnerCrossfit[T_LearnerPipelineDF],
         *,
-        percentile_lower: float = 2.5,
-        percentile_upper: float = 97.5,
+        confidence_level: float = 0.95,
         n_jobs: Optional[int] = None,
         shared_memory: Optional[bool] = None,
         pre_dispatch: Optional[Union[str, int]] = None,
@@ -134,8 +226,11 @@ class BaseUnivariateSimulator(
         """
         :param crossfit: cross-validated crossfit of a model for all observations \
         in a given sample
-        :param percentile_lower: lower bound of the confidence interval (default: 2.5)
-        :param percentile_upper: upper bound of the confidence interval (default: 97.5)
+        :param confidence_level: the width :math:`\alpha` of the confidence interval \
+            determined by bootstrapping, with :math:`0 < \alpha < 1`; \
+            for reliable CI estimates the number of splits in the crossfit should be \
+            at least :math:`n = \frac{50}{1 - \alpha}`, e.g. :math:`n = 1000` for \
+            :math:`\alpha = 0.95`
         """
         super().__init__(
             n_jobs=n_jobs,
@@ -146,7 +241,7 @@ class BaseUnivariateSimulator(
 
         if not isinstance(crossfit.pipeline, self._expected_pipeline_type()):
             raise TypeError(
-                f"arg crossfit must fit a pipeline of type "
+                "arg crossfit must fit a pipeline of type "
                 f"{self._expected_pipeline_type().__name__}."
             )
 
@@ -156,32 +251,40 @@ class BaseUnivariateSimulator(
         if isinstance(crossfit.sample_.target_name, list):
             raise NotImplementedError("multi-output simulations are not supported")
 
-        if not 0 <= percentile_lower <= 100:
+        if not 0.0 < confidence_level < 1.0:
             raise ValueError(
-                f"arg percentile_lower={percentile_lower} must be in the range"
-                "from 0 to 100"
+                f"arg confidence_level={confidence_level} "
+                "must range between 0.0 and 1.0 (exclusive)"
             )
-        if not 0 <= percentile_upper <= 100:
-            raise ValueError(
-                f"arg percentile_upper={percentile_upper} must be in the range"
-                "from 0 to 1"
+
+        if not isinstance(crossfit.cv, BaseBootstrapCV):
+            log.warning(
+                "arg crossfit.cv should be a bootstrap cross-validator "
+                f"but is a {type(crossfit.cv).__name__}"
+            )
+
+        min_splits = int(50 / (1.0 - confidence_level))
+        if len(crossfit) < min_splits:
+            log.warning(
+                f"at least {min_splits} bootstrap splits are recommended for "
+                f"reliable results with arg confidence_level={confidence_level}, "
+                f"but arg crossfit.cv has only {len(crossfit)} splits"
             )
 
         self.crossfit = crossfit
-        self.percentile_upper = percentile_upper
-        self.percentile_lower = percentile_lower
+        self.confidence_level = confidence_level
 
     # add parallelization parameters to __init__ docstring
     __init__.__doc__ += ParallelizableMixin.__init__.__doc__
 
     def simulate_feature(
-        self, name: str, partitioner: Partitioner
+        self, feature_name: str, *, partitioner: Partitioner[T_Partition]
     ) -> UnivariateSimulationResult:
         """
         Simulate the average target uplift when fixing the value of the given feature
         across all observations.
 
-        :param name: the feature to run the simulation for
+        :param feature_name: the feature to run the simulation for
         :param partitioner: the partitioner of feature values to run simulations for
 
         :return a mapping of output names to simulation results
@@ -192,40 +295,31 @@ class BaseUnivariateSimulator(
         if isinstance(sample.target_name, list):
             raise NotImplementedError("multi-output simulations are not supported")
 
-        simulation_values = partitioner.fit(sample.features.loc[:, name]).partitions_
-        simulation_results = self._aggregate_simulation_results(
-            results_per_split=self._simulate_feature_with_values(
-                feature_name=name, simulation_values=simulation_values
-            )
-        )
         return UnivariateSimulationResult(
-            feature=name,
-            target=sample.target_name,
+            feature_name=feature_name,
+            output_name=sample.target_name,
+            output_unit=self.output_unit,
+            baseline=self.baseline(),
+            confidence_level=self.confidence_level,
             partitioner=partitioner,
-            values_label=self.values_label,
-            values_median=simulation_results.iloc[:, 1].values,
-            values_lower=simulation_results.iloc[:, 0].values,
-            values_upper=simulation_results.iloc[:, 2].values,
-            values_baseline=self.baseline,
-            percentile_lower=self.percentile_lower,
-            percentile_upper=self.percentile_upper,
+            outputs=(
+                self._simulate_feature_with_values(
+                    feature_name=feature_name,
+                    simulation_values=(
+                        partitioner.fit(
+                            sample.features.loc[:, feature_name]
+                        ).partitions_
+                    ),
+                )
+            ),
         )
 
     def simulate_actuals(self) -> pd.Series:
         """
-        Run a simulation by predicting the outcome based on the actual feature values
+        Run a simulation by predicting the outputs based on the actual feature values
         across all splits of the crossfit.
 
-        In the case of regressors, for each split determine the relative deviation of
-        the mean predicted target from the mean actual target.
-        For any of the splits, 0 indicates no deviation, and, for example, 0.01
-        indicates that the mean predicted target is 1% higher than the mean actual
-        targets of a given split.
-
-        In the case of binary classifiers, for each split determine the mean predicted
-        probability of the positive class.
-
-        The breadth and offset of this actual simulation is an indication of how the
+        The spread and offset of this actual simulation is an indication of how the
         bias of the model underlying the simulation contributes to the uncertainty of
         simulations produced with method :meth:`.simulate_features`.
 
@@ -251,23 +345,24 @@ class BaseUnivariateSimulator(
             )
 
         return pd.Series(
-            index=pd.RangeIndex(len(result), name=BaseUnivariateSimulator.COL_SPLIT_ID),
             data=result,
-            name=BaseUnivariateSimulator.COL_VALUE,
-        )
+            name=COL_OUTPUT,
+        ).rename_axis(index=IDX_SPLIT)
 
     @property
     @abstractmethod
-    def values_label(self) -> str:
+    def output_unit(self) -> str:
         """
-        Designation for the values calculated in the simulation
+        Unit of the output values calculated by the simulation
         """
 
-    @property
     @abstractmethod
     def baseline(self) -> float:
         """
-        The mean of actual observed outputs
+        Calculate the expectation value of the outputs, based on historically observed
+        actuals
+
+        :return: the expectation value of the outputs
         """
 
     @staticmethod
@@ -288,8 +383,8 @@ class BaseUnivariateSimulator(
         pass
 
     def _simulate_feature_with_values(
-        self, feature_name: str, simulation_values: Sequence[Any]
-    ) -> pd.Series:
+        self, feature_name: str, simulation_values: Sequence[T_Partition]
+    ) -> pd.DataFrame:
         """
         Run a simulation on a feature.
 
@@ -308,7 +403,7 @@ class BaseUnivariateSimulator(
             raise ValueError(f"Feature '{feature_name}' not in sample")
 
         with self._parallel() as parallel:
-            simulation_results: List[List[Union[float]]] = parallel(
+            simulation_results_per_split: List[np.ndarray] = parallel(
                 self._delayed(UnivariateUpliftSimulator._simulate_values_for_split)(
                     model=model,
                     subsample=(
@@ -325,10 +420,9 @@ class BaseUnivariateSimulator(
                 )
             )
 
-        return pd.concat(
-            pd.Series(index=simulation_values, data=result)
-            for _, result in enumerate(simulation_results)
-        )
+        return pd.DataFrame(
+            simulation_results_per_split, columns=simulation_values
+        ).rename_axis(index=IDX_SPLIT, columns=IDX_PARTITION)
 
     @staticmethod
     def _simulate_values_for_split(
@@ -337,7 +431,7 @@ class BaseUnivariateSimulator(
         feature_name: str,
         simulated_values: Optional[Sequence[Any]],
         simulate_fn: Callable[[LearnerDF, pd.DataFrame, pd.Series], float],
-    ) -> List[float]:
+    ) -> np.ndarray:
         # for a list of values to be simulated, return a list of absolute target changes
 
         n_observations = len(subsample)
@@ -346,61 +440,30 @@ class BaseUnivariateSimulator(
 
         actual_outcomes = subsample.target
 
-        return [
-            simulate_fn(
-                model,
-                features.assign(
-                    **{
-                        feature_name: np.full(
-                            shape=n_observations, fill_value=value, dtype=feature_dtype
-                        )
-                    }
-                ),
-                actual_outcomes,
-            )
-            for value in simulated_values
-        ]
-
-    def _aggregate_simulation_results(
-        self, results_per_split: pd.Series
-    ) -> pd.DataFrame:
-        """
-        Aggregate uplift values computed by ``simulate_feature``.
-
-        For each parameter value, the percentile of uplift values (in the
-        ``relative_yield_change`` column) are computed.
-
-        :param results_per_split: data frame with columns
-            ``crossfit_id``, ``parameter_value``, and ``relative_yield_change``
-        :return: data frame with 3 columns ``percentile_<min>``, ``percentile_50``,
-          ``percentile_<max>`` where min/max are the min and max percentiles
-        """
-
-        def percentile(n: int) -> Callable[[float], float]:
-            """
-            Return the function computed the n-th percentile.
-
-            :param n: the percentile to compute; int between 0 and 100
-            :return: the n-th percentile function
-            """
-
-            def percentile_(x: float):
-                """n-th percentile function"""
-                return np.percentile(x, n)
-
-            percentile_.__name__ = f"percentile_{n}"
-
-            return percentile_
-
-        return results_per_split.groupby(level=0, observed=True, sort=False).agg(
-            [percentile(p) for p in (self.percentile_lower, 50, self.percentile_upper)]
+        return np.array(
+            [
+                simulate_fn(
+                    model,
+                    features.assign(
+                        **{
+                            feature_name: np.full(
+                                shape=n_observations,
+                                fill_value=value,
+                                dtype=feature_dtype,
+                            )
+                        }
+                    ),
+                    actual_outcomes,
+                )
+                for value in simulated_values
+            ]
         )
 
 
 @inheritdoc(match="[see superclass]")
 class UnivariateProbabilitySimulator(BaseUnivariateSimulator[ClassifierPipelineDF]):
     """
-    Univariate simulation for predicted probability based on a binary classifier.
+    Univariate simulation of positive class probabilities based on a binary classifier.
 
     The simulation is carried out for one specific feature `x[i]` of a model, and for a
     range of values `v[1]`, …, `v[n]` for `f`, determined by a :class:`.Partitioning`
@@ -411,37 +474,36 @@ class UnivariateProbabilitySimulator(BaseUnivariateSimulator[ClassifierPipelineD
     observations, i.e., assuming that feature `x[i]` has the constant value `v[j]`.
 
     Then all classifiers of a :class:`LearnerCrossfit` are used in turn to each predict
-    the probability of the positive class for all observations, and the mean probability
-    across all observations is calculated for each classifier, resulting in a
-    distribution of mean predicted probabilities for each value `v[j]`.
-
-    For each `v[j]`, the median and the lower and upper confidence bounds are retained.
-
-    Hence the result of the simulation is a series of `n` medians, lower and upper
-    confidence  bounds; one each for every value in the range of simulated values.
+    the positive class probabilities for all observations, and the mean probability
+    across all observations is calculated for each classifier and value `v[j]`.
+    The simulation result is a set of `n` distributions of mean predicted probabilities
+    across all classifiers -- one distribution for each `v[j]`.
 
     Note that sample weights are not taken into account for simulations; each
     observation has the same weight in the simulation even if different weights
     have been specified for the sample.
+
+    Also, care should be taken to re-calibrate classifiers trained on weighted samples
+    as the weighted samples will impact predicted class probabilities.
     """
 
     @property
-    def values_label(self) -> str:
+    def output_unit(self) -> str:
         """[see superclass]"""
         return f"probability({self._positive_class()})"
 
-    @property
     def baseline(self) -> float:
         """
         Calculate the actual observed frequency of the positive class as the baseline
         of the simulation
+
         :return: observed frequency of the positive class
         """
-        actual_target: pd.Series = self.crossfit.sample_.target
-        assert isinstance(actual_target, pd.Series), "sample has one single target"
+        actual_outputs: pd.Series = self.crossfit.sample_.target
+        assert isinstance(actual_outputs, pd.Series), "sample has one single target"
 
-        return actual_target.loc[actual_target == self._positive_class()].sum() / len(
-            actual_target
+        return actual_outputs.loc[actual_outputs == self._positive_class()].sum() / len(
+            actual_outputs
         )
 
     def _positive_class(self) -> Any:
@@ -486,7 +548,8 @@ class UnivariateProbabilitySimulator(BaseUnivariateSimulator[ClassifierPipelineD
 @inheritdoc(match="[see superclass]")
 class _UnivariateTargetSimulator(BaseUnivariateSimulator[RegressorPipelineDF]):
     """
-    Univariate simulation for absolute target values based on a regression model.
+    Univariate simulation for absolute output values for the target of a regression
+    model.
 
     The simulation is carried out for one specific feature `x[i]` of a model, and for a
     range of values `v[1]`, …, `v[n]` for `f`, determined by a :class:`.Partitioning`
@@ -497,15 +560,10 @@ class _UnivariateTargetSimulator(BaseUnivariateSimulator[RegressorPipelineDF]):
     observations, i.e., assuming that feature `x[i]` has the constant value `v[j]`.
 
     Then all regressors of a :class:`LearnerCrossfit` are used in turn to each predict
-    the target for all observations, and the mean of the predicted targets is calculated
-    for each regressor and value `v[j]`. The outcome is a distribution of mean predicted
-    targets for each `v[j]`.
-
-    For each `v[j]`, the median and the lower and upper confidence bounds of that
-    distribution are retained.
-
-    Hence the result of the simulation is a series of `n` medians, lower and upper
-    confidence bounds; one each for every value in the range of simulated values.
+    the output for all observations, and the mean of the predicted outputs across all
+    observations is calculated for each regressor and value `v[j]`.
+    The simulation result is a set of `n` distributions of mean predicted targets
+    across all regressors -- one distribution for each `v[j]`.
 
     Note that sample weights are not taken into account for simulations; each
     observation has the same weight in the simulation even if different weights
@@ -513,11 +571,10 @@ class _UnivariateTargetSimulator(BaseUnivariateSimulator[RegressorPipelineDF]):
     """
 
     @property
-    def values_label(self) -> str:
+    def output_unit(self) -> str:
         """[see superclass]"""
         return f"Mean predicted target ({self.crossfit.sample_.target_name})"
 
-    @property
     def baseline(self) -> float:
         """
         The baseline of uplift simulations is always ``0.0``
@@ -547,7 +604,8 @@ class _UnivariateTargetSimulator(BaseUnivariateSimulator[RegressorPipelineDF]):
 @inheritdoc(match="[see superclass]")
 class UnivariateUpliftSimulator(BaseUnivariateSimulator[RegressorPipelineDF]):
     """
-    Univariate simulation for target uplift based on a regression model.
+    Univariate simulation for absolute output values for the target of a regression
+    model.
 
     The simulation is carried out for one specific feature `x[i]` of a model, and for a
     range of values `v[1]`, …, `v[n]` for `f`, determined by a :class:`.Partitioning`
@@ -558,16 +616,10 @@ class UnivariateUpliftSimulator(BaseUnivariateSimulator[RegressorPipelineDF]):
     observations, i.e., assuming that feature `x[i]` has the constant value `v[j]`.
 
     Then all regressors of a :class:`LearnerCrossfit` are used in turn to each predict
-    the target for all observations, and the mean difference of the predicted targets
-    from the actual (known) targets across all observations is calculated for each
-    regressor, resulting in a distribution of mean `uplift` amounts for each value
-    `v[j]`.
-
-    For each `v[j]`, the median uplift and the lower and upper confidence bounds are
-    retained.
-
-    Hence the result of the simulation is a series of `n` medians, lower and upper
-    confidence bounds; one each for every value in the range of simulated values.
+    the output for all observations, and the mean of the predicted outputs across all
+    observations is calculated for each regressor and value `v[j]`.
+    The simulation result is a set of `n` distributions of mean predicted targets
+    across all regressors -- one distribution for each `v[j]`.
 
     Note that sample weights are not taken into account for simulations; each
     observation has the same weight in the simulation even if different weights
@@ -575,14 +627,15 @@ class UnivariateUpliftSimulator(BaseUnivariateSimulator[RegressorPipelineDF]):
     """
 
     @property
-    def values_label(self) -> str:
+    def output_unit(self) -> str:
         """[see superclass]"""
         return f"Mean predicted uplift ({self.crossfit.sample_.target_name})"
 
-    @property
     def baseline(self) -> float:
         """
         The baseline of uplift simulations is always ``0.0``
+
+        :return: 0.0
         """
         return 0.0
 

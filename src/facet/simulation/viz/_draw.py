@@ -2,16 +2,7 @@
 Visualizations of simulation results.
 """
 
-from typing import (
-    Generic,
-    Mapping,
-    NamedTuple,
-    Optional,
-    Sequence,
-    Type,
-    TypeVar,
-    Union,
-)
+from typing import Any, Mapping, Optional, Sequence, Tuple, Type, TypeVar, Union
 
 from pytools.api import AllTracker
 from pytools.viz import Drawer
@@ -38,15 +29,6 @@ __tracker = AllTracker(globals())
 #
 # Class definitions
 #
-
-
-class _SimulationSeries(NamedTuple, Generic[T_Number]):
-    # A set of aligned series representing the simulation result
-    values_median: Sequence[T_Number]
-    values_min: Sequence[T_Number]
-    values_max: Sequence[T_Number]
-    partitions: Sequence[T_Number]
-    frequencies: Sequence[T_Number]
 
 
 class SimulationDrawer(Drawer[UnivariateSimulationResult, SimulationStyle]):
@@ -83,7 +65,7 @@ class SimulationDrawer(Drawer[UnivariateSimulationResult, SimulationStyle]):
             simulated feature)
         """
         if title is None:
-            title = f"Simulation: {data.feature}"
+            title = f"Simulation: {data.feature_name}"
         super().draw(data=data, title=title)
 
     @classmethod
@@ -91,58 +73,50 @@ class SimulationDrawer(Drawer[UnivariateSimulationResult, SimulationStyle]):
         return SimulationDrawer._STYLES
 
     def _draw(self, data: UnivariateSimulationResult) -> None:
-        # draw the simulation chart
-        simulation_series = self._get_simulation_series(simulation=data)
+        # If the partitioning of the simulation is categorical, sort partitions in
+        # ascending order of the median output
+        simulation_result: Tuple[
+            Sequence[float],
+            Sequence[float],
+            Sequence[float],
+            Sequence[Any],
+            Sequence[int],
+        ] = (
+            data.outputs_median().to_list(),
+            data.outputs_lower_bound().to_list(),
+            data.outputs_upper_bound().to_list(),
+            data.partitioner.partitions_,
+            data.partitioner.frequencies_,
+        )
+
+        if data.partitioner.is_categorical:
+            # for categorical features, sort the categories by the median uplift
+            simulation_result = tuple(
+                *zip(*sorted(zip(*simulation_result), key=lambda x: x[0]))
+            )
 
         # draw the graph with the uplift curves
         self._style.draw_uplift(
-            feature=data.feature,
-            target=data.target,
-            values_label=data.values_label,
-            values_median=simulation_series.values_median,
-            values_min=simulation_series.values_min,
-            values_max=simulation_series.values_max,
-            values_baseline=data.values_baseline,
-            percentile_lower=data.percentile_lower,
-            percentile_upper=data.percentile_upper,
-            partitions=simulation_series.partitions,
-            frequencies=simulation_series.frequencies,
+            feature_name=data.feature_name,
+            output_name=data.output_name,
+            output_unit=data.output_unit,
+            outputs_median=simulation_result[0],
+            outputs_lower_bound=simulation_result[1],
+            outputs_upper_bound=simulation_result[2],
+            baseline=data.baseline,
+            confidence_level=data.confidence_level,
+            partitions=simulation_result[3],
+            frequencies=simulation_result[4],
             is_categorical_feature=data.partitioner.is_categorical,
         )
 
         if self._histogram:
             # draw the histogram of the simulation values
             self._style.draw_histogram(
-                partitions=simulation_series.partitions,
-                frequencies=simulation_series.frequencies,
+                partitions=simulation_result[3],
+                frequencies=simulation_result[4],
                 is_categorical_feature=data.partitioner.is_categorical,
             )
-
-    @staticmethod
-    def _get_simulation_series(
-        simulation: UnivariateSimulationResult,
-    ) -> _SimulationSeries:
-        # return the simulation series for median uplift, min uplift, max uplift,
-        # partitions and frequencies
-        # If the partitioning of the simulation is categorical, the series are
-        # sorted in ascending order of the median uplift.
-        # Otherwise, the simulation series are returned unchanged.
-
-        simulation_series = _SimulationSeries(
-            simulation.values_median,
-            simulation.values_lower,
-            simulation.values_upper,
-            simulation.partitioner.partitions_,
-            simulation.partitioner.frequencies_,
-        )
-
-        if simulation.partitioner.is_categorical:
-            # for categorical features, sort the categories by the median uplift
-            return _SimulationSeries(
-                *zip(*sorted(zip(*simulation_series), key=lambda x: x[0]))
-            )
-        else:
-            return simulation_series
 
 
 __tracker.validate()
