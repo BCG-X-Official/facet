@@ -124,13 +124,15 @@ class SimulationMatplotStyle(MatplotStyle, SimulationStyle):
     simulated values.
     """
 
-    _COLOR_CONFIDENCE_INTERVAL = RGBA_DARK_BLUE
-    _COLOR_MEDIAN = RGBA_LIGHT_BLUE
-    _COLOR_BASELINE = RGBA_LIGHT_GREEN
-    _COLOR_BARS = RGBA_GREY
-    _WIDTH_BARS = 0.8
+    # colour constants
+    __COLOR_CONFIDENCE_INTERVAL = RGBA_DARK_BLUE
+    __COLOR_MEDIAN = RGBA_LIGHT_BLUE
+    __COLOR_BASELINE = RGBA_LIGHT_GREEN
+    __COLOR_BARS = RGBA_GREY
 
-    _HISTOGRAM_SIZE_RATIO = 1 / 3
+    # sizing constants
+    __WIDTH_BARS = 0.8
+    __HISTOGRAM_SIZE_RATIO = 1 / 3
 
     def draw_uplift(
         self,
@@ -156,15 +158,21 @@ class SimulationMatplotStyle(MatplotStyle, SimulationStyle):
             x = partitions
         ax = self.ax
         (line_min,) = ax.plot(
-            x, outputs_lower_bound, color=self._COLOR_CONFIDENCE_INTERVAL
+            x,
+            outputs_lower_bound,
+            color=SimulationMatplotStyle.__COLOR_CONFIDENCE_INTERVAL,
         )
-        (line_median,) = ax.plot(x, outputs_median, color=self._COLOR_MEDIAN)
+        (line_median,) = ax.plot(
+            x, outputs_median, color=SimulationMatplotStyle.__COLOR_MEDIAN
+        )
         (line_max,) = ax.plot(
-            x, outputs_upper_bound, color=self._COLOR_CONFIDENCE_INTERVAL
+            x,
+            outputs_upper_bound,
+            color=SimulationMatplotStyle.__COLOR_CONFIDENCE_INTERVAL,
         )
         # add a horizontal line at the baseline
         line_base = ax.axhline(
-            y=baseline, linewidth=0.5, color=self._COLOR_CONFIDENCE_BASELINE
+            y=baseline, linewidth=0.5, color=SimulationMatplotStyle.__COLOR_BASELINE
         )
 
         # add a legend
@@ -230,11 +238,13 @@ class SimulationMatplotStyle(MatplotStyle, SimulationStyle):
             divider: AxesDivider = make_axes_locatable(main_ax)
             return divider.append_axes(
                 position="bottom",
-                size=Scaled(uplift_height * self._HISTOGRAM_SIZE_RATIO),
+                size=Scaled(
+                    uplift_height * SimulationMatplotStyle.__HISTOGRAM_SIZE_RATIO
+                ),
                 pad=Scaled(
                     axis_below_size_data
                     * (uplift_height / (uplift_height - axis_below_size_data))
-                    * (1 + self._HISTOGRAM_SIZE_RATIO)
+                    * (1 + SimulationMatplotStyle.__HISTOGRAM_SIZE_RATIO)
                 ),
             )
 
@@ -249,8 +259,11 @@ class SimulationMatplotStyle(MatplotStyle, SimulationStyle):
         ax.set_xmargin(
             max(
                 0,
-                (self._WIDTH_BARS / 2 - x_margin * (n_partitions - 1))
-                / (self._WIDTH_BARS - (n_partitions - 1)),
+                (
+                    SimulationMatplotStyle.__WIDTH_BARS / 2
+                    - x_margin * (n_partitions - 1)
+                )
+                / (SimulationMatplotStyle.__WIDTH_BARS - (n_partitions - 1)),
             )
         )
 
@@ -258,9 +271,9 @@ class SimulationMatplotStyle(MatplotStyle, SimulationStyle):
         ax.bar(
             x=x_values,
             height=y_values,
-            color=self._COLOR_BARS,
+            color=SimulationMatplotStyle.__COLOR_BARS,
             align="center",
-            width=self._WIDTH_BARS,
+            width=SimulationMatplotStyle.__WIDTH_BARS,
         )
 
         # padding between bars and labels is 2% of histogram height; might want to
@@ -294,25 +307,25 @@ class SimulationReportStyle(SimulationStyle, TextStyle):
     """
 
     # general format wih sufficient space for potential sign and "e" notation
-    _NUM_PRECISION = 3
-    _NUM_WIDTH = _NUM_PRECISION + 6
-    _NUM_FORMAT = f"< {_NUM_WIDTH}.{_NUM_PRECISION}g"
+    __NUM_PRECISION = 3
+    __NUM_WIDTH = __NUM_PRECISION + 6
+    __NUM_FORMAT = f"< {__NUM_WIDTH}.{__NUM_PRECISION}g"
 
     # table headings
-    _PARTITION_HEADING = "Partition"
-    _FREQUENCY_HEADING = "Frequency"
+    __HEADING_PARTITION = "Partition"
+    __HEADING_FREQUENCY = "Frequency"
 
     # format for partitions
-    _PARTITION_TEXT_FORMAT = "s"
-    _PARTITION_NUMBER_FORMAT = "g"
+    __PARTITION_TEXT_FORMAT = "s"
+    __PARTITION_NUMBER_FORMAT = "g"
 
     # format for frequencies
-    _FREQUENCY_WIDTH = 6
-    _FREQUENCY_FORMAT = f"{_FREQUENCY_WIDTH}g"
+    __FREQUENCY_WIDTH = 6
+    __FREQUENCY_FORMAT = f"{__FREQUENCY_WIDTH}g"
 
     @staticmethod
     def _num_format(heading: str):
-        return f"> {len(heading)}.{SimulationReportStyle._NUM_PRECISION}g"
+        return f"> {len(heading)}.{SimulationReportStyle.__NUM_PRECISION}g"
 
     def _drawing_start(self, title: str) -> None:
         # print the report title
@@ -339,14 +352,14 @@ class SimulationReportStyle(SimulationStyle, TextStyle):
         out.write(
             format_table(
                 headings=[
-                    self._PARTITION_HEADING,
+                    SimulationReportStyle.__HEADING_PARTITION,
                     *self._legend(
                         confidence_level=confidence_level,
                     )[:3],
                 ],
                 formats=[
                     self._partition_format(is_categorical_feature),
-                    *([self._NUM_FORMAT] * 3),
+                    *([SimulationReportStyle.__NUM_FORMAT] * 3),
                 ],
                 data=list(
                     zip(
@@ -371,11 +384,14 @@ class SimulationReportStyle(SimulationStyle, TextStyle):
         self.out.write("\nObserved frequencies:\n\n")
         self.out.write(
             format_table(
-                headings=(self._PARTITION_HEADING, self._FREQUENCY_HEADING),
+                headings=(
+                    SimulationReportStyle.__HEADING_PARTITION,
+                    SimulationReportStyle.__HEADING_FREQUENCY,
+                ),
                 data=list(zip(partitions, frequencies)),
                 formats=(
                     self._partition_format(is_categorical=is_categorical_feature),
-                    self._FREQUENCY_FORMAT,
+                    SimulationReportStyle.__FREQUENCY_FORMAT,
                 ),
                 alignment=["<", ">"],
             )
@@ -387,9 +403,9 @@ class SimulationReportStyle(SimulationStyle, TextStyle):
 
     def _partition_format(self, is_categorical: bool) -> str:
         if is_categorical:
-            return self._PARTITION_TEXT_FORMAT
+            return SimulationReportStyle.__PARTITION_TEXT_FORMAT
         else:
-            return self._PARTITION_NUMBER_FORMAT
+            return SimulationReportStyle.__PARTITION_NUMBER_FORMAT
 
 
 __tracker.validate()
