@@ -49,14 +49,12 @@ __all__ = [
     "UnivariateUpliftSimulator",
 ]
 
-
 #
 # Type variables
 #
 
 T_LearnerPipelineDF = TypeVar("T_LearnerPipelineDF", bound=LearnerPipelineDF)
 T_Partition = TypeVar("T_Partition")
-
 
 #
 # Ensure all symbols introduced below are included in __all__
@@ -459,7 +457,7 @@ class BaseUnivariateSimulator(
 @inheritdoc(match="[see superclass]")
 class UnivariateProbabilitySimulator(BaseUnivariateSimulator[ClassifierPipelineDF]):
     """
-    Univariate simulation for predicted probability based on a binary classifier.
+    Univariate simulation of positive class probabilities based on a binary classifier.
 
     The simulation is carried out for one specific feature `x[i]` of a model, and for a
     range of values `v[1]`, …, `v[n]` for `f`, determined by a :class:`.Partitioning`
@@ -470,18 +468,17 @@ class UnivariateProbabilitySimulator(BaseUnivariateSimulator[ClassifierPipelineD
     observations, i.e., assuming that feature `x[i]` has the constant value `v[j]`.
 
     Then all classifiers of a :class:`LearnerCrossfit` are used in turn to each predict
-    the probability of the positive class for all observations, and the mean probability
-    across all observations is calculated for each classifier, resulting in a
-    distribution of mean predicted probabilities for each value `v[j]`.
-
-    For each `v[j]`, the median and the lower and upper confidence bounds are retained.
-
-    Hence the result of the simulation is a series of `n` medians, lower and upper
-    confidence  bounds; one each for every value in the range of simulated values.
+    the positive class probabilities for all observations, and the mean probability
+    across all observations is calculated for each classifier and value `v[j]`.
+    The simulation result is a set of `n` distributions of mean predicted probabilities
+    across all classifiers -- one distribution for each `v[j]`.
 
     Note that sample weights are not taken into account for simulations; each
     observation has the same weight in the simulation even if different weights
     have been specified for the sample.
+
+    Also, care should be taken to re-calibrate classifiers trained on weighted samples
+    as the weighted samples will impact predicted class probabilities.
     """
 
     @property
