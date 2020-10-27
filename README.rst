@@ -4,9 +4,7 @@
 
 Facet is an open source library for human-explainable AI. It combines sophisticated
 model inspection and model-based simulation to enable better explanations of your
-supervised machine learning models.
-
-Facet is composed of the following key components:
+supervised machine learning models. Facet is composed of the following key components:
 
 - **Enhanced machine learning workflow**:
     Facet delivers a robust and fail-safe pipelining
@@ -210,25 +208,26 @@ Model Simulation
 
 Download the getting started tutorial and explore Facet for yourself here: |binder|
 
-Releases and Contributing
+Contributing
 ---------------------------
 
 Facet is stable and is being supported long-term.
 
 Contributions to Facet are welcome and appreciated.
 For any bug reports or feature requests/enhancements please use the appropriate
-`GitHub form <https://github.com/BCG-Gamma/facet/issues>`_ and if you wish to do so,
+`GitHub form <https://github.com/BCG-Gamma/facet/issues>`_, and if you wish to do so,
 please open a PR addressing the issue.
 
-We do ask that for major changes to please discuss with us first via the issue or
-directly at our team email: FacetTeam <at> bcg <dot> com.
+We do ask that for any major changes please discuss these with us first via an issue or
+at our team email: FacetTeam <at> bcg <dot> com.
 
 For further information on contributing please see our :ref:`contribution-guide`.
 
 License
 ---------------------------
 
-Facet is licensed under Apache 2.0.
+Facet is licensed under Apache 2.0 as described in the
+`LICENSE <https://github.com/BCG-Gamma/facet/LICENSE>`_ file.
 
 Acknowledgements
 ---------------------------
