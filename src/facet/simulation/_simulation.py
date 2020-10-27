@@ -45,16 +45,9 @@ __all__ = [
     "UnivariateSimulationResult",
     "BaseUnivariateSimulator",
     "UnivariateProbabilitySimulator",
+    "UnivariateTargetSimulator",
     "UnivariateUpliftSimulator",
 ]
-
-#
-# Constants
-#
-
-# if True, use the full available sample to carry out simulations; otherwise only
-# use the train sample of each fold
-_SIMULATE_FULL_SAMPLE = True
 
 #
 # Type variables
@@ -315,39 +308,35 @@ class BaseUnivariateSimulator(
         )
 
     def simulate_actuals(self) -> pd.Series:
-        """
-        Run a simulation by predicting the outputs based on the actual feature values
-        across all splits of the crossfit.
+        r"""
+        For each test split :math:`\mathrm{T}_i` in this simulator's
+        :attr:`.crossfit`, predict the outputs for all test samples given their actual
+        feature values, and calculate the absolute deviation from the mean of all actual
+        outputs of the entire sample
+        :math:`\frac{1}{n}\sum_{j \in \mathrm{T}_i}\hat y_j - \bar y`
 
-        The spread and offset of this actual simulation is an indication of how the
-        bias of the model underlying the simulation contributes to the uncertainty of
-        simulations produced with method :meth:`.simulate_features`.
+        The spread and offset of these deviations can serve as an indication of how the
+        bias of the model contributes to the uncertainty of simulations produced with
+        method :meth:`.simulate_features`.
 
-        :return: series mapping split IDs to simulation results based on actual \
-            feature values
+        :return: series mapping split IDs to deviations of simulated mean outputs
         """
 
         sample = self.crossfit.sample_
+        y_mean = self.expected_output()
 
         with self._parallel() as parallel:
             result: List[float] = parallel(
                 self._delayed(self._simulate_actuals)(
-                    model=model,
-                    subsample=(
-                        sample
-                        if _SIMULATE_FULL_SAMPLE
-                        else sample.subsample(iloc=test_indices)
-                    ),
+                    model, subsample.features, y_mean, self._simulate
                 )
                 for (model, (_, test_indices)) in zip(
                     self.crossfit.models(), self.crossfit.splits()
                 )
+                for subsample in (sample.subsample(iloc=test_indices),)
             )
 
-        return pd.Series(
-            data=result,
-            name=COL_OUTPUT,
-        ).rename_axis(index=IDX_SPLIT)
+        return pd.Series(data=result, name=COL_OUTPUT).rename_axis(index=IDX_SPLIT)
 
     @property
     @abstractmethod
@@ -356,14 +345,24 @@ class BaseUnivariateSimulator(
         Unit of the output values calculated by the simulation
         """
 
-    @abstractmethod
     def baseline(self) -> float:
         """
-        Calculate the expectation value of the outputs, based on historically observed
-        actuals
+        Calculate the expectation value of the simulation result, based on historically
+        observed actuals
 
-        :return: the expectation value of the outputs
+        :return: the expectation value of the simulation results
         """
+        return self.expected_output()
+
+    @abstractmethod
+    def expected_output(self) -> float:
+        """
+        Calculate the expectation value of the actual model output, based on
+        historically observed actuals
+
+        :return: the expectation value of the actual model output
+        """
+        pass
 
     @staticmethod
     @abstractmethod
@@ -372,14 +371,7 @@ class BaseUnivariateSimulator(
 
     @staticmethod
     @abstractmethod
-    def _simulate(
-        model: T_LearnerPipelineDF, x: pd.DataFrame, actual_outcomes: pd.Series
-    ) -> float:
-        pass
-
-    @staticmethod
-    @abstractmethod
-    def _simulate_actuals(model: T_LearnerPipelineDF, subsample: Sample) -> float:
+    def _simulate(model: T_LearnerPipelineDF, x: pd.DataFrame) -> float:
         pass
 
     def _simulate_feature_with_values(
@@ -406,11 +398,7 @@ class BaseUnivariateSimulator(
             simulation_results_per_split: List[np.ndarray] = parallel(
                 self._delayed(UnivariateUpliftSimulator._simulate_values_for_split)(
                     model=model,
-                    subsample=(
-                        sample
-                        if _SIMULATE_FULL_SAMPLE
-                        else sample.subsample(iloc=test_indices)
-                    ),
+                    subsample=sample.subsample(iloc=test_indices),
                     feature_name=feature_name,
                     simulated_values=simulation_values,
                     simulate_fn=self._simulate,
@@ -430,15 +418,13 @@ class BaseUnivariateSimulator(
         subsample: Sample,
         feature_name: str,
         simulated_values: Optional[Sequence[Any]],
-        simulate_fn: Callable[[LearnerDF, pd.DataFrame, pd.Series], float],
+        simulate_fn: Callable[[LearnerDF, pd.DataFrame], float],
     ) -> np.ndarray:
         # for a list of values to be simulated, return a list of absolute target changes
 
         n_observations = len(subsample)
         features = subsample.features
         feature_dtype = features.loc[:, feature_name].dtype
-
-        actual_outcomes = subsample.target
 
         return np.array(
             [
@@ -453,11 +439,19 @@ class BaseUnivariateSimulator(
                             )
                         }
                     ),
-                    actual_outcomes,
                 )
                 for value in simulated_values
             ]
         )
+
+    @staticmethod
+    def _simulate_actuals(
+        model: LearnerDF,
+        x: pd.DataFrame,
+        y_mean: float,
+        simulate_fn: Callable[[LearnerDF, pd.DataFrame], float],
+    ):
+        return simulate_fn(model, x) - y_mean
 
 
 @inheritdoc(match="[see superclass]")
@@ -492,7 +486,7 @@ class UnivariateProbabilitySimulator(BaseUnivariateSimulator[ClassifierPipelineD
         """[see superclass]"""
         return f"probability({self._positive_class()})"
 
-    def baseline(self) -> float:
+    def expected_output(self) -> float:
         """
         Calculate the actual observed frequency of the positive class as the baseline
         of the simulation
@@ -526,30 +520,40 @@ class UnivariateProbabilitySimulator(BaseUnivariateSimulator[ClassifierPipelineD
         return ClassifierPipelineDF
 
     @staticmethod
-    def _simulate(
-        model: ClassifierPipelineDF, x: pd.DataFrame, actual_outcomes: pd.Series
-    ) -> float:
+    def _simulate(model: ClassifierPipelineDF, x: pd.DataFrame) -> float:
         probabilities: pd.DataFrame = model.predict_proba(x)
         if probabilities.shape[1] != 2:
             raise TypeError("only binary classifiers are supported")
         return probabilities.iloc[:, 1].mean()
 
+
+class _UnivariateRegressionSimulator(
+    BaseUnivariateSimulator[RegressorPipelineDF], metaclass=ABCMeta
+):
+    def expected_output(self) -> float:
+        """
+        Calculate the mean of actually observed values for the target
+
+        :return: mean observed value of the target
+        """
+        actual_outputs: pd.Series = self.crossfit.sample_.target
+        assert isinstance(actual_outputs, pd.Series), "sample has one single target"
+
+        return actual_outputs.mean()
+
     @staticmethod
-    def _simulate_actuals(model: ClassifierPipelineDF, subsample: Sample) -> float:
-        # return relative difference between actual and predicted target
-        probabilities = model.predict_proba(X=subsample.features)
+    def _expected_pipeline_type() -> Type[RegressorPipelineDF]:
+        return RegressorPipelineDF
 
-        if probabilities.shape[1] != 2:
-            raise TypeError("only binary classifiers are supported")
-
-        return probabilities.iloc[:, 1].mean(axis=0)
+    @staticmethod
+    def _simulate(model: RegressorPipelineDF, x: pd.DataFrame) -> float:
+        return model.predict(X=x).mean(axis=0)
 
 
 @inheritdoc(match="[see superclass]")
-class _UnivariateTargetSimulator(BaseUnivariateSimulator[RegressorPipelineDF]):
+class UnivariateTargetSimulator(_UnivariateRegressionSimulator):
     """
-    Univariate simulation for absolute output values for the target of a regression
-    model.
+    Univariate simulation of the absolute output of a regression model.
 
     The simulation is carried out for one specific feature `x[i]` of a model, and for a
     range of values `v[1]`, …, `v[n]` for `f`, determined by a :class:`.Partitioning`
@@ -560,10 +564,10 @@ class _UnivariateTargetSimulator(BaseUnivariateSimulator[RegressorPipelineDF]):
     observations, i.e., assuming that feature `x[i]` has the constant value `v[j]`.
 
     Then all regressors of a :class:`LearnerCrossfit` are used in turn to each predict
-    the output for all observations, and the mean of the predicted outputs across all
-    observations is calculated for each regressor and value `v[j]`.
-    The simulation result is a set of `n` distributions of mean predicted targets
-    across all regressors -- one distribution for each `v[j]`.
+    the output for all observations, and the mean of the predicted outputs is calculated
+    for each regressor and value `v[j]`. The simulation result is a set of `n`
+    distributions of mean predicted targets across regressors -- one distribution for
+    each `v[j]`.
 
     Note that sample weights are not taken into account for simulations; each
     observation has the same weight in the simulation even if different weights
@@ -575,37 +579,11 @@ class _UnivariateTargetSimulator(BaseUnivariateSimulator[RegressorPipelineDF]):
         """[see superclass]"""
         return f"Mean predicted target ({self.crossfit.sample_.target_name})"
 
-    def baseline(self) -> float:
-        """
-        The baseline of uplift simulations is always ``0.0``
-        """
-        return 0.0
-
-    @staticmethod
-    def _expected_pipeline_type() -> Type[RegressorPipelineDF]:
-        return RegressorPipelineDF
-
-    @staticmethod
-    def _simulate(
-        model: RegressorPipelineDF, x: pd.DataFrame, actual_outcomes: pd.Series
-    ) -> float:
-        return model.predict(x).mean(axis=0) - actual_outcomes.mean(axis=0)
-
-    @staticmethod
-    def _simulate_actuals(model: RegressorPipelineDF, subsample: Sample) -> float:
-        # return relative difference between actual and predicted target
-        return (
-            model.predict(X=subsample.features).mean(axis=0)
-            / subsample.target.mean(axis=0)
-            - 1.0
-        )
-
 
 @inheritdoc(match="[see superclass]")
-class UnivariateUpliftSimulator(BaseUnivariateSimulator[RegressorPipelineDF]):
+class UnivariateUpliftSimulator(_UnivariateRegressionSimulator):
     """
-    Univariate simulation for absolute output values for the target of a regression
-    model.
+    Univariate simulation of the relative uplift of the output of a regression model.
 
     The simulation is carried out for one specific feature `x[i]` of a model, and for a
     range of values `v[1]`, …, `v[n]` for `f`, determined by a :class:`.Partitioning`
@@ -616,10 +594,11 @@ class UnivariateUpliftSimulator(BaseUnivariateSimulator[RegressorPipelineDF]):
     observations, i.e., assuming that feature `x[i]` has the constant value `v[j]`.
 
     Then all regressors of a :class:`LearnerCrossfit` are used in turn to each predict
-    the output for all observations, and the mean of the predicted outputs across all
-    observations is calculated for each regressor and value `v[j]`.
-    The simulation result is a set of `n` distributions of mean predicted targets
-    across all regressors -- one distribution for each `v[j]`.
+    the output for all observations, and the mean of the predicted outputs is calculated
+    for each regressor and value `v[j]`. The simulation result is a set of `n`
+    distributions of mean predicted target uplifts across regressors, i.e. the mean
+    predicted difference of the historical expectation value of the target --
+    one distribution for each `v[j]`.
 
     Note that sample weights are not taken into account for simulations; each
     observation has the same weight in the simulation even if different weights
@@ -639,24 +618,15 @@ class UnivariateUpliftSimulator(BaseUnivariateSimulator[RegressorPipelineDF]):
         """
         return 0.0
 
-    @staticmethod
-    def _expected_pipeline_type() -> Type[RegressorPipelineDF]:
-        return RegressorPipelineDF
-
-    @staticmethod
-    def _simulate(
-        model: RegressorPipelineDF, x: pd.DataFrame, actual_outcomes: pd.Series
-    ) -> float:
-        return model.predict(x).mean(axis=0) - actual_outcomes.mean(axis=0)
-
-    @staticmethod
-    def _simulate_actuals(model: RegressorPipelineDF, subsample: Sample) -> float:
-        # return relative difference between actual and predicted target
-        return (
-            model.predict(X=subsample.features).mean(axis=0)
-            / subsample.target.mean(axis=0)
-            - 1.0
+    def simulate_feature(
+        self, feature_name: str, *, partitioner: Partitioner[T_Partition]
+    ) -> UnivariateSimulationResult:
+        """[see superclass]"""
+        result = super().simulate_feature(
+            feature_name=feature_name, partitioner=partitioner
         )
+        result.outputs -= self.expected_output()
+        return result
 
 
 __tracker.validate()
