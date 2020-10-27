@@ -245,7 +245,7 @@ independence vectors.
 BCG Gamma
 ---------------------------
 
-If you would like to more about the team behind Facet please see our `about us <>`_ page.
+If you would like to know more about the team behind Facet please see our :ref:`about_us` page.
 
 We are always on the lookout for passionate and talented data scientists to join the
 BCG Gamma team. If you would like to know more you can find out about BCG Gamma
