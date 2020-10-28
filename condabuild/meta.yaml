@@ -1,6 +1,8 @@
+{% set setup_py_data = load_setup_py_data() %}
+
 package:
   name: gamma-facet
-  version: 1.0.0
+  version: {{ setup_py_data.get('version') }}
 
 source:
   git_url: {{FACET_PATH}}/facet
