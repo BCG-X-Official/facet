@@ -16,8 +16,7 @@ supervised machine learning models. Facet is composed of the following key compo
 |           | version of `scikit-learn <https://scikit-learn.org/stable/index.html>`_   |
 |           | with enhanced support for `pandas <https://pandas.pydata.org/>`_          |
 |           | dataframes and pipelining.                                                |
-+-----------+---------------------------------------------------------------------------+
-
+|           |                                                                           |
 +-----------+---------------------------------------------------------------------------+
 | |inspect| | **Model Inspection**                                                      |
 |           |                                                                           |
@@ -26,8 +25,7 @@ supervised machine learning models. Facet is composed of the following key compo
 |           | interactions. This is based on a novel method which decomposes            |
 |           | `SHAP values <https://shap.readthedocs.io/en/latest/>`_ into              |
 |           | two vectors representing **synergy** and **redundancy**.                  |
-+-----------+---------------------------------------------------------------------------+
-
+|           |                                                                           |
 +-----------+---------------------------------------------------------------------------+
 | |sim|     | **Model Simulation**                                                      |
 |           |                                                                           |
@@ -264,11 +262,8 @@ or have a look at
 `career opportunities <https://www.bcg.com/en-gb/beyond-consulting/bcg-gamma/careers>`_.
 
 .. |pipe| image:: _static/icons/pipe_icon.jpg
-    :class:
 .. |inspect| image:: _static/icons/inspect_icon.jpg
-    :class:
 .. |sim| image:: _static/icons/sim_icon.jpg
-    :class:
 
 .. |azure_conda| image:: https://
     :target: https://
