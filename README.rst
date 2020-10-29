@@ -88,7 +88,7 @@ Enhanced machine learning workflow
     )
 
     # create FACET sample object
-    boston_obs = Sample(observations=df, target="MEDIAN_HOUSE_PRICE")
+    boston_obs = Sample(observations=df, target_name="MEDIAN_HOUSE_PRICE")
 
     # create pipeline for random forest regressor
     rforest_reg = RegressorPipelineDF(regressor=RandomForestRegressorDF(random_state=42))
@@ -201,13 +201,13 @@ Model Simulation
     ).fit(sample=boston_obs)
 
     SIM_FEAT = "LSTAT"
-    simulator = UnivariateUpliftSimulator(crossfit=ranker.best_model_crossfit_, n_jobs=3)
+    simulator = UnivariateUpliftSimulator(crossfit=boot_crossfit, n_jobs=3)
 
     # split the simulation range into equal sized partitions
     partitioner = ContinuousRangePartitioner()
 
     # run the simulation
-    simulation = simulator.simulate_feature(name=SIM_FEAT, partitioner=partitioner)
+    simulation = simulator.simulate_feature(feature_name=SIM_FEAT, partitioner=partitioner)
 
     # visualise results
     SimulationDrawer().draw(data=simulation, title=SIM_FEAT)
