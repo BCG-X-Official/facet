@@ -207,7 +207,7 @@ Model Simulation
     partitioner = ContinuousRangePartitioner()
 
     # run the simulation
-    simulation = simulator.simulate_feature(name=SIM_FEAT, partitioner=partitioner)
+    simulation = simulator.simulate_feature(feature_name=SIM_FEAT, partitioner=partitioner)
 
     # visualise results
     SimulationDrawer().draw(data=simulation, title=SIM_FEAT)
