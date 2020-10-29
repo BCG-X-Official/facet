@@ -261,11 +261,11 @@ BCG GAMMA team. If you would like to know more you can find out about BCG GAMMA
 or have a look at
 `career opportunities <https://www.bcg.com/en-gb/beyond-consulting/bcg-gamma/careers>`_.
 
-.. |pipe| image:: _static/icons/pipe_icon.jpg
+.. |pipe| image:: _static/icons/pipe_icon.png
     :class: facet_icon
-.. |inspect| image:: _static/icons/inspect_icon.jpg
+.. |inspect| image:: _static/icons/inspect_icon.png
     :class: facet_icon
-.. |sim| image:: _static/icons/sim_icon.jpg
+.. |sim| image:: _static/icons/sim_icon.png
     :class: facet_icon
 
 .. |azure_conda| image:: https://
