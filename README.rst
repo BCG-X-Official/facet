@@ -201,7 +201,7 @@ Model Simulation
     ).fit(sample=boston_obs)
 
     SIM_FEAT = "LSTAT"
-    simulator = UnivariateUpliftSimulator(crossfit=ranker.best_model_crossfit_, n_jobs=3)
+    simulator = UnivariateUpliftSimulator(crossfit=boot_crossfit, n_jobs=3)
 
     # split the simulation range into equal sized partitions
     partitioner = ContinuousRangePartitioner()
