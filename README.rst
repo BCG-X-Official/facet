@@ -262,8 +262,11 @@ or have a look at
 `career opportunities <https://www.bcg.com/en-gb/beyond-consulting/bcg-gamma/careers>`_.
 
 .. |pipe| image:: _static/icons/pipe_icon.jpg
+    :class: facet_icon
 .. |inspect| image:: _static/icons/inspect_icon.jpg
+    :class: facet_icon
 .. |sim| image:: _static/icons/sim_icon.jpg
+    :class: facet_icon
 
 .. |azure_conda| image:: https://
     :target: https://
