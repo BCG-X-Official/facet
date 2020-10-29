@@ -7,7 +7,7 @@ model inspection and model-based simulation to enable better explanations of you
 supervised machine learning models. Facet is composed of the following key components:
 
 +-----------+---------------------------------------------------------------------------+
-| |pipe|    | **Enhanced machine learning workflow**                                    |
+| |pipe|    | **Enhanced Machine Learning Workflow**                                    |
 |           |                                                                           |
 |           | Facet delivers a robust and fail-safe pipelining workflow which allows you|
 |           | to easily impute and select your features as well as ranking a grid of    |
@@ -262,7 +262,7 @@ or have a look at
 `career opportunities <https://www.bcg.com/en-gb/beyond-consulting/bcg-gamma/careers>`_.
 
 .. |pipe| image:: _static/icons/pipe_icon.jpg
-    :class: facet_icon
+    :width: 600
 .. |inspect| image:: _static/icons/inspect_icon.jpg
     :class: facet_icon
 .. |sim| image:: _static/icons/sim_icon.jpg
