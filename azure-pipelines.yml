@@ -140,8 +140,9 @@ stages:
               export PYTHONPATH=$(System.DefaultWorkingDirectory)/facet/src/
               conda env create -f environment.yml
               conda activate facet-develop
+              pip install flit
               cd $(System.DefaultWorkingDirectory)/pytools/
-              pip install -e .
+              flit install -s
               cd $(System.DefaultWorkingDirectory)/sklearndf/
               pip install -e .
               cd $(System.DefaultWorkingDirectory)/facet/
