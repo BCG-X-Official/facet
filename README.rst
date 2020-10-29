@@ -88,7 +88,7 @@ Enhanced machine learning workflow
     )
 
     # create FACET sample object
-    boston_obs = Sample(observations=df, target="MEDIAN_HOUSE_PRICE")
+    boston_obs = Sample(observations=df, target_name="MEDIAN_HOUSE_PRICE")
 
     # create pipeline for random forest regressor
     rforest_reg = RegressorPipelineDF(regressor=RandomForestRegressorDF(random_state=42))
