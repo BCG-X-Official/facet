@@ -6,33 +6,33 @@ Facet is an open source library for human-explainable AI. It combines sophistica
 model inspection and model-based simulation to enable better explanations of your
 supervised machine learning models. Facet is composed of the following key components:
 
-+-----------+---------------------------------------------------------------------------+
-| |pipe|    | **Enhanced Machine Learning Workflow**                                    |
-|           |                                                                           |
-|           | Facet delivers a robust and fail-safe pipelining workflow which allows you|
-|           | to easily impute and select your features as well as ranking a grid of    |
-|           | different models "competing" against each other. Facet introduces         |
-|           | `sklearndf <https://github.com/BCG-Gamma/sklearndf>`_, an augmented       |
-|           | version of `scikit-learn <https://scikit-learn.org/stable/index.html>`_   |
-|           | with enhanced support for `pandas <https://pandas.pydata.org/>`_          |
-|           | dataframes and pipelining.                                                |
-|           |                                                                           |
-+-----------+---------------------------------------------------------------------------+
-| |inspect| | **Model Inspection**                                                      |
-|           |                                                                           |
-|           | Local explanations of features and their interactions make up a key       |
-|           | component of understanding feature importance as well as feature          |
-|           | interactions. This is based on a novel method which decomposes            |
-|           | `SHAP values <https://shap.readthedocs.io/en/latest/>`_ into              |
-|           | two vectors representing **synergy** and **redundancy**.                  |
-|           |                                                                           |
-+-----------+---------------------------------------------------------------------------+
-| |sim|     | **Model Simulation**                                                      |
-|           |                                                                           |
-|           | Use your trained model and the insights from the model inspection to      |
-|           | conduct a historical univariate simulation of any feature on your target  |
-|           | in order to identify local optima.                                        |
-+-----------+---------------------------------------------------------------------------+
++-------------------+---------------------------------------------------------------------------+
+| |pipe|            | **Enhanced Machine Learning Workflow**                                    |
+|                   |                                                                           |
+|                   | Facet delivers a robust and fail-safe pipelining workflow which allows you|
+|                   | to easily impute and select your features as well as ranking a grid of    |
+|                   | different models "competing" against each other. Facet introduces         |
+|                   | `sklearndf <https://github.com/BCG-Gamma/sklearndf>`_, an augmented       |
+|                   | version of `scikit-learn <https://scikit-learn.org/stable/index.html>`_   |
+|                   | with enhanced support for `pandas <https://pandas.pydata.org/>`_          |
+|                   | dataframes and pipelining.                                                |
+|                   |                                                                           |
++-------------------+---------------------------------------------------------------------------+
+| |inspect|         | **Model Inspection**                                                      |
+|                   |                                                                           |
+|                   | Local explanations of features and their interactions make up a key       |
+|                   | component of understanding feature importance as well as feature          |
+|                   | interactions. This is based on a novel method which decomposes            |
+|                   | `SHAP values <https://shap.readthedocs.io/en/latest/>`_ into              |
+|                   | two vectors representing **synergy** and **redundancy**.                  |
+|                   |                                                                           |
++-------------------+---------------------------------------------------------------------------+
+| |sim|             | **Model Simulation**                                                      |
+|                   |                                                                           |
+|                   | Use your trained model and the insights from the model inspection to      |
+|                   | conduct a historical univariate simulation of any feature on your target  |
+|                   | in order to identify local optima.                                        |
++-------------------+---------------------------------------------------------------------------+
 
 
 |azure_pypi| |azure_conda| |azure_devops_master_ci| |code_cov|
@@ -262,7 +262,7 @@ or have a look at
 `career opportunities <https://www.bcg.com/en-gb/beyond-consulting/bcg-gamma/careers>`_.
 
 .. |pipe| image:: _static/icons/pipe_icon.jpg
-    :width: 600
+    :class: facet_icon
 .. |inspect| image:: _static/icons/inspect_icon.jpg
     :class: facet_icon
 .. |sim| image:: _static/icons/sim_icon.jpg
