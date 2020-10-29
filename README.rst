@@ -250,13 +250,13 @@ The `shap <https://github.com/slundberg/shap>`_ implementation is used to estima
 shapley vectors which are being decomposed into the synergy, redundancy, and
 independence vectors.
 
-BCG Gamma
+BCG GAMMA
 ---------------------------
 
 If you would like to know more about the team behind Facet please see our :ref:`about_us` page.
 
 We are always on the lookout for passionate and talented data scientists to join the
-BCG Gamma team. If you would like to know more you can find out about BCG Gamma
+BCG GAMMA team. If you would like to know more you can find out about BCG GAMMA
 `here <https://www.bcg.com/en-gb/beyond-consulting/bcg-gamma/default>`_,
 or have a look at
 `career opportunities <https://www.bcg.com/en-gb/beyond-consulting/bcg-gamma/careers>`_.
