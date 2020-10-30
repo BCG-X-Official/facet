@@ -2,18 +2,46 @@
 
 |
 
-`facet` is an open source library for human-explainable AI. It combines sophisticated
+Facet is an open source library for human-explainable AI. It combines sophisticated
 model inspection and model-based simulation to enable better explanations of your
-machine learning models.
+supervised machine learning models. Facet is composed of the following key components:
+
++-------------------+---------------------------------------------------------------------------+
+| |pipe|            | **Enhanced Machine Learning Workflow**                                    |
+|                   |                                                                           |
+|                   | Facet delivers a robust and fail-safe pipelining workflow which allows you|
+|                   | to easily impute and select your features as well as ranking a grid of    |
+|                   | different models "competing" against each other. Facet introduces         |
+|                   | `sklearndf <https://github.com/BCG-Gamma/sklearndf>`_, an augmented       |
+|                   | version of `scikit-learn <https://scikit-learn.org/stable/index.html>`_   |
+|                   | with enhanced support for `pandas <https://pandas.pydata.org/>`_          |
+|                   | dataframes and pipelining.                                                |
+|                   |                                                                           |
++-------------------+---------------------------------------------------------------------------+
+| |inspect|         | **Model Inspection**                                                      |
+|                   |                                                                           |
+|                   | Local explanations of features and their interactions make up a key       |
+|                   | component of understanding feature importance as well as feature          |
+|                   | interactions. This is based on a novel method which decomposes            |
+|                   | `SHAP values <https://shap.readthedocs.io/en/latest/>`_ into              |
+|                   | two vectors representing **synergy** and **redundancy**.                  |
+|                   |                                                                           |
++-------------------+---------------------------------------------------------------------------+
+| |sim|             | **Model Simulation**                                                      |
+|                   |                                                                           |
+|                   | Use your trained model and the insights from the model inspection to      |
+|                   | conduct a historical univariate simulation of any feature on your target  |
+|                   | in order to identify local optima.                                        |
++-------------------+---------------------------------------------------------------------------+
+
 
 |azure_pypi| |azure_conda| |azure_devops_master_ci| |code_cov|
-|python_versions| |code_style| |documentation_status|
-|made_with_sphinx_doc| |License_badge|
+|python_versions| |code_style| |made_with_sphinx_doc| |License_badge|
 
 Installation
 ---------------------
 
-Facet supports both PyPI and Anaconda
+Facet supports both PyPI and Anaconda.
 
 Anaconda
 ~~~~~~~~~~~~~~~~~~~~~
@@ -32,29 +60,8 @@ Pip
 Quickstart
 ----------------------
 
-
-Facet is composed of the following key components:
-
-- **Enhanced machine learning workflow**:
-    Facet delivers a robust and fail-safe pipelining
-    workflow which allows you to easily impute and select your features as well as
-    ranking a grid of different models "competing" against each other. Facet introduces
-    **sklearndf**, an augmented version of
-    `scikit-learn <https://scikit-learn.org/stable/index.html>`_ with enhanced support
-    for pandas dataframes and pipelining.
-
-- **Model Inspection**:
-    Local explanations of features and their interactions make up a key
-    component of understanding feature importance as well as feature interactions.
-    This is based on a novel method which decomposes
-    `SHAP values <https://shap.readthedocs.io/en/latest/>`_ into
-    two vectors representing **synergy** and **redundancy**.
-
-- **Model Simulation**:
-    Use your trained model and the insights from the model inspection
-    to conduct a historical simulation of any feature on your target in order to
-    identify local optima.
-
+The following quickstart guide provides a minimal example workflow to get up and running
+with Facet.
 
 Enhanced machine learning workflow
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -81,7 +88,7 @@ Enhanced machine learning workflow
     )
 
     # create FACET sample object
-    boston_obs = Sample(observations=df, target="MEDIAN_HOUSE_PRICE")
+    boston_obs = Sample(observations=df, target_name="MEDIAN_HOUSE_PRICE")
 
     # create pipeline for random forest regressor
     rforest_reg = RegressorPipelineDF(regressor=RandomForestRegressorDF(random_state=42))
@@ -111,11 +118,11 @@ Model Inspection
 Facet implements several model inspection methods for
 `scikit-learn <https://scikit-learn.org/stable/index.html>`_ estimators.
 Fundamentally, facet enables post-hoc model inspection by breaking down the interaction
-effects of the variables that your model used for training:
+effects of the features used for model training:
 
 - **Redundancy**
-  represents how much information is shared between two features
-  contributions to the model predictions. For example, temperature and pressure in a pressure cooker are
+  represents how much information is shared between two features contributions to
+  the model predictions. For example, temperature and pressure in a pressure cooker are
   redundant features for predicting cooking time since pressure will rise relative to
   the temperature, and vice versa. Therefore, knowing just one of either temperature or
   pressure will likely enable the same predictive accuracy. Redundancy is expressed as
@@ -126,8 +133,7 @@ effects of the variables that your model used for training:
   the model predictions. For example, given features X and Y as
   coordinates on a chess board, the colour of a square can only be predicted when
   considering X and Y in combination. Synergy is expressed as a
-  percentage ranging from 0% (full autonomy) to 100% (full synergy)
-
+  percentage ranging from 0% (full autonomy) to 100% (full synergy).
 
 
 .. code-block:: Python
@@ -145,7 +151,8 @@ effects of the variables that your model used for training:
 .. image:: _static/redundancy_matrix.png
     :width: 600
 
-We can also better visualize redundancy as a dendrogram so we can identify clusters of features with redundancy.
+We can also better visualize redundancy as a dendrogram so we can identify clusters of
+features with redundancy.
 
 .. code-block:: Python
 
@@ -168,8 +175,7 @@ For feature synergy, we can get a similar picture
 .. image:: _static/synergy_matrix.png
     :width: 600
 
-Please see the API documentation for more detail.
-
+Please see the :ref:`API reference` for more detail.
 
 Model Simulation
 ~~~~~~~~~~~~~~~~~~
@@ -195,65 +201,88 @@ Model Simulation
     ).fit(sample=boston_obs)
 
     SIM_FEAT = "LSTAT"
-    simulator = UnivariateUpliftSimulator(crossfit=ranker.best_model_crossfit_, n_jobs=3)
+    simulator = UnivariateUpliftSimulator(crossfit=boot_crossfit, n_jobs=3)
 
     # split the simulation range into equal sized partitions
     partitioner = ContinuousRangePartitioner()
 
     # run the simulation
-    simulation = simulator.simulate_feature(name=SIM_FEAT, partitioner=partitioner)
+    simulation = simulator.simulate_feature(feature_name=SIM_FEAT, partitioner=partitioner)
 
     # visualise results
     SimulationDrawer().draw(data=simulation, title=SIM_FEAT)
 
 .. image:: _static/simulation_output.png
 
-.. raw:: html
+Download the getting started tutorial and explore Facet for yourself here: |binder|
 
-    <p>Download the getting started tutorial and explore FACET for yourself by clicking
-    here:
-    <a href="https://mybinder.org/" target="_blank">
-    <img src="https://mybinder.org/badge_logo.svg"></a>
-    </p>
-
-
-Development Guidelines
+Contributing
 ---------------------------
 
-We would be more than happy would you wish to contribute to Facet. See our
-:ref:`contribution-guide`.
+Facet is stable and is being supported long-term.
+
+Contributions to Facet are welcome and appreciated.
+For any bug reports or feature requests/enhancements please use the appropriate
+`GitHub form <https://github.com/BCG-Gamma/facet/issues>`_, and if you wish to do so,
+please open a PR addressing the issue.
+
+We do ask that for any major changes please discuss these with us first via an issue or
+at our team email: FacetTeam <at> bcg <dot> com.
+
+For further information on contributing please see our :ref:`contribution-guide`.
+
+License
+---------------------------
+
+Facet is licensed under Apache 2.0 as described in the
+`LICENSE <https://github.com/BCG-Gamma/facet/LICENSE>`_ file.
 
 Acknowledgements
 ---------------------------
 
-GAMMA Facet is built on top of two popular packages for Machine
-Learning:
+Facet is built on top of two popular packages for Machine Learning:
 
 The `scikit-learn <https://github.com/scikit-learn/scikit-learn>`_ learners and
 pipelining make up implementation of the underlying algorithms. Moreover, we tried
-to design the `facet` API to align with the scikit-learn API.
+to design the facet API to align with the scikit-learn API.
 
 The `shap <https://github.com/slundberg/shap>`_ implementation is used to estimate the
 shapley vectors which are being decomposed into the synergy, redundancy, and
 independence vectors.
 
-.. |azure_conda| image::
-    :target:
-.. |azure_pypi| image::
-    :target:
-.. |azure_devops_master_ci| image::
-    :target:
-.. |code_cov| image::
-    :target:
-.. |documentation_status| image::
-    :target:
+BCG GAMMA
+---------------------------
 
+If you would like to know more about the team behind Facet please see our :ref:`about_us` page.
+
+We are always on the lookout for passionate and talented data scientists to join the
+BCG GAMMA team. If you would like to know more you can find out about BCG GAMMA
+`here <https://www.bcg.com/en-gb/beyond-consulting/bcg-gamma/default>`_,
+or have a look at
+`career opportunities <https://www.bcg.com/en-gb/beyond-consulting/bcg-gamma/careers>`_.
+
+.. |pipe| image:: _static/icons/pipe_icon.png
+    :class: facet_icon
+.. |inspect| image:: _static/icons/inspect_icon.png
+    :class: facet_icon
+.. |sim| image:: _static/icons/sim_icon.png
+    :class: facet_icon
+
+.. |azure_conda| image:: https://
+    :target: https://
+.. |azure_pypi| image:: https://
+    :target: https://
+.. |azure_devops_master_ci| image:: https://
+    :target: https://
+.. |code_cov| image:: https://
+    :target: https://
 .. |python_versions| image:: https://img.shields.io/badge/python-3.7|3.8-blue.svg
     :target: https://www.python.org/downloads/release/python-380/
-
 .. |code_style| image:: https://img.shields.io/badge/code%20style-black-000000.svg
     :target: https://github.com/psf/black
 .. |made_with_sphinx_doc| image:: https://img.shields.io/badge/Made%20with-Sphinx-1f425f.svg
     :target: https://www.sphinx-doc.org/
 .. |license_badge| image:: https://img.shields.io/badge/License-Apache%202.0-olivegreen.svg
     :target: https://opensource.org/licenses/Apache-2.0
+.. |binder| image:: https://mybinder.org/badge_logo.svg
+    :target: https://mybinder.org/
