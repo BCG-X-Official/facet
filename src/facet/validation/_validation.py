@@ -39,11 +39,11 @@ class BaseBootstrapCV(BaseCrossValidator, metaclass=ABCMeta):
 
     def __init__(
         self,
-        n_splits: int = 100,
+        n_splits: int = 1000,
         random_state: Optional[Union[int, np.random.RandomState]] = None,
     ):
         """
-        :param n_splits: Number of splits to generate (default: 100)
+        :param n_splits: Number of splits to generate (default: 1000)
         :param random_state: random state to initialise the random generator with \
             (optional)
         """
@@ -205,7 +205,7 @@ class StationaryBootstrapCV(BaseBootstrapCV):
 
     def __init__(
         self,
-        n_splits: int = 100,
+        n_splits: int = 1000,
         mean_block_size: Union[int, float] = 0.5,
         random_state: Optional[Union[int, np.random.RandomState]] = None,
     ) -> None:
