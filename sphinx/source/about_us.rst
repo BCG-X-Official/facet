@@ -28,10 +28,10 @@ the industry standard eco-system (i.e., scikit-learn, shap) not re-invent it.
 
 So we got a bunch of data scientists to look at the problem from every angle and, well,
 you get FACET! Little geometry humor there, we apologize. FACET implements a newly
-developed algorithm to explain how variables of a
+developed algorithm to explain how features of a
 predictive model collaborate to predict outcomes by identifying patterns across the
 explanations of many individual predictions. This advanced model inspection allows
-strong independent factors to be identified and then explored via simulation to
+strong independent features to be identified and then explored via simulation to
 understand optimal values for the predictive target of interest.
 
 Our Team
