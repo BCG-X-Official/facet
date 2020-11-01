@@ -327,10 +327,6 @@ class SimulationReportStyle(SimulationStyle, TextStyle):
     def _num_format(heading: str):
         return f"> {len(heading)}.{SimulationReportStyle.__NUM_PRECISION}g"
 
-    def _drawing_start(self, title: str) -> None:
-        # print the report title
-        self.out.write(f"{title}\n")
-
     def draw_uplift(
         self,
         feature_name: str,
@@ -358,7 +354,7 @@ class SimulationReportStyle(SimulationStyle, TextStyle):
                     )[:3],
                 ],
                 formats=[
-                    self._partition_format(is_categorical_feature),
+                    self._partition_format(is_categorical=is_categorical_feature),
                     *([SimulationReportStyle.__NUM_FORMAT] * 3),
                 ],
                 data=list(
@@ -397,11 +393,13 @@ class SimulationReportStyle(SimulationStyle, TextStyle):
             )
         )
 
-    def _drawing_finalize(self) -> None:
+    def _drawing_finalize(self, **kwargs) -> None:
+        super()._drawing_finalize(**kwargs)
         # print two trailing line breaks
         self.out.write("\n")
 
-    def _partition_format(self, is_categorical: bool) -> str:
+    @staticmethod
+    def _partition_format(is_categorical: bool) -> str:
         if is_categorical:
             return SimulationReportStyle.__PARTITION_TEXT_FORMAT
         else:
