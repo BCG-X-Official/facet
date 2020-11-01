@@ -438,7 +438,7 @@ class LearnerInspector(
 
         return feature_importance
 
-    def feature_association_matrix(self) -> pd.DataFrame:
+    def feature_association_matrix(self) -> Union[pd.DataFrame, List[pd.DataFrame]]:
         """
         Calculate the feature association matrix.
 
@@ -457,12 +457,10 @@ class LearnerInspector(
         if no SHAP interaction values are available.
 
         In the case of multi-target regression and non-binary classification, returns
-        a data frame with one matrix per output, stacked horizontally, and with a
-        hierarchical column index (target/class name on level 1, and feature name on
-        level 2).
+        a list of data frames with one matrix per output.
 
         :return: feature association matrix as a data frame of shape \
-            `(n_features, n_outputs * n_features)`
+            `(n_features, n_features)`, or a list of data frames for multiple outputs
         """
         self._ensure_fitted()
 
@@ -486,7 +484,9 @@ class LearnerInspector(
             feature_affinity_matrix=self._shap_decomposer.association_rel_
         )
 
-    def feature_synergy_matrix(self, symmetrical: bool = True) -> pd.DataFrame:
+    def feature_synergy_matrix(
+        self, symmetrical: bool = True
+    ) -> Union[pd.DataFrame, List[pd.DataFrame]]:
         """
         Calculate the feature synergy matrix.
 
@@ -503,21 +503,21 @@ class LearnerInspector(
         (see :meth:`.feature_association_matrix`).
 
         In the case of multi-target regression and non-binary classification, returns
-        a data frame with one matrix per output, stacked horizontally, and with a
-        hierarchical column index (target/class name on level 1, and feature name on
-        level 2).
+        a list of data frames with one matrix per output.
 
         :param symmetrical: if ``True``, return a symmetrical matrix quantifying \
             mutual synergy; if ``False``, return an asymmetrical matrix quantifying \
             unilateral redundancy of the features represented by rows with the \
             features represented by columns
         :return: feature synergy matrix as a data frame of shape \
-            `(n_features, n_outputs * n_features)`
+            `(n_features, n_features)`, or a list of data frames for multiple outputs
         """
         self._ensure_fitted()
         return self._shap_interaction_decomposer.synergy(symmetrical=symmetrical)
 
-    def feature_redundancy_matrix(self, symmetrical: bool = True) -> pd.DataFrame:
+    def feature_redundancy_matrix(
+        self, symmetrical: bool = True, sorted: bool = True
+    ) -> Union[pd.DataFrame, List[pd.DataFrame]]:
         """
         Calculate the feature redundancy matrix.
 
@@ -534,16 +534,14 @@ class LearnerInspector(
         (see :meth:`.feature_association_matrix`).
 
         In the case of multi-target regression and non-binary classification, returns
-        a data frame with one matrix per output, stacked horizontally, and with a
-        hierarchical column index (target/class name on level 1, and feature name on
-        level 2).
+        a list of data frames with one matrix per output.
 
         :param symmetrical: if ``True``, return a symmetrical matrix quantifying \
             mutual redundancy; if ``False``, return an asymmetrical matrix quantifying \
             unilateral redundancy of the features represented by rows with the \
             features represented by columns
         :return: feature redundancy matrix as a data frame of shape \
-            `(n_features, n_outputs * n_features)`
+            `(n_features, n_features)`, or a list of data frames for multiple outputs
         """
         self._ensure_fitted()
         return self._shap_interaction_decomposer.redundancy(symmetrical=symmetrical)
@@ -566,7 +564,7 @@ class LearnerInspector(
             feature_affinity_matrix=self._shap_interaction_decomposer.redundancy_rel_
         )
 
-    def feature_interaction_matrix(self) -> pd.DataFrame:
+    def feature_interaction_matrix(self) -> Union[pd.DataFrame, List[pd.DataFrame]]:
         """
         Calculate relative shap interaction values for all feature pairings.
 
@@ -719,28 +717,29 @@ class LearnerInspector(
             target=sample.target,
         )
 
-    def _feature_matrix_to_df(self, matrix: np.ndarray) -> pd.DataFrame:
+    def _feature_matrix_to_df(
+        self, matrix: np.ndarray
+    ) -> Union[pd.DataFrame, List[pd.DataFrame]]:
         # transform a matrix of shape (n_outputs, n_features, n_features)
         # to a data frame
 
-        n_features = len(self.features)
-        n_outputs = len(self.output_names_)
-
-        assert matrix.shape == (n_outputs, n_features, n_features)
-
-        # transform to 2D shape (n_features, n_outputs * n_features)
-        matrix_2d = matrix.swapaxes(0, 1).reshape((n_features, n_outputs * n_features))
-
-        # convert array to data frame with appropriate indices
-        matrix_df = pd.DataFrame(
-            data=matrix_2d,
-            columns=self.shap_values().columns,
-            index=self.crossfit_.pipeline.feature_names_out_.rename(Sample.IDX_FEATURE),
+        feature_index = self.crossfit_.pipeline.feature_names_out_.rename(
+            Sample.IDX_FEATURE
         )
 
-        assert matrix_df.shape == (n_features, n_outputs * n_features)
+        n_features = len(feature_index)
+        assert matrix.shape == (len(self.output_names_), n_features, n_features)
 
-        return matrix_df
+        # convert array to data frame(s) with features as row and column indices
+        if len(matrix) == 1:
+            return pd.DataFrame(
+                data=matrix[0], index=feature_index, columns=feature_index
+            )
+        else:
+            return [
+                pd.DataFrame(data=m, index=feature_index, columns=feature_index)
+                for m in matrix
+            ]
 
     def _linkages_from_affinity_matrices(
         self, feature_affinity_matrix: np.ndarray

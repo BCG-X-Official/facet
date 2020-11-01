@@ -294,7 +294,8 @@ def test_model_inspection_classifier_multi_class(
 
     # Shap decomposition matrices (feature dependencies)
 
-    assert iris_inspector_multi_class.feature_synergy_matrix().values == pytest.approx(
+    synergy_matrix = iris_inspector_multi_class.feature_synergy_matrix()
+    assert np.hstack(m.values for m in synergy_matrix) == pytest.approx(
         np.array(
             [
                 [1.0, 0.069, 0.081, 0.061, 1.0, 0.098]
@@ -309,7 +310,9 @@ def test_model_inspection_classifier_multi_class(
         ),
         abs=0.02,
     )
-    assert iris_inspector_multi_class.feature_redundancy_matrix().values == (
+
+    redundancy_matrix = iris_inspector_multi_class.feature_redundancy_matrix()
+    assert np.hstack(m.values for m in redundancy_matrix) == (
         pytest.approx(
             np.array(
                 [
@@ -326,7 +329,9 @@ def test_model_inspection_classifier_multi_class(
             abs=0.02,
         )
     )
-    assert iris_inspector_multi_class.feature_association_matrix().values == (
+
+    association_matrix = iris_inspector_multi_class.feature_association_matrix()
+    assert np.hstack(m.values for m in association_matrix) == (
         pytest.approx(
             np.array(
                 [

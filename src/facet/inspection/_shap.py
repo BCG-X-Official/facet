@@ -164,13 +164,6 @@ class ShapCalculator(
         """
         pass
 
-    @abstractmethod
-    def get_shap_columns(self) -> pd.Index:
-        """
-        The column index of the data frame returned by :meth:`.get_shap_values`
-        """
-        pass
-
     @staticmethod
     @abstractmethod
     def get_multi_output_type() -> str:
@@ -406,11 +399,6 @@ class ShapValuesCalculator(
             shap_all_splits_df=self.shap_, method=consolidate
         )
 
-    @property
-    def get_shap_columns(self) -> pd.Index:
-        """[see superclass]"""
-        return self.shap_.columns
-
     @staticmethod
     def _get_shap_for_split(
         model: LearnerPipelineDF,
@@ -484,14 +472,6 @@ class ShapInteractionValuesCalculator(
         return ShapCalculator._consolidate_splits(
             shap_all_splits_df=self.shap_, method=consolidate
         )
-
-    @property
-    def get_shap_columns(self) -> pd.Index:
-        """
-        The column index of the data frame returned by :meth:`.shap_values`
-        and :meth:`.shap_interaction_values`
-        """
-        return self.shap_.columns
 
     def get_diagonals(self) -> pd.DataFrame:
         """

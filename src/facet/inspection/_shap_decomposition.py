@@ -3,7 +3,7 @@ Decomposition of SHAP contribution scores (i.e, SHAP importance) of all possible
 of features into additive components for synergy, redundancy, and independence.
 """
 import logging
-from typing import List, Optional, TypeVar
+from typing import List, Optional, TypeVar, Union
 
 import numpy as np
 import pandas as pd
@@ -53,14 +53,13 @@ class ShapValueDecomposer(FittableMixin[ShapCalculator]):
 
     def __init__(self) -> None:
         super().__init__()
-        self.index_: Optional[pd.Index] = None
-        self.columns_: Optional[pd.Index] = None
+        self.feature_index_: Optional[pd.Index] = None
         self.association_rel_: Optional[np.ndarray] = None
 
     @property
     def is_fitted(self) -> bool:
         """[inherit docstring from parent class]"""
-        return self.index_ is not None
+        return self.feature_index_ is not None
 
     is_fitted.__doc__ = FittableMixin.is_fitted.__doc__
 
@@ -81,8 +80,7 @@ class ShapValueDecomposer(FittableMixin[ShapCalculator]):
 
             self._fit(shap_calculator=shap_calculator)
 
-            self.index_ = shap_calculator.feature_index_
-            self.columns_ = shap_calculator.get_shap_columns
+            self.feature_index_ = shap_calculator.feature_index_
 
         except Exception:
             # reset fit in case we get an exception along the way
@@ -92,7 +90,7 @@ class ShapValueDecomposer(FittableMixin[ShapCalculator]):
         return self
 
     @property
-    def association(self) -> pd.DataFrame:
+    def association(self) -> Union[pd.DataFrame, List[pd.DataFrame]]:
         """
         The matrix of relative association for all feature pairs.
 
@@ -184,19 +182,25 @@ class ShapValueDecomposer(FittableMixin[ShapCalculator]):
 
     def _reset_fit(self) -> None:
         # revert status of this object to not fitted
-        self.index_ = self.columns_ = None
+        self.feature_index_ = None
         self.association_rel_ = None
 
-    def _to_frame(self, matrix: np.ndarray) -> pd.DataFrame:
+    def _to_frame(self, matrix: np.ndarray) -> Union[pd.DataFrame, List[pd.DataFrame]]:
         # takes an array of shape (n_outputs, n_features, n_features) and transforms it
         # into a data frame of shape (n_features, n_outputs * n_features)
-        index = self.index_
-        columns = self.columns_
-        return pd.DataFrame(
-            matrix.swapaxes(0, 1).reshape(len(index), len(columns)),
-            index=index,
-            columns=columns,
-        )
+        index = self.feature_index_
+
+        if len(matrix) == 1:
+            return pd.DataFrame(matrix[0], index=index, columns=index)
+        else:
+            return [
+                pd.DataFrame(
+                    m,
+                    index=index,
+                    columns=index,
+                )
+                for m in matrix
+            ]
 
 
 class ShapInteractionValueDecomposer(ShapValueDecomposer):
@@ -241,7 +245,9 @@ class ShapInteractionValueDecomposer(ShapValueDecomposer):
             {DEFAULT_MIN_DIRECT_SYNERGY * 100.0:g}%)
         """
 
-    def synergy(self, symmetrical: bool = True) -> pd.DataFrame:
+    def synergy(
+        self, symmetrical: bool = True
+    ) -> Union[pd.DataFrame, List[pd.DataFrame]]:
         """
         The matrix of total relative synergy (direct and indirect) for all feature
         pairs.
@@ -256,7 +262,9 @@ class ShapInteractionValueDecomposer(ShapValueDecomposer):
             self.synergy_rel_ if symmetrical else self.synergy_rel_asymmetric_
         )
 
-    def redundancy(self, symmetrical: bool = True) -> pd.DataFrame:
+    def redundancy(
+        self, symmetrical: bool = True
+    ) -> Union[pd.DataFrame, List[pd.DataFrame]]:
         """
         The matrix of total relative redundancy for all feature pairs.
 
