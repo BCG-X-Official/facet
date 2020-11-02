@@ -220,13 +220,15 @@ def test_model_inspection_classifier_binary(
 
     # Shap decomposition matrices (feature dependencies)
 
-    assert model_inspector.feature_association_matrix().values == pytest.approx(
+    assert model_inspector.feature_association_matrix(
+        clustered=True
+    ).values == pytest.approx(
         np.array(
             [
-                [1.0, 0.028, 0.14, 0.128],
-                [0.028, 1.0, 0.005, 0.002],
-                [0.14, 0.005, 1.0, 0.681],
-                [0.128, 0.002, 0.681, 1.0],
+                [1.0, 0.678, 0.133, 0.005],
+                [0.678, 1.0, 0.145, 0.007],
+                [0.133, 0.145, 1.0, 0.029],
+                [0.005, 0.007, 0.029, 1.0],
             ]
         ),
         abs=0.02,
@@ -313,7 +315,7 @@ def test_model_inspection_classifier_multi_class(
 
     # Shap decomposition matrices (feature dependencies)
 
-    synergy_matrix = iris_inspector_multi_class.feature_synergy_matrix()
+    synergy_matrix = iris_inspector_multi_class.feature_synergy_matrix(clustered=False)
     assert np.hstack(m.values for m in synergy_matrix) == pytest.approx(
         np.array(
             [
@@ -330,7 +332,9 @@ def test_model_inspection_classifier_multi_class(
         abs=0.02,
     )
 
-    redundancy_matrix = iris_inspector_multi_class.feature_redundancy_matrix()
+    redundancy_matrix = iris_inspector_multi_class.feature_redundancy_matrix(
+        clustered=False
+    )
     assert np.hstack(m.values for m in redundancy_matrix) == (
         pytest.approx(
             np.array(
@@ -349,7 +353,9 @@ def test_model_inspection_classifier_multi_class(
         )
     )
 
-    association_matrix = iris_inspector_multi_class.feature_association_matrix()
+    association_matrix = iris_inspector_multi_class.feature_association_matrix(
+        clustered=False
+    )
     assert np.hstack(m.values for m in association_matrix) == (
         pytest.approx(
             np.array(
@@ -504,19 +510,37 @@ def test_model_inspection_classifier_interaction(
         crossfit=iris_classifier_crossfit_binary,
     )
 
-    assert model_inspector.feature_synergy_matrix().values == pytest.approx(
+    assert model_inspector.feature_synergy_matrix(
+        clustered=False
+    ).values == pytest.approx(
         np.array(
             [
-                [1.0, 0.047, 0.101, 0.12],
-                [0.047, 1.0, 0.017, 0.021],
-                [0.101, 0.017, 1.0, 0.1],
-                [0.12, 0.021, 0.1, 1.0],
+                [1.000, 0.047, 0.101, 0.120],
+                [0.047, 1.000, 0.017, 0.021],
+                [0.101, 0.017, 1.000, 0.100],
+                [0.120, 0.021, 0.100, 1.000],
             ]
         ),
         abs=0.02,
     )
 
-    assert model_inspector.feature_redundancy_matrix().values == pytest.approx(
+    assert model_inspector.feature_synergy_matrix(
+        clustered=True
+    ).values == pytest.approx(
+        np.array(
+            [
+                [1.000, 0.101, 0.100, 0.017],
+                [0.101, 1.000, 0.120, 0.047],
+                [0.100, 0.120, 1.000, 0.021],
+                [0.017, 0.047, 0.021, 1.000],
+            ]
+        ),
+        abs=0.02,
+    )
+
+    assert model_inspector.feature_redundancy_matrix(
+        clustered=False
+    ).values == pytest.approx(
         np.array(
             [
                 [1.0, 0.039, 0.181, 0.206],
@@ -528,13 +552,43 @@ def test_model_inspection_classifier_interaction(
         abs=0.02,
     )
 
-    assert model_inspector.feature_association_matrix().values == pytest.approx(
+    assert model_inspector.feature_redundancy_matrix(
+        clustered=True
+    ).values == pytest.approx(
+        np.array(
+            [
+                [1.000, 0.792, 0.181, 0.005],
+                [0.792, 1.000, 0.206, 0.011],
+                [0.181, 0.206, 1.000, 0.039],
+                [0.005, 0.011, 0.039, 1.000],
+            ]
+        ),
+        abs=0.02,
+    )
+
+    assert model_inspector.feature_association_matrix(
+        clustered=False
+    ).values == pytest.approx(
         np.array(
             [
                 [1.0, 0.028, 0.14, 0.128],
                 [0.028, 1.0, 0.005, 0.002],
                 [0.14, 0.005, 1.0, 0.681],
                 [0.128, 0.002, 0.681, 1.0],
+            ]
+        ),
+        abs=0.02,
+    )
+
+    assert model_inspector.feature_association_matrix(
+        clustered=True
+    ).values == pytest.approx(
+        np.array(
+            [
+                [1.000, 0.681, 0.128, 0.002],
+                [0.681, 1.000, 0.140, 0.005],
+                [0.128, 0.140, 1.000, 0.026],
+                [0.002, 0.005, 0.026, 1.000],
             ]
         ),
         abs=0.02,

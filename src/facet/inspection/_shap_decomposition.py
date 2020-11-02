@@ -3,7 +3,7 @@ Decomposition of SHAP contribution scores (i.e, SHAP importance) of all possible
 of features into additive components for synergy, redundancy, and independence.
 """
 import logging
-from typing import List, Optional, TypeVar, Union
+from typing import List, Optional, TypeVar
 
 import numpy as np
 import pandas as pd
@@ -90,8 +90,7 @@ class ShapValueDecomposer(FittableMixin[ShapCalculator]):
 
         return self
 
-    @property
-    def association(self) -> Union[pd.DataFrame, List[pd.DataFrame]]:
+    def association(self, symmetrical: bool) -> List[pd.DataFrame]:
         """
         The matrix of relative association for all feature pairs.
 
@@ -99,9 +98,15 @@ class ShapValueDecomposer(FittableMixin[ShapCalculator]):
         (fully associated contributions).
 
         Raises an error if this SHAP value decomposer has not been fitted.
+
+        :param symmetrical: return a symmetrical matrix of mutual association
+        :returns: the matrix as a data frame, or a list of data frames for multiple \
+            outputs
         """
         self._ensure_fitted()
-        return self._to_frame(self.association_rel_)
+        return self._to_frame(
+            self.association_rel_ if symmetrical else self.association_rel_asymmetric_
+        )
 
     def _fit(self, shap_calculator: ShapCalculator) -> None:
         #
@@ -235,22 +240,19 @@ class ShapValueDecomposer(FittableMixin[ShapCalculator]):
         self.feature_index_ = None
         self.association_rel_ = None
 
-    def _to_frame(self, matrix: np.ndarray) -> Union[pd.DataFrame, List[pd.DataFrame]]:
+    def _to_frame(self, matrix: np.ndarray) -> List[pd.DataFrame]:
         # takes an array of shape (n_outputs, n_features, n_features) and transforms it
         # into a data frame of shape (n_features, n_outputs * n_features)
         index = self.feature_index_
 
-        if len(matrix) == 1:
-            return pd.DataFrame(matrix[0], index=index, columns=index)
-        else:
-            return [
-                pd.DataFrame(
-                    m,
-                    index=index,
-                    columns=index,
-                )
-                for m in matrix
-            ]
+        return [
+            pd.DataFrame(
+                m,
+                index=index,
+                columns=index,
+            )
+            for m in matrix
+        ]
 
 
 class ShapInteractionValueDecomposer(ShapValueDecomposer):
@@ -295,9 +297,7 @@ class ShapInteractionValueDecomposer(ShapValueDecomposer):
             {DEFAULT_MIN_DIRECT_SYNERGY * 100.0:g}%)
         """
 
-    def synergy(
-        self, symmetrical: bool = True
-    ) -> Union[pd.DataFrame, List[pd.DataFrame]]:
+    def synergy(self, symmetrical: bool = True) -> List[pd.DataFrame]:
         """
         The matrix of total relative synergy (direct and indirect) for all feature
         pairs.
@@ -306,15 +306,17 @@ class ShapInteractionValueDecomposer(ShapValueDecomposer):
         (fully synergistic contributions).
 
         Raises an error if this interaction decomposer has not been fitted.
+
+        :param symmetrical: return a symmetrical matrix of mutual synergy
+        :returns: the matrix as a data frame, or a list of data frames for multiple \
+            outputs
         """
         self._ensure_fitted()
         return self._to_frame(
             self.synergy_rel_ if symmetrical else self.synergy_rel_asymmetric_
         )
 
-    def redundancy(
-        self, symmetrical: bool = True
-    ) -> Union[pd.DataFrame, List[pd.DataFrame]]:
+    def redundancy(self, symmetrical: bool = True) -> List[pd.DataFrame]:
         """
         The matrix of total relative redundancy for all feature pairs.
 
@@ -322,6 +324,10 @@ class ShapInteractionValueDecomposer(ShapValueDecomposer):
         (fully redundant contributions).
 
         Raises an error if this interaction decomposer has not been fitted.
+
+        :param symmetrical: return a symmetrical matrix of mutual redundancy
+        :returns: the matrix as a data frame, or a list of data frames for multiple \
+            outputs
         """
         self._ensure_fitted()
         return self._to_frame(

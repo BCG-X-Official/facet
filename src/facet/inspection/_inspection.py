@@ -6,7 +6,7 @@ from typing import Generic, List, NamedTuple, Optional, TypeVar, Union, cast
 
 import numpy as np
 import pandas as pd
-from scipy.cluster.hierarchy import linkage
+from scipy.cluster.hierarchy import leaves_list, linkage, optimal_leaf_ordering
 from scipy.spatial.distance import squareform
 
 from pytools.api import AllTracker, inheritdoc
@@ -349,7 +349,7 @@ class LearnerInspector(
         :return: a data frame with SHAP values
         """
         self._ensure_fitted()
-        return self._split_multi_output_df(
+        return self.__split_multi_output_df(
             self._shap_calculator.get_shap_values(consolidate=consolidate)
         )
 
@@ -387,8 +387,8 @@ class LearnerInspector(
         :return: a data frame with SHAP interaction values
         """
         self._ensure_fitted()
-        return self._split_multi_output_df(
-            self._shap_interaction_values_calculator.get_shap_interaction_values(
+        return self.__split_multi_output_df(
+            self.__shap_interaction_values_calculator.get_shap_interaction_values(
                 consolidate=consolidate
             )
         )
@@ -450,7 +450,9 @@ class LearnerInspector(
 
             return _normalize_importance(abs_importance.unstack(level=0))
 
-    def feature_association_matrix(self) -> Union[pd.DataFrame, List[pd.DataFrame]]:
+    def feature_association_matrix(
+        self, symmetrical: bool = True, clustered: bool = True
+    ) -> Union[pd.DataFrame, List[pd.DataFrame]]:
         """
         Calculate the feature association matrix.
 
@@ -471,12 +473,26 @@ class LearnerInspector(
         In the case of multi-target regression and non-binary classification, returns
         a list of data frames with one matrix per output.
 
+        :param symmetrical: if ``True``, return a symmetrical matrix quantifying \
+            mutual association; if ``False``, return an asymmetrical matrix \
+            quantifying unilateral association of the features represented by rows \
+            with the features represented by columns (default: ``True``)
+        :param clustered: if ``True``, reorder the rows and columns of the matrix \
+            such that association between adjacent rows and columns is maximised; if \
+            ``False``, keep rows and columns in the original features order \
+            (default: ``True``)
         :return: feature association matrix as a data frame of shape \
             `(n_features, n_features)`, or a list of data frames for multiple outputs
         """
         self._ensure_fitted()
 
-        return self._shap_decomposer.association
+        return self.__feature_affinity_matrix(
+            affinity_matrices=(
+                self._shap_decomposer.association(symmetrical=symmetrical)
+            ),
+            affinity_symmetrical=self._shap_decomposer.association_rel_,
+            clustered=clustered,
+        )
 
     def feature_association_linkage(self) -> Union[LinkageTree, List[LinkageTree]]:
         """
@@ -492,12 +508,12 @@ class LearnerInspector(
             for multi-target regressors or non-binary classifiers
         """
         self._ensure_fitted()
-        return self._linkages_from_affinity_matrices(
+        return self.__linkages_from_affinity_matrices(
             feature_affinity_matrix=self._shap_decomposer.association_rel_
         )
 
     def feature_synergy_matrix(
-        self, symmetrical: bool = True
+        self, symmetrical: bool = True, clustered: bool = True
     ) -> Union[pd.DataFrame, List[pd.DataFrame]]:
         """
         Calculate the feature synergy matrix.
@@ -520,15 +536,26 @@ class LearnerInspector(
         :param symmetrical: if ``True``, return a symmetrical matrix quantifying \
             mutual synergy; if ``False``, return an asymmetrical matrix quantifying \
             unilateral redundancy of the features represented by rows with the \
-            features represented by columns
+            features represented by columns (default: ``True``)
+        :param clustered: if ``True``, reorder the rows and columns of the matrix \
+            such that synergy between adjacent rows and columns is maximised; if \
+            ``False``, keep rows and columns in the original features order \
+            (default: ``True``)
         :return: feature synergy matrix as a data frame of shape \
             `(n_features, n_features)`, or a list of data frames for multiple outputs
         """
         self._ensure_fitted()
-        return self._shap_interaction_decomposer.synergy(symmetrical=symmetrical)
+
+        return self.__feature_affinity_matrix(
+            affinity_matrices=(
+                self.__shap_interaction_decomposer.synergy(symmetrical=symmetrical)
+            ),
+            affinity_symmetrical=self.__shap_interaction_decomposer.synergy_rel_,
+            clustered=clustered,
+        )
 
     def feature_redundancy_matrix(
-        self, symmetrical: bool = True, sorted: bool = True
+        self, symmetrical: bool = True, clustered: bool = True
     ) -> Union[pd.DataFrame, List[pd.DataFrame]]:
         """
         Calculate the feature redundancy matrix.
@@ -551,12 +578,63 @@ class LearnerInspector(
         :param symmetrical: if ``True``, return a symmetrical matrix quantifying \
             mutual redundancy; if ``False``, return an asymmetrical matrix quantifying \
             unilateral redundancy of the features represented by rows with the \
-            features represented by columns
+            features represented by columns (default: ``True``)
+        :param clustered: if ``True``, reorder the rows and columns of the matrix \
+            such that redundancy between adjacent rows and columns is maximised; if \
+            ``False``, keep rows and columns in the original features order \
+            (default: ``True``)
         :return: feature redundancy matrix as a data frame of shape \
             `(n_features, n_features)`, or a list of data frames for multiple outputs
         """
         self._ensure_fitted()
-        return self._shap_interaction_decomposer.redundancy(symmetrical=symmetrical)
+
+        return self.__feature_affinity_matrix(
+            affinity_matrices=(
+                self.__shap_interaction_decomposer.redundancy(symmetrical=symmetrical)
+            ),
+            affinity_symmetrical=self.__shap_interaction_decomposer.redundancy_rel_,
+            clustered=clustered,
+        )
+
+    @staticmethod
+    def __feature_affinity_matrix(
+        affinity_matrices: List[pd.DataFrame],
+        affinity_symmetrical: np.ndarray,
+        clustered: bool,
+    ):
+        if clustered:
+            affinity_matrices = LearnerInspector.__sort_affinity_matrices(
+                affinity_matrices=affinity_matrices,
+                symmetrical_affinity_matrices=affinity_symmetrical,
+            )
+        return LearnerInspector.__isolate_single_frame(affinity_matrices)
+
+    @staticmethod
+    def __sort_affinity_matrices(
+        affinity_matrices: List[pd.DataFrame],
+        symmetrical_affinity_matrices: np.ndarray,
+    ) -> List[pd.DataFrame]:
+        # abbreviate a very long function name to stay within the permitted line length
+        fn_linkage = LearnerInspector.__linkage_matrix_from_affinity_matrix_for_output
+
+        return [
+            affinity_matrix.iloc[feature_order, feature_order]
+            for affinity_matrix, symmetrical_affinity_matrix in zip(
+                affinity_matrices, symmetrical_affinity_matrices
+            )
+            for feature_order in (
+                leaves_list(
+                    Z=optimal_leaf_ordering(
+                        Z=fn_linkage(
+                            feature_affinity_matrix=symmetrical_affinity_matrix
+                        ),
+                        y=symmetrical_affinity_matrix,
+                    )
+                )
+                # reverse the index list so larger values tend to end up on top
+                [::-1],
+            )
+        ]
 
     def feature_synergy_linkage(self) -> Union[LinkageTree, List[LinkageTree]]:
         """
@@ -572,8 +650,8 @@ class LearnerInspector(
             for multi-target regressors or non-binary classifiers
         """
         self._ensure_fitted()
-        return self._linkages_from_affinity_matrices(
-            feature_affinity_matrix=self._shap_interaction_decomposer.synergy_rel_
+        return self.__linkages_from_affinity_matrices(
+            feature_affinity_matrix=self.__shap_interaction_decomposer.synergy_rel_
         )
 
     def feature_redundancy_linkage(self) -> Union[LinkageTree, List[LinkageTree]]:
@@ -590,8 +668,8 @@ class LearnerInspector(
             for multi-target regressors or non-binary classifiers
         """
         self._ensure_fitted()
-        return self._linkages_from_affinity_matrices(
-            feature_affinity_matrix=self._shap_interaction_decomposer.redundancy_rel_
+        return self.__linkages_from_affinity_matrices(
+            feature_affinity_matrix=self.__shap_interaction_decomposer.redundancy_rel_
         )
 
     def feature_interaction_matrix(self) -> Union[pd.DataFrame, List[pd.DataFrame]]:
@@ -696,7 +774,7 @@ class LearnerInspector(
         )[np.newaxis, :, :]
 
         # create a data frame from the feature matrix
-        return self._feature_matrix_to_df(interaction_matrix)
+        return self.__feature_matrix_to_df(interaction_matrix)
 
     def shap_plot_data(self) -> ShapPlotData:
         """
@@ -751,7 +829,7 @@ class LearnerInspector(
             target=sample.target,
         )
 
-    def _feature_matrix_to_df(
+    def __feature_matrix_to_df(
         self, matrix: np.ndarray
     ) -> Union[pd.DataFrame, List[pd.DataFrame]]:
         # transform a matrix of shape (n_outputs, n_features, n_features)
@@ -776,7 +854,7 @@ class LearnerInspector(
             ]
 
     @staticmethod
-    def _split_multi_output_df(
+    def __split_multi_output_df(
         multi_output_df: pd.DataFrame,
     ) -> Union[pd.DataFrame, List[pd.DataFrame]]:
         # Split a multi-output data frame into a list of single-output data frames.
@@ -792,7 +870,7 @@ class LearnerInspector(
                 )
             ]
 
-    def _linkages_from_affinity_matrices(
+    def __linkages_from_affinity_matrices(
         self, feature_affinity_matrix: np.ndarray
     ) -> Union[LinkageTree, List[LinkageTree]]:
         # calculate the linkage trees for all outputs in a feature distance matrix;
@@ -806,13 +884,13 @@ class LearnerInspector(
         if len(feature_affinity_matrix) == 1:
             # we have only a single output
             # feature importance is already a series
-            return self._linkage_from_affinity_matrix_for_output(
+            return self.__linkage_tree_from_affinity_matrix_for_output(
                 feature_affinity_matrix[0], feature_importance
             )
 
         else:
             return [
-                self._linkage_from_affinity_matrix_for_output(
+                self.__linkage_tree_from_affinity_matrix_for_output(
                     feature_affinity_for_output, feature_importance_for_output
                 )
                 for feature_affinity_for_output, (
@@ -822,7 +900,7 @@ class LearnerInspector(
             ]
 
     @staticmethod
-    def _linkage_from_affinity_matrix_for_output(
+    def __linkage_tree_from_affinity_matrix_for_output(
         feature_affinity_matrix: np.ndarray, feature_importance: pd.Series
     ) -> LinkageTree:
         # calculate the linkage tree from the a given output in a feature distance
@@ -830,11 +908,11 @@ class LearnerInspector(
         # matrix has shape (n_features, n_features) with values ranging from
         # (1 = closest, 0 = most distant)
 
-        # compress the distance matrix (required by SciPy)
-        compressed_distance_vector = squareform(1 - abs(feature_affinity_matrix))
-
-        # calculate the linkage matrix
-        linkage_matrix = linkage(y=compressed_distance_vector, method="single")
+        linkage_matrix: np.ndarray = (
+            LearnerInspector.__linkage_matrix_from_affinity_matrix_for_output(
+                feature_affinity_matrix
+            )
+        )
 
         # Feature labels and weights will be used as the leaves of the linkage tree.
         # Select only the features that appear in the distance matrix, and in the
@@ -848,6 +926,21 @@ class LearnerInspector(
             max_distance=1.0,
         )
 
+    @staticmethod
+    def __linkage_matrix_from_affinity_matrix_for_output(
+        feature_affinity_matrix: np.ndarray,
+    ) -> np.ndarray:
+        # calculate the linkage matrix from the a given output in a feature distance
+        # matrix;
+        # matrix has shape (n_features, n_features) with values ranging from
+        # (1 = closest, 0 = most distant)
+
+        # compress the distance matrix (required by SciPy)
+        compressed_distance_vector = squareform(1 - abs(feature_affinity_matrix))
+
+        # calculate the linkage matrix
+        return linkage(y=compressed_distance_vector, method="single")
+
     def _ensure_shap_interaction(self) -> None:
         if not self._shap_interaction:
             raise RuntimeError(
@@ -856,13 +949,22 @@ class LearnerInspector(
                 "enable calculations involving SHAP interaction values."
             )
 
+    @staticmethod
+    def __isolate_single_frame(
+        frames: List[pd.DataFrame],
+    ) -> Union[pd.DataFrame, List[pd.DataFrame]]:
+        if len(frames) == 1:
+            return frames[0]
+        else:
+            return frames
+
     @property
-    def _shap_interaction_values_calculator(self) -> ShapInteractionValuesCalculator:
+    def __shap_interaction_values_calculator(self) -> ShapInteractionValuesCalculator:
         self._ensure_shap_interaction()
         return cast(ShapInteractionValuesCalculator, self._shap_calculator)
 
     @property
-    def _shap_interaction_decomposer(self) -> ShapInteractionValueDecomposer:
+    def __shap_interaction_decomposer(self) -> ShapInteractionValueDecomposer:
         self._ensure_shap_interaction()
         return cast(ShapInteractionValueDecomposer, self._shap_decomposer)
 
