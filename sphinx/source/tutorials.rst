@@ -42,30 +42,6 @@ Introduce yourself to the FACET workflow! With this tutorial you will:
     tutorial/Water_Drilling_Incident_Classification_with_Facet
 
 
-Simulation Tutorial: Feature Simulation on Drill Operations
-*****************************************************************************
-
-Introduce yourself to the FACET's Simulation module. This tutorial aims to provide
-a step by step explanation about the simulation capabilities of Facet and
-is based on the Water Drilling Tutorial.
-
-.. raw:: html
-
-    <p>Get started exploring the tutorial below by clicking on the section links,
-    deepen your understanding by reading the associated GAMMA Scope article (click here),
-    and explore/download the notebook for yourself here:
-    <a href="https://mybinder.org" target="_blank">
-    <img src="https://mybinder.org/badge_logo.svg"></a>
-    </p>
-
-
-
-.. toctree::
-    :maxdepth: 1
-
-    tutorial/Bootstrap_simulation_deep_dive.ipynb
-
-
 Regression Tutorial: Predictive Maintenance
 ************************************************
 
@@ -113,6 +89,31 @@ identification of individuals at risk of prediabetes you will
    :maxdepth: 1
 
    tutorial/Classification_with_Facet
+
+
+Simulation Tutorial: Feature Simulation on Drill Operations
+*****************************************************************************
+
+Introduce yourself to the FACET's Simulation module. This tutorial aims to provide
+a step by step explanation about the simulation capabilities of Facet and
+is based on the Water Drilling Tutorial.
+
+.. raw:: html
+
+    <p>Get started exploring the tutorial below by clicking on the section links,
+    deepen your understanding by reading the associated GAMMA Scope article (click here),
+    and explore/download the notebook for yourself here:
+    <a href="https://mybinder.org" target="_blank">
+    <img src="https://mybinder.org/badge_logo.svg"></a>
+    </p>
+
+
+
+.. toctree::
+    :maxdepth: 1
+
+    tutorial/Model_simulation_deep_dive.ipynb
+
 
 
 Bite-sized Simulations
