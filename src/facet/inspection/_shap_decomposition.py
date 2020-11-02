@@ -615,18 +615,15 @@ class ShapInteractionValueDecomposer(ShapValueDecomposer):
 
         std_red_ij_2x = np.abs(std_aut_ij_plus_aut_ji - std_aut_ij_minus_aut_ji)
 
-        # std(red[i, j])
-        std_red_ij = std_red_ij_2x / 2
-
         #
         # SHAP independence: ind[i, j]
         #
 
         # 4 * var(red[i, j]), var(red[i, j])
         # shape: (n_outputs, n_features, n_features)
-        var_red_ij_4x = std_red_ij_2x * std_red_ij_2x
+        var_red_ij_4x = std_red_ij_2x ** 2
 
-        # ratio of length of 2*e over length of (aut[i, j] + aut[j, i])
+        # ratio of length of 2 * red over length of (aut[i, j] + aut[j, i])
         # shape: (n_outputs, n_features, n_features)
         # we need this for the next step
         with np.errstate(divide="ignore", invalid="ignore"):
@@ -634,7 +631,8 @@ class ShapInteractionValueDecomposer(ShapValueDecomposer):
 
         # 2 * cov(aut[i, j], red[i, j])
         # shape: (n_outputs, n_features, n_features)
-        # we need this as part of the formula to calculate nu_i (see next step below)
+        # we need this as part of the formula to calculate std(ind_ij)
+        # (see next step below)
         cov_aut_ij_red_ij_2x = red_aut_ratio_2x * (var_aut_ij + cov_aut_ij_aut_ji)
 
         # std(ind_ij)
@@ -725,7 +723,7 @@ class ShapInteractionValueDecomposer(ShapValueDecomposer):
                 std_syn_ij / (std_syn_ij + std_aut_ij)
             )
             self.redundancy_rel_asymmetric_ = _fill_nans(
-                std_red_ij / (std_red_ij + std_uni_ij)
+                std_red_ij_2x / (std_red_ij_2x + std_uni_ij * 2)
             )
 
     def _reset_fit(self) -> None:
