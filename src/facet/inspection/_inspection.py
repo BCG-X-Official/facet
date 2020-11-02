@@ -318,7 +318,9 @@ class LearnerInspector(
         """
         return self.crossfit_.pipeline.feature_names_out_.to_list()
 
-    def shap_values(self, consolidate: Optional[str] = "mean") -> pd.DataFrame:
+    def shap_values(
+        self, consolidate: Optional[str] = "mean"
+    ) -> Union[pd.DataFrame, List[pd.DataFrame]]:
         """
         Calculate the SHAP values for all observations and features.
 
@@ -334,6 +336,8 @@ class LearnerInspector(
         - passing ``consolidate=None`` will disable SHAP value consolidation, \
           generating one row for every crossfit and observation (identified by
           a hierarchical index with two levels)
+        - passing ``consolidate="mean"`` (the default) will calculate the mean SHAP \
+          values across all crossfits
         - passing ``consolidate="std"`` will calculate the standard deviation of SHAP \
           values across all crossfits, as the basis for determining the uncertainty \
           of SHAP calculations
@@ -345,11 +349,13 @@ class LearnerInspector(
         :return: a data frame with SHAP values
         """
         self._ensure_fitted()
-        return self._shap_calculator.get_shap_values(consolidate=consolidate)
+        return self._split_multi_output_df(
+            self._shap_calculator.get_shap_values(consolidate=consolidate)
+        )
 
     def shap_interaction_values(
         self, consolidate: Optional[str] = "mean"
-    ) -> pd.DataFrame:
+    ) -> Union[pd.DataFrame, List[pd.DataFrame]]:
         """
         Calculate the SHAP interaction values for all observations and pairs of
         features.
@@ -368,6 +374,8 @@ class LearnerInspector(
         - passing ``consolidate=None`` will disable SHAP interaction value \
           consolidation, generating one row for every crossfit, observation and \
           feature (identified by a hierarchical index with three levels)
+        - passing ``consolidate="mean"`` (the default) will calculate the mean SHAP \
+          interaction values across all crossfits
         - passing ``consolidate="std"`` will calculate the standard deviation of SHAP \
           interaction values across all crossfits, as the basis for determining the \
           uncertainty of SHAP calculations
@@ -379,8 +387,10 @@ class LearnerInspector(
         :return: a data frame with SHAP interaction values
         """
         self._ensure_fitted()
-        return self._shap_interaction_values_calculator.get_shap_interaction_values(
-            consolidate=consolidate
+        return self._split_multi_output_df(
+            self._shap_interaction_values_calculator.get_shap_interaction_values(
+                consolidate=consolidate
+            )
         )
 
     def feature_importance(
@@ -700,18 +710,22 @@ class LearnerInspector(
         :return: consolidated SHAP and feature values for use shap plots
         """
 
-        shap_values: pd.DataFrame = self.shap_values(consolidate="mean")
-        sample: Sample = self.crossfit_.sample_.subsample(loc=shap_values.index)
+        shap_values: Union[pd.DataFrame, List[pd.DataFrame]] = self.shap_values(
+            consolidate="mean"
+        )
 
         output_names = self.output_names_
 
         if len(output_names) > 1:
-            shap_values_numpy = [
-                shap_values.xs(output_name, axis=1).values
-                for output_name in output_names
-            ]
+            shap_values: List[pd.DataFrame]
+            shap_values_numpy = [s.values for s in shap_values]
+            included_observations = shap_values[0].index
         else:
+            shap_values: pd.DataFrame
             shap_values_numpy = shap_values.values
+            included_observations = shap_values.index
+
+        sample: Sample = self.crossfit_.sample_.subsample(loc=included_observations)
 
         return ShapPlotData(
             shap_values=shap_values_numpy,
@@ -741,6 +755,23 @@ class LearnerInspector(
             return [
                 pd.DataFrame(data=m, index=feature_index, columns=feature_index)
                 for m in matrix
+            ]
+
+    @staticmethod
+    def _split_multi_output_df(
+        multi_output_df: pd.DataFrame,
+    ) -> Union[pd.DataFrame, List[pd.DataFrame]]:
+        # Split a multi-output data frame into a list of single-output data frames.
+        # Return single-output data frames as is.
+        # Multi-output data frames are grouped by level 0 in the column index.
+        if multi_output_df.columns.nlevels == 1:
+            return multi_output_df
+        else:
+            return [
+                multi_output_df.xs(key=output_name, axis=1, level=0, drop_level=True)
+                for output_name in (
+                    cast(pd.MultiIndex, multi_output_df.columns).levels[0]
+                )
             ]
 
     def _linkages_from_affinity_matrices(
