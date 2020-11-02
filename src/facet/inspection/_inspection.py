@@ -558,6 +558,24 @@ class LearnerInspector(
         self._ensure_fitted()
         return self._shap_interaction_decomposer.redundancy(symmetrical=symmetrical)
 
+    def feature_synergy_linkage(self) -> Union[LinkageTree, List[LinkageTree]]:
+        """
+        Calculate a linkage tree based on the :meth:`.feature_synergy_matrix`.
+
+        The linkage tree can be used to render a dendrogram indicating clusters of
+        synergistic features.
+
+        In the case of multi-target regression and non-binary classification, returns
+        a list of linkage trees per target or class.
+
+        :return: linkage tree of feature synergies; list of linkage trees \
+            for multi-target regressors or non-binary classifiers
+        """
+        self._ensure_fitted()
+        return self._linkages_from_affinity_matrices(
+            feature_affinity_matrix=self._shap_interaction_decomposer.synergy_rel_
+        )
+
     def feature_redundancy_linkage(self) -> Union[LinkageTree, List[LinkageTree]]:
         """
         Calculate a linkage tree based on the :meth:`.feature_redundancy_matrix`.
