@@ -2,7 +2,7 @@
 Core implementation of :mod:`facet.inspection`
 """
 import logging
-from typing import Generic, List, NamedTuple, Optional, Sequence, TypeVar, Union, cast
+from typing import Generic, List, NamedTuple, Optional, TypeVar, Union, cast
 
 import numpy as np
 import pandas as pd
@@ -294,7 +294,7 @@ class LearnerInspector(
         return self._crossfit.sample_
 
     @property
-    def output_names_(self) -> Sequence[str]:
+    def output_names_(self) -> List[str]:
         """
         The names of the outputs explained by this inspector.
 

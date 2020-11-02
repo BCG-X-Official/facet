@@ -107,7 +107,7 @@ class ShapCalculator(
         self._explainer_factory = explainer_factory
         self.shap_: Optional[pd.DataFrame] = None
         self.feature_index_: Optional[pd.Index] = None
-        self.output_names_: Optional[Sequence[str]] = None
+        self.output_names_: Optional[List[str]] = None
         self.sample_: Optional[Sample] = None
 
     @property
