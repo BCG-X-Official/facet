@@ -55,6 +55,7 @@ class ShapValueDecomposer(FittableMixin[ShapCalculator]):
         super().__init__()
         self.feature_index_: Optional[pd.Index] = None
         self.association_rel_: Optional[np.ndarray] = None
+        self.association_rel_asymmetric_: Optional[np.ndarray] = None
 
     @property
     def is_fitted(self) -> bool:
@@ -144,8 +145,9 @@ class ShapValueDecomposer(FittableMixin[ShapCalculator]):
         cov_p_i_p_j_2x = 2 * cov_p_i_p_j
 
         # variance of shap vectors
-        var_p_i = np.diagonal(cov_p_i_p_j, axis1=1, axis2=2)
-        var_p_i_plus_var_p_j = var_p_i[:, :, np.newaxis] + var_p_i[:, np.newaxis, :]
+        var_p = np.diagonal(cov_p_i_p_j, axis1=1, axis2=2)  # (n_outputs, n_features)
+        var_p_i = var_p[:, :, np.newaxis]  # (n_outputs, n_features, n_features)
+        var_p_i_plus_var_p_j = var_p_i + var_p[:, np.newaxis, :]
 
         # std(p[i] + p[j])
         # shape: (n_outputs, n_features)
@@ -168,16 +170,64 @@ class ShapValueDecomposer(FittableMixin[ShapCalculator]):
         # independently use redundant information
         std_ass_ij_2x = std_p_i_plus_p_j - std_p_i_minus_p_j
 
+        #
+        # SHAP independence: ind[i, j]
+        #
+
+        # 4 * var(ass[i, j]) * var(ass[i, j])
+        # shape: (n_outputs, n_features, n_features)
+        var_ass_ij_4x = std_ass_ij_2x ** 2
+
+        # ratio of length of 2 * ass over length of (p[i] + p[j])
+        # shape: (n_outputs, n_features, n_features)
+        # we need this for the next step
+        with np.errstate(divide="ignore", invalid="ignore"):
+            ass_p_ratio_2x = 1 - std_p_i_minus_p_j / std_p_i_plus_p_j
+
+        # 2 * cov(p[i], ass[i, j])
+        # shape: (n_outputs, n_features, n_features)
+        # we need this as part of the formula to calculate std(ind_ij)
+        # (see next step below)
+        cov_p_i_ass_ij_2x = ass_p_ratio_2x * (var_p_i + cov_p_i_p_j)
+
+        # std(ind_ij + ind_ji)
+        # where ind_ij + ind_ji = p_i + p_j - 2 * ass_ij
+        # shape: (n_outputs, n_features, n_features)
+        # the standard deviation (= length) of the independence vector
+
+        std_ind_ij_plus_ind_ji = _sqrt(
+            var_p_i_plus_var_p_j
+            + var_ass_ij_4x
+            + 2
+            * (
+                cov_p_i_p_j
+                - cov_p_i_ass_ij_2x
+                - _transpose(cov_p_i_ass_ij_2x)  # cov_p_j_ass_ij_2x
+            )
+        )
+
+        # std(ind_ij)
+        # where ind_ij = p_i - ass_ij
+        # shape: (n_outputs, n_features, n_features)
+        # the standard deviation (= length) of the asymmetrical independence vector
+        std_ind_ij = _sqrt(
+            var_p_i + var_ass_ij_4x / 4 - ass_p_ratio_2x * (var_p_i + cov_p_i_p_j)
+        )
+
         # SHAP association
         # shape: (n_outputs, n_features, n_features)
         association_ij = np.abs(std_ass_ij_2x)
+        independence_ij = np.abs(std_ind_ij_plus_ind_ji)
 
         # we should have the right shape for all resulting matrices
         assert association_ij.shape == (n_outputs, n_features, n_features)
 
         with np.errstate(divide="ignore", invalid="ignore"):
             self.association_rel_ = _fill_nans(
-                _ensure_diagonality(association_ij / std_p_i_plus_p_j)
+                _ensure_diagonality(association_ij / (association_ij + independence_ij))
+            )
+            self.association_rel_asymmetric_ = _fill_nans(
+                std_ass_ij_2x / (std_ass_ij_2x + std_ind_ij * 2)
             )
 
     def _reset_fit(self) -> None:
