@@ -96,7 +96,7 @@ class SimulationDrawer(Drawer[UnivariateSimulationResult, SimulationStyle]):
             )
 
         # draw the graph with the uplift curves
-        self._style.draw_uplift(
+        self.style.draw_uplift(
             feature_name=data.feature_name,
             output_name=data.output_name,
             output_unit=data.output_unit,
@@ -112,7 +112,7 @@ class SimulationDrawer(Drawer[UnivariateSimulationResult, SimulationStyle]):
 
         if self._histogram:
             # draw the histogram of the simulation values
-            self._style.draw_histogram(
+            self.style.draw_histogram(
                 partitions=simulation_result[3],
                 frequencies=simulation_result[4],
                 is_categorical_feature=data.partitioner.is_categorical,
