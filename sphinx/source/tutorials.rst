@@ -118,11 +118,11 @@ identification of individuals at risk of prediabetes you will
 Bite-sized Simulations
 --------------------------------------------
 
-Understanding synergy and redundancy through simulation
+Understanding synergy and redundancy with synthetic data
 *************************************************************
 
-Improve your intuition for FACET's advanced model inspection with this simulation based
-tutorial. In this tutorial you will:
+Improve your intuition for FACET's advanced model inspection with this tutorial.
+In this tutorial you will:
 
 - understand how synergy and redundancy for a feature pair varies with interaction and
   correlation, and,
