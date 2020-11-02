@@ -41,6 +41,7 @@ __all__ = ["ShapPlotData", "LearnerInspector"]
 
 T = TypeVar("T")
 T_LearnerPipelineDF = TypeVar("T_LearnerPipelineDF", bound=LearnerPipelineDF)
+T_SeriesOrDataFrame = TypeVar("T_SeriesOrDataFrame", pd.Series, pd.DataFrame)
 
 
 #
@@ -108,7 +109,7 @@ class LearnerInspector(
     specified in the underlying training sample.
     """
 
-    #: name for "feature importance" series or column
+    #: name for feature importance series or column
     COL_IMPORTANCE = "importance"
 
     #: The default explainer factory used by this inspector.
@@ -383,12 +384,12 @@ class LearnerInspector(
         )
 
     def feature_importance(
-        self, *, method: str = "rms", ci: bool = False
+        self, *, method: str = "rms"
     ) -> Union[pd.Series, pd.DataFrame]:
         """
         Calculate the relative importance of each feature based on SHAP values.
 
-        The importance values of all features always add up to ``1.0``.
+        The importance values of all features always add up to `1.0`.
 
         The calculation applies sample weights if specified in the underlying
         :attr:`.sample`.
@@ -396,17 +397,20 @@ class LearnerInspector(
         :param method: method for calculating feature importance. Supported methods \
             are ``rms`` (root of mean squares, default), ``mav`` (mean absolute \
             values)
-        :param ci: use bootstrapping to calculate the confidence interval
         :return: a series of length `n_features` for single-output models, or a \
             data frame of shape (n_features, n_outputs) for multi-output models
         """
+
+        self._ensure_fitted()
 
         methods = {"rms", "mav"}
         if method not in methods:
             raise ValueError(f'arg method="{method}" must be one of {methods}')
 
-        shap_matrix = self.shap_values(consolidate="mean")
-        weight = self.sample_.weight
+        shap_matrix: pd.DataFrame = self._shap_calculator.get_shap_values(
+            consolidate="mean"
+        )
+        weight: Optional[pd.Series] = self.sample_.weight
 
         abs_importance: pd.Series
         if method == "rms":
@@ -421,22 +425,20 @@ class LearnerInspector(
             else:
                 abs_importance = shap_matrix.abs().mul(weight, axis=0).mean()
 
-        total_importance: float = abs_importance.sum()
+        def _normalize_importance(
+            _importance: T_SeriesOrDataFrame,
+        ) -> T_SeriesOrDataFrame:
+            return _importance.divide(_importance.sum())
 
-        feature_importance: Union[pd.Series, pd.DataFrame]
+        if len(self.output_names_) == 1:
+            return _normalize_importance(abs_importance).rename(self.output_names_[0])
 
-        feature_importance = abs_importance.divide(total_importance).rename(
-            LearnerInspector.COL_IMPORTANCE
-        )
-
-        if len(self.output_names_) > 1:
+        else:
             assert (
                 abs_importance.index.nlevels == 2
             ), "2 index levels in place for multi-output models"
 
-            feature_importance: pd.DataFrame = abs_importance.unstack(level=0)
-
-        return feature_importance
+            return _normalize_importance(abs_importance.unstack(level=0))
 
     def feature_association_matrix(self) -> Union[pd.DataFrame, List[pd.DataFrame]]:
         """
