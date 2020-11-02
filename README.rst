@@ -175,7 +175,7 @@ For feature synergy, we can get a similar picture
 .. image:: _static/synergy_matrix.png
     :width: 600
 
-Please see the :ref:`API reference` for more detail.
+Please see the API reference for more detail.
 
 Model Simulation
 ~~~~~~~~~~~~~~~~~~
@@ -229,7 +229,7 @@ please open a PR addressing the issue.
 We do ask that for any major changes please discuss these with us first via an issue or
 at our team email: FacetTeam <at> bcg <dot> com.
 
-For further information on contributing please see our :ref:`contribution-guide`.
+For further information on contributing please see our contribution guide.
 
 License
 ---------------------------
@@ -253,7 +253,7 @@ independence vectors.
 BCG GAMMA
 ---------------------------
 
-If you would like to know more about the team behind Facet please see our :ref:`about_us` page.
+If you would like to know more about the team behind Facet please see our about us page.
 
 We are always on the lookout for passionate and talented data scientists to join the
 BCG GAMMA team. If you would like to know more you can find out about BCG GAMMA
