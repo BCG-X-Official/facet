@@ -12,14 +12,14 @@ from mpl_toolkits.axes_grid1.axes_divider import AxesDivider
 from mpl_toolkits.axes_grid1.axes_size import Scaled
 
 from pytools.api import AllTracker, inheritdoc
-from pytools.viz import DrawStyle, MatplotStyle, TextStyle
+from pytools.viz import DrawingStyle, MatplotStyle, TextStyle
 from pytools.viz.colors import (
     RGBA_DARK_BLUE,
     RGBA_GREY,
     RGBA_LIGHT_BLUE,
     RGBA_LIGHT_GREEN,
 )
-from pytools.viz.text import format_table
+from pytools.text import format_table
 
 log = logging.getLogger(__name__)
 
@@ -44,7 +44,7 @@ __tracker = AllTracker(globals())
 #
 
 
-class SimulationStyle(DrawStyle, metaclass=ABCMeta):
+class SimulationStyle(DrawingStyle, metaclass=ABCMeta):
     """
     Base class of styles used by :class:`.SimulationDrawer`.
     """
