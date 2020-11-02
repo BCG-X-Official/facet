@@ -142,4 +142,4 @@ In this tutorial you will:
 .. toctree::
     :maxdepth: 1
 
-    tutorial/Classification_simulation_example_Facet
+    tutorial/Synergy_Redundancy_Tutorial_with_Facet
