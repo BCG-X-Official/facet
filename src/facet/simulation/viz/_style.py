@@ -14,8 +14,12 @@ from mpl_toolkits.axes_grid1.axes_size import Scaled
 from pytools.api import AllTracker, inheritdoc
 from pytools.text import format_table
 from pytools.viz import DrawingStyle, MatplotStyle, TextStyle
-from pytools.viz.colors import (RGBA_DARK_BLUE, RGBA_GREY, RGBA_LIGHT_BLUE,
-                                RGBA_LIGHT_GREEN)
+from pytools.viz.colors import (
+    RGBA_DARK_BLUE,
+    RGBA_GREY,
+    RGBA_LIGHT_BLUE,
+    RGBA_LIGHT_GREEN,
+)
 
 log = logging.getLogger(__name__)
 
