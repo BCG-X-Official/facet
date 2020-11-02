@@ -39,7 +39,7 @@ Introduce yourself to the FACET workflow! With this tutorial you will:
 .. toctree::
     :maxdepth: 1
 
-    tutorial/Classification_Water_Drilling_Simulation
+    tutorial/Water_Drilling_Incident_Classification_with_Facet
 
 
 Simulation Tutorial: Feature Simulation on Drill Operations
