@@ -283,14 +283,33 @@ def test_model_inspection_classifier_multi_class(
         shap_values=shap_values, crossfit=iris_classifier_crossfit_multi_class
     )
 
-    shap_matrix_mean = iris_inspector_multi_class.shap_values()
+    shap_matrix_mean: List[pd.DataFrame] = iris_inspector_multi_class.shap_values()
 
-    # is the consolidation correct?
-    assert_frame_equal(shap_matrix_mean, shap_values.mean(level=1))
+    for _mean, _raw in zip(shap_matrix_mean, shap_values):
+        # is the consolidation correct?
+        assert_frame_equal(_mean, _raw.mean(level=1))
 
-    # the length of rows in shap_values should be equal to the unique observation
-    # indices we have had in the predictions_df
-    assert len(shap_matrix_mean) == len(iris_sample)
+        # the length of rows in shap_values should be equal to the unique observation
+        # indices we have had in the predictions_df
+        assert len(_mean) == len(iris_sample)
+
+    # Feature importance
+
+    print(iris_inspector_multi_class.feature_importance())
+    assert_frame_equal(
+        iris_inspector_multi_class.feature_importance(),
+        pd.DataFrame(
+            data=[
+                [0.125, 0.085, 0.104],
+                [0.020, 0.019, 0.010],
+                [0.424, 0.456, 0.461],
+                [0.432, 0.441, 0.425],
+            ],
+            index=pd.Index(iris_sample.feature_names, name="feature"),
+            columns=pd.Index(iris_inspector_multi_class.output_names_, name="class"),
+        ),
+        atol=0.02,
+    )
 
     # Shap decomposition matrices (feature dependencies)
 
@@ -410,7 +429,7 @@ def _validate_shap_values_against_predictions(
         else:
             # multi-class classification has outputs for each class
 
-            for class_name in predicted_probabilities.columns:
+            for class_idx, class_name in enumerate(predicted_probabilities.columns):
                 # for each observation and class, we expect to get the constant
                 # expected probability value by deducting the SHAP values for all
                 # features from the predicted probability
@@ -418,10 +437,7 @@ def _validate_shap_values_against_predictions(
                 class_probabilities = predicted_probabilities.loc[:, [class_name]]
 
                 shap_for_split_and_class = (
-                    -shap_values.xs(split)
-                    .xs(class_name, axis=1)
-                    .sum(axis=1)
-                    .rename("shap")
+                    -shap_values[class_idx].xs(split).sum(axis=1).rename("shap")
                 )
 
                 _check_probabilities(class_probabilities, shap_for_split_and_class)
