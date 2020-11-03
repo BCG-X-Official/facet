@@ -141,7 +141,7 @@ stages:
               conda env create -f environment.yml
               conda activate facet-develop
               cd $(System.DefaultWorkingDirectory)/pytools/
-              pip install -e .
+              flit install -s
               cd $(System.DefaultWorkingDirectory)/sklearndf/
               pip install -e .
               cd $(System.DefaultWorkingDirectory)/facet/
