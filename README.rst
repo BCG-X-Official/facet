@@ -6,34 +6,38 @@ Facet is an open source library for human-explainable AI. It combines sophistica
 model inspection and model-based simulation to enable better explanations of your
 supervised machine learning models. Facet is composed of the following key components:
 
-+-------------------+---------------------------------------------------------------------------+
-| |pipe|            | **Enhanced Machine Learning Workflow**                                    |
-|                   |                                                                           |
-|                   | Facet delivers a robust and fail-safe pipelining workflow which allows you|
-|                   | to easily impute and select your features as well as ranking a grid of    |
-|                   | different models "competing" against each other. Facet introduces         |
-|                   | `sklearndf <https://github.com/BCG-Gamma/sklearndf>`_, an augmented       |
-|                   | version of `scikit-learn <https://scikit-learn.org/stable/index.html>`_   |
-|                   | with enhanced support for `pandas <https://pandas.pydata.org/>`_          |
-|                   | dataframes and pipelining.                                                |
-|                   |                                                                           |
-+-------------------+---------------------------------------------------------------------------+
-| |inspect|         | **Model Inspection**                                                      |
-|                   |                                                                           |
-|                   | Local explanations of features and their interactions make up a key       |
-|                   | component of understanding feature importance as well as feature          |
-|                   | interactions. This is based on a novel method which decomposes            |
-|                   | `SHAP values <https://shap.readthedocs.io/en/latest/>`_ into              |
-|                   | two vectors representing **synergy** and **redundancy**.                  |
-|                   |                                                                           |
-+-------------------+---------------------------------------------------------------------------+
-| |sim|             | **Model Simulation**                                                      |
-|                   |                                                                           |
-|                   | Use your trained model and the insights from the model inspection to      |
-|                   | conduct a historical univariate simulation of any feature on your target  |
-|                   | in order to identify local optima.                                        |
-+-------------------+---------------------------------------------------------------------------+
-
++-----------+--------------------------------------------------------------------------+
+| |inspect| | **Model Inspection**                                                     |
+|           |                                                                          |
+|           | `facet` introduces a new algorithm to quantify dependencies and          |
+|           | interactions between features in ML models.                              |
+|           | This new tool for human-explainable AI adds a new, global perspective to |
+|           | the observation-level explanations provided by the popular               |
+|           | `SHAP <https://shap.readthedocs.io/en/latest/>`_ approach.               |
+|           | To learn more about `facet`’s model inspection capabilities, see the     |
+|           | getting started example below.                                           |
++-----------+--------------------------------------------------------------------------+
+| |sim|     | **Model Simulation**                                                     |
+|           |                                                                          |
+|           | `facet`’s model simulation algorithms use ML models for                  |
+|           | `virtual experiments` to help identify scenarios that optimise predicted |
+|           | outcomes.                                                                |
+|           | To quantify the uncertainty in simulations, `facet` utilises a range of  |
+|           | bootstrapping algorithms including stationary and stratified bootstraps. |
+|           | For an example of `facet`’s bootstrap simulations, see the getting       |
+|           | started example below.                                                   |
++-----------+--------------------------------------------------------------------------+
+| |pipe|    | **Enhanced Machine Learning Workflow**                                   |
+|           |                                                                          |
+|           | FACET offers an efficient and transparent machine learning workflow,     |
+|           | enhancing `scikit-learn <https://scikit-learn.org/stable/index.html>`_'s |
+|           | tried and tested pipelining paradigm with new capabilities for model     |
+|           | selection, inspection, and simulation.                                   |
+|           | `facet` also introduces                                                  |
+|           | `sklearndf <https://github.com/BCG-Gamma/sklearndf>`_, an augmented      |
+|           | version of scikit-learn with enhanced support for pandas dataframes that |
+|           | ensures end-to-end traceability of features.                             |
++-----------+--------------------------------------------------------------------------+
 
 |azure_pypi| |azure_conda| |azure_devops_master_ci| |code_cov|
 |python_versions| |code_style| |made_with_sphinx_doc| |License_badge|
