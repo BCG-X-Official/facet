@@ -28,8 +28,8 @@ Introduce yourself to the FACET workflow! With this tutorial you will:
 
 .. raw:: html
 
-    <p>Get started exploring the tutorial below by clicking on the section links,
-    deepen your understanding by reading the associated Gamma Scope article (click here),
+    <p>Start exploring the tutorial below by clicking on the section links,
+    deepen your understanding by reading the associated GAMMA Scope article (click here),
     and explore/download the notebook for yourself here:
     <a href="https://mybinder.org" target="_blank">
     <img src="https://mybinder.org/badge_logo.svg"></a>
@@ -39,8 +39,7 @@ Introduce yourself to the FACET workflow! With this tutorial you will:
 .. toctree::
     :maxdepth: 1
 
-    tutorial/Classification_Water_Drilling_Simulation
-
+    tutorial/Water_Drilling_Incident_Classification_with_Facet
 
 
 Regression Tutorial: Predictive Maintenance
@@ -92,14 +91,39 @@ identification of individuals at risk of prediabetes you will
    tutorial/Classification_with_Facet
 
 
+Simulation Tutorial: Feature Simulation on Drill Operations
+*****************************************************************************
+
+Introduce yourself to the FACET's Simulation module. This tutorial aims to provide
+a step by step explanation about the simulation capabilities of Facet and
+is based on the Water Drilling Tutorial.
+
+.. raw:: html
+
+    <p>Start exploring the tutorial below by clicking on the section links,
+    deepen your understanding by reading the associated GAMMA Scope article (click here),
+    and explore/download the notebook for yourself here:
+    <a href="https://mybinder.org" target="_blank">
+    <img src="https://mybinder.org/badge_logo.svg"></a>
+    </p>
+
+
+
+.. toctree::
+    :maxdepth: 1
+
+    tutorial/Model_simulation_deep_dive.ipynb
+
+
+
 Bite-sized Simulations
 --------------------------------------------
 
-Understanding synergy and redundancy through simulation
+Understanding synergy and redundancy with synthetic data
 *************************************************************
 
-Improve your intuition for FACET's advanced model inspection with this simulation based
-tutorial. In this tutorial you will:
+Improve your intuition for FACET's advanced model inspection with this tutorial.
+In this tutorial you will:
 
 - understand how synergy and redundancy for a feature pair varies with interaction and
   correlation, and,
@@ -118,4 +142,4 @@ tutorial. In this tutorial you will:
 .. toctree::
     :maxdepth: 1
 
-    tutorial/Classification_simulation_example_Facet
+    tutorial/Synergy_Redundancy_Tutorial_with_Facet
