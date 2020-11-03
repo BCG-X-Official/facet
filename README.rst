@@ -68,7 +68,7 @@ Quickstart
 The following quickstart guide provides a minimal example workflow to get up and running
 with `facet`.
 
-Enhanced machine learning workflow
+Enhanced Machine Learning Workflow
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: Python
@@ -88,28 +88,35 @@ Enhanced machine learning workflow
 
     # load Boston housing dataset
     boston = load_boston()
-    df = pd.DataFrame(data=boston.data, columns=boston.feature_names).assign(
+    boston_df = pd.DataFrame(data=boston.data, columns=boston.feature_names).assign(
         MEDIAN_HOUSE_PRICE=boston.target
     )
 
     # create FACET sample object
-    boston_obs = Sample(observations=df, target_name="MEDIAN_HOUSE_PRICE")
+    boston_sample = Sample(observations=boston_df, target_name="MEDIAN_HOUSE_PRICE")
 
-    # create pipeline for random forest regressor
-    rforest_reg = RegressorPipelineDF(regressor=RandomForestRegressorDF(random_state=42))
+    # create a (trivial) pipeline for a random forest regressor
+    rnd_forest_reg = RegressorPipelineDF(
+        regressor=RandomForestRegressorDF(random_state=42)
+    )
 
     # define grid of models which are "competing" against each other
-    rforest_grid = [
+    rnd_forest_grid = [
         LearnerGrid(
-            pipeline=rforest_reg, learner_parameters={"min_samples_leaf": [8, 11, 15]}
-        )
+            pipeline=rnd_forest_reg,
+            learner_parameters={
+                "min_samples_leaf": [8, 11, 15]
+            }
+        ),
     ]
 
     # create repeated k-fold CV iterator
     rkf_cv = RepeatedKFold(n_splits=5, n_repeats=10, random_state=42)
 
     # rank your models by performance (default is variance explained)
-    ranker = LearnerRanker(grids=rforest_grid, cv=rkf_cv, n_jobs=-3).fit(sample=boston_obs)
+    ranker = LearnerRanker(
+        grids=rnd_forest_grid, cv=rkf_cv, n_jobs=-3
+    ).fit(sample=boston_sample)
 
     # get summary report
     ranker.summary_report()
@@ -126,7 +133,7 @@ Fundamentally, facet enables post-hoc model inspection by breaking down the inte
 effects of the features used for model training:
 
 - **Redundancy**
-  represents how much information is shared between two features contributions to
+  represents how much information is shared between two features' contributions to
   the model predictions. For example, temperature and pressure in a pressure cooker are
   redundant features for predicting cooking time since pressure will rise relative to
   the temperature, and vice versa. Therefore, knowing just one of either temperature or
@@ -232,7 +239,7 @@ For any bug reports or feature requests/enhancements please use the appropriate
 please open a PR addressing the issue.
 
 We do ask that for any major changes please discuss these with us first via an issue or
-at our team email: FacetTeam <at> bcg <dot> com.
+using our team email: FacetTeam <at> bcg <dot> com.
 
 For further information on contributing please see our :ref:`contribution-guide`.
 
