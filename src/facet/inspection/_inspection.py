@@ -793,9 +793,12 @@ class LearnerInspector(
         # build and return the linkage tree
         return LinkageTree(
             scipy_linkage_matrix=linkage_matrix,
-            leaf_labels=feature_importance.index,
+            leaf_names=feature_importance.index,
             leaf_weights=feature_importance.values,
             max_distance=1.0,
+            distance_label="feature distance",
+            leaf_label="feature",
+            weight_label="feature importance",
         )
 
     def _ensure_shap_interaction(self) -> None:
