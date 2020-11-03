@@ -116,7 +116,7 @@ Model Inspection
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Facet implements several model inspection methods for
-`scikit-learn <https://scikit-learn.org/stable/index.html>`_ estimators.
+[LINK: scikit-learn] estimators.
 Fundamentally, facet enables post-hoc model inspection by breaking down the interaction
 effects of the features used for model training:
 
@@ -175,7 +175,7 @@ For feature synergy, we can get a similar picture
 .. image:: _static/synergy_matrix.png
     :width: 600
 
-Please see the :ref:`API reference` for more detail.
+Please see the [LINK: API reference] for more detail.
 
 Model Simulation
 ~~~~~~~~~~~~~~~~~~
@@ -229,7 +229,7 @@ please open a PR addressing the issue.
 We do ask that for any major changes please discuss these with us first via an issue or
 at our team email: FacetTeam <at> bcg <dot> com.
 
-For further information on contributing please see our :ref:`contribution-guide`.
+For further information on contributing please see our [LINK: contribution-guide].
 
 License
 ---------------------------
@@ -242,7 +242,7 @@ Acknowledgements
 
 Facet is built on top of two popular packages for Machine Learning:
 
-The `scikit-learn <https://github.com/scikit-learn/scikit-learn>`_ learners and
+The [LINK: scikit-learn] learners and
 pipelining make up implementation of the underlying algorithms. Moreover, we tried
 to design the facet API to align with the scikit-learn API.
 
@@ -253,11 +253,11 @@ independence vectors.
 BCG GAMMA
 ---------------------------
 
-If you would like to know more about the team behind Facet please see our :ref:`about_us` page.
+If you would like to know more about the team behind Facet please see our [LINK: about_us] page.
 
 We are always on the lookout for passionate and talented data scientists to join the
-BCG GAMMA team. If you would like to know more you can find out about BCG GAMMA
-`here <https://www.bcg.com/en-gb/beyond-consulting/bcg-gamma/default>`_,
+BCG GAMMA team. If you would like to know more you can find out about
+`BCG GAMMA <https://www.bcg.com/en-gb/beyond-consulting/bcg-gamma/default>`_,
 or have a look at
 `career opportunities <https://www.bcg.com/en-gb/beyond-consulting/bcg-gamma/careers>`_.
 
