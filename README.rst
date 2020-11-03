@@ -2,9 +2,10 @@
 
 |
 
-Facet is an open source library for human-explainable AI. It combines sophisticated
-model inspection and model-based simulation to enable better explanations of your
-supervised machine learning models. Facet is composed of the following key components:
+`facet` is an open source library for human-explainable AI.
+It combines sophisticated model inspection and model-based simulation to enable better 
+explanations of your supervised machine learning models.
+`facet` is composed of the following key components:
 
 +-----------+--------------------------------------------------------------------------+
 | |inspect| | **Model Inspection**                                                     |
@@ -45,7 +46,7 @@ supervised machine learning models. Facet is composed of the following key compo
 Installation
 ---------------------
 
-Facet supports both PyPI and Anaconda.
+`facet` supports both PyPI and Anaconda.
 
 Anaconda
 ~~~~~~~~~~~~~~~~~~~~~
@@ -65,7 +66,7 @@ Quickstart
 ----------------------
 
 The following quickstart guide provides a minimal example workflow to get up and running
-with Facet.
+with `facet`.
 
 Enhanced machine learning workflow
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -119,7 +120,7 @@ Enhanced machine learning workflow
 Model Inspection
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Facet implements several model inspection methods for
+`facet` implements several model inspection methods for
 `scikit-learn <https://scikit-learn.org/stable/index.html>`_ estimators.
 Fundamentally, facet enables post-hoc model inspection by breaking down the interaction
 effects of the features used for model training:
@@ -218,14 +219,14 @@ Model Simulation
 
 .. image:: _static/simulation_output.png
 
-Download the getting started tutorial and explore Facet for yourself here: |binder|
+Download the getting started tutorial and explore `facet` for yourself here: |binder|
 
 Contributing
 ---------------------------
 
-Facet is stable and is being supported long-term.
+`facet` is stable and is being supported long-term.
 
-Contributions to Facet are welcome and appreciated.
+Contributions to `facet` are welcome and appreciated.
 For any bug reports or feature requests/enhancements please use the appropriate
 `GitHub form <https://github.com/BCG-Gamma/facet/issues>`_, and if you wish to do so,
 please open a PR addressing the issue.
@@ -238,26 +239,27 @@ For further information on contributing please see our :ref:`contribution-guide`
 License
 ---------------------------
 
-Facet is licensed under Apache 2.0 as described in the
+`facet` is licensed under Apache 2.0 as described in the
 `LICENSE <https://github.com/BCG-Gamma/facet/LICENSE>`_ file.
 
 Acknowledgements
 ---------------------------
 
-Facet is built on top of two popular packages for Machine Learning:
+`facet` is built on top of two popular packages for Machine Learning:
 
 The `scikit-learn <https://github.com/scikit-learn/scikit-learn>`_ learners and
 pipelining make up implementation of the underlying algorithms. Moreover, we tried
 to design the facet API to align with the scikit-learn API.
 
 The `shap <https://github.com/slundberg/shap>`_ implementation is used to estimate the
-shapley vectors which are being decomposed into the synergy, redundancy, and
-independence vectors.
+shapley vectors which `facet` then decomposes into synergy, redundancy, and independence
+vectors.
 
 BCG GAMMA
 ---------------------------
 
-If you would like to know more about the team behind Facet please see our :ref:`about_us` page.
+If you would like to know more about the team behind `facet` please see our
+:ref:`about_us` page.
 
 We are always on the lookout for passionate and talented data scientists to join the
 BCG GAMMA team. If you would like to know more you can find out about BCG GAMMA
