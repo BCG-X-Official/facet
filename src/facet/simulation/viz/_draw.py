@@ -39,27 +39,31 @@ class SimulationDrawer(Drawer[UnivariateSimulationResult, SimulationStyle]):
 
     _STYLES = {"matplot": SimulationMatplotStyle, "text": SimulationReportStyle}
 
+    #: if ``True``, plot the histogram of observed values for the feature being
+    #: simulated; if ``False``, do not plot the histogram
+    histogram: bool
+
     def __init__(
-        self, style: Union[SimulationStyle, str] = "matplot", histogram: bool = True
+        self,
+        style: Optional[Union[SimulationStyle, str]] = None,
+        histogram: bool = True,
     ) -> None:
         """
-        :param style: the style of the dendrogram; either as a \
-            :class:`.SimulationStyle` instance, or as the name of a \
-            default style. Permissible names are ``"matplot"`` for a style based on \
-            `matplotlib`, and ``"text"`` for a text-based report to stdout \
-            (default: ``"matplot"``)
         :param histogram: if ``True``, plot the histogram of observed values for the \
             feature being simulated; if ``False`` do not plot the histogram (default: \
             ``True``).
         """
         super().__init__(style=style)
-        self._histogram = histogram
+        self.histogram = histogram
+
+    __init__.__doc__ = Drawer.__init__.__doc__ + __init__.__doc__
 
     def draw(
         self, data: UnivariateSimulationResult, title: Optional[str] = None
     ) -> None:
         """
         Draw the simulation chart.
+
         :param data: the univariate simulation to draw
         :param title: the title of the chart (optional, defaults to the name of the \
             simulated feature)
@@ -96,7 +100,7 @@ class SimulationDrawer(Drawer[UnivariateSimulationResult, SimulationStyle]):
             )
 
         # draw the graph with the uplift curves
-        self._style.draw_uplift(
+        self.style.draw_uplift(
             feature_name=data.feature_name,
             output_name=data.output_name,
             output_unit=data.output_unit,
@@ -110,9 +114,9 @@ class SimulationDrawer(Drawer[UnivariateSimulationResult, SimulationStyle]):
             is_categorical_feature=data.partitioner.is_categorical,
         )
 
-        if self._histogram:
+        if self.histogram:
             # draw the histogram of the simulation values
-            self._style.draw_histogram(
+            self.style.draw_histogram(
                 partitions=simulation_result[3],
                 frequencies=simulation_result[4],
                 is_categorical_feature=data.partitioner.is_categorical,

@@ -220,13 +220,15 @@ def test_model_inspection_classifier_binary(
 
     # Shap decomposition matrices (feature dependencies)
 
-    assert model_inspector.feature_association_matrix().values == pytest.approx(
+    assert model_inspector.feature_association_matrix(
+        clustered=True
+    ).values == pytest.approx(
         np.array(
             [
-                [1.0, 0.028, 0.14, 0.128],
-                [0.028, 1.0, 0.005, 0.002],
-                [0.14, 0.005, 1.0, 0.681],
-                [0.128, 0.002, 0.681, 1.0],
+                [1.0, 0.678, 0.133, 0.005],
+                [0.678, 1.0, 0.145, 0.007],
+                [0.133, 0.145, 1.0, 0.029],
+                [0.005, 0.007, 0.029, 1.0],
             ]
         ),
         abs=0.02,
@@ -283,18 +285,38 @@ def test_model_inspection_classifier_multi_class(
         shap_values=shap_values, crossfit=iris_classifier_crossfit_multi_class
     )
 
-    shap_matrix_mean = iris_inspector_multi_class.shap_values()
+    shap_matrix_mean: List[pd.DataFrame] = iris_inspector_multi_class.shap_values()
 
-    # is the consolidation correct?
-    assert_frame_equal(shap_matrix_mean, shap_values.mean(level=1))
+    for _mean, _raw in zip(shap_matrix_mean, shap_values):
+        # is the consolidation correct?
+        assert_frame_equal(_mean, _raw.mean(level=1))
 
-    # the length of rows in shap_values should be equal to the unique observation
-    # indices we have had in the predictions_df
-    assert len(shap_matrix_mean) == len(iris_sample)
+        # the length of rows in shap_values should be equal to the unique observation
+        # indices we have had in the predictions_df
+        assert len(_mean) == len(iris_sample)
+
+    # Feature importance
+
+    print(iris_inspector_multi_class.feature_importance())
+    assert_frame_equal(
+        iris_inspector_multi_class.feature_importance(),
+        pd.DataFrame(
+            data=[
+                [0.125, 0.085, 0.104],
+                [0.020, 0.019, 0.010],
+                [0.424, 0.456, 0.461],
+                [0.432, 0.441, 0.425],
+            ],
+            index=pd.Index(iris_sample.feature_names, name="feature"),
+            columns=pd.Index(iris_inspector_multi_class.output_names_, name="class"),
+        ),
+        atol=0.02,
+    )
 
     # Shap decomposition matrices (feature dependencies)
 
-    assert iris_inspector_multi_class.feature_synergy_matrix().values == pytest.approx(
+    synergy_matrix = iris_inspector_multi_class.feature_synergy_matrix(clustered=False)
+    assert np.hstack(m.values for m in synergy_matrix) == pytest.approx(
         np.array(
             [
                 [1.0, 0.069, 0.081, 0.061, 1.0, 0.098]
@@ -309,7 +331,11 @@ def test_model_inspection_classifier_multi_class(
         ),
         abs=0.02,
     )
-    assert iris_inspector_multi_class.feature_redundancy_matrix().values == (
+
+    redundancy_matrix = iris_inspector_multi_class.feature_redundancy_matrix(
+        clustered=False
+    )
+    assert np.hstack(m.values for m in redundancy_matrix) == (
         pytest.approx(
             np.array(
                 [
@@ -326,7 +352,11 @@ def test_model_inspection_classifier_multi_class(
             abs=0.02,
         )
     )
-    assert iris_inspector_multi_class.feature_association_matrix().values == (
+
+    association_matrix = iris_inspector_multi_class.feature_association_matrix(
+        clustered=False
+    )
+    assert np.hstack(m.values for m in association_matrix) == (
         pytest.approx(
             np.array(
                 [
@@ -405,7 +435,7 @@ def _validate_shap_values_against_predictions(
         else:
             # multi-class classification has outputs for each class
 
-            for class_name in predicted_probabilities.columns:
+            for class_idx, class_name in enumerate(predicted_probabilities.columns):
                 # for each observation and class, we expect to get the constant
                 # expected probability value by deducting the SHAP values for all
                 # features from the predicted probability
@@ -413,10 +443,7 @@ def _validate_shap_values_against_predictions(
                 class_probabilities = predicted_probabilities.loc[:, [class_name]]
 
                 shap_for_split_and_class = (
-                    -shap_values.xs(split)
-                    .xs(class_name, axis=1)
-                    .sum(axis=1)
-                    .rename("shap")
+                    -shap_values[class_idx].xs(split).sum(axis=1).rename("shap")
                 )
 
                 _check_probabilities(class_probabilities, shap_for_split_and_class)
@@ -483,19 +510,37 @@ def test_model_inspection_classifier_interaction(
         crossfit=iris_classifier_crossfit_binary,
     )
 
-    assert model_inspector.feature_synergy_matrix().values == pytest.approx(
+    assert model_inspector.feature_synergy_matrix(
+        clustered=False
+    ).values == pytest.approx(
         np.array(
             [
-                [1.0, 0.047, 0.101, 0.12],
-                [0.047, 1.0, 0.017, 0.021],
-                [0.101, 0.017, 1.0, 0.1],
-                [0.12, 0.021, 0.1, 1.0],
+                [1.000, 0.047, 0.101, 0.120],
+                [0.047, 1.000, 0.017, 0.021],
+                [0.101, 0.017, 1.000, 0.100],
+                [0.120, 0.021, 0.100, 1.000],
             ]
         ),
         abs=0.02,
     )
 
-    assert model_inspector.feature_redundancy_matrix().values == pytest.approx(
+    assert model_inspector.feature_synergy_matrix(
+        clustered=True
+    ).values == pytest.approx(
+        np.array(
+            [
+                [1.000, 0.101, 0.100, 0.017],
+                [0.101, 1.000, 0.120, 0.047],
+                [0.100, 0.120, 1.000, 0.021],
+                [0.017, 0.047, 0.021, 1.000],
+            ]
+        ),
+        abs=0.02,
+    )
+
+    assert model_inspector.feature_redundancy_matrix(
+        clustered=False
+    ).values == pytest.approx(
         np.array(
             [
                 [1.0, 0.039, 0.181, 0.206],
@@ -507,13 +552,43 @@ def test_model_inspection_classifier_interaction(
         abs=0.02,
     )
 
-    assert model_inspector.feature_association_matrix().values == pytest.approx(
+    assert model_inspector.feature_redundancy_matrix(
+        clustered=True
+    ).values == pytest.approx(
+        np.array(
+            [
+                [1.000, 0.792, 0.181, 0.005],
+                [0.792, 1.000, 0.206, 0.011],
+                [0.181, 0.206, 1.000, 0.039],
+                [0.005, 0.011, 0.039, 1.000],
+            ]
+        ),
+        abs=0.02,
+    )
+
+    assert model_inspector.feature_association_matrix(
+        clustered=False
+    ).values == pytest.approx(
         np.array(
             [
                 [1.0, 0.028, 0.14, 0.128],
                 [0.028, 1.0, 0.005, 0.002],
                 [0.14, 0.005, 1.0, 0.681],
                 [0.128, 0.002, 0.681, 1.0],
+            ]
+        ),
+        abs=0.02,
+    )
+
+    assert model_inspector.feature_association_matrix(
+        clustered=True
+    ).values == pytest.approx(
+        np.array(
+            [
+                [1.000, 0.681, 0.128, 0.002],
+                [0.681, 1.000, 0.140, 0.005],
+                [0.128, 0.140, 1.000, 0.026],
+                [0.002, 0.005, 0.026, 1.000],
             ]
         ),
         abs=0.02,
