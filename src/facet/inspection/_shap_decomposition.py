@@ -53,14 +53,14 @@ class ShapValueDecomposer(FittableMixin[ShapCalculator]):
 
     def __init__(self) -> None:
         super().__init__()
-        self.index_: Optional[pd.Index] = None
-        self.columns_: Optional[pd.Index] = None
+        self.feature_index_: Optional[pd.Index] = None
         self.association_rel_: Optional[np.ndarray] = None
+        self.association_rel_asymmetric_: Optional[np.ndarray] = None
 
     @property
     def is_fitted(self) -> bool:
         """[inherit docstring from parent class]"""
-        return self.index_ is not None
+        return self.feature_index_ is not None
 
     is_fitted.__doc__ = FittableMixin.is_fitted.__doc__
 
@@ -81,8 +81,7 @@ class ShapValueDecomposer(FittableMixin[ShapCalculator]):
 
             self._fit(shap_calculator=shap_calculator)
 
-            self.index_ = shap_calculator.feature_index_
-            self.columns_ = shap_calculator.get_shap_columns
+            self.feature_index_ = shap_calculator.feature_index_
 
         except Exception:
             # reset fit in case we get an exception along the way
@@ -91,8 +90,7 @@ class ShapValueDecomposer(FittableMixin[ShapCalculator]):
 
         return self
 
-    @property
-    def association(self) -> pd.DataFrame:
+    def association(self, symmetrical: bool) -> List[pd.DataFrame]:
         """
         The matrix of relative association for all feature pairs.
 
@@ -100,9 +98,15 @@ class ShapValueDecomposer(FittableMixin[ShapCalculator]):
         (fully associated contributions).
 
         Raises an error if this SHAP value decomposer has not been fitted.
+
+        :param symmetrical: return a symmetrical matrix of mutual association
+        :returns: the matrix as a data frame, or a list of data frames for multiple \
+            outputs
         """
         self._ensure_fitted()
-        return self._to_frame(self.association_rel_)
+        return self._to_frame(
+            self.association_rel_ if symmetrical else self.association_rel_asymmetric_
+        )
 
     def _fit(self, shap_calculator: ShapCalculator) -> None:
         #
@@ -146,8 +150,9 @@ class ShapValueDecomposer(FittableMixin[ShapCalculator]):
         cov_p_i_p_j_2x = 2 * cov_p_i_p_j
 
         # variance of shap vectors
-        var_p_i = np.diagonal(cov_p_i_p_j, axis1=1, axis2=2)
-        var_p_i_plus_var_p_j = var_p_i[:, :, np.newaxis] + var_p_i[:, np.newaxis, :]
+        var_p = np.diagonal(cov_p_i_p_j, axis1=1, axis2=2)  # (n_outputs, n_features)
+        var_p_i = var_p[:, :, np.newaxis]  # (n_outputs, n_features, n_features)
+        var_p_i_plus_var_p_j = var_p_i + var_p[:, np.newaxis, :]
 
         # std(p[i] + p[j])
         # shape: (n_outputs, n_features)
@@ -170,33 +175,84 @@ class ShapValueDecomposer(FittableMixin[ShapCalculator]):
         # independently use redundant information
         std_ass_ij_2x = std_p_i_plus_p_j - std_p_i_minus_p_j
 
+        #
+        # SHAP independence: ind[i, j]
+        #
+
+        # 4 * var(ass[i, j]) * var(ass[i, j])
+        # shape: (n_outputs, n_features, n_features)
+        var_ass_ij_4x = std_ass_ij_2x ** 2
+
+        # ratio of length of 2 * ass over length of (p[i] + p[j])
+        # shape: (n_outputs, n_features, n_features)
+        # we need this for the next step
+        with np.errstate(divide="ignore", invalid="ignore"):
+            ass_p_ratio_2x = 1 - std_p_i_minus_p_j / std_p_i_plus_p_j
+
+        # 2 * cov(p[i], ass[i, j])
+        # shape: (n_outputs, n_features, n_features)
+        # we need this as part of the formula to calculate std(ind_ij)
+        # (see next step below)
+        cov_p_i_ass_ij_2x = ass_p_ratio_2x * (var_p_i + cov_p_i_p_j)
+
+        # std(ind_ij + ind_ji)
+        # where ind_ij + ind_ji = p_i + p_j - 2 * ass_ij
+        # shape: (n_outputs, n_features, n_features)
+        # the standard deviation (= length) of the independence vector
+
+        std_ind_ij_plus_ind_ji = _sqrt(
+            var_p_i_plus_var_p_j
+            + var_ass_ij_4x
+            + 2
+            * (
+                cov_p_i_p_j
+                - cov_p_i_ass_ij_2x
+                - _transpose(cov_p_i_ass_ij_2x)  # cov_p_j_ass_ij_2x
+            )
+        )
+
+        # std(ind_ij)
+        # where ind_ij = p_i - ass_ij
+        # shape: (n_outputs, n_features, n_features)
+        # the standard deviation (= length) of the asymmetrical independence vector
+        std_ind_ij = _sqrt(
+            var_p_i + var_ass_ij_4x / 4 - ass_p_ratio_2x * (var_p_i + cov_p_i_p_j)
+        )
+
         # SHAP association
         # shape: (n_outputs, n_features, n_features)
         association_ij = np.abs(std_ass_ij_2x)
+        independence_ij = np.abs(std_ind_ij_plus_ind_ji)
 
         # we should have the right shape for all resulting matrices
         assert association_ij.shape == (n_outputs, n_features, n_features)
 
         with np.errstate(divide="ignore", invalid="ignore"):
             self.association_rel_ = _fill_nans(
-                _ensure_diagonality(association_ij / std_p_i_plus_p_j)
+                _ensure_diagonality(association_ij / (association_ij + independence_ij))
+            )
+            self.association_rel_asymmetric_ = _fill_nans(
+                std_ass_ij_2x / (std_ass_ij_2x + std_ind_ij * 2)
             )
 
     def _reset_fit(self) -> None:
         # revert status of this object to not fitted
-        self.index_ = self.columns_ = None
+        self.feature_index_ = None
         self.association_rel_ = None
 
-    def _to_frame(self, matrix: np.ndarray) -> pd.DataFrame:
+    def _to_frame(self, matrix: np.ndarray) -> List[pd.DataFrame]:
         # takes an array of shape (n_outputs, n_features, n_features) and transforms it
         # into a data frame of shape (n_features, n_outputs * n_features)
-        index = self.index_
-        columns = self.columns_
-        return pd.DataFrame(
-            matrix.swapaxes(0, 1).reshape(len(index), len(columns)),
-            index=index,
-            columns=columns,
-        )
+        index = self.feature_index_
+
+        return [
+            pd.DataFrame(
+                m,
+                index=index,
+                columns=index,
+            )
+            for m in matrix
+        ]
 
 
 class ShapInteractionValueDecomposer(ShapValueDecomposer):
@@ -241,7 +297,7 @@ class ShapInteractionValueDecomposer(ShapValueDecomposer):
             {DEFAULT_MIN_DIRECT_SYNERGY * 100.0:g}%)
         """
 
-    def synergy(self, symmetrical: bool = True) -> pd.DataFrame:
+    def synergy(self, symmetrical: bool = True) -> List[pd.DataFrame]:
         """
         The matrix of total relative synergy (direct and indirect) for all feature
         pairs.
@@ -250,13 +306,17 @@ class ShapInteractionValueDecomposer(ShapValueDecomposer):
         (fully synergistic contributions).
 
         Raises an error if this interaction decomposer has not been fitted.
+
+        :param symmetrical: return a symmetrical matrix of mutual synergy
+        :returns: the matrix as a data frame, or a list of data frames for multiple \
+            outputs
         """
         self._ensure_fitted()
         return self._to_frame(
             self.synergy_rel_ if symmetrical else self.synergy_rel_asymmetric_
         )
 
-    def redundancy(self, symmetrical: bool = True) -> pd.DataFrame:
+    def redundancy(self, symmetrical: bool = True) -> List[pd.DataFrame]:
         """
         The matrix of total relative redundancy for all feature pairs.
 
@@ -264,6 +324,10 @@ class ShapInteractionValueDecomposer(ShapValueDecomposer):
         (fully redundant contributions).
 
         Raises an error if this interaction decomposer has not been fitted.
+
+        :param symmetrical: return a symmetrical matrix of mutual redundancy
+        :returns: the matrix as a data frame, or a list of data frames for multiple \
+            outputs
         """
         self._ensure_fitted()
         return self._to_frame(
@@ -551,18 +615,15 @@ class ShapInteractionValueDecomposer(ShapValueDecomposer):
 
         std_red_ij_2x = np.abs(std_aut_ij_plus_aut_ji - std_aut_ij_minus_aut_ji)
 
-        # std(red[i, j])
-        std_red_ij = std_red_ij_2x / 2
-
         #
         # SHAP independence: ind[i, j]
         #
 
         # 4 * var(red[i, j]), var(red[i, j])
         # shape: (n_outputs, n_features, n_features)
-        var_red_ij_4x = std_red_ij_2x * std_red_ij_2x
+        var_red_ij_4x = std_red_ij_2x ** 2
 
-        # ratio of length of 2*e over length of (aut[i, j] + aut[j, i])
+        # ratio of length of 2 * red over length of (aut[i, j] + aut[j, i])
         # shape: (n_outputs, n_features, n_features)
         # we need this for the next step
         with np.errstate(divide="ignore", invalid="ignore"):
@@ -570,7 +631,8 @@ class ShapInteractionValueDecomposer(ShapValueDecomposer):
 
         # 2 * cov(aut[i, j], red[i, j])
         # shape: (n_outputs, n_features, n_features)
-        # we need this as part of the formula to calculate nu_i (see next step below)
+        # we need this as part of the formula to calculate std(ind_ij)
+        # (see next step below)
         cov_aut_ij_red_ij_2x = red_aut_ratio_2x * (var_aut_ij + cov_aut_ij_aut_ji)
 
         # std(ind_ij)
@@ -661,7 +723,7 @@ class ShapInteractionValueDecomposer(ShapValueDecomposer):
                 std_syn_ij / (std_syn_ij + std_aut_ij)
             )
             self.redundancy_rel_asymmetric_ = _fill_nans(
-                std_red_ij / (std_red_ij + std_uni_ij)
+                std_red_ij_2x / (std_red_ij_2x + std_uni_ij * 2)
             )
 
     def _reset_fit(self) -> None:

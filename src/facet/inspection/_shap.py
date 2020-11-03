@@ -107,7 +107,7 @@ class ShapCalculator(
         self._explainer_factory = explainer_factory
         self.shap_: Optional[pd.DataFrame] = None
         self.feature_index_: Optional[pd.Index] = None
-        self.output_names_: Optional[Sequence[str]] = None
+        self.output_names_: Optional[List[str]] = None
         self.sample_: Optional[Sample] = None
 
     @property
@@ -161,13 +161,6 @@ class ShapCalculator(
         :param consolidate: consolidation method, or ``None`` for no consolidation
         :return: SHAP contribution values with shape \
             (n_observations, n_outputs * n_features).
-        """
-        pass
-
-    @abstractmethod
-    def get_shap_columns(self) -> pd.Index:
-        """
-        The column index of the data frame returned by :meth:`.get_shap_values`
         """
         pass
 
@@ -406,11 +399,6 @@ class ShapValuesCalculator(
             shap_all_splits_df=self.shap_, method=consolidate
         )
 
-    @property
-    def get_shap_columns(self) -> pd.Index:
-        """[see superclass]"""
-        return self.shap_.columns
-
     @staticmethod
     def _get_shap_for_split(
         model: LearnerPipelineDF,
@@ -484,14 +472,6 @@ class ShapInteractionValuesCalculator(
         return ShapCalculator._consolidate_splits(
             shap_all_splits_df=self.shap_, method=consolidate
         )
-
-    @property
-    def get_shap_columns(self) -> pd.Index:
-        """
-        The column index of the data frame returned by :meth:`.shap_values`
-        and :meth:`.shap_interaction_values`
-        """
-        return self.shap_.columns
 
     def get_diagonals(self) -> pd.DataFrame:
         """
