@@ -2,30 +2,30 @@
 
 |
 
-`facet` is an open source library for human-explainable AI.
+*facet* is an open source library for human-explainable AI.
 It combines sophisticated model inspection and model-based simulation to enable better 
 explanations of your supervised machine learning models.
-`facet` is composed of the following key components:
+*facet* is composed of the following key components:
 
 +-----------+--------------------------------------------------------------------------+
 | |inspect| | **Model Inspection**                                                     |
 |           |                                                                          |
-|           | `facet` introduces a new algorithm to quantify dependencies and          |
+|           | *facet* introduces a new algorithm to quantify dependencies and          |
 |           | interactions between features in ML models.                              |
 |           | This new tool for human-explainable AI adds a new, global perspective to |
 |           | the observation-level explanations provided by the popular               |
 |           | `SHAP <https://shap.readthedocs.io/en/latest/>`_ approach.               |
-|           | To learn more about `facet`’s model inspection capabilities, see the     |
+|           | To learn more about *facet*’s model inspection capabilities, see the     |
 |           | getting started example below.                                           |
 +-----------+--------------------------------------------------------------------------+
 | |sim|     | **Model Simulation**                                                     |
 |           |                                                                          |
-|           | `facet`’s model simulation algorithms use ML models for                  |
-|           | `virtual experiments` to help identify scenarios that optimise predicted |
+|           | *facet*’s model simulation algorithms use ML models for                  |
+|           | *virtual experiments* to help identify scenarios that optimise predicted |
 |           | outcomes.                                                                |
-|           | To quantify the uncertainty in simulations, `facet` utilises a range of  |
+|           | To quantify the uncertainty in simulations, *facet* utilises a range of  |
 |           | bootstrapping algorithms including stationary and stratified bootstraps. |
-|           | For an example of `facet`’s bootstrap simulations, see the getting       |
+|           | For an example of *facet*’s bootstrap simulations, see the getting       |
 |           | started example below.                                                   |
 +-----------+--------------------------------------------------------------------------+
 | |pipe|    | **Enhanced Machine Learning Workflow**                                   |
@@ -34,7 +34,7 @@ explanations of your supervised machine learning models.
 |           | enhancing `scikit-learn <https://scikit-learn.org/stable/index.html>`_'s |
 |           | tried and tested pipelining paradigm with new capabilities for model     |
 |           | selection, inspection, and simulation.                                   |
-|           | `facet` also introduces                                                  |
+|           | *facet* also introduces                                                  |
 |           | `sklearndf <https://github.com/BCG-Gamma/sklearndf>`_, an augmented      |
 |           | version of scikit-learn with enhanced support for pandas dataframes that |
 |           | ensures end-to-end traceability of features.                             |
@@ -46,7 +46,7 @@ explanations of your supervised machine learning models.
 Installation
 ---------------------
 
-`facet` supports both PyPI and Anaconda.
+*facet* supports both PyPI and Anaconda.
 
 Anaconda
 ~~~~~~~~~~~~~~~~~~~~~
@@ -66,7 +66,7 @@ Quickstart
 ----------------------
 
 The following quickstart guide provides a minimal example workflow to get up and running
-with `facet`.
+with *facet*.
 
 Enhanced Machine Learning Workflow
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -127,7 +127,7 @@ Enhanced Machine Learning Workflow
 Model Inspection
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-`facet` implements several model inspection methods for
+*facet* implements several model inspection methods for
 `scikit-learn <https://scikit-learn.org/stable/index.html>`_ estimators.
 Fundamentally, facet enables post-hoc model inspection by breaking down the interaction
 effects of the features used for model training:
@@ -226,14 +226,14 @@ Model Simulation
 
 .. image:: _static/simulation_output.png
 
-Download the getting started tutorial and explore `facet` for yourself here: |binder|
+Download the getting started tutorial and explore *facet* for yourself here: |binder|
 
 Contributing
 ---------------------------
 
-`facet` is stable and is being supported long-term.
+*facet* is stable and is being supported long-term.
 
-Contributions to `facet` are welcome and appreciated.
+Contributions to *facet* are welcome and appreciated.
 For any bug reports or feature requests/enhancements please use the appropriate
 `GitHub form <https://github.com/BCG-Gamma/facet/issues>`_, and if you wish to do so,
 please open a PR addressing the issue.
@@ -246,26 +246,26 @@ For further information on contributing please see our :ref:`contribution-guide`
 License
 ---------------------------
 
-`facet` is licensed under Apache 2.0 as described in the
+*facet* is licensed under Apache 2.0 as described in the
 `LICENSE <https://github.com/BCG-Gamma/facet/LICENSE>`_ file.
 
 Acknowledgements
 ---------------------------
 
-`facet` is built on top of two popular packages for Machine Learning:
+*facet* is built on top of two popular packages for Machine Learning:
 
 The `scikit-learn <https://github.com/scikit-learn/scikit-learn>`_ learners and
 pipelining make up implementation of the underlying algorithms. Moreover, we tried
 to design the facet API to align with the scikit-learn API.
 
 The `shap <https://github.com/slundberg/shap>`_ implementation is used to estimate the
-shapley vectors which `facet` then decomposes into synergy, redundancy, and independence
+shapley vectors which *facet* then decomposes into synergy, redundancy, and independence
 vectors.
 
 BCG GAMMA
 ---------------------------
 
-If you would like to know more about the team behind `facet` please see our
+If you would like to know more about the team behind *facet* please see our
 :ref:`about_us` page.
 
 We are always on the lookout for passionate and talented data scientists to join the
