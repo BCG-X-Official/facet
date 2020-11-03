@@ -122,7 +122,7 @@ Enhanced Machine Learning Workflow
     ranker.summary_report()
 
 .. image:: _static/ranker_summary.png
-    :width: 600
+   :width: 600
 
 Model Inspection
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -275,30 +275,40 @@ or have a look at
 `career opportunities <https://www.bcg.com/en-gb/beyond-consulting/bcg-gamma/careers>`_.
 
 .. |pipe| image:: _static/icons/pipe_icon.png
-    :width: 64px
-    :class: facet_icon
+   :width: 64px
+   :class: facet_icon
+
 .. |inspect| image:: _static/icons/inspect_icon.png
-    :width: 64px
-    :class: facet_icon
+   :width: 64px
+   :class: facet_icon
+
 .. |sim| image:: _static/icons/sim_icon.png
     :width: 64px
     :class: facet_icon
 
 .. |azure_conda| image:: https://
-    :target: https://
+   :target: https://
+
 .. |azure_pypi| image:: https://
-    :target: https://
+   :target: https://
+
 .. |azure_devops_master_ci| image:: https://
-    :target: https://
+   :target: https://
+
 .. |code_cov| image:: https://
-    :target: https://
+   :target: https://
+
 .. |python_versions| image:: https://img.shields.io/badge/python-3.7|3.8-blue.svg
-    :target: https://www.python.org/downloads/release/python-380/
+   :target: https://www.python.org/downloads/release/python-380/
+
 .. |code_style| image:: https://img.shields.io/badge/code%20style-black-000000.svg
-    :target: https://github.com/psf/black
+   :target: https://github.com/psf/black
+
 .. |made_with_sphinx_doc| image:: https://img.shields.io/badge/Made%20with-Sphinx-1f425f.svg
-    :target: https://www.sphinx-doc.org/
+   :target: https://www.sphinx-doc.org/
+
 .. |license_badge| image:: https://img.shields.io/badge/License-Apache%202.0-olivegreen.svg
-    :target: https://opensource.org/licenses/Apache-2.0
+   :target: https://opensource.org/licenses/Apache-2.0
+
 .. |binder| image:: https://mybinder.org/badge_logo.svg
-    :target: https://mybinder.org/
+   :target: https://mybinder.org/
