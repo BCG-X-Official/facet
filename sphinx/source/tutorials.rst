@@ -28,7 +28,7 @@ Introduce yourself to the FACET workflow! With this tutorial you will:
 
 .. raw:: html
 
-    <p>Get started exploring the tutorial below by clicking on the section links,
+    <p>Start exploring the tutorial below by clicking on the section links,
     deepen your understanding by reading the associated GAMMA Scope article (click here),
     and explore/download the notebook for yourself here:
     <a href="https://mybinder.org" target="_blank">
@@ -100,7 +100,7 @@ is based on the Water Drilling Tutorial.
 
 .. raw:: html
 
-    <p>Get started exploring the tutorial below by clicking on the section links,
+    <p>Start exploring the tutorial below by clicking on the section links,
     deepen your understanding by reading the associated GAMMA Scope article (click here),
     and explore/download the notebook for yourself here:
     <a href="https://mybinder.org" target="_blank">
