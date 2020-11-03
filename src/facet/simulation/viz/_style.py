@@ -12,14 +12,14 @@ from mpl_toolkits.axes_grid1.axes_divider import AxesDivider
 from mpl_toolkits.axes_grid1.axes_size import Scaled
 
 from pytools.api import AllTracker, inheritdoc
-from pytools.viz import DrawStyle, MatplotStyle, TextStyle
+from pytools.text import format_table
+from pytools.viz import DrawingStyle, MatplotStyle, TextStyle
 from pytools.viz.colors import (
     RGBA_DARK_BLUE,
     RGBA_GREY,
     RGBA_LIGHT_BLUE,
     RGBA_LIGHT_GREEN,
 )
-from pytools.viz.text import format_table
 
 log = logging.getLogger(__name__)
 
@@ -44,7 +44,7 @@ __tracker = AllTracker(globals())
 #
 
 
-class SimulationStyle(DrawStyle, metaclass=ABCMeta):
+class SimulationStyle(DrawingStyle, metaclass=ABCMeta):
     """
     Base class of styles used by :class:`.SimulationDrawer`.
     """
@@ -327,10 +327,6 @@ class SimulationReportStyle(SimulationStyle, TextStyle):
     def _num_format(heading: str):
         return f"> {len(heading)}.{SimulationReportStyle.__NUM_PRECISION}g"
 
-    def _drawing_start(self, title: str) -> None:
-        # print the report title
-        self.out.write(f"{title}\n")
-
     def draw_uplift(
         self,
         feature_name: str,
@@ -358,7 +354,7 @@ class SimulationReportStyle(SimulationStyle, TextStyle):
                     )[:3],
                 ],
                 formats=[
-                    self._partition_format(is_categorical_feature),
+                    self._partition_format(is_categorical=is_categorical_feature),
                     *([SimulationReportStyle.__NUM_FORMAT] * 3),
                 ],
                 data=list(
@@ -397,11 +393,13 @@ class SimulationReportStyle(SimulationStyle, TextStyle):
             )
         )
 
-    def _drawing_finalize(self) -> None:
+    def _drawing_finalize(self, **kwargs) -> None:
+        super()._drawing_finalize(**kwargs)
         # print two trailing line breaks
         self.out.write("\n")
 
-    def _partition_format(self, is_categorical: bool) -> str:
+    @staticmethod
+    def _partition_format(is_categorical: bool) -> str:
         if is_categorical:
             return SimulationReportStyle.__PARTITION_TEXT_FORMAT
         else:
