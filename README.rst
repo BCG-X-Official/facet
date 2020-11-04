@@ -262,7 +262,7 @@ The [LINK: scikit-learn] learners and
 pipelining make up implementation of the underlying algorithms. Moreover, we tried
 to design the facet API to align with the scikit-learn API.
 
-The `shap <https://github.com/slundberg/shap>`_ implementation is used to estimate the
+The [LINK: shap] implementation is used to estimate the
 shapley vectors which *facet* then decomposes into synergy, redundancy, and independence
 vectors.
 
