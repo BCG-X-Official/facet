@@ -7,38 +7,40 @@ It combines sophisticated model inspection and model-based simulation to enable 
 explanations of your supervised machine learning models.
 *facet* is composed of the following key components:
 
-+-----------+--------------------------------------------------------------------------+
-| |inspect| | **Model Inspection**                                                     |
-|           |                                                                          |
-|           | *facet* introduces a new algorithm to quantify dependencies and          |
-|           | interactions between features in ML models.                              |
-|           | This new tool for human-explainable AI adds a new, global perspective to |
-|           | the observation-level explanations provided by the popular               |
-|           | `SHAP <https://shap.readthedocs.io/en/latest/>`_ approach.               |
-|           | To learn more about *facet*’s model inspection capabilities, see the     |
-|           | getting started example below.                                           |
-+-----------+--------------------------------------------------------------------------+
-| |sim|     | **Model Simulation**                                                     |
-|           |                                                                          |
-|           | *facet*’s model simulation algorithms use ML models for                  |
-|           | *virtual experiments* to help identify scenarios that optimise predicted |
-|           | outcomes.                                                                |
-|           | To quantify the uncertainty in simulations, *facet* utilises a range of  |
-|           | bootstrapping algorithms including stationary and stratified bootstraps. |
-|           | For an example of *facet*’s bootstrap simulations, see the getting       |
-|           | started example below.                                                   |
-+-----------+--------------------------------------------------------------------------+
-| |pipe|    | **Enhanced Machine Learning Workflow**                                   |
-|           |                                                                          |
-|           | FACET offers an efficient and transparent machine learning workflow,     |
-|           | enhancing `scikit-learn <https://scikit-learn.org/stable/index.html>`_'s |
-|           | tried and tested pipelining paradigm with new capabilities for model     |
-|           | selection, inspection, and simulation.                                   |
-|           | *facet* also introduces                                                  |
-|           | `sklearndf <https://github.com/BCG-Gamma/sklearndf>`_, an augmented      |
-|           | version of scikit-learn with enhanced support for pandas dataframes that |
-|           | ensures end-to-end traceability of features.                             |
-+-----------+--------------------------------------------------------------------------+
++----------------+---------------------------------------------------------------------+
+| |inspect|      | **Model Inspection**                                                |
+|                |                                                                     |
+|                | *facet* introduces a new algorithm to quantify dependencies and     |
+|                | interactions between features in ML models.                         |
+|                | This new tool for human-explainable AI adds a new, global           |
+|                | perspective to the observation-level explanations provided by the   |
+|                | popular `SHAP <https://shap.readthedocs.io/en/latest/>`_ approach.  |
+|                | To learn more about *facet*’s model inspection capabilities, see the|
+|                | getting started example below.                                      |
++----------------+---------------------------------------------------------------------+
+| |sim|          | **Model Simulation**                                                |
+|                |                                                                     |
+|                | *facet*’s model simulation algorithms use ML models for             |
+|                | *virtual experiments* to help identify scenarios that optimise      |
+|                | predicted outcomes.                                                 |
+|                | To quantify the uncertainty in simulations, *facet* utilises a range|
+|                | of bootstrapping algorithms including stationary and stratified     |
+|                | bootstraps.                                                         |
+|                | For an example of *facet*’s bootstrap simulations, see the getting  |
+|                | started example below.                                              |
++----------------+---------------------------------------------------------------------+
+| |pipe|         | **Enhanced Machine Learning Workflow**                              |
+|                |                                                                     |
+|                | FACET offers an efficient and transparent machine learning workflow,|
+|                | enhancing                                                           |
+|                | `scikit-learn <https://scikit-learn.org/stable/index.html>`_'s      |
+|                | tried and tested pipelining paradigm with new capabilities for model|
+|                | selection, inspection, and simulation.                              |
+|                | *facet* also introduces                                             |
+|                | `sklearndf <https://github.com/BCG-Gamma/sklearndf>`_, an augmented |
+|                | version of *scikit-learn* with enhanced support for *pandas* data   |
+|                | frames that ensures end-to-end traceability of features.            |
++----------------+---------------------------------------------------------------------+
 
 |azure_pypi| |azure_conda| |azure_devops_master_ci| |code_cov|
 |python_versions| |code_style| |made_with_sphinx_doc| |License_badge|
