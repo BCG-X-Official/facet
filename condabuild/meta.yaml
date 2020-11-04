@@ -25,7 +25,7 @@ requirements:
     - scikit-learn{{ environ.get('FACET_V_SCIKIT_LEARN') }}
     - shap{{ environ.get('FACET_V_SHAP') }}
     - gamma-pytools{{ environ.get('FACET_V_GAMMA_PYTOOLS') }}
-    - gamma-sklearndf{{ environ.get('FACET_V_GAMMA_SKLEARNDF') }}
+    - sklearndf{{ environ.get('FACET_V_SKLEARNDF') }}
     - pyyaml{{ environ.get('FACET_V_PYYAML') }}
 test:
   imports:
