@@ -79,7 +79,7 @@ numpy           =  ">=1.16"
 scipy           =  ">=1.2"
 joblib          =  ">=0.13"
 scikit-learn    =  ">=0.21"
-shap            =  "=0.35"
+shap            =  ">=0.35"
 matplotlib      =  ">=3"
 
 [tool.black]
