@@ -56,7 +56,7 @@ Anaconda
 
 .. code-block:: RST
 
-    conda install gamma-facet
+    conda install -c bcg_gamma gamma-facet
 
 Pip
 ~~~~~~~~~~~
