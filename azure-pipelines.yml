@@ -144,7 +144,7 @@ stages:
               cd $(System.DefaultWorkingDirectory)/pytools/
               flit install -s
               cd $(System.DefaultWorkingDirectory)/sklearndf/
-              pip install -e .
+              flit install -s
               cd $(System.DefaultWorkingDirectory)/facet/
               pip install pytest-azurepipelines
               coverage run -m pytest test/test/

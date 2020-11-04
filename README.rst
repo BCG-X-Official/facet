@@ -2,38 +2,46 @@
 
 |
 
-Facet is an open source library for human-explainable AI. It combines sophisticated
-model inspection and model-based simulation to enable better explanations of your
-supervised machine learning models. Facet is composed of the following key components:
+*facet* is an open source library for human-explainable AI.
+It combines sophisticated model inspection and model-based simulation to enable better 
+explanations of your supervised machine learning models.
 
-+-------------------+---------------------------------------------------------------------------+
-| |pipe|            | **Enhanced Machine Learning Workflow**                                    |
-|                   |                                                                           |
-|                   | Facet delivers a robust and fail-safe pipelining workflow which allows you|
-|                   | to easily impute and select your features as well as ranking a grid of    |
-|                   | different models "competing" against each other. Facet introduces         |
-|                   | `sklearndf <https://github.com/BCG-Gamma/sklearndf>`_, an augmented       |
-|                   | version of `scikit-learn <https://scikit-learn.org/stable/index.html>`_   |
-|                   | with enhanced support for `pandas <https://pandas.pydata.org/>`_          |
-|                   | dataframes and pipelining.                                                |
-|                   |                                                                           |
-+-------------------+---------------------------------------------------------------------------+
-| |inspect|         | **Model Inspection**                                                      |
-|                   |                                                                           |
-|                   | Local explanations of features and their interactions make up a key       |
-|                   | component of understanding feature importance as well as feature          |
-|                   | interactions. This is based on a novel method which decomposes            |
-|                   | `SHAP values <https://shap.readthedocs.io/en/latest/>`_ into              |
-|                   | two vectors representing **synergy** and **redundancy**.                  |
-|                   |                                                                           |
-+-------------------+---------------------------------------------------------------------------+
-| |sim|             | **Model Simulation**                                                      |
-|                   |                                                                           |
-|                   | Use your trained model and the insights from the model inspection to      |
-|                   | conduct a historical univariate simulation of any feature on your target  |
-|                   | in order to identify local optima.                                        |
-+-------------------+---------------------------------------------------------------------------+
+*facet* is composed of the following key components:
 
++----------------+---------------------------------------------------------------------+
+| |inspect|      | **Model Inspection**                                                |
+|                |                                                                     |
+|                | *facet* introduces a new algorithm to quantify dependencies and     |
+|                | interactions between features in ML models.                         |
+|                | This new tool for human-explainable AI adds a new, global           |
+|                | perspective to the observation-level explanations provided by the   |
+|                | popular `SHAP <https://shap.readthedocs.io/en/latest/>`_ approach.  |
+|                | To learn more about *facet*’s model inspection capabilities, see the|
+|                | getting started example below.                                      |
++----------------+---------------------------------------------------------------------+
+| |sim|          | **Model Simulation**                                                |
+|                |                                                                     |
+|                | *facet*’s model simulation algorithms use ML models for             |
+|                | *virtual experiments* to help identify scenarios that optimise      |
+|                | predicted outcomes.                                                 |
+|                | To quantify the uncertainty in simulations, *facet* utilises a range|
+|                | of bootstrapping algorithms including stationary and stratified     |
+|                | bootstraps.                                                         |
+|                | For an example of *facet*’s bootstrap simulations, see the getting  |
+|                | started example below.                                              |
++----------------+---------------------------------------------------------------------+
+| |pipe|         | **Enhanced Machine Learning Workflow**                              |
+| |spacer|       |                                                                     |
+|                | *facet* offers an efficient and transparent machine learning        |
+|                | workflow, enhancing                                                 |
+|                | `scikit-learn <https://scikit-learn.org/stable/index.html>`_'s      |
+|                | tried and tested pipelining paradigm with new capabilities for model|
+|                | selection, inspection, and simulation.                              |
+|                | *facet* also introduces                                             |
+|                | `sklearndf <https://github.com/BCG-Gamma/sklearndf>`_, an augmented |
+|                | version of *scikit-learn* with enhanced support for *pandas* data   |
+|                | frames that ensures end-to-end traceability of features.            |
++----------------+---------------------------------------------------------------------+
 
 |azure_pypi| |azure_conda| |azure_devops_master_ci| |code_cov|
 |python_versions| |code_style| |made_with_sphinx_doc| |License_badge|
@@ -41,7 +49,7 @@ supervised machine learning models. Facet is composed of the following key compo
 Installation
 ---------------------
 
-Facet supports both PyPI and Anaconda.
+*facet* supports both PyPI and Anaconda.
 
 Anaconda
 ~~~~~~~~~~~~~~~~~~~~~
@@ -61,9 +69,9 @@ Quickstart
 ----------------------
 
 The following quickstart guide provides a minimal example workflow to get up and running
-with Facet.
+with *facet*.
 
-Enhanced machine learning workflow
+Enhanced Machine Learning Workflow
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: Python
@@ -83,45 +91,53 @@ Enhanced machine learning workflow
 
     # load Boston housing dataset
     boston = load_boston()
-    df = pd.DataFrame(data=boston.data, columns=boston.feature_names).assign(
+    boston_df = pd.DataFrame(data=boston.data, columns=boston.feature_names).assign(
         MEDIAN_HOUSE_PRICE=boston.target
     )
 
     # create FACET sample object
-    boston_obs = Sample(observations=df, target_name="MEDIAN_HOUSE_PRICE")
+    boston_sample = Sample(observations=boston_df, target_name="MEDIAN_HOUSE_PRICE")
 
-    # create pipeline for random forest regressor
-    rforest_reg = RegressorPipelineDF(regressor=RandomForestRegressorDF(random_state=42))
+    # create a (trivial) pipeline for a random forest regressor
+    rnd_forest_reg = RegressorPipelineDF(
+        regressor=RandomForestRegressorDF(random_state=42)
+    )
 
     # define grid of models which are "competing" against each other
-    rforest_grid = [
+    rnd_forest_grid = [
         LearnerGrid(
-            pipeline=rforest_reg, learner_parameters={"min_samples_leaf": [8, 11, 15]}
-        )
+            pipeline=rnd_forest_reg,
+            learner_parameters={
+                "min_samples_leaf": [8, 11, 15]
+            }
+        ),
     ]
 
     # create repeated k-fold CV iterator
     rkf_cv = RepeatedKFold(n_splits=5, n_repeats=10, random_state=42)
 
     # rank your models by performance (default is variance explained)
-    ranker = LearnerRanker(grids=rforest_grid, cv=rkf_cv, n_jobs=-3).fit(sample=boston_obs)
+    ranker = LearnerRanker(
+        grids=rnd_forest_grid, cv=rkf_cv, n_jobs=-3
+    ).fit(sample=boston_sample)
 
     # get summary report
     ranker.summary_report()
 
 .. image:: _static/ranker_summary.png
-    :width: 600
+   :width: 600
 
 Model Inspection
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Facet implements several model inspection methods for
+*facet* implements several model inspection methods for
 [LINK: scikit-learn] estimators.
+
 Fundamentally, facet enables post-hoc model inspection by breaking down the interaction
 effects of the features used for model training:
 
 - **Redundancy**
-  represents how much information is shared between two features contributions to
+  represents how much information is shared between two features' contributions to
   the model predictions. For example, temperature and pressure in a pressure cooker are
   redundant features for predicting cooking time since pressure will rise relative to
   the temperature, and vice versa. Therefore, knowing just one of either temperature or
@@ -214,46 +230,46 @@ Model Simulation
 
 .. image:: _static/simulation_output.png
 
-Download the getting started tutorial and explore Facet for yourself here: |binder|
+Download the getting started tutorial and explore *facet* for yourself here: |binder|
 
 Contributing
 ---------------------------
 
-Facet is stable and is being supported long-term.
+*facet* is stable and is being supported long-term.
 
-Contributions to Facet are welcome and appreciated.
+Contributions to *facet* are welcome and appreciated.
 For any bug reports or feature requests/enhancements please use the appropriate
 `GitHub form <https://github.com/BCG-Gamma/facet/issues>`_, and if you wish to do so,
 please open a PR addressing the issue.
 
 We do ask that for any major changes please discuss these with us first via an issue or
-at our team email: FacetTeam <at> bcg <dot> com.
+using our team email: FacetTeam <at> bcg <dot> com.
 
 For further information on contributing please see our [LINK: contribution-guide].
 
 License
 ---------------------------
 
-Facet is licensed under Apache 2.0 as described in the
+*facet* is licensed under Apache 2.0 as described in the
 `LICENSE <https://github.com/BCG-Gamma/facet/LICENSE>`_ file.
 
 Acknowledgements
 ---------------------------
 
-Facet is built on top of two popular packages for Machine Learning:
+*facet* is built on top of two popular packages for Machine Learning:
 
 The [LINK: scikit-learn] learners and
 pipelining make up implementation of the underlying algorithms. Moreover, we tried
 to design the facet API to align with the scikit-learn API.
 
 The `shap <https://github.com/slundberg/shap>`_ implementation is used to estimate the
-shapley vectors which are being decomposed into the synergy, redundancy, and
-independence vectors.
+shapley vectors which *facet* then decomposes into synergy, redundancy, and independence
+vectors.
 
 BCG GAMMA
 ---------------------------
 
-If you would like to know more about the team behind Facet please see our [LINK: about_us] page.
+If you would like to know more about the team behind *facet* please see our [LINK: about_us] page.
 
 We are always on the lookout for passionate and talented data scientists to join the
 BCG GAMMA team. If you would like to know more you can find out about
@@ -262,27 +278,42 @@ or have a look at
 `career opportunities <https://www.bcg.com/en-gb/beyond-consulting/bcg-gamma/careers>`_.
 
 .. |pipe| image:: _static/icons/pipe_icon.png
-    :class: facet_icon
+   :width: 64px
+   :class: facet_icon
+
 .. |inspect| image:: _static/icons/inspect_icon.png
-    :class: facet_icon
+   :width: 64px
+   :class: facet_icon
+
 .. |sim| image:: _static/icons/sim_icon.png
+    :width: 64px
     :class: facet_icon
 
+.. |spacer| unicode:: 0x2028 0x2003 0x2003 0x2003 0x2003 0x2003 0x2003
+
 .. |azure_conda| image:: https://
-    :target: https://
+   :target: https://
+
 .. |azure_pypi| image:: https://
-    :target: https://
+   :target: https://
+
 .. |azure_devops_master_ci| image:: https://
-    :target: https://
+   :target: https://
+
 .. |code_cov| image:: https://
-    :target: https://
+   :target: https://
+
 .. |python_versions| image:: https://img.shields.io/badge/python-3.7|3.8-blue.svg
-    :target: https://www.python.org/downloads/release/python-380/
+   :target: https://www.python.org/downloads/release/python-380/
+
 .. |code_style| image:: https://img.shields.io/badge/code%20style-black-000000.svg
-    :target: https://github.com/psf/black
+   :target: https://github.com/psf/black
+
 .. |made_with_sphinx_doc| image:: https://img.shields.io/badge/Made%20with-Sphinx-1f425f.svg
-    :target: https://www.sphinx-doc.org/
+   :target: https://www.sphinx-doc.org/
+
 .. |license_badge| image:: https://img.shields.io/badge/License-Apache%202.0-olivegreen.svg
-    :target: https://opensource.org/licenses/Apache-2.0
+   :target: https://opensource.org/licenses/Apache-2.0
+
 .. |binder| image:: https://mybinder.org/badge_logo.svg
-    :target: https://mybinder.org/
+   :target: https://mybinder.org/
