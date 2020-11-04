@@ -15,7 +15,7 @@ explanations of your supervised machine learning models.
 |                | interactions between features in ML models.                         |
 |                | This new tool for human-explainable AI adds a new, global           |
 |                | perspective to the observation-level explanations provided by the   |
-|                | popular `SHAP <https://shap.readthedocs.io/en/latest/>`_ approach.  |
+|                | popular `SHAP <https://shap.readthedocs.io/en/latest/>`__ approach. |
 |                | To learn more about *facet*’s model inspection capabilities, see the|
 |                | getting started example below.                                      |
 +----------------+---------------------------------------------------------------------+
@@ -34,11 +34,11 @@ explanations of your supervised machine learning models.
 | |spacer|       |                                                                     |
 |                | *facet* offers an efficient and transparent machine learning        |
 |                | workflow, enhancing                                                 |
-|                | `scikit-learn <https://scikit-learn.org/stable/index.html>`_'s      |
+|                | `scikit-learn <https://scikit-learn.org/stable/index.html>`__'s     |
 |                | tried and tested pipelining paradigm with new capabilities for model|
 |                | selection, inspection, and simulation.                              |
 |                | *facet* also introduces                                             |
-|                | `sklearndf <https://github.com/BCG-Gamma/sklearndf>`_, an augmented |
+|                | `sklearndf <https://github.com/BCG-Gamma/sklearndf>`__, an augmented|
 |                | version of *scikit-learn* with enhanced support for *pandas* data   |
 |                | frames that ensures end-to-end traceability of features.            |
 +----------------+---------------------------------------------------------------------+
@@ -131,7 +131,7 @@ Model Inspection
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 *facet* implements several model inspection methods for
-[LINK: scikit-learn] estimators.
+`scikit-learn <https://scikit-learn.org/stable/index.html>`__ estimators.
 
 Fundamentally, facet enables post-hoc model inspection by breaking down the interaction
 effects of the features used for model training:
@@ -258,11 +258,11 @@ Acknowledgements
 
 *facet* is built on top of two popular packages for Machine Learning:
 
-The [LINK: scikit-learn] learners and
+The `scikit-learn <https://scikit-learn.org/stable/index.html>`__ learners and
 pipelining make up implementation of the underlying algorithms. Moreover, we tried
 to design the facet API to align with the scikit-learn API.
 
-The [LINK: shap] implementation is used to estimate the
+The `SHAP <https://shap.readthedocs.io/en/latest/>`__ implementation is used to estimate the
 shapley vectors which *facet* then decomposes into synergy, redundancy, and independence
 vectors.
 
