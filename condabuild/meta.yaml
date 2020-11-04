@@ -22,7 +22,7 @@ requirements:
     - numpy{{ environ.get('FACET_V_NUMPY') }}
     - scipy{{ environ.get('FACET_V_SCIPY') }}
     - matplotlib{{ environ.get('FACET_V_MATPLOTLIB') }}
-    - scikit-learn{{ environ.get('FACET_V_SKLEARN') }}
+    - scikit-learn{{ environ.get('FACET_V_SCIKIT_LEARN') }}
     - shap{{ environ.get('FACET_V_SHAP') }}
     - gamma-pytools{{ environ.get('FACET_V_GAMMA_PYTOOLS') }}
     - gamma-sklearndf{{ environ.get('FACET_V_GAMMA_SKLEARNDF') }}
