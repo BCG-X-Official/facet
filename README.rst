@@ -9,7 +9,7 @@ explanations of your supervised machine learning models.
 
 +----------------+---------------------------------------------------------------------+
 | |inspect|      | **Model Inspection**                                                |
-| |spacer|       |                                                                     |
+|                |                                                                     |
 |                | *facet* introduces a new algorithm to quantify dependencies and     |
 |                | interactions between features in ML models.                         |
 |                | This new tool for human-explainable AI adds a new, global           |
@@ -19,7 +19,7 @@ explanations of your supervised machine learning models.
 |                | getting started example below.                                      |
 +----------------+---------------------------------------------------------------------+
 | |sim|          | **Model Simulation**                                                |
-| |spacer|       |                                                                     |
+|                |                                                                     |
 |                | *facet*’s model simulation algorithms use ML models for             |
 |                | *virtual experiments* to help identify scenarios that optimise      |
 |                | predicted outcomes.                                                 |
