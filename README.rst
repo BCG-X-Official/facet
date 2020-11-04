@@ -31,8 +31,8 @@ explanations of your supervised machine learning models.
 +----------------+---------------------------------------------------------------------+
 | |pipe|         | **Enhanced Machine Learning Workflow**                              |
 | |spacer|       |                                                                     |
-|                | FACET offers an efficient and transparent machine learning workflow,|
-|                | enhancing                                                           |
+|                | *facet* offers an efficient and transparent machine learning        |
+|                | workflow, enhancing                                                 |
 |                | `scikit-learn <https://scikit-learn.org/stable/index.html>`_'s      |
 |                | tried and tested pipelining paradigm with new capabilities for model|
 |                | selection, inspection, and simulation.                              |
