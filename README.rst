@@ -5,6 +5,7 @@
 *facet* is an open source library for human-explainable AI.
 It combines sophisticated model inspection and model-based simulation to enable better 
 explanations of your supervised machine learning models.
+
 *facet* is composed of the following key components:
 
 +----------------+---------------------------------------------------------------------+
