@@ -9,7 +9,7 @@ explanations of your supervised machine learning models.
 
 +----------------+---------------------------------------------------------------------+
 | |inspect|      | **Model Inspection**                                                |
-|                |                                                                     |
+| |spacer|       |                                                                     |
 |                | *facet* introduces a new algorithm to quantify dependencies and     |
 |                | interactions between features in ML models.                         |
 |                | This new tool for human-explainable AI adds a new, global           |
@@ -19,7 +19,7 @@ explanations of your supervised machine learning models.
 |                | getting started example below.                                      |
 +----------------+---------------------------------------------------------------------+
 | |sim|          | **Model Simulation**                                                |
-|                |                                                                     |
+| |spacer|       |                                                                     |
 |                | *facet*’s model simulation algorithms use ML models for             |
 |                | *virtual experiments* to help identify scenarios that optimise      |
 |                | predicted outcomes.                                                 |
@@ -30,7 +30,7 @@ explanations of your supervised machine learning models.
 |                | started example below.                                              |
 +----------------+---------------------------------------------------------------------+
 | |pipe|         | **Enhanced Machine Learning Workflow**                              |
-|                |                                                                     |
+| |spacer|       |                                                                     |
 |                | FACET offers an efficient and transparent machine learning workflow,|
 |                | enhancing                                                           |
 |                | `scikit-learn <https://scikit-learn.org/stable/index.html>`_'s      |
@@ -287,6 +287,8 @@ or have a look at
 .. |sim| image:: _static/icons/sim_icon.png
     :width: 64px
     :class: facet_icon
+
+.. |spacer| unicode:: 0x2028 0xA0 0xA0 0xA0 0xA0 0xA0 0xA0 0xA0 0xA0 0xA0 0xA0
 
 .. |azure_conda| image:: https://
    :target: https://
