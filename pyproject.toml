@@ -23,8 +23,8 @@ requires = [
     "scipy >=1.2,<1.6",
     "pyyaml >=5.0",
     "joblib >=0.13,<1.17",
-    "gamma-pytools >=1.0.0"
-    "gamma-sklearndf >=1.0.0"
+    "gamma-pytools >=1.0.0",
+    "gamma-sklearndf >=1.0.0",
 ]
 
 requires-python = ">=3.6,<4"
@@ -45,7 +45,7 @@ docs = [
     "jupyter >= 1.0",
     "docutils",
     "xlrd == 1.2.*",
-    "m2r == 0.2.*"
+    "m2r == 0.2.*",
 ]
 
 [tool.flit.metadata.urls]
