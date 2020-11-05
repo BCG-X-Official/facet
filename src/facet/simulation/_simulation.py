@@ -109,8 +109,8 @@ class UnivariateSimulationResult(Generic[T_Partition]):
     #: the average observed actual output, acting as the baseline of the simulation
     baseline: float
 
-    #: the width :math:`\alpha` of the confidence interval \
-    #: determined by bootstrapping, with :math:`0 < \alpha < 1`
+    #: the width :math:`\\alpha` of the confidence interval \
+    #: determined by bootstrapping, with :math:`0 < \\alpha < 1`
     confidence_level: float
 
     #: the partitioner used to generate feature values to be simulated
@@ -217,13 +217,13 @@ class BaseUnivariateSimulator(
         verbose: Optional[int] = None,
     ):
         """
-        :param crossfit: cross-validated crossfit of a model for all observations \
-        in a given sample
-        :param confidence_level: the width :math:`\alpha` of the confidence interval \
-            determined by bootstrapping, with :math:`0 < \alpha < 1`; \
-            for reliable CI estimates the number of splits in the crossfit should be \
-            at least :math:`n = \frac{50}{1 - \alpha}`, e.g. :math:`n = 1000` for \
-            :math:`\alpha = 0.95`
+        :param crossfit: cross-validated crossfit of a model for all observations
+            in a given sample
+        :param confidence_level: the width :math:`\\alpha` of the confidence interval
+            determined by bootstrapping, with :math:`0 < \\alpha < 1`;
+            for reliable CI estimates the number of splits in the crossfit should be
+            at least :math:`n = \\frac{50}{1 - \\alpha}`, e.g. :math:`n = 1000` for
+            :math:`\\alpha = 0.95`
         """
         super().__init__(
             n_jobs=n_jobs,
