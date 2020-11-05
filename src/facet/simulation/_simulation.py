@@ -109,8 +109,8 @@ class UnivariateSimulationResult(Generic[T_Partition]):
     #: the average observed actual output, acting as the baseline of the simulation
     baseline: float
 
-    #: the width :math:`\alpha` of the confidence interval \
-    #: determined by bootstrapping, with :math:`0 < \alpha < 1`
+    #: the width :math:`\\alpha` of the confidence interval \
+    #: determined by bootstrapping, with :math:`0 < \\alpha < 1`
     confidence_level: float
 
     #: the partitioner used to generate feature values to be simulated
