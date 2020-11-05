@@ -83,8 +83,7 @@ class BaseBootstrapCV(BaseCrossValidator, metaclass=ABCMeta):
         :param y: target
         :param groups: not used
         :return: a generator yielding `(train, test)` tuples where
-        train and test are \
-            numpy arrays with train/test indices
+            train and test are numpy arrays with train and test indices, respectively
         """
 
         n = len(X)
@@ -196,10 +195,9 @@ class StationaryBootstrapCV(BaseBootstrapCV):
 
     Intended for use with time series that satisfy the stationarity requirement.
 
-    :param mean_block_size: mean size of coherent blocks to sample.\
-        If an ``int``, use this as the absolute number of blocks. If a ``float``, must
-        be \
-        in the range (0.0, 1.0) and denotes a block size relative to the total number \
+    :param mean_block_size: mean size of coherent blocks to sample.If an ``int``,
+        use this as the absolute number of blocks. If a ``float``, must be
+        in the range (0.0, 1.0) and denotes a block size relative to the total number
         samples. (default: 0.5)
     """
 
@@ -267,7 +265,7 @@ class FullSampleValidator(BaseCrossValidator):
 
     def __init__(self, n_splits: int = 1):
         """
-        :param n_splits: number of identical, full-sample "splits" to generate \
+        :param n_splits: number of identical, full-sample "splits" to generate
             (default: 1)
         """
         self.n_splits = n_splits
@@ -303,8 +301,8 @@ class FullSampleValidator(BaseCrossValidator):
         :param X: features
         :param y: target
         :param groups: not used
-        :return: a generator yielding `(train, test)` tuples where train and test are \
-            numpy arrays with train/test indices
+        :return: a generator yielding `(train, test)` tuples where train and test are
+            numpy arrays with train and test indices, respectively
         """
         indices = np.arange(len(X))
         for i in range(self.n_splits):
