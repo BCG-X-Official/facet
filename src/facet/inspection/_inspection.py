@@ -58,7 +58,7 @@ __tracker = AllTracker(globals())
 
 class ShapPlotData(NamedTuple):
     """
-    Data for use in SHAP plots provided by the SHAP package (:module:`shap`)
+    Data for use in SHAP plots provided by the SHAP package (:mod:`shap`)
     """
 
     #: Matrix of SHAP values (# observations x # features)
@@ -779,7 +779,7 @@ class LearnerInspector(
     def shap_plot_data(self) -> ShapPlotData:
         """
         Consolidate SHAP values and corresponding feature values from this inspector
-        for use in SHAP plots offered by the :module:`shap` package.
+        for use in SHAP plots offered by the :mod:`shap` package.
 
         The _shap_ package provides functions for creating various SHAP plots.
         Most of these functions require
