@@ -44,8 +44,8 @@ okay that was the last geometry pun, we promise.
 | |JasonB|          | |MaloG|           | |KonstantinH|     | |JanI|            |
 | Jason Bentley     | Malo Grisard      | Konstantin Hemker | Jan Ittner        |
 +-------------------+-------------------+-------------------+-------------------+
-| |RicardoK|        | |FlorentM|        | |JoergS|          |                   |
-| Ricardo Kennedy   | Florent Martin    | Jörg Schneider    |                   |
+| |SithanK|         | |RicardoK|        | |FlorentM|        | |JoergS|          |
+| Sithan Kanna      | Ricardo Kennedy   | Florent Martin    | Jörg Schneider    |
 +-------------------+-------------------+-------------------+-------------------+
 
 .. |JasonB| image:: _static/team_contributors/Jason_Bentley.jpg
@@ -58,6 +58,9 @@ okay that was the last geometry pun, we promise.
     :class: team_pic
 
 .. |JanI| image:: _static/team_contributors/Jan_Ittner.jpg
+    :class: team_pic
+
+.. |SithanK| image:: _static/team_contributors/Sithan_Kanna.jpg
     :class: team_pic
 
 .. |RicardoK| image:: _static/team_contributors/Ricardo_Kennedy.jpg
