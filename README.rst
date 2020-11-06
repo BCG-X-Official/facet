@@ -2,7 +2,7 @@
 
 |
 
-*facet* is an open source library for human-explainable AI.
+FACET is an open source library for human-explainable AI.
 It combines sophisticated model inspection and model-based simulation to enable better 
 explanations of your supervised machine learning models.
 
@@ -11,33 +11,33 @@ FACET is composed of the following key components:
 +----------------+---------------------------------------------------------------------+
 | |inspect|      | **Model Inspection**                                                |
 |                |                                                                     |
-|                | FACET introduces a new algorithm to quantify dependencies and     |
+|                | FACET introduces a new algorithm to quantify dependencies and       |
 |                | interactions between features in ML models.                         |
 |                | This new tool for human-explainable AI adds a new, global           |
 |                | perspective to the observation-level explanations provided by the   |
 |                | popular `SHAP <https://shap.readthedocs.io/en/latest/>`__ approach. |
-|                | To learn more about FACET’s model inspection capabilities, see the|
+|                | To learn more about FACET’s model inspection capabilities, see the  |
 |                | getting started example below.                                      |
 +----------------+---------------------------------------------------------------------+
 | |sim|          | **Model Simulation**                                                |
 |                |                                                                     |
-|                | FACET’s model simulation algorithms use ML models for             |
+|                | FACET’s model simulation algorithms use ML models for               |
 |                | *virtual experiments* to help identify scenarios that optimise      |
 |                | predicted outcomes.                                                 |
-|                | To quantify the uncertainty in simulations, FACET utilises a range|
+|                | To quantify the uncertainty in simulations, FACET utilises a range  |
 |                | of bootstrapping algorithms including stationary and stratified     |
 |                | bootstraps.                                                         |
-|                | For an example of FACET’s bootstrap simulations, see the getting  |
+|                | For an example of FACET’s bootstrap simulations, see the getting    |
 |                | started example below.                                              |
 +----------------+---------------------------------------------------------------------+
 | |pipe|         | **Enhanced Machine Learning Workflow**                              |
 | |spacer|       |                                                                     |
-|                | FACET offers an efficient and transparent machine learning        |
+|                | FACET offers an efficient and transparent machine learning          |
 |                | workflow, enhancing                                                 |
 |                | `scikit-learn <https://scikit-learn.org/stable/index.html>`__'s     |
 |                | tried and tested pipelining paradigm with new capabilities for model|
 |                | selection, inspection, and simulation.                              |
-|                | FACET also introduces                                             |
+|                | FACET also introduces                                               |
 |                | `sklearndf <https://github.com/BCG-Gamma/sklearndf>`__, an augmented|
 |                | version of *scikit-learn* with enhanced support for *pandas* data   |
 |                | frames that ensures end-to-end traceability of features.            |
