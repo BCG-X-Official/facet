@@ -15,4 +15,3 @@ Table of contents
    contribution_guide
    faqs
    about_us
-   genindex
