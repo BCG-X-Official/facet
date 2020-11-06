@@ -7,7 +7,7 @@ Tutorials
 Get *facet*'s advanced modelling workflow and inspection capabilities into your data
 science toolbox! Explore *facet* by using the tutorials:
 
-- **Applied Examples with *facet***: These practical examples show you how to use *facet*
+- **Applied Examples with _facet_**: These practical examples show you how to use *facet*
   in your data science workflow.
 - **Bite-sized Simulations**: Gain intuition for *facet*'s new
   SHAP-based model inspection algorithm.
