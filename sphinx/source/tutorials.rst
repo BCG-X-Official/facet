@@ -1,25 +1,25 @@
 .. _tutorials:
 
 
-FACET Tutorials
+Tutorials
 ====================
 
-Get FACET's advanced modelling workflow and inspection capabilities into your data
-science toolbox! Explore FACET by using the tutorials:
+Get *facet*'s advanced modelling workflow and inspection capabilities into your data
+science toolbox! Explore *facet* by using the tutorials:
 
-- **Applied Examples with FACET**: These practical examples show you how to use FACET
+- **Applied Examples with *facet***: These practical examples show you how to use *facet*
   in your data science workflow.
-- **Bite-sized Simulations**: Gain intuition for FACET's new
+- **Bite-sized Simulations**: Gain intuition for *facet*'s new
   SHAP-based model inspection algorithm.
 
 
-Applied Examples with FACET
+Applied Examples with *facet*
 ----------------------------
 
 Introductory Tutorial: Incident risk of drilling operations
 *****************************************************************************
 
-Introduce yourself to the FACET workflow! With this tutorial you will:
+Introduce yourself to the *facet* workflow! With this tutorial you will:
 
 - develop a classifier for predicting incident risk of drilling operations using
   drilling sensor data, and
@@ -45,7 +45,7 @@ Introduce yourself to the FACET workflow! With this tutorial you will:
 Regression Tutorial: Predictive Maintenance
 ************************************************
 
-Learn regression the FACET way with this tutorial investigating the performance of a
+Learn regression the *facet* way with this tutorial investigating the performance of a
 naval vessel Gas Turbine propulsion plant. In this tutorial you will:
 
 - build a model to accurately predict the decay state of the gas turbine, and
@@ -70,7 +70,7 @@ naval vessel Gas Turbine propulsion plant. In this tutorial you will:
 Classification Tutorial: Prediabetes
 *****************************************
 
-Start predicting your binary outcome with FACET. In this tutorial aimed at early
+Start predicting your binary outcome with *facet*. In this tutorial aimed at early
 identification of individuals at risk of prediabetes you will
 
 - select a classifier for predicting prediabetes, and
@@ -94,7 +94,7 @@ identification of individuals at risk of prediabetes you will
 Simulation Tutorial: Feature Simulation on Drill Operations
 *****************************************************************************
 
-Introduce yourself to the FACET's Simulation module. This tutorial aims to provide
+Introduce yourself to the *facet*'s Simulation module. This tutorial aims to provide
 a step by step explanation about the simulation capabilities of Facet and
 is based on the Water Drilling Tutorial.
 
@@ -122,7 +122,7 @@ Bite-sized Simulations
 Understanding synergy and redundancy with synthetic data
 *************************************************************
 
-Improve your intuition for FACET's advanced model inspection with this tutorial.
+Improve your intuition for *facet*'s advanced model inspection with this tutorial.
 In this tutorial you will:
 
 - understand how synergy and redundancy for a feature pair varies with interaction and
