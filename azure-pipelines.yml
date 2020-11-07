@@ -1,3 +1,12 @@
+trigger:
+  - master
+  - develop
+  - release/*
+
+pr:
+  - master
+  - develop
+
 # set the build name
 name: $[ variables['branchName'] ]
 
