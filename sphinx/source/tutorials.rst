@@ -1,7 +1,7 @@
 .. _tutorials:
 
 
-FACET Tutorials
+Tutorials
 ====================
 
 Get FACET's advanced modelling workflow and inspection capabilities into your data
