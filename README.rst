@@ -214,7 +214,7 @@ Model Simulation
         cv=bscv,
         n_jobs=-3,
         verbose=False,
-    ).fit(sample=boston_obs)
+    ).fit(sample=boston_sample)
 
     SIM_FEAT = "LSTAT"
     simulator = UnivariateUpliftSimulator(crossfit=boot_crossfit, n_jobs=3)
