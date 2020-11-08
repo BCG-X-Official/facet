@@ -45,3 +45,15 @@ test:
     - pytest -vs ${FACET_PATH}/pytools/test
     - pytest -vs ${FACET_PATH}/sklearndf/test
     - pytest -vs ${FACET_PATH}/facet/test
+
+about:
+  home: https://github.com/BCG-Gamma/facet
+  license: Apache Software License v2.0
+  license_file: LICENSE
+  summary: |
+    FACET is an open source library for human-explainable AI. It combines sophisticated
+    model inspection and model-based simulation to enable better explanations of
+    your supervised machine learning models.
+  dev_url: https://github.com/BCG-Gamma/facet
+  doc_url: https://pypi.org/project/facet/ # TODO - replace with docs
+  doc_source_url: https://github.com/BCG-Gamma/facet/blob/develop/README.rst
