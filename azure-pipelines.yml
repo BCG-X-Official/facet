@@ -99,7 +99,7 @@ stages:
               targetType: 'inline'
               script: |
                 cd $(Build.Repository.LocalPath)
-                git diff-index --exit-code "origin/$(branchName)" pyproject.yml
+                git diff-index --exit-code "origin/$(branchName)" pyproject.toml
                 build_changed="$?"
                 if [ "$build_changed" = 1 ]; then
                 echo "conda build config has been changed"
@@ -190,7 +190,7 @@ stages:
       condition: >
         and(
         ne(variables.master_or_release, 'True'),
-        ne(stageDependencies.detect_conda_changes.checkout_and_diff.outputs['diff.conda_build_config_changed'], '0')
+        ne(stageDependencies.detect_build_config_changes.checkout_and_diff.outputs['diff.conda_build_config_changed'], '0')
         )
 
       pool:
