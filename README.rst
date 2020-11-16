@@ -43,7 +43,7 @@ FACET is composed of the following key components:
 |                | frames that ensures end-to-end traceability of features.            |
 +----------------+---------------------------------------------------------------------+
 
-|azure_pypi| |azure_conda| |azure_devops_master_ci| |code_cov|
+|pypi| |conda| |azure_devops_master_ci| |code_cov|
 |python_versions| |code_style| |made_with_sphinx_doc| |License_badge|
 
 Installation
@@ -291,11 +291,11 @@ or have a look at
 
 .. |spacer| unicode:: 0x2028 0x2003 0x2003 0x2003 0x2003 0x2003 0x2003
 
-.. |azure_conda| image:: https://
-   :target: https://
+.. |conda| image:: https://anaconda.org/bcg_gamma/gamma-facet/badges/version.svg
+    :target: https://anaconda.org/BCG_Gamma/gamma-facet
 
-.. |azure_pypi| image:: https://
-   :target: https://
+.. |pypi| image:: https://badge.fury.io/py/gamma-facet.svg
+    :target: https://pypi.org/project/gamma-facet/
 
 .. |azure_devops_master_ci| image:: https://
    :target: https://
