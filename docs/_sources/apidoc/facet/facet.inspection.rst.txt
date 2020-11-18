@@ -1,0 +1,39 @@
+facet.inspection
+================
+
+.. automodule:: facet.inspection
+   :no-imported-members:
+
+   
+   
+   =======
+   Classes
+   =======
+
+   .. autosummary::
+      :toctree: inspection
+      :template: custom-class-template.rst
+      :nosignatures:
+   
+      ExplainerFactory
+      KernelExplainerFactory
+      LearnerInspector
+      ShapPlotData
+      TreeExplainerFactory
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+
+

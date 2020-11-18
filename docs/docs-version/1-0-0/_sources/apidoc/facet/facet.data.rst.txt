@@ -1,0 +1,35 @@
+facet.data
+==========
+
+.. automodule:: facet.data
+   :no-imported-members:
+
+   
+   
+   =======
+   Classes
+   =======
+
+   .. autosummary::
+      :toctree: data
+      :template: custom-class-template.rst
+      :nosignatures:
+   
+      Sample
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+
+

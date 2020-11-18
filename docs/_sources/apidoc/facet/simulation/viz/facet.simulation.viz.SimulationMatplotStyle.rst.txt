@@ -1,0 +1,36 @@
+facet.simulation.viz.SimulationMatplotStyle
+===========================================
+
+.. currentmodule:: facet.simulation.viz
+
+.. autoclass:: SimulationMatplotStyle
+   :members:
+   :no-show-inheritance:
+   :inherited-members:
+   :special-members: __call__
+
+   
+   
+   .. rubric:: Method summary
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~SimulationMatplotStyle.draw_histogram
+      ~SimulationMatplotStyle.draw_uplift
+      ~SimulationMatplotStyle.text_dimensions
+   
+   
+
+   
+   
+   .. rubric:: Attribute summary
+
+   .. autosummary::
+   
+      ~SimulationMatplotStyle.ax
+      ~SimulationMatplotStyle.renderer
+   
+   
+
+   .. rubric:: Definitions

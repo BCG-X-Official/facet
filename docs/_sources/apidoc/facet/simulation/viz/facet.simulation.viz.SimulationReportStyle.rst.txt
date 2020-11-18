@@ -1,0 +1,28 @@
+facet.simulation.viz.SimulationReportStyle
+==========================================
+
+.. currentmodule:: facet.simulation.viz
+
+.. autoclass:: SimulationReportStyle
+   :members:
+   :no-show-inheritance:
+   :inherited-members:
+   :special-members: __call__
+
+   
+   
+   .. rubric:: Method summary
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~SimulationReportStyle.draw_histogram
+      ~SimulationReportStyle.draw_uplift
+   
+   
+
+   
+   
+   
+
+   .. rubric:: Definitions

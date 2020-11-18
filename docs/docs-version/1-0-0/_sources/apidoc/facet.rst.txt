@@ -1,0 +1,40 @@
+facet
+=====
+
+.. automodule:: facet
+   :no-imported-members:
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+
+
+
+==========
+Submodules
+==========
+.. autosummary::
+   :toctree: facet
+   :template: custom-module-template.rst
+   :recursive:
+
+   facet.crossfit
+   facet.data
+   facet.inspection
+   facet.selection
+   facet.simulation
+   facet.validation
+
