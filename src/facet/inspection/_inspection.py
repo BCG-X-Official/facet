@@ -451,7 +451,7 @@ class LearnerInspector(
             return _normalize_importance(abs_importance.unstack(level=0))
 
     def feature_association_matrix(
-        self, symmetrical: bool = True, clustered: bool = True
+        self, symmetrical: bool = False, clustered: bool = True
     ) -> Union[pd.DataFrame, List[pd.DataFrame]]:
         """
         Calculate the feature association matrix.
@@ -513,7 +513,7 @@ class LearnerInspector(
         )
 
     def feature_synergy_matrix(
-        self, symmetrical: bool = True, clustered: bool = True
+        self, symmetrical: bool = False, clustered: bool = True
     ) -> Union[pd.DataFrame, List[pd.DataFrame]]:
         """
         Calculate the feature synergy matrix.
@@ -555,7 +555,7 @@ class LearnerInspector(
         )
 
     def feature_redundancy_matrix(
-        self, symmetrical: bool = True, clustered: bool = True
+        self, symmetrical: bool = False, clustered: bool = True
     ) -> Union[pd.DataFrame, List[pd.DataFrame]]:
         """
         Calculate the feature redundancy matrix.
