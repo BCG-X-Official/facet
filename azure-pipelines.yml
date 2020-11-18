@@ -342,7 +342,7 @@ stages:
     jobs:
     - job:
       displayName: 'Build and publish docs'
-      # condition: eq(variables.master_or_release, 'True')
+      #  condition: eq(variables.master_or_release, 'True')
 
       pool:
           vmImage: 'ubuntu-latest'
