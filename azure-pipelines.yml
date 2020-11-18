@@ -391,12 +391,13 @@ stages:
               echo "Checking out $(branchName)"
               git checkout $(branchName)
               git status
+              export PYTHONPATH=$(System.DefaultWorkingDirectory)/facet/src/
               conda env create -f environment.yml
               conda activate facet-develop
               pip install flit
-              cd $(System.DefaultWorkingDirectory)/pytools
+              cd $(System.DefaultWorkingDirectory)/pytools/
               flit install -s
-              cd $(System.DefaultWorkingDirectory)/sklearndf
+              cd $(System.DefaultWorkingDirectory)/sklearndf/
               flit install -s
               cd $(System.DefaultWorkingDirectory)/facet/
               python sphinx/make.py html
