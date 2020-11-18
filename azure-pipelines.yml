@@ -371,7 +371,7 @@ stages:
             targetType: 'inline'
             script: |
               set -e
-              cd $(System.DefaultWorkingDirectory)/sklearndf
+              cd $(System.DefaultWorkingDirectory)/facet
               git checkout --track origin/github-pages
               mkdir -p docs
               sudo apt-get install tree
