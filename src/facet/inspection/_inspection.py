@@ -596,46 +596,6 @@ class LearnerInspector(
             clustered=clustered,
         )
 
-    @staticmethod
-    def __feature_affinity_matrix(
-        affinity_matrices: List[pd.DataFrame],
-        affinity_symmetrical: np.ndarray,
-        clustered: bool,
-    ):
-        if clustered:
-            affinity_matrices = LearnerInspector.__sort_affinity_matrices(
-                affinity_matrices=affinity_matrices,
-                symmetrical_affinity_matrices=affinity_symmetrical,
-            )
-        return LearnerInspector.__isolate_single_frame(affinity_matrices)
-
-    @staticmethod
-    def __sort_affinity_matrices(
-        affinity_matrices: List[pd.DataFrame],
-        symmetrical_affinity_matrices: np.ndarray,
-    ) -> List[pd.DataFrame]:
-        # abbreviate a very long function name to stay within the permitted line length
-        fn_linkage = LearnerInspector.__linkage_matrix_from_affinity_matrix_for_output
-
-        return [
-            affinity_matrix.iloc[feature_order, feature_order]
-            for affinity_matrix, symmetrical_affinity_matrix in zip(
-                affinity_matrices, symmetrical_affinity_matrices
-            )
-            for feature_order in (
-                leaves_list(
-                    Z=optimal_leaf_ordering(
-                        Z=fn_linkage(
-                            feature_affinity_matrix=symmetrical_affinity_matrix
-                        ),
-                        y=symmetrical_affinity_matrix,
-                    )
-                )
-                # reverse the index list so larger values tend to end up on top
-                [::-1],
-            )
-        ]
-
     def feature_synergy_linkage(self) -> Union[LinkageTree, List[LinkageTree]]:
         """
         Calculate a linkage tree based on the :meth:`.feature_synergy_matrix`.
@@ -852,6 +812,46 @@ class LearnerInspector(
                 pd.DataFrame(data=m, index=feature_index, columns=feature_index)
                 for m in matrix
             ]
+
+    @staticmethod
+    def __feature_affinity_matrix(
+        affinity_matrices: List[pd.DataFrame],
+        affinity_symmetrical: np.ndarray,
+        clustered: bool,
+    ):
+        if clustered:
+            affinity_matrices = LearnerInspector.__sort_affinity_matrices(
+                affinity_matrices=affinity_matrices,
+                symmetrical_affinity_matrices=affinity_symmetrical,
+            )
+        return LearnerInspector.__isolate_single_frame(affinity_matrices)
+
+    @staticmethod
+    def __sort_affinity_matrices(
+        affinity_matrices: List[pd.DataFrame],
+        symmetrical_affinity_matrices: np.ndarray,
+    ) -> List[pd.DataFrame]:
+        # abbreviate a very long function name to stay within the permitted line length
+        fn_linkage = LearnerInspector.__linkage_matrix_from_affinity_matrix_for_output
+
+        return [
+            affinity_matrix.iloc[feature_order, feature_order]
+            for affinity_matrix, symmetrical_affinity_matrix in zip(
+                affinity_matrices, symmetrical_affinity_matrices
+            )
+            for feature_order in (
+                leaves_list(
+                    Z=optimal_leaf_ordering(
+                        Z=fn_linkage(
+                            feature_affinity_matrix=symmetrical_affinity_matrix
+                        ),
+                        y=symmetrical_affinity_matrix,
+                    )
+                )
+                # reverse the index list so larger values tend to end up on top
+                [::-1],
+            )
+        ]
 
     @staticmethod
     def __split_multi_output_df(
