@@ -28,7 +28,6 @@ from typing import (
 import numpy as np
 import pandas as pd
 from numpy.random.mtrand import RandomState
-from scipy.stats import sem
 from sklearn.model_selection import BaseCrossValidator
 
 from pytools.api import AllTracker, inheritdoc, to_tuple
@@ -424,7 +423,6 @@ class LearnerRanker(
         scoring_name = self.scoring_name
         col_scores_mean = f"{scoring_name}__mean"
         col_scores_std = f"{scoring_name}__std"
-        col_scores_sem = f"{scoring_name}__sem"
         col_learner_type = f"{self.grids[0].pipeline.final_estimator_name}__type"
 
         parameters: List[str] = []
@@ -436,12 +434,11 @@ class LearnerRanker(
             col_ranking_score,
             col_scores_mean,
             col_scores_std,
-            col_scores_sem,
             col_learner_type,
             *parameters,
         ]
 
-        # build te report
+        # build the report
 
         report = pd.DataFrame.from_records(
             [
@@ -449,7 +446,6 @@ class LearnerRanker(
                     col_ranking_score: evaluation.ranking_score,
                     col_scores_mean: evaluation.scores.mean(),
                     col_scores_std: evaluation.scores.std(ddof=1),
-                    col_scores_sem: sem(evaluation.scores, ddof=1),
                     col_learner_type: type(
                         evaluation.pipeline.final_estimator
                     ).__name__,
