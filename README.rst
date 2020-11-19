@@ -196,6 +196,24 @@ Please see the [LINK: API reference] for more detail.
 Model Simulation
 ~~~~~~~~~~~~~~~~~~
 
+Taking the LSTAT feature as an example, we do the following for the simulation:
+
+-   We use FACET's `ContinuousRangePartitioner` to split the range of observed values of
+    LSTAT into intervals of equal size. Each partition is represented by the central
+    value of that partition.
+-   For each partition, the simulator creates an artificial copy of the original sample
+    assuming the variable to be simulated has the same value across all observations -
+    which is the value representing the partition. Using the best `LearnerCrossfit`
+    acquired from the ranker, the simulator now re-predicts all targets using the models
+    trained for all folds and determines the average uplift of the target variable
+    resulting from this.
+-   The FACET `SimulationDrawer` allows us to visualise the result; both in a matplotlib
+    and a plain-text style
+
+Finally, because FACET can use bootstrap cross validation, we can create a crossfit
+from our previous `LearnerRanker` best model to perform the simulation so we can
+quantify the uncertainty by using bootstrap confidence intervals.
+
 .. code-block:: Python
 
     # FACET imports
