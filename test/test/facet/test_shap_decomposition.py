@@ -111,12 +111,10 @@ def test_shap_decomposition(regressor_inspector: LearnerInspector) -> None:
             feature_x=i, feature_y=j, is_indirect_syn_valid=indirect_syn
         )
 
-        syn_matrix = regressor_inspector.feature_synergy_matrix()
-        red_matrix = regressor_inspector.feature_redundancy_matrix()
-        syn_matrix_asym = regressor_inspector.feature_synergy_matrix(symmetrical=False)
-        red_matrix_asym = regressor_inspector.feature_redundancy_matrix(
-            symmetrical=False
-        )
+        syn_matrix = regressor_inspector.feature_synergy_matrix(symmetrical=True)
+        red_matrix = regressor_inspector.feature_redundancy_matrix(symmetrical=True)
+        syn_matrix_asym = regressor_inspector.feature_synergy_matrix()
+        red_matrix_asym = regressor_inspector.feature_redundancy_matrix()
 
         print_list(
             syn_rel=syn_rel,
@@ -160,7 +158,7 @@ def test_shap_decomposition_matrices(
 ) -> None:
     # Shap decomposition matrices (feature dependencies)
     association_matrix: pd.DataFrame = regressor_inspector.feature_association_matrix(
-        clustered=False
+        clustered=False, symmetrical=True
     )
 
     # check that dimensions of pairwise feature matrices are equal to # of features,

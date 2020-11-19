@@ -221,7 +221,7 @@ def test_model_inspection_classifier_binary(
     # Shap decomposition matrices (feature dependencies)
 
     assert model_inspector.feature_association_matrix(
-        clustered=True
+        clustered=True, symmetrical=True
     ).values == pytest.approx(
         np.array(
             [
@@ -315,7 +315,9 @@ def test_model_inspection_classifier_multi_class(
 
     # Shap decomposition matrices (feature dependencies)
 
-    synergy_matrix = iris_inspector_multi_class.feature_synergy_matrix(clustered=False)
+    synergy_matrix = iris_inspector_multi_class.feature_synergy_matrix(
+        clustered=False, symmetrical=True
+    )
     assert np.hstack(m.values for m in synergy_matrix) == pytest.approx(
         np.array(
             [
@@ -333,7 +335,7 @@ def test_model_inspection_classifier_multi_class(
     )
 
     redundancy_matrix = iris_inspector_multi_class.feature_redundancy_matrix(
-        clustered=False
+        clustered=False, symmetrical=True
     )
     assert np.hstack(m.values for m in redundancy_matrix) == (
         pytest.approx(
@@ -354,7 +356,7 @@ def test_model_inspection_classifier_multi_class(
     )
 
     association_matrix = iris_inspector_multi_class.feature_association_matrix(
-        clustered=False
+        clustered=False, symmetrical=True
     )
     assert np.hstack(m.values for m in association_matrix) == (
         pytest.approx(
@@ -511,7 +513,7 @@ def test_model_inspection_classifier_interaction(
     )
 
     assert model_inspector.feature_synergy_matrix(
-        clustered=False
+        clustered=False, symmetrical=True
     ).values == pytest.approx(
         np.array(
             [
@@ -525,7 +527,7 @@ def test_model_inspection_classifier_interaction(
     )
 
     assert model_inspector.feature_synergy_matrix(
-        clustered=True
+        clustered=True, symmetrical=True
     ).values == pytest.approx(
         np.array(
             [
@@ -539,7 +541,7 @@ def test_model_inspection_classifier_interaction(
     )
 
     assert model_inspector.feature_redundancy_matrix(
-        clustered=False
+        clustered=False, symmetrical=True
     ).values == pytest.approx(
         np.array(
             [
@@ -553,7 +555,7 @@ def test_model_inspection_classifier_interaction(
     )
 
     assert model_inspector.feature_redundancy_matrix(
-        clustered=True
+        clustered=True, symmetrical=True
     ).values == pytest.approx(
         np.array(
             [
@@ -567,7 +569,7 @@ def test_model_inspection_classifier_interaction(
     )
 
     assert model_inspector.feature_association_matrix(
-        clustered=False
+        clustered=False, symmetrical=True
     ).values == pytest.approx(
         np.array(
             [
@@ -581,7 +583,7 @@ def test_model_inspection_classifier_interaction(
     )
 
     assert model_inspector.feature_association_matrix(
-        clustered=True
+        clustered=True, symmetrical=True
     ).values == pytest.approx(
         np.array(
             [
