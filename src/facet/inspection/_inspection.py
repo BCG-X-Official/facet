@@ -450,68 +450,6 @@ class LearnerInspector(
 
             return _normalize_importance(abs_importance.unstack(level=0))
 
-    def feature_association_matrix(
-        self, symmetrical: bool = False, clustered: bool = True
-    ) -> Union[pd.DataFrame, List[pd.DataFrame]]:
-        """
-        Calculate the feature association matrix.
-
-        This yields a symmetrical matrix where each row and column represents one
-        feature, and the values at the intersections are the pairwise feature
-        associations, ranging from `0.0` (no association) to `1.0` (full association).
-
-        The association of a feature with itself is defined as `1.0`.
-
-        Feature association is the combined effect of feature redundancy and feature
-        synergy (see methods :meth:`.feature_redundancy_matrix` and
-        :meth:`feature_synergy_matrix`).
-
-        While it is preferable to assess redundancy and synergy separately, association
-        can be calculated using only SHAP values, and thus can be used as a fallback
-        if no SHAP interaction values are available.
-
-        In the case of multi-target regression and non-binary classification, returns
-        a list of data frames with one matrix per output.
-
-        :param symmetrical: if ``True``, return a symmetrical matrix quantifying \
-            mutual association; if ``False``, return an asymmetrical matrix \
-            quantifying unilateral association of the features represented by rows \
-            with the features represented by columns (default: ``False``)
-        :param clustered: if ``True``, reorder the rows and columns of the matrix \
-            such that association between adjacent rows and columns is maximised; if \
-            ``False``, keep rows and columns in the original features order \
-            (default: ``True``)
-        :return: feature association matrix as a data frame of shape \
-            `(n_features, n_features)`, or a list of data frames for multiple outputs
-        """
-        self._ensure_fitted()
-
-        return self.__feature_affinity_matrix(
-            affinity_matrices=(
-                self._shap_decomposer.association(symmetrical=symmetrical)
-            ),
-            affinity_symmetrical=self._shap_decomposer.association_rel_,
-            clustered=clustered,
-        )
-
-    def feature_association_linkage(self) -> Union[LinkageTree, List[LinkageTree]]:
-        """
-        Calculate a linkage tree based on the :meth:`.feature_association_matrix`.
-
-        The linkage tree can be used to render a dendrogram indicating clusters of
-        associated features.
-
-        In the case of multi-target regression and non-binary classification, returns
-        a list of linkage trees per target or class.
-
-        :return: linkage tree of feature associations; list of linkage trees \
-            for multi-target regressors or non-binary classifiers
-        """
-        self._ensure_fitted()
-        return self.__linkages_from_affinity_matrices(
-            feature_affinity_matrix=self._shap_decomposer.association_rel_
-        )
-
     def feature_synergy_matrix(
         self, symmetrical: bool = False, clustered: bool = True
     ) -> Union[pd.DataFrame, List[pd.DataFrame]]:
@@ -596,6 +534,50 @@ class LearnerInspector(
             clustered=clustered,
         )
 
+    def feature_association_matrix(
+        self, symmetrical: bool = False, clustered: bool = True
+    ) -> Union[pd.DataFrame, List[pd.DataFrame]]:
+        """
+        Calculate the feature association matrix.
+
+        This yields a symmetrical matrix where each row and column represents one
+        feature, and the values at the intersections are the pairwise feature
+        associations, ranging from `0.0` (no association) to `1.0` (full association).
+
+        The association of a feature with itself is defined as `1.0`.
+
+        Feature association is the combined effect of feature redundancy and feature
+        synergy (see methods :meth:`.feature_redundancy_matrix` and
+        :meth:`feature_synergy_matrix`).
+
+        While it is preferable to assess redundancy and synergy separately, association
+        can be calculated using only SHAP values, and thus can be used as a fallback
+        if no SHAP interaction values are available.
+
+        In the case of multi-target regression and non-binary classification, returns
+        a list of data frames with one matrix per output.
+
+        :param symmetrical: if ``True``, return a symmetrical matrix quantifying \
+            mutual association; if ``False``, return an asymmetrical matrix \
+            quantifying unilateral association of the features represented by rows \
+            with the features represented by columns (default: ``False``)
+        :param clustered: if ``True``, reorder the rows and columns of the matrix \
+            such that association between adjacent rows and columns is maximised; if \
+            ``False``, keep rows and columns in the original features order \
+            (default: ``True``)
+        :return: feature association matrix as a data frame of shape \
+            `(n_features, n_features)`, or a list of data frames for multiple outputs
+        """
+        self._ensure_fitted()
+
+        return self.__feature_affinity_matrix(
+            affinity_matrices=(
+                self._shap_decomposer.association(symmetrical=symmetrical)
+            ),
+            affinity_symmetrical=self._shap_decomposer.association_rel_,
+            clustered=clustered,
+        )
+
     def feature_synergy_linkage(self) -> Union[LinkageTree, List[LinkageTree]]:
         """
         Calculate a linkage tree based on the :meth:`.feature_synergy_matrix`.
@@ -630,6 +612,24 @@ class LearnerInspector(
         self._ensure_fitted()
         return self.__linkages_from_affinity_matrices(
             feature_affinity_matrix=self.__shap_interaction_decomposer.redundancy_rel_
+        )
+
+    def feature_association_linkage(self) -> Union[LinkageTree, List[LinkageTree]]:
+        """
+        Calculate a linkage tree based on the :meth:`.feature_association_matrix`.
+
+        The linkage tree can be used to render a dendrogram indicating clusters of
+        associated features.
+
+        In the case of multi-target regression and non-binary classification, returns
+        a list of linkage trees per target or class.
+
+        :return: linkage tree of feature associations; list of linkage trees \
+            for multi-target regressors or non-binary classifiers
+        """
+        self._ensure_fitted()
+        return self.__linkages_from_affinity_matrices(
+            feature_affinity_matrix=self._shap_decomposer.association_rel_
         )
 
     def feature_interaction_matrix(self) -> Union[pd.DataFrame, List[pd.DataFrame]]:
