@@ -476,7 +476,7 @@ class LearnerInspector(
         :param symmetrical: if ``True``, return a symmetrical matrix quantifying \
             mutual association; if ``False``, return an asymmetrical matrix \
             quantifying unilateral association of the features represented by rows \
-            with the features represented by columns (default: ``True``)
+            with the features represented by columns (default: ``False``)
         :param clustered: if ``True``, reorder the rows and columns of the matrix \
             such that association between adjacent rows and columns is maximised; if \
             ``False``, keep rows and columns in the original features order \
@@ -536,7 +536,7 @@ class LearnerInspector(
         :param symmetrical: if ``True``, return a symmetrical matrix quantifying \
             mutual synergy; if ``False``, return an asymmetrical matrix quantifying \
             unilateral redundancy of the features represented by rows with the \
-            features represented by columns (default: ``True``)
+            features represented by columns (default: ``False``)
         :param clustered: if ``True``, reorder the rows and columns of the matrix \
             such that synergy between adjacent rows and columns is maximised; if \
             ``False``, keep rows and columns in the original features order \
@@ -578,7 +578,7 @@ class LearnerInspector(
         :param symmetrical: if ``True``, return a symmetrical matrix quantifying \
             mutual redundancy; if ``False``, return an asymmetrical matrix quantifying \
             unilateral redundancy of the features represented by rows with the \
-            features represented by columns (default: ``True``)
+            features represented by columns (default: ``False``)
         :param clustered: if ``True``, reorder the rows and columns of the matrix \
             such that redundancy between adjacent rows and columns is maximised; if \
             ``False``, keep rows and columns in the original features order \
