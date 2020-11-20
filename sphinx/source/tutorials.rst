@@ -31,8 +31,7 @@ Introduce yourself to the FACET workflow! With this tutorial you will:
     <p>Start exploring the tutorial below by clicking on the section links,
     deepen your understanding by reading the associated GAMMA Scope article (click here),
     and explore/download the notebook for yourself here:
-    <a href="https://mybinder.org" target="_blank">
-    <img src="https://mybinder.org/badge_logo.svg"></a>
+    <a href="tutorial/Water_Drilling_Incident_Classification_with_Facet.ipynb" download>Download Notebook</a>
     </p>
 
 
@@ -57,8 +56,7 @@ naval vessel Gas Turbine propulsion plant. In this tutorial you will:
 
     <p>Start exploring the tutorial right away by clicking on the section links below,
     and start running the code for yourself by running/downloading the notebook here:
-    <a href="https://mybinder.org" target="_blank">
-    <img src="https://mybinder.org/badge_logo.svg"></a>
+    <a href="tutorial/Predictive_Maintenance_Regression_with_Facet.ipynb" download>Download Notebook</a>
     </p>
 
 .. toctree::
@@ -81,8 +79,7 @@ identification of individuals at risk of prediabetes you will
 
     <p>Start exploring the tutorial by clicking on the section links below,
     and start running the code for yourself by running/downloading the notebook here:
-    <a href="https://mybinder.org" target="_blank">
-    <img src="https://mybinder.org/badge_logo.svg"></a>
+    <a href="tutorial/Classification_with_Facet.ipynb" download>Download Notebook</a>
     </p>
 
 .. toctree::
@@ -103,8 +100,7 @@ is based on the Water Drilling Tutorial.
     <p>Start exploring the tutorial below by clicking on the section links,
     deepen your understanding by reading the associated GAMMA Scope article (click here),
     and explore/download the notebook for yourself here:
-    <a href="https://mybinder.org" target="_blank">
-    <img src="https://mybinder.org/badge_logo.svg"></a>
+    <a href="tutorial/Model_simulation_deep_dive.ipynb" download>Download Notebook</a>
     </p>
 
 
@@ -112,7 +108,7 @@ is based on the Water Drilling Tutorial.
 .. toctree::
     :maxdepth: 1
 
-    tutorial/Model_simulation_deep_dive.ipynb
+    tutorial/Model_simulation_deep_dive
 
 
 
@@ -134,8 +130,7 @@ In this tutorial you will:
     <p>Start exploring right away by clicking on the section links below,
     and run your own simulations to further boost your intuition by exploring or
     downloading the notebook here:
-    <a href="https://mybinder.org" target="_blank">
-    <img src="https://mybinder.org/badge_logo.svg"></a>
+    <a href="tutorial/Synergy_Redundancy_Tutorial_with_Facet.ipynb" download>Download Notebook</a>
     </p>
 
 
