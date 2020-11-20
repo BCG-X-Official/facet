@@ -5,16 +5,7 @@ Tutorials
 ====================
 
 Get FACET's advanced modelling workflow and inspection capabilities into your data
-science toolbox! Explore FACET by using the tutorials:
-
-- **Applied Examples with FACET**: These practical examples show you how to use FACET
-  in your data science workflow.
-- **Bite-sized Simulations**: Gain intuition for FACET's new
-  SHAP-based model inspection algorithm.
-
-
-Applied Examples with FACET
-----------------------------
+science toolbox!
 
 Introductory Tutorial: Incident risk of drilling operations
 *****************************************************************************
@@ -107,17 +98,30 @@ is based on the Water Drilling Tutorial.
     <img src="https://mybinder.org/badge_logo.svg"></a>
     </p>
 
-
-
 .. toctree::
     :maxdepth: 1
 
     tutorial/Model_simulation_deep_dive.ipynb
 
 
+Generating Standard Scikit-learn Classifier Performance Summaries
+*****************************************************************************
 
-Bite-sized Simulations
---------------------------------------------
+Find quick clear examples of how to generate standard Scikit-learn performance
+summaries for the best identified classifier from your FACET `LearnerRanker()`.
+
+.. raw:: html
+
+    <p>Start exploring the tutorial by clicking on the section links below,
+    and start running the code for yourself by running/downloading the notebook here:
+    <a href="tutorial/Scikit-learn_classifier_summaries_using_FACET.ipynb" download>Download Notebook</a>
+    </p>
+
+.. toctree::
+    :maxdepth: 1
+
+    tutorial/Scikit-learn_classifier_summaries_using_FACET
+
 
 Understanding synergy and redundancy with synthetic data
 *************************************************************
