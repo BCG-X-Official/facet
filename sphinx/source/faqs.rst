@@ -148,7 +148,7 @@ Bibtex entry::
 
      @manual{
      title={FACET},
-     author={FACET Team at BCG Gamma},
+     author={FACET Team at BCG GAMMA},
      year={2020},
      note={Python package version 1.0.0)
      }
