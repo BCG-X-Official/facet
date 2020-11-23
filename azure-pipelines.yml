@@ -10,7 +10,7 @@ pr:
 # set the build name
 name: $[ variables['branchName'] ]
 
-# RUN TESTS AND FULL CONDA BUILD MATRIX EVERY NIGHT AT 4AM
+# run tests and full conda/tox build matrix every night at 4am
 schedules:
 - cron: "0 4 * * *"
   displayName: Nightly full build
@@ -35,7 +35,7 @@ variables:
   ${{ if not(startsWith(variables['Build.SourceBranch'], 'refs/pull/')) }}:
     branchName: $[ replace(variables['Build.SourceBranch'], 'refs/heads/', '') ]
   ${{ if startsWith(variables['Build.SourceBranch'], 'refs/pull/') }}:
-    branchName: $[ replace(variables['System.PullRequest.TargetBranch'], 'refs/heads/', '') ]
+    branchName: $[ replace(variables['System.PullRequest.SourceBranch'], 'refs/heads/', '') ]
   master_or_release: >
     ${{ or(
     startsWith(variables['branchName'], 'release'),
@@ -45,7 +45,7 @@ variables:
     }}
 
 stages:
-  # Check code quality first to fail fast (isort, flake8, black)
+  # check code quality first to fail fast (isort, flake8, black)
   - stage: code_quality_checks
     displayName: 'Code quality'
     jobs:
@@ -90,6 +90,7 @@ stages:
     jobs:
 
       - job: checkout_and_diff
+        displayName: 'detect changes'
         steps:
           - checkout: self
 
@@ -98,13 +99,16 @@ stages:
             inputs:
               targetType: 'inline'
               script: |
-                cd $(Build.Repository.LocalPath)
-                git diff-index --exit-code "origin/$(branchName)" pyproject.toml
-                build_changed="$?"
-                if [ "$build_changed" = 1 ]; then
-                echo "conda build config has been changed"
+                cd $(System.DefaultWorkingDirectory)
+                files_changed=$(git diff $(Build.SourceVersion)^! --name-only)
+                echo "Files changed since last commit: ${files_changed}"
+                if [ "${files_changed}" == *"pyproject.toml"* ]
+                then
+                build_changed=1
+                echo "build config has been changed"
                 else
-                echo "conda build config is unchanged"
+                build_changed=0
+                echo "build config is unchanged";
                 fi
                 echo "##vso[task.setvariable variable=conda_build_config_changed;isOutput=true]$build_changed"
 
@@ -174,12 +178,12 @@ stages:
             summaryFileLocation: '$(System.DefaultWorkingDirectory)/facet/coverage.xml'
             reportDirectory: '$(System.DefaultWorkingDirectory)/facet/htmlcov'
 
-  # CONDA ENV BUILD TEST
-  # TESTING MATRIX OF PYTHON & SKLEARN VERSIONS
-  # - FOR RELEASE BRANCH: 3 BUILD TESTS
-  # - OTHERWISE: 1 BUILD TEST
+  # conda env & tox build test
+  # testing matrix of python & sklearn versions
+  # - for release branch: 3 build tests
+  # - otherwise: 1 build test
   - stage:
-    displayName: 'Conda build & pytest'
+    displayName: 'Conda build & test'
     dependsOn: 'detect_build_config_changes'
     variables:
       conda_build_config_changed: $[ stageDependencies.detect_build_config_changes.checkout_and_diff.outputs['diff.conda_build_config_changed'] ]
@@ -246,8 +250,7 @@ stages:
 
               cd $(Build.SourcesDirectory)/facet
               ./make.py facet $(BUILD_SYSTEM) $(PKG_DEPENDENCIES)
-
-          displayName: "Build conda&pip package"
+          displayName: "build & test conda&pip package"
 
     - job:
       displayName: 'matrix'
@@ -321,12 +324,123 @@ stages:
             targetType: 'inline'
             script: |
               if [ "$BUILD_SYSTEM" = "conda" ] ; then eval "$(conda shell.bash hook)" ; fi
-
               cd $(Build.SourcesDirectory)/pytools
               ./make.py pytools $(BUILD_SYSTEM) $(PKG_DEPENDENCIES)
               cd $(Build.SourcesDirectory)/sklearndf
               ./make.py sklearndf $(BUILD_SYSTEM) $(PKG_DEPENDENCIES)
               cd $(Build.SourcesDirectory)/facet
               ./make.py facet $(BUILD_SYSTEM) $(PKG_DEPENDENCIES)
+          displayName: "build & test conda&pip package"
 
-          displayName: "Build & test conda&pip package"
+  # render docs and publish to GitHub Pages
+  - stage:
+    displayName: 'Docs'
+
+    variables:
+    - group: github_ssh
+
+    jobs:
+    - job:
+      displayName: 'Build and publish docs'
+      condition: eq(variables.master_or_release, 'True')
+
+      pool:
+          vmImage: 'ubuntu-latest'
+
+      steps:
+        - task: UsePythonVersion@0
+          inputs:
+            versionSpec: '3.7.*'
+          displayName: 'use Python 3.7'
+
+        - task: InstallSSHKey@0
+          inputs:
+            knownHostsEntry: $(knownHostsEntry)
+            sshPublicKey: $(sshPublicKey_facet)
+            sshKeySecureFile: 'deploy_docs_facet'
+          displayName: 'Install the deploy SSH key'
+
+        - checkout: self
+        - checkout: sklearndf
+        - checkout: pytools
+
+        - script: dir $(Build.SourcesDirectory)
+
+        - task: Bash@3
+          inputs:
+            targetType: 'inline'
+            script: |
+              set -e
+              cd $(System.DefaultWorkingDirectory)/facet
+              git checkout --track origin/github-pages
+              mkdir -p docs
+              sudo apt-get install tree
+              echo "Current docs contents:"
+              tree docs
+              mkdir $(Build.ArtifactStagingDirectory)/old_docs
+              cp -r docs $(Build.ArtifactStagingDirectory)/old_docs
+          displayName: 'Save current docs version'
+
+        - task: Bash@3
+          inputs:
+            targetType: 'inline'
+            script: |
+              set -e
+              eval "$(conda shell.bash hook)"
+              cd $(System.DefaultWorkingDirectory)/facet
+              echo "Checking out $(branchName)"
+              git checkout $(branchName)
+              git status
+              export PYTHONPATH=$(System.DefaultWorkingDirectory)/facet/src/
+              conda env create -f environment.yml
+              conda activate facet-develop
+              pip install flit
+              cd $(System.DefaultWorkingDirectory)/pytools/
+              flit install -s
+              cd $(System.DefaultWorkingDirectory)/sklearndf/
+              flit install -s
+              cd $(System.DefaultWorkingDirectory)/facet/
+              python sphinx/make.py html
+              echo "Current docs contents:"
+              tree docs
+          displayName: 'Build new docs version'
+
+        - task: Bash@3
+          inputs:
+            targetType: 'inline'
+            script: |
+              set -e
+              eval "$(conda shell.bash hook)"
+              cp -r $(Build.ArtifactStagingDirectory)/old_docs/docs .
+              echo "Current docs contents:"
+              tree docs
+              echo "Building sphinx docs"
+              conda activate facet-develop
+              cd $(System.DefaultWorkingDirectory)/facet
+              python sphinx/make.py prepare_docs_deployment
+              echo "Current docs contents:"
+              tree docs
+              mkdir $(Build.ArtifactStagingDirectory)/new_docs
+              mv docs $(Build.ArtifactStagingDirectory)/new_docs
+          displayName: 'Update saved docs'
+
+        - task: Bash@3
+          inputs:
+            targetType: 'inline'
+            script: |
+              set -e
+              cd $(System.DefaultWorkingDirectory)/facet
+              echo "Adjusting git credentials"
+              git config --global user.name "Azure Pipelines"
+              git config --global user.email "azuredevops@microsoft.com"
+              git config --global url.ssh://git@github.com/.insteadOf https://github.com/
+              git checkout github-pages
+              cp -r $(Build.ArtifactStagingDirectory)/new_docs/docs .
+              git status
+              git add docs
+              echo "Staged docs HTML build"
+              git status
+              git commit -m "Publish GitHub Pages [skip ci]"
+              echo "Committed to local branch github-pages"
+              git push --set-upstream origin github-pages
+          displayName: 'Publish docs'
