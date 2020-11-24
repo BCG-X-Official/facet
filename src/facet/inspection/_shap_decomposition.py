@@ -8,9 +8,10 @@ from typing import List, Optional, TypeVar
 import numpy as np
 import pandas as pd
 
-from facet.inspection._shap import ShapCalculator, ShapInteractionValuesCalculator
 from pytools.api import AllTracker
 from pytools.fit import FittableMixin
+
+from facet.inspection._shap import ShapCalculator, ShapInteractionValuesCalculator
 
 log = logging.getLogger(__name__)
 

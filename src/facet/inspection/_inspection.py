@@ -9,18 +9,13 @@ import pandas as pd
 from scipy.cluster.hierarchy import leaves_list, linkage, optimal_leaf_ordering
 from scipy.spatial.distance import squareform
 
-from facet.crossfit import LearnerCrossfit
-from facet.data import Sample
-from facet.inspection._shap_decomposition import (
-    ShapInteractionValueDecomposer,
-    ShapValueDecomposer,
-)
 from pytools.api import AllTracker, inheritdoc
 from pytools.fit import FittableMixin
 from pytools.parallelization import ParallelizableMixin
 from pytools.viz.dendrogram import LinkageTree
 from sklearndf import ClassifierDF, LearnerDF, RegressorDF
 from sklearndf.pipeline import LearnerPipelineDF
+
 from ._explainer import ExplainerFactory, TreeExplainerFactory
 from ._shap import (
     ClassifierShapInteractionValuesCalculator,
@@ -29,6 +24,12 @@ from ._shap import (
     RegressorShapValuesCalculator,
     ShapCalculator,
     ShapInteractionValuesCalculator,
+)
+from facet.crossfit import LearnerCrossfit
+from facet.data import Sample
+from facet.inspection._shap_decomposition import (
+    ShapInteractionValueDecomposer,
+    ShapValueDecomposer,
 )
 
 log = logging.getLogger(__name__)
