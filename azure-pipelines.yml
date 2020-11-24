@@ -191,11 +191,11 @@ stages:
     jobs:
     - job:
       displayName: 'single'
-      # condition: >
-      #  and(
-      #  ne(variables.master_or_release, 'True'),
-      #  ne(stageDependencies.detect_build_config_changes.checkout_and_diff.outputs['diff.conda_build_config_changed'], '0')
-      #  )
+      condition: >
+        and(
+        ne(variables.master_or_release, 'True'),
+        ne(stageDependencies.detect_build_config_changes.checkout_and_diff.outputs['diff.conda_build_config_changed'], '0')
+        )
 
       pool:
           vmImage: 'ubuntu-latest'
@@ -204,11 +204,11 @@ stages:
           maximum_dependencies_conda:
             FACET_V_PYTHON_BUILD: '=3.8.*'
             BUILD_SYSTEM: 'conda'
-            PKG_DEPENDENCIES: 'default'
+            PKG_DEPENDENCIES: 'max'
           maximum_dependencies_tox:
             FACET_V_PYTHON_BUILD: '=3.8.*'
             BUILD_SYSTEM: 'tox'
-            PKG_DEPENDENCIES: 'default'
+            PKG_DEPENDENCIES: 'max'
 
       steps:
         - task: UsePythonVersion@0
@@ -365,7 +365,7 @@ stages:
     jobs:
       - job:
         displayName: 'Release'
-        # condition: eq(replace(variables['Build.SourceBranch'], 'refs/heads/', ''), 'master')
+        condition: eq(replace(variables['Build.SourceBranch'], 'refs/heads/', ''), 'master')
 
         steps:
           - task: UsePythonVersion@0
@@ -404,10 +404,10 @@ stages:
 
           - task: GitHubRelease@1
             inputs:
-              gitHubConnection: BCG-Gamma-test
-              repositoryName: rkdy/facet # $(Build.Repository.Name)
+              gitHubConnection: github_release
+              repositoryName: $(Build.Repository.Name)
               action: create
-              target: develop # $(Build.SourceVersion)
+              target: $(Build.SourceVersion)
               tagSource: userSpecifiedTag
               tag: $(current_version)
               title: facet $(current_version)
