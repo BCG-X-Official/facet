@@ -381,6 +381,7 @@ stages:
             inputs:
               targetType: inline
               script: |
+                set -e
                 echo "Getting version"
                 pip install packaging
                 cd $(System.DefaultWorkingDirectory)/facet/src
