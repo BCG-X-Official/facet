@@ -1,6 +1,6 @@
 """
-Decomposition of SHAP contribution scores (i.e, SHAP importance) of all possible parings
-of features into additive components for synergy, redundancy, and independence.
+Decomposition of SHAP contribution scores (i.e, SHAP importance) of all possible
+pairings of features into additive components for synergy, redundancy, and independence.
 """
 import logging
 from typing import List, Optional, TypeVar
@@ -43,7 +43,7 @@ __tracker = AllTracker(globals())
 
 class ShapValueDecomposer(FittableMixin[ShapCalculator]):
     """
-    Decomposes SHAP vectors (i.e., SHAP contribution) of all possible parings
+    Decomposes SHAP vectors (i.e., SHAP contribution) of all possible pairings
     of features into additive components for association and independence.
     SHAP contribution scores are calculated as the standard deviation of the individual
     interactions per observation. Using this metric, rather than the mean of absolute
@@ -257,7 +257,7 @@ class ShapValueDecomposer(FittableMixin[ShapCalculator]):
 
 class ShapInteractionValueDecomposer(ShapValueDecomposer):
     """
-    Decomposes SHAP interaction scores (i.e, SHAP importance) of all possible parings
+    Decomposes SHAP interaction scores (i.e, SHAP importance) of all possible pairings
     of features into additive components for synergy, redundancy, and independence.
     SHAP interaction scores are calculated as the standard deviation of the individual
     interactions per observation. Using this metric, rather than the mean of absolute
