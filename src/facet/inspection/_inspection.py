@@ -663,7 +663,7 @@ class LearnerInspector(
         :math:`I_{ii}` is the residual, non-synergistic contribution
         of feature :math:`f_i`
 
-        The matrix returned by this method is a diagonal matrix
+        The matrix returned by this method is a lower-triangular matrix
 
         .. math::
 
