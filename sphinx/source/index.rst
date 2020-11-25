@@ -9,7 +9,7 @@ Table of contents
    :maxdepth: 1
    :titlesonly:
 
-   Getting started <getting_started>
+   Getting started <getting_started/getting_started>
    API reference <apidoc/facet>
    tutorials
    contribution_guide

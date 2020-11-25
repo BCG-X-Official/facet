@@ -1,4 +1,4 @@
-.. image:: _static/Gamma_Facet_Logo_RGB_LB.svg
+.. image:: sphinx/source/_static/Gamma_Facet_Logo_RGB_LB.svg
 
 |
 
@@ -43,8 +43,12 @@ FACET is composed of the following key components:
 |                | frames that ensures end-to-end traceability of features.            |
 +----------------+---------------------------------------------------------------------+
 
+.. Begin-Badges
+
 |pypi| |conda| |azure_build| |azure_code_cov|
 |python_versions| |code_style| |made_with_sphinx_doc| |License_badge|
+
+.. End-Badges
 
 Installation
 ---------------------
@@ -124,7 +128,7 @@ Enhanced Machine Learning Workflow
     # get summary report
     ranker.summary_report()
 
-.. image:: _static/ranker_summary.png
+.. image:: sphinx/source/_static/ranker_summary.png
    :width: 600
 
 Model Inspection
@@ -164,7 +168,7 @@ effects of the features used for model training:
     redundancy_matrix = inspector.feature_redundancy_matrix()
     MatrixDrawer(style="matplot%").draw(redundancy_matrix, title="Redundancy Matrix")
 
-.. image:: _static/redundancy_matrix.png
+.. image:: sphinx/source/_static/redundancy_matrix.png
     :width: 600
 
 We can also better visualize redundancy as a dendrogram so we can identify clusters of
@@ -177,7 +181,7 @@ features with redundancy.
     redundancy = inspector.feature_redundancy_linkage()
     DendrogramDrawer().draw(data=redundancy, title="Redundancy Dendrogram")
 
-.. image:: _static/redundancy_dendrogram.png
+.. image:: sphinx/source/_static/redundancy_dendrogram.png
     :width: 600
 
 For feature synergy, we can get a similar picture
@@ -188,7 +192,7 @@ For feature synergy, we can get a similar picture
     synergy_matrix = inspector.feature_synergy_matrix()
     MatrixDrawer(style="matplot%").draw(synergy_matrix, title="Synergy Matrix")
 
-.. image:: _static/synergy_matrix.png
+.. image:: sphinx/source/_static/synergy_matrix.png
     :width: 600
 
 Please see the [LINK: API reference] for more detail.
@@ -246,7 +250,7 @@ quantify the uncertainty by using bootstrap confidence intervals.
     # visualise results
     SimulationDrawer().draw(data=simulation, title=SIM_FEAT)
 
-.. image:: _static/simulation_output.png
+.. image:: sphinx/source/_static/simulation_output.png
 
 Contributing
 ---------------------------
@@ -293,19 +297,21 @@ BCG GAMMA team. If you would like to know more you can find out about
 or have a look at
 `career opportunities <https://www.bcg.com/en-gb/beyond-consulting/bcg-gamma/careers>`_.
 
-.. |pipe| image:: _static/icons/pipe_icon.png
+.. |pipe| image:: sphinx/source/_static/icons/pipe_icon.png
    :width: 64px
    :class: facet_icon
 
-.. |inspect| image:: _static/icons/inspect_icon.png
+.. |inspect| image:: sphinx/source/_static/icons/inspect_icon.png
    :width: 64px
    :class: facet_icon
 
-.. |sim| image:: _static/icons/sim_icon.png
+.. |sim| image:: sphinx/source/_static/icons/sim_icon.png
     :width: 64px
     :class: facet_icon
 
 .. |spacer| unicode:: 0x2028 0x2003 0x2003 0x2003 0x2003 0x2003 0x2003
+
+.. Begin-Badges
 
 .. |conda| image:: https://anaconda.org/bcg_gamma/gamma-facet/badges/version.svg
     :target: https://anaconda.org/BCG_Gamma/gamma-facet
@@ -330,3 +336,5 @@ or have a look at
 
 .. |license_badge| image:: https://img.shields.io/badge/License-Apache%202.0-olivegreen.svg
    :target: https://opensource.org/licenses/Apache-2.0
+
+.. End-Badges
