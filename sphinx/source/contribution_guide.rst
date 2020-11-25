@@ -276,13 +276,13 @@ Before building the documentation ensure the ``facet-develop`` environment is ac
 the documentation build has a number of key dependencies specified in the
 ``environment.yml`` file, specifically:
 
-- sphinx = 3.2.*
+- sphinx
 
-- pydata-sphinx-theme = 0.4.*
+- pydata-sphinx-theme
 
-- nbsphinx = 0.7.*
+- nbsphinx
 
-- sphinx-autodoc-typehints = 1.11.*
+- sphinx-autodoc-typehints
 
 To generate the Sphinx documentation, run ``python make.py html`` from within
 ``/sphinx``. By default this will clean any previous build. The generated Sphinx
