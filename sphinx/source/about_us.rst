@@ -5,7 +5,7 @@ About us
 
 .. container:: hello
 
-    Hi there, we are the *facet* team! We are part of BCG Gamma, a global team of
+    Hi there, we are the FACET team! We are part of BCG GAMMA, a global team of
     data scientists working across all regions and industries who love what we do.
 
 Our Story
@@ -38,7 +38,7 @@ Of course, open-sourcing FACET would not have been possible without the support,
 contributions and perspectives of many fantastic people! FACET, many perspectives,
 okay that was the last geometry pun, we promise.
 
-**FACET Team at BCG Gamma**
+**FACET Team at BCG GAMMA**
 
 +-------------------+-------------------+-------------------+-------------------+
 | |JasonB|          | |MaloG|           | |KonstantinH|     | |JanI|            |
