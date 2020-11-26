@@ -369,12 +369,8 @@ following:
 
         - Use bullet points to indicate what key things the reader will learn (think key takeaways).
 
-        .. raw:: html
-
-            <p>Add a short comment here and direct the reader to download the notebook:
-            <a href="tutorial/name_of_new_tutorial_nb.ipynb" download>Download Notebook</a>
-            </p>
-
+        Add a short comment here and direct the reader to download the notebook:
+        :download:`here <tutorial/name_of_new_tutorial_nb.ipynb>`.
 
         .. toctree::
             :maxdepth: 1
