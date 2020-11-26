@@ -217,8 +217,6 @@ The ``sphinx/source`` folder contains:
 
     *	``index.rst``: definition of the high-level documentation structure which mainly references the other rst files in this directory.
 
-    *	``getting_started.rst``: a quickstart guide for FACET which uses the ``README.rst``.
-
     *	``tutorials.rst``: a tutorial overview that incorporates the tutorial notebooks from the ``tutorials`` directory.
 
     *	``contribution_guide.rst``: detailed information on building and releasing FACET.
@@ -300,7 +298,7 @@ markdown format. The reason for this is the ``README.rst`` is included as the qu
 guide in the documentation build. This helped minimize code duplication. However,
 there are a few key points to be aware of:
 
-- Links in the README to static images need to work both in the top level of the directory as well as in the documentation build. For that reason figures used in the README must be available in a ``_static`` folder both in the root directory and in ``sphinx/source``.
+- The README has links to figures, logos and icons located in the ``sphinx/source/_static`` folder. To ensure these links are correct when the documentation is built, they are altered and then the contents of the ``README.rst`` is incorporated into the ``getting_started.rst`` which is generated during the build and can be found in ``sphinx/source/gettting_started``.
 
 - The quick start guide based on the ``Boston_getting_started_example.ipynb`` notebook in the ``sphinx/auxiliary`` folder is not automatically included (unlike all the other tutorials). For this reason any updates to this example in the README need to be reflected in the source notebook and vice-versa.
 
@@ -372,7 +370,8 @@ following:
         .. raw:: html
 
             <p>Add a short comment here and direct the reader to download the notebook:
-            <a href="tutorial/name_of_new_tutorial_nb.ipynb" download>Download Notebook</a>
+            <a href="tutorial/name_of_new_tutorial_nb.ipynb" download>
+            <img src="_static/nb_download_button.jpg" style="height:3ex;"></a>
             </p>
 
 
