@@ -202,14 +202,14 @@ The ``sphinx`` folder in the root directory contains the following:
 
 - a ``make.py`` script for executing the documentation build via python.
 
-- a ``source`` directory containing predefined .rst files for the doc build and other required elements, see below for more details.
+- a ``source`` directory containing predefined .rst files for the documentation build and other required elements, see below for more details.
 
-- an ``auxiliary`` directory which contains the notebook used in the quickstart as well as a template notebook to be used when generating new tutorials to be added to the documentation. Note this is kept separate as it is used to generate the example for the repository `README.rst`, which is the included in the doc build.
+- an ``auxiliary`` directory which contains the notebook used in the quickstart as well as a template notebook to be used when generating new tutorials to be added to the documentation. Note this is kept separate as it is used to generate the example for the repository `README.rst`, which is the included in the documentation build.
 
 
 The ``sphinx/source`` folder contains:
 
-- a ``conf.py`` script that is the `build configuration file <https://www.sphinx-doc.org/en/master/usage/configuration.html>`_ needed to customize the input and output behavior of the Sphinx doc build (see below for further details).
+- a ``conf.py`` script that is the `build configuration file <https://www.sphinx-doc.org/en/master/usage/configuration.html>`_ needed to customize the input and output behavior of the Sphinx documentation build (see below for further details).
 
 - a ``tutorials`` directory that contains all the notebooks (and supporting data) used in the documentation build. Note that as some notebooks take a little while to generate, the notebooks are currently committed with cell output. This may change in the future where notebooks are run as part of the sphinx build.
 
