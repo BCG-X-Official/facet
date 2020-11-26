@@ -252,8 +252,6 @@ quantify the uncertainty by using bootstrap confidence intervals.
 
 .. image:: sphinx/source/_static/simulation_output.png
 
-Explore the quick start tutorial yourself by downloading the notebook
-:download:`here <sphinx/auxiliary/Boston_getting_started_example.ipynb>`.
 
 Contributing
 ---------------------------
