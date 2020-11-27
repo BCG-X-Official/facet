@@ -202,22 +202,20 @@ The ``sphinx`` folder in the root directory contains the following:
 
 - a ``make.py`` script for executing the documentation build via python.
 
-- a ``source`` directory containing predefined .rst files for the doc build and other required elements, see below for more details.
+- a ``source`` directory containing predefined .rst files for the documentation build and other required elements, see below for more details.
 
-- an ``auxiliary`` directory which contains the notebook used in the quickstart as well as a template notebook to be used when generating new tutorials to be added to the documentation. Note this is kept separate as it is used to generate the example for the repository `README.rst`, which is the included in the doc build.
+- an ``auxiliary`` directory which contains the notebook used in the quickstart as well as a template notebook to be used when generating new tutorials to be added to the documentation. Note this is kept separate as it is used to generate the example for the repository `README.rst`, which is the included in the documentation build.
 
 
 The ``sphinx/source`` folder contains:
 
-- a ``conf.py`` script that is the `build configuration file <https://www.sphinx-doc.org/en/master/usage/configuration.html>`_ needed to customize the input and output behavior of the Sphinx doc build (see below for further details).
+- a ``conf.py`` script that is the `build configuration file <https://www.sphinx-doc.org/en/master/usage/configuration.html>`_ needed to customize the input and output behavior of the Sphinx documentation build (see below for further details).
 
 - a ``tutorials`` directory that contains all the notebooks (and supporting data) used in the documentation build. Note that as some notebooks take a little while to generate, the notebooks are currently committed with cell output. This may change in the future where notebooks are run as part of the sphinx build.
 
 - the base .rst files used for the documentation build, which are:
 
     *	``index.rst``: definition of the high-level documentation structure which mainly references the other rst files in this directory.
-
-    *	``getting_started.rst``: a quickstart guide for FACET which uses the ``README.rst``.
 
     *	``tutorials.rst``: a tutorial overview that incorporates the tutorial notebooks from the ``tutorials`` directory.
 
@@ -300,7 +298,7 @@ markdown format. The reason for this is the ``README.rst`` is included as the qu
 guide in the documentation build. This helped minimize code duplication. However,
 there are a few key points to be aware of:
 
-- Links in the README to static images need to work both in the top level of the directory as well as in the documentation build. For that reason figures used in the README must be available in a ``_static`` folder both in the root directory and in ``sphinx/source``.
+- The README has links to figures, logos and icons located in the ``sphinx/source/_static`` folder. To ensure these links are correct when the documentation is built, they are altered and then the contents of the ``README.rst`` is incorporated into the ``getting_started.rst`` which is generated during the build and can be found in ``sphinx/source/gettting_started``.
 
 - The quick start guide based on the ``Boston_getting_started_example.ipynb`` notebook in the ``sphinx/auxiliary`` folder is not automatically included (unlike all the other tutorials). For this reason any updates to this example in the README need to be reflected in the source notebook and vice-versa.
 
