@@ -17,14 +17,10 @@ Introduce yourself to the FACET workflow! With this tutorial you will:
 - use model inspection and simulation to understand what drilling operation parameters
   impact incident risk, with a particular focus on rate of penetration.
 
-.. raw:: html
-
-    <p>Start exploring the tutorial below by clicking on the section links,
-    deepen your understanding by reading the associated GAMMA Scope article (click here),
-    and explore/download the notebook for yourself here:
-    <a href="tutorial/Water_Drilling_Incident_Classification_with_Facet.ipynb" download>
-    <img src="_static/facet_nb_download_button.jpg" style="height:3ex;"></a>
-    </p>
+Start exploring the tutorial below by clicking on the section links, deepen your
+understanding by reading the associated GAMMA Scope article (click here), and
+explore/download the notebook for yourself
+:download:`here <tutorial/Water_Drilling_Incident_Classification_with_Facet.ipynb>`.
 
 
 .. toctree::
@@ -44,13 +40,10 @@ naval vessel Gas Turbine propulsion plant. In this tutorial you will:
   each other and performance decay.
 
 
-.. raw:: html
+Start exploring the tutorial right away by clicking on the section links below, and
+start running the code for yourself by running/downloading the notebook
+:download:`here <tutorial/Predictive_Maintenance_Regression_with_Facet.ipynb>`.
 
-    <p>Start exploring the tutorial right away by clicking on the section links below,
-    and start running the code for yourself by running/downloading the notebook here:
-    <a href="tutorial/Predictive_Maintenance_Regression_with_Facet.ipynb" download>
-    <img src="_static/facet_nb_download_button.jpg" style="height:3ex;"></a>
-    </p>
 
 .. toctree::
     :maxdepth: 1
@@ -68,13 +61,9 @@ identification of individuals at risk of prediabetes you will
 - gain insights into key factors predictive of prediabetes using advanced model
   inspection and simulation.
 
-.. raw:: html
-
-    <p>Start exploring the tutorial by clicking on the section links below,
-    and start running the code for yourself by running/downloading the notebook here:
-    <a href="tutorial/Classification_with_Facet.ipynb" download>
-    <img src="_static/facet_nb_download_button.jpg" style="height:3ex;"></a>
-    </p>
+Start exploring the tutorial by clicking on the section links below, and start running
+the code for yourself by running/downloading the notebook
+:download:`here <tutorial/Classification_with_Facet.ipynb>`.
 
 .. toctree::
    :maxdepth: 1
@@ -89,14 +78,11 @@ Introduce yourself to the FACET's Simulation module. This tutorial aims to provi
 a step by step explanation about the simulation capabilities of Facet and
 is based on the Water Drilling Tutorial.
 
-.. raw:: html
+Start exploring the tutorial below by clicking on the section links, deepen your
+understanding by reading the associated GAMMA Scope article (click here), and
+explore/download the notebook for yourself
+:download:`here <tutorial/Model_simulation_deep_dive.ipynb>`.
 
-    <p>Start exploring the tutorial below by clicking on the section links,
-    deepen your understanding by reading the associated GAMMA Scope article (click here),
-    and explore/download the notebook for yourself here:
-    <a href="tutorial/Model_simulation_deep_dive.ipynb" download>
-    <img src="_static/facet_nb_download_button.jpg" style="height:3ex;"></a>
-    </p>
 
 .. toctree::
     :maxdepth: 1
@@ -110,13 +96,9 @@ Generating Standard Scikit-learn Classifier Performance Summaries
 Find quick clear examples of how to generate standard Scikit-learn performance
 summaries for the best identified classifier from your FACET `LearnerRanker()`.
 
-.. raw:: html
-
-    <p>Start exploring the tutorial by clicking on the section links below,
-    and start running the code for yourself by running/downloading the notebook here:
-    <a href="tutorial/Scikit-learn_classifier_summaries_using_FACET.ipynb" download>
-    <img src="_static/facet_nb_download_button.jpg" style="height:3ex;"></a>
-    </p>
+Start exploring the tutorial by clicking on the section links below, and start running
+the code for yourself by running/downloading the notebook
+:download:`here <tutorial/Scikit-learn_classifier_summaries_using_FACET.ipynb>`.
 
 .. toctree::
     :maxdepth: 1
@@ -134,14 +116,9 @@ In this tutorial you will:
   correlation, and,
 - explore how over-fitting affects the accuracy of redundancy and synergy estimates.
 
-.. raw:: html
-
-    <p>Start exploring right away by clicking on the section links below,
-    and run your own simulations to further boost your intuition by exploring or
-    downloading the notebook here:
-    <a href="tutorial/Synergy_Redundancy_Tutorial_with_Facet.ipynb" download>
-    <img src="_static/facet_nb_download_button.jpg" style="height:3ex;"></a>
-    </p>
+Start exploring right away by clicking on the section links below, and run your own
+simulations to further boost your intuition by exploring or downloading the notebook
+:download:`here <tutorial/Synergy_Redundancy_Tutorial_with_Facet.ipynb>`.
 
 
 .. toctree::

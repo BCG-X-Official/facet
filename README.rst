@@ -252,12 +252,6 @@ quantify the uncertainty by using bootstrap confidence intervals.
 
 .. image:: sphinx/source/_static/simulation_output.png
 
-.. raw:: html
-
-    <p>Explore the quick start tutorial yourself by downloading the notebook here:
-    <a href="sphinx/auxiliary/Boston_getting_started_example.ipynb" download>
-    <img src="sphinx/source/_static/nb_download_button.jpg" style="height:3ex;"></a>
-    </p>
 
 Contributing
 ---------------------------
@@ -289,14 +283,15 @@ The `scikit-learn <https://scikit-learn.org/stable/index.html>`__ learners and
 pipelining make up implementation of the underlying algorithms. Moreover, we tried
 to design the FACET API to align with the scikit-learn API.
 
-The `SHAP <https://shap.readthedocs.io/en/latest/>`__ implementation is used to estimate the
-shapley vectors which FACET then decomposes into synergy, redundancy, and independence
-vectors.
+The `SHAP <https://shap.readthedocs.io/en/latest/>`__ implementation is used to estimate
+the shapley vectors which FACET then decomposes into synergy, redundancy, and
+independence vectors.
 
 BCG GAMMA
 ---------------------------
 
-If you would like to know more about the team behind FACET please see our [LINK: about_us] page.
+If you would like to know more about the team behind FACET please see our [LINK:
+about_us] page.
 
 We are always on the lookout for passionate and talented data scientists to join the
 BCG GAMMA team. If you would like to know more you can find out about
@@ -332,7 +327,7 @@ or have a look at
 .. |azure_code_cov| image:: https://img.shields.io/azure-devops/coverage/gamma-facet/facet/_build?definitionId=7.svg
    :target: https://dev.azure.com/gamma-facet/facet/_build?definitionId=7&_a=summary
 
-.. |python_versions| image:: https://img.shields.io/badge/python-3.7|3.8-blue.svg
+.. |python_versions| image:: https://img.shields.io/badge/python-3.6|3.7|3.8-blue.svg
    :target: https://www.python.org/downloads/release/python-380/
 
 .. |code_style| image:: https://img.shields.io/badge/code%20style-black-000000.svg
