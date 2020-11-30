@@ -422,7 +422,7 @@ stages:
 
                 Your conda package can be upgraded by running
 
-                    conda install -c conda-forge gamma-facet
+                    conda install -c conda-forge -c bcg_gamma gamma-facet
 
               isDraft: false
               isPreRelease: $(is_prerelease)
