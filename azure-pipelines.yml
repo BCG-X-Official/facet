@@ -182,7 +182,7 @@ stages:
   # testing matrix of python & sklearn versions
   # - for release branch: 3 build tests
   # - otherwise: 1 build test
-  - stage:
+  - stage: conda_tox_build
     displayName: 'Conda build & test'
     dependsOn: 'detect_build_config_changes'
     variables:
@@ -250,7 +250,18 @@ stages:
 
               cd $(Build.SourcesDirectory)/facet
               ./make.py facet $(BUILD_SYSTEM) $(PKG_DEPENDENCIES)
-          displayName: "build & test conda&pip package"
+          displayName: "build & test conda/pip packages"
+
+        - task: CopyFiles@2
+          inputs:
+            sourceFolder: $(System.DefaultWorkingDirectory)/facet/dist
+            targetFolder: $(Build.ArtifactStagingDirectory)
+
+        - task: PublishBuildArtifacts@1
+          inputs:
+            pathtoPublish: $(Build.ArtifactStagingDirectory)
+            artifactName: $(BUILD_SYSTEM)_$(PKG_DEPENDENCIES)
+            publishLocation: Container
 
     - job:
       displayName: 'matrix'
@@ -330,7 +341,94 @@ stages:
               ./make.py sklearndf $(BUILD_SYSTEM) $(PKG_DEPENDENCIES)
               cd $(Build.SourcesDirectory)/facet
               ./make.py facet $(BUILD_SYSTEM) $(PKG_DEPENDENCIES)
-          displayName: "build & test conda&pip package"
+          displayName: "build & test conda/pip packages"
+
+        - task: CopyFiles@2
+          inputs:
+            sourceFolder: $(System.DefaultWorkingDirectory)/facet/dist
+            targetFolder: $(Build.ArtifactStagingDirectory)
+
+        - task: PublishBuildArtifacts@1
+          inputs:
+            pathtoPublish: $(Build.ArtifactStagingDirectory)
+            artifactName: $(BUILD_SYSTEM)_$(PKG_DEPENDENCIES)
+            publishLocation: Container
+
+  # release on merge from release branch to master:
+  # - add release tag
+  # - create GitHub release with changelog
+  # - upload conda and pip packages as artifacts to GitHub
+  - stage:
+    displayName: 'Release'
+    dependsOn: conda_tox_build
+
+    jobs:
+      - job:
+        displayName: 'Release'
+        condition: eq(replace(variables['Build.SourceBranch'], 'refs/heads/', ''), 'master')
+
+        steps:
+          - task: UsePythonVersion@0
+            inputs:
+              versionSpec: '3.7.*'
+            displayName: 'use Python 3.7'
+
+          - checkout: self
+
+          - checkout: pytools
+
+          - task: Bash@3
+            inputs:
+              targetType: inline
+              script: |
+                set -e
+                echo "Getting version"
+                pip install packaging
+                cd $(System.DefaultWorkingDirectory)/facet/src
+                export PYTHONPATH=$(System.DefaultWorkingDirectory)/pytools/sphinx/base
+                version=$(python -c "import make_base; print(make_base.get_package_version())")
+                echo "Current version: $version"
+                echo "Detecting pre-release ('rc' in version)"
+                prerelease=False
+                [[ $version == *rc* ]] && prerelease=True && echo "Pre-release identified"
+                echo "##vso[task.setvariable variable=current_version]$version"
+                echo "##vso[task.setvariable variable=is_prerelease]$prerelease"
+            displayName: "Get package version"
+
+          - task: DownloadBuildArtifacts@0
+            inputs:
+              artifactName: tox_default
+
+          - task: DownloadBuildArtifacts@0
+            inputs:
+              artifactName: conda_default
+
+          - task: GitHubRelease@1
+            inputs:
+              gitHubConnection: github_release
+              repositoryName: $(Build.Repository.Name)
+              action: create
+              target: $(Build.SourceVersion)
+              tagSource: userSpecifiedTag
+              tag: $(current_version)
+              title: facet $(current_version)
+              releaseNotesSource: inline
+              releaseNotesInline: |
+                This is the $(current_version) release of facet.
+
+                You can upgrade your current pip installation via
+
+                    pip install --upgrade gamma-facet
+
+                Your conda package can be upgraded by running
+
+                    conda install -c conda-forge -c bcg_gamma gamma-facet
+
+              isDraft: false
+              isPreRelease: $(is_prerelease)
+              assets: |
+                $(System.ArtifactsDirectory)/tox_default/tox/gamma-facet-*.tar.gz
+                $(System.ArtifactsDirectory)/conda_default/conda/noarch/gamma-facet-*.tar.bz2
 
   # render docs and publish to GitHub Pages
   - stage:
