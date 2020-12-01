@@ -225,6 +225,8 @@ The ``sphinx/source`` folder contains:
 
     *	``about_us.rst``: description of the team behind open-sourcing FACET.
 
+    *   ``api_landing.rst``: for placing any API landing page preamble for documentation as needed. This information will appear on the API landing page in the documentation build after the short description in ``src/__init__.py``. This file is included in the documentation build via the ``custom-module-template.rst``.
+
 - ``_static`` contains additional material used in the documentation build (mainly figures) but also some formatting control:
 
     *	``team_contributors``: contains photos for the FACET team.
