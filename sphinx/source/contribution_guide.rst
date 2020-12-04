@@ -380,251 +380,123 @@ following:
 - For notebooks involving simulation studies, or very long run times consider saving intermediary outputs to make the notebook more user-friendly. Code the produces the output should be included as a markdown cell with code designated as python to ensure appropriate formatting, while preventing the cell from executing should the user run all cells.
 
 
-Building and releasing FACET
+Package builds
 --------------------------------
 
-Release & Version management
+The build process for the PyPi and conda distributions uses the following key
+files:
+
+*   ``make.py``: generic Python script for package builds. Most configuration is imported
+    from pytools `make.py <https://github.com/BCG-Gamma/pytools/blob/develop/make.py>`__
+    which is a build script that wraps the package build, as well as exposing the matrix
+    dependency definitions specified in the ``pyproject.toml`` as environment variables.
+*   ``pyproject.toml``: metadata for PyPi, build settings and package dependencies.
+*   ``tox.ini``: contains configurations for tox, testenv, flake8, isort, coverage report, and pytest.
+*   ``condabuild/meta.yml``: metadata for conda, build settings and package dependencies.
+
+Versioning
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Facet version numbers follow the `Semantic versioning <https://semver.org/>`_ approach,
-with the pattern ``MAJOR.MINOR.PATCH``. We are using
-`punch <https://punch.readthedocs.io/en/latest/>`_ to increase the version numbers
-for future releases.
+FACET version numbering follows the `semantic versioning <https://semver.org/>`_
+approach, with the pattern ``MAJOR.MINOR.PATCH``.
+The version can be bumped in the ``src/__init__.py`` by updating the
+``__version__`` string accordingly.
 
-To make a new deployment, you should:
-
-1. Increase the version number with ``punch``:
-
-	a. Ensure you have once fetched the ``release`` branch
-	b. From ``develop`` git merge into ``release``
-	c. From ``release``, run ``punch -p [major|minor|patch]`` to increase the version part of your choice
-	d. Note that this will update the version number in ``setup.py`` and relevant parts of the documentation as well as commit this to the ``release`` branch
-	e. Merge ``release`` back into ``develop`` and push both branches to deploy the update
-
-2. PR from release to Master
-
-	a. Open a PR from release to master to finalize the release - the Azure Pipelines must have passed for the release branch.
-
-
-Conda Packages
+PyPi
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Build
-""""""""""""
-
-Useful references:
-
-- `Conda build tutorial <https://docs.conda.io/projects/conda-build/en/latest/user-guide/tutorials/building-conda-packages.html>`_
-- `Conda build metadata reference <https://docs.conda.io/projects/conda-build/en/latest/resources/define-metadata.html>`_
-
-Facet uses a combination of ``conda-build`` and ``make`` (both further explained below),
-for which the necessary Conda build recipes are maintained under
-``conda-build/meta.yaml``.
-
-Build output will be stored in the ``dist/conda/`` directory (gitignored).
-
-**Conda build recipes**
-
-In this section, the structure of the conda-build recipe stored within ``conda-build/``
-is explained.
-
-The ``package`` section indicates the name of the resulting Conda package and its version.
+PyPi project metadata, build settings and package dependencies
+are obtained from ``pyproject.toml``. To build and then publish the package to PyPi,
+use the following commands:
 
 .. code-block:: RST
 
-	package:
-		name: facet
-		version: 1.0.0
+	python make.py gamma-facet tox default
+	flit publish
 
-When setting the version for a build, ``punch`` will update the version here - all other
-conda-build specifications will refer to it dynamically by the ``PKG_VERSION`` variable.
+Please note the following:
 
-The **source** section specifies from where the conda-build will acquire the sources
-to build.
+*   Because the PyPi package index is immutable, it is recommended to do a test
+    upload to `PyPi test <https://test.pypi.org/>`__ first. Ensure all metadata presents
+    correctly before proceeding to proper publishing. The command to publish to test is
 
-.. code-block:: RST
+    .. code-block:: RST
 
-	source:
-		git_url: https://github.com/bcg-gamma/facet/
-		git_rev: refs/tags/{{PKG_VERSION}}
+        flit publish --repository testpypi
 
-Note that using the ``PKG_VERSION`` here will always use the latest published version tag.
+    which requires the specification of testpypi in a special ``.pypirc`` file
+    with specifications as demonstrated `here <https://flit.readthedocs.io/en/latest/upload.html>`__.
+*   The ``pyproject.toml`` does not provide specification for a short description
+    (displayed in the top gray band on the PyPi page for the package). This description
+    comes from the ``src/__init__.py`` script.
+*   `flit <https://flit.readthedocs.io/en/latest/>`__ which is used here to publish to
+    PyPi, also has the flexibility to support package building (wheel/sdist) via
+    ``flit build`` and installing the package by copy or symlink via ``flit install``.
+*   Build output will be stored in the ``dist/`` directory.
 
-The **build** section indicates how the previously acquired code should be built:
+Conda
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. code-block:: RST
-
-	build:
-		noarch: python
-		script: "python -m pip install . --no-deps --ignore-installed -vv"
-
-Note that setting the ``noarch: Python`` flag produces a pure Python, cross-platform
-build. The command given to ``script`` indicates what ``conda-build`` will do to build the
-underlying package: in this case it will pip install it using the ``setup.py`` in
-the root of the repository. The ``--no-deps`` switch is passed, so that all
-dependencies to other libraries are managed by Conda and not pip.
-
-
-The **requirements** section specifies those dependencies that ``facet`` has:
+conda build metadata, build settings and package dependencies
+are obtained from ``meta.yml``. To build and then publish the package to conda,
+use the following commands:
 
 .. code-block:: RST
 
-	requirements:
-		host:
-			- pip
-			- python={{ environ.get('FACET_V_PYTHON_BUILD', '3.7') }}
-		run:
-			- python>=3.6,<3.8
-			- pandas{{ environ.get('FACET_V_PANDAS', '>=0.24') }}
-			- numpy{{ environ.get('FACET_V_NUMPY', '>=1.16') }}
-			- matplotlib{{ environ.get('FACET_V_MATPLOT', '>=3') }}
-			- shap{{ environ.get('FACET_V_SHAP', '>=0.34') }}
-			- scikit-learn{{ environ.get('FACET_V_SKLEARN', '>=0.21,<=0.22') }}
-			- gamma-pytools=1.0
-			- gamma-sklearndf=1.0
-			- pyyaml>=5
+	python make.py gamma-facet conda default
+	anaconda upload --user BCG_Gamma dist/conda/noarch/<*package.tar.gz*>
 
-The ``host`` section defines solely what is needed to carry out the build: Python and
-pip.
+Please note the following:
 
-The ``run`` section defines which Conda packages are required by ``facet`` at runtime.
-You can see that we defined
-environment variables such as ``V_FACET_PYTHON_BUILD``. This allows us to test a matrix
-strategy of different combinations dependencies in our ``azure-pipelines.yml`` on
-Azure DevOps. If the environment variable is not specified, the default value is given
-in this section of the ``meta.yaml``. This setup helps us to detect version conflicts.
+*   Build output will be stored in the ``dist/`` directory.
+*   Some useful references for conda builds:
 
-The **test** section specifies which tests should be carried out to verify a successful
-build of the package:
+    - `Conda build tutorial <https://docs.conda.io/projects/conda-build/en/latest/user-guide/tutorials/building-conda-packages.html>`_
+    - `Conda build metadata reference <https://docs.conda.io/projects/conda-build/en/latest/resources/define-metadata.html>`_
 
-.. code-block:: RST
-
-    imports:
-    - facet
-        - facet.crossfit
-        - facet.inspection
-        - facet.selection
-        - facet.validation
-        - facet.simulation
-    requires:
-        - pytest=5.2
-    commands:
-        - python -c 'import facet;
-          import os;
-          assert facet.__version__ == os.environ["PKG_VERSION"]'
-
-In this case, we want to check that all required packages can be imported successfully
-and that the version of facet is aligned with the ``PKG_VERSION``.
-
-**Makefile**
-
-A common ``Makefile`` helps to orchestrate the facet build at a higher level, fully
-relying on the Conda build recipes introduced above.
-
-**Local Building on macOS**
-
-As introduced above, local building of facet is done using the Makefile that will in
-turn orchestrate ``conda-build``.
-
-Please make sure to activate the ``facet-develop`` environment such that
-``conda-build`` is available. When you are in the root of the ``facet`` directory,
-you can build the package locally using
-
-.. code-block:: RST
-
-    make package
-
-and delete the package using
-
-.. code-block:: RST
-
-    make clean
-
-If successful, the ``dist/conda`` folder should contain the built Conda packages.
-
-Publishing
-"""""""""""""""
-
-**TODO** - once published.
-
-
-PyPI packages
-~~~~~~~~~~~~~~~
-
-Build
-"""""""
-As mentioned the previous section, the ``conda-build`` is using ``pip`` in order to
-build the Conda package. This is using the standard ``setup.py`` required by PyPI. You
-can read more about it
-`here <https://packaging.python.org/tutorials/packaging-projects/>`_.
-
-In order to locally install the package for testing, you can run:
-
-.. code-block:: RST
-
-    pip install -e .
-
-
-Publishing
-"""""""""""""""""
-
-**TODO** - once published.
-
-
-
-
-CI/CD
-------------------
+Azure Devops CI/CD
+--------------------
 
 This project uses `Azure Devops <https://dev.azure.com/>`_ for CI/CD pipelines.
 The pipelines are defined in the ``azure-pipelines.yml`` file and are divided into
-two main stages.
+the following stages:
 
-Stage 1 - Development environment build and testing
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+* **code_quality_checks**: perform code quality checks for isort, black and flake8.
+* **detect_build_config_changes**: detect whether the build configuration as specified in the ``pyproject.yml`` has been modified. If it has, then a build test is run.
+* **Unit tests**: runs all unit tests and then publishes test results and coverage.
+* **conda_tox_build**: build the PyPi and conda distribution aritfacts.
+* **Release**: see release process below for more detail.
+* **docs**: build and publish documentation to github pages.
 
-The "Environment build & Pytest" stage performs the following steps:
+Release process
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-- Checks out the ``facet`` repository at the develop branch
-- Creates the ``facet-develop`` environment from the ``environment.yml``
-- Installs the ``sklearndf`` and ``pytools`` dependencies
-- Runs ``pytest`` and generates the code coverage reports for Azure DevOps. Note that these can be viewed on the Pipeline summary page.
+Before initiating the release process please ensure the version number
+in ``src/__init__.py`` is correct and the format conforms to semantic
+versioning. If the version needs to be corrected/bumped then open a PR for the
+change and merge into develop before going any further.
 
+The release process has the following key steps:
 
-Stage 2 - Matrix Strategy for Conda package build
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*   Create a new release branch from develop and open a PR to master.
+*   Opening the PR to master will automatically run all conda/pip build tests via
+    Azure Pipelines, triggering automatic upload of artifacts (conda and pip
+    packages) to Azure DevOps. At this stage it is recommended that the pip package
+    build is checked using `PyPi test <https://test.pypi.org/>`__ to ensure all
+    metadata presents correctly. This is important as package versions in
+    PyPi proper are immutable.
+*   If everything passes and looks okay, merge the PR in to master, this will
+    trigger the release pipeline which will:
 
-The "Test multiple conda environment builds" stage performs the following steps:
+    *   	Tag the release commit with version number as specified in ``src/__init__.py``
+    *   	Create GitHub release pages for the new version, please do check the documentation.
+    *   	Pre-fill the GitHub release title and description, including the changelog based on commits since last release. Please note this can be manually edited to be more succinct afterwards.
+    *   	Attach build artifacts (conda and pip packages) to GitHub release.
 
-- Checks out the ``facet`` repository at the development branch
-- Sets the environment variables of the ubuntu-vm as specified in the matrix strategy
-- Runs ``make package`` for ``facet`` for each combination of the following matrix:
-
-.. code-block:: RST
-
-    strategy:
-        matrix:
-          Minimum dependencies:
-            FACET_V_PYTHON_BUILD: '3.6'
-            FACET_V_PANDAS: '==0.24'
-            FACET_V_SKLEARN: '==0.21.*'
-            FACET_V_JOBLIB: '==0.13'
-            FACET_V_NUMPY: '==1.16'
-            FACET_V_SHAP: '==0.34'
-          Maximum dependencies:
-            FACET_V_PYTHON_BUILD: '3.8'
-            FACET_V_SKLEARN: '==0.23'
-            FACET_V_PANDAS: '==1.0.0'
-            FACET_V_NUMPY: '=>1.16'
-            FACET_V_SHAP: '==0.35'
-          Unconstrained dependencies:
-            FACET_V_PYTHON_BUILD: '>=3.6'
-            FACET_V_PANDAS: '=>0.24'
-            FACET_V_SKLEARN: '=>0.21'
-            FACET_V_JOBLIB: '=>0.13'
-            FACET_V_NUMPY: '=>1.16'
-            FACET_V_SHAP: '=>0.34'
-
-Note that the environment variables set here are referenced in the
-``conda-build/meta.yaml``. Testing this variety of package dependencies helps
-to identify potential version conflicts.
+*   Manually upload build artifacts to conda/PyPI using ``anaconda upload`` and
+    ``flit publish``, respectively (see relevant sections under Package builds above).
+    This may be automated in the future.
+*   Remove any test versions for pip from PyPi test.
+*   Merge any changes from release branch also back to develop
+*   Bump up version in ``src/__init__.py`` on develop to start work towards
+    next release.
