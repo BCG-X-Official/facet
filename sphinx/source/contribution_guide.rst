@@ -11,7 +11,7 @@ Python environment
 There is an ``environment.yml`` provided in the repository root, which installs all
 required development dependencies in the ``facet-develop`` environment.
 
-.. code-block:: RST
+.. code-block:: sh
 
 	conda env create -f environment.yml
 	conda activate facet-develop
@@ -32,8 +32,8 @@ running ``export PYTHONPATH=./src/`` from the repository root.
 Git Guidelines
 --------------------
 
-For commits to GitHub, phrase commit comments as the completion of the sentence "This
-commit will <...>", e.g.
+For commits to GitHub, phrase commit comments as the completion of the sentence *This
+commit will …*, e.g.
 
 .. code-block:: RST
 
@@ -61,7 +61,9 @@ style. Describe not only what the code does, but also why, including the rationa
 any design choices that may not be obvious. Provide examples wherever this helps
 explain usage patterns.
 
-- A docstring is mandatory for all of the following entities in the source code, except when they are protected/private (i.e. the name starts with a leading _ character):
+- A docstring is mandatory for all of the following entities in the source code,
+  except when they are protected/private (i.e. the name starts with a leading `_`
+  character):
 
     - modules
 
@@ -73,20 +75,21 @@ explain usage patterns.
 
     - attributes
 
-- Docstrings are not necessary for non-public methods, but you should have a comment that describes what the method does.
+- Docstrings are not necessary for non-public methods, but you should have a comment
+  that describes what the method does.
 
-- Docstrings must use reStructuredText syntax, the default syntax for Sphinx.
+- Docstrings must use *reStructuredText* syntax, the default syntax for Sphinx.
 
 - Write docstrings for functions and methods in the imperative style, e.g.,
 
-    .. code-block:: RST
+    .. code-block:: python
 
         def fit():
         """Fit the model."""
 
     but not
 
-    .. code-block:: RST
+    .. code-block:: python
 
         def fit():
         """This is a function that fits the model."""
@@ -94,9 +97,12 @@ explain usage patterns.
     which is too wordy and not imperative.
 
 
-- Write docstrings for modules, classes, modules, and attributes starting with a descriptive phrase (as you would expect in a dictionary entry). Be concise and avoid unnecessary or redundant phrases. For example:
+- Write docstrings for modules, classes, modules, and attributes starting with a 
+  descriptive phrase (as you would expect in a dictionary entry). Be concise and avoid
+  unnecessary or redundant phrases.
+  For example:
 
-    .. code-block:: RST
+    .. code-block:: python
 
         class Inspector:
             """
@@ -108,7 +114,7 @@ explain usage patterns.
 
     but not
 
-    .. code-block:: RST
+    .. code-block:: python
 
         class Inspector:
             """
@@ -120,34 +126,40 @@ explain usage patterns.
 
 - Properties should be documented as if they were attributes, not as methods, e.g.,
 
-    .. code-block:: RST
+    .. code-block:: python
 
         @property
             def children(self) -> Foo:
-                """the child nodes of the tree"""
+                """The child nodes of the tree"""
                 pass
 
     but not
 
-    .. code-block:: RST
+    .. code-block:: python
 
         @property
             def foo(self) -> Foo:
                 """:return: the foo object"""
                 pass
 
-- Start full sentences and phrases with a capitalised word and end each sentence with punctuation, e.g.,
+- Start full sentences and phrases with a capitalised word and end each sentence with 
+  punctuation, e.g.,
 
-    ``"""Fit the model."""``
+    .. code-block:: python
+
+    	"""Fit the model."""
 
     but not
 
-    ``"""fit the model"""``
+    .. code-block:: python
+
+    	"""fit the model"""
 
 
-- For multi-line docstrings, insert a line break after the leading triple quote and before the trailing triple quote, e.g.,
+- For multi-line docstrings, insert a line break after the leading triple quote and before 
+  the trailing triple quote, e.g.,
 
-    .. code-block:: RST
+    .. code-block:: python
 
         def fit():
             """
@@ -161,7 +173,7 @@ explain usage patterns.
 
     but not
 
-    .. code-block:: RST
+    .. code-block:: python
 
         def fit():
             """Fit the model.
@@ -171,9 +183,10 @@ explain usage patterns.
 
             :param sample: training sample"""
 
-- For method arguments, return value, and class parameters, one must hint the type using the typing module. Do not specify the parameter types in the docstrings, e.g.,
+- For method arguments, return value, and class parameters, one must hint the type using 
+  the typing module. Do not specify the parameter types in the docstrings, e.g.,
 
-    .. code-block:: RST
+    .. code-block:: python
 
         def f(x: int) -> float:
            """
@@ -184,7 +197,7 @@ explain usage patterns.
 
     but not
 
-    .. code-block:: RST
+    .. code-block:: python
 
         def f(x: int) -> float:
            """
@@ -202,7 +215,7 @@ The ``sphinx`` folder in the root directory contains the following:
 
 - a ``make.py`` script for executing the documentation build via python.
 
-- a ``source`` directory containing predefined .rst files for the documentation build and other required elements, see below for more details.
+- a ``source`` directory containing predefined ``.rst`` files for the documentation build and other required elements, see below for more details.
 
 - an ``auxiliary`` directory which contains the notebook used in the quickstart as well as a template notebook to be used when generating new tutorials to be added to the documentation. Note this is kept separate as it is used to generate the example for the repository `README.rst`, which is the included in the documentation build.
 
@@ -213,7 +226,7 @@ The ``sphinx/source`` folder contains:
 
 - a ``tutorials`` directory that contains all the notebooks (and supporting data) used in the documentation build. Note that as some notebooks take a little while to generate, the notebooks are currently committed with cell output. This may change in the future where notebooks are run as part of the sphinx build.
 
-- the base .rst files used for the documentation build, which are:
+- the base ``….rst`` files used for the documentation build, which are:
 
     *	``index.rst``: definition of the high-level documentation structure which mainly references the other rst files in this directory.
 
@@ -316,7 +329,7 @@ following:
 
 - When creating/revising a tutorial notebook with the development environment the following code should be added to a cell at the start of the notebook. This will ensure your local clones (and any changes) are used when running the notebook. The jupyter notebook should also be instigated from within the ``facet-develop`` environment.
 
-    .. code-block:: Python
+    .. code-block:: python
 
         def _set_paths() -> None:
 
@@ -347,7 +360,7 @@ following:
 
 - If you have a notebook cell you wish to be excluded from the generated documentation, add "nbsphinx": "hidden" to the metadata of the cell. To change the metadata of a cell, in the main menu of the jupyter notebook server, click on *View -> CellToolbar -> edit Metadata*, then click on edit Metadata in the top right part of the cell. The modified Metadata would then look something like:
 
-    .. code-block:: RST
+    .. code-block:: json
 
         {
           "nbsphinx": "hidden"
@@ -409,7 +422,7 @@ PyPI project metadata, build settings and package dependencies
 are obtained from ``pyproject.toml``. To build and then publish the package to PyPI,
 use the following commands:
 
-.. code-block:: RST
+.. code-block:: sh
 
 	python make.py gamma-facet tox default
 	flit publish
@@ -420,7 +433,7 @@ Please note the following:
     upload to `PyPI test <https://test.pypi.org/>`__ first. Ensure all metadata presents
     correctly before proceeding to proper publishing. The command to publish to test is
 
-    .. code-block:: RST
+    .. code-block:: sh
 
         flit publish --repository testpypi
 
@@ -441,7 +454,7 @@ conda build metadata, build settings and package dependencies
 are obtained from ``meta.yml``. To build and then publish the package to conda,
 use the following commands:
 
-.. code-block:: RST
+.. code-block:: sh
 
 	python make.py gamma-facet conda default
 	anaconda upload --user BCG_Gamma dist/conda/noarch/<*package.tar.gz*>
@@ -478,20 +491,20 @@ change and merge into develop before going any further.
 
 The release process has the following key steps:
 
-*   Create a new release branch from develop and open a PR to master.
-*   Opening the PR to master will automatically run all conda/pip build tests via
-    Azure Pipelines, triggering automatic upload of artifacts (conda and pip
-    packages) to Azure DevOps. At this stage, it is recommended that the pip package
-    build is checked using `PyPI test <https://test.pypi.org/>`__ to ensure all
-    metadata presents correctly. This is important as package versions in
-    PyPI proper are immutable.
-*   If everything passes and looks okay, merge the PR into master, this will
-    trigger the release pipeline which will:
+* Create a new release branch from develop and open a PR to master.
+* Opening the PR to master will automatically run all conda/pip build tests via
+  Azure Pipelines, triggering automatic upload of artifacts (conda and pip
+  packages) to Azure DevOps. At this stage, it is recommended that the pip package
+  build is checked using `PyPI test <https://test.pypi.org/>`__ to ensure all
+  metadata presents correctly. This is important as package versions in
+  PyPI proper are immutable.
+* If everything passes and looks okay, merge the PR into master, this will
+  trigger the release pipeline which will:
 
-    *   	Tag the release commit with version number as specified in ``src/__init__.py``
-    *   	Create a release on GitHub for the new version, please check the `documentation <https://docs.github.com/en/free-pro-team@latest/github/administering-a-repository/releasing-projects-on-github>`__ for details.
-    *   	Pre-fill the GitHub release title and description, including the changelog based on commits since the last release. Please note this can be manually edited to be more succinct afterwards.
-    *   	Attach build artifacts (conda and pip packages) to GitHub release.
+    * Tag the release commit with version number as specified in ``src/__init__.py``
+    * Create a release on GitHub for the new version, please check the `documentation <https://docs.github.com/en/free-pro-team@latest/github/administering-a-repository/releasing-projects-on-github>`__ for details.
+    * Pre-fill the GitHub release title and description, including the changelog based on commits since the last release. Please note this can be manually edited to be more succinct afterwards.
+    * Attach build artifacts (conda and pip packages) to GitHub release.
 
 *   Manually upload build artifacts to conda/PyPI using ``anaconda upload`` and
     ``flit publish``, respectively (see relevant sections under Package builds above).
