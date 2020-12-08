@@ -72,14 +72,6 @@ __tracker = AllTracker(globals())
 class LearnerGrid(Generic[T_LearnerPipelineDF]):
     """
     A grid of hyper-parameters for tuning a learner pipeline.
-
-    :param pipeline: the :class:`.RegressorPipelineDF` or \
-        :class:`.ClassifierPipelineDF` to which the hyper-parameters will be applied
-    :param learner_parameters: the hyper-parameter grid in which to search for the \
-        optimal parameter values for the pipeline's final estimator
-    :param preprocessing_parameters: the hyper-parameter grid in which to search for \
-        the optimal parameter values for the pipeline's preprocessing pipeline \
-        (optional)
     """
 
     def __init__(
@@ -88,6 +80,15 @@ class LearnerGrid(Generic[T_LearnerPipelineDF]):
         learner_parameters: Dict[str, Sequence],
         preprocessing_parameters: Optional[Dict[str, Sequence]] = None,
     ) -> None:
+        """
+        :param pipeline: the :class:`.RegressorPipelineDF` or \
+            :class:`.ClassifierPipelineDF` to which the hyper-parameters will be applied
+        :param learner_parameters: the hyper-parameter grid in which to search for the \
+            optimal parameter values for the pipeline's final estimator
+        :param preprocessing_parameters: the hyper-parameter grid in which to search \
+            for the optimal parameter values for the pipeline's preprocessing pipeline \
+            (optional)
+        """
         self.pipeline = pipeline
 
         def _prefix_parameter_names(

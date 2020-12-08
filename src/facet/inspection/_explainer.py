@@ -174,7 +174,7 @@ class TreeExplainerFactory(ExplainerFactory):
 @inheritdoc(match="[see superclass]")
 class KernelExplainerFactory(ExplainerFactory):
     """
-    A factory constructing class:`~shap.KernelExplainer` objects.
+    A factory constructing :class:`~shap.KernelExplainer` objects.
     """
 
     def __init__(
