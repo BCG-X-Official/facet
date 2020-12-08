@@ -72,14 +72,6 @@ __tracker = AllTracker(globals())
 class LearnerGrid(Generic[T_LearnerPipelineDF]):
     """
     A grid of hyper-parameters for tuning a learner pipeline.
-
-    :param pipeline: the :class:`.RegressorPipelineDF` or
-        :class:`.ClassifierPipelineDF` to which the hyper-parameters will be applied
-    :param learner_parameters: the hyper-parameter grid in which to search for the
-        optimal parameter values for the pipeline's final estimator
-    :param preprocessing_parameters: the hyper-parameter grid in which to search for
-        the optimal parameter values for the pipeline's preprocessing pipeline
-        (optional)
     """
 
     def __init__(
@@ -88,6 +80,15 @@ class LearnerGrid(Generic[T_LearnerPipelineDF]):
         learner_parameters: Dict[str, Sequence],
         preprocessing_parameters: Optional[Dict[str, Sequence]] = None,
     ) -> None:
+        """
+        :param pipeline: the :class:`.RegressorPipelineDF` or
+            :class:`.ClassifierPipelineDF` to which the hyper-parameters will be applied
+        :param learner_parameters: the hyper-parameter grid in which to search for the
+            optimal parameter values for the pipeline's final estimator
+        :param preprocessing_parameters: the hyper-parameter grid in which to search
+            for the optimal parameter values for the pipeline's preprocessing pipeline
+            (optional)
+        """
         self.pipeline = pipeline
 
         def _prefix_parameter_names(
@@ -259,7 +260,8 @@ class LearnerRanker(
         """
         :param grids: learner grids to be ranked
             (either a single grid, or an iterable of multiple grids)
-        :param cv: a cross validator (e.g., :class:`.BootstrapCV`)
+        :param cv: a cross validator (e.g.,
+            :class:`.BootstrapCV`)
         :param scoring: a scoring function (by name, or as a callable) for evaluating
             learners (optional; use learner's default scorer if not specified here).
             If passing a callable, the ``"score"`` will be used as the name of the

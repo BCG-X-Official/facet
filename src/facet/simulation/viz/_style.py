@@ -77,7 +77,7 @@ class SimulationStyle(DrawingStyle, metaclass=ABCMeta):
         :param confidence_level: the confidence level used to calculate the CI bounds
         :param partitions: the central or categorical values representing the partitions
         :param frequencies: observed frequencies of the partitions
-        :param is_categorical_feature: ``True`` if the simulated feature is \
+        :param is_categorical_feature: ``True`` if the simulated feature is
             categorical; ``False`` otherwise
         """
         pass
@@ -94,7 +94,7 @@ class SimulationStyle(DrawingStyle, metaclass=ABCMeta):
 
         :param partitions: the partitioning (center values) of the simulated feature
         :param frequencies: observed frequencies for each partition
-        :param is_categorical_feature: ``True`` if the simulated feature is \
+        :param is_categorical_feature: ``True`` if the simulated feature is
             categorical, ``False`` otherwise
         """
         pass
@@ -115,7 +115,7 @@ class SimulationStyle(DrawingStyle, metaclass=ABCMeta):
 @inheritdoc(match="[see superclass]")
 class SimulationMatplotStyle(MatplotStyle, SimulationStyle):
     """
-    Matplotlib Style for simulation chart.
+    `matplotlib` style for simulation chart.
 
     Along the range of simulated feature values on the x axis, plots the median and
     confidence intervals of the simulated target value.
@@ -124,7 +124,7 @@ class SimulationMatplotStyle(MatplotStyle, SimulationStyle):
     simulated values.
     """
 
-    # colour constants
+    # color constants
     __COLOR_CONFIDENCE_INTERVAL = RGBA_DARK_BLUE
     __COLOR_MEDIAN = RGBA_LIGHT_BLUE
     __COLOR_BASELINE = RGBA_LIGHT_GREEN

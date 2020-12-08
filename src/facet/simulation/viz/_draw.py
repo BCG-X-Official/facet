@@ -49,8 +49,8 @@ class SimulationDrawer(Drawer[UnivariateSimulationResult, SimulationStyle]):
         histogram: bool = True,
     ) -> None:
         """
-        :param histogram: if ``True``, plot the histogram of observed values for the \
-            feature being simulated; if ``False`` do not plot the histogram (default: \
+        :param histogram: if ``True``, plot the histogram of observed values for the
+            feature being simulated; if ``False`` do not plot the histogram (default:
             ``True``).
         """
         super().__init__(style=style)
@@ -65,7 +65,7 @@ class SimulationDrawer(Drawer[UnivariateSimulationResult, SimulationStyle]):
         Draw the simulation chart.
 
         :param data: the univariate simulation to draw
-        :param title: the title of the chart (optional, defaults to the name of the \
+        :param title: the title of the chart (optional, defaults to the name of the
             simulated feature)
         """
         if title is None:

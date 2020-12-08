@@ -272,7 +272,6 @@ class LearnerCrossfit(
     def resize(self: T, n_splits: int) -> T:
         """
         Reduce the size of this crossfit by removing a subset of the fits.
-
         :param n_splits: the number of fits to keep. Must be lower, or equal to, the
             current number of fits
         :return:

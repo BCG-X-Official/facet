@@ -44,7 +44,7 @@ class BaseBootstrapCV(BaseCrossValidator, metaclass=ABCMeta):
     ):
         """
         :param n_splits: Number of splits to generate (default: 1000)
-        :param random_state: random state to initialise the random generator with \
+        :param random_state: random state to initialise the random generator with
             (optional)
         """
         if n_splits < 1:

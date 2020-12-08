@@ -279,9 +279,9 @@ class ShapInteractionValueDecomposer(ShapValueDecomposer):
             ranging between 0 and 1, and calculated as
             :math:`\\frac \
                     {\\sigma_{\\vec{\\phi_{ij}}}} \
-                    {\\sum_{i,j}\\sigma_{\\vec{\\phi_{ij}}}}`, \
-            i.e, the relative share of the synergy contribution \
-            :math:`\\sigma_{\\vec{\\phi_{ij}}}`. \
+                    {\\sum_{i,j}\\sigma_{\\vec{\\phi_{ij}}}}`,
+            i.e, the relative share of the synergy contribution
+            :math:`\\sigma_{\\vec{\\phi_{ij}}}`.
         """
         super().__init__()
         self.min_direct_synergy = (
@@ -295,7 +295,7 @@ class ShapInteractionValueDecomposer(ShapValueDecomposer):
         self.redundancy_rel_asymmetric_: Optional[np.ndarray] = None
 
     __init__.__doc__ += f"""\
-            (default: {DEFAULT_MIN_DIRECT_SYNERGY}, i.e., \
+            (default: {DEFAULT_MIN_DIRECT_SYNERGY}, i.e.,
             {DEFAULT_MIN_DIRECT_SYNERGY * 100.0:g}%)
         """
 
@@ -328,7 +328,7 @@ class ShapInteractionValueDecomposer(ShapValueDecomposer):
         Raises an error if this interaction decomposer has not been fitted.
 
         :param symmetrical: return a symmetrical matrix of mutual redundancy
-        :returns: the matrix as a data frame, or a list of data frames for multiple \
+        :returns: the matrix as a data frame, or a list of data frames for multiple
             outputs
         """
         self._ensure_fitted()

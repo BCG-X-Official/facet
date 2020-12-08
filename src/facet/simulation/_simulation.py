@@ -109,7 +109,7 @@ class UnivariateSimulationResult(Generic[T_Partition]):
     #: the average observed actual output, acting as the baseline of the simulation
     baseline: float
 
-    #: the width :math:`\\alpha` of the confidence interval \
+    #: the width :math:`\\alpha` of the confidence interval
     #: determined by bootstrapping, with :math:`0 < \\alpha < 1`
     confidence_level: float
 
@@ -134,14 +134,14 @@ class UnivariateSimulationResult(Generic[T_Partition]):
         """
         :param feature_name: name of the simulated feature
         :param output_name: name of the target for which outputs are simulated
-        :param output_unit: the unit of the simulated outputs \
+        :param output_unit: the unit of the simulated outputs
             (e.g., uplift or class probability)
-        :param baseline: the average observed actual output, acting as the baseline \
+        :param baseline: the average observed actual output, acting as the baseline
             of the simulation
-        :param confidence_level: the width of the confidence interval determined by \
+        :param confidence_level: the width of the confidence interval determined by
             bootstrapping, ranging between 0.0 and 1.0 (exclusive)
-        :param outputs: matrix of simulated outcomes, with columns representing \
-            partitions and rows representing bootstrap splits used to fit variations \
+        :param outputs: matrix of simulated outcomes, with columns representing
+            partitions and rows representing bootstrap splits used to fit variations
             of the model
         """
         super().__init__()
@@ -169,7 +169,7 @@ class UnivariateSimulationResult(Generic[T_Partition]):
         Calculate the medians of the distribution of simulation outcomes,
         for every partition
 
-        :return: a series of medians, indexed by the central values of the partitions \
+        :return: a series of medians, indexed by the central values of the partitions
             for which the simulation was run
         """
         return self.outputs.median().rename(COL_MEDIAN)
@@ -179,7 +179,7 @@ class UnivariateSimulationResult(Generic[T_Partition]):
         Calculate the lower CI bounds of the distribution of simulation outcomes,
         for every partition
 
-        :return: a series of medians, indexed by the central values of the partitions \
+        :return: a series of medians, indexed by the central values of the partitions
             for which the simulation was run
         """
         return self.outputs.quantile(q=(1.0 - self.confidence_level) / 2.0).rename(
@@ -191,7 +191,7 @@ class UnivariateSimulationResult(Generic[T_Partition]):
         Calculate the lower CI bounds of the distribution of simulation outcomes,
         for every partition
 
-        :return: a series of medians, indexed by the central values of the partitions \
+        :return: a series of medians, indexed by the central values of the partitions
             for which the simulation was run
         """
         return self.outputs.quantile(

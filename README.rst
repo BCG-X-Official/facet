@@ -9,9 +9,9 @@ explanations of your supervised machine learning models.
 FACET is composed of the following key components:
 
 +----------------+---------------------------------------------------------------------+
-| |inspect|      | **Model Inspection**                                                |
+| |spacer|       | **Model Inspection**                                                |
 |                |                                                                     |
-|                | FACET introduces a new algorithm to quantify dependencies and       |
+| |inspect|      | FACET introduces a new algorithm to quantify dependencies and       |
 |                | interactions between features in ML models.                         |
 |                | This new tool for human-explainable AI adds a new, global           |
 |                | perspective to the observation-level explanations provided by the   |
@@ -19,9 +19,9 @@ FACET is composed of the following key components:
 |                | To learn more about FACET’s model inspection capabilities, see the  |
 |                | getting started example below.                                      |
 +----------------+---------------------------------------------------------------------+
-| |sim|          | **Model Simulation**                                                |
+| |              | **Model Simulation**                                                |
 |                |                                                                     |
-|                | FACET’s model simulation algorithms use ML models for               |
+| |sim|          | FACET’s model simulation algorithms use ML models for               |
 |                | *virtual experiments* to help identify scenarios that optimise      |
 |                | predicted outcomes.                                                 |
 |                | To quantify the uncertainty in simulations, FACET utilises a range  |
@@ -30,9 +30,9 @@ FACET is composed of the following key components:
 |                | For an example of FACET’s bootstrap simulations, see the getting    |
 |                | started example below.                                              |
 +----------------+---------------------------------------------------------------------+
-| |pipe|         | **Enhanced Machine Learning Workflow**                              |
-| |spacer|       |                                                                     |
-|                | FACET offers an efficient and transparent machine learning          |
+| |              | **Enhanced Machine Learning Workflow**                              |
+|                |                                                                     |
+| |pipe|         | FACET offers an efficient and transparent machine learning          |
 |                | workflow, enhancing                                                 |
 |                | `scikit-learn <https://scikit-learn.org/stable/index.html>`__'s     |
 |                | tried and tested pipelining paradigm with new capabilities for model|

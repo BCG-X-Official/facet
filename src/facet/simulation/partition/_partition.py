@@ -58,7 +58,7 @@ class Partitioner(
 
     def __init__(self, max_partitions: Optional[int] = None):
         """
-        :param max_partitions: the maximum number of partitions to generate; \
+        :param max_partitions: the maximum number of partitions to generate;
             must be at least 2 (default: {DEFAULT_MAX_PARTITIONS})
         """
         if max_partitions is None:
@@ -110,7 +110,7 @@ class Partitioner(
     def fit(self: T, values: Iterable[T_Values], **fit_params) -> T:
         """
         Calculate the partitioning for the given observed values.
-        :param values: a sequence of observed values as the empirical basis for \
+        :param values: a sequence of observed values as the empirical basis for
             calculating the partitions
         :return: ``self``
         """
@@ -131,7 +131,7 @@ class RangePartitioner(
         upper_bound: Optional[T_Values_Numeric] = None,
     ) -> None:
         """
-        :param max_partitions: the maximum number of partitions to make \
+        :param max_partitions: the maximum number of partitions to make
             (default: 20); should be at least 2
         :param lower_bound: the lower bound of the elements in the partition
         :param upper_bound: the upper bound of the elements in the partition
