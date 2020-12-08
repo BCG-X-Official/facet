@@ -115,7 +115,7 @@ class SimulationStyle(DrawingStyle, metaclass=ABCMeta):
 @inheritdoc(match="[see superclass]")
 class SimulationMatplotStyle(MatplotStyle, SimulationStyle):
     """
-    Matplotlib Style for simulation chart.
+    `matplotlib` style for simulation chart.
 
     Along the range of simulated feature values on the x axis, plots the median and
     confidence intervals of the simulated target value.
