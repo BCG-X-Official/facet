@@ -120,7 +120,7 @@ Enhanced Machine Learning Workflow
     # create repeated k-fold CV iterator
     rkf_cv = RepeatedKFold(n_splits=5, n_repeats=10, random_state=42)
 
-    # rank your models by performance (default is variance explained)
+    # rank your models by performance (default is mean CV score - 2*SD)
     ranker = LearnerRanker(
         grids=rnd_forest_grid, cv=rkf_cv, n_jobs=-3
     ).fit(sample=boston_sample)
@@ -165,7 +165,7 @@ effects of the features used for model training:
 
     # visualise redundancy as a matrix
     from pytools.viz.matrix import MatrixDrawer
-    redundancy_matrix = inspector.feature_redundancy_matrix()
+    redundancy_matrix = inspector.feature_redundancy_matrix(symmetrical=True)
     MatrixDrawer(style="matplot%").draw(redundancy_matrix, title="Redundancy Matrix")
 
 .. image:: sphinx/source/_static/redundancy_matrix.png
@@ -184,12 +184,12 @@ features with redundancy.
 .. image:: sphinx/source/_static/redundancy_dendrogram.png
     :width: 600
 
-For feature synergy, we can get a similar picture
+For feature synergy, we can get a similar picture.
 
 .. code-block:: Python
 
     # visualise synergy as a matrix
-    synergy_matrix = inspector.feature_synergy_matrix()
+    synergy_matrix = inspector.feature_synergy_matrix(symmetrical=True)
     MatrixDrawer(style="matplot%").draw(synergy_matrix, title="Synergy Matrix")
 
 .. image:: sphinx/source/_static/synergy_matrix.png
@@ -212,7 +212,7 @@ Taking the LSTAT feature as an example, we do the following for the simulation:
     trained for all folds and determines the average uplift of the target variable
     resulting from this.
 -   The FACET `SimulationDrawer` allows us to visualise the result; both in a matplotlib
-    and a plain-text style
+    and a plain-text style.
 
 Finally, because FACET can use bootstrap cross validation, we can create a crossfit
 from our previous `LearnerRanker` best model to perform the simulation so we can
@@ -239,7 +239,7 @@ quantify the uncertainty by using bootstrap confidence intervals.
     ).fit(sample=boston_sample)
 
     SIM_FEAT = "LSTAT"
-    simulator = UnivariateUpliftSimulator(crossfit=boot_crossfit, n_jobs=3)
+    simulator = UnivariateUpliftSimulator(crossfit=boot_crossfit, n_jobs=-3)
 
     # split the simulation range into equal sized partitions
     partitioner = ContinuousRangePartitioner()
