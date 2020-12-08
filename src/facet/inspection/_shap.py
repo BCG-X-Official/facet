@@ -159,7 +159,7 @@ class ShapCalculator(
         aggregated to averaged SHAP contributions per feature and observation.
 
         :param consolidate: consolidation method, or ``None`` for no consolidation
-        :return: SHAP contribution values with shape \
+        :return: SHAP contribution values with shape
             (n_observations, n_outputs * n_features).
         """
         pass
@@ -372,7 +372,7 @@ class ShapCalculator(
 
         :param raw_shap_tensors: the raw values returned by the SHAP explainer
         :param observations: the ids used for indexing the explained observations
-        :param features_in_split: the features in the current split, \
+        :param features_in_split: the features in the current split,
             explained by the SHAP explainer
         :return: SHAP values of a single split as data frame
         """
@@ -478,9 +478,9 @@ class ShapInteractionValuesCalculator(
         The get_diagonals of all SHAP interaction matrices, of shape
         (n_observations, n_outputs * n_features)
 
-        :return: SHAP interaction values with shape \
-            (n_observations * n_features, n_outputs * n_features), i.e., for each \
-            observation and output we get the feature interaction values of size \
+        :return: SHAP interaction values with shape
+            (n_observations * n_features, n_outputs * n_features), i.e., for each
+            observation and output we get the feature interaction values of size
             n_features * n_features.
         """
         self._ensure_fitted()

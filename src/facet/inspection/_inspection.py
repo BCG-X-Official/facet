@@ -471,15 +471,15 @@ class LearnerInspector(
         In the case of multi-target regression and non-binary classification, returns
         a list of data frames with one matrix per output.
 
-        :param symmetrical: if ``True``, return a symmetrical matrix quantifying \
-            mutual synergy; if ``False``, return an asymmetrical matrix quantifying \
-            unilateral redundancy of the features represented by rows with the \
+        :param symmetrical: if ``True``, return a symmetrical matrix quantifying
+            mutual synergy; if ``False``, return an asymmetrical matrix quantifying
+            unilateral redundancy of the features represented by rows with the
             features represented by columns (default: ``False``)
-        :param clustered: if ``True``, reorder the rows and columns of the matrix \
-            such that synergy between adjacent rows and columns is maximised; if \
-            ``False``, keep rows and columns in the original features order \
+        :param clustered: if ``True``, reorder the rows and columns of the matrix
+            such that synergy between adjacent rows and columns is maximised; if
+            ``False``, keep rows and columns in the original features order
             (default: ``True``)
-        :return: feature synergy matrix as a data frame of shape \
+        :return: feature synergy matrix as a data frame of shape
             `(n_features, n_features)`, or a list of data frames for multiple outputs
         """
         self._ensure_fitted()
@@ -513,15 +513,15 @@ class LearnerInspector(
         In the case of multi-target regression and non-binary classification, returns
         a list of data frames with one matrix per output.
 
-        :param symmetrical: if ``True``, return a symmetrical matrix quantifying \
-            mutual redundancy; if ``False``, return an asymmetrical matrix quantifying \
-            unilateral redundancy of the features represented by rows with the \
+        :param symmetrical: if ``True``, return a symmetrical matrix quantifying
+            mutual redundancy; if ``False``, return an asymmetrical matrix quantifying
+            unilateral redundancy of the features represented by rows with the
             features represented by columns (default: ``False``)
-        :param clustered: if ``True``, reorder the rows and columns of the matrix \
-            such that redundancy between adjacent rows and columns is maximised; if \
-            ``False``, keep rows and columns in the original features order \
+        :param clustered: if ``True``, reorder the rows and columns of the matrix
+            such that redundancy between adjacent rows and columns is maximised; if
+            ``False``, keep rows and columns in the original features order
             (default: ``True``)
-        :return: feature redundancy matrix as a data frame of shape \
+        :return: feature redundancy matrix as a data frame of shape
             `(n_features, n_features)`, or a list of data frames for multiple outputs
         """
         self._ensure_fitted()
@@ -557,15 +557,15 @@ class LearnerInspector(
         In the case of multi-target regression and non-binary classification, returns
         a list of data frames with one matrix per output.
 
-        :param symmetrical: if ``True``, return a symmetrical matrix quantifying \
-            mutual association; if ``False``, return an asymmetrical matrix \
-            quantifying unilateral association of the features represented by rows \
+        :param symmetrical: if ``True``, return a symmetrical matrix quantifying
+            mutual association; if ``False``, return an asymmetrical matrix
+            quantifying unilateral association of the features represented by rows
             with the features represented by columns (default: ``False``)
-        :param clustered: if ``True``, reorder the rows and columns of the matrix \
-            such that association between adjacent rows and columns is maximised; if \
-            ``False``, keep rows and columns in the original features order \
+        :param clustered: if ``True``, reorder the rows and columns of the matrix
+            such that association between adjacent rows and columns is maximised; if
+            ``False``, keep rows and columns in the original features order
             (default: ``True``)
-        :return: feature association matrix as a data frame of shape \
+        :return: feature association matrix as a data frame of shape
             `(n_features, n_features)`, or a list of data frames for multiple outputs
         """
         self._ensure_fitted()
@@ -588,7 +588,7 @@ class LearnerInspector(
         In the case of multi-target regression and non-binary classification, returns
         a list of linkage trees per target or class.
 
-        :return: linkage tree of feature synergies; list of linkage trees \
+        :return: linkage tree of feature synergies; list of linkage trees
             for multi-target regressors or non-binary classifiers
         """
         self._ensure_fitted()

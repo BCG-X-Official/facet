@@ -131,7 +131,7 @@ class RangePartitioner(
         upper_bound: Optional[T_Values_Numeric] = None,
     ) -> None:
         """
-        :param max_partitions: the maximum number of partitions to make \
+        :param max_partitions: the maximum number of partitions to make
             (default: 20); should be at least 2
         :param lower_bound: the lower bound of the elements in the partition
         :param upper_bound: the upper bound of the elements in the partition

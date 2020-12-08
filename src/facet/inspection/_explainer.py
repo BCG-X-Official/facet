@@ -185,12 +185,12 @@ class KernelExplainerFactory(ExplainerFactory):
     ) -> None:
         """
         :param link: (optional) override the default link parameter
-        :param l1_reg: (optional) override the default l1_reg parameter of method \
-            :meth:`~shap.KernelExplainer.shap_values`; pass ``None`` to use the \
+        :param l1_reg: (optional) override the default l1_reg parameter of method
+            :meth:`~shap.KernelExplainer.shap_values`; pass ``None`` to use the
             default value used by :meth:`~shap.KernelExplainer.shap_values`
-        :param data_size_limit: (optional) maximum number of observations to use as \
-            the background data set; larger data sets will be down-sampled using \
-            method :meth:`~shap.kmeans`. \
+        :param data_size_limit: (optional) maximum number of observations to use as
+            the background data set; larger data sets will be down-sampled using
+            method :meth:`~shap.kmeans`.
             Pass ``None`` to prevent down-sampling the background data set.
         """
         super().__init__()
