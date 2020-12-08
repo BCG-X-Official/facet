@@ -88,21 +88,21 @@ class LearnerInspector(
 
     - SHAP values (mean or standard deviation across crossfits)
     - SHAP interaction values (mean or standard deviation across crossfits)
-    - feature importance derived from SHAP values (either as mean absolute values \
+    - feature importance derived from SHAP values (either as mean absolute values
       or as the root of mean squares)
-    - (pairwise) feature interaction matrix (direct feature interaction quantified by \
+    - (pairwise) feature interaction matrix (direct feature interaction quantified by
       SHAP interaction values)
-    - (pairwise) feature redundancy matrix (requires availability of SHAP interaction \
+    - (pairwise) feature redundancy matrix (requires availability of SHAP interaction
       values)
-    - (pairwise) feature synergy matrix (requires availability of SHAP interaction \
+    - (pairwise) feature synergy matrix (requires availability of SHAP interaction
       values)
-    - (pairwise) feature association matrix (combined effect of redundancy and \
+    - (pairwise) feature association matrix (combined effect of redundancy and
       synergy, if no SHAP interaction values are available)
-    - feature redundancy linkage (to visualize clusters of redundant features in a \
+    - feature redundancy linkage (to visualize clusters of redundant features in a
       dendrogram)
-    - feature synergy linkage (to visualize clusters of synergistic features in a \
+    - feature synergy linkage (to visualize clusters of synergistic features in a
       dendrogram)
-    - feature association linkage (to visualize clusters of associated features in a \
+    - feature association linkage (to visualize clusters of associated features in a
       dendrogram)
 
     All inspections that aggregate across observations will respect sample weights, if
@@ -131,20 +131,20 @@ class LearnerInspector(
         verbose: Optional[int] = None,
     ) -> None:
         """
-        :param explainer_factory: optional function that creates a shap Explainer \
+        :param explainer_factory: optional function that creates a shap Explainer
             (default: :func:``.tree_explainer_factory``)
-        :param shap_interaction: if ``True``, calculate SHAP interaction values, else \
-            only calculate SHAP contribution values.\
-            SHAP interaction values are needed to determine feature synergy and \
-            redundancy. \
+        :param shap_interaction: if ``True``, calculate SHAP interaction values, else
+            only calculate SHAP contribution values.
+            SHAP interaction values are needed to determine feature synergy and
+            redundancy.
             (default: ``True``)
-        :param min_direct_synergy: minimum direct synergy to consider a feature pair \
-            for calculation of indirect synergy, \
-            only relevant if parameter ``shap_interaction`` is ``True``. \
-            This effectively acts as a noise threshold given the approximate nature of \
-            SHAP calculations. \
-            Consider increasing this value if you see warnings about contravariant \
-            indirect synergy when fitting this inspector. \
+        :param min_direct_synergy: minimum direct synergy to consider a feature pair
+            for calculation of indirect synergy,
+            only relevant if parameter ``shap_interaction`` is ``True``.
+            This effectively acts as a noise threshold given the approximate nature of
+            SHAP calculations.
+            Consider increasing this value if you see warnings about contravariant
+            indirect synergy when fitting this inspector.
             (default: <DEFAULT_MIN_DIRECT_SYNERGY>)
         """
         super().__init__(
@@ -197,7 +197,7 @@ class LearnerInspector(
         explainer, also SHAP interaction values.
 
         :param crossfit: the model crossfit to be explained by this model inspector
-        :param fit_params: additional keyword arguments (ignored; accepted for \
+        :param fit_params: additional keyword arguments (ignored; accepted for
             compatibility with :class:`.FittableMixin`)
         :return: ``self``
         """
@@ -333,18 +333,18 @@ class LearnerInspector(
         The ``consolidate`` argument can be used to disable or change the consolidation
         of SHAP values:
 
-        - passing ``consolidate=None`` will disable SHAP value consolidation, \
+        - passing ``consolidate=None`` will disable SHAP value consolidation,
           generating one row for every crossfit and observation (identified by
           a hierarchical index with two levels)
-        - passing ``consolidate="mean"`` (the default) will calculate the mean SHAP \
+        - passing ``consolidate="mean"`` (the default) will calculate the mean SHAP
           values across all crossfits
-        - passing ``consolidate="std"`` will calculate the standard deviation of SHAP \
-          values across all crossfits, as the basis for determining the uncertainty \
+        - passing ``consolidate="std"`` will calculate the standard deviation of SHAP
+          values across all crossfits, as the basis for determining the uncertainty
           of SHAP calculations
 
-        :param consolidate: consolidate SHAP values across splits; \
-            permissible values are ``"mean"`` (calculate the mean), ``"std"`` \
-            (calculate the standard deviation), or ``None`` to prevent consolidation \
+        :param consolidate: consolidate SHAP values across splits;
+            permissible values are ``"mean"`` (calculate the mean), ``"std"``
+            (calculate the standard deviation), or ``None`` to prevent consolidation
             (default: ``"mean"``)
         :return: a data frame with SHAP values
         """
@@ -371,18 +371,18 @@ class LearnerInspector(
         The ``consolidate`` argument can be used to disable or change the consolidation
         of SHAP interaction values:
 
-        - passing ``consolidate=None`` will disable SHAP interaction value \
-          consolidation, generating one row for every crossfit, observation and \
+        - passing ``consolidate=None`` will disable SHAP interaction value
+          consolidation, generating one row for every crossfit, observation and
           feature (identified by a hierarchical index with three levels)
-        - passing ``consolidate="mean"`` (the default) will calculate the mean SHAP \
+        - passing ``consolidate="mean"`` (the default) will calculate the mean SHAP
           interaction values across all crossfits
-        - passing ``consolidate="std"`` will calculate the standard deviation of SHAP \
-          interaction values across all crossfits, as the basis for determining the \
+        - passing ``consolidate="std"`` will calculate the standard deviation of SHAP
+          interaction values across all crossfits, as the basis for determining the
           uncertainty of SHAP calculations
 
-        :param consolidate: consolidate SHAP interaction values across splits; \
-            permissible values are ``"mean"`` (calculate the mean), ``"std"`` \
-            (calculate the standard deviation), or ``None`` to prevent consolidation \
+        :param consolidate: consolidate SHAP interaction values across splits;
+            permissible values are ``"mean"`` (calculate the mean), ``"std"``
+            (calculate the standard deviation), or ``None`` to prevent consolidation
             (default: ``"mean"``)
         :return: a data frame with SHAP interaction values
         """
@@ -404,10 +404,10 @@ class LearnerInspector(
         The calculation applies sample weights if specified in the underlying
         :attr:`.sample`.
 
-        :param method: method for calculating feature importance. Supported methods \
-            are ``rms`` (root of mean squares, default), ``mav`` (mean absolute \
+        :param method: method for calculating feature importance. Supported methods
+            are ``rms`` (root of mean squares, default), ``mav`` (mean absolute
             values)
-        :return: a series of length `n_features` for single-output models, or a \
+        :return: a series of length `n_features` for single-output models, or a
             data frame of shape (n_features, n_outputs) for multi-output models
         """
 

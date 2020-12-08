@@ -77,7 +77,7 @@ class SimulationStyle(DrawingStyle, metaclass=ABCMeta):
         :param confidence_level: the confidence level used to calculate the CI bounds
         :param partitions: the central or categorical values representing the partitions
         :param frequencies: observed frequencies of the partitions
-        :param is_categorical_feature: ``True`` if the simulated feature is \
+        :param is_categorical_feature: ``True`` if the simulated feature is
             categorical; ``False`` otherwise
         """
         pass
@@ -94,7 +94,7 @@ class SimulationStyle(DrawingStyle, metaclass=ABCMeta):
 
         :param partitions: the partitioning (center values) of the simulated feature
         :param frequencies: observed frequencies for each partition
-        :param is_categorical_feature: ``True`` if the simulated feature is \
+        :param is_categorical_feature: ``True`` if the simulated feature is
             categorical, ``False`` otherwise
         """
         pass

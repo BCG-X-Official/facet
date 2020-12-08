@@ -58,7 +58,7 @@ class Partitioner(
 
     def __init__(self, max_partitions: Optional[int] = None):
         """
-        :param max_partitions: the maximum number of partitions to generate; \
+        :param max_partitions: the maximum number of partitions to generate;
             must be at least 2 (default: {DEFAULT_MAX_PARTITIONS})
         """
         if max_partitions is None:
@@ -110,7 +110,7 @@ class Partitioner(
     def fit(self: T, values: Iterable[T_Values], **fit_params) -> T:
         """
         Calculate the partitioning for the given observed values.
-        :param values: a sequence of observed values as the empirical basis for \
+        :param values: a sequence of observed values as the empirical basis for
             calculating the partitions
         :return: ``self``
         """

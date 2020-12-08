@@ -70,14 +70,14 @@ class Sample:
         weight_name: Optional[str] = None,
     ) -> None:
         """
-        :param observations: a table of observational data; \
+        :param observations: a table of observational data;
             each row represents one observation
-        :param target_name: the name of the column representing the target \
+        :param target_name: the name of the column representing the target
             variable; or an iterable of names representing multiple targets
-        :param feature_names: optional iterable of strings naming the columns that \
+        :param feature_names: optional iterable of strings naming the columns that
             represent features; if omitted, all non-target and non-weight columns are
             considered features
-        :param weight_name: optional name of a column representing the weight of each \
+        :param weight_name: optional name of a column representing the weight of each
             observation
         """
 
@@ -256,7 +256,7 @@ class Sample:
 
         :param loc: indices of observations to select
         :param iloc: integer indices of observations to select
-        :return: copy of this sample, comprising only the observations in the given \
+        :return: copy of this sample, comprising only the observations in the given
             rows
         """
         subsample = copy(self)
