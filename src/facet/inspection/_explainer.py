@@ -110,10 +110,10 @@ class TreeExplainerFactory(ExplainerFactory):
     ) -> None:
         """
         :param model_output: (optional) override the default model output parameter
-        :param feature_perturbation: (optional) override the default \
+        :param feature_perturbation: (optional) override the default
             feature_perturbation parameter
-        :param use_background_dataset: if ``False``, don't pass the background \
-            dataset on to the tree explainer even if a background dataset is passed \
+        :param use_background_dataset: if ``False``, don't pass the background
+            dataset on to the tree explainer even if a background dataset is passed
             to :meth:`.make_explainer`
         """
         super().__init__()
@@ -174,7 +174,7 @@ class TreeExplainerFactory(ExplainerFactory):
 @inheritdoc(match="[see superclass]")
 class KernelExplainerFactory(ExplainerFactory):
     """
-    A factory constructing class:`~shap.KernelExplainer` objects.
+    A factory constructing :class:`~shap.KernelExplainer` objects.
     """
 
     def __init__(
@@ -185,12 +185,12 @@ class KernelExplainerFactory(ExplainerFactory):
     ) -> None:
         """
         :param link: (optional) override the default link parameter
-        :param l1_reg: (optional) override the default l1_reg parameter of method \
-            :meth:`~shap.KernelExplainer.shap_values`; pass ``None`` to use the \
+        :param l1_reg: (optional) override the default l1_reg parameter of method
+            :meth:`~shap.KernelExplainer.shap_values`; pass ``None`` to use the
             default value used by :meth:`~shap.KernelExplainer.shap_values`
-        :param data_size_limit: (optional) maximum number of observations to use as \
-            the background data set; larger data sets will be down-sampled using \
-            method :meth:`~shap.kmeans`. \
+        :param data_size_limit: (optional) maximum number of observations to use as
+            the background data set; larger data sets will be down-sampled using
+            method :meth:`~shap.kmeans`.
             Pass ``None`` to prevent down-sampling the background data set.
         """
         super().__init__()

@@ -100,7 +100,7 @@ class ShapValueDecomposer(FittableMixin[ShapCalculator]):
         Raises an error if this SHAP value decomposer has not been fitted.
 
         :param symmetrical: return a symmetrical matrix of mutual association
-        :returns: the matrix as a data frame, or a list of data frames for multiple \
+        :returns: the matrix as a data frame, or a list of data frames for multiple
             outputs
         """
         self._ensure_fitted()
@@ -271,16 +271,16 @@ class ShapInteractionValueDecomposer(ShapValueDecomposer):
 
     def __init__(self, min_direct_synergy: Optional[float] = None) -> None:
         """
-        :param min_direct_synergy: minimum direct synergy a pair of features \
-            :math:`f_i' and :math:`f_j' needs to manifest in order to be considered \
-            for calculating indirect synergies. This is expressed as the relative \
-            contribution score with regard to the total synergistic contributions \
-            ranging between 0 and 1, and calculated as \
+        :param min_direct_synergy: minimum direct synergy a pair of features
+            :math:`f_i' and :math:`f_j' needs to manifest in order to be considered
+            for calculating indirect synergies. This is expressed as the relative
+            contribution score with regard to the total synergistic contributions
+            ranging between 0 and 1, and calculated as
             :math:`\\frac \
                     {\\sigma_{\\vec{\\phi_{ij}}}} \
-                    {\\sum_{i,j}\\sigma_{\\vec{\\phi_{ij}}}}`, \
-            i.e, the relative share of the synergy contribution \
-            :math:`\\sigma_{\\vec{\\phi_{ij}}}`. \
+                    {\\sum_{i,j}\\sigma_{\\vec{\\phi_{ij}}}}`,
+            i.e, the relative share of the synergy contribution
+            :math:`\\sigma_{\\vec{\\phi_{ij}}}`.
         """
         super().__init__()
         self.min_direct_synergy = (
@@ -294,7 +294,7 @@ class ShapInteractionValueDecomposer(ShapValueDecomposer):
         self.redundancy_rel_asymmetric_: Optional[np.ndarray] = None
 
     __init__.__doc__ += f"""\
-            (default: {DEFAULT_MIN_DIRECT_SYNERGY}, i.e., \
+            (default: {DEFAULT_MIN_DIRECT_SYNERGY}, i.e.,
             {DEFAULT_MIN_DIRECT_SYNERGY * 100.0:g}%)
         """
 
@@ -309,7 +309,7 @@ class ShapInteractionValueDecomposer(ShapValueDecomposer):
         Raises an error if this interaction decomposer has not been fitted.
 
         :param symmetrical: return a symmetrical matrix of mutual synergy
-        :returns: the matrix as a data frame, or a list of data frames for multiple \
+        :returns: the matrix as a data frame, or a list of data frames for multiple
             outputs
         """
         self._ensure_fitted()
@@ -327,7 +327,7 @@ class ShapInteractionValueDecomposer(ShapValueDecomposer):
         Raises an error if this interaction decomposer has not been fitted.
 
         :param symmetrical: return a symmetrical matrix of mutual redundancy
-        :returns: the matrix as a data frame, or a list of data frames for multiple \
+        :returns: the matrix as a data frame, or a list of data frames for multiple
             outputs
         """
         self._ensure_fitted()

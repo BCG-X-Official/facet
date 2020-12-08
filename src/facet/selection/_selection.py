@@ -72,14 +72,6 @@ __tracker = AllTracker(globals())
 class LearnerGrid(Generic[T_LearnerPipelineDF]):
     """
     A grid of hyper-parameters for tuning a learner pipeline.
-
-    :param pipeline: the :class:`.RegressorPipelineDF` or \
-        :class:`.ClassifierPipelineDF` to which the hyper-parameters will be applied
-    :param learner_parameters: the hyper-parameter grid in which to search for the \
-        optimal parameter values for the pipeline's final estimator
-    :param preprocessing_parameters: the hyper-parameter grid in which to search for \
-        the optimal parameter values for the pipeline's preprocessing pipeline \
-        (optional)
     """
 
     def __init__(
@@ -88,6 +80,15 @@ class LearnerGrid(Generic[T_LearnerPipelineDF]):
         learner_parameters: Dict[str, Sequence],
         preprocessing_parameters: Optional[Dict[str, Sequence]] = None,
     ) -> None:
+        """
+        :param pipeline: the :class:`.RegressorPipelineDF` or
+            :class:`.ClassifierPipelineDF` to which the hyper-parameters will be applied
+        :param learner_parameters: the hyper-parameter grid in which to search for the
+            optimal parameter values for the pipeline's final estimator
+        :param preprocessing_parameters: the hyper-parameter grid in which to search
+            for the optimal parameter values for the pipeline's preprocessing pipeline
+            (optional)
+        """
         self.pipeline = pipeline
 
         def _prefix_parameter_names(
@@ -203,10 +204,10 @@ class LearnerEvaluation(Generic[T_LearnerPipelineDF]):
     ) -> None:
         """
         :param pipeline: the unfitted learner pipeline
-        :param parameters: the hyper-parameters for which the learner pipeline was \
+        :param parameters: the hyper-parameters for which the learner pipeline was
             scored, as a mapping of parameter names to parameter values
         :param scores: the scores of all crossfits of the learner pipeline
-        :param ranking_score: the aggregate score determined by the ranking \
+        :param ranking_score: the aggregate score determined by the ranking
             metric of the :class:`.LearnerRanker`, used for ranking the learners
         """
         super().__init__()
@@ -257,22 +258,22 @@ class LearnerRanker(
         verbose: Optional[int] = None,
     ) -> None:
         """
-        :param grids: learner grids to be ranked \
+        :param grids: learner grids to be ranked
             (either a single grid, or an iterable of multiple grids)
-        :param cv: a cross validator (e.g., \
+        :param cv: a cross validator (e.g.,
             :class:`.BootstrapCV`)
-        :param scoring: a scoring function (by name, or as a callable) for evaluating \
-            learners (optional; use learner's default scorer if not specified here). \
+        :param scoring: a scoring function (by name, or as a callable) for evaluating
+            learners (optional; use learner's default scorer if not specified here).
             If passing a callable, the ``"score"`` will be used as the name of the
             scoring function unless the callable defines a ``__name__`` attribute.
-        :param ranking_scorer: a function to calculate a scalar score for every \
-            crossfit, taking a :class:`.CrossfitScores` and returning a float. \
-            The resulting score is used to rank all crossfits (highest score is best). \
-            Defaults to :meth:`.default_ranking_scorer`, calculating \
+        :param ranking_scorer: a function to calculate a scalar score for every
+            crossfit, taking a :class:`.CrossfitScores` and returning a float.
+            The resulting score is used to rank all crossfits (highest score is best).
+            Defaults to :meth:`.default_ranking_scorer`, calculating
             `mean(scores) - 2 * std(scores, ddof=1)`.
-        :param shuffle_features: if ``True``, shuffle column order of features for \
+        :param shuffle_features: if ``True``, shuffle column order of features for
             every crossfit (default: ``False``)
-        :param random_state: optional random seed or random state for shuffling the \
+        :param random_state: optional random seed or random state for shuffling the
             feature column order
         """
         super().__init__(
