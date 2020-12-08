@@ -124,7 +124,7 @@ class SimulationMatplotStyle(MatplotStyle, SimulationStyle):
     simulated values.
     """
 
-    # colour constants
+    # color constants
     __COLOR_CONFIDENCE_INTERVAL = RGBA_DARK_BLUE
     __COLOR_MEDIAN = RGBA_LIGHT_BLUE
     __COLOR_BASELINE = RGBA_LIGHT_GREEN
