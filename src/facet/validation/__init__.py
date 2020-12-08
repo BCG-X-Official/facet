@@ -1,8 +1,5 @@
 """
-Cross-validation.
-
-:class:`BootstrapCV` performs bootstrap sampling.
-
-:class:`StationaryBootstrapCV` implements the static bootstrap for time series.
+Bootstrap cross-validation including a stationary version for use with time series
+data, that is used as the basis to generate confidence intervals for simulations.
 """
 from ._validation import *

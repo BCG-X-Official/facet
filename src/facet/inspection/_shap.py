@@ -1,5 +1,5 @@
 """
-Helper classes for SHAP calculations
+Helper classes for SHAP calculations.
 """
 
 import logging
@@ -75,7 +75,7 @@ class ShapCalculator(
     """
     Base class for all SHAP calculators.
 
-    A SHAP calculator uses the ``shap`` package to calculate SHAP tensors for oob
+    A SHAP calculator uses the ``shap`` package to calculate SHAP tensors for OOB
     samples across splits of a crossfit, then consolidates and aggregates results
     in a data frame.
     """
@@ -95,7 +95,7 @@ class ShapCalculator(
     ) -> None:
         """
         :param explain_full_sample: if ``True``, calculate SHAP values for full sample,
-            otherwise only use oob sample for each crossfit
+            otherwise only use OOB sample for each crossfit
         """
         super().__init__(
             n_jobs=n_jobs,
@@ -159,7 +159,7 @@ class ShapCalculator(
         aggregated to averaged SHAP contributions per feature and observation.
 
         :param consolidate: consolidation method, or ``None`` for no consolidation
-        :return: SHAP contribution values with shape \
+        :return: SHAP contribution values with shape
             (n_observations, n_outputs * n_features).
         """
         pass
@@ -372,7 +372,7 @@ class ShapCalculator(
 
         :param raw_shap_tensors: the raw values returned by the SHAP explainer
         :param observations: the ids used for indexing the explained observations
-        :param features_in_split: the features in the current split, \
+        :param features_in_split: the features in the current split,
             explained by the SHAP explainer
         :return: SHAP values of a single split as data frame
         """
@@ -476,11 +476,11 @@ class ShapInteractionValuesCalculator(
     def get_diagonals(self) -> pd.DataFrame:
         """
         The get_diagonals of all SHAP interaction matrices, of shape
-        (n_observations, n_outputs * n_features)
+        (n_observations, n_outputs * n_features).
 
-        :return: SHAP interaction values with shape \
-            (n_observations * n_features, n_outputs * n_features), i.e., for each \
-            observation and output we get the feature interaction values of size \
+        :return: SHAP interaction values with shape
+            (n_observations * n_features, n_outputs * n_features), i.e., for each
+            observation and output we get the feature interaction values of size
             n_features * n_features.
         """
         self._ensure_fitted()

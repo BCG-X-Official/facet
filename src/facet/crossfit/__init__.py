@@ -1,12 +1,11 @@
 """
-Meta-estimators that fit an estimator multiple times for all splits of a
-cross-validator, as the basis for model evaluation and inspection.
+Meta-estimator containing a fitted estimator for each cross-validation training
+split, that is used as the basis for learner selection and inspection.
 
-:class:`LearnerCrossfit` encapsulates a fully trained pipeline.
-It contains a :class:`.ModelPipelineDF` (preprocessing + estimator),
-a dataset given by a
-:class:`yieldengine.Sample` object and a
-cross-validation calibration. The pipeline is fitted accordingly.
+:class:`.LearnerCrossfit` encapsulates a fully trained pipeline.
+It contains a :class:`~sklearndf.PipelineDF` (preprocessing and estimator),
+a dataset given by a :class:`.Sample` object and a
+cross-validator. The pipeline is fitted accordingly.
 """
 
 from ._crossfit import *

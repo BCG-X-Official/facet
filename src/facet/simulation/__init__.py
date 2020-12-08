@@ -1,4 +1,5 @@
 """
-Univariate simulations of changes to model outputs based on changes to the inputs.
+Historical univariate simulation of changes to predicted outcome(s) based on
+selected fixed values of a selected input feature.
 """
 from ._simulation import *
