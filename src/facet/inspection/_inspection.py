@@ -58,7 +58,7 @@ __tracker = AllTracker(globals())
 
 class ShapPlotData(NamedTuple):
     """
-    Data for use in SHAP plots provided by the SHAP package (:mod:shap).
+    Data for use in SHAP plots provided by the SHAP package (:mod:`shap`).
     """
 
     #: Matrix of SHAP values (# observations x # features)
