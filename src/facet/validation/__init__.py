@@ -1,5 +1,5 @@
 """
 Bootstrap cross-validation including a stationary version for use with time series
-data, that is used as the basis to generate confidence intervals for simulations.
+data; used as the basis to generate confidence intervals for simulations.
 """
 from ._validation import *
