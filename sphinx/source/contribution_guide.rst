@@ -335,7 +335,7 @@ there are a few key points to be aware of:
   folder. To ensure these links are correct when the documentation is built, they are 
   altered and then the contents of the ``README.rst`` is incorporated into the 
   ``getting_started.rst`` which is generated during the build and can be found in 
-  ``sphinx/source/gettting_started``.
+  ``sphinx/source/getting_started``.
 
 - The quick start guide based on the ``Boston_getting_started_example.ipynb`` notebook in 
   the ``sphinx/auxiliary`` folder is not automatically included (unlike all the other 
