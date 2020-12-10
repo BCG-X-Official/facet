@@ -2,7 +2,7 @@
 Visualizations of simulation results.
 """
 
-from typing import Any, Mapping, Optional, Sequence, Tuple, Type, TypeVar, Union
+from typing import Any, Callable, Mapping, Optional, Sequence, Tuple, TypeVar, Union
 
 from pytools.api import AllTracker
 from pytools.viz import Drawer
@@ -73,7 +73,7 @@ class SimulationDrawer(Drawer[UnivariateSimulationResult, SimulationStyle]):
         super().draw(data=data, title=title)
 
     @classmethod
-    def _get_style_dict(cls) -> Mapping[str, Type[SimulationStyle]]:
+    def _get_style_dict(cls) -> Mapping[str, Callable[..., SimulationStyle]]:
         return SimulationDrawer._STYLES
 
     def _draw(self, data: UnivariateSimulationResult) -> None:
