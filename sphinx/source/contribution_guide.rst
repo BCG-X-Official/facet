@@ -13,8 +13,8 @@ required development dependencies in the ``facet-develop`` environment.
 
 .. code-block:: sh
 
-	conda env create -f environment.yml
-	conda activate facet-develop
+    conda env create -f environment.yml
+    conda activate facet-develop
 
 
 Pytest
@@ -37,13 +37,13 @@ commit will …*, e.g.
 
 .. code-block:: RST
 
-	add method foo to class Bar
+    add method foo to class Bar
 
 but not
 
 .. code-block:: RST
 
-	added method foo to class Bar
+    added method foo to class Bar
 
 
 Documentation
@@ -335,7 +335,7 @@ there are a few key points to be aware of:
   folder. To ensure these links are correct when the documentation is built, they are 
   altered and then the contents of the ``README.rst`` is incorporated into the 
   ``getting_started.rst`` which is generated during the build and can be found in 
-  ``sphinx/source/gettting_started``.
+  ``sphinx/source/getting_started``.
 
 - The quick start guide based on the ``Boston_getting_started_example.ipynb`` notebook in 
   the ``sphinx/auxiliary`` folder is not automatically included (unlike all the other 
@@ -469,8 +469,8 @@ use the following commands:
 
 .. code-block:: sh
 
-	python make.py gamma-facet tox default
-	flit publish
+    python make.py gamma-facet tox default
+    flit publish
 
 Please note the following:
 
@@ -483,7 +483,7 @@ Please note the following:
         flit publish --repository testpypi
 
     which requires the specification of testpypi in a special ``.pypirc`` file
-    with specifications as demonstrated `here 
+    with specifications as demonstrated `here
     <https://flit.readthedocs.io/en/latest/upload.html>`__.
 *   The ``pyproject.toml`` does not provide specification for a short description
     (displayed in the top gray band on the PyPI page for the package). This description
@@ -502,17 +502,17 @@ use the following commands:
 
 .. code-block:: sh
 
-	python make.py gamma-facet conda default
-	anaconda upload --user BCG_Gamma dist/conda/noarch/<*package.tar.gz*>
+    python make.py gamma-facet conda default
+    anaconda upload --user BCG_Gamma dist/conda/noarch/<*package.tar.gz*>
 
 Please note the following:
 
 - Build output will be stored in the ``dist/`` directory.
 - Some useful references for conda builds:
 
-    - `Conda build tutorial 
+    - `Conda build tutorial
       <https://docs.conda.io/projects/conda-build/en/latest/user-guide/tutorials/building-conda-packages.html>`_
-    - `Conda build metadata reference 
+    - `Conda build metadata reference
       <https://docs.conda.io/projects/conda-build/en/latest/resources/define-metadata.html>`_
 
 Azure DevOps CI/CD
@@ -555,7 +555,7 @@ The release process has the following key steps:
     <https://docs.github.com/en/free-pro-team@latest/github/administering-a-repository/releasing-projects-on-github>`__
     for details
   * Pre-fill the GitHub release title and description, including the changelog based on 
-    commits since the last release. Please note this can be manually edited to be more 
+    commits since the last release. Please note this can be manually edited to be more
     succinct afterwards
   * Attach build artifacts (conda and pip packages) to GitHub release
 

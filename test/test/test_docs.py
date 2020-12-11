@@ -188,7 +188,7 @@ def test_docstrings(all_script_objects) -> None:
 
         # inspect found classes:
         for clsname, cls in classes:
-            inner_classes, inner_functions, inner_methods = member_childs(cls, None)
+            _inner_classes, inner_functions, inner_methods = member_childs(cls, None)
 
             # functions where docstring is None:
             functions_with_missing_docstr.extend(
