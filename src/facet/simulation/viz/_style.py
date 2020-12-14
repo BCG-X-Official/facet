@@ -250,7 +250,7 @@ class SimulationMatplotStyle(MatplotStyle, SimulationStyle):
         ax.bar(
             x=x_values,
             height=y_values,
-            color=SimulationMatplotStyle.__COLOR_BARS,
+            color=self.colors.fill_1,
             align="center",
             width=SimulationMatplotStyle.__WIDTH_BARS,
         )
