@@ -270,10 +270,10 @@ with other features in the model. However, looking down the column for `LSTAT`
 (i.e., perspective of other features in a pair with `LSTAT`) we find many
 features (the rows) are synergistic (12% to 47%) with `LSTAT`. We can conclude that:
 
-- `LSTAT` is a strongly autonomous feature, displaying minimal synergy with other
-features for predicting median house price.
-- The contribution of other features to predicting median house price is partly
-enabled by the strong contribution from `LSTAT`.
+-   `LSTAT` is a strongly autonomous feature, displaying minimal synergy with other
+    features for predicting median house price.
+-   The contribution of other features to predicting median house price is partly
+    enabled by the strong contribution from `LSTAT`.
 
 High synergy features must be considered carefully when investigating business
 impact, as they work together to predict the outcome. It would not make much
