@@ -209,6 +209,7 @@ features in a model are:
 .. code-block:: Python
 
     # visualise synergy as a matrix
+    from pytools.viz.matrix import MatrixDrawer
     synergy_matrix = inspector.feature_synergy_matrix(symmetrical=True)
     MatrixDrawer(style="matplot%").draw(synergy_matrix, title="Synergy Matrix")
 
@@ -237,7 +238,6 @@ predicting median house price.
 .. code-block:: Python
 
     # visualise redundancy as a matrix
-    from pytools.viz.matrix import MatrixDrawer
     redundancy_matrix = inspector.feature_redundancy_matrix()
     MatrixDrawer(style="matplot%").draw(redundancy_matrix, title="Redundancy Matrix")
 
