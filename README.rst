@@ -153,44 +153,49 @@ FACET enhances model inspection by providing global metrics that complement
 the local perspective of SHAP. The key global metrics for each pair of
 features in a model are:
 
+- **Synergy**
+
+  The degree to which the model combines information from one feature with
+  another to predict the target. For example, let's assume we are predicting
+  cardiovascular health using age and gender and the fitted model includes
+  a complex interaction between them. This means these two features are
+  synergistic for predicting cardiovascular health. Further, both features
+  are important to the model and removing either one would significantly
+  impact performance. Let's assume age is a more important feature than
+  gender and so age contributes more to the combined prediction than
+  gender. This asymmetric contribution means the synergy for (age, gender)
+  is less than the synergy for (gender, age). To think about it another
+  way, imagine the prediction is a coordinate you are trying to reach.
+  From your starting point, age gets you much closer to this point than
+  gender, however, you need both to get there. Synergy reflects the fact
+  that gender gets more help from age (higher synergy from the perspective
+  of gender) than age does from gender (lower synergy from the perspective of
+  age) to reach the prediction. *This leads to an important point: synergy
+  is a naturally asymmetric property of the global information two interacting
+  features contribute to the model predictions.* Synergy is expressed as a
+  percentage ranging from 0% (full autonomy) to 100% (full synergy).
+
+
 - **Redundancy**
 
   The degree to which a feature in a model duplicates the information of a
-  second feature to predict the target. For example, let's assume we had house
-  size and number of bedrooms for predicting house price. These features capture
-  similar information as the more bedrooms the larger the house and likely a
-  higher price on average. The redundancy for (number of bedrooms, house size)
-  will be greater than the redundancy for (house size, number of bedrooms). This
-  is because house size "knows" more of what number of bedrooms does for
-  predicting house price than vice-versa. Hence, there is greater redundancy from
-  the perspective of number of bedrooms. Another way to think about it is removing
-  house size will be more detrimental to model performance than removing number of
-  bedrooms, as house size can better compensate for the absence of number of
-  bedrooms. This also implies that house size would be a more important feature
-  than number of bedrooms in the model. *This leads to an important point:
-  redundancy is a naturally asymmetric property of the global information feature
-  pairs have for predicting an outcome.* Redundancy is expressed as a percentage
-  ranging from 0% (full uniqueness) to 100% (full redundancy).
-
-
-- **Synergy**
-
-  The degree to which the model combines information from one feature with another
-  to predict the target. For example, let's assume we are predicting cardiovascular
-  health using age and gender and the fitted model includes a complex interaction
-  between these features. This means these two features are synergistic for
-  predicting cardiovascular health. Further, both features are important to the
-  model and removing either one would significantly impact performance. However,
-  assume age is a more important feature than gender and so age contributes more
-  to the combined prediction than gender. This asymmetric contribution means that
-  the synergy for (age, gender) is greater than the synergy for (gender, age).
-  To think about it another way, imagine the prediction is a coordinate you are
-  trying to reach, basically age gets you much closer than gender to this point
-  from where you start, but you need both age and gender to get there. *The
-  important point here is that like redundancy, synergy is a naturally asymmetric
-  property of global information feature pairs have when interacting to predict
-  an outcome.* Synergy is expressed as a percentage ranging from 0% (full autonomy)
-  to 100% (full synergy).
+  second feature to predict the target. For example, let's assume we had
+  house size and number of bedrooms for predicting house price. These
+  features capture similar information as the more bedrooms the larger
+  the house and likely a higher price on average. The redundancy for
+  (number of bedrooms, house size) will be greater than the redundancy
+  for (house size, number of bedrooms). This is because house size
+  "knows" more of what number of bedrooms does for predicting house price
+  than vice-versa. Hence, there is greater redundancy from the perspective
+  of number of bedrooms. Another way to think about it is removing house
+  size will be more detrimental to model performance than removing number
+  of bedrooms, as house size can better compensate for the absence of
+  number of bedrooms. This also implies that house size would be a more
+  important feature than number of bedrooms in the model. *The important
+  point here is that like synergy, redundancy is a naturally asymmetric
+  property of the global information feature pairs have for predicting
+  an outcome.* Redundancy is expressed as a percentage ranging from 0%
+  (full uniqueness) to 100% (full redundancy).
 
 .. code-block:: Python
 
@@ -198,6 +203,34 @@ features in a model are:
     from facet.inspection import LearnerInspector
     inspector = LearnerInspector()
     inspector.fit(crossfit=ranker.best_model_crossfit_)
+
+**Synergy**
+
+.. code-block:: Python
+
+    # visualise synergy as a matrix
+    synergy_matrix = inspector.feature_synergy_matrix(symmetrical=True)
+    MatrixDrawer(style="matplot%").draw(synergy_matrix, title="Synergy Matrix")
+
+.. image:: sphinx/source/_static/synergy_matrix.png
+    :width: 600
+
+As before the matrix row represents the "perspective from" feature in the pair.
+Looking across the row for `LSTAT` there is relatively minimal synergy (≤14%)
+with other features in the model. However, looking down the column for `LSTAT`
+(i.e., perspective of other features in a pair with `LSTAT`) we find many
+features (the rows) are synergistic (12% to 47%) with `LSTAT`. We can conclude that:
+
+-   `LSTAT` is a strongly autonomous feature, displaying minimal synergy with other
+    features for predicting median house price.
+-   The contribution of other features to predicting median house price is partly
+    enabled by the strong contribution from `LSTAT`.
+
+High synergy features must be considered carefully when investigating business
+impact, as they work together to predict the outcome. It would not make much
+sense to consider `ZN` (proportion of residential land zoned for lots over
+25,000 sq.ft) without `LSTAT` given the 47% synergy of `ZN` with `LSTAT` for
+predicting median house price.
 
 **Redundancy**
 
@@ -252,37 +285,6 @@ in parts per 10 million) each represent a cluster in the dendrogram and
 that `LSTAT` and `RM` have high importance. As a next action we could
 remove RM (and maybe NOX) to further simplify the model and obtain a
 set of independent features.
-
-**Synergy**
-
-.. code-block:: Python
-
-    # visualise synergy as a matrix
-    synergy_matrix = inspector.feature_synergy_matrix(symmetrical=True)
-    MatrixDrawer(style="matplot%").draw(synergy_matrix, title="Synergy Matrix")
-
-.. image:: sphinx/source/_static/synergy_matrix.png
-    :width: 600
-
-As before the matrix row represents the "perspective from" feature in the pair.
-Looking across the row for `LSTAT` there is relatively minimal synergy (≤14%)
-with other features in the model. However, looking down the column for `LSTAT`
-(i.e., perspective of other features in a pair with `LSTAT`) we find many
-features (the rows) are synergistic (12% to 47%) with `LSTAT`. We can conclude that:
-
--   `LSTAT` is a strongly autonomous feature, displaying minimal synergy with other
-    features for predicting median house price.
--   The contribution of other features to predicting median house price is partly
-    enabled by the strong contribution from `LSTAT`.
-
-High synergy features must be considered carefully when investigating business
-impact, as they work together to predict the outcome. It would not make much
-sense to consider `ZN` (proportion of residential land zoned for lots over
-25,000 sq.ft) without `LSTAT` given the 47% synergy of `ZN` with `LSTAT` for
-predicting median house price.
-
-Note we can also see a related pattern in synergy for `RM` which we know has a
-moderate degree of redundancy with `LSTAT`.
 
 Model Simulation
 ~~~~~~~~~~~~~~~~~~
