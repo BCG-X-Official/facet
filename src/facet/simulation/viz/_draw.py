@@ -74,6 +74,8 @@ class SimulationDrawer(Drawer[UnivariateSimulationResult, SimulationStyle]):
     @classmethod
     def get_style_classes(cls) -> Iterable[Type[SimulationStyle]]:
         """[see superclass]"""
+        """[see superclass]"""
+
         return [
             SimulationMatplotStyle,
             SimulationReportStyle,
