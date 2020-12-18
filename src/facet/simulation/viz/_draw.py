@@ -2,9 +2,9 @@
 Visualizations of simulation results.
 """
 
-from typing import Any, Callable, Mapping, Optional, Sequence, Tuple, TypeVar, Union
+from typing import Any, Iterable, Optional, Sequence, Tuple, Type, TypeVar, Union
 
-from pytools.api import AllTracker
+from pytools.api import AllTracker, inheritdoc
 from pytools.viz import Drawer
 
 from ._style import SimulationMatplotStyle, SimulationReportStyle, SimulationStyle
@@ -31,13 +31,12 @@ __tracker = AllTracker(globals())
 #
 
 
+@inheritdoc(match="[see superclass]")
 class SimulationDrawer(Drawer[UnivariateSimulationResult, SimulationStyle]):
     """
     Draws the result of a univariate simulation, represented by a
     :class:`.UnivariateSimulationResult` object.
     """
-
-    _STYLES = {"matplot": SimulationMatplotStyle, "text": SimulationReportStyle}
 
     #: if ``True``, plot the histogram of observed values for the feature being
     #: simulated; if ``False``, do not plot the histogram
@@ -50,7 +49,7 @@ class SimulationDrawer(Drawer[UnivariateSimulationResult, SimulationStyle]):
     ) -> None:
         """
         :param histogram: if ``True``, plot the histogram of observed values for the
-            feature being simulated; if ``False`` do not plot the histogram (default:
+            feature being simulated; if ``False``, do not plot the histogram (default:
             ``True``).
         """
         super().__init__(style=style)
@@ -73,8 +72,12 @@ class SimulationDrawer(Drawer[UnivariateSimulationResult, SimulationStyle]):
         super().draw(data=data, title=title)
 
     @classmethod
-    def _get_style_dict(cls) -> Mapping[str, Callable[..., SimulationStyle]]:
-        return SimulationDrawer._STYLES
+    def get_style_classes(cls) -> Iterable[Type[SimulationStyle]]:
+        """[see superclass]"""
+        return [
+            SimulationMatplotStyle,
+            SimulationReportStyle,
+        ]
 
     def _draw(self, data: UnivariateSimulationResult) -> None:
         # If the partitioning of the simulation is categorical, sort partitions in
