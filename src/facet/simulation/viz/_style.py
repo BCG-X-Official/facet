@@ -14,12 +14,6 @@ from mpl_toolkits.axes_grid1.axes_size import Scaled
 from pytools.api import AllTracker, inheritdoc
 from pytools.text import format_table
 from pytools.viz import DrawingStyle, MatplotStyle, TextStyle
-from pytools.viz.colors import (
-    RGBA_DARK_BLUE,
-    RGBA_GREY,
-    RGBA_LIGHT_BLUE,
-    RGBA_LIGHT_GREEN,
-)
 
 log = logging.getLogger(__name__)
 
@@ -124,12 +118,6 @@ class SimulationMatplotStyle(MatplotStyle, SimulationStyle):
     simulated values.
     """
 
-    # color constants
-    __COLOR_CONFIDENCE_INTERVAL = RGBA_DARK_BLUE
-    __COLOR_MEDIAN = RGBA_LIGHT_BLUE
-    __COLOR_BASELINE = RGBA_LIGHT_GREEN
-    __COLOR_BARS = RGBA_GREY
-
     # sizing constants
     __WIDTH_BARS = 0.8
     __HISTOGRAM_SIZE_RATIO = 1 / 3
@@ -157,23 +145,14 @@ class SimulationMatplotStyle(MatplotStyle, SimulationStyle):
         else:
             x = partitions
         ax = self.ax
-        (line_min,) = ax.plot(
-            x,
-            outputs_lower_bound,
-            color=SimulationMatplotStyle.__COLOR_CONFIDENCE_INTERVAL,
-        )
-        (line_median,) = ax.plot(
-            x, outputs_median, color=SimulationMatplotStyle.__COLOR_MEDIAN
-        )
-        (line_max,) = ax.plot(
-            x,
-            outputs_upper_bound,
-            color=SimulationMatplotStyle.__COLOR_CONFIDENCE_INTERVAL,
-        )
+
+        # plot the confidence bounds and the median
+        (line_min,) = ax.plot(x, outputs_lower_bound, color=self.colors.accent_3)
+        (line_median,) = ax.plot(x, outputs_median, color=self.colors.accent_2)
+        (line_max,) = ax.plot(x, outputs_upper_bound, color=self.colors.accent_3)
+
         # add a horizontal line at the baseline
-        line_base = ax.axhline(
-            y=baseline, linewidth=0.5, color=SimulationMatplotStyle.__COLOR_BASELINE
-        )
+        line_base = ax.axhline(y=baseline, linewidth=0.5, color=self.colors.accent_1)
 
         # add a legend
         labels = self._legend(confidence_level=confidence_level)
@@ -271,7 +250,7 @@ class SimulationMatplotStyle(MatplotStyle, SimulationStyle):
         ax.bar(
             x=x_values,
             height=y_values,
-            color=SimulationMatplotStyle.__COLOR_BARS,
+            color=self.colors.fill_1,
             align="center",
             width=SimulationMatplotStyle.__WIDTH_BARS,
         )
@@ -349,9 +328,7 @@ class SimulationReportStyle(SimulationStyle, TextStyle):
             format_table(
                 headings=[
                     SimulationReportStyle.__HEADING_PARTITION,
-                    *self._legend(
-                        confidence_level=confidence_level,
-                    )[:3],
+                    *self._legend(confidence_level=confidence_level)[:3],
                 ],
                 formats=[
                     self._partition_format(is_categorical=is_categorical_feature),
@@ -393,8 +370,9 @@ class SimulationReportStyle(SimulationStyle, TextStyle):
             )
         )
 
-    def _drawing_finalize(self, **kwargs) -> None:
-        super()._drawing_finalize(**kwargs)
+    def finalize_drawing(self, **kwargs) -> None:
+        """[see superclass]"""
+        super().finalize_drawing(**kwargs)
         # print two trailing line breaks
         self.out.write("\n")
 
