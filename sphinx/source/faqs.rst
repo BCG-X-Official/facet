@@ -3,33 +3,39 @@
 FAQ
 ===
 
-Below you can find answers to commonly asked questions. If you don't see your answer
-there you could also try posting on `stackoverflow <https://stackoverflow.com/>`_.
+Below you can find answers to commonly asked questions as well as how to cite FACET.
+
+Commonly asked questions
+------------------------
+
+If you don't see your answer below you could also try posting
+on `stackoverflow <https://stackoverflow.com/>`_.
 
 1. **What if I find a bug or have an idea for a new feature?**
 
     For bug reports or feature requests please use our
     `GitHub issue tracker <https://github.com/BCG-Gamma/facet/issues>`_.
-    For any other enquiries please feel free to contact us at FacetTeam <at> bcg <dot> com.
+    For any other enquiries please feel free to contact us at FacetTeam@bcg.com.
 
-2. **How does FACET's novel algorithm calculate feature redundancy and synergy?**
+2. **How does FACET's novel algorithm calculate pairwise feature redundancy and synergy?**
 
-    Please keep an eye out for our publication coming soon. In the meantime please feel
-    free to explore the GammaScope article (add link) to get a good introduction to
-    using the algorithm.
+    Please keep an eye out for our scientific publication coming soon. In the meantime
+    please feel free to explore the
+    `GAMMAscope article <TO DO ADD LINK>`__
+    to get an introduction to using the algorithm.
 
 3. **How can I contribute?**
 
     We welcome contributors! If you have minor changes in mind that would like to
     contribute, please feel free to create a pull request and be sure to follow the
-    developer guidelines. For large or extensive changes please feel free to open an
-    issue, or reach out to us at FacetTeam <at> bcg <dot> com to discuss.
+    :ref:`developer guidelines<contribution-guide>`.
+    For large or extensive changes please feel free to open an
+    issue, or reach out to us at FacetTeam@bcg.com to discuss.
 
-4. **How can I perform standard plotting of SHAP values as done in the**
-   `shap <https://github.com/slundberg/shap>`_ **library?**
+4. **How can I perform standard plotting of**
+   `SHAP <https://shap.readthedocs.io/en/latest/>`__ **values?**
 
-    You can do this by creating an output of SHAP values from the fit LearnerInspector
-    as in the example shown below.
+    You can do this by creating an output of SHAP values from the fit LearnerInspector.
 
     .. code-block:: Python
 
@@ -59,14 +65,14 @@ there you could also try posting on `stackoverflow <https://stackoverflow.com/>`
 
 6. **Can I use a custom scoring function with the LearnerRanker?**
 
-    The LearnerRanker works in a similar fashion to scikit-learn's
+    The LearnerRanker works in a similar fashion to *scikit-learn*'s
     `gridsearchCV <https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.GridSearchCV.html>`_
     so much of the functionality is equivalent. You can pass a custom scoring
     function much as you would for gridsearchCV.
 
     .. code-block:: Python
 
-        # define your own custom scorer, in this ase Huber loss with delta=3
+        # define your own custom scorer, in this case Huber loss with delta=3
         import numpy as np
         from sklearn.metrics import make_scorer
 
@@ -84,15 +90,15 @@ there you could also try posting on `stackoverflow <https://stackoverflow.com/>`
         )
         ranker.summary_report()
 
-    You can see more infomation on customer scoring with scikit-learn here
+    You can see more information on custom scoring with *scikit-learn*
     `here <https://scikit-learn.org/stable/modules/model_evaluation.html#scoring>`__.
 
 
-7. **How can I generate standard scikit-learn summaries for classifiers, such as a
+7. **How can I generate standard** *scikit-learn* **summaries for classifiers, such as a
    classification report, confusion matrix or ROC curve?**
 
     You can extract the fitted best scored model from the LearnerRanker and
-    then generate these summaries as you normally would in your scikit-learn
+    then generate these summaries as you normally would in your *scikit-learn*
     workflow.
 
     .. code-block:: Python
@@ -134,21 +140,22 @@ there you could also try posting on `stackoverflow <https://stackoverflow.com/>`
         ax.legend(loc='lower right')
 
 
-    For practical examples see the
-    Generating Standard Scikit-learn Classifier Performance Summaries tutorial,
-    which also covers using the fit for each cross-validation fold (the FACET
-    crossfit object) to generate summaries of mean performance with assessments of
-    variability.
+    For practical examples see
+    :ref:`Standard Scikit-learn Classification Summary with
+    FACET<scikit-learn-summary-tut>`,
+    which also covers using the fit for each cross-validation
+    fold (the FACET crossfit object) to generate summaries of mean performance with
+    assessments of variability.
 
 Citation
 --------
-If you use FACET in your work please cite us as follows:
+If you use FACET in your work we would appreciate if you cite the package.
 
 Bibtex entry::
 
      @manual{
      title={FACET},
      author={FACET Team at BCG GAMMA},
-     year={2020},
+     year={2021},
      note={Python package version 1.0.0)
      }
