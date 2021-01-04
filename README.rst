@@ -9,7 +9,7 @@ explanations of your supervised machine learning models.
 FACET is composed of the following key components:
 
 +-----------------+---------------------------------------------------------------------+
-| `             ` | **Model Inspection**                                                |
+| |spacer|        | **Model Inspection**                                                |
 |                 |                                                                     |
 | |inspect|       | FACET introduces a new algorithm to quantify dependencies and       |
 |                 | interactions between features in ML models.                         |
@@ -307,8 +307,8 @@ or have a look at
    :class: facet_icon
 
 .. |sim| image:: sphinx/source/_static/icons/sim_icon.png
-    :width: 100px
-    :class: facet_icon
+   :width: 100px
+   :class: facet_icon
 
 .. |spacer| unicode:: 0x2028 0x2003 0x2003 0x2003 0x2003 0x2003 0x2003
 
