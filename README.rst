@@ -8,40 +8,43 @@ explanations of your supervised machine learning models.
 
 FACET is composed of the following key components:
 
-+----------------+---------------------------------------------------------------------+
-| |              | **Model Inspection**                                                |
-|                |                                                                     |
-| |inspect|      | FACET introduces a new algorithm to quantify dependencies and       |
-|                | interactions between features in ML models.                         |
-|                | This new tool for human-explainable AI adds a new, global           |
-|                | perspective to the observation-level explanations provided by the   |
-|                | popular `SHAP <https://shap.readthedocs.io/en/latest/>`__ approach. |
-|                | To learn more about FACET’s model inspection capabilities, see the  |
-|                | getting started example below.                                      |
-+----------------+---------------------------------------------------------------------+
-| |              | **Model Simulation**                                                |
-|                |                                                                     |
-| |sim|          | FACET’s model simulation algorithms use ML models for               |
-|                | *virtual experiments* to help identify scenarios that optimise      |
-|                | predicted outcomes.                                                 |
-|                | To quantify the uncertainty in simulations, FACET utilises a range  |
-|                | of bootstrapping algorithms including stationary and stratified     |
-|                | bootstraps.                                                         |
-|                | For an example of FACET’s bootstrap simulations, see the            |
-|                | quickstart example below.                                           |
-+----------------+---------------------------------------------------------------------+
-| |              | **Enhanced Machine Learning Workflow**                              |
-|                |                                                                     |
-| |pipe|         | FACET offers an efficient and transparent machine learning          |
-|                | workflow, enhancing                                                 |
-|                | `scikit-learn <https://scikit-learn.org/stable/index.html>`__'s     |
-|                | tried and tested pipelining paradigm with new capabilities for model|
-|                | selection, inspection, and simulation.                              |
-|                | FACET also introduces                                               |
-|                | `sklearndf <https://github.com/BCG-Gamma/sklearndf>`__, an augmented|
-|                | version of *scikit-learn* with enhanced support for *pandas* data   |
-|                | frames that ensures end-to-end traceability of features.            |
-+----------------+---------------------------------------------------------------------+
+.. table::
+    :widths: 30 70
+
+    +----------------+---------------------------------------------------------------------+
+    | |              | **Model Inspection**                                                |
+    |                |                                                                     |
+    | |inspect|      | FACET introduces a new algorithm to quantify dependencies and       |
+    |                | interactions between features in ML models.                         |
+    |                | This new tool for human-explainable AI adds a new, global           |
+    |                | perspective to the observation-level explanations provided by the   |
+    |                | popular `SHAP <https://shap.readthedocs.io/en/latest/>`__ approach. |
+    |                | To learn more about FACET’s model inspection capabilities, see the  |
+    |                | getting started example below.                                      |
+    +----------------+---------------------------------------------------------------------+
+    | |              | **Model Simulation**                                                |
+    |                |                                                                     |
+    | |sim|          | FACET’s model simulation algorithms use ML models for               |
+    |                | *virtual experiments* to help identify scenarios that optimise      |
+    |                | predicted outcomes.                                                 |
+    |                | To quantify the uncertainty in simulations, FACET utilises a range  |
+    |                | of bootstrapping algorithms including stationary and stratified     |
+    |                | bootstraps.                                                         |
+    |                | For an example of FACET’s bootstrap simulations, see the            |
+    |                | quickstart example below.                                           |
+    +----------------+---------------------------------------------------------------------+
+    | |              | **Enhanced Machine Learning Workflow**                              |
+    |                |                                                                     |
+    | |pipe|         | FACET offers an efficient and transparent machine learning          |
+    |                | workflow, enhancing                                                 |
+    |                | `scikit-learn <https://scikit-learn.org/stable/index.html>`__'s     |
+    |                | tried and tested pipelining paradigm with new capabilities for model|
+    |                | selection, inspection, and simulation.                              |
+    |                | FACET also introduces                                               |
+    |                | `sklearndf <https://github.com/BCG-Gamma/sklearndf>`__, an augmented|
+    |                | version of *scikit-learn* with enhanced support for *pandas* data   |
+    |                | frames that ensures end-to-end traceability of features.            |
+    +----------------+---------------------------------------------------------------------+
 
 .. Begin-Badges
 
