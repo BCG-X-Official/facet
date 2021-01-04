@@ -9,10 +9,10 @@ explanations of your supervised machine learning models.
 FACET is composed of the following key components:
 
 +-----------------+---------------------------------------------------------------------+
-| |               | **Model Inspection**                                                |
+| `             ` | **Model Inspection**                                                |
 |                 |                                                                     |
-| <img width=100/>| FACET introduces a new algorithm to quantify dependencies and       |
-| |inspect|       | interactions between features in ML models.                         |
+| |inspect|       | FACET introduces a new algorithm to quantify dependencies and       |
+|                 | interactions between features in ML models.                         |
 |                 | This new tool for human-explainable AI adds a new, global           |
 |                 | perspective to the observation-level explanations provided by the   |
 |                 | popular `SHAP <https://shap.readthedocs.io/en/latest/>`__ approach. |
