@@ -9,7 +9,7 @@ explanations of your supervised machine learning models.
 FACET is composed of the following key components:
 
 +----------------+---------------------------------------------------------------------+
-| |spacer|       | **Model Inspection**                                                |
+| |              | **Model Inspection**                                                |
 |                |                                                                     |
 | |inspect|      | FACET introduces a new algorithm to quantify dependencies and       |
 |                | interactions between features in ML models.                         |
@@ -27,8 +27,8 @@ FACET is composed of the following key components:
 |                | To quantify the uncertainty in simulations, FACET utilises a range  |
 |                | of bootstrapping algorithms including stationary and stratified     |
 |                | bootstraps.                                                         |
-|                | For an example of FACET’s bootstrap simulations, see the getting    |
-|                | started example below.                                              |
+|                | For an example of FACET’s bootstrap simulations, see the            |
+|                | quickstart example below.                                           |
 +----------------+---------------------------------------------------------------------+
 | |              | **Enhanced Machine Learning Workflow**                              |
 |                |                                                                     |
@@ -72,8 +72,8 @@ Pip
 Quickstart
 ----------------------
 
-The following quickstart guide provides a minimal example workflow to get up and running
-with FACET.
+The following quickstart guide provides a minimal example workflow to get you
+up and running with FACET.
 
 Enhanced Machine Learning Workflow
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -120,7 +120,7 @@ Enhanced Machine Learning Workflow
     # create repeated k-fold CV iterator
     rkf_cv = RepeatedKFold(n_splits=5, n_repeats=10, random_state=42)
 
-    # rank your models by performance (default is variance explained)
+    # rank your models by performance
     ranker = LearnerRanker(
         grids=rnd_forest_grid, cv=rkf_cv, n_jobs=-3
     ).fit(sample=boston_sample)
@@ -212,7 +212,7 @@ Taking the LSTAT feature as an example, we do the following for the simulation:
     trained for all folds and determines the average uplift of the target variable
     resulting from this.
 -   The FACET `SimulationDrawer` allows us to visualise the result; both in a matplotlib
-    and a plain-text style
+    and a plain-text style.
 
 Finally, because FACET can use bootstrap cross validation, we can create a crossfit
 from our previous `LearnerRanker` best model to perform the simulation so we can
@@ -264,7 +264,7 @@ For any bug reports or feature requests/enhancements please use the appropriate
 please open a PR addressing the issue.
 
 We do ask that for any major changes please discuss these with us first via an issue or
-using our team email: FacetTeam <at> bcg <dot> com.
+using our team email: FacetTeam@bcg.com.
 
 For further information on contributing please see our [LINK: contribution-guide].
 
@@ -272,20 +272,19 @@ License
 ---------------------------
 
 FACET is licensed under Apache 2.0 as described in the
-`LICENSE <https://github.com/BCG-Gamma/facet/LICENSE>`_ file.
+`LICENSE <https://github.com/BCG-Gamma/facet/blob/develop/LICENSE>`_ file.
 
 Acknowledgements
 ---------------------------
 
 FACET is built on top of two popular packages for Machine Learning:
 
-The `scikit-learn <https://scikit-learn.org/stable/index.html>`__ learners and
-pipelining make up implementation of the underlying algorithms. Moreover, we tried
-to design the FACET API to align with the scikit-learn API.
-
-The `SHAP <https://shap.readthedocs.io/en/latest/>`__ implementation is used to estimate
-the shapley vectors which FACET then decomposes into synergy, redundancy, and
-independence vectors.
+-   The `scikit-learn <https://scikit-learn.org/stable/index.html>`__ learners and
+    pipelining make up implementation of the underlying algorithms. Moreover, we tried
+    to design the FACET API to align with the scikit-learn API.
+-   The `SHAP <https://shap.readthedocs.io/en/latest/>`__ implementation is used to
+    estimate the shapley vectors which FACET then decomposes into synergy, redundancy,
+    and independence vectors.
 
 BCG GAMMA
 ---------------------------
