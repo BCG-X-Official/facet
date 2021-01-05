@@ -37,7 +37,7 @@ class Sample:
     It provides basic methods for accessing features, targets and weights, and
     for selecting subsets of features and observations.
 
-    The underlying data structure is a pandas :class:`pandas.DataFrame`.
+    The underlying data structure is a :class:`pandas.DataFrame`.
 
     Supports :func:`.len`, returning the number of observations in this sample.
     """
@@ -199,7 +199,7 @@ class Sample:
     @property
     def features(self) -> pd.DataFrame:
         """
-        The features for all observations
+        The features for all observations.
         """
         features: pd.DataFrame = self._observations.loc[:, self._feature_names]
 
