@@ -1,6 +1,7 @@
 """
 Core implementation of :mod:`facet.inspection`
 """
+
 import logging
 from typing import Generic, List, NamedTuple, Optional, TypeVar, Union, cast
 
@@ -58,18 +59,20 @@ __tracker = AllTracker(globals())
 
 class ShapPlotData(NamedTuple):
     """
-    Data for use in SHAP plots provided by the SHAP package (:mod:`shap`).
+    Data for use in SHAP plots provided by the
+    `shap <https://shap.readthedocs.io/en/stable/>`__ package.
     """
 
-    #: Matrix of SHAP values (# observations x # features)
+    #: Matrix of SHAP values (number of observations by number of features)
     #: or list of shap value matrices for multi-output models.
     shap_values: Union[np.ndarray, List[np.ndarray]]
 
-    #: Matrix of feature values (# observations x # features).
+    #: Matrix of feature values (number of observations by number of features).
     features: pd.DataFrame
 
-    #: Series of target values (# observations)
-    #: or matrix of target values for multi-output models (# observations x # outputs).
+    #: Series of target values (number of observations)
+    #: or matrix of target values for multi-output models
+    #: (number of observations by number of outputs).
     target: Union[pd.Series, pd.DataFrame]
 
 
@@ -90,13 +93,13 @@ class LearnerInspector(
     - SHAP interaction values (mean or standard deviation across crossfits)
     - feature importance derived from SHAP values (either as mean absolute values
       or as the root of mean squares)
-    - (pairwise) feature interaction matrix (direct feature interaction quantified by
+    - pairwise feature interaction matrix (direct feature interaction quantified by
       SHAP interaction values)
-    - (pairwise) feature redundancy matrix (requires availability of SHAP interaction
+    - pairwise feature redundancy matrix (requires availability of SHAP interaction
       values)
-    - (pairwise) feature synergy matrix (requires availability of SHAP interaction
+    - pairwise feature synergy matrix (requires availability of SHAP interaction
       values)
-    - (pairwise) feature association matrix (combined effect of redundancy and
+    - pairwise feature association matrix (combined effect of redundancy and
       synergy, if no SHAP interaction values are available)
     - feature redundancy linkage (to visualize clusters of redundant features in a
       dendrogram)
@@ -132,7 +135,7 @@ class LearnerInspector(
     ) -> None:
         """
         :param explainer_factory: optional function that creates a shap Explainer
-            (default: :func:``.tree_explainer_factory``)
+            (default: ``TreeExplainerFactory``)
         :param shap_interaction: if ``True``, calculate SHAP interaction values, else
             only calculate SHAP contribution values.
             SHAP interaction values are needed to determine feature synergy and
@@ -402,7 +405,7 @@ class LearnerInspector(
         The importance values of all features always add up to `1.0`.
 
         The calculation applies sample weights if specified in the underlying
-        :attr:`.sample`.
+        :class:`.Sample`.
 
         :param method: method for calculating feature importance. Supported methods
             are ``rms`` (root of mean squares, default), ``mav`` (mean absolute
@@ -456,7 +459,7 @@ class LearnerInspector(
         """
         Calculate the feature synergy matrix.
 
-        This yields a symmetrical matrix where each row and column represents one
+        This yields an asymmetric matrix where each row and column represents one
         feature, and the values at the intersections are the pairwise feature synergies,
         ranging from `0.0` (no synergy - both features contribute to predictions fully
         autonomously of each other) to `1.0` (full synergy, both features rely on
@@ -498,7 +501,7 @@ class LearnerInspector(
         """
         Calculate the feature redundancy matrix.
 
-        This yields a symmetrical matrix where each row and column represents one
+        This yields an asymmetric matrix where each row and column represents one
         feature, and the values at the intersections are the pairwise feature
         redundancies, ranging from `0.0` (no redundancy - both features contribute to
         predictions fully independently of each other) to `1.0` (full redundancy, either
@@ -540,7 +543,7 @@ class LearnerInspector(
         """
         Calculate the feature association matrix.
 
-        This yields a symmetrical matrix where each row and column represents one
+        This yields an asymmetric matrix where each row and column represents one
         feature, and the values at the intersections are the pairwise feature
         associations, ranging from `0.0` (no association) to `1.0` (full association).
 
@@ -640,8 +643,8 @@ class LearnerInspector(
         For a quantification of overall interaction (including indirect interactions
         across more than two features), see :meth:`.feature_synergy_matrix`.
 
-        The relative values are normalised to add up to 1.0, and each value ranges
-        between 0.0 and 1.0.
+        The relative values are normalised to add up to `1.0`, and each value ranges
+        between `0.0` and `1.0`.
 
         For features :math:`f_i` and :math:`f_j`, relative feature interaction
         :math:`I` is calculated as
@@ -739,22 +742,23 @@ class LearnerInspector(
     def shap_plot_data(self) -> ShapPlotData:
         """
         Consolidate SHAP values and corresponding feature values from this inspector
-        for use in SHAP plots offered by the :mod:`shap` package.
+        for use in SHAP plots offered by the
+        `shap <https://shap.readthedocs.io/en/stable/>`__ package.
 
         The _shap_ package provides functions for creating various SHAP plots.
         Most of these functions require
 
-        - one or more SHAP value matrices as a single _numpy_ array, or a list of
-            _numpy_ arrays of shape _(n_observations, n_features)_
+        - one or more SHAP value matrices as a single _numpy_ array,
+          or a list of _numpy_ arrays of shape _(n_observations, n_features)_
         - a feature matrix of shape _(n_observations, n_features)_, which can be
-            provided as a data frame to preserve feature names
+          provided as a data frame to preserve feature names
 
         This method provides this data inside a :class:`.ShapPlotData` object, plus
 
         - the names of all outputs (i.e., the target names in case of regression,
-            or the class names in case of classification)
+          or the class names in case of classification)
         - corresponding target values as a series, or as a data frame in the case of
-            multiple targets
+          multiple targets
 
         This method also ensures that the rows of all arrays, frames, and series are
         aligned, even if only a subset of the observations in the original sample was
