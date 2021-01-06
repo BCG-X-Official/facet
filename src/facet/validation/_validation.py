@@ -43,7 +43,7 @@ class BaseBootstrapCV(BaseCrossValidator, metaclass=ABCMeta):
         random_state: Optional[Union[int, np.random.RandomState]] = None,
     ):
         """
-        :param n_splits: Number of splits to generate (default: 1000)
+        :param n_splits: number of splits to generate (default: 1000)
         :param random_state: random state to initialise the random generator with
             (optional)
         """
@@ -135,7 +135,7 @@ class BootstrapCV(BaseBootstrapCV):
     The resulting training set is the same size as the total sample;
     the test set consists of all samples not included in the training set.
 
-    Permissible as the ``cv`` argument of :class:`sklearn.model_selection.GridSearchCV`
+    Permissible as the ``cv`` argument of :class:`~sklearn.model_selection.GridSearchCV`
     object.
     """
 
@@ -195,10 +195,6 @@ class StationaryBootstrapCV(BaseBootstrapCV):
 
     Intended for use with time series that satisfy the stationarity requirement.
 
-    :param mean_block_size: mean size of coherent blocks to sample.If an ``int``,
-        use this as the absolute number of blocks. If a ``float``, must be
-        in the range (0.0, 1.0) and denotes a block size relative to the total number
-        samples. (default: 0.5)
     """
 
     def __init__(
@@ -207,6 +203,15 @@ class StationaryBootstrapCV(BaseBootstrapCV):
         mean_block_size: Union[int, float] = 0.5,
         random_state: Optional[Union[int, np.random.RandomState]] = None,
     ) -> None:
+        """
+        :param n_splits: number of splits to generate (default: 1000)
+        :param mean_block_size: mean size of coherent blocks to sample. If an ``int``,
+            use this as the absolute number of blocks. If a ``float``, must be
+            in the range (0.0, 1.0) and denotes a block size relative to the total
+            number samples. (default: 0.5)
+        :param random_state: random state to initialise the random generator with
+            (optional)
+        """
         super().__init__(n_splits=n_splits, random_state=random_state)
         if isinstance(mean_block_size, int):
             if mean_block_size < 2:
