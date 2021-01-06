@@ -19,7 +19,7 @@ FACET is composed of the following key components:
 |                 | To learn more about FACET’s model inspection capabilities, see the  |
 |                 | getting started example below.                                      |
 +-----------------+---------------------------------------------------------------------+
-| |               | **Model Simulation**                                                |
+| |spacer|        | **Model Simulation**                                                |
 |                 |                                                                     |
 | |sim|           | FACET’s model simulation algorithms use ML models for               |
 |                 | *virtual experiments* to help identify scenarios that optimise      |
@@ -30,7 +30,7 @@ FACET is composed of the following key components:
 |                 | For an example of FACET’s bootstrap simulations, see the            |
 |                 | quickstart example below.                                           |
 +-----------------+---------------------------------------------------------------------+
-| |               | **Enhanced Machine Learning Workflow**                              |
+| |spacer|        | **Enhanced Machine Learning Workflow**                              |
 |                 |                                                                     |
 | |pipe|          | FACET offers an efficient and transparent machine learning          |
 |                 | workflow, enhancing                                                 |
