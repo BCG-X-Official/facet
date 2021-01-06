@@ -7,6 +7,8 @@ Tutorials
 Get FACET's enhanced model inspection, model-based simulation and workflow
 into your data science toolbox!
 
+.. _drilling-tut:
+
 Introductory Tutorial: Incident risk of drilling operations
 *************************************************************
 
@@ -28,6 +30,7 @@ download the notebook for yourself
 
     tutorial/Water_Drilling_Incident_Classification_with_Facet
 
+.. _maintenance-tut:
 
 Regression Tutorial: Predictive Maintenance
 *********************************************
@@ -50,6 +53,7 @@ start running the code for yourself by downloading the notebook
 
     tutorial/Predictive_Maintenance_Regression_with_Facet
 
+.. _prediabetes-tut:
 
 Classification Tutorial: Prediabetes
 **************************************
@@ -70,6 +74,7 @@ the code for yourself by downloading the notebook
 
    tutorial/Classification_with_Facet
 
+.. _boot-sim-summary-tut:
 
 Simulation Tutorial: Feature Simulation on Drill Operations
 *************************************************************
@@ -106,6 +111,7 @@ the code for yourself by downloading the notebook
 
     tutorial/Scikit-learn_classifier_summaries_using_FACET
 
+.. _red-syn-summary-tut:
 
 Understanding synergy and redundancy with synthetic data
 **********************************************************
