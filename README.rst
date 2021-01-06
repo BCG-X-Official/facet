@@ -9,13 +9,13 @@ explanations of your supervised machine learning models.
 FACET is composed of the following key components:
 
 +-----------------+---------------------------------------------------------------------+
-| |spacer|        | **Model Inspection**                                                |
+| |               | **Model Inspection**                                                |
 |                 |                                                                     |
 | |inspect|       | FACET introduces a new algorithm to quantify dependencies and       |
 |                 | interactions between features in ML models.                         |
 |                 | This new tool for human-explainable AI adds a new, global           |
 |                 | perspective to the observation-level explanations provided by the   |
-|                 | popular `SHAP <https://shap.readthedocs.io/en/latest/>`__ approach. |
+|                 | popular `SHAP <https://shap.readthedocs.io/en/stable/>`__ approach. |
 |                 | To learn more about FACET’s model inspection capabilities, see the  |
 |                 | getting started example below.                                      |
 +-----------------+---------------------------------------------------------------------+
@@ -120,7 +120,7 @@ Enhanced Machine Learning Workflow
     # create repeated k-fold CV iterator
     rkf_cv = RepeatedKFold(n_splits=5, n_repeats=10, random_state=42)
 
-    # rank your models by performance
+    # rank your candidate models by performance
     ranker = LearnerRanker(
         grids=rnd_forest_grid, cv=rkf_cv, n_jobs=-3
     ).fit(sample=boston_sample)
@@ -299,15 +299,15 @@ or have a look at
 `career opportunities <https://www.bcg.com/en-gb/beyond-consulting/bcg-gamma/careers>`_.
 
 .. |pipe| image:: sphinx/source/_static/icons/pipe_icon.png
-   :width: 100px
+   :width: 100
    :class: facet_icon
 
 .. |inspect| image:: sphinx/source/_static/icons/inspect_icon.png
-   :width: 100px
+   :width: 100
    :class: facet_icon
 
 .. |sim| image:: sphinx/source/_static/icons/sim_icon.png
-   :width: 100px
+   :width: 100
    :class: facet_icon
 
 .. |spacer| unicode:: 0x2028 0x2003 0x2003 0x2003 0x2003 0x2003 0x2003
