@@ -1,6 +1,7 @@
 """
 Factories for SHAP explainers from the ``shap`` package.
 """
+
 import functools
 import logging
 from abc import ABCMeta, abstractmethod
@@ -189,8 +190,8 @@ class KernelExplainerFactory(ExplainerFactory):
             default value used by :meth:`~shap.KernelExplainer.shap_values`
         :param data_size_limit: (optional) maximum number of observations to use as
             the background data set; larger data sets will be down-sampled using
-            method :meth:`~shap.kmeans`.
-            Pass ``None`` to prevent down-sampling the background data set.
+            kmeans.
+            Pass ``None`` to prevent down-sampling the background data set
         """
         super().__init__()
         validate_type(link, expected_type=str, optional=True, name="arg link")
