@@ -299,15 +299,15 @@ or have a look at
 `career opportunities <https://www.bcg.com/en-gb/beyond-consulting/bcg-gamma/careers>`_.
 
 .. |pipe| image:: sphinx/source/_static/icons/pipe_icon.png
-   :width: 100
+   :width: 300
    :class: facet_icon
 
 .. |inspect| image:: sphinx/source/_static/icons/inspect_icon.png
-   :width: 100
+   :width: 300
    :class: facet_icon
 
 .. |sim| image:: sphinx/source/_static/icons/sim_icon.png
-   :width: 100
+   :width: 300
    :class: facet_icon
 
 .. |spacer| unicode:: 0x2028 0x2003 0x2003 0x2003 0x2003 0x2003 0x2003
