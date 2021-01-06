@@ -67,23 +67,23 @@ __tracker = AllTracker(globals())
 # Constants
 #
 
-#: the name of the row index of attribute :attr:`.output`, denoting splits
+#: The name of the row index of attribute :attr:`.output`, denoting splits.
 IDX_SPLIT = "split"
 
-#: the name of the column index of attribute :attr:`.output`, denoting partitions
-#: represented by their central values or by a category
+#: The name of the column index of attribute :attr:`.output`, denoting partitions
+#: represented by their central values or by a category.
 IDX_PARTITION = "partition"
 
-#: the name of a series of simulated outputs
+#: The name of a series of simulated outputs.
 COL_OUTPUT = "output"
 
-#: the name of a series of median simulated values per partition
+#: The name of a series of median simulated values per partition.
 COL_MEDIAN = "median"
 
-#: the name of a series of lower CI bounds of simulated values per partition
+#: The name of a series of lower CI bounds of simulated values per partition.
 COL_LOWER_BOUND = "lower_bound"
 
-#: the name of a series of upper CI bounds of simulated values per partition
+#: The name of a series of upper CI bounds of simulated values per partition.
 COL_UPPER_BOUND = "upper_bound"
 
 
@@ -97,27 +97,27 @@ class UnivariateSimulationResult(Generic[T_Partition]):
     Summary result of a univariate simulation.
     """
 
-    #: name of the simulated feature
+    #: Name of the simulated feature.
     feature_name: str
 
-    #: name of the target for which outputs are simulated
+    #: Name of the target for which outputs are simulated.
     output_name: str
 
-    #: the unit of the simulated outputs (e.g., uplift or class probability)
+    #: The unit of the simulated outputs (e.g., uplift or class probability).
     output_unit: str
 
-    #: the average observed actual output, acting as the baseline of the simulation
+    #: The average observed actual output, acting as the baseline of the simulation.
     baseline: float
 
-    #: the width :math:`\\alpha` of the confidence interval
-    #: determined by bootstrapping, with :math:`0 < \\alpha < 1`
+    #: The width :math:`\alpha` of the confidence interval
+    #: determined by bootstrapping, with :math:`0 < \alpha < 1`.
     confidence_level: float
 
-    #: the partitioner used to generate feature values to be simulated
+    #: The partitioner used to generate feature values to be simulated.
     partitioner: Partitioner
 
-    #: matrix of simulated outcomes, with columns representing partitions
-    #: and rows representing bootstrap splits used to fit variations of the model
+    #: Matrix of simulated outcomes, with columns representing partitions
+    #: and rows representing bootstrap splits used to fit variations of the model.
     outputs: pd.DataFrame
 
     def __init__(
@@ -167,7 +167,7 @@ class UnivariateSimulationResult(Generic[T_Partition]):
     def outputs_median(self) -> pd.Series:
         """
         Calculate the medians of the distribution of simulation outcomes,
-        for every partition
+        for every partition.
 
         :return: a series of medians, indexed by the central values of the partitions
             for which the simulation was run
@@ -177,7 +177,7 @@ class UnivariateSimulationResult(Generic[T_Partition]):
     def outputs_lower_bound(self) -> pd.Series:
         """
         Calculate the lower CI bounds of the distribution of simulation outcomes,
-        for every partition
+        for every partition.
 
         :return: a series of medians, indexed by the central values of the partitions
             for which the simulation was run
@@ -189,7 +189,7 @@ class UnivariateSimulationResult(Generic[T_Partition]):
     def outputs_upper_bound(self) -> pd.Series:
         """
         Calculate the lower CI bounds of the distribution of simulation outcomes,
-        for every partition
+        for every partition.
 
         :return: a series of medians, indexed by the central values of the partitions
             for which the simulation was run
@@ -310,14 +310,14 @@ class BaseUnivariateSimulator(
     def simulate_actuals(self) -> pd.Series:
         r"""
         For each test split :math:`\mathrm{T}_i` in this simulator's
-        :attr:`.crossfit`, predict the outputs for all test samples given their actual
+        crossfit, predict the outputs for all test samples given their actual
         feature values, and calculate the absolute deviation from the mean of all actual
         outputs of the entire sample
-        :math:`\frac{1}{n}\sum_{j \in \mathrm{T}_i}\hat y_j - \bar y`
+        :math:`\frac{1}{n}\sum_{j \in \mathrm{T}_i}\hat y_j - \bar y`.
 
         The spread and offset of these deviations can serve as an indication of how the
         bias of the model contributes to the uncertainty of simulations produced with
-        method :meth:`.simulate_features`.
+        method :meth:`.simulate_feature`.
 
         :return: series mapping split IDs to deviations of simulated mean outputs
         """
@@ -342,13 +342,13 @@ class BaseUnivariateSimulator(
     @abstractmethod
     def output_unit(self) -> str:
         """
-        Unit of the output values calculated by the simulation
+        Unit of the output values calculated by the simulation.
         """
 
     def baseline(self) -> float:
         """
         Calculate the expectation value of the simulation result, based on historically
-        observed actuals
+        observed actuals.
 
         :return: the expectation value of the simulation results
         """
@@ -358,7 +358,7 @@ class BaseUnivariateSimulator(
     def expected_output(self) -> float:
         """
         Calculate the expectation value of the actual model output, based on
-        historically observed actuals
+        historically observed actuals.
 
         :return: the expectation value of the actual model output
         """
@@ -460,14 +460,14 @@ class UnivariateProbabilitySimulator(BaseUnivariateSimulator[ClassifierPipelineD
     Univariate simulation of positive class probabilities based on a binary classifier.
 
     The simulation is carried out for one specific feature `x[i]` of a model, and for a
-    range of values `v[1]`, …, `v[n]` for `f`, determined by a :class:`.Partitioning`
+    range of values `v[1]`, …, `v[n]` for `f`, determined by a :class:`.Partitioner`
     object.
 
-    For each value `v[j]` of the partitioning, a :class:`Sample` of historical
+    For each value `v[j]` of the partitioning, a :class:`.Sample` of historical
     observations is modified by assigning value `v[j]` for feature `x[i]` for all
     observations, i.e., assuming that feature `x[i]` has the constant value `v[j]`.
 
-    Then all classifiers of a :class:`LearnerCrossfit` are used in turn to each predict
+    Then all classifiers of a :class:`.LearnerCrossfit` are used in turn to each predict
     the positive class probabilities for all observations, and the mean probability
     across all observations is calculated for each classifier and value `v[j]`.
     The simulation result is a set of `n` distributions of mean predicted probabilities
@@ -489,7 +489,7 @@ class UnivariateProbabilitySimulator(BaseUnivariateSimulator[ClassifierPipelineD
     def expected_output(self) -> float:
         """
         Calculate the actual observed frequency of the positive class as the baseline
-        of the simulation
+        of the simulation.
 
         :return: observed frequency of the positive class
         """
@@ -502,7 +502,7 @@ class UnivariateProbabilitySimulator(BaseUnivariateSimulator[ClassifierPipelineD
 
     def _positive_class(self) -> Any:
         """
-        The label of the positive class of the binary classifier being simulated
+        The label of the positive class of the binary classifier being simulated.
         """
         classifier = self.crossfit.pipeline.final_estimator
 
@@ -532,7 +532,7 @@ class _UnivariateRegressionSimulator(
 ):
     def expected_output(self) -> float:
         """
-        Calculate the mean of actually observed values for the target
+        Calculate the mean of actually observed values for the target.
 
         :return: mean observed value of the target
         """
@@ -556,14 +556,14 @@ class UnivariateTargetSimulator(_UnivariateRegressionSimulator):
     Univariate simulation of the absolute output of a regression model.
 
     The simulation is carried out for one specific feature `x[i]` of a model, and for a
-    range of values `v[1]`, …, `v[n]` for `f`, determined by a :class:`.Partitioning`
+    range of values `v[1]`, …, `v[n]` for `f`, determined by a :class:`.Partitioner`
     object.
 
-    For each value `v[j]` of the partitioning, a :class:`Sample` of historical
+    For each value `v[j]` of the partitioning, a :class:`.Sample` of historical
     observations is modified by assigning value `v[j]` for feature `x[i]` for all
     observations, i.e., assuming that feature `x[i]` has the constant value `v[j]`.
 
-    Then all regressors of a :class:`LearnerCrossfit` are used in turn to each predict
+    Then all regressors of a :class:`.LearnerCrossfit` are used in turn to each predict
     the output for all observations, and the mean of the predicted outputs is calculated
     for each regressor and value `v[j]`. The simulation result is a set of `n`
     distributions of mean predicted targets across regressors -- one distribution for
@@ -586,14 +586,14 @@ class UnivariateUpliftSimulator(_UnivariateRegressionSimulator):
     Univariate simulation of the relative uplift of the output of a regression model.
 
     The simulation is carried out for one specific feature `x[i]` of a model, and for a
-    range of values `v[1]`, …, `v[n]` for `f`, determined by a :class:`.Partitioning`
+    range of values `v[1]`, …, `v[n]` for `f`, determined by a :class:`.Partitioner`
     object.
 
-    For each value `v[j]` of the partitioning, a :class:`Sample` of historical
+    For each value `v[j]` of the partitioning, a :class:`.Sample` of historical
     observations is modified by assigning value `v[j]` for feature `x[i]` for all
     observations, i.e., assuming that feature `x[i]` has the constant value `v[j]`.
 
-    Then all regressors of a :class:`LearnerCrossfit` are used in turn to each predict
+    Then all regressors of a :class:`.LearnerCrossfit` are used in turn to each predict
     the output for all observations, and the mean of the predicted outputs is calculated
     for each regressor and value `v[j]`. The simulation result is a set of `n`
     distributions of mean predicted target uplifts across regressors, i.e. the mean
