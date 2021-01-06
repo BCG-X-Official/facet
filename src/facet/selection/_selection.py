@@ -212,20 +212,20 @@ class LearnerEvaluation(Generic[T_LearnerPipelineDF]):
         """
         super().__init__()
 
-        #: the unfitted learner pipeline
+        #: The unfitted learner pipeline.
         self.pipeline = pipeline
 
-        #: the hyper-parameters for which the learner pipeline was scored
+        #: The hyper-parameters for which the learner pipeline was scored.
         self.parameters = parameters
 
-        #: the name of the scoring function used to calculate the scores
+        #: The name of the scoring function used to calculate the scores.
         self.scoring_name = scoring_name
 
-        #: the scores of all crossfits of the learner pipeline
+        #: The scores of all crossfits of the learner pipeline.
         self.scores = scores
 
-        #: overall score determined by the :class:`.LearnerRanker`, used for ranking
-        #: the learners
+        #: Overall score determined by the :class:`.LearnerRanker`, used for ranking
+        #: the learners.
         self.ranking_score = ranking_score
 
 
@@ -265,12 +265,12 @@ class LearnerRanker(
         :param scoring: a scoring function (by name, or as a callable) for evaluating
             learners (optional; use learner's default scorer if not specified here).
             If passing a callable, the ``"score"`` will be used as the name of the
-            scoring function unless the callable defines a ``__name__`` attribute.
+            scoring function unless the callable defines a ``__name__`` attribute
         :param ranking_scorer: a function to calculate a scalar score for every
-            crossfit, taking a :class:`.CrossfitScores` and returning a float.
+            crossfit and returning a float.
             The resulting score is used to rank all crossfits (highest score is best).
             Defaults to :meth:`.default_ranking_scorer`, calculating
-            `mean(scores) - 2 * std(scores, ddof=1)`.
+            `mean(scores) - 2 * std(scores, ddof=1)`
         :param shuffle_features: if ``True``, shuffle column order of features for
             every crossfit (default: ``False``)
         :param random_state: optional random seed or random state for shuffling the
