@@ -266,7 +266,8 @@ please open a PR addressing the issue.
 We do ask that for any major changes please discuss these with us first via an issue or
 using our team email: FacetTeam@bcg.com.
 
-For further information on contributing please see our [LINK: contribution-guide].
+For further information on contributing please see our
+`contribution guide <https://bcg-gamma.github.io/facet/contribution_guide.html>`__.
 
 License
 ---------------------------
@@ -289,8 +290,8 @@ FACET is built on top of two popular packages for Machine Learning:
 BCG GAMMA
 ---------------------------
 
-If you would like to know more about the team behind FACET please see our [LINK:
-about_us] page.
+If you would like to know more about the team behind FACET please see the
+`about us <https://bcg-gamma.github.io/facet/about_us.html>`__ page.
 
 We are always on the lookout for passionate and talented data scientists to join the
 BCG GAMMA team. If you would like to know more you can find out about
