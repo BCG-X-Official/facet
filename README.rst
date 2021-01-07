@@ -195,7 +195,9 @@ For feature synergy, we can get a similar picture
 .. image:: sphinx/source/_static/synergy_matrix.png
     :width: 600
 
-Please see the [LINK: API reference] for more detail.
+Please see the
+`API reference <https://bcg-gamma.github.io/facet/apidoc/facet.html>`__
+for more detail.
 
 Model Simulation
 ~~~~~~~~~~~~~~~~~~
