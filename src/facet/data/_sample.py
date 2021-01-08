@@ -1,5 +1,5 @@
 """
-Implementation of Facet's :class:`.Sample` class.
+Implementation of FACET's :class:`.Sample` class.
 """
 
 import logging
@@ -29,15 +29,15 @@ __tracker = AllTracker(globals())
 
 class Sample:
     """
-    A collection of observations, comprising features as well as one or more target
+    A collection of observations, comprising features, one or more target
     variables and optional sample weights.
 
     A :class:`.Sample` object serves to keep features, targets and weights aligned,
-    thus keeping modeling code more readable and robust.
+    ensuring a more readable and robust ML workflow.
     It provides basic methods for accessing features, targets and weights, and
     for selecting subsets of features and observations.
 
-    The underlying data structure is a pandas :class:`.DataFrame`.
+    The underlying data structure is a :class:`pandas.DataFrame`.
 
     Supports :func:`.len`, returning the number of observations in this sample.
     """
@@ -49,16 +49,16 @@ class Sample:
     _feature_names: List[str]
     _target_names: List[str]
 
-    #: default name for the observations index (= row index)
-    #: of the underlying data frame
+    #: Default name for the observations index (= row index)
+    #: of the underlying data frame.
     IDX_OBSERVATION = "observation"
 
-    #: default name for the feature index (= column index)
-    #: used when returning a features table
+    #: Default name for the feature index (= column index)
+    #: used when returning a features table.
     IDX_FEATURE = "feature"
 
-    #: default name for the target series or target index (= column index)
-    #: used when returning the targets
+    #: Default name for the target series or target index (= column index)
+    #: used when returning the targets.
     IDX_TARGET = "target"
 
     def __init__(
@@ -167,14 +167,14 @@ class Sample:
     @property
     def index(self) -> pd.Index:
         """
-        Row index of all observations in this sample
+        Row index of all observations in this sample.
         """
         return self._observations.index
 
     @property
     def feature_names(self) -> List[str]:
         """
-        The column names of all features in this sample
+        The column names of all features in this sample.
         """
         return self._feature_names
 
@@ -182,7 +182,7 @@ class Sample:
     def target_name(self) -> Union[str, List[str]]:
         """
         The column name of the target in this sample, or a list of column names
-        if this sample has multiple targets
+        if this sample has multiple targets.
         """
         if len(self._target_names) == 1:
             return self._target_names[0]
@@ -192,14 +192,14 @@ class Sample:
     @property
     def weight_name(self) -> Optional[str]:
         """
-        The column name of weights in this sample; ``None`` if no weights are defined
+        The column name of weights in this sample; ``None`` if no weights are defined.
         """
         return self._weight_name
 
     @property
     def features(self) -> pd.DataFrame:
         """
-        The features for all observations
+        The features for all observations.
         """
         features: pd.DataFrame = self._observations.loc[:, self._feature_names]
 
