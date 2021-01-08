@@ -41,7 +41,7 @@ __all__ = [
 # Type variables
 #
 
-T = TypeVar("T")
+T_Self = TypeVar("T_Self")
 T_LearnerPipelineDF = TypeVar("T_LearnerPipelineDF", bound=LearnerPipelineDF)
 
 #
@@ -115,7 +115,9 @@ class ShapCalculator(
         """[see superclass]"""
         return self.shap_ is not None
 
-    def fit(self: T, crossfit: LearnerCrossfit[T_LearnerPipelineDF], **fit_params) -> T:
+    def fit(
+        self: T_Self, crossfit: LearnerCrossfit[T_LearnerPipelineDF], **fit_params
+    ) -> T_Self:
         """
         Calculate the SHAP values.
 

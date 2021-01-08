@@ -50,7 +50,7 @@ __all__ = ["LearnerGrid", "LearnerEvaluation", "LearnerRanker"]
 # Type variables
 #
 
-T = TypeVar("T")
+T_Self = TypeVar("T_Self")
 T_LearnerPipelineDF = TypeVar(
     "T_LearnerPipelineDF", RegressorPipelineDF, ClassifierPipelineDF
 )
@@ -383,7 +383,7 @@ class LearnerRanker(
         """
         return scores.mean() - 2 * scores.std(ddof=1)
 
-    def fit(self: T, sample: Sample, **fit_params) -> T:
+    def fit(self: T_Self, sample: Sample, **fit_params) -> T_Self:
         """
         Rank the candidate learners and their hyper-parameter combinations using
         crossfits from the given sample.

@@ -29,8 +29,7 @@ __all__ = [
 #
 
 
-T = TypeVar("T")
-
+T_Self = TypeVar("T_Self")
 T_Values = TypeVar("T_Values")
 T_Values_Numeric = TypeVar("T_Values_Numeric", int, float)
 
@@ -47,9 +46,7 @@ __tracker = AllTracker(globals())
 
 
 class Partitioner(
-    FittableMixin[Iterable[T_Values]],
-    Generic[T_Values],
-    metaclass=ABCMeta,
+    FittableMixin[Iterable[T_Values]], Generic[T_Values], metaclass=ABCMeta
 ):
     """
     Abstract base class of all partitioners.
@@ -108,7 +105,7 @@ class Partitioner(
         """
 
     @abstractmethod
-    def fit(self: T, values: Iterable[T_Values], **fit_params) -> T:
+    def fit(self: T_Self, values: Iterable[T_Values], **fit_params) -> T_Self:
         """
         Calculate the partitioning for the given observed values.
 
@@ -191,9 +188,7 @@ class RangePartitioner(
         return self._partitions
 
     @property
-    def partition_bounds_(
-        self,
-    ) -> Sequence[Tuple[T_Values_Numeric, T_Values_Numeric]]:
+    def partition_bounds_(self) -> Sequence[Tuple[T_Values_Numeric, T_Values_Numeric]]:
         """
         Return the endpoints of the intervals that delineate each partitions.
 
@@ -220,12 +215,12 @@ class RangePartitioner(
 
     # noinspection PyMissingOrEmptyDocstring
     def fit(
-        self: T,
+        self: T_Self,
         values: Iterable[T_Values],
         lower_bound: Optional[T_Values_Numeric] = None,
         upper_bound: Optional[T_Values_Numeric] = None,
         **fit_params,
-    ) -> T:
+    ) -> T_Self:
         """[see superclass]"""
 
         self: RangePartitioner  # support type hinting in PyCharm
@@ -433,7 +428,7 @@ class CategoryPartitioner(Partitioner[T_Values]):
         return self._frequencies
 
     # noinspection PyMissingOrEmptyDocstring
-    def fit(self: T, values: Sequence[T_Values], **fit_params) -> T:
+    def fit(self: T_Self, values: Sequence[T_Values], **fit_params) -> T_Self:
         """[see superclass]"""
 
         self: CategoryPartitioner  # support type hinting in PyCharm
