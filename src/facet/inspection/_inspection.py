@@ -745,12 +745,12 @@ class LearnerInspector(
         for use in SHAP plots offered by the
         `shap <https://shap.readthedocs.io/en/stable/>`__ package.
 
-        The _shap_ package provides functions for creating various SHAP plots.
+        The `shap` package provides functions for creating various SHAP plots.
         Most of these functions require
 
-        - one or more SHAP value matrices as a single _numpy_ array,
-          or a list of _numpy_ arrays of shape _(n_observations, n_features)_
-        - a feature matrix of shape _(n_observations, n_features)_, which can be
+        - one or more SHAP value matrices as a single `numpy` array,
+          or a list of `numpy` arrays of shape `(n_observations, n_features)`
+        - a feature matrix of shape `(n_observations, n_features)`, which can be
           provided as a data frame to preserve feature names
 
         This method provides this data inside a :class:`.ShapPlotData` object, plus
