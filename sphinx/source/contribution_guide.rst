@@ -211,6 +211,27 @@ Sphinx Build
 ~~~~~~~~~~~~~~~~~~~~~~~
 
 Documentation for FACET is built using `sphinx <https://www.sphinx-doc.org/en/master/>`_.
+Before building the documentation ensure the ``facet-develop`` environment is active as
+the documentation build has a number of key dependencies specified in the
+``environment.yml`` file, specifically:
+
+- ``sphinx``
+- ``pydata-sphinx-theme``
+- ``nbsphinx``
+- ``sphinx-autodoc-typehints``
+
+To generate the Sphinx documentation locally navigate to ``/sphinx`` and run
+
+.. code-block:: sh
+
+    python make.py html
+
+By default this will clean any previous build. The generated Sphinx
+documentation for FACET can then be found at ``sphinx/build/html``.
+
+Documentation versioning is managed via the release process - see the section on
+building and releasing FACET.
+
 The ``sphinx`` folder in the root directory contains the following:
 
 - a ``make.py`` script for executing the documentation build via python.
@@ -309,22 +330,6 @@ the build process, of which some key ones are as follows:
 - `imgmath <https://www.sphinx-doc.org/en/master/usage/extensions/math.html>`_ to render 
   math expressions in doc strings. Note that a local latex installation is required (e.g., 
   `MiKTeX <https://miktex.org/>`_ for Windows).
-
-Before building the documentation ensure the ``facet-develop`` environment is active as
-the documentation build has a number of key dependencies specified in the
-``environment.yml`` file, specifically:
-
-- ``sphinx``
-- ``pydata-sphinx-theme``
-- ``nbsphinx``
-- ``sphinx-autodoc-typehints``
-
-To generate the Sphinx documentation, run ``python make.py html`` from within
-``/sphinx``. By default this will clean any previous build. The generated Sphinx
-documentation for FACET can then be found at ``sphinx/build/html``.
-
-Documentation versioning is managed via the release process - see the section on
-Building and releasing FACET below.
 
 
 README
