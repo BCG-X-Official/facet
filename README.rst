@@ -161,10 +161,9 @@ features in a model are:
   a complex interaction between them. This means these two features are
   synergistic for predicting cardiovascular health. Further, both features
   are important to the model and removing either one would significantly
-  impact performance. Let's assume age is a more important feature than
-  gender and so age contributes more to the combined prediction than
-  gender. This asymmetric contribution means the synergy for (age, gender)
-  is less than the synergy for (gender, age). To think about it another
+  impact performance. Let's assume age brings more information to the joint
+  contribution than gender. This asymmetric contribution means the synergy for
+  (age, gender) is less than the synergy for (gender, age). To think about it another
   way, imagine the prediction is a coordinate you are trying to reach.
   From your starting point, age gets you much closer to this point than
   gender, however, you need both to get there. Synergy reflects the fact
