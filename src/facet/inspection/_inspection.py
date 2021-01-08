@@ -39,7 +39,7 @@ __all__ = ["ShapPlotData", "LearnerInspector"]
 # Type variables
 #
 
-T = TypeVar("T")
+T_Self = TypeVar("T_Self")
 T_LearnerPipelineDF = TypeVar("T_LearnerPipelineDF", bound=LearnerPipelineDF)
 T_SeriesOrDataFrame = TypeVar("T_SeriesOrDataFrame", pd.Series, pd.DataFrame)
 
@@ -189,7 +189,7 @@ class LearnerInspector(
         + ParallelizableMixin.__init__.__doc__
     )
 
-    def fit(self: T, crossfit: LearnerCrossfit, **fit_params) -> T:
+    def fit(self: T_Self, crossfit: LearnerCrossfit, **fit_params) -> T_Self:
         """
         Fit the inspector with the given crossfit.
 
