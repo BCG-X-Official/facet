@@ -113,13 +113,6 @@ class UnivariateSimulationResult(Generic[T_Partition]):
     #: determined by bootstrapping, with :math:`0 < \alpha < 1`.
     confidence_level: float
 
-    #: The partitioner used to generate feature values to be simulated.
-    partitioner: Partitioner
-
-    #: Matrix of simulated outcomes, with columns representing partitions
-    #: and rows representing bootstrap splits used to fit variations of the model.
-    outputs: pd.DataFrame
-
     def __init__(
         self,
         *,
@@ -161,8 +154,31 @@ class UnivariateSimulationResult(Generic[T_Partition]):
         self.output_unit = output_unit
         self.baseline = baseline
         self.confidence_level = confidence_level
-        self.partitioner = partitioner
-        self.outputs = outputs
+        self._partitioner = partitioner
+        self._outputs = outputs
+
+    @property
+    def partitioner(self) -> Partitioner:
+        """
+        The partitioner used to generate feature values to be simulated.
+        """
+        return self._partitioner
+
+    @partitioner.setter
+    def partitioner(self, partitioner: Partitioner) -> None:
+        self._partitioner = partitioner
+
+    @property
+    def outputs(self) -> pd.DataFrame:
+        """
+        The matrix of simulated outcomes, with columns representing partitions
+        and rows representing bootstrap splits used to fit variations of the model.
+        """
+        return self._outputs
+
+    @outputs.setter
+    def outputs(self, outputs: pd.DataFrame) -> None:
+        self._outputs = outputs
 
     def outputs_median(self) -> pd.Series:
         """
