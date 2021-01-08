@@ -27,7 +27,7 @@ _PAIRWISE_PARTIAL_SUMMATION = False
 # Type variables
 #
 
-T = TypeVar("T")
+T_Self = TypeVar("T_Self")
 
 #
 # Ensure all symbols introduced below are included in __all__
@@ -64,7 +64,7 @@ class ShapValueDecomposer(FittableMixin[ShapCalculator]):
 
     is_fitted.__doc__ = FittableMixin.is_fitted.__doc__
 
-    def fit(self: T, shap_calculator: ShapCalculator, **fit_params) -> T:
+    def fit(self: T_Self, shap_calculator: ShapCalculator, **fit_params) -> T_Self:
         """
         Calculate the SHAP decomposition for the shap values produced by the
         given SHAP calculator.
