@@ -298,6 +298,8 @@ class LearnerCrossfit(
 
     def splits(self) -> Iterator[Tuple[Sequence[int], Sequence[int]]]:
         """
+        Get an iterator of all train/test splits used by this crossfit.
+
         :return: an iterator of all train/test splits used by this crossfit
         """
         self._ensure_fitted()
@@ -308,6 +310,8 @@ class LearnerCrossfit(
 
     def models(self) -> Iterator[T_LearnerPipelineDF]:
         """
+        Get an iterator of all models fitted on the cross-validation train splits.
+
         :return: an iterator of all models fitted on the cross-validation train splits
         """
         self._ensure_fitted()
