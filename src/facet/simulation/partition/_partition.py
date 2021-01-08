@@ -404,6 +404,7 @@ class CategoryPartitioner(Partitioner[T_Values]):
     """
 
     def __init__(self, max_partitions: Optional[int] = None) -> None:
+        """[see superclass]"""
         super().__init__(max_partitions=max_partitions)
         self._frequencies = None
         self._partitions = None
