@@ -1,6 +1,7 @@
 """
-Factories for SHAP explainers from the ``shap`` package
+Factories for SHAP explainers from the ``shap`` package.
 """
+
 import functools
 import logging
 from abc import ABCMeta, abstractmethod
@@ -53,7 +54,7 @@ class ExplainerFactory(metaclass=ABCMeta):
     def explains_raw_output(self) -> bool:
         """
         ``True`` if explainers made by this factory explain raw model output,
-        ``False`` otherwise
+        ``False`` otherwise.
         """
 
     @property
@@ -99,7 +100,7 @@ class ExplainerFactory(metaclass=ABCMeta):
 @inheritdoc(match="[see superclass]")
 class TreeExplainerFactory(ExplainerFactory):
     """
-    A factory constructing class:`~shap.TreeExplainer` objects.
+    A factory constructing :class:`~shap.TreeExplainer` objects.
     """
 
     def __init__(
@@ -163,7 +164,6 @@ class TreeExplainerFactory(ExplainerFactory):
             ),
         )
 
-        # set check_additivity=False; see github.gamma.bcg.com/BCG/gamma-ml/issues/68
         explainer.shap_values = functools.partial(
             explainer.shap_values, check_additivity=False
         )
@@ -190,8 +190,8 @@ class KernelExplainerFactory(ExplainerFactory):
             default value used by :meth:`~shap.KernelExplainer.shap_values`
         :param data_size_limit: (optional) maximum number of observations to use as
             the background data set; larger data sets will be down-sampled using
-            method :meth:`~shap.kmeans`.
-            Pass ``None`` to prevent down-sampling the background data set.
+            kmeans.
+            Pass ``None`` to prevent down-sampling the background data set
         """
         super().__init__()
         validate_type(link, expected_type=str, optional=True, name="arg link")

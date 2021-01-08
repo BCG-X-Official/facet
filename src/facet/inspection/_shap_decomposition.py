@@ -68,6 +68,7 @@ class ShapValueDecomposer(FittableMixin[ShapCalculator]):
         """
         Calculate the SHAP decomposition for the shap values produced by the
         given SHAP calculator.
+
         :param shap_calculator: the fitted calculator from which to get the shap values
         """
 

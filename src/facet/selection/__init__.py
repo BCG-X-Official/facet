@@ -1,7 +1,7 @@
 """
-Model selection and hyperparameter optimization.
+Learner selection with hyperparameter optimization.
 
-:class:`.LearnerGrid` encapsulates a :class:`.LearnerPipelineDF` and a grid of
+:class:`.LearnerGrid` encapsulates a :class:`~sklearndf.PipelineDF` and a grid of
 hyperparameters.
 
 :class:`.LearnerRanker` selects the best pipeline and parametrization based on the

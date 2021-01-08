@@ -1,5 +1,5 @@
 """
-Basic data management across Facet's machine learning workflow.
+Basic data management for FACET's enhanced machine learning workflow.
 """
 
 

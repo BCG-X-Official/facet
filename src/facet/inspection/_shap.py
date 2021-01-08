@@ -1,5 +1,5 @@
 """
-Helper classes for SHAP calculations
+Helper classes for SHAP calculations.
 """
 
 import logging
@@ -75,7 +75,7 @@ class ShapCalculator(
     """
     Base class for all SHAP calculators.
 
-    A SHAP calculator uses the ``shap`` package to calculate SHAP tensors for oob
+    A SHAP calculator uses the ``shap`` package to calculate SHAP tensors for OOB
     samples across splits of a crossfit, then consolidates and aggregates results
     in a data frame.
     """
@@ -95,7 +95,7 @@ class ShapCalculator(
     ) -> None:
         """
         :param explain_full_sample: if ``True``, calculate SHAP values for full sample,
-            otherwise only use oob sample for each crossfit
+            otherwise only use OOB sample for each crossfit
         """
         super().__init__(
             n_jobs=n_jobs,
@@ -476,7 +476,7 @@ class ShapInteractionValuesCalculator(
     def get_diagonals(self) -> pd.DataFrame:
         """
         The get_diagonals of all SHAP interaction matrices, of shape
-        (n_observations, n_outputs * n_features)
+        (n_observations, n_outputs * n_features).
 
         :return: SHAP interaction values with shape
             (n_observations * n_features, n_outputs * n_features), i.e., for each
