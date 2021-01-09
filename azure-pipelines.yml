@@ -35,13 +35,7 @@ variables:
     branchName: $[ replace(variables['Build.SourceBranch'], 'refs/heads/', '') ]
   ${{ if startsWith(variables['Build.SourceBranch'], 'refs/pull/') }}:
     branchName: $[ replace(variables['System.PullRequest.SourceBranch'], 'refs/heads/', '') ]
-  master_or_release: >
-    ${{ or(
-    startsWith(variables['branchName'], 'release'),
-    eq(variables['branchName'], 'master'),
-    eq(variables['Build.Reason'], 'Schedule')
-    )
-    }}
+  master_or_release: $[ or(startsWith(variables['branchName'], 'release'), eq(variables['branchName'], 'master'), eq(variables['Build.Reason'], 'Schedule')) ]
 
 stages:
   # check code quality first to fail fast (isort, flake8, black)
