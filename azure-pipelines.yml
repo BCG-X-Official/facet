@@ -1,7 +1,6 @@
 trigger:
   - master
   - develop
-  - release/*
 
 pr:
   - master
