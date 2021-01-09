@@ -3,7 +3,7 @@ Core implementation of :mod:`facet.inspection`
 """
 
 import logging
-from typing import Generic, List, NamedTuple, Optional, TypeVar, Union, cast
+from typing import Generic, List, Optional, TypeVar, Union, cast
 
 import numpy as np
 import pandas as pd
@@ -57,23 +57,46 @@ __tracker = AllTracker(globals())
 #
 
 
-class ShapPlotData(NamedTuple):
+class ShapPlotData:
     """
     Data for use in SHAP plots provided by the
     `shap <https://shap.readthedocs.io/en/stable/>`__ package.
     """
 
-    #: Matrix of SHAP values (number of observations by number of features)
-    #: or list of shap value matrices for multi-output models.
-    shap_values: Union[np.ndarray, List[np.ndarray]]
+    def __init__(
+        self, shap_values: Union[np.ndarray, List[np.ndarray]], sample: Sample
+    ):
+        """
+        :param shap_values: the shap values for all observations and outputs
+        :param sample: (sub)sample of all observations for which SHAP values are
+            available; aligned with param ``shap_values``
+        """
+        self._shap_values = shap_values
+        self._sample = sample
 
-    #: Matrix of feature values (number of observations by number of features).
-    features: pd.DataFrame
+    @property
+    def shap_values(self) -> Union[np.ndarray, List[np.ndarray]]:
+        """
+        Matrix of SHAP values (number of observations by number of features)
+        or list of shap value matrices for multi-output models.
+        """
+        return self._shap_values
 
-    #: Series of target values (number of observations)
-    #: or matrix of target values for multi-output models
-    #: (number of observations by number of outputs).
-    target: Union[pd.Series, pd.DataFrame]
+    @property
+    def features(self) -> pd.DataFrame:
+        """
+        Matrix of feature values (number of observations by number of features).
+        """
+        return self._sample.features
+
+    @property
+    def target(self) -> Union[pd.Series, pd.DataFrame]:
+        """
+        Series of target values (number of observations)
+        or matrix of target values for multi-output models
+        (number of observations by number of outputs).
+        """
+        return self._sample.target
 
 
 @inheritdoc(match="[see superclass]")
@@ -774,7 +797,9 @@ class LearnerInspector(
             consolidate="mean"
         )
 
-        output_names = self.output_names_
+        output_names: List[str] = self.output_names_
+        shap_values_numpy: Union[np.ndarray, List[np.ndarray]]
+        included_observations: pd.Index
 
         if len(output_names) > 1:
             shap_values: List[pd.DataFrame]
@@ -789,8 +814,7 @@ class LearnerInspector(
 
         return ShapPlotData(
             shap_values=shap_values_numpy,
-            features=sample.features,
-            target=sample.target,
+            sample=sample,
         )
 
     def __feature_matrix_to_df(
