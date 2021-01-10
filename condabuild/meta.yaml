@@ -55,5 +55,5 @@ about:
     model inspection and model-based simulation to enable better explanations of
     your supervised machine learning models.
   dev_url: https://github.com/BCG-Gamma/facet
-  doc_url: https://pypi.org/project/facet/ # TODO - replace with docs
+  doc_url: https://bcg-gamma.github.io/facet/
   doc_source_url: https://github.com/BCG-Gamma/facet/blob/develop/README.rst
