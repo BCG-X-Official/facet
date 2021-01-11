@@ -21,7 +21,7 @@ on `stackoverflow <https://stackoverflow.com/>`_.
 
     Please keep an eye out for our scientific publication coming soon. In the meantime
     please feel free to explore the
-    `GAMMAscope article <TO DO ADD LINK>`__
+    `GAMMAscope article <https://medium.com/bcggamma/gamma-facet-a-new-approach-for-universal-explanations-of-machine-learning-models-b566877e7812>`__
     to get an introduction to using the algorithm.
 
 3. **How can I contribute?**
@@ -157,5 +157,5 @@ Bibtex entry::
      title={FACET},
      author={FACET Team at BCG GAMMA},
      year={2021},
-     note={Python package version 1.0.0)
+     note={Python package version 1.0.1)
      }
