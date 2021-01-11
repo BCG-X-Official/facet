@@ -1,4 +1,6 @@
 """
+Human-explainable AI.
+
 This is the class and function reference of FACET for advanced model selection,
 inspection, and simulation.
 """
