@@ -24,8 +24,8 @@ requires = [
     "scipy >=1.2,<1.6",
     "pyyaml >=5.0",
     "joblib >=0.13,<1.17",
-    "gamma-pytools >=1.0.0",
-    "sklearndf >=1.0.0",
+    "gamma-pytools >=1.0.1",
+    "sklearndf >=1.0.1",
 ]
 
 requires-python = ">=3.6,<4"

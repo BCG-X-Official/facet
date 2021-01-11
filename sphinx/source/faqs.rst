@@ -157,5 +157,5 @@ Bibtex entry::
      title={FACET},
      author={FACET Team at BCG GAMMA},
      year={2021},
-     note={Python package version 1.0.0)
+     note={Python package version 1.0.1)
      }
