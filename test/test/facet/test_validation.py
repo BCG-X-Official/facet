@@ -9,6 +9,8 @@ import pytest
 from sklearn import datasets, svm, tree
 from sklearn.model_selection import GridSearchCV
 
+from sklearndf import __sklearn_0_22__, __sklearn_version__
+
 from facet.validation import BootstrapCV
 
 
@@ -61,7 +63,7 @@ def test_get_train_test_splits_as_indices() -> None:
 
 
 def test_bootstrap_cv_with_sk_learn() -> None:
-    # filter out warnings triggerd by sk-learn/numpy
+    # filter out warnings triggered by sk-learn/numpy
 
     warnings.filterwarnings("ignore", message="numpy.dtype size changed")
     warnings.filterwarnings("ignore", message="numpy.ufunc size changed")
@@ -77,7 +79,10 @@ def test_bootstrap_cv_with_sk_learn() -> None:
     svc = svm.SVC(gamma="scale")
 
     # use the defined my_cv bootstrap CV within GridSearchCV:
-    clf = GridSearchCV(svc, parameters, cv=my_cv, iid=False)
+    if __sklearn_version__ < __sklearn_0_22__:
+        clf = GridSearchCV(svc, parameters, cv=my_cv, iid=False)
+    else:
+        clf = GridSearchCV(svc, parameters, cv=my_cv)
     clf.fit(iris.data, iris.target)
 
     # test if the number of received splits is correct:
