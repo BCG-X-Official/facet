@@ -430,7 +430,7 @@ or have a look at
    :target: https://github.com/psf/black
 
 .. |made_with_sphinx_doc| image:: https://img.shields.io/badge/Made%20with-Sphinx-1f425f.svg
-   :target: https://www.sphinx-doc.org/
+   :target: https://bcg-gamma.github.io/facet/index.html
 
 .. |license_badge| image:: https://img.shields.io/badge/License-Apache%202.0-olivegreen.svg
    :target: https://opensource.org/licenses/Apache-2.0

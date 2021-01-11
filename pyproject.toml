@@ -9,7 +9,7 @@ exclude = [".idea", "tmp", "dist", ".tox", ".pytest_cache"]
 module = "facet"
 author = "Boston Consulting Group (BCG)"
 home-page = "https://github.com/BCG-Gamma/facet"
-description-file = "README.rst"
+description-file = "pypi_description.rst"
 dist-name = "gamma-facet"
 license = "Apache Software License v2.0"
 
