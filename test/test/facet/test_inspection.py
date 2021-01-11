@@ -297,20 +297,23 @@ def test_model_inspection_classifier_multi_class(
 
     # Feature importance
 
-    print(iris_inspector_multi_class.feature_importance())
-    assert_frame_equal(
-        iris_inspector_multi_class.feature_importance(),
-        pd.DataFrame(
-            data=[
+    feature_importance: pd.DataFrame = iris_inspector_multi_class.feature_importance()
+    assert feature_importance.index.equals(
+        pd.Index(iris_sample.feature_names, name="feature")
+    )
+    assert feature_importance.columns.equals(
+        pd.Index(iris_inspector_multi_class.output_names_, name="class")
+    )
+    assert feature_importance.values == pytest.approx(
+        np.array(
+            [
                 [0.125, 0.085, 0.104],
                 [0.020, 0.019, 0.010],
                 [0.424, 0.456, 0.461],
                 [0.432, 0.441, 0.425],
-            ],
-            index=pd.Index(iris_sample.feature_names, name="feature"),
-            columns=pd.Index(iris_inspector_multi_class.output_names_, name="class"),
+            ]
         ),
-        atol=0.02,
+        abs=0.02,
     )
 
     # Shap decomposition matrices (feature dependencies)
