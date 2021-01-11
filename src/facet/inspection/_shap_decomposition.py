@@ -546,7 +546,7 @@ class ShapInteractionValueDecomposer(ShapValueDecomposer):
         # cov(aut[i, j], aut[j, i])
         # where aut[i, j] = p[i] - k[i, j] * p[i, j]
         # shape: (n_observations, n_outputs, n_features)
-        # matrix of covariances for tau vectors for all pairings of features
+        # matrix of covariances for autonomy vectors for all pairings of features
         # the aut[i, j] vector is the p[i] SHAP contribution vector where the synergy
         # effects (direct and indirect) with feature j have been deducted
 
@@ -637,10 +637,10 @@ class ShapInteractionValueDecomposer(ShapValueDecomposer):
         # (see next step below)
         cov_aut_ij_red_ij_2x = red_aut_ratio_2x * (var_aut_ij + cov_aut_ij_aut_ji)
 
-        # std(ind_ij)
-        # where ind_ij = aut_ij + aut_ji - 2 * red_ij
+        # std(ind_ij + ind_ji)
+        # where ind_ij + ind_ji = aut_ij + aut_ji - 2 * red_ij
         # shape: (n_outputs, n_features, n_features)
-        # the standard deviation (= length) of the independence vector
+        # the standard deviation (= length) of the combined independence vectors
 
         std_ind_ij_plus_ind_ji = _sqrt(
             var_aut_ij
@@ -681,7 +681,7 @@ class ShapInteractionValueDecomposer(ShapValueDecomposer):
 
         std_uni_ij_plus_uni_ji = _sqrt(
             var_p_i
-            + var_p_i.swapaxes(1, 2)
+            + _transpose(var_p_i)
             + var_red_ij_4x
             + 2 * (cov_p_i_p_j - cov_p_i_red_ij_2x - _transpose(cov_p_i_red_ij_2x))
         )
