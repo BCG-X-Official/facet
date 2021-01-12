@@ -4,16 +4,16 @@ channels:
 dependencies:
   - black = 20.8b1
   - boruta_py = 0.3.*
-  - conda-build
-  - conda-verify
-  - docutils
-  - flit = 3.0
+  - conda-build = 3.20.*
+  - conda-verify = 3.1.*
+  - docutils = 0.16.*
   - flake8 = 3.8.*
   - flake8-comprehensions = 3.2.*
+  - flit = 3.0.*
   - isort = 5.5.*
-  - joblib = 0.16.*
+  - joblib = 1.0.*
   - jupyter >= 1.0
-  - lightgbm = 3.0.*
+  - lightgbm = 3.*
   - m2r = 0.2.*
   - matplotlib = 3.3.*
   - nbsphinx = 0.7.*
@@ -26,16 +26,16 @@ dependencies:
   - pytest = 5.2.*
   - pytest-cov = 2.8.*
   - python = 3.8.*
-  - pyyaml = 5.1.*
+  - pyyaml = 5.3.*
   - scikit-learn >=0.23.1,<0.24
   - scipy = 1.5.*
   - seaborn = 0.11.*
   - shap = 0.35.*
-  - sphinx = 3.2.*
+  - sphinx = 3.4.*
   - sphinx-autodoc-typehints = 1.11.*
   - tableone = 0.7.*
-  - typing_inspect = 0.6.*
   - toml = 0.10.*
   - tox = 3.20.*
+  - typing_inspect = 0.6.*
   - xlrd = 1.2.*
-  - yaml = 0.1.*
+  - yaml = 0.2.*
