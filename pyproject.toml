@@ -1,0 +1,122 @@
+[build-system]
+requires = ["flit_core >=2,<4"]
+build-backend = "flit_core.buildapi"
+
+[tool.flit.sdist]
+exclude = [".idea", "tmp", "dist", ".tox", ".pytest_cache"]
+
+[tool.flit.metadata]
+module = "facet"
+author = "Boston Consulting Group (BCG)"
+home-page = "https://github.com/BCG-Gamma/facet"
+description-file = "pypi_description.rst"
+dist-name = "gamma-facet"
+license = "Apache Software License v2.0"
+
+requires = [
+    "boruta >=0.3",
+    "lightgbm >=3.0",
+    "shap >=0.34,<0.36",
+    "matplotlib >=3.1,<3.4",
+    "scikit-learn >=0.21,<0.24",
+    "pandas >=0.24,<1.3",
+    "numpy >=1.16,<1.20",
+    "scipy >=1.2,<1.6",
+    "pyyaml >=5.0",
+    "joblib >=0.13,<=1.0",
+    "gamma-pytools >=1.0.1",
+    "sklearndf >=1.0.1",
+]
+
+requires-python = ">=3.6,<3.9"
+
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: MacOS",
+    "Operating System :: Microsoft :: Windows",
+    "Operating System :: POSIX :: Linux",
+    "Operating System :: Unix",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.6",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Topic :: Scientific/Engineering",
+]
+
+[tool.flit.metadata.requires-extra]
+testing = [
+    "pytest >= 5.2.*",
+    "pytest-cov == 2.8.*",
+    "flake8 == 3.8.*",
+    "flake8-comprehensions == 3.2.*",
+    "isort == 5.5.*",
+]
+docs = [
+    "sphinx == 3.2.*",
+    "sphinx-autodoc-typehints == 1.11.*",
+    "pydata-sphinx-theme == 0.4.*",
+    "nbsphinx == 0.7.*",
+    "jupyter >= 1.0",
+    "docutils",
+    "xlrd == 1.2.*",
+    "m2r == 0.2.*",
+]
+
+[tool.flit.metadata.urls]
+Documentation = "https://bcg-gamma.github.io/facet/"
+Repository = "https://github.com/BCG-Gamma/facet"
+
+[build.matrix.min]
+python          =  "=3.6.*"
+pandas          =  "=0.24.*"
+numpy           =  "=1.16.*"
+scipy           =  "=1.2.*"
+joblib          =  "=0.13.*"
+scikit-learn    =  "=0.21.*"
+shap            =  "=0.34"
+matplotlib      =  "=3.0.*"
+
+[build.matrix.max]
+python          =  "=3.8.*"
+pandas          =  "=1.1.*"
+numpy           =  "=1.19.*"
+scipy           =  "=1.5.*"
+joblib          =  "=0.16.*"
+scikit-learn    =  "=0.23.*"
+shap            =  "=0.35"
+matplotlib      =  "=3.3.*"
+
+[build.matrix.unconstrained]
+python          =  ">=3.6,<3.9"
+pandas          =  ">=0.24"
+numpy           =  ">=1.16"
+scipy           =  ">=1.2,<1.6"
+joblib          =  ">=0.13"
+scikit-learn    =  ">=0.21,<0.24"
+shap            =  ">=0.35"
+matplotlib      =  ">=3"
+
+[tool.black]
+# quiet = "True"
+line-length = 88
+target_version = ['py36']
+include = '\.pyi?$'
+exclude = '''
+(
+  /(
+      \.eggs         # exclude a few common directories in the
+    | \.git          # root of the project
+    | \.hg
+    | \.mypy_cache
+    | \.tox
+    | \.venv
+    | data
+    | docs
+    | notebooks
+    | sphinx
+  )/
+)
+'''

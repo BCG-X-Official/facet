@@ -1,0 +1,537 @@
+trigger:
+  - master
+  - develop
+
+pr:
+  - master
+  - develop
+
+# set the build name
+name: $[ variables['branchName'] ]
+
+# run tests and full conda/tox build matrix every night at 4am
+schedules:
+- cron: "0 4 * * *"
+  displayName: Nightly full build
+  branches:
+    include:
+    - develop
+
+resources:
+  repositories:
+    - repository: sklearndf
+      type: github
+      endpoint: BCG-Gamma
+      name: BCG-Gamma/sklearndf
+      ref: develop # todo - update to stable release
+    - repository: pytools
+      type: github
+      endpoint: BCG-Gamma
+      name: BCG-Gamma/pytools
+      ref: develop # todo - update to stable release
+
+variables:
+  ${{ if not(startsWith(variables['Build.SourceBranch'], 'refs/pull/')) }}:
+    branchName: $[ replace(variables['Build.SourceBranch'], 'refs/heads/', '') ]
+  ${{ if startsWith(variables['Build.SourceBranch'], 'refs/pull/') }}:
+    branchName: $[ replace(variables['System.PullRequest.SourceBranch'], 'refs/heads/', '') ]
+  master_or_release: $[ or(startsWith(variables['branchName'], 'release'), eq(variables['branchName'], 'master'), eq(variables['Build.Reason'], 'Schedule')) ]
+
+stages:
+  # check code quality first to fail fast (isort, flake8, black)
+  - stage: code_quality_checks
+    displayName: 'Code quality'
+    jobs:
+      - job:
+        displayName: 'isort'
+        steps:
+          - task: UsePythonVersion@0
+            inputs:
+              versionSpec: '3.7.*'
+            displayName: 'use Python 3.7'
+          - script: |
+              python -m pip install isort==5.5.4
+              python -m isort --check --diff .
+            displayName: 'Run isort'
+      - job:
+        displayName: 'black'
+        steps:
+          - task: UsePythonVersion@0
+            inputs:
+              versionSpec: '3.7.*'
+            displayName: 'use Python 3.7'
+          - script: |
+              python -m pip install black==20.8b1
+              python -m black --check .
+            displayName: 'Run black'
+      - job:
+        displayName: 'flake8'
+        steps:
+          - task: UsePythonVersion@0
+            inputs:
+              versionSpec: '3.7.*'
+            displayName: 'use Python 3.7'
+          - script: |
+              python -m pip install flake8 flake8-comprehensions flake8-import-order
+              python -m flake8 --config tox.ini -v .
+            displayName: 'Run flake8'
+
+  # detect whether the build config (pyproject.toml) was changed -> then we must run a build test
+  - stage: detect_build_config_changes
+    displayName: 'Pyproject.toml build config'
+
+    jobs:
+
+      - job: checkout_and_diff
+        displayName: 'detect changes'
+        steps:
+          - checkout: self
+
+          - task: Bash@3
+            name: diff
+            inputs:
+              targetType: 'inline'
+              script: |
+                cd $(System.DefaultWorkingDirectory)
+                files_changed=$(git diff $(Build.SourceVersion)^! --name-only)
+                echo "Files changed since last commit: ${files_changed}"
+                if [ "${files_changed}" == *"pyproject.toml"* ]
+                then
+                build_changed=1
+                echo "build config has been changed"
+                else
+                build_changed=0
+                echo "build config is unchanged";
+                fi
+                echo "##vso[task.setvariable variable=conda_build_config_changed;isOutput=true]$build_changed"
+
+
+  - stage:
+    displayName: 'Unit tests'
+    dependsOn: 'detect_build_config_changes'
+    variables:
+      conda_build_config_changed: $[ stageDependencies.detect_build_config_changes.checkout_and_diff.outputs['diff.conda_build_config_changed'] ]
+
+    jobs:
+    - job:
+      displayName: 'pytest @ develop environment'
+      condition: >
+        and(
+        ne(variables.master_or_release, 'True'),
+        eq(stageDependencies.detect_build_config_changes.checkout_and_diff.outputs['diff.conda_build_config_changed'], '0')
+        )
+
+      pool:
+          vmImage: 'ubuntu-latest'
+
+      steps:
+        - task: UsePythonVersion@0
+          inputs:
+            versionSpec: '3.7.*'
+          displayName: 'use Python 3.7'
+
+        - checkout: self
+        - checkout: sklearndf
+        - checkout: pytools
+
+        - script: dir $(Build.SourcesDirectory)
+
+        - task: Bash@3
+          inputs:
+            targetType: 'inline'
+            script: |
+              set -e
+              eval "$(conda shell.bash hook)"
+              cd $(System.DefaultWorkingDirectory)/facet/
+              export PYTHONPATH=$(System.DefaultWorkingDirectory)/facet/src/
+              conda env create -f environment.yml
+              conda activate facet-develop
+              pip install flit
+              cd $(System.DefaultWorkingDirectory)/pytools/
+              flit install -s
+              cd $(System.DefaultWorkingDirectory)/sklearndf/
+              flit install -s
+              cd $(System.DefaultWorkingDirectory)/facet/
+              pip install pytest-azurepipelines
+              coverage run -m pytest test/test/
+              coverage xml
+              coverage html
+          displayName: 'pytest'
+
+        - task: PublishTestResults@2
+          condition: succeededOrFailed()
+          inputs:
+            testResultsFiles: '$(System.DefaultWorkingDirectory)/facet/*.xml'
+            searchFolder: '$(System.DefaultWorkingDirectory)/facet/'
+            testRunTitle: 'Publish test results'
+
+        - task: PublishCodeCoverageResults@1
+          inputs:
+            codeCoverageTool: Cobertura
+            summaryFileLocation: '$(System.DefaultWorkingDirectory)/facet/coverage.xml'
+            reportDirectory: '$(System.DefaultWorkingDirectory)/facet/htmlcov'
+
+  # conda env & tox build test
+  # testing matrix of python & sklearn versions
+  # - for release branch: 3 build tests
+  # - otherwise: 1 build test
+  - stage: conda_tox_build
+    displayName: 'Conda build & test'
+    dependsOn: 'detect_build_config_changes'
+    variables:
+      conda_build_config_changed: $[ stageDependencies.detect_build_config_changes.checkout_and_diff.outputs['diff.conda_build_config_changed'] ]
+
+    jobs:
+    - job:
+      displayName: 'single'
+      condition: >
+        and(
+        ne(variables.master_or_release, 'True'),
+        ne(stageDependencies.detect_build_config_changes.checkout_and_diff.outputs['diff.conda_build_config_changed'], '0')
+        )
+
+      pool:
+          vmImage: 'ubuntu-latest'
+      strategy:
+        matrix:
+          maximum_dependencies_conda:
+            FACET_V_PYTHON_BUILD: '=3.8.*'
+            BUILD_SYSTEM: 'conda'
+            PKG_DEPENDENCIES: 'max'
+          maximum_dependencies_tox:
+            FACET_V_PYTHON_BUILD: '=3.8.*'
+            BUILD_SYSTEM: 'tox'
+            PKG_DEPENDENCIES: 'max'
+
+      steps:
+        - task: UsePythonVersion@0
+          inputs:
+            versionSpec: '$(FACET_V_PYTHON_BUILD)'
+          displayName: 'Use Python $(FACET_V_PYTHON_BUILD)'
+
+        - checkout: self
+        - checkout: sklearndf
+        - checkout: pytools
+
+        - script: dir $(Build.SourcesDirectory)
+
+        - script: |
+            conda install -y -c anaconda conda-build=3.20.5 toml=0.10.* flit=3.0.*
+          displayName: 'Install conda-build, flit, toml'
+          condition: eq(variables['BUILD_SYSTEM'], 'conda')
+
+        - script: |
+            python -m pip install "toml==0.10.*"
+            python -m pip install "flit==3.0.*"
+            flit --version
+            python -m pip install "tox==3.20.*"
+            tox --version
+          displayName: 'Install tox, flit & toml'
+          condition: eq(variables['BUILD_SYSTEM'], 'tox')
+
+        - task: Bash@3
+          inputs:
+            targetType: 'inline'
+            script: |
+              if [ "$BUILD_SYSTEM" = "conda" ] ; then eval "$(conda shell.bash hook)" ; fi
+
+              cd $(Build.SourcesDirectory)/pytools
+              ./make.py pytools $(BUILD_SYSTEM) $(PKG_DEPENDENCIES)
+
+              cd $(Build.SourcesDirectory)/sklearndf
+              ./make.py sklearndf $(BUILD_SYSTEM) $(PKG_DEPENDENCIES)
+
+              cd $(Build.SourcesDirectory)/facet
+              ./make.py facet $(BUILD_SYSTEM) $(PKG_DEPENDENCIES)
+          displayName: "build & test conda/pip packages"
+
+        - task: CopyFiles@2
+          inputs:
+            sourceFolder: $(System.DefaultWorkingDirectory)/facet/dist
+            targetFolder: $(Build.ArtifactStagingDirectory)
+
+        - task: PublishBuildArtifacts@1
+          inputs:
+            pathtoPublish: $(Build.ArtifactStagingDirectory)
+            artifactName: $(BUILD_SYSTEM)_$(PKG_DEPENDENCIES)
+            publishLocation: Container
+
+    - job:
+      displayName: 'matrix'
+      condition: eq(variables.master_or_release, 'True')
+
+      pool:
+        vmImage: 'ubuntu-latest'
+      strategy:
+        matrix:
+          default_dependencies_conda:
+            FACET_V_PYTHON_BUILD: '=3.7.*'
+            BUILD_SYSTEM: 'conda'
+            PKG_DEPENDENCIES: 'default'
+          minimum_dependencies_conda:
+            FACET_V_PYTHON_BUILD: '=3.6.*'
+            BUILD_SYSTEM: 'conda'
+            PKG_DEPENDENCIES: 'min'
+          maximum_dependencies_conda:
+            FACET_V_PYTHON_BUILD: '=3.8.*'
+            BUILD_SYSTEM: 'conda'
+            PKG_DEPENDENCIES: 'max'
+#          unconstrained_dependencies_conda:
+#            FACET_V_PYTHON_BUILD: '>=3.6'
+#            PKG_DEPENDENCIES: 'unconstrained'
+#            BUILD_SYSTEM: 'conda'
+          default_dependencies_tox:
+            FACET_V_PYTHON_BUILD: '=3.7.*'
+            BUILD_SYSTEM: 'tox'
+            PKG_DEPENDENCIES: 'default'
+          minimum_dependencies_tox:
+            FACET_V_PYTHON_BUILD: '=3.6.*'
+            BUILD_SYSTEM: 'tox'
+            PKG_DEPENDENCIES: 'min'
+          maximum_dependencies_tox:
+            FACET_V_PYTHON_BUILD: '=3.8.*'
+            BUILD_SYSTEM: 'tox'
+            PKG_DEPENDENCIES: 'max'
+#          unconstrained_dependencies_tox:
+#            FACET_V_PYTHON_BUILD: '>=3.6'
+#            PKG_DEPENDENCIES: 'unconstrained'
+#            BUILD_SYSTEM: 'tox'
+
+      steps:
+        - task: UsePythonVersion@0
+          inputs:
+            versionSpec: '$(FACET_V_PYTHON_BUILD)'
+          displayName: 'Use Python $(FACET_V_PYTHON_BUILD)'
+
+        - checkout: self
+        - checkout: sklearndf
+        - checkout: pytools
+
+        - script: dir $(Build.SourcesDirectory)
+
+        - script: |
+            conda install -y -c anaconda conda-build=3.20.5 toml=0.10.* flit=3.0.*
+          displayName: 'Install conda-build, flit, toml'
+          condition: eq(variables['BUILD_SYSTEM'], 'conda')
+
+        - script: |
+            python -m pip install "toml==0.10.*"
+            python -m pip install "flit==3.0.*"
+            flit --version
+            python -m pip install "tox==3.20.*"
+            tox --version
+          displayName: 'Install tox, flit & toml'
+          condition: eq(variables['BUILD_SYSTEM'], 'tox')
+
+        - task: Bash@3
+          inputs:
+            targetType: 'inline'
+            script: |
+              if [ "$BUILD_SYSTEM" = "conda" ] ; then eval "$(conda shell.bash hook)" ; fi
+              cd $(Build.SourcesDirectory)/pytools
+              ./make.py pytools $(BUILD_SYSTEM) $(PKG_DEPENDENCIES)
+              cd $(Build.SourcesDirectory)/sklearndf
+              ./make.py sklearndf $(BUILD_SYSTEM) $(PKG_DEPENDENCIES)
+              cd $(Build.SourcesDirectory)/facet
+              ./make.py facet $(BUILD_SYSTEM) $(PKG_DEPENDENCIES)
+          displayName: "build & test conda/pip packages"
+
+        - task: CopyFiles@2
+          inputs:
+            sourceFolder: $(System.DefaultWorkingDirectory)/facet/dist
+            targetFolder: $(Build.ArtifactStagingDirectory)
+
+        - task: PublishBuildArtifacts@1
+          inputs:
+            pathtoPublish: $(Build.ArtifactStagingDirectory)
+            artifactName: $(BUILD_SYSTEM)_$(PKG_DEPENDENCIES)
+            publishLocation: Container
+
+  # release on merge from release branch to master:
+  # - add release tag
+  # - create GitHub release with changelog
+  # - upload conda and pip packages as artifacts to GitHub
+  - stage:
+    displayName: 'Release'
+    dependsOn: conda_tox_build
+
+    jobs:
+      - job:
+        displayName: 'Release'
+        condition: eq(replace(variables['Build.SourceBranch'], 'refs/heads/', ''), 'master')
+
+        steps:
+          - task: UsePythonVersion@0
+            inputs:
+              versionSpec: '3.7.*'
+            displayName: 'use Python 3.7'
+
+          - checkout: self
+
+          - checkout: pytools
+
+          - task: Bash@3
+            inputs:
+              targetType: inline
+              script: |
+                set -e
+                echo "Getting version"
+                pip install packaging
+                cd $(System.DefaultWorkingDirectory)/facet/src
+                export PYTHONPATH=$(System.DefaultWorkingDirectory)/pytools/sphinx/base
+                version=$(python -c "import make_base; print(make_base.get_package_version())")
+                echo "Current version: $version"
+                echo "Detecting pre-release ('rc' in version)"
+                prerelease=False
+                [[ $version == *rc* ]] && prerelease=True && echo "Pre-release identified"
+                echo "##vso[task.setvariable variable=current_version]$version"
+                echo "##vso[task.setvariable variable=is_prerelease]$prerelease"
+            displayName: "Get package version"
+
+          - task: DownloadBuildArtifacts@0
+            inputs:
+              artifactName: tox_default
+
+          - task: DownloadBuildArtifacts@0
+            inputs:
+              artifactName: conda_default
+
+          - task: GitHubRelease@1
+            inputs:
+              gitHubConnection: github_release
+              repositoryName: $(Build.Repository.Name)
+              action: create
+              target: $(Build.SourceVersion)
+              tagSource: userSpecifiedTag
+              tag: $(current_version)
+              title: facet $(current_version)
+              releaseNotesSource: inline
+              releaseNotesInline: |
+                This is the $(current_version) release of facet.
+
+                You can upgrade your current pip installation via
+
+                    pip install --upgrade gamma-facet
+
+                Your conda package can be upgraded by running
+
+                    conda install -c conda-forge -c bcg_gamma gamma-facet
+
+              isDraft: false
+              isPreRelease: $(is_prerelease)
+              assets: |
+                $(System.ArtifactsDirectory)/tox_default/tox/gamma-facet-*.tar.gz
+                $(System.ArtifactsDirectory)/conda_default/conda/noarch/gamma-facet-*.tar.bz2
+
+  # render docs and publish to GitHub Pages
+  - stage:
+    displayName: 'Docs'
+
+    variables:
+    - group: github_ssh
+
+    jobs:
+    - job:
+      displayName: 'Build and publish docs'
+      condition: eq(variables.master_or_release, 'True')
+
+      pool:
+          vmImage: 'ubuntu-latest'
+
+      steps:
+        - task: UsePythonVersion@0
+          inputs:
+            versionSpec: '3.7.*'
+          displayName: 'use Python 3.7'
+
+        - task: InstallSSHKey@0
+          inputs:
+            knownHostsEntry: $(knownHostsEntry)
+            sshPublicKey: $(sshPublicKey_facet)
+            sshKeySecureFile: 'deploy_docs_facet'
+          displayName: 'Install the deploy SSH key'
+
+        - checkout: self
+        - checkout: sklearndf
+        - checkout: pytools
+
+        - script: dir $(Build.SourcesDirectory)
+
+        - task: Bash@3
+          inputs:
+            targetType: 'inline'
+            script: |
+              set -e
+              cd $(System.DefaultWorkingDirectory)/facet
+              git checkout --track origin/github-pages
+              mkdir -p docs
+              sudo apt-get install tree
+              echo "Current docs contents:"
+              tree docs
+              mkdir $(Build.ArtifactStagingDirectory)/old_docs
+              cp -r docs $(Build.ArtifactStagingDirectory)/old_docs
+          displayName: 'Save current docs version'
+
+        - task: Bash@3
+          inputs:
+            targetType: 'inline'
+            script: |
+              set -e
+              eval "$(conda shell.bash hook)"
+              cd $(System.DefaultWorkingDirectory)/facet
+              echo "Checking out $(branchName)"
+              git checkout $(branchName)
+              git status
+              export PYTHONPATH=$(System.DefaultWorkingDirectory)/facet/src/
+              conda env create -f environment.yml
+              conda activate facet-develop
+              pip install flit
+              cd $(System.DefaultWorkingDirectory)/pytools/
+              flit install -s
+              cd $(System.DefaultWorkingDirectory)/sklearndf/
+              flit install -s
+              cd $(System.DefaultWorkingDirectory)/facet/
+              python sphinx/make.py html
+              echo "Current docs contents:"
+              tree docs
+          displayName: 'Build new docs version'
+
+        - task: Bash@3
+          inputs:
+            targetType: 'inline'
+            script: |
+              set -e
+              eval "$(conda shell.bash hook)"
+              cp -r $(Build.ArtifactStagingDirectory)/old_docs/docs .
+              echo "Current docs contents:"
+              tree docs
+              echo "Building sphinx docs"
+              conda activate facet-develop
+              cd $(System.DefaultWorkingDirectory)/facet
+              python sphinx/make.py prepare_docs_deployment
+              echo "Current docs contents:"
+              tree docs
+              mkdir $(Build.ArtifactStagingDirectory)/new_docs
+              mv docs $(Build.ArtifactStagingDirectory)/new_docs
+          displayName: 'Update saved docs'
+
+        - task: Bash@3
+          inputs:
+            targetType: 'inline'
+            script: |
+              set -e
+              cd $(System.DefaultWorkingDirectory)/facet
+              echo "Adjusting git credentials"
+              git config --global user.name "Azure Pipelines"
+              git config --global user.email "azuredevops@microsoft.com"
+              git config --global url.ssh://git@github.com/.insteadOf https://github.com/
+              git checkout github-pages
+              cp -r $(Build.ArtifactStagingDirectory)/new_docs/docs .
+              git status
+              git add docs
+              echo "Staged docs HTML build"
+              git status
+              git commit -m "Publish GitHub Pages [skip ci]"
+              echo "Committed to local branch github-pages"
+              git push --set-upstream origin github-pages
+          displayName: 'Publish docs'

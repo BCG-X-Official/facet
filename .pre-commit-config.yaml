@@ -1,0 +1,26 @@
+repos:
+  - repo: https://github.com/PyCQA/isort
+    rev: 5.5.4
+    hooks:
+      - id: isort
+
+  - repo: https://github.com/psf/black
+    rev: 20.8b1
+    hooks:
+      - id: black
+        language_version: python3
+
+  - repo: local
+    hooks:
+      - id: flake8
+        name: flake8
+        entry: flake8 --config tox.ini
+        language: system
+        types: [ python ]
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v3.2.0
+    hooks:
+      - id: check-added-large-files
+      - id: check-json
+      - id: check-yaml

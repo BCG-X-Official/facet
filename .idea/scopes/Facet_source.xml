@@ -1,0 +1,3 @@
+<component name="DependencyValidationManager">
+  <scope name="Facet source" pattern="file[facet]:src//*||file[sklearndf]:src//*||file[pytools]:src//*||file[facet]:test//*||file[sklearndf]:test//*||file[pytools]:test//*||file[facet]:notebooks//*" />
+</component>
