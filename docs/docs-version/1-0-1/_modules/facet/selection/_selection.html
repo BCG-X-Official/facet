@@ -239,8 +239,9 @@
         <span class="n">preprocessing_parameters</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        :param pipeline: the :class:`.RegressorPipelineDF` or</span>
-<span class="sd">            :class:`.ClassifierPipelineDF` to which the hyper-parameters will be applied</span>
+<span class="sd">        :param pipeline: the :class:`~.sklearndf.pipeline.RegressorPipelineDF` or</span>
+<span class="sd">            :class:`~.sklearndf.pipeline.ClassifierPipelineDF` to which the</span>
+<span class="sd">            hyper-parameters will be applied</span>
 <span class="sd">        :param learner_parameters: the hyper-parameter grid in which to search for the</span>
 <span class="sd">            optimal parameter values for the pipeline&#39;s final estimator</span>
 <span class="sd">        :param preprocessing_parameters: the hyper-parameter grid in which to search</span>
@@ -274,7 +275,9 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Any</span><span class="p">]]:</span>
-        <span class="sd">&quot;&quot;&quot;The parameter grid for the pipeline representing the entire pipeline.&quot;&quot;&quot;</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The parameter grid for the entire pipeline.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">MappingProxyType</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_grid_dict</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>

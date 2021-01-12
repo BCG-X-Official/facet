@@ -223,8 +223,9 @@
 </dd>
 <dt class="field-even">Parameters</dt>
 <dd class="field-even"><ul class="simple">
-<li><p><strong>pipeline</strong> (<em>~T_LearnerPipelineDF</em>) – the <code class="xref py py-class docutils literal notranslate"><span class="pre">RegressorPipelineDF</span></code> or
-<code class="xref py py-class docutils literal notranslate"><span class="pre">ClassifierPipelineDF</span></code> to which the hyper-parameters will be applied</p></li>
+<li><p><strong>pipeline</strong> (<em>~T_LearnerPipelineDF</em>) – the <a class="reference external" href="https://bcg-gamma.github.io/sklearndf/apidoc/sklearndf/pipeline/sklearndf.pipeline.RegressorPipelineDF.html#sklearndf.pipeline.RegressorPipelineDF" title="(in sklearndf)"><code class="xref py py-class docutils literal notranslate"><span class="pre">RegressorPipelineDF</span></code></a> or
+<a class="reference external" href="https://bcg-gamma.github.io/sklearndf/apidoc/sklearndf/pipeline/sklearndf.pipeline.ClassifierPipelineDF.html#sklearndf.pipeline.ClassifierPipelineDF" title="(in sklearndf)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ClassifierPipelineDF</span></code></a> to which the
+hyper-parameters will be applied</p></li>
 <li><p><strong>learner_parameters</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Dict" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code></a>[<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Sequence" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sequence</span></code></a>]) – the hyper-parameter grid in which to search for the
 optimal parameter values for the pipeline’s final estimator</p></li>
 <li><p><strong>preprocessing_parameters</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Optional" title="(in Python v3.6)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Dict" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code></a>[<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Sequence" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sequence</span></code></a>]]) – the hyper-parameter grid in which to search
@@ -241,7 +242,7 @@ for the optimal parameter values for the pipeline’s preprocessing pipeline
 </colgroup>
 <tbody>
 <tr class="row-odd"><td><p><a class="reference internal" href="#facet.selection.LearnerGrid.parameters" title="facet.selection.LearnerGrid.parameters"><code class="xref py py-obj docutils literal notranslate"><span class="pre">parameters</span></code></a></p></td>
-<td><p>The parameter grid for the pipeline representing the entire pipeline.</p></td>
+<td><p>The parameter grid for the entire pipeline.</p></td>
 </tr>
 </tbody>
 </table>
@@ -249,7 +250,7 @@ for the optimal parameter values for the pipeline’s preprocessing pipeline
 <dl class="py method">
 <dt id="facet.selection.LearnerGrid.parameters">
 <em class="property">property </em><code class="sig-name descname">parameters</code><a class="headerlink" href="#facet.selection.LearnerGrid.parameters" title="Permalink to this definition">¶</a></dt>
-<dd><p>The parameter grid for the pipeline representing the entire pipeline.</p>
+<dd><p>The parameter grid for the entire pipeline.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Mapping" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Mapping</span></code></a>[<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Sequence" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sequence</span></code></a>[<a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Any" title="(in Python v3.6)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code></a>]]</p>
