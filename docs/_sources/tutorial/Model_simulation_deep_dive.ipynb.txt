@@ -39,7 +39,7 @@
     "\n",
     "This tutorial aims to provide a step by step explanation about the simulation capabilities of FACET and is based on the Water Drilling Tutorial. If you would like further background to this tutorial we recommend reviewing Water Drilling tutorial first, however, as a brief re-cap:\n",
     "\n",
-    "Drilling a water well is very dangerous and costly. The costs of such drilling are driven by the time it takes to finalize a well in order to start pumping water from it. To reduce those costs, drillers are usually incentivized to drill at a faster pace—measured as the Rate of Penetration (ROP). Depending on soil characteristics, day rates can range from $\\$$30,000 to $\\$$250,000. But there is a trade-off: Drilling faster increases the risk of incidents, such as a formation collapse or a gas infiltration. We will therefore built a machine-learning model to understand the impact of drilling speed on the incident risk, in the context of other risk factors. \n",
+    "Drilling a water well is very dangerous and costly. The costs of such drilling are driven by the time it takes to finalize a well in order to start pumping water from it. To reduce those costs, drillers are usually incentivized to drill at a faster pace—measured as the Rate of Penetration (ROP). Depending on soil characteristics, day rates can range from `$30,000` to `$250,000`. But there is a trade-off: Drilling faster increases the risk of incidents, such as a formation collapse or a gas infiltration. We will therefore built a machine-learning model to understand the impact of drilling speed on the incident risk, in the context of other risk factors. \n",
     "\n",
     "For the sake of clarity, we use a simplified dataset for this example. The dataset contains 500 observations, with each row representing a drilling operation of the past, along with a binary indicator of whether or not a well-drilling incident happened in the operation. \n",
     "\n",
@@ -68,41 +68,10 @@
     "delete_for_interactive": true,
     "nbsphinx": "hidden"
    },
-   "outputs": [
-    {
-     "name": "stdout",
-     "output_type": "stream",
-     "text": [
-      "working dir is 'C:\\Projects\\facet\\facet'\n",
-      "added `C:\\Projects\\facet\\pytools\\src` to python paths\n",
-      "added `C:\\Projects\\facet\\facet\\src` to python paths\n",
-      "added `C:\\Projects\\facet\\sklearndf\\src` to python paths\n"
-     ]
-    }
-   ],
+   "outputs": [],
    "source": [
     "# this cell's metadata contains\n",
     "# \"nbsphinx\": \"hidden\" so it is hidden by nbsphinx\n",
-    "\n",
-    "\n",
-    "def _set_paths() -> None:\n",
-    "    # set the correct path when launched from within PyCharm\n",
-    "\n",
-    "    module_paths = [\"pytools\", \"facet\", \"sklearndf\"]\n",
-    "\n",
-    "    import sys\n",
-    "    import os\n",
-    "\n",
-    "    if \"cwd\" not in globals():\n",
-    "        # noinspection PyGlobalUndefined\n",
-    "        global cwd\n",
-    "        cwd = os.path.join(os.getcwd(), os.pardir, os.pardir, os.pardir)\n",
-    "        os.chdir(cwd)\n",
-    "    print(f\"working dir is '{os.getcwd()}'\")\n",
-    "    for module_path in module_paths:\n",
-    "        if module_path not in sys.path:\n",
-    "            sys.path.insert(0, os.path.abspath(f\"{cwd}/{os.pardir}/{module_path}/src\"))\n",
-    "        print(f\"added `{sys.path[0]}` to python paths\")\n",
     "\n",
     "\n",
     "def _ignore_warnings():\n",
@@ -114,10 +83,9 @@
     "    warnings.filterwarnings(\"ignore\", category=UserWarning, message=r\".*Xcode_8\\.3\\.3\")\n",
     "\n",
     "\n",
-    "_set_paths()\n",
     "_ignore_warnings()\n",
     "\n",
-    "del _set_paths, _ignore_warnings\n",
+    "del _ignore_warnings\n",
     "\n",
     "\n",
     "import matplotlib.pyplot as plt\n",
@@ -152,7 +120,7 @@
     "\n",
     "1. Common packages (pandas, matplotlib, etc.)\n",
     "2. Required FACET classes (inspection, selection, validation, simulation, etc.)\n",
-    "3. Other BCG Gamma packages which simplify pipelining (sklearndf, see on [GitHub](https://github.com/BCG-Gamma/sklearndf/)) and support visualization (pytools, see on [GitHub](https://github.com/BCG-Gamma/pytools)) when using FACET"
+    "3. Other BCG GAMMA packages which simplify pipelining (sklearndf, see on [GitHub](https://github.com/BCG-Gamma/sklearndf/)) and support visualization (pytools, see on [GitHub](https://github.com/BCG-Gamma/pytools)) when using FACET"
    ]
   },
   {
@@ -169,7 +137,7 @@
    "outputs": [],
    "source": [
     "# list your usual imports here such as pandas, numpy and others \n",
-    "# not covered by facet, sklearndf or pytools\n",
+    "# not covered by FACET, sklearndf or pytools\n",
     "import numpy as np\n",
     "import pandas as pd\n",
     "import seaborn as sns"
@@ -381,7 +349,7 @@
     "               'Depth of operation (m)', 'Mud density (kg/L)',\n",
     "               'Rate of Penetration (ft/h)', 'Hole diameter (m)']\n",
     "\n",
-    "# create a facet sample object\n",
+    "# create a FACET sample object\n",
     "drilling_obs = Sample(observations=df, \n",
     "                      target_name=\"Incident\", \n",
     "                      feature_names=feature_set)\n",
@@ -1466,7 +1434,7 @@
     "\n",
     "1. Try out using a different feature for simulation\n",
     "2. Create a different feature type and try using a different partitioner\n",
-    "3. Create a model for a dataset with a continuous target and try out the `UnivariateTargetSimulator`and the `UnivariateUpliftSimulator`."
+    "3. Create a model for a dataset with a continuous target and try out the `UnivariateTargetSimulator` and the `UnivariateUpliftSimulator`."
    ]
   }
  ],
@@ -1486,7 +1454,7 @@
    "name": "python",
    "nbconvert_exporter": "python",
    "pygments_lexer": "ipython3",
-   "version": "3.7.8"
+   "version": "3.8.6"
   },
   "toc": {
    "base_numbering": 1,
