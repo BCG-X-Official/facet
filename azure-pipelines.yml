@@ -284,18 +284,18 @@ stages:
             FACET_V_PYTHON_BUILD: '=3.7.*'
             BUILD_SYSTEM: 'tox'
             PKG_DEPENDENCIES: 'default'
-          minimum_dependencies_tox:
-            FACET_V_PYTHON_BUILD: '=3.6.*'
-            BUILD_SYSTEM: 'tox'
-            PKG_DEPENDENCIES: 'min'
+#          minimum_dependencies_tox:
+#            FACET_V_PYTHON_BUILD: '=3.6.*'
+#            BUILD_SYSTEM: 'tox'
+#            PKG_DEPENDENCIES: 'min'
           maximum_dependencies_tox:
             FACET_V_PYTHON_BUILD: '=3.8.*'
             BUILD_SYSTEM: 'tox'
             PKG_DEPENDENCIES: 'max'
-          unconstrained_dependencies_tox:
-            FACET_V_PYTHON_BUILD: '>=3.6'
-            PKG_DEPENDENCIES: 'unconstrained'
-            BUILD_SYSTEM: 'tox'
+#          unconstrained_dependencies_tox:
+#            FACET_V_PYTHON_BUILD: '>=3.6'
+#            PKG_DEPENDENCIES: 'unconstrained'
+#            BUILD_SYSTEM: 'tox'
 
       steps:
         - task: UsePythonVersion@0
