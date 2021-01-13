@@ -23,12 +23,12 @@ requires = [
     "numpy >=1.16,<1.20",
     "scipy >=1.2,<1.6",
     "pyyaml >=5.0",
-    "joblib >=0.13,<1.0",
+    "joblib >=0.13,<=1.0",
     "gamma-pytools >=1.0.1",
     "sklearndf >=1.0.1",
 ]
 
-requires-python = ">=3.6,<4"
+requires-python = ">=3.6,<3.9"
 
 classifiers = [
     "Development Status :: 5 - Production/Stable",
@@ -90,7 +90,7 @@ shap            =  "=0.35"
 matplotlib      =  "=3.3.*"
 
 [build.matrix.unconstrained]
-python          =  ">=3.6,<4"
+python          =  ">=3.6,<3.9"
 pandas          =  ">=0.24"
 numpy           =  ">=1.16"
 scipy           =  ">=1.2,<1.6"
