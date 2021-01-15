@@ -81,8 +81,9 @@ class LearnerGrid(Generic[T_LearnerPipelineDF]):
         preprocessing_parameters: Optional[Dict[str, Sequence]] = None,
     ) -> None:
         """
-        :param pipeline: the :class:`.RegressorPipelineDF` or
-            :class:`.ClassifierPipelineDF` to which the hyper-parameters will be applied
+        :param pipeline: the :class:`~.sklearndf.pipeline.RegressorPipelineDF` or
+            :class:`~.sklearndf.pipeline.ClassifierPipelineDF` to which the
+            hyper-parameters will be applied
         :param learner_parameters: the hyper-parameter grid in which to search for the
             optimal parameter values for the pipeline's final estimator
         :param preprocessing_parameters: the hyper-parameter grid in which to search
@@ -116,7 +117,9 @@ class LearnerGrid(Generic[T_LearnerPipelineDF]):
 
     @property
     def parameters(self) -> Mapping[str, Sequence[Any]]:
-        """The parameter grid for the pipeline representing the entire pipeline."""
+        """
+        The parameter grid for the entire pipeline.
+        """
         return MappingProxyType(self._grid_dict)
 
     def __iter__(self) -> Iterable[Dict[str, Any]]:
