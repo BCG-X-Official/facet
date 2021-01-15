@@ -292,16 +292,20 @@ up and running with FACET.</p>
 <div class="section" id="enhanced-machine-learning-workflow">
 <h3>Enhanced Machine Learning Workflow<a class="headerlink" href="#enhanced-machine-learning-workflow" title="Permalink to this headline">¶</a></h3>
 <p>To demonstrate the model inspection capability of FACET, we first create a
-pipeline to fit a learner. In this simple example using the Boston housing
-data, we will train a Random Forest regressor using 10 repeated 5-fold CV
-to predict median house price. With the use of <em>sklearndf</em> we can create a
-<em>pandas</em> DataFrame compatible workflow. However, FACET provides additional
-enhancements to keep track of our feature matrix and target vector using a
-sample object (<cite>Sample</cite>) and easily compare hyperparameter configurations
-and even multiple learners with the <cite>LearnerRanker</cite>.</p>
+pipeline to fit a learner. In this simple example we use the
+<a class="reference external" href="https://www4.stat.ncsu.edu/~boos/var.select/diabetes.tab.txt">diabetes dataset</a>
+which contains age, sex, BMI and blood pressure along with 6 blood serum
+measurements as features. A transformed version of this dataset is also available
+on scikit-learn
+<a class="reference external" href="https://scikit-learn.org/stable/datasets/toy_dataset.html#diabetes-dataset">here</a>.</p>
+<p>In this quickstart we will train a Random Forest regressor using 10 repeated
+5-fold CV to predict disease progression after one year. With the use of
+<em>sklearndf</em> we can create a <em>pandas</em> DataFrame compatible workflow. However,
+FACET provides additional enhancements to keep track of our feature matrix
+and target vector using a sample object (<cite>Sample</cite>) and easily compare
+hyperparameter configurations and even multiple learners with the <cite>LearnerRanker</cite>.</p>
 <div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="c1"># standard imports</span>
 <span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
-<span class="kn">from</span> <span class="nn">sklearn.datasets</span> <span class="kn">import</span> <span class="n">load_boston</span>
 <span class="kn">from</span> <span class="nn">sklearn.model_selection</span> <span class="kn">import</span> <span class="n">RepeatedKFold</span>
 
 <span class="c1"># some helpful imports from sklearndf</span>
@@ -312,14 +316,11 @@ and even multiple learners with the <cite>LearnerRanker</cite>.</p>
 <span class="kn">from</span> <span class="nn">facet.data</span> <span class="kn">import</span> <span class="n">Sample</span>
 <span class="kn">from</span> <span class="nn">facet.selection</span> <span class="kn">import</span> <span class="n">LearnerRanker</span><span class="p">,</span> <span class="n">LearnerGrid</span>
 
-<span class="c1"># load Boston housing dataset</span>
-<span class="n">boston</span> <span class="o">=</span> <span class="n">load_boston</span><span class="p">()</span>
-<span class="n">boston_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">boston</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="n">boston</span><span class="o">.</span><span class="n">feature_names</span><span class="p">)</span><span class="o">.</span><span class="n">assign</span><span class="p">(</span>
-    <span class="n">MEDIAN_HOUSE_PRICE</span><span class="o">=</span><span class="n">boston</span><span class="o">.</span><span class="n">target</span>
-<span class="p">)</span>
+<span class="c1"># load the diabetes dataset</span>
+<span class="n">diabetes_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s1">&#39;diabetes_quickstart.csv&#39;</span><span class="p">)</span>
 
 <span class="c1"># create FACET sample object</span>
-<span class="n">boston_sample</span> <span class="o">=</span> <span class="n">Sample</span><span class="p">(</span><span class="n">observations</span><span class="o">=</span><span class="n">boston_df</span><span class="p">,</span> <span class="n">target_name</span><span class="o">=</span><span class="s2">&quot;MEDIAN_HOUSE_PRICE&quot;</span><span class="p">)</span>
+<span class="n">diabetes_sample</span> <span class="o">=</span> <span class="n">Sample</span><span class="p">(</span><span class="n">observations</span><span class="o">=</span><span class="n">diabetes_df</span><span class="p">,</span> <span class="n">target_name</span><span class="o">=</span><span class="s2">&quot;Disease_progression&quot;</span><span class="p">)</span>
 
 <span class="c1"># create a (trivial) pipeline for a random forest regressor</span>
 <span class="n">rnd_forest_reg</span> <span class="o">=</span> <span class="n">RegressorPipelineDF</span><span class="p">(</span>
@@ -342,16 +343,17 @@ and even multiple learners with the <cite>LearnerRanker</cite>.</p>
 <span class="c1"># rank your candidate models by performance (default is mean CV score - 2*SD)</span>
 <span class="n">ranker</span> <span class="o">=</span> <span class="n">LearnerRanker</span><span class="p">(</span>
     <span class="n">grids</span><span class="o">=</span><span class="n">rnd_forest_grid</span><span class="p">,</span> <span class="n">cv</span><span class="o">=</span><span class="n">rkf_cv</span><span class="p">,</span> <span class="n">n_jobs</span><span class="o">=-</span><span class="mi">3</span>
-<span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">sample</span><span class="o">=</span><span class="n">boston_sample</span><span class="p">)</span>
+<span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">sample</span><span class="o">=</span><span class="n">diabetes_sample</span><span class="p">)</span>
 
 <span class="c1"># get summary report</span>
 <span class="n">ranker</span><span class="o">.</span><span class="n">summary_report</span><span class="p">()</span>
 </pre></div>
 </div>
 <a class="reference internal image-reference" href="../_images/ranker_summary.png"><img alt="../_images/ranker_summary.png" src="../_images/ranker_summary.png" style="width: 600px;" /></a>
-<p>We can see based on this minimal workflow that a value of 8 for minimum samples
-in the leaf was the best performing of the three considered values. This approach
-easily extends to multiple hyperparameters for the learner and multiple learners.</p>
+<p>We can see based on this minimal workflow that a value of 11 for minimum
+samples in the leaf was the best performing of the three considered values.
+This approach easily extends to multiple hyperparameters for the learner
+and multiple learners.</p>
 </div>
 <div class="section" id="model-inspection">
 <h3>Model Inspection<a class="headerlink" href="#model-inspection" title="Permalink to this headline">¶</a></h3>
@@ -411,27 +413,27 @@ an outcome.</em> Redundancy is expressed as a percentage ranging from 0%
 <p><strong>Synergy</strong></p>
 <div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="c1"># visualise synergy as a matrix</span>
 <span class="kn">from</span> <span class="nn">pytools.viz.matrix</span> <span class="kn">import</span> <span class="n">MatrixDrawer</span>
-<span class="n">synergy_matrix</span> <span class="o">=</span> <span class="n">inspector</span><span class="o">.</span><span class="n">feature_synergy_matrix</span><span class="p">(</span><span class="n">symmetrical</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">synergy_matrix</span> <span class="o">=</span> <span class="n">inspector</span><span class="o">.</span><span class="n">feature_synergy_matrix</span><span class="p">()</span>
 <span class="n">MatrixDrawer</span><span class="p">(</span><span class="n">style</span><span class="o">=</span><span class="s2">&quot;matplot%&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="n">synergy_matrix</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Synergy Matrix&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 <a class="reference internal image-reference" href="../_images/synergy_matrix.png"><img alt="../_images/synergy_matrix.png" src="../_images/synergy_matrix.png" style="width: 600px;" /></a>
-<p>As before the matrix row represents the “perspective from” feature in the pair.
-Looking across the row for <cite>LSTAT</cite> there is relatively minimal synergy (≤14%)
-with other features in the model. However, looking down the column for <cite>LSTAT</cite>
-(i.e., perspective of other features in a pair with <cite>LSTAT</cite>) we find many
-features (the rows) are synergistic (12% to 47%) with <cite>LSTAT</cite>. We can conclude that:</p>
+<p>For any feature pair (A, B), the first feature (A) is the row, and the second
+feature (B) the column. For example, looking across the row for <cite>LTG</cite> (Lamotrigine)
+there is relatively minimal synergy (≤14%) with other features in the model.
+However, looking down the column for <cite>LTG</cite> (i.e., perspective of other features
+in a pair with <cite>LTG</cite>) we find many features (the rows) are synergistic (12% to 34%)
+with <cite>LTG</cite>. We can conclude that:</p>
 <ul class="simple">
-<li><p><cite>LSTAT</cite> is a strongly autonomous feature, displaying minimal synergy with other
-features for predicting median house price.</p></li>
-<li><p>The contribution of other features to predicting median house price is partly
-enabled by the strong contribution from <cite>LSTAT</cite>.</p></li>
+<li><p><cite>LTG</cite> is a strongly autonomous feature, displaying minimal synergy with other
+features for predicting disease progression after one year.</p></li>
+<li><p>The contribution of other features to predicting disease progression after one
+year is partly enabled by the strong contribution from <cite>LTG</cite>.</p></li>
 </ul>
-<p>High synergy features must be considered carefully when investigating business
-impact, as they work together to predict the outcome. It would not make much
-sense to consider <cite>ZN</cite> (proportion of residential land zoned for lots over
-25,000 sq.ft) without <cite>LSTAT</cite> given the 47% synergy of <cite>ZN</cite> with <cite>LSTAT</cite> for
-predicting median house price.</p>
+<p>High synergy features must be considered carefully when investigating impact,
+as they work together to predict the outcome. It would not make much sense to
+consider <cite>TC</cite> (T-Cells) without <cite>LTG</cite> given the 34% synergy of <cite>TC</cite> with <cite>LTG</cite>
+for predicting progression after one year.</p>
 <p><strong>Redundancy</strong></p>
 <div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="c1"># visualise redundancy as a matrix</span>
 <span class="n">redundancy_matrix</span> <span class="o">=</span> <span class="n">inspector</span><span class="o">.</span><span class="n">feature_redundancy_matrix</span><span class="p">()</span>
@@ -439,15 +441,18 @@ predicting median house price.</p>
 </pre></div>
 </div>
 <a class="reference internal image-reference" href="../_images/redundancy_matrix.png"><img alt="../_images/redundancy_matrix.png" src="../_images/redundancy_matrix.png" style="width: 600px;" /></a>
-<p>For any feature pair (A, B), the first feature (A) is the row, and the second
-feature (B) the column. For example, if we look at the feature pair (<cite>LSTAT</cite>, <cite>RM</cite>)
-from the perspective of <cite>LSTAT</cite> (percentage of lower status of the population),
-then we look-up the row for <cite>LSTAT</cite> and the column for <cite>RM</cite> (average number of
-rooms per dwelling) and find 39% redundancy. This means that 39% of the
-information in <cite>LSTAT</cite> is duplicated with <cite>RM</cite> to predict median house price.
-We can also see looking across the row for <cite>LSTAT</cite> that apart from the 39%
-redundancy with <cite>RM</cite>, <cite>LSTAT</cite> has minimal redundancy (&lt;5%) with any of the
-other features included in the model.</p>
+<p>For any feature pair (A, B), the first feature (A) is the row, and the second feature
+(B) the column. For example, if we look at the feature pair (<cite>LDL</cite>, <cite>TC</cite>) from the
+perspective of <cite>LDL</cite> (Low-Density Lipoproteins), then we look-up the row for <cite>LDL</cite>
+and the column for <cite>TC</cite> and find 47% redundancy. This means that 47% of the
+information in <cite>LDL</cite> is duplicated with <cite>TC</cite> to predict disease progression
+after one year. This redundancy is similar when looking “from the perspective”
+of <cite>TC</cite> for (<cite>TC</cite>, <cite>LDL</cite>) which is 50%.</p>
+<p>If we look across the columns for the <cite>LTG</cite> row we can see that apart from the
+32% redundancy with <cite>BMI</cite>, <cite>LTG</cite> has minimal redundancy (&lt;9%) with the other
+features included in the model. Further, if we look cross the rows for the
+<cite>LTG</cite> column we can see a number of the features have moderate redundancy
+with <cite>LTG</cite>.</p>
 <p><strong>Clustering redundancy</strong></p>
 <p>As detailed above redundancy and synergy for a feature pair is from the
 “perspective” of one of the features in the pair, and so yields two distinct
@@ -467,22 +472,22 @@ synergistic features that should always be considered together.</p>
 </pre></div>
 </div>
 <a class="reference internal image-reference" href="../_images/redundancy_dendrogram.png"><img alt="../_images/redundancy_dendrogram.png" src="../_images/redundancy_dendrogram.png" style="width: 600px;" /></a>
-<p>Based on the dendrogram we can see that the feature pairs (<cite>LSTAT</cite>, <cite>RM</cite>)
-and (<cite>CRIM</cite>: per capita crime rate by town, <cite>NOX</cite>: nitric oxides concentration
-in parts per 10 million) each represent a cluster in the dendrogram and
-that <cite>LSTAT</cite> and <cite>RM</cite> have high importance. As a next action we could
-remove RM (and maybe NOX) to further simplify the model and obtain a
-set of independent features.</p>
+<p>Based on the dendrogram we can see that the feature pairs (<cite>LDL</cite>, <cite>TC</cite>)
+and (<cite>LTG</cite>, <cite>BMI</cite>: body mass index) each represent a cluster in the
+dendrogram and that <cite>LTG</cite> and <cite>BMI</cite> have high the highest importance.
+As potential next actions we could remove <cite>TC</cite> and explore the impact of
+removing one of <cite>LTG</cite> or <cite>BMI</cite> to further simplify the model and obtain a
+reduced set of independent features.</p>
 <p>Please see the
 <a class="reference external" href="https://bcg-gamma.github.io/facet/apidoc/facet.html">API reference</a>
 for more detail.</p>
 </div>
 <div class="section" id="model-simulation">
 <h3>Model Simulation<a class="headerlink" href="#model-simulation" title="Permalink to this headline">¶</a></h3>
-<p>Taking the LSTAT feature as an example, we do the following for the simulation:</p>
+<p>Taking the <cite>BMI</cite> feature as an example, we do the following for the simulation:</p>
 <ul class="simple">
 <li><p>We use FACET’s <cite>ContinuousRangePartitioner</cite> to split the range of observed values of
-LSTAT into intervals of equal size. Each partition is represented by the central
+<cite>BMI</cite> into intervals of equal size. Each partition is represented by the central
 value of that partition.</p></li>
 <li><p>For each partition, the simulator creates an artificial copy of the original sample
 assuming the variable to be simulated has the same value across all observations -
@@ -490,8 +495,8 @@ which is the value representing the partition. Using the best <cite>LearnerCross
 acquired from the ranker, the simulator now re-predicts all targets using the models
 trained for all folds and determines the average uplift of the target variable
 resulting from this.</p></li>
-<li><p>The FACET <cite>SimulationDrawer</cite> allows us to visualise the result; both in a matplotlib
-and a plain-text style.</p></li>
+<li><p>The FACET <cite>SimulationDrawer</cite> allows us to visualise the result; both in a
+matplotlib and a plain-text style.</p></li>
 </ul>
 <p>Finally, because FACET can use bootstrap cross validation, we can create a crossfit
 from our previous <cite>LearnerRanker</cite> best model to perform the simulation so we can
@@ -512,9 +517,9 @@ quantify the uncertainty by using bootstrap confidence intervals.</p>
     <span class="n">cv</span><span class="o">=</span><span class="n">bscv</span><span class="p">,</span>
     <span class="n">n_jobs</span><span class="o">=-</span><span class="mi">3</span><span class="p">,</span>
     <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-<span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">sample</span><span class="o">=</span><span class="n">boston_sample</span><span class="p">)</span>
+<span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">sample</span><span class="o">=</span><span class="n">diabetes_sample</span><span class="p">)</span>
 
-<span class="n">SIM_FEAT</span> <span class="o">=</span> <span class="s2">&quot;LSTAT&quot;</span>
+<span class="n">SIM_FEAT</span> <span class="o">=</span> <span class="s2">&quot;BMI&quot;</span>
 <span class="n">simulator</span> <span class="o">=</span> <span class="n">UnivariateUpliftSimulator</span><span class="p">(</span><span class="n">crossfit</span><span class="o">=</span><span class="n">boot_crossfit</span><span class="p">,</span> <span class="n">n_jobs</span><span class="o">=-</span><span class="mi">3</span><span class="p">)</span>
 
 <span class="c1"># split the simulation range into equal sized partitions</span>
@@ -528,9 +533,10 @@ quantify the uncertainty by using bootstrap confidence intervals.</p>
 </pre></div>
 </div>
 <img alt="../_images/simulation_output.png" src="../_images/simulation_output.png" />
-<p>We would conclude from the figure that lower values of <cite>LSTAT</cite> are associated with
-an increase in median house price, and that the lower <cite>LSTAT</cite> of 8% or less results
-in a significant uplift in median house price.</p>
+<p>We would conclude from the figure that higher values of <cite>BMI</cite> are associated with
+an increase in disease progression after one year, and that for a <cite>BMI</cite> of 29
+and above, there is a significant increase in disease progression after one year
+of at least 26 points.</p>
 </div>
 </div>
 <div class="section" id="contributing">
