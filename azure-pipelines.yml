@@ -216,7 +216,7 @@ stages:
         - script: dir $(Build.SourcesDirectory)
 
         - script: |
-            conda install -y conda-build toml=0.10.* flit=3.0.*
+            conda install -y -c anaconda conda-build=3.20.5 toml=0.10.* flit=3.0.*
           displayName: 'Install conda-build, flit, toml'
           condition: eq(variables['BUILD_SYSTEM'], 'conda')
 
@@ -276,10 +276,10 @@ stages:
             FACET_V_PYTHON_BUILD: '=3.8.*'
             BUILD_SYSTEM: 'conda'
             PKG_DEPENDENCIES: 'max'
-          unconstrained_dependencies_conda:
-            FACET_V_PYTHON_BUILD: '>=3.6'
-            PKG_DEPENDENCIES: 'unconstrained'
-            BUILD_SYSTEM: 'conda'
+#          unconstrained_dependencies_conda:
+#            FACET_V_PYTHON_BUILD: '>=3.6'
+#            PKG_DEPENDENCIES: 'unconstrained'
+#            BUILD_SYSTEM: 'conda'
           default_dependencies_tox:
             FACET_V_PYTHON_BUILD: '=3.7.*'
             BUILD_SYSTEM: 'tox'
@@ -292,10 +292,10 @@ stages:
             FACET_V_PYTHON_BUILD: '=3.8.*'
             BUILD_SYSTEM: 'tox'
             PKG_DEPENDENCIES: 'max'
-          unconstrained_dependencies_tox:
-            FACET_V_PYTHON_BUILD: '>=3.6'
-            PKG_DEPENDENCIES: 'unconstrained'
-            BUILD_SYSTEM: 'tox'
+#          unconstrained_dependencies_tox:
+#            FACET_V_PYTHON_BUILD: '>=3.6'
+#            PKG_DEPENDENCIES: 'unconstrained'
+#            BUILD_SYSTEM: 'tox'
 
       steps:
         - task: UsePythonVersion@0
@@ -310,7 +310,7 @@ stages:
         - script: dir $(Build.SourcesDirectory)
 
         - script: |
-            conda install -y conda-build toml=0.10.* flit=3.0.*
+            conda install -y -c anaconda conda-build=3.20.5 toml=0.10.* flit=3.0.*
           displayName: 'Install conda-build, flit, toml'
           condition: eq(variables['BUILD_SYSTEM'], 'conda')
 
