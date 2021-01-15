@@ -79,19 +79,25 @@ Enhanced Machine Learning Workflow
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 To demonstrate the model inspection capability of FACET, we first create a
-pipeline to fit a learner. In this simple example using the Boston housing
-data, we will train a Random Forest regressor using 10 repeated 5-fold CV
-to predict median house price. With the use of *sklearndf* we can create a
-*pandas* DataFrame compatible workflow. However, FACET provides additional
-enhancements to keep track of our feature matrix and target vector using a
-sample object (`Sample`) and easily compare hyperparameter configurations
-and even multiple learners with the `LearnerRanker`.
+pipeline to fit a learner. In this simple example we use the
+`diabetes dataset <https://www4.stat.ncsu.edu/~boos/var.select/diabetes.tab.txt>`__
+which contains age, sex, BMI and blood pressure along with 6 blood serum
+measurements as features. A transformed version of this dataset is also available
+on scikit-learn
+`here <https://scikit-learn.org/stable/datasets/toy_dataset.html#diabetes-dataset>`__.
+
+
+In this quickstart we will train a Random Forest regressor using 10 repeated
+5-fold CV to predict disease progression after one year. With the use of
+*sklearndf* we can create a *pandas* DataFrame compatible workflow. However,
+FACET provides additional enhancements to keep track of our feature matrix
+and target vector using a sample object (`Sample`) and easily compare
+hyperparameter configurations and even multiple learners with the `LearnerRanker`.
 
 .. code-block:: Python
 
     # standard imports
     import pandas as pd
-    from sklearn.datasets import load_boston
     from sklearn.model_selection import RepeatedKFold
 
     # some helpful imports from sklearndf
@@ -102,14 +108,11 @@ and even multiple learners with the `LearnerRanker`.
     from facet.data import Sample
     from facet.selection import LearnerRanker, LearnerGrid
 
-    # load Boston housing dataset
-    boston = load_boston()
-    boston_df = pd.DataFrame(data=boston.data, columns=boston.feature_names).assign(
-        MEDIAN_HOUSE_PRICE=boston.target
-    )
+    # load the diabetes dataset
+    diabetes_df = pd.read_csv('diabetes_quickstart.csv')
 
     # create FACET sample object
-    boston_sample = Sample(observations=boston_df, target_name="MEDIAN_HOUSE_PRICE")
+    diabetes_sample = Sample(observations=diabetes_df, target_name="Disease_progression")
 
     # create a (trivial) pipeline for a random forest regressor
     rnd_forest_reg = RegressorPipelineDF(
@@ -132,7 +135,7 @@ and even multiple learners with the `LearnerRanker`.
     # rank your candidate models by performance (default is mean CV score - 2*SD)
     ranker = LearnerRanker(
         grids=rnd_forest_grid, cv=rkf_cv, n_jobs=-3
-    ).fit(sample=boston_sample)
+    ).fit(sample=diabetes_sample)
 
     # get summary report
     ranker.summary_report()
@@ -140,9 +143,10 @@ and even multiple learners with the `LearnerRanker`.
 .. image:: sphinx/source/_static/ranker_summary.png
    :width: 600
 
-We can see based on this minimal workflow that a value of 8 for minimum samples
-in the leaf was the best performing of the three considered values. This approach
-easily extends to multiple hyperparameters for the learner and multiple learners.
+We can see based on this minimal workflow that a value of 11 for minimum
+samples in the leaf was the best performing of the three considered values.
+This approach easily extends to multiple hyperparameters for the learner
+and multiple learners.
 
 Model Inspection
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -209,28 +213,30 @@ features in a model are:
 
     # visualise synergy as a matrix
     from pytools.viz.matrix import MatrixDrawer
-    synergy_matrix = inspector.feature_synergy_matrix(symmetrical=True)
+    synergy_matrix = inspector.feature_synergy_matrix()
     MatrixDrawer(style="matplot%").draw(synergy_matrix, title="Synergy Matrix")
 
 .. image:: sphinx/source/_static/synergy_matrix.png
     :width: 600
 
-As before the matrix row represents the "perspective from" feature in the pair.
-Looking across the row for `LSTAT` there is relatively minimal synergy (≤14%)
-with other features in the model. However, looking down the column for `LSTAT`
-(i.e., perspective of other features in a pair with `LSTAT`) we find many
-features (the rows) are synergistic (12% to 47%) with `LSTAT`. We can conclude that:
+For any feature pair (A, B), the first feature (A) is the row, and the second
+feature (B) the column. For example, looking across the row for `LTG` (Lamotrigine)
+there is relatively minimal synergy (≤14%) with other features in the model.
+However, looking down the column for `LTG` (i.e., perspective of other features
+in a pair with `LTG`) we find many features (the rows) are synergistic (12% to 34%)
+with `LTG`. We can conclude that:
 
--   `LSTAT` is a strongly autonomous feature, displaying minimal synergy with other
-    features for predicting median house price.
--   The contribution of other features to predicting median house price is partly
-    enabled by the strong contribution from `LSTAT`.
 
-High synergy features must be considered carefully when investigating business
-impact, as they work together to predict the outcome. It would not make much
-sense to consider `ZN` (proportion of residential land zoned for lots over
-25,000 sq.ft) without `LSTAT` given the 47% synergy of `ZN` with `LSTAT` for
-predicting median house price.
+-   `LTG` is a strongly autonomous feature, displaying minimal synergy with other
+    features for predicting disease progression after one year.
+-   The contribution of other features to predicting disease progression after one
+    year is partly enabled by the strong contribution from `LTG`.
+
+
+High synergy features must be considered carefully when investigating impact,
+as they work together to predict the outcome. It would not make much sense to
+consider `TC` (T-Cells) without `LTG` given the 34% synergy of `TC` with `LTG`
+for predicting progression after one year.
 
 **Redundancy**
 
@@ -243,15 +249,20 @@ predicting median house price.
 .. image:: sphinx/source/_static/redundancy_matrix.png
     :width: 600
 
-For any feature pair (A, B), the first feature (A) is the row, and the second
-feature (B) the column. For example, if we look at the feature pair (`LSTAT`, `RM`)
-from the perspective of `LSTAT` (percentage of lower status of the population),
-then we look-up the row for `LSTAT` and the column for `RM` (average number of
-rooms per dwelling) and find 39% redundancy. This means that 39% of the
-information in `LSTAT` is duplicated with `RM` to predict median house price.
-We can also see looking across the row for `LSTAT` that apart from the 39%
-redundancy with `RM`, `LSTAT` has minimal redundancy (<5%) with any of the
-other features included in the model.
+For any feature pair (A, B), the first feature (A) is the row, and the second feature
+(B) the column. For example, if we look at the feature pair (`LDL`, `TC`) from the
+perspective of `LDL` (Low-Density Lipoproteins), then we look-up the row for `LDL`
+and the column for `TC` and find 47% redundancy. This means that 47% of the
+information in `LDL` is duplicated with `TC` to predict disease progression
+after one year. This redundancy is similar when looking "from the perspective"
+of `TC` for (`TC`, `LDL`) which is 50%.
+
+
+If we look across the columns for the `LTG` row we can see that apart from the
+32% redundancy with `BMI`, `LTG` has minimal redundancy (<9%) with the other
+features included in the model. Further, if we look cross the rows for the
+`LTG` column we can see a number of the features have moderate redundancy
+with `LTG`.
 
 **Clustering redundancy**
 
@@ -278,12 +289,12 @@ Let's look at the example for redundancy.
 .. image:: sphinx/source/_static/redundancy_dendrogram.png
     :width: 600
 
-Based on the dendrogram we can see that the feature pairs (`LSTAT`, `RM`)
-and (`CRIM`: per capita crime rate by town, `NOX`: nitric oxides concentration
-in parts per 10 million) each represent a cluster in the dendrogram and
-that `LSTAT` and `RM` have high importance. As a next action we could
-remove RM (and maybe NOX) to further simplify the model and obtain a
-set of independent features.
+Based on the dendrogram we can see that the feature pairs (`LDL`, `TC`)
+and (`LTG`, `BMI`: body mass index) each represent a cluster in the
+dendrogram and that `LTG` and `BMI` have high the highest importance.
+As potential next actions we could remove `TC` and explore the impact of
+removing one of `LTG` or `BMI` to further simplify the model and obtain a
+reduced set of independent features.
 
 Please see the
 `API reference <https://bcg-gamma.github.io/facet/apidoc/facet.html>`__
@@ -292,10 +303,10 @@ for more detail.
 Model Simulation
 ~~~~~~~~~~~~~~~~~~
 
-Taking the LSTAT feature as an example, we do the following for the simulation:
+Taking the `BMI` feature as an example, we do the following for the simulation:
 
 -   We use FACET's `ContinuousRangePartitioner` to split the range of observed values of
-    LSTAT into intervals of equal size. Each partition is represented by the central
+    `BMI` into intervals of equal size. Each partition is represented by the central
     value of that partition.
 -   For each partition, the simulator creates an artificial copy of the original sample
     assuming the variable to be simulated has the same value across all observations -
@@ -303,8 +314,8 @@ Taking the LSTAT feature as an example, we do the following for the simulation:
     acquired from the ranker, the simulator now re-predicts all targets using the models
     trained for all folds and determines the average uplift of the target variable
     resulting from this.
--   The FACET `SimulationDrawer` allows us to visualise the result; both in a matplotlib
-    and a plain-text style.
+-   The FACET `SimulationDrawer` allows us to visualise the result; both in a
+    matplotlib and a plain-text style.
 
 Finally, because FACET can use bootstrap cross validation, we can create a crossfit
 from our previous `LearnerRanker` best model to perform the simulation so we can
@@ -328,9 +339,9 @@ quantify the uncertainty by using bootstrap confidence intervals.
         cv=bscv,
         n_jobs=-3,
         verbose=False,
-    ).fit(sample=boston_sample)
+    ).fit(sample=diabetes_sample)
 
-    SIM_FEAT = "LSTAT"
+    SIM_FEAT = "BMI"
     simulator = UnivariateUpliftSimulator(crossfit=boot_crossfit, n_jobs=-3)
 
     # split the simulation range into equal sized partitions
@@ -344,9 +355,10 @@ quantify the uncertainty by using bootstrap confidence intervals.
 
 .. image:: sphinx/source/_static/simulation_output.png
 
-We would conclude from the figure that lower values of `LSTAT` are associated with
-an increase in median house price, and that the lower `LSTAT` of 8% or less results
-in a significant uplift in median house price.
+We would conclude from the figure that higher values of `BMI` are associated with
+an increase in disease progression after one year, and that for a `BMI` of 29
+and above, there is a significant increase in disease progression after one year
+of at least 26 points.
 
 
 Contributing
