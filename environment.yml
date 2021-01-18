@@ -7,9 +7,9 @@ dependencies:
   - conda-build
   - conda-verify
   - docutils
-  - flit = 3.0
   - flake8 = 3.8.*
   - flake8-comprehensions = 3.2.*
+  - flit = 3.0
   - isort = 5.5.*
   - joblib = 0.16.*
   - jupyter >= 1.0
@@ -34,8 +34,8 @@ dependencies:
   - sphinx = 3.2.*
   - sphinx-autodoc-typehints = 1.11.*
   - tableone = 0.7.*
-  - typing_inspect = 0.6.*
   - toml = 0.10.*
   - tox = 3.20.*
+  - typing_inspect = 0.6.*
   - xlrd = 1.2.*
   - yaml = 0.1.*
