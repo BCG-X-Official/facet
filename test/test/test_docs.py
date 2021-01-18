@@ -53,38 +53,40 @@ IGNORE_LIST_FUNCTION = [
 IGNORE_LIST_METHOD = []
 
 
-def member_childs(
+def member_children(
     member: object, module_filter: None
 ) -> Tuple[
     List[Tuple[str, object]], List[Tuple[str, object]], List[Tuple[str, object]]
 ]:
     """
-    Return childs of a given member (module, class,..)
+    Return children of a given member (module, class,..)
     :param member: a Python module or class
-    :param module_filter: an optional filter for __module__ of the childs
+    :param module_filter: an optional filter for __module__ of the children
     :return: three lists for classes, functions and methods
     """
 
-    all_childs = inspect.getmembers(member)
+    all_children = inspect.getmembers(member)
 
     if module_filter is not None:
-        all_childs = [
+        all_children = [
             c
-            for c in all_childs
+            for c in all_children
             if hasattr(c[1], "__module__") and c[1].__module__ == module_filter
         ]
 
     classes = [
-        c for c in all_childs if inspect.isclass(c[1]) and c[0] not in IGNORE_LIST_CLASS
+        c
+        for c in all_children
+        if inspect.isclass(c[1]) and c[0] not in IGNORE_LIST_CLASS
     ]
     functions = [
         c
-        for c in all_childs
+        for c in all_children
         if inspect.isfunction(c[1]) and c[0] not in IGNORE_LIST_FUNCTION
     ]
     methods = [
         c
-        for c in all_childs
+        for c in all_children
         if inspect.ismethod(c[1]) and c[0] not in IGNORE_LIST_METHOD
     ]
 
@@ -163,7 +165,7 @@ def test_docstrings(all_script_objects) -> None:
 
     for module_name, module in all_script_objects:
 
-        classes, functions, methods = member_childs(module, module_filter=module_name)
+        classes, functions, methods = member_children(module, module_filter=module_name)
 
         # classes where docstring is None:
         classes_with_missing_docstr.extend(
@@ -188,7 +190,7 @@ def test_docstrings(all_script_objects) -> None:
 
         # inspect found classes:
         for clsname, cls in classes:
-            _inner_classes, inner_functions, inner_methods = member_childs(cls, None)
+            _inner_classes, inner_functions, inner_methods = member_children(cls, None)
 
             # functions where docstring is None:
             functions_with_missing_docstr.extend(
