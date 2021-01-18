@@ -1,10 +1,10 @@
 trigger:
   - master
-  - 1.1
+  - 1.1.x
 
 pr:
   - master
-  - 1.1
+  - 1.1.x
 
 # set the build name
 name: $[ variables['branchName'] ]
@@ -15,7 +15,7 @@ schedules:
   displayName: Nightly full build
   branches:
     include:
-    - 1.1
+    - 1.1.x
 
 resources:
   repositories:
@@ -23,12 +23,12 @@ resources:
       type: github
       endpoint: BCG-Gamma
       name: BCG-Gamma/sklearndf
-      ref: 1.1 # todo - update to stable release
+      ref: 1.1.x # todo - update to stable release
     - repository: pytools
       type: github
       endpoint: BCG-Gamma
       name: BCG-Gamma/pytools
-      ref: 1.1 # todo - update to stable release
+      ref: 1.1.x # todo - update to stable release
 
 variables:
   ${{ if not(startsWith(variables['Build.SourceBranch'], 'refs/pull/')) }}:
@@ -114,7 +114,7 @@ stages:
 
     jobs:
     - job:
-      displayName: 'pytest @ 1.1 environment'
+      displayName: 'pytest @ develop environment'
       condition: >
         and(
         ne(variables.master_or_release, 'True'),
@@ -216,7 +216,7 @@ stages:
         - script: dir $(Build.SourcesDirectory)
 
         - script: |
-            conda install -y conda-build toml=0.10.* flit=3.0.*
+            conda install -y -c anaconda conda-build=3.20.5 toml=0.10.* flit=3.0.*
           displayName: 'Install conda-build, flit, toml'
           condition: eq(variables['BUILD_SYSTEM'], 'conda')
 
@@ -276,10 +276,10 @@ stages:
             FACET_V_PYTHON_BUILD: '=3.8.*'
             BUILD_SYSTEM: 'conda'
             PKG_DEPENDENCIES: 'max'
-          unconstrained_dependencies_conda:
-            FACET_V_PYTHON_BUILD: '>=3.6'
-            PKG_DEPENDENCIES: 'unconstrained'
-            BUILD_SYSTEM: 'conda'
+#          unconstrained_dependencies_conda:
+#            FACET_V_PYTHON_BUILD: '>=3.6'
+#            PKG_DEPENDENCIES: 'unconstrained'
+#            BUILD_SYSTEM: 'conda'
           default_dependencies_tox:
             FACET_V_PYTHON_BUILD: '=3.7.*'
             BUILD_SYSTEM: 'tox'
@@ -292,10 +292,10 @@ stages:
             FACET_V_PYTHON_BUILD: '=3.8.*'
             BUILD_SYSTEM: 'tox'
             PKG_DEPENDENCIES: 'max'
-          unconstrained_dependencies_tox:
-            FACET_V_PYTHON_BUILD: '>=3.6'
-            PKG_DEPENDENCIES: 'unconstrained'
-            BUILD_SYSTEM: 'tox'
+#          unconstrained_dependencies_tox:
+#            FACET_V_PYTHON_BUILD: '>=3.6'
+#            PKG_DEPENDENCIES: 'unconstrained'
+#            BUILD_SYSTEM: 'tox'
 
       steps:
         - task: UsePythonVersion@0
@@ -310,7 +310,7 @@ stages:
         - script: dir $(Build.SourcesDirectory)
 
         - script: |
-            conda install -y conda-build toml=0.10.* flit=3.0.*
+            conda install -y -c anaconda conda-build=3.20.5 toml=0.10.* flit=3.0.*
           displayName: 'Install conda-build, flit, toml'
           condition: eq(variables['BUILD_SYSTEM'], 'conda')
 
