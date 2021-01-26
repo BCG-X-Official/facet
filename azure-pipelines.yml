@@ -363,8 +363,14 @@ stages:
               script: |
                 set -e
                 eval "$(conda shell.bash hook)"
-                cd $(Build.AgentDirectory)
+                cd $(Build.SourcesDirectory)
                 git archive --format=zip --output $(Build.ArtifactStagingDirectory)/facet/$(Build.BuildNumber).zip HEAD
+
+          - task: PublishBuildArtifacts@1
+            inputs:
+              pathtoPublish: $(Build.ArtifactStagingDirectory)/facet/$(Build.BuildNumber).zip
+              artifactName: $(BUILD_SYSTEM)_$(PKG_DEPENDENCIES)
+              publishLocation: Container
 
           - task: Veracode@3
             inputs:
