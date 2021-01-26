@@ -347,6 +347,31 @@ stages:
             artifactName: $(BUILD_SYSTEM)_$(PKG_DEPENDENCIES)
             publishLocation: Container
 
+  # apply veracode static code analysis during nightly build
+  - stage:
+    displayName: 'Veracode check'
+
+    jobs:
+      - job:
+        displayName: 'Veracode check'
+        condition: eq(variables['Build.Reason'], 'Schedule')
+
+        steps:
+          - task: Veracode@3
+            inputs:
+              ConnectionDetailsSelection: 'Endpoint'
+              AnalysisService: 'veracode'
+              veracodeAppProfile: 'FACET'
+              version: '$(Build.BuildNumber)'
+              filepath: '$(Build.ArtifactStagingDirectory)'
+              sandboxName: 'facet'
+              createSandBox: false
+              createProfile: false
+              failTheBuildIfVeracodeScanDidNotInitiate: false
+              scanStatusCheckInterval: '60'
+              importResults: false
+              failBuildOnPolicyFail: false
+
   # release on merge from release branch to master:
   # - add release tag
   # - create GitHub release with changelog
