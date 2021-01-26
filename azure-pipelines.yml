@@ -348,7 +348,7 @@ stages:
             publishLocation: Container
 
   # apply veracode static code analysis during nightly build
-  - stage:
+  - stage: veracode_check
     displayName: 'Veracode check'
 
     jobs:
@@ -363,7 +363,7 @@ stages:
               AnalysisService: 'veracode'
               veracodeAppProfile: 'FACET'
               version: '$(Build.BuildNumber)'
-              filepath: '$(Build.ArtifactStagingDirectory)'
+              filepath: '/'
               sandboxName: 'facet'
               createSandBox: false
               createProfile: false
