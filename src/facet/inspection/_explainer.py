@@ -5,12 +5,13 @@ Factories for SHAP explainers from the ``shap`` package.
 import functools
 import logging
 from abc import ABCMeta, abstractmethod
-from distutils import version
-from typing import Any, Dict, Mapping, Optional
+from types import ModuleType
+from typing import Any, Dict, Mapping, Optional, Union
 
+import numpy as np
 import pandas as pd
 import shap
-from shap.explainers.explainer import Explainer
+from packaging import version
 from sklearn.base import BaseEstimator
 
 from pytools.api import AllTracker, inheritdoc, validate_type
@@ -18,19 +19,46 @@ from sklearndf import ClassifierDF, LearnerDF, RegressorDF
 
 log = logging.getLogger(__name__)
 
-__all__ = ["ExplainerFactory", "TreeExplainerFactory", "KernelExplainerFactory"]
+__all__ = [
+    "BaseExplainer",
+    "ExplainerFactory",
+    "KernelExplainerFactory",
+    "TreeExplainerFactory",
+]
+
+__shap_version__ = version.parse(shap.__version__)
+__shap_earliest__ = version.parse("0.34")
+__shap_0_36__ = version.parse("0.36")
+__shap_latest__ = version.parse("0.38")
+
 
 #
 # Ensure we have a supported version of the shap package
 #
 
-_SHAP_EARLIEST_VERSION = version.LooseVersion("0.34")
-
-if version.LooseVersion(shap.__version__) < _SHAP_EARLIEST_VERSION:
-    raise RuntimeError(
-        f"shap package version {shap.__version__} is not supported; "
-        f"please upgrade to version {_SHAP_EARLIEST_VERSION} or later"
+if __shap_version__ < __shap_earliest__ or __shap_version__ >= __shap_latest__:
+    raise ImportError(
+        f"shap package v{__shap_version__} is not supported; "
+        f"please use v{__shap_earliest__} or later"
+        f"but not v{__shap_latest__} or later"
     )
+
+#
+# conditional imports
+#
+
+try:
+    # noinspection PyUnresolvedReferences
+    import catboost
+except ModuleNotFoundError:
+    catboost: ModuleType
+
+if __shap_version__ < __shap_0_36__:
+    # noinspection PyUnresolvedReferences
+    from shap.explainers.explainer import Explainer
+else:
+    # noinspection PyUnresolvedReferences
+    from shap import Explainer
 
 #
 # Ensure all symbols introduced below are included in __all__
@@ -42,6 +70,50 @@ __tracker = AllTracker(globals())
 #
 # Class definitions
 #
+
+
+class BaseExplainer(metaclass=ABCMeta):
+    """
+    Abstract base class of SHAP explainers, providing stubs for methods used by FAET
+    but not consistently supported by class :class:`shap.Explainer` across different
+    versions of the `shap` package.
+    """
+
+    # noinspection PyPep8Naming,PyUnresolvedReferences
+    @abstractmethod
+    def shap_values(
+        self,
+        X: Union[np.ndarray, pd.DataFrame, "catboost.Pool"],
+        y: Union[None, np.ndarray, pd.Series] = None,
+        **kwargs,
+    ) -> np.ndarray:
+        """
+        Estimate the SHAP values for a set of samples.
+
+        :param X: matrix of samples (# samples x # features) on which to explain the
+            model's output
+        :param y: array of label values for each sample, used when explaining loss
+            functions
+        """
+        pass
+
+    # noinspection PyPep8Naming,PyUnresolvedReferences
+    @abstractmethod
+    def shap_interaction_values(
+        self,
+        X: Union[np.ndarray, pd.DataFrame, "catboost.Pool"],
+        y: Union[None, np.ndarray, pd.Series] = None,
+        **kwargs,
+    ) -> np.ndarray:
+        """
+        Estimate the SHAP interaction values for a set of samples.
+
+        :param X: matrix of samples (# samples x # features) on which to explain the
+            model's output
+        :param y: array of label values for each sample, used when explaining loss
+            functions
+        """
+        pass
 
 
 class ExplainerFactory(metaclass=ABCMeta):
@@ -76,7 +148,7 @@ class ExplainerFactory(metaclass=ABCMeta):
     @abstractmethod
     def make_explainer(
         self, model: LearnerDF, data: Optional[pd.DataFrame]
-    ) -> Explainer:
+    ) -> BaseExplainer:
         """
         Construct a new :class:`~shap.Explainer` to compute shap values.
 
@@ -95,6 +167,10 @@ class ExplainerFactory(metaclass=ABCMeta):
                 "a background dataset is required to make an explainer with this "
                 "factory"
             )
+
+
+class _TreeExplainer(shap.TreeExplainer, BaseExplainer):
+    pass
 
 
 @inheritdoc(match="[see superclass]")
@@ -153,7 +229,7 @@ class TreeExplainerFactory(ExplainerFactory):
 
         self._validate_background_dataset(data=data)
 
-        explainer = shap.TreeExplainer(
+        explainer = _TreeExplainer(
             model=model.native_estimator,
             data=data if self._uses_background_dataset else None,
             **self._remove_null_kwargs(
@@ -169,6 +245,22 @@ class TreeExplainerFactory(ExplainerFactory):
         )
 
         return explainer
+
+
+class _KernelExplainer(shap.KernelExplainer, BaseExplainer):
+    # noinspection PyPep8Naming,PyUnresolvedReferences
+    def shap_interaction_values(
+        self,
+        X: Union[np.ndarray, pd.DataFrame, "catboost.Pool"],
+        y: Union[None, np.ndarray, pd.Series] = None,
+        **kwargs,
+    ) -> np.ndarray:
+        """
+        Not implemented.
+        """
+        raise NotImplementedError()
+
+    pass
 
 
 @inheritdoc(match="[see superclass]")
@@ -245,7 +337,7 @@ class KernelExplainerFactory(ExplainerFactory):
         if data_size_limit is not None and len(data) > data_size_limit:
             data = shap.kmeans(data, data_size_limit, round_values=True)
 
-        explainer = shap.KernelExplainer(
+        explainer = _KernelExplainer(
             model=model_fn, data=data, **self._remove_null_kwargs(dict(link=self.link))
         )
 
