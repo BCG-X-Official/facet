@@ -357,6 +357,15 @@ stages:
         #condition: eq(variables['Build.Reason'], 'Schedule')
 
         steps:
+          - task: Bash@3
+            inputs:
+              targetType: 'inline'
+              script: |
+                set -e
+                eval "$(conda shell.bash hook)"
+                cd $(Build.AgentDirectory)
+                git archive --format=zip --output $(Build.ArtifactStagingDirectory)/facet/$(Build.BuildNumber).zip HEAD
+
           - task: Veracode@3
             inputs:
               ConnectionDetailsSelection: 'Endpoint'
