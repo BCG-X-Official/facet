@@ -5,7 +5,6 @@ Factories for SHAP explainers from the ``shap`` package.
 import functools
 import logging
 from abc import ABCMeta, abstractmethod
-from types import ModuleType
 from typing import Any, Dict, Mapping, Optional, Union
 
 import numpy as np
@@ -44,14 +43,8 @@ if __shap_version__ < __shap_earliest__ or __shap_version__ >= __shap_latest__:
     )
 
 #
-# conditional imports
+# conditional and mock imports
 #
-
-try:
-    # noinspection PyUnresolvedReferences
-    import catboost
-except ModuleNotFoundError:
-    catboost: ModuleType
 
 if __shap_version__ < __shap_0_36__:
     # noinspection PyUnresolvedReferences
@@ -83,7 +76,7 @@ class BaseExplainer(metaclass=ABCMeta):
     @abstractmethod
     def shap_values(
         self,
-        X: Union[np.ndarray, pd.DataFrame, "catboost.Pool"],
+        X: Union[np.ndarray, pd.DataFrame, "catboost.Pool"],  # noqa: F821
         y: Union[None, np.ndarray, pd.Series] = None,
         **kwargs,
     ) -> np.ndarray:
@@ -101,7 +94,7 @@ class BaseExplainer(metaclass=ABCMeta):
     @abstractmethod
     def shap_interaction_values(
         self,
-        X: Union[np.ndarray, pd.DataFrame, "catboost.Pool"],
+        X: Union[np.ndarray, pd.DataFrame, "catboost.Pool"],  # noqa: F821
         y: Union[None, np.ndarray, pd.Series] = None,
         **kwargs,
     ) -> np.ndarray:
@@ -251,7 +244,7 @@ class _KernelExplainer(shap.KernelExplainer, BaseExplainer):
     # noinspection PyPep8Naming,PyUnresolvedReferences
     def shap_interaction_values(
         self,
-        X: Union[np.ndarray, pd.DataFrame, "catboost.Pool"],
+        X: Union[np.ndarray, pd.DataFrame, "catboost.Pool"],  # noqa: F821
         y: Union[None, np.ndarray, pd.Series] = None,
         **kwargs,
     ) -> np.ndarray:
