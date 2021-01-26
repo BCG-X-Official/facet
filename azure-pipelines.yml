@@ -354,7 +354,7 @@ stages:
     jobs:
       - job:
         displayName: 'Veracode check'
-        condition: eq(variables['Build.Reason'], 'Schedule')
+        #condition: eq(variables['Build.Reason'], 'Schedule')
 
         steps:
           - task: Veracode@3
