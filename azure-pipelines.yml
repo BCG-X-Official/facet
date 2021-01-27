@@ -364,7 +364,7 @@ stages:
                 set -e
                 eval "$(conda shell.bash hook)"
                 cd $(Build.SourcesDirectory)
-                git archive --format=zip --output $(System.DefaultWorkingDirectory)/static_scan/$(Build.BuildNumber).zip HEAD
+                git archive --format=zip --output $(System.DefaultWorkingDirectory)/static_scan/archive.zip HEAD
                 cd $(System.DefaultWorkingDirectory)/static_scan
                 ls
 
