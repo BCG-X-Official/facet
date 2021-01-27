@@ -364,22 +364,20 @@ stages:
                 set -e
                 eval "$(conda shell.bash hook)"
                 cd $(Build.SourcesDirectory)
-                pwd
-                ls
-                git status
-                zip -r $(Build.ArtifactStagingDirectory)/facet.zip $(System.DefaultWorkingDirectory)
                 git archive --format=zip --output $(System.DefaultWorkingDirectory)/archive.zip HEAD
+                cd $(System.DefaultWorkingDirectory)
+                ls
 
-          - task: CopyFiles@2
-            inputs:
-              sourceFolder: $(Build.SourcesDirectory)/archive
-              targetFolder: $(Build.ArtifactStagingDirectory)
+#          - task: CopyFiles@2
+#            inputs:
+#              sourceFolder: $(Build.SourcesDirectory)/archive
+#              targetFolder: $(Build.ArtifactStagingDirectory)
 
-          - task: PublishBuildArtifacts@1
-            inputs:
-              pathtoPublish: $(Build.ArtifactStagingDirectory)
-              artifactName: facet_$(Build.BuildNumber)
-              publishLocation: Container
+#          - task: PublishBuildArtifacts@1
+#            inputs:
+#              pathtoPublish: $(Build.ArtifactStagingDirectory)
+#              artifactName: facet_$(Build.BuildNumber)
+#              publishLocation: Container
 
           - task: Veracode@3
             inputs:
@@ -387,7 +385,7 @@ stages:
               AnalysisService: 'veracode'
               veracodeAppProfile: 'FACET'
               version: '$(Build.BuildNumber)'
-              filepath: '$(Build.ArtifactStagingDirectory)'
+              filepath: '$(System.DefaultWorkingDirectory)'
               sandboxName: 'facet'
               createSandBox: false
               createProfile: false
