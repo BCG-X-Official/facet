@@ -348,7 +348,7 @@ stages:
             publishLocation: Container
 
   # apply veracode static code analysis during nightly build
-  - stage:
+  - stage: veracode_check
     displayName: 'Veracode check'
 
     jobs:
@@ -357,13 +357,23 @@ stages:
         condition: eq(variables['Build.Reason'], 'Schedule')
 
         steps:
+          - task: Bash@3
+            inputs:
+              targetType: 'inline'
+              script: |
+                set -e
+                eval "$(conda shell.bash hook)"
+                cd $(System.DefaultWorkingDirectory)
+                mkdir static_scan
+                git archive --format=zip --output static_scan/archive.zip HEAD
+
           - task: Veracode@3
             inputs:
               ConnectionDetailsSelection: 'Endpoint'
               AnalysisService: 'veracode'
               veracodeAppProfile: 'FACET'
               version: '$(Build.BuildNumber)'
-              filepath: '$(Build.ArtifactStagingDirectory)'
+              filepath: '$(System.DefaultWorkingDirectory)/static_scan'
               sandboxName: 'facet'
               createSandBox: false
               createProfile: false
