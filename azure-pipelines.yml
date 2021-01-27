@@ -363,9 +363,9 @@ stages:
               script: |
                 set -e
                 eval "$(conda shell.bash hook)"
-                cd $(Build.SourcesDirectory)
-                git archive --format=zip --output $(System.DefaultWorkingDirectory)/static_scan/archive.zip HEAD
-                cd $(System.DefaultWorkingDirectory)/static_scan
+                cd $(System.DefaultWorkingDirectory)
+                mkdir static_scan
+                git archive --format=zip --output static_scan/archive.zip HEAD
                 ls
 
 #          - task: CopyFiles@2
