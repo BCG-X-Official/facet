@@ -365,8 +365,10 @@ stages:
                 eval "$(conda shell.bash hook)"
                 cd $(Build.SourcesDirectory)
                 pwd
+                ls
                 git status
-                git archive --format=zip --output archive/facet_$(Build.BuildNumber).zip HEAD
+                zip -r $(Build.ArtifactStagingDirectory)/facet.zip $(System.DefaultWorkingDirectory)
+                git archive --format=zip --output $(System.DefaultWorkingDirectory)/archive.zip HEAD
 
           - task: CopyFiles@2
             inputs:
