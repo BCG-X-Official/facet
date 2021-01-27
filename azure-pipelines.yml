@@ -364,8 +364,8 @@ stages:
                 set -e
                 eval "$(conda shell.bash hook)"
                 cd $(Build.SourcesDirectory)
-                git archive --format=zip --output $(System.DefaultWorkingDirectory)/archive.zip HEAD
-                cd $(System.DefaultWorkingDirectory)
+                git archive --format=zip --output $(System.DefaultWorkingDirectory)/static_scan/$(Build.BuildNumber).zip HEAD
+                cd $(System.DefaultWorkingDirectory)/static_scan
                 ls
 
 #          - task: CopyFiles@2
@@ -385,7 +385,7 @@ stages:
               AnalysisService: 'veracode'
               veracodeAppProfile: 'FACET'
               version: '$(Build.BuildNumber)'
-              filepath: '$(System.DefaultWorkingDirectory)'
+              filepath: '$(System.DefaultWorkingDirectory)/static_scan'
               sandboxName: 'facet'
               createSandBox: false
               createProfile: false
