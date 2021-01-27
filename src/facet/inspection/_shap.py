@@ -8,7 +8,6 @@ from typing import Callable, Generic, List, Optional, Sequence, TypeVar, Union, 
 
 import numpy as np
 import pandas as pd
-from shap.explainers.explainer import Explainer
 
 from pytools.api import AllTracker, inheritdoc
 from pytools.fit import FittableMixin
@@ -19,7 +18,7 @@ from sklearndf.pipeline import (
     RegressorPipelineDF,
 )
 
-from ._explainer import ExplainerFactory
+from ._explainer import BaseExplainer, ExplainerFactory
 from facet.crossfit import LearnerCrossfit
 from facet.data import Sample
 
@@ -295,7 +294,7 @@ class ShapCalculator(
     def _get_shap_for_split(
         model: LearnerPipelineDF,
         sample: Sample,
-        explainer: Explainer,
+        explainer: BaseExplainer,
         features_out: pd.Index,
         shap_matrix_for_split_to_df_fn: ShapToDataFrameFunction,
         multi_output_type: str,
@@ -405,7 +404,7 @@ class ShapValuesCalculator(
     def _get_shap_for_split(
         model: LearnerPipelineDF,
         sample: Sample,
-        explainer: Explainer,
+        explainer: BaseExplainer,
         features_out: pd.Index,
         shap_matrix_for_split_to_df_fn: ShapToDataFrameFunction,
         multi_output_type: str,
@@ -509,7 +508,7 @@ class ShapInteractionValuesCalculator(
     def _get_shap_for_split(
         model: LearnerPipelineDF,
         sample: Sample,
-        explainer: Explainer,
+        explainer: BaseExplainer,
         features_out: pd.Index,
         shap_matrix_for_split_to_df_fn: ShapToDataFrameFunction,
         multi_output_type: str,
