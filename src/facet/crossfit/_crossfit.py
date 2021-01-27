@@ -6,9 +6,12 @@ import logging
 from abc import ABCMeta
 from copy import copy
 from typing import (
+    Any,
     Callable,
     Container,
+    Dict,
     Generic,
+    Iterable,
     Iterator,
     List,
     NamedTuple,
@@ -29,7 +32,7 @@ from sklearn.utils import check_random_state
 
 from pytools.api import AllTracker, inheritdoc
 from pytools.fit import FittableMixin
-from pytools.parallelization import ParallelizableMixin
+from pytools.parallelization import Job, JobQueue, JobRunner, ParallelizableMixin
 from sklearndf import LearnerDF, TransformerDF
 from sklearndf.pipeline import (
     ClassifierPipelineDF,
@@ -41,7 +44,7 @@ from facet.data import Sample
 
 log = logging.getLogger(__name__)
 
-__all__ = ["LearnerCrossfit", "Scorer"]
+__all__ = ["Scorer", "FitResult", "LearnerCrossfit"]
 
 #
 # Type variables
@@ -79,13 +82,15 @@ Scorer = Callable[
     float,
 ]
 
+FitResult = Tuple[Optional[LearnerPipelineDF], Optional[float]]
+
 #
 # Class definitions
 #
 
 
 class _FitScoreParameters(NamedTuple):
-    pipeline: T_LearnerPipelineDF
+    pipeline: LearnerPipelineDF
 
     # fit parameters
     train_features: Optional[pd.DataFrame]
@@ -215,7 +220,7 @@ class LearnerCrossfit(
         # un-fit this instance so we have a defined state in case of an exception
         self._reset_fit()
 
-        self._fit_score(_sample=sample, **fit_params)
+        self._run(self._fit_score_queue(_sample=sample, **fit_params))
 
         return self
 
@@ -238,7 +243,9 @@ class LearnerCrossfit(
         :return: the resulting scores as a 1d numpy array
         """
 
-        return self._fit_score(_scoring=scoring, _train_scores=train_scores)
+        return self._run(
+            self._fit_score_queue(_scoring=scoring, _train_scores=train_scores)
+        )
 
     def fit_score(
         self,
@@ -267,8 +274,45 @@ class LearnerCrossfit(
         # un-fit this instance so we have a defined state in case of an exception
         self._reset_fit()
 
-        return self._fit_score(
-            _sample=sample, _scoring=scoring, _train_scores=train_scores, **fit_params
+        return self._run(
+            self._fit_score_queue(
+                _sample=sample,
+                _scoring=scoring,
+                _train_scores=train_scores,
+                **fit_params,
+            )
+        )
+
+    def fit_score_queue(
+        self,
+        sample: Sample,
+        scoring: Union[str, Callable[[float, float], float], None] = None,
+        train_scores: bool = False,
+        **fit_params,
+    ) -> JobQueue[FitResult, Optional[np.ndarray]]:
+        """
+        Create a :class:`pytools.parallelization.JobQueue` that fits then scores this
+        crossfit.
+
+        See :meth:`.fit` and :meth:`.score` for details on fitting and scoring.
+
+        :param sample: the sample to fit the estimators to; if the sample
+            weights these are passed on to the learner and scoring function as
+            keyword argument ``sample_weight``
+        :param fit_params: optional fit parameters, to be passed on to the fit method
+            of the learner
+        :param scoring: scoring function to use to score the models
+            (see :func:`~sklearn.metrics.check_scoring` for details)
+        :param train_scores: if ``True``, calculate train scores instead of test
+            scores (default: ``False``)
+        :return: the job queue
+        """
+
+        return self._fit_score_queue(
+            _sample=sample,
+            _scoring=scoring,
+            _train_scores=train_scores,
+            **fit_params,
         )
 
     def resize(self: T_Self, n_splits: int) -> T_Self:
@@ -318,14 +362,14 @@ class LearnerCrossfit(
         return iter(self._model_by_split)
 
     # noinspection PyPep8Naming
-    def _fit_score(
+    def _fit_score_queue(
         self,
         _sample: Optional[Sample] = None,
         _scoring: Union[str, Callable[[float, float], float], None] = __NO_SCORING,
         _train_scores: bool = False,
         sample_weight: pd.Series = None,
         **fit_params,
-    ) -> Optional[np.ndarray]:
+    ) -> JobQueue[FitResult, Optional[np.ndarray]]:
 
         if sample_weight is not None:
             raise ValueError(
@@ -423,35 +467,69 @@ class LearnerCrossfit(
                     ),
                 )
 
-        with self._parallel() as parallel:
-            model_and_score_by_split: List[
-                Tuple[T_LearnerPipelineDF, Optional[float]]
-            ] = parallel(
-                self._delayed(LearnerCrossfit._fit_and_score_model_for_split)(
-                    parameters, **fit_params
+        crossfit = self
+
+        @inheritdoc(match="""[see superclass]""")
+        class _FitScoreQueue(JobQueue[FitResult, Optional[np.ndarray]]):
+            def jobs(self) -> Iterable[Job[FitResult]]:
+                """[see superclass]"""
+                return (
+                    _FitAndScoreModelForSplit(parameters, fit_params)
+                    for parameters in _generate_parameters()
                 )
-                for parameters in _generate_parameters()
-            )
 
-        model_by_split, scores = zip(*model_and_score_by_split)
+            def start(self) -> None:
+                """
+                Un-fit the crossfit associated with this queue, if we are fitting.
+                """
+                if do_fit:
+                    crossfit._reset_fit()
 
-        if do_fit:
-            self._splits = splits
-            self._model_by_split = model_by_split
-            self._sample = _sample
+            def collate(self, job_results: List[FitResult]) -> Optional[np.ndarray]:
+                """[see superclass]"""
+                model_by_split, scores = zip(*job_results)
 
-        return np.array(scores) if do_score else None
+                if do_fit:
+                    crossfit._splits = splits
+                    crossfit._model_by_split = model_by_split
+                    crossfit._sample = _sample
+
+                return np.array(scores) if do_score else None
+
+            def __len__(self) -> int:
+                return len(splits)
+
+        return _FitScoreQueue()
+
+    def _run(
+        self, queue: JobQueue[FitResult, Optional[np.ndarray]]
+    ) -> Optional[np.ndarray]:
+        return JobRunner.from_parallelizable(self).run_queue(queue)
 
     def _reset_fit(self) -> None:
         self._sample = None
         self._splits = None
         self._model_by_split = None
 
-    # noinspection PyPep8Naming
-    @staticmethod
-    def _fit_and_score_model_for_split(
-        parameters: _FitScoreParameters, **fit_params
-    ) -> Tuple[Optional[T_LearnerPipelineDF], Optional[float]]:
+    def __len__(self) -> int:
+        return self.n_splits_
+
+
+class _FitAndScoreModelForSplit(Job[FitResult]):
+    def __init__(
+        self, parameters: _FitScoreParameters, fit_params: Dict[str, Any]
+    ) -> None:
+        self.parameters = parameters
+        self.fit_params = fit_params
+
+    def run(self) -> FitResult:
+        """
+        Fit and/or score a learner pipeline.
+
+        :return: a tuple with the the fitted pipeline and the score
+        """
+        parameters = self.parameters
+
         do_fit = parameters.train_target is not None
         do_score = parameters.scorer is not None
 
@@ -463,7 +541,7 @@ class LearnerCrossfit(
                 y=parameters.train_target,
                 feature_sequence=parameters.train_feature_sequence,
                 sample_weight=parameters.train_weight,
-                **fit_params,
+                **self.fit_params,
             )
 
         else:
@@ -495,9 +573,6 @@ class LearnerCrossfit(
             score = None
 
         return pipeline if do_fit else None, score
-
-    def __len__(self) -> int:
-        return self.n_splits_
 
 
 __tracker.validate()

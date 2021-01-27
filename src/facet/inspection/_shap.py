@@ -11,7 +11,7 @@ import pandas as pd
 
 from pytools.api import AllTracker, inheritdoc
 from pytools.fit import FittableMixin
-from pytools.parallelization import ParallelizableMixin
+from pytools.parallelization import Job, JobRunner, ParallelizableMixin
 from sklearndf.pipeline import (
     ClassifierPipelineDF,
     LearnerPipelineDF,
@@ -214,9 +214,11 @@ class ShapCalculator(
         else:
             background_dataset = None
 
-        with self._parallel() as parallel:
-            shap_df_per_split: List[pd.DataFrame] = parallel(
-                self._delayed(self._get_shap_for_split)(
+        shap_df_per_split: List[pd.DataFrame] = JobRunner.from_parallelizable(
+            self
+        ).run_jobs(
+            *(
+                Job.delayed(self._get_shap_for_split)(
                     model,
                     sample,
                     self._explainer_factory.make_explainer(
@@ -253,6 +255,7 @@ class ShapCalculator(
                     ),
                 )
             )
+        )
 
         return self._concatenate_splits(shap_df_per_split=shap_df_per_split)
 
