@@ -97,7 +97,9 @@ stages:
                 build_changed = "NA"
                 else
                 cd $(System.DefaultWorkingDirectory)
-                files_changed=$(git diff $(System.PullRequest.TargetBranch) --name-only)
+                git branch
+                echo "Getting changed files relative to $(System.PullRequest.TargetBranch)"
+                files_changed=$(git diff --name-only $(System.PullRequest.TargetBranch))
                 echo "Files changed since last commit: ${files_changed}"
                 if [ "${files_changed}" == *"pyproject.toml"* ]
                 then
