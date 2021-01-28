@@ -92,8 +92,12 @@ stages:
             inputs:
               targetType: 'inline'
               script: |
+                if [ ! $(System.PullRequest.TargetBranch) ]
+                then
+                build_changed = "NA"
+                else
                 cd $(System.DefaultWorkingDirectory)
-                files_changed=$(git diff $(Build.SourceVersion)^! --name-only)
+                files_changed=$(git diff $(System.PullRequest.TargetBranch) --name-only)
                 echo "Files changed since last commit: ${files_changed}"
                 if [ "${files_changed}" == *"pyproject.toml"* ]
                 then
@@ -102,6 +106,7 @@ stages:
                 else
                 build_changed=0
                 echo "build config is unchanged";
+                fi
                 fi
                 echo "##vso[task.setvariable variable=conda_build_config_changed;isOutput=true]$build_changed"
 
@@ -187,7 +192,7 @@ stages:
       condition: >
         and(
         ne(variables.master_or_release, 'True'),
-        ne(stageDependencies.detect_build_config_changes.checkout_and_diff.outputs['diff.conda_build_config_changed'], '0')
+        eq(stageDependencies.detect_build_config_changes.checkout_and_diff.outputs['diff.conda_build_config_changed'], '1')
         )
 
       pool:
