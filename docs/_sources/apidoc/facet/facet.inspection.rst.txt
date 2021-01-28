@@ -17,6 +17,7 @@ facet.inspection
       :template: custom-class-template.rst
       :nosignatures:
    
+      BaseExplainer
       ExplainerFactory
       KernelExplainerFactory
       LearnerInspector

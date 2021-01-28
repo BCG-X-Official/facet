@@ -43,7 +43,7 @@
     <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "document", "processClass": "math|output_area"}})</script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="facet.inspection.ExplainerFactory" href="inspection/facet.inspection.ExplainerFactory.html" />
+    <link rel="next" title="facet.inspection.BaseExplainer" href="inspection/facet.inspection.BaseExplainer.html" />
     <link rel="prev" title="facet.data.Sample" href="data/facet.data.Sample.html" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="docsearch:language" content="en" />
@@ -140,6 +140,10 @@
                 <li class="active">
                     <a href="">facet.inspection</a>
                     <ul>
+                    
+                        <li class="">
+                            <a href="inspection/facet.inspection.BaseExplainer.html">facet.inspection.BaseExplainer</a>
+                        </li>
                     
                         <li class="">
                             <a href="inspection/facet.inspection.ExplainerFactory.html">facet.inspection.ExplainerFactory</a>
@@ -240,19 +244,22 @@ of a learner pipeline which has been fitted using cross-validation.</p>
 <col style="width: 90%" />
 </colgroup>
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="inspection/facet.inspection.ExplainerFactory.html#facet.inspection.ExplainerFactory" title="facet.inspection.ExplainerFactory"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ExplainerFactory</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="inspection/facet.inspection.BaseExplainer.html#facet.inspection.BaseExplainer" title="facet.inspection.BaseExplainer"><code class="xref py py-obj docutils literal notranslate"><span class="pre">BaseExplainer</span></code></a></p></td>
+<td><p>Abstract base class of SHAP explainers, providing stubs for methods used by FAET but not consistently supported by class <a class="reference external" href="https://shap.readthedocs.io/en/stable/generated/shap.Explainer.html#shap.Explainer" title="(in SHAP vlatest)"><code class="xref py py-class docutils literal notranslate"><span class="pre">shap.Explainer</span></code></a> across different versions of the <cite>shap</cite> package.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="inspection/facet.inspection.ExplainerFactory.html#facet.inspection.ExplainerFactory" title="facet.inspection.ExplainerFactory"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ExplainerFactory</span></code></a></p></td>
 <td><p>A factory for constructing <a class="reference external" href="https://shap.readthedocs.io/en/stable/generated/shap.Explainer.html#shap.Explainer" title="(in SHAP vlatest)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Explainer</span></code></a> objects.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="inspection/facet.inspection.KernelExplainerFactory.html#facet.inspection.KernelExplainerFactory" title="facet.inspection.KernelExplainerFactory"><code class="xref py py-obj docutils literal notranslate"><span class="pre">KernelExplainerFactory</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="inspection/facet.inspection.KernelExplainerFactory.html#facet.inspection.KernelExplainerFactory" title="facet.inspection.KernelExplainerFactory"><code class="xref py py-obj docutils literal notranslate"><span class="pre">KernelExplainerFactory</span></code></a></p></td>
 <td><p>A factory constructing <code class="xref py py-class docutils literal notranslate"><span class="pre">KernelExplainer</span></code> objects.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="inspection/facet.inspection.LearnerInspector.html#facet.inspection.LearnerInspector" title="facet.inspection.LearnerInspector"><code class="xref py py-obj docutils literal notranslate"><span class="pre">LearnerInspector</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="inspection/facet.inspection.LearnerInspector.html#facet.inspection.LearnerInspector" title="facet.inspection.LearnerInspector"><code class="xref py py-obj docutils literal notranslate"><span class="pre">LearnerInspector</span></code></a></p></td>
 <td><p>Explain regressors and classifiers based on SHAP values.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="inspection/facet.inspection.ShapPlotData.html#facet.inspection.ShapPlotData" title="facet.inspection.ShapPlotData"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ShapPlotData</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="inspection/facet.inspection.ShapPlotData.html#facet.inspection.ShapPlotData" title="facet.inspection.ShapPlotData"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ShapPlotData</span></code></a></p></td>
 <td><p>Data for use in SHAP plots provided by the <a class="reference external" href="https://shap.readthedocs.io/en/stable/">shap</a> package.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="inspection/facet.inspection.TreeExplainerFactory.html#facet.inspection.TreeExplainerFactory" title="facet.inspection.TreeExplainerFactory"><code class="xref py py-obj docutils literal notranslate"><span class="pre">TreeExplainerFactory</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="inspection/facet.inspection.TreeExplainerFactory.html#facet.inspection.TreeExplainerFactory" title="facet.inspection.TreeExplainerFactory"><code class="xref py py-obj docutils literal notranslate"><span class="pre">TreeExplainerFactory</span></code></a></p></td>
 <td><p>A factory constructing <code class="xref py py-class docutils literal notranslate"><span class="pre">TreeExplainer</span></code> objects.</p></td>
 </tr>
 </tbody>
@@ -267,7 +274,7 @@ of a learner pipeline which has been fitted using cross-validation.</p>
               <div class='prev-next-bottom'>
                 
     <a class='left-prev' id="prev-link" href="data/facet.data.Sample.html" title="previous page">facet.data.Sample</a>
-    <a class='right-next' id="next-link" href="inspection/facet.inspection.ExplainerFactory.html" title="next page">facet.inspection.ExplainerFactory</a>
+    <a class='right-next' id="next-link" href="inspection/facet.inspection.BaseExplainer.html" title="next page">facet.inspection.BaseExplainer</a>
 
               </div>
               

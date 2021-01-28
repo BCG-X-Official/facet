@@ -163,12 +163,12 @@
 <span class="kn">import</span> <span class="nn">functools</span>
 <span class="kn">import</span> <span class="nn">logging</span>
 <span class="kn">from</span> <span class="nn">abc</span> <span class="kn">import</span> <span class="n">ABCMeta</span><span class="p">,</span> <span class="n">abstractmethod</span>
-<span class="kn">from</span> <span class="nn">distutils</span> <span class="kn">import</span> <span class="n">version</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">,</span> <span class="n">Optional</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span>
 
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
 <span class="kn">import</span> <span class="nn">shap</span>
-<span class="kn">from</span> <span class="nn">shap.explainers.explainer</span> <span class="kn">import</span> <span class="n">Explainer</span>
+<span class="kn">from</span> <span class="nn">packaging</span> <span class="kn">import</span> <span class="n">version</span>
 <span class="kn">from</span> <span class="nn">sklearn.base</span> <span class="kn">import</span> <span class="n">BaseEstimator</span>
 
 <span class="kn">from</span> <span class="nn">pytools.api</span> <span class="kn">import</span> <span class="n">AllTracker</span><span class="p">,</span> <span class="n">inheritdoc</span><span class="p">,</span> <span class="n">validate_type</span>
@@ -176,19 +176,40 @@
 
 <span class="n">log</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
-<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;ExplainerFactory&quot;</span><span class="p">,</span> <span class="s2">&quot;TreeExplainerFactory&quot;</span><span class="p">,</span> <span class="s2">&quot;KernelExplainerFactory&quot;</span><span class="p">]</span>
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s2">&quot;BaseExplainer&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;ExplainerFactory&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;KernelExplainerFactory&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;TreeExplainerFactory&quot;</span><span class="p">,</span>
+<span class="p">]</span>
+
+<span class="n">__shap_version__</span> <span class="o">=</span> <span class="n">version</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">shap</span><span class="o">.</span><span class="n">__version__</span><span class="p">)</span>
+<span class="n">__shap_earliest__</span> <span class="o">=</span> <span class="n">version</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="s2">&quot;0.34&quot;</span><span class="p">)</span>
+<span class="n">__shap_0_36__</span> <span class="o">=</span> <span class="n">version</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="s2">&quot;0.36&quot;</span><span class="p">)</span>
+<span class="n">__shap_latest__</span> <span class="o">=</span> <span class="n">version</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="s2">&quot;0.38&quot;</span><span class="p">)</span>
+
 
 <span class="c1">#</span>
 <span class="c1"># Ensure we have a supported version of the shap package</span>
 <span class="c1">#</span>
 
-<span class="n">_SHAP_EARLIEST_VERSION</span> <span class="o">=</span> <span class="n">version</span><span class="o">.</span><span class="n">LooseVersion</span><span class="p">(</span><span class="s2">&quot;0.34&quot;</span><span class="p">)</span>
-
-<span class="k">if</span> <span class="n">version</span><span class="o">.</span><span class="n">LooseVersion</span><span class="p">(</span><span class="n">shap</span><span class="o">.</span><span class="n">__version__</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">_SHAP_EARLIEST_VERSION</span><span class="p">:</span>
-    <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
-        <span class="sa">f</span><span class="s2">&quot;shap package version </span><span class="si">{</span><span class="n">shap</span><span class="o">.</span><span class="n">__version__</span><span class="si">}</span><span class="s2"> is not supported; &quot;</span>
-        <span class="sa">f</span><span class="s2">&quot;please upgrade to version </span><span class="si">{</span><span class="n">_SHAP_EARLIEST_VERSION</span><span class="si">}</span><span class="s2"> or later&quot;</span>
+<span class="k">if</span> <span class="n">__shap_version__</span> <span class="o">&lt;</span> <span class="n">__shap_earliest__</span> <span class="ow">or</span> <span class="n">__shap_version__</span> <span class="o">&gt;=</span> <span class="n">__shap_latest__</span><span class="p">:</span>
+    <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span>
+        <span class="sa">f</span><span class="s2">&quot;shap package v</span><span class="si">{</span><span class="n">__shap_version__</span><span class="si">}</span><span class="s2"> is not supported; &quot;</span>
+        <span class="sa">f</span><span class="s2">&quot;please use v</span><span class="si">{</span><span class="n">__shap_earliest__</span><span class="si">}</span><span class="s2"> or later&quot;</span>
+        <span class="sa">f</span><span class="s2">&quot;but not v</span><span class="si">{</span><span class="n">__shap_latest__</span><span class="si">}</span><span class="s2"> or later&quot;</span>
     <span class="p">)</span>
+
+<span class="c1">#</span>
+<span class="c1"># conditional and mock imports</span>
+<span class="c1">#</span>
+
+<span class="k">if</span> <span class="n">__shap_version__</span> <span class="o">&lt;</span> <span class="n">__shap_0_36__</span><span class="p">:</span>
+    <span class="c1"># noinspection PyUnresolvedReferences</span>
+    <span class="kn">from</span> <span class="nn">shap.explainers.explainer</span> <span class="kn">import</span> <span class="n">Explainer</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="c1"># noinspection PyUnresolvedReferences</span>
+    <span class="kn">from</span> <span class="nn">shap</span> <span class="kn">import</span> <span class="n">Explainer</span>
 
 <span class="c1">#</span>
 <span class="c1"># Ensure all symbols introduced below are included in __all__</span>
@@ -200,6 +221,50 @@
 <span class="c1">#</span>
 <span class="c1"># Class definitions</span>
 <span class="c1">#</span>
+
+
+<div class="viewcode-block" id="BaseExplainer"><a class="viewcode-back" href="../../../apidoc/facet/inspection/facet.inspection.BaseExplainer.html#facet.inspection.BaseExplainer">[docs]</a><span class="k">class</span> <span class="nc">BaseExplainer</span><span class="p">(</span><span class="n">metaclass</span><span class="o">=</span><span class="n">ABCMeta</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Abstract base class of SHAP explainers, providing stubs for methods used by FAET</span>
+<span class="sd">    but not consistently supported by class :class:`shap.Explainer` across different</span>
+<span class="sd">    versions of the `shap` package.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># noinspection PyPep8Naming,PyUnresolvedReferences</span>
+<div class="viewcode-block" id="BaseExplainer.shap_values"><a class="viewcode-back" href="../../../apidoc/facet/inspection/facet.inspection.BaseExplainer.html#facet.inspection.BaseExplainer.shap_values">[docs]</a>    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">shap_values</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">X</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="s2">&quot;catboost.Pool&quot;</span><span class="p">],</span>  <span class="c1"># noqa: F821</span>
+        <span class="n">y</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Estimate the SHAP values for a set of samples.</span>
+
+<span class="sd">        :param X: matrix of samples (# samples x # features) on which to explain the</span>
+<span class="sd">            model&#39;s output</span>
+<span class="sd">        :param y: array of label values for each sample, used when explaining loss</span>
+<span class="sd">            functions</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span></div>
+
+    <span class="c1"># noinspection PyPep8Naming,PyUnresolvedReferences</span>
+<div class="viewcode-block" id="BaseExplainer.shap_interaction_values"><a class="viewcode-back" href="../../../apidoc/facet/inspection/facet.inspection.BaseExplainer.html#facet.inspection.BaseExplainer.shap_interaction_values">[docs]</a>    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">shap_interaction_values</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">X</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="s2">&quot;catboost.Pool&quot;</span><span class="p">],</span>  <span class="c1"># noqa: F821</span>
+        <span class="n">y</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Estimate the SHAP interaction values for a set of samples.</span>
+
+<span class="sd">        :param X: matrix of samples (# samples x # features) on which to explain the</span>
+<span class="sd">            model&#39;s output</span>
+<span class="sd">        :param y: array of label values for each sample, used when explaining loss</span>
+<span class="sd">            functions</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span></div></div>
 
 
 <div class="viewcode-block" id="ExplainerFactory"><a class="viewcode-back" href="../../../apidoc/facet/inspection/facet.inspection.ExplainerFactory.html#facet.inspection.ExplainerFactory">[docs]</a><span class="k">class</span> <span class="nc">ExplainerFactory</span><span class="p">(</span><span class="n">metaclass</span><span class="o">=</span><span class="n">ABCMeta</span><span class="p">):</span>
@@ -234,7 +299,7 @@
 <div class="viewcode-block" id="ExplainerFactory.make_explainer"><a class="viewcode-back" href="../../../apidoc/facet/inspection/facet.inspection.ExplainerFactory.html#facet.inspection.ExplainerFactory.make_explainer">[docs]</a>    <span class="nd">@abstractmethod</span>
     <span class="k">def</span> <span class="nf">make_explainer</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">:</span> <span class="n">LearnerDF</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">]</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Explainer</span><span class="p">:</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">BaseExplainer</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Construct a new :class:`~shap.Explainer` to compute shap values.</span>
 
@@ -253,6 +318,10 @@
                 <span class="s2">&quot;a background dataset is required to make an explainer with this &quot;</span>
                 <span class="s2">&quot;factory&quot;</span>
             <span class="p">)</span></div>
+
+
+<span class="k">class</span> <span class="nc">_TreeExplainer</span><span class="p">(</span><span class="n">shap</span><span class="o">.</span><span class="n">TreeExplainer</span><span class="p">,</span> <span class="n">BaseExplainer</span><span class="p">):</span>
+    <span class="k">pass</span>
 
 
 <div class="viewcode-block" id="TreeExplainerFactory"><a class="viewcode-back" href="../../../apidoc/facet/inspection/facet.inspection.TreeExplainerFactory.html#facet.inspection.TreeExplainerFactory">[docs]</a><span class="nd">@inheritdoc</span><span class="p">(</span><span class="n">match</span><span class="o">=</span><span class="s2">&quot;[see superclass]&quot;</span><span class="p">)</span>
@@ -311,7 +380,7 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_validate_background_dataset</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">)</span>
 
-        <span class="n">explainer</span> <span class="o">=</span> <span class="n">shap</span><span class="o">.</span><span class="n">TreeExplainer</span><span class="p">(</span>
+        <span class="n">explainer</span> <span class="o">=</span> <span class="n">_TreeExplainer</span><span class="p">(</span>
             <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">native_estimator</span><span class="p">,</span>
             <span class="n">data</span><span class="o">=</span><span class="n">data</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_uses_background_dataset</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
             <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">_remove_null_kwargs</span><span class="p">(</span>
@@ -327,6 +396,22 @@
         <span class="p">)</span>
 
         <span class="k">return</span> <span class="n">explainer</span></div></div>
+
+
+<span class="k">class</span> <span class="nc">_KernelExplainer</span><span class="p">(</span><span class="n">shap</span><span class="o">.</span><span class="n">KernelExplainer</span><span class="p">,</span> <span class="n">BaseExplainer</span><span class="p">):</span>
+    <span class="c1"># noinspection PyPep8Naming,PyUnresolvedReferences</span>
+    <span class="k">def</span> <span class="nf">shap_interaction_values</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">X</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="s2">&quot;catboost.Pool&quot;</span><span class="p">],</span>  <span class="c1"># noqa: F821</span>
+        <span class="n">y</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Not implemented.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span>
+
+    <span class="k">pass</span>
 
 
 <div class="viewcode-block" id="KernelExplainerFactory"><a class="viewcode-back" href="../../../apidoc/facet/inspection/facet.inspection.KernelExplainerFactory.html#facet.inspection.KernelExplainerFactory">[docs]</a><span class="nd">@inheritdoc</span><span class="p">(</span><span class="n">match</span><span class="o">=</span><span class="s2">&quot;[see superclass]&quot;</span><span class="p">)</span>
@@ -403,7 +488,7 @@
         <span class="k">if</span> <span class="n">data_size_limit</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">data_size_limit</span><span class="p">:</span>
             <span class="n">data</span> <span class="o">=</span> <span class="n">shap</span><span class="o">.</span><span class="n">kmeans</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">data_size_limit</span><span class="p">,</span> <span class="n">round_values</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
-        <span class="n">explainer</span> <span class="o">=</span> <span class="n">shap</span><span class="o">.</span><span class="n">KernelExplainer</span><span class="p">(</span>
+        <span class="n">explainer</span> <span class="o">=</span> <span class="n">_KernelExplainer</span><span class="p">(</span>
             <span class="n">model</span><span class="o">=</span><span class="n">model_fn</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">_remove_null_kwargs</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">link</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">link</span><span class="p">))</span>
         <span class="p">)</span>
 
