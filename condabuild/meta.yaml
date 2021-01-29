@@ -1,5 +1,3 @@
-{% set setup_py_data = load_setup_py_data() %}
-
 package:
   name: gamma-facet
   version: {{ environ.get('FACET_BUILD_FACET_VERSION') }}
