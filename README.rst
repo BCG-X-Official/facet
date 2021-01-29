@@ -204,7 +204,7 @@ features in a model are:
 
     # fit the model inspector
     from facet.inspection import LearnerInspector
-    inspector = LearnerInspector()
+    inspector = LearnerInspector(n_jobs=-3)
     inspector.fit(crossfit=ranker.best_model_crossfit_)
 
 **Synergy**
