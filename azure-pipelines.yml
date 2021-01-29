@@ -35,7 +35,8 @@ variables:
     branchName: $[ replace(variables['Build.SourceBranch'], 'refs/heads/', '') ]
   ${{ if startsWith(variables['Build.SourceBranch'], 'refs/pull/') }}:
     branchName: $[ replace(variables['System.PullRequest.SourceBranch'], 'refs/heads/', '') ]
-  master_or_release: $[ or(startsWith(variables['branchName'], 'release'), eq(variables['branchName'], 'master'), eq(variables['Build.Reason'], 'Schedule')) ]
+  master_or_release: $[ or(startsWith(variables['branchName'], 'release'), eq(variables['branchName'], 'master')) ]
+  is_scheduled: $[ eq(variables['Build.Reason'], 'Schedule') ]
 
 stages:
   # check code quality first to fail fast (isort, flake8, black)
@@ -118,6 +119,7 @@ stages:
       condition: >
         and(
         ne(variables.master_or_release, 'True'),
+        ne(variables.is_scheduled, 'True'),
         eq(stageDependencies.detect_build_config_changes.checkout_and_diff.outputs['diff.conda_build_config_changed'], '0')
         )
 
@@ -187,6 +189,7 @@ stages:
       condition: >
         and(
         ne(variables.master_or_release, 'True'),
+        ne(variables.is_scheduled, 'True'),
         ne(stageDependencies.detect_build_config_changes.checkout_and_diff.outputs['diff.conda_build_config_changed'], '0')
         )
 
@@ -216,7 +219,7 @@ stages:
         - script: dir $(Build.SourcesDirectory)
 
         - script: |
-            conda install -y -c anaconda conda-build=3.20.5 toml=0.10.* flit=3.0.*
+            conda install -y -c anaconda conda-build=3.20.5 conda-verify toml=0.10.* flit=3.0.*
           displayName: 'Install conda-build, flit, toml'
           condition: eq(variables['BUILD_SYSTEM'], 'conda')
 
@@ -258,7 +261,11 @@ stages:
 
     - job:
       displayName: 'matrix'
-      condition: eq(variables.master_or_release, 'True')
+      condition: >
+        or(
+        eq(variables.master_or_release, 'True'),
+        eq(variables.is_scheduled, 'True')
+        )
 
       pool:
         vmImage: 'ubuntu-latest'
@@ -310,7 +317,7 @@ stages:
         - script: dir $(Build.SourcesDirectory)
 
         - script: |
-            conda install -y -c anaconda conda-build=3.20.5 toml=0.10.* flit=3.0.*
+            conda install -y -c anaconda conda-build=3.20.5 conda-verify toml=0.10.* flit=3.0.*
           displayName: 'Install conda-build, flit, toml'
           condition: eq(variables['BUILD_SYSTEM'], 'conda')
 
@@ -348,7 +355,7 @@ stages:
             publishLocation: Container
 
   # apply veracode static code analysis during nightly build
-  - stage:
+  - stage: veracode_check
     displayName: 'Veracode check'
 
     jobs:
@@ -357,13 +364,23 @@ stages:
         condition: eq(variables['Build.Reason'], 'Schedule')
 
         steps:
+          - task: Bash@3
+            inputs:
+              targetType: 'inline'
+              script: |
+                set -e
+                eval "$(conda shell.bash hook)"
+                cd $(System.DefaultWorkingDirectory)
+                mkdir static_scan
+                git archive --format=zip --output static_scan/archive.zip HEAD
+
           - task: Veracode@3
             inputs:
               ConnectionDetailsSelection: 'Endpoint'
               AnalysisService: 'veracode'
               veracodeAppProfile: 'FACET'
               version: '$(Build.BuildNumber)'
-              filepath: '$(Build.ArtifactStagingDirectory)'
+              filepath: '$(System.DefaultWorkingDirectory)/static_scan'
               sandboxName: 'facet'
               createSandBox: false
               createProfile: false

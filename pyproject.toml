@@ -19,8 +19,8 @@ requires = [
     "numpy >=1.16,<1.20",
     "scipy >=1.2,<1.6",
     "pyyaml >=5.0",
-    "gamma-pytools >=1.1.0",
-    "sklearndf >=1.0.1",
+    "gamma-pytools >=1.1.0,<2",
+    "sklearndf >=1.0.2,<2",
     "packaging >= 20",
 ]
 
