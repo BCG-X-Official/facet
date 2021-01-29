@@ -35,7 +35,8 @@ variables:
     branchName: $[ replace(variables['Build.SourceBranch'], 'refs/heads/', '') ]
   ${{ if startsWith(variables['Build.SourceBranch'], 'refs/pull/') }}:
     branchName: $[ replace(variables['System.PullRequest.SourceBranch'], 'refs/heads/', '') ]
-  master_or_release: $[ or(startsWith(variables['branchName'], 'release'), eq(variables['branchName'], 'master'), eq(variables['Build.Reason'], 'Schedule')) ]
+  master_or_release: $[ or(startsWith(variables['branchName'], 'release'), eq(variables['branchName'], 'master')) ]
+  is_scheduled: $[ eq(variables['Build.Reason'], 'Schedule') ]
 
 stages:
   # check code quality first to fail fast (isort, flake8, black)
@@ -118,6 +119,7 @@ stages:
       condition: >
         and(
         ne(variables.master_or_release, 'True'),
+        ne(variables.is_scheduled, 'True'),
         eq(stageDependencies.detect_build_config_changes.checkout_and_diff.outputs['diff.conda_build_config_changed'], '0')
         )
 
@@ -187,6 +189,7 @@ stages:
       condition: >
         and(
         ne(variables.master_or_release, 'True'),
+        ne(variables.is_scheduled, 'True'),
         ne(stageDependencies.detect_build_config_changes.checkout_and_diff.outputs['diff.conda_build_config_changed'], '0')
         )
 
@@ -258,7 +261,11 @@ stages:
 
     - job:
       displayName: 'matrix'
-      condition: eq(variables.master_or_release, 'True')
+      condition: >
+        or(
+        eq(variables.master_or_release, 'True'),
+        eq(variables.is_scheduled, 'True')
+        )
 
       pool:
         vmImage: 'ubuntu-latest'
