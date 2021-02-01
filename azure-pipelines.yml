@@ -96,7 +96,8 @@ stages:
                 cd $(System.DefaultWorkingDirectory)
                 files_changed=$(git diff $(Build.SourceVersion)^! --name-only)
                 echo "Files changed since last commit: ${files_changed}"
-                if [ "${files_changed}" == *"pyproject.toml"* ]
+                n_files_changed=$(git diff $(Build.SourceVersion)^! --name-only | grep -i -E 'meta.yaml|pyproject.toml|azure-pipelines.yml|tox.ini'  | wc -l | xargs)
+                if [ ${n_files_changed} -gt 0 ]
                 then
                 build_changed=1
                 echo "build config has been changed"
