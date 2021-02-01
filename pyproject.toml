@@ -14,18 +14,21 @@ dist-name = "gamma-facet"
 license = "Apache Software License v2.0"
 
 requires = [
-    "boruta         >=0.3",
+    # direct requirements of gamma-facet
     "gamma-pytools  >=1.0.2,<2",
-    "joblib         >=0.13,<1.1",
-    "lightgbm       >=3.0",
     "matplotlib     >=3.0,<3.4",
     "numpy          >=1.16,<1.20",
     "packaging      >=20",
     "pandas         >=0.24,<1.2",
-    "scikit-learn   >=0.21,<0.24",
     "scipy          >=1.2,<1.6",
     "shap           >=0.34,<0.38",
     "sklearndf      >=1.0.1,<2",
+    # additional requirements of sklearndf
+    "boruta         >=0.3",
+    "lightgbm       >=3.0",
+    "scikit-learn   >=0.21,<0.24",
+    # additional requirements of gamma-pytools
+    "joblib         >=0.13,<1.1",
     "typing_inspect >=0.4,<0.6",
 ]
 
@@ -71,35 +74,40 @@ Documentation = "https://bcg-gamma.github.io/facet/"
 Repository = "https://github.com/BCG-Gamma/facet"
 
 [build.matrix.min]
-boruta         = "=0.3.*"
+# direct requirements of gamma-facet
 gamma-pytools  = ">=1.0.2,<1.1"
-joblib         = "=0.13.*"
-lightgbm       = "=3.0.*"
 matplotlib     = "=3.0.*"
 numpy          = "=1.16.*"
 packaging      = "=20.*"
 pandas         = "=0.24.*"
 python         = "=3.6.*"
-scikit-learn   = "=0.21.*"
 scipy          = "=1.2.*"
 shap           = "=0.34.*"
 sklearndf      = ">=1.0.1,<1.1"
+# additional requirements of sklearndf
+boruta         = "=0.3.*"
+lightgbm       = "=3.0.*"
+scikit-learn   = "=0.21.*"
+# additional requirements of gamma-pytools
+joblib         = "=0.13.*"
 typing_inspect = "=0.4"
 
 [build.matrix.max]
-boruta         = ">=0.3"
 gamma-pytools  = ">=1.0.2,<2"
-joblib         = "=1.0.*"
-lightgbm       = ">=3.0.*"
 matplotlib     = "=3.3.*"
 numpy          = "=1.19.*"
 packaging      = ">=20"
 pandas         = "=1.1.*"
 python         = "=3.8.*"
-scikit-learn   = "=0.23.*"
 scipy          = "=1.5.*"
 shap           = "=0.37.*"
 sklearndf      = ">=1.0.1,<2"
+# additional requirements of sklearndf
+boruta         = ">=0.3"
+lightgbm       = ">=3.0.*"
+scikit-learn   = "=0.23.*"
+# additional requirements of gamma-pytools
+joblib         = "=1.0.*"
 typing_inspect = "=0.6"
 
 [tool.black]
