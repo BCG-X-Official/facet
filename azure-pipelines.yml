@@ -284,10 +284,6 @@ stages:
             FACET_V_PYTHON_BUILD: '=3.8.*'
             BUILD_SYSTEM: 'conda'
             PKG_DEPENDENCIES: 'max'
-#          unconstrained_dependencies_conda:
-#            FACET_V_PYTHON_BUILD: '>=3.6'
-#            PKG_DEPENDENCIES: 'unconstrained'
-#            BUILD_SYSTEM: 'conda'
           default_dependencies_tox:
             FACET_V_PYTHON_BUILD: '=3.7.*'
             BUILD_SYSTEM: 'tox'
@@ -300,10 +296,7 @@ stages:
             FACET_V_PYTHON_BUILD: '=3.8.*'
             BUILD_SYSTEM: 'tox'
             PKG_DEPENDENCIES: 'max'
-#          unconstrained_dependencies_tox:
-#            FACET_V_PYTHON_BUILD: '>=3.6'
-#            PKG_DEPENDENCIES: 'unconstrained'
-#            BUILD_SYSTEM: 'tox'
+
 
       steps:
         - task: UsePythonVersion@0
