@@ -11,7 +11,7 @@ name: $[ variables['branchName'] ]
 
 # run tests and full conda/tox build matrix every night at 4am
 schedules:
-- cron: "0 4 * * *"
+- cron: "0 4 * * 1-5"
   displayName: Nightly full build
   branches:
     include:
