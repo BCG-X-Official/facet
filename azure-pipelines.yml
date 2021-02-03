@@ -147,7 +147,10 @@ stages:
               eval "$(conda shell.bash hook)"
               cd $(System.DefaultWorkingDirectory)/facet/
               export PYTHONPATH=$(System.DefaultWorkingDirectory)/facet/src/
-              conda env create -f environment.yml
+
+              ENV_YML = $(Agent.TempDirectory)/environment-stripped.yml
+              grep -vE 'gamma-pytools|sklearndf' environment.yml > "$ENV_YML"
+              conda env create -f "$ENV_YML"
               conda activate facet-develop
               pip install flit
               cd $(System.DefaultWorkingDirectory)/pytools/
