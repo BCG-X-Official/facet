@@ -40,5 +40,5 @@ dependencies:
   - toml = 0.10.*
   - tox = 3.20.*
   - typing_inspect >= 0.4
-  - xlrd = 1.2.*
-  - yaml = 0.2.*
+  - xlrd >= 1.2
+  - yaml > 0.2
