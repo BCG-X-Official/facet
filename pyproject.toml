@@ -59,7 +59,7 @@ testing = [
     "isort == 5.5.*",
 ]
 docs = [
-    "sphinx == 3.2.*",
+    "sphinx == 3.4.*",
     "sphinx-autodoc-typehints == 1.11.*",
     "pydata-sphinx-theme == 0.4.*",
     "nbsphinx == 0.7.*",
