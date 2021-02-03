@@ -377,7 +377,7 @@ stages:
               ConnectionDetailsSelection: 'Endpoint'
               AnalysisService: 'veracode'
               veracodeAppProfile: 'FACET'
-              version: '$(Build.BuildNumber)'
+              version: '$(Build.BuildID)'
               filepath: '$(System.DefaultWorkingDirectory)/static_scan'
               sandboxName: 'facet'
               createSandBox: false
