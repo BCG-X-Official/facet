@@ -13,6 +13,7 @@ requirements:
   host:
     - pip>=20.*
     - python {{ environ.get('FACET_V_PYTHON', '=3.8.*') }}
+    - numpy {{ environ.get('FACET_V_NUMPY', '>=1.11.*') }}
     - flit>=3.0.*
   run:
     - gamma-pytools{{ environ.get('FACET_V_GAMMA_PYTOOLS') }}
@@ -40,8 +41,6 @@ test:
     - python -c 'import facet;
                  import os;
                  assert facet.__version__ == os.environ["PKG_VERSION"]'
-    - pytest -vs ${FACET_PATH}/pytools/test
-    - pytest -vs ${FACET_PATH}/sklearndf/test
     - pytest -vs ${FACET_PATH}/facet/test
 
 about:
