@@ -41,8 +41,6 @@ test:
     - python -c 'import facet;
                  import os;
                  assert facet.__version__ == os.environ["PKG_VERSION"]'
-    - pytest -vs ${FACET_PATH}/pytools/test
-    - pytest -vs ${FACET_PATH}/sklearndf/test
     - pytest -vs ${FACET_PATH}/facet/test
 
 about:
