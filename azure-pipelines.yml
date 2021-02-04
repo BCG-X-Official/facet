@@ -148,7 +148,7 @@ stages:
               cd $(System.DefaultWorkingDirectory)/facet/
               export PYTHONPATH=$(System.DefaultWorkingDirectory)/facet/src/
 
-              ENV_YML = $(Agent.TempDirectory)/environment-stripped.yml
+              ENV_YML=$(Agent.TempDirectory)/environment-stripped.yml
               grep -vE 'gamma-pytools|sklearndf' environment.yml > "$ENV_YML"
               conda env create -f "$ENV_YML"
               conda activate facet-develop
