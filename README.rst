@@ -38,9 +38,9 @@ FACET is composed of the following key components:
 |                 | tried and tested pipelining paradigm with new capabilities for model  |
 |                 | selection, inspection, and simulation.                                |
 |                 | FACET also introduces                                                 |
-|                 | `sklearndf <https://github.com/BCG-Gamma/sklearndf>`__,               |
+|                 | `sklearndf <https://github.com/BCG-Gamma/sklearndf>`__                |
 |                 | [`documentation <https://bcg-gamma.github.io/sklearndf/index.html>`__]|
-|                 | , an augmented version of *scikit-learn* with enhanced support for    |
+|                 | an augmented version of *scikit-learn* with enhanced support for      |
 |                 | *pandas* data frames that ensures end-to-end traceability of features.|
 +-----------------+-----------------------------------------------------------------------+
 
