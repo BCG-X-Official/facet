@@ -203,6 +203,7 @@ def regressor_inspector(
         explainer_factory=TreeExplainerFactory(
             feature_perturbation="tree_path_dependent", use_background_dataset=True
         ),
+        legacy=True,
         n_jobs=n_jobs,
     ).fit(crossfit=best_lgbm_crossfit)
 

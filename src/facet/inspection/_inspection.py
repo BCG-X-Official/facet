@@ -150,6 +150,7 @@ class LearnerInspector(
         *,
         explainer_factory: Optional[ExplainerFactory] = None,
         shap_interaction: bool = True,
+        legacy: bool = False,
         min_direct_synergy: Optional[float] = None,
         n_jobs: Optional[int] = None,
         shared_memory: Optional[bool] = None,
@@ -164,9 +165,13 @@ class LearnerInspector(
             SHAP interaction values are needed to determine feature synergy and
             redundancy.
             (default: ``True``)
+        :param legacy: if ``False``, use the recommended `SHAP vector projection`
+            method; if ``True``, use the deprecated `SHAP vector decomposition` method.
+            (default: ``False``)
         :param min_direct_synergy: minimum direct synergy to consider a feature pair
-            for calculation of indirect synergy,
-            only relevant if parameter ``shap_interaction`` is ``True``.
+            for calculation of indirect synergy in conjunction with SHAP vector
+            decomposition; only relevant if parameters ``legacy`` and
+            ``shap_interaction`` are both ``True``.
             This effectively acts as a noise threshold given the approximate nature of
             SHAP calculations.
             Consider increasing this value if you see warnings about contravariant
@@ -199,6 +204,7 @@ class LearnerInspector(
 
         self._explainer_factory = explainer_factory
         self._shap_interaction = shap_interaction
+        self._legacy = legacy
         self._min_direct_synergy = min_direct_synergy
 
         self._crossfit: Optional[LearnerCrossfit[T_LearnerPipelineDF]] = None
