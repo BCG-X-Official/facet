@@ -120,8 +120,7 @@ stages:
       condition: >
         and(
         ne(variables.master_or_release, 'True'),
-        ne(variables.is_scheduled, 'True'),
-        eq(stageDependencies.detect_build_config_changes.checkout_and_diff.outputs['diff.conda_build_config_changed'], '0')
+        ne(variables.is_scheduled, 'True')
         )
 
       pool:
