@@ -117,10 +117,7 @@ stages:
     jobs:
     - job:
       displayName: 'pytest @ develop environment'
-      condition: >
-        and(
-        ne(variables.master_or_release, 'True')
-        )
+      condition: ne(variables.master_or_release, 'True')
 
       pool:
           vmImage: 'ubuntu-latest'
