@@ -119,8 +119,7 @@ stages:
       displayName: 'pytest @ develop environment'
       condition: >
         and(
-        ne(variables.master_or_release, 'True'),
-        ne(variables.is_scheduled, 'True')
+        ne(variables.master_or_release, 'True')
         )
 
       pool:
