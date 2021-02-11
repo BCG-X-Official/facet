@@ -158,10 +158,12 @@ stages:
               cd $(System.DefaultWorkingDirectory)/sklearndf/
               flit install -s
               cd $(System.DefaultWorkingDirectory)/facet/
-              pip install pytest-azurepipelines
-              coverage run -m pytest test/test/
-              coverage xml
-              coverage html
+              pytest \
+                 --cov facet \
+                 --cov-config "tox.ini" \
+                 --cov-report=xml:coverage.xml --cov-report=html:htmlcov \
+                 --junitxml pytest.xml \
+                 . -s
           displayName: 'pytest'
 
         - task: PublishTestResults@2
