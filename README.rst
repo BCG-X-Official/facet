@@ -46,7 +46,7 @@ FACET is composed of the following key components:
 
 .. Begin-Badges
 
-|pypi| |conda|
+|pypi| |conda| |azure_build|
 |python_versions| |code_style| |made_with_sphinx_doc| |License_badge|
 
 .. End-Badges
@@ -434,7 +434,7 @@ or have a look at
 .. |azure_build| image:: https://dev.azure.com/gamma-facet/facet/_apis/build/status/BCG-Gamma.facet?repoName=BCG-Gamma%2Ffacet&branchName=develop
    :target: https://dev.azure.com/gamma-facet/facet/_build?definitionId=7&_a=summary
 
-.. |azure_code_cov| image:: https://img.shields.io/azure-devops/coverage/gamma-facet/facet/_build?definitionId=7.svg
+.. |azure_code_cov| image:: https://img.shields.io/azure-devops/coverage/gamma-facet/facet/7/develop.svg
    :target: https://dev.azure.com/gamma-facet/facet/_build?definitionId=7&_a=summary
 
 .. |python_versions| image:: https://img.shields.io/badge/python-3.6|3.7|3.8-blue.svg
