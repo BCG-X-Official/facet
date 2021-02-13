@@ -3,7 +3,7 @@ Core implementation of :mod:`facet.inspection`
 """
 
 import logging
-from typing import Generic, List, Optional, TypeVar, Union, cast
+from typing import Any, Generic, Iterable, List, Optional, Tuple, TypeVar, Union, cast
 
 import numpy as np
 import pandas as pd
@@ -17,6 +17,8 @@ from pytools.viz.dendrogram import LinkageTree
 from sklearndf import ClassifierDF, LearnerDF, RegressorDF
 from sklearndf.pipeline import LearnerPipelineDF
 
+from ..crossfit import LearnerCrossfit
+from ..data import Sample
 from ._explainer import ExplainerFactory, TreeExplainerFactory
 from ._shap import (
     ClassifierShapInteractionValuesCalculator,
@@ -26,12 +28,12 @@ from ._shap import (
     ShapCalculator,
     ShapInteractionValuesCalculator,
 )
-from facet.crossfit import LearnerCrossfit
-from facet.data import Sample
-from facet.inspection._shap_decomposition import (
-    ShapInteractionValueDecomposer,
-    ShapValueDecomposer,
+from ._shap_decomposition import ShapDecomposer, ShapInteractionDecomposer
+from ._shap_global_explanation import (
+    ShapGlobalExplainer,
+    ShapInteractionGlobalExplainer,
 )
+from ._shap_projection import ShapInteractionProjector, ShapProjector
 
 log = logging.getLogger(__name__)
 
@@ -202,6 +204,12 @@ class LearnerInspector(
             )
             shap_interaction = False
 
+        if not legacy and min_direct_synergy:
+            log.warning(
+                "ignoring min_direct_synergy parameter (only relevant in legacy mode)"
+            )
+            min_direct_synergy = None
+
         self._explainer_factory = explainer_factory
         self._shap_interaction = shap_interaction
         self._legacy = legacy
@@ -209,14 +217,14 @@ class LearnerInspector(
 
         self._crossfit: Optional[LearnerCrossfit[T_LearnerPipelineDF]] = None
         self._shap_calculator: Optional[ShapCalculator] = None
-        self._shap_decomposer: Optional[ShapValueDecomposer] = None
+        self._shap_global_explainer: Optional[ShapGlobalExplainer] = None
 
     # dynamically complete the __init__ docstring
     # noinspection PyTypeChecker
     __init__.__doc__ = (
         __init__.__doc__.replace(
             "<DEFAULT_MIN_DIRECT_SYNERGY>",
-            str(ShapInteractionValueDecomposer.DEFAULT_MIN_DIRECT_SYNERGY),
+            str(ShapInteractionDecomposer.DEFAULT_MIN_DIRECT_SYNERGY),
         )
         + ParallelizableMixin.__init__.__doc__
     )
@@ -261,6 +269,8 @@ class LearnerInspector(
                 f"but is a {type(learner).__name__}"
             )
 
+        shap_global_explainer: ShapGlobalExplainer
+
         if self._shap_interaction:
             shap_calculator_type = (
                 ClassifierShapInteractionValuesCalculator
@@ -275,9 +285,12 @@ class LearnerInspector(
                 pre_dispatch=self.pre_dispatch,
                 verbose=self.verbose,
             )
-            shap_decomposer = ShapInteractionValueDecomposer(
-                min_direct_synergy=self._min_direct_synergy
-            )
+            if self._legacy:
+                shap_global_explainer = ShapInteractionDecomposer(
+                    min_direct_synergy=self._min_direct_synergy
+                )
+            else:
+                shap_global_explainer = ShapInteractionProjector()
 
         else:
             shap_calculator_type = (
@@ -293,13 +306,16 @@ class LearnerInspector(
                 pre_dispatch=self.pre_dispatch,
                 verbose=self.verbose,
             )
-            shap_decomposer = ShapValueDecomposer()
+            if self._legacy:
+                shap_global_explainer = ShapDecomposer()
+            else:
+                shap_global_explainer = ShapProjector()
 
         shap_calculator.fit(crossfit=crossfit)
-        shap_decomposer.fit(shap_calculator=shap_calculator)
+        shap_global_explainer.fit(shap_calculator=shap_calculator)
 
         self._shap_calculator = shap_calculator
-        self._shap_decomposer = shap_decomposer
+        self._shap_global_explainer = shap_global_explainer
         self._crossfit = crossfit
 
         return self
@@ -483,7 +499,11 @@ class LearnerInspector(
             return _normalize_importance(abs_importance.unstack(level=0))
 
     def feature_synergy_matrix(
-        self, symmetrical: bool = False, clustered: bool = True
+        self,
+        *,
+        absolute: bool = False,
+        symmetrical: bool = False,
+        clustered: bool = True,
     ) -> Union[pd.DataFrame, List[pd.DataFrame]]:
         """
         Calculate the feature synergy matrix.
@@ -503,6 +523,9 @@ class LearnerInspector(
         In the case of multi-target regression and non-binary classification, returns
         a list of data frames with one matrix per output.
 
+        :param absolute: if ``False``, return relative synergy as a percentage of
+            total feature importance;
+            if ``True``, return absolute synergy as a portion of feature importance
         :param symmetrical: if ``True``, return a symmetrical matrix quantifying
             mutual synergy; if ``False``, return an asymmetrical matrix quantifying
             unilateral redundancy of the features represented by rows with the
@@ -516,16 +539,23 @@ class LearnerInspector(
         """
         self._ensure_fitted()
 
+        explainer = self.__interaction_explainer
         return self.__feature_affinity_matrix(
             affinity_matrices=(
-                self.__shap_interaction_decomposer.synergy(symmetrical=symmetrical)
+                explainer.to_frames(
+                    explainer.synergy(symmetrical=symmetrical, absolute=absolute)
+                )
             ),
-            affinity_symmetrical=self.__shap_interaction_decomposer.synergy_rel_,
+            affinity_symmetrical=explainer.synergy(symmetrical=True, absolute=absolute),
             clustered=clustered,
         )
 
     def feature_redundancy_matrix(
-        self, symmetrical: bool = False, clustered: bool = True
+        self,
+        *,
+        absolute: bool = False,
+        symmetrical: bool = False,
+        clustered: bool = True,
     ) -> Union[pd.DataFrame, List[pd.DataFrame]]:
         """
         Calculate the feature redundancy matrix.
@@ -545,6 +575,9 @@ class LearnerInspector(
         In the case of multi-target regression and non-binary classification, returns
         a list of data frames with one matrix per output.
 
+        :param absolute: if ``False``, return relative redundancy as a percentage of
+            total feature importance;
+            if ``True``, return absolute redundancy as a portion of feature importance
         :param symmetrical: if ``True``, return a symmetrical matrix quantifying
             mutual redundancy; if ``False``, return an asymmetrical matrix quantifying
             unilateral redundancy of the features represented by rows with the
@@ -558,16 +591,25 @@ class LearnerInspector(
         """
         self._ensure_fitted()
 
+        explainer = self.__interaction_explainer
         return self.__feature_affinity_matrix(
             affinity_matrices=(
-                self.__shap_interaction_decomposer.redundancy(symmetrical=symmetrical)
+                explainer.to_frames(
+                    explainer.redundancy(symmetrical=symmetrical, absolute=absolute)
+                )
             ),
-            affinity_symmetrical=self.__shap_interaction_decomposer.redundancy_rel_,
+            affinity_symmetrical=explainer.redundancy(
+                symmetrical=True, absolute=absolute
+            ),
             clustered=clustered,
         )
 
     def feature_association_matrix(
-        self, symmetrical: bool = False, clustered: bool = True
+        self,
+        *,
+        absolute: bool = False,
+        symmetrical: bool = False,
+        clustered: bool = True,
     ) -> Union[pd.DataFrame, List[pd.DataFrame]]:
         """
         Calculate the feature association matrix.
@@ -589,10 +631,14 @@ class LearnerInspector(
         In the case of multi-target regression and non-binary classification, returns
         a list of data frames with one matrix per output.
 
-        :param symmetrical: if ``True``, return a symmetrical matrix quantifying
-            mutual association; if ``False``, return an asymmetrical matrix
+        :param absolute: if ``False``, return relative association as a percentage of
+            total feature importance;
+            if ``True``, return absolute association as a portion of feature importance
+        :param symmetrical: if ``False``, return an asymmetrical matrix
             quantifying unilateral association of the features represented by rows
-            with the features represented by columns (default: ``False``)
+            with the features represented by columns;
+            if ``True``, return a symmetrical matrix quantifying mutual association
+            (default: ``False``)
         :param clustered: if ``True``, reorder the rows and columns of the matrix
             such that association between adjacent rows and columns is maximised; if
             ``False``, keep rows and columns in the original features order
@@ -602,11 +648,18 @@ class LearnerInspector(
         """
         self._ensure_fitted()
 
+        global_explainer = self._shap_global_explainer
         return self.__feature_affinity_matrix(
             affinity_matrices=(
-                self._shap_decomposer.association(symmetrical=symmetrical)
+                global_explainer.to_frames(
+                    global_explainer.association(
+                        absolute=absolute, symmetrical=symmetrical
+                    )
+                )
             ),
-            affinity_symmetrical=self._shap_decomposer.association_rel_,
+            affinity_symmetrical=global_explainer.association(
+                absolute=absolute, symmetrical=True
+            ),
             clustered=clustered,
         )
 
@@ -625,7 +678,9 @@ class LearnerInspector(
         """
         self._ensure_fitted()
         return self.__linkages_from_affinity_matrices(
-            feature_affinity_matrix=self.__shap_interaction_decomposer.synergy_rel_
+            feature_affinity_matrix=self.__interaction_explainer.synergy(
+                symmetrical=True, absolute=False
+            )
         )
 
     def feature_redundancy_linkage(self) -> Union[LinkageTree, List[LinkageTree]]:
@@ -643,7 +698,9 @@ class LearnerInspector(
         """
         self._ensure_fitted()
         return self.__linkages_from_affinity_matrices(
-            feature_affinity_matrix=self.__shap_interaction_decomposer.redundancy_rel_
+            feature_affinity_matrix=self.__interaction_explainer.redundancy(
+                symmetrical=True, absolute=False
+            )
         )
 
     def feature_association_linkage(self) -> Union[LinkageTree, List[LinkageTree]]:
@@ -661,7 +718,9 @@ class LearnerInspector(
         """
         self._ensure_fitted()
         return self.__linkages_from_affinity_matrices(
-            feature_affinity_matrix=self._shap_decomposer.association_rel_
+            feature_affinity_matrix=self._shap_global_explainer.association(
+                absolute=False, symmetrical=True
+            )
         )
 
     def feature_interaction_matrix(self) -> Union[pd.DataFrame, List[pd.DataFrame]]:
@@ -923,6 +982,11 @@ class LearnerInspector(
             )
 
         else:
+            # noinspection PyCompatibility
+            feature_importance_iter: (
+                Iterable[Tuple[Any, pd.Series]]
+            ) = feature_importance.iteritems()
+
             return [
                 self.__linkage_tree_from_affinity_matrix_for_output(
                     feature_affinity_for_output, feature_importance_for_output
@@ -930,7 +994,7 @@ class LearnerInspector(
                 for feature_affinity_for_output, (
                     _,
                     feature_importance_for_output,
-                ) in zip(feature_affinity_matrix, feature_importance.iteritems())
+                ) in zip(feature_affinity_matrix, feature_importance_iter)
             ]
 
     @staticmethod
@@ -1001,9 +1065,9 @@ class LearnerInspector(
         return cast(ShapInteractionValuesCalculator, self._shap_calculator)
 
     @property
-    def __shap_interaction_decomposer(self) -> ShapInteractionValueDecomposer:
+    def __interaction_explainer(self) -> ShapInteractionGlobalExplainer:
         self._ensure_shap_interaction()
-        return cast(ShapInteractionValueDecomposer, self._shap_decomposer)
+        return cast(ShapInteractionGlobalExplainer, self._shap_global_explainer)
 
 
 __tracker.validate()
