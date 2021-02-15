@@ -217,7 +217,8 @@ class LearnerInspector(
 
         self._crossfit: Optional[LearnerCrossfit[T_LearnerPipelineDF]] = None
         self._shap_calculator: Optional[ShapCalculator] = None
-        self._shap_global_explainer: Optional[ShapGlobalExplainer] = None
+        self._shap_global_decomposer: Optional[ShapGlobalExplainer] = None
+        self._shap_global_projector: Optional[ShapGlobalExplainer] = None
 
     # dynamically complete the __init__ docstring
     # noinspection PyTypeChecker
@@ -285,19 +286,17 @@ class LearnerInspector(
                 pre_dispatch=self.pre_dispatch,
                 verbose=self.verbose,
             )
-            if self._legacy:
-                shap_global_explainer = ShapInteractionDecomposer(
-                    min_direct_synergy=self._min_direct_synergy
-                )
-            else:
-                shap_global_explainer = ShapInteractionProjector()
+            shap_global_decomposer = ShapInteractionDecomposer(
+                min_direct_synergy=self._min_direct_synergy
+            )
 
-                # todo: experimental & undocumented option, remove this in next release
-                try:
-                    orthogonalize = getattr(self, "orthogonalize")
-                    shap_global_explainer.orthogonalize = bool(orthogonalize)
-                except AttributeError:
-                    pass
+            shap_global_projector = ShapInteractionProjector()
+            # todo: experimental & undocumented option, remove this in next release
+            try:
+                orthogonalize = getattr(self, "orthogonalize")
+                shap_global_projector.orthogonalize = bool(orthogonalize)
+            except AttributeError:
+                pass
 
         else:
             shap_calculator_type = (
@@ -313,19 +312,27 @@ class LearnerInspector(
                 pre_dispatch=self.pre_dispatch,
                 verbose=self.verbose,
             )
-            if self._legacy:
-                shap_global_explainer = ShapDecomposer()
-            else:
-                shap_global_explainer = ShapProjector()
+            shap_global_decomposer = ShapDecomposer()
+            shap_global_projector = ShapProjector()
 
         shap_calculator.fit(crossfit=crossfit)
-        shap_global_explainer.fit(shap_calculator=shap_calculator)
+        shap_global_decomposer.fit(shap_calculator=shap_calculator)
+        shap_global_projector.fit(shap_calculator=shap_calculator)
 
         self._shap_calculator = shap_calculator
-        self._shap_global_explainer = shap_global_explainer
+        self._shap_global_decomposer = shap_global_decomposer
+        self._shap_global_projector = shap_global_projector
         self._crossfit = crossfit
 
         return self
+
+    @property
+    def _shap_global_explainer(self) -> ShapGlobalExplainer:
+        # todo: remove this property once we have ditched legacy global explanations
+        if self._legacy:
+            return self._shap_global_decomposer
+        else:
+            return self._shap_global_projector
 
     @property
     def is_fitted(self) -> bool:
