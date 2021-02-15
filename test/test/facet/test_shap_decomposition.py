@@ -137,7 +137,7 @@ def test_shap_decomposition(regressor_inspector: LearnerInspector) -> None:
 
         # check basic matrix properties
 
-        n_features = len(regressor_inspector.features)
+        n_features = len(regressor_inspector.features_)
 
         for matrix in (syn_matrix, syn_matrix_asym, red_matrix, red_matrix_asym):
             # matrix shape is n_features x n_features
