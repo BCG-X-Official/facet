@@ -117,12 +117,7 @@ stages:
     jobs:
     - job:
       displayName: 'pytest @ develop environment'
-      condition: >
-        and(
-        ne(variables.master_or_release, 'True'),
-        ne(variables.is_scheduled, 'True'),
-        eq(stageDependencies.detect_build_config_changes.checkout_and_diff.outputs['diff.conda_build_config_changed'], '0')
-        )
+      condition: ne(variables.master_or_release, 'True')
 
       pool:
           vmImage: 'ubuntu-latest'
@@ -158,10 +153,12 @@ stages:
               cd $(System.DefaultWorkingDirectory)/sklearndf/
               flit install -s
               cd $(System.DefaultWorkingDirectory)/facet/
-              pip install pytest-azurepipelines
-              coverage run -m pytest test/test/
-              coverage xml
-              coverage html
+              pytest \
+                 --cov facet \
+                 --cov-config "tox.ini" \
+                 --cov-report=xml:coverage.xml --cov-report=html:htmlcov \
+                 --junitxml pytest.xml \
+                 . -s
           displayName: 'pytest'
 
         - task: PublishTestResults@2
