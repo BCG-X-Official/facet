@@ -559,7 +559,7 @@ class LearnerInspector(
             if ``True``, return absolute synergy as a portion of feature importance
         :param symmetrical: if ``True``, return a symmetrical matrix quantifying
             mutual synergy; if ``False``, return an asymmetrical matrix quantifying
-            unilateral redundancy of the features represented by rows with the
+            unilateral synergy of the features represented by rows with the
             features represented by columns (default: ``False``)
         :param clustered: if ``True``, reorder the rows and columns of the matrix
             such that synergy between adjacent rows and columns is maximised; if
