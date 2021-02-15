@@ -262,7 +262,11 @@ class ShapInteractionProjector(ShapProjector, ShapInteractionGlobalExplainer):
             )
         )
 
-        p_ij = ensure_last_axis_is_fast(self._orthogonalize(p_ij=p_ij, weight=weight))
+        if getattr(self, "orthogonalize", True):
+            # todo: remove experimental option; always orthogonalize
+            p_ij = ensure_last_axis_is_fast(
+                self._orthogonalize(p_ij=p_ij, weight=weight)
+            )
 
         # p[i]
         # shape: (n_outputs, n_features, n_observations)

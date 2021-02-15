@@ -292,6 +292,13 @@ class LearnerInspector(
             else:
                 shap_global_explainer = ShapInteractionProjector()
 
+                # todo: experimental & undocumented option, remove this in next release
+                try:
+                    orthogonalize = getattr(self, "orthogonalize")
+                    shap_global_explainer.orthogonalize = bool(orthogonalize)
+                except AttributeError:
+                    pass
+
         else:
             shap_calculator_type = (
                 ClassifierShapValuesCalculator
