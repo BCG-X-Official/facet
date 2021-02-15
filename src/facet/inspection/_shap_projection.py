@@ -119,7 +119,7 @@ class ShapProjector(ShapGlobalExplainer):
         # orthogonal projection of p[i] onto p[j]
         # this converges towards 0 as var(p[j]) converges towards 0
         # shape: (n_outputs, n_features, n_features)
-        cov_p_i_p_j_over_var_p_i = np.zeros((1, n_features, n_features))
+        cov_p_i_p_j_over_var_p_i = np.zeros((n_outputs, n_features, n_features))
         np.divide(
             cov_p_i_p_j, var_p_i, out=cov_p_i_p_j_over_var_p_i, where=var_p_i > 0.0
         )
@@ -300,7 +300,7 @@ class ShapInteractionProjector(ShapProjector, ShapInteractionGlobalExplainer):
         # this converges towards 0 as var(p[i, j]) converges towards 0
         # shape: (n_outputs, n_features, n_features)
 
-        cov_p_i_p_ij_over_var_p_ij = np.zeros((1, n_features, n_features))
+        cov_p_i_p_ij_over_var_p_ij = np.zeros((n_outputs, n_features, n_features))
         np.divide(
             cov_p_i_p_ij, var_p_ij, out=cov_p_i_p_ij_over_var_p_ij, where=var_p_ij > 0.0
         )
@@ -310,7 +310,7 @@ class ShapInteractionProjector(ShapProjector, ShapInteractionGlobalExplainer):
         # this converges towards 0 as var(p[i]) converges towards 0
         # shape: (n_outputs, n_features, n_features)
 
-        cov_p_i_p_ij_over_var_p_i = np.zeros((1, n_features, n_features))
+        cov_p_i_p_ij_over_var_p_i = np.zeros((n_outputs, n_features, n_features))
         np.divide(
             cov_p_i_p_ij, var_p_i, out=cov_p_i_p_ij_over_var_p_i, where=var_p_i > 0.0
         )
@@ -340,7 +340,7 @@ class ShapInteractionProjector(ShapProjector, ShapInteractionGlobalExplainer):
         # SHAP independence: ind[i, j]
         #
 
-        ind_ij = np.ones((1, n_features, n_features)) - syn_ij - red_ij
+        ind_ij = np.ones((n_outputs, n_features, n_features)) - syn_ij - red_ij
 
         #
         # SHAP decomposition as relative contributions of
