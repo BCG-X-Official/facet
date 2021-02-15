@@ -281,7 +281,7 @@ def transpose(m: np.ndarray) -> np.ndarray:
         or shape `(n_outputs, n_features, 1, n_observations)`
     :return: array of same shape as arg ``m``, with both feature axes swapped
     """
-    assert 3 >= m.ndim <= 4
+    assert 3 <= m.ndim <= 4
     assert m.shape[1] == m.shape[2] or m.shape[2] == 1
 
     return m.swapaxes(1, 2)
