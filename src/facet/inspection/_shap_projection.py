@@ -162,8 +162,15 @@ class ShapInteractionProjector(ShapProjector, ShapInteractionGlobalExplainer):
     the decompositions of the actual SHAP vectors across observations.
     """
 
-    def __init__(self) -> None:
+    #: if ``True``, orthogonalize SHAP interaction vectors before calculating SHAP
+    #: projections
+    orthogonalize: bool
+
+    def __init__(self, orthogonalize: bool = True) -> None:
         super().__init__()
+
+        self.orthogonalize = orthogonalize
+
         self.synergy_: Optional[AffinityMatrices] = None
         self.redundancy_: Optional[AffinityMatrices] = None
 
@@ -178,7 +185,9 @@ class ShapInteractionProjector(ShapProjector, ShapInteractionGlobalExplainer):
         return self.redundancy_.get_matrix(symmetrical=symmetrical, absolute=absolute)
 
     @staticmethod
-    def _orthogonalize(p_ij: np.ndarray, weight: Optional[np.ndarray]) -> np.ndarray:
+    def _get_orthogonalized_interaction_vectors(
+        p_ij: np.ndarray, weight: Optional[np.ndarray]
+    ) -> np.ndarray:
         # p_ij: shape: (n_outputs, n_features, n_features, n_observations)
 
         assert p_ij.ndim == 4
@@ -262,10 +271,9 @@ class ShapInteractionProjector(ShapProjector, ShapInteractionGlobalExplainer):
             )
         )
 
-        if getattr(self, "orthogonalize", True):
-            # todo: remove experimental option; always orthogonalize
+        if self.orthogonalize:
             p_ij = ensure_last_axis_is_fast(
-                self._orthogonalize(p_ij=p_ij, weight=weight)
+                self._get_orthogonalized_interaction_vectors(p_ij=p_ij, weight=weight)
             )
 
         # p[i]

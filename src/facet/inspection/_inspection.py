@@ -219,6 +219,10 @@ class LearnerInspector(
         self._shap_calculator: Optional[ShapCalculator] = None
         self._shap_global_decomposer: Optional[ShapGlobalExplainer] = None
         self._shap_global_projector: Optional[ShapGlobalExplainer] = None
+        # todo: remove support for non-orthogonalized SHAP projection
+        self._shap_global_projector_no_orthogonalization: Optional[
+            ShapGlobalExplainer
+        ] = None
 
     # dynamically complete the __init__ docstring
     # noinspection PyTypeChecker
@@ -291,12 +295,9 @@ class LearnerInspector(
             )
 
             shap_global_projector = ShapInteractionProjector()
-            # todo: experimental & undocumented option, remove this in next release
-            try:
-                orthogonalize = getattr(self, "orthogonalize")
-                shap_global_projector.orthogonalize = bool(orthogonalize)
-            except AttributeError:
-                pass
+            shap_global_projector_no_orthogonalization = ShapInteractionProjector(
+                orthogonalize=True
+            )
 
         else:
             shap_calculator_type = (
@@ -314,14 +315,22 @@ class LearnerInspector(
             )
             shap_global_decomposer = ShapDecomposer()
             shap_global_projector = ShapProjector()
+            shap_global_projector_no_orthogonalization = None
 
         shap_calculator.fit(crossfit=crossfit)
         shap_global_decomposer.fit(shap_calculator=shap_calculator)
         shap_global_projector.fit(shap_calculator=shap_calculator)
+        if shap_global_projector_no_orthogonalization:
+            shap_global_projector_no_orthogonalization.fit(
+                shap_calculator=shap_calculator
+            )
 
         self._shap_calculator = shap_calculator
         self._shap_global_decomposer = shap_global_decomposer
         self._shap_global_projector = shap_global_projector
+        self._shap_global_projector_no_orthogonalization = (
+            shap_global_projector_no_orthogonalization
+        )
         self._crossfit = crossfit
 
         return self
@@ -332,6 +341,14 @@ class LearnerInspector(
         if self._legacy:
             return self._shap_global_decomposer
         else:
+            # todo: experimental & undocumented option _orthogonalize;
+            #       remove in next release
+            try:
+                if not getattr(self, "_orthogonalize", True):
+                    return self._shap_global_projector_not_orthogonalized
+            except AttributeError:
+                pass
+
             return self._shap_global_projector
 
     @property
