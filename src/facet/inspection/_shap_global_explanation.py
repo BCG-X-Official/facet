@@ -65,8 +65,8 @@ class AffinityMatrices:
         """
         :param affinity_rel_ij: the affinity matrix from which to create all variations,
             shaped `(n_outputs, n_features, n_features)`
-        :param std_p_i: feature importance for all outputs and features,
-            shaped `(n_outputs, n_features)`
+        :param std_p_i: SHAP vector magnitudes for all outputs and features,
+            shaped `(n_outputs, n_features, 1)`
         """
         assert affinity_rel_ij.ndim == 3
         assert std_p_i.ndim == 3
@@ -74,10 +74,25 @@ class AffinityMatrices:
         assert affinity_rel_ij.shape[1] == affinity_rel_ij.shape[2]
         assert std_p_i.shape[2] == 1
 
-        affinity_abs_ij = std_p_i * affinity_rel_ij
+        # normalize SHAP vector magnitudes to get feature importance in %
+        importance_ij = std_p_i / std_p_i.sum(axis=1).reshape(std_p_i.shape[0], 1, 1)
+
+        # absolute affinity is relative affinity scaled by feature importance (row-wise)
+        affinity_abs_ij = importance_ij * affinity_rel_ij
+
+        # absolute symmetrical affinity is the mean of unilateral absolute affinity
         affinity_abs_sym_ij_2x = affinity_abs_ij + transpose(affinity_abs_ij)
-        affinity_rel_sym_ij = affinity_abs_sym_ij_2x / (std_p_i + transpose(std_p_i))
+
+        # relative symmetrical affinity is absolute symmetrical affinity scaled back
+        # from total feature importance per feature pair
+        affinity_rel_sym_ij = affinity_abs_sym_ij_2x / (
+            importance_ij + transpose(importance_ij)
+        )
+
+        # re-set the diagonal to 1.0 in case of rounding errors
         fill_diagonal(affinity_rel_sym_ij, 1.0)
+
+        # store the matrices for access via method get_matrix
         self._matrices = (
             (affinity_rel_ij, affinity_abs_ij),
             (affinity_rel_sym_ij, affinity_abs_sym_ij_2x / 2),
