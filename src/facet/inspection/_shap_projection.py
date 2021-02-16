@@ -134,8 +134,8 @@ class ShapProjector(ShapGlobalExplainer):
             cov_p_i_p_j_over_var_p_i
         )
 
-        # we define the synergy of a feature with itself as 0
-        fill_diagonal(association_rel_ij, 0)
+        # we define the association of a feature with itself as 1
+        fill_diagonal(association_rel_ij, 1.0)
 
         # we should have the right shape for all resulting matrices
         assert association_rel_ij.shape == (n_outputs, n_features, n_features)
