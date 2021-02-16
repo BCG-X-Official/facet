@@ -577,7 +577,7 @@ class LearnerInspector(
                     explainer.synergy(symmetrical=symmetrical, absolute=absolute)
                 )
             ),
-            affinity_symmetrical=explainer.synergy(symmetrical=True, absolute=absolute),
+            affinity_symmetrical=explainer.synergy(symmetrical=True, absolute=False),
             clustered=clustered,
         )
 
@@ -629,9 +629,7 @@ class LearnerInspector(
                     explainer.redundancy(symmetrical=symmetrical, absolute=absolute)
                 )
             ),
-            affinity_symmetrical=explainer.redundancy(
-                symmetrical=True, absolute=absolute
-            ),
+            affinity_symmetrical=explainer.redundancy(symmetrical=True, absolute=False),
             clustered=clustered,
         )
 
@@ -689,7 +687,7 @@ class LearnerInspector(
                 )
             ),
             affinity_symmetrical=global_explainer.association(
-                absolute=absolute, symmetrical=True
+                symmetrical=True, absolute=False
             ),
             clustered=clustered,
         )
