@@ -90,7 +90,7 @@ class AffinityMatrices:
         :param absolute: if ``True``, get the absolute version of the matrix
         :return: the affinity matrix
         """
-        return self._matrices[symmetrical][absolute]
+        return self._matrices[bool(symmetrical)][bool(absolute)]
 
 
 @inheritdoc(match="""[see superclass]""")
