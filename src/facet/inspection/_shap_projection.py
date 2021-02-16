@@ -21,6 +21,7 @@ from ._shap_global_explanation import (
     diagonal,
     ensure_last_axis_is_fast,
     fill_diagonal,
+    sqrt,
     transpose,
 )
 
@@ -140,7 +141,7 @@ class ShapProjector(ShapGlobalExplainer):
         assert association_rel_ij.shape == (n_outputs, n_features, n_features)
 
         self.association_ = AffinityMatrices(
-            affinity_rel_ij=association_rel_ij, var_p_i=var_p_i
+            affinity_rel_ij=association_rel_ij, std_p_i=sqrt(var_p_i)
         )
 
     def _reset_fit(self) -> None:
@@ -366,8 +367,9 @@ class ShapInteractionProjector(ShapProjector, ShapInteractionGlobalExplainer):
         # NOTE: we do not store independence, so technically it could be removed from
         # the code above
 
-        self.synergy_ = AffinityMatrices(affinity_rel_ij=syn_ij, var_p_i=var_p_i)
-        self.redundancy_ = AffinityMatrices(affinity_rel_ij=red_ij, var_p_i=var_p_i)
+        std_p_i = sqrt(var_p_i)
+        self.synergy_ = AffinityMatrices(affinity_rel_ij=syn_ij, std_p_i=std_p_i)
+        self.redundancy_ = AffinityMatrices(affinity_rel_ij=red_ij, std_p_i=std_p_i)
 
     def _reset_fit(self) -> None:
         # revert status of this object to not fitted

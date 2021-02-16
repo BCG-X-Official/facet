@@ -61,20 +61,26 @@ class AffinityMatrices:
     Stores all variations of a feature affinity matrix.
     """
 
-    def __init__(self, affinity_rel_ij: np.ndarray, var_p_i: np.ndarray) -> None:
+    def __init__(self, affinity_rel_ij: np.ndarray, std_p_i: np.ndarray) -> None:
+        """
+        :param affinity_rel_ij: the affinity matrix from which to create all variations,
+            shaped `(n_outputs, n_features, n_features)`
+        :param std_p_i: feature importance for all outputs and features,
+            shaped `(n_outputs, n_features)`
+        """
         assert affinity_rel_ij.ndim == 3
-        assert var_p_i.ndim == 3
-        assert affinity_rel_ij.shape[:2] == var_p_i.shape[:2]
+        assert std_p_i.ndim == 3
+        assert affinity_rel_ij.shape[:2] == std_p_i.shape[:2]
         assert affinity_rel_ij.shape[1] == affinity_rel_ij.shape[2]
-        assert var_p_i.shape[2] == 1
+        assert std_p_i.shape[2] == 1
 
-        std_p_i = sqrt(var_p_i)
         affinity_abs_ij = std_p_i * affinity_rel_ij
-        affinity_abs_sym_ij = affinity_abs_ij + transpose(affinity_abs_ij)
-        affinity_rel_sym_ij = affinity_abs_sym_ij / (std_p_i + transpose(std_p_i))
+        affinity_abs_sym_ij_2x = affinity_abs_ij + transpose(affinity_abs_ij)
+        affinity_rel_sym_ij = affinity_abs_sym_ij_2x / (std_p_i + transpose(std_p_i))
+        fill_diagonal(affinity_rel_sym_ij, 1.0)
         self._matrices = (
             (affinity_rel_ij, affinity_abs_ij),
-            (affinity_rel_sym_ij, affinity_abs_sym_ij),
+            (affinity_rel_sym_ij, affinity_abs_sym_ij_2x / 2),
         )
 
     def get_matrix(self, symmetrical: bool, absolute: bool):
