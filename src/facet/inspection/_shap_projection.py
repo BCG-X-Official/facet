@@ -350,6 +350,7 @@ class ShapInteractionProjector(ShapProjector, ShapInteractionGlobalExplainer):
         #
 
         ind_ij = np.ones((n_outputs, n_features, n_features)) - syn_ij - red_ij
+        fill_diagonal(ind_ij, 1.0)
 
         #
         # SHAP decomposition as relative contributions of
