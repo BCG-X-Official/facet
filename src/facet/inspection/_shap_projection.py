@@ -251,9 +251,7 @@ class ShapInteractionProjector(ShapProjector, ShapInteractionGlobalExplainer):
         delta_ij = (
             adjustment_factors_ij[:, :, :, np.newaxis] * p_ii[:, :, np.newaxis, :]
         )
-        delta_ji = transpose(delta_ij)
-
-        return p_ij - delta_ij - delta_ji
+        return p_ij - delta_ij - transpose(delta_ij)
 
     def _fit(self, shap_calculator: ShapInteractionValuesCalculator) -> None:
         super()._fit(shap_calculator)
