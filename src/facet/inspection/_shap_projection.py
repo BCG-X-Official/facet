@@ -207,17 +207,25 @@ class ShapInteractionProjector(ShapProjector, ShapInteractionGlobalExplainer):
 
         cov_p_ii_p_ij = cov_broadcast(p_ii, p_ij, weight=weight)
 
-        f_nominator = (
-            cov_p_ii_p_jj * transpose(cov_p_ii_p_ij) - cov_p_ii_p_ij * var_p_jj
+        _nominator = cov_p_ii_p_jj * transpose(cov_p_ii_p_ij) - cov_p_ii_p_ij * var_p_jj
+        fill_diagonal(_nominator, 0.0)
+
+        _denominator = cov_p_ii_p_jj ** 2 - var_p_ii * var_p_jj
+
+        # The denominator is <= 0 due to the Cauchy-Schwarz inequality.
+        # It is 0 only if the variance of p_ii or p_jj are zero (i.e., no main effect).
+        # In that fringe case, the nominator will also be zero and we set the adjustment
+        # factor to 0 (intuitively, there is nothing to adjust in a zero-length vector)
+        adjustment_factors_ij = np.zeros(_nominator.shape)
+        # todo: prevent catastrophic cancellation where nominator/denominator are ~0.0
+        np.divide(
+            _nominator,
+            _denominator,
+            out=adjustment_factors_ij,
+            where=_denominator < 0.0,
         )
 
-        f_denominator = cov_p_ii_p_jj ** 2 - var_p_ii * var_p_jj
-
-        fill_diagonal(f_nominator, np.nan)
-
-        adjustment_factors_ij = f_nominator / f_denominator
-
-        fill_diagonal(adjustment_factors_ij, -np.nansum(adjustment_factors_ij, axis=-1))
+        fill_diagonal(adjustment_factors_ij, -adjustment_factors_ij.sum(axis=-1))
 
         delta_ij = (
             adjustment_factors_ij[:, :, :, np.newaxis] * p_ii[:, :, np.newaxis, :]
@@ -337,10 +345,17 @@ class ShapInteractionProjector(ShapProjector, ShapInteractionGlobalExplainer):
         # Redundancy: red[i, j]
         #
 
+        _nominator = (
+            cov_p_i_p_j - cov_p_i_p_ij_over_var_p_ij * transpose(cov_p_i_p_ij)
+        ) ** 2
+
         _denominator_ij = cov_p_i_p_ij_over_var_p_ij * cov_p_i_p_ij - var_p_i
         _denominator = _denominator_ij * transpose(_denominator_ij)
-        _nom = (cov_p_i_p_j - cov_p_i_p_ij_over_var_p_ij * transpose(cov_p_i_p_ij)) ** 2
-        red_ij = (_nom / _denominator) * (1 - syn_ij)
+
+        red_ij = np.zeros(_nominator.shape)
+        # todo: prevent catastrophic cancellation where nominator/denominator are ~0.0
+        np.divide(_nominator, _denominator, out=red_ij, where=_nominator > 0.0)
+        red_ij *= 1 - syn_ij
 
         # we define the redundancy of a feature with itself as 1
         fill_diagonal(red_ij, 1.0)
