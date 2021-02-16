@@ -331,7 +331,7 @@ class ShapInteractionProjector(ShapProjector, ShapInteractionGlobalExplainer):
         syn_ij = cov_p_i_p_ij_over_var_p_ij * cov_p_i_p_ij_over_var_p_i
 
         # we define the synergy of a feature with itself as 1
-        fill_diagonal(syn_ij, 1)
+        fill_diagonal(syn_ij, 1.0)
 
         #
         # Redundancy: red[i, j]
@@ -343,7 +343,7 @@ class ShapInteractionProjector(ShapProjector, ShapInteractionGlobalExplainer):
         red_ij = (_nom / _denominator) * (1 - syn_ij)
 
         # we define the redundancy of a feature with itself as 1
-        fill_diagonal(red_ij, 1)
+        fill_diagonal(red_ij, 1.0)
 
         #
         # SHAP independence: ind[i, j]
