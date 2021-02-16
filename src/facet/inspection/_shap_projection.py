@@ -201,11 +201,32 @@ class ShapInteractionProjector(ShapProjector, ShapInteractionGlobalExplainer):
         # this is the diagonal of p[i, j], i.e., the main effects p[i, i]
         p_ii = p_ij.diagonal(axis1=1, axis2=2).swapaxes(1, 2)
 
+        # cov[p[i, i], p[j, j]]
+        # shape: (n_outputs, n_features, n_features)
+        # covariance matrix of the main effects p[i, i]
         cov_p_ii_p_jj = cov(p_ii, weight=weight)
+
+        # var[p[i, i]]
+        # shape: (n_outputs, n_features, 1)
+        # variance of the main effects p[i, i] as a broadcastable matrix where each
+        # column is identical
         var_p_ii = diagonal(cov_p_ii_p_jj)[:, :, np.newaxis]
+
+        # var[p[j, j]]
+        # shape: (n_outputs, 1, n_features)
+        # variance of the main effects p[j, j] as a broadcastable matrix where each
+        # row is identical
         var_p_jj = transpose(var_p_ii)
 
+        # cov[p[i, i], p[i, j]]
+        # shape: (n_outputs, n_features, n_features)
+        # covariance matrix of the main effects p[i, i] with interaction effects p[i, j]
         cov_p_ii_p_ij = cov_broadcast(p_ii, p_ij, weight=weight)
+
+        # adjustment_factors[i, j]
+        # shape: (n_outputs, n_features, n_features)
+        # multiple of p[i, i] to be subtracted from p[i, j] and added to p[i, i]
+        # to orthogonalize the SHAP interaction vectors
 
         _nominator = cov_p_ii_p_jj * transpose(cov_p_ii_p_ij) - cov_p_ii_p_ij * var_p_jj
         fill_diagonal(_nominator, 0.0)
