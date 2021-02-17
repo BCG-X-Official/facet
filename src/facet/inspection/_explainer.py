@@ -53,8 +53,12 @@ if __shap_version__ < __shap_0_36__:
     # noinspection PyUnresolvedReferences
     from shap.explainers.explainer import Explainer
 else:
-    # noinspection PyUnresolvedReferences
-    from shap import Explainer
+    try:
+        # noinspection PyUnresolvedReferences
+        from shap import Explainer
+    except ImportError as e:
+        log.warning(e)
+        Explainer = type("Explainer", (), {})
 
 #
 # Ensure all symbols introduced below are included in __all__
@@ -165,8 +169,7 @@ class ExplainerFactory(metaclass=ABCMeta):
             )
 
 
-class _TreeExplainer(shap.TreeExplainer, BaseExplainer):
-    pass
+_TreeExplainer: Optional[type] = None
 
 
 @inheritdoc(match="[see superclass]")
@@ -202,6 +205,13 @@ class TreeExplainerFactory(ExplainerFactory):
         self.model_output = model_output
         self.feature_perturbation = feature_perturbation
         self._uses_background_dataset = use_background_dataset
+
+        global _TreeExplainer
+
+        if _TreeExplainer is None:
+            _TreeExplainer = type(
+                "_TreeExplainer", (shap.TreeExplainer, BaseExplainer), {}
+            )
 
     @property
     def explains_raw_output(self) -> bool:
