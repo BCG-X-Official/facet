@@ -26,20 +26,23 @@ __all__ = [
 ]
 
 __shap_version__ = version.parse(shap.__version__)
-__shap_earliest__ = version.parse("0.34")
+__shap_earliest_supported__ = version.parse("0.34")
 __shap_0_36__ = version.parse("0.36")
-__shap_latest__ = version.parse("0.38")
+__shap_not_yet_supported__ = version.parse("0.39")
 
 
 #
 # Ensure we have a supported version of the shap package
 #
 
-if __shap_version__ < __shap_earliest__ or __shap_version__ >= __shap_latest__:
-    raise ImportError(
+if (
+    __shap_version__ < __shap_earliest_supported__
+    or __shap_version__ >= __shap_not_yet_supported__
+):
+    log.warning(
         f"shap package v{__shap_version__} is not supported; "
-        f"please use v{__shap_earliest__} or later"
-        f"but not v{__shap_latest__} or later"
+        f"current support includes versions starting at v{__shap_earliest_supported__} "
+        f"and preceding v{__shap_not_yet_supported__}"
     )
 
 #
