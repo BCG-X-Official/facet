@@ -32,7 +32,7 @@ requires = [
     "typing_inspect >=0.4,<0.7",
     # additional requirements of shap 0.38
     # todo: remove once supported via shap 0.38 requirements
-    "ipython",
+    "ipython        >=7",
 ]
 
 requires-python = ">=3.6,<3.9"
