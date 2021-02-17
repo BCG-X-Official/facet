@@ -74,7 +74,7 @@ __tracker = AllTracker(globals())
 
 class BaseExplainer(metaclass=ABCMeta):
     """
-    Abstract base class of SHAP explainers, providing stubs for methods used by FAET
+    Abstract base class of SHAP explainers, providing stubs for methods used by FACET
     but not consistently supported by class :class:`shap.Explainer` across different
     versions of the `shap` package.
     """
