@@ -30,6 +30,9 @@ requires = [
     # additional requirements of gamma-pytools
     "joblib         >=0.13,<1.1",
     "typing_inspect >=0.4,<0.7",
+    # additional requirements of shap 0.38
+    # todo: remove once supported via shap 0.38 requirements
+    "ipython",
 ]
 
 requires-python = ">=3.6,<3.9"
@@ -109,9 +112,6 @@ scikit-learn   = "=0.23.*"
 # additional requirements of gamma-pytools
 joblib         = "<1.1"
 typing_inspect = "<0.7"
-# additional requirements of shap 0.38
-# todo: remove once supported via shap 0.38 requirements
-ipython        = "=7.*"
 
 [tool.black]
 # quiet = "True"
