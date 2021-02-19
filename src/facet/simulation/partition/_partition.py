@@ -217,8 +217,6 @@ class RangePartitioner(
     def fit(
         self: T_Self,
         values: Iterable[T_Values],
-        lower_bound: Optional[T_Values_Numeric] = None,
-        upper_bound: Optional[T_Values_Numeric] = None,
         **fit_params,
     ) -> T_Self:
         """[see superclass]"""
