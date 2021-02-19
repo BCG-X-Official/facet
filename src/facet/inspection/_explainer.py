@@ -26,20 +26,23 @@ __all__ = [
 ]
 
 __shap_version__ = version.parse(shap.__version__)
-__shap_earliest__ = version.parse("0.34")
+__shap_earliest_supported__ = version.parse("0.34")
 __shap_0_36__ = version.parse("0.36")
-__shap_latest__ = version.parse("0.38")
+__shap_not_yet_supported__ = version.parse("0.39")
 
 
 #
 # Ensure we have a supported version of the shap package
 #
 
-if __shap_version__ < __shap_earliest__ or __shap_version__ >= __shap_latest__:
-    raise ImportError(
+if (
+    __shap_version__ < __shap_earliest_supported__
+    or __shap_version__ >= __shap_not_yet_supported__
+):
+    log.warning(
         f"shap package v{__shap_version__} is not supported; "
-        f"please use v{__shap_earliest__} or later"
-        f"but not v{__shap_latest__} or later"
+        f"current support includes versions starting at v{__shap_earliest_supported__} "
+        f"and preceding v{__shap_not_yet_supported__}"
     )
 
 #
@@ -50,8 +53,12 @@ if __shap_version__ < __shap_0_36__:
     # noinspection PyUnresolvedReferences
     from shap.explainers.explainer import Explainer
 else:
-    # noinspection PyUnresolvedReferences
-    from shap import Explainer
+    try:
+        # noinspection PyUnresolvedReferences
+        from shap import Explainer
+    except ImportError as e:
+        log.warning(e)
+        Explainer = type("Explainer", (), {})
 
 #
 # Ensure all symbols introduced below are included in __all__
@@ -67,7 +74,7 @@ __tracker = AllTracker(globals())
 
 class BaseExplainer(metaclass=ABCMeta):
     """
-    Abstract base class of SHAP explainers, providing stubs for methods used by FAET
+    Abstract base class of SHAP explainers, providing stubs for methods used by FACET
     but not consistently supported by class :class:`shap.Explainer` across different
     versions of the `shap` package.
     """
@@ -162,8 +169,7 @@ class ExplainerFactory(metaclass=ABCMeta):
             )
 
 
-class _TreeExplainer(shap.TreeExplainer, BaseExplainer):
-    pass
+_TreeExplainer: Optional[type] = None
 
 
 @inheritdoc(match="[see superclass]")
@@ -199,6 +205,13 @@ class TreeExplainerFactory(ExplainerFactory):
         self.model_output = model_output
         self.feature_perturbation = feature_perturbation
         self._uses_background_dataset = use_background_dataset
+
+        global _TreeExplainer
+
+        if _TreeExplainer is None:
+            _TreeExplainer = type(
+                "_TreeExplainer", (shap.TreeExplainer, BaseExplainer), {}
+            )
 
     @property
     def explains_raw_output(self) -> bool:
