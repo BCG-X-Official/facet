@@ -343,11 +343,8 @@ class LearnerInspector(
         else:
             # todo: experimental & undocumented option _orthogonalize;
             #       remove in next release
-            try:
-                if not getattr(self, "_orthogonalize", True):
-                    return self._shap_global_projector_not_orthogonalized
-            except AttributeError:
-                pass
+            if not getattr(self, "_orthogonalize", True):
+                return self._shap_global_projector_no_orthogonalization
 
             return self._shap_global_projector
 
