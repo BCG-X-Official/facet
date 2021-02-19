@@ -255,12 +255,12 @@ class LearnerCrossfit(
         :param sample: the sample to fit the estimators to; if the sample
             weights these are passed on to the learner and scoring function as
             keyword argument ``sample_weight``
-        :param fit_params: optional fit parameters, to be passed on to the fit method
-            of the learner
         :param scoring: scoring function to use to score the models
             (see :func:`~sklearn.metrics.check_scoring` for details)
         :param train_scores: if ``True``, calculate train scores instead of test
             scores (default: ``False``)
+        :param fit_params: optional fit parameters, to be passed on to the fit method
+            of the learner
         :return: the resulting scores
         """
 
