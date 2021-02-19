@@ -951,6 +951,7 @@ def call_inspector_method_both_algorithms(
     try:
         inspector._legacy = True
         legacy_result = method(**kwargs)
+
         inspector._legacy = False
         result = method(**kwargs)
     finally:
