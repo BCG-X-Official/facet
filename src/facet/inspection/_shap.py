@@ -120,6 +120,8 @@ class ShapCalculator(
         """
         Calculate the SHAP values.
 
+        :param crossfit: the learner crossfit for which to calculate SHAP values
+        :param fit_params: additional fit parameters (unused)
         :return: self
         """
 
@@ -468,6 +470,10 @@ class ShapInteractionValuesCalculator(
         """
         The resulting consolidated shap interaction values as a data frame,
         aggregated to averaged SHAP interaction values per observation.
+
+        :param consolidate: consolidation method, or ``None`` for no consolidation
+        :return: SHAP contribution values with shape
+            (n_observations * n_features, n_outputs * n_features).
         """
         self._ensure_fitted()
         return ShapCalculator._consolidate_splits(
