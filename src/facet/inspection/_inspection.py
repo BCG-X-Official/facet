@@ -296,7 +296,7 @@ class LearnerInspector(
 
             shap_global_projector = ShapInteractionVectorProjector()
             shap_global_projector_no_orthogonalization = ShapInteractionVectorProjector(
-                orthogonalize=True
+                orthogonalize=False
             )
 
         else:
