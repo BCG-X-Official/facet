@@ -33,7 +33,7 @@ from ._shap_global_explanation import (
     ShapGlobalExplainer,
     ShapInteractionGlobalExplainer,
 )
-from ._shap_projection import ShapInteractionProjector, ShapProjector
+from ._shap_projection import ShapInteractionVectorProjector, ShapVectorProjector
 
 log = logging.getLogger(__name__)
 
@@ -294,8 +294,8 @@ class LearnerInspector(
                 min_direct_synergy=self._min_direct_synergy
             )
 
-            shap_global_projector = ShapInteractionProjector()
-            shap_global_projector_no_orthogonalization = ShapInteractionProjector(
+            shap_global_projector = ShapInteractionVectorProjector()
+            shap_global_projector_no_orthogonalization = ShapInteractionVectorProjector(
                 orthogonalize=True
             )
 
@@ -314,7 +314,7 @@ class LearnerInspector(
                 verbose=self.verbose,
             )
             shap_global_decomposer = ShapDecomposer()
-            shap_global_projector = ShapProjector()
+            shap_global_projector = ShapVectorProjector()
             shap_global_projector_no_orthogonalization = None
 
         shap_calculator.fit(crossfit=crossfit)

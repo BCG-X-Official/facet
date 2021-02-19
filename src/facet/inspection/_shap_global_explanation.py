@@ -13,14 +13,17 @@ import pandas as pd
 from pytools.api import AllTracker, inheritdoc
 from pytools.fit import FittableMixin
 
-from ._shap import ShapCalculator
+from ._shap import ShapCalculator, ShapInteractionValuesCalculator
 
 log = logging.getLogger(__name__)
 
 __all__ = [
     "AffinityMatrices",
+    "ShapContext",
     "ShapGlobalExplainer",
     "ShapInteractionGlobalExplainer",
+    "ShapInteractionValueContext",
+    "ShapValueContext",
     "cov",
     "cov_broadcast",
     "diagonal",
@@ -289,7 +292,7 @@ def make_symmetric(m: np.ndarray) -> np.ndarray:
     return (m + transpose(m)) / 2
 
 
-def transpose(m: np.ndarray) -> np.ndarray:
+def transpose(m: np.ndarray, ndim: int = 3) -> np.ndarray:
     """
     Transpose the `feature x feature` matrix for each output.
 
@@ -302,7 +305,7 @@ def transpose(m: np.ndarray) -> np.ndarray:
         or shape `(n_outputs, n_features, 1, n_observations)`
     :return: array of same shape as arg ``m``, with both feature axes swapped
     """
-    assert 3 <= m.ndim <= 4
+    assert m.ndim == ndim
     assert m.shape[1] == m.shape[2] or m.shape[2] == 1
 
     return m.swapaxes(1, 2)
@@ -406,6 +409,220 @@ def cov_broadcast(
     return (
         np.einsum("...io,...ijo->...ij", vectors_weighted, vector_grid) / weight_total
     )
+
+
+class ShapContext(metaclass=ABCMeta):
+    """
+    Contextual data for global SHAP calculations.
+    """
+
+    #: SHAP vectors,
+    #: with shape `(n_outputs, n_features, n_observations)`
+    p_i: np.ndarray
+
+    #: observation weights (optional),
+    #: with shape `(n_observations)`
+    weight: Optional[np.ndarray]
+
+    #: Covariance matrix for p[i],
+    #: with shape `(n_outputs, n_features, n_features)`
+    cov_p_i_p_j: np.ndarray
+
+    #: Variances for p[i],
+    #: with shape `(n_outputs, n_features, 1)`
+    var_p_i: np.ndarray
+
+    def __init__(self, p_i: np.ndarray, weight: Optional[np.ndarray]) -> None:
+        assert p_i.ndim == 3
+        if weight is not None:
+            assert weight.ndim == 1
+            assert p_i.shape[2] == len(weight)
+
+        self.p_i = p_i
+        self.weight = weight
+
+        # covariance matrix of shap vectors
+        # shape: (n_outputs, n_features, n_features)
+        self.cov_p_i_p_j = cov_p_i_p_j = cov(p_i, weight)
+
+        # var(p[i])
+        # variances of SHAP vectors
+        # shape: (n_outputs, n_features, 1)
+        # i.e. adding a second, empty feature dimension to enable correct broadcasting
+        self.var_p_i = diagonal(cov_p_i_p_j)[:, :, np.newaxis]
+
+
+class ShapValueContext(ShapContext):
+    """
+    Contextual data for global SHAP calculations based on SHAP values.
+    """
+
+    def __init__(self, shap_calculator: ShapCalculator) -> None:
+        shap_values: pd.DataFrame = shap_calculator.get_shap_values(consolidate="mean")
+
+        def _p_i() -> np.ndarray:
+            n_outputs: int = len(shap_calculator.output_names_)
+            n_features: int = len(shap_calculator.feature_index_)
+            n_observations: int = len(shap_values)
+
+            # p[i] = p_i
+            # shape: (n_outputs, n_features, n_observations)
+            # the vector of shap values for every output and feature
+            return ensure_last_axis_is_fast(
+                np.transpose(
+                    shap_values.values.reshape((n_observations, n_outputs, n_features)),
+                    axes=(1, 2, 0),
+                )
+            )
+
+        def _weight() -> Optional[np.ndarray]:
+            # weights
+            # shape: (n_observations)
+            # return a 1d array of weights that aligns with the observations axis of the
+            # SHAP values tensor (axis 1)
+            _weight_sr = shap_calculator.sample_.weight
+            if _weight_sr is not None:
+                return _weight_sr.loc[shap_values.index].values
+            else:
+                return None
+
+        super().__init__(p_i=_p_i(), weight=_weight())
+
+
+class ShapInteractionValueContext(ShapContext):
+    """
+    Contextual data for global SHAP calculations based on SHAP interaction values.
+    """
+
+    #: SHAP interaction vectors,
+    #: with shape `(n_outputs, n_features, n_features, n_observations)`
+    p_ij: np.ndarray
+
+    def __init__(
+        self, shap_calculator: ShapInteractionValuesCalculator, orthogonalize: bool
+    ) -> None:
+        shap_values: pd.DataFrame = shap_calculator.get_shap_interaction_values(
+            consolidate="mean"
+        )
+        n_features: int = len(shap_calculator.feature_index_)
+        n_outputs: int = len(shap_calculator.output_names_)
+        n_observations: int = len(shap_values) // n_features
+
+        assert shap_values.shape == (
+            n_observations * n_features,
+            n_outputs * n_features,
+        )
+
+        self.matrix_shape = (n_outputs, n_features, n_features)
+
+        # weights
+        # shape: (n_observations)
+        # return a 1d array of weights that aligns with the observations axis of the
+        # SHAP values tensor (axis 1)
+        weight: Optional[np.ndarray]
+        _weight_sr = shap_calculator.sample_.weight
+        if _weight_sr is not None:
+            _observation_indices = shap_values.index.get_level_values(0).values.reshape(
+                (n_observations, n_features)
+            )[:, 0]
+            weight = ensure_last_axis_is_fast(
+                _weight_sr.loc[_observation_indices].values
+            )
+        else:
+            weight = None
+
+        # p[i, j]
+        # shape: (n_outputs, n_features, n_features, n_observations)
+        # the vector of interaction values for every output and feature pairing
+        # for improved numerical precision, we ensure the last axis is the fast axis
+        # i.e. stride size equals item size (see documentation for numpy.sum)
+        p_ij = ensure_last_axis_is_fast(
+            np.transpose(
+                shap_values.values.reshape(
+                    (n_observations, n_features, n_outputs, n_features)
+                ),
+                axes=(2, 1, 3, 0),
+            )
+        )
+
+        # p[i]
+        # shape: (n_outputs, n_features, n_observations)
+        super().__init__(p_i=ensure_last_axis_is_fast(p_ij.sum(axis=2)), weight=weight)
+
+        if orthogonalize:
+            self.p_ij = ensure_last_axis_is_fast(
+                self.__get_orthogonalized_interaction_vectors(p_ij=p_ij, weight=weight)
+            )
+        else:
+            self.p_ij = p_ij
+
+    @staticmethod
+    def __get_orthogonalized_interaction_vectors(
+        p_ij: np.ndarray, weight: Optional[np.ndarray]
+    ) -> np.ndarray:
+        # p_ij: shape: (n_outputs, n_features, n_features, n_observations)
+
+        assert p_ij.ndim == 4
+        n_features = p_ij.shape[1]
+        assert p_ij.shape[2] == n_features
+
+        # p[i, i]
+        # shape: (n_outputs, n_features, n_observations)
+        # independent feature contributions;
+        # this is the diagonal of p[i, j], i.e., the main effects p[i, i]
+        p_ii = p_ij.diagonal(axis1=1, axis2=2).swapaxes(1, 2)
+
+        # cov[p[i, i], p[j, j]]
+        # shape: (n_outputs, n_features, n_features)
+        # covariance matrix of the main effects p[i, i]
+        cov_p_ii_p_jj = cov(p_ii, weight=weight)
+
+        # var[p[i, i]]
+        # shape: (n_outputs, n_features, 1)
+        # variance of the main effects p[i, i] as a broadcastable matrix where each
+        # column is identical
+        var_p_ii = diagonal(cov_p_ii_p_jj)[:, :, np.newaxis]
+
+        # var[p[j, j]]
+        # shape: (n_outputs, 1, n_features)
+        # variance of the main effects p[j, j] as a broadcastable matrix where each
+        # row is identical
+        var_p_jj = transpose(var_p_ii)
+
+        # cov[p[i, i], p[i, j]]
+        # shape: (n_outputs, n_features, n_features)
+        # covariance matrix of the main effects p[i, i] with interaction effects p[i, j]
+        cov_p_ii_p_ij = cov_broadcast(p_ii, p_ij, weight=weight)
+
+        # adjustment_factors[i, j]
+        # shape: (n_outputs, n_features, n_features)
+        # multiple of p[i, i] to be subtracted from p[i, j] and added to p[i, i]
+        # to orthogonalize the SHAP interaction vectors
+
+        _nominator = cov_p_ii_p_jj * transpose(cov_p_ii_p_ij) - cov_p_ii_p_ij * var_p_jj
+        fill_diagonal(_nominator, 0.0)
+
+        _denominator = cov_p_ii_p_jj ** 2 - var_p_ii * var_p_jj
+
+        # The denominator is <= 0 due to the Cauchy-Schwarz inequality.
+        # It is 0 only if the variance of p_ii or p_jj are zero (i.e., no main effect).
+        # In that fringe case, the nominator will also be zero and we set the adjustment
+        # factor to 0 (intuitively, there is nothing to adjust in a zero-length vector)
+        adjustment_factors_ij = np.zeros(_nominator.shape)
+        # todo: prevent catastrophic cancellation where nominator/denominator are ~0.0
+        np.divide(
+            _nominator,
+            _denominator,
+            out=adjustment_factors_ij,
+            where=_denominator < 0.0,
+        )
+
+        fill_diagonal(adjustment_factors_ij, np.nan)
+
+        delta_ij = (
+            adjustment_factors_ij[:, :, :, np.newaxis] * p_ii[:, :, np.newaxis, :]
+        )
+        return p_ij - delta_ij - transpose(delta_ij, ndim=4)
 
 
 __tracker.validate()

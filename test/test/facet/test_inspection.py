@@ -44,7 +44,7 @@ def iris_classifier_ranker_binary(
     cv_stratified_bootstrap: StratifiedBootstrapCV,
     n_jobs: int,
 ) -> LearnerRanker[ClassifierPipelineDF[RandomForestClassifierDF]]:
-    return _fit_learner_ranker(
+    return fit_learner_ranker(
         sample=iris_sample_binary, cv=cv_stratified_bootstrap, n_jobs=n_jobs
     )
 
@@ -53,7 +53,7 @@ def iris_classifier_ranker_binary(
 def iris_classifier_ranker_multi_class(
     iris_sample: Sample, cv_stratified_bootstrap: StratifiedBootstrapCV, n_jobs: int
 ) -> LearnerRanker[ClassifierPipelineDF[RandomForestClassifierDF]]:
-    return _fit_learner_ranker(
+    return fit_learner_ranker(
         sample=iris_sample, cv=cv_stratified_bootstrap, n_jobs=n_jobs
     )
 
@@ -62,7 +62,7 @@ def iris_classifier_ranker_multi_class(
 def iris_classifier_ranker_dual_target(
     iris_sample_binary_dual_target: Sample, cv_bootstrap: BootstrapCV, n_jobs: int
 ) -> LearnerRanker[ClassifierPipelineDF[RandomForestClassifierDF]]:
-    return _fit_learner_ranker(
+    return fit_learner_ranker(
         sample=iris_sample_binary_dual_target, cv=cv_bootstrap, n_jobs=n_jobs
     )
 
@@ -106,7 +106,7 @@ def test_model_inspection(
 ) -> None:
 
     # define checksums for this test
-    expected_scores = [0.418, 0.4, 0.386, 0.385, 0.122] + [
+    expected_scores = [0.418, 0.400, 0.386, 0.385, 0.122] + [
         0.122,
         -0.074,
         -0.074,
@@ -337,124 +337,131 @@ def test_model_inspection_classifier_multi_class(
 
     # Shap decomposition matrices (feature dependencies)
 
-    synergy_matrix, synergy_matrix_legacy = call_inspector_method_both_algorithms(
-        iris_inspector_multi_class.feature_synergy_matrix,
-        clustered=False,
-        symmetrical=False,
-    )
-    assert np.hstack([m.values for m in synergy_matrix_legacy]) == pytest.approx(
-        np.array(
-            [
-                [1.0, 0.04, 0.149, 0.124, 1.0, 0.059]
-                + [0.345, 0.323, 1.0, 0.011, 0.213, 0.204],
-                [0.196, 1.0, 0.116, 0.119, 0.209, 1.0]
-                + [0.204, 0.225, 0.104, 1.0, 0.297, 0.306],
-                [0.053, 0.006, 1.0, 0.022, 0.077, 0.01]
-                + [1.0, 0.196, 0.066, 0.008, 1.0, 0.157],
-                [0.042, 0.006, 0.021, 1.0, 0.069, 0.011]
-                + [0.203, 1.0, 0.067, 0.009, 0.167, 1.0],
-            ]
-        ),
-        abs=0.02,
-    )
-    assert np.hstack([m.values for m in synergy_matrix]) == pytest.approx(
-        np.array(
-            [
-                [1.0, 0.012, 0.157, 0.155, 1.0, 0.148]
-                + [0.868, 0.869, 1.0, 0.0, 0.828, 0.849],
-                [0.082, 1.0, 0.058, 0.09, 0.077, 1.0]
-                + [0.204, 0.247, 0.04, 1.0, 0.358, 0.384],
-                [0.004, 0.0, 1.0, 0.002, 0.029, 0.004]
-                + [1.0, 0.04, 0.006, 0.001, 1.0, 0.014],
-                [0.001, 0.0, 0.001, 1.0, 0.027, 0.001]
-                + [0.037, 1.0, 0.014, 0.004, 0.026, 1.0],
-            ]
-        ),
-        abs=0.02,
-    )
+    try:
+        synergy_matrix, synergy_matrix_legacy = call_inspector_method_both_algorithms(
+            iris_inspector_multi_class.feature_synergy_matrix,
+            clustered=False,
+            symmetrical=False,
+        )
+        assert np.hstack([m.values for m in synergy_matrix_legacy]) == pytest.approx(
+            np.array(
+                [
+                    [1.000, 0.040, 0.149, 0.124, 1.000, 0.059]
+                    + [0.345, 0.323, 1.000, 0.011, 0.213, 0.204],
+                    [0.196, 1.000, 0.116, 0.119, 0.209, 1.000]
+                    + [0.204, 0.225, 0.104, 1.000, 0.297, 0.306],
+                    [0.053, 0.006, 1.000, 0.022, 0.077, 0.010]
+                    + [1.000, 0.196, 0.066, 0.008, 1.000, 0.157],
+                    [0.042, 0.006, 0.021, 1.000, 0.069, 0.011]
+                    + [0.203, 1.000, 0.067, 0.009, 0.167, 1.000],
+                ]
+            ),
+            abs=0.02,
+        )
+        assert np.hstack([m.values for m in synergy_matrix]) == pytest.approx(
+            np.array(
+                [
+                    [1.000, 0.005, 0.002, 0.001, 1.000, 0.004]
+                    + [0.012, 0.012, 1.000, 0.000, 0.006, 0.008],
+                    [0.000, 1.000, 0.000, 0.000, 0.003, 1.000]
+                    + [0.001, 0.000, 0.000, 1.000, 0.000, 0.000],
+                    [0.032, 0.015, 1.000, 0.002, 0.191, 0.024]
+                    + [1.000, 0.034, 0.054, 0.000, 1.000, 0.028],
+                    [0.031, 0.022, 0.002, 1.000, 0.179, 0.038]
+                    + [0.033, 1.000, 0.056, 0.000, 0.023, 1.000],
+                ]
+            ),
+            abs=0.02,
+        )
 
-    redundancy_matrix, redundancy_matrix_legacy = call_inspector_method_both_algorithms(
-        iris_inspector_multi_class.feature_redundancy_matrix,
-        clustered=False,
-        symmetrical=False,
-    )
-    assert np.hstack([m.values for m in redundancy_matrix_legacy]) == (
-        pytest.approx(
-            np.array(
-                [
-                    [1.0, 0.077, 0.67, 0.667, 1.0, 0.084]
-                    + [0.37, 0.352, 1.0, 0.006, 0.671, 0.624],
-                    [0.356, 1.0, 0.45, 0.447, 0.297, 1.0]
-                    + [0.306, 0.304, 0.054, 1.0, 0.026, 0.086],
-                    [0.261, 0.028, 1.0, 0.97, 0.084, 0.016]
-                    + [1.0, 0.583, 0.197, 0.001, 1.0, 0.706],
-                    [0.254, 0.028, 0.96, 1.0, 0.082, 0.016]
-                    + [0.591, 1.0, 0.202, 0.002, 0.741, 1.0],
-                ]
-            ),
-            abs=0.02,
+        (
+            redundancy_matrix,
+            redundancy_matrix_legacy,
+        ) = call_inspector_method_both_algorithms(
+            iris_inspector_multi_class.feature_redundancy_matrix,
+            clustered=False,
+            symmetrical=False,
         )
-    )
-    assert np.hstack([m.values for m in redundancy_matrix]) == (
-        pytest.approx(
-            np.array(
-                [
-                    [1.0, 0.099, 0.551, 0.561, 1.0, 0.034]
-                    + [0.024, 0.016, 1.0, 0.031, 0.016, 0.037],
-                    [0.092, 1.0, 0.371, 0.37, 0.037, 1.0]
-                    + [0.079, 0.115, 0.03, 1.0, 0.002, 0.005],
-                    [0.652, 0.393, 1.0, 0.997, 0.179, 0.099]
-                    + [1.0, 0.734, 0.093, 0.003, 1.0, 0.819],
-                    [0.663, 0.406, 0.999, 1.0, 0.121, 0.152]
-                    + [0.736, 1.0, 0.242, 0.007, 0.81, 1.0],
-                ]
-            ),
-            abs=0.02,
+        assert np.hstack([m.values for m in redundancy_matrix_legacy]) == (
+            pytest.approx(
+                np.array(
+                    [
+                        [1.000, 0.077, 0.670, 0.667, 1.000, 0.084]
+                        + [0.370, 0.352, 1.000, 0.006, 0.671, 0.624],
+                        [0.356, 1.000, 0.450, 0.447, 0.297, 1.000]
+                        + [0.306, 0.304, 0.054, 1.000, 0.026, 0.086],
+                        [0.261, 0.028, 1.000, 0.970, 0.084, 0.016]
+                        + [1.000, 0.583, 0.197, 0.001, 1.000, 0.706],
+                        [0.254, 0.028, 0.960, 1.000, 0.082, 0.016]
+                        + [0.591, 1.000, 0.202, 0.002, 0.741, 1.000],
+                    ]
+                ),
+                abs=0.02,
+            )
         )
-    )
+        assert np.hstack([m.values for m in redundancy_matrix]) == (
+            pytest.approx(
+                np.array(
+                    [
+                        [1.000, 0.096, 0.665, 0.673, 1.000, 0.056]
+                        + [0.388, 0.360, 1.000, 0.006, 0.664, 0.571],
+                        [0.101, 1.000, 0.397, 0.388, 0.057, 1.000]
+                        + [0.191, 0.250, 0.006, 1.000, 0.001, 0.000],
+                        [0.635, 0.382, 1.000, 0.998, 0.209, 0.168]
+                        + [1.000, 0.762, 0.616, 0.000, 1.000, 0.759],
+                        [0.643, 0.366, 0.997, 1.000, 0.193, 0.212]
+                        + [0.763, 1.000, 0.523, 0.000, 0.764, 1.000],
+                    ]
+                ),
+                abs=0.02,
+            )
+        )
 
-    (
-        association_matrix,
-        association_matrix_legacy,
-    ) = call_inspector_method_both_algorithms(
-        iris_inspector_multi_class.feature_association_matrix,
-        clustered=False,
-        symmetrical=False,
-    )
-    assert np.hstack([m.values for m in association_matrix_legacy]) == (
-        pytest.approx(
-            np.array(
-                [
-                    [1.0, 0.049, 0.632, 0.635, 1.0, 0.053]
-                    + [0.474, 0.458, 1.0, -0.008, 0.626, 0.578],
-                    [0.258, 1.0, 0.455, 0.45, 0.206, 1.0]
-                    + [0.332, 0.371, -0.082, 1.0, -0.027, -0.02],
-                    [0.235, 0.029, 1.0, 0.983, 0.116, 0.018]
-                    + [1.0, 0.684, 0.183, -0.001, 1.0, 0.665],
-                    [0.233, 0.028, 0.972, 1.0, 0.116, 0.021]
-                    + [0.7, 1.0, 0.184, -0.0, 0.702, 1.0],
-                ]
-            ),
-            abs=0.02,
+        (
+            association_matrix,
+            association_matrix_legacy,
+        ) = call_inspector_method_both_algorithms(
+            iris_inspector_multi_class.feature_association_matrix,
+            clustered=False,
+            symmetrical=False,
         )
-    )
-    assert np.hstack([m.values for m in association_matrix]) == (
-        pytest.approx(
-            np.array(
-                [
-                    [1.0, 0.101, 0.666, 0.674, 1.0, 0.06]
-                    + [0.4, 0.371, 1.0, 0.006, 0.67, 0.579],
-                    [0.101, 1.0, 0.397, 0.388, 0.06, 1.0]
-                    + [0.192, 0.25, 0.006, 1.0, 0.001, 0.0],
-                    [0.666, 0.397, 1.0, 0.999, 0.4, 0.192]
-                    + [1.0, 0.796, 0.67, 0.001, 1.0, 0.787],
-                    [0.674, 0.388, 0.999, 1.0, 0.371, 0.25]
-                    + [0.796, 1.0, 0.579, 0.0, 0.787, 1.0],
-                ]
-            ),
-            abs=0.02,
+        assert np.hstack([m.values for m in association_matrix_legacy]) == (
+            pytest.approx(
+                np.array(
+                    [
+                        [1.000, 0.049, 0.632, 0.635, 1.000, 0.053]
+                        + [0.474, 0.458, 1.000, -0.008, 0.626, 0.578],
+                        [0.258, 1.000, 0.455, 0.450, 0.206, 1.000]
+                        + [0.332, 0.371, -0.082, 1.000, -0.027, -0.020],
+                        [0.235, 0.029, 1.000, 0.983, 0.116, 0.018]
+                        + [1.000, 0.684, 0.183, -0.001, 1.000, 0.665],
+                        [0.233, 0.028, 0.972, 1.000, 0.116, 0.021]
+                        + [0.700, 1.000, 0.184, -0.000, 0.702, 1.000],
+                    ]
+                ),
+                abs=0.02,
+            )
         )
-    )
+        assert np.hstack([m.values for m in association_matrix]) == (
+            pytest.approx(
+                np.array(
+                    [
+                        [1.000, 0.101, 0.666, 0.674, 1.000, 0.060]
+                        + [0.400, 0.371, 1.000, 0.006, 0.670, 0.579],
+                        [0.101, 1.000, 0.397, 0.388, 0.060, 1.000]
+                        + [0.192, 0.250, 0.006, 1.000, 0.001, 0.000],
+                        [0.666, 0.397, 1.000, 0.999, 0.400, 0.192]
+                        + [1.000, 0.796, 0.670, 0.001, 1.000, 0.787],
+                        [0.674, 0.388, 0.999, 1.000, 0.371, 0.250]
+                        + [0.796, 1.000, 0.579, 0.000, 0.787, 1.000],
+                    ]
+                ),
+                abs=0.02,
+            )
+        )
+    except AssertionError as error:
+        print_expected_matrix(error=error, split=True)
+        raise
 
     linkage_trees = iris_inspector_multi_class.feature_association_linkage()
 
@@ -563,7 +570,7 @@ def test_model_inspection_classifier_interaction(
     shap_values = shap_interaction_values.groupby(by="observation").sum()
 
     # shap interaction values add up to shap values
-    # we have to live with differences of up to 0.02, given the different results
+    # we have to live with differences of up to 0.020, given the different results
     # returned for SHAP values and SHAP interaction values
     # todo: review accuracy after implementing use of a background dataset
     assert (
@@ -592,167 +599,263 @@ def test_model_inspection_classifier_interaction(
         crossfit=iris_classifier_crossfit_binary,
     )
 
-    synergy_matrix, synergy_matrix_legacy = call_inspector_method_both_algorithms(
-        model_inspector.feature_synergy_matrix, clustered=False, symmetrical=True
-    )
-    assert synergy_matrix_legacy.values == pytest.approx(
-        np.array(
-            [
-                [1.000, 0.047, 0.101, 0.120],
-                [0.047, 1.000, 0.017, 0.021],
-                [0.101, 0.017, 1.000, 0.100],
-                [0.120, 0.021, 0.100, 1.000],
-            ]
-        ),
-        abs=0.02,
-    )
-    assert synergy_matrix.values == pytest.approx(
-        np.array(
-            [
-                [1.000, 0.000, 0.005, 0.007],
-                [0.000, 1.000, 0.004, 0.006],
-                [0.005, 0.004, 1.000, 0.001],
-                [0.007, 0.006, 0.001, 1.000],
-            ]
-        ),
-        abs=0.02,
+    assert model_inspector.feature_importance().values == pytest.approx(
+        np.array([0.063, 0.013, 0.492, 0.431]), abs=0.02
     )
 
-    synergy_matrix, synergy_matrix_legacy = call_inspector_method_both_algorithms(
-        model_inspector.feature_synergy_matrix, clustered=True, symmetrical=False
-    )
-    assert synergy_matrix_legacy.values == pytest.approx(
-        np.array(
-            [
-                [1.0, 0.058, 0.091, 0.008],
-                [0.26, 1.0, 0.257, 0.024],
-                [0.103, 0.078, 1.0, 0.011],
-                [0.28, 0.104, 0.297, 1.0],
-            ]
-        ),
-        abs=0.02,
-    )
-    assert synergy_matrix.values == pytest.approx(
-        np.array(
-            [
-                [1.0, 0.157, 0.001, 0.135],
-                [0.0, 1.0, 0.0, 0.001],
-                [0.0, 0.108, 1.0, 0.101],
-                [0.0, 0.001, 0.0, 1.0],
-            ]
-        ),
-        abs=0.02,
-    )
+    try:
+        synergy_matrix, synergy_matrix_legacy = call_inspector_method_both_algorithms(
+            model_inspector.feature_synergy_matrix, clustered=False, symmetrical=True
+        )
+        assert synergy_matrix_legacy.values == pytest.approx(
+            np.array(
+                [
+                    [1.000, 0.047, 0.101, 0.120],
+                    [0.047, 1.000, 0.017, 0.021],
+                    [0.101, 0.017, 1.000, 0.100],
+                    [0.120, 0.021, 0.100, 1.000],
+                ]
+            ),
+            abs=0.02,
+        )
+        assert synergy_matrix.values == pytest.approx(
+            np.array(
+                [
+                    [1.000, 0.000, 0.005, 0.007],
+                    [0.000, 1.000, 0.004, 0.006],
+                    [0.005, 0.004, 1.000, 0.001],
+                    [0.007, 0.006, 0.001, 1.000],
+                ]
+            ),
+            abs=0.02,
+        )
+        assert model_inspector.feature_synergy_matrix(
+            absolute=True, symmetrical=True
+        ).values == pytest.approx(
+            np.array(
+                [
+                    [0.431, 0.001, 0.000, 0.000],
+                    [0.001, 0.063, 0.002, 0.000],
+                    [0.000, 0.002, 0.492, 0.000],
+                    [0.000, 0.000, 0.000, 0.013],
+                ]
+            ),
+            abs=0.02,
+        )
 
-    redundancy_matrix, redundancy_matrix_legacy = call_inspector_method_both_algorithms(
-        model_inspector.feature_redundancy_matrix, clustered=False, symmetrical=True
-    )
-    assert redundancy_matrix_legacy.values == pytest.approx(
-        np.array(
-            [
-                [1.0, 0.039, 0.181, 0.206],
-                [0.039, 1.0, 0.005, 0.011],
-                [0.181, 0.005, 1.0, 0.792],
-                [0.206, 0.011, 0.792, 1.0],
-            ]
-        ),
-        abs=0.02,
-    )
-    assert redundancy_matrix.values == pytest.approx(
-        np.array(
-            [
-                [1.0, 0.034, 0.304, 0.217],
-                [0.034, 1.0, 0.111, 0.084],
-                [0.304, 0.111, 1.0, 0.733],
-                [0.217, 0.084, 0.733, 1.0],
-            ]
-        ),
-        abs=0.02,
-    )
+        synergy_matrix, synergy_matrix_legacy = call_inspector_method_both_algorithms(
+            model_inspector.feature_synergy_matrix, clustered=True, symmetrical=False
+        )
+        assert synergy_matrix_legacy.values == pytest.approx(
+            np.array(
+                [
+                    [1.000, 0.058, 0.091, 0.008],
+                    [0.260, 1.000, 0.257, 0.024],
+                    [0.103, 0.078, 1.000, 0.011],
+                    [0.280, 0.104, 0.297, 1.000],
+                ]
+            ),
+            abs=0.02,
+        )
+        assert synergy_matrix.values == pytest.approx(
+            np.array(
+                [
+                    [1.000, 0.005, 0.001, 0.000],
+                    [0.000, 1.000, 0.000, 0.000],
+                    [0.001, 0.007, 1.000, 0.002],
+                    [0.000, 0.000, 0.000, 1.000],
+                ]
+            ),
+            abs=0.02,
+        )
+        assert model_inspector.feature_synergy_matrix(
+            absolute=True, symmetrical=False
+        ).values == pytest.approx(
+            np.array(
+                [
+                    [0.431, 0.002, 0.000, 0.000],
+                    [0.000, 0.063, 0.000, 0.000],
+                    [0.000, 0.003, 0.492, 0.001],
+                    [0.000, 0.000, 0.000, 0.013],
+                ]
+            ),
+            abs=0.02,
+        )
 
-    redundancy_matrix, redundancy_matrix_legacy = call_inspector_method_both_algorithms(
-        model_inspector.feature_redundancy_matrix, clustered=True, symmetrical=False
-    )
-    assert redundancy_matrix_legacy.values == pytest.approx(
-        np.array(
-            [
-                [1.0, 0.655, 0.098, 0.002],
-                [0.7, 1.0, 0.111, 0.006],
-                [0.526, 0.494, 1.0, 0.021],
-                [0.081, 0.152, 0.092, 1.0],
-            ]
-        ),
-        abs=0.02,
-    )
-    assert redundancy_matrix.values == pytest.approx(
-        np.array(
-            [
-                [1.0, 0.733, 0.218, 0.085],
-                [0.733, 1.0, 0.305, 0.111],
-                [0.194, 0.274, 1.0, 0.034],
-                [0.071, 0.096, 0.034, 1.0],
-            ]
-        ),
-        abs=0.02,
-    )
+        (
+            redundancy_matrix,
+            redundancy_matrix_legacy,
+        ) = call_inspector_method_both_algorithms(
+            model_inspector.feature_redundancy_matrix, clustered=False, symmetrical=True
+        )
+        assert redundancy_matrix_legacy.values == pytest.approx(
+            np.array(
+                [
+                    [1.000, 0.039, 0.181, 0.206],
+                    [0.039, 1.000, 0.005, 0.011],
+                    [0.181, 0.005, 1.000, 0.792],
+                    [0.206, 0.011, 0.792, 1.000],
+                ]
+            ),
+            abs=0.02,
+        )
+        assert redundancy_matrix.values == pytest.approx(
+            np.array(
+                [
+                    [1.000, 0.005, 0.348, 0.223],
+                    [0.005, 1.000, 0.006, 0.001],
+                    [0.348, 0.006, 1.000, 0.675],
+                    [0.223, 0.001, 0.675, 1.000],
+                ]
+            ),
+            abs=0.02,
+        )
+        assert model_inspector.feature_redundancy_matrix(
+            absolute=True, symmetrical=True
+        ).values == pytest.approx(
+            np.array(
+                [
+                    [0.431, 0.312, 0.055, 0.000],
+                    [0.312, 0.492, 0.097, 0.002],
+                    [0.055, 0.097, 0.063, 0.000],
+                    [0.000, 0.002, 0.000, 0.013],
+                ]
+            ),
+            abs=0.02,
+        )
 
-    (
-        association_matrix,
-        association_matrix_legacy,
-    ) = call_inspector_method_both_algorithms(
-        model_inspector.feature_association_matrix, clustered=False, symmetrical=True
-    )
-    assert association_matrix_legacy.values == pytest.approx(
-        np.array(
-            [
-                [1.0, 0.028, 0.14, 0.128],
-                [0.028, 1.0, 0.005, 0.002],
-                [0.14, 0.005, 1.0, 0.681],
-                [0.128, 0.002, 0.681, 1.0],
-            ]
-        ),
-        abs=0.02,
-    )
-    assert association_matrix.values == pytest.approx(
-        np.array(
-            [
-                [1.0, 0.005, 0.354, 0.227],
-                [0.005, 1.0, 0.008, 0.001],
-                [0.354, 0.008, 1.0, 0.676],
-                [0.227, 0.001, 0.676, 1.0],
-            ]
-        ),
-        abs=0.02,
-    )
+        (
+            redundancy_matrix,
+            redundancy_matrix_legacy,
+        ) = call_inspector_method_both_algorithms(
+            model_inspector.feature_redundancy_matrix, clustered=True, symmetrical=False
+        )
+        assert redundancy_matrix_legacy.values == pytest.approx(
+            np.array(
+                [
+                    [1.000, 0.655, 0.098, 0.002],
+                    [0.700, 1.000, 0.111, 0.006],
+                    [0.526, 0.494, 1.000, 0.021],
+                    [0.081, 0.152, 0.092, 1.000],
+                ]
+            ),
+            abs=0.02,
+        )
+        assert redundancy_matrix.values == pytest.approx(
+            np.array(
+                [
+                    [1.000, 0.675, 0.222, 0.001],
+                    [0.675, 1.000, 0.347, 0.006],
+                    [0.227, 0.354, 1.000, 0.005],
+                    [0.001, 0.008, 0.005, 1.000],
+                ]
+            ),
+            abs=0.02,
+        )
+        assert model_inspector.feature_redundancy_matrix(
+            absolute=True, symmetrical=False
+        ).values == pytest.approx(
+            np.array(
+                [
+                    [0.431, 0.291, 0.096, 0.000],
+                    [0.332, 0.492, 0.171, 0.003],
+                    [0.014, 0.022, 0.063, 0.000],
+                    [0.000, 0.000, 0.000, 0.013],
+                ]
+            ),
+            abs=0.02,
+        )
 
-    (
-        association_matrix,
-        association_matrix_legacy,
-    ) = call_inspector_method_both_algorithms(
-        model_inspector.feature_association_matrix, clustered=True, symmetrical=False
-    )
-    assert association_matrix_legacy.values == pytest.approx(
-        np.array(
-            [
-                [1.0, 0.631, 0.069, -0.001],
-                [0.576, 1.0, 0.076, -0.002],
-                [0.365, 0.442, 1.0, -0.014],
-                [-0.029, -0.096, -0.07, 1.0],
-            ]
-        ),
-        abs=0.02,
-    )
-    assert association_matrix.values == pytest.approx(
-        np.array(
-            [
-                [1.0, 0.676, 0.227, 0.001],
-                [0.676, 1.0, 0.354, 0.008],
-                [0.227, 0.354, 1.0, 0.005],
-                [0.001, 0.008, 0.005, 1.0],
-            ]
-        ),
-        abs=0.02,
-    )
+        (
+            association_matrix,
+            association_matrix_legacy,
+        ) = call_inspector_method_both_algorithms(
+            model_inspector.feature_association_matrix,
+            clustered=False,
+            symmetrical=True,
+        )
+        assert association_matrix_legacy.values == pytest.approx(
+            np.array(
+                [
+                    [1.000, 0.028, 0.140, 0.128],
+                    [0.028, 1.000, 0.005, 0.002],
+                    [0.140, 0.005, 1.000, 0.681],
+                    [0.128, 0.002, 0.681, 1.000],
+                ]
+            ),
+            abs=0.02,
+        )
+        assert association_matrix.values == pytest.approx(
+            np.array(
+                [
+                    [1.000, 0.005, 0.354, 0.227],
+                    [0.005, 1.000, 0.008, 0.001],
+                    [0.354, 0.008, 1.000, 0.676],
+                    [0.227, 0.001, 0.676, 1.000],
+                ]
+            ),
+            abs=0.02,
+        )
+        assert model_inspector.feature_association_matrix(
+            absolute=True, symmetrical=True
+        ).values == pytest.approx(
+            np.array(
+                [
+                    [0.431, 0.312, 0.056, 0.000],
+                    [0.312, 0.492, 0.098, 0.002],
+                    [0.056, 0.098, 0.063, 0.000],
+                    [0.000, 0.002, 0.000, 0.013],
+                ]
+            ),
+            abs=0.02,
+        )
+
+        (
+            association_matrix,
+            association_matrix_legacy,
+        ) = call_inspector_method_both_algorithms(
+            model_inspector.feature_association_matrix,
+            clustered=True,
+            symmetrical=False,
+        )
+        assert association_matrix_legacy.values == pytest.approx(
+            np.array(
+                [
+                    [1.000, 0.631, 0.069, -0.001],
+                    [0.576, 1.000, 0.076, -0.002],
+                    [0.365, 0.442, 1.000, -0.014],
+                    [-0.029, -0.096, -0.070, 1.000],
+                ]
+            ),
+            abs=0.02,
+        )
+        assert association_matrix.values == pytest.approx(
+            np.array(
+                [
+                    [1.000, 0.676, 0.227, 0.001],
+                    [0.676, 1.000, 0.354, 0.008],
+                    [0.227, 0.354, 1.000, 0.005],
+                    [0.001, 0.008, 0.005, 1.000],
+                ]
+            ),
+            abs=0.02,
+        )
+        assert model_inspector.feature_association_matrix(
+            absolute=True, symmetrical=False
+        ).values == pytest.approx(
+            np.array(
+                [
+                    [0.431, 0.291, 0.098, 0.000],
+                    [0.333, 0.492, 0.174, 0.004],
+                    [0.014, 0.022, 0.063, 0.000],
+                    [0.000, 0.000, 0.000, 0.013],
+                ]
+            ),
+            abs=0.02,
+        )
+    except AssertionError as error:
+        print_expected_matrix(error=error)
+        raise
 
     linkage_tree = model_inspector.feature_redundancy_linkage()
 
@@ -810,7 +913,12 @@ def test_shap_plot_data(
     assert_series_equal(shap_plot_data.target, iris_sample.target.loc[shap_index])
 
 
-def _fit_learner_ranker(
+#
+# Utility functions
+#
+
+
+def fit_learner_ranker(
     sample: Sample, cv: BaseCrossValidator, n_jobs: int
 ) -> LearnerRanker[ClassifierPipelineDF[RandomForestClassifierDF]]:
     # define parameters and crossfit
@@ -849,3 +957,27 @@ def call_inspector_method_both_algorithms(
         inspector._legacy = legacy
 
     return result, legacy_result
+
+
+def print_expected_matrix(error: AssertionError, split: bool = False):
+    # used to print expected output for copy/paste into assertion statement
+
+    import re
+
+    matrix: List[List[float]] = eval(
+        re.search(r"array\(([^)]+)\)", error.args[0])[1].replace(r"\n", "\n")
+    )
+
+    print("==== matrix assertion failed ====")
+    print("[")
+    for row in matrix:
+        txt = "    ["
+        halfpoint = len(row) // 2
+        for i, x in enumerate(row):
+            if split and i == halfpoint:
+                txt += "] + ["
+            elif i > 0:
+                txt += ","
+            txt += f"{x:.3f}"
+        print(txt + "],")
+    print("]")
