@@ -229,7 +229,7 @@ class SimulationMatplotStyle(MatplotStyle, SimulationStyle):
 
         ax = _make_sub_axes()
 
-        self._apply_color_scheme(ax)
+        self.apply_color_scheme(ax)
 
         ax.invert_yaxis()
 

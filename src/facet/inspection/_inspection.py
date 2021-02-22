@@ -337,7 +337,7 @@ class LearnerInspector(
         return self._shap_calculator.output_names_
 
     @property
-    def features(self) -> List[str]:
+    def features_(self) -> List[str]:
         """
         The names of the features used to fit the learner pipeline explained by this
         inspector.
@@ -713,7 +713,7 @@ class LearnerInspector(
             (n_features, n_outputs * n_features)
         """
 
-        n_features = len(self.features)
+        n_features = len(self.features_)
         n_outputs = len(self.output_names_)
 
         # get a feature interaction array with shape

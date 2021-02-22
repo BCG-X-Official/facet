@@ -141,7 +141,7 @@ def test_model_inspection(
     assert shap_values_mean.columns.names == [Sample.IDX_FEATURE]
     assert shap_values_std.index.names == [Sample.IDX_OBSERVATION]
     assert shap_values_std.columns.names == [Sample.IDX_FEATURE]
-    assert shap_values_raw.index.names == (["split", "observation"])
+    assert shap_values_raw.index.names == ["split", "observation"]
     assert shap_values_raw.columns.names == [Sample.IDX_FEATURE]
 
     # column index

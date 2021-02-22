@@ -20,7 +20,7 @@ import numpy as np
 import pandas as pd
 
 from pytools.api import AllTracker, inheritdoc
-from pytools.parallelization import ParallelizableMixin
+from pytools.parallelization import Job, JobRunner, ParallelizableMixin
 from sklearndf import LearnerDF
 from sklearndf.pipeline import (
     ClassifierPipelineDF,
@@ -341,9 +341,9 @@ class BaseUnivariateSimulator(
         sample = self.crossfit.sample_
         y_mean = self.expected_output()
 
-        with self._parallel() as parallel:
-            result: List[float] = parallel(
-                self._delayed(self._simulate_actuals)(
+        result: List[float] = JobRunner.from_parallelizable(self).run_jobs(
+            *(
+                Job.delayed(self._simulate_actuals)(
                     model, subsample.features, y_mean, self._simulate
                 )
                 for (model, (_, test_indices)) in zip(
@@ -351,6 +351,7 @@ class BaseUnivariateSimulator(
                 )
                 for subsample in (sample.subsample(iloc=test_indices),)
             )
+        )
 
         return pd.Series(data=result, name=COL_OUTPUT).rename_axis(index=IDX_SPLIT)
 
@@ -410,9 +411,11 @@ class BaseUnivariateSimulator(
         if feature_name not in sample.features.columns:
             raise ValueError(f"Feature '{feature_name}' not in sample")
 
-        with self._parallel() as parallel:
-            simulation_results_per_split: List[np.ndarray] = parallel(
-                self._delayed(UnivariateUpliftSimulator._simulate_values_for_split)(
+        simulation_results_per_split: List[np.ndarray] = JobRunner.from_parallelizable(
+            self
+        ).run_jobs(
+            *(
+                Job.delayed(UnivariateUpliftSimulator._simulate_values_for_split)(
                     model=model,
                     subsample=sample.subsample(iloc=test_indices),
                     feature_name=feature_name,
@@ -423,6 +426,7 @@ class BaseUnivariateSimulator(
                     self.crossfit.models(), self.crossfit.splits()
                 )
             )
+        )
 
         return pd.DataFrame(
             simulation_results_per_split, columns=simulation_values

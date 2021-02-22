@@ -1,10 +1,10 @@
 trigger:
   - master
-  - develop
+  - 1.1.x
 
 pr:
   - master
-  - develop
+  - 1.1.x
 
 # set the build name
 name: $[ variables['branchName'] ]
@@ -15,7 +15,7 @@ schedules:
   displayName: Nightly full build
   branches:
     include:
-    - develop
+    - 1.1.x
 
 resources:
   repositories:
@@ -23,12 +23,12 @@ resources:
       type: github
       endpoint: BCG-Gamma
       name: BCG-Gamma/sklearndf
-      ref: develop # todo - update to stable release
+      ref: 1.1.x # todo - update to stable release
     - repository: pytools
       type: github
       endpoint: BCG-Gamma
       name: BCG-Gamma/pytools
-      ref: develop # todo - update to stable release
+      ref: 1.1.x # todo - update to stable release
 
 variables:
   ${{ if not(startsWith(variables['Build.SourceBranch'], 'refs/pull/')) }}:
