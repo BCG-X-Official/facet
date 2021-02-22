@@ -18,9 +18,9 @@ from sklearndf.pipeline import (
     RegressorPipelineDF,
 )
 
+from ..crossfit import LearnerCrossfit
+from ..data import Sample
 from ._explainer import BaseExplainer, ExplainerFactory
-from facet.crossfit import LearnerCrossfit
-from facet.data import Sample
 
 log = logging.getLogger(__name__)
 

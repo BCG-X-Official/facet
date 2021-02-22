@@ -32,7 +32,6 @@ dependencies:
   - scikit-learn >=0.23.1,<0.24
   - scipy >= 1.5
   - seaborn = 0.11.*
-  - shap >= 0.35
   - sklearndf >=1.0,<2
   - sphinx = 3.4.*
   - sphinx-autodoc-typehints = 1.11.*
@@ -42,3 +41,5 @@ dependencies:
   - typing_inspect >= 0.4
   - xlrd >= 1.2
   - yaml > 0.2
+  - pip:
+      - shap >=0.35,<0.39

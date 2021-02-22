@@ -21,7 +21,7 @@ requires = [
     "packaging      >=20",
     "pandas         >=0.24,<1.3",
     "scipy          >=1.2,<1.6",
-    "shap           >=0.34,<0.38",
+    "shap           >=0.34,<0.39",
     "sklearndf      >=1.0.1,<2",
     # additional requirements of sklearndf
     "boruta         >=0.3",
@@ -30,6 +30,9 @@ requires = [
     # additional requirements of gamma-pytools
     "joblib         >=0.14,<1.1",
     "typing_inspect >=0.4,<0.7",
+    # additional requirements of shap 0.38
+    # todo: remove once supported via shap 0.38 requirements
+    "ipython        >=7",
 ]
 
 requires-python = ">=3.6,<3.9"
@@ -100,7 +103,7 @@ packaging      = ">=20"
 pandas         = "<1.3"
 python         = "=3.8.*"
 scipy          = "<1.6"
-shap           = "=0.37.*"
+shap           = ">=0.37,<0.39"
 sklearndf      = ">=1.1,<2"
 # additional requirements of sklearndf
 boruta         = ">=0.3"
