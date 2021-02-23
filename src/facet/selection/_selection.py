@@ -240,8 +240,8 @@ class LearnerRanker(
     using cross-validation.
 
     The learner ranker can run a simultaneous grid search across multiple alternative
-    learner pipelines, supporting the ability to optimize hyper-parameters and
-    select a learner algorithm.
+    learner pipelines, supporting the ability to simultaneously select a learner
+    algorithm and optimize hyper-parameters.
     """
 
     def __init__(
