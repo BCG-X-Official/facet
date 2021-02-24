@@ -5,10 +5,7 @@ import logging
 from typing import Set, Tuple, Union
 
 import numpy as np
-import pandas as pd
-import pytest
 
-from pytools.viz.dendrogram import LinkageTree
 from sklearndf.pipeline import RegressorPipelineDF
 
 from facet.crossfit import LearnerCrossfit
@@ -94,6 +91,12 @@ def test_shap_decomposition(regressor_inspector: LearnerInspector) -> None:
             red_asym / (red_asym + uni_asym),
         )
 
+    regressor_inspector._legacy = True
+    syn_matrix = regressor_inspector.feature_synergy_matrix(symmetrical=True)
+    red_matrix = regressor_inspector.feature_redundancy_matrix(symmetrical=True)
+    syn_matrix_asym = regressor_inspector.feature_synergy_matrix()
+    red_matrix_asym = regressor_inspector.feature_redundancy_matrix()
+
     for i, j, indirect_syn in [
         ("LSTAT", "RM", False),
         ("LSTAT", "DIS", True),
@@ -110,11 +113,6 @@ def test_shap_decomposition(regressor_inspector: LearnerInspector) -> None:
         syn_rel, red_rel, syn_rel_asym, red_rel_asym = _calculate_relative_syn_and_red(
             feature_x=i, feature_y=j, is_indirect_syn_valid=indirect_syn
         )
-
-        syn_matrix = regressor_inspector.feature_synergy_matrix(symmetrical=True)
-        red_matrix = regressor_inspector.feature_redundancy_matrix(symmetrical=True)
-        syn_matrix_asym = regressor_inspector.feature_synergy_matrix()
-        red_matrix_asym = regressor_inspector.feature_redundancy_matrix()
 
         print_list(
             syn_rel=syn_rel,
@@ -157,15 +155,11 @@ def test_shap_decomposition_matrices(
     regressor_inspector: LearnerInspector,
 ) -> None:
     # Shap decomposition matrices (feature dependencies)
-    association_matrix: pd.DataFrame = regressor_inspector.feature_association_matrix(
-        clustered=False, symmetrical=True
-    )
-
     # check that dimensions of pairwise feature matrices are equal to # of features,
     # and value ranges:
     for matrix, matrix_name in zip(
         (
-            association_matrix,
+            regressor_inspector.feature_association_matrix(),
             regressor_inspector.feature_synergy_matrix(),
             regressor_inspector.feature_redundancy_matrix(),
         ),
@@ -184,45 +178,6 @@ def test_shap_decomposition_matrices(
                 <= matrix.fillna(0).loc[:, c].max()
                 <= 1.0
             ), f"Values of [0.0, 1.0] in {matrix_full_name}"
-
-    # check actual values:
-    assert association_matrix.values == pytest.approx(
-        np.array(
-            [
-                [1.0, 0.043, 0.233, 0.0, 0.162, 0.078]
-                + [0.192, 0.156, 0.009, 0.022, 0.035, 0.008, 0.07],
-                [0.043, 1.0, 0.155, 0.0, 0.056, 0.055]
-                + [0.017, 0.225, 0.024, 0.021, 0.049, 0.145, 0.034],
-                [0.233, 0.155, 1.0, 0.0, 0.123, 0.207]
-                + [0.15, 0.044, 0.069, 0.225, 0.241, 0.149, 0.209],
-                [0.0, 0.0, 0.0, 1.0, 0.0, 0.0] + [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-                [0.162, 0.056, 0.123, 0.0, 1.0, 0.051]
-                + [0.017, 0.156, 0.19, 0.08, 0.15, 0.025, 0.029],
-                [0.078, 0.055, 0.207, 0.0, 0.051, 1.0]
-                + [0.088, 0.005, 0.081, 0.14, 0.027, 0.058, 0.49],
-                [0.192, 0.017, 0.15, 0.0, 0.017, 0.088]
-                + [1.0, 0.128, 0.015, 0.269, 0.14, 0.096, 0.295],
-                [0.156, 0.225, 0.044, 0.0, 0.156, 0.005]
-                + [0.128, 1.0, 0.255, 0.158, 0.273, 0.132, 0.023],
-                [0.009, 0.024, 0.069, 0.0, 0.19, 0.081]
-                + [0.015, 0.255, 1.0, 0.223, 0.188, 0.035, 0.049],
-                [0.022, 0.021, 0.225, 0.0, 0.08, 0.14]
-                + [0.269, 0.158, 0.223, 1.0, 0.284, 0.182, 0.097],
-                [0.035, 0.049, 0.241, 0.0, 0.15, 0.027]
-                + [0.14, 0.273, 0.188, 0.284, 1.0, 0.027, 0.031],
-                [0.008, 0.145, 0.149, 0.0, 0.025, 0.058]
-                + [0.096, 0.132, 0.035, 0.182, 0.027, 1.0, 0.057],
-                [0.07, 0.034, 0.209, 0.0, 0.029, 0.49]
-                + [0.295, 0.023, 0.049, 0.097, 0.031, 0.057, 1.0],
-            ]
-        ),
-        abs=0.02,
-    )
-
-    # cluster associated features
-    association_linkage = regressor_inspector.feature_association_linkage()
-
-    assert isinstance(association_linkage, LinkageTree)
 
 
 #
