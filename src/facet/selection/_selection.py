@@ -208,9 +208,11 @@ class LearnerEvaluation(Generic[T_LearnerPipelineDF]):
         :param pipeline: the unfitted learner pipeline
         :param parameters: the hyper-parameters for which the learner pipeline was
             scored, as a mapping of parameter names to parameter values
+        :param scoring_name: the name of the scoring function used to calculate the
+            scores
         :param scores: the scores of all crossfits of the learner pipeline
         :param ranking_score: the aggregate score determined by the ranking
-            metric of the :class:`.LearnerRanker`, used for ranking the learners
+            metric of :class:`.LearnerRanker`, used for ranking the learners
         """
         super().__init__()
 
@@ -226,8 +228,8 @@ class LearnerEvaluation(Generic[T_LearnerPipelineDF]):
         #: The scores of all crossfits of the learner pipeline.
         self.scores = scores
 
-        #: Overall score determined by the :class:`.LearnerRanker`, used for ranking
-        #: the learners.
+        #: The aggregate score determined by the ranking metric of
+        #: :class:`.LearnerRanker`, used for ranking the learners.
         self.ranking_score = ranking_score
 
 
@@ -385,7 +387,7 @@ class LearnerRanker(
         """
         return scores.mean() - 2 * scores.std(ddof=1)
 
-    def fit(self: T_Self, sample: Sample, **fit_params) -> T_Self:
+    def fit(self: T_Self, sample: Sample, **fit_params: Any) -> T_Self:
         """
         Rank the candidate learners and their hyper-parameter combinations using
         crossfits from the given sample.
@@ -395,6 +397,7 @@ class LearnerRanker(
 
         :param sample: the sample from which to fit the crossfits
         :param fit_params: any fit parameters to pass on to the learner's fit method
+        :return: ``self``
         """
         self: LearnerRanker[T_LearnerPipelineDF]  # support type hinting in PyCharm
 

@@ -5,7 +5,7 @@ redundancy, and independence.
 """
 import logging
 from abc import ABCMeta, abstractmethod
-from typing import List, Optional, TypeVar, Union
+from typing import Any, List, Optional, TypeVar, Union
 
 import numpy as np
 import pandas as pd
@@ -127,7 +127,7 @@ class ShapGlobalExplainer(FittableMixin[ShapCalculator], metaclass=ABCMeta):
         """[see superclass]"""
         return self.feature_index_ is not None
 
-    def fit(self: T_Self, shap_calculator: ShapCalculator, **fit_params) -> T_Self:
+    def fit(self: T_Self, shap_calculator: ShapCalculator, **fit_params: Any) -> T_Self:
         """
         Calculate the SHAP decomposition for the shap values produced by the
         given SHAP calculator.

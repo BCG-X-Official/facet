@@ -5,7 +5,7 @@ Core implementation of :mod:`facet.simulation.partition`
 import logging
 import math
 from abc import ABCMeta, abstractmethod
-from typing import Generic, Iterable, Optional, Sequence, Tuple, TypeVar
+from typing import Any, Generic, Iterable, Optional, Sequence, Tuple, TypeVar
 
 import numpy as np
 import pandas as pd
@@ -54,7 +54,7 @@ class Partitioner(
 
     DEFAULT_MAX_PARTITIONS = 20
 
-    def __init__(self, max_partitions: Optional[int] = None):
+    def __init__(self, max_partitions: Optional[int] = None) -> None:
         """
         :param max_partitions: the maximum number of partitions to generate; must
             be at least 2 (default: {DEFAULT_MAX_PARTITIONS})
@@ -105,12 +105,13 @@ class Partitioner(
         """
 
     @abstractmethod
-    def fit(self: T_Self, values: Iterable[T_Values], **fit_params) -> T_Self:
+    def fit(self: T_Self, values: Iterable[T_Values], **fit_params: Any) -> T_Self:
         """
         Calculate the partitioning for the given observed values.
 
         :param values: a sequence of observed values as the empirical basis for
             calculating the partitions
+        :param fit_params: optional fitting parameters
         :return: ``self``
         """
 
@@ -217,7 +218,7 @@ class RangePartitioner(
     def fit(
         self: T_Self,
         values: Iterable[T_Values],
-        **fit_params,
+        **fit_params: Any,
     ) -> T_Self:
         """[see superclass]"""
 
@@ -258,7 +259,7 @@ class RangePartitioner(
         last_partition = math.ceil((upper_bound - step / 2) / step) * step
         n_partitions = int(round((last_partition - first_partition) / self._step)) + 1
 
-        self._partitions = np.round(
+        self._partitions = partitions = np.round(
             first_partition + np.arange(n_partitions) * self._step,
             # round to the nearest power of 10 of the step variable
             int(-np.floor(np.log10(self._step))),
@@ -268,7 +269,7 @@ class RangePartitioner(
         center_offset_right = self._step - center_offset_left
         self._partition_bounds = [
             (center - center_offset_left, center + center_offset_right)
-            for center in self.partitions_
+            for center in partitions
         ]
 
         # calculate the number of elements in each partitions
@@ -287,6 +288,7 @@ class RangePartitioner(
 
         return self
 
+    @property
     def is_fitted(self) -> bool:
         """[see superclass]"""
         return self._frequencies is not None
@@ -427,7 +429,7 @@ class CategoryPartitioner(Partitioner[T_Values]):
         return self._frequencies
 
     # noinspection PyMissingOrEmptyDocstring
-    def fit(self: T_Self, values: Sequence[T_Values], **fit_params) -> T_Self:
+    def fit(self: T_Self, values: Sequence[T_Values], **fit_params: Any) -> T_Self:
         """[see superclass]"""
 
         self: CategoryPartitioner  # support type hinting in PyCharm

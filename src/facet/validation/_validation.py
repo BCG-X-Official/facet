@@ -41,7 +41,7 @@ class BaseBootstrapCV(BaseCrossValidator, metaclass=ABCMeta):
         self,
         n_splits: int = 1000,
         random_state: Optional[Union[int, np.random.RandomState]] = None,
-    ):
+    ) -> None:
         """
         :param n_splits: number of splits to generate (default: 1000)
         :param random_state: random state to initialise the random generator with
@@ -268,7 +268,7 @@ class FullSampleValidator(BaseCrossValidator):
     on the full sample for fast indicative results.
     """
 
-    def __init__(self, n_splits: int = 1):
+    def __init__(self, n_splits: int = 1) -> None:
         """
         :param n_splits: number of identical, full-sample "splits" to generate
             (default: 1)

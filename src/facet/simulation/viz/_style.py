@@ -373,9 +373,9 @@ class SimulationReportStyle(SimulationStyle, TextStyle):
             )
         )
 
-    def finalize_drawing(self) -> None:
+    def finalize_drawing(self, **kwargs: Any) -> None:
         """[see superclass]"""
-        super().finalize_drawing()
+        super().finalize_drawing(**kwargs)
         # print two trailing line breaks
         self.out.write("\n")
 
