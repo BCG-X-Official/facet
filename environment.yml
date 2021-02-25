@@ -30,7 +30,7 @@ dependencies:
   - python = 3.8.*
   - pyyaml >= 5.1
   - scikit-learn >=0.23.1,<0.24
-  - scipy >= 1.5
+  - scipy = 1.5.* # todo: upgrade to 1.6 once we support scikit-learn 0.24
   - seaborn = 0.11.*
   - sklearndf >=1.0,<2
   - sphinx = 3.4.*
