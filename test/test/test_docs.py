@@ -2,7 +2,7 @@
 Test docstrings.
 """
 
-from pytools.api.doc import DocValidator
+from pytools.api import DocValidator
 
 
 def test_docstrings() -> None:
