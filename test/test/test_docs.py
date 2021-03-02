@@ -1,5 +1,5 @@
 """
-Test docstrings.
+Validate docstrings and type hints.
 """
 
 from pytools.api import DocValidator
