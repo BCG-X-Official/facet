@@ -252,7 +252,6 @@ class LearnerRanker(
         cv: Optional[BaseCrossValidator],
         scoring: Union[str, Callable[[float, float], float], None] = None,
         ranking_scorer: Callable[[np.ndarray], float] = None,
-        shuffle_features: Optional[bool] = None,
         random_state: Union[int, RandomState, None] = None,
         n_jobs: Optional[int] = None,
         shared_memory: Optional[bool] = None,
@@ -273,8 +272,6 @@ class LearnerRanker(
             The resulting score is used to rank all crossfits (highest score is best).
             Defaults to :meth:`.default_ranking_scorer`, calculating
             `mean(scores) - 2 * std(scores, ddof=1)`
-        :param shuffle_features: if ``True``, shuffle column order of features for
-            every crossfit (default: ``False``)
         :param random_state: optional random seed or random state for shuffling the
             feature column order
         """
@@ -308,7 +305,6 @@ class LearnerRanker(
             if ranking_scorer is None
             else ranking_scorer
         )
-        self.shuffle_features = shuffle_features
         self.random_state = random_state
 
         # initialise state
@@ -504,7 +500,6 @@ class LearnerRanker(
             LearnerCrossfit(
                 pipeline=pipeline,
                 cv=self.cv,
-                shuffle_features=self.shuffle_features,
                 random_state=self.random_state,
                 n_jobs=self.n_jobs,
                 shared_memory=self.shared_memory,

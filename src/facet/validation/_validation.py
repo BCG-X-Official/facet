@@ -264,8 +264,7 @@ class FullSampleValidator(BaseCrossValidator):
     test and in train.
 
     This can be useful to construct a :class:`.LearnerCrossfit` which
-    only shuffles the feature order across fits, or to inspect a single model fitted
-    on the full sample for fast indicative results.
+    inspects a single model fitted on the full sample for quick, indicative results.
     """
 
     def __init__(self, n_splits: int = 1):
@@ -311,7 +310,7 @@ class FullSampleValidator(BaseCrossValidator):
         """
         indices = np.arange(len(X))
         for i in range(self.n_splits):
-            yield (indices, indices)
+            yield indices, indices
 
     # noinspection PyPep8Naming
     def _iter_test_indices(self, X=None, y=None, groups=None) -> Iterator:

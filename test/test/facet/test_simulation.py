@@ -44,7 +44,6 @@ def crossfit(
             ),
         ),
         cv=StationaryBootstrapCV(n_splits=N_SPLITS, random_state=42),
-        shuffle_features=False,
         n_jobs=n_jobs,
     ).fit(sample=sample)
 

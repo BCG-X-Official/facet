@@ -28,7 +28,6 @@ from numpy.random.mtrand import RandomState
 from sklearn.base import BaseEstimator
 from sklearn.metrics import check_scoring
 from sklearn.model_selection import BaseCrossValidator
-from sklearn.utils import check_random_state
 
 from pytools.api import AllTracker, inheritdoc
 from pytools.fit import FittableMixin
@@ -94,7 +93,6 @@ class _FitScoreParameters(NamedTuple):
 
     # fit parameters
     train_features: Optional[pd.DataFrame]
-    train_feature_sequence: Optional[pd.Index]
     train_target: Union[pd.Series, pd.DataFrame, None]
     train_weight: Optional[pd.Series]
 
@@ -137,7 +135,6 @@ class LearnerCrossfit(
         pipeline: T_LearnerPipelineDF,
         cv: BaseCrossValidator,
         *,
-        shuffle_features: Optional[bool] = None,
         random_state: Union[int, RandomState, None] = None,
         n_jobs: Optional[int] = None,
         shared_memory: Optional[bool] = None,
@@ -147,8 +144,6 @@ class LearnerCrossfit(
         """
         :param pipeline: learner pipeline to be fitted
         :param cv: the cross-validator generating the train splits
-        :param shuffle_features: if ``True``, shuffle column order of features for
-            every crossfit (default: ``False``)
         :param random_state: optional random seed or random state for shuffling the
             feature column order
         """
@@ -168,10 +163,6 @@ class LearnerCrossfit(
                 "arg cv must be a cross-validator implementing method split()"
             )
         self.cv = cv
-
-        self.shuffle_features: bool = (
-            False if shuffle_features is None else shuffle_features
-        )
 
         self.random_state = random_state
 
@@ -432,23 +423,17 @@ class LearnerCrossfit(
         # generate parameter objects for fitting and/or scoring each split
 
         def _generate_parameters() -> Iterator[_FitScoreParameters]:
-            learner_features = pipeline.feature_names_out_
-            n_learner_features = len(learner_features)
-            test_scores = do_score and not _train_scores
-            models = iter(lambda: None, 0) if do_fit else self.models()
-            random_state = check_random_state(self.random_state)
-            weigh_samples = sample_weight is not None
+            test_scores: bool = do_score and not _train_scores
+            models: Iterable[T_LearnerPipelineDF] = (
+                iter(lambda: None, 0) if do_fit else self.models()
+            )
+            weigh_samples: bool = sample_weight is not None
 
             for (train, test), model in zip(splits, models):
                 yield _FitScoreParameters(
                     pipeline=pipeline.clone() if do_fit else model,
                     train_features=(
                         features.iloc[train] if do_fit or _train_scores else None
-                    ),
-                    train_feature_sequence=(
-                        learner_features[random_state.permutation(n_learner_features)]
-                        if do_fit and self.shuffle_features
-                        else None
                     ),
                     train_target=target.iloc[train] if do_fit else None,
                     train_weight=(
@@ -539,7 +524,6 @@ class _FitAndScoreModelForSplit(Job[FitResult]):
             pipeline = parameters.pipeline.fit(
                 X=parameters.train_features,
                 y=parameters.train_target,
-                feature_sequence=parameters.train_feature_sequence,
                 sample_weight=parameters.train_weight,
                 **self.fit_params,
             )
