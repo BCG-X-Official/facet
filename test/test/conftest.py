@@ -178,7 +178,6 @@ def best_lgbm_crossfit(
     return LearnerCrossfit(
         pipeline=best_lgbm_regressor,
         cv=cv_kfold,
-        shuffle_features=True,
         random_state=42,
         n_jobs=n_jobs,
     ).fit(sample=sample)

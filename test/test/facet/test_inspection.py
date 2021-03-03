@@ -936,7 +936,6 @@ def fit_learner_ranker(
         grids=grids,
         cv=cv,
         scoring="f1_macro",
-        # shuffle_features=True,
         random_state=42,
         n_jobs=n_jobs,
     ).fit(sample=sample)
