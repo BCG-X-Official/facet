@@ -4,7 +4,18 @@ Implementation of FACET's :class:`.Sample` class.
 
 import logging
 from copy import copy
-from typing import Any, Collection, Iterable, List, Optional, Sequence, Set, Union
+from typing import (
+    Any,
+    Collection,
+    Dict,
+    Iterable,
+    List,
+    Optional,
+    Sequence,
+    Set,
+    Tuple,
+    Union,
+)
 
 import pandas as pd
 
@@ -12,7 +23,7 @@ from pytools.api import AllTracker, to_list, to_set
 
 log = logging.getLogger(__name__)
 
-__all__ = ["Sample"]
+__all__ = ["Sample", "SampleBalancer"]
 
 
 #
@@ -322,6 +333,67 @@ class Sample:
 
     def __len__(self) -> int:
         return len(self._observations)
+
+
+class SampleBalancer:
+    """
+    Balances the observations of a :class:`.Sample` using over/undersampling based
+    on either class frequency (binary/ multi class target variable) or on range
+    partitioning (numeric target variable).
+    """
+
+    @staticmethod
+    def balance_binary_target(
+        sample: Sample,
+        class_ratio: float,
+        downsample: bool = True,
+        max_obs: int = None,
+    ) -> Sample:
+        """
+        Balance the observations of a :class:`.Sample` for binary targets.
+
+        :param sample: An input :class:`.Sample` object to balance
+        :param class_ratio: The desired target class ratio after balancing, e.g. use 0.1
+            to specify a target distribution in which the majority class occurs 10X of the
+            minority class
+        :param downsample: boolean parameter, whether majority class should be
+            downsampled, or minority class should be upsampled
+        :param max_obs: an (optional) integer to put an upper limit on total sample size
+        :return:
+        """
+        pass
+
+    @staticmethod
+    def balance_multiclass_target(
+        sample: Sample,
+        class_ratio: Union[float, Dict[Any, float]],
+        downsample: bool = True,
+        max_obs: int = None,
+    ) -> Sample:
+        """
+        Balance the observations of a :class:`.Sample` for multi class targets.
+
+        :param sample: An input :class:`.Sample` object to balance
+        :param class_ratio: The desired target class ratio after balancing, e.g. use
+            0.1 to specify a target distribution in which the majority class occurs 10X
+            of each minority class.
+            A dictionary of structure <class-label> => <ratio-of-majority-class> can be
+            passed to set class specific over-/undersampling amounts.
+        :param downsample: boolean parameter, whether majority class should be
+            downsampled, or minority class should be upsampled
+        :param max_obs: an (optional) integer to put an upper limit on total sample size
+        :return:
+        """
+        pass
+
+    @staticmethod
+    def balance_numeric_target(sample: Sample) -> Sample:
+        """
+        Balance the observations of a :class:`.Sample` for numeric targets.
+        TBD
+        :return:
+        """
+        pass
 
 
 __tracker.validate()
