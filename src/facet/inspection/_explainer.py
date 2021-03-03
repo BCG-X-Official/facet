@@ -5,7 +5,7 @@ Factories for SHAP explainers from the ``shap`` package.
 import functools
 import logging
 from abc import ABCMeta, abstractmethod
-from typing import Any, Dict, Mapping, Optional, Union
+from typing import Any, Dict, List, Mapping, Optional, Union
 
 import numpy as np
 import pandas as pd
@@ -85,8 +85,8 @@ class BaseExplainer(metaclass=ABCMeta):
         self,
         X: Union[np.ndarray, pd.DataFrame, "catboost.Pool"],  # noqa: F821
         y: Union[None, np.ndarray, pd.Series] = None,
-        **kwargs,
-    ) -> np.ndarray:
+        **kwargs: Any,
+    ) -> Union[np.ndarray, List[np.ndarray]]:
         """
         Estimate the SHAP values for a set of samples.
 
@@ -94,6 +94,9 @@ class BaseExplainer(metaclass=ABCMeta):
             model's output
         :param y: array of label values for each sample, used when explaining loss
             functions
+        :param kwargs: additional arguments specific to the explainer implementation
+        :return: SHAP values as an array of shape `(n_observations, n_features)`;
+            a list of such arrays in the case of a multi-output model
         """
         pass
 
@@ -103,8 +106,8 @@ class BaseExplainer(metaclass=ABCMeta):
         self,
         X: Union[np.ndarray, pd.DataFrame, "catboost.Pool"],  # noqa: F821
         y: Union[None, np.ndarray, pd.Series] = None,
-        **kwargs,
-    ) -> np.ndarray:
+        **kwargs: Any,
+    ) -> Union[np.ndarray, List[np.ndarray]]:
         """
         Estimate the SHAP interaction values for a set of samples.
 
@@ -112,6 +115,10 @@ class BaseExplainer(metaclass=ABCMeta):
             model's output
         :param y: array of label values for each sample, used when explaining loss
             functions
+        :param kwargs: additional arguments specific to the explainer implementation
+        :return: SHAP values as an array of shape
+            `(n_observations, n_features, n_features)`;
+            a list of such arrays in the case of a multi-output model
         """
         pass
 

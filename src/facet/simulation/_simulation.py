@@ -113,6 +113,13 @@ class UnivariateSimulationResult(Generic[T_Partition]):
     #: determined by bootstrapping, with :math:`0 < \alpha < 1`.
     confidence_level: float
 
+    #: The partitioner used to generate feature values to be simulated.
+    partitioner: Partitioner
+
+    #: The matrix of simulated outcomes, with columns representing partitions
+    #: and rows representing bootstrap splits used to fit variations of the model.
+    outputs: pd.DataFrame
+
     def __init__(
         self,
         *,
@@ -133,6 +140,8 @@ class UnivariateSimulationResult(Generic[T_Partition]):
             of the simulation
         :param confidence_level: the width of the confidence interval determined by
             bootstrapping, ranging between 0.0 and 1.0 (exclusive)
+        :param partitioner: the partitioner used to generate feature values to be
+            simulated
         :param outputs: matrix of simulated outcomes, with columns representing
             partitions and rows representing bootstrap splits used to fit variations
             of the model
@@ -154,31 +163,8 @@ class UnivariateSimulationResult(Generic[T_Partition]):
         self.output_unit = output_unit
         self.baseline = baseline
         self.confidence_level = confidence_level
-        self._partitioner = partitioner
-        self._outputs = outputs
-
-    @property
-    def partitioner(self) -> Partitioner:
-        """
-        The partitioner used to generate feature values to be simulated.
-        """
-        return self._partitioner
-
-    @partitioner.setter
-    def partitioner(self, partitioner: Partitioner) -> None:
-        self._partitioner = partitioner
-
-    @property
-    def outputs(self) -> pd.DataFrame:
-        """
-        The matrix of simulated outcomes, with columns representing partitions
-        and rows representing bootstrap splits used to fit variations of the model.
-        """
-        return self._outputs
-
-    @outputs.setter
-    def outputs(self, outputs: pd.DataFrame) -> None:
-        self._outputs = outputs
+        self.partitioner = partitioner
+        self.outputs = outputs
 
     def outputs_median(self) -> pd.Series:
         """
@@ -231,7 +217,7 @@ class BaseUnivariateSimulator(
         shared_memory: Optional[bool] = None,
         pre_dispatch: Optional[Union[str, int]] = None,
         verbose: Optional[int] = None,
-    ):
+    ) -> None:
         """
         :param crossfit: cross-validated crossfit of a model for all observations
             in a given sample
@@ -295,8 +281,7 @@ class BaseUnivariateSimulator(
 
         :param feature_name: the feature to run the simulation for
         :param partitioner: the partitioner of feature values to run simulations for
-
-        :return a mapping of output names to simulation results
+        :return: a mapping of output names to simulation results
         """
 
         sample = self.crossfit.sample_

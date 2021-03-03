@@ -41,7 +41,8 @@ test:
     - python -c 'import facet;
                  import os;
                  assert facet.__version__ == os.environ["PKG_VERSION"]'
-    - pytest -vs ${FACET_PATH}/facet/test
+    - cd "${FACET_PATH}/facet"
+    - pytest -vs test
 
 about:
   home: https://github.com/BCG-Gamma/facet

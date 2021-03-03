@@ -67,7 +67,7 @@ class ShapPlotData:
 
     def __init__(
         self, shap_values: Union[np.ndarray, List[np.ndarray]], sample: Sample
-    ):
+    ) -> None:
         """
         :param shap_values: the shap values for all observations and outputs
         :param sample: (sub)sample of all observations for which SHAP values are
@@ -264,7 +264,7 @@ class LearnerInspector(
         + ParallelizableMixin.__init__.__doc__
     )
 
-    def fit(self: T_Self, crossfit: LearnerCrossfit, **fit_params) -> T_Self:
+    def fit(self: T_Self, crossfit: LearnerCrossfit, **fit_params: Any) -> T_Self:
         """
         Fit the inspector with the given crossfit.
 
