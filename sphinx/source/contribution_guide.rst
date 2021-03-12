@@ -17,6 +17,19 @@ required development dependencies in the ``facet-develop`` environment.
     conda activate facet-develop
 
 
+Pre-commit hooks
+~~~~~~~~~~~~~~~~~~~~
+This project uses a number of pre-commit hooks such as black and flake8 to enforce
+uniform coding standards in all commits. Before committing code, please run
+
+.. code-block:: sh
+
+    pre-commit install
+
+You can use ``pre-commit run`` to manually run the pre-commit hooks from the command
+line.
+
+
 Pytest
 ~~~~~~~~~~~~~~~
 Run ``pytest tests/`` from the facet root folder or use the PyCharm test runner. To
