@@ -248,6 +248,9 @@ class ShapInteractionVectorProjector(ShapProjector, ShapInteractionGlobalExplain
             where=red_ij_denominator > 0.0,
         )
 
+        # scale to accommodate variance already explained by synergy
+        red_ij *= 1 - syn_ij
+
         # we define the redundancy of a feature with itself as 1
         fill_diagonal(red_ij, 1.0)
 
