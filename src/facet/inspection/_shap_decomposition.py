@@ -328,6 +328,7 @@ class ShapInteractionDecomposer(ShapDecomposer, ShapInteractionGlobalExplainer):
         # shape: (n_outputs, n_features, n_observations)
         p_i = ensure_last_axis_is_fast(p_ij.sum(axis=2))
 
+        # cov(p[i], p[j])
         # covariance matrix of shap vectors
         # shape: (n_outputs, n_features, n_features)
         cov_p_i_p_j = cov(p_i, weight)
