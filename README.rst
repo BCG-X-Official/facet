@@ -51,31 +51,40 @@ FACET is composed of the following key components:
 
 .. End-Badges
 
+
 Installation
----------------------
+------------
 
 FACET supports both PyPI and Anaconda.
 
+
 Anaconda
-~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~
 
 .. code-block:: RST
 
     conda install gamma-facet -c bcg_gamma -c conda-forge
 
+
 Pip
-~~~~~~~~~~~
+~~~
 
 .. code-block:: RST
 
     pip install gamma-facet
 
+
 Quickstart
-----------------------
+----------
 
 The following quickstart guide provides a minimal example workflow to get you
-up and running with FACET. For additional tutorials and the API guide see
-the `FACET documentation <https://bcg-gamma.github.io/facet/>`__.
+up and running with FACET.
+For additional tutorials and the API reference,
+see the `FACET documentation <https://bcg-gamma.github.io/facet/>`__.
+
+Changes and additions to new versions are summarized in the
+`release notes <https://bcg-gamma.github.io/facet/release_notes.html>`__.
+
 
 Enhanced Machine Learning Workflow
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -150,8 +159,9 @@ samples in the leaf was the best performing of the three considered values.
 This approach easily extends to multiple hyperparameters for the learner
 and multiple learners.
 
+
 Model Inspection
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~
 
 FACET implements several model inspection methods for
 `scikit-learn <https://scikit-learn.org/stable/index.html>`__ estimators.
@@ -302,8 +312,9 @@ Please see the
 `API reference <https://bcg-gamma.github.io/facet/apidoc/facet.html>`__
 for more detail.
 
+
 Model Simulation
-~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~
 
 Taking the `BMI` feature as an example, we do the following for the simulation:
 
@@ -364,7 +375,7 @@ of at least 26 points.
 
 
 Contributing
----------------------------
+------------
 
 FACET is stable and is being supported long-term.
 
@@ -379,14 +390,16 @@ using our team email: FacetTeam@bcg.com.
 For further information on contributing please see our
 `contribution guide <https://bcg-gamma.github.io/facet/contribution_guide.html>`__.
 
+
 License
----------------------------
+-------
 
 FACET is licensed under Apache 2.0 as described in the
 `LICENSE <https://github.com/BCG-Gamma/facet/blob/develop/LICENSE>`_ file.
 
+
 Acknowledgements
----------------------------
+----------------
 
 FACET is built on top of two popular packages for Machine Learning:
 
@@ -397,8 +410,9 @@ FACET is built on top of two popular packages for Machine Learning:
     estimate the shapley vectors which FACET then decomposes into synergy, redundancy,
     and independence vectors.
 
+
 BCG GAMMA
----------------------------
+---------
 
 If you would like to know more about the team behind FACET please see the
 `about us <https://bcg-gamma.github.io/facet/about_us.html>`__ page.

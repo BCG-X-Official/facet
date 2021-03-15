@@ -1,10 +1,12 @@
 trigger:
-  - master
   - 1.1.x
+  - dev/*
+  - release/*
 
 pr:
-  - master
   - 1.1.x
+  - dev/*
+  - release/*
 
 # set the build name
 name: $[ variables['branchName'] ]
@@ -35,7 +37,8 @@ variables:
     branchName: $[ replace(variables['Build.SourceBranch'], 'refs/heads/', '') ]
   ${{ if startsWith(variables['Build.SourceBranch'], 'refs/pull/') }}:
     branchName: $[ replace(variables['System.PullRequest.SourceBranch'], 'refs/heads/', '') ]
-  master_or_release: $[ or(startsWith(variables['branchName'], 'release'), eq(variables['branchName'], 'master')) ]
+  source_is_release_branch: $[ startsWith(variables['branchName'], 'release') ]
+  source_is_develop_branch: $[ or(startsWith(variables['branchName'], 'develop'), startsWith(variables['branchName'], 'dev/')) ]
   is_scheduled: $[ eq(variables['Build.Reason'], 'Schedule') ]
 
 stages:
@@ -117,7 +120,7 @@ stages:
     jobs:
     - job:
       displayName: 'pytest @ develop environment'
-      condition: ne(variables.master_or_release, 'True')
+      condition: ne(variables.source_is_release_branch, 'True')
 
       pool:
           vmImage: 'ubuntu-latest'
@@ -138,11 +141,11 @@ stages:
           inputs:
             targetType: 'inline'
             script: |
-              set -e
+              set -eux
               eval "$(conda shell.bash hook)"
               cd $(System.DefaultWorkingDirectory)/facet/
               export PYTHONPATH=$(System.DefaultWorkingDirectory)/facet/src/
-
+              export RUN_PACKAGE_VERSION_TEST=facet
               ENV_YML=$(Agent.TempDirectory)/environment-stripped.yml
               grep -vE 'gamma-pytools|sklearndf' environment.yml > "$ENV_YML"
               conda env create -f "$ENV_YML"
@@ -179,7 +182,7 @@ stages:
   # - for release branch: 3 build tests
   # - otherwise: 1 build test
   - stage: conda_tox_build
-    displayName: 'Conda build & test'
+    displayName: 'Conda/tox build & test'
     dependsOn: 'detect_build_config_changes'
     variables:
       conda_build_config_changed: $[ stageDependencies.detect_build_config_changes.checkout_and_diff.outputs['diff.conda_build_config_changed'] ]
@@ -189,7 +192,8 @@ stages:
       displayName: 'single'
       condition: >
         and(
-        ne(variables.master_or_release, 'True'),
+        ne(variables.source_is_release_branch, 'True'),
+        ne(variables.source_is_develop_branch, 'True'),
         ne(variables.is_scheduled, 'True'),
         ne(stageDependencies.detect_build_config_changes.checkout_and_diff.outputs['diff.conda_build_config_changed'], '0')
         )
@@ -238,7 +242,7 @@ stages:
             targetType: 'inline'
             script: |
               if [ "$BUILD_SYSTEM" = "conda" ] ; then eval "$(conda shell.bash hook)" ; fi
-
+              export RUN_PACKAGE_VERSION_TEST=facet
               cd $(Build.SourcesDirectory)/pytools
               ./make.py pytools $(BUILD_SYSTEM) $(PKG_DEPENDENCIES)
 
@@ -264,7 +268,8 @@ stages:
       displayName: 'matrix'
       condition: >
         or(
-        eq(variables.master_or_release, 'True'),
+        eq(variables.source_is_develop_branch, 'True'),
+        eq(variables.source_is_release_branch, 'True'),
         eq(variables.is_scheduled, 'True')
         )
 
@@ -328,8 +333,9 @@ stages:
           inputs:
             targetType: 'inline'
             script: |
-              set -e
+              set -eux
               if [ "$BUILD_SYSTEM" = "conda" ] ; then eval "$(conda shell.bash hook)" ; fi
+              export RUN_PACKAGE_VERSION_TEST=facet
               cd $(Build.SourcesDirectory)/pytools
               ./make.py pytools $(BUILD_SYSTEM) $(PKG_DEPENDENCIES)
               cd $(Build.SourcesDirectory)/sklearndf
@@ -363,7 +369,7 @@ stages:
             inputs:
               targetType: 'inline'
               script: |
-                set -e
+                set -eux
                 eval "$(conda shell.bash hook)"
                 cd $(System.DefaultWorkingDirectory)
                 mkdir static_scan
@@ -384,18 +390,83 @@ stages:
               importResults: false
               failBuildOnPolicyFail: false
 
-  # release on merge from release branch to master:
+  - stage: check_release
+    displayName: 'Check Release Version'
+    dependsOn: conda_tox_build
+
+    jobs:
+      - job:
+        displayName: 'Check Release'
+        condition: >
+          or(
+          eq(variables.source_is_release_branch, 'True'),
+          eq(variables.source_is_develop_branch, 'True')
+          )
+
+        steps:
+          - task: UsePythonVersion@0
+            inputs:
+              versionSpec: '3.7.*'
+            displayName: 'use Python 3.7'
+
+          - checkout: self
+          - checkout: pytools
+
+          - task: Bash@3
+            env:
+              BRANCH_NAME: $(branchName)
+            inputs:
+              targetType: inline
+              condition: ne(variables.branchName, 'develop')
+              script: |
+                set -eux
+                python -m pip install "toml==0.10.*"
+                cd $(System.DefaultWorkingDirectory)/pytools
+                python <<EOF
+                from os import environ
+                from make import ToxBuilder
+
+                branch_env = "BRANCH_NAME"
+                assert branch_env in environ, f"ENV variable '{branch_env}' with git branch name missing."
+                branch = environ[branch_env]
+                print(f"Checking package version consistency with branch: {branch}")
+                if branch == "develop":
+                  exit(0)
+                assert (branch.startswith("release/") or branch.startswith("dev/")
+                ), "This check should only run on versioned branches – check pipeline."
+
+                branch_version = branch.split("/", maxsplit=1)[1]
+                package_version = ToxBuilder("facet", "default").package_version
+
+                assert (
+                    package_version == branch_version
+                ), f"Package version '{package_version}' does not match '{branch_version}' from branch."
+
+                print("Check passed.")
+
+                EOF
+
+            displayName: "Check version consistency"
+
+
+  # release on merges into release/*:
   # - add release tag
   # - create GitHub release with changelog
   # - upload conda and pip packages as artifacts to GitHub
   - stage:
     displayName: 'Release'
-    dependsOn: conda_tox_build
+    dependsOn: check_release
+    variables:
+    - group: artifact_publication
 
     jobs:
       - job:
         displayName: 'Release'
-        condition: eq(replace(variables['Build.SourceBranch'], 'refs/heads/', ''), 'master')
+        condition: >
+          or(
+          eq(variables.source_is_release_branch, 'True'),
+          eq(variables.source_is_develop_branch, 'True')
+          )
 
         steps:
           - task: UsePythonVersion@0
@@ -411,7 +482,7 @@ stages:
             inputs:
               targetType: inline
               script: |
-                set -e
+                set -eux
                 echo "Getting version"
                 pip install packaging
                 cd $(System.DefaultWorkingDirectory)/facet/src
@@ -433,7 +504,45 @@ stages:
             inputs:
               artifactName: conda_default
 
+          - script: |
+              set -eux
+              cd $(System.DefaultWorkingDirectory)
+              eval "$(conda shell.bash hook)"
+              conda install -y anaconda-client
+              anaconda login --username "${CONDA_USERNAME}" --password "${CONDA_PASSWORD}"
+              anaconda upload --user BCG_Gamma --force $(System.ArtifactsDirectory)/conda_default/conda/noarch/gamma-facet-*.tar.bz2
+              anaconda logout
+              echo "##vso[task.setvariable variable=conda_published]True"
+            displayName: 'Publish to Anaconda'
+
+            condition: eq(variables['source_is_release_branch'], 'True')
+            env:
+              CONDA_PASSWORD: $(anaconda_pw)
+              CONDA_USERNAME: $(anaconda_user)
+
+          - script: |
+              set -eux
+              cd $(System.DefaultWorkingDirectory)/facet
+              pip install flit
+              flit install -s
+              flit publish
+              echo "##vso[task.setvariable variable=pypi_published]True"
+            displayName: 'Publish to PyPi'
+            condition: eq(variables['source_is_release_branch'], 'True')
+            env:
+              FLIT_PASSWORD: $(pypi_pw)
+              FLIT_USERNAME: $(pypi_user)
+
           - task: GitHubRelease@1
+            condition: >
+              and(
+                eq(variables['source_is_release_branch'], 'True'),
+                succeededOrFailed(),
+                or(
+                  eq(variables['conda_published'], 'True'),
+                  eq(variables['pypi_published'], 'True')
+                )
+              )
             inputs:
               gitHubConnection: github_release
               repositoryName: $(Build.Repository.Name)
@@ -470,7 +579,12 @@ stages:
     jobs:
     - job:
       displayName: 'Build and publish docs'
-      condition: eq(variables.master_or_release, 'True')
+      condition: >
+        or(
+        eq(variables.source_is_release_branch, 'True'),
+        eq(variables.source_is_develop_branch, 'True')
+        )
+
 
       pool:
           vmImage: 'ubuntu-latest'
@@ -498,7 +612,7 @@ stages:
           inputs:
             targetType: 'inline'
             script: |
-              set -e
+              set -eux
               cd $(System.DefaultWorkingDirectory)/facet
               git checkout --track origin/github-pages
               mkdir -p docs
@@ -513,7 +627,7 @@ stages:
           inputs:
             targetType: 'inline'
             script: |
-              set -e
+              set -eux
               eval "$(conda shell.bash hook)"
               cd $(System.DefaultWorkingDirectory)/facet
               echo "Checking out $(branchName)"
@@ -537,7 +651,7 @@ stages:
           inputs:
             targetType: 'inline'
             script: |
-              set -e
+              set -eux
               eval "$(conda shell.bash hook)"
               cp -r $(Build.ArtifactStagingDirectory)/old_docs/docs .
               echo "Current docs contents:"
@@ -553,10 +667,11 @@ stages:
           displayName: 'Update saved docs'
 
         - task: Bash@3
+          condition: eq(variables['source_is_release_branch'], 'True')
           inputs:
             targetType: 'inline'
             script: |
-              set -e
+              set -eux
               cd $(System.DefaultWorkingDirectory)/facet
               echo "Adjusting git credentials"
               git config --global user.name "Azure Pipelines"
