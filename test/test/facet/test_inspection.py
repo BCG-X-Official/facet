@@ -88,7 +88,7 @@ def iris_inspector_multi_class(
     ],
     n_jobs: int,
 ) -> LearnerInspector[ClassifierPipelineDF[RandomForestClassifierDF]]:
-    return LearnerInspector(shap_interaction=True, n_jobs=n_jobs).fit(
+    return LearnerInspector(shap_interaction=True, legacy=True, n_jobs=n_jobs).fit(
         crossfit=iris_classifier_crossfit_multi_class
     )
 
@@ -199,9 +199,9 @@ def test_model_inspection_classifier_binary(
     iris_sample_binary: Sample, iris_classifier_crossfit_binary, n_jobs: int
 ) -> None:
 
-    model_inspector = LearnerInspector(shap_interaction=False, n_jobs=n_jobs).fit(
-        crossfit=iris_classifier_crossfit_binary
-    )
+    model_inspector = LearnerInspector(
+        shap_interaction=False, legacy=True, n_jobs=n_jobs
+    ).fit(crossfit=iris_classifier_crossfit_binary)
 
     # calculate the shap value matrix, without any consolidation
     shap_values = model_inspector.shap_values(consolidate=None)
@@ -552,8 +552,12 @@ def test_model_inspection_classifier_interaction(
         explainer_factory=TreeExplainerFactory(
             feature_perturbation="tree_path_dependent", use_background_dataset=True
         ),
+        legacy=True,
         n_jobs=n_jobs,
     ).fit(crossfit=iris_classifier_crossfit_binary)
+    # disable legacy calculations; we used them in the constructor so the legacy
+    # SHAP decomposer is created along with the new SHAP vector projector
+    model_inspector._legacy = False
 
     model_inspector_no_interaction = LearnerInspector(
         shap_interaction=False,

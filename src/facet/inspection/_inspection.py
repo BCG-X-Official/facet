@@ -277,7 +277,12 @@ class LearnerInspector(
                 f"but is a {type(learner).__name__}"
             )
 
-        shap_global_explainer: ShapGlobalExplainer
+        shap_global_decomposer: Union[ShapDecomposer, ShapInteractionDecomposer, None]
+        shap_global_projector: Union[
+            ShapVectorProjector, ShapInteractionVectorProjector, None
+        ]
+
+        legacy = self._legacy
 
         if self._shap_interaction:
             shap_calculator_type = (
@@ -293,9 +298,12 @@ class LearnerInspector(
                 pre_dispatch=self.pre_dispatch,
                 verbose=self.verbose,
             )
-            shap_global_decomposer = ShapInteractionDecomposer(
-                min_direct_synergy=self._min_direct_synergy
-            )
+            if legacy:
+                shap_global_decomposer = ShapInteractionDecomposer(
+                    min_direct_synergy=self._min_direct_synergy
+                )
+            else:
+                shap_global_decomposer = None
 
             shap_global_projector = ShapInteractionVectorProjector()
 
@@ -313,11 +321,15 @@ class LearnerInspector(
                 pre_dispatch=self.pre_dispatch,
                 verbose=self.verbose,
             )
-            shap_global_decomposer = ShapDecomposer()
+            if legacy:
+                shap_global_decomposer = ShapDecomposer()
+            else:
+                shap_global_decomposer = None
             shap_global_projector = ShapVectorProjector()
 
         shap_calculator.fit(crossfit=crossfit)
-        shap_global_decomposer.fit(shap_calculator=shap_calculator)
+        if legacy:
+            shap_global_decomposer.fit(shap_calculator=shap_calculator)
         shap_global_projector.fit(shap_calculator=shap_calculator)
 
         self._shap_calculator = shap_calculator
