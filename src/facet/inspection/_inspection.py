@@ -38,6 +38,8 @@ from ._shap_projection import ShapInteractionVectorProjector, ShapVectorProjecto
 log = logging.getLogger(__name__)
 
 __all__ = ["ShapPlotData", "LearnerInspector"]
+
+
 #
 # Type variables
 #
@@ -827,12 +829,10 @@ class LearnerInspector(
         with :math:`\\sum_{a=1}^n \\sum_{b=a}^n I_{ab} = 1`
 
         In the case of multi-target regression and non-binary classification, returns
-        a data frame with one matrix per output, stacked horizontally, and with a
-        hierarchical column index (target/class name on level 1, and feature name on
-        level 2).
+        a list with one matrix per output.
 
         :return: relative shap interaction values as a data frame of shape
-            (n_features, n_outputs * n_features)
+            `(n_features, n_features)`; or a list of such data frames
         """
 
         n_features = len(self.features_)
