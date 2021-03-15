@@ -154,7 +154,6 @@ class LearnerInspector(
         *,
         explainer_factory: Optional[ExplainerFactory] = None,
         shap_interaction: bool = True,
-        orthogonalize: Optional[bool] = None,
         legacy: bool = False,
         min_direct_synergy: Optional[float] = None,
         n_jobs: Optional[int] = None,
@@ -170,16 +169,6 @@ class LearnerInspector(
             SHAP interaction values are needed to determine feature synergy and
             redundancy.
             (default: ``True``)
-        :param orthogonalize: if ``True``, transforms SHAP interaction vectors
-            :math:`p_{ij}` to only retain the orthogonal component relative to the
-            hyperplane spanned by the two associated main effect vectors
-            :math:`p_{ii}` and :math:`p_{jj}`.
-            By definition, the interaction vector should be orthogonal to start with,
-            but in practice it can be correlated with the main effects, which can lead
-            to over- or underestimation of synergy.
-            Defaults to the default behaviour, applying orthogonalization if the
-            inspector uses SHAP interaction values.
-            We recommend to use orthogonalization for increased accuracy.
         :param legacy: `Deprecated: This parameter will be removed in FACET 1.2.`
             If ``False``, use the recommended `SHAP vector projection` method;
             if ``True``, use the deprecated `SHAP vector decomposition` method.
@@ -218,21 +207,8 @@ class LearnerInspector(
                     "SHAP interaction values"
                 )
                 shap_interaction = False
-        else:
-            if orthogonalize:
-                log.warning(
-                    "ignoring orthogonalize=True "
-                    "(only applicable for SHAP interactions)"
-                )
-                orthogonalize = None
 
-        if legacy:
-            if orthogonalize:
-                log.warning(
-                    "ignoring orthogonalize=True " "(not applicable in legacy mode)"
-                )
-                orthogonalize = None
-        else:
+        if not legacy:
             if min_direct_synergy:
                 log.warning(
                     "ignoring min_direct_synergy parameter "
@@ -242,7 +218,6 @@ class LearnerInspector(
 
         self._explainer_factory = explainer_factory
         self._shap_interaction = shap_interaction
-        self._orthogonalize = orthogonalize
         # todo: remove legacy property once we have ditched legacy global explanations
         self._legacy = legacy
         self._min_direct_synergy = min_direct_synergy
@@ -251,10 +226,6 @@ class LearnerInspector(
         self._shap_calculator: Optional[ShapCalculator] = None
         self._shap_global_decomposer: Optional[ShapGlobalExplainer] = None
         self._shap_global_projector: Optional[ShapGlobalExplainer] = None
-        # todo: remove support for non-orthogonalized SHAP projection
-        self._shap_global_projector_no_orthogonalization: Optional[
-            ShapGlobalExplainer
-        ] = None
 
     # dynamically complete the __init__ docstring
     # noinspection PyTypeChecker
@@ -327,9 +298,6 @@ class LearnerInspector(
             )
 
             shap_global_projector = ShapInteractionVectorProjector()
-            shap_global_projector_no_orthogonalization = ShapInteractionVectorProjector(
-                orthogonalize=False
-            )
 
         else:
             shap_calculator_type = (
@@ -347,22 +315,14 @@ class LearnerInspector(
             )
             shap_global_decomposer = ShapDecomposer()
             shap_global_projector = ShapVectorProjector()
-            shap_global_projector_no_orthogonalization = None
 
         shap_calculator.fit(crossfit=crossfit)
         shap_global_decomposer.fit(shap_calculator=shap_calculator)
         shap_global_projector.fit(shap_calculator=shap_calculator)
-        if shap_global_projector_no_orthogonalization:
-            shap_global_projector_no_orthogonalization.fit(
-                shap_calculator=shap_calculator
-            )
 
         self._shap_calculator = shap_calculator
         self._shap_global_decomposer = shap_global_decomposer
         self._shap_global_projector = shap_global_projector
-        self._shap_global_projector_no_orthogonalization = (
-            shap_global_projector_no_orthogonalization
-        )
 
         self._crossfit = crossfit
 
@@ -372,12 +332,6 @@ class LearnerInspector(
     def _shap_global_explainer(self) -> ShapGlobalExplainer:
         if self._legacy:
             return self._shap_global_decomposer
-        elif self._shap_interaction:
-            orthogonalize = self._orthogonalize
-            if orthogonalize is not False:
-                return self._shap_global_projector
-            else:
-                return self._shap_global_projector_no_orthogonalization
         else:
             return self._shap_global_projector
 
