@@ -458,7 +458,7 @@ class ShapValueContext(ShapContext):
     """
 
     def __init__(self, shap_calculator: ShapCalculator) -> None:
-        shap_values: pd.DataFrame = shap_calculator.get_shap_values(consolidate="mean")
+        shap_values: pd.DataFrame = shap_calculator.get_shap_values(consolidate=None)
 
         def _p_i() -> np.ndarray:
             n_outputs: int = len(shap_calculator.output_names_)
@@ -482,7 +482,7 @@ class ShapValueContext(ShapContext):
             # SHAP values tensor (axis 1)
             _weight_sr = shap_calculator.sample_.weight
             if _weight_sr is not None:
-                return _weight_sr.loc[shap_values.index].values
+                return _weight_sr.loc[shap_values.index.get_level_values(-1)].values
             else:
                 return None
 
@@ -502,7 +502,7 @@ class ShapInteractionValueContext(ShapContext):
         self, shap_calculator: ShapInteractionValuesCalculator, orthogonalize: bool
     ) -> None:
         shap_values: pd.DataFrame = shap_calculator.get_shap_interaction_values(
-            consolidate="mean"
+            consolidate=None
         )
         n_features: int = len(shap_calculator.feature_index_)
         n_outputs: int = len(shap_calculator.output_names_)
@@ -522,9 +522,9 @@ class ShapInteractionValueContext(ShapContext):
         weight: Optional[np.ndarray]
         _weight_sr = shap_calculator.sample_.weight
         if _weight_sr is not None:
-            _observation_indices = shap_values.index.get_level_values(0).values.reshape(
-                (n_observations, n_features)
-            )[:, 0]
+            _observation_indices = shap_values.index.get_level_values(
+                -2
+            ).values.reshape((n_observations, n_features))[:, 0]
             weight = ensure_last_axis_is_fast(
                 _weight_sr.loc[_observation_indices].values
             )
