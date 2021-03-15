@@ -19,6 +19,7 @@ from ._shap_global_explanation import (
     ShapInteractionGlobalExplainer,
     ShapInteractionValueContext,
     ShapValueContext,
+    cov,
     cov_broadcast,
     ensure_last_axis_is_fast,
     fill_diagonal,
@@ -74,7 +75,7 @@ class ShapProjector(ShapGlobalExplainer, metaclass=ABCMeta):
         super()._reset_fit()
         self.association_ = None
 
-    def _calculate_association(self, context: ShapContext) -> np.ndarray:
+    def _calculate_association(self, context: ShapContext) -> None:
         # Calculate association: ass[i, j]
         #
         # Input: shap context
@@ -101,8 +102,6 @@ class ShapProjector(ShapGlobalExplainer, metaclass=ABCMeta):
         self.association_ = AffinityMatrices(
             affinity_rel_ij=ass_ij, std_p_i=sqrt(var_p_i)
         )
-
-        return ass_ij
 
 
 class ShapVectorProjector(ShapProjector):
@@ -170,7 +169,7 @@ class ShapInteractionVectorProjector(ShapProjector, ShapInteractionGlobalExplain
         # Association: ass[i, j]
         #
 
-        ass_ij = self._calculate_association(context=context)
+        self._calculate_association(context=context)
 
         #
         # Synergy: syn[i, j]
@@ -210,9 +209,9 @@ class ShapInteractionVectorProjector(ShapProjector, ShapInteractionGlobalExplain
             cov_p_i_p_ij, var_p_i, out=cov_p_i_p_ij_over_var_p_i, where=var_p_i > 0.0
         )
 
-        syn_ij = ass_ij * transpose(
-            cov_p_i_p_ij_over_var_p_i * cov_p_i_p_ij_over_var_p_ij
-        )
+        # syn[i, j]
+        # this is the coefficient of determination of the interaction vector
+        syn_ij = cov_p_i_p_ij_over_var_p_i * cov_p_i_p_ij_over_var_p_ij
 
         # we define the synergy of a feature with itself as 1
         fill_diagonal(syn_ij, 1.0)
@@ -221,7 +220,33 @@ class ShapInteractionVectorProjector(ShapProjector, ShapInteractionGlobalExplain
         # Redundancy: red[i, j]
         #
 
-        red_ij = ass_ij - syn_ij
+        # cov(p[i], p[j])
+        # covariance matrix of shap vectors
+        # shape: (n_outputs, n_features, n_features)
+        cov_p_i_p_j = cov(p_i, weight)
+
+        # nominator
+        # shape: (n_outputs, n_features, n_features)
+        red_ij_nominator = (
+            cov_p_i_p_j - cov_p_i_p_ij_over_var_p_ij * transpose(cov_p_i_p_ij)
+        ) ** 2
+
+        # denominator for p_i
+        # shape: (n_outputs, n_features, n_features)
+        red_ij_denominator_i = var_p_i - cov_p_i_p_ij_over_var_p_ij * cov_p_i_p_ij
+        red_ij_denominator = red_ij_denominator_i * transpose(red_ij_denominator_i)
+
+        # red[i, j]
+        # this converges towards 0 as the denominator converges towards 0
+        # shape: (n_outputs, n_features, n_features)
+
+        red_ij = np.zeros(matrix_shape)
+        np.divide(
+            red_ij_nominator,
+            red_ij_denominator,
+            out=red_ij,
+            where=red_ij_denominator > 0.0,
+        )
 
         # we define the redundancy of a feature with itself as 1
         fill_diagonal(red_ij, 1.0)
