@@ -8,8 +8,6 @@ dependencies:
   - conda-build = 3.20.*
   - conda-verify = 3.1.*
   - docutils = 0.16.*
-  - flake8 = 3.8.*
-  - flake8-comprehensions = 3.2.*
   - flit = 3.0.*
   - gamma-pytools >=1.0,<2
   - isort = 5.5.*
