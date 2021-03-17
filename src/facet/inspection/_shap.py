@@ -156,16 +156,27 @@ class ShapCalculator(
         return self
 
     @abstractmethod
-    def get_shap_values(self, consolidate: Optional[str] = None) -> pd.DataFrame:
+    def get_shap_values(self, consolidate: Optional[str]) -> pd.DataFrame:
         """
         The resulting consolidated shap values as a data frame,
         aggregated to averaged SHAP contributions per feature and observation.
 
         :param consolidate: consolidation method, or ``None`` for no consolidation
         :return: SHAP contribution values with shape
-            (n_observations, n_outputs * n_features).
+            (n_observations, n_outputs * n_features)
         """
-        pass
+
+    @abstractmethod
+    def get_shap_interaction_values(self, consolidate: Optional[str]) -> pd.DataFrame:
+        """
+        The resulting consolidated shap interaction values as a data frame,
+        aggregated to averaged SHAP interaction values per observation.
+
+        :param consolidate: consolidation method, or ``None`` for no consolidation
+        :return: SHAP contribution values with shape
+            (n_observations * n_features, n_outputs * n_features)
+        :raise TypeError: this SHAP calculator does not support interaction values
+        """
 
     @staticmethod
     @abstractmethod
@@ -173,7 +184,6 @@ class ShapCalculator(
         """
         :return: a category name for the dimensions represented by multiple outputs
         """
-        pass
 
     @abstractmethod
     def _get_multi_output_names(
@@ -398,11 +408,25 @@ class ShapValuesCalculator(
     Base class for calculating SHAP contribution values.
     """
 
-    def get_shap_values(self, consolidate: Optional[str] = None) -> pd.DataFrame:
+    def get_shap_values(self, consolidate: Optional[str]) -> pd.DataFrame:
         """[see superclass]"""
         self._ensure_fitted()
         return ShapCalculator._consolidate_splits(
             shap_all_splits_df=self.shap_, method=consolidate
+        )
+
+    def get_shap_interaction_values(self, consolidate: Optional[str]) -> pd.DataFrame:
+        """
+        Not implemented.
+
+        :param consolidate: (ignored)
+        :return: (never returns)
+        :raise TypeError: always raises this - SHAP interaction values are not supported
+        """
+        raise TypeError(
+            f"{type(self).__name__}"
+            f".{ShapValuesCalculator.get_shap_interaction_values.__name__}() "
+            "is not defined"
         )
 
     @staticmethod
@@ -460,24 +484,15 @@ class ShapInteractionValuesCalculator(
     Base class for calculating SHAP interaction values.
     """
 
-    def get_shap_values(self, consolidate: Optional[str] = None) -> pd.DataFrame:
+    def get_shap_values(self, consolidate: Optional[str]) -> pd.DataFrame:
         """[see superclass]"""
         self._ensure_fitted()
         return ShapCalculator._consolidate_splits(
             shap_all_splits_df=self.shap_.sum(level=(0, 1)), method=consolidate
         )
 
-    def get_shap_interaction_values(
-        self, consolidate: Optional[str] = None
-    ) -> pd.DataFrame:
-        """
-        The resulting consolidated shap interaction values as a data frame,
-        aggregated to averaged SHAP interaction values per observation.
-
-        :param consolidate: consolidation method, or ``None`` for no consolidation
-        :return: SHAP contribution values with shape
-            (n_observations * n_features, n_outputs * n_features).
-        """
+    def get_shap_interaction_values(self, consolidate: Optional[str]) -> pd.DataFrame:
+        """[see superclass]"""
         self._ensure_fitted()
         return ShapCalculator._consolidate_splits(
             shap_all_splits_df=self.shap_, method=consolidate

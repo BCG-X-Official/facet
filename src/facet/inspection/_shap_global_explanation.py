@@ -13,7 +13,7 @@ import pandas as pd
 from pytools.api import AllTracker, inheritdoc
 from pytools.fit import FittableMixin
 
-from ._shap import ShapCalculator, ShapInteractionValuesCalculator
+from ._shap import ShapCalculator
 
 log = logging.getLogger(__name__)
 
@@ -433,13 +433,23 @@ class ShapContext(metaclass=ABCMeta):
     #: with shape `(n_outputs, n_features, 1)`
     var_p_i: np.ndarray
 
-    def __init__(self, p_i: np.ndarray, weight: Optional[np.ndarray]) -> None:
+    #: SHAP interaction vectors,
+    #: with shape `(n_outputs, n_features, n_features, n_observations)`
+    p_ij: Optional[np.ndarray]
+
+    def __init__(
+        self,
+        p_i: np.ndarray,
+        p_ij: Optional[np.ndarray],
+        weight: Optional[np.ndarray],
+    ) -> None:
         assert p_i.ndim == 3
         if weight is not None:
             assert weight.ndim == 1
             assert p_i.shape[2] == len(weight)
 
         self.p_i = p_i
+        self.p_ij = p_ij
         self.weight = weight
 
         # covariance matrix of shap vectors
@@ -487,7 +497,7 @@ class ShapValueContext(ShapContext):
             else:
                 return None
 
-        super().__init__(p_i=_p_i(), weight=_weight())
+        super().__init__(p_i=_p_i(), p_ij=None, weight=_weight())
 
 
 class ShapInteractionValueContext(ShapContext):
@@ -495,11 +505,7 @@ class ShapInteractionValueContext(ShapContext):
     Contextual data for global SHAP calculations based on SHAP interaction values.
     """
 
-    #: SHAP interaction vectors,
-    #: with shape `(n_outputs, n_features, n_features, n_observations)`
-    p_ij: np.ndarray
-
-    def __init__(self, shap_calculator: ShapInteractionValuesCalculator) -> None:
+    def __init__(self, shap_calculator: ShapCalculator) -> None:
         shap_values: pd.DataFrame = shap_calculator.get_shap_interaction_values(
             consolidate=None
         )
@@ -546,10 +552,12 @@ class ShapInteractionValueContext(ShapContext):
 
         # p[i]
         # shape: (n_outputs, n_features, n_observations)
-        super().__init__(p_i=ensure_last_axis_is_fast(p_ij.sum(axis=2)), weight=weight)
-
-        self.p_ij = ensure_last_axis_is_fast(
-            self.__get_orthogonalized_interaction_vectors(p_ij=p_ij, weight=weight)
+        super().__init__(
+            p_i=ensure_last_axis_is_fast(p_ij.sum(axis=2)),
+            p_ij=ensure_last_axis_is_fast(
+                self.__get_orthogonalized_interaction_vectors(p_ij=p_ij, weight=weight)
+            ),
+            weight=weight,
         )
 
     @staticmethod

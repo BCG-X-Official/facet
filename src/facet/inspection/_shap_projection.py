@@ -4,14 +4,14 @@ pairings of features onto the SHAP importance vector in partitions of for synerg
 redundancy, and independence.
 """
 import logging
-from abc import ABCMeta
+from abc import ABCMeta, abstractmethod
 from typing import Optional, TypeVar
 
 import numpy as np
 
 from pytools.api import AllTracker, inheritdoc
 
-from ._shap import ShapCalculator, ShapInteractionValuesCalculator
+from ._shap import ShapCalculator
 from ._shap_global_explanation import (
     AffinityMatrices,
     ShapContext,
@@ -70,10 +70,22 @@ class ShapProjector(ShapGlobalExplainer, metaclass=ABCMeta):
         self._ensure_fitted()
         return self.association_.get_matrix(symmetrical=symmetrical, absolute=absolute)
 
+    def _fit(self, shap_calculator: ShapCalculator) -> None:
+        self._reset_fit()
+        self._calculate(self._get_context(shap_calculator=shap_calculator))
+
     def _reset_fit(self) -> None:
         # revert status of this object to not fitted
         super()._reset_fit()
         self.association_ = None
+
+    @abstractmethod
+    def _get_context(self, shap_calculator: ShapCalculator) -> ShapContext:
+        pass
+
+    @abstractmethod
+    def _calculate(self, context: ShapContext) -> None:
+        pass
 
     def _calculate_association(self, context: ShapContext) -> None:
         # Calculate association: ass[i, j]
@@ -112,12 +124,11 @@ class ShapVectorProjector(ShapProjector):
     onto a feature's main SHAP vector.
     """
 
-    def _fit(self, shap_calculator: ShapCalculator) -> None:
-        self._reset_fit()
+    def _get_context(self, shap_calculator: ShapCalculator) -> ShapContext:
+        return ShapValueContext(shap_calculator=shap_calculator)
 
-        self._calculate_association(
-            context=ShapValueContext(shap_calculator=shap_calculator)
-        )
+    def _calculate(self, context: ShapContext) -> None:
+        self._calculate_association(context=context)
 
 
 @inheritdoc(match="""[see superclass]""")
@@ -153,9 +164,10 @@ class ShapInteractionVectorProjector(ShapProjector, ShapInteractionGlobalExplain
         self._ensure_fitted()
         return self.redundancy_.get_matrix(symmetrical=symmetrical, absolute=absolute)
 
-    def _fit(self, shap_calculator: ShapInteractionValuesCalculator) -> None:
-        context = ShapInteractionValueContext(shap_calculator=shap_calculator)
+    def _get_context(self, shap_calculator: ShapCalculator) -> ShapContext:
+        return ShapInteractionValueContext(shap_calculator=shap_calculator)
 
+    def _calculate(self, context: ShapContext) -> None:
         p_i = context.p_i
         var_p_i = context.var_p_i
         p_ij = context.p_ij
