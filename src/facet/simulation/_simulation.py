@@ -36,12 +36,6 @@ from .partition import Partitioner
 log = logging.getLogger(__name__)
 
 __all__ = [
-    "IDX_SPLIT",
-    "IDX_PARTITION",
-    "COL_OUTPUT",
-    "COL_MEDIAN",
-    "COL_LOWER_BOUND",
-    "COL_UPPER_BOUND",
     "UnivariateSimulationResult",
     "BaseUnivariateSimulator",
     "UnivariateProbabilitySimulator",
@@ -61,30 +55,6 @@ T_Partition = TypeVar("T_Partition")
 #
 
 __tracker = AllTracker(globals())
-
-
-#
-# Constants
-#
-
-#: The name of the row index of attribute :attr:`.output`, denoting splits.
-IDX_SPLIT = "split"
-
-#: The name of the column index of attribute :attr:`.output`, denoting partitions
-#: represented by their central values or by a category.
-IDX_PARTITION = "partition"
-
-#: The name of a series of simulated outputs.
-COL_OUTPUT = "output"
-
-#: The name of a series of median simulated values per partition.
-COL_MEDIAN = "median"
-
-#: The name of a series of lower CI bounds of simulated values per partition.
-COL_LOWER_BOUND = "lower_bound"
-
-#: The name of a series of upper CI bounds of simulated values per partition.
-COL_UPPER_BOUND = "upper_bound"
 
 
 #
@@ -120,6 +90,15 @@ class UnivariateSimulationResult(Generic[T_Partition]):
     #: and rows representing bootstrap splits used to fit variations of the model.
     outputs: pd.DataFrame
 
+    #: The name of a series of median simulated values per partition.
+    COL_MEDIAN = "median"
+
+    #: The name of a series of lower CI bounds of simulated values per partition.
+    COL_LOWER_BOUND = "lower_bound"
+
+    #: The name of a series of upper CI bounds of simulated values per partition.
+    COL_UPPER_BOUND = "upper_bound"
+
     def __init__(
         self,
         *,
@@ -149,11 +128,12 @@ class UnivariateSimulationResult(Generic[T_Partition]):
         super().__init__()
 
         assert (
-            outputs.index.name == IDX_SPLIT
-        ), f"name of row index of arg outputs is {IDX_SPLIT}"
-        assert (
-            outputs.columns.name == IDX_PARTITION
-        ), f"name of column index of arg outputs is {IDX_PARTITION}"
+            outputs.index.name == BaseUnivariateSimulator.IDX_SPLIT
+        ), f"row index of arg outputs is named {BaseUnivariateSimulator.IDX_SPLIT}"
+        assert outputs.columns.name == BaseUnivariateSimulator.IDX_PARTITION, (
+            "column index of arg outputs is named "
+            f"{BaseUnivariateSimulator.IDX_PARTITION}"
+        )
         assert (
             0.0 < confidence_level < 1.0
         ), f"confidence_level={confidence_level} ranges between 0.0 and 1.0 (exclusive)"
@@ -174,7 +154,7 @@ class UnivariateSimulationResult(Generic[T_Partition]):
         :return: a series of medians, indexed by the central values of the partitions
             for which the simulation was run
         """
-        return self.outputs.median().rename(COL_MEDIAN)
+        return self.outputs.median().rename(UnivariateSimulationResult.COL_MEDIAN)
 
     def outputs_lower_bound(self) -> pd.Series:
         """
@@ -185,7 +165,7 @@ class UnivariateSimulationResult(Generic[T_Partition]):
             for which the simulation was run
         """
         return self.outputs.quantile(q=(1.0 - self.confidence_level) / 2.0).rename(
-            COL_LOWER_BOUND
+            UnivariateSimulationResult.COL_LOWER_BOUND
         )
 
     def outputs_upper_bound(self) -> pd.Series:
@@ -198,7 +178,7 @@ class UnivariateSimulationResult(Generic[T_Partition]):
         """
         return self.outputs.quantile(
             q=1.0 - (1.0 - self.confidence_level) / 2.0
-        ).rename(COL_UPPER_BOUND)
+        ).rename(UnivariateSimulationResult.COL_UPPER_BOUND)
 
 
 class BaseUnivariateSimulator(
@@ -207,6 +187,16 @@ class BaseUnivariateSimulator(
     """
     Base class for univariate simulations.
     """
+
+    #: The name of the row index of attribute :attr:`.output`, denoting splits.
+    IDX_SPLIT = "split"
+
+    #: The name of the column index of attribute :attr:`.output`, denoting partitions
+    #: represented by their central values or by a category.
+    IDX_PARTITION = "partition"
+
+    #: The name of a series of simulated outputs.
+    COL_OUTPUT = "output"
 
     def __init__(
         self,
@@ -338,7 +328,9 @@ class BaseUnivariateSimulator(
             )
         )
 
-        return pd.Series(data=result, name=COL_OUTPUT).rename_axis(index=IDX_SPLIT)
+        return pd.Series(
+            data=result, name=BaseUnivariateSimulator.COL_OUTPUT
+        ).rename_axis(index=BaseUnivariateSimulator.IDX_SPLIT)
 
     @property
     @abstractmethod
@@ -415,7 +407,10 @@ class BaseUnivariateSimulator(
 
         return pd.DataFrame(
             simulation_results_per_split, columns=simulation_values
-        ).rename_axis(index=IDX_SPLIT, columns=IDX_PARTITION)
+        ).rename_axis(
+            index=BaseUnivariateSimulator.IDX_SPLIT,
+            columns=BaseUnivariateSimulator.IDX_PARTITION,
+        )
 
     @staticmethod
     def _simulate_values_for_split(

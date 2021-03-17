@@ -22,7 +22,7 @@ requires = [
     "pandas         >=0.24,<1.3",
     "scipy          >=1.2,<1.6",
     "shap           >=0.34,<0.39",
-    "sklearndf      >=1.0.2rc0,<2",
+    "sklearndf      >=1.1.0rc0,<2",
     # additional requirements of sklearndf
     "boruta         >=0.3",
     "lightgbm       >=3.0",
@@ -86,7 +86,7 @@ pandas         = "=0.24.*"
 python         = "=3.6.*"
 scipy          = "=1.2.*"
 shap           = "=0.34.*"
-sklearndf      = "=1.0.2rc0"
+sklearndf      = "=1.1.0rc0"
 # additional requirements of sklearndf
 boruta         = "=0.3.*"
 lightgbm       = "=3.0.*"
