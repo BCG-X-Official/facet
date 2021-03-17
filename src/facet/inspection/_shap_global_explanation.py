@@ -303,6 +303,7 @@ def transpose(m: np.ndarray, ndim: int = 3) -> np.ndarray:
         or shape `(n_outputs, n_features, n_features, n_observations)`
         or shape `(n_outputs, n_features, 1)`
         or shape `(n_outputs, n_features, 1, n_observations)`
+    :param ndim: expected dimensions of ``m`` for validation purposes
     :return: array of same shape as arg ``m``, with both feature axes swapped
     """
     assert m.ndim == ndim
