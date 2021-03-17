@@ -498,9 +498,7 @@ class ShapInteractionValueContext(ShapContext):
     #: with shape `(n_outputs, n_features, n_features, n_observations)`
     p_ij: np.ndarray
 
-    def __init__(
-        self, shap_calculator: ShapInteractionValuesCalculator, orthogonalize: bool
-    ) -> None:
+    def __init__(self, shap_calculator: ShapInteractionValuesCalculator) -> None:
         shap_values: pd.DataFrame = shap_calculator.get_shap_interaction_values(
             consolidate=None
         )
@@ -549,12 +547,9 @@ class ShapInteractionValueContext(ShapContext):
         # shape: (n_outputs, n_features, n_observations)
         super().__init__(p_i=ensure_last_axis_is_fast(p_ij.sum(axis=2)), weight=weight)
 
-        if orthogonalize:
-            self.p_ij = ensure_last_axis_is_fast(
-                self.__get_orthogonalized_interaction_vectors(p_ij=p_ij, weight=weight)
-            )
-        else:
-            self.p_ij = p_ij
+        self.p_ij = ensure_last_axis_is_fast(
+            self.__get_orthogonalized_interaction_vectors(p_ij=p_ij, weight=weight)
+        )
 
     @staticmethod
     def __get_orthogonalized_interaction_vectors(

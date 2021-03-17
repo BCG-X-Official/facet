@@ -137,10 +137,8 @@ class ShapInteractionVectorProjector(ShapProjector, ShapInteractionGlobalExplain
     #: projections
     orthogonalize: bool
 
-    def __init__(self, orthogonalize: bool = True) -> None:
+    def __init__(self) -> None:
         super().__init__()
-
-        self.orthogonalize = orthogonalize
 
         self.synergy_: Optional[AffinityMatrices] = None
         self.redundancy_: Optional[AffinityMatrices] = None
@@ -156,9 +154,7 @@ class ShapInteractionVectorProjector(ShapProjector, ShapInteractionGlobalExplain
         return self.redundancy_.get_matrix(symmetrical=symmetrical, absolute=absolute)
 
     def _fit(self, shap_calculator: ShapInteractionValuesCalculator) -> None:
-        context = ShapInteractionValueContext(
-            shap_calculator=shap_calculator, orthogonalize=self.orthogonalize
-        )
+        context = ShapInteractionValueContext(shap_calculator=shap_calculator)
 
         p_i = context.p_i
         var_p_i = context.var_p_i
