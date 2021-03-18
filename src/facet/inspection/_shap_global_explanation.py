@@ -64,6 +64,9 @@ class AffinityMatrices:
     Stores all variations of a feature affinity matrix.
     """
 
+    # shape: (2, 2, n_outputs, n_features, n_features)
+    _matrices: np.ndarray
+
     def __init__(self, affinity_rel_ij: np.ndarray, std_p_i: np.ndarray) -> None:
         """
         :param affinity_rel_ij: the affinity matrix from which to create all variations,
@@ -96,10 +99,14 @@ class AffinityMatrices:
         fill_diagonal(affinity_rel_sym_ij, 1.0)
 
         # store the matrices for access via method get_matrix
-        self._matrices = (
-            (affinity_rel_ij, affinity_abs_ij),
-            (affinity_rel_sym_ij, affinity_abs_sym_ij_2x / 2),
-        )
+        self._matrices = np.vstack(
+            (
+                affinity_rel_ij,
+                affinity_abs_ij,
+                affinity_rel_sym_ij,
+                affinity_abs_sym_ij_2x / 2,
+            )
+        ).reshape((2, 2, *affinity_rel_ij.shape))
 
     def get_matrix(self, symmetrical: bool, absolute: bool):
         """
@@ -108,7 +115,7 @@ class AffinityMatrices:
         :param absolute: if ``True``, get the absolute version of the matrix
         :return: the affinity matrix
         """
-        return self._matrices[bool(symmetrical)][bool(absolute)]
+        return self._matrices[int(symmetrical), int(absolute)]
 
 
 @inheritdoc(match="""[see superclass]""")
