@@ -110,8 +110,13 @@ class AffinityMatrix:
 
         # relative symmetrical affinity is absolute symmetrical affinity scaled back
         # from total feature importance per feature pair
-        affinity_rel_sym_ij = affinity_abs_sym_ij_2x / (
-            importance_ij + transpose(importance_ij)
+        affinity_rel_sym_ij = np.zeros(affinity_rel_ij.shape)
+        np.divide(
+            affinity_abs_sym_ij_2x,
+            importance_ij + transpose(importance_ij),
+            out=affinity_rel_sym_ij,
+            # do not divide where the nominator is 0 (the denominator will be 0 as well)
+            where=affinity_abs_sym_ij_2x > 0.0,
         )
 
         # re-set the diagonal to 1.0 in case of rounding errors
