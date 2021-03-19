@@ -1,0 +1,40 @@
+facet.crossfit.LearnerCrossfit
+==============================
+
+.. currentmodule:: facet.crossfit
+
+.. autoclass:: LearnerCrossfit
+   :members:
+   :no-show-inheritance:
+   :inherited-members:
+   :special-members: __call__
+
+   
+   
+   .. rubric:: Method summary
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~LearnerCrossfit.fit
+      ~LearnerCrossfit.fit_score
+      ~LearnerCrossfit.models
+      ~LearnerCrossfit.resize
+      ~LearnerCrossfit.score
+      ~LearnerCrossfit.splits
+   
+   
+
+   
+   
+   .. rubric:: Attribute summary
+
+   .. autosummary::
+   
+      ~LearnerCrossfit.is_fitted
+      ~LearnerCrossfit.n_splits_
+      ~LearnerCrossfit.sample_
+   
+   
+
+   .. rubric:: Definitions
