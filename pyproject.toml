@@ -15,7 +15,7 @@ license = "Apache Software License v2.0"
 
 requires = [
     # direct requirements of gamma-facet
-    "gamma-pytools  <2",
+    "gamma-pytools  >=1.0.2,<2",
     "matplotlib     >=3.0,<3.4",
     "numpy          >=1.16,<1.21",
     "packaging      >=20",
