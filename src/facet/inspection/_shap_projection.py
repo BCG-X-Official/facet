@@ -91,7 +91,8 @@ class ShapProjector(ShapGlobalExplainer, metaclass=ABCMeta):
     def _calculate(self, contexts: Iterable[ShapContext]) -> AffinityMatrix:
         pass
 
-    def _calculate_association(self, context: ShapContext) -> AffinityMatrix:
+    @staticmethod
+    def _calculate_association(context: ShapContext) -> AffinityMatrix:
         # Calculate association: ass[i, j]
         #
         # Input: shap context
@@ -129,7 +130,10 @@ class ShapVectorProjector(ShapProjector):
     """
 
     def _get_context(self, shap_calculator: ShapCalculator) -> List[ShapContext]:
-        return [ShapValueContext(shap_calculator=shap_calculator)]
+        return [
+            ShapValueContext(shap_calculator=shap_calculator, split_id=split_id)
+            for split_id in range(shap_calculator.n_splits_)
+        ]
 
     def _calculate(self, contexts: Iterable[ShapContext]) -> None:
         # calculate association matrices for each SHAP context, then aggregate
@@ -180,7 +184,12 @@ class ShapInteractionVectorProjector(ShapProjector, ShapInteractionGlobalExplain
         )
 
     def _get_context(self, shap_calculator: ShapCalculator) -> List[ShapContext]:
-        return [ShapInteractionValueContext(shap_calculator=shap_calculator)]
+        return [
+            ShapInteractionValueContext(
+                shap_calculator=shap_calculator, split_id=split_id
+            )
+            for split_id in range(shap_calculator.n_splits_)
+        ]
 
     def _calculate(self, contexts: Iterable[ShapContext]) -> None:
         # calculate association, synergy, and redundancy matrices for each SHAP context,

@@ -108,6 +108,7 @@ class ShapCalculator(
         self.feature_index_: Optional[pd.Index] = None
         self.output_names_: Optional[List[str]] = None
         self.sample_: Optional[Sample] = None
+        self.n_splits_: Optional[int] = None
 
     @property
     def is_fitted(self) -> bool:
@@ -152,6 +153,8 @@ class ShapCalculator(
             level=1,
             copy=False,
         )
+
+        self.n_splits_ = crossfit.n_splits_
 
         return self
 
