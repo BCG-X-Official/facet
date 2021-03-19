@@ -1,0 +1,28 @@
+facet.inspection.BaseExplainer
+==============================
+
+.. currentmodule:: facet.inspection
+
+.. autoclass:: BaseExplainer
+   :members:
+   :no-show-inheritance:
+   :inherited-members:
+   :special-members: __call__
+
+   
+   
+   .. rubric:: Method summary
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~BaseExplainer.shap_interaction_values
+      ~BaseExplainer.shap_values
+   
+   
+
+   
+   
+   
+
+   .. rubric:: Definitions

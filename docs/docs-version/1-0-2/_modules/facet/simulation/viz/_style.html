@@ -1,0 +1,583 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>facet.simulation.viz._style &#8212; facet  documentation</title>
+    
+  <link rel="stylesheet" href="../../../../_static/css/index.f658d18f9b420779cfdf24aa0a7e2d77.css">
+
+    
+  <link rel="stylesheet"
+    href="../../../../_static/vendor/fontawesome/5.13.0/css/all.min.css">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../../../../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../../../../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+
+    
+      
+  <link rel="stylesheet"
+    href="../../../../_static/vendor/open-sans_all/1.44.1/index.css">
+  <link rel="stylesheet"
+    href="../../../../_static/vendor/lato_latin-ext/1.44.1/index.css">
+
+    
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/basic.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/css/gamma.css" />
+    
+  <link rel="preload" as="script" href="../../../../_static/js/index.d3f166471bb80abb5163.js">
+
+    <script id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+    <script src="../../../../_static/jquery.js"></script>
+    <script src="../../../../_static/underscore.js"></script>
+    <script src="../../../../_static/doctools.js"></script>
+    <script src="../../../../_static/js/gamma.js"></script>
+    <script src="../../../../_static/js/versions.js"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "document", "processClass": "math|output_area"}})</script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="docsearch:language" content="en" />
+  </head>
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
+    
+    <nav class="navbar navbar-light navbar-expand-lg bg-light fixed-top bd-navbar" id="navbar-main">
+<div class="container-xl">
+
+    <a class="navbar-brand" href="../../../../index.html">
+    
+      <img src="../../../../_static/Gamma_Facet_Logo_RGB_LB.svg" class="logo" alt="logo" />
+    
+    </a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar-menu" aria-controls="navbar-menu" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div id="navbar-menu" class="col-lg-9 collapse navbar-collapse">
+      <ul id="navbar-main-elements" class="navbar-nav mr-auto">
+        
+        
+        <li class="nav-item ">
+            <a class="nav-link" href="../../../../getting_started/getting_started.html">Getting started</a>
+        </li>
+        
+        <li class="nav-item ">
+            <a class="nav-link" href="../../../../apidoc/facet.html">API reference</a>
+        </li>
+        
+        <li class="nav-item ">
+            <a class="nav-link" href="../../../../tutorials.html">Tutorials</a>
+        </li>
+        
+        <li class="nav-item ">
+            <a class="nav-link" href="../../../../contribution_guide.html">Development Guidelines</a>
+        </li>
+        
+        <li class="nav-item ">
+            <a class="nav-link" href="../../../../faqs.html">FAQ</a>
+        </li>
+        
+        <li class="nav-item ">
+            <a class="nav-link" href="../../../../about_us.html">About us</a>
+        </li>
+        
+        <li class="nav-item ">
+            <a class="nav-link" href="../../../../release_notes.html">Release Notes</a>
+        </li>
+        
+        
+      </ul>
+
+
+      
+
+      <ul class="navbar-nav">
+        
+        
+      </ul>
+    </div>
+</div>
+    </nav>
+    
+
+    <div class="container-xl">
+      <div class="row">
+          
+          <div class="col-12 col-md-3 bd-sidebar"><form class="bd-search d-flex align-items-center" action="../../../../search.html" method="get">
+  <i class="icon fas fa-search"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
+</form>
+<nav class="bd-links" id="bd-docs-nav" aria-label="Main navigation">
+
+    <div class="bd-toc-item active">
+    
+  
+    <ul class="nav bd-sidenav">
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+      </ul>
+  
+  </nav>
+          </div>
+          
+
+          
+          <div class="d-none d-xl-block col-xl-2 bd-toc">
+              
+
+<nav id="bd-toc-nav">
+    <ul class="nav section-nav flex-column">
+    
+    </ul>
+</nav>
+
+
+              
+          </div>
+          
+
+          
+          <main class="col-12 col-md-9 col-xl-7 py-md-5 pl-md-5 pr-md-4 bd-content" role="main">
+              
+              <div>
+                
+  <h1>Source code for facet.simulation.viz._style</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Drawing styles for simulation results.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">from</span> <span class="nn">abc</span> <span class="kn">import</span> <span class="n">ABCMeta</span><span class="p">,</span> <span class="n">abstractmethod</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">TypeVar</span>
+
+<span class="kn">from</span> <span class="nn">matplotlib.axes</span> <span class="kn">import</span> <span class="n">Axes</span>
+<span class="kn">from</span> <span class="nn">mpl_toolkits.axes_grid1</span> <span class="kn">import</span> <span class="n">make_axes_locatable</span>
+<span class="kn">from</span> <span class="nn">mpl_toolkits.axes_grid1.axes_divider</span> <span class="kn">import</span> <span class="n">AxesDivider</span>
+<span class="kn">from</span> <span class="nn">mpl_toolkits.axes_grid1.axes_size</span> <span class="kn">import</span> <span class="n">Scaled</span>
+
+<span class="kn">from</span> <span class="nn">pytools.api</span> <span class="kn">import</span> <span class="n">AllTracker</span><span class="p">,</span> <span class="n">inheritdoc</span>
+<span class="kn">from</span> <span class="nn">pytools.text</span> <span class="kn">import</span> <span class="n">format_table</span>
+<span class="kn">from</span> <span class="nn">pytools.viz</span> <span class="kn">import</span> <span class="n">DrawingStyle</span><span class="p">,</span> <span class="n">MatplotStyle</span><span class="p">,</span> <span class="n">TextStyle</span>
+
+<span class="n">log</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;SimulationStyle&quot;</span><span class="p">,</span> <span class="s2">&quot;SimulationMatplotStyle&quot;</span><span class="p">,</span> <span class="s2">&quot;SimulationReportStyle&quot;</span><span class="p">]</span>
+
+<span class="c1">#</span>
+<span class="c1"># Type variables</span>
+<span class="c1">#</span>
+
+
+<span class="n">T_Partition</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">&quot;T_Partition&quot;</span><span class="p">)</span>
+
+<span class="c1">#</span>
+<span class="c1"># Ensure all symbols introduced below are included in __all__</span>
+<span class="c1">#</span>
+
+<span class="n">__tracker</span> <span class="o">=</span> <span class="n">AllTracker</span><span class="p">(</span><span class="nb">globals</span><span class="p">())</span>
+
+
+<span class="c1">#</span>
+<span class="c1"># Class definitions</span>
+<span class="c1">#</span>
+
+
+<div class="viewcode-block" id="SimulationStyle"><a class="viewcode-back" href="../../../../apidoc/facet/simulation/viz/facet.simulation.viz.SimulationStyle.html#facet.simulation.viz.SimulationStyle">[docs]</a><span class="k">class</span> <span class="nc">SimulationStyle</span><span class="p">(</span><span class="n">DrawingStyle</span><span class="p">,</span> <span class="n">metaclass</span><span class="o">=</span><span class="n">ABCMeta</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Base class of styles used by :class:`.SimulationDrawer`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="SimulationStyle.draw_uplift"><a class="viewcode-back" href="../../../../apidoc/facet/simulation/viz/facet.simulation.viz.SimulationStyle.html#facet.simulation.viz.SimulationStyle.draw_uplift">[docs]</a>    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">draw_uplift</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">feature_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">output_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">output_unit</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">outputs_median</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span>
+        <span class="n">outputs_lower_bound</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span>
+        <span class="n">outputs_upper_bound</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span>
+        <span class="n">baseline</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">confidence_level</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">partitions</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Any</span><span class="p">],</span>
+        <span class="n">frequencies</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span>
+        <span class="n">is_categorical_feature</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Draw the graph with the uplift curves: median, low and high percentiles.</span>
+
+<span class="sd">        :param feature_name: name of the simulated feature</span>
+<span class="sd">        :param output_name: name of the target for which output values were simulated</span>
+<span class="sd">        :param output_unit: the unit of the output axis</span>
+<span class="sd">        :param outputs_median: the medians of the simulated outputs</span>
+<span class="sd">        :param outputs_lower_bound: the lower CI bounds of the simulated outputs</span>
+<span class="sd">        :param outputs_upper_bound: the upper CI bounds of the simulated outputs</span>
+<span class="sd">        :param baseline: the baseline of the simulation</span>
+<span class="sd">        :param confidence_level: the confidence level used to calculate the CI bounds</span>
+<span class="sd">        :param partitions: the central or categorical values representing the partitions</span>
+<span class="sd">        :param frequencies: observed frequencies of the partitions</span>
+<span class="sd">        :param is_categorical_feature: ``True`` if the simulated feature is</span>
+<span class="sd">            categorical; ``False`` otherwise</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span></div>
+
+<div class="viewcode-block" id="SimulationStyle.draw_histogram"><a class="viewcode-back" href="../../../../apidoc/facet/simulation/viz/facet.simulation.viz.SimulationStyle.html#facet.simulation.viz.SimulationStyle.draw_histogram">[docs]</a>    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">draw_histogram</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">partitions</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Any</span><span class="p">],</span>
+        <span class="n">frequencies</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span>
+        <span class="n">is_categorical_feature</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Draw the histogram of observed value counts per partition.</span>
+
+<span class="sd">        :param partitions: the partitioning (center values) of the simulated feature</span>
+<span class="sd">        :param frequencies: observed frequencies for each partition</span>
+<span class="sd">        :param is_categorical_feature: ``True`` if the simulated feature is</span>
+<span class="sd">            categorical, ``False`` otherwise</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span></div>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_legend</span><span class="p">(</span><span class="n">confidence_level</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+        <span class="c1"># generate a triple with legend names for the min percentile, median, and max</span>
+        <span class="c1"># percentile</span>
+        <span class="n">tail_percentile</span> <span class="o">=</span> <span class="p">(</span><span class="mf">100.0</span> <span class="o">-</span> <span class="n">confidence_level</span> <span class="o">*</span> <span class="mf">100.0</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">tail_percentile</span><span class="si">}</span><span class="s2">th percentile&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;Median&quot;</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="mf">100.0</span> <span class="o">-</span> <span class="n">tail_percentile</span><span class="si">}</span><span class="s2">th percentile&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;Baseline&quot;</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="SimulationMatplotStyle"><a class="viewcode-back" href="../../../../apidoc/facet/simulation/viz/facet.simulation.viz.SimulationMatplotStyle.html#facet.simulation.viz.SimulationMatplotStyle">[docs]</a><span class="nd">@inheritdoc</span><span class="p">(</span><span class="n">match</span><span class="o">=</span><span class="s2">&quot;[see superclass]&quot;</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">SimulationMatplotStyle</span><span class="p">(</span><span class="n">MatplotStyle</span><span class="p">,</span> <span class="n">SimulationStyle</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    `matplotlib` style for simulation chart.</span>
+
+<span class="sd">    Along the range of simulated feature values on the x axis, plots the median and</span>
+<span class="sd">    confidence intervals of the simulated target value.</span>
+
+<span class="sd">    A bar chart below the plot shows a histogram of actually observed values near the</span>
+<span class="sd">    simulated values.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># sizing constants</span>
+    <span class="n">__WIDTH_BARS</span> <span class="o">=</span> <span class="mf">0.8</span>
+    <span class="n">__HISTOGRAM_SIZE_RATIO</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="mi">3</span>
+
+<div class="viewcode-block" id="SimulationMatplotStyle.draw_uplift"><a class="viewcode-back" href="../../../../apidoc/facet/simulation/viz/facet.simulation.viz.SimulationMatplotStyle.html#facet.simulation.viz.SimulationMatplotStyle.draw_uplift">[docs]</a>    <span class="k">def</span> <span class="nf">draw_uplift</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">feature_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">output_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">output_unit</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">outputs_median</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span>
+        <span class="n">outputs_lower_bound</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span>
+        <span class="n">outputs_upper_bound</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span>
+        <span class="n">baseline</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">confidence_level</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">partitions</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Any</span><span class="p">],</span>
+        <span class="n">frequencies</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span>
+        <span class="n">is_categorical_feature</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;[see superclass]&quot;&quot;&quot;</span>
+
+        <span class="c1"># draw the mean predicted uplift, showing median and confidence ranges for</span>
+        <span class="c1"># each prediction</span>
+        <span class="k">if</span> <span class="n">is_categorical_feature</span><span class="p">:</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">partitions</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">partitions</span>
+        <span class="n">ax</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ax</span>
+
+        <span class="c1"># plot the confidence bounds and the median</span>
+        <span class="p">(</span><span class="n">line_min</span><span class="p">,)</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">outputs_lower_bound</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">colors</span><span class="o">.</span><span class="n">accent_3</span><span class="p">)</span>
+        <span class="p">(</span><span class="n">line_median</span><span class="p">,)</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">outputs_median</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">colors</span><span class="o">.</span><span class="n">accent_2</span><span class="p">)</span>
+        <span class="p">(</span><span class="n">line_max</span><span class="p">,)</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">outputs_upper_bound</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">colors</span><span class="o">.</span><span class="n">accent_3</span><span class="p">)</span>
+
+        <span class="c1"># add a horizontal line at the baseline</span>
+        <span class="n">line_base</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">axhline</span><span class="p">(</span><span class="n">y</span><span class="o">=</span><span class="n">baseline</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">colors</span><span class="o">.</span><span class="n">accent_1</span><span class="p">)</span>
+
+        <span class="c1"># add a legend</span>
+        <span class="n">labels</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_legend</span><span class="p">(</span><span class="n">confidence_level</span><span class="o">=</span><span class="n">confidence_level</span><span class="p">)</span>
+        <span class="n">handles</span> <span class="o">=</span> <span class="p">(</span><span class="n">line_max</span><span class="p">,</span> <span class="n">line_median</span><span class="p">,</span> <span class="n">line_min</span><span class="p">,</span> <span class="n">line_base</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">handles</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span>
+
+        <span class="c1"># label the y axis</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="n">output_unit</span><span class="p">)</span>
+
+        <span class="c1"># format and label the x axis</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">tick_params</span><span class="p">(</span>
+            <span class="n">axis</span><span class="o">=</span><span class="s2">&quot;x&quot;</span><span class="p">,</span>
+            <span class="n">labelbottom</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">bottom</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">labelrotation</span><span class="o">=</span><span class="mi">45</span> <span class="k">if</span> <span class="n">is_categorical_feature</span> <span class="k">else</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">is_categorical_feature</span> <span class="ow">or</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">set_xticks</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">set_xticklabels</span><span class="p">(</span><span class="n">labels</span><span class="o">=</span><span class="n">partitions</span><span class="p">)</span>
+
+        <span class="c1"># remove the top and right spines</span>
+        <span class="k">for</span> <span class="n">pos</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;top&quot;</span><span class="p">,</span> <span class="s2">&quot;right&quot;</span><span class="p">]:</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">spines</span><span class="p">[</span><span class="n">pos</span><span class="p">]</span><span class="o">.</span><span class="n">set_visible</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="SimulationMatplotStyle.draw_histogram"><a class="viewcode-back" href="../../../../apidoc/facet/simulation/viz/facet.simulation.viz.SimulationMatplotStyle.html#facet.simulation.viz.SimulationMatplotStyle.draw_histogram">[docs]</a>    <span class="k">def</span> <span class="nf">draw_histogram</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">partitions</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">T_Partition</span><span class="p">],</span>
+        <span class="n">frequencies</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span>
+        <span class="n">is_categorical_feature</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;[see superclass]&quot;&quot;&quot;</span>
+
+        <span class="c1"># get histogram size and values (horizontally, we count bars from 0..n-1</span>
+        <span class="n">n_partitions</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">partitions</span><span class="p">)</span>
+        <span class="n">x_values</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">n_partitions</span><span class="p">))</span>
+        <span class="n">y_values</span> <span class="o">=</span> <span class="n">frequencies</span>
+
+        <span class="k">def</span> <span class="nf">_make_sub_axes</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Axes</span><span class="p">:</span>
+            <span class="c1"># create the sub-axes for the histogram</span>
+
+            <span class="c1"># get the height of the main axes - this will be the basis for</span>
+            <span class="c1"># calculating the size of the new sub-axes for the histogram</span>
+            <span class="n">main_ax</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ax</span>
+            <span class="n">y_min</span><span class="p">,</span> <span class="n">y_max</span> <span class="o">=</span> <span class="n">main_ax</span><span class="o">.</span><span class="n">get_ylim</span><span class="p">()</span>
+            <span class="n">uplift_height</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">y_max</span> <span class="o">-</span> <span class="n">y_min</span><span class="p">)</span>
+
+            <span class="k">def</span> <span class="nf">_x_axis_height</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+                <span class="n">_</span><span class="p">,</span> <span class="n">axis_below_size_pixels</span> <span class="o">=</span> <span class="n">main_ax</span><span class="o">.</span><span class="n">get_xaxis</span><span class="p">()</span><span class="o">.</span><span class="n">get_text_heights</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">renderer</span>
+                <span class="p">)</span>
+                <span class="p">((</span><span class="n">_</span><span class="p">,</span> <span class="n">y0</span><span class="p">),</span> <span class="p">(</span><span class="n">_</span><span class="p">,</span> <span class="n">y1</span><span class="p">))</span> <span class="o">=</span> <span class="n">main_ax</span><span class="o">.</span><span class="n">transData</span><span class="o">.</span><span class="n">inverted</span><span class="p">()</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span>
+                    <span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">axis_below_size_pixels</span><span class="p">))</span>
+                <span class="p">)</span>
+                <span class="k">return</span> <span class="nb">abs</span><span class="p">(</span><span class="n">y1</span> <span class="o">-</span> <span class="n">y0</span><span class="p">)</span>
+
+            <span class="c1"># calculate the height of the x axis in data space; add additional padding</span>
+            <span class="n">axis_below_size_data</span> <span class="o">=</span> <span class="n">_x_axis_height</span><span class="p">()</span> <span class="o">*</span> <span class="mf">1.2</span>
+
+            <span class="c1"># create the axes divider, then use it to append the new sub-axes at the</span>
+            <span class="c1"># bottom while leaving sufficient padding in-between to accommodate the</span>
+            <span class="c1"># main axes&#39; x axis labels</span>
+            <span class="n">divider</span><span class="p">:</span> <span class="n">AxesDivider</span> <span class="o">=</span> <span class="n">make_axes_locatable</span><span class="p">(</span><span class="n">main_ax</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">divider</span><span class="o">.</span><span class="n">append_axes</span><span class="p">(</span>
+                <span class="n">position</span><span class="o">=</span><span class="s2">&quot;bottom&quot;</span><span class="p">,</span>
+                <span class="n">size</span><span class="o">=</span><span class="n">Scaled</span><span class="p">(</span>
+                    <span class="n">uplift_height</span> <span class="o">*</span> <span class="n">SimulationMatplotStyle</span><span class="o">.</span><span class="n">__HISTOGRAM_SIZE_RATIO</span>
+                <span class="p">),</span>
+                <span class="n">pad</span><span class="o">=</span><span class="n">Scaled</span><span class="p">(</span>
+                    <span class="n">axis_below_size_data</span>
+                    <span class="o">*</span> <span class="p">(</span><span class="n">uplift_height</span> <span class="o">/</span> <span class="p">(</span><span class="n">uplift_height</span> <span class="o">-</span> <span class="n">axis_below_size_data</span><span class="p">))</span>
+                    <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">SimulationMatplotStyle</span><span class="o">.</span><span class="n">__HISTOGRAM_SIZE_RATIO</span><span class="p">)</span>
+                <span class="p">),</span>
+            <span class="p">)</span>
+
+        <span class="n">ax</span> <span class="o">=</span> <span class="n">_make_sub_axes</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_apply_color_scheme</span><span class="p">(</span><span class="n">ax</span><span class="p">)</span>
+
+        <span class="n">ax</span><span class="o">.</span><span class="n">invert_yaxis</span><span class="p">()</span>
+
+        <span class="n">width_bars</span> <span class="o">=</span> <span class="n">SimulationMatplotStyle</span><span class="o">.</span><span class="n">__WIDTH_BARS</span>
+
+        <span class="c1"># reduce the horizontal margin such that half a bar is to the left of the</span>
+        <span class="c1"># leftmost tick mark (but the tick mark stays aligned with the main</span>
+        <span class="c1"># simulation chart)</span>
+        <span class="n">x_margin</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">margins</span><span class="p">()</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_xmargin</span><span class="p">(</span>
+            <span class="nb">max</span><span class="p">(</span>
+                <span class="mi">0</span><span class="p">,</span>
+                <span class="p">(</span><span class="n">width_bars</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">-</span> <span class="n">x_margin</span> <span class="o">*</span> <span class="p">(</span><span class="n">n_partitions</span> <span class="o">-</span> <span class="mi">1</span><span class="p">))</span>
+                <span class="o">/</span> <span class="p">(</span><span class="n">width_bars</span> <span class="o">-</span> <span class="p">(</span><span class="n">n_partitions</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)),</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+
+        <span class="c1"># draw the histogram bars</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">bar</span><span class="p">(</span>
+            <span class="n">x</span><span class="o">=</span><span class="n">x_values</span><span class="p">,</span>
+            <span class="n">height</span><span class="o">=</span><span class="n">y_values</span><span class="p">,</span>
+            <span class="n">color</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">colors</span><span class="o">.</span><span class="n">fill_1</span><span class="p">,</span>
+            <span class="n">align</span><span class="o">=</span><span class="s2">&quot;center&quot;</span><span class="p">,</span>
+            <span class="n">width</span><span class="o">=</span><span class="n">width_bars</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="c1"># padding between bars and labels is 2% of histogram height; might want to</span>
+        <span class="c1"># replace this with a measure based on text height</span>
+        <span class="n">label_vertical_offset</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">y_values</span><span class="p">)</span> <span class="o">*</span> <span class="mf">0.02</span>
+
+        <span class="c1"># draw labels</span>
+        <span class="n">color_fg</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">colors</span><span class="o">.</span><span class="n">foreground</span>
+        <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">x_values</span><span class="p">,</span> <span class="n">y_values</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">y</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">ax</span><span class="o">.</span><span class="n">text</span><span class="p">(</span>
+                    <span class="n">x</span><span class="o">=</span><span class="n">x</span><span class="p">,</span>
+                    <span class="n">y</span><span class="o">=</span><span class="n">y</span> <span class="o">+</span> <span class="n">label_vertical_offset</span><span class="p">,</span>
+                    <span class="n">s</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">y</span><span class="p">),</span>
+                    <span class="n">horizontalalignment</span><span class="o">=</span><span class="s2">&quot;center&quot;</span><span class="p">,</span>
+                    <span class="n">verticalalignment</span><span class="o">=</span><span class="s2">&quot;top&quot;</span><span class="p">,</span>
+                    <span class="n">color</span><span class="o">=</span><span class="n">color_fg</span><span class="p">,</span>
+                <span class="p">)</span>
+
+        <span class="c1"># hide x and y axis</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">get_xaxis</span><span class="p">()</span><span class="o">.</span><span class="n">set_visible</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">get_yaxis</span><span class="p">()</span><span class="o">.</span><span class="n">set_visible</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="c1"># hide the spines</span>
+        <span class="k">for</span> <span class="n">pos</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;top&quot;</span><span class="p">,</span> <span class="s2">&quot;right&quot;</span><span class="p">,</span> <span class="s2">&quot;left&quot;</span><span class="p">,</span> <span class="s2">&quot;bottom&quot;</span><span class="p">]:</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">spines</span><span class="p">[</span><span class="n">pos</span><span class="p">]</span><span class="o">.</span><span class="n">set_visible</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="SimulationReportStyle"><a class="viewcode-back" href="../../../../apidoc/facet/simulation/viz/facet.simulation.viz.SimulationReportStyle.html#facet.simulation.viz.SimulationReportStyle">[docs]</a><span class="nd">@inheritdoc</span><span class="p">(</span><span class="n">match</span><span class="o">=</span><span class="s2">&quot;[see superclass]&quot;</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">SimulationReportStyle</span><span class="p">(</span><span class="n">SimulationStyle</span><span class="p">,</span> <span class="n">TextStyle</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Renders simulation results as a text report.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># general format wih sufficient space for potential sign and &quot;e&quot; notation</span>
+    <span class="n">__NUM_PRECISION</span> <span class="o">=</span> <span class="mi">3</span>
+    <span class="n">__NUM_WIDTH</span> <span class="o">=</span> <span class="n">__NUM_PRECISION</span> <span class="o">+</span> <span class="mi">6</span>
+    <span class="n">__NUM_FORMAT</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;&lt; </span><span class="si">{</span><span class="n">__NUM_WIDTH</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">__NUM_PRECISION</span><span class="si">}</span><span class="s2">g&quot;</span>
+
+    <span class="c1"># table headings</span>
+    <span class="n">__HEADING_PARTITION</span> <span class="o">=</span> <span class="s2">&quot;Partition&quot;</span>
+    <span class="n">__HEADING_FREQUENCY</span> <span class="o">=</span> <span class="s2">&quot;Frequency&quot;</span>
+
+    <span class="c1"># format for partitions</span>
+    <span class="n">__PARTITION_TEXT_FORMAT</span> <span class="o">=</span> <span class="s2">&quot;s&quot;</span>
+    <span class="n">__PARTITION_NUMBER_FORMAT</span> <span class="o">=</span> <span class="s2">&quot;g&quot;</span>
+
+    <span class="c1"># format for frequencies</span>
+    <span class="n">__FREQUENCY_WIDTH</span> <span class="o">=</span> <span class="mi">6</span>
+    <span class="n">__FREQUENCY_FORMAT</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">__FREQUENCY_WIDTH</span><span class="si">}</span><span class="s2">g&quot;</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_num_format</span><span class="p">(</span><span class="n">heading</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;&gt; </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">heading</span><span class="p">)</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">SimulationReportStyle</span><span class="o">.</span><span class="n">__NUM_PRECISION</span><span class="si">}</span><span class="s2">g&quot;</span>
+
+<div class="viewcode-block" id="SimulationReportStyle.draw_uplift"><a class="viewcode-back" href="../../../../apidoc/facet/simulation/viz/facet.simulation.viz.SimulationReportStyle.html#facet.simulation.viz.SimulationReportStyle.draw_uplift">[docs]</a>    <span class="k">def</span> <span class="nf">draw_uplift</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">feature_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">output_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">output_unit</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">outputs_median</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span>
+        <span class="n">outputs_lower_bound</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span>
+        <span class="n">outputs_upper_bound</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span>
+        <span class="n">baseline</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">confidence_level</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">partitions</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Any</span><span class="p">],</span>
+        <span class="n">frequencies</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span>
+        <span class="n">is_categorical_feature</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;[see superclass]&quot;&quot;&quot;</span>
+
+        <span class="n">out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">out</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">out</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="si">{</span><span class="n">output_unit</span><span class="si">}</span><span class="s2">:</span><span class="se">\n\n</span><span class="s2">Baseline = </span><span class="si">{</span><span class="n">baseline</span><span class="si">}</span><span class="se">\n\n</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">out</span><span class="o">.</span><span class="n">write</span><span class="p">(</span>
+            <span class="n">format_table</span><span class="p">(</span>
+                <span class="n">headings</span><span class="o">=</span><span class="p">[</span>
+                    <span class="n">SimulationReportStyle</span><span class="o">.</span><span class="n">__HEADING_PARTITION</span><span class="p">,</span>
+                    <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">_legend</span><span class="p">(</span><span class="n">confidence_level</span><span class="o">=</span><span class="n">confidence_level</span><span class="p">)[:</span><span class="mi">3</span><span class="p">],</span>
+                <span class="p">],</span>
+                <span class="n">formats</span><span class="o">=</span><span class="p">[</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_partition_format</span><span class="p">(</span><span class="n">is_categorical</span><span class="o">=</span><span class="n">is_categorical_feature</span><span class="p">),</span>
+                    <span class="o">*</span><span class="p">([</span><span class="n">SimulationReportStyle</span><span class="o">.</span><span class="n">__NUM_FORMAT</span><span class="p">]</span> <span class="o">*</span> <span class="mi">3</span><span class="p">),</span>
+                <span class="p">],</span>
+                <span class="n">data</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span>
+                    <span class="nb">zip</span><span class="p">(</span>
+                        <span class="n">partitions</span><span class="p">,</span>
+                        <span class="n">outputs_lower_bound</span><span class="p">,</span>
+                        <span class="n">outputs_median</span><span class="p">,</span>
+                        <span class="n">outputs_upper_bound</span><span class="p">,</span>
+                    <span class="p">)</span>
+                <span class="p">),</span>
+                <span class="n">alignment</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;&lt;&quot;</span><span class="p">,</span> <span class="s2">&quot;&gt;&quot;</span><span class="p">,</span> <span class="s2">&quot;&gt;&quot;</span><span class="p">,</span> <span class="s2">&quot;&gt;&quot;</span><span class="p">],</span>
+            <span class="p">)</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="SimulationReportStyle.draw_histogram"><a class="viewcode-back" href="../../../../apidoc/facet/simulation/viz/facet.simulation.viz.SimulationReportStyle.html#facet.simulation.viz.SimulationReportStyle.draw_histogram">[docs]</a>    <span class="k">def</span> <span class="nf">draw_histogram</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">partitions</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">T_Partition</span><span class="p">],</span>
+        <span class="n">frequencies</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span>
+        <span class="n">is_categorical_feature</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;[see superclass]&quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">out</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Observed frequencies:</span><span class="se">\n\n</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">out</span><span class="o">.</span><span class="n">write</span><span class="p">(</span>
+            <span class="n">format_table</span><span class="p">(</span>
+                <span class="n">headings</span><span class="o">=</span><span class="p">(</span>
+                    <span class="n">SimulationReportStyle</span><span class="o">.</span><span class="n">__HEADING_PARTITION</span><span class="p">,</span>
+                    <span class="n">SimulationReportStyle</span><span class="o">.</span><span class="n">__HEADING_FREQUENCY</span><span class="p">,</span>
+                <span class="p">),</span>
+                <span class="n">data</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">partitions</span><span class="p">,</span> <span class="n">frequencies</span><span class="p">)),</span>
+                <span class="n">formats</span><span class="o">=</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_partition_format</span><span class="p">(</span><span class="n">is_categorical</span><span class="o">=</span><span class="n">is_categorical_feature</span><span class="p">),</span>
+                    <span class="n">SimulationReportStyle</span><span class="o">.</span><span class="n">__FREQUENCY_FORMAT</span><span class="p">,</span>
+                <span class="p">),</span>
+                <span class="n">alignment</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;&lt;&quot;</span><span class="p">,</span> <span class="s2">&quot;&gt;&quot;</span><span class="p">],</span>
+            <span class="p">)</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="SimulationReportStyle.finalize_drawing"><a class="viewcode-back" href="../../../../apidoc/facet/simulation/viz/facet.simulation.viz.SimulationReportStyle.html#facet.simulation.viz.SimulationReportStyle.finalize_drawing">[docs]</a>    <span class="k">def</span> <span class="nf">finalize_drawing</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;[see superclass]&quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">finalize_drawing</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="c1"># print two trailing line breaks</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">out</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span></div>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_partition_format</span><span class="p">(</span><span class="n">is_categorical</span><span class="p">:</span> <span class="nb">bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">is_categorical</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">SimulationReportStyle</span><span class="o">.</span><span class="n">__PARTITION_TEXT_FORMAT</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">SimulationReportStyle</span><span class="o">.</span><span class="n">__PARTITION_NUMBER_FORMAT</span></div>
+
+
+<span class="n">__tracker</span><span class="o">.</span><span class="n">validate</span><span class="p">()</span>
+</pre></div>
+
+              </div>
+              
+              
+              <div class='prev-next-bottom'>
+                
+
+              </div>
+              
+          </main>
+          
+
+      </div>
+    </div>
+
+    
+  <script src="../../../../_static/js/index.d3f166471bb80abb5163.js"></script>
+
+
+    <footer class="footer mt-5 mt-md-0">
+  <div class="container">
+    <p>
+          &copy; Copyright 2021, Boston Consulting Group (BCG).<br/>
+        Created using <a href="http://sphinx-doc.org/">Sphinx</a> 3.4.3.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>
