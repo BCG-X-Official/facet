@@ -229,20 +229,21 @@ class SimulationMatplotStyle(MatplotStyle, SimulationStyle):
 
         ax = _make_sub_axes()
 
+        self._apply_color_scheme(ax)
+
         ax.invert_yaxis()
 
+        width_bars = SimulationMatplotStyle.__WIDTH_BARS
+
         # reduce the horizontal margin such that half a bar is to the left of the
-        # leftmost tickmark (but the tickmark stays aligned with the main
+        # leftmost tick mark (but the tick mark stays aligned with the main
         # simulation chart)
         x_margin, _ = ax.margins()
         ax.set_xmargin(
             max(
                 0,
-                (
-                    SimulationMatplotStyle.__WIDTH_BARS / 2
-                    - x_margin * (n_partitions - 1)
-                )
-                / (SimulationMatplotStyle.__WIDTH_BARS - (n_partitions - 1)),
+                (width_bars / 2 - x_margin * (n_partitions - 1))
+                / (width_bars - (n_partitions - 1)),
             )
         )
 
@@ -252,7 +253,7 @@ class SimulationMatplotStyle(MatplotStyle, SimulationStyle):
             height=y_values,
             color=self.colors.fill_1,
             align="center",
-            width=SimulationMatplotStyle.__WIDTH_BARS,
+            width=width_bars,
         )
 
         # padding between bars and labels is 2% of histogram height; might want to
@@ -260,6 +261,7 @@ class SimulationMatplotStyle(MatplotStyle, SimulationStyle):
         label_vertical_offset = max(y_values) * 0.02
 
         # draw labels
+        color_fg = self.colors.foreground
         for x, y in zip(x_values, y_values):
             if y > 0:
                 ax.text(
@@ -268,6 +270,7 @@ class SimulationMatplotStyle(MatplotStyle, SimulationStyle):
                     s=str(y),
                     horizontalalignment="center",
                     verticalalignment="top",
+                    color=color_fg,
                 )
 
         # hide x and y axis

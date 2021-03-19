@@ -1,5 +1,3 @@
-{% set setup_py_data = load_setup_py_data() %}
-
 package:
   name: gamma-facet
   version: {{ environ.get('FACET_BUILD_FACET_VERSION') }}
@@ -15,18 +13,19 @@ requirements:
   host:
     - pip>=20.*
     - python {{ environ.get('FACET_V_PYTHON', '=3.8.*') }}
+    - numpy {{ environ.get('FACET_V_NUMPY', '>=1.11.*') }}
     - flit>=3.0.*
   run:
-    - python{{ environ.get('FACET_V_PYTHON') }}
-    - pandas{{ environ.get('FACET_V_PANDAS') }}
-    - numpy{{ environ.get('FACET_V_NUMPY') }}
-    - scipy{{ environ.get('FACET_V_SCIPY') }}
-    - matplotlib{{ environ.get('FACET_V_MATPLOTLIB') }}
-    - scikit-learn{{ environ.get('FACET_V_SCIKIT_LEARN') }}
-    - shap{{ environ.get('FACET_V_SHAP') }}
     - gamma-pytools{{ environ.get('FACET_V_GAMMA_PYTOOLS') }}
+    - matplotlib{{ environ.get('FACET_V_MATPLOTLIB') }}
+    - numpy{{ environ.get('FACET_V_NUMPY') }}
+    - packaging{{ environ.get('FACET_V_PACKAGING') }}
+    - pandas{{ environ.get('FACET_V_PANDAS') }}
+    - python{{ environ.get('FACET_V_PYTHON') }}
+    - scipy{{ environ.get('FACET_V_SCIPY') }}
+    - shap{{ environ.get('FACET_V_SHAP') }}
     - sklearndf{{ environ.get('FACET_V_SKLEARNDF') }}
-    - pyyaml{{ environ.get('FACET_V_PYYAML') }}
+
 test:
   imports:
     - facet
@@ -42,8 +41,6 @@ test:
     - python -c 'import facet;
                  import os;
                  assert facet.__version__ == os.environ["PKG_VERSION"]'
-    - pytest -vs ${FACET_PATH}/pytools/test
-    - pytest -vs ${FACET_PATH}/sklearndf/test
     - pytest -vs ${FACET_PATH}/facet/test
 
 about:

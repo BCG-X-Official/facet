@@ -8,72 +8,83 @@ explanations of your supervised machine learning models.
 
 FACET is composed of the following key components:
 
-+-----------------+---------------------------------------------------------------------+
-| |spacer|        | **Model Inspection**                                                |
-|                 |                                                                     |
-| |inspect|       | FACET introduces a new algorithm to quantify dependencies and       |
-|                 | interactions between features in ML models.                         |
-|                 | This new tool for human-explainable AI adds a new, global           |
-|                 | perspective to the observation-level explanations provided by the   |
-|                 | popular `SHAP <https://shap.readthedocs.io/en/stable/>`__ approach. |
-|                 | To learn more about FACET’s model inspection capabilities, see the  |
-|                 | getting started example below.                                      |
-+-----------------+---------------------------------------------------------------------+
-| |spacer|        | **Model Simulation**                                                |
-|                 |                                                                     |
-| |sim|           | FACET’s model simulation algorithms use ML models for               |
-|                 | *virtual experiments* to help identify scenarios that optimise      |
-|                 | predicted outcomes.                                                 |
-|                 | To quantify the uncertainty in simulations, FACET utilises a range  |
-|                 | of bootstrapping algorithms including stationary and stratified     |
-|                 | bootstraps.                                                         |
-|                 | For an example of FACET’s bootstrap simulations, see the            |
-|                 | quickstart example below.                                           |
-+-----------------+---------------------------------------------------------------------+
-| |spacer|        | **Enhanced Machine Learning Workflow**                              |
-|                 |                                                                     |
-| |pipe|          | FACET offers an efficient and transparent machine learning          |
-|                 | workflow, enhancing                                                 |
-|                 | `scikit-learn <https://scikit-learn.org/stable/index.html>`__'s     |
-|                 | tried and tested pipelining paradigm with new capabilities for model|
-|                 | selection, inspection, and simulation.                              |
-|                 | FACET also introduces                                               |
-|                 | `sklearndf <https://github.com/BCG-Gamma/sklearndf>`__, an augmented|
-|                 | version of *scikit-learn* with enhanced support for *pandas* data   |
-|                 | frames that ensures end-to-end traceability of features.            |
-+-----------------+---------------------------------------------------------------------+
++-----------------+-----------------------------------------------------------------------+
+| |spacer|        | **Model Inspection**                                                  |
+|                 |                                                                       |
+| |inspect|       | FACET introduces a new algorithm to quantify dependencies and         |
+|                 | interactions between features in ML models.                           |
+|                 | This new tool for human-explainable AI adds a new, global             |
+|                 | perspective to the observation-level explanations provided by the     |
+|                 | popular `SHAP <https://shap.readthedocs.io/en/stable/>`__ approach.   |
+|                 | To learn more about FACET’s model inspection capabilities, see the    |
+|                 | getting started example below.                                        |
++-----------------+-----------------------------------------------------------------------+
+| |spacer|        | **Model Simulation**                                                  |
+|                 |                                                                       |
+| |sim|           | FACET’s model simulation algorithms use ML models for                 |
+|                 | *virtual experiments* to help identify scenarios that optimise        |
+|                 | predicted outcomes.                                                   |
+|                 | To quantify the uncertainty in simulations, FACET utilises a range    |
+|                 | of bootstrapping algorithms including stationary and stratified       |
+|                 | bootstraps.                                                           |
+|                 | For an example of FACET’s bootstrap simulations, see the              |
+|                 | quickstart example below.                                             |
++-----------------+-----------------------------------------------------------------------+
+| |spacer|        | **Enhanced Machine Learning Workflow**                                |
+|                 |                                                                       |
+| |pipe|          | FACET offers an efficient and transparent machine learning            |
+|                 | workflow, enhancing                                                   |
+|                 | `scikit-learn <https://scikit-learn.org/stable/index.html>`__'s       |
+|                 | tried and tested pipelining paradigm with new capabilities for model  |
+|                 | selection, inspection, and simulation.                                |
+|                 | FACET also introduces                                                 |
+|                 | `sklearndf <https://github.com/BCG-Gamma/sklearndf>`__                |
+|                 | [`documentation <https://bcg-gamma.github.io/sklearndf/index.html>`__]|
+|                 | an augmented version of *scikit-learn* with enhanced support for      |
+|                 | *pandas* data frames that ensures end-to-end traceability of features.|
++-----------------+-----------------------------------------------------------------------+
 
 .. Begin-Badges
 
-|pypi| |conda|
+|pypi| |conda| |azure_build| |azure_code_cov|
 |python_versions| |code_style| |made_with_sphinx_doc| |License_badge|
 
 .. End-Badges
 
+
 Installation
----------------------
+------------
 
 FACET supports both PyPI and Anaconda.
 
+
 Anaconda
-~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~
 
 .. code-block:: RST
 
     conda install gamma-facet -c bcg_gamma -c conda-forge
 
+
 Pip
-~~~~~~~~~~~
+~~~
 
 .. code-block:: RST
 
     pip install gamma-facet
 
+
 Quickstart
-----------------------
+----------
 
 The following quickstart guide provides a minimal example workflow to get you
 up and running with FACET.
+For additional tutorials and the API reference,
+see the `FACET documentation <https://bcg-gamma.github.io/facet/>`__.
+
+Changes and additions to new versions are summarized in the
+`release notes <https://bcg-gamma.github.io/facet/release_notes.html>`__.
+
 
 Enhanced Machine Learning Workflow
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -148,8 +159,9 @@ samples in the leaf was the best performing of the three considered values.
 This approach easily extends to multiple hyperparameters for the learner
 and multiple learners.
 
+
 Model Inspection
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~
 
 FACET implements several model inspection methods for
 `scikit-learn <https://scikit-learn.org/stable/index.html>`__ estimators.
@@ -204,7 +216,7 @@ features in a model are:
 
     # fit the model inspector
     from facet.inspection import LearnerInspector
-    inspector = LearnerInspector()
+    inspector = LearnerInspector(n_jobs=-3)
     inspector.fit(crossfit=ranker.best_model_crossfit_)
 
 **Synergy**
@@ -300,8 +312,9 @@ Please see the
 `API reference <https://bcg-gamma.github.io/facet/apidoc/facet.html>`__
 for more detail.
 
+
 Model Simulation
-~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~
 
 Taking the `BMI` feature as an example, we do the following for the simulation:
 
@@ -362,7 +375,7 @@ of at least 26 points.
 
 
 Contributing
----------------------------
+------------
 
 FACET is stable and is being supported long-term.
 
@@ -377,14 +390,16 @@ using our team email: FacetTeam@bcg.com.
 For further information on contributing please see our
 `contribution guide <https://bcg-gamma.github.io/facet/contribution_guide.html>`__.
 
+
 License
----------------------------
+-------
 
 FACET is licensed under Apache 2.0 as described in the
 `LICENSE <https://github.com/BCG-Gamma/facet/blob/develop/LICENSE>`_ file.
 
+
 Acknowledgements
----------------------------
+----------------
 
 FACET is built on top of two popular packages for Machine Learning:
 
@@ -395,8 +410,9 @@ FACET is built on top of two popular packages for Machine Learning:
     estimate the shapley vectors which FACET then decomposes into synergy, redundancy,
     and independence vectors.
 
+
 BCG GAMMA
----------------------------
+---------
 
 If you would like to know more about the team behind FACET please see the
 `about us <https://bcg-gamma.github.io/facet/about_us.html>`__ page.
@@ -432,7 +448,7 @@ or have a look at
 .. |azure_build| image:: https://dev.azure.com/gamma-facet/facet/_apis/build/status/BCG-Gamma.facet?repoName=BCG-Gamma%2Ffacet&branchName=develop
    :target: https://dev.azure.com/gamma-facet/facet/_build?definitionId=7&_a=summary
 
-.. |azure_code_cov| image:: https://img.shields.io/azure-devops/coverage/gamma-facet/facet/_build?definitionId=7.svg
+.. |azure_code_cov| image:: https://img.shields.io/azure-devops/coverage/gamma-facet/facet/7/develop.svg
    :target: https://dev.azure.com/gamma-facet/facet/_build?definitionId=7&_a=summary
 
 .. |python_versions| image:: https://img.shields.io/badge/python-3.6|3.7|3.8-blue.svg

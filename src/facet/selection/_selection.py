@@ -165,7 +165,6 @@ class LearnerGrid(Generic[T_LearnerPipelineDF]):
                 return min(i, i_max)
 
         if isinstance(pos, slice):
-            print(pos)
             return [
                 _get(i)
                 for i in range(
