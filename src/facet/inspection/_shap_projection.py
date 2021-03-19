@@ -5,7 +5,7 @@ redundancy, and independence.
 """
 import logging
 from abc import ABCMeta, abstractmethod
-from typing import Optional, TypeVar
+from typing import Iterable, List, Optional, Tuple, TypeVar
 
 import numpy as np
 
@@ -13,7 +13,7 @@ from pytools.api import AllTracker, inheritdoc
 
 from ._shap import ShapCalculator
 from ._shap_global_explanation import (
-    AffinityMatrices,
+    AffinityMatrix,
     ShapContext,
     ShapGlobalExplainer,
     ShapInteractionGlobalExplainer,
@@ -63,12 +63,16 @@ class ShapProjector(ShapGlobalExplainer, metaclass=ABCMeta):
 
     def __init__(self) -> None:
         super().__init__()
-        self.association_: Optional[AffinityMatrices] = None
+        self.association_: Optional[AffinityMatrix] = None
 
-    def association(self, absolute: bool, symmetrical: bool) -> np.ndarray:
+    def association(
+        self, absolute: bool, symmetrical: bool, std: bool
+    ) -> Optional[np.ndarray]:
         """[see superclass]"""
         self._ensure_fitted()
-        return self.association_.get_matrix(symmetrical=symmetrical, absolute=absolute)
+        return self.association_.get_values(
+            symmetrical=symmetrical, absolute=absolute, std=std
+        )
 
     def _fit(self, shap_calculator: ShapCalculator) -> None:
         self._reset_fit()
@@ -80,14 +84,14 @@ class ShapProjector(ShapGlobalExplainer, metaclass=ABCMeta):
         self.association_ = None
 
     @abstractmethod
-    def _get_context(self, shap_calculator: ShapCalculator) -> ShapContext:
+    def _get_context(self, shap_calculator: ShapCalculator) -> List[ShapContext]:
         pass
 
     @abstractmethod
-    def _calculate(self, context: ShapContext) -> None:
+    def _calculate(self, contexts: Iterable[ShapContext]) -> AffinityMatrix:
         pass
 
-    def _calculate_association(self, context: ShapContext) -> None:
+    def _calculate_association(self, context: ShapContext) -> AffinityMatrix:
         # Calculate association: ass[i, j]
         #
         # Input: shap context
@@ -111,7 +115,7 @@ class ShapProjector(ShapGlobalExplainer, metaclass=ABCMeta):
         # we define the association of a feature with itself as 1
         fill_diagonal(ass_ij, 1.0)
 
-        self.association_ = AffinityMatrices(
+        return AffinityMatrix.from_relative_affinity(
             affinity_rel_ij=ass_ij, std_p_i=sqrt(var_p_i)
         )
 
@@ -124,11 +128,14 @@ class ShapVectorProjector(ShapProjector):
     onto a feature's main SHAP vector.
     """
 
-    def _get_context(self, shap_calculator: ShapCalculator) -> ShapContext:
-        return ShapValueContext(shap_calculator=shap_calculator)
+    def _get_context(self, shap_calculator: ShapCalculator) -> List[ShapContext]:
+        return [ShapValueContext(shap_calculator=shap_calculator)]
 
-    def _calculate(self, context: ShapContext) -> None:
-        self._calculate_association(context=context)
+    def _calculate(self, contexts: Iterable[ShapContext]) -> None:
+        # calculate association matrices for each SHAP context, then aggregate
+        self.association_ = AffinityMatrix.aggregate(
+            affinity_matrices=map(self._calculate_association, contexts)
+        )
 
 
 @inheritdoc(match="""[see superclass]""")
@@ -151,33 +158,53 @@ class ShapInteractionVectorProjector(ShapProjector, ShapInteractionGlobalExplain
     def __init__(self) -> None:
         super().__init__()
 
-        self.synergy_: Optional[AffinityMatrices] = None
-        self.redundancy_: Optional[AffinityMatrices] = None
+        self.synergy_: Optional[AffinityMatrix] = None
+        self.redundancy_: Optional[AffinityMatrix] = None
 
-    def synergy(self, symmetrical: bool, absolute: bool) -> np.ndarray:
+    def synergy(
+        self, symmetrical: bool, absolute: bool, std: bool
+    ) -> Optional[np.ndarray]:
         """[see superclass]"""
         self._ensure_fitted()
-        return self.synergy_.get_matrix(symmetrical=symmetrical, absolute=absolute)
+        return self.synergy_.get_values(
+            symmetrical=symmetrical, absolute=absolute, std=std
+        )
 
-    def redundancy(self, symmetrical: bool, absolute: bool) -> np.ndarray:
+    def redundancy(
+        self, symmetrical: bool, absolute: bool, std: bool
+    ) -> Optional[np.ndarray]:
         """[see superclass]"""
         self._ensure_fitted()
-        return self.redundancy_.get_matrix(symmetrical=symmetrical, absolute=absolute)
+        return self.redundancy_.get_values(
+            symmetrical=symmetrical, absolute=absolute, std=std
+        )
 
-    def _get_context(self, shap_calculator: ShapCalculator) -> ShapContext:
-        return ShapInteractionValueContext(shap_calculator=shap_calculator)
+    def _get_context(self, shap_calculator: ShapCalculator) -> List[ShapContext]:
+        return [ShapInteractionValueContext(shap_calculator=shap_calculator)]
 
-    def _calculate(self, context: ShapContext) -> None:
+    def _calculate(self, contexts: Iterable[ShapContext]) -> None:
+        # calculate association, synergy, and redundancy matrices for each SHAP context,
+        # then aggregate each of them
+        self.association_, self.synergy_, self.redundancy_ = map(
+            AffinityMatrix.aggregate,
+            zip(
+                *(
+                    (
+                        self._calculate_association(context=context),
+                        *self._calculate_synergy_redundancy(context=context),
+                    )
+                    for context in contexts
+                )
+            ),
+        )
+
+    def _calculate_synergy_redundancy(
+        self, context: ShapContext
+    ) -> Tuple[AffinityMatrix, AffinityMatrix]:
         p_i = context.p_i
         var_p_i = context.var_p_i
         p_ij = context.p_ij
         weight = context.weight
-
-        #
-        # Association: ass[i, j]
-        #
-
-        self._calculate_association(context=context)
 
         #
         # Synergy: syn[i, j]
@@ -279,8 +306,14 @@ class ShapInteractionVectorProjector(ShapProjector, ShapInteractionGlobalExplain
         # the code above
 
         std_p_i = sqrt(var_p_i)
-        self.synergy_ = AffinityMatrices(affinity_rel_ij=syn_ij, std_p_i=std_p_i)
-        self.redundancy_ = AffinityMatrices(affinity_rel_ij=red_ij, std_p_i=std_p_i)
+        return (
+            AffinityMatrix.from_relative_affinity(
+                affinity_rel_ij=syn_ij, std_p_i=std_p_i
+            ),
+            AffinityMatrix.from_relative_affinity(
+                affinity_rel_ij=red_ij, std_p_i=std_p_i
+            ),
+        )
 
     def _reset_fit(self) -> None:
         # revert status of this object to not fitted

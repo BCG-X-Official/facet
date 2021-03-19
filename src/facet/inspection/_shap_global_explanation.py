@@ -5,7 +5,7 @@ redundancy, and independence.
 """
 import logging
 from abc import ABCMeta, abstractmethod
-from typing import Any, List, Optional, TypeVar, Union
+from typing import Any, Iterable, List, Optional, TypeVar, Union
 
 import numpy as np
 import pandas as pd
@@ -18,7 +18,7 @@ from ._shap import ShapCalculator
 log = logging.getLogger(__name__)
 
 __all__ = [
-    "AffinityMatrices",
+    "AffinityMatrix",
     "ShapContext",
     "ShapGlobalExplainer",
     "ShapInteractionGlobalExplainer",
@@ -47,6 +47,7 @@ _PAIRWISE_PARTIAL_SUMMATION = False
 T_Self = TypeVar("T_Self")
 T_ShapCalculator = TypeVar("T_ShapCalculator", bound=ShapCalculator)
 
+
 #
 # Ensure all symbols introduced below are included in __all__
 #
@@ -59,7 +60,7 @@ __tracker = AllTracker(globals())
 #
 
 
-class AffinityMatrices:
+class AffinityMatrix:
     """
     Stores all variations of a feature affinity matrix.
     """
@@ -67,7 +68,25 @@ class AffinityMatrices:
     # shape: (2, 2, n_outputs, n_features, n_features)
     _matrices: np.ndarray
 
-    def __init__(self, affinity_rel_ij: np.ndarray, std_p_i: np.ndarray) -> None:
+    # shape: (2, 2, n_outputs, n_features, n_features)
+    _matrices_std: Optional[np.ndarray]
+
+    def __init__(
+        self, matrices: np.ndarray, matrices_std: Optional[np.ndarray] = None
+    ) -> None:
+        shape = matrices.shape
+        assert len(shape) == 5
+        assert shape[:2] == (2, 2)
+        assert shape[3] == shape[4]
+        assert matrices_std is None or matrices_std.shape == matrices.shape
+
+        self._matrices = matrices
+        self._matrices_std = matrices_std
+
+    @staticmethod
+    def from_relative_affinity(
+        affinity_rel_ij: np.ndarray, std_p_i: np.ndarray
+    ) -> "AffinityMatrix":
         """
         :param affinity_rel_ij: the affinity matrix from which to create all variations,
             shaped `(n_outputs, n_features, n_features)`
@@ -98,24 +117,54 @@ class AffinityMatrices:
         # re-set the diagonal to 1.0 in case of rounding errors
         fill_diagonal(affinity_rel_sym_ij, 1.0)
 
-        # store the matrices for access via method get_matrix
-        self._matrices = np.vstack(
-            (
-                affinity_rel_ij,
-                affinity_abs_ij,
-                affinity_rel_sym_ij,
-                affinity_abs_sym_ij_2x / 2,
-            )
-        ).reshape((2, 2, *affinity_rel_ij.shape))
+        # return the AffinityMatrices object
+        return AffinityMatrix(
+            matrices=np.vstack(
+                (
+                    affinity_rel_ij,
+                    affinity_abs_ij,
+                    affinity_rel_sym_ij,
+                    affinity_abs_sym_ij_2x / 2,
+                )
+            ).reshape((2, 2, *affinity_rel_ij.shape))
+        )
 
-    def get_matrix(self, symmetrical: bool, absolute: bool):
+    @staticmethod
+    def aggregate(affinity_matrices: Iterable["AffinityMatrix"]) -> "AffinityMatrix":
+        """
+        Aggregate several sets of affinity matrices (obtained from different splits)
+        into one, by calculating the mean and standard deviation for each value in the
+        provided iterable of affinity matrices.
+
+        :param affinity_matrices: sets of affinity matrices to aggregate
+        :return: the aggregated set of affinity matrices
+        """
+        matrix_values = np.stack(
+            tuple(affinity_matrix._matrices for affinity_matrix in affinity_matrices)
+        )
+        return AffinityMatrix(
+            matrices=matrix_values.mean(axis=0), matrices_std=matrix_values.std(axis=0)
+        )
+
+    def get_values(
+        self, symmetrical: bool, absolute: bool, std: bool
+    ) -> Optional[np.ndarray]:
         """
         Get the matrix matching the given criteria.
         :param symmetrical: if ``True``, get the symmetrical version of the matrix
         :param absolute: if ``True``, get the absolute version of the matrix
+        :param std: if ``True``, return standard deviations instead of (mean) values;
+            return ``None`` if only a single affinity matrix had been calculated and
+            thus the standard deviation is not known
         :return: the affinity matrix
         """
-        return self._matrices[int(symmetrical), int(absolute)]
+        if std:
+            matrices = self._matrices_std
+            if matrices is None:
+                return None
+        else:
+            matrices = self._matrices
+        return matrices[int(symmetrical), int(absolute)]
 
 
 @inheritdoc(match="""[see superclass]""")
@@ -162,7 +211,9 @@ class ShapGlobalExplainer(FittableMixin[ShapCalculator], metaclass=ABCMeta):
         return self
 
     @abstractmethod
-    def association(self, absolute: bool, symmetrical: bool) -> np.ndarray:
+    def association(
+        self, absolute: bool, symmetrical: bool, std: bool
+    ) -> Optional[np.ndarray]:
         """
         The association matrix for all feature pairs.
 
@@ -175,6 +226,9 @@ class ShapGlobalExplainer(FittableMixin[ShapCalculator], metaclass=ABCMeta):
             quantifying unilateral association of the features represented by rows
             with the features represented by columns;
             if ``True``, return a symmetrical matrix quantifying mutual association
+        :param std: if ``True``, return a matrix of estimated standard deviations
+            instead of (mean) values; return ``None`` if the matrix was determined
+            from a single model and thus no standard deviation could be estimated
         :returns: the matrix as an array of shape (n_outputs, n_features, n_features)
         """
 
@@ -216,7 +270,9 @@ class ShapInteractionGlobalExplainer(ShapGlobalExplainer, metaclass=ABCMeta):
     """
 
     @abstractmethod
-    def synergy(self, symmetrical: bool, absolute: bool) -> np.ndarray:
+    def synergy(
+        self, symmetrical: bool, absolute: bool, std: bool
+    ) -> Optional[np.ndarray]:
         """
         The synergy matrix for all feature pairs.
 
@@ -229,11 +285,16 @@ class ShapInteractionGlobalExplainer(ShapGlobalExplainer, metaclass=ABCMeta):
             quantifying unilateral synergy of the features represented by rows
             with the features represented by columns;
             if ``True``, return a symmetrical matrix quantifying mutual synergy
+        :param std: if ``True``, return a matrix of estimated standard deviations
+            instead of (mean) values; return ``None`` if the matrix was determined
+            from a single model and thus no standard deviation could be estimated
         :returns: the matrix as an array of shape (n_outputs, n_features, n_features)
         """
 
     @abstractmethod
-    def redundancy(self, symmetrical: bool, absolute: bool) -> np.ndarray:
+    def redundancy(
+        self, symmetrical: bool, absolute: bool, std: bool
+    ) -> Optional[np.ndarray]:
         """
         The redundancy matrix for all feature pairs.
 
@@ -246,6 +307,9 @@ class ShapInteractionGlobalExplainer(ShapGlobalExplainer, metaclass=ABCMeta):
             quantifying unilateral redundancy of the features represented by rows
             with the features represented by columns;
             if ``True``, return a symmetrical matrix quantifying mutual redundancy
+        :param std: if ``True``, return a matrix of estimated standard deviations
+            instead of (mean) values; return ``None`` if the matrix was determined
+            from a single model and thus no standard deviation could be estimated
         :returns: the matrix as an array of shape (n_outputs, n_features, n_features)
         """
 

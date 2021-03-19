@@ -74,10 +74,14 @@ class ShapDecomposer(ShapGlobalExplainer):
         self.association_rel_: Optional[np.ndarray] = None
         self.association_rel_asymmetric_: Optional[np.ndarray] = None
 
-    def association(self, absolute: bool, symmetrical: bool) -> np.ndarray:
+    def association(
+        self, absolute: bool, symmetrical: bool, std: bool
+    ) -> Optional[np.ndarray]:
         """[see superclass]"""
         if absolute:
             raise NotImplementedError("absolute association is not supported")
+        if std:
+            return None
 
         self._ensure_fitted()
         return (
@@ -261,18 +265,26 @@ class ShapInteractionDecomposer(ShapDecomposer, ShapInteractionGlobalExplainer):
             {DEFAULT_MIN_DIRECT_SYNERGY * 100.0:g}%)
         """
 
-    def synergy(self, symmetrical: bool, absolute: bool = False) -> np.ndarray:
+    def synergy(
+        self, symmetrical: bool, absolute: bool, std: bool
+    ) -> Optional[np.ndarray]:
         """[see superclass]"""
         if absolute:
             raise NotImplementedError("absolute synergy is not supported")
+        if std:
+            return None
 
         self._ensure_fitted()
         return self.synergy_rel_ if symmetrical else self.synergy_rel_asymmetric_
 
-    def redundancy(self, symmetrical: bool, absolute: bool = False) -> np.ndarray:
+    def redundancy(
+        self, symmetrical: bool, absolute: bool, std: bool
+    ) -> Optional[np.ndarray]:
         """[see superclass]"""
         if absolute:
             raise NotImplementedError("absolute redundancy is not supported")
+        if std:
+            return None
 
         self._ensure_fitted()
         return self.redundancy_rel_ if symmetrical else self.redundancy_rel_asymmetric_

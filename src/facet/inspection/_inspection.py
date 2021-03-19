@@ -530,6 +530,7 @@ class LearnerInspector(
         *,
         absolute: bool = False,
         symmetrical: bool = False,
+        std: bool = False,
         clustered: bool = True,
     ) -> Union[pd.DataFrame, List[pd.DataFrame]]:
         """
@@ -557,6 +558,9 @@ class LearnerInspector(
             mutual synergy; if ``False``, return an asymmetrical matrix quantifying
             unilateral synergy of the features represented by rows with the
             features represented by columns (default: ``False``)
+        :param std: if ``True``, return standard deviations instead of (mean) values;
+            return ``None`` if only a single matrix had been calculated and
+            thus the standard deviation is not known
         :param clustered: if ``True``, reorder the rows and columns of the matrix
             such that synergy between adjacent rows and columns is maximised; if
             ``False``, keep rows and columns in the original features order
@@ -570,10 +574,14 @@ class LearnerInspector(
         return self.__feature_affinity_matrix(
             affinity_matrices=(
                 explainer.to_frames(
-                    explainer.synergy(symmetrical=symmetrical, absolute=absolute)
+                    explainer.synergy(
+                        symmetrical=symmetrical, absolute=absolute, std=std
+                    )
                 )
             ),
-            affinity_symmetrical=explainer.synergy(symmetrical=True, absolute=False),
+            affinity_symmetrical=explainer.synergy(
+                symmetrical=True, absolute=False, std=False
+            ),
             clustered=clustered,
         )
 
@@ -582,6 +590,7 @@ class LearnerInspector(
         *,
         absolute: bool = False,
         symmetrical: bool = False,
+        std: bool = False,
         clustered: bool = True,
     ) -> Union[pd.DataFrame, List[pd.DataFrame]]:
         """
@@ -609,6 +618,9 @@ class LearnerInspector(
             mutual redundancy; if ``False``, return an asymmetrical matrix quantifying
             unilateral redundancy of the features represented by rows with the
             features represented by columns (default: ``False``)
+        :param std: if ``True``, return standard deviations instead of (mean) values;
+            return ``None`` if only a single matrix had been calculated and
+            thus the standard deviation is not known
         :param clustered: if ``True``, reorder the rows and columns of the matrix
             such that redundancy between adjacent rows and columns is maximised; if
             ``False``, keep rows and columns in the original features order
@@ -622,10 +634,14 @@ class LearnerInspector(
         return self.__feature_affinity_matrix(
             affinity_matrices=(
                 explainer.to_frames(
-                    explainer.redundancy(symmetrical=symmetrical, absolute=absolute)
+                    explainer.redundancy(
+                        symmetrical=symmetrical, absolute=absolute, std=std
+                    )
                 )
             ),
-            affinity_symmetrical=explainer.redundancy(symmetrical=True, absolute=False),
+            affinity_symmetrical=explainer.redundancy(
+                symmetrical=True, absolute=False, std=False
+            ),
             clustered=clustered,
         )
 
@@ -634,6 +650,7 @@ class LearnerInspector(
         *,
         absolute: bool = False,
         symmetrical: bool = False,
+        std: bool = False,
         clustered: bool = True,
     ) -> Union[pd.DataFrame, List[pd.DataFrame]]:
         """
@@ -664,6 +681,9 @@ class LearnerInspector(
             with the features represented by columns;
             if ``True``, return a symmetrical matrix quantifying mutual association
             (default: ``False``)
+        :param std: if ``True``, return standard deviations instead of (mean) values;
+            return ``None`` if only a single matrix had been calculated and
+            thus the standard deviation is not known
         :param clustered: if ``True``, reorder the rows and columns of the matrix
             such that association between adjacent rows and columns is maximised; if
             ``False``, keep rows and columns in the original features order
@@ -678,12 +698,12 @@ class LearnerInspector(
             affinity_matrices=(
                 global_explainer.to_frames(
                     global_explainer.association(
-                        absolute=absolute, symmetrical=symmetrical
+                        absolute=absolute, symmetrical=symmetrical, std=std
                     )
                 )
             ),
             affinity_symmetrical=global_explainer.association(
-                symmetrical=True, absolute=False
+                symmetrical=True, absolute=False, std=False
             ),
             clustered=clustered,
         )
@@ -704,7 +724,7 @@ class LearnerInspector(
         self._ensure_fitted()
         return self.__linkages_from_affinity_matrices(
             feature_affinity_matrix=self.__interaction_explainer.synergy(
-                symmetrical=True, absolute=False
+                symmetrical=True, absolute=False, std=False
             )
         )
 
@@ -724,7 +744,7 @@ class LearnerInspector(
         self._ensure_fitted()
         return self.__linkages_from_affinity_matrices(
             feature_affinity_matrix=self.__interaction_explainer.redundancy(
-                symmetrical=True, absolute=False
+                symmetrical=True, absolute=False, std=False
             )
         )
 
@@ -744,7 +764,7 @@ class LearnerInspector(
         self._ensure_fitted()
         return self.__linkages_from_affinity_matrices(
             feature_affinity_matrix=self._shap_global_explainer.association(
-                absolute=False, symmetrical=True
+                absolute=False, symmetrical=True, std=False
             )
         )
 
