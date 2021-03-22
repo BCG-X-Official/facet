@@ -155,10 +155,6 @@ class ShapInteractionVectorProjector(ShapProjector, ShapInteractionGlobalExplain
     the decompositions of the actual SHAP vectors across observations.
     """
 
-    #: if ``True``, orthogonalize SHAP interaction vectors before calculating SHAP
-    #: projections
-    orthogonalize: bool
-
     def __init__(self) -> None:
         super().__init__()
 
