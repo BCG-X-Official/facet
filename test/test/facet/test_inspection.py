@@ -88,7 +88,7 @@ def iris_inspector_multi_class(
     ],
     n_jobs: int,
 ) -> LearnerInspector[ClassifierPipelineDF[RandomForestClassifierDF]]:
-    return LearnerInspector(shap_interaction=True, n_jobs=n_jobs).fit(
+    return LearnerInspector(shap_interaction=True, legacy=True, n_jobs=n_jobs).fit(
         crossfit=iris_classifier_crossfit_multi_class
     )
 
@@ -127,7 +127,7 @@ def test_model_inspection(
     with pytest.raises(ValueError, match="unknown consolidation method: invalid"):
         regressor_inspector.shap_values(consolidate="invalid")
 
-    shap_values_raw = regressor_inspector.shap_values(consolidate=None)
+    shap_values_raw: pd.DataFrame = regressor_inspector.shap_values(consolidate=None)
     shap_values_mean = regressor_inspector.shap_values(consolidate="mean")
     shap_values_std = regressor_inspector.shap_values(consolidate="std")
 
@@ -199,9 +199,9 @@ def test_model_inspection_classifier_binary(
     iris_sample_binary: Sample, iris_classifier_crossfit_binary, n_jobs: int
 ) -> None:
 
-    model_inspector = LearnerInspector(shap_interaction=False, n_jobs=n_jobs).fit(
-        crossfit=iris_classifier_crossfit_binary
-    )
+    model_inspector = LearnerInspector(
+        shap_interaction=False, legacy=True, n_jobs=n_jobs
+    ).fit(crossfit=iris_classifier_crossfit_binary)
 
     # calculate the shap value matrix, without any consolidation
     shap_values = model_inspector.shap_values(consolidate=None)
@@ -222,36 +222,40 @@ def test_model_inspection_classifier_binary(
 
     # Shap decomposition matrices (feature dependencies)
 
-    (
-        association_matrix,
-        association_matrix_legacy,
-    ) = call_inspector_method_both_algorithms(
-        model_inspector.feature_association_matrix,
-        clustered=True,
-        symmetrical=True,
-    )
-    assert association_matrix.values == pytest.approx(
-        np.array(
-            [
-                [1.000, 0.671, 0.212, 0.005],
-                [0.671, 1.000, 0.331, 0.014],
-                [0.212, 0.331, 1.000, 0.006],
-                [0.006, 0.014, 0.006, 1.000],
-            ]
-        ),
-        abs=0.02,
-    )
-    assert association_matrix_legacy.values == pytest.approx(
-        np.array(
-            [
-                [1.000, 0.678, 0.133, 0.005],
-                [0.678, 1.000, 0.145, 0.007],
-                [0.133, 0.145, 1.000, 0.029],
-                [0.005, 0.007, 0.029, 1.000],
-            ]
-        ),
-        abs=0.02,
-    )
+    try:
+        (
+            association_matrix,
+            association_matrix_legacy,
+        ) = call_inspector_method_both_algorithms(
+            model_inspector.feature_association_matrix,
+            clustered=True,
+            symmetrical=True,
+        )
+        assert association_matrix.values == pytest.approx(
+            np.array(
+                [
+                    [1.000, 0.692, 0.195, 0.052],
+                    [0.692, 1.000, 0.290, 0.041],
+                    [0.195, 0.290, 1.000, 0.081],
+                    [0.052, 0.041, 0.081, 1.000],
+                ]
+            ),
+            abs=0.02,
+        )
+        assert association_matrix_legacy.values == pytest.approx(
+            np.array(
+                [
+                    [1.000, 0.678, 0.133, 0.005],
+                    [0.678, 1.000, 0.145, 0.007],
+                    [0.133, 0.145, 1.000, 0.029],
+                    [0.005, 0.007, 0.029, 1.000],
+                ]
+            ),
+            abs=0.02,
+        )
+    except AssertionError as error:
+        print_expected_matrix(error=error)
+        raise
 
     linkage_tree = model_inspector.feature_association_linkage()
 
@@ -361,14 +365,14 @@ def test_model_inspection_classifier_multi_class(
         assert np.hstack([m.values for m in synergy_matrix]) == pytest.approx(
             np.array(
                 [
-                    [1.000, 0.005, 0.002, 0.001, 1.000, 0.004]
-                    + [0.012, 0.012, 1.000, 0.000, 0.006, 0.008],
-                    [0.000, 1.000, 0.000, 0.000, 0.003, 1.000]
-                    + [0.001, 0.000, 0.000, 1.000, 0.000, 0.000],
-                    [0.032, 0.015, 1.000, 0.002, 0.191, 0.024]
-                    + [1.000, 0.034, 0.054, 0.000, 1.000, 0.028],
-                    [0.031, 0.022, 0.002, 1.000, 0.179, 0.038]
-                    + [0.033, 1.000, 0.056, 0.000, 0.023, 1.000],
+                    [1.000, 0.009, 0.057, 0.055, 1.000, 0.042]
+                    + [0.418, 0.418, 1.000, 0.004, 0.085, 0.097],
+                    [0.101, 1.000, 0.052, 0.072, 0.094, 1.000]
+                    + [0.117, 0.156, 0.090, 1.000, 0.237, 0.258],
+                    [0.003, 0.001, 1.000, 0.002, 0.027, 0.005]
+                    + [1.000, 0.041, 0.012, 0.004, 1.000, 0.031],
+                    [0.002, 0.000, 0.001, 1.000, 0.029, 0.005]
+                    + [0.043, 1.000, 0.015, 0.005, 0.036, 1.000],
                 ]
             ),
             abs=0.02,
@@ -403,14 +407,14 @@ def test_model_inspection_classifier_multi_class(
             pytest.approx(
                 np.array(
                     [
-                        [1.000, 0.096, 0.665, 0.673, 1.000, 0.056]
-                        + [0.388, 0.360, 1.000, 0.006, 0.664, 0.571],
-                        [0.101, 1.000, 0.397, 0.388, 0.057, 1.000]
-                        + [0.191, 0.250, 0.006, 1.000, 0.001, 0.000],
-                        [0.635, 0.382, 1.000, 0.998, 0.209, 0.168]
-                        + [1.000, 0.762, 0.616, 0.000, 1.000, 0.759],
-                        [0.643, 0.366, 0.997, 1.000, 0.193, 0.212]
-                        + [0.763, 1.000, 0.523, 0.000, 0.764, 1.000],
+                        [1.000, 0.087, 0.643, 0.656, 1.000, 0.065]
+                        + [0.265, 0.234, 1.000, 0.034, 0.594, 0.505],
+                        [0.082, 1.000, 0.297, 0.292, 0.064, 1.000]
+                        + [0.117, 0.171, 0.031, 1.000, 0.024, 0.021],
+                        [0.682, 0.314, 1.000, 0.996, 0.471, 0.130]
+                        + [1.000, 0.743, 0.642, 0.031, 1.000, 0.761],
+                        [0.695, 0.315, 0.997, 1.000, 0.406, 0.194]
+                        + [0.741, 1.000, 0.550, 0.028, 0.756, 1.000],
                     ]
                 ),
                 abs=0.02,
@@ -446,14 +450,14 @@ def test_model_inspection_classifier_multi_class(
             pytest.approx(
                 np.array(
                     [
-                        [1.000, 0.101, 0.666, 0.674, 1.000, 0.060]
-                        + [0.400, 0.371, 1.000, 0.006, 0.670, 0.579],
-                        [0.101, 1.000, 0.397, 0.388, 0.060, 1.000]
-                        + [0.192, 0.250, 0.006, 1.000, 0.001, 0.000],
-                        [0.666, 0.397, 1.000, 0.999, 0.400, 0.192]
-                        + [1.000, 0.796, 0.670, 0.001, 1.000, 0.787],
-                        [0.674, 0.388, 0.999, 1.000, 0.371, 0.250]
-                        + [0.796, 1.000, 0.579, 0.000, 0.787, 1.000],
+                        [1.000, 0.077, 0.662, 0.670, 1.000, 0.046]
+                        + [0.370, 0.334, 1.000, 0.031, 0.634, 0.550],
+                        [0.077, 1.000, 0.301, 0.295, 0.046, 1.000]
+                        + [0.127, 0.173, 0.031, 1.000, 0.025, 0.020],
+                        [0.662, 0.301, 1.000, 0.998, 0.370, 0.127]
+                        + [1.000, 0.783, 0.634, 0.025, 1.000, 0.790],
+                        [0.670, 0.295, 0.998, 1.000, 0.334, 0.173]
+                        + [0.783, 1.000, 0.550, 0.020, 0.790, 1.000],
                     ]
                 ),
                 abs=0.02,
@@ -552,8 +556,12 @@ def test_model_inspection_classifier_interaction(
         explainer_factory=TreeExplainerFactory(
             feature_perturbation="tree_path_dependent", use_background_dataset=True
         ),
+        legacy=True,
         n_jobs=n_jobs,
     ).fit(crossfit=iris_classifier_crossfit_binary)
+    # disable legacy calculations; we used them in the constructor so the legacy
+    # SHAP decomposer is created along with the new SHAP vector projector
+    model_inspector._legacy = False
 
     model_inspector_no_interaction = LearnerInspector(
         shap_interaction=False,
@@ -621,10 +629,10 @@ def test_model_inspection_classifier_interaction(
         assert synergy_matrix.values == pytest.approx(
             np.array(
                 [
-                    [1.000, 0.000, 0.005, 0.007],
-                    [0.000, 1.000, 0.004, 0.006],
-                    [0.005, 0.004, 1.000, 0.001],
-                    [0.007, 0.006, 0.001, 1.000],
+                    [1.000, 0.011, 0.006, 0.007],
+                    [0.011, 1.000, 0.006, 0.007],
+                    [0.006, 0.006, 1.000, 0.003],
+                    [0.007, 0.007, 0.003, 1.000],
                 ]
             ),
             abs=0.02,
@@ -634,10 +642,10 @@ def test_model_inspection_classifier_interaction(
         ).values == pytest.approx(
             np.array(
                 [
-                    [0.431, 0.001, 0.000, 0.000],
-                    [0.001, 0.063, 0.002, 0.000],
-                    [0.000, 0.002, 0.492, 0.000],
-                    [0.000, 0.000, 0.000, 0.013],
+                    [0.425, 0.001, 0.002, 0.001],
+                    [0.001, 0.019, 0.000, 0.002],
+                    [0.002, 0.000, 0.068, 0.002],
+                    [0.001, 0.002, 0.002, 0.488],
                 ]
             ),
             abs=0.02,
@@ -660,10 +668,10 @@ def test_model_inspection_classifier_interaction(
         assert synergy_matrix.values == pytest.approx(
             np.array(
                 [
-                    [1.000, 0.005, 0.001, 0.000],
-                    [0.000, 1.000, 0.000, 0.000],
-                    [0.001, 0.007, 1.000, 0.002],
-                    [0.000, 0.000, 0.000, 1.000],
+                    [1.000, 0.000, 0.001, 0.004],
+                    [0.149, 1.000, 0.045, 0.157],
+                    [0.040, 0.004, 1.000, 0.044],
+                    [0.003, 0.001, 0.001, 1.000],
                 ]
             ),
             abs=0.02,
@@ -673,10 +681,10 @@ def test_model_inspection_classifier_interaction(
         ).values == pytest.approx(
             np.array(
                 [
-                    [0.431, 0.002, 0.000, 0.000],
-                    [0.000, 0.063, 0.000, 0.000],
-                    [0.000, 0.003, 0.492, 0.001],
-                    [0.000, 0.000, 0.000, 0.013],
+                    [0.425, 0.000, 0.000, 0.001],
+                    [0.003, 0.019, 0.001, 0.003],
+                    [0.003, 0.000, 0.068, 0.003],
+                    [0.001, 0.000, 0.001, 0.488],
                 ]
             ),
             abs=0.02,
@@ -702,10 +710,10 @@ def test_model_inspection_classifier_interaction(
         assert redundancy_matrix.values == pytest.approx(
             np.array(
                 [
-                    [1.000, 0.005, 0.348, 0.223],
-                    [0.005, 1.000, 0.006, 0.001],
-                    [0.348, 0.006, 1.000, 0.675],
-                    [0.223, 0.001, 0.675, 1.000],
+                    [1.000, 0.080, 0.316, 0.208],
+                    [0.080, 1.000, 0.036, 0.044],
+                    [0.316, 0.036, 1.000, 0.691],
+                    [0.208, 0.044, 0.691, 1.000],
                 ]
             ),
             abs=0.02,
@@ -715,10 +723,10 @@ def test_model_inspection_classifier_interaction(
         ).values == pytest.approx(
             np.array(
                 [
-                    [0.431, 0.312, 0.055, 0.000],
-                    [0.312, 0.492, 0.097, 0.002],
-                    [0.055, 0.097, 0.063, 0.000],
-                    [0.000, 0.002, 0.000, 0.013],
+                    [0.425, 0.316, 0.052, 0.010],
+                    [0.316, 0.488, 0.087, 0.009],
+                    [0.052, 0.087, 0.068, 0.004],
+                    [0.010, 0.009, 0.004, 0.019],
                 ]
             ),
             abs=0.02,
@@ -744,10 +752,10 @@ def test_model_inspection_classifier_interaction(
         assert redundancy_matrix.values == pytest.approx(
             np.array(
                 [
-                    [1.000, 0.675, 0.222, 0.001],
-                    [0.675, 1.000, 0.347, 0.006],
-                    [0.227, 0.354, 1.000, 0.005],
-                    [0.001, 0.008, 0.005, 1.000],
+                    [1.000, 0.691, 0.209, 0.045],
+                    [0.692, 1.000, 0.317, 0.037],
+                    [0.201, 0.303, 1.000, 0.081],
+                    [0.040, 0.031, 0.076, 1.000],
                 ]
             ),
             abs=0.02,
@@ -757,10 +765,10 @@ def test_model_inspection_classifier_interaction(
         ).values == pytest.approx(
             np.array(
                 [
-                    [0.431, 0.291, 0.096, 0.000],
-                    [0.332, 0.492, 0.171, 0.003],
-                    [0.014, 0.022, 0.063, 0.000],
-                    [0.000, 0.000, 0.000, 0.013],
+                    [0.425, 0.294, 0.092, 0.020],
+                    [0.337, 0.488, 0.154, 0.017],
+                    [0.013, 0.020, 0.068, 0.006],
+                    [0.001, 0.001, 0.001, 0.019],
                 ]
             ),
             abs=0.02,
@@ -788,10 +796,10 @@ def test_model_inspection_classifier_interaction(
         assert association_matrix.values == pytest.approx(
             np.array(
                 [
-                    [1.000, 0.005, 0.354, 0.227],
-                    [0.005, 1.000, 0.008, 0.001],
-                    [0.354, 0.008, 1.000, 0.676],
-                    [0.227, 0.001, 0.676, 1.000],
+                    [1.000, 0.074, 0.309, 0.205],
+                    [0.074, 1.000, 0.030, 0.040],
+                    [0.309, 0.030, 1.000, 0.694],
+                    [0.205, 0.040, 0.694, 1.000],
                 ]
             ),
             abs=0.02,
@@ -801,10 +809,10 @@ def test_model_inspection_classifier_interaction(
         ).values == pytest.approx(
             np.array(
                 [
-                    [0.431, 0.312, 0.056, 0.000],
-                    [0.312, 0.492, 0.098, 0.002],
-                    [0.056, 0.098, 0.063, 0.000],
-                    [0.000, 0.002, 0.000, 0.013],
+                    [0.425, 0.317, 0.051, 0.009],
+                    [0.317, 0.488, 0.085, 0.007],
+                    [0.051, 0.085, 0.068, 0.003],
+                    [0.009, 0.007, 0.003, 0.019],
                 ]
             ),
             abs=0.02,
@@ -832,10 +840,10 @@ def test_model_inspection_classifier_interaction(
         assert association_matrix.values == pytest.approx(
             np.array(
                 [
-                    [1.000, 0.676, 0.227, 0.001],
-                    [0.676, 1.000, 0.354, 0.008],
-                    [0.227, 0.354, 1.000, 0.005],
-                    [0.001, 0.008, 0.005, 1.000],
+                    [1.000, 0.694, 0.205, 0.040],
+                    [0.694, 1.000, 0.309, 0.030],
+                    [0.205, 0.309, 1.000, 0.074],
+                    [0.040, 0.030, 0.074, 1.000],
                 ]
             ),
             abs=0.02,
@@ -845,10 +853,10 @@ def test_model_inspection_classifier_interaction(
         ).values == pytest.approx(
             np.array(
                 [
-                    [0.431, 0.291, 0.098, 0.000],
-                    [0.333, 0.492, 0.174, 0.004],
-                    [0.014, 0.022, 0.063, 0.000],
-                    [0.000, 0.000, 0.000, 0.013],
+                    [0.425, 0.295, 0.090, 0.018],
+                    [0.338, 0.488, 0.150, 0.014],
+                    [0.013, 0.020, 0.068, 0.005],
+                    [0.001, 0.001, 0.001, 0.019],
                 ]
             ),
             abs=0.02,
@@ -968,7 +976,7 @@ def print_expected_matrix(error: AssertionError, split: bool = False):
         re.search(r"array\(([^)]+)\)", error.args[0])[1].replace(r"\n", "\n")
     )
 
-    print("==== matrix assertion failed ====")
+    print("==== matrix assertion failed ====\nExpected Matrix:")
     print("[")
     for row in matrix:
         txt = "    ["
