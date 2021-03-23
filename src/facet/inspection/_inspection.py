@@ -38,6 +38,8 @@ from ._shap_projection import ShapInteractionVectorProjector, ShapVectorProjecto
 log = logging.getLogger(__name__)
 
 __all__ = ["ShapPlotData", "LearnerInspector"]
+
+
 #
 # Type variables
 #
@@ -152,7 +154,6 @@ class LearnerInspector(
         *,
         explainer_factory: Optional[ExplainerFactory] = None,
         shap_interaction: bool = True,
-        orthogonalize: Optional[bool] = None,
         legacy: bool = False,
         min_direct_synergy: Optional[float] = None,
         n_jobs: Optional[int] = None,
@@ -168,16 +169,6 @@ class LearnerInspector(
             SHAP interaction values are needed to determine feature synergy and
             redundancy.
             (default: ``True``)
-        :param orthogonalize: if ``True``, transforms SHAP interaction vectors
-            :math:`p_{ij}` to only retain the orthogonal component relative to the
-            hyperplane spanned by the two associated main effect vectors
-            :math:`p_{ii}` and :math:`p_{jj}`.
-            By definition, the interaction vector should be orthogonal to start with,
-            but in practice it can be correlated with the main effects, which can lead
-            to over- or underestimation of synergy.
-            Defaults to the default behaviour, applying orthogonalization if the
-            inspector uses SHAP interaction values.
-            We recommend to use orthogonalization for increased accuracy.
         :param legacy: `Deprecated: This parameter will be removed in FACET 1.2.`
             If ``False``, use the recommended `SHAP vector projection` method;
             if ``True``, use the deprecated `SHAP vector decomposition` method.
@@ -216,21 +207,8 @@ class LearnerInspector(
                     "SHAP interaction values"
                 )
                 shap_interaction = False
-        else:
-            if orthogonalize:
-                log.warning(
-                    "ignoring orthogonalize=True "
-                    "(only applicable for SHAP interactions)"
-                )
-                orthogonalize = None
 
-        if legacy:
-            if orthogonalize:
-                log.warning(
-                    "ignoring orthogonalize=True " "(not applicable in legacy mode)"
-                )
-                orthogonalize = None
-        else:
+        if not legacy:
             if min_direct_synergy:
                 log.warning(
                     "ignoring min_direct_synergy parameter "
@@ -240,7 +218,6 @@ class LearnerInspector(
 
         self._explainer_factory = explainer_factory
         self._shap_interaction = shap_interaction
-        self._orthogonalize = orthogonalize
         # todo: remove legacy property once we have ditched legacy global explanations
         self._legacy = legacy
         self._min_direct_synergy = min_direct_synergy
@@ -249,10 +226,6 @@ class LearnerInspector(
         self._shap_calculator: Optional[ShapCalculator] = None
         self._shap_global_decomposer: Optional[ShapGlobalExplainer] = None
         self._shap_global_projector: Optional[ShapGlobalExplainer] = None
-        # todo: remove support for non-orthogonalized SHAP projection
-        self._shap_global_projector_no_orthogonalization: Optional[
-            ShapGlobalExplainer
-        ] = None
 
     # dynamically complete the __init__ docstring
     # noinspection PyTypeChecker
@@ -304,7 +277,12 @@ class LearnerInspector(
                 f"but is a {type(learner).__name__}"
             )
 
-        shap_global_explainer: ShapGlobalExplainer
+        shap_global_decomposer: Union[ShapDecomposer, ShapInteractionDecomposer, None]
+        shap_global_projector: Union[
+            ShapVectorProjector, ShapInteractionVectorProjector, None
+        ]
+
+        legacy = self._legacy
 
         if self._shap_interaction:
             shap_calculator_type = (
@@ -320,14 +298,14 @@ class LearnerInspector(
                 pre_dispatch=self.pre_dispatch,
                 verbose=self.verbose,
             )
-            shap_global_decomposer = ShapInteractionDecomposer(
-                min_direct_synergy=self._min_direct_synergy
-            )
+            if legacy:
+                shap_global_decomposer = ShapInteractionDecomposer(
+                    min_direct_synergy=self._min_direct_synergy
+                )
+            else:
+                shap_global_decomposer = None
 
             shap_global_projector = ShapInteractionVectorProjector()
-            shap_global_projector_no_orthogonalization = ShapInteractionVectorProjector(
-                orthogonalize=False
-            )
 
         else:
             shap_calculator_type = (
@@ -343,24 +321,20 @@ class LearnerInspector(
                 pre_dispatch=self.pre_dispatch,
                 verbose=self.verbose,
             )
-            shap_global_decomposer = ShapDecomposer()
+            if legacy:
+                shap_global_decomposer = ShapDecomposer()
+            else:
+                shap_global_decomposer = None
             shap_global_projector = ShapVectorProjector()
-            shap_global_projector_no_orthogonalization = None
 
         shap_calculator.fit(crossfit=crossfit)
-        shap_global_decomposer.fit(shap_calculator=shap_calculator)
+        if legacy:
+            shap_global_decomposer.fit(shap_calculator=shap_calculator)
         shap_global_projector.fit(shap_calculator=shap_calculator)
-        if shap_global_projector_no_orthogonalization:
-            shap_global_projector_no_orthogonalization.fit(
-                shap_calculator=shap_calculator
-            )
 
         self._shap_calculator = shap_calculator
         self._shap_global_decomposer = shap_global_decomposer
         self._shap_global_projector = shap_global_projector
-        self._shap_global_projector_no_orthogonalization = (
-            shap_global_projector_no_orthogonalization
-        )
 
         self._crossfit = crossfit
 
@@ -370,12 +344,6 @@ class LearnerInspector(
     def _shap_global_explainer(self) -> ShapGlobalExplainer:
         if self._legacy:
             return self._shap_global_decomposer
-        elif self._shap_interaction:
-            orthogonalize = self._orthogonalize
-            if orthogonalize is not False:
-                return self._shap_global_projector
-            else:
-                return self._shap_global_projector_no_orthogonalization
         else:
             return self._shap_global_projector
 
@@ -562,6 +530,7 @@ class LearnerInspector(
         *,
         absolute: bool = False,
         symmetrical: bool = False,
+        std: bool = False,
         clustered: bool = True,
     ) -> Union[pd.DataFrame, List[pd.DataFrame]]:
         """
@@ -589,6 +558,9 @@ class LearnerInspector(
             mutual synergy; if ``False``, return an asymmetrical matrix quantifying
             unilateral synergy of the features represented by rows with the
             features represented by columns (default: ``False``)
+        :param std: if ``True``, return standard deviations instead of (mean) values;
+            return ``None`` if only a single matrix had been calculated and
+            thus the standard deviation is not known
         :param clustered: if ``True``, reorder the rows and columns of the matrix
             such that synergy between adjacent rows and columns is maximised; if
             ``False``, keep rows and columns in the original features order
@@ -602,10 +574,14 @@ class LearnerInspector(
         return self.__feature_affinity_matrix(
             affinity_matrices=(
                 explainer.to_frames(
-                    explainer.synergy(symmetrical=symmetrical, absolute=absolute)
+                    explainer.synergy(
+                        symmetrical=symmetrical, absolute=absolute, std=std
+                    )
                 )
             ),
-            affinity_symmetrical=explainer.synergy(symmetrical=True, absolute=False),
+            affinity_symmetrical=explainer.synergy(
+                symmetrical=True, absolute=False, std=False
+            ),
             clustered=clustered,
         )
 
@@ -614,6 +590,7 @@ class LearnerInspector(
         *,
         absolute: bool = False,
         symmetrical: bool = False,
+        std: bool = False,
         clustered: bool = True,
     ) -> Union[pd.DataFrame, List[pd.DataFrame]]:
         """
@@ -641,6 +618,9 @@ class LearnerInspector(
             mutual redundancy; if ``False``, return an asymmetrical matrix quantifying
             unilateral redundancy of the features represented by rows with the
             features represented by columns (default: ``False``)
+        :param std: if ``True``, return standard deviations instead of (mean) values;
+            return ``None`` if only a single matrix had been calculated and
+            thus the standard deviation is not known
         :param clustered: if ``True``, reorder the rows and columns of the matrix
             such that redundancy between adjacent rows and columns is maximised; if
             ``False``, keep rows and columns in the original features order
@@ -654,10 +634,14 @@ class LearnerInspector(
         return self.__feature_affinity_matrix(
             affinity_matrices=(
                 explainer.to_frames(
-                    explainer.redundancy(symmetrical=symmetrical, absolute=absolute)
+                    explainer.redundancy(
+                        symmetrical=symmetrical, absolute=absolute, std=std
+                    )
                 )
             ),
-            affinity_symmetrical=explainer.redundancy(symmetrical=True, absolute=False),
+            affinity_symmetrical=explainer.redundancy(
+                symmetrical=True, absolute=False, std=False
+            ),
             clustered=clustered,
         )
 
@@ -666,6 +650,7 @@ class LearnerInspector(
         *,
         absolute: bool = False,
         symmetrical: bool = False,
+        std: bool = False,
         clustered: bool = True,
     ) -> Union[pd.DataFrame, List[pd.DataFrame]]:
         """
@@ -696,6 +681,9 @@ class LearnerInspector(
             with the features represented by columns;
             if ``True``, return a symmetrical matrix quantifying mutual association
             (default: ``False``)
+        :param std: if ``True``, return standard deviations instead of (mean) values;
+            return ``None`` if only a single matrix had been calculated and
+            thus the standard deviation is not known
         :param clustered: if ``True``, reorder the rows and columns of the matrix
             such that association between adjacent rows and columns is maximised; if
             ``False``, keep rows and columns in the original features order
@@ -710,12 +698,12 @@ class LearnerInspector(
             affinity_matrices=(
                 global_explainer.to_frames(
                     global_explainer.association(
-                        absolute=absolute, symmetrical=symmetrical
+                        absolute=absolute, symmetrical=symmetrical, std=std
                     )
                 )
             ),
             affinity_symmetrical=global_explainer.association(
-                symmetrical=True, absolute=False
+                symmetrical=True, absolute=False, std=False
             ),
             clustered=clustered,
         )
@@ -736,7 +724,7 @@ class LearnerInspector(
         self._ensure_fitted()
         return self.__linkages_from_affinity_matrices(
             feature_affinity_matrix=self.__interaction_explainer.synergy(
-                symmetrical=True, absolute=False
+                symmetrical=True, absolute=False, std=False
             )
         )
 
@@ -756,7 +744,7 @@ class LearnerInspector(
         self._ensure_fitted()
         return self.__linkages_from_affinity_matrices(
             feature_affinity_matrix=self.__interaction_explainer.redundancy(
-                symmetrical=True, absolute=False
+                symmetrical=True, absolute=False, std=False
             )
         )
 
@@ -776,7 +764,7 @@ class LearnerInspector(
         self._ensure_fitted()
         return self.__linkages_from_affinity_matrices(
             feature_affinity_matrix=self._shap_global_explainer.association(
-                absolute=False, symmetrical=True
+                absolute=False, symmetrical=True, std=False
             )
         )
 
@@ -827,12 +815,10 @@ class LearnerInspector(
         with :math:`\\sum_{a=1}^n \\sum_{b=a}^n I_{ab} = 1`
 
         In the case of multi-target regression and non-binary classification, returns
-        a data frame with one matrix per output, stacked horizontally, and with a
-        hierarchical column index (target/class name on level 1, and feature name on
-        level 2).
+        a list with one matrix per output.
 
         :return: relative shap interaction values as a data frame of shape
-            (n_features, n_outputs * n_features)
+            `(n_features, n_features)`; or a list of such data frames
         """
 
         n_features = len(self.features_)
