@@ -116,7 +116,7 @@ class SampleBalancer:
         max_freq_label = partitioner.partitions_[max_freq_index]
         max_freq = partitioner.frequencies_[max_freq_index]
 
-        frequency_ratios = partitioner.frequencies_ / max_freq
+        frequency_ratios = np.array(partitioner.frequencies_) / max_freq
         freq_ratio_by_label = {
             label: ratio
             for label, ratio in zip(partitioner.partitions_, frequency_ratios)
