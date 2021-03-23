@@ -54,7 +54,9 @@ def multiclass_target() -> pd.DataFrame:
     )
 
 
-def test_argument_validation(multiclass_target: pd.DataFrame,) -> None:
+def test_argument_validation(
+    multiclass_target: pd.DataFrame,
+) -> None:
 
     faulty_args = (
         {"target_class_ratio": 1.01, "bins": 10},  # ratio too high
@@ -226,8 +228,14 @@ def test_no_change(binary_target) -> None:
     test_sample = Sample(observations=binary_target, target_name="target")
 
     test_args = (
-        {"target_class_ratio": 0.05, "bins": "labels",},
-        {"target_class_ratio": {1: 0.1111}, "bins": "labels",},
+        {
+            "target_class_ratio": 0.05,
+            "bins": "labels",
+        },
+        {
+            "target_class_ratio": {1: 0.1111},
+            "bins": "labels",
+        },
     )
 
     for kwargs in test_args:
