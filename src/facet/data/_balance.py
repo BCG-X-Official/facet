@@ -32,7 +32,7 @@ class SampleBalancer:
         target_class_ratio: Union[float, Dict[Any, float]],
         bins: Union[str, int],
         undersample: bool = True,
-    ):
+    ) -> None:
         """
         :param target_class_ratio: The desired target class ratio after balancing,
             either indicating the maximum ratio between the minority class and any other
