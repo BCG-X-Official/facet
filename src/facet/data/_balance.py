@@ -1,9 +1,11 @@
-from typing import Iterable
-from typing import Any, Dict, Union
-from facet.data import Sample
-import pandas as pd
+from typing import Any, Dict, Iterable, Union
+
 import numpy as np
+import pandas as pd
+
 from pytools.api import AllTracker
+
+from facet.data import Sample
 
 __all__ = ["SampleBalancer"]
 
@@ -32,8 +34,8 @@ class SampleBalancer:
         undersample: bool = True,
     ):
         """
-        :param target_class_ratio: The desired target class ratio after balancing, either
-            indicating the maximum ratio between the minority class and any other
+        :param target_class_ratio: The desired target class ratio after balancing,
+            either indicating the maximum ratio between the minority class and any other
             class as a positive scalar in range ``]0,1]`` or indicating the target ratio
             of each minority class, as a dictionary mapping class labels to scalars.
         :param bins: either ``"labels"`` to treat target variables as class labels,
@@ -59,7 +61,7 @@ class SampleBalancer:
 
         if isinstance(bins, int):
             if bins <= 1:
-                raise ValueError(f"'bins' needs to be >1")
+                raise ValueError("'bins' needs to be >1")
 
             self._partition_target = True
 
@@ -67,7 +69,7 @@ class SampleBalancer:
             self._partition_target = False
 
         else:
-            raise ValueError(f"'bins' needs to be an integer >1 or 'labels'")
+            raise ValueError("'bins' needs to be an integer >1 or 'labels'")
 
         self._target_class_ratio = target_class_ratio
         self._bins = bins
@@ -83,10 +85,10 @@ class SampleBalancer:
         """
         # not imported globally, to avoid cross import error with Crossfit & Simulation
         from facet.simulation.partition import (
-            Partitioner,
-            IntegerRangePartitioner,
-            ContinuousRangePartitioner,
             CategoryPartitioner,
+            ContinuousRangePartitioner,
+            IntegerRangePartitioner,
+            Partitioner,
         )
 
         partitioner: Partitioner
@@ -146,12 +148,11 @@ class SampleBalancer:
                 )
 
                 # return the input Sample as-is, if no undersampling needed:
-                if all(
-                    [
-                        freq_ratio_by_label[label] >= target_class_ratio
-                        for label, target_class_ratio in self._target_class_ratio.items()
-                    ]
-                ):
+                no_undersampling_needed = [
+                    freq_ratio_by_label[label] >= target_class_ratio
+                    for label, target_class_ratio in self._target_class_ratio.items()
+                ]
+                if all(no_undersampling_needed):
                     return sample
 
                 undersampling_factors = [
@@ -325,7 +326,10 @@ class SampleBalancer:
                 columns=[_F_FACET_TARGET_PARTITION]
             )
 
-        return Sample(observations=new_observations_df, target_name=sample.target_name,)
+        return Sample(
+            observations=new_observations_df,
+            target_name=sample.target_name,
+        )
 
     @staticmethod
     def _check_label_dict(
@@ -339,7 +343,7 @@ class SampleBalancer:
         """
         if not set(target_class_ratio.keys()) == set(minority_labels):
             raise ValueError(
-                f"Keys in 'target_class_ratio' dict do not "
+                "Keys in 'target_class_ratio' dict do not "
                 "match with minority class labels"
             )
 
