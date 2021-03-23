@@ -1,11 +1,11 @@
 """ Test facet.data.SampleBalancer"""
 import logging
 
+import numpy as np
+import pandas as pd
 import pytest
 
 from facet.data import Sample, SampleBalancer
-import pandas as pd
-import numpy as np
 
 log = logging.getLogger(__name__)
 
