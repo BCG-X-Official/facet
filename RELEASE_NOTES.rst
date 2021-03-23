@@ -4,8 +4,22 @@ Release Notes
 FACET 1.1
 ---------
 
+FACET 1.1 refines and enhances the association/synergy/redundancy calculations provided
+by the :class:`.LearnerInspector`.
+
 1.1.0
 ~~~~~
+
+- API: SHAP interaction vectors can (in part) also be influenced by redundancy among
+  features. FACET now corrects interaction vectors for redundancy prior to calculating
+  synergy. Technically we ensure that the interaction vector is orthogonal w.r.t the
+  main effect vectors of both associated features.
+- API: FACET now calculates synergy, redundancy, and association separately for each
+  model in a crossfit, then returns the mean of all resulting matrices. This leads to a
+  slight increase in accuracy, and also allows us to calculate the standard deviation
+  across matrices as an indication of confidence for each calculated value.
+- API: Increase efficiency of :class:`.LearnerRanker` parallelization by adopting the
+  new :class:`pytools.parallelization.JobRunner` API provided by :mod:`pytools`
 - BUILD: add support for :mod:`shap` 0.38 and 0.39
 
 
