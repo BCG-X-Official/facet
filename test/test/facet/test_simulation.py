@@ -11,12 +11,12 @@ from sklearndf.regression.extra import LGBMRegressorDF
 
 from facet.crossfit import LearnerCrossfit
 from facet.data import Sample
+from facet.data.partition import ContinuousRangePartitioner
 from facet.simulation import (
     UnivariateSimulationResult,
     UnivariateTargetSimulator,
     UnivariateUpliftSimulator,
 )
-from facet.simulation.partition import ContinuousRangePartitioner
 from facet.simulation.viz import SimulationDrawer
 from facet.validation import StationaryBootstrapCV
 
