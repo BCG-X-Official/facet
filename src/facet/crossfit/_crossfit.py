@@ -467,7 +467,7 @@ class LearnerCrossfit(
                     for parameters in _generate_parameters()
                 )
 
-            def start(self) -> None:
+            def on_run(self) -> None:
                 """
                 Un-fit the crossfit associated with this queue, if we are fitting.
                 """
