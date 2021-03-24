@@ -151,6 +151,17 @@ def test_undersample_with_multilabel_and_ratios(multiclass_target) -> None:
     assert value_counts[2] / value_counts[0] == pytest.approx(0.2, abs=0.06)
     log.info(value_counts)
 
+    weighted = test_balancer.set_balanced_weights(test_sample)
+
+    # majority weight should be 0.57 (700 * 0.57 = 400)
+    assert all(weighted.weight[weighted.target == "a"].between(0, 57, 0, 571))
+
+    # no weight change for b (as just majority is weighted less):
+    assert all(weighted.weight[weighted.target == "b"] == 1.0)
+
+    # no weight change for c (as just majority is weighted less):
+    assert all(weighted.weight[weighted.target == "c"] == 1.0)
+
 
 def test_oversample_with_multilabel_and_ratios(multiclass_target) -> None:
 
