@@ -6,6 +6,12 @@ import pandas as pd
 from pytools.api import AllTracker
 
 from ._sample import Sample
+from .partition import (
+    CategoryPartitioner,
+    ContinuousRangePartitioner,
+    IntegerRangePartitioner,
+    Partitioner,
+)
 
 __all__ = ["SampleBalancer"]
 
@@ -83,16 +89,7 @@ class SampleBalancer:
         :param sample: the sample to balance
         :return: the balanced sample
         """
-        # not imported globally, to avoid cross import error with Crossfit & Simulation
-        from facet.simulation.partition import (
-            CategoryPartitioner,
-            ContinuousRangePartitioner,
-            IntegerRangePartitioner,
-            Partitioner,
-        )
-
         partitioner: Partitioner
-
         if self._partition_target:
             target_dtype = sample.target.dtype
 
