@@ -25,31 +25,12 @@ __all__ = [
     "TreeExplainerFactory",
 ]
 
-__shap_version__ = version.parse(shap.__version__)
-__shap_earliest_supported__ = version.parse("0.34")
-__shap_0_36__ = version.parse("0.36")
-__shap_not_yet_supported__ = version.parse("0.39")
-
-
-#
-# Ensure we have a supported version of the shap package
-#
-
-if (
-    __shap_version__ < __shap_earliest_supported__
-    or __shap_version__ >= __shap_not_yet_supported__
-):
-    log.warning(
-        f"shap package v{__shap_version__} is not supported; "
-        f"current support includes versions starting at v{__shap_earliest_supported__} "
-        f"and preceding v{__shap_not_yet_supported__}"
-    )
 
 #
 # conditional and mock imports
 #
 
-if __shap_version__ < __shap_0_36__:
+if version.parse(shap.__version__) < version.parse("0.36"):
     # noinspection PyUnresolvedReferences
     from shap.explainers.explainer import Explainer
 else:
