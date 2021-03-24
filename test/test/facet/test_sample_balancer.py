@@ -154,7 +154,7 @@ def test_undersample_with_multilabel_and_ratios(multiclass_target) -> None:
     weighted = test_balancer.set_balanced_weights(test_sample)
 
     # majority weight should be 0.57 (700 * 0.57 = 400)
-    assert all(weighted.weight[weighted.target == "a"].between(0, 57, 0, 571))
+    assert all(weighted.weight[weighted.target == "a"].between(0.57, 0.572))
 
     # no weight change for b (as just majority is weighted less):
     assert all(weighted.weight[weighted.target == "b"] == 1.0)
