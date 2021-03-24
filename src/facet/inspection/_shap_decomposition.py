@@ -75,7 +75,7 @@ class ShapDecomposer(ShapGlobalExplainer):
         self.association_rel_asymmetric_: Optional[np.ndarray] = None
 
     def association(
-        self, absolute: bool, symmetrical: bool, std: bool
+        self, absolute: bool, symmetrical: bool, std: bool = False
     ) -> Optional[np.ndarray]:
         """[see superclass]"""
         if absolute:
@@ -94,7 +94,7 @@ class ShapDecomposer(ShapGlobalExplainer):
         # basic definitions
         #
 
-        shap_values: pd.DataFrame = shap_calculator.get_shap_values(consolidate="mean")
+        shap_values: pd.DataFrame = shap_calculator.get_shap_values(aggregation="mean")
         n_outputs: int = len(shap_calculator.output_names_)
         n_features: int = len(shap_calculator.feature_index_)
         n_observations: int = len(shap_values)
@@ -266,7 +266,7 @@ class ShapInteractionDecomposer(ShapDecomposer, ShapInteractionGlobalExplainer):
         """
 
     def synergy(
-        self, symmetrical: bool, absolute: bool, std: bool
+        self, symmetrical: bool, absolute: bool, std: bool = False
     ) -> Optional[np.ndarray]:
         """[see superclass]"""
         if absolute:
@@ -278,7 +278,7 @@ class ShapInteractionDecomposer(ShapDecomposer, ShapInteractionGlobalExplainer):
         return self.synergy_rel_ if symmetrical else self.synergy_rel_asymmetric_
 
     def redundancy(
-        self, symmetrical: bool, absolute: bool, std: bool
+        self, symmetrical: bool, absolute: bool, std: bool = False
     ) -> Optional[np.ndarray]:
         """[see superclass]"""
         if absolute:
@@ -297,7 +297,7 @@ class ShapInteractionDecomposer(ShapDecomposer, ShapInteractionGlobalExplainer):
         # basic definitions
         #
         shap_values: pd.DataFrame = shap_calculator.get_shap_interaction_values(
-            consolidate="mean"
+            aggregation="mean"
         )
         features: pd.Index = shap_calculator.feature_index_
         outputs: List[str] = shap_calculator.output_names_
