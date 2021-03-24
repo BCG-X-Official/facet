@@ -5,7 +5,7 @@ import pandas as pd
 
 from pytools.api import AllTracker
 
-from facet.data._sample import Sample
+from ._sample import Sample
 
 __all__ = ["SampleBalancer"]
 
