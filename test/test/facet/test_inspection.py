@@ -124,12 +124,16 @@ def test_model_inspection(
     )
 
     # using an invalid consolidation method raises an exception
-    with pytest.raises(ValueError, match="unknown consolidation method: invalid"):
-        regressor_inspector.shap_values(consolidate="invalid")
+    with pytest.raises(ValueError, match="unknown aggregation method: invalid"):
+        regressor_inspector.shap_values(aggregation="invalid")
 
-    shap_values_raw: pd.DataFrame = regressor_inspector.shap_values(consolidate=None)
-    shap_values_mean = regressor_inspector.shap_values(consolidate="mean")
-    shap_values_std = regressor_inspector.shap_values(consolidate="std")
+    shap_values_raw: pd.DataFrame = regressor_inspector.shap_values(aggregation=None)
+    shap_values_mean = regressor_inspector.shap_values(
+        aggregation=LearnerInspector.AGG_MEAN
+    )
+    shap_values_std = regressor_inspector.shap_values(
+        aggregation=LearnerInspector.AGG_STD
+    )
 
     # method shap_values without parameter is equal to "mean" consolidation
     assert_frame_equal(shap_values_mean, regressor_inspector.shap_values())
@@ -204,7 +208,7 @@ def test_model_inspection_classifier_binary(
     ).fit(crossfit=iris_classifier_crossfit_binary)
 
     # calculate the shap value matrix, without any consolidation
-    shap_values = model_inspector.shap_values(consolidate=None)
+    shap_values = model_inspector.shap_values(aggregation=None)
 
     # do the shap values add up to predictions minus a constant value?
     _validate_shap_values_against_predictions(
@@ -301,7 +305,7 @@ def test_model_inspection_classifier_multi_class(
 ) -> None:
 
     # calculate the shap value matrix, without any consolidation
-    shap_values = iris_inspector_multi_class.shap_values(consolidate=None)
+    shap_values = iris_inspector_multi_class.shap_values(aggregation=None)
 
     # do the shap values add up to predictions minus a constant value?
     _validate_shap_values_against_predictions(
@@ -601,7 +605,7 @@ def test_model_inspection_classifier_interaction(
 
     # do the shap values add up to predictions minus a constant value?
     _validate_shap_values_against_predictions(
-        shap_values=model_inspector.shap_interaction_values(consolidate=None)
+        shap_values=model_inspector.shap_interaction_values(aggregation=None)
         .groupby(level=[0, 1])
         .sum(),
         crossfit=iris_classifier_crossfit_binary,

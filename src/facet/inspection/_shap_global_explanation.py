@@ -217,7 +217,7 @@ class ShapGlobalExplainer(FittableMixin[ShapCalculator], metaclass=ABCMeta):
 
     @abstractmethod
     def association(
-        self, absolute: bool, symmetrical: bool, std: bool
+        self, absolute: bool, symmetrical: bool, std: bool = False
     ) -> Optional[np.ndarray]:
         """
         The association matrix for all feature pairs.
@@ -276,7 +276,7 @@ class ShapInteractionGlobalExplainer(ShapGlobalExplainer, metaclass=ABCMeta):
 
     @abstractmethod
     def synergy(
-        self, symmetrical: bool, absolute: bool, std: bool
+        self, symmetrical: bool, absolute: bool, std: bool = False
     ) -> Optional[np.ndarray]:
         """
         The synergy matrix for all feature pairs.
@@ -298,7 +298,7 @@ class ShapInteractionGlobalExplainer(ShapGlobalExplainer, metaclass=ABCMeta):
 
     @abstractmethod
     def redundancy(
-        self, symmetrical: bool, absolute: bool, std: bool
+        self, symmetrical: bool, absolute: bool, std: bool = False
     ) -> Optional[np.ndarray]:
         """
         The redundancy matrix for all feature pairs.
@@ -546,7 +546,7 @@ class ShapValueContext(ShapContext):
 
     def __init__(self, shap_calculator: ShapCalculator, split_id: int) -> None:
         shap_values: pd.DataFrame = shap_calculator.get_shap_values(
-            consolidate=None
+            aggregation=None
         ).xs(split_id, level=0)
 
         def _p_i() -> np.ndarray:
@@ -585,7 +585,7 @@ class ShapInteractionValueContext(ShapContext):
 
     def __init__(self, shap_calculator: ShapCalculator, split_id: int) -> None:
         shap_values: pd.DataFrame = shap_calculator.get_shap_interaction_values(
-            consolidate=None
+            aggregation=None
         ).xs(split_id, level=0)
 
         n_features: int = len(shap_calculator.feature_index_)

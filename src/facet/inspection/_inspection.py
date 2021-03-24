@@ -139,6 +139,14 @@ class LearnerInspector(
     specified in the underlying training sample.
     """
 
+    #: constant for "mean" aggregation method, to be passed as arg ``aggregation``
+    #: to :class:`.LearnerInspector` methods that implement it
+    AGG_MEAN = "mean"
+
+    #: constant for "std" aggregation method, to be passed as arg ``aggregation``
+    #: to :class:`.LearnerInspector` methods that implement it
+    AGG_STD = "std"
+
     #: Name for feature importance series or column.
     COL_IMPORTANCE = "importance"
 
@@ -394,7 +402,7 @@ class LearnerInspector(
         return self.crossfit_.pipeline.feature_names_out_.to_list()
 
     def shap_values(
-        self, consolidate: Optional[str] = "mean"
+        self, aggregation: Optional[str] = AGG_MEAN
     ) -> Union[pd.DataFrame, List[pd.DataFrame]]:
         """
         Calculate the SHAP values for all observations and features.
@@ -405,31 +413,31 @@ class LearnerInspector(
         By default, one SHAP value is returned for each observation and feature; this
         value is calculated as the mean SHAP value across all crossfits.
 
-        The ``consolidate`` argument can be used to disable or change the consolidation
+        The ``aggregation`` argument can be used to disable or change the aggregation
         of SHAP values:
 
-        - passing ``consolidate=None`` will disable SHAP value consolidation,
+        - passing ``aggregation=None`` will disable SHAP value aggregation,
           generating one row for every crossfit and observation (identified by
           a hierarchical index with two levels)
-        - passing ``consolidate="mean"`` (the default) will calculate the mean SHAP
+        - passing ``aggregation="mean"`` (the default) will calculate the mean SHAP
           values across all crossfits
-        - passing ``consolidate="std"`` will calculate the standard deviation of SHAP
+        - passing ``aggregation="std"`` will calculate the standard deviation of SHAP
           values across all crossfits, as the basis for determining the uncertainty
           of SHAP calculations
 
-        :param consolidate: consolidate SHAP values across splits;
+        :param aggregation: aggregation SHAP values across splits;
             permissible values are ``"mean"`` (calculate the mean), ``"std"``
-            (calculate the standard deviation), or ``None`` to prevent consolidation
+            (calculate the standard deviation), or ``None`` to prevent aggregation
             (default: ``"mean"``)
         :return: a data frame with SHAP values
         """
         self._ensure_fitted()
         return self.__split_multi_output_df(
-            self._shap_calculator.get_shap_values(consolidate=consolidate)
+            self._shap_calculator.get_shap_values(aggregation=aggregation)
         )
 
     def shap_interaction_values(
-        self, consolidate: Optional[str] = "mean"
+        self, aggregation: Optional[str] = AGG_MEAN
     ) -> Union[pd.DataFrame, List[pd.DataFrame]]:
         """
         Calculate the SHAP interaction values for all observations and pairs of
@@ -443,28 +451,28 @@ class LearnerInspector(
         feature pairing; this value is calculated as the mean SHAP interaction value
         across all crossfits.
 
-        The ``consolidate`` argument can be used to disable or change the consolidation
+        The ``aggregation`` argument can be used to disable or change the aggregation
         of SHAP interaction values:
 
-        - passing ``consolidate=None`` will disable SHAP interaction value
-          consolidation, generating one row for every crossfit, observation and
+        - passing ``aggregation=None`` will disable SHAP interaction value
+          aggregation, generating one row for every crossfit, observation and
           feature (identified by a hierarchical index with three levels)
-        - passing ``consolidate="mean"`` (the default) will calculate the mean SHAP
+        - passing ``aggregation="mean"`` (the default) will calculate the mean SHAP
           interaction values across all crossfits
-        - passing ``consolidate="std"`` will calculate the standard deviation of SHAP
+        - passing ``aggregation="std"`` will calculate the standard deviation of SHAP
           interaction values across all crossfits, as the basis for determining the
           uncertainty of SHAP calculations
 
-        :param consolidate: consolidate SHAP interaction values across splits;
+        :param aggregation: aggregate SHAP interaction values across splits;
             permissible values are ``"mean"`` (calculate the mean), ``"std"``
-            (calculate the standard deviation), or ``None`` to prevent consolidation
+            (calculate the standard deviation), or ``None`` to prevent aggregation
             (default: ``"mean"``)
         :return: a data frame with SHAP interaction values
         """
         self._ensure_fitted()
         return self.__split_multi_output_df(
             self.__shap_interaction_values_calculator.get_shap_interaction_values(
-                consolidate=consolidate
+                aggregation=aggregation
             )
         )
 
@@ -493,7 +501,7 @@ class LearnerInspector(
             raise ValueError(f'arg method="{method}" must be one of {methods}')
 
         shap_matrix: pd.DataFrame = self._shap_calculator.get_shap_values(
-            consolidate="mean"
+            aggregation="mean"
         )
         weight: Optional[pd.Series] = self.sample_.weight
 
@@ -530,7 +538,7 @@ class LearnerInspector(
         *,
         absolute: bool = False,
         symmetrical: bool = False,
-        std: bool = False,
+        aggregation: Optional[str] = AGG_MEAN,
         clustered: bool = True,
     ) -> Union[pd.DataFrame, List[pd.DataFrame]]:
         """
@@ -558,9 +566,8 @@ class LearnerInspector(
             mutual synergy; if ``False``, return an asymmetrical matrix quantifying
             unilateral synergy of the features represented by rows with the
             features represented by columns (default: ``False``)
-        :param std: if ``True``, return standard deviations instead of (mean) values;
-            return ``None`` if only a single matrix had been calculated and
-            thus the standard deviation is not known
+        :param aggregation: if ``mean``, return mean values across all models in the
+            crossfit; additional aggregation methods will be added in future releases
         :param clustered: if ``True``, reorder the rows and columns of the matrix
             such that synergy between adjacent rows and columns is maximised; if
             ``False``, keep rows and columns in the original features order
@@ -574,9 +581,7 @@ class LearnerInspector(
         return self.__feature_affinity_matrix(
             affinity_matrices=(
                 explainer.to_frames(
-                    explainer.synergy(
-                        symmetrical=symmetrical, absolute=absolute, std=std
-                    )
+                    explainer.synergy(symmetrical=symmetrical, absolute=absolute)
                 )
             ),
             affinity_symmetrical=explainer.synergy(
@@ -590,7 +595,7 @@ class LearnerInspector(
         *,
         absolute: bool = False,
         symmetrical: bool = False,
-        std: bool = False,
+        aggregation: Optional[str] = AGG_MEAN,
         clustered: bool = True,
     ) -> Union[pd.DataFrame, List[pd.DataFrame]]:
         """
@@ -618,9 +623,8 @@ class LearnerInspector(
             mutual redundancy; if ``False``, return an asymmetrical matrix quantifying
             unilateral redundancy of the features represented by rows with the
             features represented by columns (default: ``False``)
-        :param std: if ``True``, return standard deviations instead of (mean) values;
-            return ``None`` if only a single matrix had been calculated and
-            thus the standard deviation is not known
+        :param aggregation: if ``mean``, return mean values across all models in the
+            crossfit; additional aggregation methods will be added in future releases
         :param clustered: if ``True``, reorder the rows and columns of the matrix
             such that redundancy between adjacent rows and columns is maximised; if
             ``False``, keep rows and columns in the original features order
@@ -634,9 +638,7 @@ class LearnerInspector(
         return self.__feature_affinity_matrix(
             affinity_matrices=(
                 explainer.to_frames(
-                    explainer.redundancy(
-                        symmetrical=symmetrical, absolute=absolute, std=std
-                    )
+                    explainer.redundancy(symmetrical=symmetrical, absolute=absolute)
                 )
             ),
             affinity_symmetrical=explainer.redundancy(
@@ -650,7 +652,7 @@ class LearnerInspector(
         *,
         absolute: bool = False,
         symmetrical: bool = False,
-        std: bool = False,
+        aggregation: Optional[str] = AGG_MEAN,
         clustered: bool = True,
     ) -> Union[pd.DataFrame, List[pd.DataFrame]]:
         """
@@ -681,9 +683,8 @@ class LearnerInspector(
             with the features represented by columns;
             if ``True``, return a symmetrical matrix quantifying mutual association
             (default: ``False``)
-        :param std: if ``True``, return standard deviations instead of (mean) values;
-            return ``None`` if only a single matrix had been calculated and
-            thus the standard deviation is not known
+        :param aggregation: if ``mean``, return mean values across all models in the
+            crossfit; additional aggregation methods will be added in future releases
         :param clustered: if ``True``, reorder the rows and columns of the matrix
             such that association between adjacent rows and columns is maximised; if
             ``False``, keep rows and columns in the original features order
@@ -693,12 +694,15 @@ class LearnerInspector(
         """
         self._ensure_fitted()
 
+        if aggregation != LearnerInspector.AGG_MEAN:
+            raise ValueError(f"unknown aggregation method: aggregation={aggregation}")
+
         global_explainer = self._shap_global_explainer
         return self.__feature_affinity_matrix(
             affinity_matrices=(
                 global_explainer.to_frames(
                     global_explainer.association(
-                        absolute=absolute, symmetrical=symmetrical, std=std
+                        absolute=absolute, symmetrical=symmetrical
                     )
                 )
             ),
@@ -828,7 +832,7 @@ class LearnerInspector(
         # (n_observations, n_outputs, n_features, n_features)
         # where the innermost feature x feature arrays are symmetrical
         im_matrix_per_observation_and_output = (
-            self.shap_interaction_values(consolidate=None)
+            self.shap_interaction_values(aggregation=None)
             .values.reshape((-1, n_features, n_outputs, n_features))
             .swapaxes(1, 2)
         )
@@ -902,7 +906,7 @@ class LearnerInspector(
         """
 
         shap_values: Union[pd.DataFrame, List[pd.DataFrame]] = self.shap_values(
-            consolidate="mean"
+            aggregation="mean"
         )
 
         output_names: List[str] = self.output_names_
