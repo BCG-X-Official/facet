@@ -142,12 +142,19 @@ class SampleBalancer:
                 raise ValueError(
                     f"Calculated undersample factor is >=1 : {undersample_factor}"
                 )
-
-            return self._make_sample_with_majority_undersampled(
-                sample=sample,
-                undersample_factor=undersample_factor,
-                majority_label=max_freq_label,
-            )
+            if only_set_weights:
+                return self._make_sample_with_weights(
+                    sample=sample,
+                    weight_by_partition={max_freq_label: undersample_factor},
+                    partitioned_target_series=partitioned_target_series,
+                )
+            else:
+                return self._make_sample_with_majority_undersampled(
+                    sample=sample,
+                    undersample_factor=undersample_factor,
+                    majority_label=max_freq_label,
+                    partitioned_target_series=partitioned_target_series,
+                )
         else:
             if isinstance(self._target_class_ratio, float):
                 # if single target ratio passed, set it for all labels:
@@ -183,12 +190,19 @@ class SampleBalancer:
                     f"A calculated oversampling factor is <= 1 :{oversampling_factors}"
                 )
 
-            return self._make_sample_with_minority_oversampled(
-                sample=sample,
-                oversampling_factors=oversampling_factors,
-                labels=self._partitioner.partitions_,
-                partitioned_target_series=partitioned_target_series,
-            )
+            if only_set_weights:
+                return self._make_sample_with_weights(
+                    sample=sample,
+                    weight_by_partition=oversampling_factors,
+                    partitioned_target_series=partitioned_target_series,
+                )
+            else:
+                return self._make_sample_with_minority_oversampled(
+                    sample=sample,
+                    oversampling_factors=oversampling_factors,
+                    labels=self._partitioner.partitions_,
+                    partitioned_target_series=partitioned_target_series,
+                )
 
     def balance(self, sample: Sample) -> Sample:
         """
