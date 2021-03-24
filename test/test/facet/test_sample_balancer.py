@@ -6,6 +6,7 @@ import pandas as pd
 import pytest
 
 from facet.data import Sample, SampleBalancer
+from facet.data.partition import ContinuousRangePartitioner
 
 log = logging.getLogger(__name__)
 
@@ -59,16 +60,13 @@ def test_argument_validation(
 ) -> None:
 
     faulty_args = (
-        {"target_class_ratio": 1.01, "bins": 10},  # ratio too high
-        {"target_class_ratio": 0.0, "bins": 10},  # ratio too low
-        {"target_class_ratio": -0.4, "bins": 10},  # ratio negative
+        {"target_class_ratio": 1.01},  # ratio too high
         {
-            "target_class_ratio": {"x": 0.1},
-            "bins": 10,
-        },  # for dict, requires bins='labels'
-        {"target_class_ratio": 0.5, "bins": 0},  # bins too low
-        {"target_class_ratio": 0.5, "bins": 1},  # bins too low
-        {"target_class_ratio": 0.5, "bins": 1.0},  # bins faulty type
+            "target_class_ratio": 0.0,
+        },  # ratio too low
+        {
+            "target_class_ratio": -0.4,
+        },  # ratio negative
     )
 
     for kwargs in faulty_args:
@@ -82,17 +80,13 @@ def test_argument_validation(
         "match with minority class labels",
     ):
         s = Sample(observations=multiclass_target, target_name="target")
-        SampleBalancer(
-            bins="labels", target_class_ratio={"a": 0.2, "b": 0.4, "faulty": 10}
-        ).balance(s)
+        SampleBalancer(target_class_ratio={"a": 0.2, "b": 0.4, "faulty": 10}).balance(s)
 
 
 def test_undersample_with_binary_labels(binary_target) -> None:
     test_sample = Sample(observations=binary_target, target_name="target")
 
-    test_balancer = SampleBalancer(
-        target_class_ratio=0.4, bins="labels", undersample=True
-    )
+    test_balancer = SampleBalancer(target_class_ratio=0.4, undersample=True)
 
     balanced = test_balancer.balance(test_sample)
     value_counts = balanced.target.value_counts()
@@ -105,9 +99,7 @@ def test_oversample_with_binary_labels(binary_target) -> None:
 
     test_sample = Sample(observations=binary_target, target_name="target")
 
-    test_balancer = SampleBalancer(
-        target_class_ratio=0.4, bins="labels", undersample=False
-    )
+    test_balancer = SampleBalancer(target_class_ratio=0.4, undersample=False)
 
     balanced = test_balancer.balance(test_sample)
     value_counts = balanced.target.value_counts()
@@ -119,9 +111,7 @@ def test_oversample_with_binary_labels(binary_target) -> None:
 def test_undersample_with_multilabel(multiclass_target) -> None:
     test_sample = Sample(observations=multiclass_target, target_name="target")
 
-    test_balancer = SampleBalancer(
-        target_class_ratio=0.4, bins="labels", undersample=True
-    )
+    test_balancer = SampleBalancer(target_class_ratio=0.4, undersample=True)
 
     balanced = test_balancer.balance(test_sample)
     value_counts = balanced.target.value_counts()
@@ -138,9 +128,7 @@ def test_oversample_with_multilabel(multiclass_target) -> None:
 
     test_sample = Sample(observations=multiclass_target, target_name="target")
 
-    test_balancer = SampleBalancer(
-        target_class_ratio=0.4, bins="labels", undersample=False
-    )
+    test_balancer = SampleBalancer(target_class_ratio=0.4, undersample=False)
 
     balanced = test_balancer.balance(test_sample)
     value_counts = balanced.target.value_counts()
@@ -153,7 +141,7 @@ def test_undersample_with_multilabel_and_ratios(multiclass_target) -> None:
     test_sample = Sample(observations=multiclass_target, target_name="target")
 
     test_balancer = SampleBalancer(
-        target_class_ratio={"b": 0.5, "c": 0.2}, bins="labels", undersample=True
+        target_class_ratio={"b": 0.5, "c": 0.2}, undersample=True
     )
 
     balanced = test_balancer.balance(test_sample)
@@ -169,7 +157,7 @@ def test_oversample_with_multilabel_and_ratios(multiclass_target) -> None:
     test_sample = Sample(observations=multiclass_target, target_name="target")
 
     test_balancer = SampleBalancer(
-        target_class_ratio={"b": 0.5, "c": 0.2}, bins="labels", undersample=False
+        target_class_ratio={"b": 0.5, "c": 0.2}, undersample=False
     )
 
     balanced = test_balancer.balance(test_sample)
@@ -184,7 +172,11 @@ def test_undersample_with_continuous_target(continuous_target) -> None:
 
     test_sample = Sample(observations=continuous_target, target_name="target")
 
-    test_balancer = SampleBalancer(target_class_ratio=0.4, bins=3, undersample=True)
+    test_balancer = SampleBalancer(
+        target_class_ratio=0.4,
+        partitioner=ContinuousRangePartitioner(max_partitions=3),
+        undersample=True,
+    )
 
     balanced = test_balancer.balance(test_sample)
     value_counts = balanced.target.value_counts()
@@ -205,7 +197,11 @@ def test_upsample_with_continuous_target(continuous_target: pd.DataFrame) -> Non
 
     test_sample = Sample(observations=continuous_target, target_name="target")
 
-    test_balancer = SampleBalancer(target_class_ratio=0.4, bins=3, undersample=False)
+    test_balancer = SampleBalancer(
+        target_class_ratio=0.4,
+        partitioner=ContinuousRangePartitioner(max_partitions=3),
+        undersample=False,
+    )
 
     balanced = test_balancer.balance(test_sample)
 
@@ -230,11 +226,9 @@ def test_no_change(binary_target) -> None:
     test_args = (
         {
             "target_class_ratio": 0.05,
-            "bins": "labels",
         },
         {
             "target_class_ratio": {1: 0.1111},
-            "bins": "labels",
         },
     )
 

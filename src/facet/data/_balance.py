@@ -6,12 +6,7 @@ import pandas as pd
 from pytools.api import AllTracker
 
 from ._sample import Sample
-from .partition import (
-    CategoryPartitioner,
-    ContinuousRangePartitioner,
-    IntegerRangePartitioner,
-    Partitioner,
-)
+from .partition import CategoryPartitioner, Partitioner
 
 __all__ = ["SampleBalancer"]
 
@@ -36,7 +31,7 @@ class SampleBalancer:
         self,
         *,
         target_class_ratio: Union[float, Dict[Any, float]],
-        bins: Union[str, int],
+        partitioner: Partitioner = None,
         undersample: bool = True,
     ) -> None:
         """
@@ -44,41 +39,29 @@ class SampleBalancer:
             either indicating the maximum ratio between the minority class and any other
             class as a positive scalar in range ``]0,1]`` or indicating the target ratio
             of each minority class, as a dictionary mapping class labels to scalars.
-        :param bins: either ``"labels"`` to treat target variables as class labels,
-            or an integer greater than 1 indicating the number of equally-sized ranges
-            of target values to use as bins
-        :param undersample: boolean parameter, whether majority class should be
-            undersampled, or minority class(es) should be oversampled
+        :param partitioner: an :class:`facet.data.partition._partition.Partitioner`
+            instance to use in order to partition the target variable into bins.
+            By default, a categorical target is assumed.
+
+        :param undersample: boolean parameter, whether majority class (partition) should
+         be undersampled, or minority classes (partitions) should be oversampled
         """
+
+        if partitioner is None:
+            partitioner = CategoryPartitioner()
 
         if isinstance(target_class_ratio, float):
             if not 0 < target_class_ratio <= 1:
                 raise ValueError("'target_class_ratio' not in range ]0,1]")
         elif isinstance(target_class_ratio, Dict):
-            if not bins == "labels":
-                raise ValueError(
-                    "If Dict passed for 'target_class_ratio', "
-                    "then bins='labels' is required"
-                )
+            pass
         else:
             raise TypeError(
                 f"Unsupported type '{type(target_class_ratio)}' for target_class_ratio"
             )
 
-        if isinstance(bins, int):
-            if bins <= 1:
-                raise ValueError("'bins' needs to be >1")
-
-            self._partition_target = True
-
-        elif isinstance(bins, str) and bins == "labels":
-            self._partition_target = False
-
-        else:
-            raise ValueError("'bins' needs to be an integer >1 or 'labels'")
-
         self._target_class_ratio = target_class_ratio
-        self._bins = bins
+        self._partitioner = partitioner
         self._undersample = undersample
 
     def balance(self, sample: Sample) -> Sample:
@@ -89,36 +72,24 @@ class SampleBalancer:
         :param sample: the sample to balance
         :return: the balanced sample
         """
-        partitioner: Partitioner
-        if self._partition_target:
-            target_dtype = sample.target.dtype
+        self._partitioner.fit(values=sample.target)
 
-            if pd.api.types.is_integer_dtype(target_dtype):
-                partitioner = IntegerRangePartitioner(max_partitions=self._bins)
-            elif pd.api.types.is_float_dtype(target_dtype):
-                partitioner = ContinuousRangePartitioner(max_partitions=self._bins)
-            else:
-                raise ValueError(
-                    f"Sample target has unsupported dtype '{target_dtype}' "
-                    f" in order to partition."
-                )
-
-            partitioner.fit(values=sample.target)
-            partitioned_target_series = self._make_partition_series(sample, partitioner)
-
+        if not self._partitioner.is_categorical:
+            partitioned_target_series = self._make_partition_series(
+                sample, self._partitioner
+            )
         else:
-            partitioner = CategoryPartitioner()
-            partitioner.fit(values=sample.target)
+
             partitioned_target_series = None
 
-        max_freq_index = np.argmax(partitioner.frequencies_)
-        max_freq_label = partitioner.partitions_[max_freq_index]
-        max_freq = partitioner.frequencies_[max_freq_index]
+        max_freq_index = np.argmax(self._partitioner.frequencies_)
+        max_freq_label = self._partitioner.partitions_[max_freq_index]
+        max_freq = self._partitioner.frequencies_[max_freq_index]
 
-        frequency_ratios = np.array(partitioner.frequencies_) / max_freq
+        frequency_ratios = np.array(self._partitioner.frequencies_) / max_freq
         freq_ratio_by_label = {
             label: ratio
-            for label, ratio in zip(partitioner.partitions_, frequency_ratios)
+            for label, ratio in zip(self._partitioner.partitions_, frequency_ratios)
         }
 
         if self._undersample:
@@ -139,7 +110,7 @@ class SampleBalancer:
                     target_class_ratio=self._target_class_ratio,
                     minority_labels={
                         label
-                        for label in partitioner.partitions_
+                        for label in self._partitioner.partitions_
                         if label != max_freq_label
                     },
                 )
@@ -177,7 +148,8 @@ class SampleBalancer:
             if isinstance(self._target_class_ratio, float):
                 # if single target ratio passed, set it for all labels:
                 target_class_ratio_by_label = {
-                    label: self._target_class_ratio for label in partitioner.partitions_
+                    label: self._target_class_ratio
+                    for label in self._partitioner.partitions_
                 }
             else:
                 target_class_ratio_by_label = self._target_class_ratio
@@ -185,7 +157,7 @@ class SampleBalancer:
             below_target_ratio = [
                 (label, current_ratio)
                 for label, current_ratio in zip(
-                    partitioner.partitions_, frequency_ratios
+                    self._partitioner.partitions_, frequency_ratios
                 )
                 if label != max_freq_label
                 and current_ratio < target_class_ratio_by_label[label]
@@ -210,12 +182,12 @@ class SampleBalancer:
             return self._make_sample_with_minority_oversampled(
                 sample=sample,
                 oversampling_factors=oversampling_factors,
-                labels=partitioner.partitions_,
+                labels=self._partitioner.partitions_,
                 partitioned_target_series=partitioned_target_series,
             )
 
     @staticmethod
-    def _make_partition_series(sample: Sample, partitioner) -> pd.Series:
+    def _make_partition_series(sample: Sample, partitioner: Partitioner) -> pd.Series:
         """
         Add a pseudo-label series to a Sample with numerical target series.
 
