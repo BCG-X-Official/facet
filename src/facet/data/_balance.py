@@ -19,6 +19,7 @@ __all__ = ["SampleBalancer"]
 __tracker = AllTracker(globals())
 
 _F_FACET_TARGET_PARTITION = "FACET_TARGET_PARTITION_"
+_F_FACET_SAMPLE_WEIGHT = "FACET_SAMPLE_WEIGHT"
 
 
 class SampleBalancer:
@@ -64,12 +65,14 @@ class SampleBalancer:
         self._partitioner = partitioner
         self._undersample = undersample
 
-    def balance(self, sample: Sample) -> Sample:
+    def _balance(self, sample: Sample, only_set_weights: bool) -> Sample:
         """
         Balance the sample by either oversampling observations of minority labels
         (partitions) or undersampling observations of majority labels (partitions)
 
         :param sample: the sample to balance
+        :param only_set_weights: do not touch observations of sample, instead add a new
+            series with sample weights for each observation
         :return: the balanced sample
         """
         self._partitioner.fit(values=sample.target)
@@ -187,6 +190,34 @@ class SampleBalancer:
                 partitioned_target_series=partitioned_target_series,
             )
 
+    def balance(self, sample: Sample) -> Sample:
+        """
+        Balance the sample by either oversampling observations of minority labels
+        (partitions) or undersampling observations of majority labels (partitions)
+
+        :param sample: the sample to balance
+        :return: the balanced sample
+        """
+        return self._balance(sample, False)
+
+    def set_balanced_weights(self, sample: Sample) -> Sample:
+        """
+        Enhance the sample by adding a new series which captures the sample weight
+        of each observation. Weights are derived either by oversampling factors for
+        observations of minority labels (partitions) or undersampling observations
+        of majority labels (partitions)
+
+        :param sample: the sample to balance
+        :return: the sample with an additional series with weights
+        """
+        if sample.weight is not None:
+            raise ValueError(
+                f"Sample has existing weight series named '{sample.weight_name}' "
+                f"which would be overridden."
+            )
+
+        return self._balance(sample, True)
+
     @staticmethod
     def _make_partition_series(sample: Sample, partitioner: Partitioner) -> pd.Series:
         """
@@ -299,6 +330,36 @@ class SampleBalancer:
         return Sample(
             observations=new_observations_df,
             target_name=sample.target_name,
+        )
+
+    @staticmethod
+    def _make_sample_with_weights(
+        sample: Sample,
+        weight_by_partition: Dict[Any, float],
+        partitioned_target_series: pd.Series = None,
+    ) -> Sample:
+
+        if partitioned_target_series is None:
+            target_series = sample.target
+        else:
+            target_series = partitioned_target_series
+
+        weight_series = pd.Series(
+            index=target_series.index, name=_F_FACET_SAMPLE_WEIGHT
+        )
+        weight_series.loc[:] = 1.0
+
+        for value, weight in weight_by_partition.items():
+            weight_series[target_series == value] = weight
+
+        observations: pd.DataFrame = pd.concat(
+            [sample.features, weight_series, sample.target], axis=1
+        )
+
+        return Sample(
+            observations=observations,
+            target_name=sample.target_name,
+            weight_name=_F_FACET_SAMPLE_WEIGHT,
         )
 
     @staticmethod
