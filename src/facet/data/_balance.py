@@ -79,7 +79,6 @@ class SampleBalancer:
                 sample, self._partitioner
             )
         else:
-
             partitioned_target_series = None
 
         max_freq_index = np.argmax(self._partitioner.frequencies_)
@@ -91,6 +90,16 @@ class SampleBalancer:
             label: ratio
             for label, ratio in zip(self._partitioner.partitions_, frequency_ratios)
         }
+
+        if isinstance(self._target_class_ratio, Dict):
+            self._check_label_dict(
+                target_class_ratio=self._target_class_ratio,
+                minority_labels={
+                    label
+                    for label in self._partitioner.partitions_
+                    if label != max_freq_label
+                },
+            )
 
         if self._undersample:
             if isinstance(self._target_class_ratio, float):
@@ -106,14 +115,6 @@ class SampleBalancer:
                 undersample_factor = min_ratio / self._target_class_ratio
             else:
                 self._target_class_ratio: Dict[Any, float]
-                self._check_label_dict(
-                    target_class_ratio=self._target_class_ratio,
-                    minority_labels={
-                        label
-                        for label in self._partitioner.partitions_
-                        if label != max_freq_label
-                    },
-                )
 
                 # return the input Sample as-is, if no undersampling needed:
                 no_undersampling_needed = [
