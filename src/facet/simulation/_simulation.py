@@ -30,8 +30,8 @@ from sklearndf.pipeline import (
 
 from ..crossfit import LearnerCrossfit
 from ..data import Sample
+from ..data.partition import Partitioner
 from ..validation import BaseBootstrapCV
-from .partition import Partitioner
 
 log = logging.getLogger(__name__)
 

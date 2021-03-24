@@ -340,7 +340,7 @@ quantify the uncertainty by using bootstrap confidence intervals.
     from facet.validation import BootstrapCV
     from facet.crossfit import LearnerCrossfit
     from facet.simulation import UnivariateUpliftSimulator
-    from facet.simulation.partition import ContinuousRangePartitioner
+    from facet.data.partition import ContinuousRangePartitioner
     from facet.simulation.viz import SimulationDrawer
 
     # create bootstrap CV iterator
