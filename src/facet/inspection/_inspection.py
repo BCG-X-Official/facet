@@ -105,7 +105,7 @@ class ShapPlotData:
 
 @inheritdoc(match="[see superclass]")
 class LearnerInspector(
-    FittableMixin[Sample], ParallelizableMixin, Generic[T_LearnerPipelineDF]
+    FittableMixin[LearnerCrossfit], ParallelizableMixin, Generic[T_LearnerPipelineDF]
 ):
     """
     Explain regressors and classifiers based on SHAP values.
