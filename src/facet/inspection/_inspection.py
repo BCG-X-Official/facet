@@ -577,6 +577,8 @@ class LearnerInspector(
         """
         self._ensure_fitted()
 
+        self.__validate_aggregation_method(aggregation)
+
         explainer = self.__interaction_explainer
         return self.__feature_affinity_matrix(
             affinity_matrices=(
@@ -633,6 +635,8 @@ class LearnerInspector(
             `(n_features, n_features)`, or a list of data frames for multiple outputs
         """
         self._ensure_fitted()
+
+        self.__validate_aggregation_method(aggregation)
 
         explainer = self.__interaction_explainer
         return self.__feature_affinity_matrix(
@@ -693,8 +697,7 @@ class LearnerInspector(
         """
         self._ensure_fitted()
 
-        if aggregation != LearnerInspector.AGG_MEAN:
-            raise ValueError(f"unknown aggregation method: aggregation={aggregation}")
+        self.__validate_aggregation_method(aggregation)
 
         global_explainer = self._shap_global_explainer
         return self.__feature_affinity_matrix(
@@ -1104,6 +1107,11 @@ class LearnerInspector(
             return frames[0]
         else:
             return frames
+
+    @staticmethod
+    def __validate_aggregation_method(aggregation: str) -> None:
+        if aggregation != LearnerInspector.AGG_MEAN:
+            raise ValueError(f"unknown aggregation method: aggregation={aggregation}")
 
     @property
     def __shap_interaction_values_calculator(self) -> ShapInteractionValuesCalculator:
