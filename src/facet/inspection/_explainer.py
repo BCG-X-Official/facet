@@ -5,7 +5,7 @@ Factories for SHAP explainers from the ``shap`` package.
 import functools
 import logging
 from abc import ABCMeta, abstractmethod
-from typing import Any, Dict, Mapping, Optional, Union
+from typing import Any, Dict, List, Mapping, Optional, Union
 
 import numpy as np
 import pandas as pd
@@ -25,31 +25,12 @@ __all__ = [
     "TreeExplainerFactory",
 ]
 
-__shap_version__ = version.parse(shap.__version__)
-__shap_earliest_supported__ = version.parse("0.34")
-__shap_0_36__ = version.parse("0.36")
-__shap_not_yet_supported__ = version.parse("0.39")
-
-
-#
-# Ensure we have a supported version of the shap package
-#
-
-if (
-    __shap_version__ < __shap_earliest_supported__
-    or __shap_version__ >= __shap_not_yet_supported__
-):
-    log.warning(
-        f"shap package v{__shap_version__} is not supported; "
-        f"current support includes versions starting at v{__shap_earliest_supported__} "
-        f"and preceding v{__shap_not_yet_supported__}"
-    )
 
 #
 # conditional and mock imports
 #
 
-if __shap_version__ < __shap_0_36__:
+if version.parse(shap.__version__) < version.parse("0.36"):
     # noinspection PyUnresolvedReferences
     from shap.explainers.explainer import Explainer
 else:
@@ -85,8 +66,8 @@ class BaseExplainer(metaclass=ABCMeta):
         self,
         X: Union[np.ndarray, pd.DataFrame, "catboost.Pool"],  # noqa: F821
         y: Union[None, np.ndarray, pd.Series] = None,
-        **kwargs,
-    ) -> np.ndarray:
+        **kwargs: Any,
+    ) -> Union[np.ndarray, List[np.ndarray]]:
         """
         Estimate the SHAP values for a set of samples.
 
@@ -94,6 +75,9 @@ class BaseExplainer(metaclass=ABCMeta):
             model's output
         :param y: array of label values for each sample, used when explaining loss
             functions
+        :param kwargs: additional arguments specific to the explainer implementation
+        :return: SHAP values as an array of shape `(n_observations, n_features)`;
+            a list of such arrays in the case of a multi-output model
         """
         pass
 
@@ -103,8 +87,8 @@ class BaseExplainer(metaclass=ABCMeta):
         self,
         X: Union[np.ndarray, pd.DataFrame, "catboost.Pool"],  # noqa: F821
         y: Union[None, np.ndarray, pd.Series] = None,
-        **kwargs,
-    ) -> np.ndarray:
+        **kwargs: Any,
+    ) -> Union[np.ndarray, List[np.ndarray]]:
         """
         Estimate the SHAP interaction values for a set of samples.
 
@@ -112,6 +96,10 @@ class BaseExplainer(metaclass=ABCMeta):
             model's output
         :param y: array of label values for each sample, used when explaining loss
             functions
+        :param kwargs: additional arguments specific to the explainer implementation
+        :return: SHAP values as an array of shape
+            `(n_observations, n_features, n_features)`;
+            a list of such arrays in the case of a multi-output model
         """
         pass
 

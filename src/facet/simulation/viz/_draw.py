@@ -58,7 +58,7 @@ class SimulationDrawer(Drawer[UnivariateSimulationResult, SimulationStyle]):
     __init__.__doc__ = Drawer.__init__.__doc__ + __init__.__doc__
 
     def draw(
-        self, data: UnivariateSimulationResult, title: Optional[str] = None
+        self, data: UnivariateSimulationResult, *, title: Optional[str] = None
     ) -> None:
         """
         Draw the simulation chart.

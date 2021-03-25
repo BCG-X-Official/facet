@@ -20,7 +20,7 @@ import numpy as np
 import pandas as pd
 
 from pytools.api import AllTracker, inheritdoc
-from pytools.parallelization import ParallelizableMixin
+from pytools.parallelization import Job, JobRunner, ParallelizableMixin
 from sklearndf import LearnerDF
 from sklearndf.pipeline import (
     ClassifierPipelineDF,
@@ -30,18 +30,12 @@ from sklearndf.pipeline import (
 
 from ..crossfit import LearnerCrossfit
 from ..data import Sample
+from ..data.partition import Partitioner
 from ..validation import BaseBootstrapCV
-from .partition import Partitioner
 
 log = logging.getLogger(__name__)
 
 __all__ = [
-    "IDX_SPLIT",
-    "IDX_PARTITION",
-    "COL_OUTPUT",
-    "COL_MEDIAN",
-    "COL_LOWER_BOUND",
-    "COL_UPPER_BOUND",
     "UnivariateSimulationResult",
     "BaseUnivariateSimulator",
     "UnivariateProbabilitySimulator",
@@ -61,30 +55,6 @@ T_Partition = TypeVar("T_Partition")
 #
 
 __tracker = AllTracker(globals())
-
-
-#
-# Constants
-#
-
-#: The name of the row index of attribute :attr:`.output`, denoting splits.
-IDX_SPLIT = "split"
-
-#: The name of the column index of attribute :attr:`.output`, denoting partitions
-#: represented by their central values or by a category.
-IDX_PARTITION = "partition"
-
-#: The name of a series of simulated outputs.
-COL_OUTPUT = "output"
-
-#: The name of a series of median simulated values per partition.
-COL_MEDIAN = "median"
-
-#: The name of a series of lower CI bounds of simulated values per partition.
-COL_LOWER_BOUND = "lower_bound"
-
-#: The name of a series of upper CI bounds of simulated values per partition.
-COL_UPPER_BOUND = "upper_bound"
 
 
 #
@@ -113,6 +83,22 @@ class UnivariateSimulationResult(Generic[T_Partition]):
     #: determined by bootstrapping, with :math:`0 < \alpha < 1`.
     confidence_level: float
 
+    #: The partitioner used to generate feature values to be simulated.
+    partitioner: Partitioner
+
+    #: The matrix of simulated outcomes, with columns representing partitions
+    #: and rows representing bootstrap splits used to fit variations of the model.
+    outputs: pd.DataFrame
+
+    #: The name of a series of median simulated values per partition.
+    COL_MEDIAN = "median"
+
+    #: The name of a series of lower CI bounds of simulated values per partition.
+    COL_LOWER_BOUND = "lower_bound"
+
+    #: The name of a series of upper CI bounds of simulated values per partition.
+    COL_UPPER_BOUND = "upper_bound"
+
     def __init__(
         self,
         *,
@@ -133,6 +119,8 @@ class UnivariateSimulationResult(Generic[T_Partition]):
             of the simulation
         :param confidence_level: the width of the confidence interval determined by
             bootstrapping, ranging between 0.0 and 1.0 (exclusive)
+        :param partitioner: the partitioner used to generate feature values to be
+            simulated
         :param outputs: matrix of simulated outcomes, with columns representing
             partitions and rows representing bootstrap splits used to fit variations
             of the model
@@ -140,11 +128,12 @@ class UnivariateSimulationResult(Generic[T_Partition]):
         super().__init__()
 
         assert (
-            outputs.index.name == IDX_SPLIT
-        ), f"name of row index of arg outputs is {IDX_SPLIT}"
-        assert (
-            outputs.columns.name == IDX_PARTITION
-        ), f"name of column index of arg outputs is {IDX_PARTITION}"
+            outputs.index.name == BaseUnivariateSimulator.IDX_SPLIT
+        ), f"row index of arg outputs is named {BaseUnivariateSimulator.IDX_SPLIT}"
+        assert outputs.columns.name == BaseUnivariateSimulator.IDX_PARTITION, (
+            "column index of arg outputs is named "
+            f"{BaseUnivariateSimulator.IDX_PARTITION}"
+        )
         assert (
             0.0 < confidence_level < 1.0
         ), f"confidence_level={confidence_level} ranges between 0.0 and 1.0 (exclusive)"
@@ -154,31 +143,8 @@ class UnivariateSimulationResult(Generic[T_Partition]):
         self.output_unit = output_unit
         self.baseline = baseline
         self.confidence_level = confidence_level
-        self._partitioner = partitioner
-        self._outputs = outputs
-
-    @property
-    def partitioner(self) -> Partitioner:
-        """
-        The partitioner used to generate feature values to be simulated.
-        """
-        return self._partitioner
-
-    @partitioner.setter
-    def partitioner(self, partitioner: Partitioner) -> None:
-        self._partitioner = partitioner
-
-    @property
-    def outputs(self) -> pd.DataFrame:
-        """
-        The matrix of simulated outcomes, with columns representing partitions
-        and rows representing bootstrap splits used to fit variations of the model.
-        """
-        return self._outputs
-
-    @outputs.setter
-    def outputs(self, outputs: pd.DataFrame) -> None:
-        self._outputs = outputs
+        self.partitioner = partitioner
+        self.outputs = outputs
 
     def outputs_median(self) -> pd.Series:
         """
@@ -188,7 +154,7 @@ class UnivariateSimulationResult(Generic[T_Partition]):
         :return: a series of medians, indexed by the central values of the partitions
             for which the simulation was run
         """
-        return self.outputs.median().rename(COL_MEDIAN)
+        return self.outputs.median().rename(UnivariateSimulationResult.COL_MEDIAN)
 
     def outputs_lower_bound(self) -> pd.Series:
         """
@@ -199,7 +165,7 @@ class UnivariateSimulationResult(Generic[T_Partition]):
             for which the simulation was run
         """
         return self.outputs.quantile(q=(1.0 - self.confidence_level) / 2.0).rename(
-            COL_LOWER_BOUND
+            UnivariateSimulationResult.COL_LOWER_BOUND
         )
 
     def outputs_upper_bound(self) -> pd.Series:
@@ -212,7 +178,7 @@ class UnivariateSimulationResult(Generic[T_Partition]):
         """
         return self.outputs.quantile(
             q=1.0 - (1.0 - self.confidence_level) / 2.0
-        ).rename(COL_UPPER_BOUND)
+        ).rename(UnivariateSimulationResult.COL_UPPER_BOUND)
 
 
 class BaseUnivariateSimulator(
@@ -221,6 +187,16 @@ class BaseUnivariateSimulator(
     """
     Base class for univariate simulations.
     """
+
+    #: The name of the row index of attribute :attr:`.output`, denoting splits.
+    IDX_SPLIT = "split"
+
+    #: The name of the column index of attribute :attr:`.output`, denoting partitions
+    #: represented by their central values or by a category.
+    IDX_PARTITION = "partition"
+
+    #: The name of a series of simulated outputs.
+    COL_OUTPUT = "output"
 
     def __init__(
         self,
@@ -231,7 +207,7 @@ class BaseUnivariateSimulator(
         shared_memory: Optional[bool] = None,
         pre_dispatch: Optional[Union[str, int]] = None,
         verbose: Optional[int] = None,
-    ):
+    ) -> None:
         """
         :param crossfit: cross-validated crossfit of a model for all observations
             in a given sample
@@ -295,8 +271,7 @@ class BaseUnivariateSimulator(
 
         :param feature_name: the feature to run the simulation for
         :param partitioner: the partitioner of feature values to run simulations for
-
-        :return a mapping of output names to simulation results
+        :return: a mapping of output names to simulation results
         """
 
         sample = self.crossfit.sample_
@@ -341,9 +316,9 @@ class BaseUnivariateSimulator(
         sample = self.crossfit.sample_
         y_mean = self.expected_output()
 
-        with self._parallel() as parallel:
-            result: List[float] = parallel(
-                self._delayed(self._simulate_actuals)(
+        result: List[float] = JobRunner.from_parallelizable(self).run_jobs(
+            *(
+                Job.delayed(self._simulate_actuals)(
                     model, subsample.features, y_mean, self._simulate
                 )
                 for (model, (_, test_indices)) in zip(
@@ -351,8 +326,11 @@ class BaseUnivariateSimulator(
                 )
                 for subsample in (sample.subsample(iloc=test_indices),)
             )
+        )
 
-        return pd.Series(data=result, name=COL_OUTPUT).rename_axis(index=IDX_SPLIT)
+        return pd.Series(
+            data=result, name=BaseUnivariateSimulator.COL_OUTPUT
+        ).rename_axis(index=BaseUnivariateSimulator.IDX_SPLIT)
 
     @property
     @abstractmethod
@@ -410,9 +388,11 @@ class BaseUnivariateSimulator(
         if feature_name not in sample.features.columns:
             raise ValueError(f"Feature '{feature_name}' not in sample")
 
-        with self._parallel() as parallel:
-            simulation_results_per_split: List[np.ndarray] = parallel(
-                self._delayed(UnivariateUpliftSimulator._simulate_values_for_split)(
+        simulation_results_per_split: List[np.ndarray] = JobRunner.from_parallelizable(
+            self
+        ).run_jobs(
+            *(
+                Job.delayed(UnivariateUpliftSimulator._simulate_values_for_split)(
                     model=model,
                     subsample=sample.subsample(iloc=test_indices),
                     feature_name=feature_name,
@@ -423,10 +403,14 @@ class BaseUnivariateSimulator(
                     self.crossfit.models(), self.crossfit.splits()
                 )
             )
+        )
 
         return pd.DataFrame(
             simulation_results_per_split, columns=simulation_values
-        ).rename_axis(index=IDX_SPLIT, columns=IDX_PARTITION)
+        ).rename_axis(
+            index=BaseUnivariateSimulator.IDX_SPLIT,
+            columns=BaseUnivariateSimulator.IDX_PARTITION,
+        )
 
     @staticmethod
     def _simulate_values_for_split(

@@ -11,7 +11,7 @@ import pandas as pd
 
 from pytools.api import AllTracker, inheritdoc
 from pytools.fit import FittableMixin
-from pytools.parallelization import ParallelizableMixin
+from pytools.parallelization import Job, JobRunner, ParallelizableMixin
 from sklearndf.pipeline import (
     ClassifierPipelineDF,
     LearnerPipelineDF,
@@ -79,6 +79,14 @@ class ShapCalculator(
     in a data frame.
     """
 
+    #: constant for "mean" aggregation method, to be passed as arg ``aggregation``
+    #: to :class:`.ShapCalculator` methods that implement it
+    AGG_MEAN = "mean"
+
+    #: constant for "std" aggregation method, to be passed as arg ``aggregation``
+    #: to :class:`.ShapCalculator` methods that implement it
+    AGG_STD = "std"
+
     #: name of index level indicating the split ID
     IDX_SPLIT = "split"
 
@@ -108,6 +116,7 @@ class ShapCalculator(
         self.feature_index_: Optional[pd.Index] = None
         self.output_names_: Optional[List[str]] = None
         self.sample_: Optional[Sample] = None
+        self.n_splits_: Optional[int] = None
 
     @property
     def is_fitted(self) -> bool:
@@ -120,6 +129,8 @@ class ShapCalculator(
         """
         Calculate the SHAP values.
 
+        :param crossfit: the learner crossfit for which to calculate SHAP values
+        :param fit_params: additional fit parameters (unused)
         :return: self
         """
 
@@ -151,19 +162,32 @@ class ShapCalculator(
             copy=False,
         )
 
+        self.n_splits_ = crossfit.n_splits_
+
         return self
 
     @abstractmethod
-    def get_shap_values(self, consolidate: Optional[str] = None) -> pd.DataFrame:
+    def get_shap_values(self, aggregation: Optional[str]) -> pd.DataFrame:
         """
-        The resulting consolidated shap values as a data frame,
+        The resulting aggregated shap values as a data frame,
         aggregated to averaged SHAP contributions per feature and observation.
 
-        :param consolidate: consolidation method, or ``None`` for no consolidation
+        :param aggregation: aggregation method, or ``None`` for no aggregation
         :return: SHAP contribution values with shape
-            (n_observations, n_outputs * n_features).
+            (n_observations, n_outputs * n_features)
         """
-        pass
+
+    @abstractmethod
+    def get_shap_interaction_values(self, aggregation: Optional[str]) -> pd.DataFrame:
+        """
+        The resulting aggregated shap interaction values as a data frame,
+        aggregated to averaged SHAP interaction values per observation.
+
+        :param aggregation: aggregation method, or ``None`` for no aggregation
+        :return: SHAP contribution values with shape
+            (n_observations * n_features, n_outputs * n_features)
+        :raise TypeError: this SHAP calculator does not support interaction values
+        """
 
     @staticmethod
     @abstractmethod
@@ -171,7 +195,6 @@ class ShapCalculator(
         """
         :return: a category name for the dimensions represented by multiple outputs
         """
-        pass
 
     @abstractmethod
     def _get_multi_output_names(
@@ -214,9 +237,11 @@ class ShapCalculator(
         else:
             background_dataset = None
 
-        with self._parallel() as parallel:
-            shap_df_per_split: List[pd.DataFrame] = parallel(
-                self._delayed(self._get_shap_for_split)(
+        shap_df_per_split: List[pd.DataFrame] = JobRunner.from_parallelizable(
+            self
+        ).run_jobs(
+            *(
+                Job.delayed(self._get_shap_for_split)(
                     model,
                     sample,
                     self._explainer_factory.make_explainer(
@@ -253,6 +278,7 @@ class ShapCalculator(
                     ),
                 )
             )
+        )
 
         return self._concatenate_splits(shap_df_per_split=shap_df_per_split)
 
@@ -263,7 +289,7 @@ class ShapCalculator(
         pass
 
     @staticmethod
-    def _consolidate_splits(
+    def _aggregate_splits(
         shap_all_splits_df: pd.DataFrame, method: Optional[str]
     ) -> pd.DataFrame:
         # Group SHAP values by observation ID, aggregate SHAP values using mean or std,
@@ -280,14 +306,14 @@ class ShapCalculator(
 
         level = 1 if n_levels == 2 else tuple(range(1, n_levels))
 
-        if method == "mean":
-            shap_consolidated = shap_all_splits_df.mean(level=level)
-        elif method == "std":
-            shap_consolidated = shap_all_splits_df.std(level=level)
+        if method == ShapCalculator.AGG_MEAN:
+            shap_aggregated = shap_all_splits_df.mean(level=level)
+        elif method == ShapCalculator.AGG_STD:
+            shap_aggregated = shap_all_splits_df.std(level=level)
         else:
-            raise ValueError(f"unknown consolidation method: {method}")
+            raise ValueError(f"unknown aggregation method: {method}")
 
-        return shap_consolidated
+        return shap_aggregated
 
     @staticmethod
     @abstractmethod
@@ -393,11 +419,25 @@ class ShapValuesCalculator(
     Base class for calculating SHAP contribution values.
     """
 
-    def get_shap_values(self, consolidate: Optional[str] = None) -> pd.DataFrame:
+    def get_shap_values(self, aggregation: Optional[str]) -> pd.DataFrame:
         """[see superclass]"""
         self._ensure_fitted()
-        return ShapCalculator._consolidate_splits(
-            shap_all_splits_df=self.shap_, method=consolidate
+        return ShapCalculator._aggregate_splits(
+            shap_all_splits_df=self.shap_, method=aggregation
+        )
+
+    def get_shap_interaction_values(self, aggregation: Optional[str]) -> pd.DataFrame:
+        """
+        Not implemented.
+
+        :param aggregation: (ignored)
+        :return: (never returns)
+        :raise TypeError: always raises this - SHAP interaction values are not supported
+        """
+        raise TypeError(
+            f"{type(self).__name__}"
+            f".{ShapValuesCalculator.get_shap_interaction_values.__name__}() "
+            "is not defined"
         )
 
     @staticmethod
@@ -455,23 +495,18 @@ class ShapInteractionValuesCalculator(
     Base class for calculating SHAP interaction values.
     """
 
-    def get_shap_values(self, consolidate: Optional[str] = None) -> pd.DataFrame:
+    def get_shap_values(self, aggregation: Optional[str]) -> pd.DataFrame:
         """[see superclass]"""
         self._ensure_fitted()
-        return ShapCalculator._consolidate_splits(
-            shap_all_splits_df=self.shap_.sum(level=(0, 1)), method=consolidate
+        return ShapCalculator._aggregate_splits(
+            shap_all_splits_df=self.shap_.sum(level=(0, 1)), method=aggregation
         )
 
-    def get_shap_interaction_values(
-        self, consolidate: Optional[str] = None
-    ) -> pd.DataFrame:
-        """
-        The resulting consolidated shap interaction values as a data frame,
-        aggregated to averaged SHAP interaction values per observation.
-        """
+    def get_shap_interaction_values(self, aggregation: Optional[str]) -> pd.DataFrame:
+        """[see superclass]"""
         self._ensure_fitted()
-        return ShapCalculator._consolidate_splits(
-            shap_all_splits_df=self.shap_, method=consolidate
+        return ShapCalculator._aggregate_splits(
+            shap_all_splits_df=self.shap_, method=aggregation
         )
 
     def get_diagonals(self) -> pd.DataFrame:
