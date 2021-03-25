@@ -1,0 +1,501 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>facet.selection.LearnerRanker &#8212; facet  documentation</title>
+    
+  <link rel="stylesheet" href="../../../_static/css/index.f658d18f9b420779cfdf24aa0a7e2d77.css">
+
+    
+  <link rel="stylesheet"
+    href="../../../_static/vendor/fontawesome/5.13.0/css/all.min.css">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../../../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../../../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+
+    
+      
+  <link rel="stylesheet"
+    href="../../../_static/vendor/open-sans_all/1.44.1/index.css">
+  <link rel="stylesheet"
+    href="../../../_static/vendor/lato_latin-ext/1.44.1/index.css">
+
+    
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/basic.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/css/gamma.css" />
+    
+  <link rel="preload" as="script" href="../../../_static/js/index.d3f166471bb80abb5163.js">
+
+    <script id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+    <script src="../../../_static/jquery.js"></script>
+    <script src="../../../_static/underscore.js"></script>
+    <script src="../../../_static/doctools.js"></script>
+    <script src="../../../_static/js/gamma.js"></script>
+    <script src="../../../_static/js/versions.js"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "document", "processClass": "math|output_area"}})</script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="facet.simulation" href="../facet.simulation.html" />
+    <link rel="prev" title="facet.selection.LearnerGrid" href="facet.selection.LearnerGrid.html" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="docsearch:language" content="en" />
+  </head>
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
+    
+    <nav class="navbar navbar-light navbar-expand-lg bg-light fixed-top bd-navbar" id="navbar-main">
+<div class="container-xl">
+
+    <a class="navbar-brand" href="../../../index.html">
+    
+      <img src="../../../_static/Gamma_Facet_Logo_RGB_LB.svg" class="logo" alt="logo" />
+    
+    </a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar-menu" aria-controls="navbar-menu" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div id="navbar-menu" class="col-lg-9 collapse navbar-collapse">
+      <ul id="navbar-main-elements" class="navbar-nav mr-auto">
+        
+        
+        <li class="nav-item ">
+            <a class="nav-link" href="../../../getting_started/getting_started.html">Getting started</a>
+        </li>
+        
+        <li class="nav-item active">
+            <a class="nav-link" href="../../facet.html">API reference</a>
+        </li>
+        
+        <li class="nav-item ">
+            <a class="nav-link" href="../../../tutorials.html">Tutorials</a>
+        </li>
+        
+        <li class="nav-item ">
+            <a class="nav-link" href="../../../contribution_guide.html">Development Guidelines</a>
+        </li>
+        
+        <li class="nav-item ">
+            <a class="nav-link" href="../../../faqs.html">FAQ</a>
+        </li>
+        
+        <li class="nav-item ">
+            <a class="nav-link" href="../../../about_us.html">About us</a>
+        </li>
+        
+        <li class="nav-item ">
+            <a class="nav-link" href="../../../release_notes.html">Release Notes</a>
+        </li>
+        
+        
+      </ul>
+
+
+      
+
+      <ul class="navbar-nav">
+        
+        
+      </ul>
+    </div>
+</div>
+    </nav>
+    
+
+    <div class="container-xl">
+      <div class="row">
+          
+          <div class="col-12 col-md-3 bd-sidebar"><form class="bd-search d-flex align-items-center" action="../../../search.html" method="get">
+  <i class="icon fas fa-search"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
+</form>
+<nav class="bd-links" id="bd-docs-nav" aria-label="Main navigation">
+
+    <div class="bd-toc-item active">
+    
+  
+    <ul class="nav bd-sidenav">
+        
+        
+        
+        
+          
+            
+                <li class="">
+                    <a href="../facet.crossfit.html">facet.crossfit</a>
+                </li>
+            
+          
+            
+                <li class="">
+                    <a href="../facet.data.html">facet.data</a>
+                </li>
+            
+          
+            
+                <li class="">
+                    <a href="../facet.inspection.html">facet.inspection</a>
+                </li>
+            
+          
+            
+  
+                <li class="active">
+                    <a href="../facet.selection.html">facet.selection</a>
+                    <ul>
+                    
+                        <li class="">
+                            <a href="facet.selection.LearnerEvaluation.html">facet.selection.LearnerEvaluation</a>
+                        </li>
+                    
+                        <li class="">
+                            <a href="facet.selection.LearnerGrid.html">facet.selection.LearnerGrid</a>
+                        </li>
+                    
+                        <li class="active">
+                            <a href="">facet.selection.LearnerRanker</a>
+                        </li>
+                    
+                    </ul>
+                </li>
+            
+          
+            
+                <li class="">
+                    <a href="../facet.simulation.html">facet.simulation</a>
+                </li>
+            
+          
+            
+                <li class="">
+                    <a href="../facet.validation.html">facet.validation</a>
+                </li>
+            
+          
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+      </ul>
+  
+  </nav>
+          </div>
+          
+
+          
+          <div class="d-none d-xl-block col-xl-2 bd-toc">
+              
+
+<nav id="bd-toc-nav">
+    <ul class="nav section-nav flex-column">
+    
+    </ul>
+</nav>
+
+
+              
+          </div>
+          
+
+          
+          <main class="col-12 col-md-9 col-xl-7 py-md-5 pl-md-5 pr-md-4 bd-content" role="main">
+              
+              <div>
+                
+  <div class="section" id="facet-selection-learnerranker">
+<h1>facet.selection.LearnerRanker<a class="headerlink" href="#facet-selection-learnerranker" title="Permalink to this headline">¶</a></h1>
+<dl class="py class">
+<dt id="facet.selection.LearnerRanker">
+<em class="property">class </em><code class="sig-prename descclassname">facet.selection.</code><code class="sig-name descname">LearnerRanker</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">grids</span></em>, <em class="sig-param"><span class="n">cv</span></em>, <em class="sig-param"><span class="n">scoring</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">ranking_scorer</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">random_state</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">n_jobs</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">shared_memory</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">pre_dispatch</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">verbose</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/facet/selection/_selection.html#LearnerRanker"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#facet.selection.LearnerRanker" title="Permalink to this definition">¶</a></dt>
+<dd><p>Score and rank different parametrizations of one or more learners,
+using cross-validation.</p>
+<p>The learner ranker can run a simultaneous grid search across multiple alternative
+learner pipelines, supporting the ability to simultaneously select a learner
+algorithm and optimize hyper-parameters.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Bases</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://bcg-gamma.github.io/pytools/apidoc/pytools/parallelization/pytools.parallelization.ParallelizableMixin.html#pytools.parallelization.ParallelizableMixin" title="(in pytools)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ParallelizableMixin</span></code></a>, <a class="reference external" href="https://bcg-gamma.github.io/pytools/apidoc/pytools/fit/pytools.fit.FittableMixin.html#pytools.fit.FittableMixin" title="(in pytools)"><code class="xref py py-class docutils literal notranslate"><span class="pre">FittableMixin</span></code></a> [<a class="reference internal" href="../data/facet.data.Sample.html#facet.data.Sample" title="facet.data.Sample"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sample</span></code></a>]</p>
+</dd>
+<dt class="field-even">Generic types</dt>
+<dd class="field-even"><p>~T_LearnerPipelineDF(<a class="reference external" href="https://bcg-gamma.github.io/sklearndf/apidoc/sklearndf/pipeline/sklearndf.pipeline.RegressorPipelineDF.html#sklearndf.pipeline.RegressorPipelineDF" title="(in sklearndf)"><code class="xref py py-class docutils literal notranslate"><span class="pre">RegressorPipelineDF</span></code></a>, <a class="reference external" href="https://bcg-gamma.github.io/sklearndf/apidoc/sklearndf/pipeline/sklearndf.pipeline.ClassifierPipelineDF.html#sklearndf.pipeline.ClassifierPipelineDF" title="(in sklearndf)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ClassifierPipelineDF</span></code></a>)</p>
+</dd>
+<dt class="field-odd">Metaclasses</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/abc.html#abc.ABCMeta" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ABCMeta</span></code></a></p>
+</dd>
+<dt class="field-even">Parameters</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>grids</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Union" title="(in Python v3.6)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code></a>[<a class="reference internal" href="facet.selection.LearnerGrid.html#facet.selection.LearnerGrid" title="facet.selection.LearnerGrid"><code class="xref py py-class docutils literal notranslate"><span class="pre">LearnerGrid</span></code></a>[~T_LearnerPipelineDF], <a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Iterable" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Iterable</span></code></a>[<a class="reference internal" href="facet.selection.LearnerGrid.html#facet.selection.LearnerGrid" title="facet.selection.LearnerGrid"><code class="xref py py-class docutils literal notranslate"><span class="pre">LearnerGrid</span></code></a>[~T_LearnerPipelineDF]]]) – learner grids to be ranked
+(either a single grid, or an iterable of multiple grids)</p></li>
+<li><p><strong>cv</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Optional" title="(in Python v3.6)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">BaseCrossValidator</span></code>]) – a cross validator (e.g.,
+<a class="reference internal" href="../validation/facet.validation.BootstrapCV.html#facet.validation.BootstrapCV" title="facet.validation.BootstrapCV"><code class="xref py py-class docutils literal notranslate"><span class="pre">BootstrapCV</span></code></a>)</p></li>
+<li><p><strong>scoring</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Union" title="(in Python v3.6)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code></a>[<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Callable" title="(in Python v3.6)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Callable</span></code></a>[[<a class="reference external" href="https://docs.python.org/3.6/library/functions.html#float" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a>, <a class="reference external" href="https://docs.python.org/3.6/library/functions.html#float" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a>], <a class="reference external" href="https://docs.python.org/3.6/library/functions.html#float" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a>], <a class="reference external" href="https://docs.python.org/3.6/library/constants.html#None" title="(in Python v3.6)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>]) – a scoring function (by name, or as a callable) for evaluating
+learners (optional; use learner’s default scorer if not specified here).
+If passing a callable, the <code class="docutils literal notranslate"><span class="pre">&quot;score&quot;</span></code> will be used as the name of the
+scoring function unless the callable defines a <code class="docutils literal notranslate"><span class="pre">__name__</span></code> attribute</p></li>
+<li><p><strong>ranking_scorer</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Optional" title="(in Python v3.6)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Callable" title="(in Python v3.6)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Callable</span></code></a>[[<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.20)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code></a>], <a class="reference external" href="https://docs.python.org/3.6/library/functions.html#float" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a>]]) – a function to calculate a scalar score for every
+crossfit and returning a float.
+The resulting score is used to rank all crossfits (highest score is best).
+Defaults to <a class="reference internal" href="#facet.selection.LearnerRanker.default_ranking_scorer" title="facet.selection.LearnerRanker.default_ranking_scorer"><code class="xref py py-meth docutils literal notranslate"><span class="pre">default_ranking_scorer()</span></code></a>, calculating
+<cite>mean(scores) - 2 * std(scores, ddof=1)</cite></p></li>
+<li><p><strong>random_state</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Union" title="(in Python v3.6)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code></a>[<a class="reference external" href="https://docs.python.org/3.6/library/functions.html#int" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">RandomState</span></code>, <a class="reference external" href="https://docs.python.org/3.6/library/constants.html#None" title="(in Python v3.6)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>]) – optional random seed or random state for shuffling the
+feature column order</p></li>
+<li><p><strong>n_jobs</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Optional" title="(in Python v3.6)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3.6/library/functions.html#int" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>]) – number of jobs to use in parallel;
+if <code class="docutils literal notranslate"><span class="pre">None</span></code>, use joblib default (default: <code class="docutils literal notranslate"><span class="pre">None</span></code>)</p></li>
+<li><p><strong>shared_memory</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Optional" title="(in Python v3.6)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3.6/library/functions.html#bool" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a>]) – if <code class="docutils literal notranslate"><span class="pre">True</span></code>, use threads in the parallel runs; if
+<code class="docutils literal notranslate"><span class="pre">False</span></code>, use multiprocessing (default: <code class="docutils literal notranslate"><span class="pre">False</span></code>)</p></li>
+<li><p><strong>pre_dispatch</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Union" title="(in Python v3.6)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code></a>[<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3.6/library/functions.html#int" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>, <a class="reference external" href="https://docs.python.org/3.6/library/constants.html#None" title="(in Python v3.6)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>]) – number of batches to pre-dispatch;
+if <code class="docutils literal notranslate"><span class="pre">None</span></code>, use joblib default (default: <code class="docutils literal notranslate"><span class="pre">None</span></code>)</p></li>
+<li><p><strong>verbose</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Optional" title="(in Python v3.6)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3.6/library/functions.html#int" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>]) – verbosity level used in the parallel computation;
+if <code class="docutils literal notranslate"><span class="pre">None</span></code>, use joblib default (default: <code class="docutils literal notranslate"><span class="pre">None</span></code>)</p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Method summary</p>
+<table class="longtable table autosummary">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#facet.selection.LearnerRanker.default_ranking_scorer" title="facet.selection.LearnerRanker.default_ranking_scorer"><code class="xref py py-obj docutils literal notranslate"><span class="pre">default_ranking_scorer</span></code></a></p></td>
+<td><p>The default function used to rank pipelines.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#facet.selection.LearnerRanker.fit" title="facet.selection.LearnerRanker.fit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fit</span></code></a></p></td>
+<td><p>Rank the candidate learners and their hyper-parameter combinations using crossfits from the given sample.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#facet.selection.LearnerRanker.summary_report" title="facet.selection.LearnerRanker.summary_report"><code class="xref py py-obj docutils literal notranslate"><span class="pre">summary_report</span></code></a></p></td>
+<td><p>Create a summary table of the scores achieved by all learners in the grid search, sorted by ranking score in descending order.</p></td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Attribute summary</p>
+<table class="longtable table autosummary">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#facet.selection.LearnerRanker.best_model_" title="facet.selection.LearnerRanker.best_model_"><code class="xref py py-obj docutils literal notranslate"><span class="pre">best_model_</span></code></a></p></td>
+<td><p>The pipeline which obtained the best ranking score, fitted on the entire sample.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#facet.selection.LearnerRanker.best_model_crossfit_" title="facet.selection.LearnerRanker.best_model_crossfit_"><code class="xref py py-obj docutils literal notranslate"><span class="pre">best_model_crossfit_</span></code></a></p></td>
+<td><p>The crossfit which obtained the best ranking score.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#facet.selection.LearnerRanker.is_fitted" title="facet.selection.LearnerRanker.is_fitted"><code class="xref py py-obj docutils literal notranslate"><span class="pre">is_fitted</span></code></a></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">True</span></code> if this object is fitted, <code class="docutils literal notranslate"><span class="pre">False</span></code> otherwise.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#facet.selection.LearnerRanker.ranking_" title="facet.selection.LearnerRanker.ranking_"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ranking_</span></code></a></p></td>
+<td><p>A list of <a class="reference internal" href="facet.selection.LearnerEvaluation.html#facet.selection.LearnerEvaluation" title="facet.selection.LearnerEvaluation"><code class="xref py py-class docutils literal notranslate"><span class="pre">LearnerEvaluation</span></code></a> for all learners evaluated by this ranker, in descending order of the ranking score.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#facet.selection.LearnerRanker.scoring_name" title="facet.selection.LearnerRanker.scoring_name"><code class="xref py py-obj docutils literal notranslate"><span class="pre">scoring_name</span></code></a></p></td>
+<td><p>The name of the scoring function used to rank the learners.</p></td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Definitions</p>
+<dl class="py method">
+<dt id="facet.selection.LearnerRanker._delayed">
+<em class="property">static </em><code class="sig-name descname">_delayed</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">function</span></em><span class="sig-paren">)</span><a class="headerlink" href="#facet.selection.LearnerRanker._delayed" title="Permalink to this definition">¶</a></dt>
+<dd><p>See <a class="reference external" href="https://bcg-gamma.github.io/pytools/apidoc/pytools/parallelization/pytools.parallelization.ParallelizableMixin.html#pytools.parallelization.ParallelizableMixin._delayed" title="(in pytools)"><code class="xref py py-meth docutils literal notranslate"><span class="pre">pytools.parallelization.ParallelizableMixin._delayed()</span></code></a></p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="facet.selection.LearnerRanker._ensure_fitted">
+<code class="sig-name descname">_ensure_fitted</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#facet.selection.LearnerRanker._ensure_fitted" title="Permalink to this definition">¶</a></dt>
+<dd><p>See <a class="reference external" href="https://bcg-gamma.github.io/pytools/apidoc/pytools/fit/pytools.fit.FittableMixin.html#pytools.fit.FittableMixin._ensure_fitted" title="(in pytools)"><code class="xref py py-meth docutils literal notranslate"><span class="pre">pytools.fit.FittableMixin._ensure_fitted()</span></code></a></p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="facet.selection.LearnerRanker._parallel">
+<code class="sig-name descname">_parallel</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#facet.selection.LearnerRanker._parallel" title="Permalink to this definition">¶</a></dt>
+<dd><p>See <a class="reference external" href="https://bcg-gamma.github.io/pytools/apidoc/pytools/parallelization/pytools.parallelization.ParallelizableMixin.html#pytools.parallelization.ParallelizableMixin._parallel" title="(in pytools)"><code class="xref py py-meth docutils literal notranslate"><span class="pre">pytools.parallelization.ParallelizableMixin._parallel()</span></code></a></p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="facet.selection.LearnerRanker.default_ranking_scorer">
+<em class="property">static </em><code class="sig-name descname">default_ranking_scorer</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">scores</span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/facet/selection/_selection.html#LearnerRanker.default_ranking_scorer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#facet.selection.LearnerRanker.default_ranking_scorer" title="Permalink to this definition">¶</a></dt>
+<dd><p>The default function used to rank pipelines.</p>
+<p>Calculates <cite>mean(scores) - 2 * std(scores, ddof=1)</cite>, i.e., ranks pipelines by a
+(pessimistic) lower bound of the expected score.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>scores</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.20)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code></a>) – the scores for all crossfits</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3.6/library/functions.html#float" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a></p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>scalar score for ranking the pipeline</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="facet.selection.LearnerRanker.fit">
+<code class="sig-name descname">fit</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">sample</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">fit_params</span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/facet/selection/_selection.html#LearnerRanker.fit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#facet.selection.LearnerRanker.fit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Rank the candidate learners and their hyper-parameter combinations using
+crossfits from the given sample.</p>
+<p>Other than the scikit-learn implementation of grid search, arbitrary parameters
+can be passed on to the learner pipeline(s) to be fitted.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>sample</strong> (<a class="reference internal" href="../data/facet.data.Sample.html#facet.data.Sample" title="facet.data.Sample"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sample</span></code></a>) – the sample from which to fit the crossfits</p></li>
+<li><p><strong>fit_params</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Any" title="(in Python v3.6)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code></a>) – any fit parameters to pass on to the learner’s fit method</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>~T_Self</p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">self</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="facet.selection.LearnerRanker.summary_report">
+<code class="sig-name descname">summary_report</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/facet/selection/_selection.html#LearnerRanker.summary_report"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#facet.selection.LearnerRanker.summary_report" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a summary table of the scores achieved by all learners in the grid
+search, sorted by ranking score in descending order.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v1.2.3)"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></a></p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the summary report of the grid search as a data frame</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="facet.selection.LearnerRanker.best_model_">
+<em class="property">property </em><code class="sig-name descname">best_model_</code><a class="headerlink" href="#facet.selection.LearnerRanker.best_model_" title="Permalink to this definition">¶</a></dt>
+<dd><p>The pipeline which obtained the best ranking score, fitted on the entire sample.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>~T_LearnerPipelineDF</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="facet.selection.LearnerRanker.best_model_crossfit_">
+<em class="property">property </em><code class="sig-name descname">best_model_crossfit_</code><a class="headerlink" href="#facet.selection.LearnerRanker.best_model_crossfit_" title="Permalink to this definition">¶</a></dt>
+<dd><p>The crossfit which obtained the best ranking score.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="../crossfit/facet.crossfit.LearnerCrossfit.html#facet.crossfit.LearnerCrossfit" title="facet.crossfit.LearnerCrossfit"><code class="xref py py-class docutils literal notranslate"><span class="pre">LearnerCrossfit</span></code></a>[~T_LearnerPipelineDF]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="facet.selection.LearnerRanker.is_fitted">
+<em class="property">property </em><code class="sig-name descname">is_fitted</code><a class="headerlink" href="#facet.selection.LearnerRanker.is_fitted" title="Permalink to this definition">¶</a></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">True</span></code> if this object is fitted, <code class="docutils literal notranslate"><span class="pre">False</span></code> otherwise.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/functions.html#bool" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="facet.selection.LearnerRanker.n_jobs">
+<code class="sig-name descname">n_jobs</code><a class="headerlink" href="#facet.selection.LearnerRanker.n_jobs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of jobs to use in parallel; if <code class="docutils literal notranslate"><span class="pre">None</span></code>, use joblib default.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="facet.selection.LearnerRanker.pre_dispatch">
+<code class="sig-name descname">pre_dispatch</code><a class="headerlink" href="#facet.selection.LearnerRanker.pre_dispatch" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of batches to pre-dispatch; if <code class="docutils literal notranslate"><span class="pre">None</span></code>, use joblib default.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="facet.selection.LearnerRanker.ranking_">
+<em class="property">property </em><code class="sig-name descname">ranking_</code><a class="headerlink" href="#facet.selection.LearnerRanker.ranking_" title="Permalink to this definition">¶</a></dt>
+<dd><p>A list of <a class="reference internal" href="facet.selection.LearnerEvaluation.html#facet.selection.LearnerEvaluation" title="facet.selection.LearnerEvaluation"><code class="xref py py-class docutils literal notranslate"><span class="pre">LearnerEvaluation</span></code></a> for all learners evaluated
+by this ranker, in descending order of the ranking score.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.List" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a>[<a class="reference internal" href="facet.selection.LearnerEvaluation.html#facet.selection.LearnerEvaluation" title="facet.selection.LearnerEvaluation"><code class="xref py py-class docutils literal notranslate"><span class="pre">LearnerEvaluation</span></code></a>[~T_LearnerPipelineDF]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="facet.selection.LearnerRanker.scoring_name">
+<em class="property">property </em><code class="sig-name descname">scoring_name</code><a class="headerlink" href="#facet.selection.LearnerRanker.scoring_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>The name of the scoring function used to rank the learners.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="facet.selection.LearnerRanker.shared_memory">
+<code class="sig-name descname">shared_memory</code><a class="headerlink" href="#facet.selection.LearnerRanker.shared_memory" title="Permalink to this definition">¶</a></dt>
+<dd><p>If <code class="docutils literal notranslate"><span class="pre">True</span></code>, use threads in the parallel runs;
+if <code class="docutils literal notranslate"><span class="pre">False</span></code>, use multiprocessing.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="facet.selection.LearnerRanker.verbose">
+<code class="sig-name descname">verbose</code><a class="headerlink" href="#facet.selection.LearnerRanker.verbose" title="Permalink to this definition">¶</a></dt>
+<dd><p>Verbosity level used in the parallel computation;
+if <code class="docutils literal notranslate"><span class="pre">None</span></code>, use joblib default.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+              </div>
+              
+              
+              <div class='prev-next-bottom'>
+                
+    <a class='left-prev' id="prev-link" href="facet.selection.LearnerGrid.html" title="previous page">facet.selection.LearnerGrid</a>
+    <a class='right-next' id="next-link" href="../facet.simulation.html" title="next page">facet.simulation</a>
+
+              </div>
+              
+          </main>
+          
+
+      </div>
+    </div>
+
+    
+  <script src="../../../_static/js/index.d3f166471bb80abb5163.js"></script>
+
+
+    <footer class="footer mt-5 mt-md-0">
+  <div class="container">
+    <p>
+          &copy; Copyright 2021, Boston Consulting Group (BCG).<br/>
+        Created using <a href="http://sphinx-doc.org/">Sphinx</a> 3.4.3.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>

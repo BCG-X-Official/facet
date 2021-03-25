@@ -1,0 +1,582 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>pytools.parallelization._parallelization &#8212; facet  documentation</title>
+    
+  <link rel="stylesheet" href="../../../_static/css/index.f658d18f9b420779cfdf24aa0a7e2d77.css">
+
+    
+  <link rel="stylesheet"
+    href="../../../_static/vendor/fontawesome/5.13.0/css/all.min.css">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../../../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../../../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+
+    
+      
+  <link rel="stylesheet"
+    href="../../../_static/vendor/open-sans_all/1.44.1/index.css">
+  <link rel="stylesheet"
+    href="../../../_static/vendor/lato_latin-ext/1.44.1/index.css">
+
+    
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/basic.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/css/gamma.css" />
+    
+  <link rel="preload" as="script" href="../../../_static/js/index.d3f166471bb80abb5163.js">
+
+    <script id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+    <script src="../../../_static/jquery.js"></script>
+    <script src="../../../_static/underscore.js"></script>
+    <script src="../../../_static/doctools.js"></script>
+    <script src="../../../_static/js/gamma.js"></script>
+    <script src="../../../_static/js/versions.js"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "document", "processClass": "math|output_area"}})</script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="docsearch:language" content="en" />
+  </head>
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
+    
+    <nav class="navbar navbar-light navbar-expand-lg bg-light fixed-top bd-navbar" id="navbar-main">
+<div class="container-xl">
+
+    <a class="navbar-brand" href="../../../index.html">
+    
+      <img src="../../../_static/Gamma_Facet_Logo_RGB_LB.svg" class="logo" alt="logo" />
+    
+    </a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar-menu" aria-controls="navbar-menu" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div id="navbar-menu" class="col-lg-9 collapse navbar-collapse">
+      <ul id="navbar-main-elements" class="navbar-nav mr-auto">
+        
+        
+        <li class="nav-item ">
+            <a class="nav-link" href="../../../getting_started/getting_started.html">Getting started</a>
+        </li>
+        
+        <li class="nav-item ">
+            <a class="nav-link" href="../../../apidoc/facet.html">API reference</a>
+        </li>
+        
+        <li class="nav-item ">
+            <a class="nav-link" href="../../../tutorials.html">Tutorials</a>
+        </li>
+        
+        <li class="nav-item ">
+            <a class="nav-link" href="../../../contribution_guide.html">Development Guidelines</a>
+        </li>
+        
+        <li class="nav-item ">
+            <a class="nav-link" href="../../../faqs.html">FAQ</a>
+        </li>
+        
+        <li class="nav-item ">
+            <a class="nav-link" href="../../../about_us.html">About us</a>
+        </li>
+        
+        <li class="nav-item ">
+            <a class="nav-link" href="../../../release_notes.html">Release Notes</a>
+        </li>
+        
+        
+      </ul>
+
+
+      
+
+      <ul class="navbar-nav">
+        
+        
+      </ul>
+    </div>
+</div>
+    </nav>
+    
+
+    <div class="container-xl">
+      <div class="row">
+          
+          <div class="col-12 col-md-3 bd-sidebar"><form class="bd-search d-flex align-items-center" action="../../../search.html" method="get">
+  <i class="icon fas fa-search"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
+</form>
+<nav class="bd-links" id="bd-docs-nav" aria-label="Main navigation">
+
+    <div class="bd-toc-item active">
+    
+  
+    <ul class="nav bd-sidenav">
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+      </ul>
+  
+  </nav>
+          </div>
+          
+
+          
+          <div class="d-none d-xl-block col-xl-2 bd-toc">
+              
+
+<nav id="bd-toc-nav">
+    <ul class="nav section-nav flex-column">
+    
+    </ul>
+</nav>
+
+
+              
+          </div>
+          
+
+          
+          <main class="col-12 col-md-9 col-xl-7 py-md-5 pl-md-5 pr-md-4 bd-content" role="main">
+              
+              <div>
+                
+  <h1>Source code for pytools.parallelization._parallelization</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Core implementation of :mod:`pytools.parallelization`.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">itertools</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">from</span> <span class="nn">abc</span> <span class="kn">import</span> <span class="n">ABCMeta</span><span class="p">,</span> <span class="n">abstractmethod</span>
+<span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="n">wraps</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">Any</span><span class="p">,</span>
+    <span class="n">Callable</span><span class="p">,</span>
+    <span class="n">Dict</span><span class="p">,</span>
+    <span class="n">Generic</span><span class="p">,</span>
+    <span class="n">Iterable</span><span class="p">,</span>
+    <span class="n">Iterator</span><span class="p">,</span>
+    <span class="n">List</span><span class="p">,</span>
+    <span class="n">Optional</span><span class="p">,</span>
+    <span class="n">Sequence</span><span class="p">,</span>
+    <span class="n">Tuple</span><span class="p">,</span>
+    <span class="n">Type</span><span class="p">,</span>
+    <span class="n">TypeVar</span><span class="p">,</span>
+    <span class="n">Union</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="kn">import</span> <span class="nn">joblib</span>
+
+<span class="kn">from</span> <span class="nn">..api</span> <span class="kn">import</span> <span class="n">AllTracker</span><span class="p">,</span> <span class="n">deprecated</span><span class="p">,</span> <span class="n">inheritdoc</span><span class="p">,</span> <span class="n">to_tuple</span>
+
+<span class="n">log</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<span class="c1">#</span>
+<span class="c1"># Exported names</span>
+<span class="c1">#</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s2">&quot;ParallelizableMixin&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;Job&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;JobQueue&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;JobRunner&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;SimpleQueue&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;NestedQueue&quot;</span><span class="p">,</span>
+<span class="p">]</span>
+
+<span class="c1">#</span>
+<span class="c1"># Type variables</span>
+<span class="c1">#</span>
+
+<span class="n">T</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">&quot;T&quot;</span><span class="p">)</span>
+<span class="n">T_JobRunner</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">&quot;T_JobRunner&quot;</span><span class="p">,</span> <span class="n">bound</span><span class="o">=</span><span class="s2">&quot;JobRunner&quot;</span><span class="p">)</span>
+<span class="n">T_Job_Result</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">&quot;T_Job_Result&quot;</span><span class="p">)</span>
+<span class="n">T_Queue_Result</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">&quot;T_Queue_Result&quot;</span><span class="p">)</span>
+
+
+<span class="c1">#</span>
+<span class="c1"># Ensure all symbols introduced below are included in __all__</span>
+<span class="c1">#</span>
+
+<span class="n">__tracker</span> <span class="o">=</span> <span class="n">AllTracker</span><span class="p">(</span><span class="nb">globals</span><span class="p">())</span>
+
+
+<span class="c1">#</span>
+<span class="c1"># Classes</span>
+<span class="c1">#</span>
+
+
+<span class="k">class</span> <span class="nc">ParallelizableMixin</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Mix-in class that supports parallelizing one or more operations using joblib.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">n_jobs</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">shared_memory</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">pre_dispatch</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">verbose</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        :param n_jobs: number of jobs to use in parallel;</span>
+<span class="sd">            if ``None``, use joblib default (default: ``None``)</span>
+<span class="sd">        :param shared_memory: if ``True``, use threads in the parallel runs; if</span>
+<span class="sd">            ``False``, use multiprocessing (default: ``False``)</span>
+<span class="sd">        :param pre_dispatch: number of batches to pre-dispatch;</span>
+<span class="sd">            if ``None``, use joblib default (default: ``None``)</span>
+<span class="sd">        :param verbose: verbosity level used in the parallel computation;</span>
+<span class="sd">            if ``None``, use joblib default (default: ``None``)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="c1">#: Number of jobs to use in parallel; if ``None``, use joblib default.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_jobs</span> <span class="o">=</span> <span class="n">n_jobs</span>
+
+        <span class="c1">#: If ``True``, use threads in the parallel runs;</span>
+        <span class="c1">#: if ``False``, use multiprocessing.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">shared_memory</span> <span class="o">=</span> <span class="n">shared_memory</span>
+
+        <span class="c1">#: Number of batches to pre-dispatch; if ``None``, use joblib default.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pre_dispatch</span> <span class="o">=</span> <span class="n">pre_dispatch</span>
+
+        <span class="c1">#: Verbosity level used in the parallel computation;</span>
+        <span class="c1">#: if ``None``, use joblib default.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">=</span> <span class="n">verbose</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_parallel_kwargs</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">name</span><span class="p">:</span> <span class="n">value</span>
+            <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="p">[</span>
+                <span class="p">(</span><span class="s2">&quot;n_jobs&quot;</span><span class="p">,</span> <span class="n">n_jobs</span><span class="p">),</span>
+                <span class="p">(</span><span class="s2">&quot;require&quot;</span><span class="p">,</span> <span class="s2">&quot;sharedmem&quot;</span> <span class="k">if</span> <span class="n">shared_memory</span> <span class="k">else</span> <span class="kc">None</span><span class="p">),</span>
+                <span class="p">(</span><span class="s2">&quot;pre_dispatch&quot;</span><span class="p">,</span> <span class="n">pre_dispatch</span><span class="p">),</span>
+                <span class="p">(</span><span class="s2">&quot;verbose&quot;</span><span class="p">,</span> <span class="n">verbose</span><span class="p">),</span>
+            <span class="p">]</span>
+            <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+        <span class="p">}</span>
+
+    <span class="nd">@deprecated</span><span class="p">(</span><span class="n">message</span><span class="o">=</span><span class="s2">&quot;this method is deprecated and will be removed in v1.1&quot;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">_parallel</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">joblib</span><span class="o">.</span><span class="n">Parallel</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Generate a :class:`joblib.Parallel` instance using the parallelization</span>
+<span class="sd">        parameters of ``self``.</span>
+
+<span class="sd">        `This method is deprecated and will be removed in v1.1.`</span>
+
+<span class="sd">        :meta public:</span>
+<span class="sd">        :return: the new :class:`joblib.Parallel` instance</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">joblib</span><span class="o">.</span><span class="n">Parallel</span><span class="p">(</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">_parallel_kwargs</span><span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="nd">@deprecated</span><span class="p">(</span><span class="n">message</span><span class="o">=</span><span class="s2">&quot;this method is deprecated and will be removed in v1.1&quot;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">_delayed</span><span class="p">(</span>
+        <span class="n">function</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">T</span><span class="p">]</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">T</span><span class="p">],</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]]:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Decorate the given function for delayed execution.</span>
+
+<span class="sd">        Convenience method preventing having to import :mod:`joblib`;</span>
+<span class="sd">        defers to function :func:`joblib.delayed`.</span>
+
+<span class="sd">        `This method is deprecated and will be removed in v1.1.`</span>
+
+<span class="sd">        :meta public:</span>
+<span class="sd">        :param function: the function to be delayed</span>
+<span class="sd">        :return: the delayed function</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">joblib</span><span class="o">.</span><span class="n">delayed</span><span class="p">(</span><span class="n">function</span><span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">Job</span><span class="p">(</span><span class="n">Generic</span><span class="p">[</span><span class="n">T_Job_Result</span><span class="p">],</span> <span class="n">metaclass</span><span class="o">=</span><span class="n">ABCMeta</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A job to be run as part of a parallelizable :class:`.JobQueue`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">T_Job_Result</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Run this job.</span>
+
+<span class="sd">        :return: the result produced by the job</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">delayed</span><span class="p">(</span>
+        <span class="bp">cls</span><span class="p">,</span> <span class="n">function</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">T_Job_Result</span><span class="p">]</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;Callable[..., Job[T_Job_Result]]&quot;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A decorator creating a `delayed` version of the given function which,</span>
+<span class="sd">        if called with arguments, does not run immediately but instead returns a</span>
+<span class="sd">        :class:`.Job` that will call the function with the given arguments.</span>
+
+<span class="sd">        Once the job is run, it will call the function with the given arguments.</span>
+
+<span class="sd">        :param function: a function returning the job result</span>
+<span class="sd">        :return: the delayed version of the function</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="nd">@wraps</span><span class="p">(</span><span class="n">function</span><span class="p">)</span>
+        <span class="k">def</span> <span class="nf">_delayed_function</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Job</span><span class="p">[</span><span class="n">T_Job_Result</span><span class="p">]:</span>
+            <span class="nd">@inheritdoc</span><span class="p">(</span><span class="n">match</span><span class="o">=</span><span class="s2">&quot;&quot;&quot;[see superclass]&quot;&quot;&quot;</span><span class="p">)</span>
+            <span class="k">class</span> <span class="nc">_Job</span><span class="p">(</span><span class="n">Job</span><span class="p">[</span><span class="n">T_Job_Result</span><span class="p">]):</span>
+                <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">T_Job_Result</span><span class="p">:</span>
+                    <span class="sd">&quot;&quot;&quot;[see superclass]&quot;&quot;&quot;</span>
+                    <span class="k">return</span> <span class="n">function</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+            <span class="k">return</span> <span class="n">_Job</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="n">_delayed_function</span>
+
+
+<span class="k">class</span> <span class="nc">JobQueue</span><span class="p">(</span><span class="n">Generic</span><span class="p">[</span><span class="n">T_Job_Result</span><span class="p">,</span> <span class="n">T_Queue_Result</span><span class="p">],</span> <span class="n">metaclass</span><span class="o">=</span><span class="n">ABCMeta</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A queue of jobs to be run in parallel, generating a collective result.</span>
+
+<span class="sd">    Supports :meth:`.len` to determine the number of jobs in this queue.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">jobs</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Job</span><span class="p">[</span><span class="n">T_Job_Result</span><span class="p">]]:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Iterate the jobs in this queue.</span>
+
+<span class="sd">        :return: the jobs in this queue</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span>
+
+    <span class="k">def</span> <span class="nf">on_run</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Called by :meth:`.JobRunner.run` when starting to run the jobs in this queue.</span>
+
+<span class="sd">        Does nothing by default; overload as required to initialize the queue before</span>
+<span class="sd">        each run.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">collate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">job_results</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">T_Job_Result</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">T_Queue_Result</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Called by :meth:`.JobRunner.run` to collate the results of all jobs once they</span>
+<span class="sd">        have all been run.</span>
+
+<span class="sd">        :param job_results: list of job results, ordered corresponding to the sequence</span>
+<span class="sd">            of jobs generated by method :meth:`.jobs`</span>
+<span class="sd">        :return: the collated result of running the queue</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span>
+
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">pass</span>
+
+
+<span class="k">class</span> <span class="nc">JobRunner</span><span class="p">(</span><span class="n">ParallelizableMixin</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Runs job queues in parallel and collates results.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_parallelizable</span><span class="p">(</span>
+        <span class="bp">cls</span><span class="p">:</span> <span class="n">Type</span><span class="p">[</span><span class="n">T_JobRunner</span><span class="p">],</span> <span class="n">parallelizable</span><span class="p">:</span> <span class="n">ParallelizableMixin</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">T_JobRunner</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create a new :class:`JobRunner` using the parameters of the given parallelizable</span>
+<span class="sd">        object.</span>
+
+<span class="sd">        :param parallelizable: the parallelizable instance whose parameters to use</span>
+<span class="sd">            for the job runner</span>
+<span class="sd">        :return: the new job runner</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">cls</span><span class="p">:</span> <span class="n">Type</span><span class="p">[</span><span class="n">T_JobRunner</span><span class="p">]</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
+            <span class="n">n_jobs</span><span class="o">=</span><span class="n">parallelizable</span><span class="o">.</span><span class="n">n_jobs</span><span class="p">,</span>
+            <span class="n">shared_memory</span><span class="o">=</span><span class="n">parallelizable</span><span class="o">.</span><span class="n">shared_memory</span><span class="p">,</span>
+            <span class="n">pre_dispatch</span><span class="o">=</span><span class="n">parallelizable</span><span class="o">.</span><span class="n">pre_dispatch</span><span class="p">,</span>
+            <span class="n">verbose</span><span class="o">=</span><span class="n">parallelizable</span><span class="o">.</span><span class="n">verbose</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">run_jobs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">jobs</span><span class="p">:</span> <span class="n">Job</span><span class="p">[</span><span class="n">T_Job_Result</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">T_Job_Result</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Run all given jobs in parallel.</span>
+
+<span class="sd">        :param jobs: the jobs to run in parallel</span>
+<span class="sd">        :return: the results of all jobs</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">simple_queue</span><span class="p">:</span> <span class="n">JobQueue</span><span class="p">[</span><span class="n">T_Job_Result</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">T_Job_Result</span><span class="p">]]</span> <span class="o">=</span> <span class="n">SimpleQueue</span><span class="p">(</span>
+            <span class="n">jobs</span><span class="o">=</span><span class="n">jobs</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">run_queue</span><span class="p">(</span><span class="n">simple_queue</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">run_queue</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">queue</span><span class="p">:</span> <span class="n">JobQueue</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">T_Queue_Result</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">T_Queue_Result</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Run all jobs in the given queue, in parallel.</span>
+
+<span class="sd">        :param queue: the queue to run</span>
+<span class="sd">        :return: the result of all jobs, collated using method :meth:`.JobQueue.collate`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">queue</span><span class="o">.</span><span class="n">on_run</span><span class="p">()</span>
+
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parallel</span><span class="p">()</span> <span class="k">as</span> <span class="n">parallel</span><span class="p">:</span>
+            <span class="n">results</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">T_Job_Result</span><span class="p">]</span> <span class="o">=</span> <span class="n">parallel</span><span class="p">(</span>
+                <span class="n">joblib</span><span class="o">.</span><span class="n">delayed</span><span class="p">(</span><span class="k">lambda</span> <span class="n">job</span><span class="p">:</span> <span class="n">job</span><span class="o">.</span><span class="n">run</span><span class="p">())(</span><span class="n">job</span><span class="p">)</span> <span class="k">for</span> <span class="n">job</span> <span class="ow">in</span> <span class="n">queue</span><span class="o">.</span><span class="n">jobs</span><span class="p">()</span>
+            <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">queue</span><span class="o">.</span><span class="n">collate</span><span class="p">(</span><span class="n">job_results</span><span class="o">=</span><span class="n">results</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">run_queues</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">queues</span><span class="p">:</span> <span class="n">JobQueue</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">T_Queue_Result</span><span class="p">]</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">T_Queue_Result</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Run all jobs in the given queues, in parallel.</span>
+
+<span class="sd">        :param queues: the queues to run</span>
+<span class="sd">        :return: the result of all jobs, collated per queue using method</span>
+<span class="sd">            :meth:`.JobQueue.collate`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">for</span> <span class="n">queue</span> <span class="ow">in</span> <span class="n">queues</span><span class="p">:</span>
+            <span class="n">queue</span><span class="o">.</span><span class="n">on_run</span><span class="p">()</span>
+
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parallel</span><span class="p">()</span> <span class="k">as</span> <span class="n">parallel</span><span class="p">:</span>
+            <span class="n">results</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">T_Job_Result</span><span class="p">]</span> <span class="o">=</span> <span class="n">parallel</span><span class="p">(</span>
+                <span class="n">joblib</span><span class="o">.</span><span class="n">delayed</span><span class="p">(</span><span class="k">lambda</span> <span class="n">job</span><span class="p">:</span> <span class="n">job</span><span class="o">.</span><span class="n">run</span><span class="p">())(</span><span class="n">job</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">queue</span> <span class="ow">in</span> <span class="n">queues</span>
+                <span class="k">for</span> <span class="n">job</span> <span class="ow">in</span> <span class="n">queue</span><span class="o">.</span><span class="n">jobs</span><span class="p">()</span>
+            <span class="p">)</span>
+
+        <span class="n">first_job</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">queue</span> <span class="ow">in</span> <span class="n">queues</span><span class="p">:</span>
+            <span class="n">last_job</span> <span class="o">=</span> <span class="n">first_job</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">queue</span><span class="p">)</span>
+            <span class="k">yield</span> <span class="n">queue</span><span class="o">.</span><span class="n">collate</span><span class="p">(</span><span class="n">results</span><span class="p">[</span><span class="n">first_job</span><span class="p">:</span><span class="n">last_job</span><span class="p">])</span>
+            <span class="n">first_job</span> <span class="o">=</span> <span class="n">last_job</span>
+
+    <span class="k">def</span> <span class="nf">_parallel</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">joblib</span><span class="o">.</span><span class="n">Parallel</span><span class="p">:</span>
+        <span class="c1"># Generate a :class:`joblib.Parallel` instance using the parallelization</span>
+        <span class="c1"># parameters of ``self``.</span>
+        <span class="k">return</span> <span class="n">joblib</span><span class="o">.</span><span class="n">Parallel</span><span class="p">(</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">_parallel_kwargs</span><span class="p">)</span>
+
+
+<span class="nd">@inheritdoc</span><span class="p">(</span><span class="n">match</span><span class="o">=</span><span class="s2">&quot;&quot;&quot;[see superclass]&quot;&quot;&quot;</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">SimpleQueue</span><span class="p">(</span><span class="n">JobQueue</span><span class="p">[</span><span class="n">T_Job_Result</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">T_Job_Result</span><span class="p">]],</span> <span class="n">Generic</span><span class="p">[</span><span class="n">T_Job_Result</span><span class="p">]):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A simple queue, running a given list of jobs and returning their results as a list.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1">#: The jobs run by this queue.</span>
+    <span class="n">_jobs</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">T_Job_Result</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">jobs</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Job</span><span class="p">[</span><span class="n">T_Job_Result</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        :param jobs: jobs to be run by this queue in the given order</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_jobs</span> <span class="o">=</span> <span class="n">to_tuple</span><span class="p">(</span><span class="n">jobs</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">jobs</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Job</span><span class="p">[</span><span class="n">T_Job_Result</span><span class="p">]]:</span>
+        <span class="sd">&quot;&quot;&quot;[see superclass]&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jobs</span>
+
+    <span class="k">def</span> <span class="nf">collate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">job_results</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">T_Job_Result</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">T_Queue_Result</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the list of job results as-is, without collating them any further.</span>
+
+<span class="sd">        :param job_results: list of job results, ordered corresponding to the sequence</span>
+<span class="sd">            of jobs generated by method :meth:`.jobs`</span>
+<span class="sd">        :return: the identical list of job results</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">job_results</span>
+
+    <span class="k">def</span> <span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_jobs</span><span class="p">)</span>
+
+
+<span class="nd">@inheritdoc</span><span class="p">(</span><span class="n">match</span><span class="o">=</span><span class="s2">&quot;&quot;&quot;[see superclass]&quot;&quot;&quot;</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">NestedQueue</span><span class="p">(</span><span class="n">JobQueue</span><span class="p">[</span><span class="n">T_Job_Result</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">T_Job_Result</span><span class="p">]]):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Runs all jobs in a given list of compatible queues and returns their results as a</span>
+<span class="sd">    flat list.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1">#: The queues run by this queue.</span>
+    <span class="n">queues</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">JobQueue</span><span class="p">[</span><span class="n">T_Job_Result</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">T_Job_Result</span><span class="p">]],</span> <span class="o">...</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">queues</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">JobQueue</span><span class="p">[</span><span class="n">T_Job_Result</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">T_Job_Result</span><span class="p">]]]</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        :param queues: queues to be run by this queue in the given order</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">queues</span> <span class="o">=</span> <span class="n">to_tuple</span><span class="p">(</span><span class="n">queues</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">jobs</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Job</span><span class="p">[</span><span class="n">T_Job_Result</span><span class="p">]]:</span>
+        <span class="sd">&quot;&quot;&quot;[see superclass]&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">itertools</span><span class="o">.</span><span class="n">chain</span><span class="o">.</span><span class="n">from_iterable</span><span class="p">(</span><span class="n">queue</span><span class="o">.</span><span class="n">jobs</span><span class="p">()</span> <span class="k">for</span> <span class="n">queue</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">queues</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">collate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">job_results</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">T_Job_Result</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">T_Queue_Result</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the list of job results as-is, without collating them any further.</span>
+
+<span class="sd">        :param job_results: list of job results, ordered corresponding to the sequence</span>
+<span class="sd">            of jobs generated by method :meth:`.jobs`</span>
+<span class="sd">        :return: the identical list of job results</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">job_results</span>
+
+    <span class="k">def</span> <span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">sum</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">queue</span><span class="p">)</span> <span class="k">for</span> <span class="n">queue</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">queues</span><span class="p">)</span>
+
+
+<span class="n">__tracker</span><span class="o">.</span><span class="n">validate</span><span class="p">()</span>
+</pre></div>
+
+              </div>
+              
+              
+              <div class='prev-next-bottom'>
+                
+
+              </div>
+              
+          </main>
+          
+
+      </div>
+    </div>
+
+    
+  <script src="../../../_static/js/index.d3f166471bb80abb5163.js"></script>
+
+
+    <footer class="footer mt-5 mt-md-0">
+  <div class="container">
+    <p>
+          &copy; Copyright 2021, Boston Consulting Group (BCG).<br/>
+        Created using <a href="http://sphinx-doc.org/">Sphinx</a> 3.4.3.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>

@@ -1,0 +1,42 @@
+facet.data.partition.RangePartitioner
+=====================================
+
+.. currentmodule:: facet.data.partition
+
+.. autoclass:: RangePartitioner
+   :members:
+   :no-show-inheritance:
+   :inherited-members:
+   :special-members: __call__
+
+   
+   
+   .. rubric:: Method summary
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~RangePartitioner.fit
+   
+   
+
+   
+   
+   .. rubric:: Attribute summary
+
+   .. autosummary::
+   
+      ~RangePartitioner.DEFAULT_MAX_PARTITIONS
+      ~RangePartitioner.frequencies_
+      ~RangePartitioner.is_categorical
+      ~RangePartitioner.is_fitted
+      ~RangePartitioner.lower_bound
+      ~RangePartitioner.max_partitions
+      ~RangePartitioner.partition_bounds_
+      ~RangePartitioner.partition_width_
+      ~RangePartitioner.partitions_
+      ~RangePartitioner.upper_bound
+   
+   
+
+   .. rubric:: Definitions
