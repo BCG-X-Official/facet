@@ -257,6 +257,10 @@ class LearnerInspector(
             compatibility with :class:`.FittableMixin`)
         :return: ``self``
         """
+        # :param full_sample: if ``True``, explain only a single model fitted on the
+        # full sample; otherwise, explain all models in the crossfit and aggregate
+        # results
+        full_sample = bool(fit_params.get("full_sample", False))
 
         self: LearnerInspector  # support type hinting in PyCharm
 
@@ -299,7 +303,7 @@ class LearnerInspector(
                 else RegressorShapInteractionValuesCalculator
             )
             shap_calculator = shap_calculator_type(
-                explain_full_sample=False,
+                explain_full_sample=full_sample,
                 explainer_factory=self._explainer_factory,
                 n_jobs=self.n_jobs,
                 shared_memory=self.shared_memory,
@@ -322,7 +326,7 @@ class LearnerInspector(
                 else RegressorShapValuesCalculator
             )
             shap_calculator = shap_calculator_type(
-                explain_full_sample=False,
+                explain_full_sample=full_sample,
                 explainer_factory=self._explainer_factory,
                 n_jobs=self.n_jobs,
                 shared_memory=self.shared_memory,
