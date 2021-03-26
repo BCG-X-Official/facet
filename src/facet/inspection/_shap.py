@@ -151,7 +151,7 @@ class ShapCalculator(
         # sequence in the original training sample
         shap_all_splits_df: pd.DataFrame = self._get_shap_all_splits(crossfit=crossfit)
 
-        assert shap_all_splits_df.index.nlevels > 1
+        assert 2 <= shap_all_splits_df.index.nlevels <= 3
         assert shap_all_splits_df.index.names[1] == training_sample.index.name
 
         self.shap_ = shap_all_splits_df.reindex(
@@ -162,7 +162,7 @@ class ShapCalculator(
             copy=False,
         )
 
-        self.n_splits_ = crossfit.n_splits_
+        self.n_splits_ = 1 if self.explain_full_sample else crossfit.n_splits_
 
         return self
 
@@ -237,48 +237,63 @@ class ShapCalculator(
         else:
             background_dataset = None
 
-        shap_df_per_split: List[pd.DataFrame] = JobRunner.from_parallelizable(
-            self
-        ).run_jobs(
-            *(
-                Job.delayed(self._get_shap_for_split)(
-                    model,
-                    sample,
-                    self._explainer_factory.make_explainer(
-                        model=model.final_estimator,
-                        # we re-index the columns of the background dataset to match
-                        # the column sequence of the model (in case feature order
-                        # was shuffled, or train split pre-processing removed columns)
-                        data=(
-                            None
-                            if background_dataset is None
-                            else background_dataset.reindex(
-                                columns=model.final_estimator.feature_names_in_,
-                                copy=False,
-                            )
-                        ),
+        def _make_explainer(_model: T_LearnerPipelineDF) -> BaseExplainer:
+            return self._explainer_factory.make_explainer(
+                model=_model.final_estimator,
+                # we re-index the columns of the background dataset to match
+                # the column sequence of the model (in case feature order
+                # was shuffled, or train split pre-processing removed columns)
+                data=(
+                    None
+                    if background_dataset is None
+                    else background_dataset.reindex(
+                        columns=_model.final_estimator.feature_names_in_,
+                        copy=False,
+                    )
+                ),
+            )
+
+        shap_df_per_split: List[pd.DataFrame]
+
+        if self.explain_full_sample:
+            # we explain the full sample using the model fitted on the full sample
+            # so the result is a list with a single data frame of shap values
+            model = crossfit.pipeline
+            shap_df_per_split = [
+                self._get_shap_for_split(
+                    model=model,
+                    sample=sample,
+                    explainer=_make_explainer(model),
+                    features_out=self.feature_index_,
+                    shap_matrix_for_split_to_df_fn=self._convert_raw_shap_to_df,
+                    multi_output_type=self.get_multi_output_type(),
+                    multi_output_names=self._get_multi_output_names(
+                        model=model, sample=sample
                     ),
-                    self.feature_index_,
-                    self._convert_raw_shap_to_df,
-                    self.get_multi_output_type(),
-                    self._get_multi_output_names(model=model, sample=sample),
                 )
-                for model, sample in zip(
-                    crossfit.models(),
-                    (
-                        # if we explain full samples, we get samples from an
-                        # infinite iterator of the full training sample
-                        iter(lambda: sample, None)
-                        if self.explain_full_sample
-                        # otherwise we iterate over the test splits of each crossfit
-                        else (
+            ]
+
+        else:
+            shap_df_per_split = JobRunner.from_parallelizable(self).run_jobs(
+                *(
+                    Job.delayed(self._get_shap_for_split)(
+                        model,
+                        sample,
+                        _make_explainer(model),
+                        self.feature_index_,
+                        self._convert_raw_shap_to_df,
+                        self.get_multi_output_type(),
+                        self._get_multi_output_names(model=model, sample=sample),
+                    )
+                    for model, sample in zip(
+                        crossfit.models(),
+                        (
                             sample.subsample(iloc=oob_split)
                             for _, oob_split in crossfit.splits()
-                        )
-                    ),
+                        ),
+                    )
                 )
             )
-        )
 
         return self._concatenate_splits(shap_df_per_split=shap_df_per_split)
 
@@ -745,11 +760,11 @@ class ClassifierShapCalculator(ShapCalculator[ClassifierPipelineDF], metaclass=A
     ) -> pd.DataFrame:
         output_names = self.output_names_
 
-        index_names = [ShapCalculator.IDX_SPLIT, *shap_df_per_split[0].index.names]
-
         split_keys = range(len(shap_df_per_split))
         if len(output_names) == 1:
-            return pd.concat(shap_df_per_split, keys=split_keys, names=index_names)
+            return pd.concat(
+                shap_df_per_split, keys=split_keys, names=[ShapCalculator.IDX_SPLIT]
+            )
 
         else:
             # for multi-class classifiers, ensure that all data frames include
@@ -766,7 +781,7 @@ class ClassifierShapCalculator(ShapCalculator[ClassifierPipelineDF], metaclass=A
                     for shap_df in shap_df_per_split
                 ],
                 keys=split_keys,
-                names=index_names,
+                names=[ShapCalculator.IDX_SPLIT],
             )
 
 
