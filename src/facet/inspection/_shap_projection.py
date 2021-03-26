@@ -66,7 +66,7 @@ class ShapProjector(ShapGlobalExplainer, metaclass=ABCMeta):
         self.association_: Optional[AffinityMatrix] = None
 
     def association(
-        self, absolute: bool, symmetrical: bool, std: bool
+        self, absolute: bool, symmetrical: bool, std: bool = False
     ) -> Optional[np.ndarray]:
         """[see superclass]"""
         self._ensure_fitted()
@@ -162,7 +162,7 @@ class ShapInteractionVectorProjector(ShapProjector, ShapInteractionGlobalExplain
         self.redundancy_: Optional[AffinityMatrix] = None
 
     def synergy(
-        self, symmetrical: bool, absolute: bool, std: bool
+        self, symmetrical: bool, absolute: bool, std: bool = False
     ) -> Optional[np.ndarray]:
         """[see superclass]"""
         self._ensure_fitted()
@@ -171,7 +171,7 @@ class ShapInteractionVectorProjector(ShapProjector, ShapInteractionGlobalExplain
         )
 
     def redundancy(
-        self, symmetrical: bool, absolute: bool, std: bool
+        self, symmetrical: bool, absolute: bool, std: bool = False
     ) -> Optional[np.ndarray]:
         """[see superclass]"""
         self._ensure_fitted()

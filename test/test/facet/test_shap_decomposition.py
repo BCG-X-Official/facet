@@ -20,7 +20,7 @@ def test_shap_decomposition(regressor_inspector: LearnerInspector) -> None:
     def _calculate_relative_syn_and_red(
         feature_x: str, feature_y: str, is_indirect_syn_valid: bool
     ) -> Tuple[float, float, float, float]:
-        iv = regressor_inspector.shap_interaction_values(consolidate=None)
+        iv = regressor_inspector.shap_interaction_values(aggregation=None)
         # Get 3 components for each feature:
         # S = interaction SHAP
         # A, B = independent SHAP
