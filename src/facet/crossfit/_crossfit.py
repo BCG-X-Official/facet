@@ -170,8 +170,8 @@ class LearnerCrossfit(
 
         self.random_state = random_state
 
-        self._splits: Optional[List[Tuple[Sequence[int], Sequence[int]]]] = None
-        self._model_by_split: Optional[List[T_LearnerPipelineDF]] = None
+        self._splits: Optional[Sequence[Tuple[Sequence[int], Sequence[int]]]] = None
+        self._model_by_split: Optional[Sequence[T_LearnerPipelineDF]] = None
         self._sample: Optional[Sample] = None
 
     __init__.__doc__ += ParallelizableMixin.__init__.__doc__
@@ -387,13 +387,26 @@ class LearnerCrossfit(
         features = _sample.features
         target = _sample.target
 
+        global_fit: Optional[Job[FitResult]]
         if do_fit:
-            if sample_weight is None:
-                pipeline.fit(X=features, y=target, **fit_params)
-            else:
-                pipeline.fit(
-                    X=features, y=target, sample_weight=sample_weight, **fit_params
-                )
+
+            class _FitModelOnFullData(Job[FitResult]):
+                # noinspection PyMissingOrEmptyDocstring
+                def run(self) -> FitResult:
+                    if sample_weight is None:
+                        pipeline.fit(X=features, y=target, **fit_params)
+                    else:
+                        pipeline.fit(
+                            X=features,
+                            y=target,
+                            sample_weight=sample_weight,
+                            **fit_params,
+                        )
+                    return (pipeline, None)
+
+            global_fit = _FitModelOnFullData()
+        else:
+            global_fit = None
 
         # prepare scoring
 
@@ -418,7 +431,7 @@ class LearnerCrossfit(
         # cross-validator being deterministic
 
         if do_fit:
-            splits: List[Tuple[Sequence[int], Sequence[int]]] = list(
+            splits: Sequence[Tuple[Sequence[int], Sequence[int]]] = tuple(
                 self.cv.split(X=features, y=target)
             )
         else:
@@ -458,35 +471,37 @@ class LearnerCrossfit(
 
         crossfit = self
 
-        @inheritdoc(match="""[see superclass]""")
+        # noinspection PyMissingOrEmptyDocstring
         class _FitScoreQueue(JobQueue[FitResult, Optional[np.ndarray]]):
             def jobs(self) -> Iterable[Job[FitResult]]:
-                """[see superclass]"""
-                return (
+                splits_fit = (
                     _FitAndScoreModelForSplit(parameters, fit_params)
                     for parameters in _generate_parameters()
                 )
+                if do_fit:
+                    return (global_fit, *splits_fit)
+                else:
+                    return splits_fit
 
             def on_run(self) -> None:
-                """
-                Un-fit the crossfit associated with this queue, if we are fitting.
-                """
                 if do_fit:
                     crossfit._reset_fit()
 
             def collate(self, job_results: List[FitResult]) -> Optional[np.ndarray]:
-                """[see superclass]"""
-                model_by_split, scores = zip(*job_results)
+                models, scores = zip(*job_results)
 
                 if do_fit:
+                    crossfit.pipeline = models[0]
+                    assert scores[0] is None
+                    scores = scores[1:]
                     crossfit._splits = splits
-                    crossfit._model_by_split = model_by_split
+                    crossfit._model_by_split = models[1:]
                     crossfit._sample = _sample
 
                 return np.array(scores) if do_score else None
 
             def __len__(self) -> int:
-                return len(splits)
+                return len(splits) + int(do_fit)
 
         return _FitScoreQueue()
 
