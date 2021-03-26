@@ -805,8 +805,8 @@ class ClassifierShapValuesCalculator(
                     f"to {_raw_shap_tensor_totals.max():g}"
                 )
 
-            # all good: proceed with SHAP values for class 0:
-            raw_shap_tensors = raw_shap_tensors[:1]
+            # all good: proceed with SHAP values for class 1 (positive class):
+            raw_shap_tensors: List[np.ndarray] = raw_shap_tensors[1:]
 
         return [
             pd.DataFrame(
@@ -852,8 +852,8 @@ class ClassifierShapInteractionValuesCalculator(
                     f"to {_raw_shap_tensor_totals.max():g}"
                 )
 
-            # all good: proceed with SHAP values for class 0:
-            raw_shap_tensors = raw_shap_tensors[:1]
+            # all good: proceed with SHAP values for class 1 (positive class):
+            raw_shap_tensors: List[np.ndarray] = raw_shap_tensors[1:]
 
         # each row is indexed by an observation and a feature
         row_index = pd.MultiIndex.from_product(
