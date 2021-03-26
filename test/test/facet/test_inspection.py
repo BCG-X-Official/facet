@@ -523,9 +523,9 @@ def _validate_shap_values_against_predictions(
             )
 
         if predicted_probabilities.shape[1] == 2:
-            # for binary classification we have SHAP values only for the first class
+            # for binary classification we have SHAP values only for the second class
             _check_probabilities(
-                predicted_probabilities.iloc[:, [0]],
+                predicted_probabilities.iloc[:, [1]],
                 -shap_values.xs(split).sum(axis=1).rename("shap"),
             )
 
