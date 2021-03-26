@@ -127,7 +127,7 @@ hyperparameter configurations and even multiple learners with the `LearnerRanker
 
     # create a (trivial) pipeline for a random forest regressor
     rnd_forest_reg = RegressorPipelineDF(
-        regressor=RandomForestRegressorDF(random_state=42)
+        regressor=RandomForestRegressorDF(n_estimators=200, random_state=42)
     )
 
     # define grid of models which are "competing" against each other
@@ -135,7 +135,8 @@ hyperparameter configurations and even multiple learners with the `LearnerRanker
         LearnerGrid(
             pipeline=rnd_forest_reg,
             learner_parameters={
-                "min_samples_leaf": [8, 11, 15]
+                "min_samples_leaf": [8, 11, 15],
+                "max_depth": [4, 5, 6],
             }
         ),
     ]
@@ -233,22 +234,20 @@ features in a model are:
 
 For any feature pair (A, B), the first feature (A) is the row, and the second
 feature (B) the column. For example, looking across the row for `LTG` (Lamotrigine)
-there is relatively minimal synergy (≤14%) with other features in the model.
+there is relatively minimal synergy (≤1%) with other features in the model.
 However, looking down the column for `LTG` (i.e., perspective of other features
-in a pair with `LTG`) we find many features (the rows) are synergistic (12% to 34%)
+in a pair with `LTG`) we find many features (the rows) are synergistic (up to ~30%)
 with `LTG`. We can conclude that:
 
+- `LTG` is a strongly autonomous feature, displaying minimal synergy with other
+  features for predicting disease progression after one year.
+- The contribution of other features to predicting disease progression after one
+  year is partly enabled by the presence of `LTG`.
 
--   `LTG` is a strongly autonomous feature, displaying minimal synergy with other
-    features for predicting disease progression after one year.
--   The contribution of other features to predicting disease progression after one
-    year is partly enabled by the strong contribution from `LTG`.
-
-
-High synergy features must be considered carefully when investigating impact,
-as they work together to predict the outcome. It would not make much sense to
-consider `TC` (T-Cells) without `LTG` given the 34% synergy of `TC` with `LTG`
-for predicting progression after one year.
+High synergy between pairs of features must be considered carefully when investigating
+impact, as the values of both features jointly determine the outcome. It would not make
+much sense to consider `TC` (T-Cells) without the context provided by `LDL` given close
+to 30% synergy of `LDL` with `LTG` for predicting progression after one year.
 
 **Redundancy**
 
@@ -261,20 +260,19 @@ for predicting progression after one year.
 .. image:: sphinx/source/_static/redundancy_matrix.png
     :width: 600
 
+
 For any feature pair (A, B), the first feature (A) is the row, and the second feature
 (B) the column. For example, if we look at the feature pair (`LDL`, `TC`) from the
 perspective of `LDL` (Low-Density Lipoproteins), then we look-up the row for `LDL`
-and the column for `TC` and find 47% redundancy. This means that 47% of the
-information in `LDL` is duplicated with `TC` to predict disease progression
-after one year. This redundancy is similar when looking "from the perspective"
-of `TC` for (`TC`, `LDL`) which is 50%.
+and the column for `TC` and find 38% redundancy. This means that 38% of the information
+in `LDL` is duplicated with `TC` to predict disease progression after one year. This
+redundancy is the same when looking "from the perspective" of `TC` for (`TC`, `LDL`),
+but need not be symmetrical in all cases (see `LTG` vs. `TSH`).
 
+If we look at `TSH`, it has between ~25–30% redundancy each with `LTG` and `HDL`, but
+the same does not hold between `LTG` and `HDL` – meaning `TSH` shares different
+information with each of the two features.
 
-If we look across the columns for the `LTG` row we can see that apart from the
-32% redundancy with `BMI`, `LTG` has minimal redundancy (<9%) with the other
-features included in the model. Further, if we look cross the rows for the
-`LTG` column we can see a number of the features have moderate redundancy
-with `LTG`.
 
 **Clustering redundancy**
 
@@ -302,10 +300,9 @@ Let's look at the example for redundancy.
     :width: 600
 
 Based on the dendrogram we can see that the feature pairs (`LDL`, `TC`)
-and (`LTG`, `BMI`: body mass index) each represent a cluster in the
-dendrogram and that `LTG` and `BMI` have high the highest importance.
-As potential next actions we could remove `TC` and explore the impact of
-removing one of `LTG` or `BMI` to further simplify the model and obtain a
+and (`HDL`, `TSH`) each represent a cluster in the dendrogram and that `LTG` and `BMI`
+have the highest importance. As potential next actions we could explore the impact of
+removing `TSH`, and one of `TC` or `LDL` to further simplify the model and obtain a
 reduced set of independent features.
 
 Please see the
@@ -316,22 +313,23 @@ for more detail.
 Model Simulation
 ~~~~~~~~~~~~~~~~
 
-Taking the `BMI` feature as an example, we do the following for the simulation:
+Taking the `BMI` feature as an example of an important and highly independent feature,
+we do the following for the simulation:
 
--   We use FACET's `ContinuousRangePartitioner` to split the range of observed values of
-    `BMI` into intervals of equal size. Each partition is represented by the central
-    value of that partition.
--   For each partition, the simulator creates an artificial copy of the original sample
-    assuming the variable to be simulated has the same value across all observations -
-    which is the value representing the partition. Using the best `LearnerCrossfit`
-    acquired from the ranker, the simulator now re-predicts all targets using the models
-    trained for all folds and determines the average uplift of the target variable
-    resulting from this.
--   The FACET `SimulationDrawer` allows us to visualise the result; both in a
-    matplotlib and a plain-text style.
+- We use FACET's `ContinuousRangePartitioner` to split the range of observed values of
+  `BMI` into intervals of equal size. Each partition is represented by the central value
+  of that partition.
+- For each partition, the simulator creates an artificial copy of the original sample
+  assuming the variable to be simulated has the same value across all observations –
+  which is the value representing the partition. Using the best `LearnerCrossfit`
+  acquired from the ranker, the simulator now re-predicts all targets using the models
+  trained for all folds and determines the average uplift of the target variable
+  resulting from this.
+- The FACET `SimulationDrawer` allows us to visualise the result; both in a
+  *matplotlib* and a plain-text style.
 
 Finally, because FACET can use bootstrap cross validation, we can create a crossfit
-from our previous `LearnerRanker` best model to perform the simulation so we can
+from our previous `LearnerRanker` best model to perform the simulation, so we can
 quantify the uncertainty by using bootstrap confidence intervals.
 
 .. code-block:: Python
@@ -372,7 +370,6 @@ We would conclude from the figure that higher values of `BMI` are associated wit
 an increase in disease progression after one year, and that for a `BMI` of 29
 and above, there is a significant increase in disease progression after one year
 of at least 26 points.
-
 
 Contributing
 ------------
