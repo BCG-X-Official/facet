@@ -105,7 +105,7 @@ class ShapPlotData:
 
 @inheritdoc(match="[see superclass]")
 class LearnerInspector(
-    FittableMixin[Sample], ParallelizableMixin, Generic[T_LearnerPipelineDF]
+    FittableMixin[LearnerCrossfit], ParallelizableMixin, Generic[T_LearnerPipelineDF]
 ):
     """
     Explain regressors and classifiers based on SHAP values.
@@ -126,8 +126,8 @@ class LearnerInspector(
       values)
     - pairwise feature synergy matrix (requires availability of SHAP interaction
       values)
-    - pairwise feature association matrix (combined effect of redundancy and
-      synergy, if no SHAP interaction values are available)
+    - pairwise feature association matrix (upper bound for redundancy but can be
+      inflated by synergy; available if SHAP interaction values are unknown)
     - feature redundancy linkage (to visualize clusters of redundant features in a
       dendrogram)
     - feature synergy linkage (to visualize clusters of synergistic features in a
@@ -257,6 +257,10 @@ class LearnerInspector(
             compatibility with :class:`.FittableMixin`)
         :return: ``self``
         """
+        # :param full_sample: if ``True``, explain only a single model fitted on the
+        # full sample; otherwise, explain all models in the crossfit and aggregate
+        # results
+        full_sample = bool(fit_params.get("full_sample", False))
 
         self: LearnerInspector  # support type hinting in PyCharm
 
@@ -299,7 +303,7 @@ class LearnerInspector(
                 else RegressorShapInteractionValuesCalculator
             )
             shap_calculator = shap_calculator_type(
-                explain_full_sample=False,
+                explain_full_sample=full_sample,
                 explainer_factory=self._explainer_factory,
                 n_jobs=self.n_jobs,
                 shared_memory=self.shared_memory,
@@ -322,7 +326,7 @@ class LearnerInspector(
                 else RegressorShapValuesCalculator
             )
             shap_calculator = shap_calculator_type(
-                explain_full_sample=False,
+                explain_full_sample=full_sample,
                 explainer_factory=self._explainer_factory,
                 n_jobs=self.n_jobs,
                 shared_memory=self.shared_memory,
@@ -577,6 +581,8 @@ class LearnerInspector(
         """
         self._ensure_fitted()
 
+        self.__validate_aggregation_method(aggregation)
+
         explainer = self.__interaction_explainer
         return self.__feature_affinity_matrix(
             affinity_matrices=(
@@ -634,6 +640,8 @@ class LearnerInspector(
         """
         self._ensure_fitted()
 
+        self.__validate_aggregation_method(aggregation)
+
         explainer = self.__interaction_explainer
         return self.__feature_affinity_matrix(
             affinity_matrices=(
@@ -664,9 +672,8 @@ class LearnerInspector(
 
         The association of a feature with itself is defined as `1.0`.
 
-        Feature association is the combined effect of feature redundancy and feature
-        synergy (see methods :meth:`.feature_redundancy_matrix` and
-        :meth:`feature_synergy_matrix`).
+        Feature association provides an upper bound for feature redundancy but might be
+        inflated by feature synergy.
 
         While it is preferable to assess redundancy and synergy separately, association
         can be calculated using only SHAP values, and thus can be used as a fallback
@@ -694,8 +701,7 @@ class LearnerInspector(
         """
         self._ensure_fitted()
 
-        if aggregation != LearnerInspector.AGG_MEAN:
-            raise ValueError(f"unknown aggregation method: aggregation={aggregation}")
+        self.__validate_aggregation_method(aggregation)
 
         global_explainer = self._shap_global_explainer
         return self.__feature_affinity_matrix(
@@ -1105,6 +1111,11 @@ class LearnerInspector(
             return frames[0]
         else:
             return frames
+
+    @staticmethod
+    def __validate_aggregation_method(aggregation: str) -> None:
+        if aggregation != LearnerInspector.AGG_MEAN:
+            raise ValueError(f"unknown aggregation method: aggregation={aggregation}")
 
     @property
     def __shap_interaction_values_calculator(self) -> ShapInteractionValuesCalculator:
