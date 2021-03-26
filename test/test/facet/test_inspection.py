@@ -349,7 +349,6 @@ def test_model_inspection_classifier_multi_class(
         synergy_matrix, synergy_matrix_legacy = call_inspector_method_both_algorithms(
             iris_inspector_multi_class.feature_synergy_matrix,
             clustered=False,
-            symmetrical=False,
         )
         assert np.hstack([m.values for m in synergy_matrix_legacy]) == pytest.approx(
             np.array(
@@ -388,7 +387,6 @@ def test_model_inspection_classifier_multi_class(
         ) = call_inspector_method_both_algorithms(
             iris_inspector_multi_class.feature_redundancy_matrix,
             clustered=False,
-            symmetrical=False,
         )
         assert np.hstack([m.values for m in redundancy_matrix_legacy]) == (
             pytest.approx(
@@ -431,7 +429,6 @@ def test_model_inspection_classifier_multi_class(
         ) = call_inspector_method_both_algorithms(
             iris_inspector_multi_class.feature_association_matrix,
             clustered=False,
-            symmetrical=False,
         )
         assert np.hstack([m.values for m in association_matrix_legacy]) == (
             pytest.approx(
@@ -563,6 +560,14 @@ def test_model_inspection_classifier_interaction(
         legacy=True,
         n_jobs=n_jobs,
     ).fit(crossfit=iris_classifier_crossfit_binary)
+
+    model_inspector_full_sample = LearnerInspector(
+        explainer_factory=TreeExplainerFactory(
+            feature_perturbation="tree_path_dependent", use_background_dataset=True
+        ),
+        n_jobs=n_jobs,
+    ).fit(crossfit=iris_classifier_crossfit_binary, full_sample=True)
+
     # disable legacy calculations; we used them in the constructor so the legacy
     # SHAP decomposer is created along with the new SHAP vector projector
     model_inspector._legacy = False
@@ -656,7 +661,7 @@ def test_model_inspection_classifier_interaction(
         )
 
         synergy_matrix, synergy_matrix_legacy = call_inspector_method_both_algorithms(
-            model_inspector.feature_synergy_matrix, clustered=True, symmetrical=False
+            model_inspector.feature_synergy_matrix, clustered=True
         )
         assert synergy_matrix_legacy.values == pytest.approx(
             np.array(
@@ -681,7 +686,7 @@ def test_model_inspection_classifier_interaction(
             abs=0.02,
         )
         assert model_inspector.feature_synergy_matrix(
-            absolute=True, symmetrical=False
+            absolute=True
         ).values == pytest.approx(
             np.array(
                 [
@@ -689,6 +694,19 @@ def test_model_inspection_classifier_interaction(
                     [0.003, 0.019, 0.001, 0.003],
                     [0.003, 0.000, 0.068, 0.003],
                     [0.001, 0.000, 0.001, 0.488],
+                ]
+            ),
+            abs=0.02,
+        )
+        assert model_inspector_full_sample.feature_synergy_matrix(
+            clustered=True
+        ).values == pytest.approx(
+            np.array(
+                [
+                    [1.000, 0.000, 0.000, 0.001],
+                    [0.386, 1.000, 0.108, 0.314],
+                    [0.005, 0.002, 1.000, 0.059],
+                    [0.002, 0.000, 0.001, 1.000],
                 ]
             ),
             abs=0.02,
@@ -740,7 +758,7 @@ def test_model_inspection_classifier_interaction(
             redundancy_matrix,
             redundancy_matrix_legacy,
         ) = call_inspector_method_both_algorithms(
-            model_inspector.feature_redundancy_matrix, clustered=True, symmetrical=False
+            model_inspector.feature_redundancy_matrix, clustered=True
         )
         assert redundancy_matrix_legacy.values == pytest.approx(
             np.array(
@@ -765,7 +783,7 @@ def test_model_inspection_classifier_interaction(
             abs=0.02,
         )
         assert model_inspector.feature_redundancy_matrix(
-            absolute=True, symmetrical=False
+            absolute=True
         ).values == pytest.approx(
             np.array(
                 [
@@ -773,6 +791,20 @@ def test_model_inspection_classifier_interaction(
                     [0.337, 0.488, 0.154, 0.017],
                     [0.013, 0.020, 0.068, 0.006],
                     [0.001, 0.001, 0.001, 0.019],
+                ]
+            ),
+            abs=0.02,
+        )
+
+        assert model_inspector_full_sample.feature_redundancy_matrix(
+            clustered=True
+        ).values == pytest.approx(
+            np.array(
+                [
+                    [1.000, 0.677, 0.384, 0.003],
+                    [0.676, 1.000, 0.465, 0.000],
+                    [0.382, 0.438, 1.000, 0.013],
+                    [0.002, 0.000, 0.012, 1.000],
                 ]
             ),
             abs=0.02,
@@ -828,7 +860,6 @@ def test_model_inspection_classifier_interaction(
         ) = call_inspector_method_both_algorithms(
             model_inspector.feature_association_matrix,
             clustered=True,
-            symmetrical=False,
         )
         assert association_matrix_legacy.values == pytest.approx(
             np.array(
@@ -853,7 +884,7 @@ def test_model_inspection_classifier_interaction(
             abs=0.02,
         )
         assert model_inspector.feature_association_matrix(
-            absolute=True, symmetrical=False
+            absolute=True
         ).values == pytest.approx(
             np.array(
                 [
@@ -865,6 +896,21 @@ def test_model_inspection_classifier_interaction(
             ),
             abs=0.02,
         )
+
+        assert model_inspector_full_sample.feature_association_matrix(
+            clustered=True
+        ).values == pytest.approx(
+            np.array(
+                [
+                    [1.000, 0.678, 0.383, 0.001],
+                    [0.678, 1.000, 0.447, 0.000],
+                    [0.383, 0.447, 1.000, 0.009],
+                    [0.001, 0.000, 0.009, 1.000],
+                ]
+            ),
+            abs=0.02,
+        )
+
     except AssertionError as error:
         print_expected_matrix(error=error)
         raise
