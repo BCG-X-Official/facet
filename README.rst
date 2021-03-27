@@ -236,7 +236,7 @@ For any feature pair (A, B), the first feature (A) is the row, and the second
 feature (B) the column. For example, looking across the row for `LTG` (Lamotrigine)
 there is relatively minimal synergy (≤1%) with other features in the model.
 However, looking down the column for `LTG` (i.e., perspective of other features
-in a pair with `LTG`) we find many features (the rows) are synergistic (up to ~30%)
+in a pair with `LTG`) we find many features (the rows) are synergistic (up to 27%)
 with `LTG`. We can conclude that:
 
 - `LTG` is a strongly autonomous feature, displaying minimal synergy with other
@@ -247,7 +247,7 @@ with `LTG`. We can conclude that:
 High synergy between pairs of features must be considered carefully when investigating
 impact, as the values of both features jointly determine the outcome. It would not make
 much sense to consider `TC` (T-Cells) without the context provided by `LDL` given close
-to 30% synergy of `LDL` with `LTG` for predicting progression after one year.
+to 27% synergy of `LDL` with `LTG` for predicting progression after one year.
 
 **Redundancy**
 
@@ -269,7 +269,7 @@ in `LDL` is duplicated with `TC` to predict disease progression after one year. 
 redundancy is the same when looking "from the perspective" of `TC` for (`TC`, `LDL`),
 but need not be symmetrical in all cases (see `LTG` vs. `TSH`).
 
-If we look at `TSH`, it has between ~25–30% redundancy each with `LTG` and `HDL`, but
+If we look at `TSH`, it has between 22–32% redundancy each with `LTG` and `HDL`, but
 the same does not hold between `LTG` and `HDL` – meaning `TSH` shares different
 information with each of the two features.
 
