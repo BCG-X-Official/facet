@@ -31,28 +31,6 @@ download the notebook for yourself
 
     tutorial/Water_Drilling_Incident_Classification_with_Facet
 
-.. _maintenance-tut:
-
-Regression Tutorial: Predictive Maintenance
-*********************************************
-
-Learn regression the FACET way with this tutorial investigating the performance of a
-naval vessel Gas Turbine propulsion plant. In this tutorial you will:
-
-- build a model to accurately predict the decay state of the gas turbine, and
-- gain insight into parameters that drive the decay state and how they interact with
-  each other and performance decay.
-
-
-Start exploring the tutorial right away by clicking on the section links below, and
-start running the code for yourself by downloading the notebook
-:download:`here <tutorial/Predictive_Maintenance_Regression_with_Facet.ipynb>`.
-
-
-.. toctree::
-    :maxdepth: 1
-
-    tutorial/Predictive_Maintenance_Regression_with_Facet
 
 .. _prediabetes-tut:
 
@@ -112,22 +90,6 @@ the code for yourself by downloading the notebook
     :maxdepth: 1
 
     tutorial/Scikit-learn_classifier_summaries_using_FACET
-
-.. _red-syn-summary-tut:
-
-Understanding synergy and redundancy with synthetic data
-**********************************************************
-
-Improve your intuition for FACET's advanced model inspection with this tutorial,
-where you will:
-
-- understand how synergy and redundancy for a feature pair varies with interaction and
-  correlation, and
-- explore how over-fitting affects the accuracy of redundancy and synergy estimates.
-
-Start exploring right away by clicking on the section links below, and run your own
-simulations to further boost your intuition by downloading the notebook
-:download:`here <tutorial/Synergy_Redundancy_Tutorial_with_Facet.ipynb>`.
 
 
 .. toctree::
