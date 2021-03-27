@@ -11,13 +11,16 @@ by the :class:`.LearnerInspector`.
 ~~~~~
 
 - API: SHAP interaction vectors can (in part) also be influenced by redundancy among
-  features. FACET now corrects interaction vectors for redundancy prior to calculating
-  synergy. Technically we ensure that the interaction vector is orthogonal w.r.t the
-  main effect vectors of both associated features.
+  features. This can inflate quantificatios of synergy, especially in cases where two
+  variables are highly redundant. FACET now corrects interaction vectors for redundancy
+  prior to calculating synergy. Technically we ensure that each interaction vector is
+  orthogonal w.r.t the main effect vectors of both associated features.
 - API: FACET now calculates synergy, redundancy, and association separately for each
   model in a crossfit, then returns the mean of all resulting matrices. This leads to a
   slight increase in accuracy, and also allows us to calculate the standard deviation
   across matrices as an indication of confidence for each calculated value.
+- API: Method :meth:`.LernerInspector.shap_plot_data` now returns SHAP values for the
+  positive class of binary classifiers.
 - API: Increase efficiency of :class:`.LearnerRanker` parallelization by adopting the
   new :class:`pytools.parallelization.JobRunner` API provided by :mod:`pytools`
 - BUILD: add support for :mod:`shap` 0.38 and 0.39
