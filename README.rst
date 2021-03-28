@@ -156,9 +156,10 @@ hyperparameter configurations and even multiple learners with the `LearnerRanker
    :width: 600
 
 We can see based on this minimal workflow that a value of 11 for minimum
-samples in the leaf was the best performing of the three considered values.
-This approach easily extends to multiple hyperparameters for the learner
-and multiple learners.
+samples in the leaf and 5 for maximum tree depth was the best performing
+of the three considered values.
+This approach easily extends to additional hyperparameters for the learner,
+and for multiple learners.
 
 
 Model Inspection
