@@ -6,7 +6,7 @@ inspection, and simulation.
 """
 
 
-__version__ = "1.1.0rc0"
+__version__ = "1.1.0"
 
 __logo__ = (
     r"""
