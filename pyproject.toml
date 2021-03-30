@@ -96,7 +96,7 @@ joblib         = "=0.13.*"
 typing_inspect = "=0.4"
 
 [build.matrix.max]
-gamma-pytools  = "<2"
+gamma-pytools  = ">=1.0.2,<2"
 matplotlib     = "=3.3.*"
 numpy          = "<1.21"
 packaging      = ">=20"
