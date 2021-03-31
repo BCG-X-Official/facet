@@ -29,6 +29,11 @@ by the :class:`.LearnerInspector`.
 FACET 1.0
 ---------
 
+1.0.3
+~~~~~
+
+- FIX: restrict package requirements to *gamma-pytools* 1.0.* and *sklearndf* 1.0.x, since FACET 1.0 is not compatible with *gamma-pytools* 1.1.* 
+
 1.0.2
 ~~~~~
 
