@@ -656,6 +656,8 @@ stages:
               cp -r $(Build.ArtifactStagingDirectory)/old_docs/docs .
               echo "Current docs contents:"
               tree docs
+              mkdir -p $(System.DefaultWorkingDirectory)/facet/sphinx/build/
+              cp -R docs/docs-version $(System.DefaultWorkingDirectory)/facet/sphinx/build/
               echo "Building sphinx docs"
               conda activate facet-develop
               cd $(System.DefaultWorkingDirectory)/facet
