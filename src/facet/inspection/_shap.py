@@ -11,7 +11,7 @@ import pandas as pd
 
 from pytools.api import AllTracker, inheritdoc
 from pytools.fit import FittableMixin
-from pytools.parallelization import ParallelizableMixin
+from pytools.parallelization import Job, JobRunner, ParallelizableMixin
 from sklearndf.pipeline import (
     ClassifierPipelineDF,
     LearnerPipelineDF,
@@ -79,6 +79,14 @@ class ShapCalculator(
     in a data frame.
     """
 
+    #: constant for "mean" aggregation method, to be passed as arg ``aggregation``
+    #: to :class:`.ShapCalculator` methods that implement it
+    AGG_MEAN = "mean"
+
+    #: constant for "std" aggregation method, to be passed as arg ``aggregation``
+    #: to :class:`.ShapCalculator` methods that implement it
+    AGG_STD = "std"
+
     #: name of index level indicating the split ID
     IDX_SPLIT = "split"
 
@@ -108,6 +116,7 @@ class ShapCalculator(
         self.feature_index_: Optional[pd.Index] = None
         self.output_names_: Optional[List[str]] = None
         self.sample_: Optional[Sample] = None
+        self.n_splits_: Optional[int] = None
 
     @property
     def is_fitted(self) -> bool:
@@ -120,6 +129,8 @@ class ShapCalculator(
         """
         Calculate the SHAP values.
 
+        :param crossfit: the learner crossfit for which to calculate SHAP values
+        :param fit_params: additional fit parameters (unused)
         :return: self
         """
 
@@ -140,7 +151,7 @@ class ShapCalculator(
         # sequence in the original training sample
         shap_all_splits_df: pd.DataFrame = self._get_shap_all_splits(crossfit=crossfit)
 
-        assert shap_all_splits_df.index.nlevels > 1
+        assert 2 <= shap_all_splits_df.index.nlevels <= 3
         assert shap_all_splits_df.index.names[1] == training_sample.index.name
 
         self.shap_ = shap_all_splits_df.reindex(
@@ -151,19 +162,32 @@ class ShapCalculator(
             copy=False,
         )
 
+        self.n_splits_ = 1 if self.explain_full_sample else crossfit.n_splits_
+
         return self
 
     @abstractmethod
-    def get_shap_values(self, consolidate: Optional[str] = None) -> pd.DataFrame:
+    def get_shap_values(self, aggregation: Optional[str]) -> pd.DataFrame:
         """
-        The resulting consolidated shap values as a data frame,
+        The resulting aggregated shap values as a data frame,
         aggregated to averaged SHAP contributions per feature and observation.
 
-        :param consolidate: consolidation method, or ``None`` for no consolidation
+        :param aggregation: aggregation method, or ``None`` for no aggregation
         :return: SHAP contribution values with shape
-            (n_observations, n_outputs * n_features).
+            (n_observations, n_outputs * n_features)
         """
-        pass
+
+    @abstractmethod
+    def get_shap_interaction_values(self, aggregation: Optional[str]) -> pd.DataFrame:
+        """
+        The resulting aggregated shap interaction values as a data frame,
+        aggregated to averaged SHAP interaction values per observation.
+
+        :param aggregation: aggregation method, or ``None`` for no aggregation
+        :return: SHAP contribution values with shape
+            (n_observations * n_features, n_outputs * n_features)
+        :raise TypeError: this SHAP calculator does not support interaction values
+        """
 
     @staticmethod
     @abstractmethod
@@ -171,7 +195,6 @@ class ShapCalculator(
         """
         :return: a category name for the dimensions represented by multiple outputs
         """
-        pass
 
     @abstractmethod
     def _get_multi_output_names(
@@ -214,43 +237,61 @@ class ShapCalculator(
         else:
             background_dataset = None
 
-        with self._parallel() as parallel:
-            shap_df_per_split: List[pd.DataFrame] = parallel(
-                self._delayed(self._get_shap_for_split)(
-                    model,
-                    sample,
-                    self._explainer_factory.make_explainer(
-                        model=model.final_estimator,
-                        # we re-index the columns of the background dataset to match
-                        # the column sequence of the model (in case feature order
-                        # was shuffled, or train split pre-processing removed columns)
-                        data=(
-                            None
-                            if background_dataset is None
-                            else background_dataset.reindex(
-                                columns=model.final_estimator.feature_names_in_,
-                                copy=False,
-                            )
-                        ),
+        def _make_explainer(_model: T_LearnerPipelineDF) -> BaseExplainer:
+            return self._explainer_factory.make_explainer(
+                model=_model.final_estimator,
+                # we re-index the columns of the background dataset to match
+                # the column sequence of the model (in case feature order
+                # was shuffled, or train split pre-processing removed columns)
+                data=(
+                    None
+                    if background_dataset is None
+                    else background_dataset.reindex(
+                        columns=_model.final_estimator.feature_names_in_,
+                        copy=False,
+                    )
+                ),
+            )
+
+        shap_df_per_split: List[pd.DataFrame]
+
+        if self.explain_full_sample:
+            # we explain the full sample using the model fitted on the full sample
+            # so the result is a list with a single data frame of shap values
+            model = crossfit.pipeline
+            shap_df_per_split = [
+                self._get_shap_for_split(
+                    model=model,
+                    sample=sample,
+                    explainer=_make_explainer(model),
+                    features_out=self.feature_index_,
+                    shap_matrix_for_split_to_df_fn=self._convert_raw_shap_to_df,
+                    multi_output_type=self.get_multi_output_type(),
+                    multi_output_names=self._get_multi_output_names(
+                        model=model, sample=sample
                     ),
-                    self.feature_index_,
-                    self._convert_raw_shap_to_df,
-                    self.get_multi_output_type(),
-                    self._get_multi_output_names(model=model, sample=sample),
                 )
-                for model, sample in zip(
-                    crossfit.models(),
-                    (
-                        # if we explain full samples, we get samples from an
-                        # infinite iterator of the full training sample
-                        iter(lambda: sample, None)
-                        if self.explain_full_sample
-                        # otherwise we iterate over the test splits of each crossfit
-                        else (
+            ]
+
+        else:
+            shap_df_per_split = JobRunner.from_parallelizable(self).run_jobs(
+                *(
+                    Job.delayed(self._get_shap_for_split)(
+                        model,
+                        sample,
+                        _make_explainer(model),
+                        self.feature_index_,
+                        self._convert_raw_shap_to_df,
+                        self.get_multi_output_type(),
+                        self._get_multi_output_names(model=model, sample=sample),
+                    )
+                    for model, sample in zip(
+                        crossfit.models(),
+                        (
                             sample.subsample(iloc=oob_split)
                             for _, oob_split in crossfit.splits()
-                        )
-                    ),
+                        ),
+                    )
                 )
             )
 
@@ -263,7 +304,7 @@ class ShapCalculator(
         pass
 
     @staticmethod
-    def _consolidate_splits(
+    def _aggregate_splits(
         shap_all_splits_df: pd.DataFrame, method: Optional[str]
     ) -> pd.DataFrame:
         # Group SHAP values by observation ID, aggregate SHAP values using mean or std,
@@ -280,14 +321,14 @@ class ShapCalculator(
 
         level = 1 if n_levels == 2 else tuple(range(1, n_levels))
 
-        if method == "mean":
-            shap_consolidated = shap_all_splits_df.mean(level=level)
-        elif method == "std":
-            shap_consolidated = shap_all_splits_df.std(level=level)
+        if method == ShapCalculator.AGG_MEAN:
+            shap_aggregated = shap_all_splits_df.mean(level=level)
+        elif method == ShapCalculator.AGG_STD:
+            shap_aggregated = shap_all_splits_df.std(level=level)
         else:
-            raise ValueError(f"unknown consolidation method: {method}")
+            raise ValueError(f"unknown aggregation method: {method}")
 
-        return shap_consolidated
+        return shap_aggregated
 
     @staticmethod
     @abstractmethod
@@ -393,11 +434,25 @@ class ShapValuesCalculator(
     Base class for calculating SHAP contribution values.
     """
 
-    def get_shap_values(self, consolidate: Optional[str] = None) -> pd.DataFrame:
+    def get_shap_values(self, aggregation: Optional[str]) -> pd.DataFrame:
         """[see superclass]"""
         self._ensure_fitted()
-        return ShapCalculator._consolidate_splits(
-            shap_all_splits_df=self.shap_, method=consolidate
+        return ShapCalculator._aggregate_splits(
+            shap_all_splits_df=self.shap_, method=aggregation
+        )
+
+    def get_shap_interaction_values(self, aggregation: Optional[str]) -> pd.DataFrame:
+        """
+        Not implemented.
+
+        :param aggregation: (ignored)
+        :return: (never returns)
+        :raise TypeError: always raises this - SHAP interaction values are not supported
+        """
+        raise TypeError(
+            f"{type(self).__name__}"
+            f".{ShapValuesCalculator.get_shap_interaction_values.__name__}() "
+            "is not defined"
         )
 
     @staticmethod
@@ -455,23 +510,18 @@ class ShapInteractionValuesCalculator(
     Base class for calculating SHAP interaction values.
     """
 
-    def get_shap_values(self, consolidate: Optional[str] = None) -> pd.DataFrame:
+    def get_shap_values(self, aggregation: Optional[str]) -> pd.DataFrame:
         """[see superclass]"""
         self._ensure_fitted()
-        return ShapCalculator._consolidate_splits(
-            shap_all_splits_df=self.shap_.sum(level=(0, 1)), method=consolidate
+        return ShapCalculator._aggregate_splits(
+            shap_all_splits_df=self.shap_.sum(level=(0, 1)), method=aggregation
         )
 
-    def get_shap_interaction_values(
-        self, consolidate: Optional[str] = None
-    ) -> pd.DataFrame:
-        """
-        The resulting consolidated shap interaction values as a data frame,
-        aggregated to averaged SHAP interaction values per observation.
-        """
+    def get_shap_interaction_values(self, aggregation: Optional[str]) -> pd.DataFrame:
+        """[see superclass]"""
         self._ensure_fitted()
-        return ShapCalculator._consolidate_splits(
-            shap_all_splits_df=self.shap_, method=consolidate
+        return ShapCalculator._aggregate_splits(
+            shap_all_splits_df=self.shap_, method=aggregation
         )
 
     def get_diagonals(self) -> pd.DataFrame:
@@ -710,11 +760,11 @@ class ClassifierShapCalculator(ShapCalculator[ClassifierPipelineDF], metaclass=A
     ) -> pd.DataFrame:
         output_names = self.output_names_
 
-        index_names = [ShapCalculator.IDX_SPLIT, *shap_df_per_split[0].index.names]
-
         split_keys = range(len(shap_df_per_split))
         if len(output_names) == 1:
-            return pd.concat(shap_df_per_split, keys=split_keys, names=index_names)
+            return pd.concat(
+                shap_df_per_split, keys=split_keys, names=[ShapCalculator.IDX_SPLIT]
+            )
 
         else:
             # for multi-class classifiers, ensure that all data frames include
@@ -731,7 +781,7 @@ class ClassifierShapCalculator(ShapCalculator[ClassifierPipelineDF], metaclass=A
                     for shap_df in shap_df_per_split
                 ],
                 keys=split_keys,
-                names=index_names,
+                names=[ShapCalculator.IDX_SPLIT],
             )
 
 
@@ -770,8 +820,8 @@ class ClassifierShapValuesCalculator(
                     f"to {_raw_shap_tensor_totals.max():g}"
                 )
 
-            # all good: proceed with SHAP values for class 0:
-            raw_shap_tensors = raw_shap_tensors[:1]
+            # all good: proceed with SHAP values for class 1 (positive class):
+            raw_shap_tensors: List[np.ndarray] = raw_shap_tensors[1:]
 
         return [
             pd.DataFrame(
@@ -817,8 +867,8 @@ class ClassifierShapInteractionValuesCalculator(
                     f"to {_raw_shap_tensor_totals.max():g}"
                 )
 
-            # all good: proceed with SHAP values for class 0:
-            raw_shap_tensors = raw_shap_tensors[:1]
+            # all good: proceed with SHAP values for class 1 (positive class):
+            raw_shap_tensors: List[np.ndarray] = raw_shap_tensors[1:]
 
         # each row is indexed by an observation and a feature
         row_index = pd.MultiIndex.from_product(

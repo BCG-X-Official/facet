@@ -229,7 +229,7 @@ class SimulationMatplotStyle(MatplotStyle, SimulationStyle):
 
         ax = _make_sub_axes()
 
-        self._apply_color_scheme(ax)
+        self.apply_color_scheme(ax)
 
         ax.invert_yaxis()
 
@@ -373,7 +373,7 @@ class SimulationReportStyle(SimulationStyle, TextStyle):
             )
         )
 
-    def finalize_drawing(self, **kwargs) -> None:
+    def finalize_drawing(self, **kwargs: Any) -> None:
         """[see superclass]"""
         super().finalize_drawing(**kwargs)
         # print two trailing line breaks

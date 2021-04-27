@@ -2,10 +2,7 @@ from typing import Sequence
 
 import numpy as np
 
-from facet.simulation.partition import (
-    ContinuousRangePartitioner,
-    IntegerRangePartitioner,
-)
+from facet.data.partition import ContinuousRangePartitioner, IntegerRangePartitioner
 
 
 def test_discrete_partitioning() -> None:

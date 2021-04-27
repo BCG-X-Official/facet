@@ -178,7 +178,6 @@ def best_lgbm_crossfit(
     return LearnerCrossfit(
         pipeline=best_lgbm_regressor,
         cv=cv_kfold,
-        shuffle_features=True,
         random_state=42,
         n_jobs=n_jobs,
     ).fit(sample=sample)
@@ -199,12 +198,19 @@ def feature_names(best_lgbm_crossfit: LearnerCrossfit[RegressorPipelineDF]) -> S
 def regressor_inspector(
     best_lgbm_crossfit: LearnerCrossfit[RegressorPipelineDF], n_jobs: int
 ) -> LearnerInspector:
-    return LearnerInspector(
+    inspector = LearnerInspector(
         explainer_factory=TreeExplainerFactory(
             feature_perturbation="tree_path_dependent", use_background_dataset=True
         ),
+        legacy=True,
         n_jobs=n_jobs,
     ).fit(crossfit=best_lgbm_crossfit)
+
+    # disable legacy calculations; we used them in the constructor so the legacy
+    # SHAP decomposer is created along with the new SHAP vector projector
+    inspector._legacy = False
+
+    return inspector
 
 
 @pytest.fixture

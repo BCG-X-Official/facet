@@ -8,14 +8,25 @@ from typing import List, Optional, TypeVar
 import numpy as np
 import pandas as pd
 
-from pytools.api import AllTracker
-from pytools.fit import FittableMixin
+from pytools.api import AllTracker, deprecated, inheritdoc
 
-from facet.inspection._shap import ShapCalculator, ShapInteractionValuesCalculator
+from ._shap import ShapCalculator, ShapInteractionValuesCalculator
+from ._shap_global_explanation import (
+    ShapGlobalExplainer,
+    ShapInteractionGlobalExplainer,
+    cov,
+    ensure_last_axis_is_fast,
+    make_symmetric,
+    sqrt,
+    transpose,
+)
 
 log = logging.getLogger(__name__)
 
-__all__ = ["ShapValueDecomposer", "ShapInteractionValueDecomposer"]
+__all__ = [
+    "ShapDecomposer",
+    "ShapInteractionDecomposer",
+]
 
 #: if ``True``, optimize numpy arrays to ensure pairwise partial summation.
 #: But given that we will add floats of the same order of magnitude and only up
@@ -41,7 +52,8 @@ __tracker = AllTracker(globals())
 #
 
 
-class ShapValueDecomposer(FittableMixin[ShapCalculator]):
+@inheritdoc(match="""[see superclass]""")
+class ShapDecomposer(ShapGlobalExplainer):
     """
     Decomposes SHAP vectors (i.e., SHAP contribution) of all possible pairings
     of features into additive components for association and independence.
@@ -51,70 +63,38 @@ class ShapValueDecomposer(FittableMixin[ShapCalculator]):
     the decompositions of the actual SHAP vectors across observations.
     """
 
+    @deprecated(
+        message=(
+            "SHAP vector decomposition is deprecated and will be removed in the next "
+            "minor release, consider using SHAP vector projection instead"
+        )
+    )
     def __init__(self) -> None:
         super().__init__()
-        self.feature_index_: Optional[pd.Index] = None
         self.association_rel_: Optional[np.ndarray] = None
         self.association_rel_asymmetric_: Optional[np.ndarray] = None
 
-    @property
-    def is_fitted(self) -> bool:
-        """[inherit docstring from parent class]"""
-        return self.feature_index_ is not None
+    def association(
+        self, absolute: bool, symmetrical: bool, std: bool = False
+    ) -> Optional[np.ndarray]:
+        """[see superclass]"""
+        if absolute:
+            raise NotImplementedError("absolute association is not supported")
+        if std:
+            return None
 
-    is_fitted.__doc__ = FittableMixin.is_fitted.__doc__
-
-    def fit(self: T_Self, shap_calculator: ShapCalculator, **fit_params) -> T_Self:
-        """
-        Calculate the SHAP decomposition for the shap values produced by the
-        given SHAP calculator.
-
-        :param shap_calculator: the fitted calculator from which to get the shap values
-        """
-
-        self: ShapValueDecomposer  # support type hinting in PyCharm
-
-        try:
-            if len(fit_params) > 0:
-                raise ValueError(
-                    f'unsupported fit parameters: {", ".join(fit_params.values())}'
-                )
-
-            self._fit(shap_calculator=shap_calculator)
-
-            self.feature_index_ = shap_calculator.feature_index_
-
-        except Exception:
-            # reset fit in case we get an exception along the way
-            self._reset_fit()
-            raise
-
-        return self
-
-    def association(self, symmetrical: bool) -> List[pd.DataFrame]:
-        """
-        The matrix of relative association for all feature pairs.
-
-        Values range between 0.0 (fully independent contributions) and 1.0
-        (fully associated contributions).
-
-        Raises an error if this SHAP value decomposer has not been fitted.
-
-        :param symmetrical: return a symmetrical matrix of mutual association
-        :returns: the matrix as a data frame, or a list of data frames for multiple
-            outputs
-        """
         self._ensure_fitted()
-        return self._to_frame(
+        return (
             self.association_rel_ if symmetrical else self.association_rel_asymmetric_
         )
 
+    # noinspection DuplicatedCode
     def _fit(self, shap_calculator: ShapCalculator) -> None:
         #
         # basic definitions
         #
 
-        shap_values: pd.DataFrame = shap_calculator.get_shap_values(consolidate="mean")
+        shap_values: pd.DataFrame = shap_calculator.get_shap_values(aggregation="mean")
         n_outputs: int = len(shap_calculator.output_names_)
         n_features: int = len(shap_calculator.feature_index_)
         n_observations: int = len(shap_values)
@@ -134,7 +114,7 @@ class ShapValueDecomposer(FittableMixin[ShapCalculator]):
         # p[i] = p_i
         # shape: (n_outputs, n_features, n_observations)
         # the vector of shap values for every output and feature
-        p_i = _ensure_last_axis_is_fast(
+        p_i = ensure_last_axis_is_fast(
             np.transpose(
                 shap_values.values.reshape((n_observations, n_outputs, n_features)),
                 axes=(1, 2, 0),
@@ -147,7 +127,7 @@ class ShapValueDecomposer(FittableMixin[ShapCalculator]):
 
         # covariance matrix of shap vectors
         # shape: (n_outputs, n_features, n_features)
-        cov_p_i_p_j = _cov(p_i, weight)
+        cov_p_i_p_j = cov(p_i, weight)
         cov_p_i_p_j_2x = 2 * cov_p_i_p_j
 
         # variance of shap vectors
@@ -161,13 +141,13 @@ class ShapValueDecomposer(FittableMixin[ShapCalculator]):
         # or, the length of the sum of vectors p[i] and p[j]
         # this quantifies the joint contributions of features i and j
         # we also need this as part of the formula to calculate ass_ij (see below)
-        std_p_i_plus_p_j = _sqrt(var_p_i_plus_var_p_j + cov_p_i_p_j_2x)
+        std_p_i_plus_p_j = sqrt(var_p_i_plus_var_p_j + cov_p_i_p_j_2x)
 
         # std(p[i] - p[j])
         # shape: (n_outputs, n_features)
         # the length of the difference of vectors p[i] and p[j]
         # we need this as part of the formula to calculate ass_ij (see below)
-        std_p_i_minus_p_j = _sqrt(var_p_i_plus_var_p_j - cov_p_i_p_j_2x)
+        std_p_i_minus_p_j = sqrt(var_p_i_plus_var_p_j - cov_p_i_p_j_2x)
 
         # 2 * std(ass[i, j]) = 2 * std(ass[j, i])
         # shape: (n_outputs, n_features, n_features)
@@ -201,14 +181,14 @@ class ShapValueDecomposer(FittableMixin[ShapCalculator]):
         # shape: (n_outputs, n_features, n_features)
         # the standard deviation (= length) of the independence vector
 
-        std_ind_ij_plus_ind_ji = _sqrt(
+        std_ind_ij_plus_ind_ji = sqrt(
             var_p_i_plus_var_p_j
             + var_ass_ij_4x
             + 2
             * (
                 cov_p_i_p_j
                 - cov_p_i_ass_ij_2x
-                - _transpose(cov_p_i_ass_ij_2x)  # cov_p_j_ass_ij_2x
+                - transpose(cov_p_i_ass_ij_2x)  # cov_p_j_ass_ij_2x
             )
         )
 
@@ -216,7 +196,7 @@ class ShapValueDecomposer(FittableMixin[ShapCalculator]):
         # where ind_ij = p_i - ass_ij
         # shape: (n_outputs, n_features, n_features)
         # the standard deviation (= length) of the asymmetrical independence vector
-        std_ind_ij = _sqrt(
+        std_ind_ij = sqrt(
             var_p_i + var_ass_ij_4x / 4 - ass_p_ratio_2x * (var_p_i + cov_p_i_p_j)
         )
 
@@ -229,34 +209,20 @@ class ShapValueDecomposer(FittableMixin[ShapCalculator]):
         assert association_ij.shape == (n_outputs, n_features, n_features)
 
         with np.errstate(divide="ignore", invalid="ignore"):
-            self.association_rel_ = _fill_nans(
-                _ensure_diagonality(association_ij / (association_ij + independence_ij))
-            )
+            matrix = association_ij / (association_ij + independence_ij)
+            self.association_rel_ = _fill_nans(make_symmetric(matrix))
             self.association_rel_asymmetric_ = _fill_nans(
                 std_ass_ij_2x / (std_ass_ij_2x + std_ind_ij * 2)
             )
 
     def _reset_fit(self) -> None:
         # revert status of this object to not fitted
-        self.feature_index_ = None
+        super()._reset_fit()
         self.association_rel_ = None
 
-    def _to_frame(self, matrix: np.ndarray) -> List[pd.DataFrame]:
-        # takes an array of shape (n_outputs, n_features, n_features) and transforms it
-        # into a data frame of shape (n_features, n_outputs * n_features)
-        index = self.feature_index_
 
-        return [
-            pd.DataFrame(
-                m,
-                index=index,
-                columns=index,
-            )
-            for m in matrix
-        ]
-
-
-class ShapInteractionValueDecomposer(ShapValueDecomposer):
+@inheritdoc(match="""[see superclass]""")
+class ShapInteractionDecomposer(ShapDecomposer, ShapInteractionGlobalExplainer):
     """
     Decomposes SHAP interaction scores (i.e, SHAP importance) of all possible pairings
     of features into additive components for synergy, redundancy, and independence.
@@ -285,7 +251,7 @@ class ShapInteractionValueDecomposer(ShapValueDecomposer):
         """
         super().__init__()
         self.min_direct_synergy = (
-            ShapInteractionValueDecomposer.DEFAULT_MIN_DIRECT_SYNERGY
+            ShapInteractionDecomposer.DEFAULT_MIN_DIRECT_SYNERGY
             if min_direct_synergy is None
             else min_direct_synergy
         )
@@ -299,43 +265,31 @@ class ShapInteractionValueDecomposer(ShapValueDecomposer):
             {DEFAULT_MIN_DIRECT_SYNERGY * 100.0:g}%)
         """
 
-    def synergy(self, symmetrical: bool = True) -> List[pd.DataFrame]:
-        """
-        The matrix of total relative synergy (direct and indirect) for all feature
-        pairs.
+    def synergy(
+        self, symmetrical: bool, absolute: bool, std: bool = False
+    ) -> Optional[np.ndarray]:
+        """[see superclass]"""
+        if absolute:
+            raise NotImplementedError("absolute synergy is not supported")
+        if std:
+            return None
 
-        Values range between 0.0 (fully autonomous contributions) and 1.0
-        (fully synergistic contributions).
-
-        Raises an error if this interaction decomposer has not been fitted.
-
-        :param symmetrical: return a symmetrical matrix of mutual synergy
-        :returns: the matrix as a data frame, or a list of data frames for multiple
-            outputs
-        """
         self._ensure_fitted()
-        return self._to_frame(
-            self.synergy_rel_ if symmetrical else self.synergy_rel_asymmetric_
-        )
+        return self.synergy_rel_ if symmetrical else self.synergy_rel_asymmetric_
 
-    def redundancy(self, symmetrical: bool = True) -> List[pd.DataFrame]:
-        """
-        The matrix of total relative redundancy for all feature pairs.
+    def redundancy(
+        self, symmetrical: bool, absolute: bool, std: bool = False
+    ) -> Optional[np.ndarray]:
+        """[see superclass]"""
+        if absolute:
+            raise NotImplementedError("absolute redundancy is not supported")
+        if std:
+            return None
 
-        Values range between 0.0 (fully unique contributions) and 1.0
-        (fully redundant contributions).
-
-        Raises an error if this interaction decomposer has not been fitted.
-
-        :param symmetrical: return a symmetrical matrix of mutual redundancy
-        :returns: the matrix as a data frame, or a list of data frames for multiple
-            outputs
-        """
         self._ensure_fitted()
-        return self._to_frame(
-            self.redundancy_rel_ if symmetrical else self.redundancy_rel_asymmetric_
-        )
+        return self.redundancy_rel_ if symmetrical else self.redundancy_rel_asymmetric_
 
+    # noinspection DuplicatedCode
     def _fit(self, shap_calculator: ShapInteractionValuesCalculator) -> None:
         super()._fit(shap_calculator)
 
@@ -343,7 +297,7 @@ class ShapInteractionValueDecomposer(ShapValueDecomposer):
         # basic definitions
         #
         shap_values: pd.DataFrame = shap_calculator.get_shap_interaction_values(
-            consolidate="mean"
+            aggregation="mean"
         )
         features: pd.Index = shap_calculator.feature_index_
         outputs: List[str] = shap_calculator.output_names_
@@ -362,7 +316,7 @@ class ShapInteractionValueDecomposer(ShapValueDecomposer):
             _observation_indices = shap_values.index.get_level_values(0).values.reshape(
                 (n_observations, n_features)
             )[:, 0]
-            weight = _ensure_last_axis_is_fast(
+            weight = ensure_last_axis_is_fast(
                 _weight_sr.loc[_observation_indices].values
             )
         else:
@@ -373,7 +327,7 @@ class ShapInteractionValueDecomposer(ShapValueDecomposer):
         # the vector of interaction values for every output and feature pairing
         # for improved numerical precision, we ensure the last axis is the fast axis
         # i.e. stride size equals item size (see documentation for numpy.sum)
-        p_ij = _ensure_last_axis_is_fast(
+        p_ij = ensure_last_axis_is_fast(
             np.transpose(
                 shap_values.values.reshape(
                     (n_observations, n_features, n_outputs, n_features)
@@ -384,11 +338,12 @@ class ShapInteractionValueDecomposer(ShapValueDecomposer):
 
         # p[i]
         # shape: (n_outputs, n_features, n_observations)
-        p_i = _ensure_last_axis_is_fast(p_ij.sum(axis=2))
+        p_i = ensure_last_axis_is_fast(p_ij.sum(axis=2))
 
+        # cov(p[i], p[j])
         # covariance matrix of shap vectors
         # shape: (n_outputs, n_features, n_features)
-        cov_p_i_p_j = _cov(p_i, weight)
+        cov_p_i_p_j = cov(p_i, weight)
 
         #
         # Feature synergy (direct and indirect): zeta[i, j]
@@ -398,7 +353,7 @@ class ShapInteractionValueDecomposer(ShapValueDecomposer):
         # shape: (n_outputs, n_features, n_features)
         # variance and length (= standard deviation) of each feature interaction vector
         var_p_ij = np.average(
-            _ensure_last_axis_is_fast(p_ij ** 2), axis=-1, weights=weight
+            ensure_last_axis_is_fast(p_ij ** 2), axis=-1, weights=weight
         )
         std_p_ij = np.sqrt(var_p_ij)
 
@@ -411,7 +366,7 @@ class ShapInteractionValueDecomposer(ShapValueDecomposer):
         # p'[i] = p[i] - p[i, i]
         # shape: (n_outputs, n_features, n_observations)
         # the SHAP vectors per feature, minus the independent contributions
-        p_prime_i = _ensure_last_axis_is_fast(p_i - p_ii)
+        p_prime_i = ensure_last_axis_is_fast(p_i - p_ii)
 
         # std_p_relative[i, j]
         # shape: (n_outputs, n_features, n_features)
@@ -522,7 +477,7 @@ class ShapInteractionValueDecomposer(ShapValueDecomposer):
         # k[j, i]
         # transpose of k[i, j]; we need this later for calculating SHAP redundancy
         # shape: (n_outputs, n_features, n_features)
-        k_ji = _transpose(k_ij)
+        k_ji = transpose(k_ij)
 
         # syn[i, j] + syn[j, i] = (k[i, j] + k[j, i]) * p[i, j]
         # total SHAP synergy, comprising both direct and indirect synergy
@@ -553,7 +508,7 @@ class ShapInteractionValueDecomposer(ShapValueDecomposer):
         cov_aut_ij_aut_ji = (
             cov_p_i_p_j
             - k_ji * cov_p_i_p_ij
-            - k_ij * _transpose(cov_p_i_p_ij)
+            - k_ij * transpose(cov_p_i_p_ij)
             + k_ji * k_ij * var_p_ij
         )
 
@@ -569,12 +524,12 @@ class ShapInteractionValueDecomposer(ShapValueDecomposer):
         var_aut_ij = var_p_i - 2 * k_ij * cov_p_i_p_ij + k_ij * k_ij * var_p_ij
 
         # std(aut[i, j])
-        std_aut_ij = _sqrt(var_aut_ij)
+        std_aut_ij = sqrt(var_aut_ij)
 
         # var(aut[i]) + var(aut[j])
         # Sum of covariances per feature pair (this is a diagonal matrix)
         # shape: (n_outputs, n_features, n_features)
-        var_aut_ij_plus_var_aut_ji = var_aut_ij + _transpose(var_aut_ij)
+        var_aut_ij_plus_var_aut_ji = var_aut_ij + transpose(var_aut_ij)
 
         # 2 * cov(aut[i, j], aut[j, i])
         # shape: (n_outputs, n_features, n_features)
@@ -591,9 +546,7 @@ class ShapInteractionValueDecomposer(ShapValueDecomposer):
         # without synergizing
         # we also need this as part of the formula to calculate red_ij (see below)
 
-        std_aut_ij_plus_aut_ji = _sqrt(
-            var_aut_ij_plus_var_aut_ji + cov_aut_ij_aut_ji_2x
-        )
+        std_aut_ij_plus_aut_ji = sqrt(var_aut_ij_plus_var_aut_ji + cov_aut_ij_aut_ji_2x)
 
         #
         # SHAP redundancy: red[i, j]
@@ -604,7 +557,7 @@ class ShapInteractionValueDecomposer(ShapValueDecomposer):
         # the length of the difference of vectors aut[i, j] and aut[j, i]
         # we need this as part of the formula to calculate red_ij (see below)
 
-        std_aut_ij_minus_aut_ji = _sqrt(
+        std_aut_ij_minus_aut_ji = sqrt(
             var_aut_ij_plus_var_aut_ji - cov_aut_ij_aut_ji_2x
         )
 
@@ -642,15 +595,15 @@ class ShapInteractionValueDecomposer(ShapValueDecomposer):
         # shape: (n_outputs, n_features, n_features)
         # the standard deviation (= length) of the combined independence vectors
 
-        std_ind_ij_plus_ind_ji = _sqrt(
+        std_ind_ij_plus_ind_ji = sqrt(
             var_aut_ij
-            + _transpose(var_aut_ij)
+            + transpose(var_aut_ij)
             + var_red_ij_4x
             + 2
             * (
                 cov_aut_ij_aut_ji
                 - cov_aut_ij_red_ij_2x
-                - _transpose(cov_aut_ij_red_ij_2x)
+                - transpose(cov_aut_ij_red_ij_2x)
             )
         )
 
@@ -671,7 +624,7 @@ class ShapInteractionValueDecomposer(ShapValueDecomposer):
         # shape: (n_outputs, n_features, n_features)
         # this is the sum of complementary contributions of feature i w.r.t. feature j,
         # i.e., deducting the redundant contributions
-        std_uni_ij = _sqrt(var_p_i + var_red_ij_4x / 4 - cov_p_i_red_ij_2x)
+        std_uni_ij = sqrt(var_p_i + var_red_ij_4x / 4 - cov_p_i_red_ij_2x)
 
         # std(uni[i, j] + uni[j, i])
         # where uni[i, j] + uni[j, i] = p[i] + p[j] - 2 * red[i, j]
@@ -679,11 +632,11 @@ class ShapInteractionValueDecomposer(ShapValueDecomposer):
         # this is the sum of complementary contributions of feature i and feature j,
         # i.e., deducting the redundant contributions
 
-        std_uni_ij_plus_uni_ji = _sqrt(
+        std_uni_ij_plus_uni_ji = sqrt(
             var_p_i
-            + _transpose(var_p_i)
+            + transpose(var_p_i)
             + var_red_ij_4x
-            + 2 * (cov_p_i_p_j - cov_p_i_red_ij_2x - _transpose(cov_p_i_red_ij_2x))
+            + 2 * (cov_p_i_p_j - cov_p_i_red_ij_2x - transpose(cov_p_i_red_ij_2x))
         )
 
         #
@@ -715,12 +668,10 @@ class ShapInteractionValueDecomposer(ShapValueDecomposer):
         # the code above
 
         with np.errstate(divide="ignore", invalid="ignore"):
-            self.synergy_rel_ = _fill_nans(
-                _ensure_diagonality(synergy_ij / (synergy_ij + autonomy_ij))
-            )
-            self.redundancy_rel_ = _fill_nans(
-                _ensure_diagonality(redundancy_ij / (redundancy_ij + uniqueness_ij))
-            )
+            matrix1 = synergy_ij / (synergy_ij + autonomy_ij)
+            self.synergy_rel_ = _fill_nans(make_symmetric(matrix1))
+            matrix2 = redundancy_ij / (redundancy_ij + uniqueness_ij)
+            self.redundancy_rel_ = _fill_nans(make_symmetric(matrix2))
             self.synergy_rel_asymmetric_ = _fill_nans(
                 std_syn_ij / (std_syn_ij + std_aut_ij)
             )
@@ -737,13 +688,6 @@ class ShapInteractionValueDecomposer(ShapValueDecomposer):
         self.redundancy_rel_asymmetric_ = None
 
 
-def _ensure_diagonality(matrix: np.ndarray) -> np.ndarray:
-    # matrix shape: (n_outputs, n_features, n_features)
-
-    # remove potential floating point round-off errors
-    return (matrix + _transpose(matrix)) / 2
-
-
 def _fill_nans(matrix: np.ndarray) -> np.ndarray:
     # apply fixes in-place for each output
     for m in matrix:
@@ -755,50 +699,6 @@ def _fill_nans(matrix: np.ndarray) -> np.ndarray:
         np.nan_to_num(m, copy=False)
 
     return matrix
-
-
-def _ensure_last_axis_is_fast(v: np.ndarray) -> np.ndarray:
-    if _PAIRWISE_PARTIAL_SUMMATION:
-        if v.strides[-1] != v.itemsize:
-            v = v.copy()
-        assert v.strides[-1] == v.itemsize
-    return v
-
-
-def _cov(vectors: np.ndarray, weight: np.ndarray) -> np.ndarray:
-    # calculate covariance matrix of two vectors, assuming µ=0 for both
-    # input shape for arg vectors is (n_outputs, n_features, n_observations)
-    # input shape for arg weight is (n_observations)
-    # output shape is (n_outputs, n_features, n_features)
-
-    assert vectors.ndim == 3
-    assert weight is None or vectors.shape[2:] == weight.shape
-
-    if _PAIRWISE_PARTIAL_SUMMATION:
-        raise NotImplementedError("max precision matmul not yet implemented")
-
-    if weight is None:
-        vectors_weighted = vectors
-        weight_total = vectors.shape[2]
-    else:
-        vectors_weighted = vectors * weight.reshape((1, 1, -1))
-        weight_total = weight.sum()
-
-    return np.matmul(vectors_weighted, vectors.swapaxes(1, 2)) / weight_total
-
-
-def _transpose(m: np.ndarray) -> np.ndarray:
-    # transpose a feature matrix for all outputs
-    assert m.ndim == 3
-
-    return m.swapaxes(1, 2)
-
-
-def _sqrt(v: np.ndarray) -> np.ndarray:
-    # we clip values < 0 as these could happen in isolated cases due to
-    # rounding errors
-
-    return np.sqrt(np.clip(v, 0, None))
 
 
 __tracker.validate()

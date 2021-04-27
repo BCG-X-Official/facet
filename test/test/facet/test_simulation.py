@@ -11,18 +11,12 @@ from sklearndf.regression.extra import LGBMRegressorDF
 
 from facet.crossfit import LearnerCrossfit
 from facet.data import Sample
+from facet.data.partition import ContinuousRangePartitioner
 from facet.simulation import (
-    COL_LOWER_BOUND,
-    COL_MEDIAN,
-    COL_OUTPUT,
-    COL_UPPER_BOUND,
-    IDX_PARTITION,
-    IDX_SPLIT,
     UnivariateSimulationResult,
     UnivariateTargetSimulator,
     UnivariateUpliftSimulator,
 )
-from facet.simulation.partition import ContinuousRangePartitioner
 from facet.simulation.viz import SimulationDrawer
 from facet.validation import StationaryBootstrapCV
 
@@ -44,7 +38,6 @@ def crossfit(
             ),
         ),
         cv=StationaryBootstrapCV(n_splits=N_SPLITS, random_state=42),
-        shuffle_features=False,
         n_jobs=n_jobs,
     ).fit(sample=sample)
 
@@ -98,13 +91,15 @@ def test_univariate_target_simulation(
     # test the first five rows of aggregated_results
     # the values were computed from a correct run
 
-    index = pd.Index(data=[5.0, 10.0, 15.0, 20.0, 25.0], name=IDX_PARTITION)
+    index = pd.Index(
+        data=[5.0, 10.0, 15.0, 20.0, 25.0], name=UnivariateTargetSimulator.IDX_PARTITION
+    )
 
     assert_series_equal(
         simulation_result.outputs_lower_bound(),
         pd.Series(
             [22.431173, 19.789556, 18.853876, 18.853876, 18.853876],
-            name=COL_LOWER_BOUND,
+            name=UnivariateSimulationResult.COL_LOWER_BOUND,
             index=index,
         ),
     )
@@ -113,7 +108,7 @@ def test_univariate_target_simulation(
         simulation_result.outputs_median(),
         pd.Series(
             [25.782475, 22.310836, 21.302304, 21.011027, 21.011027],
-            name=COL_MEDIAN,
+            name=UnivariateSimulationResult.COL_MEDIAN,
             index=index,
         ),
     )
@@ -128,7 +123,7 @@ def test_univariate_target_simulation(
                 22.906156,
                 22.906156,
             ],
-            name=COL_UPPER_BOUND,
+            name=UnivariateSimulationResult.COL_UPPER_BOUND,
             index=index,
         ),
     )
@@ -145,7 +140,7 @@ def test_actuals_simulation(uplift_simulator: UnivariateUpliftSimulator) -> None
     assert_series_equal(
         uplift_simulator.simulate_actuals(),
         pd.Series(
-            index=pd.RangeIndex(10, name=IDX_SPLIT),
+            index=pd.RangeIndex(10, name=UnivariateUpliftSimulator.IDX_SPLIT),
             data=(
                 [
                     3.207810,
@@ -160,7 +155,7 @@ def test_actuals_simulation(uplift_simulator: UnivariateUpliftSimulator) -> None
                     1.226377,
                 ]
             ),
-            name=COL_OUTPUT,
+            name=UnivariateUpliftSimulator.COL_OUTPUT,
         ),
     )
 
@@ -190,13 +185,15 @@ def test_univariate_uplift_simulation(
     # test the first five rows of aggregated_results
     # the values were computed from a correct run
 
-    index = pd.Index(data=[5.0, 10.0, 15.0, 20.0, 25.0], name=IDX_PARTITION)
+    index = pd.Index(
+        data=[5.0, 10.0, 15.0, 20.0, 25.0], name=UnivariateUpliftSimulator.IDX_PARTITION
+    )
 
     assert_series_equal(
         simulation_result.outputs_lower_bound(),
         pd.Series(
             [0.122173, -2.519444, -3.455124, -3.455124, -3.455124],
-            name=COL_LOWER_BOUND,
+            name=UnivariateSimulationResult.COL_LOWER_BOUND,
             index=index,
         ),
     )
@@ -205,7 +202,7 @@ def test_univariate_uplift_simulation(
         simulation_result.outputs_median(),
         pd.Series(
             [3.473475, 0.00183626, -1.006696, -1.297973, -1.297973],
-            name=COL_MEDIAN,
+            name=UnivariateSimulationResult.COL_MEDIAN,
             index=index,
         ),
     )
@@ -214,7 +211,7 @@ def test_univariate_uplift_simulation(
         simulation_result.outputs_upper_bound(),
         pd.Series(
             [5.441435, 1.312475, 0.722676, 0.597156, 0.597156],
-            name=COL_UPPER_BOUND,
+            name=UnivariateSimulationResult.COL_UPPER_BOUND,
             index=index,
         ),
     )

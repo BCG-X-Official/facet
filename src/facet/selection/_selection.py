@@ -32,7 +32,7 @@ from sklearn.model_selection import BaseCrossValidator
 
 from pytools.api import AllTracker, inheritdoc, to_tuple
 from pytools.fit import FittableMixin
-from pytools.parallelization import ParallelizableMixin
+from pytools.parallelization import JobRunner, ParallelizableMixin
 from sklearndf.pipeline import (
     ClassifierPipelineDF,
     LearnerPipelineDF,
@@ -208,9 +208,11 @@ class LearnerEvaluation(Generic[T_LearnerPipelineDF]):
         :param pipeline: the unfitted learner pipeline
         :param parameters: the hyper-parameters for which the learner pipeline was
             scored, as a mapping of parameter names to parameter values
+        :param scoring_name: the name of the scoring function used to calculate the
+            scores
         :param scores: the scores of all crossfits of the learner pipeline
         :param ranking_score: the aggregate score determined by the ranking
-            metric of the :class:`.LearnerRanker`, used for ranking the learners
+            metric of :class:`.LearnerRanker`, used for ranking the learners
         """
         super().__init__()
 
@@ -226,8 +228,8 @@ class LearnerEvaluation(Generic[T_LearnerPipelineDF]):
         #: The scores of all crossfits of the learner pipeline.
         self.scores = scores
 
-        #: Overall score determined by the :class:`.LearnerRanker`, used for ranking
-        #: the learners.
+        #: The aggregate score determined by the ranking metric of
+        #: :class:`.LearnerRanker`, used for ranking the learners.
         self.ranking_score = ranking_score
 
 
@@ -240,8 +242,8 @@ class LearnerRanker(
     using cross-validation.
 
     The learner ranker can run a simultaneous grid search across multiple alternative
-    learner pipelines, supporting the ability to optimize hyper-parameters and
-    select a learner algorithm.
+    learner pipelines, supporting the ability to simultaneously select a learner
+    algorithm and optimize hyper-parameters.
     """
 
     def __init__(
@@ -252,7 +254,6 @@ class LearnerRanker(
         cv: Optional[BaseCrossValidator],
         scoring: Union[str, Callable[[float, float], float], None] = None,
         ranking_scorer: Callable[[np.ndarray], float] = None,
-        shuffle_features: Optional[bool] = None,
         random_state: Union[int, RandomState, None] = None,
         n_jobs: Optional[int] = None,
         shared_memory: Optional[bool] = None,
@@ -273,8 +274,6 @@ class LearnerRanker(
             The resulting score is used to rank all crossfits (highest score is best).
             Defaults to :meth:`.default_ranking_scorer`, calculating
             `mean(scores) - 2 * std(scores, ddof=1)`
-        :param shuffle_features: if ``True``, shuffle column order of features for
-            every crossfit (default: ``False``)
         :param random_state: optional random seed or random state for shuffling the
             feature column order
         """
@@ -308,7 +307,6 @@ class LearnerRanker(
             if ranking_scorer is None
             else ranking_scorer
         )
-        self.shuffle_features = shuffle_features
         self.random_state = random_state
 
         # initialise state
@@ -385,7 +383,7 @@ class LearnerRanker(
         """
         return scores.mean() - 2 * scores.std(ddof=1)
 
-    def fit(self: T_Self, sample: Sample, **fit_params) -> T_Self:
+    def fit(self: T_Self, sample: Sample, **fit_params: Any) -> T_Self:
         """
         Rank the candidate learners and their hyper-parameter combinations using
         crossfits from the given sample.
@@ -395,6 +393,7 @@ class LearnerRanker(
 
         :param sample: the sample from which to fit the crossfits
         :param fit_params: any fit parameters to pass on to the learner's fit method
+        :return: ``self``
         """
         self: LearnerRanker[T_LearnerPipelineDF]  # support type hinting in PyCharm
 
@@ -479,15 +478,19 @@ class LearnerRanker(
     ) -> List[LearnerEvaluation[T_LearnerPipelineDF]]:
         ranking_scorer = self.ranking_scorer
 
-        configurations: Iterable[Tuple[T_LearnerPipelineDF, Dict[str, Any]]] = (
-            (
-                cast(T_LearnerPipelineDF, grid.pipeline.clone()).set_params(
-                    **parameters
-                ),
-                parameters,
+        pipelines: Iterable[T_LearnerPipelineDF]
+        pipelines_parameters: Iterable[Dict[str, Any]]
+        pipelines, pipelines_parameters = zip(
+            *(
+                (
+                    cast(T_LearnerPipelineDF, grid.pipeline.clone()).set_params(
+                        **parameters
+                    ),
+                    parameters,
+                )
+                for grid in self.grids
+                for parameters in grid
             )
-            for grid in self.grids
-            for parameters in grid
         )
 
         ranking: List[LearnerEvaluation[T_LearnerPipelineDF]] = []
@@ -496,28 +499,39 @@ class LearnerRanker(
 
         scoring_name = self.scoring_name
 
-        for pipeline, parameters in configurations:
-            crossfit = LearnerCrossfit(
+        crossfits = [
+            LearnerCrossfit(
                 pipeline=pipeline,
                 cv=self.cv,
-                shuffle_features=self.shuffle_features,
                 random_state=self.random_state,
                 n_jobs=self.n_jobs,
                 shared_memory=self.shared_memory,
                 pre_dispatch=self.pre_dispatch,
                 verbose=self.verbose,
             )
+            for pipeline in pipelines
+        ]
 
-            pipeline_scoring: np.ndarray = crossfit.fit_score(
-                sample=sample, scoring=self.scoring, **fit_params
-            )
+        queues = (
+            crossfit.fit_score_queue(sample=sample, scoring=self.scoring, **fit_params)
+            for crossfit in crossfits
+        )
+
+        pipeline_scorings: List[np.ndarray] = list(
+            JobRunner.from_parallelizable(self).run_queues(*queues)
+        )
+
+        for crossfit, pipeline_parameters, pipeline_scoring in zip(
+            crossfits, pipelines_parameters, pipeline_scorings
+        ):
 
             ranking_score = ranking_scorer(pipeline_scoring)
-
+            crossfit_pipeline = crossfit.pipeline
+            assert crossfit_pipeline.is_fitted
             ranking.append(
                 LearnerEvaluation(
-                    pipeline=pipeline,
-                    parameters=parameters,
+                    pipeline=crossfit_pipeline,
+                    parameters=pipeline_parameters,
                     scoring_name=scoring_name,
                     scores=pipeline_scoring,
                     ranking_score=ranking_score,
@@ -532,9 +546,7 @@ class LearnerRanker(
         return ranking
 
 
-def _learner_type(
-    pipeline: T_LearnerPipelineDF,
-) -> Type[Union[RegressorPipelineDF, ClassifierPipelineDF]]:
+def _learner_type(pipeline: T_LearnerPipelineDF) -> Type[T_LearnerPipelineDF]:
     # determine whether a learner pipeline fits a regressor or a classifier
     for learner_type in [RegressorPipelineDF, ClassifierPipelineDF]:
         if isinstance(pipeline, learner_type):
