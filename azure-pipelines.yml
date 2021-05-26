@@ -1,10 +1,10 @@
 trigger:
-  - 1.1.x
+  - 1.2.x
   - dev/*
   - release/*
 
 pr:
-  - 1.1.x
+  - 1.2.x
   - dev/*
   - release/*
 
@@ -25,12 +25,12 @@ resources:
       type: github
       endpoint: BCG-Gamma
       name: BCG-Gamma/sklearndf
-      ref: 1.1.x # todo - update to stable release
+      ref: 1.2.x # todo - update to stable release
     - repository: pytools
       type: github
       endpoint: BCG-Gamma
       name: BCG-Gamma/pytools
-      ref: 1.1.x # todo - update to stable release
+      ref: 1.2.x # todo - update to stable release
 
 variables:
   ${{ if not(startsWith(variables['Build.SourceBranch'], 'refs/pull/')) }}:
