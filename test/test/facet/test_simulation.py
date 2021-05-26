@@ -1,5 +1,6 @@
 import logging
 
+import numpy as np
 import pandas as pd
 import pytest
 from pandas.testing import assert_series_equal
@@ -78,9 +79,7 @@ def test_univariate_target_simulation(
         partitioner=partitioner,
     )
 
-    absolute_target_change_df: pd.DataFrame = simulation_result.outputs
-
-    values = absolute_target_change_df.values
+    values = simulation_result.outputs.values
 
     # test aggregated values
     # the values on the right were computed from correct runs
@@ -116,13 +115,86 @@ def test_univariate_target_simulation(
     assert_series_equal(
         simulation_result.outputs_upper_bound(),
         pd.Series(
-            [
-                27.750435,
-                23.621475,
-                23.031676,
-                22.906156,
-                22.906156,
-            ],
+            [27.750435, 23.621475, 23.031676, 22.906156, 22.906156],
+            name=UnivariateSimulationResult.COL_UPPER_BOUND,
+            index=index,
+        ),
+    )
+
+    SimulationDrawer(style="text").draw(
+        data=target_simulator.simulate_feature(
+            feature_name=parameterized_feature, partitioner=partitioner
+        )
+    )
+
+
+def test_univariate_target_subsample_simulation(
+    target_simulator: UnivariateTargetSimulator,
+) -> None:
+
+    parameterized_feature = "LSTAT"
+    partitioner = ContinuousRangePartitioner(max_partitions=10)
+
+    sample_index = target_simulator.crossfit.sample_.index
+
+    with pytest.raises(
+        ValueError,
+        match=(
+            "arg subsample includes indices not contained in the simulation sample: "
+            r"\[-1, 9999\]"
+        ),
+    ):
+        target_simulator.simulate_feature(
+            feature_name=parameterized_feature,
+            partitioner=partitioner,
+            subsample=pd.Index([*sample_index, -1, 9999]),
+        )
+
+    simulation_result: UnivariateSimulationResult = target_simulator.simulate_feature(
+        feature_name=parameterized_feature,
+        partitioner=partitioner,
+        subsample=sample_index[
+            np.random.default_rng(42).choice(sample_index, size=len(sample_index) // 2)
+        ],
+    )
+
+    values = simulation_result.outputs.values
+
+    # test aggregated values
+    # the values on the right were computed from correct runs
+    assert values.min() == approx(17.886890)
+    assert values.mean() == approx(22.359026)
+    assert values.max() == approx(28.760623)
+
+    # test the first five rows of aggregated_results
+    # the values were computed from a correct run
+
+    index = pd.Index(
+        data=[5.0, 10.0, 15.0, 20.0, 25.0], name=UnivariateTargetSimulator.IDX_PARTITION
+    )
+
+    assert_series_equal(
+        simulation_result.outputs_lower_bound(),
+        pd.Series(
+            [22.232130, 19.466066, 18.296744, 18.296744, 18.296744],
+            name=UnivariateSimulationResult.COL_LOWER_BOUND,
+            index=index,
+        ),
+    )
+
+    assert_series_equal(
+        simulation_result.outputs_median(),
+        pd.Series(
+            [25.808342, 22.354164, 21.596554, 21.214733, 21.214733],
+            name=UnivariateSimulationResult.COL_MEDIAN,
+            index=index,
+        ),
+    )
+
+    assert_series_equal(
+        simulation_result.outputs_upper_bound(),
+        pd.Series(
+            [28.275140, 24.345018, 23.778337, 23.736509, 23.736509],
             name=UnivariateSimulationResult.COL_UPPER_BOUND,
             index=index,
         ),

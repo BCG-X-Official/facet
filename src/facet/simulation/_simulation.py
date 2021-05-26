@@ -43,12 +43,14 @@ __all__ = [
     "UnivariateUpliftSimulator",
 ]
 
+
 #
 # Type variables
 #
 
 T_LearnerPipelineDF = TypeVar("T_LearnerPipelineDF", bound=LearnerPipelineDF)
 T_Partition = TypeVar("T_Partition")
+
 
 #
 # Ensure all symbols introduced below are included in __all__
@@ -263,7 +265,11 @@ class BaseUnivariateSimulator(
     __init__.__doc__ += ParallelizableMixin.__init__.__doc__
 
     def simulate_feature(
-        self, feature_name: str, *, partitioner: Partitioner[T_Partition]
+        self,
+        feature_name: str,
+        *,
+        partitioner: Partitioner[T_Partition],
+        subsample: Optional[pd.Index] = None,
     ) -> UnivariateSimulationResult:
         """
         Simulate the average target uplift when fixing the value of the given feature
@@ -271,10 +277,20 @@ class BaseUnivariateSimulator(
 
         :param feature_name: the feature to run the simulation for
         :param partitioner: the partitioner of feature values to run simulations for
+        :param subsample: an optional index referencing a subset of the training sample
+            to be used in the simulation
         :return: a mapping of output names to simulation results
         """
 
         sample = self.crossfit.sample_
+
+        if subsample is not None:
+            unknown_observations = subsample.difference(sample.index)
+            if len(unknown_observations) > 0:
+                raise ValueError(
+                    "arg subsample includes indices not contained "
+                    f"in the simulation sample: {unknown_observations.to_list()}"
+                )
 
         if isinstance(sample.target_name, list):
             raise NotImplementedError("multi-output simulations are not supported")
@@ -294,6 +310,7 @@ class BaseUnivariateSimulator(
                             sample.features.loc[:, feature_name]
                         ).partitions_
                     ),
+                    subsample=subsample,
                 )
             ),
         )
@@ -369,7 +386,10 @@ class BaseUnivariateSimulator(
         pass
 
     def _simulate_feature_with_values(
-        self, feature_name: str, simulation_values: Sequence[T_Partition]
+        self,
+        feature_name: str,
+        simulation_values: Sequence[T_Partition],
+        subsample: Optional[pd.Index],
     ) -> pd.DataFrame:
         """
         Run a simulation on a feature.
@@ -394,14 +414,23 @@ class BaseUnivariateSimulator(
             *(
                 Job.delayed(UnivariateUpliftSimulator._simulate_values_for_split)(
                     model=model,
-                    subsample=sample.subsample(iloc=test_indices),
+                    subsample=sample.subsample(iloc=simulation_indices),
                     feature_name=feature_name,
                     simulated_values=simulation_values,
                     simulate_fn=self._simulate,
                 )
-                for (model, (_, test_indices)) in zip(
-                    self.crossfit.models(), self.crossfit.splits()
+                for (model, simulation_indices) in zip(
+                    self.crossfit.models(),
+                    (
+                        (
+                            test_indices
+                            if subsample is None
+                            else subsample.difference(train_indices)
+                        )
+                        for train_indices, test_indices in self.crossfit.splits()
+                    ),
                 )
+                if len(simulation_indices)
             )
         )
 
@@ -619,7 +648,11 @@ class UnivariateUpliftSimulator(_UnivariateRegressionSimulator):
         return 0.0
 
     def simulate_feature(
-        self, feature_name: str, *, partitioner: Partitioner[T_Partition]
+        self,
+        feature_name: str,
+        *,
+        partitioner: Partitioner[T_Partition],
+        subsample: Optional[pd.Index] = None,
     ) -> UnivariateSimulationResult:
         """[see superclass]"""
         result = super().simulate_feature(
