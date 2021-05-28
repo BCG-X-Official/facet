@@ -285,21 +285,13 @@ class BaseUnivariateSimulator(
         sample = self.crossfit.sample_
 
         if subsample is not None:
-            unknown_observations = subsample.difference(sample.index)
-            if len(unknown_observations) > 0:
-                raise ValueError(
-                    "arg subsample includes indices not contained "
-                    f"in the simulation sample: {unknown_observations.to_list()}"
-                )
-
-        if isinstance(sample.target_name, list):
-            raise NotImplementedError("multi-output simulations are not supported")
+            self._validate_subsample(subsample)
 
         return UnivariateSimulationResult(
             feature_name=feature_name,
             output_name=sample.target_name,
             output_unit=self.output_unit,
-            baseline=self.baseline(),
+            baseline=self.baseline(subsample),
             confidence_level=self.confidence_level,
             partitioner=partitioner,
             outputs=(
@@ -315,7 +307,7 @@ class BaseUnivariateSimulator(
             ),
         )
 
-    def simulate_actuals(self) -> pd.Series:
+    def simulate_actuals(self, subsample: Optional[pd.Index] = None) -> pd.Series:
         r"""
         For each test split :math:`\mathrm{T}_i` in this simulator's
         crossfit, predict the outputs for all test samples given their actual
@@ -331,7 +323,11 @@ class BaseUnivariateSimulator(
         """
 
         sample = self.crossfit.sample_
-        y_mean = self.expected_output()
+        if subsample is not None:
+            self._validate_subsample(subsample)
+            sample = sample.subsample(loc=subsample)
+
+        y_mean = self.expected_output(subsample)
 
         result: List[float] = JobRunner.from_parallelizable(self).run_jobs(
             *(
@@ -356,21 +352,25 @@ class BaseUnivariateSimulator(
         Unit of the output values calculated by the simulation.
         """
 
-    def baseline(self) -> float:
+    def baseline(self, subsample: Optional[pd.Index] = None) -> float:
         """
         Calculate the expectation value of the simulation result, based on historically
         observed actuals.
 
+        :param subsample: an optional index referencing a subset of the training sample
+            to be used in the simulation
         :return: the expectation value of the simulation results
         """
-        return self.expected_output()
+        return self.expected_output(subsample)
 
     @abstractmethod
-    def expected_output(self) -> float:
+    def expected_output(self, subsample: Optional[pd.Index] = None) -> float:
         """
         Calculate the expectation value of the actual model output, based on
         historically observed actuals.
 
+        :param subsample: an optional index referencing a subset of the training sample
+            to be used in the simulation
         :return: the expectation value of the actual model output
         """
         pass
@@ -379,6 +379,21 @@ class BaseUnivariateSimulator(
     @abstractmethod
     def _expected_pipeline_type() -> Type[T_LearnerPipelineDF]:
         pass
+
+    def _validate_subsample(self, subsample: pd.Index) -> None:
+        unknown_observations = subsample.difference(self.crossfit.sample_.index)
+        if len(unknown_observations) > 0:
+            raise ValueError(
+                "arg subsample includes indices not contained "
+                f"in the simulation sample: {unknown_observations.to_list()}"
+            )
+
+    def _get_actual_outputs(self, subsample: Optional[pd.Index]) -> pd.Series:
+        if subsample is None:
+            return self.crossfit.sample_.target
+        else:
+            self._validate_subsample(subsample)
+            return self.crossfit.sample_.target.loc[subsample]
 
     @staticmethod
     @abstractmethod
@@ -406,7 +421,7 @@ class BaseUnivariateSimulator(
         sample = self.crossfit.sample_
 
         if feature_name not in sample.features.columns:
-            raise ValueError(f"Feature '{feature_name}' not in sample")
+            raise ValueError(f"feature not in sample: {feature_name}")
 
         simulation_results_per_split: List[np.ndarray] = JobRunner.from_parallelizable(
             self
@@ -515,15 +530,16 @@ class UnivariateProbabilitySimulator(BaseUnivariateSimulator[ClassifierPipelineD
         """[see superclass]"""
         return f"probability({self._positive_class()})"
 
-    def expected_output(self) -> float:
+    def expected_output(self, subsample: Optional[pd.Index] = None) -> float:
         """
         Calculate the actual observed frequency of the positive class as the baseline
         of the simulation.
 
+        :param subsample: an optional index referencing a subset of the training sample
+            to be used in the simulation
         :return: observed frequency of the positive class
         """
-        actual_outputs: pd.Series = self.crossfit.sample_.target
-        assert isinstance(actual_outputs, pd.Series), "sample has one single target"
+        actual_outputs = self._get_actual_outputs(subsample)
 
         return actual_outputs.loc[actual_outputs == self._positive_class()].sum() / len(
             actual_outputs
@@ -559,16 +575,15 @@ class UnivariateProbabilitySimulator(BaseUnivariateSimulator[ClassifierPipelineD
 class _UnivariateRegressionSimulator(
     BaseUnivariateSimulator[RegressorPipelineDF], metaclass=ABCMeta
 ):
-    def expected_output(self) -> float:
+    def expected_output(self, subsample: Optional[pd.Index] = None) -> float:
         """
         Calculate the mean of actually observed values for the target.
 
+        :param subsample: an optional index referencing a subset of the training sample
+            to be used in the simulation
         :return: mean observed value of the target
         """
-        actual_outputs: pd.Series = self.crossfit.sample_.target
-        assert isinstance(actual_outputs, pd.Series), "sample has one single target"
-
-        return actual_outputs.mean()
+        return self._get_actual_outputs(subsample).mean()
 
     @staticmethod
     def _expected_pipeline_type() -> Type[RegressorPipelineDF]:
@@ -639,10 +654,12 @@ class UnivariateUpliftSimulator(_UnivariateRegressionSimulator):
         """[see superclass]"""
         return f"Mean predicted uplift ({self.crossfit.sample_.target_name})"
 
-    def baseline(self) -> float:
+    def baseline(self, subsample: Optional[pd.Index] = None) -> float:
         """
         The baseline of uplift simulations is always ``0.0``
 
+        :param subsample: an optional index referencing a subset of the training sample
+            to be used in the simulation (ignored)
         :return: 0.0
         """
         return 0.0
@@ -658,7 +675,7 @@ class UnivariateUpliftSimulator(_UnivariateRegressionSimulator):
         result = super().simulate_feature(
             feature_name=feature_name, partitioner=partitioner
         )
-        result.outputs -= self.expected_output()
+        result.outputs -= self.expected_output(subsample)
         return result
 
 

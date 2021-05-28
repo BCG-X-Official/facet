@@ -150,12 +150,13 @@ def test_univariate_target_subsample_simulation(
             subsample=pd.Index([*sample_index, -1, 9999]),
         )
 
+    subsample: pd.Index = sample_index[
+        np.random.default_rng(42).choice(sample_index, size=len(sample_index) // 2)
+    ]
     simulation_result: UnivariateSimulationResult = target_simulator.simulate_feature(
         feature_name=parameterized_feature,
         partitioner=partitioner,
-        subsample=sample_index[
-            np.random.default_rng(42).choice(sample_index, size=len(sample_index) // 2)
-        ],
+        subsample=subsample,
     )
 
     values = simulation_result.outputs.values
@@ -283,6 +284,86 @@ def test_univariate_uplift_simulation(
         simulation_result.outputs_upper_bound(),
         pd.Series(
             [5.441435, 1.312475, 0.722676, 0.597156, 0.597156],
+            name=UnivariateSimulationResult.COL_UPPER_BOUND,
+            index=index,
+        ),
+    )
+
+    SimulationDrawer(style="text").draw(
+        data=uplift_simulator.simulate_feature(
+            feature_name=parameterized_feature, partitioner=partitioner
+        )
+    )
+
+
+def test_univariate_uplift_subsample_simulation(
+    uplift_simulator: UnivariateUpliftSimulator,
+) -> None:
+
+    parameterized_feature = "LSTAT"
+    partitioner = ContinuousRangePartitioner(max_partitions=10)
+
+    sample_index = uplift_simulator.crossfit.sample_.index
+    subsample: pd.Index = sample_index[
+        np.random.default_rng(42).choice(sample_index, size=len(sample_index) // 2)
+    ]
+
+    with pytest.raises(
+        ValueError,
+        match=(
+            "arg subsample includes indices not contained in the simulation sample: "
+            r"\[-1, 9999\]"
+        ),
+    ):
+        uplift_simulator.simulate_feature(
+            feature_name=parameterized_feature,
+            partitioner=partitioner,
+            subsample=pd.Index([*sample_index, -1, 9999]),
+        )
+
+    simulation_result: UnivariateSimulationResult = uplift_simulator.simulate_feature(
+        feature_name=parameterized_feature, partitioner=partitioner, subsample=subsample
+    )
+
+    absolute_target_change_df: pd.DataFrame = simulation_result.outputs
+
+    values = absolute_target_change_df.values
+
+    # test aggregated values
+    # the values on the right were computed from correct runs
+    assert values.min() == approx(-4.473241)
+    assert values.mean() == approx(-0.864690)
+    assert values.max() == approx(5.525793)
+
+    # test the first five rows of aggregated_results
+    # the values were computed from a correct run
+
+    index = pd.Index(
+        data=[5.0, 10.0, 15.0, 20.0, 25.0], name=UnivariateUpliftSimulator.IDX_PARTITION
+    )
+
+    assert_series_equal(
+        simulation_result.outputs_lower_bound(),
+        pd.Series(
+            [-0.514827, -3.156444, -4.092124, -4.092124, -4.092124],
+            name=UnivariateSimulationResult.COL_LOWER_BOUND,
+            index=index,
+        ),
+    )
+
+    assert_series_equal(
+        simulation_result.outputs_median(),
+        pd.Series(
+            [2.836475, -0.635164, -1.643696, -1.934973, -1.934973],
+            name=UnivariateSimulationResult.COL_MEDIAN,
+            index=index,
+        ),
+    )
+
+    assert_series_equal(
+        simulation_result.outputs_upper_bound(),
+        pd.Series(
+            [4.804435, 0.675475, 0.085676, -0.0398435, -0.0398435],
             name=UnivariateSimulationResult.COL_UPPER_BOUND,
             index=index,
         ),
