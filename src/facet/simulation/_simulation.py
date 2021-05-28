@@ -319,6 +319,8 @@ class BaseUnivariateSimulator(
         bias of the model contributes to the uncertainty of simulations produced with
         method :meth:`.simulate_feature`.
 
+        :param subsample: an optional index referencing a subset of the training sample
+            to be used in the simulation
         :return: series mapping split IDs to deviations of simulated mean outputs
         """
 
