@@ -438,7 +438,9 @@ class BaseUnivariateSimulator(
 
     def _get_simulations(self) -> Iterator[Tuple[T_LearnerPipelineDF, Sample]]:
         sample = self.sample
-        sample_index = sample.index
+        # we don't need duplicate indices to calculate the intersection
+        # with the samples of the test split, so we drop them
+        sample_index = sample.index.unique()
         xf_sample_index = self.crossfit.sample_.index
         return (
             (model, subsample)
