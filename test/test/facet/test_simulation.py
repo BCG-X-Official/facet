@@ -1,5 +1,6 @@
 import logging
 
+import numpy as np
 import pandas as pd
 import pytest
 from pandas.testing import assert_series_equal
@@ -78,27 +79,26 @@ def test_univariate_target_simulation(
         partitioner=partitioner,
     )
 
-    absolute_target_change_df: pd.DataFrame = simulation_result.outputs
-
-    values = absolute_target_change_df.values
+    values = simulation_result.outputs.values
 
     # test aggregated values
     # the values on the right were computed from correct runs
-    assert values.min() == approx(18.472759)
-    assert values.mean() == approx(22.081310)
-    assert values.max() == approx(28.471793)
+    assert values.min() == approx(18.47276)
+    assert values.mean() == approx(22.63754)
+    assert values.max() == approx(28.47179)
 
     # test the first five rows of aggregated_results
     # the values were computed from a correct run
 
     index = pd.Index(
-        data=[5.0, 10.0, 15.0, 20.0, 25.0], name=UnivariateTargetSimulator.IDX_PARTITION
+        data=[0.0, 5.0, 10.0, 15.0, 20.0, 25.0],
+        name=UnivariateTargetSimulator.IDX_PARTITION,
     )
 
     assert_series_equal(
         simulation_result.outputs_lower_bound(),
         pd.Series(
-            [22.431173, 19.789556, 18.853876, 18.853876, 18.853876],
+            [22.431173, 22.431173, 19.789556, 18.853876, 18.853876, 18.853876],
             name=UnivariateSimulationResult.COL_LOWER_BOUND,
             index=index,
         ),
@@ -107,7 +107,118 @@ def test_univariate_target_simulation(
     assert_series_equal(
         simulation_result.outputs_median(),
         pd.Series(
-            [25.782475, 22.310836, 21.302304, 21.011027, 21.011027],
+            [25.782475, 25.782475, 22.310836, 21.302304, 21.011027, 21.011027],
+            name=UnivariateSimulationResult.COL_MEDIAN,
+            index=index,
+        ),
+    )
+
+    assert_series_equal(
+        simulation_result.outputs_upper_bound(),
+        pd.Series(
+            [27.750435, 27.750435, 23.621475, 23.031676, 22.906156, 22.906156],
+            name=UnivariateSimulationResult.COL_UPPER_BOUND,
+            index=index,
+        ),
+    )
+
+    SimulationDrawer(style="text").draw(
+        data=target_simulator.simulate_feature(
+            feature_name=parameterized_feature, partitioner=partitioner
+        )
+    )
+
+
+def test_univariate_target_subsample_simulation(
+    crossfit: LearnerCrossfit, n_jobs: int
+) -> None:
+
+    parameterized_feature = "LSTAT"
+    partitioner = ContinuousRangePartitioner(max_partitions=10)
+
+    sample_index = crossfit.sample_.index
+
+    with pytest.raises(
+        ValueError,
+        match=(
+            "arg subsample includes indices not contained in the simulation sample: "
+            r"\[-1, 9999\]"
+        ),
+    ):
+        UnivariateTargetSimulator(
+            crossfit=crossfit,
+            subsample=pd.Index([*sample_index, -1, 9999]),
+        ).simulate_feature(
+            feature_name=parameterized_feature,
+            partitioner=partitioner,
+        )
+
+    subsample: pd.Index = sample_index[
+        np.random.default_rng(42).choice(sample_index, size=len(sample_index) // 2)
+    ]
+
+    target_simulator = UnivariateTargetSimulator(
+        crossfit=crossfit,
+        subsample=subsample,
+        confidence_level=0.8,
+        n_jobs=n_jobs,
+        verbose=50,
+    )
+
+    simulation_result: UnivariateSimulationResult = target_simulator.simulate_feature(
+        feature_name=parameterized_feature,
+        partitioner=partitioner,
+    )
+
+    values = simulation_result.outputs.values
+
+    # test aggregated values
+    # the values on the right were computed from correct runs
+    assert values.min() == approx(17.92365)
+    assert values.mean() == approx(23.30506)
+    assert values.max() == approx(28.60988)
+
+    # test the first five rows of aggregated_results
+    # the values were computed from a correct run
+
+    index = pd.Index(
+        data=[2.0, 4.0, 6.0, 8.0, 10.0, 12.0, 14.0, 16.0, 18.0],
+        name=UnivariateTargetSimulator.IDX_PARTITION,
+    )
+
+    assert_series_equal(
+        simulation_result.outputs_lower_bound(),
+        pd.Series(
+            [
+                22.233849,
+                22.233849,
+                22.233849,
+                20.942154,
+                19.444643,
+                19.363522,
+                18.300420,
+                18.300420,
+                18.300420,
+            ],
+            name=UnivariateSimulationResult.COL_LOWER_BOUND,
+            index=index,
+        ),
+    )
+
+    assert_series_equal(
+        simulation_result.outputs_median(),
+        pd.Series(
+            [
+                25.913666,
+                25.913666,
+                25.913666,
+                24.445583,
+                22.575495,
+                22.403473,
+                22.288344,
+                21.642255,
+                21.430772,
+            ],
             name=UnivariateSimulationResult.COL_MEDIAN,
             index=index,
         ),
@@ -117,11 +228,15 @@ def test_univariate_target_simulation(
         simulation_result.outputs_upper_bound(),
         pd.Series(
             [
-                27.750435,
-                23.621475,
-                23.031676,
-                22.906156,
-                22.906156,
+                28.230187,
+                28.230187,
+                28.230187,
+                25.805393,
+                24.296859,
+                24.221809,
+                24.174851,
+                23.640126,
+                23.640126,
             ],
             name=UnivariateSimulationResult.COL_UPPER_BOUND,
             index=index,
@@ -178,21 +293,22 @@ def test_univariate_uplift_simulation(
 
     # test aggregated values
     # the values on the right were computed from correct runs
-    assert values.min() == approx(-3.836241)
-    assert values.mean() == approx(-0.2276897)
-    assert values.max() == approx(6.162793)
+    assert values.min() == approx(-3.83624)
+    assert values.mean() == approx(0.3285436)
+    assert values.max() == approx(6.16279)
 
     # test the first five rows of aggregated_results
     # the values were computed from a correct run
 
     index = pd.Index(
-        data=[5.0, 10.0, 15.0, 20.0, 25.0], name=UnivariateUpliftSimulator.IDX_PARTITION
+        data=[0.0, 5.0, 10.0, 15.0, 20.0, 25.0],
+        name=UnivariateUpliftSimulator.IDX_PARTITION,
     )
 
     assert_series_equal(
         simulation_result.outputs_lower_bound(),
         pd.Series(
-            [0.122173, -2.519444, -3.455124, -3.455124, -3.455124],
+            [0.122173, 0.122173, -2.519444, -3.455124, -3.455124, -3.455124],
             name=UnivariateSimulationResult.COL_LOWER_BOUND,
             index=index,
         ),
@@ -201,7 +317,7 @@ def test_univariate_uplift_simulation(
     assert_series_equal(
         simulation_result.outputs_median(),
         pd.Series(
-            [3.473475, 0.00183626, -1.006696, -1.297973, -1.297973],
+            [3.473475, 3.473475, 0.00183626, -1.006696, -1.297973, -1.297973],
             name=UnivariateSimulationResult.COL_MEDIAN,
             index=index,
         ),
@@ -210,7 +326,128 @@ def test_univariate_uplift_simulation(
     assert_series_equal(
         simulation_result.outputs_upper_bound(),
         pd.Series(
-            [5.441435, 1.312475, 0.722676, 0.597156, 0.597156],
+            [5.441435, 5.441435, 1.312475, 0.722676, 0.597156, 0.597156],
+            name=UnivariateSimulationResult.COL_UPPER_BOUND,
+            index=index,
+        ),
+    )
+
+    SimulationDrawer(style="text").draw(
+        data=uplift_simulator.simulate_feature(
+            feature_name=parameterized_feature, partitioner=partitioner
+        )
+    )
+
+
+def test_univariate_uplift_subsample_simulation(
+    crossfit: LearnerCrossfit, n_jobs: int
+) -> None:
+
+    parameterized_feature = "LSTAT"
+    partitioner = ContinuousRangePartitioner(max_partitions=10)
+
+    sample_index = crossfit.sample_.index
+
+    with pytest.raises(
+        ValueError,
+        match=(
+            "arg subsample includes indices not contained in the simulation sample: "
+            r"\[-1, 9999\]"
+        ),
+    ):
+        UnivariateUpliftSimulator(
+            crossfit=crossfit, subsample=pd.Index([*sample_index, -1, 9999])
+        ).simulate_feature(
+            feature_name=parameterized_feature,
+            partitioner=partitioner,
+        )
+
+    subsample: pd.Index = sample_index[
+        np.random.default_rng(42).choice(sample_index, size=len(sample_index) // 2)
+    ]
+
+    uplift_simulator = UnivariateUpliftSimulator(
+        crossfit=crossfit,
+        subsample=subsample,
+        confidence_level=0.8,
+        n_jobs=n_jobs,
+        verbose=50,
+    )
+
+    simulation_result: UnivariateSimulationResult = uplift_simulator.simulate_feature(
+        feature_name=parameterized_feature, partitioner=partitioner
+    )
+
+    absolute_target_change_df: pd.DataFrame = simulation_result.outputs
+
+    values = absolute_target_change_df.values
+
+    # test aggregated values
+    # the values on the right were computed from correct runs
+    assert values.min() == approx(-5.02235)
+    assert values.mean() == approx(0.359062)
+    assert values.max() == approx(5.66388)
+
+    # test the first five rows of aggregated_results
+    # the values were computed from a correct run
+
+    index = pd.Index(
+        data=[2.0, 4.0, 6.0, 8.0, 10.0, 12.0, 14.0, 16.0, 18.0],
+        name=UnivariateUpliftSimulator.IDX_PARTITION,
+    )
+
+    assert_series_equal(
+        simulation_result.outputs_lower_bound(),
+        pd.Series(
+            [
+                -0.712151,
+                -0.712151,
+                -0.712151,
+                -2.003846,
+                -3.501357,
+                -3.582478,
+                -4.64558,
+                -4.64558,
+                -4.64558,
+            ],
+            name=UnivariateSimulationResult.COL_LOWER_BOUND,
+            index=index,
+        ),
+    )
+
+    assert_series_equal(
+        simulation_result.outputs_median(),
+        pd.Series(
+            [
+                2.967666,
+                2.967666,
+                2.967666,
+                1.499583,
+                -0.370505,
+                -0.542527,
+                -0.657656,
+                -1.303745,
+                -1.515228,
+            ],
+            name=UnivariateSimulationResult.COL_MEDIAN,
+            index=index,
+        ),
+    )
+
+    assert_series_equal(
+        simulation_result.outputs_upper_bound(),
+        pd.Series(
+            [
+                5.284187,
+                5.284187,
+                5.284187,
+                2.859393,
+                1.350859,
+                1.275809,
+                1.228851,
+                0.694126,
+                0.694126,
+            ],
             name=UnivariateSimulationResult.COL_UPPER_BOUND,
             index=index,
         ),

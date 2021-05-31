@@ -4,6 +4,7 @@ Core implementation of :mod:`facet.simulation.partition`
 
 import logging
 import math
+import operator as op
 from abc import ABCMeta, abstractmethod
 from typing import Any, Generic, Iterable, Optional, Sequence, Tuple, TypeVar
 
@@ -141,10 +142,10 @@ class RangePartitioner(
         if (
             lower_bound is not None
             and upper_bound is not None
-            and lower_bound >= upper_bound
+            and lower_bound > upper_bound
         ):
             raise ValueError(
-                f"arg lower_bound >= arg upper_bound: [{lower_bound}, {upper_bound})"
+                f"arg lower_bound > arg upper_bound: [{lower_bound}, {upper_bound})"
             )
 
         self._lower_bound = lower_bound
@@ -239,15 +240,17 @@ class RangePartitioner(
         lower_bound = self._lower_bound
         upper_bound = self._upper_bound
 
-        if lower_bound is None:
-            lower_bound = np.nanquantile(values, q=0.025)
+        if lower_bound is None or upper_bound is None:
+            q3q1 = np.nanquantile(values, q=[0.75, 0.25])
+            inlier_range = op.sub(*q3q1) * 1.5  # iqr * 1.5
 
-        if upper_bound is None:
-            upper_bound = np.nanquantile(values, q=0.975)
-            if upper_bound < lower_bound:
-                upper_bound = lower_bound
-        elif upper_bound < lower_bound:
-            lower_bound = upper_bound
+            if lower_bound is None:
+                lower_bound = values[values >= q3q1[1] - inlier_range].min()
+
+            if upper_bound is None:
+                upper_bound = values[values <= q3q1[0] + inlier_range].max()
+
+        assert upper_bound >= lower_bound
 
         # calculate the step count based on the maximum number of partitions,
         # rounded to the next-largest rounded value ending in 1, 2, or 5
