@@ -1,6 +1,23 @@
 Release Notes
 =============
 
+FACET 1.2
+---------
+
+FACET 1.2 introduces the ability to run simulations on a subsample of the data used to
+fit the underlying crossfit.
+One example where this can be useful is to use only a recent period of a time series as
+the baseline of a simulation.
+
+1.2.0
+~~~~~
+
+- API: new optional parameter `subsample` in method 
+  :meth:`.BaseUnivariateSimulator.simulate_feature` can be used to specify a subsample
+  to be used in the simulation (but simulating using a crossfit based on the full
+  sample)
+
+
 FACET 1.1
 ---------
 
@@ -28,6 +45,11 @@ by the :class:`.LearnerInspector`.
 
 FACET 1.0
 ---------
+
+1.0.3
+~~~~~
+
+- FIX: restrict package requirements to *gamma-pytools* 1.0.* and *sklearndf* 1.0.x, since FACET 1.0 is not compatible with *gamma-pytools* 1.1.* 
 
 1.0.2
 ~~~~~

@@ -16,7 +16,7 @@ dependencies:
   - lightgbm >= 3.0
   - m2r = 0.2.*
   - matplotlib >= 3.3
-  - nbsphinx = 0.7.*
+  - nbsphinx ~= 0.8.5
   - numpy >= 1.16
   - pandas >= 1.0
   - pip >= 20
