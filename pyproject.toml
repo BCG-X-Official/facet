@@ -65,7 +65,7 @@ docs = [
     "sphinx == 3.4.*",
     "sphinx-autodoc-typehints == 1.11.*",
     "pydata-sphinx-theme == 0.4.*",
-    "nbsphinx == 0.7.*",
+    "nbsphinx ~= 0.8.5",
     "jupyter >= 1.0",
     "docutils",
     "xlrd == 1.2.*",
