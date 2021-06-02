@@ -1,0 +1,378 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>facet.inspection.KernelExplainerFactory &#8212; facet  documentation</title>
+    
+  <link rel="stylesheet" href="../../../_static/css/index.f658d18f9b420779cfdf24aa0a7e2d77.css">
+
+    
+  <link rel="stylesheet"
+    href="../../../_static/vendor/fontawesome/5.13.0/css/all.min.css">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../../../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../../../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+
+    
+      
+  <link rel="stylesheet"
+    href="../../../_static/vendor/open-sans_all/1.44.1/index.css">
+  <link rel="stylesheet"
+    href="../../../_static/vendor/lato_latin-ext/1.44.1/index.css">
+
+    
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/basic.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/css/gamma.css" />
+    
+  <link rel="preload" as="script" href="../../../_static/js/index.d3f166471bb80abb5163.js">
+
+    <script id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+    <script src="../../../_static/jquery.js"></script>
+    <script src="../../../_static/underscore.js"></script>
+    <script src="../../../_static/doctools.js"></script>
+    <script src="../../../_static/js/gamma.js"></script>
+    <script src="../../../_static/js/versions.js"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "document", "processClass": "math|output_area"}})</script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="facet.inspection.LearnerInspector" href="facet.inspection.LearnerInspector.html" />
+    <link rel="prev" title="facet.inspection.ExplainerFactory" href="facet.inspection.ExplainerFactory.html" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="docsearch:language" content="en" />
+  </head>
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
+    
+    <nav class="navbar navbar-light navbar-expand-lg bg-light fixed-top bd-navbar" id="navbar-main">
+<div class="container-xl">
+
+    <a class="navbar-brand" href="../../../index.html">
+    
+      <img src="../../../_static/Gamma_Facet_Logo_RGB_LB.svg" class="logo" alt="logo" />
+    
+    </a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar-menu" aria-controls="navbar-menu" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div id="navbar-menu" class="col-lg-9 collapse navbar-collapse">
+      <ul id="navbar-main-elements" class="navbar-nav mr-auto">
+        
+        
+        <li class="nav-item ">
+            <a class="nav-link" href="../../../getting_started/getting_started.html">Getting started</a>
+        </li>
+        
+        <li class="nav-item active">
+            <a class="nav-link" href="../../facet.html">API reference</a>
+        </li>
+        
+        <li class="nav-item ">
+            <a class="nav-link" href="../../../tutorials.html">Tutorials</a>
+        </li>
+        
+        <li class="nav-item ">
+            <a class="nav-link" href="../../../contribution_guide.html">Development Guidelines</a>
+        </li>
+        
+        <li class="nav-item ">
+            <a class="nav-link" href="../../../faqs.html">FAQ</a>
+        </li>
+        
+        <li class="nav-item ">
+            <a class="nav-link" href="../../../about_us.html">About us</a>
+        </li>
+        
+        <li class="nav-item ">
+            <a class="nav-link" href="../../../release_notes.html">Release Notes</a>
+        </li>
+        
+        
+      </ul>
+
+
+      
+
+      <ul class="navbar-nav">
+        
+        
+      </ul>
+    </div>
+</div>
+    </nav>
+    
+
+    <div class="container-xl">
+      <div class="row">
+          
+          <div class="col-12 col-md-3 bd-sidebar"><form class="bd-search d-flex align-items-center" action="../../../search.html" method="get">
+  <i class="icon fas fa-search"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
+</form>
+<nav class="bd-links" id="bd-docs-nav" aria-label="Main navigation">
+
+    <div class="bd-toc-item active">
+    
+  
+    <ul class="nav bd-sidenav">
+        
+        
+        
+        
+          
+            
+                <li class="">
+                    <a href="../facet.crossfit.html">facet.crossfit</a>
+                </li>
+            
+          
+            
+                <li class="">
+                    <a href="../facet.data.html">facet.data</a>
+                </li>
+            
+          
+            
+  
+                <li class="active">
+                    <a href="../facet.inspection.html">facet.inspection</a>
+                    <ul>
+                    
+                        <li class="">
+                            <a href="facet.inspection.BaseExplainer.html">facet.inspection.BaseExplainer</a>
+                        </li>
+                    
+                        <li class="">
+                            <a href="facet.inspection.ExplainerFactory.html">facet.inspection.ExplainerFactory</a>
+                        </li>
+                    
+                        <li class="active">
+                            <a href="">facet.inspection.KernelExplainerFactory</a>
+                        </li>
+                    
+                        <li class="">
+                            <a href="facet.inspection.LearnerInspector.html">facet.inspection.LearnerInspector</a>
+                        </li>
+                    
+                        <li class="">
+                            <a href="facet.inspection.ShapPlotData.html">facet.inspection.ShapPlotData</a>
+                        </li>
+                    
+                        <li class="">
+                            <a href="facet.inspection.TreeExplainerFactory.html">facet.inspection.TreeExplainerFactory</a>
+                        </li>
+                    
+                    </ul>
+                </li>
+            
+          
+            
+                <li class="">
+                    <a href="../facet.selection.html">facet.selection</a>
+                </li>
+            
+          
+            
+                <li class="">
+                    <a href="../facet.simulation.html">facet.simulation</a>
+                </li>
+            
+          
+            
+                <li class="">
+                    <a href="../facet.validation.html">facet.validation</a>
+                </li>
+            
+          
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+      </ul>
+  
+  </nav>
+          </div>
+          
+
+          
+          <div class="d-none d-xl-block col-xl-2 bd-toc">
+              
+
+<nav id="bd-toc-nav">
+    <ul class="nav section-nav flex-column">
+    
+    </ul>
+</nav>
+
+
+              
+          </div>
+          
+
+          
+          <main class="col-12 col-md-9 col-xl-7 py-md-5 pl-md-5 pr-md-4 bd-content" role="main">
+              
+              <div>
+                
+  <div class="section" id="facet-inspection-kernelexplainerfactory">
+<h1>facet.inspection.KernelExplainerFactory<a class="headerlink" href="#facet-inspection-kernelexplainerfactory" title="Permalink to this headline">¶</a></h1>
+<dl class="py class">
+<dt id="facet.inspection.KernelExplainerFactory">
+<em class="property">class </em><code class="sig-prename descclassname">facet.inspection.</code><code class="sig-name descname">KernelExplainerFactory</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">link</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">l1_reg</span><span class="o">=</span><span class="default_value">'num_features(10)'</span></em>, <em class="sig-param"><span class="n">data_size_limit</span><span class="o">=</span><span class="default_value">100</span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/facet/inspection/_explainer.html#KernelExplainerFactory"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#facet.inspection.KernelExplainerFactory" title="Permalink to this definition">¶</a></dt>
+<dd><p>A factory constructing <code class="xref py py-class docutils literal notranslate"><span class="pre">KernelExplainer</span></code> objects.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Bases</dt>
+<dd class="field-odd"><p><a class="reference internal" href="facet.inspection.ExplainerFactory.html#facet.inspection.ExplainerFactory" title="facet.inspection.ExplainerFactory"><code class="xref py py-class docutils literal notranslate"><span class="pre">ExplainerFactory</span></code></a></p>
+</dd>
+<dt class="field-even">Metaclasses</dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3.6/library/abc.html#abc.ABCMeta" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ABCMeta</span></code></a></p>
+</dd>
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>link</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Optional" title="(in Python v3.6)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]) – (optional) override the default link parameter</p></li>
+<li><p><strong>l1_reg</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Optional" title="(in Python v3.6)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]) – (optional) override the default l1_reg parameter of method
+<code class="xref py py-meth docutils literal notranslate"><span class="pre">shap_values()</span></code>; pass <code class="docutils literal notranslate"><span class="pre">None</span></code> to use the
+default value used by <code class="xref py py-meth docutils literal notranslate"><span class="pre">shap_values()</span></code></p></li>
+<li><p><strong>data_size_limit</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Optional" title="(in Python v3.6)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3.6/library/functions.html#int" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>]) – (optional) maximum number of observations to use as
+the background data set; larger data sets will be down-sampled using
+kmeans.
+Pass <code class="docutils literal notranslate"><span class="pre">None</span></code> to prevent down-sampling the background data set</p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Method summary</p>
+<table class="longtable table autosummary">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#facet.inspection.KernelExplainerFactory.make_explainer" title="facet.inspection.KernelExplainerFactory.make_explainer"><code class="xref py py-obj docutils literal notranslate"><span class="pre">make_explainer</span></code></a></p></td>
+<td><p>Construct a new <a class="reference external" href="https://shap.readthedocs.io/en/stable/generated/shap.Explainer.html#shap.Explainer" title="(in SHAP vlatest)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Explainer</span></code></a> to compute shap values.</p></td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Attribute summary</p>
+<table class="longtable table autosummary">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#facet.inspection.KernelExplainerFactory.explains_raw_output" title="facet.inspection.KernelExplainerFactory.explains_raw_output"><code class="xref py py-obj docutils literal notranslate"><span class="pre">explains_raw_output</span></code></a></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">True</span></code> if explainers made by this factory explain raw model output, <code class="docutils literal notranslate"><span class="pre">False</span></code> otherwise.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#facet.inspection.KernelExplainerFactory.supports_shap_interaction_values" title="facet.inspection.KernelExplainerFactory.supports_shap_interaction_values"><code class="xref py py-obj docutils literal notranslate"><span class="pre">supports_shap_interaction_values</span></code></a></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">True</span></code> if explainers made by this factory allow for calculating SHAP interaction values, <code class="docutils literal notranslate"><span class="pre">False</span></code> otherwise.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#facet.inspection.KernelExplainerFactory.uses_background_dataset" title="facet.inspection.KernelExplainerFactory.uses_background_dataset"><code class="xref py py-obj docutils literal notranslate"><span class="pre">uses_background_dataset</span></code></a></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">True</span></code> if explainers made by this factory will use a background dataset passed to method <a class="reference internal" href="#facet.inspection.KernelExplainerFactory.make_explainer" title="facet.inspection.KernelExplainerFactory.make_explainer"><code class="xref py py-meth docutils literal notranslate"><span class="pre">make_explainer()</span></code></a>, <code class="docutils literal notranslate"><span class="pre">False</span></code> otherwise.</p></td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Definitions</p>
+<dl class="py method">
+<dt id="facet.inspection.KernelExplainerFactory.make_explainer">
+<code class="sig-name descname">make_explainer</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">model</span></em>, <em class="sig-param"><span class="n">data</span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/facet/inspection/_explainer.html#KernelExplainerFactory.make_explainer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#facet.inspection.KernelExplainerFactory.make_explainer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Construct a new <a class="reference external" href="https://shap.readthedocs.io/en/stable/generated/shap.Explainer.html#shap.Explainer" title="(in SHAP vlatest)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Explainer</span></code></a> to compute shap values.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<a class="reference external" href="https://bcg-gamma.github.io/sklearndf/apidoc/sklearndf/sklearndf.LearnerDF.html#sklearndf.LearnerDF" title="(in sklearndf)"><code class="xref py py-class docutils literal notranslate"><span class="pre">LearnerDF</span></code></a>) – fitted learner for which to compute shap values</p></li>
+<li><p><strong>data</strong> (<a class="reference external" href="https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v1.2.4)"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></a>) – background dataset (optional)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">Explainer</span></code></p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>the new explainer object</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="facet.inspection.KernelExplainerFactory.explains_raw_output">
+<em class="property">property </em><code class="sig-name descname">explains_raw_output</code><a class="headerlink" href="#facet.inspection.KernelExplainerFactory.explains_raw_output" title="Permalink to this definition">¶</a></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">True</span></code> if explainers made by this factory explain raw model output,
+<code class="docutils literal notranslate"><span class="pre">False</span></code> otherwise.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/functions.html#bool" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="facet.inspection.KernelExplainerFactory.supports_shap_interaction_values">
+<em class="property">property </em><code class="sig-name descname">supports_shap_interaction_values</code><a class="headerlink" href="#facet.inspection.KernelExplainerFactory.supports_shap_interaction_values" title="Permalink to this definition">¶</a></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">True</span></code> if explainers made by this factory allow for calculating
+SHAP interaction values, <code class="docutils literal notranslate"><span class="pre">False</span></code> otherwise.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/functions.html#bool" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="facet.inspection.KernelExplainerFactory.uses_background_dataset">
+<em class="property">property </em><code class="sig-name descname">uses_background_dataset</code><a class="headerlink" href="#facet.inspection.KernelExplainerFactory.uses_background_dataset" title="Permalink to this definition">¶</a></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">True</span></code> if explainers made by this factory will use a background dataset
+passed to method <a class="reference internal" href="#facet.inspection.KernelExplainerFactory.make_explainer" title="facet.inspection.KernelExplainerFactory.make_explainer"><code class="xref py py-meth docutils literal notranslate"><span class="pre">make_explainer()</span></code></a>, <code class="docutils literal notranslate"><span class="pre">False</span></code> otherwise.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/functions.html#bool" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+              </div>
+              
+              
+              <div class='prev-next-bottom'>
+                
+    <a class='left-prev' id="prev-link" href="facet.inspection.ExplainerFactory.html" title="previous page">facet.inspection.ExplainerFactory</a>
+    <a class='right-next' id="next-link" href="facet.inspection.LearnerInspector.html" title="next page">facet.inspection.LearnerInspector</a>
+
+              </div>
+              
+          </main>
+          
+
+      </div>
+    </div>
+
+    
+  <script src="../../../_static/js/index.d3f166471bb80abb5163.js"></script>
+
+
+    <footer class="footer mt-5 mt-md-0">
+  <div class="container">
+    <p>
+          &copy; Copyright 2021, Boston Consulting Group (BCG).<br/>
+        Created using <a href="http://sphinx-doc.org/">Sphinx</a> 3.4.3.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>

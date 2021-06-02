@@ -1,0 +1,26 @@
+facet.selection.LearnerGrid
+===========================
+
+.. currentmodule:: facet.selection
+
+.. autoclass:: LearnerGrid
+   :members:
+   :no-show-inheritance:
+   :inherited-members:
+   :special-members: __call__
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Attribute summary
+
+   .. autosummary::
+   
+      ~LearnerGrid.parameters
+   
+   
+
+   .. rubric:: Definitions

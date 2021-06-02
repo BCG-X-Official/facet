@@ -1,0 +1,377 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>facet.simulation.viz.SimulationStyle &#8212; facet  documentation</title>
+    
+  <link rel="stylesheet" href="../../../../_static/css/index.f658d18f9b420779cfdf24aa0a7e2d77.css">
+
+    
+  <link rel="stylesheet"
+    href="../../../../_static/vendor/fontawesome/5.13.0/css/all.min.css">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../../../../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../../../../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+
+    
+      
+  <link rel="stylesheet"
+    href="../../../../_static/vendor/open-sans_all/1.44.1/index.css">
+  <link rel="stylesheet"
+    href="../../../../_static/vendor/lato_latin-ext/1.44.1/index.css">
+
+    
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/basic.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/css/gamma.css" />
+    
+  <link rel="preload" as="script" href="../../../../_static/js/index.d3f166471bb80abb5163.js">
+
+    <script id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+    <script src="../../../../_static/jquery.js"></script>
+    <script src="../../../../_static/underscore.js"></script>
+    <script src="../../../../_static/doctools.js"></script>
+    <script src="../../../../_static/js/gamma.js"></script>
+    <script src="../../../../_static/js/versions.js"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "document", "processClass": "math|output_area"}})</script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+    <link rel="next" title="facet.validation" href="../../facet.validation.html" />
+    <link rel="prev" title="facet.simulation.viz.SimulationReportStyle" href="facet.simulation.viz.SimulationReportStyle.html" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="docsearch:language" content="en" />
+  </head>
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
+    
+    <nav class="navbar navbar-light navbar-expand-lg bg-light fixed-top bd-navbar" id="navbar-main">
+<div class="container-xl">
+
+    <a class="navbar-brand" href="../../../../index.html">
+    
+      <img src="../../../../_static/Gamma_Facet_Logo_RGB_LB.svg" class="logo" alt="logo" />
+    
+    </a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar-menu" aria-controls="navbar-menu" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div id="navbar-menu" class="col-lg-9 collapse navbar-collapse">
+      <ul id="navbar-main-elements" class="navbar-nav mr-auto">
+        
+        
+        <li class="nav-item ">
+            <a class="nav-link" href="../../../../getting_started/getting_started.html">Getting started</a>
+        </li>
+        
+        <li class="nav-item active">
+            <a class="nav-link" href="../../../facet.html">API reference</a>
+        </li>
+        
+        <li class="nav-item ">
+            <a class="nav-link" href="../../../../tutorials.html">Tutorials</a>
+        </li>
+        
+        <li class="nav-item ">
+            <a class="nav-link" href="../../../../contribution_guide.html">Development Guidelines</a>
+        </li>
+        
+        <li class="nav-item ">
+            <a class="nav-link" href="../../../../faqs.html">FAQ</a>
+        </li>
+        
+        <li class="nav-item ">
+            <a class="nav-link" href="../../../../about_us.html">About us</a>
+        </li>
+        
+        <li class="nav-item ">
+            <a class="nav-link" href="../../../../release_notes.html">Release Notes</a>
+        </li>
+        
+        
+      </ul>
+
+
+      
+
+      <ul class="navbar-nav">
+        
+        
+      </ul>
+    </div>
+</div>
+    </nav>
+    
+
+    <div class="container-xl">
+      <div class="row">
+          
+          <div class="col-12 col-md-3 bd-sidebar"><form class="bd-search d-flex align-items-center" action="../../../../search.html" method="get">
+  <i class="icon fas fa-search"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
+</form>
+<nav class="bd-links" id="bd-docs-nav" aria-label="Main navigation">
+
+    <div class="bd-toc-item active">
+    
+  
+    <ul class="nav bd-sidenav">
+        
+        
+        
+        
+          
+            
+                <li class="">
+                    <a href="../../facet.crossfit.html">facet.crossfit</a>
+                </li>
+            
+          
+            
+                <li class="">
+                    <a href="../../facet.data.html">facet.data</a>
+                </li>
+            
+          
+            
+                <li class="">
+                    <a href="../../facet.inspection.html">facet.inspection</a>
+                </li>
+            
+          
+            
+                <li class="">
+                    <a href="../../facet.selection.html">facet.selection</a>
+                </li>
+            
+          
+            
+  
+                <li class="active">
+                    <a href="../../facet.simulation.html">facet.simulation</a>
+                    <ul>
+                    
+                        <li class="">
+                            <a href="../facet.simulation.BaseUnivariateSimulator.html">facet.simulation.BaseUnivariateSimulator</a>
+                        </li>
+                    
+                        <li class="">
+                            <a href="../facet.simulation.UnivariateProbabilitySimulator.html">facet.simulation.UnivariateProbabilitySimulator</a>
+                        </li>
+                    
+                        <li class="">
+                            <a href="../facet.simulation.UnivariateSimulationResult.html">facet.simulation.UnivariateSimulationResult</a>
+                        </li>
+                    
+                        <li class="">
+                            <a href="../facet.simulation.UnivariateTargetSimulator.html">facet.simulation.UnivariateTargetSimulator</a>
+                        </li>
+                    
+                        <li class="">
+                            <a href="../facet.simulation.UnivariateUpliftSimulator.html">facet.simulation.UnivariateUpliftSimulator</a>
+                        </li>
+                    
+                        <li class="active">
+                            <a href="../facet.simulation.viz.html">facet.simulation.viz</a>
+                        </li>
+                    
+                    </ul>
+                </li>
+            
+          
+            
+                <li class="">
+                    <a href="../../facet.validation.html">facet.validation</a>
+                </li>
+            
+          
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+      </ul>
+  
+  </nav>
+          </div>
+          
+
+          
+          <div class="d-none d-xl-block col-xl-2 bd-toc">
+              
+
+<nav id="bd-toc-nav">
+    <ul class="nav section-nav flex-column">
+    
+    </ul>
+</nav>
+
+
+              
+          </div>
+          
+
+          
+          <main class="col-12 col-md-9 col-xl-7 py-md-5 pl-md-5 pr-md-4 bd-content" role="main">
+              
+              <div>
+                
+  <div class="section" id="facet-simulation-viz-simulationstyle">
+<h1>facet.simulation.viz.SimulationStyle<a class="headerlink" href="#facet-simulation-viz-simulationstyle" title="Permalink to this headline">¶</a></h1>
+<dl class="py class">
+<dt id="facet.simulation.viz.SimulationStyle">
+<em class="property">class </em><code class="sig-prename descclassname">facet.simulation.viz.</code><code class="sig-name descname">SimulationStyle</code><a class="reference internal" href="../../../../_modules/facet/simulation/viz/_style.html#SimulationStyle"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#facet.simulation.viz.SimulationStyle" title="Permalink to this definition">¶</a></dt>
+<dd><p>Base class of styles used by <a class="reference internal" href="facet.simulation.viz.SimulationDrawer.html#facet.simulation.viz.SimulationDrawer" title="facet.simulation.viz.SimulationDrawer"><code class="xref py py-class docutils literal notranslate"><span class="pre">SimulationDrawer</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Bases</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://bcg-gamma.github.io/pytools/apidoc/pytools/viz/pytools.viz.DrawingStyle.html#pytools.viz.DrawingStyle" title="(in pytools v1.1.2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">DrawingStyle</span></code></a></p>
+</dd>
+<dt class="field-even">Metaclasses</dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3.6/library/abc.html#abc.ABCMeta" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ABCMeta</span></code></a></p>
+</dd>
+</dl>
+<p class="rubric">Method summary</p>
+<table class="longtable table autosummary">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#facet.simulation.viz.SimulationStyle.draw_histogram" title="facet.simulation.viz.SimulationStyle.draw_histogram"><code class="xref py py-obj docutils literal notranslate"><span class="pre">draw_histogram</span></code></a></p></td>
+<td><p>Draw the histogram of observed value counts per partition.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#facet.simulation.viz.SimulationStyle.draw_uplift" title="facet.simulation.viz.SimulationStyle.draw_uplift"><code class="xref py py-obj docutils literal notranslate"><span class="pre">draw_uplift</span></code></a></p></td>
+<td><p>Draw the graph with the uplift curves: median, low and high percentiles.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#facet.simulation.viz.SimulationStyle.finalize_drawing" title="facet.simulation.viz.SimulationStyle.finalize_drawing"><code class="xref py py-obj docutils literal notranslate"><span class="pre">finalize_drawing</span></code></a></p></td>
+<td><p>See <a class="reference external" href="https://bcg-gamma.github.io/pytools/apidoc/pytools/viz/pytools.viz.DrawingStyle.html#pytools.viz.DrawingStyle.finalize_drawing" title="(in pytools v1.1.2)"><code class="xref py py-meth docutils literal notranslate"><span class="pre">pytools.viz.DrawingStyle.finalize_drawing()</span></code></a></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#facet.simulation.viz.SimulationStyle.get_default_style_name" title="facet.simulation.viz.SimulationStyle.get_default_style_name"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_default_style_name</span></code></a></p></td>
+<td><p>See <a class="reference external" href="https://bcg-gamma.github.io/pytools/apidoc/pytools/viz/pytools.viz.DrawingStyle.html#pytools.viz.DrawingStyle.get_default_style_name" title="(in pytools v1.1.2)"><code class="xref py py-meth docutils literal notranslate"><span class="pre">pytools.viz.DrawingStyle.get_default_style_name()</span></code></a></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#facet.simulation.viz.SimulationStyle.get_named_styles" title="facet.simulation.viz.SimulationStyle.get_named_styles"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_named_styles</span></code></a></p></td>
+<td><p>See <a class="reference external" href="https://bcg-gamma.github.io/pytools/apidoc/pytools/viz/pytools.viz.DrawingStyle.html#pytools.viz.DrawingStyle.get_named_styles" title="(in pytools v1.1.2)"><code class="xref py py-meth docutils literal notranslate"><span class="pre">pytools.viz.DrawingStyle.get_named_styles()</span></code></a></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#facet.simulation.viz.SimulationStyle.start_drawing" title="facet.simulation.viz.SimulationStyle.start_drawing"><code class="xref py py-obj docutils literal notranslate"><span class="pre">start_drawing</span></code></a></p></td>
+<td><p>See <a class="reference external" href="https://bcg-gamma.github.io/pytools/apidoc/pytools/viz/pytools.viz.DrawingStyle.html#pytools.viz.DrawingStyle.start_drawing" title="(in pytools v1.1.2)"><code class="xref py py-meth docutils literal notranslate"><span class="pre">pytools.viz.DrawingStyle.start_drawing()</span></code></a></p></td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Definitions</p>
+<dl class="py method">
+<dt id="facet.simulation.viz.SimulationStyle.draw_histogram">
+<em class="property">abstract </em><code class="sig-name descname">draw_histogram</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">partitions</span></em>, <em class="sig-param"><span class="n">frequencies</span></em>, <em class="sig-param"><span class="n">is_categorical_feature</span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/facet/simulation/viz/_style.html#SimulationStyle.draw_histogram"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#facet.simulation.viz.SimulationStyle.draw_histogram" title="Permalink to this definition">¶</a></dt>
+<dd><p>Draw the histogram of observed value counts per partition.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>partitions</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Sequence" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sequence</span></code></a>[<a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Any" title="(in Python v3.6)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code></a>]) – the partitioning (center values) of the simulated feature</p></li>
+<li><p><strong>frequencies</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Sequence" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sequence</span></code></a>[<a class="reference external" href="https://docs.python.org/3.6/library/functions.html#int" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>]) – observed frequencies for each partition</p></li>
+<li><p><strong>is_categorical_feature</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/functions.html#bool" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a>) – <code class="docutils literal notranslate"><span class="pre">True</span></code> if the simulated feature is
+categorical, <code class="docutils literal notranslate"><span class="pre">False</span></code> otherwise</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3.6/library/constants.html#None" title="(in Python v3.6)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="facet.simulation.viz.SimulationStyle.draw_uplift">
+<em class="property">abstract </em><code class="sig-name descname">draw_uplift</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">feature_name</span></em>, <em class="sig-param"><span class="n">output_name</span></em>, <em class="sig-param"><span class="n">output_unit</span></em>, <em class="sig-param"><span class="n">outputs_median</span></em>, <em class="sig-param"><span class="n">outputs_lower_bound</span></em>, <em class="sig-param"><span class="n">outputs_upper_bound</span></em>, <em class="sig-param"><span class="n">baseline</span></em>, <em class="sig-param"><span class="n">confidence_level</span></em>, <em class="sig-param"><span class="n">partitions</span></em>, <em class="sig-param"><span class="n">frequencies</span></em>, <em class="sig-param"><span class="n">is_categorical_feature</span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/facet/simulation/viz/_style.html#SimulationStyle.draw_uplift"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#facet.simulation.viz.SimulationStyle.draw_uplift" title="Permalink to this definition">¶</a></dt>
+<dd><p>Draw the graph with the uplift curves: median, low and high percentiles.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>feature_name</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>) – name of the simulated feature</p></li>
+<li><p><strong>output_name</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>) – name of the target for which output values were simulated</p></li>
+<li><p><strong>output_unit</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>) – the unit of the output axis</p></li>
+<li><p><strong>outputs_median</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Sequence" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sequence</span></code></a>[<a class="reference external" href="https://docs.python.org/3.6/library/functions.html#float" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a>]) – the medians of the simulated outputs</p></li>
+<li><p><strong>outputs_lower_bound</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Sequence" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sequence</span></code></a>[<a class="reference external" href="https://docs.python.org/3.6/library/functions.html#float" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a>]) – the lower CI bounds of the simulated outputs</p></li>
+<li><p><strong>outputs_upper_bound</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Sequence" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sequence</span></code></a>[<a class="reference external" href="https://docs.python.org/3.6/library/functions.html#float" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a>]) – the upper CI bounds of the simulated outputs</p></li>
+<li><p><strong>baseline</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/functions.html#float" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a>) – the baseline of the simulation</p></li>
+<li><p><strong>confidence_level</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/functions.html#float" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a>) – the confidence level used to calculate the CI bounds</p></li>
+<li><p><strong>partitions</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Sequence" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sequence</span></code></a>[<a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Any" title="(in Python v3.6)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code></a>]) – the central or categorical values representing the partitions</p></li>
+<li><p><strong>frequencies</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Sequence" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sequence</span></code></a>[<a class="reference external" href="https://docs.python.org/3.6/library/functions.html#int" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>]) – observed frequencies of the partitions</p></li>
+<li><p><strong>is_categorical_feature</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/functions.html#bool" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a>) – <code class="docutils literal notranslate"><span class="pre">True</span></code> if the simulated feature is
+categorical; <code class="docutils literal notranslate"><span class="pre">False</span></code> otherwise</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3.6/library/constants.html#None" title="(in Python v3.6)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="facet.simulation.viz.SimulationStyle.finalize_drawing">
+<code class="sig-name descname">finalize_drawing</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#facet.simulation.viz.SimulationStyle.finalize_drawing" title="Permalink to this definition">¶</a></dt>
+<dd><p>See <a class="reference external" href="https://bcg-gamma.github.io/pytools/apidoc/pytools/viz/pytools.viz.DrawingStyle.html#pytools.viz.DrawingStyle.finalize_drawing" title="(in pytools v1.1.2)"><code class="xref py py-meth docutils literal notranslate"><span class="pre">pytools.viz.DrawingStyle.finalize_drawing()</span></code></a></p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="facet.simulation.viz.SimulationStyle.get_default_style_name">
+<em class="property">abstract classmethod </em><code class="sig-name descname">get_default_style_name</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#facet.simulation.viz.SimulationStyle.get_default_style_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>See <a class="reference external" href="https://bcg-gamma.github.io/pytools/apidoc/pytools/viz/pytools.viz.DrawingStyle.html#pytools.viz.DrawingStyle.get_default_style_name" title="(in pytools v1.1.2)"><code class="xref py py-meth docutils literal notranslate"><span class="pre">pytools.viz.DrawingStyle.get_default_style_name()</span></code></a></p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="facet.simulation.viz.SimulationStyle.get_named_styles">
+<em class="property">classmethod </em><code class="sig-name descname">get_named_styles</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#facet.simulation.viz.SimulationStyle.get_named_styles" title="Permalink to this definition">¶</a></dt>
+<dd><p>See <a class="reference external" href="https://bcg-gamma.github.io/pytools/apidoc/pytools/viz/pytools.viz.DrawingStyle.html#pytools.viz.DrawingStyle.get_named_styles" title="(in pytools v1.1.2)"><code class="xref py py-meth docutils literal notranslate"><span class="pre">pytools.viz.DrawingStyle.get_named_styles()</span></code></a></p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="facet.simulation.viz.SimulationStyle.start_drawing">
+<code class="sig-name descname">start_drawing</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span></em>, <em class="sig-param"><span class="n">title</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#facet.simulation.viz.SimulationStyle.start_drawing" title="Permalink to this definition">¶</a></dt>
+<dd><p>See <a class="reference external" href="https://bcg-gamma.github.io/pytools/apidoc/pytools/viz/pytools.viz.DrawingStyle.html#pytools.viz.DrawingStyle.start_drawing" title="(in pytools v1.1.2)"><code class="xref py py-meth docutils literal notranslate"><span class="pre">pytools.viz.DrawingStyle.start_drawing()</span></code></a></p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+              </div>
+              
+              
+              <div class='prev-next-bottom'>
+                
+    <a class='left-prev' id="prev-link" href="facet.simulation.viz.SimulationReportStyle.html" title="previous page">facet.simulation.viz.SimulationReportStyle</a>
+    <a class='right-next' id="next-link" href="../../facet.validation.html" title="next page">facet.validation</a>
+
+              </div>
+              
+          </main>
+          
+
+      </div>
+    </div>
+
+    
+  <script src="../../../../_static/js/index.d3f166471bb80abb5163.js"></script>
+
+
+    <footer class="footer mt-5 mt-md-0">
+  <div class="container">
+    <p>
+          &copy; Copyright 2021, Boston Consulting Group (BCG).<br/>
+        Created using <a href="http://sphinx-doc.org/">Sphinx</a> 3.4.3.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>
