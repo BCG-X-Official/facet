@@ -86,8 +86,6 @@ lightgbm       = "=3.0.*"
 scikit-learn   = "=0.21.*"
 # additional minimum requirements of gamma-pytools
 joblib         = "=0.14.*"
-matplotlib     = "=3.0.*"
-scipy          = "=1.2.*"
 typing_inspect = "=0.4"
 
 [build.matrix.max]
