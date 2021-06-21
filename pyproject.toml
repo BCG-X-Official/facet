@@ -71,7 +71,7 @@ Repository = "https://github.com/BCG-Gamma/facet"
 
 [build.matrix.min]
 # direct requirements of gamma-facet
-gamma-pytools  = "=1.1.*"
+gamma-pytools  = "=1.1.2"
 matplotlib     = "=3.0.*"
 numpy          = "=1.16.*"
 packaging      = "=20.*"
@@ -90,7 +90,7 @@ typing_inspect = "=0.4"
 
 [build.matrix.max]
 # direct requirements of gamma-facet
-gamma-pytools  = "~1.1"
+gamma-pytools  = "~=1.1,>=1.1.2"
 matplotlib     = "~=3.3"
 numpy          = "=1.20.*"
 packaging      = "=20.*"
