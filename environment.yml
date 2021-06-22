@@ -11,6 +11,7 @@ dependencies:
   - flit = 3.0.*
   - gamma-pytools = 1.0.*
   - isort = 5.5.*
+  - jinja2 ~= 2.11
   - joblib >= 0.16
   - jupyter >= 1.0
   - lightgbm >= 3.0
