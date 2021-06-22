@@ -9,7 +9,7 @@ dependencies:
   - conda-verify = 3.1.*
   - docutils = 0.16.*
   - flit = 3.0.*
-  - gamma-pytools >=1.0,<2
+  - gamma-pytools = 1.0.*
   - isort = 5.5.*
   - joblib >= 0.16
   - jupyter >= 1.0
@@ -30,7 +30,7 @@ dependencies:
   - scikit-learn >=0.23.1,<0.24
   - scipy = 1.5.*  # todo: upgrade to 1.6 once we support scikit-learn 0.24
   - seaborn = 0.11.*
-  - sklearndf >=1.0,<2
+  - sklearndf = 1.0.*
   - sphinx = 3.4.*
   - sphinx-autodoc-typehints = 1.11.*
   - tableone = 0.7.*
