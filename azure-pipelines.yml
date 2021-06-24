@@ -241,17 +241,37 @@ stages:
           inputs:
             targetType: 'inline'
             script: |
+              set -eux
               if [ "$BUILD_SYSTEM" = "conda" ] ; then eval "$(conda shell.bash hook)" ; fi
               export RUN_PACKAGE_VERSION_TEST=facet
+
               cd $(Build.SourcesDirectory)/pytools
               ./make.py pytools $(BUILD_SYSTEM) $(PKG_DEPENDENCIES)
+          displayName: "build & test pytools"
+
+        - task: Bash@3
+          inputs:
+            targetType: 'inline'
+            script: |
+              set -eux
+              if [ "$BUILD_SYSTEM" = "conda" ] ; then eval "$(conda shell.bash hook)" ; fi
+              export RUN_PACKAGE_VERSION_TEST=facet
 
               cd $(Build.SourcesDirectory)/sklearndf
               ./make.py sklearndf $(BUILD_SYSTEM) $(PKG_DEPENDENCIES)
+          displayName: "build & test sklearndf"
+
+        - task: Bash@3
+          inputs:
+            targetType: 'inline'
+            script: |
+              set -eux
+              if [ "$BUILD_SYSTEM" = "conda" ] ; then eval "$(conda shell.bash hook)" ; fi
+              export RUN_PACKAGE_VERSION_TEST=facet
 
               cd $(Build.SourcesDirectory)/facet
               ./make.py facet $(BUILD_SYSTEM) $(PKG_DEPENDENCIES)
-          displayName: "build & test conda/pip packages"
+          displayName: "build & test facet"
 
         - task: CopyFiles@2
           inputs:
@@ -336,13 +356,34 @@ stages:
               set -eux
               if [ "$BUILD_SYSTEM" = "conda" ] ; then eval "$(conda shell.bash hook)" ; fi
               export RUN_PACKAGE_VERSION_TEST=facet
+
               cd $(Build.SourcesDirectory)/pytools
               ./make.py pytools $(BUILD_SYSTEM) $(PKG_DEPENDENCIES)
+          displayName: "build & test pytools"
+
+        - task: Bash@3
+          inputs:
+            targetType: 'inline'
+            script: |
+              set -eux
+              if [ "$BUILD_SYSTEM" = "conda" ] ; then eval "$(conda shell.bash hook)" ; fi
+              export RUN_PACKAGE_VERSION_TEST=facet
+
               cd $(Build.SourcesDirectory)/sklearndf
               ./make.py sklearndf $(BUILD_SYSTEM) $(PKG_DEPENDENCIES)
+          displayName: "build & test sklearndf"
+
+        - task: Bash@3
+          inputs:
+            targetType: 'inline'
+            script: |
+              set -eux
+              if [ "$BUILD_SYSTEM" = "conda" ] ; then eval "$(conda shell.bash hook)" ; fi
+              export RUN_PACKAGE_VERSION_TEST=facet
+
               cd $(Build.SourcesDirectory)/facet
               ./make.py facet $(BUILD_SYSTEM) $(PKG_DEPENDENCIES)
-          displayName: "build & test conda/pip packages"
+          displayName: "build & test facet"
 
         - task: CopyFiles@2
           inputs:
