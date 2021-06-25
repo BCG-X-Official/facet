@@ -23,7 +23,7 @@ resources:
       type: github
       endpoint: BCG-Gamma
       name: BCG-Gamma/sklearndf
-      ref: 1.1.x
+      ref: 1.2.x
     - repository: pytools
       type: github
       endpoint: BCG-Gamma
