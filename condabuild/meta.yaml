@@ -16,15 +16,21 @@ requirements:
     - numpy=1.16
     - flit=3.0
   run:
-    - gamma-pytools{{ environ.get('FACET_V_GAMMA_PYTOOLS') }}
-    - matplotlib{{ environ.get('FACET_V_MATPLOTLIB') }}
-    - numpy{{ environ.get('FACET_V_NUMPY') }}
-    - packaging{{ environ.get('FACET_V_PACKAGING') }}
-    - pandas{{ environ.get('FACET_V_PANDAS') }}
-    - python{{ environ.get('FACET_V_PYTHON') }}
-    - scipy{{ environ.get('FACET_V_SCIPY') }}
-    - shap{{ environ.get('FACET_V_SHAP') }}
-    - sklearndf{{ environ.get('FACET_V_SKLEARNDF') }}
+    - boruta {{ environ.get('FACET_V_BORUTA') }}
+    - gamma-pytools {{ environ.get('FACET_V_GAMMA_PYTOOLS') }}
+    - ipython {{ environ.get('FACET_V_IPYTHON') }}
+    - joblib {{ environ.get('FACET_V_JOBLIB') }}
+    - lightgbm {{ environ.get('FACET_V_LIGHTGBM') }}
+    - matplotlib {{ environ.get('FACET_V_MATPLOTLIB') }}
+    - numpy {{ environ.get('FACET_V_NUMPY') }}
+    - packaging {{ environ.get('FACET_V_PACKAGING') }}
+    - pandas {{ environ.get('FACET_V_PANDAS') }}
+    - python {{ environ.get('FACET_V_PYTHON') }}
+    - scikit-learn {{ environ.get('FACET_V_SCIKIT_LEARN') }}
+    - scipy {{ environ.get('FACET_V_SCIPY') }}
+    - shap {{ environ.get('FACET_V_SHAP') }}
+    - sklearndf {{ environ.get('FACET_V_SKLEARNDF') }}
+    - typing_inspect {{ environ.get('FACET_V_TYPING_INSPECT') }}
 
 test:
   imports:
@@ -35,7 +41,7 @@ test:
     - facet.validation
     - facet.simulation
   requires:
-    - pytest=5.2.*
+    - pytest=5.2
   commands:
     - conda list
     - python -c 'import facet;
