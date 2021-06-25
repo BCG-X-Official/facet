@@ -26,7 +26,7 @@ requires = [
     # additional requirements of shap 0.38
     "ipython        >=7",
     # additional requitements that we will vary for testing
-    "boruta         >=0.3",
+    "boruta_py      >=0.3",
     "lightgbm       >=3.0",
     "scikit-learn   >=0.21",
     "joblib         >=0.14",
@@ -87,7 +87,7 @@ scipy          = "=1.2"
 shap           = "=0.34"
 sklearndf      = "=1.2.0"
 # additional minimum requirements of sklearndf
-boruta         = "=0.3"
+boruta_py      = "=0.3"
 lightgbm       = "=3.0"
 scikit-learn   = "=0.21"
 # additional minimum requirements of gamma-pytools
@@ -106,7 +106,7 @@ scipy          = "~=1.5"
 shap           = "=0.39"
 sklearndf      = "~=1.2"
 # additional requirements of sklearndf
-boruta         = "~=0.3"
+boruta_py      = "~=0.3"
 lightgbm       = "~=3.2"
 scikit-learn   = "~=0.24"
 # additional maximum requirements of gamma-pytools

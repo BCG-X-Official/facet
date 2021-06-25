@@ -16,7 +16,7 @@ requirements:
     - numpy=1.16
     - flit=3.0
   run:
-    - boruta {{ environ.get('FACET_V_BORUTA') }}
+    - boruta_py {{ environ.get('FACET_V_BORUTA_PY') }}
     - gamma-pytools {{ environ.get('FACET_V_GAMMA_PYTOOLS') }}
     - ipython {{ environ.get('FACET_V_IPYTHON') }}
     - joblib {{ environ.get('FACET_V_JOBLIB') }}
