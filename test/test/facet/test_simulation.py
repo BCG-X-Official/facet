@@ -1,6 +1,5 @@
 import logging
 
-import numpy as np
 import pandas as pd
 import pytest
 from pandas.testing import assert_series_equal
@@ -41,6 +40,15 @@ def crossfit(
         cv=StationaryBootstrapCV(n_splits=N_SPLITS, random_state=42),
         n_jobs=n_jobs,
     ).fit(sample=sample)
+
+
+@pytest.fixture
+def subsample() -> pd.Index:
+    return pd.Index(
+        [8, 77, 65, 43, 43, 85, 8, 69, 20, 9, 52, 97, 73, 76, 71, 78]
+        + [51, 12, 83, 45, 50, 37, 18, 92, 78, 64, 40, 82, 54, 44, 45, 22]
+        + [9, 55, 88, 6, 85, 82, 27, 63, 16, 75, 70, 35, 6, 97, 44, 89, 67, 77]
+    )
 
 
 @pytest.fixture
@@ -130,7 +138,7 @@ def test_univariate_target_simulation(
 
 
 def test_univariate_target_subsample_simulation(
-    crossfit: LearnerCrossfit, n_jobs: int
+    crossfit: LearnerCrossfit, subsample: pd.Index, n_jobs: int
 ) -> None:
 
     parameterized_feature = "LSTAT"
@@ -152,10 +160,6 @@ def test_univariate_target_subsample_simulation(
             feature_name=parameterized_feature,
             partitioner=partitioner,
         )
-
-    subsample: pd.Index = sample_index[
-        np.random.default_rng(42).choice(sample_index, size=len(sample_index) // 2)
-    ]
 
     target_simulator = UnivariateTargetSimulator(
         crossfit=crossfit,
@@ -189,17 +193,8 @@ def test_univariate_target_subsample_simulation(
     assert_series_equal(
         simulation_result.outputs_lower_bound(),
         pd.Series(
-            [
-                22.233849,
-                22.233849,
-                22.233849,
-                20.942154,
-                19.444643,
-                19.363522,
-                18.300420,
-                18.300420,
-                18.300420,
-            ],
+            [22.233849, 22.233849, 22.233849, 20.942154, 19.444643]
+            + [19.363522, 18.300420, 18.300420, 18.300420],
             name=UnivariateSimulationResult.COL_LOWER_BOUND,
             index=index,
         ),
@@ -208,17 +203,8 @@ def test_univariate_target_subsample_simulation(
     assert_series_equal(
         simulation_result.outputs_median(),
         pd.Series(
-            [
-                25.913666,
-                25.913666,
-                25.913666,
-                24.445583,
-                22.575495,
-                22.403473,
-                22.288344,
-                21.642255,
-                21.430772,
-            ],
+            [25.913666, 25.913666, 25.913666, 24.445583, 22.575495]
+            + [22.403473, 22.288344, 21.642255, 21.430772],
             name=UnivariateSimulationResult.COL_MEDIAN,
             index=index,
         ),
@@ -227,17 +213,8 @@ def test_univariate_target_subsample_simulation(
     assert_series_equal(
         simulation_result.outputs_upper_bound(),
         pd.Series(
-            [
-                28.230187,
-                28.230187,
-                28.230187,
-                25.805393,
-                24.296859,
-                24.221809,
-                24.174851,
-                23.640126,
-                23.640126,
-            ],
+            [28.230187, 28.230187, 28.230187, 25.805393, 24.296859]
+            + [24.221809, 24.174851, 23.640126, 23.640126],
             name=UnivariateSimulationResult.COL_UPPER_BOUND,
             index=index,
         ),
@@ -257,18 +234,8 @@ def test_actuals_simulation(uplift_simulator: UnivariateUpliftSimulator) -> None
         pd.Series(
             index=pd.RangeIndex(10, name=UnivariateUpliftSimulator.IDX_SPLIT),
             data=(
-                [
-                    3.207810,
-                    1.807740,
-                    0.709917,
-                    -2.392966,
-                    1.530005,
-                    -2.394199,
-                    1.389225,
-                    -3.261376,
-                    2.248752,
-                    1.226377,
-                ]
+                [3.207810, 1.807740, 0.709917, -2.392966, 1.530005]
+                + [-2.394199, 1.389225, -3.261376, 2.248752, 1.226377]
             ),
             name=UnivariateUpliftSimulator.COL_OUTPUT,
         ),
@@ -340,7 +307,7 @@ def test_univariate_uplift_simulation(
 
 
 def test_univariate_uplift_subsample_simulation(
-    crossfit: LearnerCrossfit, n_jobs: int
+    crossfit: LearnerCrossfit, subsample: pd.Index, n_jobs: int
 ) -> None:
 
     parameterized_feature = "LSTAT"
@@ -361,10 +328,6 @@ def test_univariate_uplift_subsample_simulation(
             feature_name=parameterized_feature,
             partitioner=partitioner,
         )
-
-    subsample: pd.Index = sample_index[
-        np.random.default_rng(42).choice(sample_index, size=len(sample_index) // 2)
-    ]
 
     uplift_simulator = UnivariateUpliftSimulator(
         crossfit=crossfit,
@@ -399,17 +362,8 @@ def test_univariate_uplift_subsample_simulation(
     assert_series_equal(
         simulation_result.outputs_lower_bound(),
         pd.Series(
-            [
-                -0.712151,
-                -0.712151,
-                -0.712151,
-                -2.003846,
-                -3.501357,
-                -3.582478,
-                -4.64558,
-                -4.64558,
-                -4.64558,
-            ],
+            [-0.712151, -0.712151, -0.712151, -2.003846, -3.501357]
+            + [-3.582478, -4.64558, -4.64558, -4.64558],
             name=UnivariateSimulationResult.COL_LOWER_BOUND,
             index=index,
         ),
@@ -418,17 +372,8 @@ def test_univariate_uplift_subsample_simulation(
     assert_series_equal(
         simulation_result.outputs_median(),
         pd.Series(
-            [
-                2.967666,
-                2.967666,
-                2.967666,
-                1.499583,
-                -0.370505,
-                -0.542527,
-                -0.657656,
-                -1.303745,
-                -1.515228,
-            ],
+            [2.967666, 2.967666, 2.967666, 1.499583, -0.370505]
+            + [-0.542527, -0.657656, -1.303745, -1.515228],
             name=UnivariateSimulationResult.COL_MEDIAN,
             index=index,
         ),
@@ -437,17 +382,8 @@ def test_univariate_uplift_subsample_simulation(
     assert_series_equal(
         simulation_result.outputs_upper_bound(),
         pd.Series(
-            [
-                5.284187,
-                5.284187,
-                5.284187,
-                2.859393,
-                1.350859,
-                1.275809,
-                1.228851,
-                0.694126,
-                0.694126,
-            ],
+            [5.284187, 5.284187, 5.284187, 2.859393, 1.350859]
+            + [1.275809, 1.228851, 0.694126, 0.694126],
             name=UnivariateSimulationResult.COL_UPPER_BOUND,
             index=index,
         ),

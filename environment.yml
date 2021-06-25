@@ -38,7 +38,7 @@ dependencies:
   # notebooks
   - jupyterlab = 3.*
   - nbclassic ~= 0.2.8
-  - nbsphinx = 0.7.*
+  - nbsphinx ~= 0.8.5
   - openpyxl = 3.*
   - seaborn = 0.11.*
   - tableone = 0.7.*

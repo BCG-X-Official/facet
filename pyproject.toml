@@ -58,7 +58,7 @@ docs = [
     "sphinx-autodoc-typehints == 1.11.*",
     "pydata-sphinx-theme == 0.4.*",
     "jinja2 ~= 2.11",
-    "nbsphinx == 0.7.*",
+    "nbsphinx ~= 0.8.5",
     "jupyter == 1.*",
     "docutils == 0.16.*",
     "xlrd ~= 1.2",
@@ -86,7 +86,7 @@ lightgbm       = "=3.0.*"
 scikit-learn   = "=0.21.*"
 # additional minimum requirements of gamma-pytools
 joblib         = "=0.14.*"
-typing_inspect = "=0.4"
+typing_inspect = "=0.4.*"
 
 [build.matrix.max]
 # direct requirements of gamma-facet
