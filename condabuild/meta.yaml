@@ -11,10 +11,10 @@ build:
 
 requirements:
   host:
-    - pip>=20.*
-    - python {{ environ.get('FACET_V_PYTHON', '=3.8.*') }}
-    - numpy {{ environ.get('FACET_V_NUMPY', '>=1.11.*') }}
-    - flit>=3.0.*
+    - pip>=20
+    - python=3.8
+    - numpy=1.16
+    - flit=3.0
   run:
     - gamma-pytools{{ environ.get('FACET_V_GAMMA_PYTOOLS') }}
     - matplotlib{{ environ.get('FACET_V_MATPLOTLIB') }}
