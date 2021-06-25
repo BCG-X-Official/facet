@@ -1,11 +1,9 @@
 trigger:
   - 1.2.x
-  - dev/*
   - release/*
 
 pr:
   - 1.2.x
-  - dev/*
   - release/*
 
 # set the build name
