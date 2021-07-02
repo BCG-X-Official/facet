@@ -84,15 +84,15 @@ packaging      = "~=20.9"
 pandas         = "~=0.24.2"
 python         = "~=3.6.13"
 scipy          = "~=1.2.1"
-shap           = "=0.34"
+shap           = "==0.34"
 sklearndf      = "~=1.0.2"
 # additional minimum requirements of sklearndf
-boruta         = "=0.3"
-lightgbm       = "=3.0"
+boruta         = "==0.3"
+lightgbm       = "==3.0"
 scikit-learn   = "~=0.21.3"
 # additional minimum requirements of gamma-pytools
 joblib         = "~=0.13.2"
-typing_inspect = "=0.4"
+typing_inspect = "==0.4"
 # additional minimum requirements of shap
 ipython        = "==7"
 
@@ -107,7 +107,7 @@ python         = "~=3.8"
 scipy          = "=1.5"
 shap           = "=0.39"
 sklearndf      = "~=1.0.2"
-# additional requirements of sklearndf
+# additional maximum requirements of sklearndf
 boruta         = "~=0.3"
 lightgbm       = "~=3.2"
 scikit-learn   = "~=0.23.2"
