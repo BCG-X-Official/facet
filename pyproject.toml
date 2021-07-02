@@ -25,12 +25,6 @@ requires = [
     "sklearndf      ~=1.0.2",
     # additional requirements of shap 0.38
     "ipython        >=7",
-    # additional requitements that we will vary for testing
-    "boruta         >=0.3",
-    "lightgbm       >=3.0",
-    "scikit-learn   >=0.21",
-    "joblib         >=0.14",
-    "typing_inspect >=0.4",
 ]
 
 requires-python = "~=3.6"
