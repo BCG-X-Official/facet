@@ -33,7 +33,7 @@ requires = [
     "typing_inspect >=0.4",
 ]
 
-requires-python = "~=3.6"
+requires-python = ">=3.6,<4a"
 
 classifiers = [
     "Development Status :: 5 - Production/Stable",
@@ -104,7 +104,7 @@ numpy          = ">=1.20,<2a"
 packaging      = "~=20.9"
 pandas         = "~=1.2"
 python         = "~=3.8"
-scipy          = "~=1.5.0"
+scipy          = "~=1.5.4"
 shap           = "~=0.39.0"
 sklearndf      = "~=1.0.2"
 # additional maximum requirements of sklearndf
