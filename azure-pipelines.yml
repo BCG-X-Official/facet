@@ -33,6 +33,8 @@ variables:
   source_is_release_branch: $[ startsWith(variables['branchName'], 'release') ]
   source_is_develop_branch: $[ or(startsWith(variables['branchName'], 'develop'), startsWith(variables['branchName'], 'dev/')) ]
   is_scheduled: $[ eq(variables['Build.Reason'], 'Schedule') ]
+  project_name: facet
+  package_name: gamma-facet
 
 stages:
   # check code quality first to fail fast (isort, flake8, black)
@@ -135,11 +137,11 @@ stages:
               set -eux
               eval "$(conda shell.bash hook)"
               export PYTHONPATH=$(System.DefaultWorkingDirectory)/src/
-              export RUN_PACKAGE_VERSION_TEST=facet
+              export RUN_PACKAGE_VERSION_TEST=$(project_name)
               conda env create
-              conda activate facet-develop
+              conda activate $(project_name)-develop
               pytest \
-                 --cov facet \
+                 --cov $(project_name) \
                  --cov-config "tox.ini" \
                  --cov-report=xml:coverage.xml --cov-report=html:htmlcov \
                  --junitxml pytest.xml \
@@ -224,15 +226,15 @@ stages:
             script: |
               set -eux
               if [ "$BUILD_SYSTEM" = "conda" ] ; then eval "$(conda shell.bash hook)" ; fi
-              export RUN_PACKAGE_VERSION_TEST=facet
+              export RUN_PACKAGE_VERSION_TEST=$(project_name)
 
-              cd $(Build.SourcesDirectory)/facet
-              ./make.py facet $(BUILD_SYSTEM) $(PKG_DEPENDENCIES)
+              cd $(Build.SourcesDirectory)/$(project_name)
+              ./make.py $(project_name) $(BUILD_SYSTEM) $(PKG_DEPENDENCIES)
           displayName: "build & test"
 
         - task: CopyFiles@2
           inputs:
-            sourceFolder: $(System.DefaultWorkingDirectory)/facet/dist
+            sourceFolder: $(System.DefaultWorkingDirectory)/$(project_name)/dist
             targetFolder: $(Build.ArtifactStagingDirectory)
 
         - task: PublishBuildArtifacts@1
@@ -311,15 +313,15 @@ stages:
             script: |
               set -eux
               if [ "$BUILD_SYSTEM" = "conda" ] ; then eval "$(conda shell.bash hook)" ; fi
-              export RUN_PACKAGE_VERSION_TEST=facet
+              export RUN_PACKAGE_VERSION_TEST=$(project_name)
 
-              cd $(Build.SourcesDirectory)/facet
-              ./make.py facet $(BUILD_SYSTEM) $(PKG_DEPENDENCIES)
+              cd $(Build.SourcesDirectory)/$(project_name)
+              ./make.py $(project_name) $(BUILD_SYSTEM) $(PKG_DEPENDENCIES)
           displayName: "build & test"
 
         - task: CopyFiles@2
           inputs:
-            sourceFolder: $(System.DefaultWorkingDirectory)/facet/dist
+            sourceFolder: $(System.DefaultWorkingDirectory)/$(project_name)/dist
             targetFolder: $(Build.ArtifactStagingDirectory)
 
         - task: PublishBuildArtifacts@1
@@ -355,7 +357,7 @@ stages:
               veracodeAppProfile: 'FACET'
               version: '$(Build.BuildID)'
               filepath: '$(System.DefaultWorkingDirectory)/static_scan'
-              sandboxName: 'facet'
+              sandboxName: '$(project_name)'
               createSandBox: false
               createProfile: false
               failTheBuildIfVeracodeScanDidNotInitiate: false
@@ -409,7 +411,7 @@ stages:
                 ), "This check should only run on versioned branches – check pipeline."
 
                 branch_version = branch.split("/", maxsplit=1)[1]
-                package_version = ToxBuilder("facet", "default").package_version
+                package_version = ToxBuilder("$(project_name)", "default").package_version
 
                 assert (
                     package_version == branch_version
@@ -457,7 +459,7 @@ stages:
                 set -eux
                 echo "Getting version"
                 pip install packaging
-                cd $(System.DefaultWorkingDirectory)/facet/src
+                cd $(System.DefaultWorkingDirectory)/$(project_name)/src
                 export PYTHONPATH=$(System.DefaultWorkingDirectory)/pytools/sphinx/base
                 version=$(python -c "import make_base; print(make_base.get_package_version())")
                 echo "Current version: $version"
@@ -482,7 +484,7 @@ stages:
               eval "$(conda shell.bash hook)"
               conda install -y anaconda-client
               anaconda login --username "${CONDA_USERNAME}" --password "${CONDA_PASSWORD}"
-              anaconda upload --user BCG_Gamma --force $(System.ArtifactsDirectory)/conda_default/conda/noarch/gamma-facet-*.tar.bz2
+              anaconda upload --user BCG_Gamma --force $(System.ArtifactsDirectory)/conda_default/conda/noarch/$(package_name)-*.tar.bz2
               anaconda logout
               echo "##vso[task.setvariable variable=conda_published]True"
             displayName: 'Publish to Anaconda'
@@ -494,7 +496,7 @@ stages:
 
           - script: |
               set -eux
-              cd $(System.DefaultWorkingDirectory)/facet
+              cd $(System.DefaultWorkingDirectory)/$(project_name)
               pip install flit
               flit install -s
               flit publish
@@ -522,24 +524,24 @@ stages:
               target: $(Build.SourceVersion)
               tagSource: userSpecifiedTag
               tag: $(current_version)
-              title: facet $(current_version)
+              title: $(project_name) $(current_version)
               releaseNotesSource: inline
               releaseNotesInline: |
-                This is the $(current_version) release of facet.
+                This is the $(current_version) release of $(package_name).
 
                 You can upgrade your current pip installation via
 
-                    pip install --upgrade gamma-facet
+                    pip install --upgrade $(package_name)
 
                 Your conda package can be upgraded by running
 
-                    conda install -c conda-forge -c bcg_gamma gamma-facet
+                    conda install -c conda-forge -c bcg_gamma $(package_name)
 
               isDraft: false
               isPreRelease: $(is_prerelease)
               assets: |
-                $(System.ArtifactsDirectory)/tox_default/tox/gamma-facet-*.tar.gz
-                $(System.ArtifactsDirectory)/conda_default/conda/noarch/gamma-facet-*.tar.bz2
+                $(System.ArtifactsDirectory)/tox_default/tox/$(package_name)-*.tar.gz
+                $(System.ArtifactsDirectory)/conda_default/conda/noarch/$(package_name)-*.tar.bz2
 
   # render docs and publish to GitHub Pages
   - stage:
@@ -584,7 +586,7 @@ stages:
             targetType: 'inline'
             script: |
               set -eux
-              cd $(System.DefaultWorkingDirectory)/facet
+              cd $(System.DefaultWorkingDirectory)/$(project_name)
               git checkout --track origin/github-pages
               mkdir -p docs
               sudo apt-get install tree
@@ -600,14 +602,14 @@ stages:
             script: |
               set -eux
               eval "$(conda shell.bash hook)"
-              cd $(System.DefaultWorkingDirectory)/facet
+              cd $(System.DefaultWorkingDirectory)/$(project_name)
               echo "Checking out $(branchName)"
               git checkout $(branchName)
               git status
-              export PYTHONPATH=$(System.DefaultWorkingDirectory)/facet/src/
+              export PYTHONPATH=$(System.DefaultWorkingDirectory)/$(project_name)/src/
               conda env create -f environment.yml
-              conda activate facet-develop
-              cd $(System.DefaultWorkingDirectory)/facet/
+              conda activate $(project_name)-develop
+              cd $(System.DefaultWorkingDirectory)/$(project_name)/
               python sphinx/make.py html
               echo "Current docs contents:"
               tree docs
@@ -622,11 +624,11 @@ stages:
               cp -r $(Build.ArtifactStagingDirectory)/old_docs/docs .
               echo "Current docs contents:"
               tree docs
-              mkdir -p $(System.DefaultWorkingDirectory)/facet/sphinx/build/
-              cp -R docs/docs-version $(System.DefaultWorkingDirectory)/facet/sphinx/build/
+              mkdir -p $(System.DefaultWorkingDirectory)/$(project_name)/sphinx/build/
+              cp -R docs/docs-version $(System.DefaultWorkingDirectory)/$(project_name)/sphinx/build/
               echo "Building sphinx docs"
-              conda activate facet-develop
-              cd $(System.DefaultWorkingDirectory)/facet
+              conda activate $(project_name)-develop
+              cd $(System.DefaultWorkingDirectory)/$(project_name)
               python sphinx/make.py prepare_docs_deployment
               echo "Current docs contents:"
               tree docs
@@ -640,7 +642,7 @@ stages:
             targetType: 'inline'
             script: |
               set -eux
-              cd $(System.DefaultWorkingDirectory)/facet
+              cd $(System.DefaultWorkingDirectory)/$(project_name)
               echo "Adjusting git credentials"
               git config --global user.name "Azure Pipelines"
               git config --global user.email "azuredevops@microsoft.com"
