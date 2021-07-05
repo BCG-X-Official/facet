@@ -34,7 +34,9 @@ variables:
   source_is_develop_branch: $[ or(startsWith(variables['branchName'], 'develop'), startsWith(variables['branchName'], 'dev/')) ]
   is_scheduled: $[ eq(variables['Build.Reason'], 'Schedule') ]
   project_name: facet
+  project_root: $(project_name)
   package_name: gamma-facet
+  sshPublicKey: $(sshPublicKey_facet)
 
 stages:
   # check code quality first to fail fast (isort, flake8, black)
@@ -91,6 +93,7 @@ stages:
             inputs:
               targetType: 'inline'
               script: |
+                echo Repo: $(Build.DefinitionName)
                 cd $(System.DefaultWorkingDirectory)
                 files_changed=$(git diff $(Build.SourceVersion)^! --name-only)
                 echo "Files changed since last commit: ${files_changed}"
@@ -201,13 +204,13 @@ stages:
             versionSpec: '$(FACET_V_PYTHON_BUILD)'
           displayName: 'Use Python $(FACET_V_PYTHON_BUILD)'
 
-        - checkout: self
         - checkout: pytools
+        - checkout: self
 
         - script: dir $(Build.SourcesDirectory)
 
         - script: |
-            conda install -y -c anaconda conda-build=3.20.5 conda-verify toml=0.10.* flit=3.0.*
+            conda install -y -c anaconda conda-build~=3.20.5 conda-verify toml=0.10.* flit=3.0.*
           displayName: 'Install conda-build, flit, toml'
           condition: eq(variables['BUILD_SYSTEM'], 'conda')
 
@@ -228,13 +231,13 @@ stages:
               if [ "$BUILD_SYSTEM" = "conda" ] ; then eval "$(conda shell.bash hook)" ; fi
               export RUN_PACKAGE_VERSION_TEST=$(project_name)
 
-              cd $(Build.SourcesDirectory)/$(project_name)
+              cd $(Build.SourcesDirectory)/$(project_root)
               ./make.py $(project_name) $(BUILD_SYSTEM) $(PKG_DEPENDENCIES)
           displayName: "build & test"
 
         - task: CopyFiles@2
           inputs:
-            sourceFolder: $(System.DefaultWorkingDirectory)/$(project_name)/dist
+            sourceFolder: $(System.DefaultWorkingDirectory)/$(project_root)/dist
             targetFolder: $(Build.ArtifactStagingDirectory)
 
         - task: PublishBuildArtifacts@1
@@ -288,8 +291,8 @@ stages:
             versionSpec: '$(FACET_V_PYTHON_BUILD)'
           displayName: 'Use Python $(FACET_V_PYTHON_BUILD)'
 
-        - checkout: self
         - checkout: pytools
+        - checkout: self
 
         - script: dir $(Build.SourcesDirectory)
 
@@ -315,13 +318,13 @@ stages:
               if [ "$BUILD_SYSTEM" = "conda" ] ; then eval "$(conda shell.bash hook)" ; fi
               export RUN_PACKAGE_VERSION_TEST=$(project_name)
 
-              cd $(Build.SourcesDirectory)/$(project_name)
+              cd $(Build.SourcesDirectory)/$(project_root)
               ./make.py $(project_name) $(BUILD_SYSTEM) $(PKG_DEPENDENCIES)
           displayName: "build & test"
 
         - task: CopyFiles@2
           inputs:
-            sourceFolder: $(System.DefaultWorkingDirectory)/$(project_name)/dist
+            sourceFolder: $(System.DefaultWorkingDirectory)/$(project_root)/dist
             targetFolder: $(Build.ArtifactStagingDirectory)
 
         - task: PublishBuildArtifacts@1
@@ -384,8 +387,8 @@ stages:
               versionSpec: '3.7.*'
             displayName: 'use Python 3.7'
 
-          - checkout: self
           - checkout: pytools
+          - checkout: self
 
           - task: Bash@3
             env:
@@ -449,8 +452,8 @@ stages:
               versionSpec: '3.7.*'
             displayName: 'use Python 3.7'
 
-          - checkout: self
           - checkout: pytools
+          - checkout: self
 
           - task: Bash@3
             inputs:
@@ -459,7 +462,7 @@ stages:
                 set -eux
                 echo "Getting version"
                 pip install packaging
-                cd $(System.DefaultWorkingDirectory)/$(project_name)/src
+                cd $(System.DefaultWorkingDirectory)/$(project_root)/src
                 export PYTHONPATH=$(System.DefaultWorkingDirectory)/pytools/sphinx/base
                 version=$(python -c "import make_base; print(make_base.get_package_version())")
                 echo "Current version: $version"
@@ -496,7 +499,7 @@ stages:
 
           - script: |
               set -eux
-              cd $(System.DefaultWorkingDirectory)/$(project_name)
+              cd $(System.DefaultWorkingDirectory)/$(project_root)
               pip install flit
               flit install -s
               flit publish
@@ -572,12 +575,12 @@ stages:
         - task: InstallSSHKey@0
           inputs:
             knownHostsEntry: $(knownHostsEntry)
-            sshPublicKey: $(sshPublicKey_facet)
-            sshKeySecureFile: 'deploy_docs_facet'
+            sshPublicKey: $(sshPublicKey)
+            sshKeySecureFile: 'deploy_docs_$(project_name)'
           displayName: 'Install the deploy SSH key'
 
-        - checkout: self
         - checkout: pytools
+        - checkout: self
 
         - script: dir $(Build.SourcesDirectory)
 
@@ -586,7 +589,7 @@ stages:
             targetType: 'inline'
             script: |
               set -eux
-              cd $(System.DefaultWorkingDirectory)/$(project_name)
+              cd $(System.DefaultWorkingDirectory)/$(project_root)
               git checkout --track origin/github-pages
               mkdir -p docs
               sudo apt-get install tree
@@ -602,14 +605,14 @@ stages:
             script: |
               set -eux
               eval "$(conda shell.bash hook)"
-              cd $(System.DefaultWorkingDirectory)/$(project_name)
+              cd $(System.DefaultWorkingDirectory)/$(project_root)
               echo "Checking out $(branchName)"
               git checkout $(branchName)
               git status
-              export PYTHONPATH=$(System.DefaultWorkingDirectory)/$(project_name)/src/
+              export PYTHONPATH=$(System.DefaultWorkingDirectory)/$(project_root)/src/
               conda env create -f environment.yml
               conda activate $(project_name)-develop
-              cd $(System.DefaultWorkingDirectory)/$(project_name)/
+              cd $(System.DefaultWorkingDirectory)/$(project_root)/
               python sphinx/make.py html
               echo "Current docs contents:"
               tree docs
@@ -624,11 +627,11 @@ stages:
               cp -r $(Build.ArtifactStagingDirectory)/old_docs/docs .
               echo "Current docs contents:"
               tree docs
-              mkdir -p $(System.DefaultWorkingDirectory)/$(project_name)/sphinx/build/
-              cp -R docs/docs-version $(System.DefaultWorkingDirectory)/$(project_name)/sphinx/build/
+              mkdir -p $(System.DefaultWorkingDirectory)/$(project_root)/sphinx/build/
+              cp -R docs/docs-version $(System.DefaultWorkingDirectory)/$(project_root)/sphinx/build/
               echo "Building sphinx docs"
               conda activate $(project_name)-develop
-              cd $(System.DefaultWorkingDirectory)/$(project_name)
+              cd $(System.DefaultWorkingDirectory)/$(project_root)
               python sphinx/make.py prepare_docs_deployment
               echo "Current docs contents:"
               tree docs
@@ -642,7 +645,7 @@ stages:
             targetType: 'inline'
             script: |
               set -eux
-              cd $(System.DefaultWorkingDirectory)/$(project_name)
+              cd $(System.DefaultWorkingDirectory)/$(project_root)
               echo "Adjusting git credentials"
               git config --global user.name "Azure Pipelines"
               git config --global user.email "azuredevops@microsoft.com"
