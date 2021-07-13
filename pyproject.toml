@@ -15,19 +15,19 @@ license = "Apache Software License v2.0"
 
 requires = [
     # direct requirements of gamma-facet
-    "gamma-pytools  ~=1.1.2",
-    "matplotlib     ==3.*",
+    "gamma-pytools  ~=1.1,>=1.1.2",
+    "matplotlib     ~=3.0",
     "numpy          >=1.16,<1.21a",
-    "packaging      ==20.*",
+    "packaging      ~=20.0",
     "pandas         >=0.24,<2a",
     "scipy          ~=1.2",
-    "shap           >=0.34,<0.40",
+    "shap           >=0.34,<0.40a",
     "sklearndf      ~=1.1",
     # additional requirements of shap 0.38
     "ipython        >=7",
 ]
 
-requires-python = "~=3.6"
+requires-python = ">=3.6,<4a"
 
 classifiers = [
     "Development Status :: 5 - Production/Stable",
@@ -54,15 +54,15 @@ testing = [
     "isort ~= 5.5",
 ]
 docs = [
-    "sphinx == 3.4.*",
-    "sphinx-autodoc-typehints == 1.11.*",
-    "pydata-sphinx-theme == 0.4.*",
+    "sphinx ~= 3.4.0",
+    "sphinx-autodoc-typehints ~= 1.11.0",
+    "pydata-sphinx-theme ~= 0.4.0",
     "jinja2 ~= 2.11",
-    "nbsphinx == 0.7.*",
-    "jupyter == 1.*",
-    "docutils == 0.16.*",
+    "nbsphinx ~= 0.8.5",
+    "jupyter ~= 1.0",
+    "docutils ~= 0.16.0",
     "xlrd ~= 1.2",
-    "m2r == 0.2.*"
+    "m2r ~= 0.2.0"
 ]
 
 [tool.flit.metadata.urls]
@@ -71,41 +71,45 @@ Repository = "https://github.com/BCG-Gamma/facet"
 
 [build.matrix.min]
 # direct requirements of gamma-facet
-gamma-pytools  = "=1.1.2"
-matplotlib     = "=3.0.*"
-numpy          = "=1.16.*"
-packaging      = "=20.*"
-pandas         = "=0.24.*"
-python         = "=3.6.*"
-scipy          = "=1.2.*"
-shap           = "=0.34.*"
-sklearndf      = "=1.1.*"
+gamma-pytools  = "~=1.1.5"
+matplotlib     = "~=3.0.3"
+numpy          = ">=1.16.6,<17a"
+packaging      = "~=20.9"
+pandas         = "~=0.24.2"
+python         = "~=3.6.13"
+scipy          = "~=1.2.1"
+shap           = "~=0.34.0"
+sklearndf      = "~=1.1.0"
 # additional minimum requirements of sklearndf
-boruta         = "=0.3.*"
-lightgbm       = "=3.0.*"
-scikit-learn   = "=0.21.*"
+boruta         = "~=0.3.0"
+lightgbm       = "~=3.0.0"
+scikit-learn   = "~=0.21.3"
 # additional minimum requirements of gamma-pytools
-joblib         = "=0.14.*"
-typing_inspect = "=0.4"
+joblib         = "~=0.14.2"
+typing_inspect = "~=0.4.0"
+# additional minimum requirements of shap
+ipython        = "~=7.0"
 
 [build.matrix.max]
 # direct requirements of gamma-facet
 gamma-pytools  = "~=1.1,>=1.1.2"
 matplotlib     = "~=3.3"
-numpy          = "=1.20.*"
-packaging      = "=20.*"
+numpy          = ">=1.20,<2a"
+packaging      = "~=20.9"
 pandas         = "~=1.2"
 python         = "~=3.8"
-scipy          = "~=1.5"
-shap           = "=0.39.*"
+scipy          = "~=1.5.3"
+shap           = "~=0.39.0"
 sklearndf      = "~=1.1"
-# additional requirements of sklearndf
+# additional maximum requirements of sklearndf
 boruta         = "~=0.3"
 lightgbm       = "~=3.2"
-scikit-learn   = "~=0.23"
+scikit-learn   = "~=0.23.2"
 # additional maximum requirements of gamma-pytools
-joblib         = "=1.*"
-typing_inspect = "~=0.6"
+joblib         = "~=1.0"
+typing_inspect = "~=0.6.0"
+# additional maximum requirements of shap
+ipython        = ">=7"
 
 [tool.black]
 # quiet = "True"
