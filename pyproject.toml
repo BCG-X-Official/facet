@@ -85,7 +85,7 @@ boruta         = "~=0.3.0"
 lightgbm       = "~=3.0.0"
 scikit-learn   = "~=0.21.3"
 # additional minimum requirements of gamma-pytools
-joblib         = "~=0.14.2"
+joblib         = "~=0.14.1"
 typing_inspect = "~=0.4.0"
 # additional minimum requirements of shap
 ipython        = "~=7.0"
