@@ -9,7 +9,7 @@ dependencies:
   - joblib = 1.*
   - lightgbm ~= 3.2
   - matplotlib ~= 3.3
-  - numpy ~= 1.16
+  - numpy ~= 1.17
   - pandas ~= 1.2
   - python ~= 3.8
   - scikit-learn ~= 0.23.1
@@ -38,7 +38,7 @@ dependencies:
   # notebooks
   - jupyterlab = 3.*
   - nbclassic ~= 0.2.8
-  - nbsphinx = 0.7.*
+  - nbsphinx ~= 0.8.5
   - openpyxl = 3.*
   - seaborn = 0.11.*
   - tableone = 0.7.*

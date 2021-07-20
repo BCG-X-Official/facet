@@ -17,6 +17,8 @@ requirements:
     - python=3.8.*
   run:
     - gamma-pytools {{ environ.get('FACET_V_GAMMA_PYTOOLS') }}
+    - ipython {{ environ.get('FACET_V_IPYTHON') }}
+    - joblib {{ environ.get('FACET_V_JOBLIB') }}
     - lightgbm {{ environ.get('FACET_V_LIGHTGBM') }}
     - matplotlib {{ environ.get('FACET_V_MATPLOTLIB') }}
     - numpy {{ environ.get('FACET_V_NUMPY') }}
