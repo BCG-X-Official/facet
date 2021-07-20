@@ -16,8 +16,6 @@ requirements:
     - pip>=20.*
     - python=3.8.*
   run:
-    # boruta is called boruta_py on conda-forge
-    - boruta_py {{ environ.get('FACET_V_BORUTA') }}
     - gamma-pytools {{ environ.get('FACET_V_GAMMA_PYTOOLS') }}
     - ipython {{ environ.get('FACET_V_IPYTHON') }}
     - joblib {{ environ.get('FACET_V_JOBLIB') }}
