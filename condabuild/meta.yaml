@@ -20,7 +20,7 @@ requirements:
     - ipython         {{ environ.get('FACET_V_IPYTHON') }}
     - joblib          {{ environ.get('FACET_V_JOBLIB') }}
     - lightgbm        {{ environ.get('FACET_V_LIGHTGBM') }}
-    - matplotlib-base {{ environ.get('FACET_V_MATPLOTLIB_BASE') }}
+    - matplotlib-base {{ environ.get('FACET_V_MATPLOTLIB') }}
     - numpy           {{ environ.get('FACET_V_NUMPY') }}
     - packaging       {{ environ.get('FACET_V_PACKAGING') }}
     - pandas          {{ environ.get('FACET_V_PANDAS') }}
