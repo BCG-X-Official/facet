@@ -18,7 +18,7 @@ requires = [
     "gamma-pytools  ~=1.2,>=1.2.1",
     "matplotlib     ~=3.0",
     "numpy          >=1.17,<2a",
-    "packaging      ~=20",
+    "packaging      >=20",
     "pandas         >=0.24,<2a",
     "scipy          ~=1.2",
     "shap           >=0.34,<0.40a",
