@@ -100,12 +100,7 @@ class BaseBootstrapCV(BaseCrossValidator, metaclass=ABCMeta):
         if n < 2:
             raise ValueError("arg X must have at least 2 rows")
 
-        if y is None:
-            raise ValueError(
-                "no target variable specified in arg y as labels for stratification"
-            )
-
-        if n != len(y):
+        if y is not None and n != len(y):
             raise ValueError("args X and y must have the same length")
 
         if groups is not None:
@@ -185,6 +180,10 @@ class StratifiedBootstrapCV(BaseBootstrapCV):
         random_state: np.random.RandomState,
         y: Union[np.ndarray, pd.Series, pd.DataFrame, None],
     ) -> np.ndarray:
+        if y is None:
+            raise ValueError(
+                "no target variable specified in arg y as labels for stratification"
+            )
         if isinstance(y, pd.Series):
             y = y.values
         elif not (isinstance(y, np.ndarray) and y.ndim == 1):
