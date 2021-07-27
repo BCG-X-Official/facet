@@ -1,7 +1,7 @@
 """
 Core implementation of :mod:`facet.validation`.
 """
-
+import warnings
 from abc import ABCMeta, abstractmethod
 from typing import Generator, Iterator, Optional, Sequence, Tuple, Union
 
@@ -67,6 +67,14 @@ class BaseBootstrapCV(BaseCrossValidator, metaclass=ABCMeta):
         :param groups: for compatibility only, not used
         :return: the number of splits
         """
+
+        for arg_name, arg in ("X", X), ("y", y), ("groups", groups):
+            if arg is not None:
+                warnings.warn(
+                    f"arg {arg_name} is not used but got {arg_name}={arg!r}",
+                    stacklevel=2,
+                )
+
         return self.n_splits
 
     # noinspection PyPep8Naming
@@ -74,24 +82,34 @@ class BaseBootstrapCV(BaseCrossValidator, metaclass=ABCMeta):
         self,
         X: Union[np.ndarray, pd.DataFrame],
         y: Union[np.ndarray, pd.Series, pd.DataFrame, None] = None,
-        groups: Sequence = None,
+        groups: Union[np.ndarray, pd.Series, pd.DataFrame, None] = None,
     ) -> Generator[Tuple[np.ndarray, np.ndarray], None, None]:
         """
         Generate indices to split data into training and test set.
 
         :param X: features
-        :param y: target
-        :param groups: not used
+        :param y: target: target variable for supervised learning problems,
+            used as labels for stratification
+        :param groups: ignored; exists for compatibility
         :return: a generator yielding `(train, test)` tuples where
             train and test are numpy arrays with train and test indices, respectively
         """
 
         n = len(X)
 
-        if y is not None and n != len(y):
-            raise ValueError("args X and y must have the same length")
         if n < 2:
-            raise ValueError("args X and y must have a length of at least 2")
+            raise ValueError("arg X must have at least 2 rows")
+
+        if y is None:
+            raise ValueError(
+                "no target variable specified in arg y as labels for stratification"
+            )
+
+        if n != len(y):
+            raise ValueError("args X and y must have the same length")
+
+        if groups is not None:
+            warnings.warn(f"ignoring arg groups={groups!r}", stacklevel=2)
 
         rs = check_random_state(self.random_state)
         indices = np.arange(n)
@@ -114,9 +132,9 @@ class BaseBootstrapCV(BaseCrossValidator, metaclass=ABCMeta):
         y: Union[np.ndarray, pd.Series, pd.DataFrame, None],
     ) -> np.ndarray:
         """
-        :param y: target
         :param n_samples: number of indices to sample
         :param random_state: random state object to be used for random sampling
+        :param y: labels for stratification
         :return: an array of integer indices with shape ``[n_samples]``
         """
         pass
@@ -167,16 +185,16 @@ class StratifiedBootstrapCV(BaseBootstrapCV):
         random_state: np.random.RandomState,
         y: Union[np.ndarray, pd.Series, pd.DataFrame, None],
     ) -> np.ndarray:
-        if y is None:
-            raise ValueError("arg y must be specified")
-        if not (
-            isinstance(y, pd.Series) or (isinstance(y, np.ndarray) and y.ndim == 1)
-        ):
-            raise ValueError("arg y must be a Series or a 1d numpy array")
+        if isinstance(y, pd.Series):
+            y = y.values
+        elif not (isinstance(y, np.ndarray) and y.ndim == 1):
+            raise ValueError(
+                "target labels must be provided as a Series or a 1d numpy array"
+            )
 
         return (
             pd.Series(np.arange(len(y)))
-            .groupby(by=y.values if isinstance(y, pd.Series) else y)
+            .groupby(by=y)
             .apply(
                 lambda group: group.sample(
                     n=len(group), replace=True, random_state=random_state
