@@ -227,6 +227,73 @@ def test_univariate_target_subsample_simulation(
     )
 
 
+def test_univariate_uplift_subsample_simulation_full_sample(
+    crossfit: LearnerCrossfit, subsample: pd.Index, n_jobs: int
+) -> None:
+
+    parameterized_feature = "LSTAT"
+    partitioner = ContinuousRangePartitioner(max_partitions=10)
+
+    target_simulator = UnivariateUpliftSimulator(
+        crossfit=crossfit,
+        subsample=subsample,
+        confidence_level=0.95,
+        n_jobs=n_jobs,
+        verbose=50,
+    )
+
+    target_simulator.full_sample = True
+
+    simulation_result: UnivariateSimulationResult = target_simulator.simulate_feature(
+        feature_name=parameterized_feature,
+        partitioner=partitioner,
+    )
+
+    # test the first five rows of aggregated_results
+    # the values were computed from a correct run
+
+    index = pd.Index(
+        data=[2.0, 4.0, 6.0, 8.0, 10.0, 12.0, 14.0, 16.0, 18.0],
+        name=UnivariateTargetSimulator.IDX_PARTITION,
+    )
+
+    assert_series_equal(
+        simulation_result.outputs_lower_bound().round(6),
+        pd.Series(
+            [1.800835, 1.800835, 1.800835, -0.320393, -1.847194]
+            + [-2.074327, -2.539217, -2.825394, -2.825394],
+            name=UnivariateSimulationResult.COL_LOWER_BOUND,
+            index=index,
+        ),
+    )
+
+    assert_series_equal(
+        simulation_result.outputs_median().round(6),
+        pd.Series(
+            [2.696227, 2.696227, 2.696227, 0.652706, -0.878943]
+            + [-1.081172, -1.494944, -1.750046, -1.750046],
+            name=UnivariateSimulationResult.COL_MEDIAN,
+            index=index,
+        ),
+    )
+
+    assert_series_equal(
+        simulation_result.outputs_upper_bound().round(6),
+        pd.Series(
+            [3.59162, 3.59162, 3.59162, 1.625805, 0.089307]
+            + [-0.088017, -0.450671, -0.674698, -0.674698],
+            name=UnivariateSimulationResult.COL_UPPER_BOUND,
+            index=index,
+        ),
+    )
+
+    SimulationDrawer(style="text").draw(
+        data=target_simulator.simulate_feature(
+            feature_name=parameterized_feature, partitioner=partitioner
+        )
+    )
+
+
 def test_actuals_simulation(uplift_simulator: UnivariateUpliftSimulator) -> None:
 
     assert_series_equal(
