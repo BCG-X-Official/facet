@@ -444,8 +444,7 @@ class BaseUnivariateSimulator(
 
         :param feature_name: name of the feature to use in the simulation
         :param simulation_values: values to use in the simulation
-        :return: data frame with three columns: ``crossfit_id``, ``parameter_value`` and
-          ``simulation_result``.
+        :return: data frame with splits as rows and partitions as columns.
         """
 
         if feature_name not in self.sample.features.columns:
