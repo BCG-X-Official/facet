@@ -2,6 +2,7 @@ import logging
 
 import pandas as pd
 import pytest
+from numpy.testing import assert_array_equal
 from pandas.testing import assert_series_equal
 from pytest import approx
 
@@ -130,6 +131,10 @@ def test_univariate_target_simulation(
         ),
     )
 
+    assert_array_equal(
+        simulation_result.partitioner.frequencies_, [1, 31, 37, 19, 8, 1]
+    )
+
     SimulationDrawer(style="text").draw(
         data=target_simulator.simulate_feature(
             feature_name=parameterized_feature, partitioner=partitioner
@@ -220,6 +225,10 @@ def test_univariate_target_subsample_simulation(
         ),
     )
 
+    assert_array_equal(
+        simulation_result.partitioner.frequencies_, [1, 4, 9, 10, 10, 6, 2, 1, 4]
+    )
+
     SimulationDrawer(style="text").draw(
         data=target_simulator.simulate_feature(
             feature_name=parameterized_feature, partitioner=partitioner
@@ -285,6 +294,10 @@ def test_univariate_uplift_subsample_simulation_full_sample(
             name=UnivariateSimulationResult.COL_UPPER_BOUND,
             index=index,
         ),
+    )
+
+    assert_array_equal(
+        simulation_result.partitioner.frequencies_, [1, 4, 9, 10, 10, 6, 2, 1, 4]
     )
 
     SimulationDrawer(style="text").draw(
@@ -364,6 +377,10 @@ def test_univariate_uplift_simulation(
             name=UnivariateSimulationResult.COL_UPPER_BOUND,
             index=index,
         ),
+    )
+
+    assert_array_equal(
+        simulation_result.partitioner.frequencies_, [1, 31, 37, 19, 8, 1]
     )
 
     SimulationDrawer(style="text").draw(
@@ -454,6 +471,10 @@ def test_univariate_uplift_subsample_simulation(
             name=UnivariateSimulationResult.COL_UPPER_BOUND,
             index=index,
         ),
+    )
+
+    assert_array_equal(
+        simulation_result.partitioner.frequencies_, [1, 4, 9, 10, 10, 6, 2, 1, 4]
     )
 
     SimulationDrawer(style="text").draw(
