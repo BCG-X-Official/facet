@@ -20,10 +20,10 @@ from typing import (
 
 import numpy as np
 import pandas as pd
+from scipy import stats
 
 from pytools.api import AllTracker, inheritdoc
 from pytools.parallelization import Job, JobRunner, ParallelizableMixin
-from scipy import stats
 from sklearndf import LearnerDF
 from sklearndf.pipeline import (
     ClassifierPipelineDF,
