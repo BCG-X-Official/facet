@@ -20,6 +20,7 @@ from typing import (
 
 import numpy as np
 import pandas as pd
+from scipy import stats
 
 from pytools.api import AllTracker, inheritdoc
 from pytools.parallelization import Job, JobRunner, ParallelizableMixin
@@ -131,9 +132,12 @@ class UnivariateSimulationResult(Generic[T_Partition]):
         """
         super().__init__()
 
-        assert (
-            outputs.index.name == BaseUnivariateSimulator.IDX_SPLIT
-        ), f"row index of arg outputs is named {BaseUnivariateSimulator.IDX_SPLIT}"
+        assert outputs.index.name in [
+            BaseUnivariateSimulator.IDX_SPLIT,
+            # for the experimental _full sample_ feature, we also accept "metric" as
+            # the name of the row index
+            "metric",
+        ], f"row index of arg outputs is named {BaseUnivariateSimulator.IDX_SPLIT}"
         assert outputs.columns.name == BaseUnivariateSimulator.IDX_PARTITION, (
             "column index of arg outputs is named "
             f"{BaseUnivariateSimulator.IDX_PARTITION}"
@@ -158,7 +162,14 @@ class UnivariateSimulationResult(Generic[T_Partition]):
         :return: a series of medians, indexed by the central values of the partitions
             for which the simulation was run
         """
-        return self.outputs.median().rename(UnivariateSimulationResult.COL_MEDIAN)
+        if self._full_sample:
+            # experimental feature: we only simulated using one model fit on the full
+            # sample; return the mean outputs for each partition without aggregating
+            # further
+            values = self.outputs.loc["mean"]
+        else:
+            values = self.outputs.median()
+        return values.rename(UnivariateSimulationResult.COL_MEDIAN)
 
     def outputs_lower_bound(self) -> pd.Series:
         """
@@ -168,9 +179,19 @@ class UnivariateSimulationResult(Generic[T_Partition]):
         :return: a series of medians, indexed by the central values of the partitions
             for which the simulation was run
         """
-        return self.outputs.quantile(q=(1.0 - self.confidence_level) / 2.0).rename(
-            UnivariateSimulationResult.COL_LOWER_BOUND
-        )
+        if self._full_sample:
+            # experimental feature: we only simulated using one model fit on the full
+            # sample; return the mean outputs for each partition without aggregating
+            # further, and determine the lower confidence bound based on the standard
+            # error of the mean and the desired confidence level
+            values = (
+                self.outputs.loc["mean"]
+                + stats.norm.ppf((1.0 - self.confidence_level) / 2.0)
+                * self.outputs.loc["sem"]
+            )
+        else:
+            values = self.outputs.quantile(q=(1.0 - self.confidence_level) / 2.0)
+        return values.rename(UnivariateSimulationResult.COL_LOWER_BOUND)
 
     def outputs_upper_bound(self) -> pd.Series:
         """
@@ -180,9 +201,25 @@ class UnivariateSimulationResult(Generic[T_Partition]):
         :return: a series of medians, indexed by the central values of the partitions
             for which the simulation was run
         """
-        return self.outputs.quantile(
-            q=1.0 - (1.0 - self.confidence_level) / 2.0
-        ).rename(UnivariateSimulationResult.COL_UPPER_BOUND)
+        if self._full_sample:
+            # experimental feature: we only simulated using one model fit on the full
+            # sample; return the mean outputs for each partition without aggregating
+            # further, and determine the upper confidence bound based on the standard
+            # error of the mean and the desired confidence level
+            values = (
+                self.outputs.loc["mean"]
+                - stats.norm.ppf((1.0 - self.confidence_level) / 2.0)
+                * self.outputs.loc["sem"]
+            )
+        else:
+            values = self.outputs.quantile(q=1.0 - (1.0 - self.confidence_level) / 2.0)
+        return values.rename(UnivariateSimulationResult.COL_UPPER_BOUND)
+
+    @property
+    def _full_sample(self) -> bool:
+        # experimental _full sample_ feature is active iff the name of the row index
+        # is "metric"
+        return self.outputs.index.name == "metric"
 
 
 class BaseUnivariateSimulator(
@@ -391,7 +428,7 @@ class BaseUnivariateSimulator(
 
     @staticmethod
     @abstractmethod
-    def _simulate(model: T_LearnerPipelineDF, x: pd.DataFrame) -> float:
+    def _simulate(model: T_LearnerPipelineDF, x: pd.DataFrame) -> pd.Series:
         pass
 
     def _simulate_feature_with_values(
@@ -407,16 +444,17 @@ class BaseUnivariateSimulator(
 
         :param feature_name: name of the feature to use in the simulation
         :param simulation_values: values to use in the simulation
-        :return: data frame with three columns: ``crossfit_id``, ``parameter_value`` and
-          ``simulation_result``.
+        :return: data frame with splits as rows and partitions as columns.
         """
 
         if feature_name not in self.sample.features.columns:
             raise ValueError(f"feature not in sample: {feature_name}")
 
-        simulation_results_per_split: List[np.ndarray] = JobRunner.from_parallelizable(
-            self
-        ).run_jobs(
+        # for each split, calculate the mean simulation outputs and the standard error
+        # of each mean
+        simulation_means_and_sems_per_split: List[
+            Tuple[Sequence[float], Sequence[float]]
+        ] = JobRunner.from_parallelizable(self).run_jobs(
             *(
                 Job.delayed(UnivariateUpliftSimulator._simulate_values_for_split)(
                     model=model,
@@ -429,10 +467,34 @@ class BaseUnivariateSimulator(
             )
         )
 
+        index_name: str
+        index: Optional[List[str]]
+        simulation_results_per_split: List[List[float]]
+
+        if self._full_sample:
+            # experimental "full sample" feature: we only worked with one split
+            # (which is the full sample); for that split we preserve the means and
+            # standard errors of the means for each partition
+            assert len(simulation_means_and_sems_per_split) == 1
+            simulation_results_per_split = [
+                # convert mean and sem tuple to a list
+                list(seq_result)
+                for seq_result in simulation_means_and_sems_per_split[0]
+            ]
+            index_name = "metric"
+            index = ["mean", "sem"]
+        else:
+            # existing approach: only keep the means for each split
+            simulation_results_per_split = [
+                list(seq_mean) for seq_mean, _ in simulation_means_and_sems_per_split
+            ]
+            index_name = BaseUnivariateSimulator.IDX_SPLIT
+            index = None
+
         return pd.DataFrame(
-            simulation_results_per_split, columns=simulation_values
+            simulation_results_per_split, columns=simulation_values, index=index
         ).rename_axis(
-            index=BaseUnivariateSimulator.IDX_SPLIT,
+            index=index_name,
             columns=BaseUnivariateSimulator.IDX_PARTITION,
         )
 
@@ -441,6 +503,23 @@ class BaseUnivariateSimulator(
         # we don't need duplicate indices to calculate the intersection
         # with the samples of the test split, so we drop them
         sample_index = sample.index.unique()
+
+        if self._full_sample:
+            # experimental flag: if `True`, simulate on full sample using all data
+            xf_sample: Sample = self.crossfit.sample_
+            return iter(
+                (
+                    (
+                        self.crossfit.pipeline.clone().fit(
+                            X=xf_sample.features,
+                            y=xf_sample.target,
+                            sample_weight=xf_sample.weight,
+                        ),
+                        sample,
+                    ),
+                )
+            )
+
         xf_sample_index = self.crossfit.sample_.index
         return (
             (model, subsample)
@@ -458,22 +537,30 @@ class BaseUnivariateSimulator(
             if len(subsample)
         )
 
+    @property
+    def _full_sample(self) -> Sample:
+        # experimental flag: if `True`, simulate on full sample using all data
+        full_sample = getattr(self, "full_sample", False)
+        return full_sample
+
     @staticmethod
     def _simulate_values_for_split(
         model: LearnerDF,
         subsample: Sample,
         feature_name: str,
         simulated_values: Optional[Sequence[Any]],
-        simulate_fn: Callable[[LearnerDF, pd.DataFrame], float],
-    ) -> np.ndarray:
-        # for a list of values to be simulated, return a list of absolute target changes
+        simulate_fn: Callable[[LearnerDF, pd.DataFrame], pd.Series],
+    ) -> Tuple[Sequence[float], Sequence[float]]:
+        # for a list of values to be simulated, return a sequence of mean outputs
+        # and a sequence of standard errors of those means
 
         n_observations = len(subsample)
         features = subsample.features
         feature_dtype = features.loc[:, feature_name].dtype
 
-        return np.array(
-            [
+        outputs_mean_sem: List[Tuple[float, float]] = [
+            (outputs_sr.mean(), outputs_sr.sem())
+            for outputs_sr in (
                 simulate_fn(
                     model,
                     features.assign(
@@ -487,17 +574,19 @@ class BaseUnivariateSimulator(
                     ),
                 )
                 for value in simulated_values
-            ]
-        )
+            )
+        ]
+        outputs_mean, outputs_sem = zip(*outputs_mean_sem)
+        return outputs_mean, outputs_sem
 
     @staticmethod
     def _simulate_actuals(
         model: LearnerDF,
         x: pd.DataFrame,
         y_mean: float,
-        simulate_fn: Callable[[LearnerDF, pd.DataFrame], float],
-    ):
-        return simulate_fn(model, x) - y_mean
+        simulate_fn: Callable[[LearnerDF, pd.DataFrame], pd.Series],
+    ) -> float:
+        return simulate_fn(model, x).mean() - y_mean
 
 
 @inheritdoc(match="[see superclass]")
@@ -565,11 +654,11 @@ class UnivariateProbabilitySimulator(BaseUnivariateSimulator[ClassifierPipelineD
         return ClassifierPipelineDF
 
     @staticmethod
-    def _simulate(model: ClassifierPipelineDF, x: pd.DataFrame) -> float:
+    def _simulate(model: ClassifierPipelineDF, x: pd.DataFrame) -> pd.Series:
         probabilities: pd.DataFrame = model.predict_proba(x)
         if probabilities.shape[1] != 2:
             raise TypeError("only binary classifiers are supported")
-        return probabilities.iloc[:, 1].mean()
+        return probabilities.iloc[:, 1]
 
 
 class _UnivariateRegressionSimulator(
@@ -588,8 +677,10 @@ class _UnivariateRegressionSimulator(
         return RegressorPipelineDF
 
     @staticmethod
-    def _simulate(model: RegressorPipelineDF, x: pd.DataFrame) -> float:
-        return model.predict(X=x).mean(axis=0)
+    def _simulate(model: RegressorPipelineDF, x: pd.DataFrame) -> pd.Series:
+        predictions = model.predict(X=x)
+        assert predictions.ndim == 1, "single-target regressor required"
+        return predictions
 
 
 @inheritdoc(match="[see superclass]")
@@ -670,7 +761,12 @@ class UnivariateUpliftSimulator(_UnivariateRegressionSimulator):
         result = super().simulate_feature(
             feature_name=feature_name, partitioner=partitioner
         )
-        result.outputs -= self.expected_output()
+        if self._full_sample:
+            # we only offset the mean values, but not the standard errors of the means
+            # (which are relative values already so don't need to be offset)
+            result.outputs.loc["mean"] -= self.expected_output()
+        else:
+            result.outputs -= self.expected_output()
         return result
 
 
