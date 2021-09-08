@@ -1,0 +1,37 @@
+facet.simulation.UnivariateSimulationResult
+===========================================
+
+.. currentmodule:: facet.simulation
+
+.. autoclass:: UnivariateSimulationResult
+   :members:
+   :no-show-inheritance:
+   :inherited-members:
+   :special-members: __call__
+
+   
+   
+   .. rubric:: Method summary
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~UnivariateSimulationResult.outputs_lower_bound
+      ~UnivariateSimulationResult.outputs_median
+      ~UnivariateSimulationResult.outputs_upper_bound
+   
+   
+
+   
+   
+   .. rubric:: Attribute summary
+
+   .. autosummary::
+   
+      ~UnivariateSimulationResult.COL_LOWER_BOUND
+      ~UnivariateSimulationResult.COL_MEDIAN
+      ~UnivariateSimulationResult.COL_UPPER_BOUND
+   
+   
+
+   .. rubric:: Definitions

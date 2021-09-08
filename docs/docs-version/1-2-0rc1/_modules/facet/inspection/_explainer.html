@@ -1,0 +1,537 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>facet.inspection._explainer &#8212; facet  documentation</title>
+    
+  <link rel="stylesheet" href="../../../_static/css/index.f658d18f9b420779cfdf24aa0a7e2d77.css">
+
+    
+  <link rel="stylesheet"
+    href="../../../_static/vendor/fontawesome/5.13.0/css/all.min.css">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../../../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../../../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+
+    
+      
+  <link rel="stylesheet"
+    href="../../../_static/vendor/open-sans_all/1.44.1/index.css">
+  <link rel="stylesheet"
+    href="../../../_static/vendor/lato_latin-ext/1.44.1/index.css">
+
+    
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/basic.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/css/gamma.css" />
+    
+  <link rel="preload" as="script" href="../../../_static/js/index.d3f166471bb80abb5163.js">
+
+    <script id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+    <script src="../../../_static/jquery.js"></script>
+    <script src="../../../_static/underscore.js"></script>
+    <script src="../../../_static/doctools.js"></script>
+    <script src="../../../_static/js/gamma.js"></script>
+    <script src="../../../_static/js/versions.js"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="docsearch:language" content="en" />
+  </head>
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
+    
+    <nav class="navbar navbar-light navbar-expand-lg bg-light fixed-top bd-navbar" id="navbar-main">
+<div class="container-xl">
+
+    <a class="navbar-brand" href="../../../index.html">
+    
+      <img src="../../../_static/Gamma_Facet_Logo_RGB_LB.svg" class="logo" alt="logo" />
+    
+    </a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar-menu" aria-controls="navbar-menu" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div id="navbar-menu" class="col-lg-9 collapse navbar-collapse">
+      <ul id="navbar-main-elements" class="navbar-nav mr-auto">
+        
+        
+        <li class="nav-item ">
+            <a class="nav-link" href="../../../getting_started/getting_started.html">Getting started</a>
+        </li>
+        
+        <li class="nav-item ">
+            <a class="nav-link" href="../../../apidoc/facet.html">API reference</a>
+        </li>
+        
+        <li class="nav-item ">
+            <a class="nav-link" href="../../../tutorials.html">Tutorials</a>
+        </li>
+        
+        <li class="nav-item ">
+            <a class="nav-link" href="../../../contribution_guide.html">Development Guidelines</a>
+        </li>
+        
+        <li class="nav-item ">
+            <a class="nav-link" href="../../../faqs.html">FAQ</a>
+        </li>
+        
+        <li class="nav-item ">
+            <a class="nav-link" href="../../../about_us.html">About us</a>
+        </li>
+        
+        <li class="nav-item ">
+            <a class="nav-link" href="../../../release_notes.html">Release Notes</a>
+        </li>
+        
+        
+      </ul>
+
+
+      
+
+      <ul class="navbar-nav">
+        
+        
+      </ul>
+    </div>
+</div>
+    </nav>
+    
+
+    <div class="container-xl">
+      <div class="row">
+          
+          <div class="col-12 col-md-3 bd-sidebar"><form class="bd-search d-flex align-items-center" action="../../../search.html" method="get">
+  <i class="icon fas fa-search"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
+</form>
+<nav class="bd-links" id="bd-docs-nav" aria-label="Main navigation">
+
+    <div class="bd-toc-item active">
+    
+  
+    <ul class="nav bd-sidenav">
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+      </ul>
+  
+  </nav>
+          </div>
+          
+
+          
+          <div class="d-none d-xl-block col-xl-2 bd-toc">
+              
+
+<nav id="bd-toc-nav">
+    <ul class="nav section-nav flex-column">
+    
+    </ul>
+</nav>
+
+
+              
+          </div>
+          
+
+          
+          <main class="col-12 col-md-9 col-xl-7 py-md-5 pl-md-5 pr-md-4 bd-content" role="main">
+              
+              <div>
+                
+  <h1>Source code for facet.inspection._explainer</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Factories for SHAP explainers from the ``shap`` package.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">functools</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">from</span> <span class="nn">abc</span> <span class="kn">import</span> <span class="n">ABCMeta</span><span class="p">,</span> <span class="n">abstractmethod</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">shap</span>
+<span class="kn">from</span> <span class="nn">packaging</span> <span class="kn">import</span> <span class="n">version</span>
+<span class="kn">from</span> <span class="nn">sklearn.base</span> <span class="kn">import</span> <span class="n">BaseEstimator</span>
+
+<span class="kn">from</span> <span class="nn">pytools.api</span> <span class="kn">import</span> <span class="n">AllTracker</span><span class="p">,</span> <span class="n">inheritdoc</span><span class="p">,</span> <span class="n">validate_type</span>
+<span class="kn">from</span> <span class="nn">sklearndf</span> <span class="kn">import</span> <span class="n">ClassifierDF</span><span class="p">,</span> <span class="n">LearnerDF</span><span class="p">,</span> <span class="n">RegressorDF</span>
+
+<span class="n">log</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s2">&quot;BaseExplainer&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;ExplainerFactory&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;KernelExplainerFactory&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;TreeExplainerFactory&quot;</span><span class="p">,</span>
+<span class="p">]</span>
+
+
+<span class="c1">#</span>
+<span class="c1"># conditional and mock imports</span>
+<span class="c1">#</span>
+
+<span class="k">if</span> <span class="n">version</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">shap</span><span class="o">.</span><span class="n">__version__</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">version</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="s2">&quot;0.36&quot;</span><span class="p">):</span>
+    <span class="c1"># noinspection PyUnresolvedReferences</span>
+    <span class="kn">from</span> <span class="nn">shap.explainers.explainer</span> <span class="kn">import</span> <span class="n">Explainer</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="c1"># noinspection PyUnresolvedReferences</span>
+        <span class="kn">from</span> <span class="nn">shap</span> <span class="kn">import</span> <span class="n">Explainer</span>
+    <span class="k">except</span> <span class="ne">ImportError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+        <span class="n">Explainer</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span><span class="s2">&quot;Explainer&quot;</span><span class="p">,</span> <span class="p">(),</span> <span class="p">{})</span>
+
+<span class="c1">#</span>
+<span class="c1"># Ensure all symbols introduced below are included in __all__</span>
+<span class="c1">#</span>
+
+<span class="n">__tracker</span> <span class="o">=</span> <span class="n">AllTracker</span><span class="p">(</span><span class="nb">globals</span><span class="p">())</span>
+
+
+<span class="c1">#</span>
+<span class="c1"># Class definitions</span>
+<span class="c1">#</span>
+
+
+<div class="viewcode-block" id="BaseExplainer"><a class="viewcode-back" href="../../../apidoc/facet/inspection/facet.inspection.BaseExplainer.html#facet.inspection.BaseExplainer">[docs]</a><span class="k">class</span> <span class="nc">BaseExplainer</span><span class="p">(</span><span class="n">metaclass</span><span class="o">=</span><span class="n">ABCMeta</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Abstract base class of SHAP explainers, providing stubs for methods used by FACET</span>
+<span class="sd">    but not consistently supported by class :class:`shap.Explainer` across different</span>
+<span class="sd">    versions of the `shap` package.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># noinspection PyPep8Naming,PyUnresolvedReferences</span>
+<div class="viewcode-block" id="BaseExplainer.shap_values"><a class="viewcode-back" href="../../../apidoc/facet/inspection/facet.inspection.BaseExplainer.html#facet.inspection.BaseExplainer.shap_values">[docs]</a>    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">shap_values</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">X</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="s2">&quot;catboost.Pool&quot;</span><span class="p">],</span>  <span class="c1"># noqa: F821</span>
+        <span class="n">y</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]]:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Estimate the SHAP values for a set of samples.</span>
+
+<span class="sd">        :param X: matrix of samples (# samples x # features) on which to explain the</span>
+<span class="sd">            model&#39;s output</span>
+<span class="sd">        :param y: array of label values for each sample, used when explaining loss</span>
+<span class="sd">            functions</span>
+<span class="sd">        :param kwargs: additional arguments specific to the explainer implementation</span>
+<span class="sd">        :return: SHAP values as an array of shape `(n_observations, n_features)`;</span>
+<span class="sd">            a list of such arrays in the case of a multi-output model</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span></div>
+
+    <span class="c1"># noinspection PyPep8Naming,PyUnresolvedReferences</span>
+<div class="viewcode-block" id="BaseExplainer.shap_interaction_values"><a class="viewcode-back" href="../../../apidoc/facet/inspection/facet.inspection.BaseExplainer.html#facet.inspection.BaseExplainer.shap_interaction_values">[docs]</a>    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">shap_interaction_values</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">X</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="s2">&quot;catboost.Pool&quot;</span><span class="p">],</span>  <span class="c1"># noqa: F821</span>
+        <span class="n">y</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]]:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Estimate the SHAP interaction values for a set of samples.</span>
+
+<span class="sd">        :param X: matrix of samples (# samples x # features) on which to explain the</span>
+<span class="sd">            model&#39;s output</span>
+<span class="sd">        :param y: array of label values for each sample, used when explaining loss</span>
+<span class="sd">            functions</span>
+<span class="sd">        :param kwargs: additional arguments specific to the explainer implementation</span>
+<span class="sd">        :return: SHAP values as an array of shape</span>
+<span class="sd">            `(n_observations, n_features, n_features)`;</span>
+<span class="sd">            a list of such arrays in the case of a multi-output model</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span></div></div>
+
+
+<div class="viewcode-block" id="ExplainerFactory"><a class="viewcode-back" href="../../../apidoc/facet/inspection/facet.inspection.ExplainerFactory.html#facet.inspection.ExplainerFactory">[docs]</a><span class="k">class</span> <span class="nc">ExplainerFactory</span><span class="p">(</span><span class="n">metaclass</span><span class="o">=</span><span class="n">ABCMeta</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A factory for constructing :class:`~shap.Explainer` objects.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="nd">@property</span>
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">explains_raw_output</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        ``True`` if explainers made by this factory explain raw model output,</span>
+<span class="sd">        ``False`` otherwise.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+    <span class="nd">@property</span>
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">supports_shap_interaction_values</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        ``True`` if explainers made by this factory allow for calculating</span>
+<span class="sd">        SHAP interaction values, ``False`` otherwise.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+    <span class="nd">@property</span>
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">uses_background_dataset</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        ``True`` if explainers made by this factory will use a background dataset</span>
+<span class="sd">        passed to method :meth:`.make_explainer`, ``False`` otherwise.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="ExplainerFactory.make_explainer"><a class="viewcode-back" href="../../../apidoc/facet/inspection/facet.inspection.ExplainerFactory.html#facet.inspection.ExplainerFactory.make_explainer">[docs]</a>    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">make_explainer</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">:</span> <span class="n">LearnerDF</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">]</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">BaseExplainer</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Construct a new :class:`~shap.Explainer` to compute shap values.</span>
+
+<span class="sd">        :param model: fitted learner for which to compute shap values</span>
+<span class="sd">        :param data: background dataset (optional)</span>
+<span class="sd">        :return: the new explainer object</span>
+<span class="sd">        &quot;&quot;&quot;</span></div>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_remove_null_kwargs</span><span class="p">(</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">v</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">}</span>
+
+    <span class="k">def</span> <span class="nf">_validate_background_dataset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">data</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">uses_background_dataset</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;a background dataset is required to make an explainer with this &quot;</span>
+                <span class="s2">&quot;factory&quot;</span>
+            <span class="p">)</span></div>
+
+
+<span class="n">_TreeExplainer</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">type</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+
+
+<div class="viewcode-block" id="TreeExplainerFactory"><a class="viewcode-back" href="../../../apidoc/facet/inspection/facet.inspection.TreeExplainerFactory.html#facet.inspection.TreeExplainerFactory">[docs]</a><span class="nd">@inheritdoc</span><span class="p">(</span><span class="n">match</span><span class="o">=</span><span class="s2">&quot;[see superclass]&quot;</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">TreeExplainerFactory</span><span class="p">(</span><span class="n">ExplainerFactory</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A factory constructing :class:`~shap.TreeExplainer` objects.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">model_output</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">feature_perturbation</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">use_background_dataset</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        :param model_output: (optional) override the default model output parameter</span>
+<span class="sd">        :param feature_perturbation: (optional) override the default</span>
+<span class="sd">            feature_perturbation parameter</span>
+<span class="sd">        :param use_background_dataset: if ``False``, don&#39;t pass the background</span>
+<span class="sd">            dataset on to the tree explainer even if a background dataset is passed</span>
+<span class="sd">            to :meth:`.make_explainer`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="n">validate_type</span><span class="p">(</span>
+            <span class="n">model_output</span><span class="p">,</span> <span class="n">expected_type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">optional</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;arg model_output&quot;</span>
+        <span class="p">)</span>
+        <span class="n">validate_type</span><span class="p">(</span>
+            <span class="n">feature_perturbation</span><span class="p">,</span>
+            <span class="n">expected_type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+            <span class="n">optional</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">name</span><span class="o">=</span><span class="s2">&quot;arg feature_perturbation&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model_output</span> <span class="o">=</span> <span class="n">model_output</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">feature_perturbation</span> <span class="o">=</span> <span class="n">feature_perturbation</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_uses_background_dataset</span> <span class="o">=</span> <span class="n">use_background_dataset</span>
+
+        <span class="k">global</span> <span class="n">_TreeExplainer</span>
+
+        <span class="k">if</span> <span class="n">_TreeExplainer</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">_TreeExplainer</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span>
+                <span class="s2">&quot;_TreeExplainer&quot;</span><span class="p">,</span> <span class="p">(</span><span class="n">shap</span><span class="o">.</span><span class="n">TreeExplainer</span><span class="p">,</span> <span class="n">BaseExplainer</span><span class="p">),</span> <span class="p">{}</span>
+            <span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">explains_raw_output</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;[see superclass]&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_output</span> <span class="ow">in</span> <span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;raw&quot;</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">supports_shap_interaction_values</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;[see superclass]&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">feature_perturbation</span> <span class="o">==</span> <span class="s2">&quot;tree_path_dependent&quot;</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">uses_background_dataset</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;[see superclass]&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_uses_background_dataset</span>
+
+<div class="viewcode-block" id="TreeExplainerFactory.make_explainer"><a class="viewcode-back" href="../../../apidoc/facet/inspection/facet.inspection.TreeExplainerFactory.html#facet.inspection.TreeExplainerFactory.make_explainer">[docs]</a>    <span class="k">def</span> <span class="nf">make_explainer</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">:</span> <span class="n">LearnerDF</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Explainer</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;[see superclass]&quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_validate_background_dataset</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">)</span>
+
+        <span class="n">explainer</span> <span class="o">=</span> <span class="n">_TreeExplainer</span><span class="p">(</span>
+            <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">native_estimator</span><span class="p">,</span>
+            <span class="n">data</span><span class="o">=</span><span class="n">data</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_uses_background_dataset</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">_remove_null_kwargs</span><span class="p">(</span>
+                <span class="nb">dict</span><span class="p">(</span>
+                    <span class="n">model_output</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model_output</span><span class="p">,</span>
+                    <span class="n">feature_perturbation</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">feature_perturbation</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="p">),</span>
+        <span class="p">)</span>
+
+        <span class="n">explainer</span><span class="o">.</span><span class="n">shap_values</span> <span class="o">=</span> <span class="n">functools</span><span class="o">.</span><span class="n">partial</span><span class="p">(</span>
+            <span class="n">explainer</span><span class="o">.</span><span class="n">shap_values</span><span class="p">,</span> <span class="n">check_additivity</span><span class="o">=</span><span class="kc">False</span>
+        <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">explainer</span></div></div>
+
+
+<span class="k">class</span> <span class="nc">_KernelExplainer</span><span class="p">(</span><span class="n">shap</span><span class="o">.</span><span class="n">KernelExplainer</span><span class="p">,</span> <span class="n">BaseExplainer</span><span class="p">):</span>
+    <span class="c1"># noinspection PyPep8Naming,PyUnresolvedReferences</span>
+    <span class="k">def</span> <span class="nf">shap_interaction_values</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">X</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="s2">&quot;catboost.Pool&quot;</span><span class="p">],</span>  <span class="c1"># noqa: F821</span>
+        <span class="n">y</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Not implemented.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span>
+
+    <span class="k">pass</span>
+
+
+<div class="viewcode-block" id="KernelExplainerFactory"><a class="viewcode-back" href="../../../apidoc/facet/inspection/facet.inspection.KernelExplainerFactory.html#facet.inspection.KernelExplainerFactory">[docs]</a><span class="nd">@inheritdoc</span><span class="p">(</span><span class="n">match</span><span class="o">=</span><span class="s2">&quot;[see superclass]&quot;</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">KernelExplainerFactory</span><span class="p">(</span><span class="n">ExplainerFactory</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A factory constructing :class:`~shap.KernelExplainer` objects.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">link</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">l1_reg</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;num_features(10)&quot;</span><span class="p">,</span>
+        <span class="n">data_size_limit</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="mi">100</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        :param link: (optional) override the default link parameter</span>
+<span class="sd">        :param l1_reg: (optional) override the default l1_reg parameter of method</span>
+<span class="sd">            :meth:`~shap.KernelExplainer.shap_values`; pass ``None`` to use the</span>
+<span class="sd">            default value used by :meth:`~shap.KernelExplainer.shap_values`</span>
+<span class="sd">        :param data_size_limit: (optional) maximum number of observations to use as</span>
+<span class="sd">            the background data set; larger data sets will be down-sampled using</span>
+<span class="sd">            kmeans.</span>
+<span class="sd">            Pass ``None`` to prevent down-sampling the background data set</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="n">validate_type</span><span class="p">(</span><span class="n">link</span><span class="p">,</span> <span class="n">expected_type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">optional</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;arg link&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">link</span> <span class="o">=</span> <span class="n">link</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">l1_reg</span> <span class="o">=</span> <span class="n">l1_reg</span> <span class="k">if</span> <span class="n">l1_reg</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="s2">&quot;num_features(10)&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data_size_limit</span> <span class="o">=</span> <span class="n">data_size_limit</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">explains_raw_output</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;[see superclass]&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">link</span> <span class="ow">in</span> <span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;identity&quot;</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">supports_shap_interaction_values</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;[see superclass]&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">uses_background_dataset</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;[see superclass]&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="kc">True</span>
+
+<div class="viewcode-block" id="KernelExplainerFactory.make_explainer"><a class="viewcode-back" href="../../../apidoc/facet/inspection/facet.inspection.KernelExplainerFactory.html#facet.inspection.KernelExplainerFactory.make_explainer">[docs]</a>    <span class="k">def</span> <span class="nf">make_explainer</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">:</span> <span class="n">LearnerDF</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Explainer</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;[see superclass]&quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_validate_background_dataset</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">)</span>
+
+        <span class="n">model_root_estimator</span><span class="p">:</span> <span class="n">BaseEstimator</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">native_estimator</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">RegressorDF</span><span class="p">):</span>
+                <span class="c1"># noinspection PyUnresolvedReferences</span>
+                <span class="n">model_fn</span> <span class="o">=</span> <span class="n">model_root_estimator</span><span class="o">.</span><span class="n">predict</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">ClassifierDF</span><span class="p">):</span>
+                <span class="c1"># noinspection PyUnresolvedReferences</span>
+                <span class="n">model_fn</span> <span class="o">=</span> <span class="n">model_root_estimator</span><span class="o">.</span><span class="n">predict_proba</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">model_fn</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">except</span> <span class="ne">AttributeError</span> <span class="k">as</span> <span class="n">cause</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;arg model does not support default prediction method: </span><span class="si">{</span><span class="n">cause</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span> <span class="kn">from</span> <span class="nn">cause</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">model_fn</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                <span class="s2">&quot;arg model is neither a regressor nor a classifier: &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">model</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+
+        <span class="n">data_size_limit</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_size_limit</span>
+        <span class="k">if</span> <span class="n">data_size_limit</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">data_size_limit</span><span class="p">:</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">shap</span><span class="o">.</span><span class="n">kmeans</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">data_size_limit</span><span class="p">,</span> <span class="n">round_values</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="n">explainer</span> <span class="o">=</span> <span class="n">_KernelExplainer</span><span class="p">(</span>
+            <span class="n">model</span><span class="o">=</span><span class="n">model_fn</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">_remove_null_kwargs</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">link</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">link</span><span class="p">))</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">l1_reg</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">explainer</span><span class="o">.</span><span class="n">shap_values</span> <span class="o">=</span> <span class="n">functools</span><span class="o">.</span><span class="n">partial</span><span class="p">(</span>
+                <span class="n">explainer</span><span class="o">.</span><span class="n">shap_values</span><span class="p">,</span> <span class="n">l1_reg</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">l1_reg</span>
+            <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">explainer</span></div></div>
+
+
+<span class="n">__tracker</span><span class="o">.</span><span class="n">validate</span><span class="p">()</span>
+</pre></div>
+
+              </div>
+              
+              
+              <div class='prev-next-bottom'>
+                
+
+              </div>
+              
+          </main>
+          
+
+      </div>
+    </div>
+
+    
+  <script src="../../../_static/js/index.d3f166471bb80abb5163.js"></script>
+
+
+    <footer class="footer mt-5 mt-md-0">
+  <div class="container">
+    <p>
+          &copy; Copyright 2021, Boston Consulting Group (BCG).<br/>
+        Created using <a href="http://sphinx-doc.org/">Sphinx</a> 3.5.3.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>
