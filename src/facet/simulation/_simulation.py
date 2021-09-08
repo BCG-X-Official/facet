@@ -469,20 +469,24 @@ class BaseUnivariateSimulator(
 
         index_name: str
         index: Optional[List[str]]
-        simulation_results_per_split: Sequence[Sequence[float]]
+        simulation_results_per_split: List[List[float]]
 
         if self._full_sample:
             # experimental "full sample" feature: we only worked with one split
             # (which is the full sample); for that split we preserve the means and
             # standard errors of the means for each partition
             assert len(simulation_means_and_sems_per_split) == 1
-            simulation_results_per_split = simulation_means_and_sems_per_split[0]
+            simulation_results_per_split = [
+                # convert mean and sem tuple to a list
+                list(seq_result)
+                for seq_result in simulation_means_and_sems_per_split[0]
+            ]
             index_name = "metric"
             index = ["mean", "sem"]
         else:
             # existing approach: only keep the means for each split
             simulation_results_per_split = [
-                seq_mean for seq_mean, _ in simulation_means_and_sems_per_split
+                list(seq_mean) for seq_mean, _ in simulation_means_and_sems_per_split
             ]
             index_name = BaseUnivariateSimulator.IDX_SPLIT
             index = None
