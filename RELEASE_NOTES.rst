@@ -4,7 +4,8 @@ Release Notes
 FACET 1.2
 ---------
 
-FACET 1.2 introduces the ability to run simulations on a subsample of the data used to
+FACET 1.2 adds support for *sklearndf* 1.2 and *scikit-learn* 0.24.
+It also introduces the ability to run simulations on a subsample of the data used to
 fit the underlying crossfit.
 One example where this can be useful is to use only a recent period of a time series as
 the baseline of a simulation.
@@ -12,6 +13,7 @@ the baseline of a simulation.
 1.2.0
 ~~~~~
 
+- BUILD: added support for *sklearndf* 1.2 and *scikit-learn* 0.24
 - API: new optional parameter `subsample` in method 
   :meth:`.BaseUnivariateSimulator.simulate_feature` can be used to specify a subsample
   to be used in the simulation (but simulating using a crossfit based on the full
@@ -23,6 +25,12 @@ FACET 1.1
 
 FACET 1.1 refines and enhances the association/synergy/redundancy calculations provided
 by the :class:`.LearnerInspector`.
+
+1.1.1
+~~~~~
+
+- DOC: add reference to FACET research paper on the project landing page
+
 
 1.1.0
 ~~~~~
