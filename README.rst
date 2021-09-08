@@ -168,8 +168,10 @@ Model Inspection
 FACET implements several model inspection methods for
 `scikit-learn <https://scikit-learn.org/stable/index.html>`__ estimators.
 FACET enhances model inspection by providing global metrics that complement
-the local perspective of SHAP. The key global metrics for each pair of
-features in a model are:
+the local perspective of SHAP (see
+`[arXiv:2107.12436] <https://arxiv.org/abs/2107.12436>`__ for a formal description).
+
+The key global metrics for each pair of features in a model are:
 
 - **Synergy**
 
@@ -191,7 +193,6 @@ features in a model are:
   is a naturally asymmetric property of the global information two interacting
   features contribute to the model predictions.* Synergy is expressed as a
   percentage ranging from 0% (full autonomy) to 100% (full synergy).
-
 
 - **Redundancy**
 
