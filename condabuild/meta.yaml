@@ -16,20 +16,20 @@ requirements:
     - pip>=20.*
     - python=3.8.*
   run:
-    - gamma-pytools {{ environ.get('FACET_V_GAMMA_PYTOOLS') }}
-    - ipython {{ environ.get('FACET_V_IPYTHON') }}
-    - joblib {{ environ.get('FACET_V_JOBLIB') }}
-    - lightgbm {{ environ.get('FACET_V_LIGHTGBM') }}
-    - matplotlib {{ environ.get('FACET_V_MATPLOTLIB') }}
-    - numpy {{ environ.get('FACET_V_NUMPY') }}
-    - packaging {{ environ.get('FACET_V_PACKAGING') }}
-    - pandas {{ environ.get('FACET_V_PANDAS') }}
-    - python {{ environ.get('FACET_V_PYTHON') }}
-    - scipy {{ environ.get('FACET_V_SCIPY') }}
-    - shap {{ environ.get('FACET_V_SHAP') }}
-    - scikit-learn {{ environ.get('FACET_V_SCIKIT_LEARN') }}
-    - sklearndf {{ environ.get('FACET_V_SKLEARNDF') }}
-    - typing_inspect {{ environ.get('FACET_V_TYPING_INSPECT') }}
+    - gamma-pytools   {{ environ.get('FACET_V_GAMMA_PYTOOLS') }}
+    - ipython         {{ environ.get('FACET_V_IPYTHON') }}
+    - joblib          {{ environ.get('FACET_V_JOBLIB') }}
+    - lightgbm        {{ environ.get('FACET_V_LIGHTGBM') }}
+    - matplotlib-base {{ environ.get('FACET_V_MATPLOTLIB') }}
+    - numpy           {{ environ.get('FACET_V_NUMPY') }}
+    - packaging       {{ environ.get('FACET_V_PACKAGING') }}
+    - pandas          {{ environ.get('FACET_V_PANDAS') }}
+    - python          {{ environ.get('FACET_V_PYTHON') }}
+    - scipy           {{ environ.get('FACET_V_SCIPY') }}
+    - shap            {{ environ.get('FACET_V_SHAP') }}
+    - scikit-learn    {{ environ.get('FACET_V_SCIKIT_LEARN') }}
+    - sklearndf       {{ environ.get('FACET_V_SKLEARNDF') }}
+    - typing_inspect  {{ environ.get('FACET_V_TYPING_INSPECT') }}
 
 test:
   imports:
