@@ -275,23 +275,21 @@ class ShapCalculator(
 
         else:
             shap_df_per_split = JobRunner.from_parallelizable(self).run_jobs(
-                *(
-                    Job.delayed(self._get_shap_for_split)(
-                        model,
-                        sample,
-                        _make_explainer(model),
-                        self.feature_index_,
-                        self._convert_raw_shap_to_df,
-                        self.get_multi_output_type(),
-                        self._get_multi_output_names(model=model, sample=sample),
-                    )
-                    for model, sample in zip(
-                        crossfit.models(),
-                        (
-                            sample.subsample(iloc=oob_split)
-                            for _, oob_split in crossfit.splits()
-                        ),
-                    )
+                Job.delayed(self._get_shap_for_split)(
+                    model,
+                    sample,
+                    _make_explainer(model),
+                    self.feature_index_,
+                    self._convert_raw_shap_to_df,
+                    self.get_multi_output_type(),
+                    self._get_multi_output_names(model=model, sample=sample),
+                )
+                for model, sample in zip(
+                    crossfit.models(),
+                    (
+                        sample.subsample(iloc=oob_split)
+                        for _, oob_split in crossfit.splits()
+                    ),
                 )
             )
 
