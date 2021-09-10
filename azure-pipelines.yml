@@ -541,7 +541,7 @@ stages:
                     conda install -c conda-forge -c bcg_gamma $(package_name)
 
               isDraft: false
-              isPreRelease: $(is_prerelease)
+              isPrerelease: $(is_prerelease)
               assets: |
                 $(System.ArtifactsDirectory)/tox_default/tox/$(package_name)-*.tar.gz
                 $(System.ArtifactsDirectory)/conda_default/conda/noarch/$(package_name)-*.tar.bz2
