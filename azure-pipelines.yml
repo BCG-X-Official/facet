@@ -466,8 +466,9 @@ stages:
                 export PYTHONPATH=$(System.DefaultWorkingDirectory)/pytools/sphinx/base
                 version=$(python -c "import make_base; print(make_base.get_package_version())")
                 echo "Current version: $version"
-                echo "Detecting pre-release ('rc' in version)"
+                echo "Detecting pre-release ('dev' or 'rc' in version)"
                 prerelease=False
+                [[ $version == *dev* ]] && prerelease=True && echo "Development release identified"
                 [[ $version == *rc* ]] && prerelease=True && echo "Pre-release identified"
                 echo "##vso[task.setvariable variable=current_version]$version"
                 echo "##vso[task.setvariable variable=is_prerelease]$prerelease"
