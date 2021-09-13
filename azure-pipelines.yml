@@ -30,8 +30,8 @@ variables:
     branchName: $[ replace(variables['Build.SourceBranch'], 'refs/heads/', '') ]
   ${{ if startsWith(variables['Build.SourceBranch'], 'refs/pull/') }}:
     branchName: $[ replace(variables['System.PullRequest.SourceBranch'], 'refs/heads/', '') ]
-  source_is_release_branch: $[ startsWith(variables['branchName'], 'release') ]
-  source_is_develop_branch: $[ or(startsWith(variables['branchName'], 'develop'), startsWith(variables['branchName'], 'dev/')) ]
+  source_is_release_branch: $[ startsWith(variables['branchName'], 'release/') ]
+  source_is_develop_branch: $[ startsWith(variables['branchName'], 'dev/') ]
   is_scheduled: $[ eq(variables['Build.Reason'], 'Schedule') ]
   project_name: facet
   project_root: $(project_name)
@@ -97,7 +97,7 @@ stages:
                 cd $(System.DefaultWorkingDirectory)
                 files_changed=$(git diff $(Build.SourceVersion)^! --name-only)
                 echo "Files changed since last commit: ${files_changed}"
-                n_files_changed=$(git diff $(Build.SourceVersion)^! --name-only | grep -i -E 'meta.yaml|pyproject.toml|azure-pipelines.yml|tox.ini'  | wc -l | xargs)
+                n_files_changed=$(git diff $(Build.SourceVersion)^! --name-only | grep -i -E 'meta\.yaml|pyproject\.toml|azure-pipelines\.yml|tox\.ini|make\.py'  | wc -l | xargs)
                 if [ ${n_files_changed} -gt 0 ]
                 then
                 build_changed=1
@@ -210,7 +210,7 @@ stages:
         - script: dir $(Build.SourcesDirectory)
 
         - script: |
-            conda install -y -c anaconda conda-build~=3.20.5 conda-verify toml=0.10.* flit=3.0.*
+            conda install -y -c anaconda conda-build~=3.20.5 conda-verify toml=0.10.* flit=3.0.* packaging~=20.9
           displayName: 'Install conda-build, flit, toml'
           condition: eq(variables['BUILD_SYSTEM'], 'conda')
 
@@ -297,7 +297,7 @@ stages:
         - script: dir $(Build.SourcesDirectory)
 
         - script: |
-            conda install -y -c anaconda conda-build~=3.20.5 conda-verify toml=0.10.* flit=3.0.*
+            conda install -y -c anaconda conda-build~=3.20.5 conda-verify toml=0.10.* flit=3.0.* packaging~=20.9
           displayName: 'Install conda-build, flit, toml'
           condition: eq(variables['BUILD_SYSTEM'], 'conda')
 
@@ -398,7 +398,7 @@ stages:
               condition: ne(variables.branchName, 'develop')
               script: |
                 set -eux
-                python -m pip install "toml==0.10.*"
+                python -m pip install toml~=0.10.2 packaging~=20.9
                 cd $(System.DefaultWorkingDirectory)/pytools
                 python <<EOF
                 from os import environ
@@ -461,7 +461,7 @@ stages:
               script: |
                 set -eux
                 echo "Getting version"
-                pip install packaging
+                pip install packaging~=20.9
                 cd $(System.DefaultWorkingDirectory)/$(project_root)/src
                 export PYTHONPATH=$(System.DefaultWorkingDirectory)/pytools/sphinx/base
                 version=$(python -c "import make_base; print(make_base.get_package_version())")
