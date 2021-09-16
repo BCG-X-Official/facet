@@ -383,12 +383,10 @@ class BaseUnivariateSimulator(
         y_mean = self.expected_output()
 
         result: List[float] = JobRunner.from_parallelizable(self).run_jobs(
-            *(
-                Job.delayed(self._simulate_actuals)(
-                    model, subsample.features, y_mean, self._simulate
-                )
-                for model, subsample in self._get_simulations()
+            Job.delayed(self._simulate_actuals)(
+                model, subsample.features, y_mean, self._simulate
             )
+            for model, subsample in self._get_simulations()
         )
 
         return pd.Series(
@@ -455,16 +453,14 @@ class BaseUnivariateSimulator(
         simulation_means_and_sems_per_split: List[
             Tuple[Sequence[float], Sequence[float]]
         ] = JobRunner.from_parallelizable(self).run_jobs(
-            *(
-                Job.delayed(UnivariateUpliftSimulator._simulate_values_for_split)(
-                    model=model,
-                    subsample=subsample,
-                    feature_name=feature_name,
-                    simulated_values=simulation_values,
-                    simulate_fn=self._simulate,
-                )
-                for (model, subsample) in self._get_simulations()
+            Job.delayed(UnivariateUpliftSimulator._simulate_values_for_split)(
+                model=model,
+                subsample=subsample,
+                feature_name=feature_name,
+                simulated_values=simulation_values,
+                simulate_fn=self._simulate,
             )
+            for (model, subsample) in self._get_simulations()
         )
 
         index_name: str

@@ -480,7 +480,7 @@ class LearnerCrossfit(
                 if do_fit:
                     crossfit._reset_fit()
 
-            def collate(self, job_results: List[FitResult]) -> Optional[np.ndarray]:
+            def aggregate(self, job_results: List[FitResult]) -> Optional[np.ndarray]:
                 models, scores = zip(*job_results)
 
                 if do_fit:
