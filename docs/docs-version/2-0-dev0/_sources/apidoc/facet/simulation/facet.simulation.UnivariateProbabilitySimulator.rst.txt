@@ -1,0 +1,39 @@
+facet.simulation.UnivariateProbabilitySimulator
+===============================================
+
+.. currentmodule:: facet.simulation
+
+.. autoclass:: UnivariateProbabilitySimulator
+   :members:
+   :no-show-inheritance:
+   :inherited-members:
+   :special-members: __call__
+
+   
+   
+   .. rubric:: Method summary
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~UnivariateProbabilitySimulator.baseline
+      ~UnivariateProbabilitySimulator.expected_output
+      ~UnivariateProbabilitySimulator.simulate_actuals
+      ~UnivariateProbabilitySimulator.simulate_feature
+   
+   
+
+   
+   
+   .. rubric:: Attribute summary
+
+   .. autosummary::
+   
+      ~UnivariateProbabilitySimulator.COL_OUTPUT
+      ~UnivariateProbabilitySimulator.IDX_PARTITION
+      ~UnivariateProbabilitySimulator.IDX_SPLIT
+      ~UnivariateProbabilitySimulator.output_unit
+   
+   
+
+   .. rubric:: Definitions

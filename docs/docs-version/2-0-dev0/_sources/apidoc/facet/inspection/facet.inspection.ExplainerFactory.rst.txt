@@ -1,0 +1,35 @@
+facet.inspection.ExplainerFactory
+=================================
+
+.. currentmodule:: facet.inspection
+
+.. autoclass:: ExplainerFactory
+   :members:
+   :no-show-inheritance:
+   :inherited-members:
+   :special-members: __call__
+
+   
+   
+   .. rubric:: Method summary
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~ExplainerFactory.make_explainer
+   
+   
+
+   
+   
+   .. rubric:: Attribute summary
+
+   .. autosummary::
+   
+      ~ExplainerFactory.explains_raw_output
+      ~ExplainerFactory.supports_shap_interaction_values
+      ~ExplainerFactory.uses_background_dataset
+   
+   
+
+   .. rubric:: Definitions

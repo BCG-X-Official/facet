@@ -1,0 +1,90 @@
+h1, h2 {
+    color:#29BA74;
+}
+
+a {
+    color: #3333ff;
+}
+
+a:hover {
+    color: #30C1D7;
+}
+
+code {
+    color: #295E7E;
+    background-color: #E0E0E0;
+    padding-left: 1pt;
+    padding-right: 1pt;
+}
+
+.bd-content .longtable.table {
+    display: table;
+}
+
+.longtable.table {
+    width: 100%;
+}
+
+.longtable.table td, .longtable.table th {
+    padding: .25rem;
+    vertical-align: top;
+    border-top: 1px solid #DEE2E6;
+    border-bottom: 1px solid #DEE2E6;
+}
+
+.longtable.table tr:nth-child(odd) {
+    background-color: #F1F5FA;
+}
+
+p.rubric {
+    border-bottom: none;
+    border-top: 1px #295E7E solid;
+    padding-top: 8px;
+}
+
+dl {
+    padding-bottom: 8px;
+    padding-top: 8px;
+    margin-bottom: unset;
+    margin-top: unset;
+}
+
+dl.py + dl.py {
+    border-top: 1px #DEE2E6 solid;
+}
+
+.navbar-brand img {
+    max-width: 175px;
+    height:auto;
+    width:auto;
+}
+
+.navbar-nav > .active > .nav-link {
+    color:#29BA74 !important;
+}
+
+.bd-sidebar .nav > .active:hover > a, .bd-sidebar .nav > .active > a,
+.bd-sidebar .nav > li > ul > .active:hover > a, .bd-sidebar .nav > li > ul > .active > a {
+    color:#29BA74;
+}
+
+.toc-entry > .nav-link.active {
+    color: #29BA74;
+    border-left-color: #29BA74;
+}
+
+img.team-pic {
+    height: 200px;
+    padding-top: 5pt;
+    padding-bottom: 5pt;
+    padding-left: 5pt;
+    padding-right: 5pt;
+}
+
+/*
+.py.class {
+    margin-top: 32pt;
+    padding-top: 32pt;
+    border-top: 2pt solid #295E7E;
+}
+*/

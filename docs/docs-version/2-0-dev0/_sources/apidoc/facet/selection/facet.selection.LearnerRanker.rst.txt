@@ -1,0 +1,39 @@
+facet.selection.LearnerRanker
+=============================
+
+.. currentmodule:: facet.selection
+
+.. autoclass:: LearnerRanker
+   :members:
+   :no-show-inheritance:
+   :inherited-members:
+   :special-members: __call__
+
+   
+   
+   .. rubric:: Method summary
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~LearnerRanker.default_ranking_scorer
+      ~LearnerRanker.fit
+      ~LearnerRanker.summary_report
+   
+   
+
+   
+   
+   .. rubric:: Attribute summary
+
+   .. autosummary::
+   
+      ~LearnerRanker.best_model_
+      ~LearnerRanker.best_model_crossfit_
+      ~LearnerRanker.is_fitted
+      ~LearnerRanker.ranking_
+      ~LearnerRanker.scoring_name
+   
+   
+
+   .. rubric:: Definitions
