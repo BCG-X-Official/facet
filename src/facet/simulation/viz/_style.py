@@ -373,12 +373,6 @@ class SimulationReportStyle(SimulationStyle, TextStyle):
             )
         )
 
-    def finalize_drawing(self, **kwargs: Any) -> None:
-        """[see superclass]"""
-        super().finalize_drawing(**kwargs)
-        # print two trailing line breaks
-        self.out.write("\n")
-
     @staticmethod
     def _partition_format(is_categorical: bool) -> str:
         if is_categorical:
