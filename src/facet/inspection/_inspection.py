@@ -11,10 +11,9 @@ from scipy.cluster.hierarchy import leaves_list, linkage, optimal_leaf_ordering
 from scipy.spatial.distance import squareform
 
 from pytools.api import AllTracker, inheritdoc
-from pytools.data import Matrix
+from pytools.data import LinkageTree, Matrix
 from pytools.fit import FittableMixin
 from pytools.parallelization import ParallelizableMixin
-from pytools.viz.dendrogram import LinkageTree
 from sklearndf import ClassifierDF, LearnerDF, RegressorDF
 from sklearndf.pipeline import LearnerPipelineDF
 
