@@ -11,6 +11,7 @@ from scipy.cluster.hierarchy import leaves_list, linkage, optimal_leaf_ordering
 from scipy.spatial.distance import squareform
 
 from pytools.api import AllTracker, inheritdoc
+from pytools.data import Matrix
 from pytools.fit import FittableMixin
 from pytools.parallelization import ParallelizableMixin
 from pytools.viz.dendrogram import LinkageTree
@@ -491,7 +492,7 @@ class LearnerInspector(
         symmetrical: bool = False,
         aggregation: Optional[str] = AGG_MEAN,
         clustered: bool = True,
-    ) -> Union[pd.DataFrame, List[pd.DataFrame]]:
+    ) -> Union[Matrix, List[Matrix]]:
         """
         Calculate the feature synergy matrix.
 
@@ -550,7 +551,7 @@ class LearnerInspector(
         symmetrical: bool = False,
         aggregation: Optional[str] = AGG_MEAN,
         clustered: bool = True,
-    ) -> Union[pd.DataFrame, List[pd.DataFrame]]:
+    ) -> Union[Matrix, List[Matrix]]:
         """
         Calculate the feature redundancy matrix.
 
@@ -609,7 +610,7 @@ class LearnerInspector(
         symmetrical: bool = False,
         aggregation: Optional[str] = AGG_MEAN,
         clustered: bool = True,
-    ) -> Union[pd.DataFrame, List[pd.DataFrame]]:
+    ) -> Union[Matrix, List[Matrix]]:
         """
         Calculate the feature association matrix.
 
@@ -911,7 +912,7 @@ class LearnerInspector(
         affinity_matrices: List[pd.DataFrame],
         affinity_symmetrical: np.ndarray,
         clustered: bool,
-    ):
+    ) -> Matrix:
         if clustered:
             affinity_matrices = LearnerInspector.__sort_affinity_matrices(
                 affinity_matrices=affinity_matrices,
@@ -1053,11 +1054,11 @@ class LearnerInspector(
     @staticmethod
     def __isolate_single_frame(
         frames: List[pd.DataFrame],
-    ) -> Union[pd.DataFrame, List[pd.DataFrame]]:
+    ) -> Union[Matrix, List[Matrix]]:
         if len(frames) == 1:
-            return frames[0]
+            return Matrix.from_frame(frames[0])
         else:
-            return frames
+            return list(map(Matrix.from_frame, frames))
 
     @staticmethod
     def __validate_aggregation_method(aggregation: str) -> None:
