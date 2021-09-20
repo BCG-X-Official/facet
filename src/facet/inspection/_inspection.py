@@ -540,6 +540,7 @@ class LearnerInspector(
             affinity_symmetrical=explainer.synergy(
                 symmetrical=True, absolute=False, std=False
             ),
+            affinity_metric="synergy",
             clustered=clustered,
         )
 
@@ -599,6 +600,7 @@ class LearnerInspector(
             affinity_symmetrical=explainer.redundancy(
                 symmetrical=True, absolute=False, std=False
             ),
+            affinity_metric="redundancy",
             clustered=clustered,
         )
 
@@ -662,6 +664,7 @@ class LearnerInspector(
             affinity_symmetrical=global_explainer.association(
                 symmetrical=True, absolute=False, std=False
             ),
+            affinity_metric="association",
             clustered=clustered,
         )
 
@@ -906,18 +909,21 @@ class LearnerInspector(
                 for m in matrix
             ]
 
-    @staticmethod
     def __feature_affinity_matrix(
+        self,
         affinity_matrices: List[pd.DataFrame],
         affinity_symmetrical: np.ndarray,
+        affinity_metric: str,
         clustered: bool,
     ) -> Matrix:
         if clustered:
-            affinity_matrices = LearnerInspector.__sort_affinity_matrices(
+            affinity_matrices = self.__sort_affinity_matrices(
                 affinity_matrices=affinity_matrices,
                 symmetrical_affinity_matrices=affinity_symmetrical,
             )
-        return LearnerInspector.__isolate_single_frame(affinity_matrices)
+        return self.__isolate_single_frame(
+            affinity_matrices, affinity_metric=affinity_metric
+        )
 
     @staticmethod
     def __sort_affinity_matrices(
@@ -1050,14 +1056,54 @@ class LearnerInspector(
                 "enable calculations involving SHAP interaction values."
             )
 
-    @staticmethod
     def __isolate_single_frame(
+        self,
         frames: List[pd.DataFrame],
+        affinity_metric: str,
     ) -> Union[Matrix, List[Matrix]]:
+        feature_importance = self.feature_importance()
+
         if len(frames) == 1:
-            return Matrix.from_frame(frames[0])
+            assert isinstance(feature_importance, pd.Series)
+            return self.__frame_to_matrix(
+                frames[0],
+                affinity_metric=affinity_metric,
+                feature_importance=feature_importance,
+            )
         else:
-            return list(map(Matrix.from_frame, frames))
+            return [
+                self.__frame_to_matrix(
+                    frame,
+                    affinity_metric=affinity_metric,
+                    feature_importance=frame_importance,
+                    feature_importance_category=str(frame_name),
+                )
+                for frame, (frame_name, frame_importance) in zip(
+                    frames, feature_importance.items()
+                )
+            ]
+
+    @staticmethod
+    def __frame_to_matrix(
+        frame: pd.DataFrame,
+        *,
+        affinity_metric: str,
+        feature_importance: pd.Series,
+        feature_importance_category: Optional[str] = None,
+    ) -> Matrix:
+        return Matrix.from_frame(
+            frame,
+            weights=(
+                feature_importance.reindex(frame.index),
+                feature_importance.reindex(frame.columns),
+            ),
+            name_labels=("feature", "dependent feature"),
+            weight_label=(
+                f"{affinity_metric} ({feature_importance_category})"
+                if feature_importance_category
+                else affinity_metric
+            ),
+        )
 
     @staticmethod
     def __validate_aggregation_method(aggregation: str) -> None:
