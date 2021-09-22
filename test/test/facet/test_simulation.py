@@ -6,13 +6,15 @@ from pandas.testing import assert_series_equal
 from pytest import approx
 
 from sklearndf import TransformerDF
-from sklearndf.pipeline import RegressorPipelineDF
+from sklearndf.classification import RandomForestClassifierDF
+from sklearndf.pipeline import ClassifierPipelineDF, RegressorPipelineDF
 from sklearndf.regression.extra import LGBMRegressorDF
 
 from facet.crossfit import LearnerCrossfit
 from facet.data import Sample
 from facet.data.partition import ContinuousRangePartitioner
 from facet.simulation import (
+    UnivariateProbabilitySimulator,
     UnivariateSimulationResult,
     UnivariateTargetSimulator,
     UnivariateUpliftSimulator,
@@ -216,8 +218,62 @@ def test_univariate_uplift_simulation(
         ),
     )
 
-    SimulationDrawer(style="text").draw(
-        data=uplift_simulator.simulate_feature(
-            feature_name=parameterized_feature, partitioner=partitioner
-        )
+    SimulationDrawer(style="text").draw(data=simulation_result)
+
+
+def test_univariate_probability_simulation(
+    iris_classifier_crossfit_binary: LearnerCrossfit[
+        ClassifierPipelineDF[RandomForestClassifierDF]
+    ],
+    n_jobs: int,
+) -> None:
+    parameterized_feature = "sepal length (cm)"
+    partitioner = ContinuousRangePartitioner(max_partitions=10)
+
+    print(iris_classifier_crossfit_binary.sample_.feature_names)
+
+    proba_simulator = UnivariateProbabilitySimulator(
+        crossfit=iris_classifier_crossfit_binary,
+        confidence_level=0.95,
+        n_jobs=n_jobs,
+        verbose=50,
     )
+
+    simulation_result: UnivariateSimulationResult = proba_simulator.simulate_feature(
+        feature_name=parameterized_feature, partitioner=partitioner
+    )
+
+    index = pd.Index(
+        data=[5, 5.5, 6, 6.5, 7, 7.5], name=UnivariateUpliftSimulator.IDX_PARTITION
+    )
+
+    assert simulation_result.baseline == approx(0.5)
+
+    assert_series_equal(
+        simulation_result.outputs_lower_bound(),
+        pd.Series(
+            [0.346255, 0.346255, 0.353697, 0.394167, 0.401895, 0.417372],
+            name=UnivariateSimulationResult.COL_LOWER_BOUND,
+            index=index,
+        ),
+    )
+
+    assert_series_equal(
+        simulation_result.outputs_median(),
+        pd.Series(
+            [0.460432, 0.450516, 0.469412, 0.488569, 0.492651, 0.507788],
+            name=UnivariateSimulationResult.COL_MEDIAN,
+            index=index,
+        ),
+    )
+
+    assert_series_equal(
+        simulation_result.outputs_upper_bound(),
+        pd.Series(
+            [0.582565, 0.562096, 0.570590, 0.580023, 0.599714, 0.602303],
+            name=UnivariateSimulationResult.COL_UPPER_BOUND,
+            index=index,
+        ),
+    )
+
+    SimulationDrawer(style="text").draw(data=simulation_result)
