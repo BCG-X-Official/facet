@@ -628,11 +628,9 @@ class UnivariateProbabilitySimulator(BaseUnivariateSimulator[ClassifierPipelineD
 
         :return: observed frequency of the positive class
         """
-        actual_outputs = self.sample.target.loc[self.subsample]
+        actual_outputs = self.sample.target
 
-        return actual_outputs.loc[actual_outputs == self._positive_class()].sum() / len(
-            actual_outputs
-        )
+        return (actual_outputs == self._positive_class()).sum() / len(actual_outputs)
 
     def _positive_class(self) -> Any:
         """

@@ -10,7 +10,7 @@ import pandas as pd
 import pytest
 from pandas.testing import assert_frame_equal, assert_series_equal
 from sklearn.datasets import make_classification
-from sklearn.model_selection import BaseCrossValidator, KFold
+from sklearn.model_selection import KFold
 
 from pytools.viz.dendrogram import DendrogramDrawer, DendrogramReportStyle
 from sklearndf import TransformerDF
@@ -29,68 +29,13 @@ from facet.inspection import (
     TreeExplainerFactory,
 )
 from facet.selection import LearnerGrid, LearnerRanker
-from facet.validation import BootstrapCV, StratifiedBootstrapCV
+from facet.validation import BootstrapCV
 
 # noinspection PyMissingOrEmptyDocstring
 
 log = logging.getLogger(__name__)
 
 T = TypeVar("T")
-
-
-@pytest.fixture
-def iris_classifier_ranker_binary(
-    iris_sample_binary: Sample,
-    cv_stratified_bootstrap: StratifiedBootstrapCV,
-    n_jobs: int,
-) -> LearnerRanker[ClassifierPipelineDF[RandomForestClassifierDF]]:
-    return fit_learner_ranker(
-        sample=iris_sample_binary, cv=cv_stratified_bootstrap, n_jobs=n_jobs
-    )
-
-
-@pytest.fixture
-def iris_classifier_ranker_multi_class(
-    iris_sample: Sample, cv_stratified_bootstrap: StratifiedBootstrapCV, n_jobs: int
-) -> LearnerRanker[ClassifierPipelineDF[RandomForestClassifierDF]]:
-    return fit_learner_ranker(
-        sample=iris_sample, cv=cv_stratified_bootstrap, n_jobs=n_jobs
-    )
-
-
-@pytest.fixture
-def iris_classifier_ranker_dual_target(
-    iris_sample_binary_dual_target: Sample, cv_bootstrap: BootstrapCV, n_jobs: int
-) -> LearnerRanker[ClassifierPipelineDF[RandomForestClassifierDF]]:
-    return fit_learner_ranker(
-        sample=iris_sample_binary_dual_target, cv=cv_bootstrap, n_jobs=n_jobs
-    )
-
-
-@pytest.fixture
-def iris_classifier_crossfit_binary(
-    iris_classifier_ranker_binary: LearnerRanker[ClassifierPipelineDF],
-) -> LearnerCrossfit[ClassifierPipelineDF[RandomForestClassifierDF]]:
-    return iris_classifier_ranker_binary.best_model_crossfit_
-
-
-@pytest.fixture
-def iris_classifier_crossfit_multi_class(
-    iris_classifier_ranker_multi_class: LearnerRanker[ClassifierPipelineDF],
-) -> LearnerCrossfit[ClassifierPipelineDF[RandomForestClassifierDF]]:
-    return iris_classifier_ranker_multi_class.best_model_crossfit_
-
-
-@pytest.fixture
-def iris_inspector_multi_class(
-    iris_classifier_crossfit_multi_class: LearnerCrossfit[
-        ClassifierPipelineDF[RandomForestClassifierDF]
-    ],
-    n_jobs: int,
-) -> LearnerInspector[ClassifierPipelineDF[RandomForestClassifierDF]]:
-    return LearnerInspector(shap_interaction=True, n_jobs=n_jobs).fit(
-        crossfit=iris_classifier_crossfit_multi_class
-    )
 
 
 def test_model_inspection(
@@ -813,29 +758,6 @@ def test_shap_plot_data(
 #
 # Utility functions
 #
-
-
-def fit_learner_ranker(
-    sample: Sample, cv: BaseCrossValidator, n_jobs: int
-) -> LearnerRanker[ClassifierPipelineDF[RandomForestClassifierDF]]:
-    # define parameters and crossfit
-    grids = [
-        LearnerGrid(
-            pipeline=ClassifierPipelineDF(
-                classifier=RandomForestClassifierDF(random_state=42), preprocessing=None
-            ),
-            learner_parameters={"n_estimators": [10, 50], "min_samples_leaf": [4, 8]},
-        )
-    ]
-    # pipeline inspector does only support binary classification - hence
-    # filter the test_sample down to only 2 target classes:
-    return LearnerRanker(
-        grids=grids,
-        cv=cv,
-        scoring="f1_macro",
-        random_state=42,
-        n_jobs=n_jobs,
-    ).fit(sample=sample)
 
 
 def print_expected_matrix(error: AssertionError, split: bool = False):
