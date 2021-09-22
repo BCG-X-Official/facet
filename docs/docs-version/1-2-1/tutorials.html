@@ -1,0 +1,278 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>Tutorials &#8212; facet  documentation</title>
+    
+  <link rel="stylesheet" href="_static/css/index.f658d18f9b420779cfdf24aa0a7e2d77.css">
+
+    
+  <link rel="stylesheet"
+    href="_static/vendor/fontawesome/5.13.0/css/all.min.css">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+
+    
+      
+  <link rel="stylesheet"
+    href="_static/vendor/open-sans_all/1.44.1/index.css">
+  <link rel="stylesheet"
+    href="_static/vendor/lato_latin-ext/1.44.1/index.css">
+
+    
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/basic.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="_static/css/gamma.css" />
+    
+  <link rel="preload" as="script" href="_static/js/index.d3f166471bb80abb5163.js">
+
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/js/gamma.js"></script>
+    <script src="_static/js/versions.js"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="&lt;no title&gt;" href="tutorial/Water_Drilling_Incident_Classification_with_Facet.html" />
+    <link rel="prev" title="facet.validation.StratifiedBootstrapCV" href="apidoc/facet/validation/facet.validation.StratifiedBootstrapCV.html" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="docsearch:language" content="en" />
+  </head>
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
+    
+    <nav class="navbar navbar-light navbar-expand-lg bg-light fixed-top bd-navbar" id="navbar-main">
+<div class="container-xl">
+
+    <a class="navbar-brand" href="index.html">
+    
+      <img src="_static/Gamma_Facet_Logo_RGB_LB.svg" class="logo" alt="logo" />
+    
+    </a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar-menu" aria-controls="navbar-menu" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div id="navbar-menu" class="col-lg-9 collapse navbar-collapse">
+      <ul id="navbar-main-elements" class="navbar-nav mr-auto">
+        
+        
+        <li class="nav-item ">
+            <a class="nav-link" href="getting_started/getting_started.html">Getting started</a>
+        </li>
+        
+        <li class="nav-item ">
+            <a class="nav-link" href="apidoc/facet.html">API reference</a>
+        </li>
+        
+        <li class="nav-item active">
+            <a class="nav-link" href="">Tutorials</a>
+        </li>
+        
+        <li class="nav-item ">
+            <a class="nav-link" href="contribution_guide.html">Development Guidelines</a>
+        </li>
+        
+        <li class="nav-item ">
+            <a class="nav-link" href="faqs.html">FAQ</a>
+        </li>
+        
+        <li class="nav-item ">
+            <a class="nav-link" href="about_us.html">About us</a>
+        </li>
+        
+        <li class="nav-item ">
+            <a class="nav-link" href="release_notes.html">Release Notes</a>
+        </li>
+        
+        
+      </ul>
+
+
+      
+
+      <ul class="navbar-nav">
+        
+        
+      </ul>
+    </div>
+</div>
+    </nav>
+    
+
+    <div class="container-xl">
+      <div class="row">
+          
+          <div class="col-12 col-md-3 bd-sidebar"><form class="bd-search d-flex align-items-center" action="search.html" method="get">
+  <i class="icon fas fa-search"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
+</form>
+<nav class="bd-links" id="bd-docs-nav" aria-label="Main navigation">
+
+    <div class="bd-toc-item active">
+    
+  
+    <ul class="nav bd-sidenav">
+        
+        
+        
+        
+        
+        
+          
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+      </ul>
+  
+  </nav>
+          </div>
+          
+
+          
+          <div class="d-none d-xl-block col-xl-2 bd-toc">
+              
+<div class="tocsection onthispage pt-5 pb-3">
+    <i class="fas fa-list"></i> On this page
+</div>
+
+<nav id="bd-toc-nav">
+    <ul class="nav section-nav flex-column">
+    
+        <li class="nav-item toc-entry toc-h2">
+            <a href="#introductory-tutorial-incident-risk-of-drilling-operations" class="nav-link">Introductory Tutorial: Incident risk of drilling operations</a>
+        </li>
+    
+        <li class="nav-item toc-entry toc-h2">
+            <a href="#classification-tutorial-prediabetes" class="nav-link">Classification Tutorial: Prediabetes</a>
+        </li>
+    
+        <li class="nav-item toc-entry toc-h2">
+            <a href="#simulation-tutorial-feature-simulation-on-drill-operations" class="nav-link">Simulation Tutorial: Feature Simulation on Drill Operations</a>
+        </li>
+    
+        <li class="nav-item toc-entry toc-h2">
+            <a href="#generating-standard-scikit-learn-classifier-performance-summaries" class="nav-link">Generating Standard Scikit-learn Classifier Performance Summaries</a>
+        </li>
+    
+    </ul>
+</nav>
+
+
+              
+          </div>
+          
+
+          
+          <main class="col-12 col-md-9 col-xl-7 py-md-5 pl-md-5 pr-md-4 bd-content" role="main">
+              
+              <div>
+                
+  <section id="tutorials">
+<span id="id1"></span><h1>Tutorials<a class="headerlink" href="#tutorials" title="Permalink to this headline">¶</a></h1>
+<p>Get FACET’s enhanced model inspection, model-based simulation and workflow
+into your data science toolbox!</p>
+<section id="introductory-tutorial-incident-risk-of-drilling-operations">
+<span id="drilling-tut"></span><h2>Introductory Tutorial: Incident risk of drilling operations<a class="headerlink" href="#introductory-tutorial-incident-risk-of-drilling-operations" title="Permalink to this headline">¶</a></h2>
+<p>Introduce yourself to the FACET workflow! With this tutorial you will:</p>
+<ul class="simple">
+<li><p>develop a classifier for predicting incident risk of drilling operations using
+drilling sensor data, and</p></li>
+<li><p>use model inspection and simulation to understand what drilling operation parameters
+impact incident risk, with a particular focus on rate of penetration.</p></li>
+</ul>
+<p>Start exploring the tutorial below by clicking on the section links, deepen your
+understanding by reading the associated
+<a class="reference external" href="https://medium.com/bcggamma/gamma-facet-a-new-approach-for-universal-explanations-of-machine-learning-models-b566877e7812">GAMMAscope article</a>, and
+download the notebook for yourself
+<a class="reference download internal" download="" href="_downloads/87bd7a5fc5edee5f7e46545ac3ff5913/Water_Drilling_Incident_Classification_with_Facet.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">here</span></code></a>.</p>
+<div class="toctree-wrapper compound">
+</div>
+</section>
+<section id="classification-tutorial-prediabetes">
+<span id="prediabetes-tut"></span><h2>Classification Tutorial: Prediabetes<a class="headerlink" href="#classification-tutorial-prediabetes" title="Permalink to this headline">¶</a></h2>
+<p>Predict your binary target with FACET. In this tutorial aiming to
+predict individuals at risk of prediabetes you will:</p>
+<ul class="simple">
+<li><p>select a classifier for predicting prediabetes, and</p></li>
+<li><p>gain insights into key factors predictive of prediabetes using advanced model
+inspection and simulation.</p></li>
+</ul>
+<p>Start exploring the tutorial by clicking on the section links below, and start running
+the code for yourself by downloading the notebook
+<a class="reference download internal" download="" href="_downloads/f8edc62901c3352636cbd43e4d813713/Classification_with_Facet.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">here</span></code></a>.</p>
+<div class="toctree-wrapper compound">
+</div>
+</section>
+<section id="simulation-tutorial-feature-simulation-on-drill-operations">
+<span id="boot-sim-summary-tut"></span><h2>Simulation Tutorial: Feature Simulation on Drill Operations<a class="headerlink" href="#simulation-tutorial-feature-simulation-on-drill-operations" title="Permalink to this headline">¶</a></h2>
+<p>Introduce yourself to the FACET’s simulation module. This tutorial aims to provide
+a step by step explanation about the simulation capabilities of FACET and
+is based on the introductory Water Drilling Tutorial above.</p>
+<p>Start exploring the tutorial below by clicking on the section links, deepen your
+understanding by reading the associated
+<a class="reference external" href="https://medium.com/bcggamma/gamma-facet-a-new-approach-for-universal-explanations-of-machine-learning-models-b566877e7812">GAMMAscope article</a>, and
+download the notebook for yourself
+<a class="reference download internal" download="" href="_downloads/fcb03e5fb29767c409d10d05899d1d68/Model_simulation_deep_dive.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">here</span></code></a>.</p>
+<div class="toctree-wrapper compound">
+</div>
+</section>
+<section id="generating-standard-scikit-learn-classifier-performance-summaries">
+<span id="scikit-learn-summary-tut"></span><h2>Generating Standard Scikit-learn Classifier Performance Summaries<a class="headerlink" href="#generating-standard-scikit-learn-classifier-performance-summaries" title="Permalink to this headline">¶</a></h2>
+<p>Find quick clear examples of how to generate standard <em>scikit-learn</em> performance
+summaries for the best identified classifier from your FACET <cite>LearnerRanker()</cite>.</p>
+<p>Start exploring the tutorial by clicking on the section links below, and run
+the code for yourself by downloading the notebook
+<a class="reference download internal" download="" href="_downloads/cf9a77d79c2a3565a488450ce979e06f/Scikit-learn_classifier_summaries_using_FACET.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">here</span></code></a>.</p>
+<div class="toctree-wrapper compound">
+</div>
+<div class="toctree-wrapper compound">
+</div>
+</section>
+</section>
+
+
+              </div>
+              
+              
+              <div class='prev-next-bottom'>
+                
+    <a class='left-prev' id="prev-link" href="apidoc/facet/validation/facet.validation.StratifiedBootstrapCV.html" title="previous page">facet.validation.StratifiedBootstrapCV</a>
+    <a class='right-next' id="next-link" href="tutorial/Water_Drilling_Incident_Classification_with_Facet.html" title="next page">&lt;no title&gt;</a>
+
+              </div>
+              
+          </main>
+          
+
+      </div>
+    </div>
+
+    
+  <script src="_static/js/index.d3f166471bb80abb5163.js"></script>
+
+
+    <footer class="footer mt-5 mt-md-0">
+  <div class="container">
+    <p>
+          &copy; Copyright 2021, Boston Consulting Group (BCG).<br/>
+        Created using <a href="http://sphinx-doc.org/">Sphinx</a> 3.5.3.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>

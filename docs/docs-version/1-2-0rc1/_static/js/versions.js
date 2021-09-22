@@ -1,6 +1,7 @@
 const DOCS_VERSIONS = {
-    "current": "1.2.0",
+    "current": "1.2.1",
     "non_rc": [
+        "1.2.1",
         "1.2.0",
         "1.1.1",
         "1.1.0",
@@ -10,6 +11,7 @@ const DOCS_VERSIONS = {
     ],
     "all": [
         "2.0.dev0",
+        "1.2.1",
         "1.2.0",
         "1.2.0rc1",
         "1.2.0rc0",

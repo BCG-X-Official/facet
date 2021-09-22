@@ -1,0 +1,28 @@
+facet.inspection.ShapPlotData
+=============================
+
+.. currentmodule:: facet.inspection
+
+.. autoclass:: ShapPlotData
+   :members:
+   :no-show-inheritance:
+   :inherited-members:
+   :special-members: __call__
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Attribute summary
+
+   .. autosummary::
+   
+      ~ShapPlotData.features
+      ~ShapPlotData.shap_values
+      ~ShapPlotData.target
+   
+   
+
+   .. rubric:: Definitions
