@@ -505,7 +505,7 @@ def test_univariate_probability_simulation(
     )
 
     index = pd.Index(
-        data=[5, 5.5, 6, 6.5, 7, 7.5], name=UnivariateUpliftSimulator.IDX_PARTITION
+        data=[5, 5.5, 6, 6.5, 7, 7.5, 8], name=UnivariateUpliftSimulator.IDX_PARTITION
     )
 
     assert simulation_result.baseline == approx(0.5)
@@ -513,7 +513,7 @@ def test_univariate_probability_simulation(
     assert_series_equal(
         simulation_result.outputs_lower_bound(),
         pd.Series(
-            [0.346255, 0.346255, 0.353697, 0.394167, 0.401895, 0.417372],
+            [0.346255, 0.346255, 0.353697, 0.394167, 0.401895, 0.417372, 0.417372],
             name=UnivariateSimulationResult.COL_LOWER_BOUND,
             index=index,
         ),
@@ -522,7 +522,7 @@ def test_univariate_probability_simulation(
     assert_series_equal(
         simulation_result.outputs_median(),
         pd.Series(
-            [0.460432, 0.450516, 0.469412, 0.488569, 0.492651, 0.507788],
+            [0.460432, 0.450516, 0.469412, 0.488569, 0.492651, 0.507788, 0.507788],
             name=UnivariateSimulationResult.COL_MEDIAN,
             index=index,
         ),
@@ -531,7 +531,7 @@ def test_univariate_probability_simulation(
     assert_series_equal(
         simulation_result.outputs_upper_bound(),
         pd.Series(
-            [0.582565, 0.562096, 0.570590, 0.580023, 0.599714, 0.602303],
+            [0.582565, 0.562096, 0.570590, 0.580023, 0.599714, 0.602303, 0.602303],
             name=UnivariateSimulationResult.COL_UPPER_BOUND,
             index=index,
         ),
