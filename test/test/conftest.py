@@ -402,7 +402,7 @@ def iris_inspector_multi_class(
     ],
     n_jobs: int,
 ) -> LearnerInspector[ClassifierPipelineDF[RandomForestClassifierDF]]:
-    return LearnerInspector(shap_interaction=True, legacy=True, n_jobs=n_jobs).fit(
+    return LearnerInspector(shap_interaction=True, n_jobs=n_jobs).fit(
         crossfit=iris_classifier_crossfit_multi_class
     )
 
