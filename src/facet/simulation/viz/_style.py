@@ -144,15 +144,18 @@ class SimulationMatplotStyle(MatplotStyle, SimulationStyle):
             x = range(len(partitions))
         else:
             x = partitions
+
+        # get axes and color scheme
         ax = self.ax
+        colors = self.colors
 
         # plot the confidence bounds and the median
-        (line_min,) = ax.plot(x, outputs_lower_bound, color=self.colors.accent_3)
-        (line_median,) = ax.plot(x, outputs_median, color=self.colors.accent_2)
-        (line_max,) = ax.plot(x, outputs_upper_bound, color=self.colors.accent_3)
+        (line_min,) = ax.plot(x, outputs_lower_bound, color=colors.accent_3)
+        (line_median,) = ax.plot(x, outputs_median, color=colors.accent_2)
+        (line_max,) = ax.plot(x, outputs_upper_bound, color=colors.accent_3)
 
         # add a horizontal line at the baseline
-        line_base = ax.axhline(y=baseline, linewidth=0.5, color=self.colors.accent_1)
+        line_base = ax.axhline(y=baseline, linewidth=0.5, color=colors.accent_1)
 
         # add a legend
         labels = self._legend(confidence_level=confidence_level)
@@ -160,7 +163,7 @@ class SimulationMatplotStyle(MatplotStyle, SimulationStyle):
         ax.legend(handles, labels)
 
         # label the y axis
-        ax.set_ylabel(output_unit)
+        ax.set_ylabel(output_unit, color=colors.foreground)
 
         # format and label the x axis
         ax.tick_params(
