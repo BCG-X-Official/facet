@@ -7,6 +7,13 @@ FACET 1.1
 FACET 1.1 refines and enhances the association/synergy/redundancy calculations provided
 by the :class:`.LearnerInspector`.
 
+1.1.1
+~~~~~
+
+- DOC: add reference to FACET research paper on the project landing page
+- FIX: correctly count positive class frequency in UnivariateProbabilitySimulator
+
+
 1.1.0
 ~~~~~
 
@@ -28,6 +35,11 @@ by the :class:`.LearnerInspector`.
 
 FACET 1.0
 ---------
+
+1.0.3
+~~~~~
+
+- FIX: restrict package requirements to *gamma-pytools* 1.0.* and *sklearndf* 1.0.x, since FACET 1.0 is not compatible with *gamma-pytools* 1.1.* 
 
 1.0.2
 ~~~~~
