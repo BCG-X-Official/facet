@@ -26,16 +26,11 @@ FACET 1.1
 FACET 1.1 refines and enhances the association/synergy/redundancy calculations provided
 by the :class:`.LearnerInspector`.
 
-1.1.2
-~~~~~
-
-- FIX: correctly count positive class frequency in UnivariateProbabilitySimulator
-
-
 1.1.1
 ~~~~~
 
 - DOC: add reference to FACET research paper on the project landing page
+- FIX: correctly count positive class frequency in UnivariateProbabilitySimulator
 
 
 1.1.0
