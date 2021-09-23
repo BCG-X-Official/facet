@@ -934,21 +934,13 @@ class LearnerInspector(
         fn_linkage = LearnerInspector.__linkage_matrix_from_affinity_matrix_for_output
 
         return [
-            affinity_matrix.iloc[feature_order, feature_order]
+            (lambda feature_order: affinity_matrix.iloc[feature_order, feature_order])(
+                feature_order=leaves_list(
+                    Z=fn_linkage(feature_affinity_matrix=symmetrical_affinity_matrix)
+                )
+            )
             for affinity_matrix, symmetrical_affinity_matrix in zip(
                 affinity_matrices, symmetrical_affinity_matrices
-            )
-            for feature_order in (
-                leaves_list(
-                    Z=optimal_leaf_ordering(
-                        Z=fn_linkage(
-                            feature_affinity_matrix=symmetrical_affinity_matrix
-                        ),
-                        y=symmetrical_affinity_matrix,
-                    )
-                )
-                # reverse the index list so larger values tend to end up on top
-                [::-1],
             )
         ]
 
@@ -1043,10 +1035,20 @@ class LearnerInspector(
         # (1 = closest, 0 = most distant)
 
         # compress the distance matrix (required by SciPy)
-        compressed_distance_vector = squareform(1 - abs(feature_affinity_matrix))
+        compressed_distance_matrix: np.ndarray = squareform(
+            1 - abs(feature_affinity_matrix)
+        )
 
         # calculate the linkage matrix
-        return linkage(y=compressed_distance_vector, method="single")
+        leaf_ordering: np.ndarray = optimal_leaf_ordering(
+            Z=linkage(y=compressed_distance_matrix, method="single"),
+            y=compressed_distance_matrix,
+        )
+
+        # reverse the leaf ordering, so that larger values tend to end up on top
+        leaf_ordering[:, [1, 0]] = leaf_ordering[:, [0, 1]]
+
+        return leaf_ordering
 
     def _ensure_shap_interaction(self) -> None:
         if not self._shap_interaction:
