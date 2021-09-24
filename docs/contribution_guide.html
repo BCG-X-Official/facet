@@ -4,8 +4,7 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Development Guidelines &#8212; facet  documentation</title>
     
   <link rel="stylesheet" href="_static/css/index.f658d18f9b420779cfdf24aa0a7e2d77.css">
@@ -42,7 +41,7 @@
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="FAQ" href="faqs.html" />
-    <link rel="prev" title="&lt;no title&gt;" href="tutorial/Scikit-learn_classifier_summaries_using_FACET.html" />
+    <link rel="prev" title="Standard Scikit-learn Classification Summary with FACET" href="tutorial/Scikit-learn_classifier_summaries_using_FACET.html" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="docsearch:language" content="en" />
   </head>
@@ -238,11 +237,11 @@
               
               <div>
                 
-  <section id="development-guidelines">
+  <div class="section" id="development-guidelines">
 <span id="contribution-guide"></span><h1>Development Guidelines<a class="headerlink" href="#development-guidelines" title="Permalink to this headline">¶</a></h1>
-<section id="setup">
+<div class="section" id="setup">
 <h2>Setup<a class="headerlink" href="#setup" title="Permalink to this headline">¶</a></h2>
-<section id="python-environment">
+<div class="section" id="python-environment">
 <h3>Python environment<a class="headerlink" href="#python-environment" title="Permalink to this headline">¶</a></h3>
 <p>There is an <code class="docutils literal notranslate"><span class="pre">environment.yml</span></code> provided in the repository root, which installs all
 required development dependencies in the <code class="docutils literal notranslate"><span class="pre">facet-develop</span></code> environment.</p>
@@ -250,8 +249,8 @@ required development dependencies in the <code class="docutils literal notransla
 conda activate facet-develop
 </pre></div>
 </div>
-</section>
-<section id="pre-commit-hooks">
+</div>
+<div class="section" id="pre-commit-hooks">
 <h3>Pre-commit hooks<a class="headerlink" href="#pre-commit-hooks" title="Permalink to this headline">¶</a></h3>
 <p>This project uses a number of pre-commit hooks such as black and flake8 to enforce
 uniform coding standards in all commits. Before committing code, please run</p>
@@ -260,17 +259,17 @@ uniform coding standards in all commits. Before committing code, please run</p>
 </div>
 <p>You can use <code class="docutils literal notranslate"><span class="pre">pre-commit</span> <span class="pre">run</span></code> to manually run the pre-commit hooks from the command
 line.</p>
-</section>
-<section id="pytest">
+</div>
+<div class="section" id="pytest">
 <h3>Pytest<a class="headerlink" href="#pytest" title="Permalink to this headline">¶</a></h3>
 <p>Run <code class="docutils literal notranslate"><span class="pre">pytest</span> <span class="pre">tests/</span></code> from the facet root folder or use the PyCharm test runner. To
 measure coverage, use <code class="docutils literal notranslate"><span class="pre">pytest</span> <span class="pre">--cov=src/facet</span> <span class="pre">tests/</span></code>. Note that the code coverage
 reports are also generated in the Azure Pipelines (see CI/CD section).</p>
 <p>Note that you will need to set the PYTHONPATH to the <code class="docutils literal notranslate"><span class="pre">src/</span></code> directory by
 running <code class="docutils literal notranslate"><span class="pre">export</span> <span class="pre">PYTHONPATH=./src/</span></code> from the repository root.</p>
-</section>
-</section>
-<section id="git-guidelines">
+</div>
+</div>
+<div class="section" id="git-guidelines">
 <h2>Git Guidelines<a class="headerlink" href="#git-guidelines" title="Permalink to this headline">¶</a></h2>
 <p>For commits to GitHub, phrase commit comments as the completion of the sentence <em>This
 commit will …</em>, e.g.</p>
@@ -281,12 +280,12 @@ commit will …</em>, e.g.</p>
 <div class="highlight-RST notranslate"><div class="highlight"><pre><span></span>added method foo to class Bar
 </pre></div>
 </div>
-</section>
-<section id="documentation">
+</div>
+<div class="section" id="documentation">
 <h2>Documentation<a class="headerlink" href="#documentation" title="Permalink to this headline">¶</a></h2>
 <p>This section provides a general guide to the documentation of FACET, including
 docstrings, Sphinx, the README and tutorial notebooks.</p>
-<section id="docstrings">
+<div class="section" id="docstrings">
 <h3>Docstrings<a class="headerlink" href="#docstrings" title="Permalink to this headline">¶</a></h3>
 <p>The API documentation is generated from docstrings in the source code. Before writing
 your own, take some time to study the existing code documentation and emulate the same
@@ -413,8 +412,8 @@ the typing module. Do not specify the parameter types in the docstrings, e.g.,</
 </div>
 </li>
 </ul>
-</section>
-<section id="sphinx-build">
+</div>
+<div class="section" id="sphinx-build">
 <h3>Sphinx Build<a class="headerlink" href="#sphinx-build" title="Permalink to this headline">¶</a></h3>
 <p>Documentation for FACET is built using <a class="reference external" href="https://www.sphinx-doc.org/en/master/">sphinx</a>.
 Before building the documentation ensure the <code class="docutils literal notranslate"><span class="pre">facet-develop</span></code> environment is active as
@@ -515,8 +514,8 @@ documentation.</p></li>
 math expressions in doc strings. Note that a local latex installation is required (e.g.,
 <a class="reference external" href="https://miktex.org/">MiKTeX</a> for Windows).</p></li>
 </ul>
-</section>
-<section id="readme">
+</div>
+<div class="section" id="readme">
 <h3>README<a class="headerlink" href="#readme" title="Permalink to this headline">¶</a></h3>
 <p>The README file for the repo is .rst format instead of the perhaps more traditional
 markdown format. The reason for this is the <code class="docutils literal notranslate"><span class="pre">README.rst</span></code> is included as the quick start
@@ -533,8 +532,8 @@ the <code class="docutils literal notranslate"><span class="pre">sphinx/auxiliar
 tutorials). For this reason any updates to this example in the README need to be
 reflected in the source notebook and vice-versa.</p></li>
 </ul>
-</section>
-<section id="tutorial-notebooks">
+</div>
+<div class="section" id="tutorial-notebooks">
 <h3>Tutorial Notebooks<a class="headerlink" href="#tutorial-notebooks" title="Permalink to this headline">¶</a></h3>
 <p>Notebooks are used as the basis for detailed tutorials in the documentation. Tutorials
 created for documentation need to be placed in <code class="docutils literal notranslate"><span class="pre">sphinx/source/tutorial</span></code> folder.</p>
@@ -617,9 +616,9 @@ output should be included as a markdown cell with code designated as python to e
 appropriate formatting, while preventing the cell from executing should the user run
 all cells.</p></li>
 </ul>
-</section>
-</section>
-<section id="package-builds">
+</div>
+</div>
+<div class="section" id="package-builds">
 <h2>Package builds<a class="headerlink" href="#package-builds" title="Permalink to this headline">¶</a></h2>
 <p>The build process for the PyPI and conda distributions uses the following key
 files:</p>
@@ -633,14 +632,14 @@ dependency definitions specified in the <code class="docutils literal notranslat
 and pytest.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">condabuild/meta.yml</span></code>: metadata for conda, build settings and package dependencies.</p></li>
 </ul>
-<section id="versioning">
+<div class="section" id="versioning">
 <h3>Versioning<a class="headerlink" href="#versioning" title="Permalink to this headline">¶</a></h3>
 <p>FACET version numbering follows the <a class="reference external" href="https://semver.org/">semantic versioning</a>
 approach, with the pattern <code class="docutils literal notranslate"><span class="pre">MAJOR.MINOR.PATCH</span></code>.
 The version can be bumped in the <code class="docutils literal notranslate"><span class="pre">src/__init__.py</span></code> by updating the
 <code class="docutils literal notranslate"><span class="pre">__version__</span></code> string accordingly.</p>
-</section>
-<section id="pypi">
+</div>
+<div class="section" id="pypi">
 <h3>PyPI<a class="headerlink" href="#pypi" title="Permalink to this headline">¶</a></h3>
 <p>PyPI project metadata, build settings and package dependencies
 are obtained from <code class="docutils literal notranslate"><span class="pre">pyproject.toml</span></code>. To build and then publish the package to PyPI,
@@ -668,8 +667,8 @@ PyPI, also has the flexibility to support package building (wheel/sdist) via
 <code class="docutils literal notranslate"><span class="pre">flit</span> <span class="pre">build</span></code> and installing the package by copy or symlink via <code class="docutils literal notranslate"><span class="pre">flit</span> <span class="pre">install</span></code>.</p></li>
 <li><p>Build output will be stored in the <code class="docutils literal notranslate"><span class="pre">dist/</span></code> directory.</p></li>
 </ul>
-</section>
-<section id="conda">
+</div>
+<div class="section" id="conda">
 <h3>Conda<a class="headerlink" href="#conda" title="Permalink to this headline">¶</a></h3>
 <p>conda build metadata, build settings and package dependencies
 are obtained from <code class="docutils literal notranslate"><span class="pre">meta.yml</span></code>. To build and then publish the package to conda,
@@ -690,9 +689,9 @@ anaconda upload --user BCG_Gamma dist/conda/noarch/&lt;*package.tar.gz*&gt;
 </div></blockquote>
 </li>
 </ul>
-</section>
-</section>
-<section id="azure-devops-ci-cd">
+</div>
+</div>
+<div class="section" id="azure-devops-ci-cd">
 <h2>Azure DevOps CI/CD<a class="headerlink" href="#azure-devops-ci-cd" title="Permalink to this headline">¶</a></h2>
 <p>This project uses <a class="reference external" href="https://dev.azure.com/">Azure DevOps</a> for CI/CD pipelines.
 The pipelines are defined in the <code class="docutils literal notranslate"><span class="pre">azure-pipelines.yml</span></code> file and are divided into
@@ -706,7 +705,7 @@ in the <code class="docutils literal notranslate"><span class="pre">pyproject.ym
 <li><p><strong>Release</strong>: see release process below for more detail.</p></li>
 <li><p><strong>Docs</strong>: build and publish documentation to GitHub Pages.</p></li>
 </ul>
-<section id="release-process">
+<div class="section" id="release-process">
 <h3>Release process<a class="headerlink" href="#release-process" title="Permalink to this headline">¶</a></h3>
 <p>Before initiating the release process, please ensure the version number
 in <code class="docutils literal notranslate"><span class="pre">src/__init__.py</span></code> is correct and the format conforms to semantic
@@ -740,9 +739,9 @@ This may be automated in the future.</p></li>
 <li><p>Merge any changes from release branch also back to develop.</p></li>
 <li><p>Bump up version in <code class="docutils literal notranslate"><span class="pre">src/__init__.py</span></code> on develop to start work towards next release.</p></li>
 </ul>
-</section>
-</section>
-</section>
+</div>
+</div>
+</div>
 
 
               </div>
@@ -750,7 +749,7 @@ This may be automated in the future.</p></li>
               
               <div class='prev-next-bottom'>
                 
-    <a class='left-prev' id="prev-link" href="tutorial/Scikit-learn_classifier_summaries_using_FACET.html" title="previous page">&lt;no title&gt;</a>
+    <a class='left-prev' id="prev-link" href="tutorial/Scikit-learn_classifier_summaries_using_FACET.html" title="previous page">Standard Scikit-learn Classification Summary with FACET</a>
     <a class='right-next' id="next-link" href="faqs.html" title="next page">FAQ</a>
 
               </div>
@@ -769,7 +768,7 @@ This may be automated in the future.</p></li>
   <div class="container">
     <p>
           &copy; Copyright 2021, Boston Consulting Group (BCG).<br/>
-        Created using <a href="http://sphinx-doc.org/">Sphinx</a> 3.5.3.<br/>
+        Created using <a href="http://sphinx-doc.org/">Sphinx</a> 3.5.4.<br/>
     </p>
   </div>
 </footer>

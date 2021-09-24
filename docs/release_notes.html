@@ -4,8 +4,7 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Release Notes &#8212; facet  documentation</title>
     
   <link rel="stylesheet" href="_static/css/index.f658d18f9b420779cfdf24aa0a7e2d77.css">
@@ -211,24 +210,24 @@
               
               <div>
                 
-  <section id="release-notes">
+  <div class="section" id="release-notes">
 <span id="id1"></span><h1>Release Notes<a class="headerlink" href="#release-notes" title="Permalink to this headline">¶</a></h1>
-<section id="facet-1-2">
+<div class="section" id="facet-1-2">
 <h2>FACET 1.2<a class="headerlink" href="#facet-1-2" title="Permalink to this headline">¶</a></h2>
 <p>FACET 1.2 adds support for <em>sklearndf</em> 1.2 and <em>scikit-learn</em> 0.24.
 It also introduces the ability to run simulations on a subsample of the data used to
 fit the underlying crossfit.
 One example where this can be useful is to use only a recent period of a time series as
 the baseline of a simulation.</p>
-<section id="id2">
+<div class="section" id="id2">
 <h3>1.2.1<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
 <li><p>FIX: fix a bug in <a class="reference internal" href="apidoc/facet/simulation/facet.simulation.UnivariateProbabilitySimulator.html#facet.simulation.UnivariateProbabilitySimulator" title="facet.simulation.UnivariateProbabilitySimulator"><code class="xref py py-class docutils literal notranslate"><span class="pre">UnivariateProbabilitySimulator</span></code></a> that was introduced in
 FACET 1.2.0</p></li>
-<li><p>catch up with FACET 1.1.1</p></li>
+<li><p>catch up with FACET 1.1.2</p></li>
 </ul>
-</section>
-<section id="id3">
+</div>
+<div class="section" id="id3">
 <h3>1.2.0<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
 <li><p>BUILD: added support for <em>sklearndf</em> 1.2 and <em>scikit-learn</em> 0.24</p></li>
@@ -237,20 +236,20 @@ FACET 1.2.0</p></li>
 to be used in the simulation (but simulating using a crossfit based on the full
 sample)</p></li>
 </ul>
-</section>
-</section>
-<section id="facet-1-1">
+</div>
+</div>
+<div class="section" id="facet-1-1">
 <h2>FACET 1.1<a class="headerlink" href="#facet-1-1" title="Permalink to this headline">¶</a></h2>
 <p>FACET 1.1 refines and enhances the association/synergy/redundancy calculations provided
 by the <a class="reference internal" href="apidoc/facet/inspection/facet.inspection.LearnerInspector.html#facet.inspection.LearnerInspector" title="facet.inspection.LearnerInspector"><code class="xref py py-class docutils literal notranslate"><span class="pre">LearnerInspector</span></code></a>.</p>
-<section id="id4">
+<div class="section" id="id4">
 <h3>1.1.1<a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
 <li><p>DOC: add reference to FACET research paper on the project landing page</p></li>
 <li><p>FIX: correctly count positive class frequency in UnivariateProbabilitySimulator</p></li>
 </ul>
-</section>
-<section id="id5">
+</div>
+<div class="section" id="id5">
 <h3>1.1.0<a class="headerlink" href="#id5" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
 <li><p>API: SHAP interaction vectors can (in part) also be influenced by redundancy among
@@ -268,17 +267,17 @@ positive class of binary classifiers.</p></li>
 new <a class="reference external" href="https://bcg-gamma.github.io/pytools/apidoc/pytools/parallelization/pytools.parallelization.JobRunner.html#pytools.parallelization.JobRunner" title="(in pytools v1.2.2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">pytools.parallelization.JobRunner</span></code></a> API provided by <a class="reference external" href="https://bcg-gamma.github.io/pytools/apidoc/pytools.html#module-pytools" title="(in pytools v1.2.2)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pytools</span></code></a></p></li>
 <li><p>BUILD: add support for <code class="xref py py-mod docutils literal notranslate"><span class="pre">shap</span></code> 0.38 and 0.39</p></li>
 </ul>
-</section>
-</section>
-<section id="facet-1-0">
+</div>
+</div>
+<div class="section" id="facet-1-0">
 <h2>FACET 1.0<a class="headerlink" href="#facet-1-0" title="Permalink to this headline">¶</a></h2>
-<section id="id6">
+<div class="section" id="id6">
 <h3>1.0.3<a class="headerlink" href="#id6" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
 <li><p>FIX: restrict package requirements to <em>gamma-pytools</em> 1.0.* and <em>sklearndf</em> 1.0.x, since FACET 1.0 is not compatible with <em>gamma-pytools</em> 1.1.*</p></li>
 </ul>
-</section>
-<section id="id7">
+</div>
+<div class="section" id="id7">
 <h3>1.0.2<a class="headerlink" href="#id7" title="Permalink to this headline">¶</a></h3>
 <p>This is a maintenance release focusing on enhancements to the CI/CD pipeline and bug
 fixes.</p>
@@ -289,13 +288,13 @@ stub class</p></li>
 <li><p>BUILD: add support for <a class="reference external" href="https://numpy.org/doc/stable/reference/index.html#module-numpy" title="(in NumPy v1.21)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">numpy</span></code></a> 1.20</p></li>
 <li><p>BUILD: updates and changes to the CI/CD pipeline</p></li>
 </ul>
-</section>
-<section id="id8">
+</div>
+<div class="section" id="id8">
 <h3>1.0.1<a class="headerlink" href="#id8" title="Permalink to this headline">¶</a></h3>
 <p>Initial release.</p>
-</section>
-</section>
-</section>
+</div>
+</div>
+</div>
 
 
               </div>
@@ -321,7 +320,7 @@ stub class</p></li>
   <div class="container">
     <p>
           &copy; Copyright 2021, Boston Consulting Group (BCG).<br/>
-        Created using <a href="http://sphinx-doc.org/">Sphinx</a> 3.5.3.<br/>
+        Created using <a href="http://sphinx-doc.org/">Sphinx</a> 3.5.4.<br/>
     </p>
   </div>
 </footer>
