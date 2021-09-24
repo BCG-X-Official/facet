@@ -320,9 +320,9 @@ class ShapCalculator(
         level = 1 if n_levels == 2 else tuple(range(1, n_levels))
 
         if method == ShapCalculator.AGG_MEAN:
-            shap_aggregated = shap_all_splits_df.mean(level=level)
+            shap_aggregated = shap_all_splits_df.groupby(level=level).mean()
         elif method == ShapCalculator.AGG_STD:
-            shap_aggregated = shap_all_splits_df.std(level=level)
+            shap_aggregated = shap_all_splits_df.groupby(level=level).std()
         else:
             raise ValueError(f"unknown aggregation method: {method}")
 
@@ -512,7 +512,8 @@ class ShapInteractionValuesCalculator(
         """[see superclass]"""
         self._ensure_fitted()
         return ShapCalculator._aggregate_splits(
-            shap_all_splits_df=self.shap_.sum(level=(0, 1)), method=aggregation
+            shap_all_splits_df=self.shap_.groupby(level=(0, 1)).sum(),
+            method=aggregation,
         )
 
     def get_shap_interaction_values(self, aggregation: Optional[str]) -> pd.DataFrame:
