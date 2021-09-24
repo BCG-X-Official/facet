@@ -163,7 +163,7 @@ def test_model_inspection_classifier_binary(
     shap_matrix_mean = model_inspector.shap_values()
 
     # is the consolidation correct?
-    assert_frame_equal(shap_matrix_mean, shap_values.mean(level=1))
+    assert_frame_equal(shap_matrix_mean, shap_values.groupby(level=1).mean())
 
     # the length of rows in shap_values should be equal to the unique observation
     # indices we have had in the predictions_df
@@ -245,7 +245,7 @@ def test_model_inspection_classifier_multi_class(
 
     for _mean, _raw in zip(shap_matrix_mean, shap_values):
         # is the consolidation correct?
-        assert_frame_equal(_mean, _raw.mean(level=1))
+        assert_frame_equal(_mean, _raw.groupby(level=1).mean())
 
         # the length of rows in shap_values should be equal to the unique observation
         # indices we have had in the predictions_df
