@@ -109,7 +109,9 @@ hyperparameter configurations and even multiple learners with the `LearnerRanker
 
     # standard imports
     import pandas as pd
+    import numpy as np
     from sklearn.model_selection import RepeatedKFold
+    from sklearn.datasets import load_diabetes
 
     # some helpful imports from sklearndf
     from sklearndf.pipeline import RegressorPipelineDF
@@ -120,7 +122,13 @@ hyperparameter configurations and even multiple learners with the `LearnerRanker
     from facet.selection import LearnerRanker, LearnerGrid
 
     # load the diabetes dataset
-    diabetes_df = pd.read_csv('diabetes_quickstart.csv')
+    data = load_diabetes()
+    # converting input data to Pandas dataframe
+    diabetes_df = pd.DataFrame(data=np.c_[data['data'], data['target']],
+                           columns=data['feature_names']+['Disease_progression'])
+    # changing a column names for better readability
+    diabetes_df.rename(columns={'s1':'TC', 's2':'LDL', 's3':'HDL',
+                            's4':'TCH', 's5':'LTG', 's6':'GLU'}, inplace=True)
 
     # create FACET sample object
     diabetes_sample = Sample(observations=diabetes_df, target_name="Disease_progression")
