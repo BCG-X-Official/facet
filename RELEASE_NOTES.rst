@@ -53,7 +53,7 @@ by the :class:`.LearnerInspector`.
   model in a crossfit, then returns the mean of all resulting matrices. This leads to a
   slight increase in accuracy, and also allows us to calculate the standard deviation
   across matrices as an indication of confidence for each calculated value.
-- API: Method :meth:`.LernerInspector.shap_plot_data` now returns SHAP values for the
+- API: Method :meth:`.LearnerInspector.shap_plot_data` now returns SHAP values for the
   positive class of binary classifiers.
 - API: Increase efficiency of :class:`.LearnerRanker` parallelization by adopting the
   new :class:`pytools.parallelization.JobRunner` API provided by :mod:`pytools`
