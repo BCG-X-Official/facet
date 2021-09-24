@@ -10,6 +10,14 @@ fit the underlying crossfit.
 One example where this can be useful is to use only a recent period of a time series as
 the baseline of a simulation.
 
+1.2.1
+~~~~~
+
+- FIX: fix a bug in :class:`.UnivariateProbabilitySimulator` that was introduced in
+  FACET 1.2.0
+- catch up with FACET 1.1.2
+
+
 1.2.0
 ~~~~~
 
@@ -30,6 +38,7 @@ by the :class:`.LearnerInspector`.
 ~~~~~
 
 - DOC: add reference to FACET research paper on the project landing page
+- FIX: correctly count positive class frequency in UnivariateProbabilitySimulator
 
 
 1.1.0
@@ -44,7 +53,7 @@ by the :class:`.LearnerInspector`.
   model in a crossfit, then returns the mean of all resulting matrices. This leads to a
   slight increase in accuracy, and also allows us to calculate the standard deviation
   across matrices as an indication of confidence for each calculated value.
-- API: Method :meth:`.LernerInspector.shap_plot_data` now returns SHAP values for the
+- API: Method :meth:`.LearnerInspector.shap_plot_data` now returns SHAP values for the
   positive class of binary classifiers.
 - API: Increase efficiency of :class:`.LearnerRanker` parallelization by adopting the
   new :class:`pytools.parallelization.JobRunner` API provided by :mod:`pytools`
