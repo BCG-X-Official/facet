@@ -1,0 +1,28 @@
+facet.validation.BaseBootstrapCV
+================================
+
+.. currentmodule:: facet.validation
+
+.. autoclass:: BaseBootstrapCV
+   :members:
+   :no-show-inheritance:
+   :inherited-members:
+   :special-members: __call__
+
+   
+   
+   .. rubric:: Method summary
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~BaseBootstrapCV.get_n_splits
+      ~BaseBootstrapCV.split
+   
+   
+
+   
+   
+   
+
+   .. rubric:: Definitions

@@ -1,0 +1,321 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>facet.simulation.viz._draw &#8212; facet  documentation</title>
+    
+  <link rel="stylesheet" href="../../../../_static/css/index.f658d18f9b420779cfdf24aa0a7e2d77.css">
+
+    
+  <link rel="stylesheet"
+    href="../../../../_static/vendor/fontawesome/5.13.0/css/all.min.css">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../../../../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../../../../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+
+    
+      
+  <link rel="stylesheet"
+    href="../../../../_static/vendor/open-sans_all/1.44.1/index.css">
+  <link rel="stylesheet"
+    href="../../../../_static/vendor/lato_latin-ext/1.44.1/index.css">
+
+    
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/basic.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/css/gamma.css" />
+    
+  <link rel="preload" as="script" href="../../../../_static/js/index.d3f166471bb80abb5163.js">
+
+    <script id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+    <script src="../../../../_static/jquery.js"></script>
+    <script src="../../../../_static/underscore.js"></script>
+    <script src="../../../../_static/doctools.js"></script>
+    <script src="../../../../_static/js/gamma.js"></script>
+    <script src="../../../../_static/js/versions.js"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="docsearch:language" content="en" />
+  </head>
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
+    
+    <nav class="navbar navbar-light navbar-expand-lg bg-light fixed-top bd-navbar" id="navbar-main">
+<div class="container-xl">
+
+    <a class="navbar-brand" href="../../../../index.html">
+    
+      <img src="../../../../_static/Gamma_Facet_Logo_RGB_LB.svg" class="logo" alt="logo" />
+    
+    </a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar-menu" aria-controls="navbar-menu" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div id="navbar-menu" class="col-lg-9 collapse navbar-collapse">
+      <ul id="navbar-main-elements" class="navbar-nav mr-auto">
+        
+        
+        <li class="nav-item ">
+            <a class="nav-link" href="../../../../getting_started/getting_started.html">Getting started</a>
+        </li>
+        
+        <li class="nav-item ">
+            <a class="nav-link" href="../../../../apidoc/facet.html">API reference</a>
+        </li>
+        
+        <li class="nav-item ">
+            <a class="nav-link" href="../../../../tutorials.html">Tutorials</a>
+        </li>
+        
+        <li class="nav-item ">
+            <a class="nav-link" href="../../../../contribution_guide.html">Development Guidelines</a>
+        </li>
+        
+        <li class="nav-item ">
+            <a class="nav-link" href="../../../../faqs.html">FAQ</a>
+        </li>
+        
+        <li class="nav-item ">
+            <a class="nav-link" href="../../../../about_us.html">About us</a>
+        </li>
+        
+        <li class="nav-item ">
+            <a class="nav-link" href="../../../../release_notes.html">Release Notes</a>
+        </li>
+        
+        
+      </ul>
+
+
+      
+
+      <ul class="navbar-nav">
+        
+        
+      </ul>
+    </div>
+</div>
+    </nav>
+    
+
+    <div class="container-xl">
+      <div class="row">
+          
+          <div class="col-12 col-md-3 bd-sidebar"><form class="bd-search d-flex align-items-center" action="../../../../search.html" method="get">
+  <i class="icon fas fa-search"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
+</form>
+<nav class="bd-links" id="bd-docs-nav" aria-label="Main navigation">
+
+    <div class="bd-toc-item active">
+    
+  
+    <ul class="nav bd-sidenav">
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+      </ul>
+  
+  </nav>
+          </div>
+          
+
+          
+          <div class="d-none d-xl-block col-xl-2 bd-toc">
+              
+
+<nav id="bd-toc-nav">
+    <ul class="nav section-nav flex-column">
+    
+    </ul>
+</nav>
+
+
+              
+          </div>
+          
+
+          
+          <main class="col-12 col-md-9 col-xl-7 py-md-5 pl-md-5 pr-md-4 bd-content" role="main">
+              
+              <div>
+                
+  <h1>Source code for facet.simulation.viz._draw</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Visualizations of simulation results.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Type</span><span class="p">,</span> <span class="n">TypeVar</span><span class="p">,</span> <span class="n">Union</span>
+
+<span class="kn">from</span> <span class="nn">pytools.api</span> <span class="kn">import</span> <span class="n">AllTracker</span><span class="p">,</span> <span class="n">inheritdoc</span>
+<span class="kn">from</span> <span class="nn">pytools.viz</span> <span class="kn">import</span> <span class="n">Drawer</span>
+
+<span class="kn">from</span> <span class="nn">._style</span> <span class="kn">import</span> <span class="n">SimulationMatplotStyle</span><span class="p">,</span> <span class="n">SimulationReportStyle</span><span class="p">,</span> <span class="n">SimulationStyle</span>
+<span class="kn">from</span> <span class="nn">facet.simulation</span> <span class="kn">import</span> <span class="n">UnivariateSimulationResult</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;SimulationDrawer&quot;</span><span class="p">]</span>
+
+<span class="c1">#</span>
+<span class="c1"># Type variables</span>
+<span class="c1">#</span>
+
+
+<span class="n">T_Number</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">&quot;T_Number&quot;</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">)</span>
+
+<span class="c1">#</span>
+<span class="c1"># Ensure all symbols introduced below are included in __all__</span>
+<span class="c1">#</span>
+
+<span class="n">__tracker</span> <span class="o">=</span> <span class="n">AllTracker</span><span class="p">(</span><span class="nb">globals</span><span class="p">())</span>
+
+
+<span class="c1">#</span>
+<span class="c1"># Class definitions</span>
+<span class="c1">#</span>
+
+
+<div class="viewcode-block" id="SimulationDrawer"><a class="viewcode-back" href="../../../../apidoc/facet/simulation/viz/facet.simulation.viz.SimulationDrawer.html#facet.simulation.viz.SimulationDrawer">[docs]</a><span class="nd">@inheritdoc</span><span class="p">(</span><span class="n">match</span><span class="o">=</span><span class="s2">&quot;[see superclass]&quot;</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">SimulationDrawer</span><span class="p">(</span><span class="n">Drawer</span><span class="p">[</span><span class="n">UnivariateSimulationResult</span><span class="p">,</span> <span class="n">SimulationStyle</span><span class="p">]):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Draws the result of a univariate simulation, represented by a</span>
+<span class="sd">    :class:`.UnivariateSimulationResult` object.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1">#: if ``True``, plot the histogram of observed values for the feature being</span>
+    <span class="c1">#: simulated; if ``False``, do not plot the histogram</span>
+    <span class="n">histogram</span><span class="p">:</span> <span class="nb">bool</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">style</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">SimulationStyle</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">histogram</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        :param histogram: if ``True``, plot the histogram of observed values for the</span>
+<span class="sd">            feature being simulated; if ``False``, do not plot the histogram (default:</span>
+<span class="sd">            ``True``).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">style</span><span class="o">=</span><span class="n">style</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">histogram</span> <span class="o">=</span> <span class="n">histogram</span>
+
+    <span class="fm">__init__</span><span class="o">.</span><span class="vm">__doc__</span> <span class="o">=</span> <span class="n">Drawer</span><span class="o">.</span><span class="fm">__init__</span><span class="o">.</span><span class="vm">__doc__</span> <span class="o">+</span> <span class="fm">__init__</span><span class="o">.</span><span class="vm">__doc__</span>
+
+<div class="viewcode-block" id="SimulationDrawer.draw"><a class="viewcode-back" href="../../../../apidoc/facet/simulation/viz/facet.simulation.viz.SimulationDrawer.html#facet.simulation.viz.SimulationDrawer.draw">[docs]</a>    <span class="k">def</span> <span class="nf">draw</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">UnivariateSimulationResult</span><span class="p">,</span> <span class="n">title</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Draw the simulation chart.</span>
+
+<span class="sd">        :param data: the univariate simulation to draw</span>
+<span class="sd">        :param title: the title of the chart (optional, defaults to the name of the</span>
+<span class="sd">            simulated feature)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">title</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">title</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Simulation: </span><span class="si">{</span><span class="n">data</span><span class="o">.</span><span class="n">feature_name</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="n">title</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="SimulationDrawer.get_style_classes"><a class="viewcode-back" href="../../../../apidoc/facet/simulation/viz/facet.simulation.viz.SimulationDrawer.html#facet.simulation.viz.SimulationDrawer.get_style_classes">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">get_style_classes</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Type</span><span class="p">[</span><span class="n">SimulationStyle</span><span class="p">]]:</span>
+        <span class="sd">&quot;&quot;&quot;[see superclass]&quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="p">[</span>
+            <span class="n">SimulationMatplotStyle</span><span class="p">,</span>
+            <span class="n">SimulationReportStyle</span><span class="p">,</span>
+        <span class="p">]</span></div>
+
+<div class="viewcode-block" id="SimulationDrawer._draw"><a class="viewcode-back" href="../../../../apidoc/facet/simulation/viz/facet.simulation.viz.SimulationDrawer.html#facet.simulation.viz.SimulationDrawer._draw">[docs]</a>    <span class="k">def</span> <span class="nf">_draw</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">UnivariateSimulationResult</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># If the partitioning of the simulation is categorical, sort partitions in</span>
+        <span class="c1"># ascending order of the median output</span>
+        <span class="n">simulation_result</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span>
+            <span class="n">Sequence</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span>
+            <span class="n">Sequence</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span>
+            <span class="n">Sequence</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span>
+            <span class="n">Sequence</span><span class="p">[</span><span class="n">Any</span><span class="p">],</span>
+            <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span>
+        <span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">data</span><span class="o">.</span><span class="n">outputs_median</span><span class="p">()</span><span class="o">.</span><span class="n">to_list</span><span class="p">(),</span>
+            <span class="n">data</span><span class="o">.</span><span class="n">outputs_lower_bound</span><span class="p">()</span><span class="o">.</span><span class="n">to_list</span><span class="p">(),</span>
+            <span class="n">data</span><span class="o">.</span><span class="n">outputs_upper_bound</span><span class="p">()</span><span class="o">.</span><span class="n">to_list</span><span class="p">(),</span>
+            <span class="n">data</span><span class="o">.</span><span class="n">partitioner</span><span class="o">.</span><span class="n">partitions_</span><span class="p">,</span>
+            <span class="n">data</span><span class="o">.</span><span class="n">partitioner</span><span class="o">.</span><span class="n">frequencies_</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">data</span><span class="o">.</span><span class="n">partitioner</span><span class="o">.</span><span class="n">is_categorical</span><span class="p">:</span>
+            <span class="c1"># for categorical features, sort the categories by the median uplift</span>
+            <span class="n">simulation_result</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
+                <span class="o">*</span><span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="nb">sorted</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">simulation_result</span><span class="p">),</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+            <span class="p">)</span>
+
+        <span class="c1"># draw the graph with the uplift curves</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">style</span><span class="o">.</span><span class="n">draw_uplift</span><span class="p">(</span>
+            <span class="n">feature_name</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">feature_name</span><span class="p">,</span>
+            <span class="n">output_name</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">output_name</span><span class="p">,</span>
+            <span class="n">output_unit</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">output_unit</span><span class="p">,</span>
+            <span class="n">outputs_median</span><span class="o">=</span><span class="n">simulation_result</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+            <span class="n">outputs_lower_bound</span><span class="o">=</span><span class="n">simulation_result</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+            <span class="n">outputs_upper_bound</span><span class="o">=</span><span class="n">simulation_result</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span>
+            <span class="n">baseline</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">baseline</span><span class="p">,</span>
+            <span class="n">confidence_level</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">confidence_level</span><span class="p">,</span>
+            <span class="n">partitions</span><span class="o">=</span><span class="n">simulation_result</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span>
+            <span class="n">frequencies</span><span class="o">=</span><span class="n">simulation_result</span><span class="p">[</span><span class="mi">4</span><span class="p">],</span>
+            <span class="n">is_categorical_feature</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">partitioner</span><span class="o">.</span><span class="n">is_categorical</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">histogram</span><span class="p">:</span>
+            <span class="c1"># draw the histogram of the simulation values</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">style</span><span class="o">.</span><span class="n">draw_histogram</span><span class="p">(</span>
+                <span class="n">partitions</span><span class="o">=</span><span class="n">simulation_result</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span>
+                <span class="n">frequencies</span><span class="o">=</span><span class="n">simulation_result</span><span class="p">[</span><span class="mi">4</span><span class="p">],</span>
+                <span class="n">is_categorical_feature</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">partitioner</span><span class="o">.</span><span class="n">is_categorical</span><span class="p">,</span>
+            <span class="p">)</span></div></div>
+
+
+<span class="n">__tracker</span><span class="o">.</span><span class="n">validate</span><span class="p">()</span>
+</pre></div>
+
+              </div>
+              
+              
+              <div class='prev-next-bottom'>
+                
+
+              </div>
+              
+          </main>
+          
+
+      </div>
+    </div>
+
+    
+  <script src="../../../../_static/js/index.d3f166471bb80abb5163.js"></script>
+
+
+    <footer class="footer mt-5 mt-md-0">
+  <div class="container">
+    <p>
+          &copy; Copyright 2021, Boston Consulting Group (BCG).<br/>
+        Created using <a href="http://sphinx-doc.org/">Sphinx</a> 3.5.4.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>
