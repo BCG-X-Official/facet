@@ -518,7 +518,7 @@ class LearnerRanker(
         )
 
         pipeline_scorings: List[np.ndarray] = list(
-            JobRunner.from_parallelizable(self).run_queues(*queues)
+            JobRunner.from_parallelizable(self).run_queues(queues)
         )
 
         for crossfit, pipeline_parameters, pipeline_scoring in zip(
