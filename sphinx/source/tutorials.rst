@@ -90,9 +90,3 @@ the code for yourself by downloading the notebook
     :maxdepth: 1
 
     tutorial/Scikit-learn_classifier_summaries_using_FACET
-
-
-.. toctree::
-    :maxdepth: 1
-
-    tutorial/Synergy_Redundancy_Tutorial_with_Facet
