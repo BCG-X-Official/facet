@@ -1099,12 +1099,12 @@ class LearnerInspector(
                 feature_importance.reindex(frame.index),
                 feature_importance.reindex(frame.columns),
             ),
-            name_labels=("primary feature", "associated feature"),
-            weight_label=(
+            value_label=(
                 f"{affinity_metric} ({feature_importance_category})"
                 if feature_importance_category
                 else affinity_metric
             ),
+            name_labels=("primary feature", "associated feature"),
         )
 
     @staticmethod
