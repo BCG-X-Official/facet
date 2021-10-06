@@ -828,7 +828,7 @@ class LearnerInspector(
         )[np.newaxis, :, :]
 
         # create a data frame from the feature matrix
-        return self.__feature_matrix_to_df(
+        return self.__arrays_to_matrix(
             interaction_matrix, value_label="relative shap interaction"
         )
 
@@ -887,7 +887,7 @@ class LearnerInspector(
             sample=sample,
         )
 
-    def __feature_matrix_to_df(
+    def __arrays_to_matrix(
         self, matrix: np.ndarray, value_label: str
     ) -> Union[Matrix, List[Matrix]]:
         # transform a matrix of shape (n_outputs, n_features, n_features)
