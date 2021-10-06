@@ -761,12 +761,14 @@ def test_shap_plot_data(
 
 
 def print_expected_matrix(error: AssertionError, split: bool = False):
-    # used to print expected output for copy/paste into assertion statement
+    # print expected output for copy/paste into assertion statement
 
     import re
 
     matrix: List[List[float]] = eval(
-        re.search(r"array\(([^)]+)\)", error.args[0])[1].replace(r"\n", "\n")
+        re.search(r"array\(([^)]+)\)", error.args[0])[1]
+        .replace(r"\n", "\n")
+        .replace("nan", "np.nan")
     )
 
     print("==== matrix assertion failed ====\nExpected Matrix:")
@@ -778,7 +780,7 @@ def print_expected_matrix(error: AssertionError, split: bool = False):
             if split and i == halfpoint:
                 txt += "] + ["
             elif i > 0:
-                txt += ","
-            txt += f"{x:.3f}"
+                txt += ", "
+            txt += "np.nan" if np.isnan(x) else f"{x:.3f}"
         print(txt + "],")
     print("]")
