@@ -728,7 +728,7 @@ class LearnerInspector(
             )
         )
 
-    def feature_interaction_matrix(self) -> Union[pd.DataFrame, List[pd.DataFrame]]:
+    def feature_interaction_matrix(self) -> Union[Matrix, List[Matrix]]:
         """
         Calculate relative shap interaction values for all feature pairings.
 
@@ -828,7 +828,9 @@ class LearnerInspector(
         )[np.newaxis, :, :]
 
         # create a data frame from the feature matrix
-        return self.__feature_matrix_to_df(interaction_matrix)
+        return self.__feature_matrix_to_df(
+            interaction_matrix, value_label="relative shap interaction"
+        )
 
     def shap_plot_data(self) -> ShapPlotData:
         """
@@ -886,8 +888,8 @@ class LearnerInspector(
         )
 
     def __feature_matrix_to_df(
-        self, matrix: np.ndarray
-    ) -> Union[pd.DataFrame, List[pd.DataFrame]]:
+        self, matrix: np.ndarray, value_label: str
+    ) -> Union[Matrix, List[Matrix]]:
         # transform a matrix of shape (n_outputs, n_features, n_features)
         # to a data frame
 
@@ -900,13 +902,21 @@ class LearnerInspector(
 
         # convert array to data frame(s) with features as row and column indices
         if len(matrix) == 1:
-            return pd.DataFrame(
-                data=matrix[0], index=feature_index, columns=feature_index
+            return self.__array_to_matrix(
+                matrix[0],
+                feature_importance=self.feature_importance(),
+                value_label=value_label,
             )
         else:
             return [
-                pd.DataFrame(data=m, index=feature_index, columns=feature_index)
-                for m in matrix
+                self.__array_to_matrix(
+                    m,
+                    feature_importance=feature_importance,
+                    value_label=f"{value_label} ({output_name})",
+                )
+                for m, (_, feature_importance), output_name in zip(
+                    matrix, self.feature_importance().items(), self.output_names_
+                )
             ]
 
     def __feature_affinity_matrix(
@@ -987,7 +997,8 @@ class LearnerInspector(
 
             return [
                 self.__linkage_tree_from_affinity_matrix_for_output(
-                    feature_affinity_for_output, feature_importance_for_output
+                    feature_affinity_for_output,
+                    feature_importance_for_output,
                 )
                 for feature_affinity_for_output, (
                     _,
@@ -1084,6 +1095,21 @@ class LearnerInspector(
                     frames, feature_importance.items()
                 )
             ]
+
+    @staticmethod
+    def __array_to_matrix(
+        a: np.ndarray,
+        *,
+        feature_importance: pd.Series,
+        value_label: str,
+    ) -> Matrix:
+        return Matrix(
+            a,
+            names=(feature_importance.index, feature_importance.index),
+            weights=(feature_importance, feature_importance),
+            value_label=value_label,
+            name_labels=("feature", "feature"),
+        )
 
     @staticmethod
     def __frame_to_matrix(
