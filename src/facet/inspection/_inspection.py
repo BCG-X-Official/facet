@@ -7,8 +7,8 @@ from typing import Any, Generic, Iterable, List, Optional, Tuple, TypeVar, Union
 
 import numpy as np
 import pandas as pd
-from scipy.cluster.hierarchy import leaves_list, linkage, optimal_leaf_ordering
-from scipy.spatial.distance import squareform
+from scipy.cluster import hierarchy
+from scipy.spatial import distance
 
 from pytools.api import AllTracker, inheritdoc
 from pytools.data import LinkageTree, Matrix
@@ -945,7 +945,7 @@ class LearnerInspector(
 
         return [
             (lambda feature_order: affinity_matrix.iloc[feature_order, feature_order])(
-                feature_order=leaves_list(
+                feature_order=hierarchy.leaves_list(
                     Z=fn_linkage(feature_affinity_matrix=symmetrical_affinity_matrix)
                 )
             )
@@ -1048,11 +1048,11 @@ class LearnerInspector(
         # compress the distance matrix (required by SciPy)
         distance_matrix = 1.0 - abs(feature_affinity_matrix)
         np.fill_diagonal(distance_matrix, 0.0)
-        compressed_distance_matrix: np.ndarray = squareform(distance_matrix)
+        compressed_distance_matrix: np.ndarray = distance.squareform(distance_matrix)
 
         # calculate the linkage matrix
-        leaf_ordering: np.ndarray = optimal_leaf_ordering(
-            Z=linkage(y=compressed_distance_matrix, method="single"),
+        leaf_ordering: np.ndarray = hierarchy.optimal_leaf_ordering(
+            Z=hierarchy.linkage(y=compressed_distance_matrix, method="single"),
             y=compressed_distance_matrix,
         )
 
