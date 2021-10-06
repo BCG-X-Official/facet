@@ -1035,9 +1035,9 @@ class LearnerInspector(
         # (1 = closest, 0 = most distant)
 
         # compress the distance matrix (required by SciPy)
-        compressed_distance_matrix: np.ndarray = squareform(
-            1 - abs(feature_affinity_matrix)
-        )
+        distance_matrix = 1.0 - abs(feature_affinity_matrix)
+        np.fill_diagonal(distance_matrix, 0.0)
+        compressed_distance_matrix: np.ndarray = squareform(distance_matrix)
 
         # calculate the linkage matrix
         leaf_ordering: np.ndarray = optimal_leaf_ordering(

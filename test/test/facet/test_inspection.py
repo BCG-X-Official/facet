@@ -8,6 +8,7 @@ from typing import List, Sequence, Set, TypeVar
 import numpy as np
 import pandas as pd
 import pytest
+from numpy.testing import assert_allclose
 from pandas.testing import assert_frame_equal, assert_series_equal
 from sklearn.datasets import make_classification
 from sklearn.model_selection import KFold
@@ -175,16 +176,17 @@ def test_model_inspection_classifier_binary(
         association_matrix = model_inspector.feature_association_matrix(
             clustered=True, symmetrical=True
         )
-        assert association_matrix.values == pytest.approx(
+        assert_allclose(
+            association_matrix.values,
             np.array(
                 [
-                    [1.000, 0.692, 0.195, 0.052],
-                    [0.692, 1.000, 0.290, 0.041],
-                    [0.195, 0.290, 1.000, 0.081],
-                    [0.052, 0.041, 0.081, 1.000],
+                    [np.nan, 0.692, 0.195, 0.052],
+                    [0.692, np.nan, 0.290, 0.041],
+                    [0.195, 0.290, np.nan, 0.081],
+                    [0.052, 0.041, 0.081, np.nan],
                 ]
             ),
-            abs=0.02,
+            atol=0.02,
         )
     except AssertionError as error:
         print_expected_matrix(error=error)
@@ -260,7 +262,8 @@ def test_model_inspection_classifier_multi_class(
     assert feature_importance.columns.equals(
         pd.Index(iris_inspector_multi_class.output_names_, name="class")
     )
-    assert feature_importance.values == pytest.approx(
+    assert_allclose(
+        feature_importance.values,
         np.array(
             [
                 [0.125, 0.085, 0.104],
@@ -269,7 +272,7 @@ def test_model_inspection_classifier_multi_class(
                 [0.432, 0.441, 0.425],
             ]
         ),
-        abs=0.02,
+        atol=0.02,
     )
 
     # Shap decomposition matrices (feature dependencies)
@@ -279,62 +282,61 @@ def test_model_inspection_classifier_multi_class(
             clustered=False
         )
 
-        assert np.hstack([m.values for m in synergy_matrix]) == pytest.approx(
+        assert_allclose(
+            np.hstack([m.values for m in synergy_matrix]),
             np.array(
                 [
-                    [1.000, 0.009, 0.057, 0.055, 1.000, 0.042]
-                    + [0.418, 0.418, 1.000, 0.004, 0.085, 0.097],
-                    [0.101, 1.000, 0.052, 0.072, 0.094, 1.000]
-                    + [0.117, 0.156, 0.090, 1.000, 0.237, 0.258],
-                    [0.003, 0.001, 1.000, 0.002, 0.027, 0.005]
-                    + [1.000, 0.041, 0.012, 0.004, 1.000, 0.031],
-                    [0.002, 0.000, 0.001, 1.000, 0.029, 0.005]
-                    + [0.043, 1.000, 0.015, 0.005, 0.036, 1.000],
+                    [np.nan, 0.009, 0.057, 0.055, np.nan, 0.042]
+                    + [0.418, 0.418, np.nan, 0.004, 0.085, 0.097],
+                    [0.101, np.nan, 0.052, 0.072, 0.094, np.nan]
+                    + [0.117, 0.156, 0.090, np.nan, 0.237, 0.258],
+                    [0.003, 0.001, np.nan, 0.002, 0.027, 0.005]
+                    + [np.nan, 0.041, 0.012, 0.004, np.nan, 0.031],
+                    [0.002, 0.000, 0.001, np.nan, 0.029, 0.005]
+                    + [0.043, np.nan, 0.015, 0.005, 0.036, np.nan],
                 ]
             ),
-            abs=0.02,
+            atol=0.02,
         )
 
         redundancy_matrix = iris_inspector_multi_class.feature_redundancy_matrix(
             clustered=False
         )
-        assert np.hstack([m.values for m in redundancy_matrix]) == (
-            pytest.approx(
-                np.array(
-                    [
-                        [1.000, 0.087, 0.643, 0.656, 1.000, 0.065]
-                        + [0.265, 0.234, 1.000, 0.034, 0.594, 0.505],
-                        [0.082, 1.000, 0.297, 0.292, 0.064, 1.000]
-                        + [0.117, 0.171, 0.031, 1.000, 0.024, 0.021],
-                        [0.682, 0.314, 1.000, 0.996, 0.471, 0.130]
-                        + [1.000, 0.743, 0.642, 0.031, 1.000, 0.761],
-                        [0.695, 0.315, 0.997, 1.000, 0.406, 0.194]
-                        + [0.741, 1.000, 0.550, 0.028, 0.756, 1.000],
-                    ]
-                ),
-                abs=0.02,
-            )
+        assert_allclose(
+            np.hstack([m.values for m in redundancy_matrix]),
+            np.array(
+                [
+                    [np.nan, 0.087, 0.643, 0.656, np.nan, 0.065]
+                    + [0.265, 0.234, np.nan, 0.034, 0.594, 0.505],
+                    [0.082, np.nan, 0.297, 0.292, 0.064, np.nan]
+                    + [0.117, 0.171, 0.031, np.nan, 0.024, 0.021],
+                    [0.682, 0.314, np.nan, 0.996, 0.471, 0.130]
+                    + [np.nan, 0.743, 0.642, 0.031, np.nan, 0.761],
+                    [0.695, 0.315, 0.997, np.nan, 0.406, 0.194]
+                    + [0.741, np.nan, 0.550, 0.028, 0.756, np.nan],
+                ]
+            ),
+            atol=0.02,
         )
 
         association_matrix = iris_inspector_multi_class.feature_association_matrix(
             clustered=False
         )
-        assert np.hstack([m.values for m in association_matrix]) == (
-            pytest.approx(
-                np.array(
-                    [
-                        [1.000, 0.077, 0.662, 0.670, 1.000, 0.046]
-                        + [0.370, 0.334, 1.000, 0.031, 0.634, 0.550],
-                        [0.077, 1.000, 0.301, 0.295, 0.046, 1.000]
-                        + [0.127, 0.173, 0.031, 1.000, 0.025, 0.020],
-                        [0.662, 0.301, 1.000, 0.998, 0.370, 0.127]
-                        + [1.000, 0.783, 0.634, 0.025, 1.000, 0.790],
-                        [0.670, 0.295, 0.998, 1.000, 0.334, 0.173]
-                        + [0.783, 1.000, 0.550, 0.020, 0.790, 1.000],
-                    ]
-                ),
-                abs=0.02,
-            )
+        assert_allclose(
+            np.hstack([m.values for m in association_matrix]),
+            np.array(
+                [
+                    [np.nan, 0.077, 0.662, 0.670, np.nan, 0.046]
+                    + [0.370, 0.334, np.nan, 0.031, 0.634, 0.550],
+                    [0.077, np.nan, 0.301, 0.295, 0.046, np.nan]
+                    + [0.127, 0.173, 0.031, np.nan, 0.025, 0.020],
+                    [0.662, 0.301, np.nan, 0.998, 0.370, 0.127]
+                    + [np.nan, 0.783, 0.634, 0.025, np.nan, 0.790],
+                    [0.670, 0.295, 0.998, np.nan, 0.334, 0.173]
+                    + [0.783, np.nan, 0.550, 0.020, 0.790, np.nan],
+                ]
+            ),
+            atol=0.02,
         )
     except AssertionError as error:
         print_expected_matrix(error=error, split=True)
@@ -495,204 +497,211 @@ def test_model_inspection_classifier_interaction(
         synergy_matrix = model_inspector.feature_synergy_matrix(
             clustered=False, symmetrical=True
         )
-        assert synergy_matrix.values == pytest.approx(
+        assert_allclose(
+            synergy_matrix.values,
             np.array(
                 [
-                    [1.000, 0.011, 0.006, 0.007],
-                    [0.011, 1.000, 0.006, 0.007],
-                    [0.006, 0.006, 1.000, 0.003],
-                    [0.007, 0.007, 0.003, 1.000],
+                    [np.nan, 0.011, 0.006, 0.007],
+                    [0.011, np.nan, 0.006, 0.007],
+                    [0.006, 0.006, np.nan, 0.003],
+                    [0.007, 0.007, 0.003, np.nan],
                 ]
             ),
-            abs=0.02,
+            atol=0.02,
         )
-        assert model_inspector.feature_synergy_matrix(
-            absolute=True, symmetrical=True
-        ).values == pytest.approx(
+        assert_allclose(
+            model_inspector.feature_synergy_matrix(
+                absolute=True, symmetrical=True
+            ).values,
             np.array(
                 [
-                    [0.425, 0.001, 0.002, 0.001],
-                    [0.001, 0.019, 0.000, 0.002],
-                    [0.002, 0.000, 0.068, 0.002],
-                    [0.001, 0.002, 0.002, 0.488],
+                    [np.nan, 0.001, 0.002, 0.001],
+                    [0.001, np.nan, 0.000, 0.002],
+                    [0.002, 0.000, np.nan, 0.002],
+                    [0.001, 0.002, 0.002, np.nan],
                 ]
             ),
-            abs=0.02,
+            atol=0.02,
         )
 
         synergy_matrix = model_inspector.feature_synergy_matrix(clustered=True)
-        assert synergy_matrix.values == pytest.approx(
+        assert_allclose(
+            synergy_matrix.values,
             np.array(
                 [
-                    [1.000, 0.000, 0.001, 0.004],
-                    [0.149, 1.000, 0.045, 0.157],
-                    [0.040, 0.004, 1.000, 0.044],
-                    [0.003, 0.001, 0.001, 1.000],
+                    [np.nan, 0.000, 0.001, 0.004],
+                    [0.149, np.nan, 0.045, 0.157],
+                    [0.040, 0.004, np.nan, 0.044],
+                    [0.003, 0.001, 0.001, np.nan],
                 ]
             ),
-            abs=0.02,
+            atol=0.02,
         )
-        assert model_inspector.feature_synergy_matrix(
-            absolute=True
-        ).values == pytest.approx(
+        assert_allclose(
+            model_inspector.feature_synergy_matrix(absolute=True).values,
             np.array(
                 [
-                    [0.425, 0.000, 0.000, 0.001],
-                    [0.003, 0.019, 0.001, 0.003],
-                    [0.003, 0.000, 0.068, 0.003],
-                    [0.001, 0.000, 0.001, 0.488],
+                    [np.nan, 0.000, 0.000, 0.001],
+                    [0.003, np.nan, 0.001, 0.003],
+                    [0.003, 0.000, np.nan, 0.003],
+                    [0.001, 0.000, 0.001, np.nan],
                 ]
             ),
-            abs=0.02,
+            atol=0.02,
         )
-        assert model_inspector_full_sample.feature_synergy_matrix(
-            clustered=True
-        ).values == pytest.approx(
+        assert_allclose(
+            model_inspector_full_sample.feature_synergy_matrix(clustered=True).values,
             np.array(
                 [
-                    [1.000, 0.000, 0.000, 0.001],
-                    [0.386, 1.000, 0.108, 0.314],
-                    [0.005, 0.002, 1.000, 0.059],
-                    [0.002, 0.000, 0.001, 1.000],
+                    [np.nan, 0.000, 0.000, 0.001],
+                    [0.386, np.nan, 0.108, 0.314],
+                    [0.005, 0.002, np.nan, 0.059],
+                    [0.002, 0.000, 0.001, np.nan],
                 ]
             ),
-            abs=0.02,
+            atol=0.02,
         )
 
         redundancy_matrix = model_inspector.feature_redundancy_matrix(
             clustered=False, symmetrical=True
         )
-        assert redundancy_matrix.values == pytest.approx(
+        assert_allclose(
+            redundancy_matrix.values,
             np.array(
                 [
-                    [1.000, 0.080, 0.316, 0.208],
-                    [0.080, 1.000, 0.036, 0.044],
-                    [0.316, 0.036, 1.000, 0.691],
-                    [0.208, 0.044, 0.691, 1.000],
+                    [np.nan, 0.080, 0.316, 0.208],
+                    [0.080, np.nan, 0.036, 0.044],
+                    [0.316, 0.036, np.nan, 0.691],
+                    [0.208, 0.044, 0.691, np.nan],
                 ]
             ),
-            abs=0.02,
+            atol=0.02,
         )
-        assert model_inspector.feature_redundancy_matrix(
-            absolute=True, symmetrical=True
-        ).values == pytest.approx(
+        assert_allclose(
+            model_inspector.feature_redundancy_matrix(
+                absolute=True, symmetrical=True
+            ).values,
             np.array(
                 [
-                    [0.425, 0.316, 0.052, 0.010],
-                    [0.316, 0.488, 0.087, 0.009],
-                    [0.052, 0.087, 0.068, 0.004],
-                    [0.010, 0.009, 0.004, 0.019],
+                    [np.nan, 0.316, 0.052, 0.010],
+                    [0.316, np.nan, 0.087, 0.009],
+                    [0.052, 0.087, np.nan, 0.004],
+                    [0.010, 0.009, 0.004, np.nan],
                 ]
             ),
-            abs=0.02,
+            atol=0.02,
         )
 
         redundancy_matrix = model_inspector.feature_redundancy_matrix(clustered=True)
-        assert redundancy_matrix.values == pytest.approx(
+        assert_allclose(
+            redundancy_matrix.values,
             np.array(
                 [
-                    [1.000, 0.691, 0.209, 0.045],
-                    [0.692, 1.000, 0.317, 0.037],
-                    [0.201, 0.303, 1.000, 0.081],
-                    [0.040, 0.031, 0.076, 1.000],
+                    [np.nan, 0.691, 0.209, 0.045],
+                    [0.692, np.nan, 0.317, 0.037],
+                    [0.201, 0.303, np.nan, 0.081],
+                    [0.040, 0.031, 0.076, np.nan],
                 ]
             ),
-            abs=0.02,
+            atol=0.02,
         )
-        assert model_inspector.feature_redundancy_matrix(
-            absolute=True
-        ).values == pytest.approx(
+        assert_allclose(
+            model_inspector.feature_redundancy_matrix(absolute=True).values,
             np.array(
                 [
-                    [0.425, 0.294, 0.092, 0.020],
-                    [0.337, 0.488, 0.154, 0.017],
-                    [0.013, 0.020, 0.068, 0.006],
-                    [0.001, 0.001, 0.001, 0.019],
+                    [np.nan, 0.294, 0.092, 0.020],
+                    [0.337, np.nan, 0.154, 0.017],
+                    [0.013, 0.020, np.nan, 0.006],
+                    [0.001, 0.001, 0.001, np.nan],
                 ]
             ),
-            abs=0.02,
+            atol=0.02,
         )
 
-        assert model_inspector_full_sample.feature_redundancy_matrix(
-            clustered=True
-        ).values == pytest.approx(
+        assert_allclose(
+            model_inspector_full_sample.feature_redundancy_matrix(
+                clustered=True
+            ).values,
             np.array(
                 [
-                    [1.000, 0.677, 0.384, 0.003],
-                    [0.676, 1.000, 0.465, 0.000],
-                    [0.382, 0.438, 1.000, 0.013],
-                    [0.002, 0.000, 0.012, 1.000],
+                    [np.nan, 0.677, 0.384, 0.003],
+                    [0.676, np.nan, 0.465, 0.000],
+                    [0.382, 0.438, np.nan, 0.013],
+                    [0.002, 0.000, 0.012, np.nan],
                 ]
             ),
-            abs=0.02,
+            atol=0.02,
         )
 
         association_matrix = model_inspector.feature_association_matrix(
             clustered=False, symmetrical=True
         )
-        assert association_matrix.values == pytest.approx(
+        assert_allclose(
+            association_matrix.values,
             np.array(
                 [
-                    [1.000, 0.074, 0.309, 0.205],
-                    [0.074, 1.000, 0.030, 0.040],
-                    [0.309, 0.030, 1.000, 0.694],
-                    [0.205, 0.040, 0.694, 1.000],
+                    [np.nan, 0.074, 0.309, 0.205],
+                    [0.074, np.nan, 0.030, 0.040],
+                    [0.309, 0.030, np.nan, 0.694],
+                    [0.205, 0.040, 0.694, np.nan],
                 ]
             ),
-            abs=0.02,
+            atol=0.02,
         )
-        assert model_inspector.feature_association_matrix(
-            absolute=True, symmetrical=True
-        ).values == pytest.approx(
+        assert_allclose(
+            model_inspector.feature_association_matrix(
+                absolute=True, symmetrical=True
+            ).values,
             np.array(
                 [
-                    [0.425, 0.317, 0.051, 0.009],
-                    [0.317, 0.488, 0.085, 0.007],
-                    [0.051, 0.085, 0.068, 0.003],
-                    [0.009, 0.007, 0.003, 0.019],
+                    [np.nan, 0.317, 0.051, 0.009],
+                    [0.317, np.nan, 0.085, 0.007],
+                    [0.051, 0.085, np.nan, 0.003],
+                    [0.009, 0.007, 0.003, np.nan],
                 ]
             ),
-            abs=0.02,
+            atol=0.02,
         )
 
         association_matrix = model_inspector.feature_association_matrix(clustered=True)
-        assert association_matrix.values == pytest.approx(
+        assert_allclose(
+            association_matrix.values,
             np.array(
                 [
-                    [1.000, 0.694, 0.205, 0.040],
-                    [0.694, 1.000, 0.309, 0.030],
-                    [0.205, 0.309, 1.000, 0.074],
-                    [0.040, 0.030, 0.074, 1.000],
+                    [np.nan, 0.694, 0.205, 0.040],
+                    [0.694, np.nan, 0.309, 0.030],
+                    [0.205, 0.309, np.nan, 0.074],
+                    [0.040, 0.030, 0.074, np.nan],
                 ]
             ),
-            abs=0.02,
+            atol=0.02,
         )
-        assert model_inspector.feature_association_matrix(
-            absolute=True
-        ).values == pytest.approx(
+        assert_allclose(
+            model_inspector.feature_association_matrix(absolute=True).values,
             np.array(
                 [
-                    [0.425, 0.295, 0.090, 0.018],
-                    [0.338, 0.488, 0.150, 0.014],
-                    [0.013, 0.020, 0.068, 0.005],
-                    [0.001, 0.001, 0.001, 0.019],
+                    [np.nan, 0.295, 0.090, 0.018],
+                    [0.338, np.nan, 0.150, 0.014],
+                    [0.013, 0.020, np.nan, 0.005],
+                    [0.001, 0.001, 0.001, np.nan],
                 ]
             ),
-            abs=0.02,
+            atol=0.02,
         )
 
-        assert model_inspector_full_sample.feature_association_matrix(
-            clustered=True
-        ).values == pytest.approx(
+        assert_allclose(
+            model_inspector_full_sample.feature_association_matrix(
+                clustered=True
+            ).values,
             np.array(
                 [
-                    [1.000, 0.678, 0.383, 0.001],
-                    [0.678, 1.000, 0.447, 0.000],
-                    [0.383, 0.447, 1.000, 0.009],
-                    [0.001, 0.000, 0.009, 1.000],
+                    [np.nan, 0.678, 0.383, 0.001],
+                    [0.678, np.nan, 0.447, 0.000],
+                    [0.383, 0.447, np.nan, 0.009],
+                    [0.001, 0.000, 0.009, np.nan],
                 ]
             ),
-            abs=0.02,
+            atol=0.02,
         )
 
     except AssertionError as error:

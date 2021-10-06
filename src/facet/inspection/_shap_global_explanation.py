@@ -119,8 +119,8 @@ class AffinityMatrix:
             where=affinity_abs_sym_ij_2x > 0.0,
         )
 
-        # re-set the diagonal to 1.0 in case of rounding errors
-        fill_diagonal(affinity_rel_sym_ij, 1.0)
+        # affinity of a feature with itself is undefined
+        fill_diagonal(affinity_rel_sym_ij, np.nan)
 
         # return the AffinityMatrices object
         return AffinityMatrix(

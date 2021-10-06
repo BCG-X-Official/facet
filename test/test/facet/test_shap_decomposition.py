@@ -37,7 +37,7 @@ def test_shap_decomposition_matrices(
 
         # check values
         assert (
-            matrix.values.min() >= 0.0 and matrix.values.max() <= 1.0
+            np.nanmin(matrix.values) >= 0.0 and np.nanmax(matrix.values) <= 1.0
         ), f"Values of [0.0, 1.0] in {matrix_full_name}"
 
 
