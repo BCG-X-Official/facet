@@ -386,9 +386,7 @@ quantify the uncertainty by using bootstrap confidence intervals.
 .. image:: sphinx/source/_static/simulation_output.png
 
 We would conclude from the figure that higher values of `BMI` are associated with
-an increase in disease progression after one year, and that for a `BMI` of 29
-and above, there is a significant increase in disease progression after one year
-of at least 26 points.
+an increase in disease progression after one year.
 
 Contributing
 ------------
