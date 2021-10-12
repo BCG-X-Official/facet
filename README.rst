@@ -286,10 +286,10 @@ perspective of `LDL` (Low-Density Lipoproteins), then we look-up the row for `LD
 and the column for `TC` and find 38% redundancy. This means that 38% of the information
 in `LDL` is duplicated with `TC` to predict disease progression after one year. This
 redundancy is the same when looking "from the perspective" of `TC` for (`TC`, `LDL`),
-but need not be symmetrical in all cases (see `LTG` vs. `TSH`).
+but need not be symmetrical in all cases (see `LTG` vs. `TCH`).
 
-If we look at `TSH`, it has between 22–32% redundancy each with `LTG` and `HDL`, but
-the same does not hold between `LTG` and `HDL` – meaning `TSH` shares different
+If we look at `TCH`, it has between 22–32% redundancy each with `LTG` and `HDL`, but
+the same does not hold between `LTG` and `HDL` – meaning `TCH` shares different
 information with each of the two features.
 
 
@@ -319,9 +319,9 @@ Let's look at the example for redundancy.
     :width: 600
 
 Based on the dendrogram we can see that the feature pairs (`LDL`, `TC`)
-and (`HDL`, `TSH`) each represent a cluster in the dendrogram and that `LTG` and `BMI`
+and (`HDL`, `TCH`) each represent a cluster in the dendrogram and that `LTG` and `BMI`
 have the highest importance. As potential next actions we could explore the impact of
-removing `TSH`, and one of `TC` or `LDL` to further simplify the model and obtain a
+removing `TCH`, and one of `TC` or `LDL` to further simplify the model and obtain a
 reduced set of independent features.
 
 Please see the
