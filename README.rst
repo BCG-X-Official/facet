@@ -265,7 +265,7 @@ with `LTG`. We can conclude that:
 
 High synergy between pairs of features must be considered carefully when investigating
 impact, as the values of both features jointly determine the outcome. It would not make
-much sense to consider `TC` (T-Cells) without the context provided by `LDL` given close
+much sense to consider `LDL` without the context provided by `LTG` given close
 to 27% synergy of `LDL` with `LTG` for predicting progression after one year.
 
 **Redundancy**
