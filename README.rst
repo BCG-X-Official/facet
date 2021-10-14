@@ -253,10 +253,10 @@ The key global metrics for each pair of features in a model are:
 
 For any feature pair (A, B), the first feature (A) is the row, and the second
 feature (B) the column. For example, looking across the row for `LTG` (Lamotrigine)
-there is relatively minimal synergy (≤1%) with other features in the model.
-However, looking down the column for `LTG` (i.e., perspective of other features
-in a pair with `LTG`) we find many features (the rows) are synergistic (up to 27%)
-with `LTG`. We can conclude that:
+there is hardly any synergy with other features in the model (≤ 1%).
+However, looking down the column for `LTG` (i.e., from the perspective of other features
+relative with `LTG`) we find that many features (the rows) are aided by synergy with
+with `LTG` (up to 27% in the case of LDL). We conclude that:
 
 - `LTG` is a strongly autonomous feature, displaying minimal synergy with other
   features for predicting disease progression after one year.
@@ -284,7 +284,7 @@ For any feature pair (A, B), the first feature (A) is the row, and the second fe
 (B) the column. For example, if we look at the feature pair (`LDL`, `TC`) from the
 perspective of `LDL` (Low-Density Lipoproteins), then we look-up the row for `LDL`
 and the column for `TC` and find 38% redundancy. This means that 38% of the information
-in `LDL` is duplicated with `TC` to predict disease progression after one year. This
+in `LDL` to predict disease progression is duplicated in `TC`. This
 redundancy is the same when looking "from the perspective" of `TC` for (`TC`, `LDL`),
 but need not be symmetrical in all cases (see `LTG` vs. `TCH`).
 
