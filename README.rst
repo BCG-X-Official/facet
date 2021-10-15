@@ -110,7 +110,6 @@ hyperparameter configurations and even multiple learners with the `LearnerRanker
     # standard imports
     import pandas as pd
     from sklearn.model_selection import RepeatedKFold
-    from sklearn.datasets import load_diabetes
 
     # some helpful imports from sklearndf
     from sklearndf.pipeline import RegressorPipelineDF
@@ -120,22 +119,20 @@ hyperparameter configurations and even multiple learners with the `LearnerRanker
     from facet.data import Sample
     from facet.selection import LearnerRanker, LearnerGrid
 
-    # load the diabetes dataset
-    diabetes_sklearn = load_diabetes(as_frame=True)
+    # declaring url with data
+    data_url = 'https://www4.stat.ncsu.edu/~boos/var.select/diabetes.tab.txt'
 
-    #converting sklearn bunch object to dataframe
-    diabetes_df = diabetes_sklearn.frame.rename(
-    # renaming columns for better readability
+    #importing data from url
+    diabetes_df = pd.read_csv(data_url, delimiter='\t').rename(
+        # renaming columns for better readability
         columns={
-            'bmi': 'BMI', # body mass index, making caps for consistency in abbreviation
-            'bp': 'BP', # blood pressure, making caps for consistency in abbreviation
-            's1': 'TC', # total serum cholesterol
-            's2': 'LDL', # low-density lipoproteins
-            's3': 'HDL', # high-density lipoproteins
-            's4': 'TCH', # total cholesterol/ HDL
-            's5': 'LTG', # lamotrigine level
-            's6': 'GLU', # blood sugar level
-            'target': 'Disease_progression' # measure of progress since 1yr of baseline
+            'S1': 'TC', # total serum cholesterol
+            'S2': 'LDL', # low-density lipoproteins
+            'S3': 'HDL', # high-density lipoproteins
+            'S4': 'TCH', # total cholesterol/ HDL
+            'S5': 'LTG', # lamotrigine level
+            'S6': 'GLU', # blood sugar level
+            'Y': 'Disease_progression' # measure of progress since 1yr of baseline
         }
     )
 
