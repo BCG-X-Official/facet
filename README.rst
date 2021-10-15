@@ -90,13 +90,13 @@ Enhanced Machine Learning Workflow
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 To demonstrate the model inspection capability of FACET, we first create a
-pipeline to fit a learner. In this simple example we use the
-`diabetes dataset <https://www4.stat.ncsu.edu/~boos/var.select/diabetes.tab.txt>`__
+pipeline to fit a learner. In this simple example we will use the
+`diabetes dataset <https://web.stanford.edu/~hastie/Papers/LARS/diabetes.data>`__
 which contains age, sex, BMI and blood pressure along with 6 blood serum
-measurements as features. A transformed version of this dataset is also available
-on scikit-learn
+measurements as features. This dataset was used in this
+`publication <https://statweb.stanford.edu/~tibs/ftp/lars.pdf>`__.
+A transformed version of this dataset is also available on scikit-learn
 `here <https://scikit-learn.org/stable/datasets/toy_dataset.html#diabetes-dataset>`__.
-
 
 In this quickstart we will train a Random Forest regressor using 10 repeated
 5-fold CV to predict disease progression after one year. With the use of
@@ -120,7 +120,7 @@ hyperparameter configurations and even multiple learners with the `LearnerRanker
     from facet.selection import LearnerRanker, LearnerGrid
 
     # declaring url with data
-    data_url = 'https://www4.stat.ncsu.edu/~boos/var.select/diabetes.tab.txt'
+    data_url = 'https://web.stanford.edu/~hastie/Papers/LARS/diabetes.data'
 
     #importing data from url
     diabetes_df = pd.read_csv(data_url, delimiter='\t').rename(
