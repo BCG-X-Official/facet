@@ -200,15 +200,12 @@ def regressor_inspector(
     best_lgbm_crossfit: LearnerCrossfit[RegressorPipelineDF], n_jobs: int
 ) -> LearnerInspector:
     inspector = LearnerInspector(
+        pipeline=best_lgbm_crossfit.pipeline,
         explainer_factory=TreeExplainerFactory(
             feature_perturbation="tree_path_dependent", use_background_dataset=True
         ),
         n_jobs=n_jobs,
-    ).fit(crossfit=best_lgbm_crossfit)
-
-    # disable legacy calculations; we used them in the constructor so the legacy
-    # SHAP decomposer is created along with the new SHAP vector projector
-    inspector._legacy = False
+    ).fit(sample=best_lgbm_crossfit.sample_)
 
     return inspector
 
@@ -402,9 +399,11 @@ def iris_inspector_multi_class(
     ],
     n_jobs: int,
 ) -> LearnerInspector[ClassifierPipelineDF[RandomForestClassifierDF]]:
-    return LearnerInspector(shap_interaction=True, n_jobs=n_jobs).fit(
-        crossfit=iris_classifier_crossfit_multi_class
-    )
+    return LearnerInspector(
+        pipeline=iris_classifier_crossfit_multi_class.pipeline,
+        shap_interaction=True,
+        n_jobs=n_jobs,
+    ).fit(sample=iris_classifier_crossfit_multi_class.sample_)
 
 
 #

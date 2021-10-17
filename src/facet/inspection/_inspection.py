@@ -17,7 +17,6 @@ from pytools.parallelization import ParallelizableMixin
 from sklearndf import ClassifierDF, LearnerDF, RegressorDF
 from sklearndf.pipeline import LearnerPipelineDF
 
-from ..crossfit import LearnerCrossfit
 from ..data import Sample
 from ._explainer import ExplainerFactory, TreeExplainerFactory
 from ._shap import (
@@ -104,7 +103,7 @@ class ShapPlotData:
 
 @inheritdoc(match="[see superclass]")
 class LearnerInspector(
-    FittableMixin[LearnerCrossfit], ParallelizableMixin, Generic[T_LearnerPipelineDF]
+    FittableMixin[Sample], ParallelizableMixin, Generic[T_LearnerPipelineDF]
 ):
     """
     Explain regressors and classifiers based on SHAP values.
@@ -159,6 +158,7 @@ class LearnerInspector(
     def __init__(
         self,
         *,
+        pipeline: T_LearnerPipelineDF,
         explainer_factory: Optional[ExplainerFactory] = None,
         shap_interaction: bool = True,
         n_jobs: Optional[int] = None,
@@ -167,6 +167,7 @@ class LearnerInspector(
         verbose: Optional[int] = None,
     ) -> None:
         """
+        :param pipeline: the learner pipeline to inspect
         :param explainer_factory: optional function that creates a shap Explainer
             (default: ``TreeExplainerFactory``)
         :param shap_interaction: if ``True``, calculate SHAP interaction values, else
@@ -181,6 +182,15 @@ class LearnerInspector(
             pre_dispatch=pre_dispatch,
             verbose=verbose,
         )
+
+        if not pipeline.is_fitted:
+            raise ValueError("arg pipeline must be fitted")
+
+        if not isinstance(pipeline.final_estimator, (ClassifierDF, RegressorDF)):
+            raise TypeError(
+                "learner in arg pipeline must be a classifier or a regressor,"
+                f"but is a {type(pipeline.final_estimator).__name__}"
+            )
 
         if explainer_factory:
             if not explainer_factory.explains_raw_output:
@@ -200,73 +210,63 @@ class LearnerInspector(
                 )
                 shap_interaction = False
 
-        self._explainer_factory = explainer_factory
-        self._shap_interaction = shap_interaction
+        self.pipeline = pipeline
+        self.explainer_factory = explainer_factory
+        self.shap_interaction = shap_interaction
 
-        self._crossfit: Optional[LearnerCrossfit[T_LearnerPipelineDF]] = None
         self._shap_calculator: Optional[ShapCalculator] = None
         self._shap_global_decomposer: Optional[ShapGlobalExplainer] = None
         self._shap_global_projector: Optional[ShapGlobalExplainer] = None
+        self._sample: Optional[Sample] = None
 
     __init__.__doc__ += ParallelizableMixin.__init__.__doc__
 
-    def fit(self: T_Self, crossfit: LearnerCrossfit, **fit_params: Any) -> T_Self:
+    def fit(self: T_Self, sample: Sample, **fit_params: Any) -> T_Self:
         """
         Fit the inspector with the given crossfit.
 
         This will calculate SHAP values and, if enabled in the underlying SHAP
         explainer, also SHAP interaction values.
 
-        :param crossfit: the model crossfit to be explained by this model inspector
+        :param sample: the background sample to be used for the global explanation
+            of this model
         :param fit_params: additional keyword arguments (ignored; accepted for
             compatibility with :class:`.FittableMixin`)
         :return: ``self``
         """
-        # :param full_sample: if ``True``, explain only a single model fitted on the
-        # full sample; otherwise, explain all models in the crossfit and aggregate
-        # results
-        full_sample = bool(fit_params.get("full_sample", False))
 
         self: LearnerInspector  # support type hinting in PyCharm
 
-        if not crossfit.is_fitted:
-            raise ValueError("crossfit in arg pipeline is not fitted")
-
-        learner: LearnerDF = crossfit.pipeline.final_estimator
+        learner: LearnerDF = self.pipeline.final_estimator
 
         if isinstance(learner, ClassifierDF):
-            if isinstance(crossfit.sample_.target_name, list):
+            if isinstance(sample.target_name, list):
                 raise ValueError(
                     "only single-output classifiers (binary or multi-class) are "
                     "supported, but the classifier in the given crossfit has been "
                     "fitted on multiple columns "
-                    f"{crossfit.sample_.target_name}"
+                    f"{sample.target_name}"
                 )
 
             is_classifier = True
 
-        elif isinstance(learner, RegressorDF):
-            is_classifier = False
-
         else:
-            raise TypeError(
-                "learner in given crossfit must be a classifier or a regressor,"
-                f"but is a {type(learner).__name__}"
-            )
+            assert isinstance(learner, RegressorDF)
+            is_classifier = False
 
         shap_global_projector: Union[
             ShapVectorProjector, ShapInteractionVectorProjector, None
         ]
 
-        if self._shap_interaction:
+        if self.shap_interaction:
             shap_calculator_type = (
                 ClassifierShapInteractionValuesCalculator
                 if is_classifier
                 else RegressorShapInteractionValuesCalculator
             )
             shap_calculator = shap_calculator_type(
-                explain_full_sample=full_sample,
-                explainer_factory=self._explainer_factory,
+                pipeline=self.pipeline,
+                explainer_factory=self.explainer_factory,
                 n_jobs=self.n_jobs,
                 shared_memory=self.shared_memory,
                 pre_dispatch=self.pre_dispatch,
@@ -282,8 +282,8 @@ class LearnerInspector(
                 else RegressorShapValuesCalculator
             )
             shap_calculator = shap_calculator_type(
-                explain_full_sample=full_sample,
-                explainer_factory=self._explainer_factory,
+                pipeline=self.pipeline,
+                explainer_factory=self.explainer_factory,
                 n_jobs=self.n_jobs,
                 shared_memory=self.shared_memory,
                 pre_dispatch=self.pre_dispatch,
@@ -292,13 +292,12 @@ class LearnerInspector(
 
             shap_global_projector = ShapVectorProjector()
 
-        shap_calculator.fit(crossfit=crossfit)
+        shap_calculator.fit(sample)
         shap_global_projector.fit(shap_calculator=shap_calculator)
 
+        self._sample = sample
         self._shap_calculator = shap_calculator
         self._shap_global_projector = shap_global_projector
-
-        self._crossfit = crossfit
 
         return self
 
@@ -309,23 +308,15 @@ class LearnerInspector(
     @property
     def is_fitted(self) -> bool:
         """[see superclass]"""
-        return self._crossfit is not None
-
-    @property
-    def crossfit_(self) -> LearnerCrossfit[T_LearnerPipelineDF]:
-        """
-        The crossfit with which this inspector was fitted.
-        """
-        self._ensure_fitted()
-        return self._crossfit
+        return self._sample is not None
 
     @property
     def sample_(self) -> Sample:
         """
-        The training sample of the crossfit with which this inspector was fitted.
+        The background sample used to fit this inspector.
         """
         self._ensure_fitted()
-        return self._crossfit.sample_
+        return self._sample
 
     @property
     def output_names_(self) -> List[str]:
@@ -352,44 +343,19 @@ class LearnerInspector(
         """
         return self.crossfit_.pipeline.feature_names_out_.to_list()
 
-    def shap_values(
-        self, aggregation: Optional[str] = AGG_MEAN
-    ) -> Union[pd.DataFrame, List[pd.DataFrame]]:
+    def shap_values(self) -> Union[pd.DataFrame, List[pd.DataFrame]]:
         """
         Calculate the SHAP values for all observations and features.
 
         Returns a data frame of SHAP values where each row corresponds to an
         observation, and each column corresponds to a feature.
 
-        By default, one SHAP value is returned for each observation and feature; this
-        value is calculated as the mean SHAP value across all crossfits.
-
-        The ``aggregation`` argument can be used to disable or change the aggregation
-        of SHAP values:
-
-        - passing ``aggregation=None`` will disable SHAP value aggregation,
-          generating one row for every crossfit and observation (identified by
-          a hierarchical index with two levels)
-        - passing ``aggregation="mean"`` (the default) will calculate the mean SHAP
-          values across all crossfits
-        - passing ``aggregation="std"`` will calculate the standard deviation of SHAP
-          values across all crossfits, as the basis for determining the uncertainty
-          of SHAP calculations
-
-        :param aggregation: aggregation SHAP values across splits;
-            permissible values are ``"mean"`` (calculate the mean), ``"std"``
-            (calculate the standard deviation), or ``None`` to prevent aggregation
-            (default: ``"mean"``)
         :return: a data frame with SHAP values
         """
         self._ensure_fitted()
-        return self.__split_multi_output_df(
-            self._shap_calculator.get_shap_values(aggregation=aggregation)
-        )
+        return self.__split_multi_output_df(self._shap_calculator.get_shap_values())
 
-    def shap_interaction_values(
-        self, aggregation: Optional[str] = AGG_MEAN
-    ) -> Union[pd.DataFrame, List[pd.DataFrame]]:
+    def shap_interaction_values(self) -> Union[pd.DataFrame, List[pd.DataFrame]]:
         """
         Calculate the SHAP interaction values for all observations and pairs of
         features.
@@ -398,33 +364,11 @@ class LearnerInspector(
         observation and a feature (identified by a hierarchical index with two levels),
         and each column corresponds to a feature.
 
-        By default, one SHAP interaction value is returned for each observation and
-        feature pairing; this value is calculated as the mean SHAP interaction value
-        across all crossfits.
-
-        The ``aggregation`` argument can be used to disable or change the aggregation
-        of SHAP interaction values:
-
-        - passing ``aggregation=None`` will disable SHAP interaction value
-          aggregation, generating one row for every crossfit, observation and
-          feature (identified by a hierarchical index with three levels)
-        - passing ``aggregation="mean"`` (the default) will calculate the mean SHAP
-          interaction values across all crossfits
-        - passing ``aggregation="std"`` will calculate the standard deviation of SHAP
-          interaction values across all crossfits, as the basis for determining the
-          uncertainty of SHAP calculations
-
-        :param aggregation: aggregate SHAP interaction values across splits;
-            permissible values are ``"mean"`` (calculate the mean), ``"std"``
-            (calculate the standard deviation), or ``None`` to prevent aggregation
-            (default: ``"mean"``)
         :return: a data frame with SHAP interaction values
         """
         self._ensure_fitted()
         return self.__split_multi_output_df(
-            self.__shap_interaction_values_calculator.get_shap_interaction_values(
-                aggregation=aggregation
-            )
+            self.__shap_interaction_values_calculator.get_shap_interaction_values()
         )
 
     def feature_importance(
@@ -451,9 +395,7 @@ class LearnerInspector(
         if method not in methods:
             raise ValueError(f'arg method="{method}" must be one of {methods}')
 
-        shap_matrix: pd.DataFrame = self._shap_calculator.get_shap_values(
-            aggregation="mean"
-        )
+        shap_matrix: pd.DataFrame = self._shap_calculator.get_shap_values()
         weight: Optional[pd.Series] = self.sample_.weight
 
         abs_importance: pd.Series
@@ -788,7 +730,7 @@ class LearnerInspector(
         # (n_observations, n_outputs, n_features, n_features)
         # where the innermost feature x feature arrays are symmetrical
         im_matrix_per_observation_and_output = (
-            self.shap_interaction_values(aggregation=None)
+            self.shap_interaction_values()
             .values.reshape((-1, n_features, n_outputs, n_features))
             .swapaxes(1, 2)
         )
@@ -863,9 +805,7 @@ class LearnerInspector(
         :return: consolidated SHAP and feature values for use shap plots
         """
 
-        shap_values: Union[pd.DataFrame, List[pd.DataFrame]] = self.shap_values(
-            aggregation="mean"
-        )
+        shap_values: Union[pd.DataFrame, List[pd.DataFrame]] = self.shap_values()
 
         output_names: List[str] = self.output_names_
         shap_values_numpy: Union[np.ndarray, List[np.ndarray]]
@@ -880,7 +820,7 @@ class LearnerInspector(
             shap_values_numpy = shap_values.values
             included_observations = shap_values.index
 
-        sample: Sample = self.crossfit_.sample_.subsample(loc=included_observations)
+        sample: Sample = self.sample_.subsample(loc=included_observations)
 
         return ShapPlotData(
             shap_values=shap_values_numpy,
@@ -1062,7 +1002,7 @@ class LearnerInspector(
         return leaf_ordering
 
     def _ensure_shap_interaction(self) -> None:
-        if not self._shap_interaction:
+        if not self.shap_interaction:
             raise RuntimeError(
                 "SHAP interaction values have not been calculated. "
                 "Create an inspector with parameter 'shap_interaction=True' to "

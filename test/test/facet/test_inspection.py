@@ -3,7 +3,7 @@ Model inspector tests.
 """
 import logging
 import warnings
-from typing import List, Sequence, Set, TypeVar
+from typing import List, Optional, Sequence, Set, TypeVar, Union
 
 import numpy as np
 import pandas as pd
@@ -52,74 +52,49 @@ def test_model_inspection(
 ) -> None:
 
     # define checksums for this test
-    expected_scores = [0.418, 0.400, 0.386, 0.385, 0.122] + [
-        0.122,
-        -0.074,
-        -0.074,
-        -0.074,
-        -0.074,
-    ]
-
     log.debug(f"\n{regressor_ranker.summary_report()}")
 
     check_ranking(
         ranking=regressor_ranker.ranking_,
-        expected_scores=expected_scores,
+        expected_scores=(
+            [0.418, 0.400, 0.386, 0.385, 0.122, 0.122, -0.074, -0.074, -0.074, -0.074]
+        ),
         expected_learners=None,
         expected_parameters=None,
     )
 
-    # using an invalid consolidation method raises an exception
-    with pytest.raises(ValueError, match="unknown aggregation method: invalid"):
-        regressor_inspector.shap_values(aggregation="invalid")
-
-    shap_values_raw: pd.DataFrame = regressor_inspector.shap_values(aggregation=None)
-    shap_values_mean = regressor_inspector.shap_values(
-        aggregation=LearnerInspector.AGG_MEAN
-    )
-    shap_values_std = regressor_inspector.shap_values(
-        aggregation=LearnerInspector.AGG_STD
-    )
-
-    # method shap_values without parameter is equal to "mean" consolidation
-    assert_frame_equal(shap_values_mean, regressor_inspector.shap_values())
+    shap_values: pd.DataFrame = regressor_inspector.shap_values()
 
     # the length of rows in shap_values should be equal to the unique observation
     # indices we have had in the predictions_df
-    assert len(shap_values_mean) == len(sample)
+    assert len(shap_values) == len(sample)
 
     # index names
-    assert shap_values_mean.index.names == [Sample.IDX_OBSERVATION]
-    assert shap_values_mean.columns.names == [Sample.IDX_FEATURE]
-    assert shap_values_std.index.names == [Sample.IDX_OBSERVATION]
-    assert shap_values_std.columns.names == [Sample.IDX_FEATURE]
-    assert shap_values_raw.index.names == ["split", "observation"]
-    assert shap_values_raw.columns.names == [Sample.IDX_FEATURE]
+    assert shap_values.index.names == [Sample.IDX_OBSERVATION]
+    assert shap_values.columns.names == [Sample.IDX_FEATURE]
 
     # column index
-    assert set(shap_values_mean.columns) == feature_names
+    assert set(shap_values.columns) == feature_names
 
     # check that the SHAP values add up to the predictions
-    shap_totals_raw = shap_values_raw.sum(axis=1)
+    shap_totals = shap_values.sum(axis=1)
 
-    for split_id, model in enumerate(best_lgbm_crossfit.models()):
-        # for each model in the crossfit, calculate the difference between total
-        # SHAP values and prediction for every observation. This is always the same
-        # constant value, so `mad` (mean absolute deviation) is zero
+    # calculate the difference between total SHAP values and prediction
+    # for every observation. This is always the same constant value,
+    # therefore the mean absolute deviation is zero
 
-        shap_minus_pred = shap_totals_raw.xs(key=split_id) - model.predict(
-            X=sample.features
-        )
-        assert (
-            round(shap_minus_pred.mad(), 12) == 0.0
-        ), f"predictions matching total SHAP for split {split_id}"
+    shap_minus_pred = shap_totals - best_lgbm_crossfit.pipeline.predict(
+        X=sample.features
+    )
+    assert round(shap_minus_pred.mad(), 12) == 0.0, "predictions matching total SHAP"
 
     #  test the ModelInspector with a KernelExplainer:
 
     inspector_2 = LearnerInspector(
+        pipeline=best_lgbm_crossfit.pipeline,
         explainer_factory=KernelExplainerFactory(link="identity", data_size_limit=20),
         n_jobs=n_jobs,
-    ).fit(crossfit=best_lgbm_crossfit)
+    ).fit(sample=best_lgbm_crossfit.sample_)
     inspector_2.shap_values()
 
     linkage_tree = inspector_2.feature_association_linkage()
@@ -149,26 +124,23 @@ def test_model_inspection_classifier_binary(
     iris_sample_binary: Sample, iris_classifier_crossfit_binary, n_jobs: int
 ) -> None:
 
-    model_inspector = LearnerInspector(shap_interaction=False, n_jobs=n_jobs).fit(
-        crossfit=iris_classifier_crossfit_binary
-    )
+    model_inspector = LearnerInspector(
+        pipeline=iris_classifier_crossfit_binary.pipeline,
+        shap_interaction=False,
+        n_jobs=n_jobs,
+    ).fit(sample=iris_classifier_crossfit_binary.sample_)
 
     # calculate the shap value matrix, without any consolidation
-    shap_values = model_inspector.shap_values(aggregation=None)
+    shap_values = model_inspector.shap_values()
 
     # do the shap values add up to predictions minus a constant value?
     _validate_shap_values_against_predictions(
         shap_values=shap_values, crossfit=iris_classifier_crossfit_binary
     )
 
-    shap_matrix_mean = model_inspector.shap_values()
-
-    # is the consolidation correct?
-    assert_frame_equal(shap_matrix_mean, shap_values.groupby(level=1).mean())
-
     # the length of rows in shap_values should be equal to the unique observation
     # indices we have had in the predictions_df
-    assert len(shap_matrix_mean) == len(iris_sample_binary)
+    assert len(shap_values) == len(iris_sample_binary)
 
     # Shap decomposition matrices (feature dependencies)
 
@@ -180,10 +152,10 @@ def test_model_inspection_classifier_binary(
             association_matrix.values,
             np.array(
                 [
-                    [np.nan, 0.692, 0.195, 0.052],
-                    [0.692, np.nan, 0.290, 0.041],
-                    [0.195, 0.290, np.nan, 0.081],
-                    [0.052, 0.041, 0.081, np.nan],
+                    [np.nan, 0.684, 0.368, 0.002],
+                    [0.684, np.nan, 0.442, 0.000],
+                    [0.368, 0.442, np.nan, 0.010],
+                    [0.002, 0.000, 0.010, np.nan],
                 ]
             ),
             atol=0.02,
@@ -224,7 +196,7 @@ def test_model_inspection_classifier_binary_single_shap_output() -> None:
     ).fit(sample_df)
 
     # fit the inspector
-    LearnerInspector(n_jobs=-3).fit(crossfit=crossfit)
+    LearnerInspector(pipeline=crossfit.pipeline, n_jobs=-3).fit(sample=crossfit.sample_)
 
 
 # noinspection DuplicatedCode
@@ -236,22 +208,12 @@ def test_model_inspection_classifier_multi_class(
 ) -> None:
 
     # calculate the shap value matrix, without any consolidation
-    shap_values = iris_inspector_multi_class.shap_values(aggregation=None)
+    shap_values = iris_inspector_multi_class.shap_values()
 
     # do the shap values add up to predictions minus a constant value?
     _validate_shap_values_against_predictions(
         shap_values=shap_values, crossfit=iris_classifier_crossfit_multi_class
     )
-
-    shap_matrix_mean: List[pd.DataFrame] = iris_inspector_multi_class.shap_values()
-
-    for _mean, _raw in zip(shap_matrix_mean, shap_values):
-        # is the consolidation correct?
-        assert_frame_equal(_mean, _raw.groupby(level=1).mean())
-
-        # the length of rows in shap_values should be equal to the unique observation
-        # indices we have had in the predictions_df
-        assert len(_mean) == len(iris_sample)
 
     # Feature importance
 
@@ -266,10 +228,10 @@ def test_model_inspection_classifier_multi_class(
         feature_importance.values,
         np.array(
             [
-                [0.125, 0.085, 0.104],
-                [0.020, 0.019, 0.010],
-                [0.424, 0.456, 0.461],
-                [0.432, 0.441, 0.425],
+                [0.122, 0.086, 0.102],
+                [0.020, 0.021, 0.007],
+                [0.433, 0.465, 0.481],
+                [0.424, 0.428, 0.410],
             ]
         ),
         atol=0.02,
@@ -286,14 +248,14 @@ def test_model_inspection_classifier_multi_class(
             np.hstack([m.values for m in synergy_matrix]),
             np.array(
                 [
-                    [np.nan, 0.009, 0.057, 0.055, np.nan, 0.042]
-                    + [0.418, 0.418, np.nan, 0.004, 0.085, 0.097],
-                    [0.101, np.nan, 0.052, 0.072, 0.094, np.nan]
-                    + [0.117, 0.156, 0.090, np.nan, 0.237, 0.258],
-                    [0.003, 0.001, np.nan, 0.002, 0.027, 0.005]
-                    + [np.nan, 0.041, 0.012, 0.004, np.nan, 0.031],
-                    [0.002, 0.000, 0.001, np.nan, 0.029, 0.005]
-                    + [0.043, np.nan, 0.015, 0.005, 0.036, np.nan],
+                    [np.nan, 0.008, 0.032, 0.037, np.nan, 0.002]
+                    + [0.367, 0.343, np.nan, 0.001, 0.081, 0.067],
+                    [0.124, np.nan, 0.042, 0.035, 0.094, np.nan]
+                    + [0.061, 0.055, 0.160, np.nan, 0.643, 0.456],
+                    [0.002, 0.000, np.nan, 0.003, 0.041, 0.008]
+                    + [np.nan, 0.048, 0.015, 0.000, np.nan, 0.034],
+                    [0.002, 0.000, 0.003, np.nan, 0.025, 0.009]
+                    + [0.042, np.nan, 0.008, 0.012, 0.034, np.nan],
                 ]
             ),
             atol=0.02,
@@ -306,14 +268,14 @@ def test_model_inspection_classifier_multi_class(
             np.hstack([m.values for m in redundancy_matrix]),
             np.array(
                 [
-                    [np.nan, 0.087, 0.643, 0.656, np.nan, 0.065]
-                    + [0.265, 0.234, np.nan, 0.034, 0.594, 0.505],
-                    [0.082, np.nan, 0.297, 0.292, 0.064, np.nan]
-                    + [0.117, 0.171, 0.031, np.nan, 0.024, 0.021],
-                    [0.682, 0.314, np.nan, 0.996, 0.471, 0.130]
-                    + [np.nan, 0.743, 0.642, 0.031, np.nan, 0.761],
-                    [0.695, 0.315, 0.997, np.nan, 0.406, 0.194]
-                    + [0.741, np.nan, 0.550, 0.028, 0.756, np.nan],
+                    [np.nan, 0.080, 0.734, 0.721, np.nan, 0.156]
+                    + [0.327, 0.315, np.nan, 0.002, 0.671, 0.610],
+                    [0.071, np.nan, 0.382, 0.388, 0.142, np.nan]
+                    + [0.333, 0.403, 0.002, np.nan, 0.039, 0.021],
+                    [0.757, 0.398, np.nan, 0.995, 0.495, 0.352]
+                    + [np.nan, 0.741, 0.720, 0.109, np.nan, 0.754],
+                    [0.747, 0.402, 0.995, np.nan, 0.468, 0.423]
+                    + [0.746, np.nan, 0.649, 0.038, 0.753, np.nan],
                 ]
             ),
             atol=0.02,
@@ -326,14 +288,14 @@ def test_model_inspection_classifier_multi_class(
             np.hstack([m.values for m in association_matrix]),
             np.array(
                 [
-                    [np.nan, 0.077, 0.662, 0.670, np.nan, 0.046]
-                    + [0.370, 0.334, np.nan, 0.031, 0.634, 0.550],
-                    [0.077, np.nan, 0.301, 0.295, 0.046, np.nan]
-                    + [0.127, 0.173, 0.031, np.nan, 0.025, 0.020],
-                    [0.662, 0.301, np.nan, 0.998, 0.370, 0.127]
-                    + [np.nan, 0.783, 0.634, 0.025, np.nan, 0.790],
-                    [0.670, 0.295, 0.998, np.nan, 0.334, 0.173]
-                    + [0.783, np.nan, 0.550, 0.020, 0.790, np.nan],
+                    [np.nan, 0.087, 0.746, 0.735, np.nan, 0.132]
+                    + [0.466, 0.419, np.nan, 0.003, 0.719, 0.643],
+                    [0.087, np.nan, 0.387, 0.390, 0.132, np.nan]
+                    + [0.357, 0.428, 0.003, np.nan, 0.034, 0.046],
+                    [0.746, 0.387, np.nan, 0.998, 0.466, 0.357]
+                    + [np.nan, 0.788, 0.719, 0.034, np.nan, 0.787],
+                    [0.735, 0.390, 0.998, np.nan, 0.419, 0.428]
+                    + [0.788, np.nan, 0.643, 0.046, 0.787, np.nan],
                 ]
             ),
             atol=0.02,
@@ -359,62 +321,59 @@ def _validate_shap_values_against_predictions(
 
     # calculate the matching predictions, so we can check if the SHAP values add up
     # correctly
-    predicted_probabilities_per_split: List[pd.DataFrame] = [
-        model.predict_proba(crossfit.sample_.features.iloc[test_split, :])
-        for model, (_, test_split) in zip(crossfit.models(), crossfit.splits())
-    ]
+    predicted_probabilities: pd.DataFrame = crossfit.pipeline.predict_proba(
+        crossfit.sample_.features
+    )
 
-    for split, predicted_probabilities in enumerate(predicted_probabilities_per_split):
+    assert isinstance(
+        predicted_probabilities, pd.DataFrame
+    ), "predicted probabilities are single-output"
 
-        assert isinstance(
-            predicted_probabilities, pd.DataFrame
-        ), "predicted probabilities are single-output"
+    expected_probability_range = 1 / len(predicted_probabilities.columns)
 
-        expected_probability_range = 1 / len(predicted_probabilities.columns)
+    def _check_probabilities(
+        _class_probabilities: pd.DataFrame, _shap_for_split_and_class: pd.Series
+    ) -> None:
+        expected_probability = _class_probabilities.join(_shap_for_split_and_class).sum(
+            axis=1
+        )
 
-        def _check_probabilities(
-            _class_probabilities: pd.DataFrame, _shap_for_split_and_class: pd.Series
-        ) -> None:
-            expected_probability = _class_probabilities.join(
-                _shap_for_split_and_class
-            ).sum(axis=1)
+        expected_probability_min = expected_probability.min()
+        expected_probability_max = expected_probability.max()
+        assert expected_probability_min == pytest.approx(
+            expected_probability_max
+        ), "expected probability is the same for all explanations"
+        assert (
+            expected_probability_range * 0.6
+            <= expected_probability_min
+            <= expected_probability_range / 0.6
+        ), (
+            "expected class probability is roughly in the range of "
+            f"{expected_probability_range * 100:.0f}%"
+        )
 
-            expected_probability_min = expected_probability.min()
-            expected_probability_max = expected_probability.max()
-            assert expected_probability_min == pytest.approx(
-                expected_probability_max
-            ), "expected probability is the same for all explanations"
-            assert (
-                expected_probability_range * 0.6
-                <= expected_probability_min
-                <= expected_probability_range / 0.6
-            ), (
-                "expected class probability is roughly in the range of "
-                f"{expected_probability_range * 100:.0f}%"
+    if predicted_probabilities.shape[1] == 2:
+        # for binary classification we have SHAP values only for the second class
+        _check_probabilities(
+            predicted_probabilities.iloc[:, [1]],
+            -shap_values.sum(axis=1).rename("shap"),
+        )
+
+    else:
+        # multi-class classification has outputs for each class
+
+        for class_idx, class_name in enumerate(predicted_probabilities.columns):
+            # for each observation and class, we expect to get the constant
+            # expected probability value by deducting the SHAP values for all
+            # features from the predicted probability
+
+            class_probabilities = predicted_probabilities.loc[:, [class_name]]
+
+            shap_for_split_and_class = (
+                -shap_values[class_idx].sum(axis=1).rename("shap")
             )
 
-        if predicted_probabilities.shape[1] == 2:
-            # for binary classification we have SHAP values only for the second class
-            _check_probabilities(
-                predicted_probabilities.iloc[:, [1]],
-                -shap_values.xs(split).sum(axis=1).rename("shap"),
-            )
-
-        else:
-            # multi-class classification has outputs for each class
-
-            for class_idx, class_name in enumerate(predicted_probabilities.columns):
-                # for each observation and class, we expect to get the constant
-                # expected probability value by deducting the SHAP values for all
-                # features from the predicted probability
-
-                class_probabilities = predicted_probabilities.loc[:, [class_name]]
-
-                shap_for_split_and_class = (
-                    -shap_values[class_idx].xs(split).sum(axis=1).rename("shap")
-                )
-
-                _check_probabilities(class_probabilities, shap_for_split_and_class)
+            _check_probabilities(class_probabilities, shap_for_split_and_class)
 
 
 # noinspection DuplicatedCode
@@ -428,30 +387,21 @@ def test_model_inspection_classifier_interaction(
     warnings.filterwarnings("ignore", message="You are accessing a training score")
 
     model_inspector = LearnerInspector(
+        pipeline=iris_classifier_crossfit_binary.pipeline,
         explainer_factory=TreeExplainerFactory(
             feature_perturbation="tree_path_dependent", use_background_dataset=True
         ),
         n_jobs=n_jobs,
-    ).fit(crossfit=iris_classifier_crossfit_binary)
-
-    model_inspector_full_sample = LearnerInspector(
-        explainer_factory=TreeExplainerFactory(
-            feature_perturbation="tree_path_dependent", use_background_dataset=True
-        ),
-        n_jobs=n_jobs,
-    ).fit(crossfit=iris_classifier_crossfit_binary, full_sample=True)
-
-    # disable legacy calculations; we used them in the constructor so the legacy
-    # SHAP decomposer is created along with the new SHAP vector projector
-    model_inspector._legacy = False
+    ).fit(sample=iris_classifier_crossfit_binary.sample_)
 
     model_inspector_no_interaction = LearnerInspector(
+        pipeline=iris_classifier_crossfit_binary.pipeline,
         shap_interaction=False,
         explainer_factory=TreeExplainerFactory(
             feature_perturbation="tree_path_dependent", use_background_dataset=True
         ),
         n_jobs=n_jobs,
-    ).fit(crossfit=iris_classifier_crossfit_binary)
+    ).fit(sample=iris_classifier_crossfit_binary.sample_)
 
     # calculate shap interaction values
     shap_interaction_values = model_inspector.shap_interaction_values()
@@ -483,14 +433,12 @@ def test_model_inspection_classifier_interaction(
 
     # do the shap values add up to predictions minus a constant value?
     _validate_shap_values_against_predictions(
-        shap_values=model_inspector.shap_interaction_values(aggregation=None)
-        .groupby(level=[0, 1])
-        .sum(),
+        shap_values=model_inspector.shap_interaction_values().groupby(level=0).sum(),
         crossfit=iris_classifier_crossfit_binary,
     )
 
     assert model_inspector.feature_importance().values == pytest.approx(
-        np.array([0.063, 0.013, 0.492, 0.431]), abs=0.02
+        np.array([0.054, 0.019, 0.451, 0.477]), abs=0.02
     )
 
     try:
@@ -524,19 +472,19 @@ def test_model_inspection_classifier_interaction(
             atol=0.02,
         )
 
-        synergy_matrix = model_inspector.feature_synergy_matrix(clustered=True)
         assert_allclose(
-            synergy_matrix.values,
+            model_inspector.feature_synergy_matrix(clustered=True).values,
             np.array(
                 [
-                    [np.nan, 0.000, 0.001, 0.004],
-                    [0.149, np.nan, 0.045, 0.157],
-                    [0.040, 0.004, np.nan, 0.044],
-                    [0.003, 0.001, 0.001, np.nan],
+                    [np.nan, 0.000, 0.000, 0.001],
+                    [0.386, np.nan, 0.108, 0.314],
+                    [0.005, 0.002, np.nan, 0.059],
+                    [0.002, 0.000, 0.001, np.nan],
                 ]
             ),
             atol=0.02,
         )
+
         assert_allclose(
             model_inspector.feature_synergy_matrix(absolute=True).values,
             np.array(
@@ -549,30 +497,17 @@ def test_model_inspection_classifier_interaction(
             ),
             atol=0.02,
         )
-        assert_allclose(
-            model_inspector_full_sample.feature_synergy_matrix(clustered=True).values,
-            np.array(
-                [
-                    [np.nan, 0.000, 0.000, 0.001],
-                    [0.386, np.nan, 0.108, 0.314],
-                    [0.005, 0.002, np.nan, 0.059],
-                    [0.002, 0.000, 0.001, np.nan],
-                ]
-            ),
-            atol=0.02,
-        )
 
-        redundancy_matrix = model_inspector.feature_redundancy_matrix(
-            clustered=False, symmetrical=True
-        )
         assert_allclose(
-            redundancy_matrix.values,
+            model_inspector.feature_redundancy_matrix(
+                clustered=False, symmetrical=True
+            ).values,
             np.array(
                 [
-                    [np.nan, 0.080, 0.316, 0.208],
-                    [0.080, np.nan, 0.036, 0.044],
-                    [0.316, 0.036, np.nan, 0.691],
-                    [0.208, 0.044, 0.691, np.nan],
+                    [np.nan, 0.013, 0.462, 0.383],
+                    [0.013, np.nan, 0.000, 0.003],
+                    [0.462, 0.000, np.nan, 0.677],
+                    [0.383, 0.003, 0.677, np.nan],
                 ]
             ),
             atol=0.02,
@@ -583,51 +518,36 @@ def test_model_inspection_classifier_interaction(
             ).values,
             np.array(
                 [
-                    [np.nan, 0.316, 0.052, 0.010],
-                    [0.316, np.nan, 0.087, 0.009],
-                    [0.052, 0.087, np.nan, 0.004],
-                    [0.010, 0.009, 0.004, np.nan],
-                ]
-            ),
-            atol=0.02,
-        )
-
-        redundancy_matrix = model_inspector.feature_redundancy_matrix(clustered=True)
-        assert_allclose(
-            redundancy_matrix.values,
-            np.array(
-                [
-                    [np.nan, 0.691, 0.209, 0.045],
-                    [0.692, np.nan, 0.317, 0.037],
-                    [0.201, 0.303, np.nan, 0.081],
-                    [0.040, 0.031, 0.076, np.nan],
-                ]
-            ),
-            atol=0.02,
-        )
-        assert_allclose(
-            model_inspector.feature_redundancy_matrix(absolute=True).values,
-            np.array(
-                [
-                    [np.nan, 0.294, 0.092, 0.020],
-                    [0.337, np.nan, 0.154, 0.017],
-                    [0.013, 0.020, np.nan, 0.006],
-                    [0.001, 0.001, 0.001, np.nan],
+                    [np.nan, 0.314, 0.102, 0.001],
+                    [0.314, np.nan, 0.116, 0.000],
+                    [0.102, 0.116, np.nan, 0.000],
+                    [0.001, 0.000, 0.000, np.nan],
                 ]
             ),
             atol=0.02,
         )
 
         assert_allclose(
-            model_inspector_full_sample.feature_redundancy_matrix(
-                clustered=True
-            ).values,
+            model_inspector.feature_redundancy_matrix(clustered=True).values,
             np.array(
                 [
                     [np.nan, 0.677, 0.384, 0.003],
                     [0.676, np.nan, 0.465, 0.000],
                     [0.382, 0.438, np.nan, 0.013],
                     [0.002, 0.000, 0.012, np.nan],
+                ]
+            ),
+            atol=0.02,
+        )
+
+        assert_allclose(
+            model_inspector.feature_redundancy_matrix(absolute=True).values,
+            np.array(
+                [
+                    [np.nan, 0.323, 0.183, 0.002],
+                    [0.305, np.nan, 0.209, 0.000],
+                    [0.021, 0.024, np.nan, 0.001],
+                    [0.000, 0.000, 0.000, np.nan],
                 ]
             ),
             atol=0.02,
@@ -640,65 +560,51 @@ def test_model_inspection_classifier_interaction(
             association_matrix.values,
             np.array(
                 [
-                    [np.nan, 0.074, 0.309, 0.205],
-                    [0.074, np.nan, 0.030, 0.040],
-                    [0.309, 0.030, np.nan, 0.694],
-                    [0.205, 0.040, 0.694, np.nan],
+                    [np.nan, 0.009, 0.447, 0.383],
+                    [0.009, np.nan, 0.000, 0.001],
+                    [0.447, 0.000, np.nan, 0.678],
+                    [0.383, 0.001, 0.678, np.nan],
                 ]
             ),
             atol=0.02,
         )
+
         assert_allclose(
             model_inspector.feature_association_matrix(
                 absolute=True, symmetrical=True
             ).values,
             np.array(
                 [
-                    [np.nan, 0.317, 0.051, 0.009],
-                    [0.317, np.nan, 0.085, 0.007],
-                    [0.051, 0.085, np.nan, 0.003],
-                    [0.009, 0.007, 0.003, np.nan],
-                ]
-            ),
-            atol=0.02,
-        )
-
-        association_matrix = model_inspector.feature_association_matrix(clustered=True)
-        assert_allclose(
-            association_matrix.values,
-            np.array(
-                [
-                    [np.nan, 0.694, 0.205, 0.040],
-                    [0.694, np.nan, 0.309, 0.030],
-                    [0.205, 0.309, np.nan, 0.074],
-                    [0.040, 0.030, 0.074, np.nan],
-                ]
-            ),
-            atol=0.02,
-        )
-        assert_allclose(
-            model_inspector.feature_association_matrix(absolute=True).values,
-            np.array(
-                [
-                    [np.nan, 0.295, 0.090, 0.018],
-                    [0.338, np.nan, 0.150, 0.014],
-                    [0.013, 0.020, np.nan, 0.005],
-                    [0.001, 0.001, 0.001, np.nan],
+                    [np.nan, 0.314, 0.102, 0.000],
+                    [0.314, np.nan, 0.113, 0.000],
+                    [0.102, 0.113, np.nan, 0.000],
+                    [0.000, 0.000, 0.000, np.nan],
                 ]
             ),
             atol=0.02,
         )
 
         assert_allclose(
-            model_inspector_full_sample.feature_association_matrix(
-                clustered=True
-            ).values,
+            model_inspector.feature_association_matrix(clustered=True).values,
             np.array(
                 [
                     [np.nan, 0.678, 0.383, 0.001],
                     [0.678, np.nan, 0.447, 0.000],
                     [0.383, 0.447, np.nan, 0.009],
                     [0.001, 0.000, 0.009, np.nan],
+                ]
+            ),
+            atol=0.02,
+        )
+
+        assert_allclose(
+            model_inspector.feature_association_matrix(absolute=True).values,
+            np.array(
+                [
+                    [np.nan, 0.323, 0.182, 0.001],
+                    [0.305, np.nan, 0.201, 0.000],
+                    [0.021, 0.024, np.nan, 0.000],
+                    [0.000, 0.000, 0.000, np.nan],
                 ]
             ),
             atol=0.02,
@@ -735,9 +641,9 @@ def test_model_inspection_classifier_interaction_dual_target(
             f"{iris_target_name}.*{iris_target_name}2"
         ),
     ):
-        LearnerInspector(n_jobs=n_jobs).fit(
-            crossfit=iris_classifier_crossfit_dual_target
-        )
+        LearnerInspector(
+            pipeline=iris_classifier_crossfit_dual_target.pipeline, n_jobs=n_jobs
+        ).fit(sample=iris_classifier_crossfit_dual_target.sample_)
 
 
 def test_shap_plot_data(
@@ -769,17 +675,21 @@ def test_shap_plot_data(
 #
 
 
-def print_expected_matrix(error: AssertionError, split: bool = False):
+def print_expected_matrix(error: AssertionError, *, split: bool = False):
     # print expected output for copy/paste into assertion statement
 
     import re
 
-    matrix: List[List[float]] = eval(
-        re.search(r"array\(([^)]+)\)", error.args[0])[1]
-        .replace(r"\n", "\n")
-        .replace("nan", "np.nan")
-    )
+    array: Optional[re.Match] = re.search(r"array\(([^)]+)\)", error.args[0])
+    if array is not None:
+        matrix: List[List[float]] = eval(
+            array[1].replace(r"\n", "\n").replace("nan", "np.nan")
+        )
 
+        print_matrix(matrix, split=split)
+
+
+def print_matrix(matrix: Union[List[List[float]], np.ndarray], *, split: bool):
     print("==== matrix assertion failed ====\nExpected Matrix:")
     print("[")
     for row in matrix:

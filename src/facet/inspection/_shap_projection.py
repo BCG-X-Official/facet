@@ -5,7 +5,7 @@ redundancy, and independence.
 """
 import logging
 from abc import ABCMeta, abstractmethod
-from typing import Iterable, List, Optional, Tuple, TypeVar
+from typing import Optional, Tuple, TypeVar
 
 import numpy as np
 
@@ -84,11 +84,11 @@ class ShapProjector(ShapGlobalExplainer, metaclass=ABCMeta):
         self.association_ = None
 
     @abstractmethod
-    def _get_context(self, shap_calculator: ShapCalculator) -> List[ShapContext]:
+    def _get_context(self, shap_calculator: ShapCalculator) -> ShapContext:
         pass
 
     @abstractmethod
-    def _calculate(self, contexts: Iterable[ShapContext]) -> AffinityMatrix:
+    def _calculate(self, context: ShapContext) -> AffinityMatrix:
         pass
 
     @staticmethod
@@ -129,17 +129,12 @@ class ShapVectorProjector(ShapProjector):
     onto a feature's main SHAP vector.
     """
 
-    def _get_context(self, shap_calculator: ShapCalculator) -> List[ShapContext]:
-        return [
-            ShapValueContext(shap_calculator=shap_calculator, split_id=split_id)
-            for split_id in range(shap_calculator.n_splits_)
-        ]
+    def _get_context(self, shap_calculator: ShapCalculator) -> ShapContext:
+        return ShapValueContext(shap_calculator=shap_calculator)
 
-    def _calculate(self, contexts: Iterable[ShapContext]) -> None:
+    def _calculate(self, context: ShapContext) -> None:
         # calculate association matrices for each SHAP context, then aggregate
-        self.association_ = AffinityMatrix.aggregate(
-            affinity_matrices=map(self._calculate_association, contexts)
-        )
+        self.association_ = self._calculate_association(context)
 
 
 @inheritdoc(match="""[see superclass]""")
@@ -179,32 +174,20 @@ class ShapInteractionVectorProjector(ShapProjector, ShapInteractionGlobalExplain
             symmetrical=symmetrical, absolute=absolute, std=std
         )
 
-    def _get_context(self, shap_calculator: ShapCalculator) -> List[ShapContext]:
-        return [
-            ShapInteractionValueContext(
-                shap_calculator=shap_calculator, split_id=split_id
-            )
-            for split_id in range(shap_calculator.n_splits_)
-        ]
+    def _get_context(self, shap_calculator: ShapCalculator) -> ShapContext:
+        return ShapInteractionValueContext(shap_calculator=shap_calculator)
 
-    def _calculate(self, contexts: Iterable[ShapContext]) -> None:
-        # calculate association, synergy, and redundancy matrices for each SHAP context,
-        # then aggregate each of them
-        self.association_, self.synergy_, self.redundancy_ = map(
-            AffinityMatrix.aggregate,
-            zip(
-                *(
-                    (
-                        self._calculate_association(context=context),
-                        *self._calculate_synergy_redundancy(context=context),
-                    )
-                    for context in contexts
-                )
-            ),
+    def _calculate(self, context: ShapContext) -> None:
+        # calculate association, synergy, and redundancy matrices for the SHAP context
+
+        self.association_ = self._calculate_association(context=context)
+        self.synergy_, self.redundancy_ = self._calculate_synergy_redundancy(
+            context=context
         )
 
+    @staticmethod
     def _calculate_synergy_redundancy(
-        self, context: ShapContext
+        context: ShapContext,
     ) -> Tuple[AffinityMatrix, AffinityMatrix]:
         p_i = context.p_i
         var_p_i = context.var_p_i
