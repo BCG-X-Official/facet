@@ -188,9 +188,10 @@ class ShapCalculator(
         """
 
     @abstractmethod
-    def _get_multi_output_names(
-        self, model: T_LearnerPipelineDF, sample: Sample
-    ) -> List[str]:
+    def get_multi_output_names(self, sample: Sample) -> List[str]:
+        """
+        :return: a name for each of the outputs
+        """
         pass
 
     def _get_shap(self, sample: Sample) -> pd.DataFrame:
@@ -242,36 +243,18 @@ class ShapCalculator(
 
         # we explain the full sample using the model fitted on the full sample
         # so the result is a list with a single data frame of shap values
-        return self._calculate_shap(
-            model=pipeline,
-            sample=sample,
-            explainer=_make_explainer(pipeline),
-            features_out=self.feature_index_,
-            shap_matrix_to_df_fn=self._convert_raw_shap_to_df,
-            multi_output_type=self.get_multi_output_type(),
-            multi_output_names=self._get_multi_output_names(
-                model=pipeline, sample=sample
-            ),
-        )
+        return self._calculate_shap(sample=sample, explainer=_make_explainer(pipeline))
 
-    @staticmethod
     @abstractmethod
     def _calculate_shap(
-        *,
-        model: LearnerPipelineDF,
-        sample: Sample,
-        explainer: BaseExplainer,
-        features_out: pd.Index,
-        shap_matrix_to_df_fn: ShapToDataFrameFunction,
-        multi_output_type: str,
-        multi_output_names: Sequence[str],
+        self, *, sample: Sample, explainer: BaseExplainer
     ) -> pd.DataFrame:
         pass
 
-    @staticmethod
     def _convert_shap_tensors_to_list(
+        self,
+        *,
         shap_tensors: Union[np.ndarray, Sequence[np.ndarray]],
-        multi_output_type: str,
         multi_output_names: Sequence[str],
     ):
         def _validate_shap_tensor(_t: np.ndarray) -> None:
@@ -290,11 +273,7 @@ class ShapCalculator(
                 _validate_shap_tensor(shap_tensor)
         else:
             _validate_shap_tensor(shap_tensors)
-            if (
-                n_outputs == 2
-                and multi_output_type
-                == ClassifierShapCalculator.get_multi_output_type()
-            ):
+            if n_outputs == 2 and isinstance(self, ClassifierShapCalculator):
                 # if we have a single output *and* binary classification, the explainer
                 # will have returned a single tensor for the positive class;
                 # the SHAP values for the negative class will have the opposite sign
@@ -312,20 +291,22 @@ class ShapCalculator(
 
         return shap_tensors
 
-    @staticmethod
-    def _preprocess_features(model: LearnerPipelineDF, sample: Sample) -> pd.DataFrame:
+    def _preprocess_features(self, sample: Sample) -> pd.DataFrame:
         # get the out-of-bag subsample of the training sample, with feature columns
         # in the sequence that was used to fit the learner
+
+        # get the model
+        pipeline = self.pipeline
 
         # get the features of all out-of-bag observations
         x = sample.features
 
         # pre-process the features
-        if model.preprocessing is not None:
-            x = model.preprocessing.transform(x)
+        if pipeline.preprocessing is not None:
+            x = pipeline.preprocessing.transform(x)
 
         # re-index the features to fit the sequence that was used to fit the learner
-        return x.reindex(columns=model.final_estimator.feature_names_in_, copy=False)
+        return x.reindex(columns=pipeline.final_estimator.feature_names_in_, copy=False)
 
     @staticmethod
     @abstractmethod
@@ -376,18 +357,10 @@ class ShapValuesCalculator(
             "is not defined"
         )
 
-    @staticmethod
     def _calculate_shap(
-        *,
-        model: LearnerPipelineDF,
-        sample: Sample,
-        explainer: BaseExplainer,
-        features_out: pd.Index,
-        shap_matrix_to_df_fn: ShapToDataFrameFunction,
-        multi_output_type: str,
-        multi_output_names: Sequence[str],
+        self, *, sample: Sample, explainer: BaseExplainer
     ) -> pd.DataFrame:
-        x = ShapCalculator._preprocess_features(model=model, sample=sample)
+        x = self._preprocess_features(sample=sample)
 
         if x.isna().values.any():
             log.warning(
@@ -395,11 +368,13 @@ class ShapValuesCalculator(
                 "try to change preprocessing to impute all NaN values"
             )
 
+        multi_output_type = self.get_multi_output_type()
+        multi_output_names = self.get_multi_output_names(sample=sample)
+        features_out = self.feature_index_
+
         # calculate the shap values, and ensure the result is a list of arrays
-        shap_values: List[np.ndarray] = ShapCalculator._convert_shap_tensors_to_list(
-            shap_tensors=explainer.shap_values(x),
-            multi_output_type=multi_output_type,
-            multi_output_names=multi_output_names,
+        shap_values: List[np.ndarray] = self._convert_shap_tensors_to_list(
+            shap_tensors=explainer.shap_values(x), multi_output_names=multi_output_names
         )
 
         # convert to a data frame per output (different logic depending on whether
@@ -407,7 +382,7 @@ class ShapValuesCalculator(
         # shap_matrix_for_split_to_df_fn)
         shap_values_df_per_output: List[pd.DataFrame] = [
             shap.reindex(columns=features_out, copy=False, fill_value=0.0)
-            for shap in shap_matrix_to_df_fn(shap_values, x.index, x.columns)
+            for shap in self._convert_raw_shap_to_df(shap_values, x.index, x.columns)
         ]
 
         # if we have a single output, return the data frame for that output;
@@ -472,18 +447,10 @@ class ShapInteractionValuesCalculator(
             columns=interaction_matrix.columns,
         )
 
-    @staticmethod
     def _calculate_shap(
-        *,
-        model: LearnerPipelineDF,
-        sample: Sample,
-        explainer: BaseExplainer,
-        features_out: pd.Index,
-        shap_matrix_to_df_fn: ShapToDataFrameFunction,
-        multi_output_type: str,
-        multi_output_names: Sequence[str],
+        self, *, sample: Sample, explainer: BaseExplainer
     ) -> pd.DataFrame:
-        x = ShapCalculator._preprocess_features(model=model, sample=sample)
+        x = self._preprocess_features(sample=sample)
 
         # calculate the im values (returned as an array)
         try:
@@ -494,12 +461,13 @@ class ShapInteractionValuesCalculator(
                 "Explainer does not implement method shap_interaction_values"
             )
 
+        multi_output_type = self.get_multi_output_type()
+        multi_output_names = self.get_multi_output_names(sample)
+        features_out = self.feature_index_
+
         # calculate the shap interaction values; ensure the result is a list of arrays
-        shap_interaction_tensors: List[
-            np.ndarray
-        ] = ShapCalculator._convert_shap_tensors_to_list(
+        shap_interaction_tensors: List[np.ndarray] = self._convert_shap_tensors_to_list(
             shap_tensors=shap_interaction_values_fn(x),
-            multi_output_type=multi_output_type,
             multi_output_names=multi_output_names,
         )
 
@@ -513,7 +481,9 @@ class ShapInteractionValuesCalculator(
                 copy=False,
                 fill_value=0.0,
             )
-            for im in shap_matrix_to_df_fn(shap_interaction_tensors, x.index, x.columns)
+            for im in self._convert_raw_shap_to_df(
+                shap_interaction_tensors, x.index, x.columns
+            )
         ]
 
         # if we have a single output, use the data frame for that output;
@@ -545,9 +515,8 @@ class RegressorShapCalculator(ShapCalculator[RegressorPipelineDF], metaclass=ABC
         """[see superclass]"""
         return Sample.IDX_TARGET
 
-    def _get_multi_output_names(
-        self, model: RegressorPipelineDF, sample: Sample
-    ) -> List[str]:
+    def get_multi_output_names(self, sample: Sample) -> List[str]:
+        """[see superclass]"""
         # noinspection PyProtectedMember
         return sample._target_names
 
@@ -652,15 +621,14 @@ class ClassifierShapCalculator(ShapCalculator[ClassifierPipelineDF], metaclass=A
         """[see superclass]"""
         return ClassifierShapCalculator.COL_CLASS
 
-    def _get_multi_output_names(
-        self, model: ClassifierPipelineDF, sample: Sample
-    ) -> List[str]:
+    def get_multi_output_names(self, sample: Sample) -> List[str]:
+        """[see superclass]"""
         assert isinstance(
             sample.target, pd.Series
         ), "only single-output classifiers are currently supported"
-        root_classifier = model.final_estimator.native_estimator
+        root_classifier = self.pipeline.final_estimator.native_estimator
         # noinspection PyUnresolvedReferences
-        return [str(class_) for class_ in root_classifier.classes_]
+        return list(map(str, root_classifier.classes_))
 
 
 class ClassifierShapValuesCalculator(
