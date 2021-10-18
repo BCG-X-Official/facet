@@ -227,7 +227,7 @@ class TreeExplainerFactory(ExplainerFactory):
 
     def make_explainer(
         self, model: LearnerDF, data: Optional[pd.DataFrame] = None
-    ) -> Explainer:
+    ) -> BaseExplainer:
         """[see superclass]"""
 
         self._validate_background_dataset(data=data)
@@ -309,7 +309,7 @@ class KernelExplainerFactory(ExplainerFactory):
         """[see superclass]"""
         return True
 
-    def make_explainer(self, model: LearnerDF, data: pd.DataFrame) -> Explainer:
+    def make_explainer(self, model: LearnerDF, data: pd.DataFrame) -> BaseExplainer:
         """[see superclass]"""
 
         self._validate_background_dataset(data=data)
