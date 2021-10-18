@@ -14,6 +14,8 @@ from packaging import version
 from sklearn.base import BaseEstimator
 
 from pytools.api import AllTracker, inheritdoc, validate_type
+from pytools.expression import Expression, HasExpressionRepr
+from pytools.expression.atomic import Id
 from sklearndf import ClassifierDF, LearnerDF, RegressorDF
 
 log = logging.getLogger(__name__)
@@ -113,7 +115,7 @@ class BaseExplainer(metaclass=ABCMeta):
         pass
 
 
-class ExplainerFactory(metaclass=ABCMeta):
+class ExplainerFactory(HasExpressionRepr, metaclass=ABCMeta):
     """
     A factory for constructing :class:`~shap.Explainer` objects.
     """
@@ -250,6 +252,14 @@ class TreeExplainerFactory(ExplainerFactory):
 
         return explainer
 
+    def to_expression(self) -> Expression:
+        """[see superclass]"""
+        return Id(type(self))(
+            model_output=self.model_output,
+            feature_perturbation=self.feature_perturbation,
+            use_background_dataset=self._uses_background_dataset,
+        )
+
 
 class _KernelExplainer(shap.KernelExplainer, BaseExplainer):
     # noinspection PyPep8Naming,PyUnresolvedReferences
@@ -352,6 +362,14 @@ class KernelExplainerFactory(ExplainerFactory):
             )
 
         return explainer
+
+    def to_expression(self) -> Expression:
+        """[see superclass]"""
+        return Id(type(self))(
+            link=self.link,
+            l1_reg=self.l1_reg,
+            data_size_limit=self.data_size_limit,
+        )
 
 
 __tracker.validate()
