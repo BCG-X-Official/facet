@@ -225,25 +225,24 @@ class ShapCalculator(
         else:
             background_dataset = None
 
-        def _make_explainer(_model: T_LearnerPipelineDF) -> BaseExplainer:
-            return self._explainer_factory.make_explainer(
-                model=_model.final_estimator,
-                # we re-index the columns of the background dataset to match
-                # the column sequence of the model (in case feature order
-                # was shuffled, or train split pre-processing removed columns)
-                data=(
-                    None
-                    if background_dataset is None
-                    else background_dataset.reindex(
-                        columns=_model.final_estimator.feature_names_in_,
-                        copy=False,
-                    )
-                ),
-            )
+        explainer = self._explainer_factory.make_explainer(
+            model=pipeline.final_estimator,
+            # we re-index the columns of the background dataset to match
+            # the column sequence of the model (in case feature order
+            # was shuffled, or train split pre-processing removed columns)
+            data=(
+                None
+                if background_dataset is None
+                else background_dataset.reindex(
+                    columns=pipeline.final_estimator.feature_names_in_,
+                    copy=False,
+                )
+            ),
+        )
 
         # we explain the full sample using the model fitted on the full sample
         # so the result is a list with a single data frame of shap values
-        return self._calculate_shap(sample=sample, explainer=_make_explainer(pipeline))
+        return self._calculate_shap(sample=sample, explainer=explainer)
 
     @abstractmethod
     def _calculate_shap(
