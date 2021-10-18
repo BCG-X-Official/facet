@@ -180,13 +180,13 @@ class TreeExplainerFactory(ExplainerFactory):
         *,
         model_output: Optional[str] = None,
         feature_perturbation: Optional[str] = None,
-        use_background_dataset: bool = True,
+        uses_background_dataset: bool = True,
     ) -> None:
         """
         :param model_output: (optional) override the default model output parameter
         :param feature_perturbation: (optional) override the default
             feature_perturbation parameter
-        :param use_background_dataset: if ``False``, don't pass the background
+        :param uses_background_dataset: if ``False``, don't pass the background
             dataset on to the tree explainer even if a background dataset is passed
             to :meth:`.make_explainer`
         """
@@ -202,7 +202,7 @@ class TreeExplainerFactory(ExplainerFactory):
         )
         self.model_output = model_output
         self.feature_perturbation = feature_perturbation
-        self._uses_background_dataset = use_background_dataset
+        self._uses_background_dataset = uses_background_dataset
 
         global _TreeExplainer
 

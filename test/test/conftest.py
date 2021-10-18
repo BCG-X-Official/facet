@@ -202,7 +202,7 @@ def regressor_inspector(
     inspector = LearnerInspector(
         pipeline=best_lgbm_crossfit.pipeline,
         explainer_factory=TreeExplainerFactory(
-            feature_perturbation="tree_path_dependent", use_background_dataset=True
+            feature_perturbation="tree_path_dependent", uses_background_dataset=True
         ),
         n_jobs=n_jobs,
     ).fit(sample=best_lgbm_crossfit.sample_)

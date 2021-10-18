@@ -153,7 +153,7 @@ class LearnerInspector(
     #: This is a tree explainer using the tree_path_dependent method for
     #: feature perturbation, so we can calculate SHAP interaction values.
     DEFAULT_EXPLAINER_FACTORY = TreeExplainerFactory(
-        feature_perturbation="tree_path_dependent", use_background_dataset=False
+        feature_perturbation="tree_path_dependent", uses_background_dataset=False
     )
 
     def __init__(

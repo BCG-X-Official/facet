@@ -389,7 +389,7 @@ def test_model_inspection_classifier_interaction(
     model_inspector = LearnerInspector(
         pipeline=iris_classifier_crossfit_binary.pipeline,
         explainer_factory=TreeExplainerFactory(
-            feature_perturbation="tree_path_dependent", use_background_dataset=True
+            feature_perturbation="tree_path_dependent", uses_background_dataset=True
         ),
         n_jobs=n_jobs,
     ).fit(sample=iris_classifier_crossfit_binary.sample_)
@@ -398,7 +398,7 @@ def test_model_inspection_classifier_interaction(
         pipeline=iris_classifier_crossfit_binary.pipeline,
         shap_interaction=False,
         explainer_factory=TreeExplainerFactory(
-            feature_perturbation="tree_path_dependent", use_background_dataset=True
+            feature_perturbation="tree_path_dependent", uses_background_dataset=True
         ),
         n_jobs=n_jobs,
     ).fit(sample=iris_classifier_crossfit_binary.sample_)
