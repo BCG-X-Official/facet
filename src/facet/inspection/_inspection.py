@@ -9,6 +9,7 @@ import numpy as np
 import pandas as pd
 from scipy.cluster import hierarchy
 from scipy.spatial import distance
+from sklearn.base import is_classifier
 
 from pytools.api import AllTracker, inheritdoc
 from pytools.data import LinkageTree, Matrix
@@ -239,20 +240,14 @@ class LearnerInspector(
 
         learner: LearnerDF = self.pipeline.final_estimator
 
-        if isinstance(learner, ClassifierDF):
-            if isinstance(sample.target_name, list):
-                raise ValueError(
-                    "only single-output classifiers (binary or multi-class) are "
-                    "supported, but the classifier in the given crossfit has been "
-                    "fitted on multiple columns "
-                    f"{sample.target_name}"
-                )
-
-            is_classifier = True
-
-        else:
-            assert isinstance(learner, RegressorDF)
-            is_classifier = False
+        _is_classifier = is_classifier(learner)
+        if _is_classifier and isinstance(sample.target_name, list):
+            raise ValueError(
+                "only single-output classifiers (binary or multi-class) are "
+                "supported, but the classifier in the given crossfit has been "
+                "fitted on multiple columns "
+                f"{sample.target_name}"
+            )
 
         shap_global_projector: Union[
             ShapVectorProjector, ShapInteractionVectorProjector, None
@@ -261,7 +256,7 @@ class LearnerInspector(
         if self.shap_interaction:
             shap_calculator_type = (
                 ClassifierShapInteractionValuesCalculator
-                if is_classifier
+                if _is_classifier
                 else RegressorShapInteractionValuesCalculator
             )
             shap_calculator = shap_calculator_type(
@@ -278,7 +273,7 @@ class LearnerInspector(
         else:
             shap_calculator_type = (
                 ClassifierShapValuesCalculator
-                if is_classifier
+                if _is_classifier
                 else RegressorShapValuesCalculator
             )
             shap_calculator = shap_calculator_type(
