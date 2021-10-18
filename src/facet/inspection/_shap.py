@@ -19,7 +19,7 @@ from sklearndf.pipeline import (
 )
 
 from ..data import Sample
-from ._explainer import BaseExplainer, ExplainerFactory
+from ._explainer import BaseExplainer, ExplainerFactory, ParallelExplainer
 
 log = logging.getLogger(__name__)
 
@@ -239,6 +239,15 @@ class ShapCalculator(
                 )
             ),
         )
+
+        if self.n_jobs != 1:
+            explainer = ParallelExplainer(
+                explainer,
+                n_jobs=self.n_jobs,
+                shared_memory=self.shared_memory,
+                pre_dispatch=self.pre_dispatch,
+                verbose=self.verbose,
+            )
 
         # we explain the full sample using the model fitted on the full sample
         # so the result is a list with a single data frame of shap values
