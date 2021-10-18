@@ -177,6 +177,7 @@ class TreeExplainerFactory(ExplainerFactory):
 
     def __init__(
         self,
+        *,
         model_output: Optional[str] = None,
         feature_perturbation: Optional[str] = None,
         use_background_dataset: bool = True,
@@ -274,6 +275,7 @@ class KernelExplainerFactory(ExplainerFactory):
 
     def __init__(
         self,
+        *,
         link: Optional[str] = None,
         l1_reg: Optional[str] = "num_features(10)",
         data_size_limit: Optional[int] = 100,
