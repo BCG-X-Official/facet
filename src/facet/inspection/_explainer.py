@@ -169,7 +169,7 @@ class ExplainerFactory(metaclass=ABCMeta):
 _TreeExplainer: Optional[type] = None
 
 
-@inheritdoc(match="[see superclass]")
+@inheritdoc(match="""[see superclass]""")
 class TreeExplainerFactory(ExplainerFactory):
     """
     A factory constructing :class:`~shap.TreeExplainer` objects.
@@ -266,7 +266,7 @@ class _KernelExplainer(shap.KernelExplainer, BaseExplainer):
     pass
 
 
-@inheritdoc(match="[see superclass]")
+@inheritdoc(match="""[see superclass]""")
 class KernelExplainerFactory(ExplainerFactory):
     """
     A factory constructing :class:`~shap.KernelExplainer` objects.
