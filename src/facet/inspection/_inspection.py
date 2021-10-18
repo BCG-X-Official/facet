@@ -206,7 +206,7 @@ class LearnerInspector(
             if not explainer_factory.supports_shap_interaction_values:
                 log.warning(
                     "ignoring arg shap_interaction=True: "
-                    "explainers made by arg explainer_factory do not support "
+                    f"explainers made by {explainer_factory!r} do not support "
                     "SHAP interaction values"
                 )
                 shap_interaction = False
