@@ -260,41 +260,28 @@ class ShapCalculator(
         pass
 
     def _convert_shap_tensors_to_list(
-        self,
-        *,
-        shap_tensors: Union[np.ndarray, Sequence[np.ndarray]],
-        multi_output_names: Sequence[str],
+        self, *, shap_tensors: Union[np.ndarray, List[np.ndarray]], n_outputs: int
     ):
         def _validate_shap_tensor(_t: np.ndarray) -> None:
             if np.isnan(np.sum(_t)):
                 raise AssertionError(
-                    "Output of SHAP explainer included NaN values. "
+                    "Output of SHAP explainer includes NaN values. "
                     "This should not happen; consider initialising the "
                     "LearnerInspector with an ExplainerFactory that has a different "
                     "configuration, or that makes SHAP explainers of a different type."
                 )
-
-        n_outputs = len(multi_output_names)
 
         if isinstance(shap_tensors, List):
             for shap_tensor in shap_tensors:
                 _validate_shap_tensor(shap_tensor)
         else:
             _validate_shap_tensor(shap_tensors)
-            if n_outputs == 2 and isinstance(self, ClassifierShapCalculator):
-                # if we have a single output *and* binary classification, the explainer
-                # will have returned a single tensor for the positive class;
-                # the SHAP values for the negative class will have the opposite sign
-                shap_tensors = [-shap_tensors, shap_tensors]
-            else:
-                # if we have a single output *and* no classification, the explainer will
-                # have returned a single tensor as an array, so we wrap it in a list
-                shap_tensors = [shap_tensors]
+            shap_tensors = [shap_tensors]
 
         if n_outputs != len(shap_tensors):
             raise AssertionError(
                 f"count of SHAP tensors (n={len(shap_tensors)}) "
-                f"should match number of outputs ({multi_output_names})"
+                f"should match number of outputs (n={n_outputs})"
             )
 
         return shap_tensors
@@ -382,7 +369,7 @@ class ShapValuesCalculator(
 
         # calculate the shap values, and ensure the result is a list of arrays
         shap_values: List[np.ndarray] = self._convert_shap_tensors_to_list(
-            shap_tensors=explainer.shap_values(x), multi_output_names=multi_output_names
+            shap_tensors=explainer.shap_values(x), n_outputs=len(multi_output_names)
         )
 
         # convert to a data frame per output (different logic depending on whether
@@ -578,6 +565,23 @@ class ClassifierShapCalculator(ShapCalculator[ClassifierPipelineDF], metaclass=A
     """
 
     COL_CLASS = "class"
+
+    def _convert_shap_tensors_to_list(
+        self, *, shap_tensors: Union[np.ndarray, List[np.ndarray]], n_outputs: int
+    ):
+
+        if n_outputs == 2 and isinstance(shap_tensors, np.ndarray):
+            # if we have a single output *and* binary classification, the explainer
+            # will have returned a single tensor for the positive class;
+            # the SHAP values for the negative class will have the opposite sign
+            (shap_tensors,) = super()._convert_shap_tensors_to_list(
+                shap_tensors=shap_tensors, n_outputs=1
+            )
+            return [-shap_tensors, shap_tensors]
+        else:
+            return super()._convert_shap_tensors_to_list(
+                shap_tensors=shap_tensors, n_outputs=n_outputs
+            )
 
     def _get_output_names(
         self,
