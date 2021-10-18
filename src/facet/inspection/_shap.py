@@ -460,23 +460,14 @@ class ShapInteractionValuesCalculator(
     ) -> pd.DataFrame:
         x = self._preprocess_features(sample=sample)
 
-        # calculate the im values (returned as an array)
-        try:
-            # noinspection PyUnresolvedReferences
-            shap_interaction_values_fn = explainer.shap_interaction_values
-        except AttributeError:
-            raise RuntimeError(
-                "Explainer does not implement method shap_interaction_values"
-            )
-
         multi_output_type = self.get_multi_output_type()
         multi_output_names = self.get_multi_output_names(sample)
         features_out = self.feature_index_
 
         # calculate the shap interaction values; ensure the result is a list of arrays
         shap_interaction_tensors: List[np.ndarray] = self._convert_shap_tensors_to_list(
-            shap_tensors=shap_interaction_values_fn(x),
-            multi_output_names=multi_output_names,
+            shap_tensors=explainer.shap_interaction_values(x),
+            n_outputs=len(multi_output_names),
         )
 
         interaction_matrix_per_output: List[pd.DataFrame] = [
