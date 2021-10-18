@@ -244,8 +244,6 @@ class ExplainerQueue(
     #: additional arguments specific to the explainer method
     kwargs: Dict[str, Any]
 
-    _DEFAULT_MAX_JOB_SIZE = 10
-
     # noinspection PyPep8Naming
     def __init__(
         self,
@@ -253,7 +251,7 @@ class ExplainerQueue(
         X: Union[np.ndarray, pd.DataFrame],
         y: Union[None, np.ndarray, pd.Series] = None,
         *,
-        max_job_size: int = _DEFAULT_MAX_JOB_SIZE,
+        max_job_size: int,
         **kwargs: Any,
     ) -> None:
         """
@@ -313,14 +311,15 @@ class ParallelExplainer(BaseExplainer, ParallelizableMixin):
     #: The explainer being parallelized by this wrapper
     explainer: BaseExplainer
 
-    # noinspection PyProtectedMember
-    _DEFAULT_MAX_JOB_SIZE = ExplainerQueue._DEFAULT_MAX_JOB_SIZE
+    #: the maximum number of observations to allocate to any of the explainer jobs
+    #: running in parallel
+    max_job_size: int
 
     def __init__(
         self,
         explainer: BaseExplainer,
         *,
-        max_job_size: int = _DEFAULT_MAX_JOB_SIZE,
+        max_job_size: int = 10,
         n_jobs: int,
         shared_memory: Optional[bool] = None,
         pre_dispatch: Optional[Union[str, int]] = None,
