@@ -6,9 +6,8 @@ import logging
 from abc import ABCMeta, abstractmethod
 from typing import (
     Any,
-    Callable,
     Generic,
-    List,
+    Iterable,
     Optional,
     Sequence,
     Tuple,
@@ -23,12 +22,7 @@ from scipy import stats
 
 from pytools.api import AllTracker, inheritdoc
 from pytools.parallelization import ParallelizableMixin
-from sklearndf import LearnerDF
-from sklearndf.pipeline import (
-    ClassifierPipelineDF,
-    LearnerPipelineDF,
-    RegressorPipelineDF,
-)
+from sklearndf import ClassifierDF, LearnerDF, RegressorDF
 
 from ..data import Sample
 from ..data.partition import Partitioner
@@ -48,7 +42,7 @@ __all__ = [
 # Type variables
 #
 
-T_LearnerPipelineDF = TypeVar("T_LearnerPipelineDF", bound=LearnerPipelineDF)
+T_LearnerDF = TypeVar("T_LearnerDF", bound=LearnerDF)
 T_Partition = TypeVar("T_Partition")
 
 
@@ -69,6 +63,24 @@ class UnivariateSimulationResult(Generic[T_Partition]):
     Summary result of a univariate simulation.
     """
 
+    #: The partitioner used to generate feature values to be simulated.
+    partitioner: Partitioner
+
+    #: The mean predictions for the values representing each partition.
+    mean: pd.Series
+
+    #: The standard errors of the mean predictions for the values representing each
+    # partition.
+    sem: pd.Series
+
+    #: The lower bounds of the confidence intervals for the mean predictions for the
+    # values representing each partition.
+    lower_bound: pd.Series
+
+    #: The upper bounds of the confidence intervals for the mean predictions for the
+    # values representing each partition.
+    upper_bound: pd.Series
+
     #: Name of the simulated feature.
     feature_name: str
 
@@ -85,15 +97,15 @@ class UnivariateSimulationResult(Generic[T_Partition]):
     #: determined by bootstrapping, with :math:`0 < \alpha < 1`.
     confidence_level: float
 
-    #: The partitioner used to generate feature values to be simulated.
-    partitioner: Partitioner
-
-    #: The matrix of simulated outcomes, with columns representing partitions
-    #: and rows representing bootstrap splits used to fit variations of the model.
-    outputs: pd.DataFrame
+    #: The name of the column index of attribute :attr:`.output`, denoting partitions
+    #: represented by their central values or by a category.
+    IDX_PARTITION = "partition"
 
     #: The name of a series of mean simulated values per partition.
     COL_MEAN = "mean"
+
+    #: The name of a series of standard errors of mean simulated values per partition.
+    COL_SEM = "sem"
 
     #: The name of a series of lower CI bounds of simulated values per partition.
     COL_LOWER_BOUND = "lower_bound"
@@ -104,15 +116,21 @@ class UnivariateSimulationResult(Generic[T_Partition]):
     def __init__(
         self,
         *,
+        partitioner: Partitioner,
+        mean: Sequence[float],
+        sem: Sequence[float],
         feature_name: str,
         output_name: str,
         output_unit: str,
         baseline: float,
         confidence_level: float,
-        partitioner: Partitioner,
-        outputs: pd.DataFrame,
     ) -> None:
         """
+        :param partitioner: the partitioner used to generate feature values to be
+            simulated
+        :param mean: mean predictions for the values representing each partition
+        :param sem: standard errors of the mean predictions for the values representing
+            each partition
         :param feature_name: name of the simulated feature
         :param output_name: name of the target for which outputs are simulated
         :param output_unit: the unit of the simulated outputs
@@ -121,38 +139,46 @@ class UnivariateSimulationResult(Generic[T_Partition]):
             of the simulation
         :param confidence_level: the width of the confidence interval determined by
             bootstrapping, ranging between 0.0 and 1.0 (exclusive)
-        :param partitioner: the partitioner used to generate feature values to be
-            simulated
-        :param outputs: matrix of simulated outcomes, with columns representing
-            partitions and rows representing bootstrap splits used to fit variations
-            of the model
         """
         super().__init__()
 
-        assert outputs.index.name == "metric"
-        assert outputs.columns.name == BaseUnivariateSimulator.IDX_PARTITION
-        assert (
-            0.0 < confidence_level < 1.0
-        ), f"confidence_level={confidence_level} ranges between 0.0 and 1.0 (exclusive)"
+        if not partitioner.is_fitted:
+            raise ValueError("arg partitioner must be fitted")
 
+        n_partitions = len(partitioner.partitions_)
+
+        for seq, seq_name in [(mean, "mean"), (sem, "sem")]:
+            if len(seq) != n_partitions:
+                raise ValueError(
+                    f"length of arg {seq_name} must correspond to "
+                    f"the number of partitions (n={n_partitions})"
+                )
+
+        if not (0.0 < confidence_level < 1.0):
+            raise ValueError(
+                f"arg confidence_level={confidence_level} is not "
+                "in the range between 0.0 and 1.0 (exclusive)"
+            )
+
+        idx = pd.Index(
+            partitioner.partitions_, name=UnivariateSimulationResult.IDX_PARTITION
+        )
+
+        self.partitioner = partitioner
+        self.mean = pd.Series(mean, index=idx, name=UnivariateSimulationResult.COL_MEAN)
+        self.sem = pd.Series(sem, index=idx, name=UnivariateSimulationResult.COL_SEM)
         self.feature_name = feature_name
         self.output_name = output_name
         self.output_unit = output_unit
         self.baseline = baseline
         self.confidence_level = confidence_level
-        self.partitioner = partitioner
-        self.outputs = outputs
 
-    def outputs_mean(self) -> pd.Series:
-        """
-        Calculate the means of simulation outcomes for every partition.
+    def _ci_width(self) -> np.ndarray:
+        # get the width of the confidence interval
+        return -stats.norm.ppf((1.0 - self.confidence_level) / 2.0) * self.sem.values
 
-        :return: a series of means, indexed by the central values of the partitions
-            for which the simulation was run
-        """
-        return self.outputs.loc["mean"].rename(UnivariateSimulationResult.COL_MEAN)
-
-    def outputs_lower_bound(self) -> pd.Series:
+    @property
+    def lower_bound(self) -> pd.Series:
         """
         Calculate the lower CI bounds of the distribution of simulation outcomes,
         for every partition.
@@ -160,19 +186,13 @@ class UnivariateSimulationResult(Generic[T_Partition]):
         :return: a series of lower CI bounds, indexed by the central values of the
             partitions for which the simulation was run
         """
-        # return the mean outputs for each partition without aggregating
-        # further, and determine the lower confidence bound based on the standard
-        # error of the mean and the desired confidence level
 
-        values = (
-            self.outputs.loc["mean"]
-            + stats.norm.ppf((1.0 - self.confidence_level) / 2.0)
-            * self.outputs.loc["sem"]
+        return (self.mean - self._ci_width()).rename(
+            UnivariateSimulationResult.COL_LOWER_BOUND
         )
 
-        return values.rename(UnivariateSimulationResult.COL_LOWER_BOUND)
-
-    def outputs_upper_bound(self) -> pd.Series:
+    @property
+    def upper_bound(self) -> pd.Series:
         """
         Calculate the lower CI bounds of the distribution of simulation outcomes,
         for every partition.
@@ -180,34 +200,20 @@ class UnivariateSimulationResult(Generic[T_Partition]):
         :return: a series of upper CI bounds, indexed by the central values of the
             partitions for which the simulation was run
         """
-        # return the mean outputs for each partition without aggregating
-        # further, and determine the upper confidence bound based on the standard
-        # error of the mean and the desired confidence level
-        values = (
-            self.outputs.loc["mean"]
-            - stats.norm.ppf((1.0 - self.confidence_level) / 2.0)
-            * self.outputs.loc["sem"]
+        return (self.mean + self._ci_width()).rename(
+            UnivariateSimulationResult.COL_UPPER_BOUND
         )
-
-        return values.rename(UnivariateSimulationResult.COL_UPPER_BOUND)
 
 
 class BaseUnivariateSimulator(
-    ParallelizableMixin, Generic[T_LearnerPipelineDF], metaclass=ABCMeta
+    ParallelizableMixin, Generic[T_LearnerDF], metaclass=ABCMeta
 ):
     """
     Base class for univariate simulations.
     """
 
-    #: The name of the column index of attribute :attr:`.output`, denoting partitions
-    #: represented by their central values or by a category.
-    IDX_PARTITION = "partition"
-
-    #: The name of a series of simulated outputs.
-    COL_OUTPUT = "output"
-
     #: The learner pipeline used to conduct simulations
-    model: T_LearnerPipelineDF
+    model: T_LearnerDF
 
     #: The sample used in baseline calculations and simulations; this is the full sample
     #: from the :attr:`.crossfit`, or a subsample thereof
@@ -219,7 +225,7 @@ class BaseUnivariateSimulator(
 
     def __init__(
         self,
-        model: T_LearnerPipelineDF,
+        model: T_LearnerDF,
         sample: Sample,
         *,
         confidence_level: float = 0.95,
@@ -241,10 +247,10 @@ class BaseUnivariateSimulator(
             verbose=verbose,
         )
 
-        if not isinstance(model, self._expected_pipeline_type()):
+        if not isinstance(model, self._expected_learner_type()):
             raise TypeError(
                 "arg crossfit must fit a pipeline of type "
-                f"{self._expected_pipeline_type().__name__}."
+                f"{self._expected_learner_type().__name__}."
             )
 
         if not model.is_fitted:
@@ -283,23 +289,21 @@ class BaseUnivariateSimulator(
 
         sample = self.sample
 
+        mean, sem = self._simulate_feature_with_values(
+            feature_name=feature_name,
+            simulation_values=(
+                partitioner.fit(sample.features.loc[:, feature_name]).partitions_
+            ),
+        )
         return UnivariateSimulationResult(
+            partitioner=partitioner,
+            mean=mean,
+            sem=sem,
             feature_name=feature_name,
             output_name=sample.target_name,
             output_unit=self.output_unit,
             baseline=self.baseline(),
             confidence_level=self.confidence_level,
-            partitioner=partitioner,
-            outputs=(
-                self._simulate_feature_with_values(
-                    feature_name=feature_name,
-                    simulation_values=(
-                        partitioner.fit(
-                            sample.features.loc[:, feature_name]
-                        ).partitions_
-                    ),
-                )
-            ),
         )
 
     @property
@@ -330,19 +334,24 @@ class BaseUnivariateSimulator(
 
     @staticmethod
     @abstractmethod
-    def _expected_pipeline_type() -> Type[T_LearnerPipelineDF]:
+    def _expected_learner_type() -> Type[T_LearnerDF]:
         pass
 
     @staticmethod
     @abstractmethod
-    def _simulate(model: T_LearnerPipelineDF, x: pd.DataFrame) -> pd.Series:
+    def _simulate(model: T_LearnerDF, x: pd.DataFrame) -> Tuple[float, float]:
         pass
+
+    @staticmethod
+    def _aggregate(predictions: pd.Series) -> Tuple[float, float]:
+        # generate summary stats for a series of predictions
+        return predictions.mean(), predictions.sem()
 
     def _simulate_feature_with_values(
         self,
         feature_name: str,
         simulation_values: Sequence[T_Partition],
-    ) -> pd.DataFrame:
+    ) -> Tuple[Sequence[float], Sequence[float]]:
         """
         Run a simulation on a feature.
 
@@ -351,79 +360,40 @@ class BaseUnivariateSimulator(
 
         :param feature_name: name of the feature to use in the simulation
         :param simulation_values: values to use in the simulation
-        :return: data frame with splits as rows and partitions as columns.
+        :return: a tuple with mean predictions and standard errors of mean predictions
+            for each partition
         """
 
         if feature_name not in self.sample.features.columns:
             raise ValueError(f"feature not in sample: {feature_name}")
 
-        model = self.model
-        sample = self.sample
-        # for each split, calculate the mean simulation outputs and the standard error
-        # of each mean
-        mean: Sequence[float]
-        sem: Sequence[float]
-        mean, sem = UnivariateUpliftSimulator._simulate_values_for_split(
-            model=model,
-            subsample=sample,
-            feature_name=feature_name,
-            simulated_values=simulation_values,
-            simulate_fn=self._simulate,
-        )
-
-        index_name: str
-        index: Optional[List[str]]
-        simulation_results_per_split: List[List[float]]
-
-        index_name = "metric"
-        index = ["mean", "sem"]
-
-        return pd.DataFrame(
-            [mean, sem], columns=simulation_values, index=index
-        ).rename_axis(
-            index=index_name,
-            columns=BaseUnivariateSimulator.IDX_PARTITION,
-        )
-
-    @staticmethod
-    def _simulate_values_for_split(
-        model: LearnerDF,
-        subsample: Sample,
-        feature_name: str,
-        simulated_values: Optional[Sequence[Any]],
-        simulate_fn: Callable[[LearnerDF, pd.DataFrame], pd.Series],
-    ) -> Tuple[Sequence[float], Sequence[float]]:
-        # for a list of values to be simulated, return a sequence of mean outputs
+        # for a list of values to be simulated, calculate a sequence of mean predictions
         # and a sequence of standard errors of those means
-
-        n_observations = len(subsample)
-        features = subsample.features
+        features = self.sample.features
         feature_dtype = features.loc[:, feature_name].dtype
 
-        outputs_mean_sem: List[Tuple[float, float]] = [
-            (outputs_sr.mean(), outputs_sr.sem())
-            for outputs_sr in (
-                simulate_fn(
-                    model,
-                    features.assign(
-                        **{
-                            feature_name: np.full(
-                                shape=n_observations,
-                                fill_value=value,
-                                dtype=feature_dtype,
-                            )
-                        }
-                    ),
-                )
-                for value in simulated_values
+        outputs_mean_sem: Iterable[Tuple[float, float]] = (
+            self._simulate(
+                self.model,
+                features.assign(
+                    **{
+                        feature_name: np.full(
+                            shape=len(features),
+                            fill_value=value,
+                            dtype=feature_dtype,
+                        )
+                    }
+                ),
             )
-        ]
+            for value in simulation_values
+        )
+
         outputs_mean, outputs_sem = zip(*outputs_mean_sem)
         return outputs_mean, outputs_sem
 
 
 @inheritdoc(match="[see superclass]")
-class UnivariateProbabilitySimulator(BaseUnivariateSimulator[ClassifierPipelineDF]):
+class UnivariateProbabilitySimulator(BaseUnivariateSimulator[ClassifierDF]):
     """
     Univariate simulation of positive class probabilities based on a binary classifier.
 
@@ -469,7 +439,7 @@ class UnivariateProbabilitySimulator(BaseUnivariateSimulator[ClassifierPipelineD
         """
         The label of the positive class of the binary classifier being simulated.
         """
-        classifier = self.model.final_estimator
+        classifier = self.model
 
         try:
             return classifier.classes_[-1]
@@ -481,19 +451,19 @@ class UnivariateProbabilitySimulator(BaseUnivariateSimulator[ClassifierPipelineD
             return "positive class"
 
     @staticmethod
-    def _expected_pipeline_type() -> Type[ClassifierPipelineDF]:
-        return ClassifierPipelineDF
+    def _expected_learner_type() -> Type[ClassifierDF]:
+        return ClassifierDF
 
     @staticmethod
-    def _simulate(model: ClassifierPipelineDF, x: pd.DataFrame) -> pd.Series:
+    def _simulate(model: ClassifierDF, x: pd.DataFrame) -> Tuple[float, float]:
         probabilities: pd.DataFrame = model.predict_proba(x)
         if probabilities.shape[1] != 2:
             raise TypeError("only binary classifiers are supported")
-        return probabilities.iloc[:, 1]
+        return BaseUnivariateSimulator._aggregate(probabilities.iloc[:, 1])
 
 
 class _UnivariateRegressionSimulator(
-    BaseUnivariateSimulator[RegressorPipelineDF], metaclass=ABCMeta
+    BaseUnivariateSimulator[RegressorDF], metaclass=ABCMeta
 ):
     def expected_output(self) -> float:
         """
@@ -504,14 +474,14 @@ class _UnivariateRegressionSimulator(
         return self.sample.target.mean()
 
     @staticmethod
-    def _expected_pipeline_type() -> Type[RegressorPipelineDF]:
-        return RegressorPipelineDF
+    def _expected_learner_type() -> Type[RegressorDF]:
+        return RegressorDF
 
     @staticmethod
-    def _simulate(model: RegressorPipelineDF, x: pd.DataFrame) -> pd.Series:
+    def _simulate(model: RegressorDF, x: pd.DataFrame) -> Tuple[float, float]:
         predictions = model.predict(X=x)
         assert predictions.ndim == 1, "single-target regressor required"
-        return predictions
+        return BaseUnivariateSimulator._aggregate(predictions)
 
 
 @inheritdoc(match="[see superclass]")
@@ -583,18 +553,16 @@ class UnivariateUpliftSimulator(_UnivariateRegressionSimulator):
         return 0.0
 
     def simulate_feature(
-        self,
-        feature_name: str,
-        *,
-        partitioner: Partitioner[T_Partition],
+        self, feature_name: str, *, partitioner: Partitioner[T_Partition]
     ) -> UnivariateSimulationResult:
         """[see superclass]"""
+
         result = super().simulate_feature(
             feature_name=feature_name, partitioner=partitioner
         )
-        # we only offset the mean values, but not the standard errors of the means
-        # (which are relative values already so don't need to be offset)
-        result.outputs.loc["mean"] -= self.expected_output()
+
+        # offset the mean values to get uplift instead of absolute outputs
+        result.mean -= self.expected_output()
 
         return result
 
