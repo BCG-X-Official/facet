@@ -215,8 +215,7 @@ class BaseUnivariateSimulator(
     #: The learner pipeline used to conduct simulations
     model: T_LearnerDF
 
-    #: The sample used in baseline calculations and simulations; this is the full sample
-    #: from the :attr:`.crossfit`, or a subsample thereof
+    #: The sample to be used in baseline calculations and simulations
     sample: Sample
 
     #: The width of the confidence interval used to calculate the lower/upper bound
@@ -249,7 +248,7 @@ class BaseUnivariateSimulator(
 
         if not isinstance(model, self._expected_learner_type()):
             raise TypeError(
-                "arg crossfit must fit a pipeline of type "
+                "arg model must be a learner of type "
                 f"{self._expected_learner_type().__name__}."
             )
 
@@ -411,11 +410,11 @@ class UnivariateProbabilitySimulator(BaseUnivariateSimulator[ClassifierDF]):
     observations is modified by assigning value `v[j]` for feature `x[i]` for all
     observations, i.e., assuming that feature `x[i]` has the constant value `v[j]`.
 
-    Then all classifiers of a :class:`.LearnerCrossfit` are used in turn to each predict
-    the positive class probabilities for all observations, and the mean probability
-    across all observations is calculated for each classifier and value `v[j]`.
-    The simulation result is a set of `n` distributions of mean predicted probabilities
-    across all classifiers -- one distribution for each `v[j]`.
+    Then the classifier is used to predict the positive class probabilities for all
+    observations, and the mean probability across all observations is calculated
+    for each classifier and value `v[j]`,
+    along with the standard error of the mean as a basis of obtaining confidence
+    intervals.
 
     Note that sample weights are not taken into account for simulations; each
     observation has the same weight in the simulation even if different weights
@@ -513,11 +512,11 @@ class UnivariateTargetSimulator(_UnivariateRegressionSimulator):
     observations is modified by assigning value `v[j]` for feature `x[i]` for all
     observations, i.e., assuming that feature `x[i]` has the constant value `v[j]`.
 
-    Then all regressors of a :class:`.LearnerCrossfit` are used in turn to each predict
-    the output for all observations, and the mean of the predicted outputs is calculated
-    for each regressor and value `v[j]`. The simulation result is a set of `n`
-    distributions of mean predicted targets across regressors -- one distribution for
-    each `v[j]`.
+    Then the regressor is used to predict the output for all
+    observations, and the mean output across all observations is calculated
+    for each regressor and value `v[j]`,
+    along with the standard error of the mean as a basis of obtaining confidence
+    intervals.
 
     Note that sample weights are not taken into account for simulations; each
     observation has the same weight in the simulation even if different weights
@@ -543,12 +542,14 @@ class UnivariateUpliftSimulator(_UnivariateRegressionSimulator):
     observations is modified by assigning value `v[j]` for feature `x[i]` for all
     observations, i.e., assuming that feature `x[i]` has the constant value `v[j]`.
 
-    Then all regressors of a :class:`.LearnerCrossfit` are used in turn to each predict
-    the output for all observations, and the mean of the predicted outputs is calculated
-    for each regressor and value `v[j]`. The simulation result is a set of `n`
-    distributions of mean predicted target uplifts across regressors, i.e. the mean
-    predicted difference of the historical expectation value of the target --
-    one distribution for each `v[j]`.
+    Then the regressor is used to predict the output for all
+    observations, and the mean output across all observations is calculated
+    for each regressor and value `v[j]`,
+    along with the standard error of the mean as a basis of obtaining confidence
+    intervals.
+    The simulation result is determined as the mean *uplift*, i.e., the mean
+    predicted difference of the historical expectation value of the target,
+    for each `v[j]`.
 
     Note that sample weights are not taken into account for simulations; each
     observation has the same weight in the simulation even if different weights
