@@ -336,7 +336,7 @@ class LearnerInspector(
         The names of the features used to fit the learner pipeline explained by this
         inspector.
         """
-        return self.crossfit_.pipeline.feature_names_out_.to_list()
+        return self.pipeline.feature_names_out_.to_list()
 
     def shap_values(self) -> Union[pd.DataFrame, List[pd.DataFrame]]:
         """
@@ -828,9 +828,7 @@ class LearnerInspector(
         # transform a matrix of shape (n_outputs, n_features, n_features)
         # to a data frame
 
-        feature_index = self.crossfit_.pipeline.feature_names_out_.rename(
-            Sample.IDX_FEATURE
-        )
+        feature_index = self.pipeline.feature_names_out_.rename(Sample.IDX_FEATURE)
 
         n_features = len(feature_index)
         assert matrix.shape == (len(self.output_names_), n_features, n_features)
