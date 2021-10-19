@@ -1,3 +1,7 @@
+"""
+Implementation of the sample balancer.
+"""
+
 from typing import Any, Dict, Iterable, Union
 
 import numpy as np
@@ -39,12 +43,11 @@ class SampleBalancer:
             either indicating the maximum ratio between the minority class and any other
             class as a positive scalar in range ``]0,1]`` or indicating the target ratio
             of each minority class, as a dictionary mapping class labels to scalars.
-        :param partitioner: an :class:`facet.data.partition._partition.Partitioner`
+        :param partitioner: a :class:`.Partitioner`
             instance to use in order to partition the target variable into bins.
             By default, a categorical target is assumed.
-
         :param undersample: boolean parameter, whether majority class (partition) should
-         be undersampled, or minority classes (partitions) should be oversampled
+            be undersampled, or minority classes (partitions) should be oversampled
         """
 
         if partitioner is None:
