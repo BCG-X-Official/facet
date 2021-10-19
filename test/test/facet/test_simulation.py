@@ -368,7 +368,7 @@ def test_univariate_uplift_subsample_simulation(
 
 
 def test_univariate_probability_simulation(
-    iris_classifier_model_binary: ClassifierPipelineDF[RandomForestClassifierDF],
+    iris_classifier_binary: ClassifierPipelineDF[RandomForestClassifierDF],
     iris_sample_binary: Sample,
     n_jobs: int,
 ) -> None:
@@ -378,7 +378,7 @@ def test_univariate_probability_simulation(
     print(iris_sample_binary.feature_names)
 
     proba_simulator = UnivariateProbabilitySimulator(
-        model=iris_classifier_model_binary,
+        model=iris_classifier_binary,
         sample=iris_sample_binary,
         confidence_level=0.95,
         n_jobs=n_jobs,
