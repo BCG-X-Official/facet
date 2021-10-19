@@ -55,10 +55,10 @@ class Partitioner(
 
     DEFAULT_MAX_PARTITIONS = 20
 
-    #: The central values for all partitions.
+    #: The values representing the partitions.
     _partitions: Optional[np.ndarray]
 
-    #: The value counts for all partitions.
+    #: The count of values allocated to each partition.
     _frequencies: Optional[np.ndarray]
 
     def __init__(self, max_partitions: Optional[int] = None) -> None:
@@ -90,7 +90,7 @@ class Partitioner(
     @property
     def partitions_(self) -> np.ndarray:
         """
-        The central values of all partitions.
+        The values representing the partitions.
         """
         self._ensure_fitted()
         return self._partitions
@@ -98,7 +98,7 @@ class Partitioner(
     @property
     def frequencies_(self) -> np.ndarray:
         """
-        The count of data points in each partition.
+        The count of values allocated to each partition.
         """
         self._ensure_fitted()
         return self._frequencies
