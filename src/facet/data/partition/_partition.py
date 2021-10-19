@@ -54,6 +54,12 @@ class Partitioner(
 
     DEFAULT_MAX_PARTITIONS = 20
 
+    #: The central values for all partitions.
+    _partitions: Optional[np.ndarray]
+
+    #: The value counts for all partitions.
+    _frequencies: Optional[np.ndarray]
+
     def __init__(self, max_partitions: Optional[int] = None) -> None:
         """
         :param max_partitions: the maximum number of partitions to generate; must
@@ -65,6 +71,9 @@ class Partitioner(
             raise ValueError(f"arg max_partitions={max_partitions} must be at least 2")
         else:
             self._max_partitions = max_partitions
+
+        self._partitions = None
+        self._frequencies = None
 
     __init__.__doc__ = __init__.__doc__.replace(
         "{DEFAULT_MAX_PARTITIONS}", repr(DEFAULT_MAX_PARTITIONS)
@@ -78,8 +87,7 @@ class Partitioner(
         return self._max_partitions
 
     @property
-    @abstractmethod
-    def partitions_(self) -> Sequence[T_Values]:
+    def partitions_(self) -> np.ndarray:
         """
         Return central values of the partitions.
 
@@ -87,15 +95,18 @@ class Partitioner(
 
         :return: a sequence of central values for each partition
         """
+        self._ensure_fitted()
+        return self._partitions
 
     @property
-    @abstractmethod
-    def frequencies_(self) -> Sequence[int]:
+    def frequencies_(self) -> np.ndarray:
         """
         Return the count of observed elements in each partition.
 
         :return: a sequence of value counts for each partition
         """
+        self._ensure_fitted()
+        return self._frequencies
 
     @property
     @abstractmethod
@@ -143,8 +154,6 @@ class RangePartitioner(
         super().__init__(max_partitions)
 
         self._step: Optional[T_Values_Numeric] = None
-        self._frequencies: Optional[Sequence[int]] = None
-        self._partitions: Optional[Sequence[T_Values_Numeric]] = None
         self._partition_bounds: Optional[
             Sequence[Tuple[T_Values_Numeric, T_Values_Numeric]]
         ] = None
@@ -175,12 +184,6 @@ class RangePartitioner(
         return False
 
     @property
-    def partitions_(self) -> Sequence[T_Values_Numeric]:
-        """[see superclass]"""
-        self._ensure_fitted()
-        return self._partitions
-
-    @property
     def partition_bounds_(self) -> Sequence[Tuple[T_Values_Numeric, T_Values_Numeric]]:
         """
         Return the endpoints of the intervals that delineate each partitions.
@@ -200,16 +203,10 @@ class RangePartitioner(
         self._ensure_fitted()
         return self._step
 
-    @property
-    def frequencies_(self) -> Sequence[int]:
-        """[see superclass]"""
-        self._ensure_fitted()
-        return self._frequencies
-
     # noinspection PyMissingOrEmptyDocstring,PyIncorrectDocstring
     def fit(
         self: T_Self,
-        values: Iterable[T_Values],
+        values: Iterable[T_Values_Numeric],
         *,
         lower_bound: Optional[T_Values_Numeric] = None,
         upper_bound: Optional[T_Values_Numeric] = None,
@@ -426,18 +423,6 @@ class CategoryPartitioner(Partitioner[T_Values]):
         ``True``
         """
         return True
-
-    @property
-    def partitions_(self) -> Sequence[T_Values]:
-        """[see superclass]"""
-        self._ensure_fitted()
-        return self._partitions
-
-    @property
-    def frequencies_(self) -> Sequence[int]:
-        """[see superclass]"""
-        self._ensure_fitted()
-        return self._frequencies
 
     # noinspection PyMissingOrEmptyDocstring
     def fit(self: T_Self, values: Iterable[T_Values], **fit_params: Any) -> T_Self:
