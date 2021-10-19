@@ -9,7 +9,6 @@ from abc import ABCMeta, abstractmethod
 from typing import Any, Generic, Iterable, Optional, Sequence, Tuple, TypeVar
 
 import numpy as np
-import pandas as pd
 
 from pytools.api import AllTracker, inheritdoc
 from pytools.fit import FittableMixin
@@ -115,6 +114,14 @@ class Partitioner(
         :param fit_params: optional fitting parameters
         :return: ``self``
         """
+
+    @staticmethod
+    def _as_non_empty_array(values: Iterable[Any]) -> np.ndarray:
+        # ensure arg values is a non-empty array
+        values = np.asarray(values)
+        if len(values) == 0:
+            raise ValueError("arg values is empty")
+        return values
 
 
 @inheritdoc(match="[see superclass]")
@@ -228,27 +235,9 @@ class RangePartitioner(
 
         self: RangePartitioner  # support type hinting in PyCharm
 
-        # ensure arg values is an array
-        if not isinstance(values, np.ndarray):
-            if isinstance(values, pd.Series):
-                values = values.values
-            else:
-                if not isinstance(values, Sequence):
-                    try:
-                        values = iter(values)
-                    except TypeError:
-                        raise TypeError("arg values must be iterable")
-                values = np.array(values)
+        values = self._as_non_empty_array(values)
 
-        if (
-            not ((lower_bound is None) or (upper_bound is None))
-            and lower_bound > upper_bound
-        ):
-            raise ValueError(
-                f"arg lower_bound > arg upper_bound: [{lower_bound}, {upper_bound})"
-            )
-
-        else:
+        if lower_bound is None or upper_bound is None:
             q3q1 = np.nanquantile(values, q=[0.75, 0.25])
             inlier_range = op.sub(*q3q1) * 1.5  # iqr * 1.5
 
@@ -258,7 +247,18 @@ class RangePartitioner(
             if upper_bound is None:
                 upper_bound = values[values <= q3q1[0] + inlier_range].max()
 
-        assert upper_bound >= lower_bound
+            if lower_bound == upper_bound:
+                raise ValueError(
+                    "insufficient variance in values; cannot infer partitioning bounds"
+                )
+
+        elif lower_bound >= upper_bound:
+            raise ValueError(
+                "arg lower_bound must be lower than arg upper_bound "
+                f"but got: [{lower_bound}, {upper_bound})"
+            )
+
+        assert lower_bound < upper_bound
 
         # calculate the step count based on the maximum number of partitions,
         # rounded to the next-largest rounded value ending in 1, 2, or 5
@@ -440,23 +440,18 @@ class CategoryPartitioner(Partitioner[T_Values]):
         return self._frequencies
 
     # noinspection PyMissingOrEmptyDocstring
-    def fit(self: T_Self, values: Sequence[T_Values], **fit_params: Any) -> T_Self:
+    def fit(self: T_Self, values: Iterable[T_Values], **fit_params: Any) -> T_Self:
         """[see superclass]"""
 
         self: CategoryPartitioner  # support type hinting in PyCharm
 
-        if not isinstance(values, pd.Series):
-            if not (isinstance(values, np.ndarray) or isinstance(values, Sequence)):
-                try:
-                    values = iter(values)
-                except TypeError:
-                    raise TypeError("arg values must be iterable")
-            values = pd.Series(data=values)
+        values = self._as_non_empty_array(values)
 
-        value_counts = values.value_counts(ascending=False)
-        max_partitions = self.max_partitions
-        self._partitions = value_counts.index.values[:max_partitions]
-        self._frequencies = value_counts.values[:max_partitions]
+        partitions, frequencies = np.unique(values, return_counts=True)
+        order_descending = np.flip(np.argsort(frequencies))[: self.max_partitions]
+
+        self._partitions = partitions[order_descending]
+        self._frequencies = frequencies[order_descending]
 
         return self
 
