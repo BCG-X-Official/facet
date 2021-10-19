@@ -90,7 +90,7 @@ class SimulationDrawer(Drawer[UnivariateSimulationResult, SimulationStyle]):
             Sequence[Any],
             Sequence[int],
         ] = (
-            data.outputs_median().to_list(),
+            data.outputs_mean().to_list(),
             data.outputs_lower_bound().to_list(),
             data.outputs_upper_bound().to_list(),
             data.partitioner.partitions_,
