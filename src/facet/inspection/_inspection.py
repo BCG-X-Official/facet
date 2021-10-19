@@ -7,13 +7,13 @@ from typing import Any, Generic, Iterable, List, Optional, Tuple, TypeVar, Union
 
 import numpy as np
 import pandas as pd
-from scipy.cluster.hierarchy import leaves_list, linkage, optimal_leaf_ordering
-from scipy.spatial.distance import squareform
+from scipy.cluster import hierarchy
+from scipy.spatial import distance
 
 from pytools.api import AllTracker, inheritdoc
+from pytools.data import LinkageTree, Matrix
 from pytools.fit import FittableMixin
 from pytools.parallelization import ParallelizableMixin
-from pytools.viz.dendrogram import LinkageTree
 from sklearndf import ClassifierDF, LearnerDF, RegressorDF
 from sklearndf.pipeline import LearnerPipelineDF
 
@@ -491,7 +491,7 @@ class LearnerInspector(
         symmetrical: bool = False,
         aggregation: Optional[str] = AGG_MEAN,
         clustered: bool = True,
-    ) -> Union[pd.DataFrame, List[pd.DataFrame]]:
+    ) -> Union[Matrix, List[Matrix]]:
         """
         Calculate the feature synergy matrix.
 
@@ -540,6 +540,7 @@ class LearnerInspector(
             affinity_symmetrical=explainer.synergy(
                 symmetrical=True, absolute=False, std=False
             ),
+            affinity_metric="synergy",
             clustered=clustered,
         )
 
@@ -550,7 +551,7 @@ class LearnerInspector(
         symmetrical: bool = False,
         aggregation: Optional[str] = AGG_MEAN,
         clustered: bool = True,
-    ) -> Union[pd.DataFrame, List[pd.DataFrame]]:
+    ) -> Union[Matrix, List[Matrix]]:
         """
         Calculate the feature redundancy matrix.
 
@@ -599,6 +600,7 @@ class LearnerInspector(
             affinity_symmetrical=explainer.redundancy(
                 symmetrical=True, absolute=False, std=False
             ),
+            affinity_metric="redundancy",
             clustered=clustered,
         )
 
@@ -609,7 +611,7 @@ class LearnerInspector(
         symmetrical: bool = False,
         aggregation: Optional[str] = AGG_MEAN,
         clustered: bool = True,
-    ) -> Union[pd.DataFrame, List[pd.DataFrame]]:
+    ) -> Union[Matrix, List[Matrix]]:
         """
         Calculate the feature association matrix.
 
@@ -662,6 +664,7 @@ class LearnerInspector(
             affinity_symmetrical=global_explainer.association(
                 symmetrical=True, absolute=False, std=False
             ),
+            affinity_metric="association",
             clustered=clustered,
         )
 
@@ -725,7 +728,7 @@ class LearnerInspector(
             )
         )
 
-    def feature_interaction_matrix(self) -> Union[pd.DataFrame, List[pd.DataFrame]]:
+    def feature_interaction_matrix(self) -> Union[Matrix, List[Matrix]]:
         """
         Calculate relative shap interaction values for all feature pairings.
 
@@ -825,7 +828,9 @@ class LearnerInspector(
         )[np.newaxis, :, :]
 
         # create a data frame from the feature matrix
-        return self.__feature_matrix_to_df(interaction_matrix)
+        return self.__arrays_to_matrix(
+            interaction_matrix, value_label="relative shap interaction"
+        )
 
     def shap_plot_data(self) -> ShapPlotData:
         """
@@ -882,9 +887,9 @@ class LearnerInspector(
             sample=sample,
         )
 
-    def __feature_matrix_to_df(
-        self, matrix: np.ndarray
-    ) -> Union[pd.DataFrame, List[pd.DataFrame]]:
+    def __arrays_to_matrix(
+        self, matrix: np.ndarray, value_label: str
+    ) -> Union[Matrix, List[Matrix]]:
         # transform a matrix of shape (n_outputs, n_features, n_features)
         # to a data frame
 
@@ -897,27 +902,38 @@ class LearnerInspector(
 
         # convert array to data frame(s) with features as row and column indices
         if len(matrix) == 1:
-            return pd.DataFrame(
-                data=matrix[0], index=feature_index, columns=feature_index
+            return self.__array_to_matrix(
+                matrix[0],
+                feature_importance=self.feature_importance(),
+                value_label=value_label,
             )
         else:
             return [
-                pd.DataFrame(data=m, index=feature_index, columns=feature_index)
-                for m in matrix
+                self.__array_to_matrix(
+                    m,
+                    feature_importance=feature_importance,
+                    value_label=f"{value_label} ({output_name})",
+                )
+                for m, (_, feature_importance), output_name in zip(
+                    matrix, self.feature_importance().items(), self.output_names_
+                )
             ]
 
-    @staticmethod
     def __feature_affinity_matrix(
+        self,
         affinity_matrices: List[pd.DataFrame],
         affinity_symmetrical: np.ndarray,
+        affinity_metric: str,
         clustered: bool,
-    ):
+    ) -> Matrix:
         if clustered:
-            affinity_matrices = LearnerInspector.__sort_affinity_matrices(
+            affinity_matrices = self.__sort_affinity_matrices(
                 affinity_matrices=affinity_matrices,
                 symmetrical_affinity_matrices=affinity_symmetrical,
             )
-        return LearnerInspector.__isolate_single_frame(affinity_matrices)
+        return self.__isolate_single_frame(
+            affinity_matrices, affinity_metric=affinity_metric
+        )
 
     @staticmethod
     def __sort_affinity_matrices(
@@ -928,21 +944,13 @@ class LearnerInspector(
         fn_linkage = LearnerInspector.__linkage_matrix_from_affinity_matrix_for_output
 
         return [
-            affinity_matrix.iloc[feature_order, feature_order]
+            (lambda feature_order: affinity_matrix.iloc[feature_order, feature_order])(
+                feature_order=hierarchy.leaves_list(
+                    Z=fn_linkage(feature_affinity_matrix=symmetrical_affinity_matrix)
+                )
+            )
             for affinity_matrix, symmetrical_affinity_matrix in zip(
                 affinity_matrices, symmetrical_affinity_matrices
-            )
-            for feature_order in (
-                leaves_list(
-                    Z=optimal_leaf_ordering(
-                        Z=fn_linkage(
-                            feature_affinity_matrix=symmetrical_affinity_matrix
-                        ),
-                        y=symmetrical_affinity_matrix,
-                    )
-                )
-                # reverse the index list so larger values tend to end up on top
-                [::-1],
             )
         ]
 
@@ -989,7 +997,8 @@ class LearnerInspector(
 
             return [
                 self.__linkage_tree_from_affinity_matrix_for_output(
-                    feature_affinity_for_output, feature_importance_for_output
+                    feature_affinity_for_output,
+                    feature_importance_for_output,
                 )
                 for feature_affinity_for_output, (
                     _,
@@ -1037,10 +1046,20 @@ class LearnerInspector(
         # (1 = closest, 0 = most distant)
 
         # compress the distance matrix (required by SciPy)
-        compressed_distance_vector = squareform(1 - abs(feature_affinity_matrix))
+        distance_matrix = 1.0 - abs(feature_affinity_matrix)
+        np.fill_diagonal(distance_matrix, 0.0)
+        compressed_distance_matrix: np.ndarray = distance.squareform(distance_matrix)
 
         # calculate the linkage matrix
-        return linkage(y=compressed_distance_vector, method="single")
+        leaf_ordering: np.ndarray = hierarchy.optimal_leaf_ordering(
+            Z=hierarchy.linkage(y=compressed_distance_matrix, method="single"),
+            y=compressed_distance_matrix,
+        )
+
+        # reverse the leaf ordering, so that larger values tend to end up on top
+        leaf_ordering[:, [1, 0]] = leaf_ordering[:, [0, 1]]
+
+        return leaf_ordering
 
     def _ensure_shap_interaction(self) -> None:
         if not self._shap_interaction:
@@ -1050,14 +1069,69 @@ class LearnerInspector(
                 "enable calculations involving SHAP interaction values."
             )
 
-    @staticmethod
     def __isolate_single_frame(
+        self,
         frames: List[pd.DataFrame],
-    ) -> Union[pd.DataFrame, List[pd.DataFrame]]:
+        affinity_metric: str,
+    ) -> Union[Matrix, List[Matrix]]:
+        feature_importance = self.feature_importance()
+
         if len(frames) == 1:
-            return frames[0]
+            assert isinstance(feature_importance, pd.Series)
+            return self.__frame_to_matrix(
+                frames[0],
+                affinity_metric=affinity_metric,
+                feature_importance=feature_importance,
+            )
         else:
-            return frames
+            return [
+                self.__frame_to_matrix(
+                    frame,
+                    affinity_metric=affinity_metric,
+                    feature_importance=frame_importance,
+                    feature_importance_category=str(frame_name),
+                )
+                for frame, (frame_name, frame_importance) in zip(
+                    frames, feature_importance.items()
+                )
+            ]
+
+    @staticmethod
+    def __array_to_matrix(
+        a: np.ndarray,
+        *,
+        feature_importance: pd.Series,
+        value_label: str,
+    ) -> Matrix:
+        return Matrix(
+            a,
+            names=(feature_importance.index, feature_importance.index),
+            weights=(feature_importance, feature_importance),
+            value_label=value_label,
+            name_labels=("feature", "feature"),
+        )
+
+    @staticmethod
+    def __frame_to_matrix(
+        frame: pd.DataFrame,
+        *,
+        affinity_metric: str,
+        feature_importance: pd.Series,
+        feature_importance_category: Optional[str] = None,
+    ) -> Matrix:
+        return Matrix.from_frame(
+            frame,
+            weights=(
+                feature_importance.reindex(frame.index),
+                feature_importance.reindex(frame.columns),
+            ),
+            value_label=(
+                f"{affinity_metric} ({feature_importance_category})"
+                if feature_importance_category
+                else affinity_metric
+            ),
+            name_labels=("primary feature", "associated feature"),
+        )
 
     @staticmethod
     def __validate_aggregation_method(aggregation: str) -> None:

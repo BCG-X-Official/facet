@@ -113,8 +113,8 @@ class ShapProjector(ShapGlobalExplainer, metaclass=ABCMeta):
         # calculate association as the coefficient of determination for p[i] and p[j]
         ass_ij = cov_p_i_p_j_over_var_p_i * transpose(cov_p_i_p_j_over_var_p_i)
 
-        # we define the association of a feature with itself as 1
-        fill_diagonal(ass_ij, 1.0)
+        # association of a feature with itself is undefined
+        fill_diagonal(ass_ij, np.nan)
 
         return AffinityMatrix.from_relative_affinity(
             affinity_rel_ij=ass_ij, std_p_i=sqrt(var_p_i)
@@ -253,8 +253,8 @@ class ShapInteractionVectorProjector(ShapProjector, ShapInteractionGlobalExplain
         # this is the coefficient of determination of the interaction vector
         syn_ij = cov_p_i_p_ij_over_var_p_i * cov_p_i_p_ij_over_var_p_ij
 
-        # we define the synergy of a feature with itself as 1
-        fill_diagonal(syn_ij, 1.0)
+        # synergy of a feature with itself is undefined
+        fill_diagonal(syn_ij, np.nan)
 
         #
         # Redundancy: red[i, j]
@@ -291,8 +291,8 @@ class ShapInteractionVectorProjector(ShapProjector, ShapInteractionGlobalExplain
         # scale to accommodate variance already explained by synergy
         red_ij *= 1 - syn_ij
 
-        # we define the redundancy of a feature with itself as 1
-        fill_diagonal(red_ij, 1.0)
+        # redundancy of a feature with itself is undefined
+        fill_diagonal(red_ij, np.nan)
 
         #
         # SHAP decomposition as relative contributions of
