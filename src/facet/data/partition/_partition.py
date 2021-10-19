@@ -6,10 +6,10 @@ import logging
 import math
 import operator as op
 from abc import ABCMeta, abstractmethod
+from numbers import Number
 from typing import Any, Generic, Iterable, Optional, Sequence, Tuple, TypeVar
 
 import numpy as np
-import pandas as pd
 
 from pytools.api import AllTracker, inheritdoc
 from pytools.fit import FittableMixin
@@ -32,7 +32,7 @@ __all__ = [
 
 T_Self = TypeVar("T_Self")
 T_Values = TypeVar("T_Values")
-T_Values_Numeric = TypeVar("T_Values_Numeric", int, float)
+T_Values_Numeric = TypeVar("T_Values_Numeric", bound=Number)
 
 #
 # Ensure all symbols introduced below are included in __all__
@@ -55,6 +55,12 @@ class Partitioner(
 
     DEFAULT_MAX_PARTITIONS = 20
 
+    #: The values representing the partitions.
+    _partitions: Optional[np.ndarray]
+
+    #: The count of values allocated to each partition.
+    _frequencies: Optional[np.ndarray]
+
     def __init__(self, max_partitions: Optional[int] = None) -> None:
         """
         :param max_partitions: the maximum number of partitions to generate; must
@@ -66,6 +72,9 @@ class Partitioner(
             raise ValueError(f"arg max_partitions={max_partitions} must be at least 2")
         else:
             self._max_partitions = max_partitions
+
+        self._partitions = None
+        self._frequencies = None
 
     __init__.__doc__ = __init__.__doc__.replace(
         "{DEFAULT_MAX_PARTITIONS}", repr(DEFAULT_MAX_PARTITIONS)
@@ -79,24 +88,20 @@ class Partitioner(
         return self._max_partitions
 
     @property
-    @abstractmethod
-    def partitions_(self) -> Sequence[T_Values]:
+    def partitions_(self) -> np.ndarray:
         """
-        Return central values of the partitions.
-
-        Requires that this partitioner has been fitted with a set of observed values.
-
-        :return: a sequence of central values for each partition
+        The values representing the partitions.
         """
+        self._ensure_fitted()
+        return self._partitions
 
     @property
-    @abstractmethod
-    def frequencies_(self) -> Sequence[int]:
+    def frequencies_(self) -> np.ndarray:
         """
-        Return the count of observed elements in each partition.
-
-        :return: a sequence of value counts for each partition
+        The count of values allocated to each partition.
         """
+        self._ensure_fitted()
+        return self._frequencies
 
     @property
     @abstractmethod
@@ -116,44 +121,29 @@ class Partitioner(
         :return: ``self``
         """
 
+    @staticmethod
+    def _as_non_empty_array(values: Iterable[Any]) -> np.ndarray:
+        # ensure arg values is a non-empty array
+        values = np.asarray(values)
+        if len(values) == 0:
+            raise ValueError("arg values is empty")
+        return values
 
-@inheritdoc(match="[see superclass]")
+
+@inheritdoc(match="""[see superclass]""")
 class RangePartitioner(
     Partitioner[T_Values_Numeric], Generic[T_Values_Numeric], metaclass=ABCMeta
 ):
     """
-    Abstract base class for numerical partitioners.
+    Abstract base class of partitioners for numerical ranges.
     """
 
-    def __init__(
-        self,
-        max_partitions: int = None,
-        lower_bound: Optional[T_Values_Numeric] = None,
-        upper_bound: Optional[T_Values_Numeric] = None,
-    ) -> None:
-        """
-        :param max_partitions: the maximum number of partitions to make
-            (default: 20); should be at least 2
-        :param lower_bound: the lower bound of the elements in the partition
-        :param upper_bound: the upper bound of the elements in the partition
-        """
+    def __init__(self, max_partitions: Optional[int] = None) -> None:
+        """[see superclass]"""
+
         super().__init__(max_partitions)
 
-        if (
-            lower_bound is not None
-            and upper_bound is not None
-            and lower_bound > upper_bound
-        ):
-            raise ValueError(
-                f"arg lower_bound > arg upper_bound: [{lower_bound}, {upper_bound})"
-            )
-
-        self._lower_bound = lower_bound
-        self._upper_bound = upper_bound
-
         self._step: Optional[T_Values_Numeric] = None
-        self._frequencies: Optional[Sequence[int]] = None
-        self._partitions: Optional[Sequence[T_Values_Numeric]] = None
         self._partition_bounds: Optional[
             Sequence[Tuple[T_Values_Numeric, T_Values_Numeric]]
         ] = None
@@ -184,12 +174,6 @@ class RangePartitioner(
         return False
 
     @property
-    def partitions_(self) -> Sequence[T_Values_Numeric]:
-        """[see superclass]"""
-        self._ensure_fitted()
-        return self._partitions
-
-    @property
     def partition_bounds_(self) -> Sequence[Tuple[T_Values_Numeric, T_Values_Numeric]]:
         """
         Return the endpoints of the intervals that delineate each partitions.
@@ -209,36 +193,36 @@ class RangePartitioner(
         self._ensure_fitted()
         return self._step
 
-    @property
-    def frequencies_(self) -> Sequence[int]:
-        """[see superclass]"""
-        self._ensure_fitted()
-        return self._frequencies
-
-    # noinspection PyMissingOrEmptyDocstring
+    # noinspection PyMissingOrEmptyDocstring,PyIncorrectDocstring
     def fit(
         self: T_Self,
-        values: Iterable[T_Values],
+        values: Iterable[T_Values_Numeric],
+        *,
+        lower_bound: Optional[T_Values_Numeric] = None,
+        upper_bound: Optional[T_Values_Numeric] = None,
         **fit_params: Any,
     ) -> T_Self:
-        """[see superclass]"""
+        r"""
+        Calculate the partitioning for the given observed values.
+
+        The lower and upper bounds of the range to be partitioned can be provided
+        as optional arguments.
+        If no bounds are provided, the partitioner automatically chooses the lower
+        and upper outlier thresholds based on the Tukey test, i.e.,
+        :math:`[- 1.5 * \mathit{iqr}, 1.5 * \mathit{iqr}]`
+        where :math:`\mathit{iqr}` is the inter-quartile range.
+
+        :param values: a sequence of observed values as the empirical basis for
+            calculating the partitions
+        :param lower_bound: the inclusive lower bound of the elements to partition
+        :param upper_bound: the inclusive upper bound of the elements to partition
+        :param fit_params: optional fitting parameters
+        :return: ``self``
+        """
 
         self: RangePartitioner  # support type hinting in PyCharm
 
-        # ensure arg values is an array
-        if not isinstance(values, np.ndarray):
-            if isinstance(values, pd.Series):
-                values = values.values
-            else:
-                if not isinstance(values, Sequence):
-                    try:
-                        values = iter(values)
-                    except TypeError:
-                        raise TypeError("arg values must be iterable")
-                values = np.array(values)
-
-        lower_bound = self._lower_bound
-        upper_bound = self._upper_bound
+        values = self._as_non_empty_array(values)
 
         if lower_bound is None or upper_bound is None:
             q3q1 = np.nanquantile(values, q=[0.75, 0.25])
@@ -250,7 +234,18 @@ class RangePartitioner(
             if upper_bound is None:
                 upper_bound = values[values <= q3q1[0] + inlier_range].max()
 
-        assert upper_bound >= lower_bound
+            if lower_bound == upper_bound:
+                raise ValueError(
+                    "insufficient variance in values; cannot infer partitioning bounds"
+                )
+
+        elif lower_bound >= upper_bound:
+            raise ValueError(
+                "arg lower_bound must be lower than arg upper_bound "
+                f"but got: [{lower_bound}, {upper_bound})"
+            )
+
+        assert lower_bound < upper_bound
 
         # calculate the step count based on the maximum number of partitions,
         # rounded to the next-largest rounded value ending in 1, 2, or 5
@@ -278,9 +273,9 @@ class RangePartitioner(
         # calculate the number of elements in each partitions
 
         # create the bins, starting with the lower bound of the first partition
-        partition_bins = (first_partition - step / 2) + np.arange(
-            n_partitions + 1
-        ) * step
+        partition_bins = (first_partition - step / 2) + (
+            step * np.arange(n_partitions + 1)
+        )
         partition_indices = np.digitize(values, bins=partition_bins)
 
         # frequency counts will include left and right outliers, hence n_partitions + 2
@@ -401,12 +396,6 @@ class CategoryPartitioner(Partitioner[T_Values]):
     :attr:`.max_partitions` most frequent values.
     """
 
-    def __init__(self, max_partitions: Optional[int] = None) -> None:
-        """[see superclass]"""
-        super().__init__(max_partitions=max_partitions)
-        self._frequencies = None
-        self._partitions = None
-
     @property
     def is_fitted(self) -> bool:
         """[see superclass]"""
@@ -419,36 +408,19 @@ class CategoryPartitioner(Partitioner[T_Values]):
         """
         return True
 
-    @property
-    def partitions_(self) -> Sequence[T_Values]:
-        """[see superclass]"""
-        self._ensure_fitted()
-        return self._partitions
-
-    @property
-    def frequencies_(self) -> Sequence[int]:
-        """[see superclass]"""
-        self._ensure_fitted()
-        return self._frequencies
-
     # noinspection PyMissingOrEmptyDocstring
-    def fit(self: T_Self, values: Sequence[T_Values], **fit_params: Any) -> T_Self:
+    def fit(self: T_Self, values: Iterable[T_Values], **fit_params: Any) -> T_Self:
         """[see superclass]"""
 
         self: CategoryPartitioner  # support type hinting in PyCharm
 
-        if not isinstance(values, pd.Series):
-            if not (isinstance(values, np.ndarray) or isinstance(values, Sequence)):
-                try:
-                    values = iter(values)
-                except TypeError:
-                    raise TypeError("arg values must be iterable")
-            values = pd.Series(data=values)
+        values = self._as_non_empty_array(values)
 
-        value_counts = values.value_counts(ascending=False)
-        max_partitions = self.max_partitions
-        self._partitions = value_counts.index.values[:max_partitions]
-        self._frequencies = value_counts.values[:max_partitions]
+        partitions, frequencies = np.unique(values, return_counts=True)
+        order_descending = np.flip(np.argsort(frequencies))[: self.max_partitions]
+
+        self._partitions = partitions[order_descending]
+        self._frequencies = frequencies[order_descending]
 
         return self
 
