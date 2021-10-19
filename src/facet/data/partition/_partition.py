@@ -128,28 +128,12 @@ class RangePartitioner(
     def __init__(
         self,
         max_partitions: int = None,
-        lower_bound: Optional[T_Values_Numeric] = None,
-        upper_bound: Optional[T_Values_Numeric] = None,
     ) -> None:
         """
         :param max_partitions: the maximum number of partitions to make
             (default: 20); should be at least 2
-        :param lower_bound: the lower bound of the elements in the partition
-        :param upper_bound: the upper bound of the elements in the partition
         """
         super().__init__(max_partitions)
-
-        if (
-            lower_bound is not None
-            and upper_bound is not None
-            and lower_bound > upper_bound
-        ):
-            raise ValueError(
-                f"arg lower_bound > arg upper_bound: [{lower_bound}, {upper_bound})"
-            )
-
-        self._lower_bound = lower_bound
-        self._upper_bound = upper_bound
 
         self._step: Optional[T_Values_Numeric] = None
         self._frequencies: Optional[Sequence[int]] = None
@@ -215,13 +199,32 @@ class RangePartitioner(
         self._ensure_fitted()
         return self._frequencies
 
-    # noinspection PyMissingOrEmptyDocstring
+    # noinspection PyMissingOrEmptyDocstring,PyIncorrectDocstring
     def fit(
         self: T_Self,
         values: Iterable[T_Values],
+        *,
+        lower_bound: Optional[T_Values_Numeric] = None,
+        upper_bound: Optional[T_Values_Numeric] = None,
         **fit_params: Any,
     ) -> T_Self:
-        """[see superclass]"""
+        r"""
+        Calculate the partitioning for the given observed values.
+
+        The lower and upper bounds of the range to be partitioned can be provided
+        as optional arguments.
+        If no bounds are provided, the partitioner automatically chooses the lower
+        and upper outlier thresholds based on the Tukey test, i.e.,
+        :math:`[- 1.5 * \mathit{iqr}, 1.5 * \mathit{iqr}]`
+        where :math:`\mathit{iqr}` is the inter-quartile range.
+
+        :param values: a sequence of observed values as the empirical basis for
+            calculating the partitions
+        :param lower_bound: the inclusive lower bound of the elements to partition
+        :param upper_bound: the inclusive upper bound of the elements to partition
+        :param fit_params: optional fitting parameters
+        :return: ``self``
+        """
 
         self: RangePartitioner  # support type hinting in PyCharm
 
@@ -237,10 +240,15 @@ class RangePartitioner(
                         raise TypeError("arg values must be iterable")
                 values = np.array(values)
 
-        lower_bound = self._lower_bound
-        upper_bound = self._upper_bound
+        if (
+            not ((lower_bound is None) or (upper_bound is None))
+            and lower_bound > upper_bound
+        ):
+            raise ValueError(
+                f"arg lower_bound > arg upper_bound: [{lower_bound}, {upper_bound})"
+            )
 
-        if lower_bound is None or upper_bound is None:
+        else:
             q3q1 = np.nanquantile(values, q=[0.75, 0.25])
             inlier_range = op.sub(*q3q1) * 1.5  # iqr * 1.5
 
