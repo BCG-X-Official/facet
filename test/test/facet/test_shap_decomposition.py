@@ -32,17 +32,13 @@ def test_shap_decomposition_matrices(
     ):
         matrix_full_name = f"feature {matrix_name} matrix"
         n_features = len(feature_names)
-        assert len(matrix) == n_features, f"rows in {matrix_full_name}"
-        assert len(matrix.columns) == n_features, f"columns in {matrix_full_name}"
+        assert matrix.values.shape[0] == n_features, f"rows in {matrix_full_name}"
+        assert matrix.values.shape[1] == n_features, f"columns in {matrix_full_name}"
 
         # check values
-        for c in matrix.columns:
-            assert (
-                0.0
-                <= matrix.fillna(0).loc[:, c].min()
-                <= matrix.fillna(0).loc[:, c].max()
-                <= 1.0
-            ), f"Values of [0.0, 1.0] in {matrix_full_name}"
+        assert (
+            np.nanmin(matrix.values) >= 0.0 and np.nanmax(matrix.values) <= 1.0
+        ), f"Values of [0.0, 1.0] in {matrix_full_name}"
 
 
 #
