@@ -6,7 +6,7 @@ import pandas as pd
 from pytools.api import AllTracker
 
 from ._sample import Sample
-from .partition import CategoryPartitioner, Partitioner
+from .partition import CategoryPartitioner, Partitioner, RangePartitioner
 
 __all__ = ["SampleBalancer"]
 
@@ -14,7 +14,6 @@ __all__ = ["SampleBalancer"]
 #
 # Ensure all symbols introduced below are included in __all__
 #
-
 
 __tracker = AllTracker(globals())
 
@@ -75,23 +74,26 @@ class SampleBalancer:
             series with sample weights for each observation
         :return: the balanced sample
         """
-        self._partitioner.fit(values=sample.target)
-
-        if not self._partitioner.is_categorical:
-            partitioned_target_series = self._make_partition_series(
-                sample, self._partitioner
+        partitioner = self._partitioner
+        if isinstance(partitioner, RangePartitioner):
+            partitioner.fit(
+                values=sample.target,
+                lower_bound=sample.target.min(),
+                upper_bound=sample.target.max(),
             )
+            partitioned_target_series = self._make_partition_series(sample, partitioner)
         else:
+            partitioner.fit(values=sample.target)
             partitioned_target_series = None
 
-        max_freq_index = np.argmax(self._partitioner.frequencies_)
-        max_freq_label = self._partitioner.partitions_[max_freq_index]
-        max_freq = self._partitioner.frequencies_[max_freq_index]
+        max_freq_index = np.argmax(partitioner.frequencies_)
+        max_freq_label = partitioner.partitions_[max_freq_index]
+        max_freq = partitioner.frequencies_[max_freq_index]
 
-        frequency_ratios = np.array(self._partitioner.frequencies_) / max_freq
+        frequency_ratios = np.array(partitioner.frequencies_) / max_freq
         freq_ratio_by_label = {
             label: ratio
-            for label, ratio in zip(self._partitioner.partitions_, frequency_ratios)
+            for label, ratio in zip(partitioner.partitions_, frequency_ratios)
         }
 
         if isinstance(self._target_class_ratio, Dict):
@@ -99,7 +101,7 @@ class SampleBalancer:
                 target_class_ratio=self._target_class_ratio,
                 minority_labels={
                     label
-                    for label in self._partitioner.partitions_
+                    for label in partitioner.partitions_
                     if label != max_freq_label
                 },
             )
@@ -159,8 +161,7 @@ class SampleBalancer:
             if isinstance(self._target_class_ratio, float):
                 # if single target ratio passed, set it for all labels:
                 target_class_ratio_by_label = {
-                    label: self._target_class_ratio
-                    for label in self._partitioner.partitions_
+                    label: self._target_class_ratio for label in partitioner.partitions_
                 }
             else:
                 target_class_ratio_by_label = self._target_class_ratio
@@ -168,7 +169,7 @@ class SampleBalancer:
             below_target_ratio = [
                 (label, current_ratio)
                 for label, current_ratio in zip(
-                    self._partitioner.partitions_, frequency_ratios
+                    partitioner.partitions_, frequency_ratios
                 )
                 if label != max_freq_label
                 and current_ratio < target_class_ratio_by_label[label]
@@ -185,7 +186,7 @@ class SampleBalancer:
 
             # check oversampling_factors
             # (exception should never occur as 'target_class_ratio' is sanitised):
-            if any([f for label, f in oversampling_factors.items() if f <= 1]):
+            if any(f for _, f in oversampling_factors.items() if f <= 1):
                 raise ValueError(
                     f"A calculated oversampling factor is <= 1 :{oversampling_factors}"
                 )
@@ -200,7 +201,7 @@ class SampleBalancer:
                 return self._make_sample_with_minority_oversampled(
                     sample=sample,
                     oversampling_factors=oversampling_factors,
-                    labels=self._partitioner.partitions_,
+                    labels=partitioner.partitions_,
                     partitioned_target_series=partitioned_target_series,
                 )
 
@@ -233,7 +234,9 @@ class SampleBalancer:
         return self._balance(sample, True)
 
     @staticmethod
-    def _make_partition_series(sample: Sample, partitioner: Partitioner) -> pd.Series:
+    def _make_partition_series(
+        sample: Sample, partitioner: RangePartitioner
+    ) -> pd.Series:
         """
         Add a pseudo-label series to a Sample with numerical target series.
 
@@ -242,9 +245,6 @@ class SampleBalancer:
             sample
         :return: a Pandas series with partition center values as labels
         """
-        from facet.simulation.partition import RangePartitioner
-
-        partitioner: RangePartitioner
 
         partitioned_target_series = sample.target.copy()
         partitioned_target_series.name = _F_FACET_TARGET_PARTITION
