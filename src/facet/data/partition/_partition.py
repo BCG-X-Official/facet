@@ -284,9 +284,9 @@ class RangePartitioner(
         # calculate the number of elements in each partitions
 
         # create the bins, starting with the lower bound of the first partition
-        partition_bins = (first_partition - step / 2) + np.arange(
-            n_partitions + 1
-        ) * step
+        partition_bins = (first_partition - step / 2) + (
+            step * np.arange(n_partitions + 1)
+        )
         partition_indices = np.digitize(values, bins=partition_bins)
 
         # frequency counts will include left and right outliers, hence n_partitions + 2
