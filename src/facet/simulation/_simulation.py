@@ -21,7 +21,7 @@ import pandas as pd
 from scipy import stats
 
 from pytools.api import AllTracker, inheritdoc
-from pytools.parallelization import ParallelizableMixin
+from pytools.parallelization import Job, JobRunner, ParallelizableMixin
 from sklearndf import ClassifierDF, LearnerDF, RegressorDF
 
 from ..data import Sample
@@ -339,11 +339,27 @@ class BaseUnivariateSimulator(
 
     @staticmethod
     @abstractmethod
-    def _simulate(model: T_LearnerDF, x: pd.DataFrame) -> Tuple[float, float]:
+    def _simulate(
+        model: T_LearnerDF, x: pd.DataFrame, name: str, value: Any
+    ) -> Tuple[float, float]:
         pass
 
     @staticmethod
-    def _aggregate(predictions: pd.Series) -> Tuple[float, float]:
+    def _set_constant_feature_value(
+        x: pd.DataFrame, feature_name: str, value: Any
+    ) -> pd.DataFrame:
+        return x.assign(
+            **{
+                feature_name: np.full(
+                    shape=len(x),
+                    fill_value=value,
+                    dtype=x.loc[:, feature_name].dtype,
+                )
+            }
+        )
+
+    @staticmethod
+    def _aggregate_simulation_results(predictions: pd.Series) -> Tuple[float, float]:
         # generate summary stats for a series of predictions
         return predictions.mean(), predictions.sem()
 
@@ -355,8 +371,8 @@ class BaseUnivariateSimulator(
         """
         Run a simulation on a feature.
 
-        For each combination of crossfit and feature value, compute the simulation
-        result when substituting a given fixed value for the feature being simulated.
+        For each simulation value, compute the mean and sem of predictions when
+        substituting the value for the feature being simulated.
 
         :param feature_name: name of the feature to use in the simulation
         :param simulation_values: values to use in the simulation
@@ -370,21 +386,11 @@ class BaseUnivariateSimulator(
         # for a list of values to be simulated, calculate a sequence of mean predictions
         # and a sequence of standard errors of those means
         features = self.sample.features
-        feature_dtype = features.loc[:, feature_name].dtype
 
-        outputs_mean_sem: Iterable[Tuple[float, float]] = (
-            self._simulate(
-                self.model,
-                features.assign(
-                    **{
-                        feature_name: np.full(
-                            shape=len(features),
-                            fill_value=value,
-                            dtype=feature_dtype,
-                        )
-                    }
-                ),
-            )
+        outputs_mean_sem: Iterable[Tuple[float, float]] = JobRunner.from_parallelizable(
+            self
+        ).run_jobs(
+            Job.delayed(self._simulate)(self.model, features, feature_name, value)
             for value in simulation_values
         )
 
@@ -455,11 +461,17 @@ class UnivariateProbabilitySimulator(BaseUnivariateSimulator[ClassifierDF]):
         return ClassifierDF
 
     @staticmethod
-    def _simulate(model: ClassifierDF, x: pd.DataFrame) -> Tuple[float, float]:
-        probabilities: pd.DataFrame = model.predict_proba(x)
+    def _simulate(
+        model: ClassifierDF, x: pd.DataFrame, name: str, value: Any
+    ) -> Tuple[float, float]:
+        probabilities: pd.DataFrame = model.predict_proba(
+            BaseUnivariateSimulator._set_constant_feature_value(x, name, value)
+        )
         if probabilities.shape[1] != 2:
             raise TypeError("only binary classifiers are supported")
-        return BaseUnivariateSimulator._aggregate(probabilities.iloc[:, 1])
+        return BaseUnivariateSimulator._aggregate_simulation_results(
+            probabilities.iloc[:, 1]
+        )
 
 
 class _UnivariateRegressionSimulator(
@@ -478,10 +490,14 @@ class _UnivariateRegressionSimulator(
         return RegressorDF
 
     @staticmethod
-    def _simulate(model: RegressorDF, x: pd.DataFrame) -> Tuple[float, float]:
-        predictions = model.predict(X=x)
+    def _simulate(
+        model: RegressorDF, x: pd.DataFrame, name: str, value: Any
+    ) -> Tuple[float, float]:
+        predictions = model.predict(
+            X=BaseUnivariateSimulator._set_constant_feature_value(x, name, value)
+        )
         assert predictions.ndim == 1, "single-target regressor required"
-        return BaseUnivariateSimulator._aggregate(predictions)
+        return BaseUnivariateSimulator._aggregate_simulation_results(predictions)
 
 
 @inheritdoc(match="[see superclass]")
