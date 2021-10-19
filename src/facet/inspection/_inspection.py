@@ -109,28 +109,27 @@ class LearnerInspector(
     """
     Explain regressors and classifiers based on SHAP values.
 
-    Focus is on explaining the overall model as well as individual observations.
-    Given that SHAP values are estimations, this inspector operates based on crossfits
-    to enable estimations of the uncertainty of SHAP values.
+    Focus is on explaining the overall model, but the inspector also delivers
+    SHAP explanations of the individual observations.
 
     Available inspection methods are:
 
-    - SHAP values (mean or standard deviation across crossfits)
-    - SHAP interaction values (mean or standard deviation across crossfits)
+    - SHAP values
+    - SHAP interaction values
     - feature importance derived from SHAP values (either as mean absolute values
       or as the root of mean squares)
-    - pairwise feature interaction matrix (direct feature interaction quantified by
-      SHAP interaction values)
     - pairwise feature redundancy matrix (requires availability of SHAP interaction
       values)
     - pairwise feature synergy matrix (requires availability of SHAP interaction
       values)
     - pairwise feature association matrix (upper bound for redundancy but can be
       inflated by synergy; available if SHAP interaction values are unknown)
+    - pairwise feature interaction matrix (direct feature interaction quantified by
+      SHAP interaction values)
     - feature redundancy linkage (to visualize clusters of redundant features in a
-      dendrogram)
+      dendrogram; requires availability of SHAP interaction values)
     - feature synergy linkage (to visualize clusters of synergistic features in a
-      dendrogram)
+      dendrogram; requires availability of SHAP interaction values)
     - feature association linkage (to visualize clusters of associated features in a
       dendrogram)
 
@@ -216,7 +215,7 @@ class LearnerInspector(
 
     def fit(self: T_Self, sample: Sample, **fit_params: Any) -> T_Self:
         """
-        Fit the inspector with the given crossfit.
+        Fit the inspector with the given sample.
 
         This will calculate SHAP values and, if enabled in the underlying SHAP
         explainer, also SHAP interaction values.
@@ -235,9 +234,8 @@ class LearnerInspector(
         _is_classifier = is_classifier(learner)
         if _is_classifier and isinstance(sample.target_name, list):
             raise ValueError(
-                "only single-output classifiers (binary or multi-class) are "
-                "supported, but the classifier in the given crossfit has been "
-                "fitted on multiple columns "
+                "only single-output classifiers (binary or multi-class) are supported, "
+                "but the given classifier has been fitted on multiple columns "
                 f"{sample.target_name}"
             )
 
