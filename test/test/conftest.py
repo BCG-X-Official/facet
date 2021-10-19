@@ -1,6 +1,4 @@
-import functools
 import logging
-import operator
 from typing import Any, List, Mapping, Optional, Sequence, Set
 
 import numpy as np
@@ -160,12 +158,9 @@ def regressor_ranker(
 
 
 @pytest.fixture
-def best_lgbm_crossfit(
+def best_lgbm_model(
     regressor_ranker: LearnerRanker[RegressorPipelineDF],
-    cv_kfold: KFold,
-    sample: Sample,
-    n_jobs: int,
-) -> LearnerCrossfit[RegressorPipelineDF]:
+) -> RegressorPipelineDF:
     # we get the best model_evaluation which is a LGBM - for the sake of test
     # performance
     best_lgbm_evaluation: LearnerEvaluation[RegressorPipelineDF] = [
@@ -174,38 +169,28 @@ def best_lgbm_crossfit(
         if isinstance(evaluation.pipeline.regressor, LGBMRegressorDF)
     ][0]
 
-    best_lgbm_regressor: RegressorPipelineDF = best_lgbm_evaluation.pipeline
-
-    return LearnerCrossfit(
-        pipeline=best_lgbm_regressor,
-        cv=cv_kfold,
-        random_state=42,
-        n_jobs=n_jobs,
-    ).fit(sample=sample)
+    return best_lgbm_evaluation.pipeline
 
 
 @pytest.fixture
-def feature_names(best_lgbm_crossfit: LearnerCrossfit[RegressorPipelineDF]) -> Set[str]:
+def preprocessed_feature_names(best_lgbm_model: RegressorPipelineDF) -> Set[str]:
     """
-    all unique features across the models in the crossfit, after preprocessing
+    Names of all features after preprocessing
     """
-    return functools.reduce(
-        operator.or_,
-        (set(model.feature_names_out_) for model in best_lgbm_crossfit.models()),
-    )
+    return set(best_lgbm_model.feature_names_out_)
 
 
 @pytest.fixture
 def regressor_inspector(
-    best_lgbm_crossfit: LearnerCrossfit[RegressorPipelineDF], n_jobs: int
+    best_lgbm_model: RegressorPipelineDF, sample: Sample, n_jobs: int
 ) -> LearnerInspector:
     inspector = LearnerInspector(
-        pipeline=best_lgbm_crossfit.pipeline,
+        pipeline=best_lgbm_model,
         explainer_factory=TreeExplainerFactory(
             feature_perturbation="tree_path_dependent", uses_background_dataset=True
         ),
         n_jobs=n_jobs,
-    ).fit(sample=best_lgbm_crossfit.sample_)
+    ).fit(sample=sample)
 
     return inspector
 
@@ -272,7 +257,7 @@ def iris_df(iris_target_name: str) -> pd.DataFrame:
 
 
 @pytest.fixture
-def iris_sample(iris_df: pd.DataFrame, iris_target_name: str) -> Sample:
+def iris_sample_multi_class(iris_df: pd.DataFrame, iris_target_name: str) -> Sample:
     # the iris dataset
     return Sample(
         observations=iris_df.assign(weight=2.0),
@@ -282,10 +267,10 @@ def iris_sample(iris_df: pd.DataFrame, iris_target_name: str) -> Sample:
 
 
 @pytest.fixture
-def iris_sample_binary(iris_sample: Sample) -> Sample:
+def iris_sample_binary(iris_sample_multi_class) -> Sample:
     # the iris dataset, retaining only two categories so we can do binary classification
-    return iris_sample.subsample(
-        loc=iris_sample.target.isin(["virginica", "versicolor"])
+    return iris_sample_multi_class.subsample(
+        loc=iris_sample_multi_class.target.isin(["virginica", "versicolor"])
     )
 
 
@@ -355,17 +340,19 @@ def iris_classifier_ranker_binary(
     cv_stratified_bootstrap: StratifiedBootstrapCV,
     n_jobs: int,
 ) -> LearnerRanker[ClassifierPipelineDF[RandomForestClassifierDF]]:
-    return fit_learner_ranker(
+    return fit_classifier_ranker(
         sample=iris_sample_binary, cv=cv_stratified_bootstrap, n_jobs=n_jobs
     )
 
 
 @pytest.fixture
 def iris_classifier_ranker_multi_class(
-    iris_sample: Sample, cv_stratified_bootstrap: StratifiedBootstrapCV, n_jobs: int
+    iris_sample_multi_class: Sample,
+    cv_stratified_bootstrap: StratifiedBootstrapCV,
+    n_jobs: int,
 ) -> LearnerRanker[ClassifierPipelineDF[RandomForestClassifierDF]]:
-    return fit_learner_ranker(
-        sample=iris_sample, cv=cv_stratified_bootstrap, n_jobs=n_jobs
+    return fit_classifier_ranker(
+        sample=iris_sample_multi_class, cv=cv_stratified_bootstrap, n_jobs=n_jobs
     )
 
 
@@ -373,9 +360,16 @@ def iris_classifier_ranker_multi_class(
 def iris_classifier_ranker_dual_target(
     iris_sample_binary_dual_target: Sample, cv_bootstrap: BootstrapCV, n_jobs: int
 ) -> LearnerRanker[ClassifierPipelineDF[RandomForestClassifierDF]]:
-    return fit_learner_ranker(
+    return fit_classifier_ranker(
         sample=iris_sample_binary_dual_target, cv=cv_bootstrap, n_jobs=n_jobs
     )
+
+
+@pytest.fixture
+def iris_classifier_binary(
+    iris_classifier_ranker_binary: LearnerRanker[ClassifierPipelineDF],
+) -> ClassifierPipelineDF[RandomForestClassifierDF]:
+    return iris_classifier_ranker_binary.best_model_
 
 
 @pytest.fixture
@@ -386,24 +380,21 @@ def iris_classifier_crossfit_binary(
 
 
 @pytest.fixture
-def iris_classifier_crossfit_multi_class(
+def iris_classifier_multi_class(
     iris_classifier_ranker_multi_class: LearnerRanker[ClassifierPipelineDF],
-) -> LearnerCrossfit[ClassifierPipelineDF[RandomForestClassifierDF]]:
-    return iris_classifier_ranker_multi_class.best_model_crossfit_
+) -> ClassifierPipelineDF[RandomForestClassifierDF]:
+    return iris_classifier_ranker_multi_class.best_model_
 
 
 @pytest.fixture
 def iris_inspector_multi_class(
-    iris_classifier_crossfit_multi_class: LearnerCrossfit[
-        ClassifierPipelineDF[RandomForestClassifierDF]
-    ],
+    iris_classifier_multi_class: ClassifierPipelineDF[RandomForestClassifierDF],
+    iris_sample_multi_class: Sample,
     n_jobs: int,
 ) -> LearnerInspector[ClassifierPipelineDF[RandomForestClassifierDF]]:
     return LearnerInspector(
-        pipeline=iris_classifier_crossfit_multi_class.pipeline,
-        shap_interaction=True,
-        n_jobs=n_jobs,
-    ).fit(sample=iris_classifier_crossfit_multi_class.sample_)
+        pipeline=iris_classifier_multi_class, shap_interaction=True, n_jobs=n_jobs
+    ).fit(sample=iris_sample_multi_class)
 
 
 #
@@ -411,10 +402,10 @@ def iris_inspector_multi_class(
 #
 
 
-def fit_learner_ranker(
+def fit_classifier_ranker(
     sample: Sample, cv: BaseCrossValidator, n_jobs: int
 ) -> LearnerRanker[ClassifierPipelineDF[RandomForestClassifierDF]]:
-    # define parameters and crossfit
+    # define the parameter grid
     grids = [
         LearnerGrid(
             pipeline=ClassifierPipelineDF(
@@ -423,8 +414,9 @@ def fit_learner_ranker(
             learner_parameters={"n_estimators": [10, 50], "min_samples_leaf": [4, 8]},
         )
     ]
-    # pipeline inspector does only support binary classification - hence
-    # filter the test_sample down to only 2 target classes:
+
+    # pipeline inspector only supports binary classification,
+    # therefore filter the sample down to only 2 target classes
     return LearnerRanker(
         grids=grids,
         cv=cv,

@@ -6,20 +6,15 @@ from typing import Set, Union
 
 import numpy as np
 
-from sklearndf.pipeline import RegressorPipelineDF
-
-from facet.crossfit import LearnerCrossfit
 from facet.inspection import LearnerInspector
 
 log = logging.getLogger(__name__)
 
 
-def test_shap_decomposition_matrices(
-    best_lgbm_crossfit: LearnerCrossfit[RegressorPipelineDF],
-    feature_names: Set[str],
-    regressor_inspector: LearnerInspector,
+def test_feature_affinity_matrices(
+    preprocessed_feature_names: Set[str], regressor_inspector: LearnerInspector
 ) -> None:
-    # Shap decomposition matrices (feature dependencies)
+    # feature affinity matrices (feature dependencies)
     # check that dimensions of pairwise feature matrices are equal to # of features,
     # and value ranges:
     for matrix, matrix_name in zip(
@@ -31,9 +26,15 @@ def test_shap_decomposition_matrices(
         ("association", "synergy", "redundancy"),
     ):
         matrix_full_name = f"feature {matrix_name} matrix"
-        n_features = len(feature_names)
+        n_features = len(preprocessed_feature_names)
         assert matrix.values.shape[0] == n_features, f"rows in {matrix_full_name}"
         assert matrix.values.shape[1] == n_features, f"columns in {matrix_full_name}"
+        assert (
+            set(matrix.names[0]) == preprocessed_feature_names
+        ), f"row names in {matrix_full_name}"
+        assert (
+            set(matrix.names[1]) == preprocessed_feature_names
+        ), f"column names in {matrix_full_name}"
 
         # check values
         assert (

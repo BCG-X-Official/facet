@@ -3,7 +3,7 @@ Model inspector tests.
 """
 import logging
 import warnings
-from typing import List, Optional, Sequence, Set, TypeVar, Union
+from typing import List, Optional, Sequence, TypeVar, Union
 
 import numpy as np
 import pandas as pd
@@ -22,7 +22,6 @@ from sklearndf.classification import (
 from sklearndf.pipeline import ClassifierPipelineDF, RegressorPipelineDF
 
 from ..conftest import check_ranking
-from facet.crossfit import LearnerCrossfit
 from facet.data import Sample
 from facet.inspection import (
     KernelExplainerFactory,
@@ -30,7 +29,6 @@ from facet.inspection import (
     TreeExplainerFactory,
 )
 from facet.selection import LearnerGrid, LearnerRanker
-from facet.validation import BootstrapCV
 
 # noinspection PyMissingOrEmptyDocstring
 
@@ -42,8 +40,8 @@ T = TypeVar("T")
 def test_model_inspection(
     regressor_grids: Sequence[LearnerGrid[RegressorPipelineDF]],
     regressor_ranker: LearnerRanker[RegressorPipelineDF],
-    best_lgbm_crossfit: LearnerCrossfit[RegressorPipelineDF],
-    feature_names: Set[str],
+    best_lgbm_model: RegressorPipelineDF,
+    preprocessed_feature_names,
     regressor_inspector: LearnerInspector,
     cv_kfold: KFold,
     sample: Sample,
@@ -74,7 +72,7 @@ def test_model_inspection(
     assert shap_values.columns.names == [Sample.IDX_FEATURE]
 
     # column index
-    assert set(shap_values.columns) == feature_names
+    assert set(shap_values.columns) == preprocessed_feature_names
 
     # check that the SHAP values add up to the predictions
     shap_totals = shap_values.sum(axis=1)
@@ -83,18 +81,16 @@ def test_model_inspection(
     # for every observation. This is always the same constant value,
     # therefore the mean absolute deviation is zero
 
-    shap_minus_pred = shap_totals - best_lgbm_crossfit.pipeline.predict(
-        X=sample.features
-    )
+    shap_minus_pred = shap_totals - best_lgbm_model.predict(X=sample.features)
     assert round(shap_minus_pred.mad(), 12) == 0.0, "predictions matching total SHAP"
 
     #  test the ModelInspector with a KernelExplainer:
 
     inspector_2 = LearnerInspector(
-        pipeline=best_lgbm_crossfit.pipeline,
+        pipeline=best_lgbm_model,
         explainer_factory=KernelExplainerFactory(link="identity", data_size_limit=20),
         n_jobs=n_jobs,
-    ).fit(sample=best_lgbm_crossfit.sample_)
+    ).fit(sample=sample)
     inspector_2.shap_values()
 
     linkage_tree = inspector_2.feature_association_linkage()
@@ -121,21 +117,23 @@ def test_binary_classifier_ranking(iris_classifier_ranker_binary) -> None:
 
 # noinspection DuplicatedCode
 def test_model_inspection_classifier_binary(
-    iris_sample_binary: Sample, iris_classifier_crossfit_binary, n_jobs: int
+    iris_classifier_binary: ClassifierPipelineDF,
+    iris_sample_binary: Sample,
+    n_jobs: int,
 ) -> None:
 
     model_inspector = LearnerInspector(
-        pipeline=iris_classifier_crossfit_binary.pipeline,
+        pipeline=iris_classifier_binary,
         shap_interaction=False,
         n_jobs=n_jobs,
-    ).fit(sample=iris_classifier_crossfit_binary.sample_)
+    ).fit(sample=iris_sample_binary)
 
     # calculate the shap value matrix, without any consolidation
     shap_values = model_inspector.shap_values()
 
     # do the shap values add up to predictions minus a constant value?
     _validate_shap_values_against_predictions(
-        shap_values=shap_values, crossfit=iris_classifier_crossfit_binary
+        shap_values=shap_values, model=iris_classifier_binary, sample=iris_sample_binary
     )
 
     # the length of rows in shap_values should be equal to the unique observation
@@ -185,34 +183,29 @@ def test_model_inspection_classifier_binary_single_shap_output() -> None:
     # create sample object
     sample_df = Sample(observations=sim_df, target_name="target")
 
-    # fit the crossfit
-    crossfit = LearnerCrossfit(
-        pipeline=ClassifierPipelineDF(
-            classifier=GradientBoostingClassifierDF(random_state=42)
-        ),
-        cv=BootstrapCV(n_splits=5, random_state=42),
-        random_state=42,
-        n_jobs=-3,
-    ).fit(sample_df)
+    # fit the model
+    pipeline = ClassifierPipelineDF(
+        classifier=GradientBoostingClassifierDF(random_state=42)
+    ).fit(sample_df.features, sample_df.target)
 
     # fit the inspector
-    LearnerInspector(pipeline=crossfit.pipeline, n_jobs=-3).fit(sample=crossfit.sample_)
+    LearnerInspector(pipeline=pipeline, n_jobs=-3).fit(sample=sample_df)
 
 
 # noinspection DuplicatedCode
 def test_model_inspection_classifier_multi_class(
-    iris_sample: Sample,
-    iris_classifier_crossfit_multi_class: LearnerCrossfit[ClassifierPipelineDF],
     iris_inspector_multi_class: LearnerInspector[ClassifierPipelineDF],
     n_jobs: int,
 ) -> None:
+    iris_classifier = iris_inspector_multi_class.pipeline
+    iris_sample = iris_inspector_multi_class.sample_
 
     # calculate the shap value matrix, without any consolidation
     shap_values = iris_inspector_multi_class.shap_values()
 
     # do the shap values add up to predictions minus a constant value?
     _validate_shap_values_against_predictions(
-        shap_values=shap_values, crossfit=iris_classifier_crossfit_multi_class
+        shap_values=shap_values, model=iris_classifier, sample=iris_sample
     )
 
     # Feature importance
@@ -316,14 +309,12 @@ def test_model_inspection_classifier_multi_class(
 
 
 def _validate_shap_values_against_predictions(
-    shap_values: pd.DataFrame, crossfit: LearnerCrossfit[ClassifierPipelineDF]
+    shap_values: pd.DataFrame, model: ClassifierPipelineDF, sample: Sample
 ):
 
     # calculate the matching predictions, so we can check if the SHAP values add up
     # correctly
-    predicted_probabilities: pd.DataFrame = crossfit.pipeline.predict_proba(
-        crossfit.sample_.features
-    )
+    predicted_probabilities: pd.DataFrame = model.predict_proba(sample.features)
 
     assert isinstance(
         predicted_probabilities, pd.DataFrame
@@ -378,30 +369,28 @@ def _validate_shap_values_against_predictions(
 
 # noinspection DuplicatedCode
 def test_model_inspection_classifier_interaction(
+    iris_classifier_binary: ClassifierPipelineDF[RandomForestClassifierDF],
     iris_sample_binary: Sample,
-    iris_classifier_crossfit_binary: LearnerCrossfit[
-        ClassifierPipelineDF[RandomForestClassifierDF]
-    ],
     n_jobs: int,
 ) -> None:
     warnings.filterwarnings("ignore", message="You are accessing a training score")
 
     model_inspector = LearnerInspector(
-        pipeline=iris_classifier_crossfit_binary.pipeline,
+        pipeline=iris_classifier_binary,
         explainer_factory=TreeExplainerFactory(
             feature_perturbation="tree_path_dependent", uses_background_dataset=True
         ),
         n_jobs=n_jobs,
-    ).fit(sample=iris_classifier_crossfit_binary.sample_)
+    ).fit(sample=iris_sample_binary)
 
     model_inspector_no_interaction = LearnerInspector(
-        pipeline=iris_classifier_crossfit_binary.pipeline,
+        pipeline=iris_classifier_binary,
         shap_interaction=False,
         explainer_factory=TreeExplainerFactory(
             feature_perturbation="tree_path_dependent", uses_background_dataset=True
         ),
         n_jobs=n_jobs,
-    ).fit(sample=iris_classifier_crossfit_binary.sample_)
+    ).fit(sample=iris_sample_binary)
 
     # calculate shap interaction values
     shap_interaction_values = model_inspector.shap_interaction_values()
@@ -434,7 +423,8 @@ def test_model_inspection_classifier_interaction(
     # do the shap values add up to predictions minus a constant value?
     _validate_shap_values_against_predictions(
         shap_values=model_inspector.shap_interaction_values().groupby(level=0).sum(),
-        crossfit=iris_classifier_crossfit_binary,
+        model=iris_classifier_binary,
+        sample=iris_sample_binary,
     )
 
     assert model_inspector.feature_importance().values == pytest.approx(
@@ -630,9 +620,7 @@ def test_model_inspection_classifier_interaction_dual_target(
     iris_target_name,
     n_jobs: int,
 ) -> None:
-    iris_classifier_crossfit_dual_target = (
-        iris_classifier_ranker_dual_target.best_model_crossfit_
-    )
+    iris_classifier_dual_target = iris_classifier_ranker_dual_target.best_model_
 
     with pytest.raises(
         ValueError,
@@ -641,13 +629,13 @@ def test_model_inspection_classifier_interaction_dual_target(
             f"{iris_target_name}.*{iris_target_name}2"
         ),
     ):
-        LearnerInspector(
-            pipeline=iris_classifier_crossfit_dual_target.pipeline, n_jobs=n_jobs
-        ).fit(sample=iris_classifier_crossfit_dual_target.sample_)
+        LearnerInspector(pipeline=iris_classifier_dual_target, n_jobs=n_jobs).fit(
+            sample=iris_sample_binary_dual_target
+        )
 
 
 def test_shap_plot_data(
-    iris_sample,
+    iris_sample_multi_class,
     iris_inspector_multi_class: LearnerInspector[ClassifierPipelineDF],
 ) -> None:
     shap_plot_data = iris_inspector_multi_class.shap_plot_data()
@@ -666,8 +654,12 @@ def test_shap_plot_data(
     assert all(shap.shape == features_shape for shap in shap_values)
 
     shap_index = shap_plot_data.features.index
-    assert_frame_equal(shap_plot_data.features, iris_sample.features.loc[shap_index])
-    assert_series_equal(shap_plot_data.target, iris_sample.target.loc[shap_index])
+    assert_frame_equal(
+        shap_plot_data.features, iris_sample_multi_class.features.loc[shap_index]
+    )
+    assert_series_equal(
+        shap_plot_data.target, iris_sample_multi_class.target.loc[shap_index]
+    )
 
 
 #
