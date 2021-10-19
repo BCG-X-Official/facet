@@ -6,10 +6,8 @@ import logging
 from abc import ABCMeta, abstractmethod
 from typing import (
     Any,
-    Callable,
     Generic,
-    Iterator,
-    List,
+    Iterable,
     Optional,
     Sequence,
     Tuple,
@@ -24,17 +22,10 @@ from scipy import stats
 
 from pytools.api import AllTracker, inheritdoc
 from pytools.parallelization import Job, JobRunner, ParallelizableMixin
-from sklearndf import LearnerDF
-from sklearndf.pipeline import (
-    ClassifierPipelineDF,
-    LearnerPipelineDF,
-    RegressorPipelineDF,
-)
+from sklearndf import ClassifierDF, LearnerDF, RegressorDF
 
-from ..crossfit import LearnerCrossfit
 from ..data import Sample
 from ..data.partition import Partitioner
-from ..validation import BaseBootstrapCV
 
 log = logging.getLogger(__name__)
 
@@ -51,7 +42,7 @@ __all__ = [
 # Type variables
 #
 
-T_LearnerPipelineDF = TypeVar("T_LearnerPipelineDF", bound=LearnerPipelineDF)
+T_LearnerDF = TypeVar("T_LearnerDF", bound=LearnerDF)
 T_Partition = TypeVar("T_Partition")
 
 
@@ -72,6 +63,24 @@ class UnivariateSimulationResult(Generic[T_Partition]):
     Summary result of a univariate simulation.
     """
 
+    #: The partitioner used to generate feature values to be simulated.
+    partitioner: Partitioner
+
+    #: The mean predictions for the values representing each partition.
+    mean: pd.Series
+
+    #: The standard errors of the mean predictions for the values representing each
+    # partition.
+    sem: pd.Series
+
+    #: The lower bounds of the confidence intervals for the mean predictions for the
+    # values representing each partition.
+    lower_bound: pd.Series
+
+    #: The upper bounds of the confidence intervals for the mean predictions for the
+    # values representing each partition.
+    upper_bound: pd.Series
+
     #: Name of the simulated feature.
     feature_name: str
 
@@ -88,15 +97,15 @@ class UnivariateSimulationResult(Generic[T_Partition]):
     #: determined by bootstrapping, with :math:`0 < \alpha < 1`.
     confidence_level: float
 
-    #: The partitioner used to generate feature values to be simulated.
-    partitioner: Partitioner
+    #: The name of the column index of attribute :attr:`.output`, denoting partitions
+    #: represented by their central values or by a category.
+    IDX_PARTITION = "partition"
 
-    #: The matrix of simulated outcomes, with columns representing partitions
-    #: and rows representing bootstrap splits used to fit variations of the model.
-    outputs: pd.DataFrame
+    #: The name of a series of mean simulated values per partition.
+    COL_MEAN = "mean"
 
-    #: The name of a series of median simulated values per partition.
-    COL_MEDIAN = "median"
+    #: The name of a series of standard errors of mean simulated values per partition.
+    COL_SEM = "sem"
 
     #: The name of a series of lower CI bounds of simulated values per partition.
     COL_LOWER_BOUND = "lower_bound"
@@ -107,15 +116,21 @@ class UnivariateSimulationResult(Generic[T_Partition]):
     def __init__(
         self,
         *,
+        partitioner: Partitioner,
+        mean: Sequence[float],
+        sem: Sequence[float],
         feature_name: str,
         output_name: str,
         output_unit: str,
         baseline: float,
         confidence_level: float,
-        partitioner: Partitioner,
-        outputs: pd.DataFrame,
     ) -> None:
         """
+        :param partitioner: the partitioner used to generate feature values to be
+            simulated
+        :param mean: mean predictions for the values representing each partition
+        :param sem: standard errors of the mean predictions for the values representing
+            each partition
         :param feature_name: name of the simulated feature
         :param output_name: name of the target for which outputs are simulated
         :param output_unit: the unit of the simulated outputs
@@ -124,126 +139,83 @@ class UnivariateSimulationResult(Generic[T_Partition]):
             of the simulation
         :param confidence_level: the width of the confidence interval determined by
             bootstrapping, ranging between 0.0 and 1.0 (exclusive)
-        :param partitioner: the partitioner used to generate feature values to be
-            simulated
-        :param outputs: matrix of simulated outcomes, with columns representing
-            partitions and rows representing bootstrap splits used to fit variations
-            of the model
         """
         super().__init__()
 
-        assert outputs.index.name in [
-            BaseUnivariateSimulator.IDX_SPLIT,
-            # for the experimental _full sample_ feature, we also accept "metric" as
-            # the name of the row index
-            "metric",
-        ], f"row index of arg outputs is named {BaseUnivariateSimulator.IDX_SPLIT}"
-        assert outputs.columns.name == BaseUnivariateSimulator.IDX_PARTITION, (
-            "column index of arg outputs is named "
-            f"{BaseUnivariateSimulator.IDX_PARTITION}"
-        )
-        assert (
-            0.0 < confidence_level < 1.0
-        ), f"confidence_level={confidence_level} ranges between 0.0 and 1.0 (exclusive)"
+        if not partitioner.is_fitted:
+            raise ValueError("arg partitioner must be fitted")
 
+        n_partitions = len(partitioner.partitions_)
+
+        for seq, seq_name in [(mean, "mean"), (sem, "sem")]:
+            if len(seq) != n_partitions:
+                raise ValueError(
+                    f"length of arg {seq_name} must correspond to "
+                    f"the number of partitions (n={n_partitions})"
+                )
+
+        if not (0.0 < confidence_level < 1.0):
+            raise ValueError(
+                f"arg confidence_level={confidence_level} is not "
+                "in the range between 0.0 and 1.0 (exclusive)"
+            )
+
+        idx = pd.Index(
+            partitioner.partitions_, name=UnivariateSimulationResult.IDX_PARTITION
+        )
+
+        self.partitioner = partitioner
+        self.mean = pd.Series(mean, index=idx, name=UnivariateSimulationResult.COL_MEAN)
+        self.sem = pd.Series(sem, index=idx, name=UnivariateSimulationResult.COL_SEM)
         self.feature_name = feature_name
         self.output_name = output_name
         self.output_unit = output_unit
         self.baseline = baseline
         self.confidence_level = confidence_level
-        self.partitioner = partitioner
-        self.outputs = outputs
 
-    def outputs_median(self) -> pd.Series:
-        """
-        Calculate the medians of the distribution of simulation outcomes,
-        for every partition.
-
-        :return: a series of medians, indexed by the central values of the partitions
-            for which the simulation was run
-        """
-        if self._full_sample:
-            # experimental feature: we only simulated using one model fit on the full
-            # sample; return the mean outputs for each partition without aggregating
-            # further
-            values = self.outputs.loc["mean"]
-        else:
-            values = self.outputs.median()
-        return values.rename(UnivariateSimulationResult.COL_MEDIAN)
-
-    def outputs_lower_bound(self) -> pd.Series:
-        """
-        Calculate the lower CI bounds of the distribution of simulation outcomes,
-        for every partition.
-
-        :return: a series of medians, indexed by the central values of the partitions
-            for which the simulation was run
-        """
-        if self._full_sample:
-            # experimental feature: we only simulated using one model fit on the full
-            # sample; return the mean outputs for each partition without aggregating
-            # further, and determine the lower confidence bound based on the standard
-            # error of the mean and the desired confidence level
-            values = (
-                self.outputs.loc["mean"]
-                + stats.norm.ppf((1.0 - self.confidence_level) / 2.0)
-                * self.outputs.loc["sem"]
-            )
-        else:
-            values = self.outputs.quantile(q=(1.0 - self.confidence_level) / 2.0)
-        return values.rename(UnivariateSimulationResult.COL_LOWER_BOUND)
-
-    def outputs_upper_bound(self) -> pd.Series:
-        """
-        Calculate the lower CI bounds of the distribution of simulation outcomes,
-        for every partition.
-
-        :return: a series of medians, indexed by the central values of the partitions
-            for which the simulation was run
-        """
-        if self._full_sample:
-            # experimental feature: we only simulated using one model fit on the full
-            # sample; return the mean outputs for each partition without aggregating
-            # further, and determine the upper confidence bound based on the standard
-            # error of the mean and the desired confidence level
-            values = (
-                self.outputs.loc["mean"]
-                - stats.norm.ppf((1.0 - self.confidence_level) / 2.0)
-                * self.outputs.loc["sem"]
-            )
-        else:
-            values = self.outputs.quantile(q=1.0 - (1.0 - self.confidence_level) / 2.0)
-        return values.rename(UnivariateSimulationResult.COL_UPPER_BOUND)
+    def _ci_width(self) -> np.ndarray:
+        # get the width of the confidence interval
+        return -stats.norm.ppf((1.0 - self.confidence_level) / 2.0) * self.sem.values
 
     @property
-    def _full_sample(self) -> bool:
-        # experimental _full sample_ feature is active iff the name of the row index
-        # is "metric"
-        return self.outputs.index.name == "metric"
+    def lower_bound(self) -> pd.Series:
+        """
+        Calculate the lower CI bounds of the distribution of simulation outcomes,
+        for every partition.
+
+        :return: a series of lower CI bounds, indexed by the central values of the
+            partitions for which the simulation was run
+        """
+
+        return (self.mean - self._ci_width()).rename(
+            UnivariateSimulationResult.COL_LOWER_BOUND
+        )
+
+    @property
+    def upper_bound(self) -> pd.Series:
+        """
+        Calculate the lower CI bounds of the distribution of simulation outcomes,
+        for every partition.
+
+        :return: a series of upper CI bounds, indexed by the central values of the
+            partitions for which the simulation was run
+        """
+        return (self.mean + self._ci_width()).rename(
+            UnivariateSimulationResult.COL_UPPER_BOUND
+        )
 
 
 class BaseUnivariateSimulator(
-    ParallelizableMixin, Generic[T_LearnerPipelineDF], metaclass=ABCMeta
+    ParallelizableMixin, Generic[T_LearnerDF], metaclass=ABCMeta
 ):
     """
     Base class for univariate simulations.
     """
 
-    #: The name of the row index of attribute :attr:`.output`, denoting splits.
-    IDX_SPLIT = "split"
+    #: The learner pipeline used to conduct simulations
+    model: T_LearnerDF
 
-    #: The name of the column index of attribute :attr:`.output`, denoting partitions
-    #: represented by their central values or by a category.
-    IDX_PARTITION = "partition"
-
-    #: The name of a series of simulated outputs.
-    COL_OUTPUT = "output"
-
-    #: The crossfit used to conduct simulations
-    crossfit: LearnerCrossfit[T_LearnerPipelineDF]
-
-    #: The sample used in baseline calculations and simulations; this is the full sample
-    #: from the :attr:`.crossfit`, or a subsample thereof
+    #: The sample to be used in baseline calculations and simulations
     sample: Sample
 
     #: The width of the confidence interval used to calculate the lower/upper bound
@@ -252,9 +224,9 @@ class BaseUnivariateSimulator(
 
     def __init__(
         self,
-        crossfit: LearnerCrossfit[T_LearnerPipelineDF],
+        model: T_LearnerDF,
+        sample: Sample,
         *,
-        subsample: Optional[pd.Index] = None,
         confidence_level: float = 0.95,
         n_jobs: Optional[int] = None,
         shared_memory: Optional[bool] = None,
@@ -262,15 +234,10 @@ class BaseUnivariateSimulator(
         verbose: Optional[int] = None,
     ) -> None:
         """
-        :param crossfit: cross-validated crossfit of a model for all observations
-            in a given sample
-        :param subsample: an optional index referencing a subset of the training sample
-            to be used in baseline calculations and simulations
+        :param model: a fitted learner to use for calculating simulated outputs
+        :param sample: the sample to be used for baseline calculations and simulations
         :param confidence_level: the width :math:`\\alpha` of the confidence interval
-            determined by bootstrapping, with :math:`0 < \\alpha < 1`;
-            for reliable CI estimates the number of splits in the crossfit should be
-            at least :math:`n = \\frac{50}{1 - \\alpha}`, e.g. :math:`n = 1000` for
-            :math:`\\alpha = 0.95`
+            to be estimated for simulation results
         """
         super().__init__(
             n_jobs=n_jobs,
@@ -279,16 +246,16 @@ class BaseUnivariateSimulator(
             verbose=verbose,
         )
 
-        if not isinstance(crossfit.pipeline, self._expected_pipeline_type()):
+        if not isinstance(model, self._expected_learner_type()):
             raise TypeError(
-                "arg crossfit must fit a pipeline of type "
-                f"{self._expected_pipeline_type().__name__}."
+                "arg model must be a learner of type "
+                f"{self._expected_learner_type().__name__}."
             )
 
-        if not crossfit.is_fitted:
-            raise ValueError("arg crossfit expected to be fitted")
+        if not model.is_fitted:
+            raise ValueError("arg model must be fitted")
 
-        if isinstance(crossfit.sample_.target_name, list):
+        if isinstance(sample.target_name, list):
             raise NotImplementedError("multi-output simulations are not supported")
 
         if not 0.0 < confidence_level < 1.0:
@@ -297,32 +264,7 @@ class BaseUnivariateSimulator(
                 "must range between 0.0 and 1.0 (exclusive)"
             )
 
-        if not isinstance(crossfit.cv, BaseBootstrapCV):
-            log.warning(
-                "arg crossfit.cv should be a bootstrap cross-validator "
-                f"but is a {type(crossfit.cv).__name__}"
-            )
-
-        min_splits = int(50 / (1.0 - confidence_level))
-        if len(crossfit) < min_splits:
-            log.warning(
-                f"at least {min_splits} bootstrap splits are recommended for "
-                f"reliable results with arg confidence_level={confidence_level}, "
-                f"but arg crossfit.cv has only {len(crossfit)} splits"
-            )
-
-        sample = crossfit.sample_
-
-        if subsample is not None:
-            unknown_observations = subsample.difference(sample.index)
-            if len(unknown_observations) > 0:
-                raise ValueError(
-                    "arg subsample includes indices not contained "
-                    f"in the simulation sample: {unknown_observations.to_list()}"
-                )
-            sample = sample.subsample(loc=subsample)
-
-        self.crossfit = crossfit
+        self.model = model
         self.sample = sample
         self.confidence_level = confidence_level
 
@@ -346,52 +288,22 @@ class BaseUnivariateSimulator(
 
         sample = self.sample
 
+        mean, sem = self._simulate_feature_with_values(
+            feature_name=feature_name,
+            simulation_values=(
+                partitioner.fit(sample.features.loc[:, feature_name]).partitions_
+            ),
+        )
         return UnivariateSimulationResult(
+            partitioner=partitioner,
+            mean=mean,
+            sem=sem,
             feature_name=feature_name,
             output_name=sample.target_name,
             output_unit=self.output_unit,
             baseline=self.baseline(),
             confidence_level=self.confidence_level,
-            partitioner=partitioner,
-            outputs=(
-                self._simulate_feature_with_values(
-                    feature_name=feature_name,
-                    simulation_values=(
-                        partitioner.fit(
-                            sample.features.loc[:, feature_name]
-                        ).partitions_
-                    ),
-                )
-            ),
         )
-
-    def simulate_actuals(self) -> pd.Series:
-        r"""
-        For each test split :math:`\mathrm{T}_i` in this simulator's
-        crossfit, predict the outputs for all test samples given their actual
-        feature values, and calculate the absolute deviation from the mean of all actual
-        outputs of the entire sample
-        :math:`\frac{1}{n}\sum_{j \in \mathrm{T}_i}\hat y_j - \bar y`.
-
-        The spread and offset of these deviations can serve as an indication of how the
-        bias of the model contributes to the uncertainty of simulations produced with
-        method :meth:`.simulate_feature`.
-
-        :return: series mapping split IDs to deviations of simulated mean outputs
-        """
-
-        y_mean = self.expected_output()
-
-        result: List[float] = JobRunner.from_parallelizable(self).run_jobs(
-            Job.delayed(self._simulate_actuals)(
-                model, subsample.features, y_mean, self._simulate
-            )
-            for model, subsample in self._get_simulations()
-        )
-
-        return pd.Series(
-            data=result, name=BaseUnivariateSimulator.COL_OUTPUT
-        ).rename_axis(index=BaseUnivariateSimulator.IDX_SPLIT)
 
     @property
     @abstractmethod
@@ -421,172 +333,72 @@ class BaseUnivariateSimulator(
 
     @staticmethod
     @abstractmethod
-    def _expected_pipeline_type() -> Type[T_LearnerPipelineDF]:
+    def _expected_learner_type() -> Type[T_LearnerDF]:
         pass
 
     @staticmethod
     @abstractmethod
-    def _simulate(model: T_LearnerPipelineDF, x: pd.DataFrame) -> pd.Series:
+    def _simulate(
+        model: T_LearnerDF, x: pd.DataFrame, name: str, value: Any
+    ) -> Tuple[float, float]:
         pass
+
+    @staticmethod
+    def _set_constant_feature_value(
+        x: pd.DataFrame, feature_name: str, value: Any
+    ) -> pd.DataFrame:
+        return x.assign(
+            **{
+                feature_name: np.full(
+                    shape=len(x),
+                    fill_value=value,
+                    dtype=x.loc[:, feature_name].dtype,
+                )
+            }
+        )
+
+    @staticmethod
+    def _aggregate_simulation_results(predictions: pd.Series) -> Tuple[float, float]:
+        # generate summary stats for a series of predictions
+        return predictions.mean(), predictions.sem()
 
     def _simulate_feature_with_values(
         self,
         feature_name: str,
         simulation_values: Sequence[T_Partition],
-    ) -> pd.DataFrame:
+    ) -> Tuple[Sequence[float], Sequence[float]]:
         """
         Run a simulation on a feature.
 
-        For each combination of crossfit and feature value, compute the simulation
-        result when substituting a given fixed value for the feature being simulated.
+        For each simulation value, compute the mean and sem of predictions when
+        substituting the value for the feature being simulated.
 
         :param feature_name: name of the feature to use in the simulation
         :param simulation_values: values to use in the simulation
-        :return: data frame with splits as rows and partitions as columns.
+        :return: a tuple with mean predictions and standard errors of mean predictions
+            for each partition
         """
 
         if feature_name not in self.sample.features.columns:
             raise ValueError(f"feature not in sample: {feature_name}")
 
-        # for each split, calculate the mean simulation outputs and the standard error
-        # of each mean
-        simulation_means_and_sems_per_split: List[
-            Tuple[Sequence[float], Sequence[float]]
-        ] = JobRunner.from_parallelizable(self).run_jobs(
-            Job.delayed(UnivariateUpliftSimulator._simulate_values_for_split)(
-                model=model,
-                subsample=subsample,
-                feature_name=feature_name,
-                simulated_values=simulation_values,
-                simulate_fn=self._simulate,
-            )
-            for (model, subsample) in self._get_simulations()
-        )
-
-        index_name: str
-        index: Optional[List[str]]
-        simulation_results_per_split: List[List[float]]
-
-        if self._full_sample:
-            # experimental "full sample" feature: we only worked with one split
-            # (which is the full sample); for that split we preserve the means and
-            # standard errors of the means for each partition
-            assert len(simulation_means_and_sems_per_split) == 1
-            simulation_results_per_split = [
-                # convert mean and sem tuple to a list
-                list(seq_result)
-                for seq_result in simulation_means_and_sems_per_split[0]
-            ]
-            index_name = "metric"
-            index = ["mean", "sem"]
-        else:
-            # existing approach: only keep the means for each split
-            simulation_results_per_split = [
-                list(seq_mean) for seq_mean, _ in simulation_means_and_sems_per_split
-            ]
-            index_name = BaseUnivariateSimulator.IDX_SPLIT
-            index = None
-
-        return pd.DataFrame(
-            simulation_results_per_split, columns=simulation_values, index=index
-        ).rename_axis(
-            index=index_name,
-            columns=BaseUnivariateSimulator.IDX_PARTITION,
-        )
-
-    def _get_simulations(self) -> Iterator[Tuple[T_LearnerPipelineDF, Sample]]:
-        sample = self.sample
-        # we don't need duplicate indices to calculate the intersection
-        # with the samples of the test split, so we drop them
-        sample_index = sample.index.unique()
-
-        if self._full_sample:
-            # experimental flag: if `True`, simulate on full sample using all data
-            xf_sample: Sample = self.crossfit.sample_
-            return iter(
-                (
-                    (
-                        self.crossfit.pipeline.clone().fit(
-                            X=xf_sample.features,
-                            y=xf_sample.target,
-                            sample_weight=xf_sample.weight,
-                        ),
-                        sample,
-                    ),
-                )
-            )
-
-        xf_sample_index = self.crossfit.sample_.index
-        return (
-            (model, subsample)
-            for model, subsample in zip(
-                self.crossfit.models(),
-                (
-                    (
-                        sample.subsample(
-                            loc=sample_index.intersection(xf_sample_index[test_indices])
-                        )
-                    )
-                    for _, test_indices in self.crossfit.splits()
-                ),
-            )
-            if len(subsample)
-        )
-
-    @property
-    def _full_sample(self) -> Sample:
-        # experimental flag: if `True`, simulate on full sample using all data
-        full_sample = getattr(self, "full_sample", False)
-        return full_sample
-
-    @staticmethod
-    def _simulate_values_for_split(
-        model: LearnerDF,
-        subsample: Sample,
-        feature_name: str,
-        simulated_values: Optional[Sequence[Any]],
-        simulate_fn: Callable[[LearnerDF, pd.DataFrame], pd.Series],
-    ) -> Tuple[Sequence[float], Sequence[float]]:
-        # for a list of values to be simulated, return a sequence of mean outputs
+        # for a list of values to be simulated, calculate a sequence of mean predictions
         # and a sequence of standard errors of those means
+        features = self.sample.features
 
-        n_observations = len(subsample)
-        features = subsample.features
-        feature_dtype = features.loc[:, feature_name].dtype
+        outputs_mean_sem: Iterable[Tuple[float, float]] = JobRunner.from_parallelizable(
+            self
+        ).run_jobs(
+            Job.delayed(self._simulate)(self.model, features, feature_name, value)
+            for value in simulation_values
+        )
 
-        outputs_mean_sem: List[Tuple[float, float]] = [
-            (outputs_sr.mean(), outputs_sr.sem())
-            for outputs_sr in (
-                simulate_fn(
-                    model,
-                    features.assign(
-                        **{
-                            feature_name: np.full(
-                                shape=n_observations,
-                                fill_value=value,
-                                dtype=feature_dtype,
-                            )
-                        }
-                    ),
-                )
-                for value in simulated_values
-            )
-        ]
         outputs_mean, outputs_sem = zip(*outputs_mean_sem)
         return outputs_mean, outputs_sem
 
-    @staticmethod
-    def _simulate_actuals(
-        model: LearnerDF,
-        x: pd.DataFrame,
-        y_mean: float,
-        simulate_fn: Callable[[LearnerDF, pd.DataFrame], pd.Series],
-    ) -> float:
-        return simulate_fn(model, x).mean() - y_mean
-
 
 @inheritdoc(match="[see superclass]")
-class UnivariateProbabilitySimulator(BaseUnivariateSimulator[ClassifierPipelineDF]):
+class UnivariateProbabilitySimulator(BaseUnivariateSimulator[ClassifierDF]):
     """
     Univariate simulation of positive class probabilities based on a binary classifier.
 
@@ -598,11 +410,11 @@ class UnivariateProbabilitySimulator(BaseUnivariateSimulator[ClassifierPipelineD
     observations is modified by assigning value `v[j]` for feature `x[i]` for all
     observations, i.e., assuming that feature `x[i]` has the constant value `v[j]`.
 
-    Then all classifiers of a :class:`.LearnerCrossfit` are used in turn to each predict
-    the positive class probabilities for all observations, and the mean probability
-    across all observations is calculated for each classifier and value `v[j]`.
-    The simulation result is a set of `n` distributions of mean predicted probabilities
-    across all classifiers -- one distribution for each `v[j]`.
+    Then the classifier is used to predict the positive class probabilities for all
+    observations, and the mean probability across all observations is calculated
+    for each classifier and value `v[j]`,
+    along with the standard error of the mean as a basis of obtaining confidence
+    intervals.
 
     Note that sample weights are not taken into account for simulations; each
     observation has the same weight in the simulation even if different weights
@@ -632,7 +444,7 @@ class UnivariateProbabilitySimulator(BaseUnivariateSimulator[ClassifierPipelineD
         """
         The label of the positive class of the binary classifier being simulated.
         """
-        classifier = self.crossfit.pipeline.final_estimator
+        classifier = self.model
 
         try:
             return classifier.classes_[-1]
@@ -644,19 +456,25 @@ class UnivariateProbabilitySimulator(BaseUnivariateSimulator[ClassifierPipelineD
             return "positive class"
 
     @staticmethod
-    def _expected_pipeline_type() -> Type[ClassifierPipelineDF]:
-        return ClassifierPipelineDF
+    def _expected_learner_type() -> Type[ClassifierDF]:
+        return ClassifierDF
 
     @staticmethod
-    def _simulate(model: ClassifierPipelineDF, x: pd.DataFrame) -> pd.Series:
-        probabilities: pd.DataFrame = model.predict_proba(x)
+    def _simulate(
+        model: ClassifierDF, x: pd.DataFrame, name: str, value: Any
+    ) -> Tuple[float, float]:
+        probabilities: pd.DataFrame = model.predict_proba(
+            BaseUnivariateSimulator._set_constant_feature_value(x, name, value)
+        )
         if probabilities.shape[1] != 2:
             raise TypeError("only binary classifiers are supported")
-        return probabilities.iloc[:, 1]
+        return BaseUnivariateSimulator._aggregate_simulation_results(
+            probabilities.iloc[:, 1]
+        )
 
 
 class _UnivariateRegressionSimulator(
-    BaseUnivariateSimulator[RegressorPipelineDF], metaclass=ABCMeta
+    BaseUnivariateSimulator[RegressorDF], metaclass=ABCMeta
 ):
     def expected_output(self) -> float:
         """
@@ -667,14 +485,18 @@ class _UnivariateRegressionSimulator(
         return self.sample.target.mean()
 
     @staticmethod
-    def _expected_pipeline_type() -> Type[RegressorPipelineDF]:
-        return RegressorPipelineDF
+    def _expected_learner_type() -> Type[RegressorDF]:
+        return RegressorDF
 
     @staticmethod
-    def _simulate(model: RegressorPipelineDF, x: pd.DataFrame) -> pd.Series:
-        predictions = model.predict(X=x)
+    def _simulate(
+        model: RegressorDF, x: pd.DataFrame, name: str, value: Any
+    ) -> Tuple[float, float]:
+        predictions = model.predict(
+            X=BaseUnivariateSimulator._set_constant_feature_value(x, name, value)
+        )
         assert predictions.ndim == 1, "single-target regressor required"
-        return predictions
+        return BaseUnivariateSimulator._aggregate_simulation_results(predictions)
 
 
 @inheritdoc(match="[see superclass]")
@@ -690,11 +512,11 @@ class UnivariateTargetSimulator(_UnivariateRegressionSimulator):
     observations is modified by assigning value `v[j]` for feature `x[i]` for all
     observations, i.e., assuming that feature `x[i]` has the constant value `v[j]`.
 
-    Then all regressors of a :class:`.LearnerCrossfit` are used in turn to each predict
-    the output for all observations, and the mean of the predicted outputs is calculated
-    for each regressor and value `v[j]`. The simulation result is a set of `n`
-    distributions of mean predicted targets across regressors -- one distribution for
-    each `v[j]`.
+    Then the regressor is used to predict the output for all
+    observations, and the mean output across all observations is calculated
+    for each regressor and value `v[j]`,
+    along with the standard error of the mean as a basis of obtaining confidence
+    intervals.
 
     Note that sample weights are not taken into account for simulations; each
     observation has the same weight in the simulation even if different weights
@@ -704,7 +526,7 @@ class UnivariateTargetSimulator(_UnivariateRegressionSimulator):
     @property
     def output_unit(self) -> str:
         """[see superclass]"""
-        return f"Mean predicted target ({self.crossfit.sample_.target_name})"
+        return f"Mean predicted target ({self.sample.target_name})"
 
 
 @inheritdoc(match="[see superclass]")
@@ -720,12 +542,14 @@ class UnivariateUpliftSimulator(_UnivariateRegressionSimulator):
     observations is modified by assigning value `v[j]` for feature `x[i]` for all
     observations, i.e., assuming that feature `x[i]` has the constant value `v[j]`.
 
-    Then all regressors of a :class:`.LearnerCrossfit` are used in turn to each predict
-    the output for all observations, and the mean of the predicted outputs is calculated
-    for each regressor and value `v[j]`. The simulation result is a set of `n`
-    distributions of mean predicted target uplifts across regressors, i.e. the mean
-    predicted difference of the historical expectation value of the target --
-    one distribution for each `v[j]`.
+    Then the regressor is used to predict the output for all
+    observations, and the mean output across all observations is calculated
+    for each regressor and value `v[j]`,
+    along with the standard error of the mean as a basis of obtaining confidence
+    intervals.
+    The simulation result is determined as the mean *uplift*, i.e., the mean
+    predicted difference of the historical expectation value of the target,
+    for each `v[j]`.
 
     Note that sample weights are not taken into account for simulations; each
     observation has the same weight in the simulation even if different weights
@@ -735,7 +559,7 @@ class UnivariateUpliftSimulator(_UnivariateRegressionSimulator):
     @property
     def output_unit(self) -> str:
         """[see superclass]"""
-        return f"Mean predicted uplift ({self.crossfit.sample_.target_name})"
+        return f"Mean predicted uplift ({self.sample.target_name})"
 
     def baseline(self) -> float:
         """
@@ -746,21 +570,17 @@ class UnivariateUpliftSimulator(_UnivariateRegressionSimulator):
         return 0.0
 
     def simulate_feature(
-        self,
-        feature_name: str,
-        *,
-        partitioner: Partitioner[T_Partition],
+        self, feature_name: str, *, partitioner: Partitioner[T_Partition]
     ) -> UnivariateSimulationResult:
         """[see superclass]"""
+
         result = super().simulate_feature(
             feature_name=feature_name, partitioner=partitioner
         )
-        if self._full_sample:
-            # we only offset the mean values, but not the standard errors of the means
-            # (which are relative values already so don't need to be offset)
-            result.outputs.loc["mean"] -= self.expected_output()
-        else:
-            result.outputs -= self.expected_output()
+
+        # offset the mean values to get uplift instead of absolute outputs
+        result.mean -= self.expected_output()
+
         return result
 
 
