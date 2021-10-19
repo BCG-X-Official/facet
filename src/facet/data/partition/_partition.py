@@ -90,11 +90,7 @@ class Partitioner(
     @property
     def partitions_(self) -> np.ndarray:
         """
-        Return central values of the partitions.
-
-        Requires that this partitioner has been fitted with a set of observed values.
-
-        :return: a sequence of central values for each partition
+        The central values of all partitions.
         """
         self._ensure_fitted()
         return self._partitions
@@ -102,9 +98,7 @@ class Partitioner(
     @property
     def frequencies_(self) -> np.ndarray:
         """
-        Return the count of observed elements in each partition.
-
-        :return: a sequence of value counts for each partition
+        The count of data points in each partition.
         """
         self._ensure_fitted()
         return self._frequencies
@@ -136,22 +130,17 @@ class Partitioner(
         return values
 
 
-@inheritdoc(match="[see superclass]")
+@inheritdoc(match="""[see superclass]""")
 class RangePartitioner(
     Partitioner[T_Values_Numeric], Generic[T_Values_Numeric], metaclass=ABCMeta
 ):
     """
-    Abstract base class for numerical partitioners.
+    Abstract base class of partitioners for numerical ranges.
     """
 
-    def __init__(
-        self,
-        max_partitions: int = None,
-    ) -> None:
-        """
-        :param max_partitions: the maximum number of partitions to make
-            (default: 20); should be at least 2
-        """
+    def __init__(self, max_partitions: Optional[int] = None) -> None:
+        """[see superclass]"""
+
         super().__init__(max_partitions)
 
         self._step: Optional[T_Values_Numeric] = None
@@ -409,7 +398,9 @@ class CategoryPartitioner(Partitioner[T_Values]):
 
     def __init__(self, max_partitions: Optional[int] = None) -> None:
         """[see superclass]"""
+
         super().__init__(max_partitions=max_partitions)
+
         self._frequencies = None
         self._partitions = None
 
