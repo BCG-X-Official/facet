@@ -6,6 +6,7 @@ import logging
 import math
 import operator as op
 from abc import ABCMeta, abstractmethod
+from numbers import Number
 from typing import Any, Generic, Iterable, Optional, Sequence, Tuple, TypeVar
 
 import numpy as np
@@ -31,7 +32,7 @@ __all__ = [
 
 T_Self = TypeVar("T_Self")
 T_Values = TypeVar("T_Values")
-T_Values_Numeric = TypeVar("T_Values_Numeric", int, float)
+T_Values_Numeric = TypeVar("T_Values_Numeric", bound=Number)
 
 #
 # Ensure all symbols introduced below are included in __all__
