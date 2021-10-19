@@ -138,14 +138,6 @@ class LearnerInspector(
     specified in the underlying training sample.
     """
 
-    #: constant for "mean" aggregation method, to be passed as arg ``aggregation``
-    #: to :class:`.LearnerInspector` methods that implement it
-    AGG_MEAN = "mean"
-
-    #: constant for "std" aggregation method, to be passed as arg ``aggregation``
-    #: to :class:`.LearnerInspector` methods that implement it
-    AGG_STD = "std"
-
     #: Name for feature importance series or column.
     COL_IMPORTANCE = "importance"
 
@@ -426,7 +418,6 @@ class LearnerInspector(
         *,
         absolute: bool = False,
         symmetrical: bool = False,
-        aggregation: Optional[str] = AGG_MEAN,
         clustered: bool = True,
     ) -> Union[Matrix, List[Matrix]]:
         """
@@ -454,8 +445,6 @@ class LearnerInspector(
             mutual synergy; if ``False``, return an asymmetrical matrix quantifying
             unilateral synergy of the features represented by rows with the
             features represented by columns (default: ``False``)
-        :param aggregation: if ``mean``, return mean values across all models in the
-            crossfit; additional aggregation methods will be added in future releases
         :param clustered: if ``True``, reorder the rows and columns of the matrix
             such that synergy between adjacent rows and columns is maximised; if
             ``False``, keep rows and columns in the original features order
@@ -464,8 +453,6 @@ class LearnerInspector(
             `(n_features, n_features)`, or a list of data frames for multiple outputs
         """
         self._ensure_fitted()
-
-        self.__validate_aggregation_method(aggregation)
 
         explainer = self.__interaction_explainer
         return self.__feature_affinity_matrix(
@@ -486,7 +473,6 @@ class LearnerInspector(
         *,
         absolute: bool = False,
         symmetrical: bool = False,
-        aggregation: Optional[str] = AGG_MEAN,
         clustered: bool = True,
     ) -> Union[Matrix, List[Matrix]]:
         """
@@ -514,8 +500,6 @@ class LearnerInspector(
             mutual redundancy; if ``False``, return an asymmetrical matrix quantifying
             unilateral redundancy of the features represented by rows with the
             features represented by columns (default: ``False``)
-        :param aggregation: if ``mean``, return mean values across all models in the
-            crossfit; additional aggregation methods will be added in future releases
         :param clustered: if ``True``, reorder the rows and columns of the matrix
             such that redundancy between adjacent rows and columns is maximised; if
             ``False``, keep rows and columns in the original features order
@@ -524,8 +508,6 @@ class LearnerInspector(
             `(n_features, n_features)`, or a list of data frames for multiple outputs
         """
         self._ensure_fitted()
-
-        self.__validate_aggregation_method(aggregation)
 
         explainer = self.__interaction_explainer
         return self.__feature_affinity_matrix(
@@ -546,7 +528,6 @@ class LearnerInspector(
         *,
         absolute: bool = False,
         symmetrical: bool = False,
-        aggregation: Optional[str] = AGG_MEAN,
         clustered: bool = True,
     ) -> Union[Matrix, List[Matrix]]:
         """
@@ -576,8 +557,6 @@ class LearnerInspector(
             with the features represented by columns;
             if ``True``, return a symmetrical matrix quantifying mutual association
             (default: ``False``)
-        :param aggregation: if ``mean``, return mean values across all models in the
-            crossfit; additional aggregation methods will be added in future releases
         :param clustered: if ``True``, reorder the rows and columns of the matrix
             such that association between adjacent rows and columns is maximised; if
             ``False``, keep rows and columns in the original features order
@@ -586,8 +565,6 @@ class LearnerInspector(
             `(n_features, n_features)`, or a list of data frames for multiple outputs
         """
         self._ensure_fitted()
-
-        self.__validate_aggregation_method(aggregation)
 
         global_explainer = self._shap_global_explainer
         return self.__feature_affinity_matrix(
@@ -1065,11 +1042,6 @@ class LearnerInspector(
             ),
             name_labels=("primary feature", "associated feature"),
         )
-
-    @staticmethod
-    def __validate_aggregation_method(aggregation: str) -> None:
-        if aggregation != LearnerInspector.AGG_MEAN:
-            raise ValueError(f"unknown aggregation method: aggregation={aggregation}")
 
     @property
     def __shap_interaction_values_calculator(self) -> ShapInteractionValuesCalculator:
