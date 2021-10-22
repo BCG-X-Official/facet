@@ -27,7 +27,6 @@ from sklearndf.transformation import (
 )
 
 import facet
-from facet.crossfit import LearnerCrossfit
 from facet.data import Sample
 from facet.inspection import LearnerInspector, TreeExplainerFactory
 from facet.selection import LearnerEvaluation, LearnerGrid, LearnerRanker
@@ -370,13 +369,6 @@ def iris_classifier_binary(
     iris_classifier_ranker_binary: LearnerRanker[ClassifierPipelineDF],
 ) -> ClassifierPipelineDF[RandomForestClassifierDF]:
     return iris_classifier_ranker_binary.best_model_
-
-
-@pytest.fixture
-def iris_classifier_crossfit_binary(
-    iris_classifier_ranker_binary: LearnerRanker[ClassifierPipelineDF],
-) -> LearnerCrossfit[ClassifierPipelineDF[RandomForestClassifierDF]]:
-    return iris_classifier_ranker_binary.best_model_crossfit_
 
 
 @pytest.fixture
