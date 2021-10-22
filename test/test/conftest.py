@@ -1,5 +1,5 @@
 import logging
-from typing import Any, List, Mapping, Optional, Sequence, Set
+from typing import Any, List, Mapping, Optional, Sequence, Set, Tuple
 
 import numpy as np
 import pandas as pd
@@ -198,12 +198,16 @@ def regressor_inspector(
 def simple_preprocessor(sample: Sample) -> TransformerDF:
     features = sample.features
 
-    column_transforms = []
+    column_transforms: List[Tuple[str, Any, Any]] = []
 
-    numeric_columns = features.select_dtypes(np.number).columns
+    numeric_columns: pd.Index = features.select_dtypes(np.number).columns
     if numeric_columns is not None and len(numeric_columns) > 0:
         column_transforms.append(
-            (STEP_IMPUTE, SimpleImputerDF(strategy="median"), numeric_columns)
+            (
+                STEP_IMPUTE,
+                SimpleImputerDF(strategy="median"),
+                list(map(str, numeric_columns)),
+            )
         )
 
     category_columns = features.select_dtypes(object).columns
@@ -212,7 +216,7 @@ def simple_preprocessor(sample: Sample) -> TransformerDF:
             (
                 STEP_ONE_HOT_ENCODE,
                 OneHotEncoderDF(sparse=False, handle_unknown="ignore"),
-                category_columns,
+                list(map(str, category_columns)),
             )
         )
 
