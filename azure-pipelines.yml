@@ -6,6 +6,9 @@ pr:
   - 1.2.x
   - release/*
 
+pool:
+    vmImage: 'Ubuntu-latest'
+
 # set the build name
 name: $[ variables['branchName'] ]
 
