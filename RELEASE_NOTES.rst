@@ -10,12 +10,18 @@ fit the underlying crossfit.
 One example where this can be useful is to use only a recent period of a time series as
 the baseline of a simulation.
 
+1.2.2
+~~~~~
+
+- catch up with FACET 1.1.2
+
+
 1.2.1
 ~~~~~
 
 - FIX: fix a bug in :class:`.UnivariateProbabilitySimulator` that was introduced in
   FACET 1.2.0
-- catch up with FACET 1.1.2
+- catch up with FACET 1.1.1
 
 
 1.2.0
