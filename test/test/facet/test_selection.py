@@ -8,10 +8,14 @@ from typing import List
 import numpy as np
 import pandas as pd
 import pytest
+from scipy.stats import loguniform, randint, zipfian
 from sklearn import datasets
 
+from pytools.expression import freeze
+from pytools.expression.atomic import Id
+from sklearndf import TransformerDF
 from sklearndf.classification import SVCDF
-from sklearndf.pipeline import ClassifierPipelineDF, RegressorPipelineDF
+from sklearndf.pipeline import ClassifierPipelineDF, PipelineDF, RegressorPipelineDF
 from sklearndf.regression import (
     AdaBoostRegressorDF,
     LinearRegressionDF,
@@ -22,7 +26,14 @@ from sklearndf.regression.extra import LGBMRegressorDF
 from ..conftest import check_ranking
 from facet.crossfit import LearnerCrossfit
 from facet.data import Sample
-from facet.selection import LearnerEvaluation, LearnerGrid, LearnerRanker
+from facet.selection import (
+    LearnerEvaluation,
+    LearnerGrid,
+    LearnerRanker,
+    MultiClassifierParameterSpace,
+    MultiRegressorParameterSpace,
+    ParameterSpace,
+)
 from facet.validation import BootstrapCV
 
 log = logging.getLogger(__name__)
@@ -183,3 +194,121 @@ def test_model_ranker_no_preprocessing(n_jobs) -> None:
     assert (
         model_ranker.ranking_[0].ranking_score >= 0.8
     ), "expected a best performance of at least 0.8"
+
+
+def test_parameter_space(
+    sample: Sample, simple_preprocessor: TransformerDF, n_jobs: int
+) -> None:
+
+    # distributions
+
+    randint_3_10 = randint(3, 10)
+    loguniform_0_01_0_10 = loguniform(0.01, 0.1)
+    loguniform_0_05_0_10 = loguniform(0.05, 0.1)
+    zipfian_1_32 = zipfian(1.0, 32)
+
+    # parameter space 1
+
+    pipeline_1 = RegressorPipelineDF(
+        regressor=RandomForestRegressorDF(random_state=42),
+        preprocessing=simple_preprocessor,
+    )
+    ps_1 = ParameterSpace(pipeline_1)
+    ps_1.regressor.min_weight_fraction_leaf = loguniform_0_01_0_10
+    ps_1.regressor.max_depth = randint_3_10
+    ps_1.regressor.min_samples_leaf = loguniform_0_05_0_10
+
+    with pytest.raises(
+        AttributeError,
+        match=r"^unknown parameter name for RandomForestRegressorDF: unknown$",
+    ):
+        ps_1.regressor.unknown = 1
+
+    with pytest.raises(
+        TypeError,
+        match=(
+            "^expected list or distribution for parameter min_samples_leaf "
+            "but got: 1$"
+        ),
+    ):
+        ps_1.regressor.min_samples_leaf = 1
+
+    # parameter space 2
+
+    pipeline_2 = RegressorPipelineDF(
+        regressor=LGBMRegressorDF(random_state=42),
+        preprocessing=simple_preprocessor,
+    )
+    ps_2 = ParameterSpace(pipeline_2)
+    ps_2.regressor.max_depth = randint_3_10
+    ps_2.regressor.min_child_samples = zipfian_1_32
+
+    # multi parameter space
+
+    with pytest.raises(
+        TypeError,
+        match=(
+            r"^arg estimator_type must be a subclass of ClassifierPipelineDF but is: "
+            r"RegressorPipelineDF$"
+        ),
+    ):
+        # noinspection PyTypeChecker
+        MultiClassifierParameterSpace(ps_1, ps_2, estimator_type=RegressorPipelineDF)
+
+    with pytest.raises(
+        TypeError,
+        match=(
+            r"^all candidate estimators must be instances of ClassifierPipelineDF, "
+            r"but candidate estimators include: RegressorPipelineDF$"
+        ),
+    ):
+        # noinspection PyTypeChecker
+        MultiClassifierParameterSpace(ps_1, ps_2)
+
+    mps = MultiRegressorParameterSpace(ps_1, ps_2)
+
+    # test
+
+    assert freeze(mps.to_expression()) == freeze(
+        Id.MultiRegressorParameterSpace(
+            Id.PipelineDF(steps=[("candidate", pipeline_1.to_expression())]),
+            [
+                Id.ParameterSpace(
+                    candidate=pipeline_1.to_expression(),
+                    **{
+                        "candidate.regressor.min_weight_fraction_leaf": (
+                            Id.loguniform(0.01, 0.1)
+                        ),
+                        "candidate.regressor.max_depth": Id.randint(3, 10),
+                        "candidate.regressor.min_samples_leaf": (
+                            Id.loguniform(0.05, 0.1)
+                        ),
+                    },
+                ),
+                Id.ParameterSpace(
+                    candidate=pipeline_2.to_expression(),
+                    **{
+                        "candidate.regressor.max_depth": Id.randint(3, 10),
+                        "candidate.regressor.min_child_samples": Id.zipfian(1.0, 32),
+                    },
+                ),
+            ],
+        )
+    )
+
+    assert type(mps.estimator) == PipelineDF
+    assert mps.estimator.steps == [("candidate", pipeline_1)]
+
+    assert mps.parameters == [
+        {
+            "candidate": [pipeline_1],
+            "candidate__regressor__max_depth": randint_3_10,
+            "candidate__regressor__min_samples_leaf": loguniform_0_05_0_10,
+            "candidate__regressor__min_weight_fraction_leaf": loguniform_0_01_0_10,
+        },
+        {
+            "candidate": [pipeline_2],
+            "candidate__regressor__max_depth": randint_3_10,
+            "candidate__regressor__min_child_samples": zipfian_1_32,
+        },
+    ]

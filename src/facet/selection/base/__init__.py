@@ -1,0 +1,5 @@
+"""
+Base classes for module :mod:`facet.selection`.
+"""
+
+from ._parameters import *
