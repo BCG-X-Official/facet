@@ -7,6 +7,15 @@ FACET 1.1
 FACET 1.1 refines and enhances the association/synergy/redundancy calculations provided
 by the :class:`.LearnerInspector`.
 
+1.1.2
+~~~~~
+
+- DOC: use downloadable dataset in the `getting started` notebook
+- FIX: import :mod:`catboost` if present, else create a local module mockup
+- FIX: correctly identify if ``sample_weights`` is undefined when re-fitting a model
+  on the full dataset in a :class:`.LearnerCrossfit`
+
+
 1.1.1
 ~~~~~
 
