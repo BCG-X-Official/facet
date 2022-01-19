@@ -29,7 +29,13 @@ from sklearndf.transformation import (
 import facet
 from facet.data import Sample
 from facet.inspection import LearnerInspector, TreeExplainerFactory
-from facet.selection import LearnerEvaluation, LearnerGrid, LearnerRanker
+from facet.selection import (
+    LearnerEvaluation,
+    LearnerGrid,
+    LearnerRanker,
+    MultiRegressorParameterSpace,
+    ParameterSpace,
+)
 from facet.validation import BootstrapCV, StratifiedBootstrapCV
 
 logging.basicConfig(level=logging.DEBUG)
@@ -142,6 +148,79 @@ def regressor_grids(simple_preprocessor: TransformerDF) -> List[LearnerGrid]:
             learner_parameters={"normalize": [False, True]},
         ),
     ]
+
+
+@pytest.fixture
+def regressor_parameters(
+    simple_preprocessor: TransformerDF,
+) -> MultiRegressorParameterSpace:
+    random_state = {"random_state": 42}
+
+    space_1 = ParameterSpace(
+        RegressorPipelineDF(
+            preprocessing=simple_preprocessor, regressor=LGBMRegressorDF(**random_state)
+        )
+    )
+    space_1.regressor.max_depth = [5, 10]
+    space_1.regressor.min_split_gain = [0.1, 0.2]
+    space_1.regressor.num_leaves = [50, 100, 200]
+
+    space_2 = ParameterSpace(
+        RegressorPipelineDF(
+            preprocessing=simple_preprocessor,
+            regressor=AdaBoostRegressorDF(**random_state),
+        )
+    )
+    space_2.regressor.n_estimators = [50, 80]
+
+    space_3 = ParameterSpace(
+        RegressorPipelineDF(
+            preprocessing=simple_preprocessor,
+            regressor=RandomForestRegressorDF(**random_state),
+        )
+    )
+    space_3.regressor.n_estimators = [50, 80]
+
+    space_4 = ParameterSpace(
+        RegressorPipelineDF(
+            preprocessing=simple_preprocessor,
+            regressor=DecisionTreeRegressorDF(**random_state),
+        )
+    )
+    space_4.regressor.max_depth = [0.5, 1.0]
+    space_4.regressor.max_features = [0.5, 1.0]
+
+    space_5 = ParameterSpace(
+        RegressorPipelineDF(
+            preprocessing=simple_preprocessor,
+            regressor=ExtraTreeRegressorDF(**random_state),
+        )
+    )
+    space_5.regressor.max_depth = [5, 10, 12]
+
+    space_6 = ParameterSpace(
+        RegressorPipelineDF(preprocessing=simple_preprocessor, regressor=SVRDF())
+    )
+    space_6.regressor.gamma = [0.5, 1]
+    space_6.regressor.C = [50, 100]
+
+    space_7 = ParameterSpace(
+        RegressorPipelineDF(
+            preprocessing=simple_preprocessor, regressor=LinearRegressionDF()
+        )
+    )
+    space_7.regressor.normalize = [False, True]
+
+    return MultiRegressorParameterSpace(
+        space_1,
+        space_2,
+        space_3,
+        space_4,
+        space_5,
+        space_6,
+        space_7,
+        estimator_type=RegressorPipelineDF,
+    )
 
 
 @pytest.fixture

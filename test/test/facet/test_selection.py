@@ -10,6 +10,7 @@ import pandas as pd
 import pytest
 from scipy.stats import loguniform, randint, zipfian
 from sklearn import datasets
+from sklearn.model_selection import GridSearchCV
 
 from pytools.expression import freeze
 from pytools.expression.atomic import Id
@@ -34,6 +35,7 @@ from facet.selection import (
     MultiRegressorParameterSpace,
     ParameterSpace,
 )
+from facet.selection._selection import LearnerRanker2
 from facet.validation import BootstrapCV
 
 log = logging.getLogger(__name__)
@@ -312,3 +314,42 @@ def test_parameter_space(
             "candidate__regressor__min_child_samples": zipfian_1_32,
         },
     ]
+
+
+def test_learner_ranker(
+    regressor_parameters: MultiRegressorParameterSpace, sample: Sample, n_jobs: int
+) -> None:
+
+    # define the circular cross validator with just 5 splits (to speed up testing)
+    cv = BootstrapCV(n_splits=5, random_state=42)
+
+    with pytest.raises(
+        ValueError,
+        match=(
+            "arg searcher_params must not include the first two positional arguments "
+            "of arg searcher_factory, but included: param_grid"
+        ),
+    ):
+        LearnerRanker2(GridSearchCV, regressor_parameters, param_grid=None)
+
+    ranker: LearnerRanker2[RegressorPipelineDF] = LearnerRanker2(
+        GridSearchCV,
+        regressor_parameters,
+        scoring="r2",
+        cv=cv,
+        n_jobs=n_jobs,
+    ).fit(sample=sample)
+
+    assert isinstance(ranker.best_estimator_, PipelineDF)
+
+    report_df = ranker.summary_report()
+    log.debug(report_df.columns.tolist())
+    log.debug(f"\n{report_df}")
+
+    assert len(report_df) > 0
+    assert isinstance(report_df, pd.DataFrame)
+
+    scores_sr: pd.Series = report_df.loc[:, "mean_test_score"]
+    assert all(
+        score_hi >= score_lo for score_hi, score_lo in zip(scores_sr, scores_sr[1:])
+    )

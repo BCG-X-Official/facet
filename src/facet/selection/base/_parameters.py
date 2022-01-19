@@ -30,7 +30,7 @@ ParameterDict = Dict[str, Union[List[Any], stats.rv_continuous, stats.rv_discret
 # Type variables
 #
 
-T_Estimator = TypeVar("T_Estimator")
+T_Estimator = TypeVar("T_Estimator", bound=BaseEstimator)
 
 
 #
