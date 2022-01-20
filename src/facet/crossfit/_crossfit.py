@@ -579,7 +579,7 @@ class _FitModelOnFullData(_BaseFitAndScore):
         parameters = self.parameters
         pipeline = parameters.pipeline
 
-        if parameters.train_target is None:
+        if parameters.train_weight is None:
             pipeline.fit(
                 X=parameters.train_features,
                 y=parameters.train_target,
