@@ -2,7 +2,9 @@
 Visualizations of simulation results.
 """
 
-from typing import Any, Iterable, Optional, Sequence, Tuple, Type, TypeVar, Union
+from typing import Iterable, Optional, Type, TypeVar, Union
+
+import pandas as pd
 
 from pytools.api import AllTracker, inheritdoc
 from pytools.viz import Drawer
@@ -80,50 +82,53 @@ class SimulationDrawer(Drawer[UnivariateSimulationResult, SimulationStyle]):
             SimulationReportStyle,
         ]
 
-    def _draw(self, data: UnivariateSimulationResult) -> None:
+    def _draw(self, result: UnivariateSimulationResult) -> None:
         # If the partitioning of the simulation is categorical, sort partitions in
         # ascending order of the median output
-        simulation_result: Tuple[
-            Sequence[float],
-            Sequence[float],
-            Sequence[float],
-            Sequence[Any],
-            Sequence[int],
-        ] = (
-            data.mean.to_list(),
-            data.lower_bound.to_list(),
-            data.upper_bound.to_list(),
-            data.partitioner.partitions_,
-            data.partitioner.frequencies_,
+        simulation_result: pd.DataFrame = result.data.assign(
+            frequencies=result.partitioner.frequencies_
         )
 
-        if data.partitioner.is_categorical:
-            # for categorical features, sort the categories by the median uplift
-            simulation_result = tuple(
-                *zip(*sorted(zip(*simulation_result), key=lambda x: x[0]))
+        if result.partitioner.is_categorical:
+            # for categorical features, sort the categories by mean predictions
+            simulation_result = simulation_result.sort_values(
+                by=UnivariateSimulationResult.COL_MEAN
             )
+
+        partitions = simulation_result.index.values
+        frequencies = simulation_result.frequencies.values
 
         # draw the graph with the uplift curves
         self.style.draw_uplift(
-            feature_name=data.feature_name,
-            output_name=data.output_name,
-            output_unit=data.output_unit,
-            outputs_median=simulation_result[0],
-            outputs_lower_bound=simulation_result[1],
-            outputs_upper_bound=simulation_result[2],
-            baseline=data.baseline,
-            confidence_level=data.confidence_level,
-            partitions=simulation_result[3],
-            frequencies=simulation_result[4],
-            is_categorical_feature=data.partitioner.is_categorical,
+            feature_name=result.feature_name,
+            output_name=result.output_name,
+            output_unit=result.output_unit,
+            outputs_median=(
+                simulation_result.loc[:, UnivariateSimulationResult.COL_MEAN].values
+            ),
+            outputs_lower_bound=(
+                simulation_result.loc[
+                    :, UnivariateSimulationResult.COL_LOWER_BOUND
+                ].values
+            ),
+            outputs_upper_bound=(
+                simulation_result.loc[
+                    :, UnivariateSimulationResult.COL_UPPER_BOUND
+                ].values
+            ),
+            baseline=result.baseline,
+            confidence_level=result.confidence_level,
+            partitions=partitions,
+            frequencies=frequencies,
+            is_categorical_feature=result.partitioner.is_categorical,
         )
 
         if self.histogram:
             # draw the histogram of the simulation values
             self.style.draw_histogram(
-                partitions=simulation_result[3],
-                frequencies=simulation_result[4],
-                is_categorical_feature=data.partitioner.is_categorical,
+                partitions=partitions,
+                frequencies=frequencies,
+                is_categorical_feature=result.partitioner.is_categorical,
             )
 
 

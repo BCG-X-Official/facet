@@ -86,7 +86,7 @@ def test_univariate_target_simulation(
     )
 
     assert_series_equal(
-        simulation_result.lower_bound,
+        simulation_result.data.loc[:, UnivariateSimulationResult.COL_LOWER_BOUND],
         pd.Series(
             [24.98646, 24.98646, 21.15398, 20.23877, 20.23877, 20.23877],
             name=UnivariateSimulationResult.COL_LOWER_BOUND,
@@ -95,7 +95,7 @@ def test_univariate_target_simulation(
     )
 
     assert_series_equal(
-        simulation_result.mean,
+        simulation_result.data.loc[:, UnivariateSimulationResult.COL_MEAN],
         pd.Series(
             [25.4571, 25.4571, 21.67744, 20.81063, 20.81063, 20.81063],
             name=UnivariateSimulationResult.COL_MEAN,
@@ -104,7 +104,7 @@ def test_univariate_target_simulation(
     )
 
     assert_series_equal(
-        simulation_result.upper_bound,
+        simulation_result.data.loc[:, UnivariateSimulationResult.COL_UPPER_BOUND],
         pd.Series(
             [25.92774, 25.92774, 22.2009, 21.38249, 21.38249, 21.38249],
             name=UnivariateSimulationResult.COL_UPPER_BOUND,
@@ -147,7 +147,7 @@ def test_univariate_target_subsample_simulation_80(
     )
 
     assert_series_equal(
-        simulation_result.lower_bound,
+        simulation_result.data.loc[:, UnivariateSimulationResult.COL_LOWER_BOUND],
         pd.Series(
             [25.05676, 25.05676, 25.05676, 22.96243, 21.43395]
             + [21.21544, 20.76824, 20.49282, 20.49282],
@@ -157,7 +157,7 @@ def test_univariate_target_subsample_simulation_80(
     )
 
     assert_series_equal(
-        simulation_result.mean,
+        simulation_result.data.loc[:, UnivariateSimulationResult.COL_MEAN],
         pd.Series(
             [25.642227, 25.642227, 25.642227, 23.598706, 22.067057]
             + [21.864828, 21.451056, 21.195954, 21.195954],
@@ -167,7 +167,7 @@ def test_univariate_target_subsample_simulation_80(
     )
 
     assert_series_equal(
-        simulation_result.upper_bound,
+        simulation_result.data.loc[:, UnivariateSimulationResult.COL_UPPER_BOUND],
         pd.Series(
             [26.22769, 26.22769, 26.22769, 24.23498, 22.70016]
             + [22.51422, 22.13387, 21.89909, 21.89909],
@@ -211,7 +211,9 @@ def test_univariate_uplift_subsample_simulation_95(
     )
 
     assert_series_equal(
-        simulation_result.lower_bound.round(6),
+        simulation_result.data.loc[:, UnivariateSimulationResult.COL_LOWER_BOUND].round(
+            6
+        ),
         pd.Series(
             [1.800835, 1.800835, 1.800835, -0.320393, -1.847194]
             + [-2.074327, -2.539217, -2.825394, -2.825394],
@@ -221,7 +223,7 @@ def test_univariate_uplift_subsample_simulation_95(
     )
 
     assert_series_equal(
-        simulation_result.mean.round(6),
+        simulation_result.data.loc[:, UnivariateSimulationResult.COL_MEAN].round(6),
         pd.Series(
             [2.696227, 2.696227, 2.696227, 0.652706, -0.878943]
             + [-1.081172, -1.494944, -1.750046, -1.750046],
@@ -231,7 +233,9 @@ def test_univariate_uplift_subsample_simulation_95(
     )
 
     assert_series_equal(
-        simulation_result.upper_bound.round(6),
+        simulation_result.data.loc[:, UnivariateSimulationResult.COL_UPPER_BOUND].round(
+            6
+        ),
         pd.Series(
             [3.59162, 3.59162, 3.59162, 1.625805, 0.089307]
             + [-0.088017, -0.450671, -0.674698, -0.674698],
@@ -271,7 +275,7 @@ def test_univariate_uplift_simulation(
     )
 
     assert_series_equal(
-        simulation_result.lower_bound,
+        simulation_result.data.loc[:, UnivariateSimulationResult.COL_LOWER_BOUND],
         pd.Series(
             [2.677461, 2.677461, -1.155017, -2.070234, -2.070234, -2.070234],
             name=UnivariateSimulationResult.COL_LOWER_BOUND,
@@ -280,7 +284,7 @@ def test_univariate_uplift_simulation(
     )
 
     assert_series_equal(
-        simulation_result.mean,
+        simulation_result.data.loc[:, UnivariateSimulationResult.COL_MEAN],
         pd.Series(
             [3.148100, 3.148100, -0.631560, -1.498371, -1.498371, -1.498371],
             name=UnivariateSimulationResult.COL_MEAN,
@@ -289,7 +293,7 @@ def test_univariate_uplift_simulation(
     )
 
     assert_series_equal(
-        simulation_result.upper_bound,
+        simulation_result.data.loc[:, UnivariateSimulationResult.COL_UPPER_BOUND],
         pd.Series(
             [3.618739, 3.618739, -0.108103, -0.926508, -0.926508, -0.926508],
             name=UnivariateSimulationResult.COL_UPPER_BOUND,
@@ -331,7 +335,7 @@ def test_univariate_uplift_subsample_simulation(
     )
 
     assert_series_equal(
-        simulation_result.lower_bound,
+        simulation_result.data.loc[:, UnivariateSimulationResult.COL_LOWER_BOUND],
         pd.Series(
             [2.110762, 2.110762, 2.110762, 0.0164306, -1.512048]
             + [-1.730561, -2.177757, -2.453179, -2.453179],
@@ -341,7 +345,7 @@ def test_univariate_uplift_subsample_simulation(
     )
 
     assert_series_equal(
-        simulation_result.mean,
+        simulation_result.data.loc[:, UnivariateSimulationResult.COL_MEAN],
         pd.Series(
             [2.696227, 2.696227, 2.696227, 0.652706, -0.878943]
             + [-1.081172, -1.494944, -1.750046, -1.750046],
@@ -351,7 +355,7 @@ def test_univariate_uplift_subsample_simulation(
     )
 
     assert_series_equal(
-        simulation_result.upper_bound,
+        simulation_result.data.loc[:, UnivariateSimulationResult.COL_UPPER_BOUND],
         pd.Series(
             [3.281693, 3.281693, 3.281693, 1.288981, -0.245838]
             + [-0.431783, -0.81213, -1.046914, -1.046914],
@@ -396,7 +400,7 @@ def test_univariate_probability_simulation(
     assert simulation_result.baseline == approx(0.5)
 
     assert_series_equal(
-        simulation_result.lower_bound,
+        simulation_result.data.loc[:, UnivariateSimulationResult.COL_LOWER_BOUND],
         pd.Series(
             [0.415337, 0.390766, 0.401039, 0.420727, 0.425914, 0.452885, 0.452885],
             name=UnivariateSimulationResult.COL_LOWER_BOUND,
@@ -405,7 +409,7 @@ def test_univariate_probability_simulation(
     )
 
     assert_series_equal(
-        simulation_result.mean,
+        simulation_result.data.loc[:, UnivariateSimulationResult.COL_MEAN],
         pd.Series(
             [0.495814, 0.475288, 0.48689, 0.507294, 0.510055, 0.533888, 0.533888],
             name=UnivariateSimulationResult.COL_MEAN,
@@ -414,7 +418,7 @@ def test_univariate_probability_simulation(
     )
 
     assert_series_equal(
-        simulation_result.upper_bound,
+        simulation_result.data.loc[:, UnivariateSimulationResult.COL_UPPER_BOUND],
         pd.Series(
             [0.576292, 0.559809, 0.57274, 0.593862, 0.594196, 0.614892, 0.614892],
             name=UnivariateSimulationResult.COL_UPPER_BOUND,
