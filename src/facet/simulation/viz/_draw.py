@@ -84,7 +84,7 @@ class SimulationDrawer(Drawer[UnivariateSimulationResult, SimulationStyle]):
 
     def _draw(self, result: UnivariateSimulationResult) -> None:
         # If the partitioning of the simulation is categorical, sort partitions in
-        # ascending order of the median output
+        # ascending order of the mean output
         simulation_result: pd.DataFrame = result.data.assign(
             frequencies=result.partitioner.frequencies_
         )
@@ -103,7 +103,7 @@ class SimulationDrawer(Drawer[UnivariateSimulationResult, SimulationStyle]):
             feature_name=result.feature_name,
             output_name=result.output_name,
             output_unit=result.output_unit,
-            outputs_median=(
+            outputs_mean=(
                 simulation_result.loc[:, UnivariateSimulationResult.COL_MEAN].values
             ),
             outputs_lower_bound=(

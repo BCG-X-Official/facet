@@ -49,7 +49,7 @@ class SimulationStyle(DrawingStyle, metaclass=ABCMeta):
         feature_name: str,
         output_name: str,
         output_unit: str,
-        outputs_median: Sequence[float],
+        outputs_mean: Sequence[float],
         outputs_lower_bound: Sequence[float],
         outputs_upper_bound: Sequence[float],
         baseline: float,
@@ -59,12 +59,13 @@ class SimulationStyle(DrawingStyle, metaclass=ABCMeta):
         is_categorical_feature: bool,
     ) -> None:
         """
-        Draw the graph with the uplift curves: median, low and high percentiles.
+        Draw the simulation results as the mean simulated outputs with their
+        confidence intervals.
 
         :param feature_name: name of the simulated feature
         :param output_name: name of the target for which output values were simulated
         :param output_unit: the unit of the output axis
-        :param outputs_median: the medians of the simulated outputs
+        :param outputs_mean: the mean simulated outputs
         :param outputs_lower_bound: the lower CI bounds of the simulated outputs
         :param outputs_upper_bound: the upper CI bounds of the simulated outputs
         :param baseline: the baseline of the simulation
@@ -95,12 +96,12 @@ class SimulationStyle(DrawingStyle, metaclass=ABCMeta):
 
     @staticmethod
     def _legend(confidence_level: float) -> Tuple[str, ...]:
-        # generate a triple with legend names for the min percentile, median, and max
+        # generate a triple with legend names for the min percentile, mean, and max
         # percentile
         tail_percentile = (100.0 - confidence_level * 100.0) / 2
         return (
             f"{tail_percentile}th percentile",
-            "Median",
+            "Mean",
             f"{100.0 - tail_percentile}th percentile",
             "Baseline",
         )
@@ -111,7 +112,7 @@ class SimulationMatplotStyle(MatplotStyle, SimulationStyle):
     """
     `matplotlib` style for simulation chart.
 
-    Along the range of simulated feature values on the x axis, plots the median and
+    Along the range of simulated feature values on the x axis, plots the mean and
     confidence intervals of the simulated target value.
 
     A bar chart below the plot shows a histogram of actually observed values near the
@@ -127,7 +128,7 @@ class SimulationMatplotStyle(MatplotStyle, SimulationStyle):
         feature_name: str,
         output_name: str,
         output_unit: str,
-        outputs_median: Sequence[float],
+        outputs_mean: Sequence[float],
         outputs_lower_bound: Sequence[float],
         outputs_upper_bound: Sequence[float],
         baseline: float,
@@ -138,7 +139,7 @@ class SimulationMatplotStyle(MatplotStyle, SimulationStyle):
     ) -> None:
         """[see superclass]"""
 
-        # draw the mean predicted uplift, showing median and confidence ranges for
+        # draw the mean predicted uplift, showing mean and confidence ranges for
         # each prediction
         if is_categorical_feature:
             x = range(len(partitions))
@@ -149,9 +150,9 @@ class SimulationMatplotStyle(MatplotStyle, SimulationStyle):
         ax = self.ax
         colors = self.colors
 
-        # plot the confidence bounds and the median
+        # plot the confidence bounds and the mean
         (line_min,) = ax.plot(x, outputs_lower_bound, color=colors.accent_3)
-        (line_median,) = ax.plot(x, outputs_median, color=colors.accent_2)
+        (line_mean,) = ax.plot(x, outputs_mean, color=colors.accent_2)
         (line_max,) = ax.plot(x, outputs_upper_bound, color=colors.accent_3)
 
         # add a horizontal line at the baseline
@@ -159,7 +160,7 @@ class SimulationMatplotStyle(MatplotStyle, SimulationStyle):
 
         # add a legend
         labels = self._legend(confidence_level=confidence_level)
-        handles = (line_max, line_median, line_min, line_base)
+        handles = (line_max, line_mean, line_min, line_base)
         ax.legend(handles, labels)
 
         # label the y axis
@@ -317,7 +318,7 @@ class SimulationReportStyle(SimulationStyle, TextStyle):
         feature_name: str,
         output_name: str,
         output_unit: str,
-        outputs_median: Sequence[float],
+        outputs_mean: Sequence[float],
         outputs_lower_bound: Sequence[float],
         outputs_upper_bound: Sequence[float],
         baseline: float,
@@ -344,7 +345,7 @@ class SimulationReportStyle(SimulationStyle, TextStyle):
                     zip(
                         partitions,
                         outputs_lower_bound,
-                        outputs_median,
+                        outputs_mean,
                         outputs_upper_bound,
                     )
                 ),
