@@ -63,23 +63,21 @@ class UnivariateSimulationResult(Generic[T_Partition]):
     Summary result of a univariate simulation.
     """
 
+    #: The simulation result as a data frame, indexed by the central values of the
+    #: partitions for which the simulation was run, with the following columns:
+    #:
+    #: - :attr:`.COL_MEAN`: the mean predictions for the simulated values
+    #: - :attr:`.COL_SEM`: the standard errors of the mean predictions
+    #: - :attr:`.COL_LOWER_BOUND`: the lower bounds of the confidence intervals for the
+    #:   simulation outcomes, based on mean, standard error of the mean, and
+    #:   :attr:`confidence_level`
+    #: - :attr:`.COL_UPPER_BOUND`: the upper bounds of the confidence intervals for the
+    #:   simulation outcomes, based on mean, standard error of the mean, and
+    #:   :attr:`confidence_level`
+    data: pd.DataFrame
+
     #: The partitioner used to generate feature values to be simulated.
     partitioner: Partitioner
-
-    #: The mean predictions for the values representing each partition.
-    mean: pd.Series
-
-    #: The standard errors of the mean predictions for the values representing each
-    # partition.
-    sem: pd.Series
-
-    #: The lower bounds of the confidence intervals for the mean predictions for the
-    # values representing each partition.
-    lower_bound: pd.Series
-
-    #: The upper bounds of the confidence intervals for the mean predictions for the
-    # values representing each partition.
-    upper_bound: pd.Series
 
     #: Name of the simulated feature.
     feature_name: str
@@ -160,48 +158,30 @@ class UnivariateSimulationResult(Generic[T_Partition]):
                 "in the range between 0.0 and 1.0 (exclusive)"
             )
 
-        idx = pd.Index(
-            partitioner.partitions_, name=UnivariateSimulationResult.IDX_PARTITION
-        )
-
         self.partitioner = partitioner
-        self.mean = pd.Series(mean, index=idx, name=UnivariateSimulationResult.COL_MEAN)
-        self.sem = pd.Series(sem, index=idx, name=UnivariateSimulationResult.COL_SEM)
         self.feature_name = feature_name
         self.output_name = output_name
         self.output_unit = output_unit
         self.baseline = baseline
         self.confidence_level = confidence_level
 
-    def _ci_width(self) -> np.ndarray:
-        # get the width of the confidence interval
-        return -stats.norm.ppf((1.0 - self.confidence_level) / 2.0) * self.sem.values
+        # convert mean and sem to numpy arrays
+        mean_arr = np.array(mean)
+        sem_arr = np.array(sem)
 
-    @property
-    def lower_bound(self) -> pd.Series:
-        """
-        Calculate the lower CI bounds of the distribution of simulation outcomes,
-        for every partition.
+        # get the width of the confidence interval (this is a negative number)
+        ci_width = stats.norm.ppf((1.0 - self.confidence_level) / 2.0) * sem_arr
 
-        :return: a series of lower CI bounds, indexed by the central values of the
-            partitions for which the simulation was run
-        """
-
-        return (self.mean - self._ci_width()).rename(
-            UnivariateSimulationResult.COL_LOWER_BOUND
-        )
-
-    @property
-    def upper_bound(self) -> pd.Series:
-        """
-        Calculate the lower CI bounds of the distribution of simulation outcomes,
-        for every partition.
-
-        :return: a series of upper CI bounds, indexed by the central values of the
-            partitions for which the simulation was run
-        """
-        return (self.mean + self._ci_width()).rename(
-            UnivariateSimulationResult.COL_UPPER_BOUND
+        self.data = pd.DataFrame(
+            data={
+                UnivariateSimulationResult.COL_MEAN: mean_arr,
+                UnivariateSimulationResult.COL_SEM: sem_arr,
+                UnivariateSimulationResult.COL_LOWER_BOUND: mean_arr + ci_width,
+                UnivariateSimulationResult.COL_UPPER_BOUND: mean_arr - ci_width,
+            },
+            index=pd.Index(
+                partitioner.partitions_, name=UnivariateSimulationResult.IDX_PARTITION
+            ),
         )
 
 
@@ -579,7 +559,14 @@ class UnivariateUpliftSimulator(_UnivariateRegressionSimulator):
         )
 
         # offset the mean values to get uplift instead of absolute outputs
-        result.mean -= self.expected_output()
+        result.data.loc[
+            :,
+            [
+                UnivariateSimulationResult.COL_MEAN,
+                UnivariateSimulationResult.COL_LOWER_BOUND,
+                UnivariateSimulationResult.COL_UPPER_BOUND,
+            ],
+        ] -= self.expected_output()
 
         return result
 
