@@ -382,6 +382,13 @@ def iris_classifier_ranker_dual_target(
 
 
 @pytest.fixture
+def iris_classifier_model_binary(
+    iris_classifier_ranker_binary: LearnerRanker[ClassifierPipelineDF],
+) -> ClassifierPipelineDF[RandomForestClassifierDF]:
+    return iris_classifier_ranker_binary.best_model_
+
+
+@pytest.fixture
 def iris_classifier_crossfit_binary(
     iris_classifier_ranker_binary: LearnerRanker[ClassifierPipelineDF],
 ) -> LearnerCrossfit[ClassifierPipelineDF[RandomForestClassifierDF]]:
