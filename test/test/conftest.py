@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 import pytest
 from sklearn import datasets
-from sklearn.model_selection import BaseCrossValidator, KFold
+from sklearn.model_selection import BaseCrossValidator, GridSearchCV, KFold
 from sklearn.utils import Bunch
 
 from sklearndf import TransformerDF
@@ -29,13 +29,7 @@ from sklearndf.transformation import (
 import facet
 from facet.data import Sample
 from facet.inspection import LearnerInspector, TreeExplainerFactory
-from facet.selection import (
-    LearnerEvaluation,
-    LearnerGrid,
-    LearnerRanker,
-    MultiRegressorParameterSpace,
-    ParameterSpace,
-)
+from facet.selection import LearnerRanker2, MultiRegressorParameterSpace, ParameterSpace
 from facet.validation import BootstrapCV, StratifiedBootstrapCV
 
 logging.basicConfig(level=logging.DEBUG)
@@ -89,65 +83,6 @@ def cv_bootstrap() -> BaseCrossValidator:
 def cv_stratified_bootstrap() -> BaseCrossValidator:
     # define a CV
     return StratifiedBootstrapCV(n_splits=N_BOOTSTRAPS, random_state=42)
-
-
-@pytest.fixture
-def regressor_grids(simple_preprocessor: TransformerDF) -> List[LearnerGrid]:
-    random_state = {"random_state": [42]}
-
-    return [
-        LearnerGrid(
-            pipeline=RegressorPipelineDF(
-                preprocessing=simple_preprocessor, regressor=LGBMRegressorDF()
-            ),
-            learner_parameters={
-                "max_depth": [5, 10],
-                "min_split_gain": [0.1, 0.2],
-                "num_leaves": [50, 100, 200],
-                **random_state,
-            },
-        ),
-        LearnerGrid(
-            pipeline=RegressorPipelineDF(
-                preprocessing=simple_preprocessor, regressor=AdaBoostRegressorDF()
-            ),
-            learner_parameters={"n_estimators": [50, 80], **random_state},
-        ),
-        LearnerGrid(
-            pipeline=RegressorPipelineDF(
-                preprocessing=simple_preprocessor, regressor=RandomForestRegressorDF()
-            ),
-            learner_parameters={"n_estimators": [50, 80], **random_state},
-        ),
-        LearnerGrid(
-            pipeline=RegressorPipelineDF(
-                preprocessing=simple_preprocessor, regressor=DecisionTreeRegressorDF()
-            ),
-            learner_parameters={
-                "max_depth": [0.5, 1.0],
-                "max_features": [0.5, 1.0],
-                **random_state,
-            },
-        ),
-        LearnerGrid(
-            pipeline=RegressorPipelineDF(
-                preprocessing=simple_preprocessor, regressor=ExtraTreeRegressorDF()
-            ),
-            learner_parameters={"max_depth": [5, 10, 12], **random_state},
-        ),
-        LearnerGrid(
-            pipeline=RegressorPipelineDF(
-                preprocessing=simple_preprocessor, regressor=SVRDF()
-            ),
-            learner_parameters={"gamma": [0.5, 1], "C": [50, 100]},
-        ),
-        LearnerGrid(
-            pipeline=RegressorPipelineDF(
-                preprocessing=simple_preprocessor, regressor=LinearRegressionDF()
-            ),
-            learner_parameters={"normalize": [False, True]},
-        ),
-    ]
 
 
 @pytest.fixture
@@ -226,28 +161,32 @@ def regressor_parameters(
 @pytest.fixture
 def regressor_ranker(
     cv_kfold: KFold,
-    regressor_grids: List[LearnerGrid[RegressorPipelineDF]],
+    regressor_parameters: MultiRegressorParameterSpace,
     sample: Sample,
     n_jobs: int,
-) -> LearnerRanker[RegressorPipelineDF]:
-    return LearnerRanker(
-        grids=regressor_grids, cv=cv_kfold, scoring="r2", n_jobs=n_jobs
+) -> LearnerRanker2[RegressorPipelineDF, GridSearchCV]:
+    return LearnerRanker2(
+        searcher_factory=GridSearchCV,
+        parameter_space=regressor_parameters,
+        cv=cv_kfold,
+        scoring="r2",
+        n_jobs=n_jobs,
     ).fit(sample=sample)
 
 
 @pytest.fixture
 def best_lgbm_model(
-    regressor_ranker: LearnerRanker[RegressorPipelineDF],
+    regressor_ranker: LearnerRanker2[RegressorPipelineDF, GridSearchCV],
+    sample: Sample,
 ) -> RegressorPipelineDF:
     # we get the best model_evaluation which is a LGBM - for the sake of test
     # performance
-    best_lgbm_evaluation: LearnerEvaluation[RegressorPipelineDF] = [
-        evaluation
-        for evaluation in regressor_ranker.ranking_
-        if isinstance(evaluation.pipeline.regressor, LGBMRegressorDF)
+    candidates = regressor_ranker.summary_report()["param_candidate"].iloc[:, 0]
+    best_lgbm_model = candidates[
+        candidates.apply(lambda x: isinstance(x.regressor, LGBMRegressorDF))
     ][0]
 
-    return best_lgbm_evaluation.pipeline
+    return best_lgbm_model.fit(X=sample.features, y=sample.target)
 
 
 @pytest.fixture
@@ -374,42 +313,35 @@ def iris_sample_binary_dual_target(
 
 
 def check_ranking(
-    ranking: List[LearnerEvaluation],
+    ranking: pd.DataFrame,
+    is_classifier: bool,
     expected_scores: Sequence[float],
-    expected_learners: Optional[Sequence[type]],
     expected_parameters: Optional[Mapping[int, Mapping[str, Any]]],
 ) -> None:
     """
     Test helper to check rankings produced by learner rankers
 
-    :param ranking: a list of LearnerEvaluations
+    :param ranking: summary data frame
+    :param is_classifier: flag if ranking was performed on classifiers, or regressors
     :param expected_scores: expected ranking scores, rounded to 3 decimal places
-    :param expected_learners: expected learner classes
     :param expected_parameters: expected learner parameters
     :return: None
     """
 
-    if expected_learners is None:
-        expected_learners = [None] * len(ranking)
+    SCORE_COLUMN = "mean_test_score"
 
-    for rank, (learner_eval, score_expected, learner_expected) in enumerate(
-        zip(ranking, expected_scores, expected_learners)
-    ):
-        score_actual = round(learner_eval.ranking_score, 3)
+    for rank, score_expected in enumerate(expected_scores):
+        score_actual = round(ranking[SCORE_COLUMN].iloc[rank], 3)
         assert score_actual == pytest.approx(score_expected, abs=0.1), (
             f"unexpected score for learner at rank #{rank + 1}: "
             f"got {score_actual} but expected {score_expected}"
         )
-        if learner_expected is not None:
-            learner_actual = learner_eval.pipeline.final_estimator
-            assert type(learner_actual) == learner_expected, (
-                f"unexpected class for learner at rank #{rank}: "
-                f"got {type(learner_actual)} but expected {learner_expected}"
-            )
+
+    param_column = "param_classifier" if is_classifier else "param_regressor"
 
     if expected_parameters is not None:
         for rank, parameters_expected in expected_parameters.items():
-            parameters_actual = ranking[rank].parameters
+            parameters_actual = ranking[param_column].iloc[rank].to_dict()
             assert parameters_actual == parameters_expected, (
                 f"unexpected parameters for learner at rank #{rank}: "
                 f"got {parameters_actual} but expected {parameters_expected}"
@@ -421,7 +353,7 @@ def iris_classifier_ranker_binary(
     iris_sample_binary: Sample,
     cv_stratified_bootstrap: StratifiedBootstrapCV,
     n_jobs: int,
-) -> LearnerRanker[ClassifierPipelineDF[RandomForestClassifierDF]]:
+) -> LearnerRanker2[ClassifierPipelineDF[RandomForestClassifierDF], GridSearchCV]:
     return fit_classifier_ranker(
         sample=iris_sample_binary, cv=cv_stratified_bootstrap, n_jobs=n_jobs
     )
@@ -432,7 +364,7 @@ def iris_classifier_ranker_multi_class(
     iris_sample_multi_class: Sample,
     cv_stratified_bootstrap: StratifiedBootstrapCV,
     n_jobs: int,
-) -> LearnerRanker[ClassifierPipelineDF[RandomForestClassifierDF]]:
+) -> LearnerRanker2[ClassifierPipelineDF[RandomForestClassifierDF], GridSearchCV]:
     return fit_classifier_ranker(
         sample=iris_sample_multi_class, cv=cv_stratified_bootstrap, n_jobs=n_jobs
     )
@@ -441,7 +373,7 @@ def iris_classifier_ranker_multi_class(
 @pytest.fixture
 def iris_classifier_ranker_dual_target(
     iris_sample_binary_dual_target: Sample, cv_bootstrap: BootstrapCV, n_jobs: int
-) -> LearnerRanker[ClassifierPipelineDF[RandomForestClassifierDF]]:
+) -> LearnerRanker2[ClassifierPipelineDF[RandomForestClassifierDF], GridSearchCV]:
     return fit_classifier_ranker(
         sample=iris_sample_binary_dual_target, cv=cv_bootstrap, n_jobs=n_jobs
     )
@@ -449,16 +381,18 @@ def iris_classifier_ranker_dual_target(
 
 @pytest.fixture
 def iris_classifier_binary(
-    iris_classifier_ranker_binary: LearnerRanker[ClassifierPipelineDF],
+    iris_classifier_ranker_binary: LearnerRanker2[ClassifierPipelineDF, GridSearchCV],
 ) -> ClassifierPipelineDF[RandomForestClassifierDF]:
-    return iris_classifier_ranker_binary.best_model_
+    return iris_classifier_ranker_binary.best_estimator_
 
 
 @pytest.fixture
 def iris_classifier_multi_class(
-    iris_classifier_ranker_multi_class: LearnerRanker[ClassifierPipelineDF],
+    iris_classifier_ranker_multi_class: LearnerRanker2[
+        ClassifierPipelineDF, GridSearchCV
+    ],
 ) -> ClassifierPipelineDF[RandomForestClassifierDF]:
-    return iris_classifier_ranker_multi_class.best_model_
+    return iris_classifier_ranker_multi_class.best_estimator_
 
 
 @pytest.fixture
@@ -479,23 +413,23 @@ def iris_inspector_multi_class(
 
 def fit_classifier_ranker(
     sample: Sample, cv: BaseCrossValidator, n_jobs: int
-) -> LearnerRanker[ClassifierPipelineDF[RandomForestClassifierDF]]:
-    # define the parameter grid
-    grids = [
-        LearnerGrid(
-            pipeline=ClassifierPipelineDF(
-                classifier=RandomForestClassifierDF(random_state=42), preprocessing=None
-            ),
-            learner_parameters={"n_estimators": [10, 50], "min_samples_leaf": [4, 8]},
+) -> LearnerRanker2[ClassifierPipelineDF[RandomForestClassifierDF], GridSearchCV]:
+    # define the parameter space
+    parameter_space = ParameterSpace(
+        ClassifierPipelineDF(
+            classifier=RandomForestClassifierDF(random_state=42),
+            preprocessing=None,
         )
-    ]
+    )
+    parameter_space.classifier.n_estimators = [10, 50]
+    parameter_space.classifier.min_samples_leaf = [4, 8]
 
     # pipeline inspector only supports binary classification,
     # therefore filter the sample down to only 2 target classes
-    return LearnerRanker(
-        grids=grids,
+    return LearnerRanker2(
+        searcher_factory=GridSearchCV,
+        parameter_space=parameter_space,
         cv=cv,
         scoring="f1_macro",
-        random_state=42,
         n_jobs=n_jobs,
     ).fit(sample=sample)

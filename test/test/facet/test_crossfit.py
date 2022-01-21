@@ -1,14 +1,18 @@
 import logging
 
-import numpy as np
 import pytest
+from sklearn.model_selection import GridSearchCV
 
 from sklearndf.classification import RandomForestClassifierDF
 from sklearndf.pipeline import ClassifierPipelineDF, RegressorPipelineDF
 from sklearndf.regression import RandomForestRegressorDF
 
-from ..conftest import check_ranking
-from facet.selection import LearnerGrid, LearnerRanker
+# from ..conftest import check_ranking
+from facet.selection import (
+    LearnerRanker2,
+    MultiClassifierParameterSpace,
+    ParameterSpace,
+)
 from facet.validation import StratifiedBootstrapCV
 
 log = logging.getLogger(__name__)
@@ -18,72 +22,58 @@ def test_prediction_classifier(
     iris_sample_multi_class, cv_stratified_bootstrap: StratifiedBootstrapCV, n_jobs: int
 ) -> None:
 
-    expected_learner_scores = [0.889, 0.886, 0.885, 0.879]
+    # expected_learner_scores = [0.889, 0.886, 0.885, 0.879]
 
     # define parameters and crossfit
-    grids = LearnerGrid(
-        pipeline=ClassifierPipelineDF(
-            classifier=RandomForestClassifierDF(random_state=42)
-        ),
-        learner_parameters={"min_samples_leaf": [16, 32], "n_estimators": [50, 80]},
+    ps1 = ParameterSpace(
+        ClassifierPipelineDF(classifier=RandomForestClassifierDF(random_state=42))
     )
+    ps1.classifier.min_samples_leaf = [16, 32]
+    ps1.classifier.n_estimators = [50, 80]
 
-    # define an illegal grid list, mixing classification with regression
-    grids_illegal = [
-        grids,
-        LearnerGrid(
-            pipeline=RegressorPipelineDF(
-                regressor=RandomForestRegressorDF(random_state=42)
-            ),
-            learner_parameters={"min_samples_leaf": [16, 32], "n_estimators": [50, 80]},
-        ),
-    ]
+    ps2 = ParameterSpace(
+        RegressorPipelineDF(regressor=RandomForestRegressorDF(random_state=42))
+    )
+    ps2.regressor.min_samples_leaf = [16, 32]
+    ps2.regressor.n_estimators = [50, 80]
 
     with pytest.raises(
-        ValueError, match="^arg grids mixes regressor and classifier pipelines$"
+        TypeError,
+        match="^all candidate estimators must be instances of "
+        "ClassifierPipelineDF, but candidate estimators include: "
+        "RegressorPipelineDF$",
     ):
-        LearnerRanker(
-            grids=grids_illegal,
-            cv=cv_stratified_bootstrap,
-        )
+        # define an illegal grid list, mixing classification with regression
+        MultiClassifierParameterSpace(ps1, ps2)
 
-    model_ranker: LearnerRanker[
-        ClassifierPipelineDF[RandomForestClassifierDF]
-    ] = LearnerRanker(
-        grids=grids,
+    model_ranker: LearnerRanker2[
+        ClassifierPipelineDF[RandomForestClassifierDF], GridSearchCV
+    ] = LearnerRanker2(
+        searcher_factory=GridSearchCV,
+        parameter_space=ps1,
         cv=cv_stratified_bootstrap,
         scoring="f1_macro",
         n_jobs=n_jobs,
-        random_state=42,
     )
 
-    model_ranker.fit(sample=iris_sample_multi_class)
-
     with pytest.raises(
-        ValueError, match="do not use arg sample_weight to pass sample weights"
+        ValueError,
+        match="arg sample_weight is not supported, " "use ag sample.weight instead",
     ):
         model_ranker.fit(
             sample=iris_sample_multi_class, sample_weight=iris_sample_multi_class.weight
         )
 
+    model_ranker.fit(sample=iris_sample_multi_class)
+
     log.debug(f"\n{model_ranker.summary_report()}")
 
-    check_ranking(
-        ranking=model_ranker.ranking_,
-        expected_scores=expected_learner_scores,
-        expected_learners=[RandomForestClassifierDF] * 4,
-        expected_parameters={
-            2: dict(classifier__min_samples_leaf=32, classifier__n_estimators=50),
-            3: dict(classifier__min_samples_leaf=32, classifier__n_estimators=80),
-        },
-    )
-
-    # consider: model_with_type(...) function for ModelRanking
-    crossfit = model_ranker.best_model_crossfit_
-
-    assert crossfit.is_fitted
-
-    accuracy_scores_per_split: np.ndarray = crossfit.score(scoring="accuracy")
-    assert (
-        (accuracy_scores_per_split > 0.9) & (accuracy_scores_per_split <= 1.0)
-    ).all()
+    # check_ranking(
+    #     ranking=model_ranker.ranking_,
+    #     expected_scores=expected_learner_scores,
+    #     expected_learners=[RandomForestClassifierDF] * 4,
+    #     expected_parameters={
+    #         2: dict(classifier__min_samples_leaf=32, classifier__n_estimators=50),
+    #         3: dict(classifier__min_samples_leaf=32, classifier__n_estimators=80),
+    #     },
+    # )
