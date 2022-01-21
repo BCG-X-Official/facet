@@ -16,7 +16,9 @@ from pytools.expression.atomic import Id
 from sklearndf import TransformerDF
 from sklearndf.classification import SVCDF
 from sklearndf.pipeline import ClassifierPipelineDF, PipelineDF, RegressorPipelineDF
-from sklearndf.regression import (  # AdaBoostRegressorDF,; LinearRegressionDF,
+from sklearndf.regression import (
+    AdaBoostRegressorDF,
+    LinearRegressionDF,
     RandomForestRegressorDF,
 )
 from sklearndf.regression.extra import LGBMRegressorDF
@@ -87,26 +89,36 @@ def test_model_ranker(
     regressor_parameters: MultiRegressorParameterSpace, sample: Sample, n_jobs: int
 ) -> None:
 
-    # TODO adjust
-    # expected_scores = [0.745, 0.742, 0.7, 0.689, 0.675, 0.675, 0.61, 0.61, 0.61, 0.61]
-    # expected_learners = [
-    #     RandomForestRegressorDF,
-    #     RandomForestRegressorDF,
-    #     AdaBoostRegressorDF,
-    #     AdaBoostRegressorDF,
-    #     LinearRegressionDF,
-    #     LinearRegressionDF,
-    #     LGBMRegressorDF,
-    #     LGBMRegressorDF,
-    #     LGBMRegressorDF,
-    #     LGBMRegressorDF,
-    # ]
-    # expected_parameters = {
-    #     0: dict(regressor__n_estimators=80, regressor__random_state=42),
-    #     1: dict(regressor__n_estimators=50, regressor__random_state=42),
-    #     2: dict(regressor__n_estimators=50, regressor__random_state=42),
-    #     3: dict(regressor__n_estimators=80, regressor__random_state=42),
-    # }
+    expected_scores = [
+        0.840,
+        0.837,
+        0.812,
+        0.812,
+        0.793,
+        0.790,
+        0.758,
+        0.758,
+        0.758,
+        0.758,
+    ]
+    expected_learners = [
+        RandomForestRegressorDF,
+        RandomForestRegressorDF,
+        LinearRegressionDF,
+        LinearRegressionDF,
+        AdaBoostRegressorDF,
+        AdaBoostRegressorDF,
+        LGBMRegressorDF,
+        LGBMRegressorDF,
+        LGBMRegressorDF,
+        LGBMRegressorDF,
+    ]
+    expected_parameters = {
+        0: dict(n_estimators=80),
+        1: dict(n_estimators=50),
+        4: dict(n_estimators=50),
+        5: dict(n_estimators=80),
+    }
 
     # define the circular cross validator with just 5 splits (to speed up testing)
     cv = BootstrapCV(n_splits=5, random_state=42)
@@ -124,22 +136,21 @@ def test_model_ranker(
     assert isinstance(ranker.best_estimator_.steps[0][1], RegressorPipelineDF)
 
     ranking = ranker.summary_report()
+    ranking_score = ranking["mean_test_score"]
 
     assert len(ranking) > 0
-    # TODO adjust
-    # assert isinstance(ranking[0], LearnerEvaluation)
-    # assert all(
-    #     ranking_hi.ranking_score >= ranking_lo.ranking_score
-    #     for ranking_hi, ranking_lo in zip(ranking, ranking[1:])
-    # )
+    assert all(
+        ranking_hi >= ranking_lo
+        for ranking_hi, ranking_lo in zip(ranking_score, ranking_score[1:])
+    )
 
-    # TODO adjust
-    # check_ranking(
-    #     ranking=ranker.ranking_,
-    #     expected_scores=expected_scores,
-    #     expected_learners=expected_learners,
-    #     expected_parameters=expected_parameters,
-    # )
+    check_ranking(
+        ranking=ranking,
+        is_classifier=False,
+        expected_scores=expected_scores,
+        expected_parameters=expected_parameters,
+        expected_learners=expected_learners,
+    )
 
 
 def test_model_ranker_no_preprocessing(n_jobs) -> None:

@@ -7,7 +7,7 @@ from sklearndf.classification import RandomForestClassifierDF
 from sklearndf.pipeline import ClassifierPipelineDF, RegressorPipelineDF
 from sklearndf.regression import RandomForestRegressorDF
 
-# from ..conftest import check_ranking
+from ..conftest import check_ranking
 from facet.selection import (
     LearnerRanker2,
     MultiClassifierParameterSpace,
@@ -22,7 +22,7 @@ def test_prediction_classifier(
     iris_sample_multi_class, cv_stratified_bootstrap: StratifiedBootstrapCV, n_jobs: int
 ) -> None:
 
-    # expected_learner_scores = [0.889, 0.886, 0.885, 0.879]
+    expected_learner_scores = [0.889, 0.886, 0.885, 0.879]
 
     # define parameters and crossfit
     ps1 = ParameterSpace(
@@ -66,14 +66,16 @@ def test_prediction_classifier(
 
     model_ranker.fit(sample=iris_sample_multi_class)
 
-    log.debug(f"\n{model_ranker.summary_report()}")
+    ranking = model_ranker.summary_report()
 
-    # check_ranking(
-    #     ranking=model_ranker.ranking_,
-    #     expected_scores=expected_learner_scores,
-    #     expected_learners=[RandomForestClassifierDF] * 4,
-    #     expected_parameters={
-    #         2: dict(classifier__min_samples_leaf=32, classifier__n_estimators=50),
-    #         3: dict(classifier__min_samples_leaf=32, classifier__n_estimators=80),
-    #     },
-    # )
+    log.debug(f"\n{ranking}")
+
+    check_ranking(
+        ranking=ranking,
+        is_classifier=True,
+        expected_scores=expected_learner_scores,
+        expected_parameters={
+            2: dict(min_samples_leaf=32, n_estimators=50),
+            3: dict(min_samples_leaf=32, n_estimators=80),
+        },
+    )

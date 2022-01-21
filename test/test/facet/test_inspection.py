@@ -21,7 +21,7 @@ from sklearndf.classification import (
 )
 from sklearndf.pipeline import ClassifierPipelineDF, RegressorPipelineDF
 
-# from ..conftest import check_ranking
+from ..conftest import check_ranking
 from facet.data import Sample
 from facet.inspection import (
     KernelExplainerFactory,
@@ -48,18 +48,19 @@ def test_model_inspection(
     n_jobs: int,
 ) -> None:
 
-    # define checksums for this test
-    log.debug(f"\n{regressor_ranker.summary_report()}")
+    ranking = regressor_ranker.summary_report()
 
-    # TODO adjust
-    # check_ranking(
-    #     ranking=regressor_ranker.ranking_,
-    #     expected_scores=(
-    #         [0.418, 0.400, 0.386, 0.385, 0.122, 0.122, -0.074, -0.074, -0.074, -0.074]
-    #     ),
-    #     expected_learners=None,
-    #     expected_parameters=None,
-    # )
+    # define checksums for this test
+    log.debug(f"\n{ranking}")
+
+    check_ranking(
+        ranking=ranking,
+        is_classifier=False,
+        expected_scores=(
+            [0.693, 0.689, 0.677, 0.661, 0.615, 0.615, 0.367, 0.281, 0.281, 0.281]
+        ),
+        expected_parameters=None,
+    )
 
     shap_values: pd.DataFrame = regressor_inspector.shap_values()
 
@@ -101,20 +102,21 @@ def test_model_inspection(
 
 def test_binary_classifier_ranking(iris_classifier_ranker_binary) -> None:
 
-    # expected_learner_scores = [0.872, 0.868, 0.866, 0.859]
+    expected_learner_scores = [0.872, 0.868, 0.866, 0.859]
 
-    log.debug(f"\n{iris_classifier_ranker_binary.summary_report()}")
+    ranking = iris_classifier_ranker_binary.summary_report()
 
-    # TODO adjust
-    # check_ranking(
-    #     ranking=iris_classifier_ranker_binary.ranking_,
-    #     expected_scores=expected_learner_scores,
-    #     expected_learners=[RandomForestClassifierDF] * 4,
-    #     expected_parameters={
-    #         2: dict(classifier__min_samples_leaf=4, classifier__n_estimators=10),
-    #         3: dict(classifier__min_samples_leaf=8, classifier__n_estimators=10),
-    #     },
-    # )
+    log.debug(f"\n{ranking}")
+
+    check_ranking(
+        ranking=ranking,
+        is_classifier=True,
+        expected_scores=expected_learner_scores,
+        expected_parameters={
+            2: dict(min_samples_leaf=4, n_estimators=10),
+            3: dict(min_samples_leaf=8, n_estimators=10),
+        },
+    )
 
 
 # noinspection DuplicatedCode

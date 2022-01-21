@@ -8,7 +8,7 @@ from sklearn import datasets
 from sklearn.model_selection import BaseCrossValidator, GridSearchCV, KFold
 from sklearn.utils import Bunch
 
-from sklearndf import TransformerDF
+from sklearndf import LearnerDF, TransformerDF
 from sklearndf.classification import RandomForestClassifierDF
 from sklearndf.pipeline import ClassifierPipelineDF, RegressorPipelineDF
 from sklearndf.regression import (
@@ -181,10 +181,17 @@ def best_lgbm_model(
 ) -> RegressorPipelineDF:
     # we get the best model_evaluation which is a LGBM - for the sake of test
     # performance
-    candidates = regressor_ranker.summary_report()["param_candidate"].iloc[:, 0]
-    best_lgbm_model = candidates[
-        candidates.apply(lambda x: isinstance(x.regressor, LGBMRegressorDF))
-    ][0]
+    candidates = regressor_ranker.summary_report()["param_candidate"]
+    best_lgbm_model_df = candidates[
+        candidates.apply(
+            lambda x: isinstance(x.iloc[0].regressor, LGBMRegressorDF), axis=1
+        )
+    ].iloc[0]
+
+    best_lgbm_model = best_lgbm_model_df[0]
+    best_lgbm_model.regressor.set_params(
+        **best_lgbm_model_df["regressor"].dropna().to_dict()
+    )
 
     return best_lgbm_model.fit(X=sample.features, y=sample.target)
 
@@ -317,6 +324,7 @@ def check_ranking(
     is_classifier: bool,
     expected_scores: Sequence[float],
     expected_parameters: Optional[Mapping[int, Mapping[str, Any]]],
+    expected_learners: Optional[List[LearnerDF]] = None,
 ) -> None:
     """
     Test helper to check rankings produced by learner rankers
@@ -325,10 +333,27 @@ def check_ranking(
     :param is_classifier: flag if ranking was performed on classifiers, or regressors
     :param expected_scores: expected ranking scores, rounded to 3 decimal places
     :param expected_parameters: expected learner parameters
+    :param expected_learners: optional list of expected learners. Should be present
+                              only for multi estimator search.
     :return: None
     """
 
     SCORE_COLUMN = "mean_test_score"
+    CLASSIFIER_STR = "classifier"
+    REGRESSOR_STR = "regressor"
+    PARAM_CANDIDATE_STR = "param_candidate"
+
+    def _select_parameters(
+        param_column: str, rank: int, learner_str: Optional[str]
+    ) -> Tuple[dict, Optional[LearnerDF]]:
+        if param_column == PARAM_CANDIDATE_STR:
+            raw_parameters = ranking[param_column][learner_str].iloc[rank].to_dict()
+            return (
+                {k: v for k, v in raw_parameters.items() if v is not np.nan},
+                ranking[param_column].iloc[:, 0].iloc[rank],
+            )
+        else:
+            return ranking[param_column].iloc[rank].to_dict(), None
 
     for rank, score_expected in enumerate(expected_scores):
         score_actual = round(ranking[SCORE_COLUMN].iloc[rank], 3)
@@ -337,15 +362,24 @@ def check_ranking(
             f"got {score_actual} but expected {score_expected}"
         )
 
-    param_column = "param_classifier" if is_classifier else "param_regressor"
+    learner_str = CLASSIFIER_STR if is_classifier else REGRESSOR_STR
+    param_column = f"param_{learner_str}"
+    if expected_learners is not None:
+        param_column = PARAM_CANDIDATE_STR
 
     if expected_parameters is not None:
         for rank, parameters_expected in expected_parameters.items():
-            parameters_actual = ranking[param_column].iloc[rank].to_dict()
+            parameters_actual, learner_actual = _select_parameters(
+                param_column, rank, learner_str
+            )
             assert parameters_actual == parameters_expected, (
                 f"unexpected parameters for learner at rank #{rank}: "
                 f"got {parameters_actual} but expected {parameters_expected}"
             )
+            if learner_actual is not None:
+                assert isinstance(
+                    getattr(learner_actual, learner_str), expected_learners[rank]
+                )
 
 
 @pytest.fixture
