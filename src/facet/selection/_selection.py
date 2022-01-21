@@ -4,23 +4,16 @@ Core implementation of :mod:`facet.selection`
 import inspect
 import itertools
 import logging
-import operator
 import re
-from functools import reduce
-from itertools import chain
 from re import Pattern
-from types import MappingProxyType
 from typing import (
     Any,
     Callable,
     Dict,
     Generic,
-    Iterable,
     List,
-    Mapping,
     Optional,
     Sequence,
-    Tuple,
     TypeVar,
     Union,
 )
@@ -30,7 +23,7 @@ import pandas as pd
 from numpy.random.mtrand import RandomState
 from sklearn.model_selection import BaseCrossValidator, GridSearchCV
 
-from pytools.api import AllTracker, deprecated, inheritdoc
+from pytools.api import AllTracker, inheritdoc
 from pytools.fit import FittableMixin
 from pytools.parallelization import ParallelizableMixin
 from sklearndf.pipeline import ClassifierPipelineDF, RegressorPipelineDF
@@ -40,7 +33,7 @@ from facet.selection.base import BaseParameterSpace
 
 log = logging.getLogger(__name__)
 
-__all__ = ["LearnerGrid", "LearnerEvaluation", "LearnerRanker"]
+__all__ = ["LearnerRanker"]
 
 #
 # Type constants
@@ -345,172 +338,6 @@ class LearnerRanker(
     summary_report.__doc__ = summary_report.__doc__.replace(
         "%%SORT_COLUMN%%", _DEFAULT_REPORT_SORT_COLUMN
     )
-
-
-class LearnerGrid(Generic[T_LearnerPipelineDF]):
-    """
-    A grid of hyper-parameters for tuning a learner pipeline.
-    """
-
-    @deprecated(message=f"use class {LearnerRanker.__name__} instead")
-    def __init__(
-        self,
-        pipeline: T_LearnerPipelineDF,
-        learner_parameters: Dict[str, Sequence],
-        preprocessing_parameters: Optional[Dict[str, Sequence]] = None,
-    ) -> None:
-        """
-        :param pipeline: the :class:`~.sklearndf.pipeline.RegressorPipelineDF` or
-            :class:`~.sklearndf.pipeline.ClassifierPipelineDF` to which the
-            hyper-parameters will be applied
-        :param learner_parameters: the hyper-parameter grid in which to search for the
-            optimal parameter values for the pipeline's final estimator
-        :param preprocessing_parameters: the hyper-parameter grid in which to search
-            for the optimal parameter values for the pipeline's preprocessing pipeline
-            (optional)
-        """
-        self.pipeline = pipeline
-
-        def _prefix_parameter_names(
-            parameters: Dict[str, Sequence], prefix: str
-        ) -> Iterable[Tuple[str, Any]]:
-            return (
-                (f"{prefix}__{param}", values) for param, values in parameters.items()
-            )
-
-        grid_parameters: Iterable[Tuple[str, Sequence]] = _prefix_parameter_names(
-            parameters=learner_parameters, prefix=pipeline.final_estimator_name
-        )
-
-        if preprocessing_parameters is not None:
-            grid_parameters = chain(
-                grid_parameters,
-                _prefix_parameter_names(
-                    parameters=preprocessing_parameters,
-                    prefix=pipeline.preprocessing_name,
-                ),
-            )
-
-        self._grid_parameters: List[Tuple[str, Sequence]] = list(grid_parameters)
-        self._grid_dict: Dict[str, Sequence] = dict(self._grid_parameters)
-
-    @property
-    def parameters(self) -> Mapping[str, Sequence[Any]]:
-        """
-        The parameter grid for the entire pipeline.
-        """
-        return MappingProxyType(self._grid_dict)
-
-    def __iter__(self) -> Iterable[Dict[str, Any]]:
-        grid = self._grid_parameters
-        params: List[Tuple[str, Any]] = [("", None) for _ in grid]
-
-        def _iter_parameter(param_index: int):
-            if param_index < 0:
-                yield dict(params)
-            else:
-                name, values = grid[param_index]
-                for value in values:
-                    params[param_index] = (name, value)
-                    yield from _iter_parameter(param_index=param_index - 1)
-
-        yield from _iter_parameter(len(grid) - 1)
-
-    def __getitem__(
-        self, pos: Union[int, slice]
-    ) -> Union[Dict[str, Sequence], Sequence[Dict[str, Sequence]]]:
-
-        _len = len(self)
-
-        def _get(i: int) -> Dict[str, Sequence]:
-            assert i >= 0
-
-            parameters = self._grid_parameters
-            result: Dict[str, Sequence] = {}
-
-            for name, values in parameters:
-                n_values = len(values)
-                result[name] = values[i % n_values]
-                i //= n_values
-
-            assert i == 0
-
-            return result
-
-        def _clip(i: int, i_max: int) -> int:
-            if i < 0:
-                return max(_len + i, 0)
-            else:
-                return min(i, i_max)
-
-        if isinstance(pos, slice):
-            return [
-                _get(i)
-                for i in range(
-                    _clip(pos.start or 0, _len - 1),
-                    _clip(pos.stop or _len, _len),
-                    pos.step or 1,
-                )
-            ]
-        else:
-            if pos < -_len or pos >= _len:
-                raise ValueError(f"index out of bounds: {pos}")
-            return _get(_len + pos if pos < 0 else pos)
-
-    def __len__(self) -> int:
-        return reduce(
-            operator.mul,
-            (
-                len(values_for_parameter)
-                for values_for_parameter in self._grid_dict.values()
-            ),
-        )
-
-
-class LearnerEvaluation(Generic[T_LearnerPipelineDF]):
-    """
-    A collection of scores for a specific parametrization of a learner pipeline,
-    generated by a :class:`.LearnerRanker`.
-    """
-
-    __slots__ = ["pipeline", "parameters", "scoring_name", "scores", "ranking_score"]
-
-    @deprecated(message=f"use class {LearnerRanker.__name__} instead")
-    def __init__(
-        self,
-        pipeline: T_LearnerPipelineDF,
-        parameters: Mapping[str, Any],
-        scoring_name: str,
-        scores: np.ndarray,
-        ranking_score: float,
-    ) -> None:
-        """
-        :param pipeline: the unfitted learner pipeline
-        :param parameters: the hyper-parameters for which the learner pipeline was
-            scored, as a mapping of parameter names to parameter values
-        :param scoring_name: the name of the scoring function used to calculate the
-            scores
-        :param scores: the scores of all crossfits of the learner pipeline
-        :param ranking_score: the aggregate score determined by the ranking
-            metric of :class:`.LearnerRanker`, used for ranking the learners
-        """
-        super().__init__()
-
-        #: The unfitted learner pipeline.
-        self.pipeline = pipeline
-
-        #: The hyper-parameters for which the learner pipeline was scored.
-        self.parameters = parameters
-
-        #: The name of the scoring function used to calculate the scores.
-        self.scoring_name = scoring_name
-
-        #: The scores of all crossfits of the learner pipeline.
-        self.scores = scores
-
-        #: The aggregate score determined by the ranking metric of
-        #: :class:`.LearnerRanker`, used for ranking the learners.
-        self.ranking_score = ranking_score
 
 
 __tracker.validate()

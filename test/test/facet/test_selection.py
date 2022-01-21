@@ -26,7 +26,6 @@ from sklearndf.regression.extra import LGBMRegressorDF
 from ..conftest import check_ranking
 from facet.data import Sample
 from facet.selection import (
-    LearnerGrid,
     LearnerRanker,
     MultiClassifierParameterSpace,
     MultiRegressorParameterSpace,
@@ -35,54 +34,6 @@ from facet.selection import (
 from facet.validation import BootstrapCV
 
 log = logging.getLogger(__name__)
-
-
-def test_parameter_grid() -> None:
-
-    grid = LearnerGrid(
-        pipeline=ClassifierPipelineDF(classifier=SVCDF(gamma="scale")),
-        learner_parameters={"a": [1, 2, 3], "b": [11, 12], "c": [21, 22]},
-    )
-
-    grid_expected = [
-        {"classifier__a": 1, "classifier__b": 11, "classifier__c": 21},
-        {"classifier__a": 2, "classifier__b": 11, "classifier__c": 21},
-        {"classifier__a": 3, "classifier__b": 11, "classifier__c": 21},
-        {"classifier__a": 1, "classifier__b": 12, "classifier__c": 21},
-        {"classifier__a": 2, "classifier__b": 12, "classifier__c": 21},
-        {"classifier__a": 3, "classifier__b": 12, "classifier__c": 21},
-        {"classifier__a": 1, "classifier__b": 11, "classifier__c": 22},
-        {"classifier__a": 2, "classifier__b": 11, "classifier__c": 22},
-        {"classifier__a": 3, "classifier__b": 11, "classifier__c": 22},
-        {"classifier__a": 1, "classifier__b": 12, "classifier__c": 22},
-        {"classifier__a": 2, "classifier__b": 12, "classifier__c": 22},
-        {"classifier__a": 3, "classifier__b": 12, "classifier__c": 22},
-    ]
-
-    _len = len(grid_expected)
-
-    # length of the grid
-    assert len(grid) == _len
-
-    # iterating all items in the grid
-    for item, expected in zip(grid, grid_expected):
-        assert item == expected
-
-    # positive indices
-    for i in range(_len):
-        assert grid[i] == grid_expected[i]
-
-    # negative indices
-    for i in range(-_len, 0):
-        assert grid[i] == grid_expected[_len + i]
-
-    # exceptions raised for out-of-bounds indices
-    with pytest.raises(expected_exception=ValueError):
-        _ = grid[_len]
-        _ = grid[-_len - 1]
-
-    # slicing support
-    assert grid[-10:10:2] == grid_expected[-10:10:2]
 
 
 def test_model_ranker(
