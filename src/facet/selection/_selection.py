@@ -21,7 +21,6 @@ from typing import (
     Optional,
     Sequence,
     Tuple,
-    Type,
     TypeVar,
     Union,
 )
@@ -34,11 +33,7 @@ from sklearn.model_selection import BaseCrossValidator, GridSearchCV
 from pytools.api import AllTracker, deprecated, inheritdoc
 from pytools.fit import FittableMixin
 from pytools.parallelization import ParallelizableMixin
-from sklearndf.pipeline import (
-    ClassifierPipelineDF,
-    LearnerPipelineDF,
-    RegressorPipelineDF,
-)
+from sklearndf.pipeline import ClassifierPipelineDF, RegressorPipelineDF
 
 from facet.data import Sample
 from facet.selection.base import BaseParameterSpace
@@ -516,20 +511,6 @@ class LearnerEvaluation(Generic[T_LearnerPipelineDF]):
         #: The aggregate score determined by the ranking metric of
         #: :class:`.LearnerRanker`, used for ranking the learners.
         self.ranking_score = ranking_score
-
-
-def _learner_type(pipeline: T_LearnerPipelineDF) -> Type[T_LearnerPipelineDF]:
-    # determine whether a learner pipeline fits a regressor or a classifier
-    for learner_type in [RegressorPipelineDF, ClassifierPipelineDF]:
-        if isinstance(pipeline, learner_type):
-            return learner_type
-    if isinstance(pipeline, LearnerPipelineDF):
-        raise TypeError(f"unknown learner pipeline type: {type(learner_type).__name__}")
-    else:
-        raise TypeError(
-            "attribute grid.pipeline is not a learner pipeline: "
-            f"{type(learner_type).__name__}"
-        )
 
 
 __tracker.validate()
