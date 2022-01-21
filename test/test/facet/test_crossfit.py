@@ -8,11 +8,7 @@ from sklearndf.pipeline import ClassifierPipelineDF, RegressorPipelineDF
 from sklearndf.regression import RandomForestRegressorDF
 
 from ..conftest import check_ranking
-from facet.selection import (
-    LearnerRanker2,
-    MultiClassifierParameterSpace,
-    ParameterSpace,
-)
+from facet.selection import LearnerRanker, MultiClassifierParameterSpace, ParameterSpace
 from facet.validation import StratifiedBootstrapCV
 
 log = logging.getLogger(__name__)
@@ -46,9 +42,9 @@ def test_prediction_classifier(
         # define an illegal grid list, mixing classification with regression
         MultiClassifierParameterSpace(ps1, ps2)
 
-    model_ranker: LearnerRanker2[
+    model_ranker: LearnerRanker[
         ClassifierPipelineDF[RandomForestClassifierDF], GridSearchCV
-    ] = LearnerRanker2(
+    ] = LearnerRanker(
         searcher_factory=GridSearchCV,
         parameter_space=ps1,
         cv=cv_stratified_bootstrap,

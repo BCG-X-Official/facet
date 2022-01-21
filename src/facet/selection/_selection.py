@@ -40,7 +40,7 @@ from facet.selection.base import BaseParameterSpace
 
 log = logging.getLogger(__name__)
 
-__all__ = ["LearnerGrid", "LearnerEvaluation", "LearnerRanker2"]
+__all__ = ["LearnerGrid", "LearnerEvaluation", "LearnerRanker"]
 
 #
 # Type constants
@@ -85,7 +85,7 @@ __tracker = AllTracker(globals())
 
 
 @inheritdoc(match="[see superclass]")
-class LearnerRanker2(
+class LearnerRanker(
     FittableMixin[Sample], ParallelizableMixin, Generic[T_LearnerPipelineDF, T_SearchCV]
 ):
     """
@@ -230,7 +230,7 @@ class LearnerRanker2(
         :param fit_params: any fit parameters to pass on to the learner's fit method
         :return: ``self``
         """
-        self: LearnerRanker2[
+        self: LearnerRanker[
             T_LearnerPipelineDF, T_SearchCV
         ]  # support type hinting in PyCharm
 
@@ -352,7 +352,7 @@ class LearnerGrid(Generic[T_LearnerPipelineDF]):
     A grid of hyper-parameters for tuning a learner pipeline.
     """
 
-    @deprecated(message=f"use class {LearnerRanker2.__name__} instead")
+    @deprecated(message=f"use class {LearnerRanker.__name__} instead")
     def __init__(
         self,
         pipeline: T_LearnerPipelineDF,
@@ -475,7 +475,7 @@ class LearnerEvaluation(Generic[T_LearnerPipelineDF]):
 
     __slots__ = ["pipeline", "parameters", "scoring_name", "scores", "ranking_score"]
 
-    @deprecated(message=f"use class {LearnerRanker2.__name__} instead")
+    @deprecated(message=f"use class {LearnerRanker.__name__} instead")
     def __init__(
         self,
         pipeline: T_LearnerPipelineDF,

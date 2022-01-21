@@ -28,7 +28,7 @@ from facet.inspection import (
     LearnerInspector,
     TreeExplainerFactory,
 )
-from facet.selection import LearnerRanker2
+from facet.selection import LearnerRanker
 
 # noinspection PyMissingOrEmptyDocstring
 
@@ -38,7 +38,7 @@ T = TypeVar("T")
 
 
 def test_model_inspection(
-    regressor_ranker: LearnerRanker2[RegressorPipelineDF, GridSearchCV],
+    regressor_ranker: LearnerRanker[RegressorPipelineDF, GridSearchCV],
     best_lgbm_model: RegressorPipelineDF,
     preprocessed_feature_names,
     regressor_inspector: LearnerInspector,
@@ -618,7 +618,7 @@ def test_model_inspection_classifier_interaction(
 
 def test_model_inspection_classifier_interaction_dual_target(
     iris_sample_binary_dual_target: Sample,
-    iris_classifier_ranker_dual_target: LearnerRanker2[
+    iris_classifier_ranker_dual_target: LearnerRanker[
         ClassifierPipelineDF[RandomForestClassifierDF], GridSearchCV
     ],
     iris_target_name,

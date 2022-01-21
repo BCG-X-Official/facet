@@ -27,7 +27,7 @@ from ..conftest import check_ranking
 from facet.data import Sample
 from facet.selection import (
     LearnerGrid,
-    LearnerRanker2,
+    LearnerRanker,
     MultiClassifierParameterSpace,
     MultiRegressorParameterSpace,
     ParameterSpace,
@@ -123,7 +123,7 @@ def test_model_ranker(
     # define the circular cross validator with just 5 splits (to speed up testing)
     cv = BootstrapCV(n_splits=5, random_state=42)
 
-    ranker: LearnerRanker2[RegressorPipelineDF, GridSearchCV] = LearnerRanker2(
+    ranker: LearnerRanker[RegressorPipelineDF, GridSearchCV] = LearnerRanker(
         searcher_factory=GridSearchCV,
         parameter_space=regressor_parameters,
         cv=cv,
@@ -175,9 +175,9 @@ def test_model_ranker_no_preprocessing(n_jobs) -> None:
     )
     test_sample: Sample = Sample(observations=test_data, target_name="target")
 
-    model_ranker: LearnerRanker2[
+    model_ranker: LearnerRanker[
         ClassifierPipelineDF[SVCDF], GridSearchCV
-    ] = LearnerRanker2(
+    ] = LearnerRanker(
         searcher_factory=GridSearchCV,
         parameter_space=parameter_space,
         cv=cv,
@@ -336,9 +336,9 @@ def test_learner_ranker(
             "of arg searcher_factory, but included: param_grid"
         ),
     ):
-        LearnerRanker2(GridSearchCV, regressor_parameters, param_grid=None)
+        LearnerRanker(GridSearchCV, regressor_parameters, param_grid=None)
 
-    ranker: LearnerRanker2[RegressorPipelineDF, GridSearchCV] = LearnerRanker2(
+    ranker: LearnerRanker[RegressorPipelineDF, GridSearchCV] = LearnerRanker(
         GridSearchCV,
         regressor_parameters,
         scoring="r2",
