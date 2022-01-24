@@ -291,7 +291,7 @@ class MultiEstimatorParameterSpace(
 
         super().__init__(
             estimator=cls_pipeline(
-                [(MultiEstimatorParameterSpace.STEP_CANDIDATE, candidates[0].estimator)]
+                [(MultiEstimatorParameterSpace.STEP_CANDIDATE, None)]
             )
         )
 

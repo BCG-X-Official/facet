@@ -230,7 +230,7 @@ def test_parameter_space(
 
     assert freeze(mps.to_expression()) == freeze(
         Id.MultiRegressorParameterSpace(
-            Id.PipelineDF(steps=[("candidate", pipeline_1.to_expression())]),
+            Id.PipelineDF(steps=[("candidate", None)]),
             [
                 Id.ParameterSpace(
                     candidate=pipeline_1.to_expression(),
@@ -256,7 +256,7 @@ def test_parameter_space(
     )
 
     assert type(mps.estimator) == PipelineDF
-    assert mps.estimator.steps == [("candidate", pipeline_1)]
+    assert mps.estimator.steps == [("candidate", None)]
 
     assert mps.parameters == [
         {
