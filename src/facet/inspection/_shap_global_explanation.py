@@ -5,7 +5,7 @@ redundancy, and independence.
 """
 import logging
 from abc import ABCMeta, abstractmethod
-from typing import Any, Iterable, List, Optional, TypeVar, Union
+from typing import Any, List, Optional, TypeVar, Union
 
 import numpy as np
 import pandas as pd
@@ -132,23 +132,6 @@ class AffinityMatrix:
                     affinity_abs_sym_ij_2x / 2,
                 )
             ).reshape((2, 2, *affinity_rel_ij.shape))
-        )
-
-    @staticmethod
-    def aggregate(affinity_matrices: Iterable["AffinityMatrix"]) -> "AffinityMatrix":
-        """
-        Aggregate several sets of affinity matrices (obtained from different splits)
-        into one, by calculating the mean and standard deviation for each value in the
-        provided iterable of affinity matrices.
-
-        :param affinity_matrices: sets of affinity matrices to aggregate
-        :return: the aggregated set of affinity matrices
-        """
-        matrix_values = np.stack(
-            tuple(affinity_matrix._matrices for affinity_matrix in affinity_matrices)
-        )
-        return AffinityMatrix(
-            matrices=matrix_values.mean(axis=0), matrices_std=matrix_values.std(axis=0)
         )
 
     def get_values(
@@ -544,10 +527,8 @@ class ShapValueContext(ShapContext):
     Contextual data for global SHAP calculations based on SHAP values.
     """
 
-    def __init__(self, shap_calculator: ShapCalculator, split_id: int) -> None:
-        shap_values: pd.DataFrame = shap_calculator.get_shap_values(
-            aggregation=None
-        ).xs(split_id, level=0)
+    def __init__(self, shap_calculator: ShapCalculator) -> None:
+        shap_values: pd.DataFrame = shap_calculator.get_shap_values()
 
         def _p_i() -> np.ndarray:
             n_outputs: int = len(shap_calculator.output_names_)
@@ -583,10 +564,8 @@ class ShapInteractionValueContext(ShapContext):
     Contextual data for global SHAP calculations based on SHAP interaction values.
     """
 
-    def __init__(self, shap_calculator: ShapCalculator, split_id: int) -> None:
-        shap_values: pd.DataFrame = shap_calculator.get_shap_interaction_values(
-            aggregation=None
-        ).xs(split_id, level=0)
+    def __init__(self, shap_calculator: ShapCalculator) -> None:
+        shap_values: pd.DataFrame = shap_calculator.get_shap_interaction_values()
 
         n_features: int = len(shap_calculator.feature_index_)
         n_outputs: int = len(shap_calculator.output_names_)

@@ -8,7 +8,6 @@ from sklearndf.pipeline import ClassifierPipelineDF, RegressorPipelineDF
 from sklearndf.regression import RandomForestRegressorDF
 
 from ..conftest import check_ranking
-from facet.data import Sample
 from facet.selection import LearnerGrid, LearnerRanker
 from facet.validation import StratifiedBootstrapCV
 
@@ -16,7 +15,7 @@ log = logging.getLogger(__name__)
 
 
 def test_prediction_classifier(
-    iris_sample: Sample, cv_stratified_bootstrap: StratifiedBootstrapCV, n_jobs: int
+    iris_sample_multi_class, cv_stratified_bootstrap: StratifiedBootstrapCV, n_jobs: int
 ) -> None:
 
     expected_learner_scores = [0.889, 0.886, 0.885, 0.879]
@@ -58,12 +57,14 @@ def test_prediction_classifier(
         random_state=42,
     )
 
-    model_ranker.fit(sample=iris_sample)
+    model_ranker.fit(sample=iris_sample_multi_class)
 
     with pytest.raises(
         ValueError, match="do not use arg sample_weight to pass sample weights"
     ):
-        model_ranker.fit(sample=iris_sample, sample_weight=iris_sample.weight)
+        model_ranker.fit(
+            sample=iris_sample_multi_class, sample_weight=iris_sample_multi_class.weight
+        )
 
     log.debug(f"\n{model_ranker.summary_report()}")
 
