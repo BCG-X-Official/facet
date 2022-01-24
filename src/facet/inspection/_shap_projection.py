@@ -88,7 +88,7 @@ class ShapProjector(ShapGlobalExplainer, metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def _calculate(self, context: ShapContext) -> AffinityMatrix:
+    def _calculate(self, context: ShapContext) -> None:
         pass
 
     @staticmethod
