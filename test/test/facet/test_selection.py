@@ -84,7 +84,7 @@ def test_model_ranker(
 
     log.debug(f"\n{ranker.summary_report()}")
 
-    assert isinstance(ranker.best_estimator_.steps[0][1], RegressorPipelineDF)
+    assert isinstance(ranker.best_estimator_, RegressorPipelineDF)
 
     ranking = ranker.summary_report()
     ranking_score = ranking["mean_test_score"]
@@ -297,7 +297,7 @@ def test_learner_ranker(
         n_jobs=n_jobs,
     ).fit(sample=sample)
 
-    assert isinstance(ranker.best_estimator_, PipelineDF)
+    assert isinstance(ranker.best_estimator_, RegressorPipelineDF)
 
     report_df = ranker.summary_report()
     log.debug(report_df.columns.tolist())

@@ -149,6 +149,11 @@ distribution:
             for (name, values) in self._iter_parameters([prefix] if prefix else [])
         }
 
+    @staticmethod
+    def unlift_estimator(estimator: T_Estimator) -> T_Estimator:
+        """[see superclass]"""
+        return estimator
+
     def _validate_parameter(self, name: str, value: ParameterSet) -> None:
 
         if name not in self._params:
@@ -317,6 +322,11 @@ class MultiEstimatorParameterSpace(
             }
             for candidate in self.candidates
         ]
+
+    @staticmethod
+    def unlift_estimator(estimator: T_Estimator) -> T_Estimator:
+        """[see superclass]"""
+        return estimator.steps[0][1]
 
     def to_expression(self) -> "Expression":
         """[see superclass]"""

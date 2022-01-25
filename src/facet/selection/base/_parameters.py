@@ -91,5 +91,16 @@ class BaseParameterSpace(HasExpressionRepr, Generic[T_Estimator], metaclass=ABCM
         """
         pass
 
+    @staticmethod
+    @abstractmethod
+    def unlift_estimator(estimator: T_Estimator) -> T_Estimator:
+        """
+        Unlift passed estimator from a context.
+
+        :param estimator: estimator in a context
+        :return: unlifted estimator
+        """
+        pass
+
 
 __tracker.validate()
