@@ -21,12 +21,17 @@ from typing import (
 import numpy as np
 import pandas as pd
 from numpy.random.mtrand import RandomState
+from sklearn.metrics import check_scoring
 from sklearn.model_selection import BaseCrossValidator, GridSearchCV
 
 from pytools.api import AllTracker, inheritdoc
 from pytools.fit import FittableMixin
 from pytools.parallelization import ParallelizableMixin
-from sklearndf.pipeline import ClassifierPipelineDF, RegressorPipelineDF
+from sklearndf.pipeline import (
+    ClassifierPipelineDF,
+    LearnerPipelineDF,
+    RegressorPipelineDF,
+)
 
 from facet.data import Sample
 from facet.selection.base import BaseParameterSpace
@@ -180,6 +185,9 @@ class LearnerRanker(
                 + ", ".join(unsupported_params)
             )
 
+        if type(self.scoring) == str:
+            self.scoring = self._preprocess_scoring(self.scoring)
+
         self.searcher_ = None
 
     __init__.__doc__ = __init__.__doc__.replace(
@@ -190,6 +198,25 @@ class LearnerRanker(
     def is_fitted(self) -> bool:
         """[see superclass]"""
         return self.searcher_ is not None
+
+    @staticmethod
+    def _preprocess_scoring(scoring: str):
+        def _score_fn(estimator, X: pd.DataFrame, y: pd.Series):
+            estimator = estimator.raw_estimator
+
+            if isinstance(estimator, LearnerPipelineDF):
+                if estimator.preprocessing:
+                    X = estimator.preprocessing.transform(X=X)
+                estimator = estimator.final_estimator
+
+            scorer = check_scoring(
+                estimator=estimator.native_estimator,
+                scoring=scoring,
+            )
+
+            return scorer(estimator.native_estimator, X.values, y.values)
+
+        return _score_fn
 
     @property
     def best_estimator_(self) -> T_LearnerPipelineDF:
