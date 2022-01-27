@@ -15,7 +15,7 @@ from pytools.expression import freeze
 from pytools.expression.atomic import Id
 from sklearndf import TransformerDF
 from sklearndf.classification import SVCDF
-from sklearndf.pipeline import ClassifierPipelineDF, PipelineDF, RegressorPipelineDF
+from sklearndf.pipeline import ClassifierPipelineDF, RegressorPipelineDF
 from sklearndf.regression import (
     AdaBoostRegressorDF,
     LinearRegressionDF,
@@ -230,7 +230,7 @@ def test_parameter_space(
 
     assert freeze(mps.to_expression()) == freeze(
         Id.MultiRegressorParameterSpace(
-            Id.PipelineDF(steps=[("candidate", None)]),
+            None,
             [
                 Id.ParameterSpace(
                     candidate=pipeline_1.to_expression(),
@@ -255,8 +255,7 @@ def test_parameter_space(
         )
     )
 
-    assert type(mps.estimator) == PipelineDF
-    assert mps.estimator.steps == [("candidate", None)]
+    assert mps.estimator.candidate is None
 
     assert mps.parameters == [
         {

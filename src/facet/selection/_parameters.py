@@ -4,6 +4,7 @@ Core implementation of :mod:`facet.selection`
 
 import logging
 import warnings
+from abc import ABCMeta
 from typing import (
     Any,
     Collection,
@@ -12,6 +13,7 @@ from typing import (
     Iterable,
     Iterator,
     List,
+    Mapping,
     Optional,
     Set,
     Tuple,
@@ -20,21 +22,22 @@ from typing import (
     Union,
 )
 
+import pandas as pd
 from scipy import stats
 from sklearn.base import BaseEstimator
-from sklearn.pipeline import Pipeline
 
 from pytools.api import AllTracker, inheritdoc, subsdoc, to_list, validate_element_types
 from pytools.expression import Expression, make_expression
 from pytools.expression.atomic import Id
 from sklearndf import EstimatorDF
-from sklearndf.pipeline import ClassifierPipelineDF, PipelineDF, RegressorPipelineDF
+from sklearndf.pipeline import ClassifierPipelineDF, RegressorPipelineDF
 
 from .base import BaseParameterSpace
 
 log = logging.getLogger(__name__)
 
 __all__ = [
+    "CandidateEstimatorDF",
     "MultiClassifierParameterSpace",
     "MultiEstimatorParameterSpace",
     "MultiRegressorParameterSpace",
@@ -57,6 +60,7 @@ assert rv_frozen.__name__ == "rv_frozen"
 # Type variables
 #
 
+T_Self = TypeVar("T_Self")
 T_Estimator = TypeVar("T_Estimator", bound=BaseEstimator)
 
 
@@ -120,7 +124,7 @@ distribution:
         :param estimator: the estimator to which to apply the parameters to
         """
 
-        super().__init__(estimator=estimator)
+        super().__init__(estimator=CandidateEstimatorDF(estimator))
 
         params: Dict[str, Any] = {
             name: param
@@ -149,16 +153,12 @@ distribution:
             for (name, values) in self._iter_parameters([prefix] if prefix else [])
         }
 
-    @staticmethod
-    def unlift_estimator(estimator: T_Estimator) -> T_Estimator:
-        """[see superclass]"""
-        return estimator
-
     def _validate_parameter(self, name: str, value: ParameterSet) -> None:
 
         if name not in self._params:
             raise AttributeError(
-                f"unknown parameter name for {type(self.estimator).__name__}: {name}"
+                f"unknown parameter name for "
+                f"{type(self.estimator.candidate).__name__}: {name}"
             )
 
         if not (
@@ -248,10 +248,10 @@ distribution:
 
         if path_prefix:
             return Id(type(self))(
-                **{".".join(path_prefix): self.estimator}, **parameters
+                **{".".join(path_prefix): self.estimator.candidate}, **parameters
             )
         else:
-            return Id(type(self))(self.estimator, **parameters)
+            return Id(type(self))(self.estimator.candidate, **parameters)
 
 
 @inheritdoc(match="""[see superclass]""")
@@ -287,18 +287,7 @@ class MultiEstimatorParameterSpace(
         if len(candidates) == 0:
             raise TypeError("no parameter space passed; need to pass at least one")
 
-        if all(
-            isinstance(candidate.estimator, EstimatorDF) for candidate in candidates
-        ):
-            cls_pipeline = PipelineDF
-        else:
-            cls_pipeline = Pipeline
-
-        super().__init__(
-            estimator=cls_pipeline(
-                [(MultiEstimatorParameterSpace.STEP_CANDIDATE, None)]
-            )
-        )
+        super().__init__(estimator=CandidateEstimatorDF())
 
         self.candidates = candidates
         self.estimator_type = estimator_type
@@ -315,7 +304,9 @@ class MultiEstimatorParameterSpace(
         """[see superclass]"""
         return [
             {
-                MultiEstimatorParameterSpace.STEP_CANDIDATE: [candidate.estimator],
+                MultiEstimatorParameterSpace.STEP_CANDIDATE: [
+                    candidate.estimator.candidate
+                ],
                 **candidate.get_parameters(
                     prefix=MultiEstimatorParameterSpace.STEP_CANDIDATE
                 ),
@@ -323,16 +314,11 @@ class MultiEstimatorParameterSpace(
             for candidate in self.candidates
         ]
 
-    @staticmethod
-    def unlift_estimator(estimator: T_Estimator) -> T_Estimator:
-        """[see superclass]"""
-        return estimator.steps[0][1]
-
     def to_expression(self) -> "Expression":
         """[see superclass]"""
         # noinspection PyProtectedMember
         return Id(type(self))(
-            self.estimator,
+            self.estimator.candidate,
             [
                 candidate._to_expression(
                     path_prefix=MultiEstimatorParameterSpace.STEP_CANDIDATE
@@ -372,6 +358,63 @@ class MultiClassifierParameterSpace(MultiEstimatorParameterSpace[ClassifierPipel
         super().__init__(*candidates, estimator_type=estimator_type)
 
 
+@inheritdoc(match="""[see superclass]""")
+class CandidateEstimatorDF(EstimatorDF, metaclass=ABCMeta):
+    """
+    Wrapper class providing proper unboxing of `estimator` member for
+    :class:`.ParameterSpace` and class:`.MultiEstimatorParameterSpace` classes.
+    """
+
+    def __init__(self, candidate: Optional[EstimatorDF] = None) -> None:
+        """
+        :param candidate: estimator to be wrapped as candidate
+        """
+        self.candidate = candidate
+
+    def fit(
+        self: T_Self,
+        X: pd.DataFrame,
+        y: Optional[Union[pd.Series, pd.DataFrame]] = None,
+        **fit_params: Any,
+    ) -> T_Self:
+        """[see superclass]"""
+        self.candidate.fit(X, y, **fit_params)
+        return self
+
+    @property
+    def is_fitted(self) -> bool:
+        """[see superclass]"""
+        return False if self.candidate is None else self.candidate.is_fitted
+
+    def _get_features_in(self) -> pd.Index:
+        return self.candidate._get_features_in()
+
+    def _get_n_outputs(self) -> int:
+        return self.candidate._get_n_outputs()
+
+    def get_params(self, deep: bool = True) -> Mapping[str, Any]:
+        """[see superclass]"""
+        return {
+            "candidate": self.candidate,
+        }
+
+    def set_params(self, **params: Any) -> Any:
+        """[see superclass]"""
+        if "candidate" in params:
+            self.candidate = params["candidate"]
+            del params["candidate"]
+            params = {k[11:]: v for k, v in params.items()}
+        self.candidate.set_params(**params)
+        return self
+
+    def to_expression(self) -> "Expression":
+        """[see superclass]"""
+        return self.candidate.to_expression()
+
+    def __getattr__(self, item):
+        return getattr(self.candidate, item)
+
+
 __tracker.validate()
 
 
@@ -409,9 +452,9 @@ def validate_candidates(
     """
 
     non_compliant_candidate_estimators: Set[str] = {
-        type(candidate.estimator).__name__
+        type(candidate.estimator.candidate).__name__
         for candidate in candidates
-        if not isinstance(candidate.estimator, expected_estimator_type)
+        if not isinstance(candidate.estimator.candidate, expected_estimator_type)
     }
     if non_compliant_candidate_estimators:
         raise TypeError(
