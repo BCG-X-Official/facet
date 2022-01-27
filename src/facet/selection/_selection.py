@@ -199,7 +199,7 @@ class LearnerRanker(
         self._ensure_fitted()
         searcher = self.searcher_
         if searcher.refit:
-            return searcher.best_estimator_.candidate
+            return searcher.best_estimator_.raw_estimator
         else:
             raise AttributeError(
                 "best_model_ is not defined; use a CV searcher with refit=True"

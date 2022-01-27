@@ -255,7 +255,7 @@ def test_parameter_space(
         )
     )
 
-    assert mps.estimator.candidate is None
+    assert mps.estimator.raw_estimator is None
 
     assert mps.parameters == [
         {
