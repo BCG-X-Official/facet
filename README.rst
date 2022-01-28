@@ -109,7 +109,7 @@ hyperparameter configurations and even multiple learners with the `LearnerRanker
 
     # standard imports
     import pandas as pd
-    from sklearn.model_selection import RepeatedKFold
+    from sklearn.model_selection import RepeatedKFold, GridSearchCV
 
     # some helpful imports from sklearndf
     from sklearndf.pipeline import RegressorPipelineDF
@@ -117,7 +117,7 @@ hyperparameter configurations and even multiple learners with the `LearnerRanker
 
     # relevant FACET imports
     from facet.data import Sample
-    from facet.selection import LearnerRanker, LearnerGrid
+    from facet.selection import LearnerRanker, ParameterSpace
 
     # declaring url with data
     data_url = 'https://web.stanford.edu/~hastie/Papers/LARS/diabetes.data'
@@ -144,23 +144,21 @@ hyperparameter configurations and even multiple learners with the `LearnerRanker
         regressor=RandomForestRegressorDF(n_estimators=200, random_state=42)
     )
 
-    # define grid of models which are "competing" against each other
-    rnd_forest_grid = [
-        LearnerGrid(
-            pipeline=rnd_forest_reg,
-            learner_parameters={
-                "min_samples_leaf": [8, 11, 15],
-                "max_depth": [4, 5, 6],
-            }
-        ),
-    ]
+    # define parameter space for models which are "competing" against each other
+    rnd_forest_ps = ParameterSpace(rnd_forest_reg)
+    rnd_forest_ps.regressor.min_samples_leaf = [8, 11, 15]
+    rnd_forest_ps.regressor.max_depth = [4, 5, 6]
 
     # create repeated k-fold CV iterator
     rkf_cv = RepeatedKFold(n_splits=5, n_repeats=10, random_state=42)
 
-    # rank your candidate models by performance (default is mean CV score - 2*SD)
+    # rank your candidate models by performance
     ranker = LearnerRanker(
-        grids=rnd_forest_grid, cv=rkf_cv, n_jobs=-3
+        searcher_factory=GridSearchCV,
+        parameter_space=rnd_forest_ps,
+        cv=rkf_cv,
+        n_jobs=-3,
+        scoring="r2"
     ).fit(sample=diabetes_sample)
 
     # get summary report
@@ -233,8 +231,10 @@ The key global metrics for each pair of features in a model are:
 
     # fit the model inspector
     from facet.inspection import LearnerInspector
-    inspector = LearnerInspector(n_jobs=-3)
-    inspector.fit(crossfit=ranker.best_model_crossfit_)
+    inspector = LearnerInspector(
+        pipeline=ranker.best_estimator_,
+        n_jobs=-3
+    ).fit(sample=diabetes_sample)
 
 **Synergy**
 
@@ -337,22 +337,17 @@ we do the following for the simulation:
   of that partition.
 - For each partition, the simulator creates an artificial copy of the original sample
   assuming the variable to be simulated has the same value across all observations –
-  which is the value representing the partition. Using the best `LearnerCrossfit`
+  which is the value representing the partition. Using the best estimator
   acquired from the ranker, the simulator now re-predicts all targets using the models
-  trained for all folds and determines the average uplift of the target variable
+  trained for full sample and determines the uplift of the target variable
   resulting from this.
 - The FACET `SimulationDrawer` allows us to visualise the result; both in a
   *matplotlib* and a plain-text style.
-
-Finally, because FACET can use bootstrap cross validation, we can create a crossfit
-from our previous `LearnerRanker` best model to perform the simulation, so we can
-quantify the uncertainty by using bootstrap confidence intervals.
 
 .. code-block:: Python
 
     # FACET imports
     from facet.validation import BootstrapCV
-    from facet.crossfit import LearnerCrossfit
     from facet.simulation import UnivariateUpliftSimulator
     from facet.data.partition import ContinuousRangePartitioner
     from facet.simulation.viz import SimulationDrawer
@@ -360,16 +355,12 @@ quantify the uncertainty by using bootstrap confidence intervals.
     # create bootstrap CV iterator
     bscv = BootstrapCV(n_splits=1000, random_state=42)
 
-    # create a bootstrap CV crossfit for simulation using best model
-    boot_crossfit = LearnerCrossfit(
-        pipeline=ranker.best_model_,
-        cv=bscv,
-        n_jobs=-3,
-        verbose=False,
-    ).fit(sample=diabetes_sample)
-
     SIM_FEAT = "BMI"
-    simulator = UnivariateUpliftSimulator(crossfit=boot_crossfit, n_jobs=-3)
+    simulator = UnivariateUpliftSimulator(
+        model=ranker.best_estimator_,
+        sample=diabetes_sample,
+        n_jobs=-3
+    )
 
     # split the simulation range into equal sized partitions
     partitioner = ContinuousRangePartitioner()

@@ -41,9 +41,10 @@ on `stackoverflow <https://stackoverflow.com/>`_.
 
         # run inspector
         inspector = LearnerInspector(
+            pipeline=clf_ranker.best_estimator_,
             n_jobs=-3,
             verbose=False,
-        ).fit(crossfit=ranker.best_model_crossfit)
+        ).fit(sample=sample)
 
         # get shap values and associated data
         shap_data = inspector.shap_plot_data()
@@ -104,13 +105,18 @@ on `stackoverflow <https://stackoverflow.com/>`_.
     .. code-block:: Python
 
         # get your ranking object
-        ranker = LearnerRanker(grids=FACET_classifier_grid, cv=cv_iterator).fit(
+        ranker = LearnerRanker(
+            searcher_factory=GridSearchCV,
+            parameter_space=ps,
+            cv=cv_iterator,
+            scoring="accuracy"
+        ).fit(
             sample=FACET_sample
         )
 
         # obtain required quantities
-        y_pred = ranker.best_model_.predict(FACET_sample.features)
-        y_prob = ranker.best_model_.predict_proba(FACET_sample.features)[1]
+        y_pred = ranker.best_estimator_.predict(FACET_sample.features)
+        y_prob = ranker.best_estimator_.predict_proba(FACET_sample.features)[1]
         y_true = FACET_sample.target
 
         # generate outputs of interest
@@ -138,14 +144,6 @@ on `stackoverflow <https://stackoverflow.com/>`_.
         ax.set_ylabel('True Positive Rate')
         ax.set_title('ROC')
         ax.legend(loc='lower right')
-
-
-    For practical examples see
-    :ref:`Standard Scikit-learn Classification Summary with
-    FACET<scikit-learn-summary-tut>`,
-    which also covers using the fit for each cross-validation
-    fold (the FACET crossfit object) to generate summaries of mean performance with
-    assessments of variability.
 
 Citation
 --------
