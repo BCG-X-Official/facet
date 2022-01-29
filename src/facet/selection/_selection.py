@@ -202,7 +202,7 @@ class LearnerRanker(
     @staticmethod
     def _preprocess_scoring(scoring: str):
         def _score_fn(estimator, X: pd.DataFrame, y: pd.Series):
-            estimator = estimator.raw_estimator
+            estimator = estimator.candidate
 
             if isinstance(estimator, LearnerPipelineDF):
                 if estimator.preprocessing:
@@ -226,7 +226,7 @@ class LearnerRanker(
         self._ensure_fitted()
         searcher = self.searcher_
         if searcher.refit:
-            return searcher.best_estimator_.raw_estimator
+            return searcher.best_estimator_.candidate
         else:
             raise AttributeError(
                 "best_model_ is not defined; use a CV searcher with refit=True"

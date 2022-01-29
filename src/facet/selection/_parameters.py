@@ -4,7 +4,6 @@ Core implementation of :mod:`facet.selection`
 
 import logging
 import warnings
-from abc import ABCMeta
 from typing import (
     Any,
     Collection,
@@ -13,8 +12,8 @@ from typing import (
     Iterable,
     Iterator,
     List,
-    Mapping,
     Optional,
+    Sequence,
     Set,
     Tuple,
     Type,
@@ -29,7 +28,7 @@ from sklearn.base import BaseEstimator
 from pytools.api import AllTracker, inheritdoc, subsdoc, to_list, validate_element_types
 from pytools.expression import Expression, make_expression
 from pytools.expression.atomic import Id
-from sklearndf import EstimatorDF
+from sklearndf import ClassifierDF, EstimatorDF, RegressorDF, TransformerDF
 from sklearndf.pipeline import ClassifierPipelineDF, RegressorPipelineDF
 
 from .base import BaseParameterSpace
@@ -119,6 +118,8 @@ distribution:
 
     """
 
+    STEP_CANDIDATE = "candidate"
+
     def __init__(self, estimator: T_Estimator) -> None:
         """
         :param estimator: the estimator to which to apply the parameters to
@@ -145,7 +146,7 @@ distribution:
         replacement="",
         using=BaseParameterSpace.get_parameters,
     )
-    def get_parameters(self, prefix: Optional[str] = None) -> ParameterDict:
+    def get_parameters(self, prefix: Optional[str] = STEP_CANDIDATE) -> ParameterDict:
         """[see superclass]"""
 
         return {
@@ -158,7 +159,7 @@ distribution:
         if name not in self._params:
             raise AttributeError(
                 f"unknown parameter name for "
-                f"{type(self.estimator.raw_estimator).__name__}: {name}"
+                f"{type(self.estimator.candidate).__name__}: {name}"
             )
 
         if not (
@@ -248,10 +249,10 @@ distribution:
 
         if path_prefix:
             return Id(type(self))(
-                **{".".join(path_prefix): self.estimator.raw_estimator}, **parameters
+                **{".".join(path_prefix): self.estimator.candidate}, **parameters
             )
         else:
-            return Id(type(self))(self.estimator.raw_estimator, **parameters)
+            return Id(type(self))(self.estimator.candidate, **parameters)
 
 
 @inheritdoc(match="""[see superclass]""")
@@ -265,8 +266,6 @@ class MultiEstimatorParameterSpace(
     See :class:`.ParameterSpace` for documentation on how to set up and use parameter
     spaces.
     """
-
-    STEP_CANDIDATE = "candidate"
 
     #: The estimator base type which all candidate estimators must implement.
     estimator_type: Type[T_Estimator]
@@ -304,12 +303,8 @@ class MultiEstimatorParameterSpace(
         """[see superclass]"""
         return [
             {
-                MultiEstimatorParameterSpace.STEP_CANDIDATE: [
-                    candidate.estimator.raw_estimator
-                ],
-                **candidate.get_parameters(
-                    prefix=MultiEstimatorParameterSpace.STEP_CANDIDATE
-                ),
+                ParameterSpace.STEP_CANDIDATE: [candidate.estimator.candidate],
+                **candidate.get_parameters(),
             }
             for candidate in self.candidates
         ]
@@ -318,11 +313,9 @@ class MultiEstimatorParameterSpace(
         """[see superclass]"""
         # noinspection PyProtectedMember
         return Id(type(self))(
-            self.estimator.raw_estimator,
+            self.estimator.candidate,
             [
-                candidate._to_expression(
-                    path_prefix=MultiEstimatorParameterSpace.STEP_CANDIDATE
-                )
+                candidate._to_expression(path_prefix=ParameterSpace.STEP_CANDIDATE)
                 for candidate in self.candidates
             ],
         )
@@ -359,17 +352,20 @@ class MultiClassifierParameterSpace(MultiEstimatorParameterSpace[ClassifierPipel
 
 
 @inheritdoc(match="""[see superclass]""")
-class CandidateEstimatorDF(EstimatorDF, metaclass=ABCMeta):
+class CandidateEstimatorDF(ClassifierDF, RegressorDF, TransformerDF):
     """
-    Wrapper class providing proper unboxing of `estimator` member for
-    :class:`.ParameterSpace` and class:`.MultiEstimatorParameterSpace` classes.
+    Metaclass providing representation for candidate estimator to be used in
+    hyperparameter search. Unifies evaluation approach for :class:`.ParameterSpace`
+    and class:`.MultiEstimatorParameterSpace`. For the latter it provides "empty"
+    candidate where actual estimator is a hyperparameter itself.
     """
 
     def __init__(self, candidate: Optional[EstimatorDF] = None) -> None:
         """
-        :param candidate: candidate estimator to be wrapped
+        :param candidate: candidate estimator. If None then estimators to be evaluated
+                          should be provided in the parameter grid under "candidate" key
         """
-        self.raw_estimator = candidate
+        self.candidate = candidate
 
     @classmethod
     def empty(cls) -> "CandidateEstimatorDF":
@@ -378,6 +374,47 @@ class CandidateEstimatorDF(EstimatorDF, metaclass=ABCMeta):
         """
         return cls()
 
+    @property
+    def classes_(self) -> Sequence[Any]:
+        """[see superclass]"""
+        return self.candidate.classes_
+
+    def predict_proba(
+        self, X: pd.DataFrame, **predict_params: Any
+    ) -> Union[pd.DataFrame, List[pd.DataFrame]]:
+        """[see superclass]"""
+        return self.candidate.predict_proba(X, **predict_params)
+
+    def predict_log_proba(
+        self, X: pd.DataFrame, **predict_params: Any
+    ) -> Union[pd.DataFrame, List[pd.DataFrame]]:
+        """[see superclass]"""
+        return self.candidate.predict_log_proba(X, **predict_params)
+
+    def decision_function(
+        self, X: pd.DataFrame, **predict_params: Any
+    ) -> Union[pd.Series, pd.DataFrame]:
+        """[see superclass]"""
+        return self.candidate.decision_function(X, **predict_params)
+
+    def score(
+        self, X: pd.DataFrame, y: pd.Series, sample_weight: Optional[pd.Series] = None
+    ) -> float:
+        """[see superclass]"""
+        return self.candidate.score(X, y, sample_weight)
+
+    def predict(
+        self, X: pd.DataFrame, **predict_params: Any
+    ) -> Union[pd.Series, pd.DataFrame]:
+        """[see superclass]"""
+        return self.candidate.predic(X, **predict_params)
+
+    def fit_predict(
+        self, X: pd.DataFrame, y: pd.Series, **fit_params: Any
+    ) -> Union[pd.Series, pd.DataFrame]:
+        """[see superclass]"""
+        return self.candidate.fit_predict(X, y, **fit_params)
+
     def fit(
         self: T_Self,
         X: pd.DataFrame,
@@ -385,41 +422,30 @@ class CandidateEstimatorDF(EstimatorDF, metaclass=ABCMeta):
         **fit_params: Any,
     ) -> T_Self:
         """[see superclass]"""
-        self.raw_estimator.fit(X, y, **fit_params)
+        self.candidate.fit(X, y, **fit_params)
         return self
 
     @property
     def is_fitted(self) -> bool:
         """[see superclass]"""
-        return False if self.raw_estimator is None else self.raw_estimator.is_fitted
+        return False if self.candidate is None else self.candidate.is_fitted
+
+    def inverse_transform(self, X: pd.DataFrame) -> pd.DataFrame:
+        """[see superclass]"""
+        return self.candidate.inverse_transform(X)
+
+    def transform(self, X: pd.DataFrame) -> pd.DataFrame:
+        """[see superclass]"""
+        return self.candidate.transform(X)
 
     def _get_features_in(self) -> pd.Index:
-        return self.raw_estimator._get_features_in()
+        return self.candidate._get_features_in()
 
     def _get_n_outputs(self) -> int:
-        return self.raw_estimator._get_n_outputs()
+        return self.candidate._get_n_outputs()
 
-    def get_params(self, deep: bool = True) -> Mapping[str, Any]:
-        """[see superclass]"""
-        return {
-            "candidate": self.raw_estimator,
-        }
-
-    def set_params(self, **params: Any) -> Any:
-        """[see superclass]"""
-        if "candidate" in params:
-            self.raw_estimator = params["candidate"]
-            del params["candidate"]
-            params = {k[len("candidate__") :]: v for k, v in params.items()}
-        self.raw_estimator.set_params(**params)
-        return self
-
-    def to_expression(self) -> "Expression":
-        """[see superclass]"""
-        return self.raw_estimator.to_expression()
-
-    def __getattr__(self, item):
-        return getattr(self.raw_estimator, item)
+    def _get_features_original(self) -> pd.Series:
+        return self.candidate._get_features_original()
 
 
 __tracker.validate()
@@ -459,9 +485,9 @@ def validate_candidates(
     """
 
     non_compliant_candidate_estimators: Set[str] = {
-        type(candidate.estimator.raw_estimator).__name__
+        type(candidate.estimator.candidate).__name__
         for candidate in candidates
-        if not isinstance(candidate.estimator.raw_estimator, expected_estimator_type)
+        if not isinstance(candidate.estimator.candidate, expected_estimator_type)
     }
     if non_compliant_candidate_estimators:
         raise TypeError(

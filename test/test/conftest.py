@@ -342,18 +342,21 @@ def check_ranking(
     CLASSIFIER_STR = "classifier"
     REGRESSOR_STR = "regressor"
     PARAM_CANDIDATE_STR = "param_candidate"
+    ESTIMATOR_COLUMN = ""
 
     def _select_parameters(
         param_column: str, rank: int, learner_str: Optional[str]
     ) -> Tuple[dict, Optional[LearnerDF]]:
-        if param_column == PARAM_CANDIDATE_STR:
-            raw_parameters = ranking[param_column][learner_str].iloc[rank].to_dict()
-            return (
-                {k: v for k, v in raw_parameters.items() if v is not np.nan},
-                ranking[param_column].iloc[:, 0].iloc[rank],
-            )
-        else:
-            return ranking[param_column].iloc[rank].to_dict(), None
+        raw_parameters = ranking[param_column][learner_str].iloc[rank].to_dict()
+        estimator = (
+            ranking[param_column][ESTIMATOR_COLUMN].iloc[rank]
+            if ESTIMATOR_COLUMN in ranking[param_column]
+            else None
+        )
+        return (
+            {k: v for k, v in raw_parameters.items() if v is not np.nan},
+            estimator,
+        )
 
     for rank, score_expected in enumerate(expected_scores):
         score_actual = round(ranking[SCORE_COLUMN].iloc[rank], 3)
@@ -363,9 +366,7 @@ def check_ranking(
         )
 
     learner_str = CLASSIFIER_STR if is_classifier else REGRESSOR_STR
-    param_column = f"param_{learner_str}"
-    if expected_learners is not None:
-        param_column = PARAM_CANDIDATE_STR
+    param_column = PARAM_CANDIDATE_STR
 
     if expected_parameters is not None:
         for rank, parameters_expected in expected_parameters.items():
