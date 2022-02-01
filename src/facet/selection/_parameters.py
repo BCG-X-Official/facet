@@ -98,7 +98,8 @@ class ParameterSpace(BaseParameterSpace[T_Estimator], Generic[T_Estimator]):
             RegressorPipelineDF(
                 regressor=RandomForestRegressorDF(random_state=42),
                 preprocessing=simple_preprocessor,
-            )
+            ),
+            candidate_name="rf_candidate"
         )
         ps.regressor.min_weight_fraction_leaf = scipy.stats.loguniform(0.01, 0.1)
         ps.regressor.max_depth = [3, 4, 5, 7, 10]
@@ -119,13 +120,15 @@ distribution:
     """
 
     STEP_CANDIDATE = "candidate"
+    STEP_NAME = "candidate_name"
 
-    def __init__(self, estimator: T_Estimator) -> None:
+    def __init__(self, estimator: T_Estimator, name: Optional[str] = None) -> None:
         """
         :param estimator: the estimator to which to apply the parameters to
+        :param name: a name for the estimator to be used in the report data frame
         """
 
-        super().__init__(estimator=CandidateEstimatorDF(estimator))
+        super().__init__(estimator=CandidateEstimatorDF(estimator, name))
 
         params: Dict[str, Any] = {
             name: param
@@ -272,23 +275,23 @@ class MultiEstimatorParameterSpace(
 
     def __init__(
         self,
-        *candidates: ParameterSpace[T_Estimator],
+        *spaces: ParameterSpace[T_Estimator],
         estimator_type: Type[T_Estimator],
     ) -> None:
         """
-        :param candidates: the parameter spaces from which to select the best estimator
+        :param spaces: the parameter spaces from which to select the best estimator
         :param estimator_type: the estimator base type which all candidate estimators
             must implement
         """
-        validate_element_types(candidates, expected_type=ParameterSpace)
-        validate_candidates(candidates, expected_estimator_type=estimator_type)
+        validate_element_types(spaces, expected_type=ParameterSpace)
+        validate_spaces(spaces, expected_estimator_type=estimator_type)
 
-        if len(candidates) == 0:
+        if len(spaces) == 0:
             raise TypeError("no parameter space passed; need to pass at least one")
 
         super().__init__(estimator=CandidateEstimatorDF.empty())
 
-        self.candidates = candidates
+        self.spaces = spaces
         self.estimator_type = estimator_type
 
     @subsdoc(
@@ -303,10 +306,11 @@ class MultiEstimatorParameterSpace(
         """[see superclass]"""
         return [
             {
-                ParameterSpace.STEP_CANDIDATE: [candidate.estimator.candidate],
-                **candidate.get_parameters(),
+                ParameterSpace.STEP_CANDIDATE: [space.estimator.candidate],
+                ParameterSpace.STEP_NAME: [space.estimator.candidate_name],
+                **space.get_parameters(),
             }
-            for candidate in self.candidates
+            for space in self.spaces
         ]
 
     def to_expression(self) -> "Expression":
@@ -315,8 +319,8 @@ class MultiEstimatorParameterSpace(
         return Id(type(self))(
             self.estimator.candidate,
             [
-                candidate._to_expression(path_prefix=ParameterSpace.STEP_CANDIDATE)
-                for candidate in self.candidates
+                space._to_expression(path_prefix=ParameterSpace.STEP_CANDIDATE)
+                for space in self.spaces
             ],
         )
 
@@ -328,12 +332,12 @@ class MultiRegressorParameterSpace(MultiEstimatorParameterSpace[RegressorPipelin
 
     def __init__(
         self,
-        *candidates: ParameterSpace[RegressorPipelineDF],
+        *spaces: ParameterSpace[RegressorPipelineDF],
         estimator_type: Type[RegressorPipelineDF] = RegressorPipelineDF,
     ) -> None:
         """[see superclass]"""
         ensure_subclass(estimator_type, RegressorPipelineDF)
-        super().__init__(*candidates, estimator_type=estimator_type)
+        super().__init__(*spaces, estimator_type=estimator_type)
 
 
 @subsdoc(pattern="a competing estimator", replacement="a competing classifier pipeline")
@@ -343,12 +347,12 @@ class MultiClassifierParameterSpace(MultiEstimatorParameterSpace[ClassifierPipel
 
     def __init__(
         self,
-        *candidates: ParameterSpace[ClassifierPipelineDF],
+        *spaces: ParameterSpace[ClassifierPipelineDF],
         estimator_type: Type[ClassifierPipelineDF] = ClassifierPipelineDF,
     ) -> None:
         """[see superclass]"""
         ensure_subclass(estimator_type, ClassifierPipelineDF)
-        super().__init__(*candidates, estimator_type=estimator_type)
+        super().__init__(*spaces, estimator_type=estimator_type)
 
 
 @inheritdoc(match="""[see superclass]""")
@@ -360,17 +364,24 @@ class CandidateEstimatorDF(ClassifierDF, RegressorDF, TransformerDF):
     candidate where actual estimator is a hyperparameter itself.
     """
 
-    def __init__(self, candidate: Optional[EstimatorDF] = None) -> None:
+    def __init__(
+        self,
+        candidate: Optional[EstimatorDF] = None,
+        candidate_name: Optional[str] = None,
+    ) -> None:
         """
-        :param candidate: candidate estimator. If None then estimators to be evaluated
-                          should be provided in the parameter grid under "candidate" key
+        :param candidate: the candidate estimator. If ``None`` then estimators to be
+                          evaluated should be provided in the parameter grid under a
+                          "candidate" key.
+        :param candidate_name: a name for the candidate
         """
         self.candidate = candidate
+        self.candidate_name = candidate_name
 
     @classmethod
     def empty(cls) -> "CandidateEstimatorDF":
         """
-        :return: new instance with an empty candidate
+        :return: new candidate instance without internal estimator
         """
         return cls()
 
@@ -428,7 +439,7 @@ class CandidateEstimatorDF(ClassifierDF, RegressorDF, TransformerDF):
     @property
     def is_fitted(self) -> bool:
         """[see superclass]"""
-        return False if self.candidate is None else self.candidate.is_fitted
+        return self.candidate is not None and self.candidate.is_fitted
 
     def inverse_transform(self, X: pd.DataFrame) -> pd.DataFrame:
         """[see superclass]"""
@@ -439,13 +450,13 @@ class CandidateEstimatorDF(ClassifierDF, RegressorDF, TransformerDF):
         return self.candidate.transform(X)
 
     def _get_features_in(self) -> pd.Index:
-        return self.candidate._get_features_in()
+        return self.candidate.feature_names_in_
 
     def _get_n_outputs(self) -> int:
-        return self.candidate._get_n_outputs()
+        return self.candidate.n_outputs_
 
     def _get_features_original(self) -> pd.Series:
-        return self.candidate._get_features_original()
+        return self.candidate.feature_names_original_
 
 
 __tracker.validate()
@@ -472,22 +483,22 @@ def ensure_subclass(
         )
 
 
-def validate_candidates(
-    candidates: Collection[ParameterSpace[T_Estimator]],
+def validate_spaces(
+    spaces: Collection[ParameterSpace[T_Estimator]],
     expected_estimator_type: Type[T_Estimator],
 ) -> None:
     """
     Ensure that all candidates implement a given estimator type.
 
-    :param candidates: the candidates to check
+    :param spaces: the candidates to check
     :param expected_estimator_type: the type that all candidates' estimators must
         implement
     """
 
     non_compliant_candidate_estimators: Set[str] = {
-        type(candidate.estimator.candidate).__name__
-        for candidate in candidates
-        if not isinstance(candidate.estimator.candidate, expected_estimator_type)
+        type(space.estimator.candidate).__name__
+        for space in spaces
+        if not isinstance(space.estimator.candidate, expected_estimator_type)
     }
     if non_compliant_candidate_estimators:
         raise TypeError(

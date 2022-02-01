@@ -172,7 +172,8 @@ def test_parameter_space(
         regressor=RandomForestRegressorDF(random_state=42),
         preprocessing=simple_preprocessor,
     )
-    ps_1 = ParameterSpace(pipeline_1)
+    ps_1_name = "rf_regressor"
+    ps_1 = ParameterSpace(pipeline_1, name=ps_1_name)
     ps_1.regressor.min_weight_fraction_leaf = loguniform_0_01_0_10
     ps_1.regressor.max_depth = randint_3_10
     ps_1.regressor.min_samples_leaf = loguniform_0_05_0_10
@@ -198,7 +199,8 @@ def test_parameter_space(
         regressor=LGBMRegressorDF(random_state=42),
         preprocessing=simple_preprocessor,
     )
-    ps_2 = ParameterSpace(pipeline_2)
+    ps_2_name = "lgbm"
+    ps_2 = ParameterSpace(pipeline_2, name=ps_2_name)
     ps_2.regressor.max_depth = randint_3_10
     ps_2.regressor.min_child_samples = zipfian_1_32
 
@@ -260,12 +262,14 @@ def test_parameter_space(
     assert mps.parameters == [
         {
             "candidate": [pipeline_1],
+            "candidate_name": [ps_1_name],
             "candidate__regressor__max_depth": randint_3_10,
             "candidate__regressor__min_samples_leaf": loguniform_0_05_0_10,
             "candidate__regressor__min_weight_fraction_leaf": loguniform_0_01_0_10,
         },
         {
             "candidate": [pipeline_2],
+            "candidate_name": [ps_2_name],
             "candidate__regressor__max_depth": randint_3_10,
             "candidate__regressor__min_child_samples": zipfian_1_32,
         },
