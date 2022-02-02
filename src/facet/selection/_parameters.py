@@ -57,7 +57,7 @@ assert rv_frozen.__name__ == "rv_frozen"
 #
 
 T_Self = TypeVar("T_Self")
-T_Estimator = TypeVar("T_Estimator", bound=BaseEstimator)
+T_Candidate_co = TypeVar("T_Candidate_co", covariant=True, bound=EstimatorDF)
 
 
 #
@@ -73,8 +73,7 @@ __tracker = AllTracker(globals())
 
 
 @inheritdoc(match="""[see superclass]""")
-class ParameterSpace(BaseParameterSpace[T_Estimator], Generic[T_Estimator]):
-    # noinspection SpellCheckingInspection
+class ParameterSpace(BaseParameterSpace[T_Candidate_co], Generic[T_Candidate_co]):
     """
     A set of parameters spanning a parameter space for optimizing the hyper-parameters
     of a single estimator.
@@ -119,22 +118,25 @@ distribution:
     STEP_CANDIDATE = "candidate"
     STEP_NAME = "candidate_name"
 
-    def __init__(self, estimator: T_Estimator, name: Optional[str] = None) -> None:
+    def __init__(
+        self, candidate: T_Candidate_co, candidate_name: Optional[str] = None
+    ) -> None:
         """
-        :param estimator: the estimator to which to apply the parameters to
-        :param name: a name for the estimator to be used in the report data frame
+        :param candidate: the estimator candidate to which to apply the parameters to
+        :param candidate_name: a name for the estimator candidate to be used in summary
+            reports
         """
 
-        super().__init__(estimator=CandidateEstimatorDF(estimator, name))
+        super().__init__(estimator=CandidateEstimatorDF(candidate, candidate_name))
 
         params: Dict[str, Any] = {
             name: param
-            for name, param in estimator.get_params(deep=True).items()
+            for name, param in candidate.get_params(deep=True).items()
             if "__" not in name
         }
 
         self._children: Dict[str, ParameterSpace] = {
-            name: ParameterSpace(estimator=value)
+            name: ParameterSpace(candidate=value)
             for name, value in params.items()
             if isinstance(value, BaseEstimator)
         }
@@ -257,7 +259,7 @@ distribution:
 
 @inheritdoc(match="""[see superclass]""")
 class MultiEstimatorParameterSpace(
-    BaseParameterSpace[T_Estimator], Generic[T_Estimator]
+    BaseParameterSpace[T_Candidate_co], Generic[T_Candidate_co]
 ):
     """
     A collection of parameter spaces, each representing a competing estimator from which
@@ -267,21 +269,12 @@ class MultiEstimatorParameterSpace(
     spaces.
     """
 
-    #: The estimator base type which all candidate estimators must implement.
-    estimator_type: Type[T_Estimator]
-
-    def __init__(
-        self,
-        *spaces: ParameterSpace[T_Estimator],
-        estimator_type: Type[T_Estimator],
-    ) -> None:
+    def __init__(self, *spaces: ParameterSpace[T_Candidate_co]) -> None:
         """
         :param spaces: the parameter spaces from which to select the best estimator
-        :param estimator_type: the estimator base type which all candidate estimators
-            must implement
         """
         validate_element_types(spaces, expected_type=ParameterSpace)
-        validate_spaces(spaces, expected_estimator_type=estimator_type)
+        validate_spaces(spaces)
 
         if len(spaces) == 0:
             raise TypeError("no parameter space passed; need to pass at least one")
@@ -289,7 +282,6 @@ class MultiEstimatorParameterSpace(
         super().__init__(estimator=CandidateEstimatorDF.empty())
 
         self.spaces = spaces
-        self.estimator_type = estimator_type
 
     @subsdoc(
         pattern=(
@@ -323,7 +315,9 @@ class MultiEstimatorParameterSpace(
 
 
 @inheritdoc(match="""[see superclass]""")
-class CandidateEstimatorDF(ClassifierDF, RegressorDF, TransformerDF):
+class CandidateEstimatorDF(
+    ClassifierDF, RegressorDF, TransformerDF, Generic[T_Candidate_co]
+):
     """
     Metaclass providing representation for candidate estimator to be used in
     hyperparameter search. Unifies evaluation approach for :class:`.ParameterSpace`
@@ -333,7 +327,7 @@ class CandidateEstimatorDF(ClassifierDF, RegressorDF, TransformerDF):
 
     def __init__(
         self,
-        candidate: Optional[EstimatorDF] = None,
+        candidate: Optional[T_Candidate_co] = None,
         candidate_name: Optional[str] = None,
     ) -> None:
         """
@@ -435,7 +429,7 @@ __tracker.validate()
 
 
 def ensure_subclass(
-    estimator_type: Type[T_Estimator], expected_type: Type[T_Estimator]
+    estimator_type: Type[T_Candidate_co], expected_type: Type[T_Candidate_co]
 ) -> None:
     """
     Ensure that the given estimator type is a subclass of the expected estimator type.
@@ -450,27 +444,20 @@ def ensure_subclass(
         )
 
 
-def validate_spaces(
-    spaces: Collection[ParameterSpace[T_Estimator]],
-    expected_estimator_type: Type[T_Estimator],
-) -> None:
+def validate_spaces(spaces: Collection[ParameterSpace[T_Candidate_co]]) -> None:
     """
-    Ensure that all candidates implement a given estimator type.
+    Ensure that all candidates implement the same estimator type (typically regressors
+    or classifiers)
 
     :param spaces: the candidates to check
-    :param expected_estimator_type: the type that all candidates' estimators must
-        implement
     """
 
-    non_compliant_candidate_estimators: Set[str] = {
-        type(space.estimator.candidate).__name__
-        for space in spaces
-        if not isinstance(space.estimator.candidate, expected_estimator_type)
+    estimator_types = {
+        getattr(space.estimator, "_estimator_type", None) for space in spaces
     }
-    if non_compliant_candidate_estimators:
+
+    if len(estimator_types) > 1:
         raise TypeError(
-            f"all candidate estimators must be instances of "
-            f"{expected_estimator_type.__name__}, "
-            f"but candidate estimators include: "
-            f"{', '.join(non_compliant_candidate_estimators)}"
+            "all candidate estimators must have the same estimator type, "
+            "but got multiple types: " + ", ".join(sorted(estimator_types))
         )
