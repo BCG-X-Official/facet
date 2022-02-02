@@ -371,42 +371,49 @@ class CandidateEstimatorDF(
         """[see superclass]"""
         return self.candidate.classes_
 
+    # noinspection PyPep8Naming
     def predict_proba(
         self, X: pd.DataFrame, **predict_params: Any
     ) -> Union[pd.DataFrame, List[pd.DataFrame]]:
         """[see superclass]"""
         return self.candidate.predict_proba(X, **predict_params)
 
+    # noinspection PyPep8Naming
     def predict_log_proba(
         self, X: pd.DataFrame, **predict_params: Any
     ) -> Union[pd.DataFrame, List[pd.DataFrame]]:
         """[see superclass]"""
         return self.candidate.predict_log_proba(X, **predict_params)
 
+    # noinspection PyPep8Naming
     def decision_function(
         self, X: pd.DataFrame, **predict_params: Any
     ) -> Union[pd.Series, pd.DataFrame]:
         """[see superclass]"""
         return self.candidate.decision_function(X, **predict_params)
 
+    # noinspection PyPep8Naming
     def score(
         self, X: pd.DataFrame, y: pd.Series, sample_weight: Optional[pd.Series] = None
     ) -> float:
         """[see superclass]"""
         return self.candidate.score(X, y, sample_weight)
 
+    # noinspection PyPep8Naming
     def predict(
         self, X: pd.DataFrame, **predict_params: Any
     ) -> Union[pd.Series, pd.DataFrame]:
         """[see superclass]"""
         return self.candidate.predic(X, **predict_params)
 
+    # noinspection PyPep8Naming
     def fit_predict(
         self, X: pd.DataFrame, y: pd.Series, **fit_params: Any
     ) -> Union[pd.Series, pd.DataFrame]:
         """[see superclass]"""
         return self.candidate.fit_predict(X, y, **fit_params)
 
+    # noinspection PyPep8Naming
     def fit(
         self: T_Self,
         X: pd.DataFrame,
@@ -422,10 +429,12 @@ class CandidateEstimatorDF(
         """[see superclass]"""
         return self.candidate is not None and self.candidate.is_fitted
 
+    # noinspection PyPep8Naming
     def inverse_transform(self, X: pd.DataFrame) -> pd.DataFrame:
         """[see superclass]"""
         return self.candidate.inverse_transform(X)
 
+    # noinspection PyPep8Naming
     def transform(self, X: pd.DataFrame) -> pd.DataFrame:
         """[see superclass]"""
         return self.candidate.transform(X)
