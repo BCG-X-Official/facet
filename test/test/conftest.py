@@ -1,5 +1,5 @@
 import logging
-from typing import Any, List, Mapping, Optional, Sequence, Set, Tuple
+from typing import Any, List, Mapping, Optional, Sequence, Set, Tuple, Type
 
 import numpy as np
 import pandas as pd
@@ -29,7 +29,7 @@ from sklearndf.transformation import (
 import facet
 from facet.data import Sample
 from facet.inspection import LearnerInspector, TreeExplainerFactory
-from facet.selection import LearnerRanker, MultiRegressorParameterSpace, ParameterSpace
+from facet.selection import LearnerRanker, MultiEstimatorParameterSpace, ParameterSpace
 from facet.validation import BootstrapCV, StratifiedBootstrapCV
 
 logging.basicConfig(level=logging.DEBUG)
@@ -88,7 +88,7 @@ def cv_stratified_bootstrap() -> BaseCrossValidator:
 @pytest.fixture
 def regressor_parameters(
     simple_preprocessor: TransformerDF,
-) -> MultiRegressorParameterSpace:
+) -> MultiEstimatorParameterSpace[RegressorPipelineDF]:
     random_state = {"random_state": 42}
 
     space_1 = ParameterSpace(
@@ -146,7 +146,7 @@ def regressor_parameters(
     )
     space_7.regressor.normalize = [False, True]
 
-    return MultiRegressorParameterSpace(
+    return MultiEstimatorParameterSpace(
         space_1,
         space_2,
         space_3,
@@ -154,14 +154,13 @@ def regressor_parameters(
         space_5,
         space_6,
         space_7,
-        estimator_type=RegressorPipelineDF,
     )
 
 
 @pytest.fixture
 def regressor_ranker(
     cv_kfold: KFold,
-    regressor_parameters: MultiRegressorParameterSpace,
+    regressor_parameters: MultiEstimatorParameterSpace[RegressorPipelineDF],
     sample: Sample,
     n_jobs: int,
 ) -> LearnerRanker[RegressorPipelineDF, GridSearchCV]:
@@ -324,7 +323,7 @@ def check_ranking(
     is_classifier: bool,
     expected_scores: Sequence[float],
     expected_parameters: Optional[Mapping[int, Mapping[str, Any]]],
-    expected_learners: Optional[List[LearnerDF]] = None,
+    expected_learners: Optional[List[Type[LearnerDF]]] = None,
 ) -> None:
     """
     Test helper to check rankings produced by learner rankers

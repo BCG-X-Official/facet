@@ -25,19 +25,16 @@ from sklearndf.regression.extra import LGBMRegressorDF
 
 from ..conftest import check_ranking
 from facet.data import Sample
-from facet.selection import (
-    LearnerRanker,
-    MultiClassifierParameterSpace,
-    MultiRegressorParameterSpace,
-    ParameterSpace,
-)
+from facet.selection import LearnerRanker, MultiEstimatorParameterSpace, ParameterSpace
 from facet.validation import BootstrapCV
 
 log = logging.getLogger(__name__)
 
 
 def test_model_ranker(
-    regressor_parameters: MultiRegressorParameterSpace, sample: Sample, n_jobs: int
+    regressor_parameters: MultiEstimatorParameterSpace[RegressorPipelineDF],
+    sample: Sample,
+    n_jobs: int,
 ) -> None:
 
     expected_scores = [
@@ -173,7 +170,7 @@ def test_parameter_space(
         preprocessing=simple_preprocessor,
     )
     ps_1_name = "rf_regressor"
-    ps_1 = ParameterSpace(pipeline_1, name=ps_1_name)
+    ps_1 = ParameterSpace(pipeline_1, candidate_name=ps_1_name)
     ps_1.regressor.min_weight_fraction_leaf = loguniform_0_01_0_10
     ps_1.regressor.max_depth = randint_3_10
     ps_1.regressor.min_samples_leaf = loguniform_0_05_0_10
@@ -200,7 +197,7 @@ def test_parameter_space(
         preprocessing=simple_preprocessor,
     )
     ps_2_name = "lgbm"
-    ps_2 = ParameterSpace(pipeline_2, name=ps_2_name)
+    ps_2 = ParameterSpace(pipeline_2, candidate_name=ps_2_name)
     ps_2.regressor.max_depth = randint_3_10
     ps_2.regressor.min_child_samples = zipfian_1_32
 
@@ -209,29 +206,21 @@ def test_parameter_space(
     with pytest.raises(
         TypeError,
         match=(
-            r"^arg estimator_type must be a subclass of ClassifierPipelineDF but is: "
-            r"RegressorPipelineDF$"
+            r"^all candidate estimators must have the same estimator type, "
+            r"but got multiple types: classifier, regressor$"
         ),
     ):
         # noinspection PyTypeChecker
-        MultiClassifierParameterSpace(ps_1, ps_2, estimator_type=RegressorPipelineDF)
+        MultiEstimatorParameterSpace(
+            ps_1, ps_2, ParameterSpace(ClassifierPipelineDF(classifier=SVCDF()))
+        )
 
-    with pytest.raises(
-        TypeError,
-        match=(
-            r"^all candidate estimators must be instances of ClassifierPipelineDF, "
-            r"but candidate estimators include: RegressorPipelineDF$"
-        ),
-    ):
-        # noinspection PyTypeChecker
-        MultiClassifierParameterSpace(ps_1, ps_2)
-
-    mps = MultiRegressorParameterSpace(ps_1, ps_2)
+    mps = MultiEstimatorParameterSpace(ps_1, ps_2)
 
     # test
 
     assert freeze(mps.to_expression()) == freeze(
-        Id.MultiRegressorParameterSpace(
+        Id.MultiEstimatorParameterSpace(
             None,
             [
                 Id.ParameterSpace(
@@ -277,7 +266,9 @@ def test_parameter_space(
 
 
 def test_learner_ranker(
-    regressor_parameters: MultiRegressorParameterSpace, sample: Sample, n_jobs: int
+    regressor_parameters: MultiEstimatorParameterSpace[RegressorPipelineDF],
+    sample: Sample,
+    n_jobs: int,
 ) -> None:
 
     # define the circular cross validator with just 5 splits (to speed up testing)

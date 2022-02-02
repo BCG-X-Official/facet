@@ -8,7 +8,7 @@ from sklearndf.pipeline import ClassifierPipelineDF, RegressorPipelineDF
 from sklearndf.regression import RandomForestRegressorDF
 
 from ..conftest import check_ranking
-from facet.selection import LearnerRanker, MultiClassifierParameterSpace, ParameterSpace
+from facet.selection import LearnerRanker, MultiEstimatorParameterSpace, ParameterSpace
 from facet.validation import StratifiedBootstrapCV
 
 log = logging.getLogger(__name__)
@@ -35,12 +35,13 @@ def test_prediction_classifier(
 
     with pytest.raises(
         TypeError,
-        match="^all candidate estimators must be instances of "
-        "ClassifierPipelineDF, but candidate estimators include: "
-        "RegressorPipelineDF$",
+        match=(
+            "^all candidate estimators must have the same estimator type, "
+            "but got multiple types: classifier, regressor$"
+        ),
     ):
         # define an illegal grid list, mixing classification with regression
-        MultiClassifierParameterSpace(ps1, ps2)
+        MultiEstimatorParameterSpace(ps1, ps2)
 
     model_ranker: LearnerRanker[
         ClassifierPipelineDF[RandomForestClassifierDF], GridSearchCV
