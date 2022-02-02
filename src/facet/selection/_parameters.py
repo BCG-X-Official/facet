@@ -337,6 +337,12 @@ class CandidateEstimatorDF(
     #: name of the `candidate_name` parameter
     PARAM_CANDIDATE_NAME = "candidate_name"
 
+    #: The currently selected estimator candidate
+    candidate: T_Candidate_co
+
+    #: The name of the candidate
+    candidate_name: str
+
     def __init__(
         self,
         candidate: Optional[T_Candidate_co] = None,
