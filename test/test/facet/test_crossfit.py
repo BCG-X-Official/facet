@@ -54,7 +54,7 @@ def test_prediction_classifier(
 
     with pytest.raises(
         ValueError,
-        match="arg sample_weight is not supported, " "use ag sample.weight instead",
+        match="arg sample_weight is not supported, use arg sample.weight instead",
     ):
         model_ranker.fit(
             sample=iris_sample_multi_class, sample_weight=iris_sample_multi_class.weight

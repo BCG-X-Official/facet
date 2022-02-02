@@ -245,7 +245,7 @@ class LearnerRanker(
 
         if ARG_SAMPLE_WEIGHT in fit_params:
             raise ValueError(
-                "arg sample_weight is not supported, use ag sample.weight instead"
+                "arg sample_weight is not supported, use arg sample.weight instead"
             )
 
         if isinstance(groups, pd.Series):
