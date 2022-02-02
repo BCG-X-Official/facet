@@ -7,10 +7,10 @@ from abc import ABCMeta, abstractmethod
 from typing import Any, Dict, Generic, List, Optional, TypeVar, Union
 
 from scipy import stats
-from sklearn.base import BaseEstimator
 
 from pytools.api import AllTracker
 from pytools.expression import HasExpressionRepr
+from sklearndf import EstimatorDF
 
 log = logging.getLogger(__name__)
 
@@ -30,7 +30,7 @@ ParameterDict = Dict[str, Union[List[Any], stats.rv_continuous, stats.rv_discret
 # Type variables
 #
 
-T_Estimator = TypeVar("T_Estimator", bound=BaseEstimator)
+T_Estimator = TypeVar("T_Estimator", bound=EstimatorDF)
 
 
 #
@@ -51,11 +51,14 @@ class BaseParameterSpace(HasExpressionRepr, Generic[T_Estimator], metaclass=ABCM
     optimization.
     """
 
+    #: The estimator associated with this parameter space.
+    estimator: T_Estimator
+
     def __init__(self, estimator: T_Estimator) -> None:
         """
         :param estimator: the estimator for which to capture parameters
         """
-        self._estimator: BaseEstimator = estimator
+        self._estimator = estimator
 
     @property
     def estimator(self) -> T_Estimator:
