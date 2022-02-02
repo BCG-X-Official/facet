@@ -29,7 +29,6 @@ from pytools.api import AllTracker, inheritdoc, subsdoc, to_list, validate_eleme
 from pytools.expression import Expression, make_expression
 from pytools.expression.atomic import Id
 from sklearndf import ClassifierDF, EstimatorDF, RegressorDF, TransformerDF
-from sklearndf.pipeline import ClassifierPipelineDF, RegressorPipelineDF
 
 from .base import BaseParameterSpace
 
@@ -37,9 +36,7 @@ log = logging.getLogger(__name__)
 
 __all__ = [
     "CandidateEstimatorDF",
-    "MultiClassifierParameterSpace",
     "MultiEstimatorParameterSpace",
-    "MultiRegressorParameterSpace",
     "ParameterSpace",
 ]
 
@@ -323,36 +320,6 @@ class MultiEstimatorParameterSpace(
                 for space in self.spaces
             ],
         )
-
-
-@subsdoc(pattern="a competing estimator", replacement="a competing regressor pipeline")
-@inheritdoc(match="""[see superclass]""")
-class MultiRegressorParameterSpace(MultiEstimatorParameterSpace[RegressorPipelineDF]):
-    """[see superclass]"""
-
-    def __init__(
-        self,
-        *spaces: ParameterSpace[RegressorPipelineDF],
-        estimator_type: Type[RegressorPipelineDF] = RegressorPipelineDF,
-    ) -> None:
-        """[see superclass]"""
-        ensure_subclass(estimator_type, RegressorPipelineDF)
-        super().__init__(*spaces, estimator_type=estimator_type)
-
-
-@subsdoc(pattern="a competing estimator", replacement="a competing classifier pipeline")
-@inheritdoc(match="""[see superclass]""")
-class MultiClassifierParameterSpace(MultiEstimatorParameterSpace[ClassifierPipelineDF]):
-    """[see superclass]"""
-
-    def __init__(
-        self,
-        *spaces: ParameterSpace[ClassifierPipelineDF],
-        estimator_type: Type[ClassifierPipelineDF] = ClassifierPipelineDF,
-    ) -> None:
-        """[see superclass]"""
-        ensure_subclass(estimator_type, ClassifierPipelineDF)
-        super().__init__(*spaces, estimator_type=estimator_type)
 
 
 @inheritdoc(match="""[see superclass]""")
