@@ -439,6 +439,11 @@ class CandidateEstimatorDF(
         """[see superclass]"""
         return self.candidate.transform(X)
 
+    @property
+    def _estimator_type(self) -> str:
+        # noinspection PyProtectedMember
+        return self.candidate._estimator_type
+
     def _get_features_in(self) -> pd.Index:
         return self.candidate.feature_names_in_
 
