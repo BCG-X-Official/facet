@@ -148,12 +148,16 @@ distribution:
         replacement="",
         using=BaseParameterSpace.get_parameters,
     )
-    def get_parameters(self, prefix: Optional[str] = STEP_CANDIDATE) -> ParameterDict:
+    def get_parameters(self, prefix: Optional[str] = None) -> ParameterDict:
         """[see superclass]"""
 
         return {
             "__".join(name): values
-            for (name, values) in self._iter_parameters([prefix] if prefix else [])
+            for (name, values) in self._iter_parameters(
+                path_prefix=[
+                    CandidateEstimatorDF.PARAM_CANDIDATE if prefix is None else prefix
+                ]
+            )
         }
 
     def _validate_parameter(self, name: str, value: ParameterSet) -> None:
@@ -295,8 +299,10 @@ class MultiEstimatorParameterSpace(
         """[see superclass]"""
         return [
             {
-                ParameterSpace.STEP_CANDIDATE: [space.estimator.candidate],
-                ParameterSpace.STEP_NAME: [space.estimator.candidate_name],
+                CandidateEstimatorDF.PARAM_CANDIDATE: [space.estimator.candidate],
+                CandidateEstimatorDF.PARAM_CANDIDATE_NAME: [
+                    space.estimator.candidate_name
+                ],
                 **space.get_parameters(),
             }
             for space in self.spaces
@@ -308,7 +314,7 @@ class MultiEstimatorParameterSpace(
         return Id(type(self))(
             self.estimator.candidate,
             [
-                space._to_expression(path_prefix=ParameterSpace.STEP_CANDIDATE)
+                space._to_expression(path_prefix=CandidateEstimatorDF.PARAM_CANDIDATE)
                 for space in self.spaces
             ],
         )
@@ -324,6 +330,12 @@ class CandidateEstimatorDF(
     and class:`.MultiEstimatorParameterSpace`. For the latter it provides "empty"
     candidate where actual estimator is a hyperparameter itself.
     """
+
+    #: name of the `candidate` parameter
+    PARAM_CANDIDATE = "candidate"
+
+    #: name of the `candidate_name` parameter
+    PARAM_CANDIDATE_NAME = "candidate_name"
 
     def __init__(
         self,
