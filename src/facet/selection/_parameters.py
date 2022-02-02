@@ -115,9 +115,6 @@ distribution:
 
     """
 
-    STEP_CANDIDATE = "candidate"
-    STEP_NAME = "candidate_name"
-
     def __init__(
         self, candidate: T_Candidate_co, candidate_name: Optional[str] = None
     ) -> None:
