@@ -106,7 +106,7 @@ class ParameterSpace(BaseParameterSpace[T_Candidate_co], Generic[T_Candidate_co]
             # ...
         )
 
-        # the following will raise an AttributeError for unknown attribute xyz:
+        # The following will raise an AttributeError for the unknown attribute xyz:
         ps.regressor.xyz = [3, 4, 5, 7, 10]
 
         # the following will raise a TypeError because we do not assign a list or \
