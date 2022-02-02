@@ -21,12 +21,13 @@ from typing import (
 import numpy as np
 import pandas as pd
 from numpy.random.mtrand import RandomState
-from sklearn.metrics import check_scoring
+from sklearn.metrics import get_scorer
 from sklearn.model_selection import BaseCrossValidator, GridSearchCV
 
 from pytools.api import AllTracker, inheritdoc
 from pytools.fit import FittableMixin
 from pytools.parallelization import ParallelizableMixin
+from sklearndf import EstimatorDF
 from sklearndf.pipeline import (
     ClassifierPipelineDF,
     LearnerPipelineDF,
@@ -34,6 +35,7 @@ from sklearndf.pipeline import (
 )
 
 from facet.data import Sample
+from facet.selection import CandidateEstimatorDF
 from facet.selection.base import BaseParameterSpace
 
 log = logging.getLogger(__name__)
@@ -115,7 +117,14 @@ class LearnerRanker(
         parameter_space: BaseParameterSpace,
         *,
         cv: Optional[BaseCrossValidator] = None,
-        scoring: Union[str, Callable[[float, float], float], None] = None,
+        scoring: Union[
+            str,
+            Callable[
+                [EstimatorDF, pd.Series, pd.Series],
+                float,
+            ],
+            None,
+        ] = None,
         random_state: Union[int, RandomState, None] = None,
         n_jobs: Optional[int] = None,
         shared_memory: Optional[bool] = None,
@@ -185,9 +194,6 @@ class LearnerRanker(
                 + ", ".join(unsupported_params)
             )
 
-        if type(self.scoring) == str:
-            self.scoring = self._preprocess_scoring(self.scoring)
-
         self.searcher_ = None
 
     __init__.__doc__ = __init__.__doc__.replace(
@@ -198,25 +204,6 @@ class LearnerRanker(
     def is_fitted(self) -> bool:
         """[see superclass]"""
         return self.searcher_ is not None
-
-    @staticmethod
-    def _preprocess_scoring(scoring: str):
-        def _score_fn(estimator, X: pd.DataFrame, y: pd.Series):
-            estimator = estimator.candidate
-
-            if isinstance(estimator, LearnerPipelineDF):
-                if estimator.preprocessing:
-                    X = estimator.preprocessing.transform(X=X)
-                estimator = estimator.final_estimator
-
-            scorer = check_scoring(
-                estimator=estimator.native_estimator,
-                scoring=scoring,
-            )
-
-            return scorer(estimator.native_estimator, X.values, y.values)
-
-        return _score_fn
 
     @property
     def best_estimator_(self) -> T_LearnerPipelineDF:
@@ -350,7 +337,7 @@ class LearnerRanker(
                 k: v
                 for k, v in dict(
                     cv=self.cv,
-                    scoring=self.scoring,
+                    scoring=self._get_scorer(),
                     random_state=self.random_state,
                     n_jobs=self.n_jobs,
                     shared_memory=self.shared_memory,
@@ -361,6 +348,32 @@ class LearnerRanker(
             },
             **self.searcher_params,
         }
+
+    def _get_scorer(
+        self,
+    ) -> Optional[Callable[[CandidateEstimatorDF, pd.DataFrame, pd.Series], float]]:
+        scoring = self.scoring
+
+        if scoring is None:
+            return None
+
+        elif isinstance(scoring, str):
+            scorer = get_scorer(scoring)
+
+        # noinspection PyPep8Naming
+        def _scorer_fn(
+            estimator: CandidateEstimatorDF, X: pd.DataFrame, y: pd.Series
+        ) -> float:
+            candidate = estimator.candidate
+
+            if isinstance(candidate, LearnerPipelineDF):
+                if candidate.preprocessing:
+                    X = candidate.preprocessing.transform(X=X)
+                candidate = candidate.final_estimator
+
+            return scorer(candidate.native_estimator, X, y)
+
+        return _scorer_fn
 
     summary_report.__doc__ = summary_report.__doc__.replace(
         "%%SORT_COLUMN%%", _DEFAULT_REPORT_SORT_COLUMN
