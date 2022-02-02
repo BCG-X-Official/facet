@@ -354,6 +354,8 @@ class CandidateEstimatorDF(
                           "candidate" key.
         :param candidate_name: a name for the candidate
         """
+        super().__init__()
+
         self.candidate = candidate
         self.candidate_name = candidate_name
 
