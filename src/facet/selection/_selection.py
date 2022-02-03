@@ -177,6 +177,12 @@ class LearnerRanker(
         # validate parameters for the searcher factory
         #
 
+        if not callable(searcher_factory):
+            raise TypeError(
+                "arg searcher_factory expected to be a callable, "
+                f"but is a {type(searcher_factory).__name__}"
+            )
+
         searcher_factory_params = inspect.signature(searcher_factory).parameters.keys()
 
         # raise an error if the searcher params include the searcher's first two
