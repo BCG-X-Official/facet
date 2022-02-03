@@ -1,8 +1,8 @@
 """
 Tests for module facet.selection
 """
-
 import logging
+from typing import List
 
 import numpy as np
 import pandas as pd
@@ -49,17 +49,20 @@ def test_model_ranker(
         0.758,
         0.758,
     ]
-    expected_learners = [
-        RandomForestRegressorDF,
-        RandomForestRegressorDF,
-        LinearRegressionDF,
-        LinearRegressionDF,
-        AdaBoostRegressorDF,
-        AdaBoostRegressorDF,
-        LGBMRegressorDF,
-        LGBMRegressorDF,
-        LGBMRegressorDF,
-        LGBMRegressorDF,
+    expected_learners: List[str] = [
+        cls.__name__
+        for cls in (
+            RandomForestRegressorDF,
+            RandomForestRegressorDF,
+            LinearRegressionDF,
+            LinearRegressionDF,
+            AdaBoostRegressorDF,
+            AdaBoostRegressorDF,
+            LGBMRegressorDF,
+            LGBMRegressorDF,
+            LGBMRegressorDF,
+            LGBMRegressorDF,
+        )
     ]
     expected_parameters = {
         0: dict(n_estimators=80),
@@ -84,7 +87,7 @@ def test_model_ranker(
     assert isinstance(ranker.best_estimator_, RegressorPipelineDF)
 
     ranking = ranker.summary_report()
-    ranking_score = ranking["mean_test_score"]
+    ranking_score = ranking[("score", "test", "mean")]
 
     assert len(ranking) > 0
     assert all(
@@ -95,9 +98,9 @@ def test_model_ranker(
     check_ranking(
         ranking=ranking,
         is_classifier=False,
-        expected_scores=expected_scores,
-        expected_parameters=expected_parameters,
-        expected_learners=expected_learners,
+        scores_expected=expected_scores,
+        params_expected=expected_parameters,
+        candidate_names_expected=expected_learners,
     )
 
 
@@ -140,15 +143,15 @@ def test_model_ranker_no_preprocessing(n_jobs) -> None:
     check_ranking(
         ranking=summary_report,
         is_classifier=True,
-        expected_scores=expected_learner_scores,
-        expected_parameters={
+        scores_expected=expected_learner_scores,
+        params_expected={
             0: dict(C=10, kernel="linear"),
             3: dict(C=1, kernel="rbf"),
         },
     )
 
     assert (
-        summary_report["mean_test_score"].iloc[0] >= 0.8
+        summary_report[("score", "test", "mean")].iloc[0] >= 0.8
     ), "expected a best performance of at least 0.8"
 
 
@@ -170,7 +173,7 @@ def test_parameter_space(
         preprocessing=simple_preprocessor,
     )
     ps_1_name = "rf_regressor"
-    ps_1 = ParameterSpace(pipeline_1, candidate_name=ps_1_name)
+    ps_1 = ParameterSpace(pipeline_1, name=ps_1_name)
     ps_1.regressor.min_weight_fraction_leaf = loguniform_0_01_0_10
     ps_1.regressor.max_depth = randint_3_10
     ps_1.regressor.min_samples_leaf = loguniform_0_05_0_10
@@ -197,7 +200,7 @@ def test_parameter_space(
         preprocessing=simple_preprocessor,
     )
     ps_2_name = "lgbm"
-    ps_2 = ParameterSpace(pipeline_2, candidate_name=ps_2_name)
+    ps_2 = ParameterSpace(pipeline_2, name=ps_2_name)
     ps_2.regressor.max_depth = randint_3_10
     ps_2.regressor.min_child_samples = zipfian_1_32
 
@@ -219,30 +222,38 @@ def test_parameter_space(
 
     # test
 
+    def regressor_repr(model: Id):
+        return Id.RegressorPipelineDF(
+            preprocessing=Id.ColumnTransformerDF(
+                transformers=[
+                    (
+                        "impute",
+                        Id.SimpleImputerDF(strategy="median"),
+                        ["CRIM", "ZN", "INDUS", "CHAS", "NOX", "RM", "AGE"]
+                        + ["DIS", "RAD", "TAX", "PTRATIO", "B", "LSTAT"],
+                    )
+                ]
+            ),
+            regressor=model(random_state=42),
+        )
+
     assert freeze(mps.to_expression()) == freeze(
         Id.MultiEstimatorParameterSpace(
-            None,
-            [
-                Id.ParameterSpace(
-                    candidate=pipeline_1.to_expression(),
-                    **{
-                        "candidate.regressor.min_weight_fraction_leaf": (
-                            Id.loguniform(0.01, 0.1)
-                        ),
-                        "candidate.regressor.max_depth": Id.randint(3, 10),
-                        "candidate.regressor.min_samples_leaf": (
-                            Id.loguniform(0.05, 0.1)
-                        ),
-                    },
-                ),
-                Id.ParameterSpace(
-                    candidate=pipeline_2.to_expression(),
-                    **{
-                        "candidate.regressor.max_depth": Id.randint(3, 10),
-                        "candidate.regressor.min_child_samples": Id.zipfian(1.0, 32),
-                    },
-                ),
-            ],
+            Id.ParameterSpace(
+                regressor_repr(Id.RandomForestRegressorDF),
+                **{
+                    "regressor.min_weight_fraction_leaf": (Id.loguniform(0.01, 0.1)),
+                    "regressor.max_depth": Id.randint(3, 10),
+                    "regressor.min_samples_leaf": (Id.loguniform(0.05, 0.1)),
+                },
+            ),
+            Id.ParameterSpace(
+                regressor_repr(Id.LGBMRegressorDF),
+                **{
+                    "regressor.max_depth": Id.randint(3, 10),
+                    "regressor.min_child_samples": Id.zipfian(1.0, 32),
+                },
+            ),
         )
     )
 
@@ -300,7 +311,7 @@ def test_learner_ranker(
     assert len(report_df) > 0
     assert isinstance(report_df, pd.DataFrame)
 
-    scores_sr: pd.Series = report_df.loc[:, "mean_test_score"]
+    scores_sr: pd.Series = report_df.loc[:, ("score", "test", "mean")]
     assert all(
         score_hi >= score_lo for score_hi, score_lo in zip(scores_sr, scores_sr[1:])
     )

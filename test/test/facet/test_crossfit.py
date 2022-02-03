@@ -18,7 +18,7 @@ def test_prediction_classifier(
     iris_sample_multi_class, cv_stratified_bootstrap: StratifiedBootstrapCV, n_jobs: int
 ) -> None:
 
-    expected_learner_scores = [0.889, 0.886, 0.885, 0.879]
+    expected_learner_scores = [0.965, 0.964, 0.957, 0.956]
 
     # define parameters and crossfit
     ps1 = ParameterSpace(
@@ -70,8 +70,8 @@ def test_prediction_classifier(
     check_ranking(
         ranking=ranking,
         is_classifier=True,
-        expected_scores=expected_learner_scores,
-        expected_parameters={
+        scores_expected=expected_learner_scores,
+        params_expected={
             2: dict(min_samples_leaf=32, n_estimators=50),
             3: dict(min_samples_leaf=32, n_estimators=80),
         },
