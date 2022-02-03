@@ -97,6 +97,30 @@ class LearnerRanker(
     algorithm and optimize hyper-parameters.
     """
 
+    #: A cross-validation searcher class, or any other callable
+    #: that instantiates a cross-validation searcher.
+    searcher_type: Callable[..., T_SearchCV]
+
+    #: The parameter space to search.
+    parameter_space: BaseParameterSpace
+
+    #: The cross-validator to be used by the searcher.
+    cv: Optional[BaseCrossValidator]
+
+    #: The scoring function (by name, or as a callable) to be used by the searcher
+    #: (optional; use learner's default scorer if not specified here)
+    scoring: Union[
+        str,
+        Callable[
+            [EstimatorDF, pd.Series, pd.Series],
+            float,
+        ],
+        None,
+    ]
+
+    #: Additional parameters to be passed on to the searcher.
+    searcher_params: Dict[str, Any]
+
     #: The searcher used to fit this LearnerRanker; ``None`` if not fitted.
     searcher_: Optional[T_SearchCV]
 
