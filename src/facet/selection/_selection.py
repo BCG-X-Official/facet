@@ -157,7 +157,7 @@ class LearnerRanker(
         :param searcher_params: additional parameters to be passed on to the searcher;
             must not include the first two positional arguments of the searcher
             constructor used to pass the estimator and the search space, since these
-            will be populated using arg parameter_space
+            will be populated using arg ``parameter_space``
         """
         super().__init__(
             n_jobs=n_jobs,
