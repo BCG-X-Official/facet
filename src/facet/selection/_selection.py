@@ -14,6 +14,7 @@ from typing import (
     List,
     Optional,
     Sequence,
+    Tuple,
     TypeVar,
     Union,
 )
@@ -101,14 +102,22 @@ class LearnerRanker(
     searcher_: Optional[T_SearchCV]
 
     _CV_RESULT_COLUMNS = [
-        r"mean_test_\w+",
-        r"std_test_\w+",
-        r"param_\w+",
-        r"(rank|mean|std)_\w+",
+        (r"rank_test_(\w+)", r"\1__test__rank"),
+        (r"(mean|std)_test_(\w+)", r"\2__test__\1"),
+        (r"param_(\w+)", r"param__\1"),
+        (r"(rank|mean|std)_(\w+)_time", r"time__\2__\1"),
+        (r"(rank|mean|std)_(\w+)_(\w+)", r"\3__\2__\1"),
     ]
 
+    _CV_RESULT_CANDIDATE_PATTERN = re.compile(
+        r"^(?:(param__)candidate__|param__(candidate(?:_name)?)$)"
+    )
+    _CV_RESULT_CANDIDATE_REPL = r"\1\2"
+
     # noinspection PyTypeChecker
-    _CV_RESULT_PATTERNS: List[Pattern] = list(map(re.compile, _CV_RESULT_COLUMNS))
+    _CV_RESULT_PATTERNS: List[Tuple[Pattern, str]] = [
+        (re.compile(pattern), repl) for pattern, repl in _CV_RESULT_COLUMNS
+    ]
     _DEFAULT_REPORT_SORT_COLUMN = "rank_test_score"
 
     def __init__(
@@ -212,11 +221,17 @@ class LearnerRanker(
         """
         self._ensure_fitted()
         searcher = self.searcher_
+
         if searcher.refit:
-            return searcher.best_estimator_.candidate
+            best_estimator = searcher.best_estimator_
+            while isinstance(best_estimator, CandidateEstimatorDF):
+                # unpack the candidate estimator
+                best_estimator = best_estimator.candidate
+            return best_estimator
+
         else:
             raise AttributeError(
-                "best_model_ is not defined; use a CV searcher with refit=True"
+                "best_estimator_ is not defined; use a CV searcher with refit=True"
             )
 
     def fit(
@@ -293,36 +308,77 @@ class LearnerRanker(
 
         # we create a table using a subset of the cv results, to keep the report
         # relevant and readable
-        cv_results_subset: Dict[str, np.ndarray] = {}
+        cv_results_processed: Dict[str, np.ndarray] = {}
 
-        # add the sorting column as the leftmost column of the report
-        sort_results = sort_by in cv_results
-        if sort_results:
-            cv_results_subset[sort_by] = cv_results[sort_by]
+        unpack_candidate: bool = isinstance(
+            self.parameter_space.estimator, CandidateEstimatorDF
+        )
 
-        # add all other columns that match any of the pre-defined patterns
-        for pattern in self._CV_RESULT_PATTERNS:
-            cv_results_subset.update(
+        def _process(name: str) -> Optional[str]:
+            # process the name of the original cv_results_ record
+            # to achieve a better table format
+
+            match = pattern.fullmatch(name)
+            if match is None:
+                # we could not match the name:
+                # return None so we don't include it in the summary report
+                return None
+
+            name = match.expand(repl)
+            if unpack_candidate:
+                # remove the "candidate" layer in the parameter output if we're dealing
+                # with a multi parameter space
+                return LearnerRanker._CV_RESULT_CANDIDATE_PATTERN.sub(
+                    LearnerRanker._CV_RESULT_CANDIDATE_REPL, name
+                )
+            else:
+                return name
+
+        # add all columns that match any of the pre-defined patterns
+        for pattern, repl in self._CV_RESULT_PATTERNS:
+            cv_results_processed.update(
                 {
-                    name: values
-                    for name, values in cv_results.items()
-                    if name not in cv_results_subset and pattern.fullmatch(name)
+                    name: (name_processed, values)
+                    for name, name_processed, values in (
+                        # iterate matches between pattern and name
+                        (name, _process(name), values)
+                        for name, values in cv_results.items()
+                        if name not in cv_results_processed
+                    )
+                    if name_processed is not None
                 }
             )
 
+        # add the sorting column as the leftmost column of the report
+        sort_column_processed: Optional[str]
+
+        sort_column_processed, _ = cv_results_processed.get(sort_by, None)
+        if sort_column_processed is None:
+            sort_column_values = cv_results.get(sort_by, None)
+            if sort_column_values is None:
+                sort_column_processed = None
+            else:
+                sort_column_processed = sort_by
+                cv_results_processed[sort_by] = cv_results[sort_by]
+
         # convert the results into a data frame and sort
-        report = pd.DataFrame(cv_results_subset)
+        report = pd.DataFrame(
+            {
+                name_processed: values
+                for name_processed, values in cv_results_processed.values()
+            }
+        )
+
+        # sort the report, if applicable
+        if sort_column_processed is not None:
+            report = report.sort_values(by=sort_column_processed)
 
         # split column headers containing one or more "__",
         # resulting in a column MultiIndex
 
         report.columns = report.columns.str.split("__", expand=True).map(
-            lambda column: tuple(level if pd.notna(level) else "" for level in column)
+            lambda column: tuple(level if pd.notna(level) else "-" for level in column)
         )
-
-        # sort the report, if applicable
-        if sort_results:
-            report = report.sort_values(by=sort_by)
 
         return report
 
@@ -351,7 +407,7 @@ class LearnerRanker(
 
     def _get_scorer(
         self,
-    ) -> Optional[Callable[[CandidateEstimatorDF, pd.DataFrame, pd.Series], float]]:
+    ) -> Optional[Callable[[EstimatorDF, pd.DataFrame, pd.Series], float]]:
         scoring = self.scoring
 
         if scoring is None:
@@ -359,19 +415,19 @@ class LearnerRanker(
 
         elif isinstance(scoring, str):
             scorer = get_scorer(scoring)
+            print(f"{scoring} --> {scorer}")
 
         # noinspection PyPep8Naming
-        def _scorer_fn(
-            estimator: CandidateEstimatorDF, X: pd.DataFrame, y: pd.Series
-        ) -> float:
-            candidate = estimator.candidate
+        def _scorer_fn(estimator: EstimatorDF, X: pd.DataFrame, y: pd.Series) -> float:
+            while isinstance(estimator, CandidateEstimatorDF):
+                estimator = estimator.candidate
 
-            if isinstance(candidate, LearnerPipelineDF):
-                if candidate.preprocessing:
-                    X = candidate.preprocessing.transform(X=X)
-                candidate = candidate.final_estimator
+            if isinstance(estimator, LearnerPipelineDF):
+                if estimator.preprocessing:
+                    X = estimator.preprocessing.transform(X=X)
+                estimator = estimator.final_estimator
 
-            return scorer(candidate.native_estimator, X, y)
+            return scorer(estimator.native_estimator, X, y)
 
         return _scorer_fn
 

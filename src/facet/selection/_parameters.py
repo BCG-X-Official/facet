@@ -29,6 +29,7 @@ from pytools.api import AllTracker, inheritdoc, subsdoc, to_list, validate_eleme
 from pytools.expression import Expression, make_expression
 from pytools.expression.atomic import Id
 from sklearndf import ClassifierDF, EstimatorDF, RegressorDF, TransformerDF
+from sklearndf.pipeline import LearnerPipelineDF, PipelineDF
 
 from .base import BaseParameterSpace
 
@@ -115,30 +116,47 @@ distribution:
 
     """
 
-    def __init__(
-        self, candidate: T_Candidate_co, candidate_name: Optional[str] = None
-    ) -> None:
+    def __init__(self, estimator: T_Candidate_co, name: Optional[str] = None) -> None:
         """
-        :param candidate: the estimator candidate to which to apply the parameters to
-        :param candidate_name: a name for the estimator candidate to be used in summary
-            reports
+        :param estimator: the estimator candidate to which to apply the parameters to
+        :param name: a name for the estimator candidate to be used in summary reports
         """
 
-        super().__init__(estimator=CandidateEstimatorDF(candidate, candidate_name))
+        super().__init__(estimator=estimator)
 
         params: Dict[str, Any] = {
             name: param
-            for name, param in candidate.get_params(deep=True).items()
+            for name, param in estimator.get_params(deep=True).items()
             if "__" not in name
         }
 
         self._children: Dict[str, ParameterSpace] = {
-            name: ParameterSpace(candidate=value)
+            name: ParameterSpace(estimator=value)
             for name, value in params.items()
             if isinstance(value, BaseEstimator)
         }
+
+        self._name = name
         self._values: ParameterDict = {}
         self._params: Set[str] = set(params.keys())
+
+    def get_name(self) -> str:
+        """
+        Get the name for this parameter space.
+
+        If no name was passed to the constructor, determine the default name as follows:
+
+            - for meta-estimators, this is the default name of the delegate estimator
+            - for pipelines, this is the default name of the final estimator
+            - for all other estimators, this is the name of the estimator's type
+
+        :return: the name for this parameter space
+        """
+
+        if self._name is None:
+            return get_default_estimator_name(self._estimator)
+        else:
+            return self._name
 
     @subsdoc(
         pattern="or a list of such dictionaries, ",
@@ -151,9 +169,7 @@ distribution:
         return {
             "__".join(name): values
             for (name, values) in self._iter_parameters(
-                path_prefix=[
-                    CandidateEstimatorDF.PARAM_CANDIDATE if prefix is None else prefix
-                ]
+                path_prefix=[] if prefix is None else [prefix]
             )
         }
 
@@ -162,7 +178,7 @@ distribution:
         if name not in self._params:
             raise AttributeError(
                 f"unknown parameter name for "
-                f"{type(self.estimator.candidate).__name__}: {name}"
+                f"{type(self.estimator).__name__}: {name}"
             )
 
         if not (
@@ -252,10 +268,10 @@ distribution:
 
         if path_prefix:
             return Id(type(self))(
-                **{".".join(path_prefix): self.estimator.candidate}, **parameters
+                **{".".join(path_prefix): self.estimator}, **parameters
             )
         else:
-            return Id(type(self))(self.estimator.candidate, **parameters)
+            return Id(type(self))(self.estimator, **parameters)
 
 
 @inheritdoc(match="""[see superclass]""")
@@ -296,11 +312,9 @@ class MultiEstimatorParameterSpace(
         """[see superclass]"""
         return [
             {
-                CandidateEstimatorDF.PARAM_CANDIDATE: [space.estimator.candidate],
-                CandidateEstimatorDF.PARAM_CANDIDATE_NAME: [
-                    space.estimator.candidate_name
-                ],
-                **space.get_parameters(),
+                CandidateEstimatorDF.PARAM_CANDIDATE: [space.estimator],
+                CandidateEstimatorDF.PARAM_CANDIDATE_NAME: [space.get_name()],
+                **space.get_parameters(prefix=CandidateEstimatorDF.PARAM_CANDIDATE),
             }
             for space in self.spaces
         ]
@@ -308,18 +322,15 @@ class MultiEstimatorParameterSpace(
     def to_expression(self) -> "Expression":
         """[see superclass]"""
         # noinspection PyProtectedMember
-        return Id(type(self))(
-            self.estimator.candidate,
-            [
-                space._to_expression(path_prefix=CandidateEstimatorDF.PARAM_CANDIDATE)
-                for space in self.spaces
-            ],
-        )
+        return Id(type(self))(*self.spaces)
 
 
 @inheritdoc(match="""[see superclass]""")
 class CandidateEstimatorDF(
-    ClassifierDF, RegressorDF, TransformerDF, Generic[T_Candidate_co]
+    ClassifierDF,
+    RegressorDF,
+    TransformerDF,
+    Generic[T_Candidate_co],
 ):
     """
     Metaclass providing representation for candidate estimator to be used in
@@ -359,7 +370,9 @@ class CandidateEstimatorDF(
     @classmethod
     def empty(cls) -> "CandidateEstimatorDF":
         """
-        :return: new candidate instance without internal estimator
+        Create a new candidate estimator with no candidate set.
+
+        :return: the new candidate estimator
         """
         return cls()
 
@@ -492,3 +505,31 @@ def validate_spaces(spaces: Collection[ParameterSpace[T_Candidate_co]]) -> None:
             "all candidate estimators must have the same estimator type, "
             "but got multiple types: " + ", ".join(sorted(estimator_types))
         )
+
+
+def get_default_estimator_name(estimator: EstimatorDF) -> str:
+    """
+    Get a default name of the estimator.
+
+    For meta-estimators, this is the default name of the delegate estimator.
+
+    For pipelines, this is the default name of the final estimator.
+
+    For all other estimators, this is the name of the estimator's type.
+
+    :param estimator: the estimator to get the default name for
+    :return: the default name
+    """
+
+    while True:
+        if isinstance(estimator, CandidateEstimatorDF):
+            estimator = estimator.candidate
+
+        elif isinstance(estimator, PipelineDF) and estimator.steps:
+            estimator = estimator.steps[-1]
+
+        elif isinstance(estimator, LearnerPipelineDF):
+            estimator = estimator.final_estimator
+
+        else:
+            return type(estimator).__name__
