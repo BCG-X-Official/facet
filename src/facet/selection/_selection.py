@@ -21,7 +21,6 @@ from typing import (
 
 import numpy as np
 import pandas as pd
-from numpy.random.mtrand import RandomState
 from sklearn.metrics import get_scorer
 from sklearn.model_selection import BaseCrossValidator, GridSearchCV
 
@@ -134,7 +133,6 @@ class LearnerRanker(
             ],
             None,
         ] = None,
-        random_state: Union[int, RandomState, None] = None,
         n_jobs: Optional[int] = None,
         shared_memory: Optional[bool] = None,
         pre_dispatch: Optional[Union[str, int]] = None,
@@ -151,8 +149,6 @@ class LearnerRanker(
             learners (optional; use learner's default scorer if not specified here).
             If passing a callable, the ``"score"`` will be used as the name of the
             scoring function unless the callable defines a ``__name__`` attribute
-        :param random_state: optional random seed or random state for shuffling the
-            feature column order
         %%PARALLELIZABLE_PARAMS%%
         :param searcher_params: additional parameters to be passed on to the searcher;
             must not include the first two positional arguments of the searcher
@@ -170,7 +166,6 @@ class LearnerRanker(
         self.parameter_space = parameter_space
         self.cv = cv
         self.scoring = scoring
-        self.random_state = random_state
         self.searcher_params = searcher_params
 
         #
@@ -400,7 +395,6 @@ class LearnerRanker(
                 for k, v in dict(
                     cv=self.cv,
                     scoring=self._get_scorer(),
-                    random_state=self.random_state,
                     n_jobs=self.n_jobs,
                     shared_memory=self.shared_memory,
                     pre_dispatch=self.pre_dispatch,
