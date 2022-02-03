@@ -166,7 +166,7 @@ def regressor_ranker(
     n_jobs: int,
 ) -> LearnerRanker[RegressorPipelineDF, GridSearchCV]:
     return LearnerRanker(
-        searcher_factory=GridSearchCV,
+        searcher_type=GridSearchCV,
         parameter_space=regressor_parameters,
         cv=cv_kfold,
         scoring="r2",
@@ -473,7 +473,7 @@ def fit_classifier_ranker(
     # pipeline inspector only supports binary classification,
     # therefore filter the sample down to only 2 target classes
     return LearnerRanker(
-        searcher_factory=GridSearchCV,
+        searcher_type=GridSearchCV,
         parameter_space=parameter_space,
         cv=cv,
         scoring="f1_macro",

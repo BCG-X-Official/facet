@@ -122,7 +122,7 @@ class LearnerRanker(
 
     def __init__(
         self,
-        searcher_factory: Callable[..., T_SearchCV],
+        searcher_type: Callable[..., T_SearchCV],
         parameter_space: BaseParameterSpace,
         *,
         cv: Optional[BaseCrossValidator] = None,
@@ -142,7 +142,7 @@ class LearnerRanker(
         **searcher_params: Any,
     ) -> None:
         """
-        :param searcher_factory: a cross-validation searcher class, or any other
+        :param searcher_type: a cross-validation searcher class, or any other
             callable that instantiates a cross-validation searcher
         :param parameter_space: the parameter space to search
         :param cv: a cross validator (e.g.,
@@ -166,7 +166,7 @@ class LearnerRanker(
             verbose=verbose,
         )
 
-        self.searcher_factory = searcher_factory
+        self.searcher_type = searcher_type
         self.parameter_space = parameter_space
         self.cv = cv
         self.scoring = scoring
@@ -177,13 +177,13 @@ class LearnerRanker(
         # validate parameters for the searcher factory
         #
 
-        if not callable(searcher_factory):
+        if not callable(searcher_type):
             raise TypeError(
-                "arg searcher_factory expected to be a callable, "
-                f"but is a {type(searcher_factory).__name__}"
+                "arg searcher_type expected to be a callable, "
+                f"but is a {type(searcher_type).__name__}"
             )
 
-        searcher_factory_params = inspect.signature(searcher_factory).parameters.keys()
+        searcher_factory_params = inspect.signature(searcher_type).parameters.keys()
 
         # raise an error if the searcher params include the searcher's first two
         # positional arguments
@@ -194,7 +194,7 @@ class LearnerRanker(
         if reserved_params_overrides:
             raise ValueError(
                 "arg searcher_params must not include the first two positional "
-                "arguments of arg searcher_factory, but included: "
+                "arguments of arg searcher_type, but included: "
                 + ", ".join(reserved_params_overrides)
             )
 
@@ -205,7 +205,7 @@ class LearnerRanker(
 
         if unsupported_params:
             raise TypeError(
-                "parameters not supported by arg searcher_factory: "
+                "parameters not supported by arg searcher_type: "
                 + ", ".join(unsupported_params)
             )
 
@@ -282,7 +282,7 @@ class LearnerRanker(
 
         parameter_space = self.parameter_space
         searcher: BaseSearchCV
-        searcher = self.searcher_ = self.searcher_factory(
+        searcher = self.searcher_ = self.searcher_type(
             parameter_space.estimator,
             parameter_space.parameters,
             **self._get_searcher_parameters(),

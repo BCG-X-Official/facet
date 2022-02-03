@@ -75,7 +75,7 @@ def test_model_ranker(
     cv = BootstrapCV(n_splits=5, random_state=42)
 
     ranker: LearnerRanker[RegressorPipelineDF, GridSearchCV] = LearnerRanker(
-        searcher_factory=GridSearchCV,
+        searcher_type=GridSearchCV,
         parameter_space=regressor_parameters,
         cv=cv,
         scoring="r2",
@@ -129,7 +129,7 @@ def test_model_ranker_no_preprocessing(n_jobs) -> None:
     model_ranker: LearnerRanker[
         ClassifierPipelineDF[SVCDF], GridSearchCV
     ] = LearnerRanker(
-        searcher_factory=GridSearchCV,
+        searcher_type=GridSearchCV,
         parameter_space=parameter_space,
         cv=cv,
         n_jobs=n_jobs,
@@ -289,7 +289,7 @@ def test_learner_ranker_regression(
         ValueError,
         match=(
             "arg searcher_params must not include the first two positional arguments "
-            "of arg searcher_factory, but included: param_grid"
+            "of arg searcher_type, but included: param_grid"
         ),
     ):
         LearnerRanker(GridSearchCV, regressor_parameters, param_grid=None)
@@ -349,7 +349,7 @@ def test_learner_ranker_classification(
     model_ranker: LearnerRanker[
         ClassifierPipelineDF[RandomForestClassifierDF], GridSearchCV
     ] = LearnerRanker(
-        searcher_factory=GridSearchCV,
+        searcher_type=GridSearchCV,
         parameter_space=ps1,
         cv=cv_stratified_bootstrap,
         scoring="f1_macro",
