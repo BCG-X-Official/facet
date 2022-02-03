@@ -421,7 +421,6 @@ class LearnerRanker(
 
         elif isinstance(scoring, str):
             scorer = get_scorer(scoring)
-            print(f"{scoring} --> {scorer}")
 
         # noinspection PyPep8Naming
         def _scorer_fn(estimator: EstimatorDF, X: pd.DataFrame, y: pd.Series) -> float:
