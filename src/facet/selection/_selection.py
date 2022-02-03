@@ -167,17 +167,17 @@ class LearnerRanker(
         :param searcher_type: a cross-validation searcher class, or any other
             callable that instantiates a cross-validation searcher
         :param parameter_space: the parameter space to search
-        :param cv: a cross validator (e.g.,
-            :class:`.BootstrapCV`)
-        :param scoring: a scoring function (by name, or as a callable) for evaluating
-            learners (optional; use learner's default scorer if not specified here).
-            If passing a callable, the ``"score"`` will be used as the name of the
+        :param cv: the cross-validator to be used by the searcher
+            (e.g., :class:`~sklearn.model_selection.RepeatedKFold`)
+        :param scoring: a scoring function (by name, or as a callable) to be used by the
+            searcher (optional; use learner's default scorer if not specified here).
+            If passing a callable, ``"score"`` will be used as the name of the
             scoring function unless the callable defines a ``__name__`` attribute
         %%PARALLELIZABLE_PARAMS%%
         :param searcher_params: additional parameters to be passed on to the searcher;
             must not include the first two positional arguments of the searcher
             constructor used to pass the estimator and the search space, since these
-            will be populated using arg ``parameter_space``
+            will be populated from arg ``parameter_space``
         """
         super().__init__(
             n_jobs=n_jobs,
