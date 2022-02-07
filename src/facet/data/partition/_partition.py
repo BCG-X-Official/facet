@@ -6,7 +6,6 @@ import logging
 import math
 import operator as op
 from abc import ABCMeta, abstractmethod
-from numbers import Number
 from typing import Any, Generic, Iterable, Optional, Sequence, Tuple, TypeVar
 
 import numpy as np
@@ -33,7 +32,7 @@ T_Partitioner = TypeVar("T_Partitioner", bound="Partitioner")
 T_RangePartitioner = TypeVar("T_RangePartitioner", bound="RangePartitioner")
 T_CategoryPartitioner = TypeVar("T_CategoryPartitioner", bound="CategoryPartitioner")
 T_Values = TypeVar("T_Values")
-T_Values_Numeric = TypeVar("T_Values_Numeric", bound=Number)
+T_Values_Numeric = TypeVar("T_Values_Numeric", float, int)
 
 
 #
@@ -114,7 +113,7 @@ class Partitioner(
 
     @abstractmethod
     def fit(
-        self: T_Partitioner, values: Iterable[T_Values], **fit_params: Any
+        self: T_Partitioner, values: Sequence[T_Values], **fit_params: Any
     ) -> T_Partitioner:
         """
         Calculate the partitioning for the given observed values.
@@ -126,7 +125,7 @@ class Partitioner(
         """
 
     @staticmethod
-    def _as_non_empty_array(values: Iterable[Any]) -> np.ndarray:
+    def _as_non_empty_array(values: Sequence[Any]) -> np.ndarray:
         # ensure arg values is a non-empty array
         values = np.asarray(values)
         if len(values) == 0:
@@ -187,6 +186,7 @@ class RangePartitioner(
           bound of a partition range
         """
         self._ensure_fitted()
+        assert self._partition_bounds is not None, "Partitioner is fitted"
         return self._partition_bounds
 
     @property
@@ -195,12 +195,13 @@ class RangePartitioner(
         The width of each partition.
         """
         self._ensure_fitted()
+        assert self._step is not None, "Partitioner is fitted"
         return self._step
 
     # noinspection PyMissingOrEmptyDocstring,PyIncorrectDocstring
     def fit(
         self: T_RangePartitioner,
-        values: Iterable[T_Values_Numeric],
+        values: Sequence[T_Values_Numeric],
         *,
         lower_bound: Optional[T_Values_Numeric] = None,
         upper_bound: Optional[T_Values_Numeric] = None,
@@ -307,10 +308,9 @@ class RangePartitioner(
 
         return min(10 ** math.ceil(math.log10(step * m)) / m for m in [1, 2, 5])
 
-    @staticmethod
     @abstractmethod
     def _step_size(
-        lower_bound: T_Values_Numeric, upper_bound: T_Values_Numeric
+        self, lower_bound: T_Values_Numeric, upper_bound: T_Values_Numeric
     ) -> T_Values_Numeric:
         # Compute the step size (interval length) used in the partitions
         pass
@@ -350,6 +350,7 @@ class ContinuousRangePartitioner(RangePartitioner[float]):
 
     @property
     def _partition_center_offset(self) -> float:
+        assert self._step is not None, "Partitioner is fitted"
         return self._step / 2
 
 
@@ -412,11 +413,9 @@ class CategoryPartitioner(Partitioner[T_Values]):
 
     # noinspection PyMissingOrEmptyDocstring
     def fit(
-        self: T_CategoryPartitioner, values: Iterable[T_Values], **fit_params: Any
+        self: T_CategoryPartitioner, values: Sequence[T_Values], **fit_params: Any
     ) -> T_CategoryPartitioner:
         """[see superclass]"""
-
-        self: CategoryPartitioner  # support type hinting in PyCharm
 
         values = self._as_non_empty_array(values)
 

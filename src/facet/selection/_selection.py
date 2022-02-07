@@ -48,7 +48,7 @@ __all__ = ["LearnerRanker"]
 
 # sklearn does not publish base class BaseSearchCV, so we pull it from the MRO
 # of GridSearchCV
-BaseSearchCV = [
+BaseSearchCV: type = [
     base_class
     for base_class in GridSearchCV.mro()
     if base_class.__name__ == "BaseSearchCV"
@@ -64,7 +64,7 @@ T_LearnerPipelineDF = TypeVar(
 )
 T_RegressorPipelineDF = TypeVar("T_RegressorPipelineDF", bound=RegressorPipelineDF)
 T_ClassifierPipelineDF = TypeVar("T_ClassifierPipelineDF", bound=ClassifierPipelineDF)
-T_SearchCV = TypeVar("T_SearchCV", bound=BaseSearchCV)
+T_SearchCV = TypeVar("T_SearchCV", bound=BaseSearchCV)  # type: ignore
 
 #
 # Constants
@@ -230,9 +230,10 @@ class LearnerRanker(
 
         self.searcher_ = None
 
-    __init__.__doc__ = __init__.__doc__.replace(
-        "%%PARALLELIZABLE_PARAMS%%", ParallelizableMixin.__init__.__doc__.strip()
-    )
+    if __init__.__doc__ is not None:
+        __init__.__doc__ = __init__.__doc__.replace(
+            "%%PARALLELIZABLE_PARAMS%%", ParallelizableMixin.__init__.__doc__.strip()
+        )
 
     @property
     def is_fitted(self) -> bool:
@@ -246,6 +247,7 @@ class LearnerRanker(
         """
         self._ensure_fitted()
         searcher = self.searcher_
+        assert searcher is not None, "Ranker is fitted"
 
         if searcher.refit:
             best_estimator = searcher.best_estimator_
@@ -277,9 +279,6 @@ class LearnerRanker(
         :param fit_params: any fit parameters to pass on to the learner's fit method
         :return: ``self``
         """
-        self: LearnerRanker[
-            T_LearnerPipelineDF, T_SearchCV
-        ]  # support type hinting in PyCharm
 
         self._reset_fit()
 
@@ -329,6 +328,7 @@ class LearnerRanker(
         if sort_by is None:
             sort_by = self._DEFAULT_REPORT_SORT_COLUMN
 
+        assert self.searcher_ is not None, "Ranker is fitted"
         cv_results: Dict[str, Any] = self.searcher_.cv_results_
 
         # we create a table using a subset of the cv results, to keep the report

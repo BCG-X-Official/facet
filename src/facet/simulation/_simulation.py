@@ -83,7 +83,7 @@ class UnivariateSimulationResult(Generic[T_Partition]):
     feature_name: str
 
     #: Name of the target for which outputs are simulated.
-    output_name: str
+    output_name: Union[str, Sequence[str]]
 
     #: The unit of the simulated outputs (e.g., uplift or class probability).
     output_unit: str
@@ -118,7 +118,7 @@ class UnivariateSimulationResult(Generic[T_Partition]):
         mean: Sequence[float],
         sem: Sequence[float],
         feature_name: str,
-        output_name: str,
+        output_name: Union[str, Sequence[str]],
         output_unit: str,
         baseline: float,
         confidence_level: float,
