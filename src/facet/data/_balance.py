@@ -102,15 +102,13 @@ class SampleBalancer:
         if all(round(sampling_factors, 6) == 1.0):
             return sample
 
-        sampling_factors = sampling_factors.to_dict()
-
         if only_set_weights:
             weight_series = pd.Series(
                 index=sample.target.index, name=_F_FACET_SAMPLE_WEIGHT
             )
             weight_series.loc[:] = 1.0
 
-            for label, weight in sampling_factors.items():
+            for label, weight in sampling_factors.iteritems():
                 weight_series[sample.target == label] = weight
 
             observations: pd.DataFrame = pd.concat(
@@ -128,21 +126,21 @@ class SampleBalancer:
             )
             needs_sampling = {
                 label
-                for label, factor in sampling_factors.items()
+                for label, factor in sampling_factors.iteritems()
                 if not round(factor, 6) == 1.0
             }
 
             balanced_dfs = [
                 observations[sample.target == label].sample(
-                    frac=factor, replace=factor > 1.000000001
+                    frac=factor, replace=factor > 1.0
                 )
-                for label, factor in sampling_factors.items()
+                for label, factor in sampling_factors.iteritems()
                 if label in needs_sampling
             ]
 
             keep_as_is_dfs = [
                 observations[sample.target == label]
-                for label, factor in sampling_factors.items()
+                for label, factor in sampling_factors.iteritems()
                 if label not in needs_sampling
             ]
 
@@ -206,9 +204,9 @@ class SampleBalancer:
                     f"but is {cumulative_frequency}"
                 )
         else:
-            omitted_classes = set(
-                class_count.index[~class_count.index.isin(target_frequencies.index)]
-            )
+            omitted_classes = class_count.index[
+                ~class_count.index.isin(target_frequencies.index)
+            ]
 
             if round(cumulative_frequency, 2) == 1.0:
                 raise ValueError(
@@ -268,6 +266,18 @@ class SampleBalancer:
                 )
             else:
                 sampling_factor = preliminary_sample_factor
+
+        # if undersampling was performed – alone or in combination with oversampling -
+        # then check if absolute frequency of any class would drop below 1:
+        if self._undersample:
+            resulting_count: pd.Series = round(class_count * sampling_factor, 0)
+            zero_obs_sampled = resulting_count[resulting_count == 0.0]
+            if len(zero_obs_sampled) > 0:
+                raise ValueError(
+                    f"Undersampling of {','.join(zero_obs_sampled.index)} to "
+                    f"meet target frequencies leads to 0 retained observations. "
+                    f"consider to allow (only) oversampling to avoid this."
+                )
 
         return sampling_factor
 
