@@ -70,6 +70,7 @@ class ShapProjector(ShapGlobalExplainer, metaclass=ABCMeta):
     ) -> Optional[np.ndarray]:
         """[see superclass]"""
         self._ensure_fitted()
+        assert self.association_ is not None
         return self.association_.get_values(
             symmetrical=symmetrical, absolute=absolute, std=std
         )

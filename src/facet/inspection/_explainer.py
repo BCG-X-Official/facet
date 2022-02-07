@@ -182,18 +182,6 @@ class ExplainerJob(Job[Union[np.ndarray, List[np.ndarray]]]):
     A call to an explainer function with given `X` and `y` values.
     """
 
-    #: the explainer method to call
-    explain_fn: Callable[..., Union[np.ndarray, List[np.ndarray]]]
-
-    #: the feature values of the observations to be explained
-    X: Union[np.ndarray, pd.DataFrame]
-
-    #: the target values of the observations to be explained
-    y: Union[None, np.ndarray, pd.Series]
-
-    #: additional arguments specific to the explainer method
-    kwargs: Dict[str, Any]
-
     # noinspection PyPep8Naming
     def __init__(
         self,
@@ -208,10 +196,10 @@ class ExplainerJob(Job[Union[np.ndarray, List[np.ndarray]]]):
         :param y: the target values of the observations to be explained
         :param kwargs: additional arguments specific to the explainer method
         """
-        self.explain_fn = explain_fn
-        self.X = X
-        self.y = y
-        self.kwargs = kwargs
+        self.explain_fn: Callable[..., Union[np.ndarray, List[np.ndarray]]] = explain_fn
+        self.X: Union[np.ndarray, pd.DataFrame] = X
+        self.y: Union[None, np.ndarray, pd.Series] = y
+        self.kwargs: Dict[str, Any] = kwargs
 
     def run(self) -> Union[np.ndarray, List[np.ndarray]]:
         """[see superclass]"""
@@ -228,21 +216,6 @@ class ExplainerQueue(
     """
     A queue splitting a data set to be explained into multiple jobs.
     """
-
-    #: the explainer method to call
-    explain_fn: Callable[..., Union[np.ndarray, List[np.ndarray]]]
-
-    #: the feature values of the observations to be explained
-    X: np.ndarray
-
-    #: the target values of the observations to be explained
-    y: Optional[np.ndarray]
-
-    #: the maximum number of observations to allocate to each job
-    max_job_size: int
-
-    #: additional arguments specific to the explainer method
-    kwargs: Dict[str, Any]
 
     # noinspection PyPep8Naming
     def __init__(
@@ -263,11 +236,11 @@ class ExplainerQueue(
         """
         super().__init__()
 
-        self.explain_fn = explain_fn
-        self.X = X.values if isinstance(X, pd.DataFrame) else X
-        self.y = y.values if isinstance(y, pd.Series) else y
-        self.max_job_size = max_job_size
-        self.kwargs = kwargs
+        self.explain_fn: Callable[..., Union[np.ndarray, List[np.ndarray]]] = explain_fn
+        self.X: np.ndarray = X.values if isinstance(X, pd.DataFrame) else X
+        self.y: Optional[np.ndarray] = y.values if isinstance(y, pd.Series) else y
+        self.max_job_size: int = max_job_size
+        self.kwargs: Dict[str, Any] = kwargs
 
     def jobs(self) -> Iterable[Job[Union[np.ndarray, List[np.ndarray]]]]:
         """[see superclass]"""
@@ -457,6 +430,8 @@ class TreeExplainerFactory(ExplainerFactory):
 
         self._validate_background_dataset(data=data)
 
+        assert _TreeExplainer is not None, "Global tree explainer is set"
+
         explainer = _TreeExplainer(
             model=model.native_estimator,
             data=data if self._uses_background_dataset else None,
@@ -582,7 +557,7 @@ class KernelExplainerFactory(ExplainerFactory):
         )
 
         if self.l1_reg is not None:
-            explainer.shap_values = functools.partial(
+            explainer.shap_values = functools.partial(  # type: ignore
                 explainer.shap_values, l1_reg=self.l1_reg
             )
 

@@ -29,10 +29,12 @@ __all__ = [
 # Type variables
 #
 
-
-T_Self = TypeVar("T_Self")
+T_Partitioner = TypeVar("T_Partitioner", bound="Partitioner")
+T_RangePartitioner = TypeVar("T_RangePartitioner", bound="RangePartitioner")
+T_CategoryPartitioner = TypeVar("T_CategoryPartitioner", bound="CategoryPartitioner")
 T_Values = TypeVar("T_Values")
 T_Values_Numeric = TypeVar("T_Values_Numeric", bound=Number)
+
 
 #
 # Ensure all symbols introduced below are included in __all__
@@ -111,7 +113,9 @@ class Partitioner(
         """
 
     @abstractmethod
-    def fit(self: T_Self, values: Iterable[T_Values], **fit_params: Any) -> T_Self:
+    def fit(
+        self: T_Partitioner, values: Iterable[T_Values], **fit_params: Any
+    ) -> T_Partitioner:
         """
         Calculate the partitioning for the given observed values.
 
@@ -195,13 +199,13 @@ class RangePartitioner(
 
     # noinspection PyMissingOrEmptyDocstring,PyIncorrectDocstring
     def fit(
-        self: T_Self,
+        self: T_RangePartitioner,
         values: Iterable[T_Values_Numeric],
         *,
         lower_bound: Optional[T_Values_Numeric] = None,
         upper_bound: Optional[T_Values_Numeric] = None,
         **fit_params: Any,
-    ) -> T_Self:
+    ) -> T_RangePartitioner:
         r"""
         Calculate the partitioning for the given observed values.
 
@@ -219,8 +223,6 @@ class RangePartitioner(
         :param fit_params: optional fitting parameters
         :return: ``self``
         """
-
-        self: RangePartitioner  # support type hinting in PyCharm
 
         values = self._as_non_empty_array(values)
 
@@ -409,7 +411,9 @@ class CategoryPartitioner(Partitioner[T_Values]):
         return True
 
     # noinspection PyMissingOrEmptyDocstring
-    def fit(self: T_Self, values: Iterable[T_Values], **fit_params: Any) -> T_Self:
+    def fit(
+        self: T_CategoryPartitioner, values: Iterable[T_Values], **fit_params: Any
+    ) -> T_CategoryPartitioner:
         """[see superclass]"""
 
         self: CategoryPartitioner  # support type hinting in PyCharm

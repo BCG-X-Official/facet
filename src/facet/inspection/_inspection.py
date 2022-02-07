@@ -43,7 +43,7 @@ __all__ = ["ShapPlotData", "LearnerInspector"]
 # Type variables
 #
 
-T_Self = TypeVar("T_Self")
+T_LearnerInspector = TypeVar("T_LearnerInspector", bound="LearnerInspector")
 T_LearnerPipelineDF = TypeVar("T_LearnerPipelineDF", bound=LearnerPipelineDF)
 T_SeriesOrDataFrame = TypeVar("T_SeriesOrDataFrame", pd.Series, pd.DataFrame)
 
@@ -213,7 +213,9 @@ class LearnerInspector(
 
     __init__.__doc__ += ParallelizableMixin.__init__.__doc__
 
-    def fit(self: T_Self, sample: Sample, **fit_params: Any) -> T_Self:
+    def fit(
+        self: T_LearnerInspector, sample: Sample, **fit_params: Any
+    ) -> T_LearnerInspector:
         """
         Fit the inspector with the given sample.
 
@@ -226,8 +228,6 @@ class LearnerInspector(
             compatibility with :class:`.FittableMixin`)
         :return: ``self``
         """
-
-        self: LearnerInspector  # support type hinting in PyCharm
 
         learner: LearnerDF = self.pipeline.final_estimator
 
@@ -288,6 +288,8 @@ class LearnerInspector(
 
     @property
     def _shap_global_explainer(self) -> ShapGlobalExplainer:
+        self._ensure_fitted()
+        assert self._shap_global_projector is not None, "Inspector is fitted"
         return self._shap_global_projector
 
     @property
@@ -301,6 +303,7 @@ class LearnerInspector(
         The background sample used to fit this inspector.
         """
         self._ensure_fitted()
+        assert self._sample is not None, "Inspector is fitted"
         return self._sample
 
     @property
@@ -318,6 +321,7 @@ class LearnerInspector(
         """
 
         self._ensure_fitted()
+        assert self._shap_calculator is not None, "Inspector is fitted"
         return self._shap_calculator.output_names_
 
     @property
@@ -380,6 +384,7 @@ class LearnerInspector(
         if method not in methods:
             raise ValueError(f'arg method="{method}" must be one of {methods}')
 
+        assert self._shap_calculator is not None
         shap_matrix: pd.DataFrame = self._shap_calculator.get_shap_values()
         weight: Optional[pd.Series] = self.sample_.weight
 
@@ -782,11 +787,9 @@ class LearnerInspector(
         included_observations: pd.Index
 
         if len(output_names) > 1:
-            shap_values: List[pd.DataFrame]
             shap_values_numpy = [s.values for s in shap_values]
             included_observations = shap_values[0].index
         else:
-            shap_values: pd.DataFrame
             shap_values_numpy = shap_values.values
             included_observations = shap_values.index
 

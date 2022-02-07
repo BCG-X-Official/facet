@@ -141,6 +141,7 @@ class SimulationMatplotStyle(MatplotStyle, SimulationStyle):
 
         # draw the mean predicted uplift, showing mean and confidence ranges for
         # each prediction
+        x: Sequence[Any]
         if is_categorical_feature:
             x = range(len(partitions))
         else:

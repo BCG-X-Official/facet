@@ -26,3 +26,9 @@ repos:
       - id: check-added-large-files
       - id: check-json
       - id: check-yaml
+
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v0.931
+    hooks:
+      - id: mypy
+        files: src/

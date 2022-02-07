@@ -58,7 +58,7 @@ BaseSearchCV = [
 # Type variables
 #
 
-T_Self = TypeVar("T_Self")
+T_LearnerRanker = TypeVar("T_LearnerRanker", bound="LearnerRanker")
 T_LearnerPipelineDF = TypeVar(
     "T_LearnerPipelineDF", RegressorPipelineDF, ClassifierPipelineDF
 )
@@ -260,11 +260,11 @@ class LearnerRanker(
             )
 
     def fit(
-        self: T_Self,
+        self: T_LearnerRanker,
         sample: Sample,
         groups: Union[pd.Series, np.ndarray, Sequence, None] = None,
         **fit_params: Any,
-    ) -> T_Self:
+    ) -> T_LearnerRanker:
         """
         Rank the candidate learners and their hyper-parameter combinations using
         crossfits from the given sample.

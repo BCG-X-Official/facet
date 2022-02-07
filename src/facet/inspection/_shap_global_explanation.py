@@ -44,7 +44,7 @@ _PAIRWISE_PARTIAL_SUMMATION = False
 # Type variables
 #
 
-T_Self = TypeVar("T_Self")
+T_ShapGlobalExplainer = TypeVar("T_ShapGlobalExplainer", bound="ShapGlobalExplainer")
 T_ShapCalculator = TypeVar("T_ShapCalculator", bound=ShapCalculator)
 
 
@@ -171,15 +171,15 @@ class ShapGlobalExplainer(FittableMixin[ShapCalculator], metaclass=ABCMeta):
         """[see superclass]"""
         return self.feature_index_ is not None
 
-    def fit(self: T_Self, shap_calculator: ShapCalculator, **fit_params: Any) -> T_Self:
+    def fit(
+        self: T_ShapGlobalExplainer, shap_calculator: ShapCalculator, **fit_params: Any
+    ) -> T_ShapGlobalExplainer:
         """
         Calculate the SHAP decomposition for the shap values produced by the
         given SHAP calculator.
 
         :param shap_calculator: the fitted calculator from which to get the shap values
         """
-
-        self: ShapGlobalExplainer  # support type hinting in PyCharm
 
         try:
             if len(fit_params) > 0:
@@ -228,6 +228,7 @@ class ShapGlobalExplainer(FittableMixin[ShapCalculator], metaclass=ABCMeta):
             representing one or more affinity matrices
         :return: a list of `n_outputs` data frames of shape `(n_features, n_features)`
         """
+        assert self.feature_index_ is not None, "explainer is fitted"
         index = self.feature_index_
 
         n_features = len(index)
@@ -531,6 +532,10 @@ class ShapValueContext(ShapContext):
         shap_values: pd.DataFrame = shap_calculator.get_shap_values()
 
         def _p_i() -> np.ndarray:
+            assert (
+                shap_calculator.output_names_ is not None
+                and shap_calculator.feature_index_ is not None
+            ), "calculator is fitted"
             n_outputs: int = len(shap_calculator.output_names_)
             n_features: int = len(shap_calculator.feature_index_)
             n_observations: int = len(shap_values)
@@ -550,6 +555,7 @@ class ShapValueContext(ShapContext):
             # shape: (n_observations)
             # return a 1d array of weights that aligns with the observations axis of the
             # SHAP values tensor (axis 1)
+            assert shap_calculator.sample_ is not None and "calculator is fitted"
             _weight_sr = shap_calculator.sample_.weight
             if _weight_sr is not None:
                 return _weight_sr.loc[shap_values.index.get_level_values(-1)].values
@@ -567,6 +573,10 @@ class ShapInteractionValueContext(ShapContext):
     def __init__(self, shap_calculator: ShapCalculator) -> None:
         shap_values: pd.DataFrame = shap_calculator.get_shap_interaction_values()
 
+        assert (
+            shap_calculator.output_names_ is not None
+            and shap_calculator.feature_index_ is not None
+        ), "calculator is fitted"
         n_features: int = len(shap_calculator.feature_index_)
         n_outputs: int = len(shap_calculator.output_names_)
         n_observations: int = len(shap_values) // n_features
@@ -583,6 +593,7 @@ class ShapInteractionValueContext(ShapContext):
         # return a 1d array of weights that aligns with the observations axis of the
         # SHAP values tensor (axis 1)
         weight: Optional[np.ndarray]
+        assert shap_calculator.sample_ is not None and "calculator is fitted"
         _weight_sr = shap_calculator.sample_.weight
         if _weight_sr is not None:
             _observation_indices = shap_values.index.get_level_values(

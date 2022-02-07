@@ -39,7 +39,7 @@ __all__ = [
 # Type variables
 #
 
-T_Self = TypeVar("T_Self")
+T_ShapCalculator = TypeVar("T_ShapCalculator", bound="ShapCalculator")
 T_LearnerPipelineDF = TypeVar("T_LearnerPipelineDF", bound=LearnerPipelineDF)
 
 #
@@ -117,7 +117,7 @@ class ShapCalculator(
         """[see superclass]"""
         return self.shap_ is not None
 
-    def fit(self: T_Self, sample: Sample, **fit_params) -> T_Self:
+    def fit(self: T_ShapCalculator, sample: Sample, **fit_params) -> T_ShapCalculator:
         """
         Calculate the SHAP values.
 
@@ -125,9 +125,6 @@ class ShapCalculator(
         :param fit_params: additional fit parameters (unused)
         :return: self
         """
-
-        # noinspection PyMethodFirstArgAssignment
-        self: ShapCalculator  # support type hinting in PyCharm
 
         # reset fit in case we get an exception along the way
         self.shap_ = None

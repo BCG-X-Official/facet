@@ -51,9 +51,6 @@ class BaseParameterSpace(HasExpressionRepr, Generic[T_Estimator], metaclass=ABCM
     optimization.
     """
 
-    #: The estimator associated with this parameter space.
-    estimator: T_Estimator
-
     def __init__(self, estimator: T_Estimator) -> None:
         """
         :param estimator: the estimator for which to capture parameters

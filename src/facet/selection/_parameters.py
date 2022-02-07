@@ -57,7 +57,7 @@ assert rv_frozen.__name__ == "rv_frozen"
 # Type variables
 #
 
-T_Self = TypeVar("T_Self")
+T_CandidateEstimatorDF = TypeVar("T_CandidateEstimatorDF", bound="CandidateEstimatorDF")
 T_Candidate_co = TypeVar("T_Candidate_co", covariant=True, bound=EstimatorDF)
 
 
@@ -425,11 +425,11 @@ class CandidateEstimatorDF(
 
     # noinspection PyPep8Naming
     def fit(
-        self: T_Self,
+        self: T_CandidateEstimatorDF,
         X: pd.DataFrame,
         y: Optional[Union[pd.Series, pd.DataFrame]] = None,
         **fit_params: Any,
-    ) -> T_Self:
+    ) -> T_CandidateEstimatorDF:
         """[see superclass]"""
         self.candidate.fit(X, y, **fit_params)
         return self
