@@ -2,15 +2,13 @@
 Implementation of the sample balancer.
 """
 
-from typing import Any, Dict, Iterable, Union
+from typing import Any, Dict, List
 
-import numpy as np
 import pandas as pd
 
 from pytools.api import AllTracker
 
 from ._sample import Sample
-from .partition import CategoryPartitioner, Partitioner, RangePartitioner
 
 __all__ = ["SampleBalancer"]
 
@@ -27,45 +25,61 @@ _F_FACET_SAMPLE_WEIGHT = "FACET_SAMPLE_WEIGHT"
 
 class SampleBalancer:
     """
-    Balances the target distribution of a :class:`.Sample`, by either over- or
+    Balances the target distribution of a :class:`.Sample`, by over- or
     under-sampling its observations.
+    Sample objects with multiple targets are not supported.
     """
+
+    #
+    # target_ratios_
+    # partitioner
 
     def __init__(
         self,
         *,
-        target_class_ratio: Union[float, Dict[Any, float]],
-        partitioner: Partitioner = None,
+        target_frequencies: Dict[Any, float],
+        oversample: bool = True,
         undersample: bool = True,
     ) -> None:
         """
-        :param target_class_ratio: The desired target class ratio after balancing,
-            either indicating the maximum ratio between the minority class and any other
-            class as a positive scalar in range ``]0,1]`` or indicating the target ratio
-            of each minority class, as a dictionary mapping class labels to scalars.
-        :param partitioner: a :class:`.Partitioner`
-            instance to use in order to partition the target variable into bins.
-            By default, a categorical target is assumed.
-        :param undersample: boolean parameter, whether majority class (partition) should
-            be undersampled, or minority classes (partitions) should be oversampled
+        :param target_frequencies: Dictionary assigning desired target frequencies to
+            class labels. Frequency values are expected as float within the ]0,1[
+            interval. When omitting frequency for a class label, it is assigned the
+            unallocated frequency: i.e. in binary classification one can specify just a
+            single class label to balance with frequency 0.3, then 0.7 is used for the
+            second class. When omitting multiple classes in a multiclass classification
+            scenario, all remaining frequency is allocated evenly across them. When
+            frequencies for all classes are passed, they are expected to sum up to
+            1.00 after rounding to two digits. Sampling with frequencies of 0 is not
+            supported.
+        :param oversample: Whether to use oversampling.
+        :param undersample: Whether to use undersampling.
         """
 
-        if partitioner is None:
-            partitioner = CategoryPartitioner()
-
-        if isinstance(target_class_ratio, float):
-            if not 0 < target_class_ratio <= 1:
-                raise ValueError("'target_class_ratio' not in range ]0,1]")
-        elif isinstance(target_class_ratio, Dict):
-            pass
-        else:
-            raise TypeError(
-                f"Unsupported type '{type(target_class_ratio)}' for target_class_ratio"
+        if not oversample and not undersample:
+            raise ValueError(
+                "args oversample and undersample are both false. enable at least one"
             )
 
-        self._target_class_ratio = target_class_ratio
-        self._partitioner = partitioner
+        if target_frequencies == {}:
+            raise ValueError("arg target_frequencies is empty")
+
+        for key, val in target_frequencies.items():
+            if isinstance(val, float):
+                if not 0 < val < 1:
+                    raise ValueError(
+                        f"target frequency for label {key} expected in range ]0,1[. "
+                        f"but is: {val}"
+                    )
+            else:
+                raise TypeError(
+                    f"target frequency value for label {key} should be float "
+                    f"but is a {type(val).__name__}"
+                )
+
+        self._oversample = oversample
         self._undersample = undersample
+        self._target_frequencies = pd.Series(data=target_frequencies)
 
     def _balance(self, sample: Sample, only_set_weights: bool) -> Sample:
         """
@@ -77,141 +91,72 @@ class SampleBalancer:
             series with sample weights for each observation
         :return: the balanced sample
         """
-        partitioner = self._partitioner
-        if isinstance(partitioner, RangePartitioner):
-            partitioner.fit(
-                values=sample.target,
-                lower_bound=sample.target.min(),
-                upper_bound=sample.target.max(),
-            )
-            partitioned_target_series = self._make_partition_series(sample, partitioner)
-        else:
-            partitioner.fit(values=sample.target)
-            partitioned_target_series = None
-
-        max_freq_index = np.argmax(partitioner.frequencies_)
-        max_freq_label = partitioner.partitions_[max_freq_index]
-        max_freq = partitioner.frequencies_[max_freq_index]
-
-        frequency_ratios = np.array(partitioner.frequencies_) / max_freq
-        freq_ratio_by_label = {
-            label: ratio
-            for label, ratio in zip(partitioner.partitions_, frequency_ratios)
-        }
-
-        if isinstance(self._target_class_ratio, Dict):
-            self._check_label_dict(
-                target_class_ratio=self._target_class_ratio,
-                minority_labels={
-                    label
-                    for label in partitioner.partitions_
-                    if label != max_freq_label
-                },
+        if isinstance(sample.target_name, List):
+            raise ValueError(
+                "sample to balance should be single target, but has multiple"
             )
 
-        if self._undersample:
-            if isinstance(self._target_class_ratio, float):
-                # base undersample factor on class with smallest frequency ratio to
-                # majority class, e.g. pick the maximum amount of undersampling
-                # of the majority class, as needed to meet constraints:
-                min_ratio = np.min(frequency_ratios)
+        sampling_factors = self._find_sampling_factors(sample)
 
-                # return the input Sample as-is, if no undersampling needed:
-                if min_ratio >= self._target_class_ratio:
-                    return sample
+        # skip sampling if all factors 1 or nearly 1
+        if all(round(sampling_factors, 6) == 1.0):
+            return sample
 
-                undersample_factor = min_ratio / self._target_class_ratio
-            else:
-                self._target_class_ratio: Dict[Any, float]
+        sampling_factors = sampling_factors.to_dict()
 
-                # return the input Sample as-is, if no undersampling needed:
-                no_undersampling_needed = [
-                    freq_ratio_by_label[label] >= target_class_ratio
-                    for label, target_class_ratio in self._target_class_ratio.items()
-                ]
-                if all(no_undersampling_needed):
-                    return sample
+        if only_set_weights:
+            weight_series = pd.Series(
+                index=sample.target.index, name=_F_FACET_SAMPLE_WEIGHT
+            )
+            weight_series.loc[:] = 1.0
 
-                undersampling_factors = [
-                    freq_ratio_by_label[label] / target_class_ratio
-                    for label, target_class_ratio in self._target_class_ratio.items()
-                ]
+            for label, weight in sampling_factors.items():
+                weight_series[sample.target == label] = weight
 
-                # pick the minimum factor, e.g. the maximum amount of undersampling
-                # of the majority class, as needed to meet constraints:
-                undersample_factor = min(undersampling_factors)
+            observations: pd.DataFrame = pd.concat(
+                [sample.features, weight_series, sample.target], axis=1
+            )
 
-            # check undersample_factor
-            # (exception should never occur as 'target_class_ratio' is sanitised):
-            if undersample_factor >= 1:
-                raise ValueError(
-                    f"Calculated undersample factor is >=1 : {undersample_factor}"
-                )
-            if only_set_weights:
-                return self._make_sample_with_weights(
-                    sample=sample,
-                    weight_by_partition={max_freq_label: undersample_factor},
-                    partitioned_target_series=partitioned_target_series,
-                )
-            else:
-                return self._make_sample_with_majority_undersampled(
-                    sample=sample,
-                    undersample_factor=undersample_factor,
-                    majority_label=max_freq_label,
-                    partitioned_target_series=partitioned_target_series,
-                )
+            return Sample(
+                observations=observations,
+                target_name=sample.target_name,
+                weight_name=_F_FACET_SAMPLE_WEIGHT,
+            )
         else:
-            if isinstance(self._target_class_ratio, float):
-                # if single target ratio passed, set it for all labels:
-                target_class_ratio_by_label = {
-                    label: self._target_class_ratio for label in partitioner.partitions_
-                }
-            else:
-                target_class_ratio_by_label = self._target_class_ratio
-
-            below_target_ratio = [
-                (label, current_ratio)
-                for label, current_ratio in zip(
-                    partitioner.partitions_, frequency_ratios
-                )
-                if label != max_freq_label
-                and current_ratio < target_class_ratio_by_label[label]
-            ]
-
-            # return the input Sample as-is, if no oversampling needed:
-            if len(below_target_ratio) == 0:
-                return sample
-
-            oversampling_factors = {
-                label: target_class_ratio_by_label[label] / current_ratio
-                for label, current_ratio in below_target_ratio
+            observations: pd.DataFrame = pd.concat(
+                [sample.features, sample.target], axis=1
+            )
+            needs_sampling = {
+                label
+                for label, factor in sampling_factors.items()
+                if not (1.00000000 > factor > 1.000000001)
             }
 
-            # check oversampling_factors
-            # (exception should never occur as 'target_class_ratio' is sanitised):
-            if any(f for _, f in oversampling_factors.items() if f <= 1):
-                raise ValueError(
-                    f"A calculated oversampling factor is <= 1 :{oversampling_factors}"
+            balanced_dfs = [
+                observations[sample.target == label].sample(
+                    frac=factor, replace=factor > 1.000000001
                 )
+                for label, factor in sampling_factors.items()
+                if label in needs_sampling
+            ]
 
-            if only_set_weights:
-                return self._make_sample_with_weights(
-                    sample=sample,
-                    weight_by_partition=oversampling_factors,
-                    partitioned_target_series=partitioned_target_series,
-                )
-            else:
-                return self._make_sample_with_minority_oversampled(
-                    sample=sample,
-                    oversampling_factors=oversampling_factors,
-                    labels=partitioner.partitions_,
-                    partitioned_target_series=partitioned_target_series,
-                )
+            keep_as_is_dfs = [
+                observations[sample.target == label]
+                for label, factor in sampling_factors.items()
+                if label not in needs_sampling
+            ]
+
+            new_observations = balanced_dfs + keep_as_is_dfs
+            new_observations_df = pd.concat(new_observations, axis=0)
+
+            return Sample(
+                observations=new_observations_df,
+                target_name=sample.target_name,
+            )
 
     def balance(self, sample: Sample) -> Sample:
         """
-        Balance the sample by either oversampling observations of minority labels
-        (partitions) or undersampling observations of majority labels (partitions)
+        Balance the sample by over- and/or undersampling.
 
         :param sample: the sample to balance
         :return: the balanced sample
@@ -221,179 +166,110 @@ class SampleBalancer:
     def set_balanced_weights(self, sample: Sample) -> Sample:
         """
         Enhance the sample by adding a new series which captures the sample weight
-        of each observation. Weights are derived either by oversampling factors for
-        observations of minority labels (partitions) or undersampling observations
-        of majority labels (partitions)
+        of each observation. Weights are derived from sampling factors to balance
+        observation as specified in target_frequencies.
 
         :param sample: the sample to balance
         :return: the sample with an additional series with weights
         """
         if sample.weight is not None:
             raise ValueError(
-                f"Sample has existing weight series named '{sample.weight_name}' "
+                f"Sample has existing weight series named {sample.weight_name} "
                 f"which would be overridden."
             )
 
         return self._balance(sample, True)
 
-    @staticmethod
-    def _make_partition_series(
-        sample: Sample, partitioner: RangePartitioner
+    def _find_sampling_factors(
+        self,
+        sample: Sample,
     ) -> pd.Series:
-        """
-        Add a pseudo-label series to a Sample with numerical target series.
+        class_count = sample.target.value_counts()
+        target_frequencies = self._target_frequencies
 
-        :param sample: the input Sample
-        :param partitioner: a facet.simulation.partition.RangePartitioner, fit on
-            sample
-        :return: a Pandas series with partition center values as labels
-        """
-
-        partitioned_target_series = sample.target.copy()
-        partitioned_target_series.name = _F_FACET_TARGET_PARTITION
-
-        for partition_center, partition_bounds in zip(
-            partitioner.partitions_, partitioner.partition_bounds_
-        ):
-            partitioned_target_series.loc[
-                (partitioned_target_series >= partition_bounds[0])
-                & (partitioned_target_series < partition_bounds[1])
-            ] = partition_center
-
-        return partitioned_target_series
-
-    @staticmethod
-    def _make_sample_with_majority_undersampled(
-        sample: Sample,
-        undersample_factor: float,
-        majority_label: Any,
-        partitioned_target_series: pd.Series = None,
-    ) -> Sample:
-        """
-        Return a new Sample with observations of minority classes/partitions
-        undersampled.
-
-        :param sample: the input Sample
-        :param undersample_factor: the factor of how much to undersample the majority
-        :param majority_label: label/partition center denoting the majority
-        :param partitioned_target_series: a pandas.Series with partition values
-            corresponding to a numeric Sample.target series (optional)
-        :return: the balanced Sample
-        """
-        if partitioned_target_series is None:
-            target_series = sample.target
-        else:
-            target_series = partitioned_target_series
-
-        keep_minority_idx = target_series != majority_label
-
-        keep_majority_idx = (target_series == majority_label).sample(
-            frac=undersample_factor
-        )
-        keep_index = keep_minority_idx | keep_majority_idx
-
-        return sample.subsample(loc=keep_index)
-
-    @staticmethod
-    def _make_sample_with_minority_oversampled(
-        sample: Sample,
-        oversampling_factors: Dict[Any, float],
-        labels: Iterable[Any],
-        partitioned_target_series: pd.Series = None,
-    ) -> Sample:
-        """
-        Return a new Sample with observations of minority classes/partitions
-        oversampled.
-
-        :param sample: the input Sample
-        :param oversampling_factors: dictionary mapping oversampling factors to class
-            labels/partition centers
-        :param labels: iterable of all labels in Sample – including untouched ones
-        :param partitioned_target_series: a pandas.Series with partition values
-            corresponding to a numeric Sample.target series(optional)
-        :return: the balanced Sample
-        """
-
-        labels_to_oversample = {label for label, _ in oversampling_factors.items()}
-
-        if partitioned_target_series is None:
-            target_series = sample.target
-        else:
-            target_series = partitioned_target_series
-
-        observations: pd.DataFrame = pd.concat(
-            [sample.features, sample.target, partitioned_target_series], axis=1
-        )
-
-        oversampled_dfs = [
-            observations[target_series == label].sample(frac=factor, replace=True)
-            for label, factor in oversampling_factors.items()
-        ]
-
-        keep_as_is_dfs = [
-            observations[target_series == label]
-            for label in labels
-            if label not in labels_to_oversample
-        ]
-
-        new_observations = oversampled_dfs + keep_as_is_dfs
-        new_observations_df = pd.concat(new_observations, axis=0)
-
-        if partitioned_target_series is not None:
-            new_observations_df = new_observations_df.drop(
-                columns=[_F_FACET_TARGET_PARTITION]
+        if not all(target_frequencies.index.isin(class_count.index)):
+            unknowns = ",".join(
+                target_frequencies.index[
+                    ~target_frequencies.index.isin(class_count.index)
+                ]
             )
-
-        return Sample(
-            observations=new_observations_df,
-            target_name=sample.target_name,
-        )
-
-    @staticmethod
-    def _make_sample_with_weights(
-        sample: Sample,
-        weight_by_partition: Dict[Any, float],
-        partitioned_target_series: pd.Series = None,
-    ) -> Sample:
-
-        if partitioned_target_series is None:
-            target_series = sample.target
-        else:
-            target_series = partitioned_target_series
-
-        weight_series = pd.Series(
-            index=target_series.index, name=_F_FACET_SAMPLE_WEIGHT
-        )
-        weight_series.loc[:] = 1.0
-
-        for value, weight in weight_by_partition.items():
-            weight_series[target_series == value] = weight
-
-        observations: pd.DataFrame = pd.concat(
-            [sample.features, weight_series, sample.target], axis=1
-        )
-
-        return Sample(
-            observations=observations,
-            target_name=sample.target_name,
-            weight_name=_F_FACET_SAMPLE_WEIGHT,
-        )
-
-    @staticmethod
-    def _check_label_dict(
-        target_class_ratio: Dict[Any, float], minority_labels: Iterable[Any]
-    ) -> None:
-        """
-        Check a passed dictionary with target ratios for class labels.
-
-        :param target_class_ratio: user provided mapping of label names to ratio
-        :param minority_labels: minority labels found in the input Sample
-        """
-        if not set(target_class_ratio.keys()) == set(minority_labels):
             raise ValueError(
-                "Keys in 'target_class_ratio' dict do not "
-                "match with minority class labels"
+                f"arg target_frequencies specifies unknown class labels: {unknowns}"
             )
+
+        cumulative_frequency = target_frequencies.sum()
+        # check, if user specified frequencies for all found class labels in sample:
+        if all(class_count.index.isin(target_frequencies.index)):
+            if round(cumulative_frequency, 2) != 1.0:
+                raise ValueError(
+                    f"arg target_frequencies expects a cumulative frequency of 1.0, "
+                    f"but is {cumulative_frequency}"
+                )
+        else:
+            omitted_classes = set(
+                class_count.index[~class_count.index.isin(target_frequencies.index)]
+            )
+
+            if round(cumulative_frequency, 2) == 1.0:
+                raise ValueError(
+                    "frequencies passed for arg target_frequencies specify cumulative "
+                    f"frequency of 1.0, but class label(s) {','.join(omitted_classes)} "
+                    "have been omitted and would end up with 0.0 – either specify them "
+                    "directly or reduce allocation of frequencies to other classes."
+                )
+            else:
+                remaining_frequency = 1 - cumulative_frequency
+                target_frequencies = pd.concat(
+                    [
+                        target_frequencies,
+                        pd.Series(
+                            {
+                                c: remaining_frequency / len(omitted_classes)
+                                for c in omitted_classes
+                            }
+                        ),
+                    ]
+                )
+
+        if self._oversample and self._undersample:
+            sampling_factor = pd.Series(
+                class_count.sum() * (target_frequencies / class_count),
+                name="sample_factor",
+            )
+
+        elif self._oversample:
+            relative_target_frequency = target_frequencies / target_frequencies.max()
+            balanced_count = relative_target_frequency * class_count.max()
+            preliminary_sample_factor = pd.Series(
+                balanced_count / class_count, name="sample_factor"
+            )
+
+            # if any sample factor is < 1, scale up proportionally to keep oversampling
+            if preliminary_sample_factor.min() < 1:
+                sampling_factor = (
+                    preliminary_sample_factor / preliminary_sample_factor.min()
+                )
+            else:
+                sampling_factor = preliminary_sample_factor
+
+        else:
+            # perform only undersampling:
+            relative_target_frequency = target_frequencies / target_frequencies.min()
+            balanced_count = relative_target_frequency * class_count.min()
+            preliminary_sample_factor = pd.Series(
+                balanced_count / class_count, name="sample_factor"
+            )
+
+            # if any sample factor is > 1, scale down proportionally to keep
+            # undersampling
+            if preliminary_sample_factor.max() > 1:
+                sampling_factor = (
+                    preliminary_sample_factor / preliminary_sample_factor.max()
+                )
+            else:
+                sampling_factor = preliminary_sample_factor
+
+        return sampling_factor
 
 
 __tracker.validate()
