@@ -129,7 +129,7 @@ class SampleBalancer:
             needs_sampling = {
                 label
                 for label, factor in sampling_factors.items()
-                if not (1.00000000 > factor > 1.000000001)
+                if not round(factor, 6) == 1.0
             }
 
             balanced_dfs = [
