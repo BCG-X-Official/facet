@@ -19,6 +19,7 @@ from typing import (
     Type,
     TypeVar,
     Union,
+    cast,
 )
 
 import pandas as pd
@@ -240,12 +241,12 @@ distribution:
         """[see superclass]"""
         return self._to_expression([])
 
-    def _to_expression(self, path_prefix: Union[str, List[str]]) -> Expression:
+    def _to_expression(self, path_prefix: Union[str, List[str], None]) -> Expression:
         # path_prefix: the path prefix to prepend to each parameter name
 
         def _values_to_expression(values: ParameterSet) -> Expression:
             if isinstance(values, rv_frozen):
-                values: rv_frozen
+                values = cast(rv_frozen, values)  # type: ignore
                 return Id(values.dist.name)(*values.args, **values.kwds)
             elif isinstance(values, (stats.rv_continuous, stats.rv_discrete)):
                 try:
@@ -255,7 +256,7 @@ distribution:
 
             return make_expression(values)
 
-        path_prefix = (
+        path_prefix_list: List[str] = (
             []
             if path_prefix is None
             else to_list(path_prefix, element_type=str, arg_name="path_prefix")
@@ -263,12 +264,12 @@ distribution:
 
         parameters = {
             ".".join(path): _values_to_expression(value)
-            for path, value in self._iter_parameters(path_prefix=path_prefix)
+            for path, value in self._iter_parameters(path_prefix=path_prefix_list)
         }
 
-        if path_prefix:
+        if path_prefix_list:
             return Id(type(self))(
-                **{".".join(path_prefix): self.estimator}, **parameters
+                **{".".join(path_prefix_list): self.estimator}, **parameters
             )
         else:
             return Id(type(self))(self.estimator, **parameters)
@@ -346,10 +347,10 @@ class CandidateEstimatorDF(
     PARAM_CANDIDATE_NAME = "candidate_name"
 
     #: The currently selected estimator candidate
-    candidate: T_Candidate_co
+    candidate: Optional[T_Candidate_co]
 
     #: The name of the candidate
-    candidate_name: str
+    candidate_name: Optional[str]
 
     def __init__(
         self,
@@ -377,51 +378,56 @@ class CandidateEstimatorDF(
         return cls()
 
     @property
+    def _candidate(self) -> T_Candidate_co:
+        assert self.candidate is not None, "Candidate is set"
+        return self.candidate
+
+    @property
     def classes_(self) -> Sequence[Any]:
         """[see superclass]"""
-        return self.candidate.classes_
+        return self._candidate.classes_
 
     # noinspection PyPep8Naming
     def predict_proba(
         self, X: pd.DataFrame, **predict_params: Any
     ) -> Union[pd.DataFrame, List[pd.DataFrame]]:
         """[see superclass]"""
-        return self.candidate.predict_proba(X, **predict_params)
+        return self._candidate.predict_proba(X, **predict_params)
 
     # noinspection PyPep8Naming
     def predict_log_proba(
         self, X: pd.DataFrame, **predict_params: Any
     ) -> Union[pd.DataFrame, List[pd.DataFrame]]:
         """[see superclass]"""
-        return self.candidate.predict_log_proba(X, **predict_params)
+        return self._candidate.predict_log_proba(X, **predict_params)
 
     # noinspection PyPep8Naming
     def decision_function(
         self, X: pd.DataFrame, **predict_params: Any
     ) -> Union[pd.Series, pd.DataFrame]:
         """[see superclass]"""
-        return self.candidate.decision_function(X, **predict_params)
+        return self._candidate.decision_function(X, **predict_params)
 
     # noinspection PyPep8Naming
     def score(
         self, X: pd.DataFrame, y: pd.Series, sample_weight: Optional[pd.Series] = None
     ) -> float:
         """[see superclass]"""
-        return self.candidate.score(X, y, sample_weight)
+        return self._candidate.score(X, y, sample_weight)
 
     # noinspection PyPep8Naming
     def predict(
         self, X: pd.DataFrame, **predict_params: Any
     ) -> Union[pd.Series, pd.DataFrame]:
         """[see superclass]"""
-        return self.candidate.predic(X, **predict_params)
+        return self._candidate.predic(X, **predict_params)
 
     # noinspection PyPep8Naming
     def fit_predict(
         self, X: pd.DataFrame, y: pd.Series, **fit_params: Any
     ) -> Union[pd.Series, pd.DataFrame]:
         """[see superclass]"""
-        return self.candidate.fit_predict(X, y, **fit_params)
+        return self._candidate.fit_predict(X, y, **fit_params)
 
     # noinspection PyPep8Naming
     def fit(
@@ -431,7 +437,7 @@ class CandidateEstimatorDF(
         **fit_params: Any,
     ) -> T_CandidateEstimatorDF:
         """[see superclass]"""
-        self.candidate.fit(X, y, **fit_params)
+        self._candidate.fit(X, y, **fit_params)
         return self
 
     @property
@@ -442,26 +448,26 @@ class CandidateEstimatorDF(
     # noinspection PyPep8Naming
     def inverse_transform(self, X: pd.DataFrame) -> pd.DataFrame:
         """[see superclass]"""
-        return self.candidate.inverse_transform(X)
+        return self._candidate.inverse_transform(X)
 
     # noinspection PyPep8Naming
     def transform(self, X: pd.DataFrame) -> pd.DataFrame:
         """[see superclass]"""
-        return self.candidate.transform(X)
+        return self._candidate.transform(X)
 
     @property
     def _estimator_type(self) -> str:
         # noinspection PyProtectedMember
-        return self.candidate._estimator_type
+        return self.candidate._estimator_type  # type: ignore
 
     def _get_features_in(self) -> pd.Index:
-        return self.candidate.feature_names_in_
+        return self._candidate.feature_names_in_
 
     def _get_n_outputs(self) -> int:
-        return self.candidate.n_outputs_
+        return self._candidate.n_outputs_
 
     def _get_features_original(self) -> pd.Series:
-        return self.candidate.feature_names_original_
+        return self._candidate.feature_names_original_
 
 
 __tracker.validate()
@@ -496,8 +502,8 @@ def validate_spaces(spaces: Collection[ParameterSpace[T_Candidate_co]]) -> None:
     :param spaces: the candidates to check
     """
 
-    estimator_types = {
-        getattr(space.estimator, "_estimator_type", None) for space in spaces
+    estimator_types: Set[str] = {
+        getattr(space.estimator, "_estimator_type") for space in spaces
     }
 
     if len(estimator_types) > 1:

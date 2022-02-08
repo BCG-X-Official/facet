@@ -109,7 +109,7 @@ class ShapCalculator(
         self._explainer_factory = explainer_factory
         self.shap_: Optional[pd.DataFrame] = None
         self.feature_index_: Optional[pd.Index] = None
-        self.output_names_: Optional[List[str]] = None
+        self.output_names_: Optional[Sequence[str]] = None
         self.sample_: Optional[Sample] = None
 
     @property
@@ -185,7 +185,7 @@ class ShapCalculator(
         """
 
     @abstractmethod
-    def get_multi_output_names(self, sample: Sample) -> List[str]:
+    def get_multi_output_names(self, sample: Sample) -> Sequence[str]:
         """
         :return: a name for each of the outputs
         """
@@ -319,7 +319,7 @@ class ShapCalculator(
         pass
 
     @abstractmethod
-    def _get_output_names(self, sample: Sample) -> List[str]:
+    def _get_output_names(self, sample: Sample) -> Sequence[str]:
         pass
 
 
@@ -362,6 +362,7 @@ class ShapValuesCalculator(
 
         multi_output_type = self.get_multi_output_type()
         multi_output_names = self.get_multi_output_names(sample=sample)
+        assert self.feature_index_ is not None, "Calculator is fitted"
         features_out = self.feature_index_
 
         # calculate the shap values, and ensure the result is a list of arrays
@@ -402,11 +403,13 @@ class ShapInteractionValuesCalculator(
     def get_shap_values(self) -> pd.DataFrame:
         """[see superclass]"""
         self._ensure_fitted()
+        assert self.shap_ is not None, "Calculator is fitted"
         return self.shap_.groupby(level=0).sum()
 
     def get_shap_interaction_values(self) -> pd.DataFrame:
         """[see superclass]"""
         self._ensure_fitted()
+        assert self.shap_ is not None, "Calculator is fitted"
         return self.shap_
 
     def get_diagonals(self) -> pd.DataFrame:
@@ -420,6 +423,11 @@ class ShapInteractionValuesCalculator(
             n_features * n_features.
         """
         self._ensure_fitted()
+        assert (
+            self.shap_ is not None
+            and self.sample_ is not None
+            and self.feature_index_ is not None
+        ), "Calculator is fitted"
 
         n_observations = len(self.sample_)
         n_features = len(self.feature_index_)
@@ -446,6 +454,7 @@ class ShapInteractionValuesCalculator(
 
         multi_output_type = self.get_multi_output_type()
         multi_output_names = self.get_multi_output_names(sample)
+        assert self.feature_index_ is not None, "Calculator is fitted"
         features_out = self.feature_index_
 
         # calculate the shap interaction values; ensure the result is a list of arrays
@@ -667,7 +676,7 @@ class ClassifierShapValuesCalculator(
                 )
 
             # all good: proceed with SHAP values for class 1 (positive class):
-            raw_shap_tensors: List[np.ndarray] = raw_shap_tensors[1:]
+            raw_shap_tensors = raw_shap_tensors[1:]
 
         return [
             pd.DataFrame(
@@ -714,7 +723,7 @@ class ClassifierShapInteractionValuesCalculator(
                 )
 
             # all good: proceed with SHAP values for class 1 (positive class):
-            raw_shap_tensors: List[np.ndarray] = raw_shap_tensors[1:]
+            raw_shap_tensors = raw_shap_tensors[1:]
 
         # each row is indexed by an observation and a feature
         row_index = pd.MultiIndex.from_product(

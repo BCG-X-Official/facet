@@ -162,6 +162,7 @@ class ShapInteractionVectorProjector(ShapProjector, ShapInteractionGlobalExplain
     ) -> Optional[np.ndarray]:
         """[see superclass]"""
         self._ensure_fitted()
+        assert self.synergy_ is not None, "Projector is fitted"
         return self.synergy_.get_values(
             symmetrical=symmetrical, absolute=absolute, std=std
         )
@@ -171,6 +172,7 @@ class ShapInteractionVectorProjector(ShapProjector, ShapInteractionGlobalExplain
     ) -> Optional[np.ndarray]:
         """[see superclass]"""
         self._ensure_fitted()
+        assert self.redundancy_ is not None, "Projector is fitted"
         return self.redundancy_.get_values(
             symmetrical=symmetrical, absolute=absolute, std=std
         )
@@ -192,6 +194,7 @@ class ShapInteractionVectorProjector(ShapProjector, ShapInteractionGlobalExplain
     ) -> Tuple[AffinityMatrix, AffinityMatrix]:
         p_i = context.p_i
         var_p_i = context.var_p_i
+        assert context.p_ij is not None, "Projector has interaction values enabled"
         p_ij = context.p_ij
         weight = context.weight
 

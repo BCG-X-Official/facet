@@ -3,7 +3,18 @@ Core implementation of :mod:`facet.inspection`
 """
 
 import logging
-from typing import Any, Generic, Iterable, List, Optional, Tuple, TypeVar, Union, cast
+from typing import (
+    Any,
+    Generic,
+    Iterable,
+    List,
+    Optional,
+    Sequence,
+    Tuple,
+    TypeVar,
+    Union,
+    cast,
+)
 
 import numpy as np
 import pandas as pd
@@ -307,7 +318,7 @@ class LearnerInspector(
         return self._sample
 
     @property
-    def output_names_(self) -> List[str]:
+    def output_names_(self) -> Sequence[str]:
         """
         The names of the outputs explained by this inspector.
 
@@ -321,7 +332,10 @@ class LearnerInspector(
         """
 
         self._ensure_fitted()
-        assert self._shap_calculator is not None, "Inspector is fitted"
+        assert (
+            self._shap_calculator is not None
+            and self._shap_calculator.output_names_ is not None
+        ), "Inspector is fitted"
         return self._shap_calculator.output_names_
 
     @property
@@ -342,6 +356,7 @@ class LearnerInspector(
         :return: a data frame with SHAP values
         """
         self._ensure_fitted()
+        assert self._shap_calculator is not None, "Inspector is fitted"
         return self.__split_multi_output_df(self._shap_calculator.get_shap_values())
 
     def shap_interaction_values(self) -> Union[pd.DataFrame, List[pd.DataFrame]]:
@@ -705,7 +720,7 @@ class LearnerInspector(
         # (n_observations, n_outputs, n_features, n_features)
         # where the innermost feature x feature arrays are symmetrical
         im_matrix_per_observation_and_output = (
-            self.shap_interaction_values()
+            self.shap_interaction_values()  # TODO wrong handling for multi output
             .values.reshape((-1, n_features, n_outputs, n_features))
             .swapaxes(1, 2)
         )
@@ -782,7 +797,7 @@ class LearnerInspector(
 
         shap_values: Union[pd.DataFrame, List[pd.DataFrame]] = self.shap_values()
 
-        output_names: List[str] = self.output_names_
+        output_names: Sequence[str] = self.output_names_
         shap_values_numpy: Union[np.ndarray, List[np.ndarray]]
         included_observations: pd.Index
 
@@ -790,6 +805,7 @@ class LearnerInspector(
             shap_values_numpy = [s.values for s in shap_values]
             included_observations = shap_values[0].index
         else:
+            assert isinstance(shap_values, pd.DataFrame), "shap_values is a data frame"
             shap_values_numpy = shap_values.values
             included_observations = shap_values.index
 

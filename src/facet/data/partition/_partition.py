@@ -77,7 +77,7 @@ class Partitioner(
         self._partitions = None
         self._frequencies = None
 
-    __init__.__doc__ = __init__.__doc__.replace(
+    __init__.__doc__ = __init__.__doc__.replace(  # type: ignore
         "{DEFAULT_MAX_PARTITIONS}", repr(DEFAULT_MAX_PARTITIONS)
     )
 
@@ -387,6 +387,7 @@ class IntegerRangePartitioner(RangePartitioner[int]):
 
     @property
     def _partition_center_offset(self) -> int:
+        assert self._step is not None, "Partitioner is fitted"
         return self._step // 2
 
 

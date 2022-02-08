@@ -299,7 +299,6 @@ class LearnerRanker(
                 )
 
         parameter_space = self.parameter_space
-        searcher: BaseSearchCV
         searcher = self.searcher_ = self.searcher_type(
             parameter_space.estimator,
             parameter_space.parameters,
@@ -454,7 +453,7 @@ class LearnerRanker(
 
         return _scorer_fn
 
-    summary_report.__doc__ = summary_report.__doc__.replace(
+    summary_report.__doc__ = summary_report.__doc__.replace(  # type: ignore
         "%%SORT_COLUMN%%", _DEFAULT_REPORT_SORT_COLUMN
     )
 
