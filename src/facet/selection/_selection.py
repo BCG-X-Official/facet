@@ -98,8 +98,9 @@ class LearnerRanker(
     """
 
     #: A cross-validation searcher class, or any other callable
-    #: that instantiates a cross-validation searcher.
-    searcher_type: Callable[..., T_SearchCV]
+    #: that instantiates a cross-validation searcher, wrapped in
+    #: a tuple to avoid confusion with methods
+    searcher_type: Tuple[Callable[..., T_SearchCV]]
 
     #: The parameter space to search.
     parameter_space: BaseParameterSpace
@@ -186,7 +187,7 @@ class LearnerRanker(
             verbose=verbose,
         )
 
-        self.searcher_type = searcher_type
+        self.searcher_type = (searcher_type,)
         self.parameter_space = parameter_space
         self.cv = cv
         self.scoring = scoring
@@ -299,7 +300,8 @@ class LearnerRanker(
                 )
 
         parameter_space = self.parameter_space
-        searcher = self.searcher_ = self.searcher_type(
+        (searcher_type,) = self.searcher_type
+        searcher = self.searcher_ = searcher_type(
             parameter_space.estimator,
             parameter_space.parameters,
             **self._get_searcher_parameters(),

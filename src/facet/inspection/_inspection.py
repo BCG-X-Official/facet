@@ -719,8 +719,9 @@ class LearnerInspector(
         # get a feature interaction array with shape
         # (n_observations, n_outputs, n_features, n_features)
         # where the innermost feature x feature arrays are symmetrical
-        im_matrix_per_observation_and_output = (
-            self.shap_interaction_values()  # TODO wrong handling for multi output
+        im_matrix_per_observation_and_output: np.ndarray = (
+            # TODO missing proper handling for list of data frames
+            self.shap_interaction_values()  # type: ignore
             .values.reshape((-1, n_features, n_outputs, n_features))
             .swapaxes(1, 2)
         )
