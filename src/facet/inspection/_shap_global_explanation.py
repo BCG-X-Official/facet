@@ -432,7 +432,7 @@ def cov(vectors: np.ndarray, weight: Optional[np.ndarray]) -> np.ndarray:
 
 
 def cov_broadcast(
-    vector_sequence: np.ndarray, vector_grid: np.ndarray, weight: np.ndarray
+    vector_sequence: np.ndarray, vector_grid: np.ndarray, weight: Optional[np.ndarray]
 ) -> np.ndarray:
     """
     Calculate the covariance matrix between a sequence of vectors and a grid of vectors

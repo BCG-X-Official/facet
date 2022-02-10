@@ -583,6 +583,7 @@ class ClassifierShapCalculator(ShapCalculator[ClassifierPipelineDF], metaclass=A
             (shap_tensors,) = super()._convert_shap_tensors_to_list(
                 shap_tensors=shap_tensors, n_outputs=1
             )
+            assert isinstance(shap_tensors, np.ndarray), "shap_tensors is numpy array"
             return [-shap_tensors, shap_tensors]
         else:
             return super()._convert_shap_tensors_to_list(

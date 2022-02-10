@@ -586,7 +586,7 @@ class KernelExplainerFactory(ExplainerFactory):
         )
 
         if self.l1_reg is not None:
-            # mypy: disabling type check due to method assignment
+            # mypy - disabling type check due to method assignment
             explainer.shap_values = functools.partial(  # type: ignore
                 explainer.shap_values, l1_reg=self.l1_reg
             )

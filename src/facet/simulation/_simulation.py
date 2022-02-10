@@ -270,9 +270,9 @@ class BaseUnivariateSimulator(
 
         mean, sem = self._simulate_feature_with_values(
             feature_name=feature_name,
-            simulation_values=(
-                partitioner.fit(sample.features.loc[:, feature_name]).partitions_
-            ),
+            simulation_values=partitioner.fit(
+                sample.features.loc[:, feature_name]
+            ).partitions_,
         )
         return UnivariateSimulationResult(
             partitioner=partitioner,

@@ -57,7 +57,7 @@ class Partitioner(
     DEFAULT_MAX_PARTITIONS = 20
 
     #: The values representing the partitions.
-    _partitions: Optional[np.ndarray]
+    _partitions: Optional[Sequence]
 
     #: The count of values allocated to each partition.
     _frequencies: Optional[np.ndarray]
@@ -77,7 +77,7 @@ class Partitioner(
         self._partitions = None
         self._frequencies = None
 
-    # mypy: incorrect type inference for __doc__
+    # mypy - incorrect type inference for __doc__
     __init__.__doc__ = __init__.__doc__.replace(  # type: ignore
         "{DEFAULT_MAX_PARTITIONS}", repr(DEFAULT_MAX_PARTITIONS)
     )
@@ -90,11 +90,12 @@ class Partitioner(
         return self._max_partitions
 
     @property
-    def partitions_(self) -> np.ndarray:
+    def partitions_(self) -> Sequence:
         """
         The values representing the partitions.
         """
         self._ensure_fitted()
+        assert self._partitions is not None, "Partitioner is fitted"
         return self._partitions
 
     @property
@@ -103,6 +104,7 @@ class Partitioner(
         The count of values allocated to each partition.
         """
         self._ensure_fitted()
+        assert self._frequencies is not None, "Partitioner is fitted"
         return self._frequencies
 
     @property

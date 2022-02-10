@@ -64,6 +64,7 @@ T_LearnerPipelineDF = TypeVar(
 )
 T_RegressorPipelineDF = TypeVar("T_RegressorPipelineDF", bound=RegressorPipelineDF)
 T_ClassifierPipelineDF = TypeVar("T_ClassifierPipelineDF", bound=ClassifierPipelineDF)
+# mypy - disabling due to lack of support for dynamic types
 T_SearchCV = TypeVar("T_SearchCV", bound=BaseSearchCV)  # type: ignore
 
 #
@@ -231,10 +232,10 @@ class LearnerRanker(
 
         self.searcher_ = None
 
-    if __init__.__doc__ is not None:
-        __init__.__doc__ = __init__.__doc__.replace(
-            "%%PARALLELIZABLE_PARAMS%%", ParallelizableMixin.__init__.__doc__.strip()
-        )
+    # mypy - incorrect type inference for __doc__
+    __init__.__doc__ = __init__.__doc__.replace(  # type: ignore
+        "%%PARALLELIZABLE_PARAMS%%", ParallelizableMixin.__init__.__doc__.strip()
+    )
 
     @property
     def is_fitted(self) -> bool:
@@ -455,6 +456,7 @@ class LearnerRanker(
 
         return _scorer_fn
 
+    # mypy - incorrect type inference for __doc__
     summary_report.__doc__ = summary_report.__doc__.replace(  # type: ignore
         "%%SORT_COLUMN%%", _DEFAULT_REPORT_SORT_COLUMN
     )

@@ -470,19 +470,17 @@ class LearnerInspector(
         :return: feature synergy matrix as a data frame of shape
             `(n_features, n_features)`, or a list of data frames for multiple outputs
         """
-        self._ensure_fitted()
+        SYNERGY_STR = "synergy"
 
-        explainer = self.__interaction_explainer
+        self._ensure_fitted()
+        affinity_matrices, affinity_symmetrical = self.__get_affinity_matrices(
+            symmetrical, absolute, explainer_fn_name=SYNERGY_STR
+        )
+
         return self.__feature_affinity_matrix(
-            affinity_matrices=(
-                explainer.to_frames(
-                    explainer.synergy(symmetrical=symmetrical, absolute=absolute)
-                )
-            ),
-            affinity_symmetrical=explainer.synergy(
-                symmetrical=True, absolute=False, std=False
-            ),
-            affinity_metric="synergy",
+            affinity_matrices=affinity_matrices,
+            affinity_symmetrical=affinity_symmetrical,
+            affinity_metric=SYNERGY_STR,
             clustered=clustered,
         )
 
@@ -525,19 +523,18 @@ class LearnerInspector(
         :return: feature redundancy matrix as a data frame of shape
             `(n_features, n_features)`, or a list of data frames for multiple outputs
         """
+        REDUNDANCY_STR = "redundancy"
+
         self._ensure_fitted()
 
-        explainer = self.__interaction_explainer
+        affinity_matrices, affinity_symmetrical = self.__get_affinity_matrices(
+            symmetrical, absolute, explainer_fn_name=REDUNDANCY_STR
+        )
+
         return self.__feature_affinity_matrix(
-            affinity_matrices=(
-                explainer.to_frames(
-                    explainer.redundancy(symmetrical=symmetrical, absolute=absolute)
-                )
-            ),
-            affinity_symmetrical=explainer.redundancy(
-                symmetrical=True, absolute=False, std=False
-            ),
-            affinity_metric="redundancy",
+            affinity_matrices=affinity_matrices,
+            affinity_symmetrical=affinity_symmetrical,
+            affinity_metric=REDUNDANCY_STR,
             clustered=clustered,
         )
 
@@ -582,21 +579,21 @@ class LearnerInspector(
         :return: feature association matrix as a data frame of shape
             `(n_features, n_features)`, or a list of data frames for multiple outputs
         """
+        ASSOCIATION_STR = "association"
+
         self._ensure_fitted()
 
-        global_explainer = self._shap_global_explainer
+        affinity_matrices, affinity_symmetrical = self.__get_affinity_matrices(
+            symmetrical,
+            absolute,
+            explainer_fn_name=ASSOCIATION_STR,
+            explainer=self._shap_global_explainer,
+        )
+
         return self.__feature_affinity_matrix(
-            affinity_matrices=(
-                global_explainer.to_frames(
-                    global_explainer.association(
-                        absolute=absolute, symmetrical=symmetrical
-                    )
-                )
-            ),
-            affinity_symmetrical=global_explainer.association(
-                symmetrical=True, absolute=False, std=False
-            ),
-            affinity_metric="association",
+            affinity_matrices=affinity_matrices,
+            affinity_symmetrical=affinity_symmetrical,
+            affinity_metric=ASSOCIATION_STR,
             clustered=clustered,
         )
 
@@ -614,10 +611,15 @@ class LearnerInspector(
             for multi-target regressors or non-binary classifiers
         """
         self._ensure_fitted()
+        feature_affinity_matrix = self.__interaction_explainer.synergy(
+            symmetrical=True, absolute=False, std=False
+        )
+        assert (
+            feature_affinity_matrix is not None
+        ), "Shap interaction values are supported"
+
         return self.__linkages_from_affinity_matrices(
-            feature_affinity_matrix=self.__interaction_explainer.synergy(
-                symmetrical=True, absolute=False, std=False
-            )
+            feature_affinity_matrix=feature_affinity_matrix
         )
 
     def feature_redundancy_linkage(self) -> Union[LinkageTree, List[LinkageTree]]:
@@ -634,10 +636,15 @@ class LearnerInspector(
             for multi-target regressors or non-binary classifiers
         """
         self._ensure_fitted()
+        feature_affinity_matrix = self.__interaction_explainer.redundancy(
+            symmetrical=True, absolute=False, std=False
+        )
+        assert (
+            feature_affinity_matrix is not None
+        ), "Shap interaction values are supported"
+
         return self.__linkages_from_affinity_matrices(
-            feature_affinity_matrix=self.__interaction_explainer.redundancy(
-                symmetrical=True, absolute=False, std=False
-            )
+            feature_affinity_matrix=feature_affinity_matrix
         )
 
     def feature_association_linkage(self) -> Union[LinkageTree, List[LinkageTree]]:
@@ -654,10 +661,15 @@ class LearnerInspector(
             for multi-target regressors or non-binary classifiers
         """
         self._ensure_fitted()
+        feature_affinity_matrix = self._shap_global_explainer.association(
+            absolute=False, symmetrical=True, std=False
+        )
+        assert (
+            feature_affinity_matrix is not None
+        ), "Shap interaction values are supported"
+
         return self.__linkages_from_affinity_matrices(
-            feature_affinity_matrix=self._shap_global_explainer.association(
-                absolute=False, symmetrical=True, std=False
-            )
+            feature_affinity_matrix=feature_affinity_matrix
         )
 
     def feature_interaction_matrix(self) -> Union[Matrix, List[Matrix]]:
@@ -862,6 +874,24 @@ class LearnerInspector(
         return self.__isolate_single_frame(
             affinity_matrices, affinity_metric=affinity_metric
         )
+
+    def __get_affinity_matrices(
+        self,
+        symmetrical: bool,
+        absolute: bool,
+        explainer_fn_name: str,
+        explainer: Optional[ShapGlobalExplainer] = None,
+    ) -> Tuple[List[pd.DataFrame], np.ndarray]:
+        if explainer is None:
+            explainer = self.__interaction_explainer
+        explainer_fn = getattr(explainer, explainer_fn_name)
+        affinity_matrices = explainer_fn(symmetrical=symmetrical, absolute=absolute)
+        affinity_symmetrical = explainer_fn(symmetrical=True, absolute=False, std=False)
+        assert (
+            affinity_matrices is not None and affinity_symmetrical is not None
+        ), "Shap interaction values are supported"
+
+        return explainer.to_frames(affinity_matrices), affinity_symmetrical
 
     @staticmethod
     def __sort_affinity_matrices(
