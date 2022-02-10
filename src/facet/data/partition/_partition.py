@@ -77,6 +77,7 @@ class Partitioner(
         self._partitions = None
         self._frequencies = None
 
+    # mypy: incorrect type inference for __doc__
     __init__.__doc__ = __init__.__doc__.replace(  # type: ignore
         "{DEFAULT_MAX_PARTITIONS}", repr(DEFAULT_MAX_PARTITIONS)
     )

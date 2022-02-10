@@ -87,7 +87,10 @@ stages:
               versionSpec: '3.7.*'
             displayName: 'use Python 3.7'
           - script: |
-              python -m pip install mypy~=0.931
+              set -eux
+              eval "$(conda shell.bash hook)"
+              conda env create
+              conda activate $(project_name)-develop
               python -m mypy src
             displayName: 'Run mypy'
 
