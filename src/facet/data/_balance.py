@@ -31,7 +31,7 @@ _F_FACET_SAMPLE_WEIGHT = "FACET_SAMPLE_WEIGHT"
 class SampleBalancer(metaclass=ABCMeta):
     """
     Balances the target distribution of a :class:`.Sample`, by over- or
-    under-sampling its observations.
+    under sampling its observations.
     Sample objects with multiple targets are not supported.
     """
 
@@ -228,7 +228,22 @@ class SampleBalancer(metaclass=ABCMeta):
 
 class UniformSampleBalancer(SampleBalancer):
     """
-    TBD
+    Balances the target distribution of a :class:`.Sample`, by over- or
+    under sampling its observations.
+
+    The :class:`.UniformSampleBalancer` is instantiated with ``balance_pct`` indicating
+    the share of observations to uniformly rebalance. If passing ``1.0``, this leads to
+    a Sample being balanced in a way where each class is represented with the same
+    amount of observations. E.g. in a binary target Sample, each class occurs at a
+    relative frequency of 0.5, in a Sample with four targets, each class occurs at a
+    frequency of 0.25, and so on.
+    If passing ``balance_pct < 1.0``, uniform rebalancing is only applied to this given
+    share of the Sample. The remaining share is allocated across classes matching their
+    relative frequencies within the original Sample.
+    E.g. when passing ``balance_pct = 0.5``, then 50% of the sampling is uniform,
+    and the remaining 50% corresponds to the original class frequencies.
+
+    Sample objects with multiple targets are not supported.
     """
 
     def __init__(
@@ -240,7 +255,9 @@ class UniformSampleBalancer(SampleBalancer):
     ) -> None:
         """
         :param balance_pct: Share of observations to be uniformly rebalanced. Expected
-            in range ]0.0,1.0].
+            in range ]0,1]. If a value below 1.0 is passed, the remaining share
+            of observations to resample is allocated to each class using its
+            corresponding relative frequency within the original Sample.
         :param oversample: Whether to use oversampling.
         :param undersample: Whether to use undersampling.
         """
@@ -280,7 +297,14 @@ class UniformSampleBalancer(SampleBalancer):
 
 class TargetFrequencySampleBalancer(SampleBalancer):
     """
-    tbd
+    Balances the target distribution of a :class:`.Sample`, by over- or
+    under sampling its observations.
+
+    The :class:`.TargetFrequencySampleBalancer` is instantiated with argument
+    ``target_frequencies`` indicating the desired target frequency per class after
+    balancing.
+
+    Sample objects with multiple targets are not supported.
     """
 
     def __init__(
