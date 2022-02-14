@@ -37,7 +37,7 @@ class SampleBalancer(metaclass=ABCMeta):
 
     _target_sampling_frequencies: pd.Series
     _sampling_factors: pd.Series
-    _class_count: pd.Series
+    _class_counts: pd.Series
 
     def __init__(
         self,
@@ -73,7 +73,7 @@ class SampleBalancer(metaclass=ABCMeta):
                 "sample to balance should be single target, but has multiple"
             )
 
-        self._set_class_count(sample)
+        self._set_class_counts(sample)
         self._set_target_sampling_frequencies()
         self._set_sampling_factors()
 
@@ -161,15 +161,15 @@ class SampleBalancer(metaclass=ABCMeta):
     def _set_target_sampling_frequencies(self) -> None:
         pass
 
-    def _set_class_count(self, sample: Sample) -> None:
-        self._class_count = sample.target.value_counts()
+    def _set_class_counts(self, sample: Sample) -> None:
+        self._class_counts = sample.target.value_counts()
 
     def _set_sampling_factors(self) -> None:
 
         if self._oversample and self._undersample:
             sampling_factors = pd.Series(
-                self._class_count.sum()
-                * (self._target_sampling_frequencies / self._class_count),
+                self._class_counts.sum()
+                * (self._target_sampling_frequencies / self._class_counts),
                 name="sample_factor",
             )
 
@@ -178,9 +178,9 @@ class SampleBalancer(metaclass=ABCMeta):
                 self._target_sampling_frequencies
                 / self._target_sampling_frequencies.max()
             )
-            balanced_count = relative_target_frequency * self._class_count.max()
+            balanced_count = relative_target_frequency * self._class_counts.max()
             preliminary_sample_factor = pd.Series(
-                balanced_count / self._class_count, name="sample_factor"
+                balanced_count / self._class_counts, name="sample_factor"
             )
 
             # if any sample factor is < 1, scale up proportionally to keep oversampling
@@ -197,9 +197,9 @@ class SampleBalancer(metaclass=ABCMeta):
                 self._target_sampling_frequencies
                 / self._target_sampling_frequencies.min()
             )
-            balanced_count = relative_target_frequency * self._class_count.min()
+            balanced_count = relative_target_frequency * self._class_counts.min()
             preliminary_sample_factor = pd.Series(
-                balanced_count / self._class_count, name="sample_factor"
+                balanced_count / self._class_counts, name="sample_factor"
             )
 
             # if any sample factor is > 1, scale down proportionally to keep
@@ -214,7 +214,7 @@ class SampleBalancer(metaclass=ABCMeta):
         # if undersampling was performed – alone or in combination with oversampling -
         # then check if absolute frequency of any class would drop below 1:
         if self._undersample:
-            resulting_count: pd.Series = round(self._class_count * sampling_factors, 0)
+            resulting_count: pd.Series = round(self._class_counts * sampling_factors, 0)
             zero_obs_sampled = resulting_count[resulting_count == 0.0]
             if len(zero_obs_sampled) > 0:
                 raise ValueError(
@@ -268,10 +268,10 @@ class UniformSampleBalancer(SampleBalancer):
         self._balance_pct = balance_pct
 
     def _set_target_sampling_frequencies(self) -> None:
-        uniform_balanced_pct_per_class = self._balance_pct / len(self._class_count)
+        uniform_balanced_pct_per_class = self._balance_pct / len(self._class_counts)
         remaining_frequency = 1.0 - self._balance_pct
         allocated_of_remaining = (
-            self._class_count / self._class_count.sum()
+            self._class_counts / self._class_counts.sum()
         ) * remaining_frequency
         self._target_sampling_frequencies = (
             uniform_balanced_pct_per_class + allocated_of_remaining
@@ -332,10 +332,10 @@ class TargetFrequencySampleBalancer(SampleBalancer):
         self._target_frequencies = pd.Series(data=target_frequencies)
 
     def _set_target_sampling_frequencies(self) -> None:
-        if not all(self._target_frequencies.index.isin(self._class_count.index)):
+        if not all(self._target_frequencies.index.isin(self._class_counts.index)):
             unknowns = ",".join(
                 self._target_frequencies.index[
-                    ~self._target_frequencies.index.isin(self._class_count.index)
+                    ~self._target_frequencies.index.isin(self._class_counts.index)
                 ]
             )
             raise ValueError(
@@ -344,7 +344,7 @@ class TargetFrequencySampleBalancer(SampleBalancer):
 
         cumulative_frequency = self._target_frequencies.sum()
         # check, if user has specified frequencies for all found class labels in sample:
-        if all(self._class_count.index.isin(self._target_frequencies.index)):
+        if all(self._class_counts.index.isin(self._target_frequencies.index)):
             if round(cumulative_frequency, 2) != 1.0:
                 raise ValueError(
                     f"arg target_frequencies expects a cumulative frequency of 1.0, "
@@ -352,8 +352,8 @@ class TargetFrequencySampleBalancer(SampleBalancer):
                 )
             self._target_sampling_frequencies = self._target_frequencies
         else:
-            omitted_classes = self._class_count.index[
-                ~self._class_count.index.isin(self._target_frequencies.index)
+            omitted_classes = self._class_counts.index[
+                ~self._class_counts.index.isin(self._target_frequencies.index)
             ]
 
             if round(cumulative_frequency, 2) == 1.0:
@@ -368,8 +368,8 @@ class TargetFrequencySampleBalancer(SampleBalancer):
                 # allocate remaining frequency based on relative frequencies among
                 # omitted classes
                 omitted_classes_weights = (
-                    self._class_count[omitted_classes]
-                    / self._class_count[omitted_classes].sum()
+                    self._class_counts[omitted_classes]
+                    / self._class_counts[omitted_classes].sum()
                 )
 
                 self._target_sampling_frequencies = pd.concat(
