@@ -1,7 +1,8 @@
 """
 Implementation of the sample balancer.
 """
-
+import abc
+from abc import ABCMeta
 from typing import Any, Dict, List
 
 import pandas as pd
@@ -10,7 +11,11 @@ from pytools.api import AllTracker
 
 from ._sample import Sample
 
-__all__ = ["SampleBalancer"]
+__all__ = [
+    "SampleBalancer",
+    "UniformDistributionSampleBalancer",
+    "TargetFrequencySampleBalancer",
+]
 
 
 #
@@ -23,35 +28,23 @@ _F_FACET_TARGET_PARTITION = "FACET_TARGET_PARTITION_"
 _F_FACET_SAMPLE_WEIGHT = "FACET_SAMPLE_WEIGHT"
 
 
-class SampleBalancer:
+class SampleBalancer(metaclass=ABCMeta):
     """
     Balances the target distribution of a :class:`.Sample`, by over- or
     under-sampling its observations.
     Sample objects with multiple targets are not supported.
     """
 
-    #
-    # target_ratios_
-    # partitioner
+    _target_sampling_frequencies: pd.Series
+    _sampling_factors: pd.Series
 
     def __init__(
         self,
         *,
-        target_frequencies: Dict[Any, float],
         oversample: bool = True,
         undersample: bool = True,
     ) -> None:
         """
-        :param target_frequencies: Dictionary assigning desired target frequencies to
-            class labels. Frequency values are expected as float within the ]0,1[
-            interval. When omitting frequency for a class label, it is assigned the
-            unallocated frequency: i.e. in binary classification one can specify just a
-            single class label to balance with frequency 0.3, then 0.7 is used for the
-            second class. When omitting multiple classes in a multiclass classification
-            scenario, all remaining frequency is allocated evenly across them. When
-            frequencies for all classes are passed, they are expected to sum up to
-            1.00 after rounding to two digits. Sampling with frequencies of 0 is not
-            supported.
         :param oversample: Whether to use oversampling.
         :param undersample: Whether to use undersampling.
         """
@@ -61,25 +54,8 @@ class SampleBalancer:
                 "args oversample and undersample are both false. enable at least one"
             )
 
-        if target_frequencies == {}:
-            raise ValueError("arg target_frequencies is empty")
-
-        for key, val in target_frequencies.items():
-            if isinstance(val, float):
-                if not 0 < val < 1:
-                    raise ValueError(
-                        f"target frequency for label {key} expected in range ]0,1[. "
-                        f"but is: {val}"
-                    )
-            else:
-                raise TypeError(
-                    f"target frequency value for label {key} should be float "
-                    f"but is a {type(val).__name__}"
-                )
-
         self._oversample = oversample
         self._undersample = undersample
-        self._target_frequencies = pd.Series(data=target_frequencies)
 
     def _balance(self, sample: Sample, only_set_weights: bool) -> Sample:
         """
@@ -96,10 +72,12 @@ class SampleBalancer:
                 "sample to balance should be single target, but has multiple"
             )
 
-        sampling_factors = self._find_sampling_factors(sample)
+        self._set_class_count(sample)
+        self._set_target_sampling_frequencies()
+        self._set_sampling_factors()
 
         # skip sampling if all factors 1 or nearly 1
-        if all(round(sampling_factors, 6) == 1.0):
+        if all(round(self._sampling_factors, 6) == 1.0):
             return sample
 
         if only_set_weights:
@@ -108,7 +86,7 @@ class SampleBalancer:
             )
             weight_series.loc[:] = 1.0
 
-            for label, weight in sampling_factors.iteritems():
+            for label, weight in self._sampling_factors.iteritems():
                 weight_series[sample.target == label] = weight
 
             observations: pd.DataFrame = pd.concat(
@@ -126,7 +104,7 @@ class SampleBalancer:
             )
             needs_sampling = {
                 label
-                for label, factor in sampling_factors.iteritems()
+                for label, factor in self._sampling_factors.iteritems()
                 if not round(factor, 6) == 1.0
             }
 
@@ -134,13 +112,13 @@ class SampleBalancer:
                 observations[sample.target == label].sample(
                     frac=factor, replace=factor > 1.0
                 )
-                for label, factor in sampling_factors.iteritems()
+                for label, factor in self._sampling_factors.iteritems()
                 if label in needs_sampling
             ]
 
             keep_as_is_dfs = [
                 observations[sample.target == label]
-                for label, factor in sampling_factors.iteritems()
+                for label, factor in self._sampling_factors.iteritems()
                 if label not in needs_sampling
             ]
 
@@ -178,34 +156,151 @@ class SampleBalancer:
 
         return self._balance(sample, True)
 
-    def _find_sampling_factors(
-        self,
-        sample: Sample,
-    ) -> pd.Series:
-        class_count = sample.target.value_counts()
-        target_frequencies = self._target_frequencies
+    @abc.abstractmethod
+    def _set_target_sampling_frequencies(self) -> None:
+        pass
 
-        if not all(target_frequencies.index.isin(class_count.index)):
+    def _set_class_count(self, sample: Sample) -> None:
+        self._class_count = sample.target.value_counts()
+
+    def _set_sampling_factors(self) -> None:
+
+        if self._oversample and self._undersample:
+            sampling_factors = pd.Series(
+                self._class_count.sum()
+                * (self._target_sampling_frequencies / self._class_count),
+                name="sample_factor",
+            )
+
+        elif self._oversample:
+            relative_target_frequency = (
+                self._target_sampling_frequencies
+                / self._target_sampling_frequencies.max()
+            )
+            balanced_count = relative_target_frequency * self._class_count.max()
+            preliminary_sample_factor = pd.Series(
+                balanced_count / self._class_count, name="sample_factor"
+            )
+
+            # if any sample factor is < 1, scale up proportionally to keep oversampling
+            if preliminary_sample_factor.min() < 1:
+                sampling_factors = (
+                    preliminary_sample_factor / preliminary_sample_factor.min()
+                )
+            else:
+                sampling_factors = preliminary_sample_factor
+
+        else:
+            # perform only undersampling:
+            relative_target_frequency = (
+                self._target_sampling_frequencies
+                / self._target_sampling_frequencies.min()
+            )
+            balanced_count = relative_target_frequency * self._class_count.min()
+            preliminary_sample_factor = pd.Series(
+                balanced_count / self._class_count, name="sample_factor"
+            )
+
+            # if any sample factor is > 1, scale down proportionally to keep
+            # undersampling
+            if preliminary_sample_factor.max() > 1:
+                sampling_factors = (
+                    preliminary_sample_factor / preliminary_sample_factor.max()
+                )
+            else:
+                sampling_factors = preliminary_sample_factor
+
+        # if undersampling was performed – alone or in combination with oversampling -
+        # then check if absolute frequency of any class would drop below 1:
+        if self._undersample:
+            resulting_count: pd.Series = round(self._class_count * sampling_factors, 0)
+            zero_obs_sampled = resulting_count[resulting_count == 0.0]
+            if len(zero_obs_sampled) > 0:
+                raise ValueError(
+                    f"Undersampling of {','.join(zero_obs_sampled.index)} to "
+                    f"meet target frequencies leads to 0 retained observations. "
+                    f"consider to allow (only) oversampling to avoid this."
+                )
+
+        self._sampling_factors = sampling_factors
+
+
+class UniformDistributionSampleBalancer(SampleBalancer):
+    pass
+
+
+class TargetFrequencySampleBalancer(SampleBalancer):
+    def __init__(
+        self,
+        *,
+        target_frequencies: Dict[Any, float],
+        oversample: bool = True,
+        undersample: bool = True,
+    ) -> None:
+        """
+        :param target_frequencies: Dictionary assigning desired target frequencies to
+            class labels. Frequency values are expected as float within the ]0,1[
+            interval. When omitting frequency for a class label, it is assigned the
+            unallocated frequency: i.e. in binary classification one can specify just a
+            single class label to balance with frequency 0.3, then 0.7 is used for the
+            second class. When omitting multiple classes in a multiclass classification
+            scenario, all remaining frequency is allocated evenly across them. When
+            frequencies for all classes are passed, they are expected to sum up to
+            1.00 after rounding to two digits. Sampling with frequencies of 0 is not
+            supported.
+        :param oversample: Whether to use oversampling.
+        :param undersample: Whether to use undersampling.
+        """
+        super().__init__(oversample=oversample, undersample=undersample)
+
+        if not oversample and not undersample:
+            raise ValueError(
+                "args oversample and undersample are both false. enable at least one"
+            )
+
+        if target_frequencies == {}:
+            raise ValueError("arg target_frequencies is empty")
+
+        for key, val in target_frequencies.items():
+            if isinstance(val, float):
+                if not 0 < val < 1:
+                    raise ValueError(
+                        f"target frequency for label {key} expected in range ]0,1[. "
+                        f"but is: {val}"
+                    )
+            else:
+                raise TypeError(
+                    f"target frequency value for label {key} should be float "
+                    f"but is a {type(val).__name__}"
+                )
+
+        self._oversample = oversample
+        self._undersample = undersample
+        self._target_frequencies = pd.Series(data=target_frequencies)
+
+    def _set_target_sampling_frequencies(self) -> None:
+        if not all(self._target_frequencies.index.isin(self._class_count.index)):
             unknowns = ",".join(
-                target_frequencies.index[
-                    ~target_frequencies.index.isin(class_count.index)
+                self._target_frequencies.index[
+                    ~self._target_frequencies.index.isin(self._class_count.index)
                 ]
             )
             raise ValueError(
                 f"arg target_frequencies specifies unknown class labels: {unknowns}"
             )
 
-        cumulative_frequency = target_frequencies.sum()
+        cumulative_frequency = self._target_frequencies.sum()
         # check, if user specified frequencies for all found class labels in sample:
-        if all(class_count.index.isin(target_frequencies.index)):
+        if all(self._class_count.index.isin(self._target_frequencies.index)):
             if round(cumulative_frequency, 2) != 1.0:
                 raise ValueError(
                     f"arg target_frequencies expects a cumulative frequency of 1.0, "
                     f"but is {cumulative_frequency}"
                 )
+            self._target_sampling_frequencies = self._target_frequencies
         else:
-            omitted_classes = class_count.index[
-                ~class_count.index.isin(target_frequencies.index)
+            omitted_classes = self._class_count.index[
+                ~self._class_count.index.isin(self._target_frequencies.index)
             ]
 
             if round(cumulative_frequency, 2) == 1.0:
@@ -217,69 +312,19 @@ class SampleBalancer:
                 )
             else:
                 remaining_frequency = 1 - cumulative_frequency
-                target_frequencies = pd.concat(
+                # allocate remaining frequency based on relative frequencies among
+                # omitted classes
+                omitted_classes_weights = (
+                    self._class_count[omitted_classes]
+                    / self._class_count[omitted_classes].sum()
+                )
+
+                self._target_sampling_frequencies = pd.concat(
                     [
-                        target_frequencies,
-                        pd.Series(
-                            {
-                                c: remaining_frequency / len(omitted_classes)
-                                for c in omitted_classes
-                            }
-                        ),
+                        self._target_frequencies,
+                        remaining_frequency * omitted_classes_weights,
                     ]
                 )
-
-        if self._oversample and self._undersample:
-            sampling_factor = pd.Series(
-                class_count.sum() * (target_frequencies / class_count),
-                name="sample_factor",
-            )
-
-        elif self._oversample:
-            relative_target_frequency = target_frequencies / target_frequencies.max()
-            balanced_count = relative_target_frequency * class_count.max()
-            preliminary_sample_factor = pd.Series(
-                balanced_count / class_count, name="sample_factor"
-            )
-
-            # if any sample factor is < 1, scale up proportionally to keep oversampling
-            if preliminary_sample_factor.min() < 1:
-                sampling_factor = (
-                    preliminary_sample_factor / preliminary_sample_factor.min()
-                )
-            else:
-                sampling_factor = preliminary_sample_factor
-
-        else:
-            # perform only undersampling:
-            relative_target_frequency = target_frequencies / target_frequencies.min()
-            balanced_count = relative_target_frequency * class_count.min()
-            preliminary_sample_factor = pd.Series(
-                balanced_count / class_count, name="sample_factor"
-            )
-
-            # if any sample factor is > 1, scale down proportionally to keep
-            # undersampling
-            if preliminary_sample_factor.max() > 1:
-                sampling_factor = (
-                    preliminary_sample_factor / preliminary_sample_factor.max()
-                )
-            else:
-                sampling_factor = preliminary_sample_factor
-
-        # if undersampling was performed – alone or in combination with oversampling -
-        # then check if absolute frequency of any class would drop below 1:
-        if self._undersample:
-            resulting_count: pd.Series = round(class_count * sampling_factor, 0)
-            zero_obs_sampled = resulting_count[resulting_count == 0.0]
-            if len(zero_obs_sampled) > 0:
-                raise ValueError(
-                    f"Undersampling of {','.join(zero_obs_sampled.index)} to "
-                    f"meet target frequencies leads to 0 retained observations. "
-                    f"consider to allow (only) oversampling to avoid this."
-                )
-
-        return sampling_factor
 
 
 __tracker.validate()

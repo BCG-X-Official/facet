@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from facet.data import Sample, SampleBalancer
+from facet.data import Sample, TargetFrequencySampleBalancer
 
 log = logging.getLogger(__name__)
 
@@ -50,28 +50,28 @@ def test_init_argument_validation() -> None:
     with pytest.raises(
         expected_exception=ValueError, match="oversample and undersample are both false"
     ):
-        SampleBalancer(
+        TargetFrequencySampleBalancer(
             undersample=False, oversample=False, target_frequencies={"a": 0.1}
         )
 
     with pytest.raises(
         expected_exception=ValueError, match="target_frequencies is empty"
     ):
-        SampleBalancer(target_frequencies={})
+        TargetFrequencySampleBalancer(target_frequencies={})
 
     for faulty in (-0.1, 1.0, 0.0, 1.0001):
         with pytest.raises(
             expected_exception=ValueError,
             match="target frequency for label a expected in range",
         ):
-            SampleBalancer(target_frequencies={"a": faulty})
+            TargetFrequencySampleBalancer(target_frequencies={"a": faulty})
 
     with pytest.raises(
         expected_exception=TypeError,
         match="target frequency value for label a should be float but is a str",
     ):
         # noinspection PyTypeChecker
-        SampleBalancer(target_frequencies={"a": "a"})
+        TargetFrequencySampleBalancer(target_frequencies={"a": "a"})
 
 
 def test_frequency_validation(multiclass_target: Sample) -> None:
@@ -81,11 +81,15 @@ def test_frequency_validation(multiclass_target: Sample) -> None:
         expected_exception=ValueError,
         match="target_frequencies expects a cumulative frequency of 1.0, but is 0.99",
     ):
-        sb = SampleBalancer(target_frequencies={"a": 0.5, "b": 0.25, "c": 0.24})
+        sb = TargetFrequencySampleBalancer(
+            target_frequencies={"a": 0.5, "b": 0.25, "c": 0.24}
+        )
         sb.balance(sample=multiclass_target)
 
     # this should be accepted, since we round to two digits for the check
-    sb = SampleBalancer(target_frequencies={"a": 0.333, "b": 0.333, "c": 0.333})
+    sb = TargetFrequencySampleBalancer(
+        target_frequencies={"a": 0.333, "b": 0.333, "c": 0.333}
+    )
     sb.balance(sample=multiclass_target)
 
     # 2. a frequency is listed with a class label, which does not exist in the data
@@ -94,14 +98,16 @@ def test_frequency_validation(multiclass_target: Sample) -> None:
         expected_exception=ValueError,
         match="target_frequencies specifies unknown class labels: d",
     ):
-        sb = SampleBalancer(target_frequencies={"a": 0.5, "b": 0.25, "d": 0.25})
+        sb = TargetFrequencySampleBalancer(
+            target_frequencies={"a": 0.5, "b": 0.25, "d": 0.25}
+        )
         sb.balance(sample=multiclass_target)
     # 2.2 several extra unknown class labels
     with pytest.raises(
         expected_exception=ValueError,
         match="target_frequencies specifies unknown class labels: d,e",
     ):
-        sb = SampleBalancer(
+        sb = TargetFrequencySampleBalancer(
             target_frequencies={"a": 0.5, "b": 0.25, "d": 0.20, "e": 0.05}
         )
         sb.balance(sample=multiclass_target)
@@ -113,7 +119,7 @@ def test_frequency_validation(multiclass_target: Sample) -> None:
         expected_exception=ValueError,
         match=r"cumulative frequency of 1.0, but class label\(s\) c have been omitted",
     ):
-        sb = SampleBalancer(
+        sb = TargetFrequencySampleBalancer(
             target_frequencies={
                 "a": 0.5,
                 "b": 0.5,
@@ -124,7 +130,7 @@ def test_frequency_validation(multiclass_target: Sample) -> None:
 
 def test_undersample_with_binary_labels(binary_target: Sample) -> None:
 
-    test_balancer = SampleBalancer(
+    test_balancer = TargetFrequencySampleBalancer(
         target_frequencies={0: 0.6, 1: 0.4}, undersample=True, oversample=False
     )
 
@@ -137,7 +143,7 @@ def test_undersample_with_binary_labels(binary_target: Sample) -> None:
 
 
 def test_oversample_with_binary_labels(binary_target: Sample) -> None:
-    test_balancer = SampleBalancer(
+    test_balancer = TargetFrequencySampleBalancer(
         target_frequencies={0: 0.6, 1: 0.4}, undersample=False, oversample=True
     )
 
@@ -151,7 +157,7 @@ def test_oversample_with_binary_labels(binary_target: Sample) -> None:
 
 def test_mixed_sample_with_binary_labels(binary_target: Sample) -> None:
 
-    test_balancer = SampleBalancer(
+    test_balancer = TargetFrequencySampleBalancer(
         target_frequencies={0: 0.6, 1: 0.4}, undersample=True, oversample=True
     )
 
@@ -165,7 +171,7 @@ def test_mixed_sample_with_binary_labels(binary_target: Sample) -> None:
 
 def test_undersample_with_multilabel(multiclass_target: Sample) -> None:
 
-    test_balancer = SampleBalancer(
+    test_balancer = TargetFrequencySampleBalancer(
         target_frequencies={"a": 0.4, "b": 0.3, "c": 0.3},
         undersample=True,
         oversample=False,
@@ -189,7 +195,7 @@ def test_undersample_error() -> None:
     )
 
     # test case 1: here a and b retain both 1 observation, but c drops to 0:
-    test_balancer = SampleBalancer(
+    test_balancer = TargetFrequencySampleBalancer(
         target_frequencies={"a": 0.45, "b": 0.45, "c": 0.1},
         undersample=True,
         oversample=True,
@@ -201,7 +207,7 @@ def test_undersample_error() -> None:
         test_balancer.balance(test_sample)
 
     # test case 2: both classes b and c drop to 0 remaining observations:
-    test_balancer = SampleBalancer(
+    test_balancer = TargetFrequencySampleBalancer(
         target_frequencies={"a": 0.8, "b": 0.1, "c": 0.1},
         undersample=True,
         oversample=False,
@@ -215,7 +221,7 @@ def test_undersample_error() -> None:
 
 def test_oversample_with_multilabel(multiclass_target: Sample) -> None:
 
-    test_balancer = SampleBalancer(
+    test_balancer = TargetFrequencySampleBalancer(
         target_frequencies={"a": 0.4, "b": 0.3, "c": 0.3},
         undersample=False,
         oversample=True,
@@ -231,7 +237,7 @@ def test_oversample_with_multilabel(multiclass_target: Sample) -> None:
 
 
 def test_no_change(binary_target: Sample) -> None:
-    test_balancer = SampleBalancer(
+    test_balancer = TargetFrequencySampleBalancer(
         target_frequencies={0: 0.9},
     )
 
