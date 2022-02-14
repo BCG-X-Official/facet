@@ -343,7 +343,7 @@ class TargetFrequencySampleBalancer(SampleBalancer):
             )
 
         cumulative_frequency = self._target_frequencies.sum()
-        # check, if user specified frequencies for all found class labels in sample:
+        # check, if user has specified frequencies for all found class labels in sample:
         if all(self._class_count.index.isin(self._target_frequencies.index)):
             if round(cumulative_frequency, 2) != 1.0:
                 raise ValueError(
