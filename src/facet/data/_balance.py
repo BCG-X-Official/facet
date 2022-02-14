@@ -13,7 +13,7 @@ from ._sample import Sample
 
 __all__ = [
     "SampleBalancer",
-    "UniformDistributionSampleBalancer",
+    "UniformSampleBalancer",
     "TargetFrequencySampleBalancer",
 ]
 
@@ -37,6 +37,7 @@ class SampleBalancer(metaclass=ABCMeta):
 
     _target_sampling_frequencies: pd.Series
     _sampling_factors: pd.Series
+    _class_count: pd.Series
 
     def __init__(
         self,
@@ -225,11 +226,63 @@ class SampleBalancer(metaclass=ABCMeta):
         self._sampling_factors = sampling_factors
 
 
-class UniformDistributionSampleBalancer(SampleBalancer):
-    pass
+class UniformSampleBalancer(SampleBalancer):
+    """
+    TBD
+    """
+
+    def __init__(
+        self,
+        *,
+        balance_pct: float = 0.5,
+        oversample: bool = True,
+        undersample: bool = True,
+    ) -> None:
+        """
+        :param balance_pct: Share of observations to be uniformly rebalanced. Expected
+            in range ]0.0,1.0].
+        :param oversample: Whether to use oversampling.
+        :param undersample: Whether to use undersampling.
+        """
+        super().__init__(oversample=oversample, undersample=undersample)
+
+        if not oversample and not undersample:
+            raise ValueError(
+                "args oversample and undersample are both false. enable at least one"
+            )
+
+        if isinstance(balance_pct, float):
+            if not 0 < balance_pct <= 1:
+                raise ValueError(
+                    f"arg rebalance_pct expected in range ]0,1]. "
+                    f"but is: {balance_pct}"
+                )
+        else:
+            raise TypeError(
+                f"arg rebalance_pct should be float "
+                f"but is a {type(balance_pct).__name__}"
+            )
+
+        self._oversample = oversample
+        self._undersample = undersample
+        self._balance_pct = balance_pct
+
+    def _set_target_sampling_frequencies(self) -> None:
+        uniform_balanced_pct_per_class = self._balance_pct / len(self._class_count)
+        remaining_frequency = 1.0 - self._balance_pct
+        allocated_of_remaining = (
+            self._class_count / self._class_count.sum()
+        ) * remaining_frequency
+        self._target_sampling_frequencies = (
+            uniform_balanced_pct_per_class + allocated_of_remaining
+        )
 
 
 class TargetFrequencySampleBalancer(SampleBalancer):
+    """
+    tbd
+    """
+
     def __init__(
         self,
         *,
@@ -244,10 +297,10 @@ class TargetFrequencySampleBalancer(SampleBalancer):
             unallocated frequency: i.e. in binary classification one can specify just a
             single class label to balance with frequency 0.3, then 0.7 is used for the
             second class. When omitting multiple classes in a multiclass classification
-            scenario, all remaining frequency is allocated evenly across them. When
-            frequencies for all classes are passed, they are expected to sum up to
-            1.00 after rounding to two digits. Sampling with frequencies of 0 is not
-            supported.
+            scenario, all remaining frequency is allocated across them, weighted on
+            relative frequency ratios in the original sample. When frequencies for all
+            classes are passed, they are expected to sum up to 1.00 after rounding to
+            two digits. Sampling with frequencies of 0 is not supported.
         :param oversample: Whether to use oversampling.
         :param undersample: Whether to use undersampling.
         """

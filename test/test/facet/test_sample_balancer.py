@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from facet.data import Sample, TargetFrequencySampleBalancer
+from facet.data import Sample, TargetFrequencySampleBalancer, UniformSampleBalancer
 
 log = logging.getLogger(__name__)
 
@@ -233,6 +233,24 @@ def test_oversample_with_multilabel(multiclass_target: Sample) -> None:
     assert value_counts[1] / value_counts[0] == pytest.approx(0.3 / 0.4, abs=0.05)
 
     assert value_counts[2] / value_counts[0] == pytest.approx(0.3 / 0.4, abs=0.05)
+    log.info(value_counts)
+
+
+def test_oversample_with_multilabel_uniform(multiclass_target: Sample) -> None:
+
+    test_balancer = UniformSampleBalancer(
+        balance_pct=1.0,
+        undersample=False,
+        oversample=True,
+    )
+
+    balanced = test_balancer.balance(multiclass_target)
+    value_counts = balanced.target.value_counts()
+    value_freqs = value_counts / value_counts.sum()
+
+    assert value_freqs.min() == pytest.approx(0.33, abs=0.01)
+    assert value_freqs.max() == pytest.approx(0.33, abs=0.01)
+
     log.info(value_counts)
 
 
