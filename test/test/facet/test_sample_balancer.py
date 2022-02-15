@@ -266,3 +266,17 @@ def test_no_change(binary_target: Sample) -> None:
     assert value_counts[1] / value_counts[0] == pytest.approx(0.11, abs=0.01)
 
     log.info(value_counts)
+
+
+def test_balancer_random_state(binary_target: Sample) -> None:
+    _get_target = lambda balancer: balancer.balance(binary_target).target
+
+    test_balancer = TargetFrequencySampleBalancer(
+        target_frequencies={0: 0.5}, random_state=42
+    )
+
+    assert _get_target(test_balancer).equals(_get_target(test_balancer))
+
+    test_balancer = TargetFrequencySampleBalancer(target_frequencies={0: 0.5})
+
+    assert not _get_target(test_balancer).equals(_get_target(test_balancer))

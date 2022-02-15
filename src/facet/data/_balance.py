@@ -3,9 +3,11 @@ Implementation of the sample balancer.
 """
 import abc
 from abc import ABCMeta
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional, Union
 
+import numpy as np
 import pandas as pd
+from numpy.random import SeedSequence
 
 from pytools.api import AllTracker
 
@@ -44,10 +46,13 @@ class SampleBalancer(metaclass=ABCMeta):
         *,
         oversample: bool = True,
         undersample: bool = True,
+        random_state: Optional[int] = None,
     ) -> None:
         """
         :param oversample: Whether to use oversampling.
         :param undersample: Whether to use undersampling.
+        :param random_state: Optional random seed. If provided balancing will be
+            deterministic and `balance` call idempotent.
         """
 
         if not oversample and not undersample:
@@ -57,6 +62,7 @@ class SampleBalancer(metaclass=ABCMeta):
 
         self._oversample = oversample
         self._undersample = undersample
+        self._seed_sequence = random_state and SeedSequence(random_state)
 
     def _balance(self, sample: Sample, only_set_weights: bool) -> Sample:
         """
@@ -109,11 +115,20 @@ class SampleBalancer(metaclass=ABCMeta):
                 if not round(factor, 6) == 1.0
             }
 
+            _length: int = self._sampling_factors.size
+            seeds: Union[np.ndarray, List[None]] = (
+                self._seed_sequence.generate_state(_length)
+                if self._seed_sequence is not None
+                else [None] * _length
+            )
+
             balanced_dfs = [
                 observations[sample.target == label].sample(
-                    frac=factor, replace=factor > 1.0
+                    frac=factor, replace=factor > 1.0, random_state=seed
                 )
-                for label, factor in self._sampling_factors.iteritems()
+                for seed, (label, factor) in zip(
+                    seeds, self._sampling_factors.iteritems()
+                )
                 if label in needs_sampling
             ]
 
@@ -252,6 +267,7 @@ class UniformSampleBalancer(SampleBalancer):
         balance_pct: float = 0.5,
         oversample: bool = True,
         undersample: bool = True,
+        random_state: Optional[int] = None,
     ) -> None:
         """
         :param balance_pct: Share of observations to be uniformly rebalanced. Expected
@@ -260,8 +276,12 @@ class UniformSampleBalancer(SampleBalancer):
             corresponding relative frequency within the original Sample.
         :param oversample: Whether to use oversampling.
         :param undersample: Whether to use undersampling.
+        :param random_state: Optional random seed. If provided balancing will be
+            deterministic and `balance` call idempotent.
         """
-        super().__init__(oversample=oversample, undersample=undersample)
+        super().__init__(
+            oversample=oversample, undersample=undersample, random_state=random_state
+        )
 
         if not oversample and not undersample:
             raise ValueError(
@@ -313,6 +333,7 @@ class TargetFrequencySampleBalancer(SampleBalancer):
         target_frequencies: Dict[Any, float],
         oversample: bool = True,
         undersample: bool = True,
+        random_state: Optional[int] = None,
     ) -> None:
         """
         :param target_frequencies: Dictionary assigning desired target frequencies to
@@ -327,8 +348,12 @@ class TargetFrequencySampleBalancer(SampleBalancer):
             two digits. Sampling with frequencies of 0 is not supported.
         :param oversample: Whether to use oversampling.
         :param undersample: Whether to use undersampling.
+        :param random_state: Optional random seed. If provided balancing will be
+            deterministic and `balance` call idempotent.
         """
-        super().__init__(oversample=oversample, undersample=undersample)
+        super().__init__(
+            oversample=oversample, undersample=undersample, random_state=random_state
+        )
 
         if not oversample and not undersample:
             raise ValueError(
