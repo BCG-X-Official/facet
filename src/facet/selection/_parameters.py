@@ -57,9 +57,8 @@ assert rv_frozen.__name__ == "rv_frozen"
 # Type variables
 #
 
-T_Self = TypeVar("T_Self")
 T_Candidate_co = TypeVar("T_Candidate_co", covariant=True, bound=EstimatorDF)
-
+T_CandidateEstimatorDF = TypeVar("T_CandidateEstimatorDF", bound="CandidateEstimatorDF")
 
 #
 # Ensure all symbols introduced below are included in __all__
@@ -334,12 +333,7 @@ class MultiEstimatorParameterSpace(
 
 
 @inheritdoc(match="""[see superclass]""")
-class CandidateEstimatorDF(
-    ClassifierDF,
-    RegressorDF,
-    TransformerDF,
-    Generic[T_Candidate_co],
-):
+class CandidateEstimatorDF(ClassifierDF, RegressorDF, TransformerDF):
     """
     Metaclass providing representation for candidate estimator to be used in
     hyperparameter search. Unifies evaluation approach for :class:`.ParameterSpace`
@@ -354,10 +348,10 @@ class CandidateEstimatorDF(
     PARAM_CANDIDATE_NAME = "candidate_name"
 
     #: The currently selected estimator candidate
-    candidate: T_Candidate_co
+    candidate: Optional[Union[ClassifierDF, RegressorDF, TransformerDF]]
 
     #: The name of the candidate
-    candidate_name: str
+    candidate_name: Optional[str]
 
     def __init__(
         self,
@@ -433,11 +427,11 @@ class CandidateEstimatorDF(
 
     # noinspection PyPep8Naming
     def fit(
-        self: T_Self,
+        self: T_CandidateEstimatorDF,
         X: pd.DataFrame,
         y: Optional[Union[pd.Series, pd.DataFrame]] = None,
         **fit_params: Any,
-    ) -> T_Self:
+    ) -> T_CandidateEstimatorDF:
         """[see superclass]"""
         self.candidate.fit(X, y, **fit_params)
         return self
