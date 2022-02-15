@@ -28,11 +28,7 @@ from pytools.api import AllTracker, inheritdoc
 from pytools.fit import FittableMixin
 from pytools.parallelization import ParallelizableMixin
 from sklearndf import EstimatorDF
-from sklearndf.pipeline import (
-    ClassifierPipelineDF,
-    LearnerPipelineDF,
-    RegressorPipelineDF,
-)
+from sklearndf.pipeline import LearnerPipelineDF
 
 from facet.data import Sample
 from facet.selection import CandidateEstimatorDF
@@ -57,11 +53,7 @@ BaseSearchCV = next(
 #
 
 T_Self = TypeVar("T_Self")
-T_LearnerPipelineDF = TypeVar(
-    "T_LearnerPipelineDF", RegressorPipelineDF, ClassifierPipelineDF
-)
-T_RegressorPipelineDF = TypeVar("T_RegressorPipelineDF", bound=RegressorPipelineDF)
-T_ClassifierPipelineDF = TypeVar("T_ClassifierPipelineDF", bound=ClassifierPipelineDF)
+T_EstimatorDF = TypeVar("T_EstimatorDF", bound=EstimatorDF)
 T_SearchCV = TypeVar("T_SearchCV", bound=BaseSearchCV)
 
 #
@@ -84,7 +76,7 @@ __tracker = AllTracker(globals())
 
 @inheritdoc(match="[see superclass]")
 class LearnerRanker(
-    FittableMixin[Sample], ParallelizableMixin, Generic[T_LearnerPipelineDF, T_SearchCV]
+    FittableMixin[Sample], ParallelizableMixin, Generic[T_EstimatorDF, T_SearchCV]
 ):
     """
     Select the best model obtained through fitting an estimator using different
@@ -243,7 +235,7 @@ class LearnerRanker(
         return self.searcher_ is not None
 
     @property
-    def best_estimator_(self) -> T_LearnerPipelineDF:
+    def best_estimator_(self) -> T_EstimatorDF:
         """
         The model which obtained the best ranking score, fitted on the entire sample.
         """
@@ -278,9 +270,6 @@ class LearnerRanker(
         :param fit_params: parameters to pass on to the estimator's fit method
         :return: ``self``
         """
-        self: LearnerRanker[
-            T_LearnerPipelineDF, T_SearchCV
-        ]  # support type hinting in PyCharm
 
         self._reset_fit()
 
