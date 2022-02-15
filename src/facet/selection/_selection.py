@@ -116,6 +116,8 @@ class LearnerRanker(
     #: The searcher used to fit this LearnerRanker; ``None`` if not fitted.
     searcher_: Optional[T_SearchCV]
 
+    # regular expressions and replacement patterns for selecting and renaming
+    # relevant columns from scikit-learn's cv_result_ table
     _CV_RESULT_COLUMNS = [
         (r"rank_test_(\w+)", r"\1__test__rank"),
         (r"(mean|std)_test_(\w+)", r"\2__test__\1"),
@@ -132,10 +134,8 @@ class LearnerRanker(
         r"\1\2",
     )
 
-    # noinspection PyTypeChecker
-    _CV_RESULT_PATTERNS: List[Tuple[Pattern, str]] = [
-        (re.compile(pattern), repl) for pattern, repl in _CV_RESULT_COLUMNS
-    ]
+    # Default column to sort by in the summary_report() method.
+    # This has no influence on how the best model is selected.
     _DEFAULT_REPORT_SORT_COLUMN = "rank_test_score"
 
     def __init__(
