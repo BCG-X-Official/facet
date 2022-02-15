@@ -310,11 +310,19 @@ class MultiEstimatorParameterSpace(
     )
     def get_parameters(self, prefix: Optional[str] = None) -> List[ParameterDict]:
         """[see superclass]"""
+
+        if prefix is None:
+            prefix = ""
+            candidate_prefixed = CandidateEstimatorDF.PARAM_CANDIDATE
+        else:
+            prefix = f"{prefix}__"
+            candidate_prefixed = prefix + CandidateEstimatorDF.PARAM_CANDIDATE
+
         return [
             {
-                CandidateEstimatorDF.PARAM_CANDIDATE: [space.estimator],
-                CandidateEstimatorDF.PARAM_CANDIDATE_NAME: [space.get_name()],
-                **space.get_parameters(prefix=CandidateEstimatorDF.PARAM_CANDIDATE),
+                candidate_prefixed: [space.estimator],
+                prefix + CandidateEstimatorDF.PARAM_CANDIDATE_NAME: [space.get_name()],
+                **space.get_parameters(prefix=candidate_prefixed),
             }
             for space in self.spaces
         ]

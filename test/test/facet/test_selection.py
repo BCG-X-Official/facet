@@ -36,7 +36,6 @@ def test_model_ranker(
     sample: Sample,
     n_jobs: int,
 ) -> None:
-
     expected_scores = [
         0.840,
         0.837,
@@ -105,7 +104,6 @@ def test_model_ranker(
 
 
 def test_model_ranker_no_preprocessing(n_jobs) -> None:
-
     expected_learner_scores = [0.961, 0.957, 0.957, 0.936]
 
     # define a yield-engine circular CV:
@@ -158,7 +156,6 @@ def test_model_ranker_no_preprocessing(n_jobs) -> None:
 def test_parameter_space(
     sample: Sample, simple_preprocessor: TransformerDF, n_jobs: int
 ) -> None:
-
     # distributions
 
     randint_3_10 = randint(3, 10)
@@ -275,13 +272,30 @@ def test_parameter_space(
         },
     ]
 
+    assert mps.get_parameters("my_prefix") == [
+        {
+            "my_prefix__candidate": [pipeline_1],
+            "my_prefix__candidate_name": [ps_1_name],
+            "my_prefix__candidate__regressor__max_depth": randint_3_10,
+            "my_prefix__candidate__regressor__min_samples_leaf": loguniform_0_05_0_10,
+            (
+                "my_prefix__candidate__regressor__min_weight_fraction_leaf"
+            ): loguniform_0_01_0_10,
+        },
+        {
+            "my_prefix__candidate": [pipeline_2],
+            "my_prefix__candidate_name": [ps_2_name],
+            "my_prefix__candidate__regressor__max_depth": randint_3_10,
+            "my_prefix__candidate__regressor__min_child_samples": zipfian_1_32,
+        },
+    ]
+
 
 def test_learner_ranker_regression(
     regressor_parameters: MultiEstimatorParameterSpace[RegressorPipelineDF],
     sample: Sample,
     n_jobs: int,
 ) -> None:
-
     # define the circular cross validator with just 5 splits (to speed up testing)
     cv = BootstrapCV(n_splits=5, random_state=42)
 
@@ -320,7 +334,6 @@ def test_learner_ranker_regression(
 def test_learner_ranker_classification(
     iris_sample_multi_class, cv_stratified_bootstrap: StratifiedBootstrapCV, n_jobs: int
 ) -> None:
-
     expected_learner_scores = [0.965, 0.964, 0.957, 0.956]
 
     # define parameters and crossfit
