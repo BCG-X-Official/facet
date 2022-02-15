@@ -131,11 +131,14 @@ class LearnerRanker(
         (r"(rank|mean|std)_(\w+)_time", r"time__\2__\1"),
         (r"(rank|mean|std)_(\w+)_(\w+)", r"\3__\2__\1"),
     ]
-
-    _CV_RESULT_CANDIDATE_PATTERN = re.compile(
-        r"^(?:(param__)candidate__|param__(candidate(?:_name)?)$)"
+    # noinspection PyTypeChecker
+    _CV_RESULT_PATTERNS: List[Tuple[Pattern, str]] = [
+        (re.compile(pattern), repl) for pattern, repl in _CV_RESULT_COLUMNS
+    ]
+    _CV_RESULT_CANDIDATE_PATTERN, _CV_RESULT_CANDIDATE_REPL = (
+        re.compile(r"^(?:(param__)candidate__|param__(candidate(?:_name)?)$)"),
+        r"\1\2",
     )
-    _CV_RESULT_CANDIDATE_REPL = r"\1\2"
 
     # noinspection PyTypeChecker
     _CV_RESULT_PATTERNS: List[Tuple[Pattern, str]] = [
