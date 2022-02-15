@@ -78,8 +78,8 @@ class ModelSelector(
     FittableMixin[Sample], ParallelizableMixin, Generic[T_EstimatorDF, T_SearchCV]
 ):
     """
-    Select the best model obtained through fitting an estimator using different
-    choices of hyper-parameters and/or estimator types obtained from a
+    Select the best model obtained by fitting an estimator using different
+    choices of hyper-parameters and/or estimator types from a
     :class:`.ParameterSpace` or :class:`.MultiEstimatorParameterSpace`, and using
     a given scoring metric to evaluate the performance of all resulting models.
 
