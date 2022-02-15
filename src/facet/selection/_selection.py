@@ -31,8 +31,7 @@ from sklearndf import EstimatorDF
 from sklearndf.pipeline import LearnerPipelineDF
 
 from facet.data import Sample
-from facet.selection import CandidateEstimatorDF
-from facet.selection.base import BaseParameterSpace
+from facet.selection.base import BaseParameterSpace, CandidateEstimatorDF
 
 log = logging.getLogger(__name__)
 
