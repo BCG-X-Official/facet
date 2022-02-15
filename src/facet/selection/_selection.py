@@ -48,11 +48,9 @@ __all__ = ["LearnerRanker"]
 
 # sklearn does not publish base class BaseSearchCV, so we pull it from the MRO
 # of GridSearchCV
-BaseSearchCV = [
-    base_class
-    for base_class in GridSearchCV.mro()
-    if base_class.__name__ == "BaseSearchCV"
-][0]
+BaseSearchCV = next(
+    filter(lambda cls: cls.__name__ == "BaseSearchCV", GridSearchCV.mro())
+)
 
 #
 # Type variables
