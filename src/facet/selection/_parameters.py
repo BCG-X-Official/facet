@@ -75,15 +75,15 @@ __tracker = AllTracker(globals())
 @inheritdoc(match="""[see superclass]""")
 class ParameterSpace(BaseParameterSpace[T_Candidate_co], Generic[T_Candidate_co]):
     """
-    A set of parameters spanning a parameter space for optimizing the hyper-parameters
-    of a single estimator.
+    A set of parameter choices or distributions spanning a parameter space for
+    optimizing the hyper-parameters of a single estimator.
 
     Parameter spaces provide an easy approach to define and validate search spaces
     for hyper-parameter tuning of ML pipelines using `scikit-learn`'s
     :class:`~sklearn.model_selection.GridSearchCV` and
     :class:`~sklearn.model_selection.RandomizedSearchCV`.
 
-    Parameter lists or distributions to be searched can be set using attribute access,
+    Parameter choices or distributions to be searched can be set using attribute access,
     and will be validated for correct names and values.
 
     Example:
@@ -95,7 +95,7 @@ class ParameterSpace(BaseParameterSpace[T_Candidate_co], Generic[T_Candidate_co]
                 regressor=RandomForestRegressorDF(random_state=42),
                 preprocessing=simple_preprocessor,
             ),
-            candidate_name="rf_candidate"
+            name="random forest",
         )
         ps.regressor.min_weight_fraction_leaf = scipy.stats.loguniform(0.01, 0.1)
         ps.regressor.max_depth = [3, 4, 5, 7, 10]
@@ -118,7 +118,9 @@ distribution:
     def __init__(self, estimator: T_Candidate_co, name: Optional[str] = None) -> None:
         """
         :param estimator: the estimator candidate to which to apply the parameters to
-        :param name: a name for the estimator candidate to be used in summary reports
+        :param name: a name for the estimator candidate to be used in summary reports;
+            defaults to the type of the estimator, or the type of the final estimator
+            if arg estimator is a pipeline
         """
 
         super().__init__(estimator=estimator)
@@ -301,7 +303,7 @@ class MultiEstimatorParameterSpace(
 
     @subsdoc(
         pattern=(
-            r"a dictionary of parameter distributions,[\n\s]*"
+            r"a dictionary of parameter choices and distributions,[\n\s]*"
             r"or a list of such dictionaries"
         ),
         replacement="a list of dictionaries of parameter distributions",
@@ -335,10 +337,13 @@ class MultiEstimatorParameterSpace(
 @inheritdoc(match="""[see superclass]""")
 class CandidateEstimatorDF(ClassifierDF, RegressorDF, TransformerDF):
     """
-    Metaclass providing representation for candidate estimator to be used in
-    hyperparameter search. Unifies evaluation approach for :class:`.ParameterSpace`
-    and class:`.MultiEstimatorParameterSpace`. For the latter it provides "empty"
-    candidate where actual estimator is a hyperparameter itself.
+    A trivial wrapper for classifiers, regressors and transformers, acting
+    like a pipeline with a single step.
+
+    Used in conjunction with :class:`MultiEstimatorParameterSpace` to evaluate multiple
+    competing models: the :attr:`.candidate` parameter determines the estimator to be
+    used and is used to include multiple estimators as part of the parameter space
+    that is searched during model tuning.
     """
 
     #: name of the `candidate` parameter
@@ -347,10 +352,11 @@ class CandidateEstimatorDF(ClassifierDF, RegressorDF, TransformerDF):
     #: name of the `candidate_name` parameter
     PARAM_CANDIDATE_NAME = "candidate_name"
 
-    #: The currently selected estimator candidate
+    #: The currently selected estimator candidate.
     candidate: Optional[Union[ClassifierDF, RegressorDF, TransformerDF]]
 
-    #: The name of the candidate
+    #: The name of the candidate, used for more readable summary reports
+    #: of model tuning results.
     candidate_name: Optional[str]
 
     def __init__(

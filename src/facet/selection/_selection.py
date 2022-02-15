@@ -87,11 +87,13 @@ class LearnerRanker(
     FittableMixin[Sample], ParallelizableMixin, Generic[T_LearnerPipelineDF, T_SearchCV]
 ):
     """
-    Score and rank different parametrizations of one or more learners,
-    using cross-validation.
+    Select the best model obtained through fitting an estimator using different
+    choices of hyper-parameters and/or estimator types obtained from a
+    :class:`.ParameterSpace` or :class:`.MultiEstimatorParameterSpace`, and using
+    a given scoring metric to evaluate the performance of all resulting models.
 
-    The learner ranker can run a simultaneous grid search across multiple alternative
-    learner pipelines, supporting the ability to simultaneously select a learner
+    The learner ranker can run a simultaneous search across multiple alternative
+    estimators, supporting the ability to simultaneously select a learner
     algorithm and optimize hyper-parameters.
     """
 
@@ -240,7 +242,7 @@ class LearnerRanker(
     @property
     def best_estimator_(self) -> T_LearnerPipelineDF:
         """
-        The pipeline which obtained the best ranking score, fitted on the entire sample.
+        The model which obtained the best ranking score, fitted on the entire sample.
         """
         self._ensure_fitted()
         searcher = self.searcher_
@@ -264,15 +266,13 @@ class LearnerRanker(
         **fit_params: Any,
     ) -> T_Self:
         """
-        Rank the candidate learners and their hyper-parameter combinations using
-        crossfits from the given sample.
+        Identify the model with the best-performing hyper-parameter combination using
+        the given sample.
 
-        Other than the scikit-learn implementation of grid search, arbitrary parameters
-        can be passed on to the learner pipeline(s) to be fitted.
-
-        :param sample: the sample from which to fit the crossfits
-        :param groups:
-        :param fit_params: any fit parameters to pass on to the learner's fit method
+        :param sample: the sample used to fit and score the estimators
+        :param groups: group labels for the samples used while splitting the dataset
+            into train/test set; passed on to the ``fit`` method of the searcher
+        :param fit_params: parameters to pass on to the estimator's fit method
         :return: ``self``
         """
         self: LearnerRanker[
