@@ -297,7 +297,7 @@ class MultiEstimatorParameterSpace(
         if len(spaces) == 0:
             raise TypeError("no parameter space passed; need to pass at least one")
 
-        super().__init__(estimator=CandidateEstimatorDF.empty())
+        super().__init__(estimator=CandidateEstimatorDF())
 
         self.spaces = spaces
 
@@ -375,15 +375,6 @@ class CandidateEstimatorDF(ClassifierDF, RegressorDF, TransformerDF):
 
         self.candidate = candidate
         self.candidate_name = candidate_name
-
-    @classmethod
-    def empty(cls) -> "CandidateEstimatorDF":
-        """
-        Create a new candidate estimator with no candidate set.
-
-        :return: the new candidate estimator
-        """
-        return cls()
 
     @property
     def classes_(self) -> Sequence[Any]:
