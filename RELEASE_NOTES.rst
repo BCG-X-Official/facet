@@ -34,7 +34,7 @@ FACET 2.0
 ``facet.selection``
 ^^^^^^^^^^^^^^^^^^^
 
-- API: :class:`.LearnerRanker` completely rewritten to work with native *scikit-learn*
+- API: :class:`.ModelSelector` completely rewritten to work with native *scikit-learn*
   searchers such as :class:`.GridSearchCV` or :class:`.RandomizedSearchCV`
 - API: new classes :class:`.ParameterSpace` and :class:`MultiParameterSpace` offer an
   a more convenient and robust mechanism for declaring options or distributions for
@@ -124,7 +124,7 @@ by the :class:`.LearnerInspector`.
   across matrices as an indication of confidence for each calculated value.
 - API: Method :meth:`.LearnerInspector.shap_plot_data` now returns SHAP values for the
   positive class of binary classifiers.
-- API: Increase efficiency of :class:`.LearnerRanker` parallelization by adopting the
+- API: Increase efficiency of :class:`.ModelSelector` parallelization by adopting the
   new :class:`pytools.parallelization.JobRunner` API provided by :mod:`pytools`
 - BUILD: add support for :mod:`shap` 0.38 and 0.39
 

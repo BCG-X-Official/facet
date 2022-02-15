@@ -25,7 +25,7 @@ from sklearndf.regression.extra import LGBMRegressorDF
 
 from ..conftest import check_ranking
 from facet.data import Sample
-from facet.selection import LearnerRanker, MultiEstimatorParameterSpace, ParameterSpace
+from facet.selection import ModelSelector, MultiEstimatorParameterSpace, ParameterSpace
 from facet.validation import BootstrapCV, StratifiedBootstrapCV
 
 log = logging.getLogger(__name__)
@@ -73,7 +73,7 @@ def test_model_ranker(
     # define the circular cross validator with just 5 splits (to speed up testing)
     cv = BootstrapCV(n_splits=5, random_state=42)
 
-    ranker: LearnerRanker[RegressorPipelineDF, GridSearchCV] = LearnerRanker(
+    ranker: ModelSelector[RegressorPipelineDF, GridSearchCV] = ModelSelector(
         searcher_type=GridSearchCV,
         parameter_space=regressor_parameters,
         cv=cv,
@@ -124,9 +124,9 @@ def test_model_ranker_no_preprocessing(n_jobs) -> None:
     )
     test_sample: Sample = Sample(observations=test_data, target_name="target")
 
-    model_ranker: LearnerRanker[
+    model_ranker: ModelSelector[
         ClassifierPipelineDF[SVCDF], GridSearchCV
-    ] = LearnerRanker(
+    ] = ModelSelector(
         searcher_type=GridSearchCV,
         parameter_space=parameter_space,
         cv=cv,
@@ -306,9 +306,9 @@ def test_learner_ranker_regression(
             "of arg searcher_type, but included: param_grid"
         ),
     ):
-        LearnerRanker(GridSearchCV, regressor_parameters, param_grid=None)
+        ModelSelector(GridSearchCV, regressor_parameters, param_grid=None)
 
-    ranker: LearnerRanker[RegressorPipelineDF, GridSearchCV] = LearnerRanker(
+    ranker: ModelSelector[RegressorPipelineDF, GridSearchCV] = ModelSelector(
         GridSearchCV,
         regressor_parameters,
         scoring="r2",
@@ -359,9 +359,9 @@ def test_learner_ranker_classification(
         # define an illegal grid list, mixing classification with regression
         MultiEstimatorParameterSpace(ps1, ps2)
 
-    model_ranker: LearnerRanker[
+    model_ranker: ModelSelector[
         ClassifierPipelineDF[RandomForestClassifierDF], GridSearchCV
-    ] = LearnerRanker(
+    ] = ModelSelector(
         searcher_type=GridSearchCV,
         parameter_space=ps1,
         cv=cv_stratified_bootstrap,

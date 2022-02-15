@@ -36,7 +36,7 @@ from facet.selection.base import BaseParameterSpace
 
 log = logging.getLogger(__name__)
 
-__all__ = ["LearnerRanker"]
+__all__ = ["ModelSelector"]
 
 #
 # Type constants
@@ -52,7 +52,7 @@ BaseSearchCV = next(
 # Type variables
 #
 
-T_Self = TypeVar("T_Self")
+T_ModelSelector = TypeVar("T_ModelSelector", bound="ModelSelector")
 T_EstimatorDF = TypeVar("T_EstimatorDF", bound=EstimatorDF)
 T_SearchCV = TypeVar("T_SearchCV", bound=BaseSearchCV)
 
@@ -75,7 +75,7 @@ __tracker = AllTracker(globals())
 
 
 @inheritdoc(match="[see superclass]")
-class LearnerRanker(
+class ModelSelector(
     FittableMixin[Sample], ParallelizableMixin, Generic[T_EstimatorDF, T_SearchCV]
 ):
     """
@@ -113,7 +113,7 @@ class LearnerRanker(
     #: Additional parameters to be passed on to the searcher.
     searcher_params: Dict[str, Any]
 
-    #: The searcher used to fit this LearnerRanker; ``None`` if not fitted.
+    #: The searcher used to fit this ModelSelector; ``None`` if not fitted.
     searcher_: Optional[T_SearchCV]
 
     # regular expressions and replacement patterns for selecting and renaming
@@ -255,11 +255,11 @@ class LearnerRanker(
             )
 
     def fit(
-        self: T_Self,
+        self: T_ModelSelector,
         sample: Sample,
         groups: Union[pd.Series, np.ndarray, Sequence, None] = None,
         **fit_params: Any,
-    ) -> T_Self:
+    ) -> T_ModelSelector:
         """
         Identify the model with the best-performing hyper-parameter combination using
         the given sample.
@@ -343,8 +343,8 @@ class LearnerRanker(
             if unpack_candidate:
                 # remove the "candidate" layer in the parameter output if we're dealing
                 # with a multi parameter space
-                return LearnerRanker._CV_RESULT_CANDIDATE_PATTERN.sub(
-                    LearnerRanker._CV_RESULT_CANDIDATE_REPL, name
+                return ModelSelector._CV_RESULT_CANDIDATE_PATTERN.sub(
+                    ModelSelector._CV_RESULT_CANDIDATE_REPL, name
                 )
             else:
                 return name
