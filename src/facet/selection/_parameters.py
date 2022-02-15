@@ -50,7 +50,7 @@ ParameterSet = Union[List[Any], stats.rv_continuous, stats.rv_discrete]
 ParameterDict = Dict[str, ParameterSet]
 
 rv_frozen = type(stats.uniform())
-assert rv_frozen.__name__ == "rv_frozen"
+assert rv_frozen.__name__ == "rv_frozen", "type of stats.uniform() is rv_frozen"
 
 
 #
