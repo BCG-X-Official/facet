@@ -365,10 +365,11 @@ class CandidateEstimatorDF(ClassifierDF, RegressorDF, TransformerDF):
         candidate_name: Optional[str] = None,
     ) -> None:
         """
-        :param candidate: the candidate estimator. If ``None`` then estimators to be
-                          evaluated should be provided in the parameter grid under a
-                          "candidate" key.
-        :param candidate_name: a name for the candidate
+        :param candidate: the current estimator candidate; usually not specified on
+            class creation but set as a parameter during multi-estimator model selection
+        :param candidate_name: a name for the estimator candidate; usually not specified
+            on class creation but set as a parameter during multi-estimator model
+            selection
         """
         super().__init__()
 
