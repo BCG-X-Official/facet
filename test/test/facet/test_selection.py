@@ -25,18 +25,17 @@ from sklearndf.regression.extra import LGBMRegressorDF
 
 from ..conftest import check_ranking
 from facet.data import Sample
-from facet.selection import LearnerRanker, MultiEstimatorParameterSpace, ParameterSpace
+from facet.selection import ModelSelector, MultiEstimatorParameterSpace, ParameterSpace
 from facet.validation import BootstrapCV, StratifiedBootstrapCV
 
 log = logging.getLogger(__name__)
 
 
-def test_model_ranker(
+def test_model_selector(
     regressor_parameters: MultiEstimatorParameterSpace[RegressorPipelineDF],
     sample: Sample,
     n_jobs: int,
 ) -> None:
-
     expected_scores = [
         0.840,
         0.837,
@@ -74,7 +73,7 @@ def test_model_ranker(
     # define the circular cross validator with just 5 splits (to speed up testing)
     cv = BootstrapCV(n_splits=5, random_state=42)
 
-    ranker: LearnerRanker[RegressorPipelineDF, GridSearchCV] = LearnerRanker(
+    ranker: ModelSelector[RegressorPipelineDF, GridSearchCV] = ModelSelector(
         searcher_type=GridSearchCV,
         parameter_space=regressor_parameters,
         cv=cv,
@@ -104,8 +103,7 @@ def test_model_ranker(
     )
 
 
-def test_model_ranker_no_preprocessing(n_jobs) -> None:
-
+def test_model_selector_no_preprocessing(n_jobs) -> None:
     expected_learner_scores = [0.961, 0.957, 0.957, 0.936]
 
     # define a yield-engine circular CV:
@@ -126,9 +124,9 @@ def test_model_ranker_no_preprocessing(n_jobs) -> None:
     )
     test_sample: Sample = Sample(observations=test_data, target_name="target")
 
-    model_ranker: LearnerRanker[
+    model_selector: ModelSelector[
         ClassifierPipelineDF[SVCDF], GridSearchCV
-    ] = LearnerRanker(
+    ] = ModelSelector(
         searcher_type=GridSearchCV,
         parameter_space=parameter_space,
         cv=cv,
@@ -137,7 +135,7 @@ def test_model_ranker_no_preprocessing(n_jobs) -> None:
         sample=test_sample
     )
 
-    summary_report = model_ranker.summary_report()
+    summary_report = model_selector.summary_report()
     log.debug(f"\n{summary_report}")
 
     check_ranking(
@@ -158,7 +156,6 @@ def test_model_ranker_no_preprocessing(n_jobs) -> None:
 def test_parameter_space(
     sample: Sample, simple_preprocessor: TransformerDF, n_jobs: int
 ) -> None:
-
     # distributions
 
     randint_3_10 = randint(3, 10)
@@ -275,13 +272,30 @@ def test_parameter_space(
         },
     ]
 
+    assert mps.get_parameters("my_prefix") == [
+        {
+            "my_prefix__candidate": [pipeline_1],
+            "my_prefix__candidate_name": [ps_1_name],
+            "my_prefix__candidate__regressor__max_depth": randint_3_10,
+            "my_prefix__candidate__regressor__min_samples_leaf": loguniform_0_05_0_10,
+            (
+                "my_prefix__candidate__regressor__min_weight_fraction_leaf"
+            ): loguniform_0_01_0_10,
+        },
+        {
+            "my_prefix__candidate": [pipeline_2],
+            "my_prefix__candidate_name": [ps_2_name],
+            "my_prefix__candidate__regressor__max_depth": randint_3_10,
+            "my_prefix__candidate__regressor__min_child_samples": zipfian_1_32,
+        },
+    ]
 
-def test_learner_ranker_regression(
+
+def test_model_selector_regression(
     regressor_parameters: MultiEstimatorParameterSpace[RegressorPipelineDF],
     sample: Sample,
     n_jobs: int,
 ) -> None:
-
     # define the circular cross validator with just 5 splits (to speed up testing)
     cv = BootstrapCV(n_splits=5, random_state=42)
 
@@ -292,9 +306,9 @@ def test_learner_ranker_regression(
             "of arg searcher_type, but included: param_grid"
         ),
     ):
-        LearnerRanker(GridSearchCV, regressor_parameters, param_grid=None)
+        ModelSelector(GridSearchCV, regressor_parameters, param_grid=None)
 
-    ranker: LearnerRanker[RegressorPipelineDF, GridSearchCV] = LearnerRanker(
+    ranker: ModelSelector[RegressorPipelineDF, GridSearchCV] = ModelSelector(
         GridSearchCV,
         regressor_parameters,
         scoring="r2",
@@ -317,10 +331,9 @@ def test_learner_ranker_regression(
     )
 
 
-def test_learner_ranker_classification(
+def test_model_selector_classification(
     iris_sample_multi_class, cv_stratified_bootstrap: StratifiedBootstrapCV, n_jobs: int
 ) -> None:
-
     expected_learner_scores = [0.965, 0.964, 0.957, 0.956]
 
     # define parameters and crossfit
@@ -346,9 +359,9 @@ def test_learner_ranker_classification(
         # define an illegal grid list, mixing classification with regression
         MultiEstimatorParameterSpace(ps1, ps2)
 
-    model_ranker: LearnerRanker[
+    model_selector: ModelSelector[
         ClassifierPipelineDF[RandomForestClassifierDF], GridSearchCV
-    ] = LearnerRanker(
+    ] = ModelSelector(
         searcher_type=GridSearchCV,
         parameter_space=ps1,
         cv=cv_stratified_bootstrap,
@@ -360,13 +373,13 @@ def test_learner_ranker_classification(
         ValueError,
         match="arg sample_weight is not supported, use arg sample.weight instead",
     ):
-        model_ranker.fit(
+        model_selector.fit(
             sample=iris_sample_multi_class, sample_weight=iris_sample_multi_class.weight
         )
 
-    model_ranker.fit(sample=iris_sample_multi_class)
+    model_selector.fit(sample=iris_sample_multi_class)
 
-    ranking = model_ranker.summary_report()
+    ranking = model_selector.summary_report()
 
     log.debug(f"\n{ranking}")
 

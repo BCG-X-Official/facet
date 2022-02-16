@@ -28,19 +28,14 @@ from pytools.api import AllTracker, inheritdoc
 from pytools.fit import FittableMixin
 from pytools.parallelization import ParallelizableMixin
 from sklearndf import EstimatorDF
-from sklearndf.pipeline import (
-    ClassifierPipelineDF,
-    LearnerPipelineDF,
-    RegressorPipelineDF,
-)
+from sklearndf.pipeline import LearnerPipelineDF
 
 from facet.data import Sample
-from facet.selection import CandidateEstimatorDF
-from facet.selection.base import BaseParameterSpace
+from facet.selection.base import BaseParameterSpace, CandidateEstimatorDF
 
 log = logging.getLogger(__name__)
 
-__all__ = ["LearnerRanker"]
+__all__ = ["ModelSelector"]
 
 #
 # Type constants
@@ -48,22 +43,16 @@ __all__ = ["LearnerRanker"]
 
 # sklearn does not publish base class BaseSearchCV, so we pull it from the MRO
 # of GridSearchCV
-BaseSearchCV: type = [
-    base_class
-    for base_class in GridSearchCV.mro()
-    if base_class.__name__ == "BaseSearchCV"
-][0]
+BaseSearchCV = next(
+    filter(lambda cls: cls.__name__ == "BaseSearchCV", GridSearchCV.mro())
+)
 
 #
 # Type variables
 #
 
-T_LearnerRanker = TypeVar("T_LearnerRanker", bound="LearnerRanker")
-T_LearnerPipelineDF = TypeVar(
-    "T_LearnerPipelineDF", RegressorPipelineDF, ClassifierPipelineDF
-)
-T_RegressorPipelineDF = TypeVar("T_RegressorPipelineDF", bound=RegressorPipelineDF)
-T_ClassifierPipelineDF = TypeVar("T_ClassifierPipelineDF", bound=ClassifierPipelineDF)
+T_ModelSelector = TypeVar("T_ModelSelector", bound="ModelSelector")
+T_EstimatorDF = TypeVar("T_EstimatorDF", bound=EstimatorDF)
 # mypy - disabling due to lack of support for dynamic types
 T_SearchCV = TypeVar("T_SearchCV", bound=BaseSearchCV)  # type: ignore
 
@@ -86,16 +75,14 @@ __tracker = AllTracker(globals())
 
 
 @inheritdoc(match="[see superclass]")
-class LearnerRanker(
-    FittableMixin[Sample], ParallelizableMixin, Generic[T_LearnerPipelineDF, T_SearchCV]
+class ModelSelector(
+    FittableMixin[Sample], ParallelizableMixin, Generic[T_EstimatorDF, T_SearchCV]
 ):
     """
-    Score and rank different parametrizations of one or more learners,
-    using cross-validation.
-
-    The learner ranker can run a simultaneous grid search across multiple alternative
-    learner pipelines, supporting the ability to simultaneously select a learner
-    algorithm and optimize hyper-parameters.
+    Select the best model obtained by fitting an estimator using different
+    choices of hyper-parameters from a :class:`.ParameterSpace`, or even
+    simultaneously evaluating multiple competing estimators from a
+    :class:`.MultiEstimatorParameterSpace`.
     """
 
     #: A cross-validation searcher class, or any other callable
@@ -123,9 +110,11 @@ class LearnerRanker(
     #: Additional parameters to be passed on to the searcher.
     searcher_params: Dict[str, Any]
 
-    #: The searcher used to fit this LearnerRanker; ``None`` if not fitted.
+    #: The searcher used to fit this ModelSelector; ``None`` if not fitted.
     searcher_: Optional[T_SearchCV]
 
+    # regular expressions and replacement patterns for selecting and renaming
+    # relevant columns from scikit-learn's cv_result_ table
     _CV_RESULT_COLUMNS = [
         (r"rank_test_(\w+)", r"\1__test__rank"),
         (r"(mean|std)_test_(\w+)", r"\2__test__\1"),
@@ -133,16 +122,18 @@ class LearnerRanker(
         (r"(rank|mean|std)_(\w+)_time", r"time__\2__\1"),
         (r"(rank|mean|std)_(\w+)_(\w+)", r"\3__\2__\1"),
     ]
-
-    _CV_RESULT_CANDIDATE_PATTERN = re.compile(
-        r"^(?:(param__)candidate__|param__(candidate(?:_name)?)$)"
-    )
-    _CV_RESULT_CANDIDATE_REPL = r"\1\2"
-
     # noinspection PyTypeChecker
     _CV_RESULT_PATTERNS: List[Tuple[Pattern, str]] = [
         (re.compile(pattern), repl) for pattern, repl in _CV_RESULT_COLUMNS
     ]
+
+    _CV_RESULT_CANDIDATE_PATTERN, _CV_RESULT_CANDIDATE_REPL = (
+        re.compile(r"^(?:(param__)candidate__|param__(candidate(?:_name)?)$)"),
+        r"\1\2",
+    )
+
+    # Default column to sort by in the summary_report() method.
+    # This has no influence on how the best model is selected.
     _DEFAULT_REPORT_SORT_COLUMN = "rank_test_score"
 
     def __init__(
@@ -243,9 +234,9 @@ class LearnerRanker(
         return self.searcher_ is not None
 
     @property
-    def best_estimator_(self) -> T_LearnerPipelineDF:
+    def best_estimator_(self) -> T_EstimatorDF:
         """
-        The pipeline which obtained the best ranking score, fitted on the entire sample.
+        The model which obtained the best ranking score, fitted on the entire sample.
         """
         self._ensure_fitted()
         searcher = self.searcher_
@@ -264,21 +255,20 @@ class LearnerRanker(
             )
 
     def fit(
-        self: T_LearnerRanker,
+        self: T_ModelSelector,
         sample: Sample,
         groups: Union[pd.Series, np.ndarray, Sequence, None] = None,
         **fit_params: Any,
-    ) -> T_LearnerRanker:
+    ) -> T_ModelSelector:
         """
-        Rank the candidate learners and their hyper-parameter combinations using
-        crossfits from the given sample.
+        Search this model selector's parameter space to identify the model with the
+        best-performing hyper-parameter combination, using the given sample to fit and
+        score the candidate estimators.
 
-        Other than the scikit-learn implementation of grid search, arbitrary parameters
-        can be passed on to the learner pipeline(s) to be fitted.
-
-        :param sample: the sample from which to fit the crossfits
-        :param groups:
-        :param fit_params: any fit parameters to pass on to the learner's fit method
+        :param sample: the sample used to fit and score the estimators
+        :param groups: group labels for the samples used while splitting the dataset
+            into train/test set; passed on to the ``fit`` method of the searcher
+        :param fit_params: parameters to pass on to the estimator's fit method
         :return: ``self``
         """
 
@@ -355,8 +345,8 @@ class LearnerRanker(
             if unpack_candidate:
                 # remove the "candidate" layer in the parameter output if we're dealing
                 # with a multi parameter space
-                return LearnerRanker._CV_RESULT_CANDIDATE_PATTERN.sub(
-                    LearnerRanker._CV_RESULT_CANDIDATE_REPL, name
+                return ModelSelector._CV_RESULT_CANDIDATE_PATTERN.sub(
+                    ModelSelector._CV_RESULT_CANDIDATE_REPL, name
                 )
             else:
                 return name

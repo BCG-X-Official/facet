@@ -13,7 +13,6 @@ from typing import (
     Iterator,
     List,
     Optional,
-    Sequence,
     Set,
     Tuple,
     Type,
@@ -22,22 +21,20 @@ from typing import (
     cast,
 )
 
-import pandas as pd
 from scipy import stats
 from sklearn.base import BaseEstimator
 
 from pytools.api import AllTracker, inheritdoc, subsdoc, to_list, validate_element_types
 from pytools.expression import Expression, make_expression
 from pytools.expression.atomic import Id
-from sklearndf import ClassifierDF, EstimatorDF, RegressorDF, TransformerDF
+from sklearndf import EstimatorDF
 from sklearndf.pipeline import LearnerPipelineDF, PipelineDF
 
-from .base import BaseParameterSpace
+from .base import BaseParameterSpace, CandidateEstimatorDF
 
 log = logging.getLogger(__name__)
 
 __all__ = [
-    "CandidateEstimatorDF",
     "MultiEstimatorParameterSpace",
     "ParameterSpace",
 ]
@@ -51,16 +48,14 @@ ParameterSet = Union[List[Any], stats.rv_continuous, stats.rv_discrete]
 ParameterDict = Dict[str, ParameterSet]
 
 rv_frozen = type(stats.uniform())
-assert rv_frozen.__name__ == "rv_frozen"
+assert rv_frozen.__name__ == "rv_frozen", "type of stats.uniform() is rv_frozen"
 
 
 #
 # Type variables
 #
 
-T_CandidateEstimatorDF = TypeVar("T_CandidateEstimatorDF", bound="CandidateEstimatorDF")
 T_Candidate_co = TypeVar("T_Candidate_co", covariant=True, bound=EstimatorDF)
-
 
 #
 # Ensure all symbols introduced below are included in __all__
@@ -77,16 +72,16 @@ __tracker = AllTracker(globals())
 @inheritdoc(match="""[see superclass]""")
 class ParameterSpace(BaseParameterSpace[T_Candidate_co], Generic[T_Candidate_co]):
     """
-    A set of parameters spanning a parameter space for optimizing the hyper-parameters
-    of a single estimator.
+    A set of parameter choices or distributions spanning a parameter space for
+    optimizing the hyper-parameters of a single estimator.
 
     Parameter spaces provide an easy approach to define and validate search spaces
     for hyper-parameter tuning of ML pipelines using `scikit-learn`'s
     :class:`~sklearn.model_selection.GridSearchCV` and
     :class:`~sklearn.model_selection.RandomizedSearchCV`.
 
-    Parameter lists or distributions to be searched can be set using attribute access,
-    and will be validated for correct names and values.
+    Parameter choices (as lists) or distributions (from :mod:`scipy.stats`) can be
+    set using attribute access, and will be validated for correct names and values.
 
     Example:
 
@@ -97,7 +92,7 @@ class ParameterSpace(BaseParameterSpace[T_Candidate_co], Generic[T_Candidate_co]
                 regressor=RandomForestRegressorDF(random_state=42),
                 preprocessing=simple_preprocessor,
             ),
-            candidate_name="rf_candidate"
+            name="random forest",
         )
         ps.regressor.min_weight_fraction_leaf = scipy.stats.loguniform(0.01, 0.1)
         ps.regressor.max_depth = [3, 4, 5, 7, 10]
@@ -120,7 +115,9 @@ distribution:
     def __init__(self, estimator: T_Candidate_co, name: Optional[str] = None) -> None:
         """
         :param estimator: the estimator candidate to which to apply the parameters to
-        :param name: a name for the estimator candidate to be used in summary reports
+        :param name: a name for the estimator candidate to be used in summary reports;
+            defaults to the type of the estimator, or the type of the final estimator
+            if arg estimator is a pipeline
         """
 
         super().__init__(estimator=estimator)
@@ -145,11 +142,12 @@ distribution:
         """
         Get the name for this parameter space.
 
-        If no name was passed to the constructor, determine the default name as follows:
+        If no name was passed to the constructor, determine the `default name`
+        recursively as follows:
 
-            - for meta-estimators, this is the default name of the delegate estimator
-            - for pipelines, this is the default name of the final estimator
-            - for all other estimators, this is the name of the estimator's type
+        - for meta-estimators, this is the `default name` of the delegate estimator
+        - for pipelines, this is the `default name` of the final estimator
+        - for all other estimators, this is the name of the estimator's type
 
         :return: the name for this parameter space
         """
@@ -241,7 +239,7 @@ distribution:
         """[see superclass]"""
         return self._to_expression([])
 
-    def _to_expression(self, path_prefix: Union[str, List[str], None]) -> Expression:
+    def _to_expression(self, path_prefix: Union[str, List[str]]) -> Expression:
         # path_prefix: the path prefix to prepend to each parameter name
 
         def _values_to_expression(values: ParameterSet) -> Expression:
@@ -282,11 +280,13 @@ class MultiEstimatorParameterSpace(
 ):
     """
     A collection of parameter spaces, each representing a competing estimator from which
-    select the best-performing candidate with optimal hyper-parameters.
+    to select the best-performing candidate with optimal hyper-parameters.
 
-    See :class:`.ParameterSpace` for documentation on how to set up and use parameter
-    spaces.
+    See :class:`.ParameterSpace` for details on setting up and using parameter spaces.
     """
+
+    #: The parameter spaces constituting this multi-estimator parameter space.
+    spaces: Tuple[ParameterSpace[T_Candidate_co], ...]
 
     def __init__(self, *spaces: ParameterSpace[T_Candidate_co]) -> None:
         """
@@ -298,13 +298,13 @@ class MultiEstimatorParameterSpace(
         if len(spaces) == 0:
             raise TypeError("no parameter space passed; need to pass at least one")
 
-        super().__init__(estimator=CandidateEstimatorDF.empty())
+        super().__init__(estimator=CandidateEstimatorDF())
 
         self.spaces = spaces
 
     @subsdoc(
         pattern=(
-            r"a dictionary of parameter distributions,[\n\s]*"
+            r"a dictionary of parameter choices and distributions,[\n\s]*"
             r"or a list of such dictionaries"
         ),
         replacement="a list of dictionaries of parameter distributions",
@@ -312,11 +312,18 @@ class MultiEstimatorParameterSpace(
     )
     def get_parameters(self, prefix: Optional[str] = None) -> List[ParameterDict]:
         """[see superclass]"""
+        if prefix is None:
+            prefix = ""
+            candidate_prefixed = CandidateEstimatorDF.PARAM_CANDIDATE
+        else:
+            prefix = f"{prefix}__"
+            candidate_prefixed = prefix + CandidateEstimatorDF.PARAM_CANDIDATE
+
         return [
             {
-                CandidateEstimatorDF.PARAM_CANDIDATE: [space.estimator],
-                CandidateEstimatorDF.PARAM_CANDIDATE_NAME: [space.get_name()],
-                **space.get_parameters(prefix=CandidateEstimatorDF.PARAM_CANDIDATE),
+                candidate_prefixed: [space.estimator],
+                prefix + CandidateEstimatorDF.PARAM_CANDIDATE_NAME: [space.get_name()],
+                **space.get_parameters(prefix=candidate_prefixed),
             }
             for space in self.spaces
         ]
@@ -325,150 +332,6 @@ class MultiEstimatorParameterSpace(
         """[see superclass]"""
         # noinspection PyProtectedMember
         return Id(type(self))(*self.spaces)
-
-
-@inheritdoc(match="""[see superclass]""")
-class CandidateEstimatorDF(
-    ClassifierDF,
-    RegressorDF,
-    TransformerDF,
-    Generic[T_Candidate_co],
-):
-    """
-    Metaclass providing representation for candidate estimator to be used in
-    hyperparameter search. Unifies evaluation approach for :class:`.ParameterSpace`
-    and class:`.MultiEstimatorParameterSpace`. For the latter it provides "empty"
-    candidate where actual estimator is a hyperparameter itself.
-    """
-
-    #: name of the `candidate` parameter
-    PARAM_CANDIDATE = "candidate"
-
-    #: name of the `candidate_name` parameter
-    PARAM_CANDIDATE_NAME = "candidate_name"
-
-    #: The currently selected estimator candidate
-    candidate: Optional[T_Candidate_co]
-
-    #: The name of the candidate
-    candidate_name: Optional[str]
-
-    def __init__(
-        self,
-        candidate: Optional[T_Candidate_co] = None,
-        candidate_name: Optional[str] = None,
-    ) -> None:
-        """
-        :param candidate: the candidate estimator. If ``None`` then estimators to be
-                          evaluated should be provided in the parameter grid under a
-                          "candidate" key.
-        :param candidate_name: a name for the candidate
-        """
-        super().__init__()
-
-        self.candidate = candidate
-        self.candidate_name = candidate_name
-
-    @classmethod
-    def empty(cls) -> "CandidateEstimatorDF":
-        """
-        Create a new candidate estimator with no candidate set.
-
-        :return: the new candidate estimator
-        """
-        return cls()
-
-    @property
-    def _candidate(self) -> T_Candidate_co:
-        assert self.candidate is not None, "Candidate is set"
-        return self.candidate
-
-    @property
-    def classes_(self) -> Sequence[Any]:
-        """[see superclass]"""
-        return self._candidate.classes_
-
-    # noinspection PyPep8Naming
-    def predict_proba(
-        self, X: pd.DataFrame, **predict_params: Any
-    ) -> Union[pd.DataFrame, List[pd.DataFrame]]:
-        """[see superclass]"""
-        return self._candidate.predict_proba(X, **predict_params)
-
-    # noinspection PyPep8Naming
-    def predict_log_proba(
-        self, X: pd.DataFrame, **predict_params: Any
-    ) -> Union[pd.DataFrame, List[pd.DataFrame]]:
-        """[see superclass]"""
-        return self._candidate.predict_log_proba(X, **predict_params)
-
-    # noinspection PyPep8Naming
-    def decision_function(
-        self, X: pd.DataFrame, **predict_params: Any
-    ) -> Union[pd.Series, pd.DataFrame]:
-        """[see superclass]"""
-        return self._candidate.decision_function(X, **predict_params)
-
-    # noinspection PyPep8Naming
-    def score(
-        self, X: pd.DataFrame, y: pd.Series, sample_weight: Optional[pd.Series] = None
-    ) -> float:
-        """[see superclass]"""
-        return self._candidate.score(X, y, sample_weight)
-
-    # noinspection PyPep8Naming
-    def predict(
-        self, X: pd.DataFrame, **predict_params: Any
-    ) -> Union[pd.Series, pd.DataFrame]:
-        """[see superclass]"""
-        return self._candidate.predic(X, **predict_params)
-
-    # noinspection PyPep8Naming
-    def fit_predict(
-        self, X: pd.DataFrame, y: pd.Series, **fit_params: Any
-    ) -> Union[pd.Series, pd.DataFrame]:
-        """[see superclass]"""
-        return self._candidate.fit_predict(X, y, **fit_params)
-
-    # noinspection PyPep8Naming
-    def fit(
-        self: T_CandidateEstimatorDF,
-        X: pd.DataFrame,
-        y: Optional[Union[pd.Series, pd.DataFrame]] = None,
-        **fit_params: Any,
-    ) -> T_CandidateEstimatorDF:
-        """[see superclass]"""
-        self._candidate.fit(X, y, **fit_params)
-        return self
-
-    @property
-    def is_fitted(self) -> bool:
-        """[see superclass]"""
-        return self.candidate is not None and self.candidate.is_fitted
-
-    # noinspection PyPep8Naming
-    def inverse_transform(self, X: pd.DataFrame) -> pd.DataFrame:
-        """[see superclass]"""
-        return self._candidate.inverse_transform(X)
-
-    # noinspection PyPep8Naming
-    def transform(self, X: pd.DataFrame) -> pd.DataFrame:
-        """[see superclass]"""
-        return self._candidate.transform(X)
-
-    @property
-    def _estimator_type(self) -> str:
-        # noinspection PyProtectedMember
-        return self.candidate._estimator_type  # type: ignore
-
-    def _get_features_in(self) -> pd.Index:
-        return self._candidate.feature_names_in_
-
-    def _get_n_outputs(self) -> int:
-        return self._candidate.n_outputs_
-
-    def _get_features_original(self) -> pd.Series:
-        return self._candidate.feature_names_original_
 
 
 __tracker.validate()
