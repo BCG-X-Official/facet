@@ -31,7 +31,7 @@ from facet.validation import BootstrapCV, StratifiedBootstrapCV
 log = logging.getLogger(__name__)
 
 
-def test_model_ranker(
+def test_model_selector(
     regressor_parameters: MultiEstimatorParameterSpace[RegressorPipelineDF],
     sample: Sample,
     n_jobs: int,
@@ -103,7 +103,7 @@ def test_model_ranker(
     )
 
 
-def test_model_ranker_no_preprocessing(n_jobs) -> None:
+def test_model_selector_no_preprocessing(n_jobs) -> None:
     expected_learner_scores = [0.961, 0.957, 0.957, 0.936]
 
     # define a yield-engine circular CV:
@@ -124,7 +124,7 @@ def test_model_ranker_no_preprocessing(n_jobs) -> None:
     )
     test_sample: Sample = Sample(observations=test_data, target_name="target")
 
-    model_ranker: ModelSelector[
+    model_selector: ModelSelector[
         ClassifierPipelineDF[SVCDF], GridSearchCV
     ] = ModelSelector(
         searcher_type=GridSearchCV,
@@ -135,7 +135,7 @@ def test_model_ranker_no_preprocessing(n_jobs) -> None:
         sample=test_sample
     )
 
-    summary_report = model_ranker.summary_report()
+    summary_report = model_selector.summary_report()
     log.debug(f"\n{summary_report}")
 
     check_ranking(
@@ -291,7 +291,7 @@ def test_parameter_space(
     ]
 
 
-def test_learner_ranker_regression(
+def test_model_selector_regression(
     regressor_parameters: MultiEstimatorParameterSpace[RegressorPipelineDF],
     sample: Sample,
     n_jobs: int,
@@ -331,7 +331,7 @@ def test_learner_ranker_regression(
     )
 
 
-def test_learner_ranker_classification(
+def test_model_selector_classification(
     iris_sample_multi_class, cv_stratified_bootstrap: StratifiedBootstrapCV, n_jobs: int
 ) -> None:
     expected_learner_scores = [0.965, 0.964, 0.957, 0.956]
@@ -359,7 +359,7 @@ def test_learner_ranker_classification(
         # define an illegal grid list, mixing classification with regression
         MultiEstimatorParameterSpace(ps1, ps2)
 
-    model_ranker: ModelSelector[
+    model_selector: ModelSelector[
         ClassifierPipelineDF[RandomForestClassifierDF], GridSearchCV
     ] = ModelSelector(
         searcher_type=GridSearchCV,
@@ -373,13 +373,13 @@ def test_learner_ranker_classification(
         ValueError,
         match="arg sample_weight is not supported, use arg sample.weight instead",
     ):
-        model_ranker.fit(
+        model_selector.fit(
             sample=iris_sample_multi_class, sample_weight=iris_sample_multi_class.weight
         )
 
-    model_ranker.fit(sample=iris_sample_multi_class)
+    model_selector.fit(sample=iris_sample_multi_class)
 
-    ranking = model_ranker.summary_report()
+    ranking = model_selector.summary_report()
 
     log.debug(f"\n{ranking}")
 

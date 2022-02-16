@@ -38,7 +38,7 @@ T = TypeVar("T")
 
 
 def test_model_inspection(
-    regressor_ranker: ModelSelector[RegressorPipelineDF, GridSearchCV],
+    regressor_selector,
     best_lgbm_model: RegressorPipelineDF,
     preprocessed_feature_names,
     regressor_inspector: LearnerInspector,
@@ -48,7 +48,7 @@ def test_model_inspection(
     n_jobs: int,
 ) -> None:
 
-    ranking = regressor_ranker.summary_report()
+    ranking = regressor_selector.summary_report()
 
     # define checksums for this test
     log.debug(f"\n{ranking}")
@@ -100,11 +100,11 @@ def test_model_inspection(
     DendrogramDrawer(style="text").draw(data=linkage_tree, title="Test")
 
 
-def test_binary_classifier_ranking(iris_classifier_ranker_binary) -> None:
+def test_binary_classifier_ranking(iris_classifier_selector_binary) -> None:
 
     expected_learner_scores = [0.938, 0.936, 0.936, 0.929]
 
-    ranking = iris_classifier_ranker_binary.summary_report()
+    ranking = iris_classifier_selector_binary.summary_report()
 
     log.debug(f"\n{ranking}")
 
@@ -618,13 +618,13 @@ def test_model_inspection_classifier_interaction(
 
 def test_model_inspection_classifier_interaction_dual_target(
     iris_sample_binary_dual_target: Sample,
-    iris_classifier_ranker_dual_target: ModelSelector[
+    iris_classifier_selector_dual_target: ModelSelector[
         ClassifierPipelineDF[RandomForestClassifierDF], GridSearchCV
     ],
     iris_target_name,
     n_jobs: int,
 ) -> None:
-    iris_classifier_dual_target = iris_classifier_ranker_dual_target.best_estimator_
+    iris_classifier_dual_target = iris_classifier_selector_dual_target.best_estimator_
 
     with pytest.raises(
         ValueError,
