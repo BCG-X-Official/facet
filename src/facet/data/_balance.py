@@ -74,7 +74,7 @@ class SampleBalancer(metaclass=ABCMeta):
                 "sample to balance should be single target, but has multiple"
             )
 
-        self._set_class_counts(sample)
+        self._class_counts = sample.target.value_counts()
         self._set_target_sampling_frequencies()
         self._set_sampling_factors()
 
@@ -163,9 +163,6 @@ class SampleBalancer(metaclass=ABCMeta):
     @abc.abstractmethod
     def _set_target_sampling_frequencies(self) -> None:
         pass
-
-    def _set_class_counts(self, sample: Sample) -> None:
-        self._class_counts = sample.target.value_counts()
 
     def _set_sampling_factors(self) -> None:
 
