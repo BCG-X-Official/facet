@@ -103,7 +103,7 @@ In this quickstart we will train a Random Forest regressor using 10 repeated
 *sklearndf* we can create a *pandas* DataFrame compatible workflow. However,
 FACET provides additional enhancements to keep track of our feature matrix
 and target vector using a sample object (`Sample`) and easily compare
-hyperparameter configurations and even multiple learners with the `LearnerRanker`.
+hyperparameter configurations and even multiple learners with the `ModelSelector`.
 
 .. code-block:: Python
 
@@ -117,7 +117,7 @@ hyperparameter configurations and even multiple learners with the `LearnerRanker
 
     # relevant FACET imports
     from facet.data import Sample
-    from facet.selection import LearnerRanker, ParameterSpace
+    from facet.selection import ModelSelector, ParameterSpace
 
     # declaring url with data
     data_url = 'https://web.stanford.edu/~hastie/Papers/LARS/diabetes.data'
@@ -153,8 +153,8 @@ hyperparameter configurations and even multiple learners with the `LearnerRanker
     rkf_cv = RepeatedKFold(n_splits=5, n_repeats=10, random_state=42)
 
     # rank your candidate models by performance
-    ranker = LearnerRanker(
-        searcher_factory=GridSearchCV,
+    selector = ModelSelector(
+        searcher_type=GridSearchCV,
         parameter_space=rnd_forest_ps,
         cv=rkf_cv,
         n_jobs=-3,
@@ -162,7 +162,7 @@ hyperparameter configurations and even multiple learners with the `LearnerRanker
     ).fit(sample=diabetes_sample)
 
     # get summary report
-    ranker.summary_report()
+    selector.summary_report()
 
 .. image:: sphinx/source/_static/ranker_summary.png
    :width: 600
@@ -232,7 +232,7 @@ The key global metrics for each pair of features in a model are:
     # fit the model inspector
     from facet.inspection import LearnerInspector
     inspector = LearnerInspector(
-        pipeline=ranker.best_estimator_,
+        pipeline=selector.best_estimator_,
         n_jobs=-3
     ).fit(sample=diabetes_sample)
 
@@ -338,7 +338,7 @@ we do the following for the simulation:
 - For each partition, the simulator creates an artificial copy of the original sample
   assuming the variable to be simulated has the same value across all observations –
   which is the value representing the partition. Using the best estimator
-  acquired from the ranker, the simulator now re-predicts all targets using the models
+  acquired from the selector, the simulator now re-predicts all targets using the models
   trained for full sample and determines the uplift of the target variable
   resulting from this.
 - The FACET `SimulationDrawer` allows us to visualise the result; both in a
@@ -357,7 +357,7 @@ we do the following for the simulation:
 
     SIM_FEAT = "BMI"
     simulator = UnivariateUpliftSimulator(
-        model=ranker.best_estimator_,
+        model=selector.best_estimator_,
         sample=diabetes_sample,
         n_jobs=-3
     )
