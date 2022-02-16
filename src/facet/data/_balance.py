@@ -60,8 +60,9 @@ class SampleBalancer(metaclass=ABCMeta):
 
     def _balance(self, sample: Sample, only_set_weights: bool) -> Sample:
         """
-        Balance the sample by either oversampling observations of minority labels
-        (partitions) or undersampling observations of majority labels (partitions)
+        Balance the sample by oversampling observations of classes below the
+        desired target frequencies and/or undersampling observations of classes
+        above their desired target frequencies.
 
         :param sample: the sample to balance
         :param only_set_weights: do not touch observations of sample, instead add a new
@@ -133,7 +134,9 @@ class SampleBalancer(metaclass=ABCMeta):
 
     def balance(self, sample: Sample) -> Sample:
         """
-        Balance the sample by over- and/or undersampling.
+        Balance the sample by oversampling observations of classes below the
+        desired target frequencies and/or undersampling observations of classes
+        above their desired target frequencies.
 
         :param sample: the sample to balance
         :return: the balanced sample
@@ -144,7 +147,7 @@ class SampleBalancer(metaclass=ABCMeta):
         """
         Enhance the sample by adding a new series which captures the sample weight
         of each observation. Weights are derived from sampling factors to balance
-        observation as specified in target_frequencies.
+        observations using over- and/or undersampling of classes.
 
         :param sample: the sample to balance
         :return: the sample with an additional series with weights
