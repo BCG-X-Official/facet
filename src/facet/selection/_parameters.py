@@ -4,7 +4,6 @@ Core implementation of :mod:`facet.selection`
 
 import logging
 import warnings
-from abc import ABCMeta
 from typing import (
     Any,
     Collection,
@@ -13,7 +12,6 @@ from typing import (
     Iterable,
     Iterator,
     List,
-    Mapping,
     Optional,
     Set,
     Tuple,
@@ -22,7 +20,6 @@ from typing import (
     Union,
 )
 
-import pandas as pd
 from scipy import stats
 from sklearn.base import BaseEstimator
 
@@ -30,17 +27,14 @@ from pytools.api import AllTracker, inheritdoc, subsdoc, to_list, validate_eleme
 from pytools.expression import Expression, make_expression
 from pytools.expression.atomic import Id
 from sklearndf import EstimatorDF
-from sklearndf.pipeline import ClassifierPipelineDF, RegressorPipelineDF
+from sklearndf.pipeline import LearnerPipelineDF, PipelineDF
 
-from .base import BaseParameterSpace
+from .base import BaseParameterSpace, CandidateEstimatorDF
 
 log = logging.getLogger(__name__)
 
 __all__ = [
-    "CandidateEstimatorDF",
-    "MultiClassifierParameterSpace",
     "MultiEstimatorParameterSpace",
-    "MultiRegressorParameterSpace",
     "ParameterSpace",
 ]
 
@@ -53,16 +47,14 @@ ParameterSet = Union[List[Any], stats.rv_continuous, stats.rv_discrete]
 ParameterDict = Dict[str, ParameterSet]
 
 rv_frozen = type(stats.uniform())
-assert rv_frozen.__name__ == "rv_frozen"
+assert rv_frozen.__name__ == "rv_frozen", "type of stats.uniform() is rv_frozen"
 
 
 #
 # Type variables
 #
 
-T_Self = TypeVar("T_Self")
-T_Estimator = TypeVar("T_Estimator", bound=BaseEstimator)
-
+T_Candidate_co = TypeVar("T_Candidate_co", covariant=True, bound=EstimatorDF)
 
 #
 # Ensure all symbols introduced below are included in __all__
@@ -77,19 +69,18 @@ __tracker = AllTracker(globals())
 
 
 @inheritdoc(match="""[see superclass]""")
-class ParameterSpace(BaseParameterSpace[T_Estimator], Generic[T_Estimator]):
-    # noinspection SpellCheckingInspection
+class ParameterSpace(BaseParameterSpace[T_Candidate_co], Generic[T_Candidate_co]):
     """
-    A set of parameters spanning a parameter space for optimizing the hyper-parameters
-    of a single estimator.
+    A set of parameter choices or distributions spanning a parameter space for
+    optimizing the hyper-parameters of a single estimator.
 
     Parameter spaces provide an easy approach to define and validate search spaces
     for hyper-parameter tuning of ML pipelines using `scikit-learn`'s
     :class:`~sklearn.model_selection.GridSearchCV` and
     :class:`~sklearn.model_selection.RandomizedSearchCV`.
 
-    Parameter lists or distributions to be searched can be set using attribute access,
-    and will be validated for correct names and values.
+    Parameter choices (as lists) or distributions (from :mod:`scipy.stats`) can be
+    set using attribute access, and will be validated for correct names and values.
 
     Example:
 
@@ -99,7 +90,8 @@ class ParameterSpace(BaseParameterSpace[T_Estimator], Generic[T_Estimator]):
             RegressorPipelineDF(
                 regressor=RandomForestRegressorDF(random_state=42),
                 preprocessing=simple_preprocessor,
-            )
+            ),
+            name="random forest",
         )
         ps.regressor.min_weight_fraction_leaf = scipy.stats.loguniform(0.01, 0.1)
         ps.regressor.max_depth = [3, 4, 5, 7, 10]
@@ -110,7 +102,7 @@ class ParameterSpace(BaseParameterSpace[T_Estimator], Generic[T_Estimator]):
             # ...
         )
 
-        # the following will raise an AttributeError for unknown attribute xyz:
+        # The following will raise an AttributeError for the unknown attribute xyz:
         ps.regressor.xyz = [3, 4, 5, 7, 10]
 
         # the following will raise a TypeError because we do not assign a list or \
@@ -119,12 +111,15 @@ distribution:
 
     """
 
-    def __init__(self, estimator: T_Estimator) -> None:
+    def __init__(self, estimator: T_Candidate_co, name: Optional[str] = None) -> None:
         """
-        :param estimator: the estimator to which to apply the parameters to
+        :param estimator: the estimator candidate to which to apply the parameters to
+        :param name: a name for the estimator candidate to be used in summary reports;
+            defaults to the type of the estimator, or the type of the final estimator
+            if arg estimator is a pipeline
         """
 
-        super().__init__(estimator=CandidateEstimatorDF(estimator))
+        super().__init__(estimator=estimator)
 
         params: Dict[str, Any] = {
             name: param
@@ -137,8 +132,29 @@ distribution:
             for name, value in params.items()
             if isinstance(value, BaseEstimator)
         }
+
+        self._name = name
         self._values: ParameterDict = {}
         self._params: Set[str] = set(params.keys())
+
+    def get_name(self) -> str:
+        """
+        Get the name for this parameter space.
+
+        If no name was passed to the constructor, determine the `default name`
+        recursively as follows:
+
+        - for meta-estimators, this is the `default name` of the delegate estimator
+        - for pipelines, this is the `default name` of the final estimator
+        - for all other estimators, this is the name of the estimator's type
+
+        :return: the name for this parameter space
+        """
+
+        if self._name is None:
+            return get_default_estimator_name(self._estimator)
+        else:
+            return self._name
 
     @subsdoc(
         pattern="or a list of such dictionaries, ",
@@ -150,7 +166,9 @@ distribution:
 
         return {
             "__".join(name): values
-            for (name, values) in self._iter_parameters([prefix] if prefix else [])
+            for (name, values) in self._iter_parameters(
+                path_prefix=[] if prefix is None else [prefix]
+            )
         }
 
     def _validate_parameter(self, name: str, value: ParameterSet) -> None:
@@ -158,7 +176,7 @@ distribution:
         if name not in self._params:
             raise AttributeError(
                 f"unknown parameter name for "
-                f"{type(self.estimator.raw_estimator).__name__}: {name}"
+                f"{type(self.estimator).__name__}: {name}"
             )
 
         if not (
@@ -248,53 +266,43 @@ distribution:
 
         if path_prefix:
             return Id(type(self))(
-                **{".".join(path_prefix): self.estimator.raw_estimator}, **parameters
+                **{".".join(path_prefix): self.estimator}, **parameters
             )
         else:
-            return Id(type(self))(self.estimator.raw_estimator, **parameters)
+            return Id(type(self))(self.estimator, **parameters)
 
 
 @inheritdoc(match="""[see superclass]""")
 class MultiEstimatorParameterSpace(
-    BaseParameterSpace[T_Estimator], Generic[T_Estimator]
+    BaseParameterSpace[T_Candidate_co], Generic[T_Candidate_co]
 ):
     """
     A collection of parameter spaces, each representing a competing estimator from which
-    select the best-performing candidate with optimal hyper-parameters.
+    to select the best-performing candidate with optimal hyper-parameters.
 
-    See :class:`.ParameterSpace` for documentation on how to set up and use parameter
-    spaces.
+    See :class:`.ParameterSpace` for details on setting up and using parameter spaces.
     """
 
-    STEP_CANDIDATE = "candidate"
+    #: The parameter spaces constituting this multi-estimator parameter space.
+    spaces: Tuple[ParameterSpace[T_Candidate_co], ...]
 
-    #: The estimator base type which all candidate estimators must implement.
-    estimator_type: Type[T_Estimator]
-
-    def __init__(
-        self,
-        *candidates: ParameterSpace[T_Estimator],
-        estimator_type: Type[T_Estimator],
-    ) -> None:
+    def __init__(self, *spaces: ParameterSpace[T_Candidate_co]) -> None:
         """
-        :param candidates: the parameter spaces from which to select the best estimator
-        :param estimator_type: the estimator base type which all candidate estimators
-            must implement
+        :param spaces: the parameter spaces from which to select the best estimator
         """
-        validate_element_types(candidates, expected_type=ParameterSpace)
-        validate_candidates(candidates, expected_estimator_type=estimator_type)
+        validate_element_types(spaces, expected_type=ParameterSpace)
+        validate_spaces(spaces)
 
-        if len(candidates) == 0:
+        if len(spaces) == 0:
             raise TypeError("no parameter space passed; need to pass at least one")
 
-        super().__init__(estimator=CandidateEstimatorDF.empty())
+        super().__init__(estimator=CandidateEstimatorDF())
 
-        self.candidates = candidates
-        self.estimator_type = estimator_type
+        self.spaces = spaces
 
     @subsdoc(
         pattern=(
-            r"a dictionary of parameter distributions,[\n\s]*"
+            r"a dictionary of parameter choices and distributions,[\n\s]*"
             r"or a list of such dictionaries"
         ),
         replacement="a list of dictionaries of parameter distributions",
@@ -302,124 +310,27 @@ class MultiEstimatorParameterSpace(
     )
     def get_parameters(self, prefix: Optional[str] = None) -> List[ParameterDict]:
         """[see superclass]"""
+
+        if prefix is None:
+            prefix = ""
+            candidate_prefixed = CandidateEstimatorDF.PARAM_CANDIDATE
+        else:
+            prefix = f"{prefix}__"
+            candidate_prefixed = prefix + CandidateEstimatorDF.PARAM_CANDIDATE
+
         return [
             {
-                MultiEstimatorParameterSpace.STEP_CANDIDATE: [
-                    candidate.estimator.raw_estimator
-                ],
-                **candidate.get_parameters(
-                    prefix=MultiEstimatorParameterSpace.STEP_CANDIDATE
-                ),
+                candidate_prefixed: [space.estimator],
+                prefix + CandidateEstimatorDF.PARAM_CANDIDATE_NAME: [space.get_name()],
+                **space.get_parameters(prefix=candidate_prefixed),
             }
-            for candidate in self.candidates
+            for space in self.spaces
         ]
 
     def to_expression(self) -> "Expression":
         """[see superclass]"""
         # noinspection PyProtectedMember
-        return Id(type(self))(
-            self.estimator.raw_estimator,
-            [
-                candidate._to_expression(
-                    path_prefix=MultiEstimatorParameterSpace.STEP_CANDIDATE
-                )
-                for candidate in self.candidates
-            ],
-        )
-
-
-@subsdoc(pattern="a competing estimator", replacement="a competing regressor pipeline")
-@inheritdoc(match="""[see superclass]""")
-class MultiRegressorParameterSpace(MultiEstimatorParameterSpace[RegressorPipelineDF]):
-    """[see superclass]"""
-
-    def __init__(
-        self,
-        *candidates: ParameterSpace[RegressorPipelineDF],
-        estimator_type: Type[RegressorPipelineDF] = RegressorPipelineDF,
-    ) -> None:
-        """[see superclass]"""
-        ensure_subclass(estimator_type, RegressorPipelineDF)
-        super().__init__(*candidates, estimator_type=estimator_type)
-
-
-@subsdoc(pattern="a competing estimator", replacement="a competing classifier pipeline")
-@inheritdoc(match="""[see superclass]""")
-class MultiClassifierParameterSpace(MultiEstimatorParameterSpace[ClassifierPipelineDF]):
-    """[see superclass]"""
-
-    def __init__(
-        self,
-        *candidates: ParameterSpace[ClassifierPipelineDF],
-        estimator_type: Type[ClassifierPipelineDF] = ClassifierPipelineDF,
-    ) -> None:
-        """[see superclass]"""
-        ensure_subclass(estimator_type, ClassifierPipelineDF)
-        super().__init__(*candidates, estimator_type=estimator_type)
-
-
-@inheritdoc(match="""[see superclass]""")
-class CandidateEstimatorDF(EstimatorDF, metaclass=ABCMeta):
-    """
-    Wrapper class providing proper unboxing of `estimator` member for
-    :class:`.ParameterSpace` and class:`.MultiEstimatorParameterSpace` classes.
-    """
-
-    def __init__(self, candidate: Optional[EstimatorDF] = None) -> None:
-        """
-        :param candidate: candidate estimator to be wrapped
-        """
-        self.raw_estimator = candidate
-
-    @classmethod
-    def empty(cls) -> "CandidateEstimatorDF":
-        """
-        :return: new instance with an empty candidate
-        """
-        return cls()
-
-    def fit(
-        self: T_Self,
-        X: pd.DataFrame,
-        y: Optional[Union[pd.Series, pd.DataFrame]] = None,
-        **fit_params: Any,
-    ) -> T_Self:
-        """[see superclass]"""
-        self.raw_estimator.fit(X, y, **fit_params)
-        return self
-
-    @property
-    def is_fitted(self) -> bool:
-        """[see superclass]"""
-        return False if self.raw_estimator is None else self.raw_estimator.is_fitted
-
-    def _get_features_in(self) -> pd.Index:
-        return self.raw_estimator._get_features_in()
-
-    def _get_n_outputs(self) -> int:
-        return self.raw_estimator._get_n_outputs()
-
-    def get_params(self, deep: bool = True) -> Mapping[str, Any]:
-        """[see superclass]"""
-        return {
-            "candidate": self.raw_estimator,
-        }
-
-    def set_params(self, **params: Any) -> Any:
-        """[see superclass]"""
-        if "candidate" in params:
-            self.raw_estimator = params["candidate"]
-            del params["candidate"]
-            params = {k[len("candidate__") :]: v for k, v in params.items()}
-        self.raw_estimator.set_params(**params)
-        return self
-
-    def to_expression(self) -> "Expression":
-        """[see superclass]"""
-        return self.raw_estimator.to_expression()
-
-    def __getattr__(self, item):
-        return getattr(self.raw_estimator, item)
+        return Id(type(self))(*self.spaces)
 
 
 __tracker.validate()
@@ -431,7 +342,7 @@ __tracker.validate()
 
 
 def ensure_subclass(
-    estimator_type: Type[T_Estimator], expected_type: Type[T_Estimator]
+    estimator_type: Type[T_Candidate_co], expected_type: Type[T_Candidate_co]
 ) -> None:
     """
     Ensure that the given estimator type is a subclass of the expected estimator type.
@@ -446,27 +357,48 @@ def ensure_subclass(
         )
 
 
-def validate_candidates(
-    candidates: Collection[ParameterSpace[T_Estimator]],
-    expected_estimator_type: Type[T_Estimator],
-) -> None:
+def validate_spaces(spaces: Collection[ParameterSpace[T_Candidate_co]]) -> None:
     """
-    Ensure that all candidates implement a given estimator type.
+    Ensure that all candidates implement the same estimator type (typically regressors
+    or classifiers)
 
-    :param candidates: the candidates to check
-    :param expected_estimator_type: the type that all candidates' estimators must
-        implement
+    :param spaces: the candidates to check
     """
 
-    non_compliant_candidate_estimators: Set[str] = {
-        type(candidate.estimator.raw_estimator).__name__
-        for candidate in candidates
-        if not isinstance(candidate.estimator.raw_estimator, expected_estimator_type)
+    estimator_types = {
+        getattr(space.estimator, "_estimator_type", None) for space in spaces
     }
-    if non_compliant_candidate_estimators:
+
+    if len(estimator_types) > 1:
         raise TypeError(
-            f"all candidate estimators must be instances of "
-            f"{expected_estimator_type.__name__}, "
-            f"but candidate estimators include: "
-            f"{', '.join(non_compliant_candidate_estimators)}"
+            "all candidate estimators must have the same estimator type, "
+            "but got multiple types: " + ", ".join(sorted(estimator_types))
         )
+
+
+def get_default_estimator_name(estimator: EstimatorDF) -> str:
+    """
+    Get a default name of the estimator.
+
+    For meta-estimators, this is the default name of the delegate estimator.
+
+    For pipelines, this is the default name of the final estimator.
+
+    For all other estimators, this is the name of the estimator's type.
+
+    :param estimator: the estimator to get the default name for
+    :return: the default name
+    """
+
+    while True:
+        if isinstance(estimator, CandidateEstimatorDF):
+            estimator = estimator.candidate
+
+        elif isinstance(estimator, PipelineDF) and estimator.steps:
+            estimator = estimator.steps[-1]
+
+        elif isinstance(estimator, LearnerPipelineDF):
+            estimator = estimator.final_estimator
+
+        else:
+            return type(estimator).__name__

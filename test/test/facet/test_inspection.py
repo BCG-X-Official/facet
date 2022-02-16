@@ -28,7 +28,7 @@ from facet.inspection import (
     LearnerInspector,
     TreeExplainerFactory,
 )
-from facet.selection import LearnerRanker
+from facet.selection import ModelSelector
 
 # noinspection PyMissingOrEmptyDocstring
 
@@ -38,7 +38,7 @@ T = TypeVar("T")
 
 
 def test_model_inspection(
-    regressor_ranker: LearnerRanker[RegressorPipelineDF, GridSearchCV],
+    regressor_selector,
     best_lgbm_model: RegressorPipelineDF,
     preprocessed_feature_names,
     regressor_inspector: LearnerInspector,
@@ -48,7 +48,7 @@ def test_model_inspection(
     n_jobs: int,
 ) -> None:
 
-    ranking = regressor_ranker.summary_report()
+    ranking = regressor_selector.summary_report()
 
     # define checksums for this test
     log.debug(f"\n{ranking}")
@@ -56,10 +56,10 @@ def test_model_inspection(
     check_ranking(
         ranking=ranking,
         is_classifier=False,
-        expected_scores=(
+        scores_expected=(
             [0.693, 0.689, 0.677, 0.661, 0.615, 0.615, 0.367, 0.281, 0.281, 0.281]
         ),
-        expected_parameters=None,
+        params_expected=None,
     )
 
     shap_values: pd.DataFrame = regressor_inspector.shap_values()
@@ -100,19 +100,19 @@ def test_model_inspection(
     DendrogramDrawer(style="text").draw(data=linkage_tree, title="Test")
 
 
-def test_binary_classifier_ranking(iris_classifier_ranker_binary) -> None:
+def test_binary_classifier_ranking(iris_classifier_selector_binary) -> None:
 
-    expected_learner_scores = [0.872, 0.868, 0.866, 0.859]
+    expected_learner_scores = [0.938, 0.936, 0.936, 0.929]
 
-    ranking = iris_classifier_ranker_binary.summary_report()
+    ranking = iris_classifier_selector_binary.summary_report()
 
     log.debug(f"\n{ranking}")
 
     check_ranking(
         ranking=ranking,
         is_classifier=True,
-        expected_scores=expected_learner_scores,
-        expected_parameters={
+        scores_expected=expected_learner_scores,
+        params_expected={
             2: dict(min_samples_leaf=4, n_estimators=10),
             3: dict(min_samples_leaf=8, n_estimators=10),
         },
@@ -618,13 +618,13 @@ def test_model_inspection_classifier_interaction(
 
 def test_model_inspection_classifier_interaction_dual_target(
     iris_sample_binary_dual_target: Sample,
-    iris_classifier_ranker_dual_target: LearnerRanker[
+    iris_classifier_selector_dual_target: ModelSelector[
         ClassifierPipelineDF[RandomForestClassifierDF], GridSearchCV
     ],
     iris_target_name,
     n_jobs: int,
 ) -> None:
-    iris_classifier_dual_target = iris_classifier_ranker_dual_target.best_estimator_
+    iris_classifier_dual_target = iris_classifier_selector_dual_target.best_estimator_
 
     with pytest.raises(
         ValueError,

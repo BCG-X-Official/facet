@@ -1,14 +1,15 @@
 import logging
-from typing import Any, List, Mapping, Optional, Sequence, Set, Tuple
+from typing import Any, Dict, List, Mapping, Optional, Sequence, Set, Tuple
 
 import numpy as np
 import pandas as pd
 import pytest
+from numpy.testing import assert_array_almost_equal, assert_array_equal
 from sklearn import datasets
 from sklearn.model_selection import BaseCrossValidator, GridSearchCV, KFold
 from sklearn.utils import Bunch
 
-from sklearndf import LearnerDF, TransformerDF
+from sklearndf import TransformerDF
 from sklearndf.classification import RandomForestClassifierDF
 from sklearndf.pipeline import ClassifierPipelineDF, RegressorPipelineDF
 from sklearndf.regression import (
@@ -29,7 +30,7 @@ from sklearndf.transformation import (
 import facet
 from facet.data import Sample
 from facet.inspection import LearnerInspector, TreeExplainerFactory
-from facet.selection import LearnerRanker, MultiRegressorParameterSpace, ParameterSpace
+from facet.selection import ModelSelector, MultiEstimatorParameterSpace, ParameterSpace
 from facet.validation import BootstrapCV, StratifiedBootstrapCV
 
 logging.basicConfig(level=logging.DEBUG)
@@ -88,7 +89,7 @@ def cv_stratified_bootstrap() -> BaseCrossValidator:
 @pytest.fixture
 def regressor_parameters(
     simple_preprocessor: TransformerDF,
-) -> MultiRegressorParameterSpace:
+) -> MultiEstimatorParameterSpace[RegressorPipelineDF]:
     random_state = {"random_state": 42}
 
     space_1 = ParameterSpace(
@@ -146,7 +147,7 @@ def regressor_parameters(
     )
     space_7.regressor.normalize = [False, True]
 
-    return MultiRegressorParameterSpace(
+    return MultiEstimatorParameterSpace(
         space_1,
         space_2,
         space_3,
@@ -154,19 +155,18 @@ def regressor_parameters(
         space_5,
         space_6,
         space_7,
-        estimator_type=RegressorPipelineDF,
     )
 
 
 @pytest.fixture
-def regressor_ranker(
+def regressor_selector(
     cv_kfold: KFold,
-    regressor_parameters: MultiRegressorParameterSpace,
+    regressor_parameters: MultiEstimatorParameterSpace[RegressorPipelineDF],
     sample: Sample,
     n_jobs: int,
-) -> LearnerRanker[RegressorPipelineDF, GridSearchCV]:
-    return LearnerRanker(
-        searcher_factory=GridSearchCV,
+) -> ModelSelector[RegressorPipelineDF, GridSearchCV]:
+    return ModelSelector(
+        searcher_type=GridSearchCV,
         parameter_space=regressor_parameters,
         cv=cv_kfold,
         scoring="r2",
@@ -174,26 +174,38 @@ def regressor_ranker(
     ).fit(sample=sample)
 
 
+PARAM_CANDIDATE__ = "param_candidate__"
+
+
 @pytest.fixture
 def best_lgbm_model(
-    regressor_ranker: LearnerRanker[RegressorPipelineDF, GridSearchCV],
+    regressor_selector,
     sample: Sample,
 ) -> RegressorPipelineDF:
     # we get the best model_evaluation which is a LGBM - for the sake of test
     # performance
-    candidates = regressor_ranker.summary_report()["param_candidate"]
-    best_lgbm_model_df = candidates[
-        candidates.apply(
-            lambda x: isinstance(x.iloc[0].regressor, LGBMRegressorDF), axis=1
+    # noinspection PyTypeChecker
+    best_lgbm_params: Dict[str, Any] = (
+        pd.DataFrame(regressor_selector.searcher_.cv_results_)
+        .pipe(
+            lambda df: df.loc[df.loc[:, "param_candidate_name"] == "LGBMRegressorDF", :]
         )
-    ].iloc[0]
-
-    best_lgbm_model = best_lgbm_model_df[0]
-    best_lgbm_model.regressor.set_params(
-        **best_lgbm_model_df["regressor"].dropna().to_dict()
+        .pipe(lambda df: df.loc[df.loc[:, "rank_test_score"].idxmin(), "params"])
     )
 
-    return best_lgbm_model.fit(X=sample.features, y=sample.target)
+    len_param_candidate = len(PARAM_CANDIDATE__)
+    return (
+        best_lgbm_params["candidate"]
+        .clone()
+        .set_params(
+            **{
+                param[len_param_candidate:]: value
+                for param, value in best_lgbm_params.items()
+                if param.startswith(PARAM_CANDIDATE__)
+            }
+        )
+        .fit(X=sample.features, y=sample.target)
+    )
 
 
 @pytest.fixture
@@ -319,114 +331,115 @@ def iris_sample_binary_dual_target(
     )
 
 
+COL_PARAM = "param"
+COL_CANDIDATE = "candidate"
+COL_CANDIDATE_NAME = "candidate_name"
+COL_CLASSIFIER = "classifier"
+COL_REGRESSOR = "regressor"
+COL_SCORE = ("score", "test", "mean")
+
+
 def check_ranking(
     ranking: pd.DataFrame,
     is_classifier: bool,
-    expected_scores: Sequence[float],
-    expected_parameters: Optional[Mapping[int, Mapping[str, Any]]],
-    expected_learners: Optional[List[LearnerDF]] = None,
+    scores_expected: Sequence[float],
+    params_expected: Optional[Mapping[int, Mapping[str, Any]]],
+    candidate_names_expected: Optional[Sequence[str]] = None,
 ) -> None:
     """
-    Test helper to check rankings produced by learner rankers
+    Test helper to check rankings produced by learner rankers.
 
     :param ranking: summary data frame
     :param is_classifier: flag if ranking was performed on classifiers, or regressors
-    :param expected_scores: expected ranking scores, rounded to 3 decimal places
-    :param expected_parameters: expected learner parameters
-    :param expected_learners: optional list of expected learners. Should be present
-                              only for multi estimator search.
-    :return: None
+    :param scores_expected: expected ranking scores, rounded to 3 decimal places
+    :param params_expected: expected learner parameters
+    :param candidate_names_expected: optional list of expected learners;
+        only required for multi estimator search
     """
 
-    SCORE_COLUMN = "mean_test_score"
-    CLASSIFIER_STR = "classifier"
-    REGRESSOR_STR = "regressor"
-    PARAM_CANDIDATE_STR = "param_candidate"
+    col_score = COL_SCORE  # + ("-",) * (ranking.columns.nlevels - len(COL_SCORE))
+    scores_actual: pd.Series = ranking.loc[:, col_score].values[: len(scores_expected)]
+    assert_array_almost_equal(
+        scores_actual,
+        scores_expected,
+        decimal=3,
+        err_msg=(
+            f"unexpected scores: " f"got {scores_actual} but expected {scores_expected}"
+        ),
+    )
 
-    def _select_parameters(
-        param_column: str, rank: int, learner_str: Optional[str]
-    ) -> Tuple[dict, Optional[LearnerDF]]:
-        if param_column == PARAM_CANDIDATE_STR:
-            raw_parameters = ranking[param_column][learner_str].iloc[rank].to_dict()
-            return (
-                {k: v for k, v in raw_parameters.items() if v is not np.nan},
-                ranking[param_column].iloc[:, 0].iloc[rank],
-            )
-        else:
-            return ranking[param_column].iloc[rank].to_dict(), None
+    col_learner = COL_CLASSIFIER if is_classifier else COL_REGRESSOR
 
-    for rank, score_expected in enumerate(expected_scores):
-        score_actual = round(ranking[SCORE_COLUMN].iloc[rank], 3)
-        assert score_actual == pytest.approx(score_expected, abs=0.1), (
-            f"unexpected score for learner at rank #{rank + 1}: "
-            f"got {score_actual} but expected {score_expected}"
-        )
-
-    learner_str = CLASSIFIER_STR if is_classifier else REGRESSOR_STR
-    param_column = f"param_{learner_str}"
-    if expected_learners is not None:
-        param_column = PARAM_CANDIDATE_STR
-
-    if expected_parameters is not None:
-        for rank, parameters_expected in expected_parameters.items():
-            parameters_actual, learner_actual = _select_parameters(
-                param_column, rank, learner_str
+    if params_expected is not None:
+        param_columns: pd.DataFrame = ranking.loc[:, (COL_PARAM, col_learner)]
+        for rank, parameters_expected in params_expected.items():
+            parameters_actual: Dict[str, Any] = (
+                param_columns.iloc[rank, :].dropna().to_dict()
             )
             assert parameters_actual == parameters_expected, (
                 f"unexpected parameters for learner at rank #{rank}: "
                 f"got {parameters_actual} but expected {parameters_expected}"
             )
-            if learner_actual is not None:
-                assert isinstance(
-                    getattr(learner_actual, learner_str), expected_learners[rank]
-                )
+
+    if candidate_names_expected:
+        candidates_actual: np.ndarray = ranking.loc[
+            :, (COL_CANDIDATE_NAME, "-", "-")
+        ].values[: len(candidate_names_expected)]
+        assert_array_equal(
+            candidates_actual,
+            candidate_names_expected,
+            (
+                f"unexpected candidate names: got {list(candidates_actual)} "
+                f"but expected {list(candidate_names_expected)}"
+            ),
+        )
 
 
 @pytest.fixture
-def iris_classifier_ranker_binary(
+def iris_classifier_selector_binary(
     iris_sample_binary: Sample,
     cv_stratified_bootstrap: StratifiedBootstrapCV,
     n_jobs: int,
-) -> LearnerRanker[ClassifierPipelineDF[RandomForestClassifierDF], GridSearchCV]:
-    return fit_classifier_ranker(
+) -> ModelSelector[ClassifierPipelineDF[RandomForestClassifierDF], GridSearchCV]:
+    return fit_classifier_selector(
         sample=iris_sample_binary, cv=cv_stratified_bootstrap, n_jobs=n_jobs
     )
 
 
 @pytest.fixture
-def iris_classifier_ranker_multi_class(
+def iris_classifier_selector_multi_class(
     iris_sample_multi_class: Sample,
     cv_stratified_bootstrap: StratifiedBootstrapCV,
     n_jobs: int,
-) -> LearnerRanker[ClassifierPipelineDF[RandomForestClassifierDF], GridSearchCV]:
-    return fit_classifier_ranker(
+) -> ModelSelector[ClassifierPipelineDF[RandomForestClassifierDF], GridSearchCV]:
+    return fit_classifier_selector(
         sample=iris_sample_multi_class, cv=cv_stratified_bootstrap, n_jobs=n_jobs
     )
 
 
 @pytest.fixture
-def iris_classifier_ranker_dual_target(
+def iris_classifier_selector_dual_target(
     iris_sample_binary_dual_target: Sample, cv_bootstrap: BootstrapCV, n_jobs: int
-) -> LearnerRanker[ClassifierPipelineDF[RandomForestClassifierDF], GridSearchCV]:
-    return fit_classifier_ranker(
+) -> ModelSelector[ClassifierPipelineDF[RandomForestClassifierDF], GridSearchCV]:
+    return fit_classifier_selector(
         sample=iris_sample_binary_dual_target, cv=cv_bootstrap, n_jobs=n_jobs
     )
 
 
 @pytest.fixture
 def iris_classifier_binary(
-    iris_classifier_ranker_binary: LearnerRanker[ClassifierPipelineDF, GridSearchCV],
+    iris_classifier_selector_binary: ModelSelector[ClassifierPipelineDF, GridSearchCV],
 ) -> ClassifierPipelineDF[RandomForestClassifierDF]:
-    return iris_classifier_ranker_binary.best_estimator_
+    return iris_classifier_selector_binary.best_estimator_
 
 
 @pytest.fixture
 def iris_classifier_multi_class(
-    iris_classifier_ranker_multi_class: LearnerRanker[
+    iris_classifier_selector_multi_class: ModelSelector[
         ClassifierPipelineDF, GridSearchCV
     ],
 ) -> ClassifierPipelineDF[RandomForestClassifierDF]:
-    return iris_classifier_ranker_multi_class.best_estimator_
+    return iris_classifier_selector_multi_class.best_estimator_
 
 
 @pytest.fixture
@@ -445,9 +458,9 @@ def iris_inspector_multi_class(
 #
 
 
-def fit_classifier_ranker(
+def fit_classifier_selector(
     sample: Sample, cv: BaseCrossValidator, n_jobs: int
-) -> LearnerRanker[ClassifierPipelineDF[RandomForestClassifierDF], GridSearchCV]:
+) -> ModelSelector[ClassifierPipelineDF[RandomForestClassifierDF], GridSearchCV]:
     # define the parameter space
     parameter_space = ParameterSpace(
         ClassifierPipelineDF(
@@ -460,8 +473,8 @@ def fit_classifier_ranker(
 
     # pipeline inspector only supports binary classification,
     # therefore filter the sample down to only 2 target classes
-    return LearnerRanker(
-        searcher_factory=GridSearchCV,
+    return ModelSelector(
+        searcher_type=GridSearchCV,
         parameter_space=parameter_space,
         cv=cv,
         scoring="f1_macro",
