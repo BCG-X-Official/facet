@@ -34,8 +34,10 @@ FACET 2.0
 ``facet.selection``
 ^^^^^^^^^^^^^^^^^^^
 
-- API: :class:`.ModelSelector` completely rewritten to work with native *scikit-learn*
-  searchers such as :class:`.GridSearchCV` or :class:`.RandomizedSearchCV`
+- API: :class:`.ModelSelector` replaces FACET 1 class ``LearnerRanker``, and now
+  supports any CV searcher that supports `scikit-learn`'s CV search API, including
+  `scikit-learn`'s native searchers such as :class:`.GridSearchCV` or
+  :class:`.RandomizedSearchCV`
 - API: new classes :class:`.ParameterSpace` and :class:`MultiParameterSpace` offer an
   a more convenient and robust mechanism for declaring options or distributions for
   hyperparameter tuning
