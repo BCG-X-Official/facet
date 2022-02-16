@@ -79,8 +79,8 @@ class ParameterSpace(BaseParameterSpace[T_Candidate_co], Generic[T_Candidate_co]
     :class:`~sklearn.model_selection.GridSearchCV` and
     :class:`~sklearn.model_selection.RandomizedSearchCV`.
 
-    Parameter choices or distributions to be searched can be set using attribute access,
-    and will be validated for correct names and values.
+    Parameter choices (as lists) or distributions (from :mod:`scipy.stats`) can be
+    set using attribute access, and will be validated for correct names and values.
 
     Example:
 
@@ -141,11 +141,12 @@ distribution:
         """
         Get the name for this parameter space.
 
-        If no name was passed to the constructor, determine the default name as follows:
+        If no name was passed to the constructor, determine the `default name`
+        recursively as follows:
 
-            - for meta-estimators, this is the default name of the delegate estimator
-            - for pipelines, this is the default name of the final estimator
-            - for all other estimators, this is the name of the estimator's type
+        - for meta-estimators, this is the `default name` of the delegate estimator
+        - for pipelines, this is the `default name` of the final estimator
+        - for all other estimators, this is the name of the estimator's type
 
         :return: the name for this parameter space
         """
@@ -277,11 +278,13 @@ class MultiEstimatorParameterSpace(
 ):
     """
     A collection of parameter spaces, each representing a competing estimator from which
-    select the best-performing candidate with optimal hyper-parameters.
+    to select the best-performing candidate with optimal hyper-parameters.
 
-    See :class:`.ParameterSpace` for documentation on how to set up and use parameter
-    spaces.
+    See :class:`.ParameterSpace` for details on setting up and using parameter spaces.
     """
+
+    #: The parameter spaces constituting this multi-estimator parameter space.
+    spaces: Tuple[ParameterSpace[T_Candidate_co], ...]
 
     def __init__(self, *spaces: ParameterSpace[T_Candidate_co]) -> None:
         """

@@ -79,13 +79,9 @@ class ModelSelector(
 ):
     """
     Select the best model obtained by fitting an estimator using different
-    choices of hyper-parameters and/or estimator types from a
-    :class:`.ParameterSpace` or :class:`.MultiEstimatorParameterSpace`, and using
-    a given scoring metric to evaluate the performance of all resulting models.
-
-    The learner ranker can run a simultaneous search across multiple alternative
-    estimators, supporting the ability to simultaneously select a learner
-    algorithm and optimize hyper-parameters.
+    choices of hyper-parameters from a :class:`.ParameterSpace`, or even
+    simultaneously evaluating multiple competing estimators from a
+    :class:`.MultiEstimatorParameterSpace`.
     """
 
     #: A cross-validation searcher class, or any other callable
@@ -260,8 +256,9 @@ class ModelSelector(
         **fit_params: Any,
     ) -> T_ModelSelector:
         """
-        Identify the model with the best-performing hyper-parameter combination using
-        the given sample.
+        Search this model selector's parameter space to identify the model with the
+        best-performing hyper-parameter combination, using the given sample to fit and
+        score the candidate estimators.
 
         :param sample: the sample used to fit and score the estimators
         :param groups: group labels for the samples used while splitting the dataset

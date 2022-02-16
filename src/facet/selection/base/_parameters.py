@@ -74,7 +74,8 @@ class BaseParameterSpace(HasExpressionRepr, Generic[T_Estimator], metaclass=ABCM
     @property
     def parameters(self) -> Union[List[ParameterDict], ParameterDict]:
         """
-        The parameter choices and distributions that constitute this parameter space.
+        The parameter choices (as lists) or distributions (from :mod:`scipy.stats`)
+        that constitute this parameter space.
 
         This is a shortcut for calling method :meth:`.get_parameters` with no
         arguments.
@@ -87,15 +88,15 @@ class BaseParameterSpace(HasExpressionRepr, Generic[T_Estimator], metaclass=ABCM
     ) -> Union[List[ParameterDict], ParameterDict]:
         """
         Generate a dictionary of parameter choices and distributions,
-        or a list of such dictionaries, compatible with `scikit-learn`'s
-        :class:`~sklearn.model_selection.GridSearchCV` and
-        :class:`~sklearn.model_selection.RandomizedSearchCV`.
+        or a list of such dictionaries, compatible with `scikit-learn`'s CV search API
+        (e.g., :class:`~sklearn.model_selection.GridSearchCV` or
+        :class:`~sklearn.model_selection.RandomizedSearchCV`).
 
         :param prefix: an optional prefix to prepend to all parameter names in the
-            resulting dictionary, separated by two underscore characters (`__`) as
-            per scikit-learn's convention for hierarchical parameter names
+            resulting dictionary, separated by two underscore characters (``__``) as
+            per `scikit-learn`'s convention for hierarchical parameter names
         :return: a dictionary mapping parameter names to parameter
-            distributions
+            choices (as lists) or distributions (from :mod:`scipy.stats`)
         """
         pass
 
