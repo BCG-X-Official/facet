@@ -92,11 +92,11 @@ ipython        = "~=7.0"
 
 [build.matrix.max]
 # direct requirements of gamma-facet
-gamma-pytools  = "~=1.1.4"
+gamma-pytools  = "~=1.1.5"
 matplotlib     = "~=3.3"
 numpy          = ">=1.22,<2a"
 packaging      = "~=20.9"
-pandas         = "~=1.2"
+pandas         = "~=1.4"
 python         = "~=3.8"
 scipy          = "~=1.5.3"
 shap           = "~=0.39.0"
