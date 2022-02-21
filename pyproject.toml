@@ -23,8 +23,6 @@ requires = [
     "scipy          ~=1.2",
     "shap           >=0.34,<0.40a",
     "sklearndf      ~=1.1.0",
-    # additional requirements of shap 0.38
-    "ipython        >=7",
 ]
 
 requires-python = ">=3.6,<4a"
