@@ -1,0 +1,444 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>facet.simulation.UnivariateSimulationResult &#8212; facet  documentation</title>
+    
+  <link rel="stylesheet" href="../../../_static/css/index.f658d18f9b420779cfdf24aa0a7e2d77.css">
+
+    
+  <link rel="stylesheet"
+    href="../../../_static/vendor/fontawesome/5.13.0/css/all.min.css">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../../../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../../../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+
+    
+      
+  <link rel="stylesheet"
+    href="../../../_static/vendor/open-sans_all/1.44.1/index.css">
+  <link rel="stylesheet"
+    href="../../../_static/vendor/lato_latin-ext/1.44.1/index.css">
+
+    
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/basic.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/css/gamma.css" />
+    
+  <link rel="preload" as="script" href="../../../_static/js/index.d3f166471bb80abb5163.js">
+
+    <script id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+    <script src="../../../_static/jquery.js"></script>
+    <script src="../../../_static/underscore.js"></script>
+    <script src="../../../_static/doctools.js"></script>
+    <script src="../../../_static/js/gamma.js"></script>
+    <script src="../../../_static/js/versions.js"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "document", "processClass": "math|output_area"}})</script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="facet.simulation.UnivariateTargetSimulator" href="facet.simulation.UnivariateTargetSimulator.html" />
+    <link rel="prev" title="facet.simulation.UnivariateProbabilitySimulator" href="facet.simulation.UnivariateProbabilitySimulator.html" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="docsearch:language" content="en" />
+  </head>
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
+    
+    <nav class="navbar navbar-light navbar-expand-lg bg-light fixed-top bd-navbar" id="navbar-main">
+<div class="container-xl">
+
+    <a class="navbar-brand" href="../../../index.html">
+    
+      <img src="../../../_static/Gamma_Facet_Logo_RGB_LB.svg" class="logo" alt="logo" />
+    
+    </a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar-menu" aria-controls="navbar-menu" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div id="navbar-menu" class="col-lg-9 collapse navbar-collapse">
+      <ul id="navbar-main-elements" class="navbar-nav mr-auto">
+        
+        
+        <li class="nav-item ">
+            <a class="nav-link" href="../../../getting_started/getting_started.html">Getting started</a>
+        </li>
+        
+        <li class="nav-item active">
+            <a class="nav-link" href="../../facet.html">API reference</a>
+        </li>
+        
+        <li class="nav-item ">
+            <a class="nav-link" href="../../../tutorials.html">Tutorials</a>
+        </li>
+        
+        <li class="nav-item ">
+            <a class="nav-link" href="../../../contribution_guide.html">Development Guidelines</a>
+        </li>
+        
+        <li class="nav-item ">
+            <a class="nav-link" href="../../../faqs.html">FAQ</a>
+        </li>
+        
+        <li class="nav-item ">
+            <a class="nav-link" href="../../../about_us.html">About us</a>
+        </li>
+        
+        <li class="nav-item ">
+            <a class="nav-link" href="../../../release_notes.html">Release Notes</a>
+        </li>
+        
+        
+      </ul>
+
+
+      
+
+      <ul class="navbar-nav">
+        
+        
+      </ul>
+    </div>
+</div>
+    </nav>
+    
+
+    <div class="container-xl">
+      <div class="row">
+          
+          <div class="col-12 col-md-3 bd-sidebar"><form class="bd-search d-flex align-items-center" action="../../../search.html" method="get">
+  <i class="icon fas fa-search"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
+</form>
+<nav class="bd-links" id="bd-docs-nav" aria-label="Main navigation">
+
+    <div class="bd-toc-item active">
+    
+  
+    <ul class="nav bd-sidenav">
+        
+        
+        
+        
+          
+            
+                <li class="">
+                    <a href="../facet.crossfit.html">facet.crossfit</a>
+                </li>
+            
+          
+            
+                <li class="">
+                    <a href="../facet.data.html">facet.data</a>
+                </li>
+            
+          
+            
+                <li class="">
+                    <a href="../facet.inspection.html">facet.inspection</a>
+                </li>
+            
+          
+            
+                <li class="">
+                    <a href="../facet.selection.html">facet.selection</a>
+                </li>
+            
+          
+            
+  
+                <li class="active">
+                    <a href="../facet.simulation.html">facet.simulation</a>
+                    <ul>
+                    
+                        <li class="">
+                            <a href="facet.simulation.BaseUnivariateSimulator.html">facet.simulation.BaseUnivariateSimulator</a>
+                        </li>
+                    
+                        <li class="">
+                            <a href="facet.simulation.UnivariateProbabilitySimulator.html">facet.simulation.UnivariateProbabilitySimulator</a>
+                        </li>
+                    
+                        <li class="active">
+                            <a href="">facet.simulation.UnivariateSimulationResult</a>
+                        </li>
+                    
+                        <li class="">
+                            <a href="facet.simulation.UnivariateTargetSimulator.html">facet.simulation.UnivariateTargetSimulator</a>
+                        </li>
+                    
+                        <li class="">
+                            <a href="facet.simulation.UnivariateUpliftSimulator.html">facet.simulation.UnivariateUpliftSimulator</a>
+                        </li>
+                    
+                        <li class="">
+                            <a href="facet.simulation.partition.html">facet.simulation.partition</a>
+                        </li>
+                    
+                        <li class="">
+                            <a href="facet.simulation.viz.html">facet.simulation.viz</a>
+                        </li>
+                    
+                    </ul>
+                </li>
+            
+          
+            
+                <li class="">
+                    <a href="../facet.validation.html">facet.validation</a>
+                </li>
+            
+          
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+      </ul>
+  
+  </nav>
+          </div>
+          
+
+          
+          <div class="d-none d-xl-block col-xl-2 bd-toc">
+              
+
+<nav id="bd-toc-nav">
+    <ul class="nav section-nav flex-column">
+    
+    </ul>
+</nav>
+
+
+              
+          </div>
+          
+
+          
+          <main class="col-12 col-md-9 col-xl-7 py-md-5 pl-md-5 pr-md-4 bd-content" role="main">
+              
+              <div>
+                
+  <div class="section" id="facet-simulation-univariatesimulationresult">
+<h1>facet.simulation.UnivariateSimulationResult<a class="headerlink" href="#facet-simulation-univariatesimulationresult" title="Permalink to this headline">¶</a></h1>
+<dl class="py class">
+<dt id="facet.simulation.UnivariateSimulationResult">
+<em class="property">class </em><code class="sig-prename descclassname">facet.simulation.</code><code class="sig-name descname">UnivariateSimulationResult</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span></em>, <em class="sig-param"><span class="n">feature_name</span></em>, <em class="sig-param"><span class="n">output_name</span></em>, <em class="sig-param"><span class="n">output_unit</span></em>, <em class="sig-param"><span class="n">baseline</span></em>, <em class="sig-param"><span class="n">confidence_level</span></em>, <em class="sig-param"><span class="n">partitioner</span></em>, <em class="sig-param"><span class="n">outputs</span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/facet/simulation/_simulation.html#UnivariateSimulationResult"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#facet.simulation.UnivariateSimulationResult" title="Permalink to this definition">¶</a></dt>
+<dd><p>Summary result of a univariate simulation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Generic types</dt>
+<dd class="field-odd"><p>~T_Partition</p>
+</dd>
+<dt class="field-even">Parameters</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>feature_name</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>) – name of the simulated feature</p></li>
+<li><p><strong>output_name</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>) – name of the target for which outputs are simulated</p></li>
+<li><p><strong>output_unit</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>) – the unit of the simulated outputs
+(e.g., uplift or class probability)</p></li>
+<li><p><strong>baseline</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/functions.html#float" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a>) – the average observed actual output, acting as the baseline
+of the simulation</p></li>
+<li><p><strong>confidence_level</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/functions.html#float" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a>) – the width of the confidence interval determined by
+bootstrapping, ranging between 0.0 and 1.0 (exclusive)</p></li>
+<li><p><strong>partitioner</strong> (<a class="reference internal" href="../data/partition/facet.data.partition.Partitioner.html#facet.data.partition.Partitioner" title="facet.data.partition.Partitioner"><code class="xref py py-class docutils literal notranslate"><span class="pre">Partitioner</span></code></a>) – the partitioner used to generate feature values to be
+simulated</p></li>
+<li><p><strong>outputs</strong> (<a class="reference external" href="https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v1.4.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></a>) – matrix of simulated outcomes, with columns representing
+partitions and rows representing bootstrap splits used to fit variations
+of the model</p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Method summary</p>
+<table class="longtable table autosummary">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#facet.simulation.UnivariateSimulationResult.outputs_lower_bound" title="facet.simulation.UnivariateSimulationResult.outputs_lower_bound"><code class="xref py py-obj docutils literal notranslate"><span class="pre">outputs_lower_bound</span></code></a></p></td>
+<td><p>Calculate the lower CI bounds of the distribution of simulation outcomes, for every partition.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#facet.simulation.UnivariateSimulationResult.outputs_median" title="facet.simulation.UnivariateSimulationResult.outputs_median"><code class="xref py py-obj docutils literal notranslate"><span class="pre">outputs_median</span></code></a></p></td>
+<td><p>Calculate the medians of the distribution of simulation outcomes, for every partition.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#facet.simulation.UnivariateSimulationResult.outputs_upper_bound" title="facet.simulation.UnivariateSimulationResult.outputs_upper_bound"><code class="xref py py-obj docutils literal notranslate"><span class="pre">outputs_upper_bound</span></code></a></p></td>
+<td><p>Calculate the lower CI bounds of the distribution of simulation outcomes, for every partition.</p></td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Attribute summary</p>
+<table class="longtable table autosummary">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#facet.simulation.UnivariateSimulationResult.COL_LOWER_BOUND" title="facet.simulation.UnivariateSimulationResult.COL_LOWER_BOUND"><code class="xref py py-obj docutils literal notranslate"><span class="pre">COL_LOWER_BOUND</span></code></a></p></td>
+<td><p>The name of a series of lower CI bounds of simulated values per partition.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#facet.simulation.UnivariateSimulationResult.COL_MEDIAN" title="facet.simulation.UnivariateSimulationResult.COL_MEDIAN"><code class="xref py py-obj docutils literal notranslate"><span class="pre">COL_MEDIAN</span></code></a></p></td>
+<td><p>The name of a series of median simulated values per partition.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#facet.simulation.UnivariateSimulationResult.COL_UPPER_BOUND" title="facet.simulation.UnivariateSimulationResult.COL_UPPER_BOUND"><code class="xref py py-obj docutils literal notranslate"><span class="pre">COL_UPPER_BOUND</span></code></a></p></td>
+<td><p>The name of a series of upper CI bounds of simulated values per partition.</p></td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Definitions</p>
+<dl class="py method">
+<dt id="facet.simulation.UnivariateSimulationResult.outputs_lower_bound">
+<code class="sig-name descname">outputs_lower_bound</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/facet/simulation/_simulation.html#UnivariateSimulationResult.outputs_lower_bound"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#facet.simulation.UnivariateSimulationResult.outputs_lower_bound" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate the lower CI bounds of the distribution of simulation outcomes,
+for every partition.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Series.html#pandas.Series" title="(in pandas v1.4.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Series</span></code></a></p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>a series of medians, indexed by the central values of the partitions
+for which the simulation was run</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="facet.simulation.UnivariateSimulationResult.outputs_median">
+<code class="sig-name descname">outputs_median</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/facet/simulation/_simulation.html#UnivariateSimulationResult.outputs_median"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#facet.simulation.UnivariateSimulationResult.outputs_median" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate the medians of the distribution of simulation outcomes,
+for every partition.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Series.html#pandas.Series" title="(in pandas v1.4.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Series</span></code></a></p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>a series of medians, indexed by the central values of the partitions
+for which the simulation was run</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="facet.simulation.UnivariateSimulationResult.outputs_upper_bound">
+<code class="sig-name descname">outputs_upper_bound</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/facet/simulation/_simulation.html#UnivariateSimulationResult.outputs_upper_bound"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#facet.simulation.UnivariateSimulationResult.outputs_upper_bound" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate the lower CI bounds of the distribution of simulation outcomes,
+for every partition.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Series.html#pandas.Series" title="(in pandas v1.4.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Series</span></code></a></p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>a series of medians, indexed by the central values of the partitions
+for which the simulation was run</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="facet.simulation.UnivariateSimulationResult.COL_LOWER_BOUND">
+<code class="sig-name descname">COL_LOWER_BOUND</code><em class="property"> = 'lower_bound'</em><a class="headerlink" href="#facet.simulation.UnivariateSimulationResult.COL_LOWER_BOUND" title="Permalink to this definition">¶</a></dt>
+<dd><p>The name of a series of lower CI bounds of simulated values per partition.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="facet.simulation.UnivariateSimulationResult.COL_MEDIAN">
+<code class="sig-name descname">COL_MEDIAN</code><em class="property"> = 'median'</em><a class="headerlink" href="#facet.simulation.UnivariateSimulationResult.COL_MEDIAN" title="Permalink to this definition">¶</a></dt>
+<dd><p>The name of a series of median simulated values per partition.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="facet.simulation.UnivariateSimulationResult.COL_UPPER_BOUND">
+<code class="sig-name descname">COL_UPPER_BOUND</code><em class="property"> = 'upper_bound'</em><a class="headerlink" href="#facet.simulation.UnivariateSimulationResult.COL_UPPER_BOUND" title="Permalink to this definition">¶</a></dt>
+<dd><p>The name of a series of upper CI bounds of simulated values per partition.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="facet.simulation.UnivariateSimulationResult.baseline">
+<code class="sig-name descname">baseline</code><em class="property">: <a class="reference external" href="https://docs.python.org/3.6/library/functions.html#float" title="(in Python v3.6)">float</a></em><a class="headerlink" href="#facet.simulation.UnivariateSimulationResult.baseline" title="Permalink to this definition">¶</a></dt>
+<dd><p>The average observed actual output, acting as the baseline of the simulation.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="facet.simulation.UnivariateSimulationResult.confidence_level">
+<code class="sig-name descname">confidence_level</code><em class="property">: <a class="reference external" href="https://docs.python.org/3.6/library/functions.html#float" title="(in Python v3.6)">float</a></em><a class="headerlink" href="#facet.simulation.UnivariateSimulationResult.confidence_level" title="Permalink to this definition">¶</a></dt>
+<dd><p>The width <span class="math notranslate nohighlight">\(\alpha\)</span> of the confidence interval
+determined by bootstrapping, with <span class="math notranslate nohighlight">\(0 &lt; \alpha &lt; 1\)</span>.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="facet.simulation.UnivariateSimulationResult.feature_name">
+<code class="sig-name descname">feature_name</code><em class="property">: <a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)">str</a></em><a class="headerlink" href="#facet.simulation.UnivariateSimulationResult.feature_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Name of the simulated feature.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="facet.simulation.UnivariateSimulationResult.output_name">
+<code class="sig-name descname">output_name</code><em class="property">: <a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)">str</a></em><a class="headerlink" href="#facet.simulation.UnivariateSimulationResult.output_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Name of the target for which outputs are simulated.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="facet.simulation.UnivariateSimulationResult.output_unit">
+<code class="sig-name descname">output_unit</code><em class="property">: <a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)">str</a></em><a class="headerlink" href="#facet.simulation.UnivariateSimulationResult.output_unit" title="Permalink to this definition">¶</a></dt>
+<dd><p>The unit of the simulated outputs (e.g., uplift or class probability).</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="facet.simulation.UnivariateSimulationResult.outputs">
+<code class="sig-name descname">outputs</code><em class="property">: <a class="reference external" href="https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v1.4.1)">pandas.core.frame.DataFrame</a></em><a class="headerlink" href="#facet.simulation.UnivariateSimulationResult.outputs" title="Permalink to this definition">¶</a></dt>
+<dd><p>The matrix of simulated outcomes, with columns representing partitions
+and rows representing bootstrap splits used to fit variations of the model.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="facet.simulation.UnivariateSimulationResult.partitioner">
+<code class="sig-name descname">partitioner</code><em class="property">: facet.data.partition._partition.Partitioner</em><a class="headerlink" href="#facet.simulation.UnivariateSimulationResult.partitioner" title="Permalink to this definition">¶</a></dt>
+<dd><p>The partitioner used to generate feature values to be simulated.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+              </div>
+              
+              
+              <div class='prev-next-bottom'>
+                
+    <a class='left-prev' id="prev-link" href="facet.simulation.UnivariateProbabilitySimulator.html" title="previous page">facet.simulation.UnivariateProbabilitySimulator</a>
+    <a class='right-next' id="next-link" href="facet.simulation.UnivariateTargetSimulator.html" title="next page">facet.simulation.UnivariateTargetSimulator</a>
+
+              </div>
+              
+          </main>
+          
+
+      </div>
+    </div>
+
+    
+  <script src="../../../_static/js/index.d3f166471bb80abb5163.js"></script>
+
+
+    <footer class="footer mt-5 mt-md-0">
+  <div class="container">
+    <p>
+          &copy; Copyright 2021, Boston Consulting Group (BCG).<br/>
+        Created using <a href="http://sphinx-doc.org/">Sphinx</a> 3.4.3.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>

@@ -1,0 +1,496 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>facet.simulation.partition.IntegerRangePartitioner &#8212; facet  documentation</title>
+    
+  <link rel="stylesheet" href="../../../../_static/css/index.f658d18f9b420779cfdf24aa0a7e2d77.css">
+
+    
+  <link rel="stylesheet"
+    href="../../../../_static/vendor/fontawesome/5.13.0/css/all.min.css">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../../../../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../../../../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+
+    
+      
+  <link rel="stylesheet"
+    href="../../../../_static/vendor/open-sans_all/1.44.1/index.css">
+  <link rel="stylesheet"
+    href="../../../../_static/vendor/lato_latin-ext/1.44.1/index.css">
+
+    
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/basic.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/css/gamma.css" />
+    
+  <link rel="preload" as="script" href="../../../../_static/js/index.d3f166471bb80abb5163.js">
+
+    <script id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+    <script src="../../../../_static/jquery.js"></script>
+    <script src="../../../../_static/underscore.js"></script>
+    <script src="../../../../_static/doctools.js"></script>
+    <script src="../../../../_static/js/gamma.js"></script>
+    <script src="../../../../_static/js/versions.js"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "document", "processClass": "math|output_area"}})</script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+    <link rel="next" title="facet.simulation.partition.Partitioner" href="facet.simulation.partition.Partitioner.html" />
+    <link rel="prev" title="facet.simulation.partition.ContinuousRangePartitioner" href="facet.simulation.partition.ContinuousRangePartitioner.html" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="docsearch:language" content="en" />
+  </head>
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
+    
+    <nav class="navbar navbar-light navbar-expand-lg bg-light fixed-top bd-navbar" id="navbar-main">
+<div class="container-xl">
+
+    <a class="navbar-brand" href="../../../../index.html">
+    
+      <img src="../../../../_static/Gamma_Facet_Logo_RGB_LB.svg" class="logo" alt="logo" />
+    
+    </a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar-menu" aria-controls="navbar-menu" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div id="navbar-menu" class="col-lg-9 collapse navbar-collapse">
+      <ul id="navbar-main-elements" class="navbar-nav mr-auto">
+        
+        
+        <li class="nav-item ">
+            <a class="nav-link" href="../../../../getting_started/getting_started.html">Getting started</a>
+        </li>
+        
+        <li class="nav-item active">
+            <a class="nav-link" href="../../../facet.html">API reference</a>
+        </li>
+        
+        <li class="nav-item ">
+            <a class="nav-link" href="../../../../tutorials.html">Tutorials</a>
+        </li>
+        
+        <li class="nav-item ">
+            <a class="nav-link" href="../../../../contribution_guide.html">Development Guidelines</a>
+        </li>
+        
+        <li class="nav-item ">
+            <a class="nav-link" href="../../../../faqs.html">FAQ</a>
+        </li>
+        
+        <li class="nav-item ">
+            <a class="nav-link" href="../../../../about_us.html">About us</a>
+        </li>
+        
+        <li class="nav-item ">
+            <a class="nav-link" href="../../../../release_notes.html">Release Notes</a>
+        </li>
+        
+        
+      </ul>
+
+
+      
+
+      <ul class="navbar-nav">
+        
+        
+      </ul>
+    </div>
+</div>
+    </nav>
+    
+
+    <div class="container-xl">
+      <div class="row">
+          
+          <div class="col-12 col-md-3 bd-sidebar"><form class="bd-search d-flex align-items-center" action="../../../../search.html" method="get">
+  <i class="icon fas fa-search"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
+</form>
+<nav class="bd-links" id="bd-docs-nav" aria-label="Main navigation">
+
+    <div class="bd-toc-item active">
+    
+  
+    <ul class="nav bd-sidenav">
+        
+        
+        
+        
+          
+            
+                <li class="">
+                    <a href="../../facet.crossfit.html">facet.crossfit</a>
+                </li>
+            
+          
+            
+                <li class="">
+                    <a href="../../facet.data.html">facet.data</a>
+                </li>
+            
+          
+            
+                <li class="">
+                    <a href="../../facet.inspection.html">facet.inspection</a>
+                </li>
+            
+          
+            
+                <li class="">
+                    <a href="../../facet.selection.html">facet.selection</a>
+                </li>
+            
+          
+            
+  
+                <li class="active">
+                    <a href="../../facet.simulation.html">facet.simulation</a>
+                    <ul>
+                    
+                        <li class="">
+                            <a href="../facet.simulation.BaseUnivariateSimulator.html">facet.simulation.BaseUnivariateSimulator</a>
+                        </li>
+                    
+                        <li class="">
+                            <a href="../facet.simulation.UnivariateProbabilitySimulator.html">facet.simulation.UnivariateProbabilitySimulator</a>
+                        </li>
+                    
+                        <li class="">
+                            <a href="../facet.simulation.UnivariateSimulationResult.html">facet.simulation.UnivariateSimulationResult</a>
+                        </li>
+                    
+                        <li class="">
+                            <a href="../facet.simulation.UnivariateTargetSimulator.html">facet.simulation.UnivariateTargetSimulator</a>
+                        </li>
+                    
+                        <li class="">
+                            <a href="../facet.simulation.UnivariateUpliftSimulator.html">facet.simulation.UnivariateUpliftSimulator</a>
+                        </li>
+                    
+                        <li class="active">
+                            <a href="../facet.simulation.partition.html">facet.simulation.partition</a>
+                        </li>
+                    
+                        <li class="">
+                            <a href="../facet.simulation.viz.html">facet.simulation.viz</a>
+                        </li>
+                    
+                    </ul>
+                </li>
+            
+          
+            
+                <li class="">
+                    <a href="../../facet.validation.html">facet.validation</a>
+                </li>
+            
+          
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+      </ul>
+  
+  </nav>
+          </div>
+          
+
+          
+          <div class="d-none d-xl-block col-xl-2 bd-toc">
+              
+
+<nav id="bd-toc-nav">
+    <ul class="nav section-nav flex-column">
+    
+    </ul>
+</nav>
+
+
+              
+          </div>
+          
+
+          
+          <main class="col-12 col-md-9 col-xl-7 py-md-5 pl-md-5 pr-md-4 bd-content" role="main">
+              
+              <div>
+                
+  <div class="section" id="facet-simulation-partition-integerrangepartitioner">
+<h1>facet.simulation.partition.IntegerRangePartitioner<a class="headerlink" href="#facet-simulation-partition-integerrangepartitioner" title="Permalink to this headline">¶</a></h1>
+<dl class="py class">
+<dt id="facet.simulation.partition.IntegerRangePartitioner">
+<em class="property">class </em><code class="sig-prename descclassname">facet.simulation.partition.</code><code class="sig-name descname">IntegerRangePartitioner</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">max_partitions</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">lower_bound</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">upper_bound</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/facet/data/partition/_partition.html#IntegerRangePartitioner"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#facet.simulation.partition.IntegerRangePartitioner" title="Permalink to this definition">¶</a></dt>
+<dd><p>Partition integer values in adjacent intervals of the same length.</p>
+<p>The range of intervals and interval size is computed based on attributes
+<a class="reference internal" href="#facet.simulation.partition.IntegerRangePartitioner.max_partitions" title="facet.simulation.partition.IntegerRangePartitioner.max_partitions"><code class="xref py py-attr docutils literal notranslate"><span class="pre">max_partitions</span></code></a>, <a class="reference internal" href="#facet.simulation.partition.IntegerRangePartitioner.lower_bound" title="facet.simulation.partition.IntegerRangePartitioner.lower_bound"><code class="xref py py-attr docutils literal notranslate"><span class="pre">lower_bound</span></code></a>, and <a class="reference internal" href="#facet.simulation.partition.IntegerRangePartitioner.upper_bound" title="facet.simulation.partition.IntegerRangePartitioner.upper_bound"><code class="xref py py-attr docutils literal notranslate"><span class="pre">upper_bound</span></code></a>.</p>
+<p>Partition boundaries and interval sized are chosen with interpretability in mind and
+are always an integer and a power of 10, or a multiple of 2 or 5 of a power of 10,
+e.g. 1, 2, 5, 10, 20, 50, and so on.</p>
+<p>The intervals also satisfy the following conditions:</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#facet.simulation.partition.IntegerRangePartitioner.lower_bound" title="facet.simulation.partition.IntegerRangePartitioner.lower_bound"><code class="xref py py-attr docutils literal notranslate"><span class="pre">lower_bound</span></code></a> is within the first interval</p></li>
+<li><p><a class="reference internal" href="#facet.simulation.partition.IntegerRangePartitioner.upper_bound" title="facet.simulation.partition.IntegerRangePartitioner.upper_bound"><code class="xref py py-attr docutils literal notranslate"><span class="pre">upper_bound</span></code></a> is within the last interval</p></li>
+</ul>
+<p>For example, with <a class="reference internal" href="#facet.simulation.partition.IntegerRangePartitioner.max_partitions" title="facet.simulation.partition.IntegerRangePartitioner.max_partitions"><code class="xref py py-attr docutils literal notranslate"><span class="pre">max_partitions</span></code></a> = 5, <a class="reference internal" href="#facet.simulation.partition.IntegerRangePartitioner.lower_bound" title="facet.simulation.partition.IntegerRangePartitioner.lower_bound"><code class="xref py py-attr docutils literal notranslate"><span class="pre">lower_bound</span></code></a> = 3, and
+<a class="reference internal" href="#facet.simulation.partition.IntegerRangePartitioner.upper_bound" title="facet.simulation.partition.IntegerRangePartitioner.upper_bound"><code class="xref py py-attr docutils literal notranslate"><span class="pre">upper_bound</span></code></a> = 11, the resulting partitioning would be:
+[2, 4), [4, 6), [6, 8), [8, 10), [10, 12)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Bases</dt>
+<dd class="field-odd"><p><a class="reference internal" href="../../data/partition/facet.data.partition.RangePartitioner.html#facet.data.partition.RangePartitioner" title="facet.data.partition.RangePartitioner"><code class="xref py py-class docutils literal notranslate"><span class="pre">RangePartitioner</span></code></a> [<a class="reference external" href="https://docs.python.org/3.6/library/functions.html#int" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>]</p>
+</dd>
+<dt class="field-even">Metaclasses</dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3.6/library/abc.html#abc.ABCMeta" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ABCMeta</span></code></a></p>
+</dd>
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>max_partitions</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Optional" title="(in Python v3.6)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3.6/library/functions.html#int" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>]) – the maximum number of partitions to make
+(default: 20); should be at least 2</p></li>
+<li><p><strong>lower_bound</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Optional" title="(in Python v3.6)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[~T_Values_Numeric]) – the lower bound of the elements in the partition</p></li>
+<li><p><strong>upper_bound</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Optional" title="(in Python v3.6)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[~T_Values_Numeric]) – the upper bound of the elements in the partition</p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Method summary</p>
+<table class="longtable table autosummary">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#facet.simulation.partition.IntegerRangePartitioner.fit" title="facet.simulation.partition.IntegerRangePartitioner.fit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fit</span></code></a></p></td>
+<td><p>Calculate the partitioning for the given observed values.</p></td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Attribute summary</p>
+<table class="longtable table autosummary">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">DEFAULT_MAX_PARTITIONS</span></code></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#facet.simulation.partition.IntegerRangePartitioner.frequencies_" title="facet.simulation.partition.IntegerRangePartitioner.frequencies_"><code class="xref py py-obj docutils literal notranslate"><span class="pre">frequencies_</span></code></a></p></td>
+<td><p>Return the count of observed elements in each partition.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#facet.simulation.partition.IntegerRangePartitioner.is_categorical" title="facet.simulation.partition.IntegerRangePartitioner.is_categorical"><code class="xref py py-obj docutils literal notranslate"><span class="pre">is_categorical</span></code></a></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">False</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#facet.simulation.partition.IntegerRangePartitioner.is_fitted" title="facet.simulation.partition.IntegerRangePartitioner.is_fitted"><code class="xref py py-obj docutils literal notranslate"><span class="pre">is_fitted</span></code></a></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">True</span></code> if this object is fitted, <code class="docutils literal notranslate"><span class="pre">False</span></code> otherwise.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#facet.simulation.partition.IntegerRangePartitioner.lower_bound" title="facet.simulation.partition.IntegerRangePartitioner.lower_bound"><code class="xref py py-obj docutils literal notranslate"><span class="pre">lower_bound</span></code></a></p></td>
+<td><p>The lower bound of the partitioning.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#facet.simulation.partition.IntegerRangePartitioner.max_partitions" title="facet.simulation.partition.IntegerRangePartitioner.max_partitions"><code class="xref py py-obj docutils literal notranslate"><span class="pre">max_partitions</span></code></a></p></td>
+<td><p>The maximum number of partitions to be generated by this partitioner.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#facet.simulation.partition.IntegerRangePartitioner.partition_bounds_" title="facet.simulation.partition.IntegerRangePartitioner.partition_bounds_"><code class="xref py py-obj docutils literal notranslate"><span class="pre">partition_bounds_</span></code></a></p></td>
+<td><p>Return the endpoints of the intervals that delineate each partitions.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#facet.simulation.partition.IntegerRangePartitioner.partition_width_" title="facet.simulation.partition.IntegerRangePartitioner.partition_width_"><code class="xref py py-obj docutils literal notranslate"><span class="pre">partition_width_</span></code></a></p></td>
+<td><p>The width of each partition.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#facet.simulation.partition.IntegerRangePartitioner.partitions_" title="facet.simulation.partition.IntegerRangePartitioner.partitions_"><code class="xref py py-obj docutils literal notranslate"><span class="pre">partitions_</span></code></a></p></td>
+<td><p>Return central values of the partitions.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#facet.simulation.partition.IntegerRangePartitioner.upper_bound" title="facet.simulation.partition.IntegerRangePartitioner.upper_bound"><code class="xref py py-obj docutils literal notranslate"><span class="pre">upper_bound</span></code></a></p></td>
+<td><p>The upper bound of the partitioning.</p></td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Definitions</p>
+<dl class="py method">
+<dt id="facet.simulation.partition.IntegerRangePartitioner._ensure_fitted">
+<code class="sig-name descname">_ensure_fitted</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#facet.simulation.partition.IntegerRangePartitioner._ensure_fitted" title="Permalink to this definition">¶</a></dt>
+<dd><p>See <a class="reference external" href="https://bcg-gamma.github.io/pytools/apidoc/pytools/fit/pytools.fit.FittableMixin.html#pytools.fit.FittableMixin._ensure_fitted" title="(in pytools v1.2.2)"><code class="xref py py-meth docutils literal notranslate"><span class="pre">pytools.fit.FittableMixin._ensure_fitted()</span></code></a></p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="facet.simulation.partition.IntegerRangePartitioner.fit">
+<code class="sig-name descname">fit</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">values</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">fit_params</span></em><span class="sig-paren">)</span><a class="headerlink" href="#facet.simulation.partition.IntegerRangePartitioner.fit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate the partitioning for the given observed values.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>values</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Iterable" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Iterable</span></code></a>[~T_Values]) – a sequence of observed values as the empirical basis for
+calculating the partitions</p></li>
+<li><p><strong>fit_params</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Any" title="(in Python v3.6)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code></a>) – optional fitting parameters</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>~T_Self</p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">self</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="facet.simulation.partition.IntegerRangePartitioner.frequencies_">
+<em class="property">property </em><code class="sig-name descname">frequencies_</code><a class="headerlink" href="#facet.simulation.partition.IntegerRangePartitioner.frequencies_" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the count of observed elements in each partition.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Sequence" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sequence</span></code></a>[<a class="reference external" href="https://docs.python.org/3.6/library/functions.html#int" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>]</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>a sequence of value counts for each partition</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="facet.simulation.partition.IntegerRangePartitioner.is_categorical">
+<em class="property">property </em><code class="sig-name descname">is_categorical</code><a class="headerlink" href="#facet.simulation.partition.IntegerRangePartitioner.is_categorical" title="Permalink to this definition">¶</a></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">False</span></code></p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/functions.html#bool" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="facet.simulation.partition.IntegerRangePartitioner.is_fitted">
+<em class="property">property </em><code class="sig-name descname">is_fitted</code><a class="headerlink" href="#facet.simulation.partition.IntegerRangePartitioner.is_fitted" title="Permalink to this definition">¶</a></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">True</span></code> if this object is fitted, <code class="docutils literal notranslate"><span class="pre">False</span></code> otherwise.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/functions.html#bool" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="facet.simulation.partition.IntegerRangePartitioner.lower_bound">
+<em class="property">property </em><code class="sig-name descname">lower_bound</code><a class="headerlink" href="#facet.simulation.partition.IntegerRangePartitioner.lower_bound" title="Permalink to this definition">¶</a></dt>
+<dd><p>The lower bound of the partitioning.</p>
+<p><code class="docutils literal notranslate"><span class="pre">Null</span></code> if no explicit lower bound is set.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>~T_Values_Numeric</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="facet.simulation.partition.IntegerRangePartitioner.max_partitions">
+<em class="property">property </em><code class="sig-name descname">max_partitions</code><a class="headerlink" href="#facet.simulation.partition.IntegerRangePartitioner.max_partitions" title="Permalink to this definition">¶</a></dt>
+<dd><p>The maximum number of partitions to be generated by this partitioner.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/functions.html#int" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="facet.simulation.partition.IntegerRangePartitioner.partition_bounds_">
+<em class="property">property </em><code class="sig-name descname">partition_bounds_</code><a class="headerlink" href="#facet.simulation.partition.IntegerRangePartitioner.partition_bounds_" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the endpoints of the intervals that delineate each partitions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Sequence" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sequence</span></code></a>[<a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Tuple" title="(in Python v3.6)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code></a>[~T_Values_Numeric, ~T_Values_Numeric]]</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>sequence of tuples (x, y) for every partition, where x is the
+inclusive lower bound of a partition range, and y is the exclusive upper
+bound of a partition range</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="facet.simulation.partition.IntegerRangePartitioner.partition_width_">
+<em class="property">property </em><code class="sig-name descname">partition_width_</code><a class="headerlink" href="#facet.simulation.partition.IntegerRangePartitioner.partition_width_" title="Permalink to this definition">¶</a></dt>
+<dd><p>The width of each partition.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>~T_Values_Numeric</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="facet.simulation.partition.IntegerRangePartitioner.partitions_">
+<em class="property">property </em><code class="sig-name descname">partitions_</code><a class="headerlink" href="#facet.simulation.partition.IntegerRangePartitioner.partitions_" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return central values of the partitions.</p>
+<p>Requires that this partitioner has been fitted with a set of observed values.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Sequence" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sequence</span></code></a>[~T_Values_Numeric]</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>a sequence of central values for each partition</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="facet.simulation.partition.IntegerRangePartitioner.upper_bound">
+<em class="property">property </em><code class="sig-name descname">upper_bound</code><a class="headerlink" href="#facet.simulation.partition.IntegerRangePartitioner.upper_bound" title="Permalink to this definition">¶</a></dt>
+<dd><p>The upper bound of the partitioning.</p>
+<p><code class="docutils literal notranslate"><span class="pre">Null</span></code> if no explicit upper bound is set.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>~T_Values_Numeric</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+              </div>
+              
+              
+              <div class='prev-next-bottom'>
+                
+    <a class='left-prev' id="prev-link" href="facet.simulation.partition.ContinuousRangePartitioner.html" title="previous page">facet.simulation.partition.ContinuousRangePartitioner</a>
+    <a class='right-next' id="next-link" href="facet.simulation.partition.Partitioner.html" title="next page">facet.simulation.partition.Partitioner</a>
+
+              </div>
+              
+          </main>
+          
+
+      </div>
+    </div>
+
+    
+  <script src="../../../../_static/js/index.d3f166471bb80abb5163.js"></script>
+
+
+    <footer class="footer mt-5 mt-md-0">
+  <div class="container">
+    <p>
+          &copy; Copyright 2021, Boston Consulting Group (BCG).<br/>
+        Created using <a href="http://sphinx-doc.org/">Sphinx</a> 3.4.3.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>

@@ -1,0 +1,476 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>facet.simulation.BaseUnivariateSimulator &#8212; facet  documentation</title>
+    
+  <link rel="stylesheet" href="../../../_static/css/index.f658d18f9b420779cfdf24aa0a7e2d77.css">
+
+    
+  <link rel="stylesheet"
+    href="../../../_static/vendor/fontawesome/5.13.0/css/all.min.css">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../../../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../../../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+
+    
+      
+  <link rel="stylesheet"
+    href="../../../_static/vendor/open-sans_all/1.44.1/index.css">
+  <link rel="stylesheet"
+    href="../../../_static/vendor/lato_latin-ext/1.44.1/index.css">
+
+    
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/basic.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/css/gamma.css" />
+    
+  <link rel="preload" as="script" href="../../../_static/js/index.d3f166471bb80abb5163.js">
+
+    <script id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+    <script src="../../../_static/jquery.js"></script>
+    <script src="../../../_static/underscore.js"></script>
+    <script src="../../../_static/doctools.js"></script>
+    <script src="../../../_static/js/gamma.js"></script>
+    <script src="../../../_static/js/versions.js"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "document", "processClass": "math|output_area"}})</script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="facet.simulation.UnivariateProbabilitySimulator" href="facet.simulation.UnivariateProbabilitySimulator.html" />
+    <link rel="prev" title="facet.simulation" href="../facet.simulation.html" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="docsearch:language" content="en" />
+  </head>
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
+    
+    <nav class="navbar navbar-light navbar-expand-lg bg-light fixed-top bd-navbar" id="navbar-main">
+<div class="container-xl">
+
+    <a class="navbar-brand" href="../../../index.html">
+    
+      <img src="../../../_static/Gamma_Facet_Logo_RGB_LB.svg" class="logo" alt="logo" />
+    
+    </a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar-menu" aria-controls="navbar-menu" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div id="navbar-menu" class="col-lg-9 collapse navbar-collapse">
+      <ul id="navbar-main-elements" class="navbar-nav mr-auto">
+        
+        
+        <li class="nav-item ">
+            <a class="nav-link" href="../../../getting_started/getting_started.html">Getting started</a>
+        </li>
+        
+        <li class="nav-item active">
+            <a class="nav-link" href="../../facet.html">API reference</a>
+        </li>
+        
+        <li class="nav-item ">
+            <a class="nav-link" href="../../../tutorials.html">Tutorials</a>
+        </li>
+        
+        <li class="nav-item ">
+            <a class="nav-link" href="../../../contribution_guide.html">Development Guidelines</a>
+        </li>
+        
+        <li class="nav-item ">
+            <a class="nav-link" href="../../../faqs.html">FAQ</a>
+        </li>
+        
+        <li class="nav-item ">
+            <a class="nav-link" href="../../../about_us.html">About us</a>
+        </li>
+        
+        <li class="nav-item ">
+            <a class="nav-link" href="../../../release_notes.html">Release Notes</a>
+        </li>
+        
+        
+      </ul>
+
+
+      
+
+      <ul class="navbar-nav">
+        
+        
+      </ul>
+    </div>
+</div>
+    </nav>
+    
+
+    <div class="container-xl">
+      <div class="row">
+          
+          <div class="col-12 col-md-3 bd-sidebar"><form class="bd-search d-flex align-items-center" action="../../../search.html" method="get">
+  <i class="icon fas fa-search"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
+</form>
+<nav class="bd-links" id="bd-docs-nav" aria-label="Main navigation">
+
+    <div class="bd-toc-item active">
+    
+  
+    <ul class="nav bd-sidenav">
+        
+        
+        
+        
+          
+            
+                <li class="">
+                    <a href="../facet.crossfit.html">facet.crossfit</a>
+                </li>
+            
+          
+            
+                <li class="">
+                    <a href="../facet.data.html">facet.data</a>
+                </li>
+            
+          
+            
+                <li class="">
+                    <a href="../facet.inspection.html">facet.inspection</a>
+                </li>
+            
+          
+            
+                <li class="">
+                    <a href="../facet.selection.html">facet.selection</a>
+                </li>
+            
+          
+            
+  
+                <li class="active">
+                    <a href="../facet.simulation.html">facet.simulation</a>
+                    <ul>
+                    
+                        <li class="active">
+                            <a href="">facet.simulation.BaseUnivariateSimulator</a>
+                        </li>
+                    
+                        <li class="">
+                            <a href="facet.simulation.UnivariateProbabilitySimulator.html">facet.simulation.UnivariateProbabilitySimulator</a>
+                        </li>
+                    
+                        <li class="">
+                            <a href="facet.simulation.UnivariateSimulationResult.html">facet.simulation.UnivariateSimulationResult</a>
+                        </li>
+                    
+                        <li class="">
+                            <a href="facet.simulation.UnivariateTargetSimulator.html">facet.simulation.UnivariateTargetSimulator</a>
+                        </li>
+                    
+                        <li class="">
+                            <a href="facet.simulation.UnivariateUpliftSimulator.html">facet.simulation.UnivariateUpliftSimulator</a>
+                        </li>
+                    
+                        <li class="">
+                            <a href="facet.simulation.partition.html">facet.simulation.partition</a>
+                        </li>
+                    
+                        <li class="">
+                            <a href="facet.simulation.viz.html">facet.simulation.viz</a>
+                        </li>
+                    
+                    </ul>
+                </li>
+            
+          
+            
+                <li class="">
+                    <a href="../facet.validation.html">facet.validation</a>
+                </li>
+            
+          
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+      </ul>
+  
+  </nav>
+          </div>
+          
+
+          
+          <div class="d-none d-xl-block col-xl-2 bd-toc">
+              
+
+<nav id="bd-toc-nav">
+    <ul class="nav section-nav flex-column">
+    
+    </ul>
+</nav>
+
+
+              
+          </div>
+          
+
+          
+          <main class="col-12 col-md-9 col-xl-7 py-md-5 pl-md-5 pr-md-4 bd-content" role="main">
+              
+              <div>
+                
+  <div class="section" id="facet-simulation-baseunivariatesimulator">
+<h1>facet.simulation.BaseUnivariateSimulator<a class="headerlink" href="#facet-simulation-baseunivariatesimulator" title="Permalink to this headline">¶</a></h1>
+<dl class="py class">
+<dt id="facet.simulation.BaseUnivariateSimulator">
+<em class="property">class </em><code class="sig-prename descclassname">facet.simulation.</code><code class="sig-name descname">BaseUnivariateSimulator</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">crossfit</span></em>, <em class="sig-param"><span class="o">*</span></em>, <em class="sig-param"><span class="n">confidence_level</span><span class="o">=</span><span class="default_value">0.95</span></em>, <em class="sig-param"><span class="n">n_jobs</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">shared_memory</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">pre_dispatch</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">verbose</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/facet/simulation/_simulation.html#BaseUnivariateSimulator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#facet.simulation.BaseUnivariateSimulator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Base class for univariate simulations.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Bases</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://bcg-gamma.github.io/pytools/apidoc/pytools/parallelization/pytools.parallelization.ParallelizableMixin.html#pytools.parallelization.ParallelizableMixin" title="(in pytools v1.2.2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ParallelizableMixin</span></code></a></p>
+</dd>
+<dt class="field-even">Generic types</dt>
+<dd class="field-even"><p>~T_LearnerPipelineDF(bound= <a class="reference external" href="https://bcg-gamma.github.io/sklearndf/apidoc/sklearndf/pipeline/sklearndf.pipeline.LearnerPipelineDF.html#sklearndf.pipeline.LearnerPipelineDF" title="(in sklearndf v1.2.2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">LearnerPipelineDF</span></code></a>)</p>
+</dd>
+<dt class="field-odd">Metaclasses</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/abc.html#abc.ABCMeta" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ABCMeta</span></code></a></p>
+</dd>
+<dt class="field-even">Parameters</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>crossfit</strong> (<a class="reference internal" href="../crossfit/facet.crossfit.LearnerCrossfit.html#facet.crossfit.LearnerCrossfit" title="facet.crossfit.LearnerCrossfit"><code class="xref py py-class docutils literal notranslate"><span class="pre">LearnerCrossfit</span></code></a>[~T_LearnerPipelineDF]) – cross-validated crossfit of a model for all observations
+in a given sample</p></li>
+<li><p><strong>confidence_level</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/functions.html#float" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a>) – the width <span class="math notranslate nohighlight">\(\alpha\)</span> of the confidence interval
+determined by bootstrapping, with <span class="math notranslate nohighlight">\(0 &lt; \alpha &lt; 1\)</span>;
+for reliable CI estimates the number of splits in the crossfit should be
+at least <span class="math notranslate nohighlight">\(n = \frac{50}{1 - \alpha}\)</span>, e.g. <span class="math notranslate nohighlight">\(n = 1000\)</span> for
+<span class="math notranslate nohighlight">\(\alpha = 0.95\)</span></p></li>
+<li><p><strong>n_jobs</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Optional" title="(in Python v3.6)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3.6/library/functions.html#int" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>]) – number of jobs to use in parallel;
+if <code class="docutils literal notranslate"><span class="pre">None</span></code>, use joblib default (default: <code class="docutils literal notranslate"><span class="pre">None</span></code>)</p></li>
+<li><p><strong>shared_memory</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Optional" title="(in Python v3.6)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3.6/library/functions.html#bool" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a>]) – if <code class="docutils literal notranslate"><span class="pre">True</span></code>, use threads in the parallel runs; if
+<code class="docutils literal notranslate"><span class="pre">False</span></code>, use multiprocessing (default: <code class="docutils literal notranslate"><span class="pre">False</span></code>)</p></li>
+<li><p><strong>pre_dispatch</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Union" title="(in Python v3.6)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code></a>[<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3.6/library/functions.html#int" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>, <a class="reference external" href="https://docs.python.org/3.6/library/constants.html#None" title="(in Python v3.6)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>]) – number of batches to pre-dispatch;
+if <code class="docutils literal notranslate"><span class="pre">None</span></code>, use joblib default (default: <code class="docutils literal notranslate"><span class="pre">None</span></code>)</p></li>
+<li><p><strong>verbose</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Optional" title="(in Python v3.6)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3.6/library/functions.html#int" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>]) – verbosity level used in the parallel computation;
+if <code class="docutils literal notranslate"><span class="pre">None</span></code>, use joblib default (default: <code class="docutils literal notranslate"><span class="pre">None</span></code>)</p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Method summary</p>
+<table class="longtable table autosummary">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#facet.simulation.BaseUnivariateSimulator.baseline" title="facet.simulation.BaseUnivariateSimulator.baseline"><code class="xref py py-obj docutils literal notranslate"><span class="pre">baseline</span></code></a></p></td>
+<td><p>Calculate the expectation value of the simulation result, based on historically observed actuals.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#facet.simulation.BaseUnivariateSimulator.expected_output" title="facet.simulation.BaseUnivariateSimulator.expected_output"><code class="xref py py-obj docutils literal notranslate"><span class="pre">expected_output</span></code></a></p></td>
+<td><p>Calculate the expectation value of the actual model output, based on historically observed actuals.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#facet.simulation.BaseUnivariateSimulator.simulate_actuals" title="facet.simulation.BaseUnivariateSimulator.simulate_actuals"><code class="xref py py-obj docutils literal notranslate"><span class="pre">simulate_actuals</span></code></a></p></td>
+<td><p>For each test split <span class="math notranslate nohighlight">\(\mathrm{T}_i\)</span> in this simulator’s crossfit, predict the outputs for all test samples given their actual feature values, and calculate the absolute deviation from the mean of all actual outputs of the entire sample <span class="math notranslate nohighlight">\(\frac{1}{n}\sum_{j \in \mathrm{T}_i}\hat y_j - \bar y\)</span>.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#facet.simulation.BaseUnivariateSimulator.simulate_feature" title="facet.simulation.BaseUnivariateSimulator.simulate_feature"><code class="xref py py-obj docutils literal notranslate"><span class="pre">simulate_feature</span></code></a></p></td>
+<td><p>Simulate the average target uplift when fixing the value of the given feature across all observations.</p></td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Attribute summary</p>
+<table class="longtable table autosummary">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#facet.simulation.BaseUnivariateSimulator.COL_OUTPUT" title="facet.simulation.BaseUnivariateSimulator.COL_OUTPUT"><code class="xref py py-obj docutils literal notranslate"><span class="pre">COL_OUTPUT</span></code></a></p></td>
+<td><p>The name of a series of simulated outputs.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#facet.simulation.BaseUnivariateSimulator.IDX_PARTITION" title="facet.simulation.BaseUnivariateSimulator.IDX_PARTITION"><code class="xref py py-obj docutils literal notranslate"><span class="pre">IDX_PARTITION</span></code></a></p></td>
+<td><p>The name of the column index of attribute <code class="xref py py-attr docutils literal notranslate"><span class="pre">output</span></code>, denoting partitions represented by their central values or by a category.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#facet.simulation.BaseUnivariateSimulator.IDX_SPLIT" title="facet.simulation.BaseUnivariateSimulator.IDX_SPLIT"><code class="xref py py-obj docutils literal notranslate"><span class="pre">IDX_SPLIT</span></code></a></p></td>
+<td><p>The name of the row index of attribute <code class="xref py py-attr docutils literal notranslate"><span class="pre">output</span></code>, denoting splits.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#facet.simulation.BaseUnivariateSimulator.output_unit" title="facet.simulation.BaseUnivariateSimulator.output_unit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">output_unit</span></code></a></p></td>
+<td><p>Unit of the output values calculated by the simulation.</p></td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Definitions</p>
+<dl class="py method">
+<dt id="facet.simulation.BaseUnivariateSimulator.baseline">
+<code class="sig-name descname">baseline</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/facet/simulation/_simulation.html#BaseUnivariateSimulator.baseline"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#facet.simulation.BaseUnivariateSimulator.baseline" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate the expectation value of the simulation result, based on historically
+observed actuals.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/functions.html#float" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a></p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the expectation value of the simulation results</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="facet.simulation.BaseUnivariateSimulator.expected_output">
+<em class="property">abstract </em><code class="sig-name descname">expected_output</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/facet/simulation/_simulation.html#BaseUnivariateSimulator.expected_output"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#facet.simulation.BaseUnivariateSimulator.expected_output" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate the expectation value of the actual model output, based on
+historically observed actuals.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/functions.html#float" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a></p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the expectation value of the actual model output</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="facet.simulation.BaseUnivariateSimulator.simulate_actuals">
+<code class="sig-name descname">simulate_actuals</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/facet/simulation/_simulation.html#BaseUnivariateSimulator.simulate_actuals"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#facet.simulation.BaseUnivariateSimulator.simulate_actuals" title="Permalink to this definition">¶</a></dt>
+<dd><p>For each test split <span class="math notranslate nohighlight">\(\mathrm{T}_i\)</span> in this simulator’s
+crossfit, predict the outputs for all test samples given their actual
+feature values, and calculate the absolute deviation from the mean of all actual
+outputs of the entire sample
+<span class="math notranslate nohighlight">\(\frac{1}{n}\sum_{j \in \mathrm{T}_i}\hat y_j - \bar y\)</span>.</p>
+<p>The spread and offset of these deviations can serve as an indication of how the
+bias of the model contributes to the uncertainty of simulations produced with
+method <a class="reference internal" href="#facet.simulation.BaseUnivariateSimulator.simulate_feature" title="facet.simulation.BaseUnivariateSimulator.simulate_feature"><code class="xref py py-meth docutils literal notranslate"><span class="pre">simulate_feature()</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Series.html#pandas.Series" title="(in pandas v1.4.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Series</span></code></a></p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>series mapping split IDs to deviations of simulated mean outputs</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="facet.simulation.BaseUnivariateSimulator.simulate_feature">
+<code class="sig-name descname">simulate_feature</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">feature_name</span></em>, <em class="sig-param"><span class="o">*</span></em>, <em class="sig-param"><span class="n">partitioner</span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/facet/simulation/_simulation.html#BaseUnivariateSimulator.simulate_feature"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#facet.simulation.BaseUnivariateSimulator.simulate_feature" title="Permalink to this definition">¶</a></dt>
+<dd><p>Simulate the average target uplift when fixing the value of the given feature
+across all observations.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>feature_name</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>) – the feature to run the simulation for</p></li>
+<li><p><strong>partitioner</strong> (<a class="reference internal" href="../data/partition/facet.data.partition.Partitioner.html#facet.data.partition.Partitioner" title="facet.data.partition.Partitioner"><code class="xref py py-class docutils literal notranslate"><span class="pre">Partitioner</span></code></a>[~T_Partition]) – the partitioner of feature values to run simulations for</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference internal" href="facet.simulation.UnivariateSimulationResult.html#facet.simulation.UnivariateSimulationResult" title="facet.simulation.UnivariateSimulationResult"><code class="xref py py-class docutils literal notranslate"><span class="pre">UnivariateSimulationResult</span></code></a></p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>a mapping of output names to simulation results</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="facet.simulation.BaseUnivariateSimulator.COL_OUTPUT">
+<code class="sig-name descname">COL_OUTPUT</code><em class="property"> = 'output'</em><a class="headerlink" href="#facet.simulation.BaseUnivariateSimulator.COL_OUTPUT" title="Permalink to this definition">¶</a></dt>
+<dd><p>The name of a series of simulated outputs.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="facet.simulation.BaseUnivariateSimulator.IDX_PARTITION">
+<code class="sig-name descname">IDX_PARTITION</code><em class="property"> = 'partition'</em><a class="headerlink" href="#facet.simulation.BaseUnivariateSimulator.IDX_PARTITION" title="Permalink to this definition">¶</a></dt>
+<dd><p>The name of the column index of attribute <code class="xref py py-attr docutils literal notranslate"><span class="pre">output</span></code>, denoting partitions
+represented by their central values or by a category.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="facet.simulation.BaseUnivariateSimulator.IDX_SPLIT">
+<code class="sig-name descname">IDX_SPLIT</code><em class="property"> = 'split'</em><a class="headerlink" href="#facet.simulation.BaseUnivariateSimulator.IDX_SPLIT" title="Permalink to this definition">¶</a></dt>
+<dd><p>The name of the row index of attribute <code class="xref py py-attr docutils literal notranslate"><span class="pre">output</span></code>, denoting splits.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="facet.simulation.BaseUnivariateSimulator.n_jobs">
+<code class="sig-name descname">n_jobs</code><a class="headerlink" href="#facet.simulation.BaseUnivariateSimulator.n_jobs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of jobs to use in parallel; if <code class="docutils literal notranslate"><span class="pre">None</span></code>, use joblib default.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="facet.simulation.BaseUnivariateSimulator.output_unit">
+<em class="property">abstract property </em><code class="sig-name descname">output_unit</code><a class="headerlink" href="#facet.simulation.BaseUnivariateSimulator.output_unit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Unit of the output values calculated by the simulation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="facet.simulation.BaseUnivariateSimulator.pre_dispatch">
+<code class="sig-name descname">pre_dispatch</code><a class="headerlink" href="#facet.simulation.BaseUnivariateSimulator.pre_dispatch" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of batches to pre-dispatch; if <code class="docutils literal notranslate"><span class="pre">None</span></code>, use joblib default.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="facet.simulation.BaseUnivariateSimulator.shared_memory">
+<code class="sig-name descname">shared_memory</code><a class="headerlink" href="#facet.simulation.BaseUnivariateSimulator.shared_memory" title="Permalink to this definition">¶</a></dt>
+<dd><p>If <code class="docutils literal notranslate"><span class="pre">True</span></code>, use threads in the parallel runs;
+if <code class="docutils literal notranslate"><span class="pre">False</span></code>, use multiprocessing.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="facet.simulation.BaseUnivariateSimulator.verbose">
+<code class="sig-name descname">verbose</code><a class="headerlink" href="#facet.simulation.BaseUnivariateSimulator.verbose" title="Permalink to this definition">¶</a></dt>
+<dd><p>Verbosity level used in the parallel computation;
+if <code class="docutils literal notranslate"><span class="pre">None</span></code>, use joblib default.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+              </div>
+              
+              
+              <div class='prev-next-bottom'>
+                
+    <a class='left-prev' id="prev-link" href="../facet.simulation.html" title="previous page">facet.simulation</a>
+    <a class='right-next' id="next-link" href="facet.simulation.UnivariateProbabilitySimulator.html" title="next page">facet.simulation.UnivariateProbabilitySimulator</a>
+
+              </div>
+              
+          </main>
+          
+
+      </div>
+    </div>
+
+    
+  <script src="../../../_static/js/index.d3f166471bb80abb5163.js"></script>
+
+
+    <footer class="footer mt-5 mt-md-0">
+  <div class="container">
+    <p>
+          &copy; Copyright 2021, Boston Consulting Group (BCG).<br/>
+        Created using <a href="http://sphinx-doc.org/">Sphinx</a> 3.4.3.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>

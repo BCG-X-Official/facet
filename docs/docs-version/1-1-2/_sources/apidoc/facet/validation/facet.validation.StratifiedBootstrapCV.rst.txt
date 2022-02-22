@@ -1,0 +1,28 @@
+facet.validation.StratifiedBootstrapCV
+======================================
+
+.. currentmodule:: facet.validation
+
+.. autoclass:: StratifiedBootstrapCV
+   :members:
+   :no-show-inheritance:
+   :inherited-members:
+   :special-members: __call__
+
+   
+   
+   .. rubric:: Method summary
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~StratifiedBootstrapCV.get_n_splits
+      ~StratifiedBootstrapCV.split
+   
+   
+
+   
+   
+   
+
+   .. rubric:: Definitions

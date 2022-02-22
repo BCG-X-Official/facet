@@ -1,0 +1,44 @@
+facet.data.Sample
+=================
+
+.. currentmodule:: facet.data
+
+.. autoclass:: Sample
+   :members:
+   :no-show-inheritance:
+   :inherited-members:
+   :special-members: __call__
+
+   
+   
+   .. rubric:: Method summary
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~Sample.drop
+      ~Sample.keep
+      ~Sample.subsample
+   
+   
+
+   
+   
+   .. rubric:: Attribute summary
+
+   .. autosummary::
+   
+      ~Sample.IDX_FEATURE
+      ~Sample.IDX_OBSERVATION
+      ~Sample.IDX_TARGET
+      ~Sample.feature_names
+      ~Sample.features
+      ~Sample.index
+      ~Sample.target
+      ~Sample.target_name
+      ~Sample.weight
+      ~Sample.weight_name
+   
+   
+
+   .. rubric:: Definitions

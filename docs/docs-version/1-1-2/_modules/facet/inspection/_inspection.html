@@ -1,0 +1,1324 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>facet.inspection._inspection &#8212; facet  documentation</title>
+    
+  <link rel="stylesheet" href="../../../_static/css/index.f658d18f9b420779cfdf24aa0a7e2d77.css">
+
+    
+  <link rel="stylesheet"
+    href="../../../_static/vendor/fontawesome/5.13.0/css/all.min.css">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../../../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../../../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+
+    
+      
+  <link rel="stylesheet"
+    href="../../../_static/vendor/open-sans_all/1.44.1/index.css">
+  <link rel="stylesheet"
+    href="../../../_static/vendor/lato_latin-ext/1.44.1/index.css">
+
+    
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/basic.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/css/gamma.css" />
+    
+  <link rel="preload" as="script" href="../../../_static/js/index.d3f166471bb80abb5163.js">
+
+    <script id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+    <script src="../../../_static/jquery.js"></script>
+    <script src="../../../_static/underscore.js"></script>
+    <script src="../../../_static/doctools.js"></script>
+    <script src="../../../_static/js/gamma.js"></script>
+    <script src="../../../_static/js/versions.js"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "document", "processClass": "math|output_area"}})</script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="docsearch:language" content="en" />
+  </head>
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
+    
+    <nav class="navbar navbar-light navbar-expand-lg bg-light fixed-top bd-navbar" id="navbar-main">
+<div class="container-xl">
+
+    <a class="navbar-brand" href="../../../index.html">
+    
+      <img src="../../../_static/Gamma_Facet_Logo_RGB_LB.svg" class="logo" alt="logo" />
+    
+    </a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar-menu" aria-controls="navbar-menu" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div id="navbar-menu" class="col-lg-9 collapse navbar-collapse">
+      <ul id="navbar-main-elements" class="navbar-nav mr-auto">
+        
+        
+        <li class="nav-item ">
+            <a class="nav-link" href="../../../getting_started/getting_started.html">Getting started</a>
+        </li>
+        
+        <li class="nav-item ">
+            <a class="nav-link" href="../../../apidoc/facet.html">API reference</a>
+        </li>
+        
+        <li class="nav-item ">
+            <a class="nav-link" href="../../../tutorials.html">Tutorials</a>
+        </li>
+        
+        <li class="nav-item ">
+            <a class="nav-link" href="../../../contribution_guide.html">Development Guidelines</a>
+        </li>
+        
+        <li class="nav-item ">
+            <a class="nav-link" href="../../../faqs.html">FAQ</a>
+        </li>
+        
+        <li class="nav-item ">
+            <a class="nav-link" href="../../../about_us.html">About us</a>
+        </li>
+        
+        <li class="nav-item ">
+            <a class="nav-link" href="../../../release_notes.html">Release Notes</a>
+        </li>
+        
+        
+      </ul>
+
+
+      
+
+      <ul class="navbar-nav">
+        
+        
+      </ul>
+    </div>
+</div>
+    </nav>
+    
+
+    <div class="container-xl">
+      <div class="row">
+          
+          <div class="col-12 col-md-3 bd-sidebar"><form class="bd-search d-flex align-items-center" action="../../../search.html" method="get">
+  <i class="icon fas fa-search"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
+</form>
+<nav class="bd-links" id="bd-docs-nav" aria-label="Main navigation">
+
+    <div class="bd-toc-item active">
+    
+  
+    <ul class="nav bd-sidenav">
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+      </ul>
+  
+  </nav>
+          </div>
+          
+
+          
+          <div class="d-none d-xl-block col-xl-2 bd-toc">
+              
+
+<nav id="bd-toc-nav">
+    <ul class="nav section-nav flex-column">
+    
+    </ul>
+</nav>
+
+
+              
+          </div>
+          
+
+          
+          <main class="col-12 col-md-9 col-xl-7 py-md-5 pl-md-5 pr-md-4 bd-content" role="main">
+              
+              <div>
+                
+  <h1>Source code for facet.inspection._inspection</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Core implementation of :mod:`facet.inspection`</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Generic</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">TypeVar</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">cast</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">from</span> <span class="nn">scipy.cluster.hierarchy</span> <span class="kn">import</span> <span class="n">leaves_list</span><span class="p">,</span> <span class="n">linkage</span><span class="p">,</span> <span class="n">optimal_leaf_ordering</span>
+<span class="kn">from</span> <span class="nn">scipy.spatial.distance</span> <span class="kn">import</span> <span class="n">squareform</span>
+
+<span class="kn">from</span> <span class="nn">pytools.api</span> <span class="kn">import</span> <span class="n">AllTracker</span><span class="p">,</span> <span class="n">inheritdoc</span>
+<span class="kn">from</span> <span class="nn">pytools.fit</span> <span class="kn">import</span> <span class="n">FittableMixin</span>
+<span class="kn">from</span> <span class="nn">pytools.parallelization</span> <span class="kn">import</span> <span class="n">ParallelizableMixin</span>
+<span class="kn">from</span> <span class="nn">pytools.viz.dendrogram</span> <span class="kn">import</span> <span class="n">LinkageTree</span>
+<span class="kn">from</span> <span class="nn">sklearndf</span> <span class="kn">import</span> <span class="n">ClassifierDF</span><span class="p">,</span> <span class="n">LearnerDF</span><span class="p">,</span> <span class="n">RegressorDF</span>
+<span class="kn">from</span> <span class="nn">sklearndf.pipeline</span> <span class="kn">import</span> <span class="n">LearnerPipelineDF</span>
+
+<span class="kn">from</span> <span class="nn">..crossfit</span> <span class="kn">import</span> <span class="n">LearnerCrossfit</span>
+<span class="kn">from</span> <span class="nn">..data</span> <span class="kn">import</span> <span class="n">Sample</span>
+<span class="kn">from</span> <span class="nn">._explainer</span> <span class="kn">import</span> <span class="n">ExplainerFactory</span><span class="p">,</span> <span class="n">TreeExplainerFactory</span>
+<span class="kn">from</span> <span class="nn">._shap</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">ClassifierShapInteractionValuesCalculator</span><span class="p">,</span>
+    <span class="n">ClassifierShapValuesCalculator</span><span class="p">,</span>
+    <span class="n">RegressorShapInteractionValuesCalculator</span><span class="p">,</span>
+    <span class="n">RegressorShapValuesCalculator</span><span class="p">,</span>
+    <span class="n">ShapCalculator</span><span class="p">,</span>
+    <span class="n">ShapInteractionValuesCalculator</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">._shap_decomposition</span> <span class="kn">import</span> <span class="n">ShapDecomposer</span><span class="p">,</span> <span class="n">ShapInteractionDecomposer</span>
+<span class="kn">from</span> <span class="nn">._shap_global_explanation</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">ShapGlobalExplainer</span><span class="p">,</span>
+    <span class="n">ShapInteractionGlobalExplainer</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">._shap_projection</span> <span class="kn">import</span> <span class="n">ShapInteractionVectorProjector</span><span class="p">,</span> <span class="n">ShapVectorProjector</span>
+
+<span class="n">log</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;ShapPlotData&quot;</span><span class="p">,</span> <span class="s2">&quot;LearnerInspector&quot;</span><span class="p">]</span>
+
+
+<span class="c1">#</span>
+<span class="c1"># Type variables</span>
+<span class="c1">#</span>
+
+<span class="n">T_Self</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">&quot;T_Self&quot;</span><span class="p">)</span>
+<span class="n">T_LearnerPipelineDF</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">&quot;T_LearnerPipelineDF&quot;</span><span class="p">,</span> <span class="n">bound</span><span class="o">=</span><span class="n">LearnerPipelineDF</span><span class="p">)</span>
+<span class="n">T_SeriesOrDataFrame</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">&quot;T_SeriesOrDataFrame&quot;</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)</span>
+
+
+<span class="c1">#</span>
+<span class="c1"># Ensure all symbols introduced below are included in __all__</span>
+<span class="c1">#</span>
+
+<span class="n">__tracker</span> <span class="o">=</span> <span class="n">AllTracker</span><span class="p">(</span><span class="nb">globals</span><span class="p">())</span>
+
+
+<span class="c1">#</span>
+<span class="c1"># Class definitions</span>
+<span class="c1">#</span>
+
+
+<div class="viewcode-block" id="ShapPlotData"><a class="viewcode-back" href="../../../apidoc/facet/inspection/facet.inspection.ShapPlotData.html#facet.inspection.ShapPlotData">[docs]</a><span class="k">class</span> <span class="nc">ShapPlotData</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Data for use in SHAP plots provided by the</span>
+<span class="sd">    `shap &lt;https://shap.readthedocs.io/en/stable/&gt;`__ package.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">shap_values</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]],</span> <span class="n">sample</span><span class="p">:</span> <span class="n">Sample</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        :param shap_values: the shap values for all observations and outputs</span>
+<span class="sd">        :param sample: (sub)sample of all observations for which SHAP values are</span>
+<span class="sd">            available; aligned with param ``shap_values``</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_shap_values</span> <span class="o">=</span> <span class="n">shap_values</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_sample</span> <span class="o">=</span> <span class="n">sample</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">shap_values</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]]:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Matrix of SHAP values (number of observations by number of features)</span>
+<span class="sd">        or list of shap value matrices for multi-output models.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shap_values</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">features</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Matrix of feature values (number of observations by number of features).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sample</span><span class="o">.</span><span class="n">features</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">target</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Series of target values (number of observations)</span>
+<span class="sd">        or matrix of target values for multi-output models</span>
+<span class="sd">        (number of observations by number of outputs).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sample</span><span class="o">.</span><span class="n">target</span></div>
+
+
+<div class="viewcode-block" id="LearnerInspector"><a class="viewcode-back" href="../../../apidoc/facet/inspection/facet.inspection.LearnerInspector.html#facet.inspection.LearnerInspector">[docs]</a><span class="nd">@inheritdoc</span><span class="p">(</span><span class="n">match</span><span class="o">=</span><span class="s2">&quot;[see superclass]&quot;</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">LearnerInspector</span><span class="p">(</span>
+    <span class="n">FittableMixin</span><span class="p">[</span><span class="n">LearnerCrossfit</span><span class="p">],</span> <span class="n">ParallelizableMixin</span><span class="p">,</span> <span class="n">Generic</span><span class="p">[</span><span class="n">T_LearnerPipelineDF</span><span class="p">]</span>
+<span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Explain regressors and classifiers based on SHAP values.</span>
+
+<span class="sd">    Focus is on explaining the overall model as well as individual observations.</span>
+<span class="sd">    Given that SHAP values are estimations, this inspector operates based on crossfits</span>
+<span class="sd">    to enable estimations of the uncertainty of SHAP values.</span>
+
+<span class="sd">    Available inspection methods are:</span>
+
+<span class="sd">    - SHAP values (mean or standard deviation across crossfits)</span>
+<span class="sd">    - SHAP interaction values (mean or standard deviation across crossfits)</span>
+<span class="sd">    - feature importance derived from SHAP values (either as mean absolute values</span>
+<span class="sd">      or as the root of mean squares)</span>
+<span class="sd">    - pairwise feature interaction matrix (direct feature interaction quantified by</span>
+<span class="sd">      SHAP interaction values)</span>
+<span class="sd">    - pairwise feature redundancy matrix (requires availability of SHAP interaction</span>
+<span class="sd">      values)</span>
+<span class="sd">    - pairwise feature synergy matrix (requires availability of SHAP interaction</span>
+<span class="sd">      values)</span>
+<span class="sd">    - pairwise feature association matrix (upper bound for redundancy but can be</span>
+<span class="sd">      inflated by synergy; available if SHAP interaction values are unknown)</span>
+<span class="sd">    - feature redundancy linkage (to visualize clusters of redundant features in a</span>
+<span class="sd">      dendrogram)</span>
+<span class="sd">    - feature synergy linkage (to visualize clusters of synergistic features in a</span>
+<span class="sd">      dendrogram)</span>
+<span class="sd">    - feature association linkage (to visualize clusters of associated features in a</span>
+<span class="sd">      dendrogram)</span>
+
+<span class="sd">    All inspections that aggregate across observations will respect sample weights, if</span>
+<span class="sd">    specified in the underlying training sample.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1">#: constant for &quot;mean&quot; aggregation method, to be passed as arg ``aggregation``</span>
+    <span class="c1">#: to :class:`.LearnerInspector` methods that implement it</span>
+    <span class="n">AGG_MEAN</span> <span class="o">=</span> <span class="s2">&quot;mean&quot;</span>
+
+    <span class="c1">#: constant for &quot;std&quot; aggregation method, to be passed as arg ``aggregation``</span>
+    <span class="c1">#: to :class:`.LearnerInspector` methods that implement it</span>
+    <span class="n">AGG_STD</span> <span class="o">=</span> <span class="s2">&quot;std&quot;</span>
+
+    <span class="c1">#: Name for feature importance series or column.</span>
+    <span class="n">COL_IMPORTANCE</span> <span class="o">=</span> <span class="s2">&quot;importance&quot;</span>
+
+    <span class="c1">#: The default explainer factory used by this inspector.</span>
+    <span class="c1">#: This is a tree explainer using the tree_path_dependent method for</span>
+    <span class="c1">#: feature perturbation, so we can calculate SHAP interaction values.</span>
+    <span class="n">DEFAULT_EXPLAINER_FACTORY</span> <span class="o">=</span> <span class="n">TreeExplainerFactory</span><span class="p">(</span>
+        <span class="n">feature_perturbation</span><span class="o">=</span><span class="s2">&quot;tree_path_dependent&quot;</span><span class="p">,</span> <span class="n">use_background_dataset</span><span class="o">=</span><span class="kc">False</span>
+    <span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">explainer_factory</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ExplainerFactory</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">shap_interaction</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">legacy</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">min_direct_synergy</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">n_jobs</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">shared_memory</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">pre_dispatch</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">verbose</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        :param explainer_factory: optional function that creates a shap Explainer</span>
+<span class="sd">            (default: ``TreeExplainerFactory``)</span>
+<span class="sd">        :param shap_interaction: if ``True``, calculate SHAP interaction values, else</span>
+<span class="sd">            only calculate SHAP contribution values.</span>
+<span class="sd">            SHAP interaction values are needed to determine feature synergy and</span>
+<span class="sd">            redundancy.</span>
+<span class="sd">            (default: ``True``)</span>
+<span class="sd">        :param legacy: `Deprecated: This parameter will be removed in FACET 1.2.`</span>
+<span class="sd">            If ``False``, use the recommended `SHAP vector projection` method;</span>
+<span class="sd">            if ``True``, use the deprecated `SHAP vector decomposition` method.</span>
+<span class="sd">            (default: ``False``)</span>
+<span class="sd">        :param min_direct_synergy: minimum direct synergy to consider a feature pair</span>
+<span class="sd">            for calculation of indirect synergy in conjunction with SHAP vector</span>
+<span class="sd">            decomposition; only relevant if parameters ``legacy`` and</span>
+<span class="sd">            ``shap_interaction`` are both ``True``.</span>
+<span class="sd">            This effectively acts as a noise threshold given the approximate nature of</span>
+<span class="sd">            SHAP calculations.</span>
+<span class="sd">            Consider increasing this value if you see warnings about contravariant</span>
+<span class="sd">            indirect synergy when fitting this inspector.</span>
+<span class="sd">            (default: &lt;DEFAULT_MIN_DIRECT_SYNERGY&gt;)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="n">n_jobs</span><span class="o">=</span><span class="n">n_jobs</span><span class="p">,</span>
+            <span class="n">shared_memory</span><span class="o">=</span><span class="n">shared_memory</span><span class="p">,</span>
+            <span class="n">pre_dispatch</span><span class="o">=</span><span class="n">pre_dispatch</span><span class="p">,</span>
+            <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">explainer_factory</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">explainer_factory</span><span class="o">.</span><span class="n">explains_raw_output</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="s2">&quot;arg explainer_factory is not configured to explain raw output&quot;</span>
+                <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">explainer_factory</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">DEFAULT_EXPLAINER_FACTORY</span>
+            <span class="k">assert</span> <span class="n">explainer_factory</span><span class="o">.</span><span class="n">explains_raw_output</span>
+
+        <span class="k">if</span> <span class="n">shap_interaction</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">explainer_factory</span><span class="o">.</span><span class="n">supports_shap_interaction_values</span><span class="p">:</span>
+                <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                    <span class="s2">&quot;ignoring arg shap_interaction=True: &quot;</span>
+                    <span class="s2">&quot;explainers made by arg explainer_factory do not support &quot;</span>
+                    <span class="s2">&quot;SHAP interaction values&quot;</span>
+                <span class="p">)</span>
+                <span class="n">shap_interaction</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">legacy</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">min_direct_synergy</span><span class="p">:</span>
+                <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                    <span class="s2">&quot;ignoring min_direct_synergy parameter &quot;</span>
+                    <span class="s2">&quot;(only relevant in legacy mode)&quot;</span>
+                <span class="p">)</span>
+                <span class="n">min_direct_synergy</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_explainer_factory</span> <span class="o">=</span> <span class="n">explainer_factory</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_shap_interaction</span> <span class="o">=</span> <span class="n">shap_interaction</span>
+        <span class="c1"># todo: remove legacy property once we have ditched legacy global explanations</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_legacy</span> <span class="o">=</span> <span class="n">legacy</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_min_direct_synergy</span> <span class="o">=</span> <span class="n">min_direct_synergy</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_crossfit</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">LearnerCrossfit</span><span class="p">[</span><span class="n">T_LearnerPipelineDF</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_shap_calculator</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ShapCalculator</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_shap_global_decomposer</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ShapGlobalExplainer</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_shap_global_projector</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ShapGlobalExplainer</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="c1"># dynamically complete the __init__ docstring</span>
+    <span class="c1"># noinspection PyTypeChecker</span>
+    <span class="fm">__init__</span><span class="o">.</span><span class="vm">__doc__</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="fm">__init__</span><span class="o">.</span><span class="vm">__doc__</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span>
+            <span class="s2">&quot;&lt;DEFAULT_MIN_DIRECT_SYNERGY&gt;&quot;</span><span class="p">,</span>
+            <span class="nb">str</span><span class="p">(</span><span class="n">ShapInteractionDecomposer</span><span class="o">.</span><span class="n">DEFAULT_MIN_DIRECT_SYNERGY</span><span class="p">),</span>
+        <span class="p">)</span>
+        <span class="o">+</span> <span class="n">ParallelizableMixin</span><span class="o">.</span><span class="fm">__init__</span><span class="o">.</span><span class="vm">__doc__</span>
+    <span class="p">)</span>
+
+<div class="viewcode-block" id="LearnerInspector.fit"><a class="viewcode-back" href="../../../apidoc/facet/inspection/facet.inspection.LearnerInspector.html#facet.inspection.LearnerInspector.fit">[docs]</a>    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">:</span> <span class="n">T_Self</span><span class="p">,</span> <span class="n">crossfit</span><span class="p">:</span> <span class="n">LearnerCrossfit</span><span class="p">,</span> <span class="o">**</span><span class="n">fit_params</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">T_Self</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Fit the inspector with the given crossfit.</span>
+
+<span class="sd">        This will calculate SHAP values and, if enabled in the underlying SHAP</span>
+<span class="sd">        explainer, also SHAP interaction values.</span>
+
+<span class="sd">        :param crossfit: the model crossfit to be explained by this model inspector</span>
+<span class="sd">        :param fit_params: additional keyword arguments (ignored; accepted for</span>
+<span class="sd">            compatibility with :class:`.FittableMixin`)</span>
+<span class="sd">        :return: ``self``</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># :param full_sample: if ``True``, explain only a single model fitted on the</span>
+        <span class="c1"># full sample; otherwise, explain all models in the crossfit and aggregate</span>
+        <span class="c1"># results</span>
+        <span class="n">full_sample</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="n">fit_params</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;full_sample&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="p">:</span> <span class="n">LearnerInspector</span>  <span class="c1"># support type hinting in PyCharm</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">crossfit</span><span class="o">.</span><span class="n">is_fitted</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;crossfit in arg pipeline is not fitted&quot;</span><span class="p">)</span>
+
+        <span class="n">learner</span><span class="p">:</span> <span class="n">LearnerDF</span> <span class="o">=</span> <span class="n">crossfit</span><span class="o">.</span><span class="n">pipeline</span><span class="o">.</span><span class="n">final_estimator</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">learner</span><span class="p">,</span> <span class="n">ClassifierDF</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">crossfit</span><span class="o">.</span><span class="n">sample_</span><span class="o">.</span><span class="n">target_name</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="s2">&quot;only single-output classifiers (binary or multi-class) are &quot;</span>
+                    <span class="s2">&quot;supported, but the classifier in the given crossfit has been &quot;</span>
+                    <span class="s2">&quot;fitted on multiple columns &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">crossfit</span><span class="o">.</span><span class="n">sample_</span><span class="o">.</span><span class="n">target_name</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="p">)</span>
+
+            <span class="n">is_classifier</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">learner</span><span class="p">,</span> <span class="n">RegressorDF</span><span class="p">):</span>
+            <span class="n">is_classifier</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                <span class="s2">&quot;learner in given crossfit must be a classifier or a regressor,&quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;but is a </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">learner</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+
+        <span class="n">shap_global_decomposer</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">ShapDecomposer</span><span class="p">,</span> <span class="n">ShapInteractionDecomposer</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span>
+        <span class="n">shap_global_projector</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span>
+            <span class="n">ShapVectorProjector</span><span class="p">,</span> <span class="n">ShapInteractionVectorProjector</span><span class="p">,</span> <span class="kc">None</span>
+        <span class="p">]</span>
+
+        <span class="n">legacy</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_legacy</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shap_interaction</span><span class="p">:</span>
+            <span class="n">shap_calculator_type</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">ClassifierShapInteractionValuesCalculator</span>
+                <span class="k">if</span> <span class="n">is_classifier</span>
+                <span class="k">else</span> <span class="n">RegressorShapInteractionValuesCalculator</span>
+            <span class="p">)</span>
+            <span class="n">shap_calculator</span> <span class="o">=</span> <span class="n">shap_calculator_type</span><span class="p">(</span>
+                <span class="n">explain_full_sample</span><span class="o">=</span><span class="n">full_sample</span><span class="p">,</span>
+                <span class="n">explainer_factory</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_explainer_factory</span><span class="p">,</span>
+                <span class="n">n_jobs</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">n_jobs</span><span class="p">,</span>
+                <span class="n">shared_memory</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">shared_memory</span><span class="p">,</span>
+                <span class="n">pre_dispatch</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">pre_dispatch</span><span class="p">,</span>
+                <span class="n">verbose</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="n">legacy</span><span class="p">:</span>
+                <span class="n">shap_global_decomposer</span> <span class="o">=</span> <span class="n">ShapInteractionDecomposer</span><span class="p">(</span>
+                    <span class="n">min_direct_synergy</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_min_direct_synergy</span>
+                <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">shap_global_decomposer</span> <span class="o">=</span> <span class="kc">None</span>
+
+            <span class="n">shap_global_projector</span> <span class="o">=</span> <span class="n">ShapInteractionVectorProjector</span><span class="p">()</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">shap_calculator_type</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">ClassifierShapValuesCalculator</span>
+                <span class="k">if</span> <span class="n">is_classifier</span>
+                <span class="k">else</span> <span class="n">RegressorShapValuesCalculator</span>
+            <span class="p">)</span>
+            <span class="n">shap_calculator</span> <span class="o">=</span> <span class="n">shap_calculator_type</span><span class="p">(</span>
+                <span class="n">explain_full_sample</span><span class="o">=</span><span class="n">full_sample</span><span class="p">,</span>
+                <span class="n">explainer_factory</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_explainer_factory</span><span class="p">,</span>
+                <span class="n">n_jobs</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">n_jobs</span><span class="p">,</span>
+                <span class="n">shared_memory</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">shared_memory</span><span class="p">,</span>
+                <span class="n">pre_dispatch</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">pre_dispatch</span><span class="p">,</span>
+                <span class="n">verbose</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="n">legacy</span><span class="p">:</span>
+                <span class="n">shap_global_decomposer</span> <span class="o">=</span> <span class="n">ShapDecomposer</span><span class="p">()</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">shap_global_decomposer</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="n">shap_global_projector</span> <span class="o">=</span> <span class="n">ShapVectorProjector</span><span class="p">()</span>
+
+        <span class="n">shap_calculator</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">crossfit</span><span class="o">=</span><span class="n">crossfit</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">legacy</span><span class="p">:</span>
+            <span class="n">shap_global_decomposer</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">shap_calculator</span><span class="o">=</span><span class="n">shap_calculator</span><span class="p">)</span>
+        <span class="n">shap_global_projector</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">shap_calculator</span><span class="o">=</span><span class="n">shap_calculator</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_shap_calculator</span> <span class="o">=</span> <span class="n">shap_calculator</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_shap_global_decomposer</span> <span class="o">=</span> <span class="n">shap_global_decomposer</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_shap_global_projector</span> <span class="o">=</span> <span class="n">shap_global_projector</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_crossfit</span> <span class="o">=</span> <span class="n">crossfit</span>
+
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">_shap_global_explainer</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ShapGlobalExplainer</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_legacy</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shap_global_decomposer</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shap_global_projector</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">is_fitted</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;[see superclass]&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_crossfit</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">crossfit_</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LearnerCrossfit</span><span class="p">[</span><span class="n">T_LearnerPipelineDF</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The crossfit with which this inspector was fitted.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ensure_fitted</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_crossfit</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">sample_</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Sample</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The training sample of the crossfit with which this inspector was fitted.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ensure_fitted</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_crossfit</span><span class="o">.</span><span class="n">sample_</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">output_names_</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The names of the outputs explained by this inspector.</span>
+
+<span class="sd">        For regressors, these are the names of the target columns.</span>
+
+<span class="sd">        For binary classifiers, this is a list of length 1 with the name of a single</span>
+<span class="sd">        class, since the SHAP values of the second class can be trivially derived as</span>
+<span class="sd">        the negation of the SHAP values of the first class.</span>
+
+<span class="sd">        For non-binary classifiers, this is the list of all classes.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ensure_fitted</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shap_calculator</span><span class="o">.</span><span class="n">output_names_</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">features_</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The names of the features used to fit the learner pipeline explained by this</span>
+<span class="sd">        inspector.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">crossfit_</span><span class="o">.</span><span class="n">pipeline</span><span class="o">.</span><span class="n">feature_names_out_</span><span class="o">.</span><span class="n">to_list</span><span class="p">()</span>
+
+<div class="viewcode-block" id="LearnerInspector.shap_values"><a class="viewcode-back" href="../../../apidoc/facet/inspection/facet.inspection.LearnerInspector.html#facet.inspection.LearnerInspector.shap_values">[docs]</a>    <span class="k">def</span> <span class="nf">shap_values</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">aggregation</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">AGG_MEAN</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">]]:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculate the SHAP values for all observations and features.</span>
+
+<span class="sd">        Returns a data frame of SHAP values where each row corresponds to an</span>
+<span class="sd">        observation, and each column corresponds to a feature.</span>
+
+<span class="sd">        By default, one SHAP value is returned for each observation and feature; this</span>
+<span class="sd">        value is calculated as the mean SHAP value across all crossfits.</span>
+
+<span class="sd">        The ``aggregation`` argument can be used to disable or change the aggregation</span>
+<span class="sd">        of SHAP values:</span>
+
+<span class="sd">        - passing ``aggregation=None`` will disable SHAP value aggregation,</span>
+<span class="sd">          generating one row for every crossfit and observation (identified by</span>
+<span class="sd">          a hierarchical index with two levels)</span>
+<span class="sd">        - passing ``aggregation=&quot;mean&quot;`` (the default) will calculate the mean SHAP</span>
+<span class="sd">          values across all crossfits</span>
+<span class="sd">        - passing ``aggregation=&quot;std&quot;`` will calculate the standard deviation of SHAP</span>
+<span class="sd">          values across all crossfits, as the basis for determining the uncertainty</span>
+<span class="sd">          of SHAP calculations</span>
+
+<span class="sd">        :param aggregation: aggregation SHAP values across splits;</span>
+<span class="sd">            permissible values are ``&quot;mean&quot;`` (calculate the mean), ``&quot;std&quot;``</span>
+<span class="sd">            (calculate the standard deviation), or ``None`` to prevent aggregation</span>
+<span class="sd">            (default: ``&quot;mean&quot;``)</span>
+<span class="sd">        :return: a data frame with SHAP values</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ensure_fitted</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__split_multi_output_df</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_shap_calculator</span><span class="o">.</span><span class="n">get_shap_values</span><span class="p">(</span><span class="n">aggregation</span><span class="o">=</span><span class="n">aggregation</span><span class="p">)</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="LearnerInspector.shap_interaction_values"><a class="viewcode-back" href="../../../apidoc/facet/inspection/facet.inspection.LearnerInspector.html#facet.inspection.LearnerInspector.shap_interaction_values">[docs]</a>    <span class="k">def</span> <span class="nf">shap_interaction_values</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">aggregation</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">AGG_MEAN</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">]]:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculate the SHAP interaction values for all observations and pairs of</span>
+<span class="sd">        features.</span>
+
+<span class="sd">        Returns a data frame of SHAP interaction values where each row corresponds to an</span>
+<span class="sd">        observation and a feature (identified by a hierarchical index with two levels),</span>
+<span class="sd">        and each column corresponds to a feature.</span>
+
+<span class="sd">        By default, one SHAP interaction value is returned for each observation and</span>
+<span class="sd">        feature pairing; this value is calculated as the mean SHAP interaction value</span>
+<span class="sd">        across all crossfits.</span>
+
+<span class="sd">        The ``aggregation`` argument can be used to disable or change the aggregation</span>
+<span class="sd">        of SHAP interaction values:</span>
+
+<span class="sd">        - passing ``aggregation=None`` will disable SHAP interaction value</span>
+<span class="sd">          aggregation, generating one row for every crossfit, observation and</span>
+<span class="sd">          feature (identified by a hierarchical index with three levels)</span>
+<span class="sd">        - passing ``aggregation=&quot;mean&quot;`` (the default) will calculate the mean SHAP</span>
+<span class="sd">          interaction values across all crossfits</span>
+<span class="sd">        - passing ``aggregation=&quot;std&quot;`` will calculate the standard deviation of SHAP</span>
+<span class="sd">          interaction values across all crossfits, as the basis for determining the</span>
+<span class="sd">          uncertainty of SHAP calculations</span>
+
+<span class="sd">        :param aggregation: aggregate SHAP interaction values across splits;</span>
+<span class="sd">            permissible values are ``&quot;mean&quot;`` (calculate the mean), ``&quot;std&quot;``</span>
+<span class="sd">            (calculate the standard deviation), or ``None`` to prevent aggregation</span>
+<span class="sd">            (default: ``&quot;mean&quot;``)</span>
+<span class="sd">        :return: a data frame with SHAP interaction values</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ensure_fitted</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__split_multi_output_df</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__shap_interaction_values_calculator</span><span class="o">.</span><span class="n">get_shap_interaction_values</span><span class="p">(</span>
+                <span class="n">aggregation</span><span class="o">=</span><span class="n">aggregation</span>
+            <span class="p">)</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="LearnerInspector.feature_importance"><a class="viewcode-back" href="../../../apidoc/facet/inspection/facet.inspection.LearnerInspector.html#facet.inspection.LearnerInspector.feature_importance">[docs]</a>    <span class="k">def</span> <span class="nf">feature_importance</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">method</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;rms&quot;</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculate the relative importance of each feature based on SHAP values.</span>
+
+<span class="sd">        The importance values of all features always add up to `1.0`.</span>
+
+<span class="sd">        The calculation applies sample weights if specified in the underlying</span>
+<span class="sd">        :class:`.Sample`.</span>
+
+<span class="sd">        :param method: method for calculating feature importance. Supported methods</span>
+<span class="sd">            are ``rms`` (root of mean squares, default), ``mav`` (mean absolute</span>
+<span class="sd">            values)</span>
+<span class="sd">        :return: a series of length `n_features` for single-output models, or a</span>
+<span class="sd">            data frame of shape (n_features, n_outputs) for multi-output models</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ensure_fitted</span><span class="p">()</span>
+
+        <span class="n">methods</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;rms&quot;</span><span class="p">,</span> <span class="s2">&quot;mav&quot;</span><span class="p">}</span>
+        <span class="k">if</span> <span class="n">method</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">methods</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;arg method=&quot;</span><span class="si">{</span><span class="n">method</span><span class="si">}</span><span class="s1">&quot; must be one of </span><span class="si">{</span><span class="n">methods</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+
+        <span class="n">shap_matrix</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shap_calculator</span><span class="o">.</span><span class="n">get_shap_values</span><span class="p">(</span>
+            <span class="n">aggregation</span><span class="o">=</span><span class="s2">&quot;mean&quot;</span>
+        <span class="p">)</span>
+        <span class="n">weight</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sample_</span><span class="o">.</span><span class="n">weight</span>
+
+        <span class="n">abs_importance</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span>
+        <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;rms&quot;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">weight</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">abs_importance</span> <span class="o">=</span> <span class="n">shap_matrix</span><span class="o">.</span><span class="n">pow</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span><span class="o">.</span><span class="n">pow</span><span class="p">(</span><span class="mf">0.5</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">abs_importance</span> <span class="o">=</span> <span class="n">shap_matrix</span><span class="o">.</span><span class="n">pow</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">mul</span><span class="p">(</span><span class="n">weight</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span><span class="o">.</span><span class="n">pow</span><span class="p">(</span><span class="mf">0.5</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;mav&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;method is in </span><span class="si">{</span><span class="n">methods</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="k">if</span> <span class="n">weight</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">abs_importance</span> <span class="o">=</span> <span class="n">shap_matrix</span><span class="o">.</span><span class="n">abs</span><span class="p">()</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">abs_importance</span> <span class="o">=</span> <span class="n">shap_matrix</span><span class="o">.</span><span class="n">abs</span><span class="p">()</span><span class="o">.</span><span class="n">mul</span><span class="p">(</span><span class="n">weight</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+
+        <span class="k">def</span> <span class="nf">_normalize_importance</span><span class="p">(</span>
+            <span class="n">_importance</span><span class="p">:</span> <span class="n">T_SeriesOrDataFrame</span><span class="p">,</span>
+        <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">T_SeriesOrDataFrame</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">_importance</span><span class="o">.</span><span class="n">divide</span><span class="p">(</span><span class="n">_importance</span><span class="o">.</span><span class="n">sum</span><span class="p">())</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">output_names_</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">_normalize_importance</span><span class="p">(</span><span class="n">abs_importance</span><span class="p">)</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">output_names_</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="p">(</span>
+                <span class="n">abs_importance</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">nlevels</span> <span class="o">==</span> <span class="mi">2</span>
+            <span class="p">),</span> <span class="s2">&quot;2 index levels in place for multi-output models&quot;</span>
+
+            <span class="k">return</span> <span class="n">_normalize_importance</span><span class="p">(</span><span class="n">abs_importance</span><span class="o">.</span><span class="n">unstack</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="mi">0</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="LearnerInspector.feature_synergy_matrix"><a class="viewcode-back" href="../../../apidoc/facet/inspection/facet.inspection.LearnerInspector.html#facet.inspection.LearnerInspector.feature_synergy_matrix">[docs]</a>    <span class="k">def</span> <span class="nf">feature_synergy_matrix</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">absolute</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">symmetrical</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">aggregation</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">AGG_MEAN</span><span class="p">,</span>
+        <span class="n">clustered</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">]]:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculate the feature synergy matrix.</span>
+
+<span class="sd">        This yields an asymmetric matrix where each row and column represents one</span>
+<span class="sd">        feature, and the values at the intersections are the pairwise feature synergies,</span>
+<span class="sd">        ranging from `0.0` (no synergy - both features contribute to predictions fully</span>
+<span class="sd">        autonomously of each other) to `1.0` (full synergy, both features rely on</span>
+<span class="sd">        combining all of their information to achieve any contribution to predictions).</span>
+
+<span class="sd">        The synergy of a feature with itself is defined as `1.0`.</span>
+
+<span class="sd">        Feature synergy calculations require SHAP interaction values; if only SHAP</span>
+<span class="sd">        values are available consider calculating feature associations instead</span>
+<span class="sd">        (see :meth:`.feature_association_matrix`).</span>
+
+<span class="sd">        In the case of multi-target regression and non-binary classification, returns</span>
+<span class="sd">        a list of data frames with one matrix per output.</span>
+
+<span class="sd">        :param absolute: if ``False``, return relative synergy as a percentage of</span>
+<span class="sd">            total feature importance;</span>
+<span class="sd">            if ``True``, return absolute synergy as a portion of feature importance</span>
+<span class="sd">        :param symmetrical: if ``True``, return a symmetrical matrix quantifying</span>
+<span class="sd">            mutual synergy; if ``False``, return an asymmetrical matrix quantifying</span>
+<span class="sd">            unilateral synergy of the features represented by rows with the</span>
+<span class="sd">            features represented by columns (default: ``False``)</span>
+<span class="sd">        :param aggregation: if ``mean``, return mean values across all models in the</span>
+<span class="sd">            crossfit; additional aggregation methods will be added in future releases</span>
+<span class="sd">        :param clustered: if ``True``, reorder the rows and columns of the matrix</span>
+<span class="sd">            such that synergy between adjacent rows and columns is maximised; if</span>
+<span class="sd">            ``False``, keep rows and columns in the original features order</span>
+<span class="sd">            (default: ``True``)</span>
+<span class="sd">        :return: feature synergy matrix as a data frame of shape</span>
+<span class="sd">            `(n_features, n_features)`, or a list of data frames for multiple outputs</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ensure_fitted</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">__validate_aggregation_method</span><span class="p">(</span><span class="n">aggregation</span><span class="p">)</span>
+
+        <span class="n">explainer</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__interaction_explainer</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__feature_affinity_matrix</span><span class="p">(</span>
+            <span class="n">affinity_matrices</span><span class="o">=</span><span class="p">(</span>
+                <span class="n">explainer</span><span class="o">.</span><span class="n">to_frames</span><span class="p">(</span>
+                    <span class="n">explainer</span><span class="o">.</span><span class="n">synergy</span><span class="p">(</span><span class="n">symmetrical</span><span class="o">=</span><span class="n">symmetrical</span><span class="p">,</span> <span class="n">absolute</span><span class="o">=</span><span class="n">absolute</span><span class="p">)</span>
+                <span class="p">)</span>
+            <span class="p">),</span>
+            <span class="n">affinity_symmetrical</span><span class="o">=</span><span class="n">explainer</span><span class="o">.</span><span class="n">synergy</span><span class="p">(</span>
+                <span class="n">symmetrical</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">absolute</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">std</span><span class="o">=</span><span class="kc">False</span>
+            <span class="p">),</span>
+            <span class="n">clustered</span><span class="o">=</span><span class="n">clustered</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="LearnerInspector.feature_redundancy_matrix"><a class="viewcode-back" href="../../../apidoc/facet/inspection/facet.inspection.LearnerInspector.html#facet.inspection.LearnerInspector.feature_redundancy_matrix">[docs]</a>    <span class="k">def</span> <span class="nf">feature_redundancy_matrix</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">absolute</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">symmetrical</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">aggregation</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">AGG_MEAN</span><span class="p">,</span>
+        <span class="n">clustered</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">]]:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculate the feature redundancy matrix.</span>
+
+<span class="sd">        This yields an asymmetric matrix where each row and column represents one</span>
+<span class="sd">        feature, and the values at the intersections are the pairwise feature</span>
+<span class="sd">        redundancies, ranging from `0.0` (no redundancy - both features contribute to</span>
+<span class="sd">        predictions fully independently of each other) to `1.0` (full redundancy, either</span>
+<span class="sd">        feature can replace the other feature without loss of predictive power).</span>
+
+<span class="sd">        The redundancy of a feature with itself is defined as `1.0`.</span>
+
+<span class="sd">        Feature redundancy calculations require SHAP interaction values; if only SHAP</span>
+<span class="sd">        values are available consider calculating feature associations instead</span>
+<span class="sd">        (see :meth:`.feature_association_matrix`).</span>
+
+<span class="sd">        In the case of multi-target regression and non-binary classification, returns</span>
+<span class="sd">        a list of data frames with one matrix per output.</span>
+
+<span class="sd">        :param absolute: if ``False``, return relative redundancy as a percentage of</span>
+<span class="sd">            total feature importance;</span>
+<span class="sd">            if ``True``, return absolute redundancy as a portion of feature importance</span>
+<span class="sd">        :param symmetrical: if ``True``, return a symmetrical matrix quantifying</span>
+<span class="sd">            mutual redundancy; if ``False``, return an asymmetrical matrix quantifying</span>
+<span class="sd">            unilateral redundancy of the features represented by rows with the</span>
+<span class="sd">            features represented by columns (default: ``False``)</span>
+<span class="sd">        :param aggregation: if ``mean``, return mean values across all models in the</span>
+<span class="sd">            crossfit; additional aggregation methods will be added in future releases</span>
+<span class="sd">        :param clustered: if ``True``, reorder the rows and columns of the matrix</span>
+<span class="sd">            such that redundancy between adjacent rows and columns is maximised; if</span>
+<span class="sd">            ``False``, keep rows and columns in the original features order</span>
+<span class="sd">            (default: ``True``)</span>
+<span class="sd">        :return: feature redundancy matrix as a data frame of shape</span>
+<span class="sd">            `(n_features, n_features)`, or a list of data frames for multiple outputs</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ensure_fitted</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">__validate_aggregation_method</span><span class="p">(</span><span class="n">aggregation</span><span class="p">)</span>
+
+        <span class="n">explainer</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__interaction_explainer</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__feature_affinity_matrix</span><span class="p">(</span>
+            <span class="n">affinity_matrices</span><span class="o">=</span><span class="p">(</span>
+                <span class="n">explainer</span><span class="o">.</span><span class="n">to_frames</span><span class="p">(</span>
+                    <span class="n">explainer</span><span class="o">.</span><span class="n">redundancy</span><span class="p">(</span><span class="n">symmetrical</span><span class="o">=</span><span class="n">symmetrical</span><span class="p">,</span> <span class="n">absolute</span><span class="o">=</span><span class="n">absolute</span><span class="p">)</span>
+                <span class="p">)</span>
+            <span class="p">),</span>
+            <span class="n">affinity_symmetrical</span><span class="o">=</span><span class="n">explainer</span><span class="o">.</span><span class="n">redundancy</span><span class="p">(</span>
+                <span class="n">symmetrical</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">absolute</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">std</span><span class="o">=</span><span class="kc">False</span>
+            <span class="p">),</span>
+            <span class="n">clustered</span><span class="o">=</span><span class="n">clustered</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="LearnerInspector.feature_association_matrix"><a class="viewcode-back" href="../../../apidoc/facet/inspection/facet.inspection.LearnerInspector.html#facet.inspection.LearnerInspector.feature_association_matrix">[docs]</a>    <span class="k">def</span> <span class="nf">feature_association_matrix</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">absolute</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">symmetrical</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">aggregation</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">AGG_MEAN</span><span class="p">,</span>
+        <span class="n">clustered</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">]]:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculate the feature association matrix.</span>
+
+<span class="sd">        This yields an asymmetric matrix where each row and column represents one</span>
+<span class="sd">        feature, and the values at the intersections are the pairwise feature</span>
+<span class="sd">        associations, ranging from `0.0` (no association) to `1.0` (full association).</span>
+
+<span class="sd">        The association of a feature with itself is defined as `1.0`.</span>
+
+<span class="sd">        Feature association provides an upper bound for feature redundancy but might be</span>
+<span class="sd">        inflated by feature synergy.</span>
+
+<span class="sd">        While it is preferable to assess redundancy and synergy separately, association</span>
+<span class="sd">        can be calculated using only SHAP values, and thus can be used as a fallback</span>
+<span class="sd">        if no SHAP interaction values are available.</span>
+
+<span class="sd">        In the case of multi-target regression and non-binary classification, returns</span>
+<span class="sd">        a list of data frames with one matrix per output.</span>
+
+<span class="sd">        :param absolute: if ``False``, return relative association as a percentage of</span>
+<span class="sd">            total feature importance;</span>
+<span class="sd">            if ``True``, return absolute association as a portion of feature importance</span>
+<span class="sd">        :param symmetrical: if ``False``, return an asymmetrical matrix</span>
+<span class="sd">            quantifying unilateral association of the features represented by rows</span>
+<span class="sd">            with the features represented by columns;</span>
+<span class="sd">            if ``True``, return a symmetrical matrix quantifying mutual association</span>
+<span class="sd">            (default: ``False``)</span>
+<span class="sd">        :param aggregation: if ``mean``, return mean values across all models in the</span>
+<span class="sd">            crossfit; additional aggregation methods will be added in future releases</span>
+<span class="sd">        :param clustered: if ``True``, reorder the rows and columns of the matrix</span>
+<span class="sd">            such that association between adjacent rows and columns is maximised; if</span>
+<span class="sd">            ``False``, keep rows and columns in the original features order</span>
+<span class="sd">            (default: ``True``)</span>
+<span class="sd">        :return: feature association matrix as a data frame of shape</span>
+<span class="sd">            `(n_features, n_features)`, or a list of data frames for multiple outputs</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ensure_fitted</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">__validate_aggregation_method</span><span class="p">(</span><span class="n">aggregation</span><span class="p">)</span>
+
+        <span class="n">global_explainer</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shap_global_explainer</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__feature_affinity_matrix</span><span class="p">(</span>
+            <span class="n">affinity_matrices</span><span class="o">=</span><span class="p">(</span>
+                <span class="n">global_explainer</span><span class="o">.</span><span class="n">to_frames</span><span class="p">(</span>
+                    <span class="n">global_explainer</span><span class="o">.</span><span class="n">association</span><span class="p">(</span>
+                        <span class="n">absolute</span><span class="o">=</span><span class="n">absolute</span><span class="p">,</span> <span class="n">symmetrical</span><span class="o">=</span><span class="n">symmetrical</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
+            <span class="p">),</span>
+            <span class="n">affinity_symmetrical</span><span class="o">=</span><span class="n">global_explainer</span><span class="o">.</span><span class="n">association</span><span class="p">(</span>
+                <span class="n">symmetrical</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">absolute</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">std</span><span class="o">=</span><span class="kc">False</span>
+            <span class="p">),</span>
+            <span class="n">clustered</span><span class="o">=</span><span class="n">clustered</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="LearnerInspector.feature_synergy_linkage"><a class="viewcode-back" href="../../../apidoc/facet/inspection/facet.inspection.LearnerInspector.html#facet.inspection.LearnerInspector.feature_synergy_linkage">[docs]</a>    <span class="k">def</span> <span class="nf">feature_synergy_linkage</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">LinkageTree</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">LinkageTree</span><span class="p">]]:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculate a linkage tree based on the :meth:`.feature_synergy_matrix`.</span>
+
+<span class="sd">        The linkage tree can be used to render a dendrogram indicating clusters of</span>
+<span class="sd">        synergistic features.</span>
+
+<span class="sd">        In the case of multi-target regression and non-binary classification, returns</span>
+<span class="sd">        a list of linkage trees per target or class.</span>
+
+<span class="sd">        :return: linkage tree of feature synergies; list of linkage trees</span>
+<span class="sd">            for multi-target regressors or non-binary classifiers</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ensure_fitted</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__linkages_from_affinity_matrices</span><span class="p">(</span>
+            <span class="n">feature_affinity_matrix</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">__interaction_explainer</span><span class="o">.</span><span class="n">synergy</span><span class="p">(</span>
+                <span class="n">symmetrical</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">absolute</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">std</span><span class="o">=</span><span class="kc">False</span>
+            <span class="p">)</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="LearnerInspector.feature_redundancy_linkage"><a class="viewcode-back" href="../../../apidoc/facet/inspection/facet.inspection.LearnerInspector.html#facet.inspection.LearnerInspector.feature_redundancy_linkage">[docs]</a>    <span class="k">def</span> <span class="nf">feature_redundancy_linkage</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">LinkageTree</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">LinkageTree</span><span class="p">]]:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculate a linkage tree based on the :meth:`.feature_redundancy_matrix`.</span>
+
+<span class="sd">        The linkage tree can be used to render a dendrogram indicating clusters of</span>
+<span class="sd">        redundant features.</span>
+
+<span class="sd">        In the case of multi-target regression and non-binary classification, returns</span>
+<span class="sd">        a list of linkage trees per target or class.</span>
+
+<span class="sd">        :return: linkage tree of feature redundancies; list of linkage trees</span>
+<span class="sd">            for multi-target regressors or non-binary classifiers</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ensure_fitted</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__linkages_from_affinity_matrices</span><span class="p">(</span>
+            <span class="n">feature_affinity_matrix</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">__interaction_explainer</span><span class="o">.</span><span class="n">redundancy</span><span class="p">(</span>
+                <span class="n">symmetrical</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">absolute</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">std</span><span class="o">=</span><span class="kc">False</span>
+            <span class="p">)</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="LearnerInspector.feature_association_linkage"><a class="viewcode-back" href="../../../apidoc/facet/inspection/facet.inspection.LearnerInspector.html#facet.inspection.LearnerInspector.feature_association_linkage">[docs]</a>    <span class="k">def</span> <span class="nf">feature_association_linkage</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">LinkageTree</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">LinkageTree</span><span class="p">]]:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculate a linkage tree based on the :meth:`.feature_association_matrix`.</span>
+
+<span class="sd">        The linkage tree can be used to render a dendrogram indicating clusters of</span>
+<span class="sd">        associated features.</span>
+
+<span class="sd">        In the case of multi-target regression and non-binary classification, returns</span>
+<span class="sd">        a list of linkage trees per target or class.</span>
+
+<span class="sd">        :return: linkage tree of feature associations; list of linkage trees</span>
+<span class="sd">            for multi-target regressors or non-binary classifiers</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ensure_fitted</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__linkages_from_affinity_matrices</span><span class="p">(</span>
+            <span class="n">feature_affinity_matrix</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_shap_global_explainer</span><span class="o">.</span><span class="n">association</span><span class="p">(</span>
+                <span class="n">absolute</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">symmetrical</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">std</span><span class="o">=</span><span class="kc">False</span>
+            <span class="p">)</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="LearnerInspector.feature_interaction_matrix"><a class="viewcode-back" href="../../../apidoc/facet/inspection/facet.inspection.LearnerInspector.html#facet.inspection.LearnerInspector.feature_interaction_matrix">[docs]</a>    <span class="k">def</span> <span class="nf">feature_interaction_matrix</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">]]:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculate relative shap interaction values for all feature pairings.</span>
+
+<span class="sd">        Shap interactions quantify direct interactions between pairs of features.</span>
+<span class="sd">        For a quantification of overall interaction (including indirect interactions</span>
+<span class="sd">        across more than two features), see :meth:`.feature_synergy_matrix`.</span>
+
+<span class="sd">        The relative values are normalised to add up to `1.0`, and each value ranges</span>
+<span class="sd">        between `0.0` and `1.0`.</span>
+
+<span class="sd">        For features :math:`f_i` and :math:`f_j`, relative feature interaction</span>
+<span class="sd">        :math:`I` is calculated as</span>
+
+<span class="sd">        .. math::</span>
+<span class="sd">            I_{ij} = \\frac</span>
+<span class="sd">                {\\sigma(\\vec{\\phi}_{ij})}</span>
+<span class="sd">                {\\sum_{a=1}^n \\sum_{b=1}^n \\sigma(\\vec{\\phi}_{ab})}</span>
+
+<span class="sd">        where :math:`\\sigma(\\vec v)` is the standard deviation of all elements of</span>
+<span class="sd">        vector :math:`\\vec v`.</span>
+
+<span class="sd">        The total average interaction of features</span>
+<span class="sd">        :math:`f_i` and :math:`f_j` is</span>
+<span class="sd">        :math:`I_{ij} \</span>
+<span class="sd">            + I_{ji} \</span>
+<span class="sd">            = 2 I_{ij}`.</span>
+
+<span class="sd">        :math:`I_{ii}` is the residual, non-synergistic contribution</span>
+<span class="sd">        of feature :math:`f_i`</span>
+
+<span class="sd">        The matrix returned by this method is a lower-triangular matrix</span>
+
+<span class="sd">        .. math::</span>
+
+<span class="sd">            \\newcommand\\nan{\\mathit{nan}}</span>
+<span class="sd">            I_{} = \\begin{pmatrix}</span>
+<span class="sd">                I_{11} &amp; \\nan &amp; \\nan &amp; \\dots &amp; \\nan \\\\</span>
+<span class="sd">                2I_{21} &amp; I_{22} &amp; \\nan &amp; \\dots &amp; \\nan \\\\</span>
+<span class="sd">                2I_{31} &amp; 2I_{32} &amp; I_{33} &amp; \\dots &amp; \\nan \\\\</span>
+<span class="sd">                \\vdots &amp; \\vdots &amp; \\vdots &amp; \\ddots &amp; \\vdots \\\\</span>
+<span class="sd">                2I_{n1} &amp; 2I_{n2} &amp; 2I_{n3} &amp; \\dots &amp; I_{nn} \\\\</span>
+<span class="sd">            \\end{pmatrix}</span>
+
+<span class="sd">        with :math:`\\sum_{a=1}^n \\sum_{b=a}^n I_{ab} = 1`</span>
+
+<span class="sd">        In the case of multi-target regression and non-binary classification, returns</span>
+<span class="sd">        a list with one matrix per output.</span>
+
+<span class="sd">        :return: relative shap interaction values as a data frame of shape</span>
+<span class="sd">            `(n_features, n_features)`; or a list of such data frames</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">n_features</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">features_</span><span class="p">)</span>
+        <span class="n">n_outputs</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">output_names_</span><span class="p">)</span>
+
+        <span class="c1"># get a feature interaction array with shape</span>
+        <span class="c1"># (n_observations, n_outputs, n_features, n_features)</span>
+        <span class="c1"># where the innermost feature x feature arrays are symmetrical</span>
+        <span class="n">im_matrix_per_observation_and_output</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">shap_interaction_values</span><span class="p">(</span><span class="n">aggregation</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+            <span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">n_features</span><span class="p">,</span> <span class="n">n_outputs</span><span class="p">,</span> <span class="n">n_features</span><span class="p">))</span>
+            <span class="o">.</span><span class="n">swapaxes</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="p">)</span>
+
+        <span class="c1"># get the observation weights with shape</span>
+        <span class="c1"># (n_observations, n_outputs, n_features, n_features)</span>
+        <span class="n">weight</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span>
+        <span class="n">_weight_sr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sample_</span><span class="o">.</span><span class="n">weight</span>
+        <span class="k">if</span> <span class="n">_weight_sr</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># if sample weights are defined, convert them to an array</span>
+            <span class="c1"># and align the array with the dimensions of the feature interaction array</span>
+            <span class="n">weight</span> <span class="o">=</span> <span class="n">_weight_sr</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">weight</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="c1"># calculate the average interactions for each output and feature/feature</span>
+        <span class="c1"># interaction, based on the standard deviation assuming a mean of 0.0.</span>
+        <span class="c1"># The resulting matrix has shape (n_outputs, n_features, n_features)</span>
+        <span class="n">_interaction_squared</span> <span class="o">=</span> <span class="n">im_matrix_per_observation_and_output</span> <span class="o">**</span> <span class="mi">2</span>
+        <span class="k">if</span> <span class="n">weight</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">_interaction_squared</span> <span class="o">*=</span> <span class="n">weight</span>
+        <span class="n">interaction_matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">_interaction_squared</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">))</span>
+        <span class="k">assert</span> <span class="n">interaction_matrix</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="p">(</span><span class="n">n_outputs</span><span class="p">,</span> <span class="n">n_features</span><span class="p">,</span> <span class="n">n_features</span><span class="p">)</span>
+
+        <span class="c1"># we normalise the synergy matrix for each output to a total of 1.0</span>
+        <span class="n">interaction_matrix</span> <span class="o">/=</span> <span class="n">interaction_matrix</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+
+        <span class="c1"># the total interaction effect for features i and j is the total of matrix</span>
+        <span class="c1"># cells (i,j) and (j,i); theoretically both should be the same but to minimize</span>
+        <span class="c1"># numerical errors we total both in the lower matrix triangle (but excluding the</span>
+        <span class="c1"># matrix diagonal, hence k=1)</span>
+        <span class="n">interaction_matrix</span> <span class="o">+=</span> <span class="n">np</span><span class="o">.</span><span class="n">triu</span><span class="p">(</span><span class="n">interaction_matrix</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">swapaxes</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+
+        <span class="c1"># discard the upper matrix triangle by setting it to nan</span>
+        <span class="n">interaction_matrix</span> <span class="o">+=</span> <span class="n">np</span><span class="o">.</span><span class="n">triu</span><span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="n">n_features</span><span class="p">,</span> <span class="n">n_features</span><span class="p">),</span> <span class="n">fill_value</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">),</span> <span class="n">k</span><span class="o">=</span><span class="mi">1</span>
+        <span class="p">)[</span><span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:]</span>
+
+        <span class="c1"># create a data frame from the feature matrix</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__feature_matrix_to_df</span><span class="p">(</span><span class="n">interaction_matrix</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="LearnerInspector.shap_plot_data"><a class="viewcode-back" href="../../../apidoc/facet/inspection/facet.inspection.LearnerInspector.html#facet.inspection.LearnerInspector.shap_plot_data">[docs]</a>    <span class="k">def</span> <span class="nf">shap_plot_data</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ShapPlotData</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Consolidate SHAP values and corresponding feature values from this inspector</span>
+<span class="sd">        for use in SHAP plots offered by the</span>
+<span class="sd">        `shap &lt;https://shap.readthedocs.io/en/stable/&gt;`__ package.</span>
+
+<span class="sd">        The `shap` package provides functions for creating various SHAP plots.</span>
+<span class="sd">        Most of these functions require</span>
+
+<span class="sd">        - one or more SHAP value matrices as a single `numpy` array,</span>
+<span class="sd">          or a list of `numpy` arrays of shape `(n_observations, n_features)`</span>
+<span class="sd">        - a feature matrix of shape `(n_observations, n_features)`, which can be</span>
+<span class="sd">          provided as a data frame to preserve feature names</span>
+
+<span class="sd">        This method provides this data inside a :class:`.ShapPlotData` object, plus</span>
+
+<span class="sd">        - the names of all outputs (i.e., the target names in case of regression,</span>
+<span class="sd">          or the class names in case of classification)</span>
+<span class="sd">        - corresponding target values as a series, or as a data frame in the case of</span>
+<span class="sd">          multiple targets</span>
+
+<span class="sd">        This method also ensures that the rows of all arrays, frames, and series are</span>
+<span class="sd">        aligned, even if only a subset of the observations in the original sample was</span>
+<span class="sd">        used to calculate SHAP values.</span>
+
+<span class="sd">        Calculates mean shap values for each observation and feature, across all</span>
+<span class="sd">        splits for which SHAP values were calculated.</span>
+
+<span class="sd">        :return: consolidated SHAP and feature values for use shap plots</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">shap_values</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">]]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">shap_values</span><span class="p">(</span>
+            <span class="n">aggregation</span><span class="o">=</span><span class="s2">&quot;mean&quot;</span>
+        <span class="p">)</span>
+
+        <span class="n">output_names</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_names_</span>
+        <span class="n">shap_values_numpy</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]]</span>
+        <span class="n">included_observations</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Index</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">output_names</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">shap_values</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">]</span>
+            <span class="n">shap_values_numpy</span> <span class="o">=</span> <span class="p">[</span><span class="n">s</span><span class="o">.</span><span class="n">values</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">shap_values</span><span class="p">]</span>
+            <span class="n">included_observations</span> <span class="o">=</span> <span class="n">shap_values</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">index</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">shap_values</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
+            <span class="n">shap_values_numpy</span> <span class="o">=</span> <span class="n">shap_values</span><span class="o">.</span><span class="n">values</span>
+            <span class="n">included_observations</span> <span class="o">=</span> <span class="n">shap_values</span><span class="o">.</span><span class="n">index</span>
+
+        <span class="n">sample</span><span class="p">:</span> <span class="n">Sample</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">crossfit_</span><span class="o">.</span><span class="n">sample_</span><span class="o">.</span><span class="n">subsample</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="n">included_observations</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">ShapPlotData</span><span class="p">(</span>
+            <span class="n">shap_values</span><span class="o">=</span><span class="n">shap_values_numpy</span><span class="p">,</span>
+            <span class="n">sample</span><span class="o">=</span><span class="n">sample</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">__feature_matrix_to_df</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">matrix</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">]]:</span>
+        <span class="c1"># transform a matrix of shape (n_outputs, n_features, n_features)</span>
+        <span class="c1"># to a data frame</span>
+
+        <span class="n">feature_index</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">crossfit_</span><span class="o">.</span><span class="n">pipeline</span><span class="o">.</span><span class="n">feature_names_out_</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span>
+            <span class="n">Sample</span><span class="o">.</span><span class="n">IDX_FEATURE</span>
+        <span class="p">)</span>
+
+        <span class="n">n_features</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">feature_index</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">matrix</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">output_names_</span><span class="p">),</span> <span class="n">n_features</span><span class="p">,</span> <span class="n">n_features</span><span class="p">)</span>
+
+        <span class="c1"># convert array to data frame(s) with features as row and column indices</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">matrix</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
+                <span class="n">data</span><span class="o">=</span><span class="n">matrix</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">index</span><span class="o">=</span><span class="n">feature_index</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="n">feature_index</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[</span>
+                <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">m</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">feature_index</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="n">feature_index</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">matrix</span>
+            <span class="p">]</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">__feature_affinity_matrix</span><span class="p">(</span>
+        <span class="n">affinity_matrices</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">],</span>
+        <span class="n">affinity_symmetrical</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+        <span class="n">clustered</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="k">if</span> <span class="n">clustered</span><span class="p">:</span>
+            <span class="n">affinity_matrices</span> <span class="o">=</span> <span class="n">LearnerInspector</span><span class="o">.</span><span class="n">__sort_affinity_matrices</span><span class="p">(</span>
+                <span class="n">affinity_matrices</span><span class="o">=</span><span class="n">affinity_matrices</span><span class="p">,</span>
+                <span class="n">symmetrical_affinity_matrices</span><span class="o">=</span><span class="n">affinity_symmetrical</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="n">LearnerInspector</span><span class="o">.</span><span class="n">__isolate_single_frame</span><span class="p">(</span><span class="n">affinity_matrices</span><span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">__sort_affinity_matrices</span><span class="p">(</span>
+        <span class="n">affinity_matrices</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">],</span>
+        <span class="n">symmetrical_affinity_matrices</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">]:</span>
+        <span class="c1"># abbreviate a very long function name to stay within the permitted line length</span>
+        <span class="n">fn_linkage</span> <span class="o">=</span> <span class="n">LearnerInspector</span><span class="o">.</span><span class="n">__linkage_matrix_from_affinity_matrix_for_output</span>
+
+        <span class="k">return</span> <span class="p">[</span>
+            <span class="n">affinity_matrix</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">feature_order</span><span class="p">,</span> <span class="n">feature_order</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">affinity_matrix</span><span class="p">,</span> <span class="n">symmetrical_affinity_matrix</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span>
+                <span class="n">affinity_matrices</span><span class="p">,</span> <span class="n">symmetrical_affinity_matrices</span>
+            <span class="p">)</span>
+            <span class="k">for</span> <span class="n">feature_order</span> <span class="ow">in</span> <span class="p">(</span>
+                <span class="n">leaves_list</span><span class="p">(</span>
+                    <span class="n">Z</span><span class="o">=</span><span class="n">optimal_leaf_ordering</span><span class="p">(</span>
+                        <span class="n">Z</span><span class="o">=</span><span class="n">fn_linkage</span><span class="p">(</span>
+                            <span class="n">feature_affinity_matrix</span><span class="o">=</span><span class="n">symmetrical_affinity_matrix</span>
+                        <span class="p">),</span>
+                        <span class="n">y</span><span class="o">=</span><span class="n">symmetrical_affinity_matrix</span><span class="p">,</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
+                <span class="c1"># reverse the index list so larger values tend to end up on top</span>
+                <span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span>
+            <span class="p">)</span>
+        <span class="p">]</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">__split_multi_output_df</span><span class="p">(</span>
+        <span class="n">multi_output_df</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">]]:</span>
+        <span class="c1"># Split a multi-output data frame into a list of single-output data frames.</span>
+        <span class="c1"># Return single-output data frames as is.</span>
+        <span class="c1"># Multi-output data frames are grouped by level 0 in the column index.</span>
+        <span class="k">if</span> <span class="n">multi_output_df</span><span class="o">.</span><span class="n">columns</span><span class="o">.</span><span class="n">nlevels</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">multi_output_df</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[</span>
+                <span class="n">multi_output_df</span><span class="o">.</span><span class="n">xs</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="n">output_name</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">drop_level</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">output_name</span> <span class="ow">in</span> <span class="p">(</span>
+                    <span class="n">cast</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">MultiIndex</span><span class="p">,</span> <span class="n">multi_output_df</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span><span class="o">.</span><span class="n">levels</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="p">)</span>
+            <span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">__linkages_from_affinity_matrices</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">feature_affinity_matrix</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">LinkageTree</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">LinkageTree</span><span class="p">]]:</span>
+        <span class="c1"># calculate the linkage trees for all outputs in a feature distance matrix;</span>
+        <span class="c1"># matrix has shape (n_outputs, n_features, n_features) with values ranging from</span>
+        <span class="c1"># (1 = closest, 0 = most distant)</span>
+        <span class="c1"># return a linkage tree if there is only one output, else return a list of</span>
+        <span class="c1"># linkage trees</span>
+
+        <span class="n">feature_importance</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">feature_importance</span><span class="p">(</span><span class="n">method</span><span class="o">=</span><span class="s2">&quot;rms&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">feature_affinity_matrix</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="c1"># we have only a single output</span>
+            <span class="c1"># feature importance is already a series</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__linkage_tree_from_affinity_matrix_for_output</span><span class="p">(</span>
+                <span class="n">feature_affinity_matrix</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">feature_importance</span>
+            <span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># noinspection PyCompatibility</span>
+            <span class="n">feature_importance_iter</span><span class="p">:</span> <span class="p">(</span>
+                <span class="n">Iterable</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">]]</span>
+            <span class="p">)</span> <span class="o">=</span> <span class="n">feature_importance</span><span class="o">.</span><span class="n">iteritems</span><span class="p">()</span>
+
+            <span class="k">return</span> <span class="p">[</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">__linkage_tree_from_affinity_matrix_for_output</span><span class="p">(</span>
+                    <span class="n">feature_affinity_for_output</span><span class="p">,</span> <span class="n">feature_importance_for_output</span>
+                <span class="p">)</span>
+                <span class="k">for</span> <span class="n">feature_affinity_for_output</span><span class="p">,</span> <span class="p">(</span>
+                    <span class="n">_</span><span class="p">,</span>
+                    <span class="n">feature_importance_for_output</span><span class="p">,</span>
+                <span class="p">)</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">feature_affinity_matrix</span><span class="p">,</span> <span class="n">feature_importance_iter</span><span class="p">)</span>
+            <span class="p">]</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">__linkage_tree_from_affinity_matrix_for_output</span><span class="p">(</span>
+        <span class="n">feature_affinity_matrix</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">feature_importance</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LinkageTree</span><span class="p">:</span>
+        <span class="c1"># calculate the linkage tree from the a given output in a feature distance</span>
+        <span class="c1"># matrix;</span>
+        <span class="c1"># matrix has shape (n_features, n_features) with values ranging from</span>
+        <span class="c1"># (1 = closest, 0 = most distant)</span>
+
+        <span class="n">linkage_matrix</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">LearnerInspector</span><span class="o">.</span><span class="n">__linkage_matrix_from_affinity_matrix_for_output</span><span class="p">(</span>
+                <span class="n">feature_affinity_matrix</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Feature labels and weights will be used as the leaves of the linkage tree.</span>
+        <span class="c1"># Select only the features that appear in the distance matrix, and in the</span>
+        <span class="c1"># correct order</span>
+
+        <span class="c1"># build and return the linkage tree</span>
+        <span class="k">return</span> <span class="n">LinkageTree</span><span class="p">(</span>
+            <span class="n">scipy_linkage_matrix</span><span class="o">=</span><span class="n">linkage_matrix</span><span class="p">,</span>
+            <span class="n">leaf_names</span><span class="o">=</span><span class="n">feature_importance</span><span class="o">.</span><span class="n">index</span><span class="p">,</span>
+            <span class="n">leaf_weights</span><span class="o">=</span><span class="n">feature_importance</span><span class="o">.</span><span class="n">values</span><span class="p">,</span>
+            <span class="n">max_distance</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+            <span class="n">distance_label</span><span class="o">=</span><span class="s2">&quot;feature distance&quot;</span><span class="p">,</span>
+            <span class="n">leaf_label</span><span class="o">=</span><span class="s2">&quot;feature&quot;</span><span class="p">,</span>
+            <span class="n">weight_label</span><span class="o">=</span><span class="s2">&quot;feature importance&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">__linkage_matrix_from_affinity_matrix_for_output</span><span class="p">(</span>
+        <span class="n">feature_affinity_matrix</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="c1"># calculate the linkage matrix from the a given output in a feature distance</span>
+        <span class="c1"># matrix;</span>
+        <span class="c1"># matrix has shape (n_features, n_features) with values ranging from</span>
+        <span class="c1"># (1 = closest, 0 = most distant)</span>
+
+        <span class="c1"># compress the distance matrix (required by SciPy)</span>
+        <span class="n">compressed_distance_vector</span> <span class="o">=</span> <span class="n">squareform</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="nb">abs</span><span class="p">(</span><span class="n">feature_affinity_matrix</span><span class="p">))</span>
+
+        <span class="c1"># calculate the linkage matrix</span>
+        <span class="k">return</span> <span class="n">linkage</span><span class="p">(</span><span class="n">y</span><span class="o">=</span><span class="n">compressed_distance_vector</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">&quot;single&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_ensure_shap_interaction</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shap_interaction</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                <span class="s2">&quot;SHAP interaction values have not been calculated. &quot;</span>
+                <span class="s2">&quot;Create an inspector with parameter &#39;shap_interaction=True&#39; to &quot;</span>
+                <span class="s2">&quot;enable calculations involving SHAP interaction values.&quot;</span>
+            <span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">__isolate_single_frame</span><span class="p">(</span>
+        <span class="n">frames</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">],</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">]]:</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">frames</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">frames</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">frames</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">__validate_aggregation_method</span><span class="p">(</span><span class="n">aggregation</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">aggregation</span> <span class="o">!=</span> <span class="n">LearnerInspector</span><span class="o">.</span><span class="n">AGG_MEAN</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;unknown aggregation method: aggregation=</span><span class="si">{</span><span class="n">aggregation</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">__shap_interaction_values_calculator</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ShapInteractionValuesCalculator</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ensure_shap_interaction</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">cast</span><span class="p">(</span><span class="n">ShapInteractionValuesCalculator</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shap_calculator</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">__interaction_explainer</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ShapInteractionGlobalExplainer</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ensure_shap_interaction</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">cast</span><span class="p">(</span><span class="n">ShapInteractionGlobalExplainer</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shap_global_explainer</span><span class="p">)</span></div>
+
+
+<span class="n">__tracker</span><span class="o">.</span><span class="n">validate</span><span class="p">()</span>
+</pre></div>
+
+              </div>
+              
+              
+              <div class='prev-next-bottom'>
+                
+
+              </div>
+              
+          </main>
+          
+
+      </div>
+    </div>
+
+    
+  <script src="../../../_static/js/index.d3f166471bb80abb5163.js"></script>
+
+
+    <footer class="footer mt-5 mt-md-0">
+  <div class="container">
+    <p>
+          &copy; Copyright 2021, Boston Consulting Group (BCG).<br/>
+        Created using <a href="http://sphinx-doc.org/">Sphinx</a> 3.4.3.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>
