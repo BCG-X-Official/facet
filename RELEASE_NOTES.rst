@@ -7,6 +7,17 @@ FACET 1.1
 FACET 1.1 refines and enhances the association/synergy/redundancy calculations provided
 by the :class:`.LearnerInspector`.
 
+
+1.1.2
+~~~~~
+
+- DOC: use a downloadable dataset in the `getting started` notebook
+- FIX: import :mod:`catboost` if present, else create a local module mockup
+- FIX: correctly identify if ``sample_weights`` is undefined when re-fitting a model
+  on the full dataset in a :class:`.LearnerCrossfit`
+- BUILD: relax package dependencies to support any `numpy` version 1.`x` from 1.16
+
+
 1.1.1
 ~~~~~
 
@@ -26,7 +37,7 @@ by the :class:`.LearnerInspector`.
   model in a crossfit, then returns the mean of all resulting matrices. This leads to a
   slight increase in accuracy, and also allows us to calculate the standard deviation
   across matrices as an indication of confidence for each calculated value.
-- API: Method :meth:`.LernerInspector.shap_plot_data` now returns SHAP values for the
+- API: Method :meth:`.LearnerInspector.shap_plot_data` now returns SHAP values for the
   positive class of binary classifiers.
 - API: Increase efficiency of :class:`.LearnerRanker` parallelization by adopting the
   new :class:`pytools.parallelization.JobRunner` API provided by :mod:`pytools`

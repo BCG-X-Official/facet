@@ -90,13 +90,13 @@ Enhanced Machine Learning Workflow
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 To demonstrate the model inspection capability of FACET, we first create a
-pipeline to fit a learner. In this simple example we use the
-`diabetes dataset <https://www4.stat.ncsu.edu/~boos/var.select/diabetes.tab.txt>`__
+pipeline to fit a learner. In this simple example we will use the
+`diabetes dataset <https://web.stanford.edu/~hastie/Papers/LARS/diabetes.data>`__
 which contains age, sex, BMI and blood pressure along with 6 blood serum
-measurements as features. A transformed version of this dataset is also available
-on scikit-learn
+measurements as features. This dataset was used in this
+`publication <https://statweb.stanford.edu/~tibs/ftp/lars.pdf>`__.
+A transformed version of this dataset is also available on scikit-learn
 `here <https://scikit-learn.org/stable/datasets/toy_dataset.html#diabetes-dataset>`__.
-
 
 In this quickstart we will train a Random Forest regressor using 10 repeated
 5-fold CV to predict disease progression after one year. With the use of
@@ -119,8 +119,22 @@ hyperparameter configurations and even multiple learners with the `LearnerRanker
     from facet.data import Sample
     from facet.selection import LearnerRanker, LearnerGrid
 
-    # load the diabetes dataset
-    diabetes_df = pd.read_csv('diabetes_quickstart.csv')
+    # declaring url with data
+    data_url = 'https://web.stanford.edu/~hastie/Papers/LARS/diabetes.data'
+
+    #importing data from url
+    diabetes_df = pd.read_csv(data_url, delimiter='\t').rename(
+        # renaming columns for better readability
+        columns={
+            'S1': 'TC', # total serum cholesterol
+            'S2': 'LDL', # low-density lipoproteins
+            'S3': 'HDL', # high-density lipoproteins
+            'S4': 'TCH', # total cholesterol/ HDL
+            'S5': 'LTG', # lamotrigine level
+            'S6': 'GLU', # blood sugar level
+            'Y': 'Disease_progression' # measure of progress since 1yr of baseline
+        }
+    )
 
     # create FACET sample object
     diabetes_sample = Sample(observations=diabetes_df, target_name="Disease_progression")
@@ -236,10 +250,10 @@ The key global metrics for each pair of features in a model are:
 
 For any feature pair (A, B), the first feature (A) is the row, and the second
 feature (B) the column. For example, looking across the row for `LTG` (Lamotrigine)
-there is relatively minimal synergy (≤1%) with other features in the model.
-However, looking down the column for `LTG` (i.e., perspective of other features
-in a pair with `LTG`) we find many features (the rows) are synergistic (up to 27%)
-with `LTG`. We can conclude that:
+there is hardly any synergy with other features in the model (≤ 1%).
+However, looking down the column for `LTG` (i.e., from the perspective of other features
+relative with `LTG`) we find that many features (the rows) are aided by synergy with
+with `LTG` (up to 27% in the case of LDL). We conclude that:
 
 - `LTG` is a strongly autonomous feature, displaying minimal synergy with other
   features for predicting disease progression after one year.
@@ -248,7 +262,7 @@ with `LTG`. We can conclude that:
 
 High synergy between pairs of features must be considered carefully when investigating
 impact, as the values of both features jointly determine the outcome. It would not make
-much sense to consider `TC` (T-Cells) without the context provided by `LDL` given close
+much sense to consider `LDL` without the context provided by `LTG` given close
 to 27% synergy of `LDL` with `LTG` for predicting progression after one year.
 
 **Redundancy**
@@ -267,12 +281,12 @@ For any feature pair (A, B), the first feature (A) is the row, and the second fe
 (B) the column. For example, if we look at the feature pair (`LDL`, `TC`) from the
 perspective of `LDL` (Low-Density Lipoproteins), then we look-up the row for `LDL`
 and the column for `TC` and find 38% redundancy. This means that 38% of the information
-in `LDL` is duplicated with `TC` to predict disease progression after one year. This
+in `LDL` to predict disease progression is duplicated in `TC`. This
 redundancy is the same when looking "from the perspective" of `TC` for (`TC`, `LDL`),
-but need not be symmetrical in all cases (see `LTG` vs. `TSH`).
+but need not be symmetrical in all cases (see `LTG` vs. `TCH`).
 
-If we look at `TSH`, it has between 22–32% redundancy each with `LTG` and `HDL`, but
-the same does not hold between `LTG` and `HDL` – meaning `TSH` shares different
+If we look at `TCH`, it has between 22–32% redundancy each with `LTG` and `HDL`, but
+the same does not hold between `LTG` and `HDL` – meaning `TCH` shares different
 information with each of the two features.
 
 
@@ -302,9 +316,9 @@ Let's look at the example for redundancy.
     :width: 600
 
 Based on the dendrogram we can see that the feature pairs (`LDL`, `TC`)
-and (`HDL`, `TSH`) each represent a cluster in the dendrogram and that `LTG` and `BMI`
+and (`HDL`, `TCH`) each represent a cluster in the dendrogram and that `LTG` and `BMI`
 have the highest importance. As potential next actions we could explore the impact of
-removing `TSH`, and one of `TC` or `LDL` to further simplify the model and obtain a
+removing `TCH`, and one of `TC` or `LDL` to further simplify the model and obtain a
 reduced set of independent features.
 
 Please see the
@@ -369,7 +383,7 @@ quantify the uncertainty by using bootstrap confidence intervals.
 .. image:: sphinx/source/_static/simulation_output.png
 
 We would conclude from the figure that higher values of `BMI` are associated with
-an increase in disease progression after one year, and that for a `BMI` of 29
+an increase in disease progression after one year, and that for a `BMI` of 28
 and above, there is a significant increase in disease progression after one year
 of at least 26 points.
 
@@ -447,7 +461,7 @@ or have a look at
 .. |azure_build| image:: https://dev.azure.com/gamma-facet/facet/_apis/build/status/BCG-Gamma.facet?repoName=BCG-Gamma%2Ffacet&branchName=develop
    :target: https://dev.azure.com/gamma-facet/facet/_build?definitionId=7&_a=summary
 
-.. |azure_code_cov| image:: https://img.shields.io/azure-devops/coverage/gamma-facet/facet/7/develop.svg
+.. |azure_code_cov| image:: https://img.shields.io/azure-devops/coverage/gamma-facet/facet/7/1.1.x
    :target: https://dev.azure.com/gamma-facet/facet/_build?definitionId=7&_a=summary
 
 .. |python_versions| image:: https://img.shields.io/badge/python-3.6|3.7|3.8-blue.svg

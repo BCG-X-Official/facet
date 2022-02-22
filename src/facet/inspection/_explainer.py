@@ -41,6 +41,15 @@ else:
         log.warning(e)
         Explainer = type("Explainer", (), {})
 
+try:
+    import catboost
+except ImportError:
+    from types import ModuleType
+
+    catboost = ModuleType("catboost")
+    catboost.Pool = type("Pool", (), {})
+
+
 #
 # Ensure all symbols introduced below are included in __all__
 #
@@ -64,7 +73,7 @@ class BaseExplainer(metaclass=ABCMeta):
     @abstractmethod
     def shap_values(
         self,
-        X: Union[np.ndarray, pd.DataFrame, "catboost.Pool"],  # noqa: F821
+        X: Union[np.ndarray, pd.DataFrame, catboost.Pool],
         y: Union[None, np.ndarray, pd.Series] = None,
         **kwargs: Any,
     ) -> Union[np.ndarray, List[np.ndarray]]:
@@ -85,7 +94,7 @@ class BaseExplainer(metaclass=ABCMeta):
     @abstractmethod
     def shap_interaction_values(
         self,
-        X: Union[np.ndarray, pd.DataFrame, "catboost.Pool"],  # noqa: F821
+        X: Union[np.ndarray, pd.DataFrame, catboost.Pool],
         y: Union[None, np.ndarray, pd.Series] = None,
         **kwargs: Any,
     ) -> Union[np.ndarray, List[np.ndarray]]:
@@ -245,7 +254,7 @@ class _KernelExplainer(shap.KernelExplainer, BaseExplainer):
     # noinspection PyPep8Naming,PyUnresolvedReferences
     def shap_interaction_values(
         self,
-        X: Union[np.ndarray, pd.DataFrame, "catboost.Pool"],  # noqa: F821
+        X: Union[np.ndarray, pd.DataFrame, catboost.Pool],
         y: Union[None, np.ndarray, pd.Series] = None,
         **kwargs,
     ) -> np.ndarray:
