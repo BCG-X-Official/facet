@@ -12,19 +12,19 @@ build:
 requirements:
   host:
     - flit>=3.0.*
-    - numpy {{ environ.get('FACET_V_NUMPY', '>=1.11') }}
+    - numpy           {{ environ.get('FACET_V_NUMPY', '>=1.11') }}
     - pip>=20
     - python=3.8
   run:
-    - gamma-pytools {{ environ.get('FACET_V_GAMMA_PYTOOLS') }}
-    - matplotlib {{ environ.get('FACET_V_MATPLOTLIB') }}
-    - numpy {{ environ.get('FACET_V_NUMPY') }}
-    - packaging {{ environ.get('FACET_V_PACKAGING') }}
-    - pandas {{ environ.get('FACET_V_PANDAS') }}
-    - python {{ environ.get('FACET_V_PYTHON') }}
-    - scipy {{ environ.get('FACET_V_SCIPY') }}
-    - shap {{ environ.get('FACET_V_SHAP') }}
-    - sklearndf {{ environ.get('FACET_V_SKLEARNDF') }}
+    - gamma-pytools   {{ environ.get('FACET_V_GAMMA_PYTOOLS') }}
+    - matplotlib-base {{ environ.get('FACET_V_MATPLOTLIB') }}
+    - numpy           {{ environ.get('FACET_V_NUMPY') }}
+    - packaging       {{ environ.get('FACET_V_PACKAGING') }}
+    - pandas          {{ environ.get('FACET_V_PANDAS') }}
+    - python          {{ environ.get('FACET_V_PYTHON') }}
+    - scipy           {{ environ.get('FACET_V_SCIPY') }}
+    - shap            {{ environ.get('FACET_V_SHAP') }}
+    - sklearndf       {{ environ.get('FACET_V_SKLEARNDF') }}
 
 test:
   imports:
@@ -37,14 +37,14 @@ test:
   requires:
     - pytest=5.2.*
     # additional requirements of sklearndf
-    - boruta_py {{ environ.get('FACET_V_BORUTA') }}
-    - lightgbm {{ environ.get('FACET_V_LIGHTGBM') }}
-    - scikit-learn {{ environ.get('FACET_V_SCIKIT_LEARN') }}
+    - boruta_py      {{ environ.get('FACET_V_BORUTA') }}
+    - lightgbm       {{ environ.get('FACET_V_LIGHTGBM') }}
+    - scikit-learn   {{ environ.get('FACET_V_SCIKIT_LEARN') }}
     # additional requirements of gamma-pytools
-    - ipython {{ environ.get('FACET_V_IPYTHON') }}
-    - joblib {{ environ.get('FACET_V_JOBLIB') }}
-    # additional requirements of shap
+    - joblib         {{ environ.get('FACET_V_JOBLIB') }}
     - typing_inspect {{ environ.get('FACET_V_TYPING_INSPECT') }}
+    # additional requirements of shap
+    - ipython        {{ environ.get('FACET_V_IPYTHON') }}
   commands:
     - conda list
     - python -c 'import facet;
