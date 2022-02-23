@@ -61,7 +61,7 @@ FACET is licensed under Apache 2.0 as described in the
 .. |pypi| image:: https://badge.fury.io/py/gamma-facet.svg
     :target: https://pypi.org/project/gamma-facet/
 
-.. |python_versions| image:: https://img.shields.io/badge/python-3.6|3.7|3.8-blue.svg
+.. |python_versions| image:: https://img.shields.io/badge/python-3.7|3.8-blue.svg
    :target: https://www.python.org/downloads/release/python-380/
 
 .. |code_style| image:: https://img.shields.io/badge/code%20style-black-000000.svg

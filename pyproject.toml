@@ -27,7 +27,7 @@ requires = [
     "ipython        >=7",
 ]
 
-requires-python = ">=3.6,<4a"
+requires-python = ">=3.7,<4a"
 
 classifiers = [
     "Development Status :: 5 - Production/Stable",
@@ -39,7 +39,6 @@ classifiers = [
     "Operating System :: Unix",
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.6",
     "Programming Language :: Python :: 3.7",
     "Programming Language :: Python :: 3.8",
     "Topic :: Scientific/Engineering",
@@ -76,7 +75,7 @@ matplotlib     = "~=3.0.3"
 numpy          = ">=1.17.5,<18a"
 packaging      = "~=20.9"
 pandas         = "~=0.24.2"
-python         = "~=3.6.13"
+python         = "~=3.7"
 scipy          = "~=1.2.1"
 shap           = "~=0.34.0"
 sklearndf      = "~=2.0.dev0"
