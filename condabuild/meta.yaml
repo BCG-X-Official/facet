@@ -12,7 +12,7 @@ build:
 requirements:
   host:
     - flit>=3.0.*
-    - numpy {{ environ.get('FACET_V_NUMPY', '>=1.11') }}
+    - numpy           {{ environ.get('FACET_V_NUMPY', '>=1.11') }}
     - pip>=20
     - python=3.8
   run:
