@@ -14,6 +14,7 @@ from typing import (
     Type,
     TypeVar,
     Union,
+    cast,
 )
 
 import numpy as np
@@ -83,7 +84,7 @@ class UnivariateSimulationResult(Generic[T_Partition]):
     feature_name: str
 
     #: Name of the target for which outputs are simulated.
-    output_name: Union[str, Sequence[str]]
+    output_name: str
 
     #: The unit of the simulated outputs (e.g., uplift or class probability).
     output_unit: str
@@ -118,7 +119,7 @@ class UnivariateSimulationResult(Generic[T_Partition]):
         mean: Sequence[float],
         sem: Sequence[float],
         feature_name: str,
-        output_name: Union[str, Sequence[str]],
+        output_name: str,
         output_unit: str,
         baseline: float,
         confidence_level: float,
@@ -246,6 +247,7 @@ class BaseUnivariateSimulator(
 
         self.model = model
         self.sample = sample
+        self.output_name = cast(str, sample.target_name)
         self.confidence_level = confidence_level
 
     # add parallelization parameters to __init__ docstring
@@ -279,7 +281,7 @@ class BaseUnivariateSimulator(
             mean=mean,
             sem=sem,
             feature_name=feature_name,
-            output_name=sample.target_name,
+            output_name=self.output_name,
             output_unit=self.output_unit,
             baseline=self.baseline(),
             confidence_level=self.confidence_level,
