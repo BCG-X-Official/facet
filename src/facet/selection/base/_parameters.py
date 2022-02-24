@@ -126,7 +126,7 @@ class CandidateEstimatorDF(ClassifierDF, RegressorDF, TransformerDF):
 
     def __init__(
         self,
-        candidate: Optional[EstimatorDF] = None,
+        candidate: Optional[Union[ClassifierDF, RegressorDF, TransformerDF]] = None,
         candidate_name: Optional[str] = None,
     ) -> None:
         """
