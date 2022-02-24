@@ -5,7 +5,7 @@ Factories for SHAP explainers from the ``shap`` package.
 import functools
 import logging
 from abc import ABCMeta, abstractmethod
-from typing import Any, Callable, Dict, Iterable, List, Mapping, Optional, Tuple, Union
+from typing import Any, Callable, Dict, Iterable, List, Mapping, Optional, Union
 
 import numpy as np
 import pandas as pd
@@ -182,8 +182,11 @@ class ExplainerJob(Job[Union[np.ndarray, List[np.ndarray]]]):
     A call to an explainer function with given `X` and `y` values.
     """
 
-    #: the explainer method to call, wrapped in a tuple to avoid confusion with methods
-    explain_fn: Tuple[Callable[..., Union[np.ndarray, List[np.ndarray]]]]
+    #: the SHAP explainer to use
+    explainer: BaseExplainer
+
+    #: if ``False``, calculate SHAp values; otherwise, calculate SHAP interaction values
+    interactions: bool
 
     #: the feature values of the observations to be explained
     X: Union[np.ndarray, pd.DataFrame]
@@ -197,29 +200,40 @@ class ExplainerJob(Job[Union[np.ndarray, List[np.ndarray]]]):
     # noinspection PyPep8Naming
     def __init__(
         self,
-        explain_fn: Callable[..., Union[np.ndarray, List[np.ndarray]]],
+        explainer: BaseExplainer,
         X: Union[np.ndarray, pd.DataFrame],
         y: Union[None, np.ndarray, pd.Series] = None,
+        *,
+        interactions: bool,
         **kwargs: Any,
     ) -> None:
         """
-        :param explain_fn: the explainer method to call
+        :param explainer: the SHAP explainer to use
         :param X: the feature values of the observations to be explained
         :param y: the target values of the observations to be explained
+        :param interactions: if ``False``, calculate SHAP values; if ``True``,
+            calculate SHAP interaction values
         :param kwargs: additional arguments specific to the explainer method
         """
-        self.explain_fn = (explain_fn,)
+        self.explainer = explainer
         self.X = X
         self.y = y
+        self.interactions = interactions
         self.kwargs = kwargs
 
     def run(self) -> Union[np.ndarray, List[np.ndarray]]:
         """[see superclass]"""
-        (explain_fn,) = self.explain_fn
+
+        shap_fn: Callable[..., np.ndarray] = (
+            self.explainer.shap_interaction_values
+            if self.interactions
+            else self.explainer.shap_values
+        )
+
         if self.y is None:
-            return explain_fn(self.X, **self.kwargs)
+            return shap_fn(self.X, **self.kwargs)
         else:
-            return explain_fn(self.X, self.y, **self.kwargs)
+            return shap_fn(self.X, self.y, **self.kwargs)
 
 
 @inheritdoc(match="""[see superclass]""")
@@ -230,8 +244,11 @@ class ExplainerQueue(
     A queue splitting a data set to be explained into multiple jobs.
     """
 
-    #: the explainer method to call, wrapped in a tuple to avoid confusion with methods
-    explain_fn: Tuple[Callable[..., Union[np.ndarray, List[np.ndarray]]]]
+    #: the SHAP explainer to use
+    explainer: BaseExplainer
+
+    #: if ``False``, calculate SHAp values; otherwise, calculate SHAP interaction values
+    interactions: bool
 
     #: the feature values of the observations to be explained
     X: np.ndarray
@@ -248,25 +265,29 @@ class ExplainerQueue(
     # noinspection PyPep8Naming
     def __init__(
         self,
-        explain_fn: Callable[..., Union[np.ndarray, List[np.ndarray]]],
+        explainer: BaseExplainer,
         X: Union[np.ndarray, pd.DataFrame],
         y: Union[None, np.ndarray, pd.Series] = None,
         *,
+        interactions: bool,
         max_job_size: int,
         **kwargs: Any,
     ) -> None:
         """
-        :param explain_fn: the explainer method to call
+        :param explainer: the SHAP explainer to use
         :param X: the feature values of the observations to be explained
         :param y: the target values of the observations to be explained
+        :param interactions: if ``False``, calculate SHAP values; if ``True``,
+            calculate SHAP interaction values
         :param max_job_size: the maximum number of observations to allocate to each job
         :param kwargs: additional arguments specific to the explainer method
         """
         super().__init__()
 
-        self.explain_fn = (explain_fn,)
+        self.explainer = explainer
         self.X = X.values if isinstance(X, pd.DataFrame) else X
         self.y = y.values if isinstance(y, pd.Series) else y
+        self.interactions = interactions
         self.max_job_size = max_job_size
         self.kwargs = kwargs
 
@@ -278,13 +299,13 @@ class ExplainerQueue(
         n = len(x)
         job_size = (n - 1) // len(self) + 1
         kwargs = self.kwargs
-        (explain_fn,) = self.explain_fn
 
         return (
             ExplainerJob(
-                explain_fn,
+                self.explainer,
                 X=x[start : start + job_size].copy(),
                 y=None if y is None else y[start : start + job_size].copy(),
+                interactions=self.interactions,
                 **kwargs,
             )
             for start in range(0, n, job_size)
@@ -357,7 +378,7 @@ class ParallelExplainer(BaseExplainer, ParallelizableMixin):
         **kwargs: Any,
     ) -> Union[np.ndarray, List[np.ndarray]]:
         """[see superclass]"""
-        return self._run(self.explainer.shap_values, X, y, **kwargs)
+        return self._run(self.explainer, X, y, interactions=False, **kwargs)
 
     # noinspection PyPep8Naming
     def shap_interaction_values(
@@ -367,21 +388,24 @@ class ParallelExplainer(BaseExplainer, ParallelizableMixin):
         **kwargs: Any,
     ) -> Union[np.ndarray, List[np.ndarray]]:
         """[see superclass]"""
-        return self._run(self.explainer.shap_interaction_values, X, y, **kwargs)
+        return self._run(self.explainer, X, y, interactions=True, **kwargs)
 
     # noinspection PyPep8Naming
     def _run(
         self,
-        explain_fn: Callable[..., Union[np.ndarray, List[np.ndarray]]],
+        explainer: BaseExplainer,
         X: Union[np.ndarray, pd.DataFrame, catboost.Pool],
         y: Union[None, np.ndarray, pd.Series] = None,
+        *,
+        interactions: bool,
         **kwargs: Any,
     ):
         return JobRunner.from_parallelizable(self).run_queue(
             ExplainerQueue(
-                explain_fn=explain_fn,
+                explainer=explainer,
                 X=X,
                 y=y,
+                interactions=interactions,
                 max_job_size=self.max_job_size,
                 **kwargs,
             )
