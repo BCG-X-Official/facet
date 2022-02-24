@@ -1,8 +1,8 @@
 """
 Core implementation of :mod:`facet.inspection`
 """
-
 import logging
+from types import MethodType
 from typing import (
     Any,
     Callable,
@@ -475,7 +475,6 @@ class LearnerInspector(
         self._ensure_fitted()
 
         return self.__feature_affinity_matrix(
-            explainer=self.__interaction_explainer,
             explainer_fn=self.__interaction_explainer.synergy,
             absolute=absolute,
             symmetrical=symmetrical,
@@ -524,7 +523,6 @@ class LearnerInspector(
         self._ensure_fitted()
 
         return self.__feature_affinity_matrix(
-            explainer=self.__interaction_explainer,
             explainer_fn=self.__interaction_explainer.redundancy,
             absolute=absolute,
             symmetrical=symmetrical,
@@ -576,7 +574,6 @@ class LearnerInspector(
         self._ensure_fitted()
 
         return self.__feature_affinity_matrix(
-            explainer=self._shap_global_explainer,
             explainer_fn=self._shap_global_explainer.association,
             absolute=absolute,
             symmetrical=symmetrical,
@@ -848,14 +845,16 @@ class LearnerInspector(
     def __feature_affinity_matrix(
         self,
         *,
-        explainer: ShapGlobalExplainer,
         explainer_fn: Callable[..., Optional[np.ndarray]],
         absolute: bool,
         symmetrical: bool,
         clustered: bool,
     ):
         affinity_matrices = explainer_fn(symmetrical=symmetrical, absolute=absolute)
-        assert affinity_matrices is not None, "Shap interaction values are supported"
+
+        explainer: ShapGlobalExplainer = cast(
+            ShapGlobalExplainer, cast(MethodType, explainer_fn).__self__
+        )
         affinity_matrices = explainer.to_frames(affinity_matrices)
 
         if clustered:
