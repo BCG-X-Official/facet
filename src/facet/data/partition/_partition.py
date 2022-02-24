@@ -57,7 +57,7 @@ class Partitioner(
     DEFAULT_MAX_PARTITIONS = 20
 
     #: The values representing the partitions.
-    _partitions: Optional[Sequence]
+    _partitions: Optional[Sequence[T_Values]]
 
     #: The count of values allocated to each partition.
     _frequencies: Optional[np.ndarray]
@@ -90,7 +90,7 @@ class Partitioner(
         return self._max_partitions
 
     @property
-    def partitions_(self) -> Sequence:
+    def partitions_(self) -> Sequence[T_Values]:
         """
         The values representing the partitions.
         """

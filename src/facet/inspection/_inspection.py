@@ -804,7 +804,7 @@ class LearnerInspector(
             shap_values_numpy = [s.values for s in shap_values]
             included_observations = shap_values[0].index
         else:
-            assert isinstance(shap_values, pd.DataFrame), "shap_values is a data frame"
+            shap_values = cast(pd.DataFrame, shap_values)
             shap_values_numpy = shap_values.values
             included_observations = shap_values.index
 
@@ -849,21 +849,24 @@ class LearnerInspector(
         self,
         *,
         explainer: ShapGlobalExplainer,
-        explainer_fn: Callable[..., np.ndarray],
+        explainer_fn: Callable[..., Optional[np.ndarray]],
         absolute: bool,
         symmetrical: bool,
         clustered: bool,
     ):
-        affinity_matrices = explainer.to_frames(
-            explainer_fn(symmetrical=symmetrical, absolute=absolute)
-        )
+        affinity_matrices = explainer_fn(symmetrical=symmetrical, absolute=absolute)
+        assert affinity_matrices is not None, "Shap interaction values are supported"
+        affinity_matrices = explainer.to_frames(affinity_matrices)
 
         if clustered:
+            affinity_symmetrical = explainer_fn(symmetrical=True, absolute=False)
+            assert (
+                affinity_symmetrical is not None
+            ), "Shap interaction values are supported"
+
             affinity_matrices = self.__sort_affinity_matrices(
                 affinity_matrices=affinity_matrices,
-                symmetrical_affinity_matrices=(
-                    explainer_fn(symmetrical=True, absolute=False)
-                ),
+                symmetrical_affinity_matrices=affinity_symmetrical,
             )
 
         return self.__isolate_single_frame(

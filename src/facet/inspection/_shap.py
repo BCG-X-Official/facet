@@ -185,7 +185,7 @@ class ShapCalculator(
         """
 
     @abstractmethod
-    def get_multi_output_names(self, sample: Sample) -> Sequence[str]:
+    def get_multi_output_names(self, sample: Sample) -> List[str]:
         """
         :return: a name for each of the outputs
         """
@@ -319,7 +319,7 @@ class ShapCalculator(
         pass
 
     @abstractmethod
-    def _get_output_names(self, sample: Sample) -> Sequence[str]:
+    def _get_output_names(self, sample: Sample) -> List[str]:
         pass
 
 
@@ -583,7 +583,7 @@ class ClassifierShapCalculator(ShapCalculator[ClassifierPipelineDF], metaclass=A
             (shap_tensors,) = super()._convert_shap_tensors_to_list(
                 shap_tensors=shap_tensors, n_outputs=1
             )
-            assert isinstance(shap_tensors, np.ndarray), "shap_tensors is numpy array"
+            shap_tensors = cast(np.ndarray, shap_tensors)
             return [-shap_tensors, shap_tensors]
         else:
             return super()._convert_shap_tensors_to_list(
@@ -593,7 +593,7 @@ class ClassifierShapCalculator(ShapCalculator[ClassifierPipelineDF], metaclass=A
     def _get_output_names(
         self,
         sample: Sample,
-    ) -> Sequence[str]:
+    ) -> List[str]:
         assert not isinstance(
             sample.target_name, list
         ), "classification model is single-output"

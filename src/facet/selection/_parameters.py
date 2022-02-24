@@ -18,7 +18,6 @@ from typing import (
     Type,
     TypeVar,
     Union,
-    cast,
 )
 
 from scipy import stats
@@ -244,8 +243,6 @@ distribution:
 
         def _values_to_expression(values: ParameterSet) -> Expression:
             if isinstance(values, rv_frozen):
-                # mypy - disabling due to lack of support for dynamic types
-                values = cast(rv_frozen, values)  # type: ignore
                 return Id(values.dist.name)(*values.args, **values.kwds)
             elif isinstance(values, (stats.rv_continuous, stats.rv_discrete)):
                 try:
