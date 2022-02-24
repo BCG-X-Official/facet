@@ -252,10 +252,8 @@ distribution:
 
             return make_expression(values)
 
-        path_prefix_list: List[str] = (
-            []
-            if path_prefix is None
-            else to_list(path_prefix, element_type=str, arg_name="path_prefix")
+        path_prefix_list: List[str] = to_list(
+            path_prefix, element_type=str, optional=True, arg_name="path_prefix"
         )
 
         parameters = {
