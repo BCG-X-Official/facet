@@ -23,8 +23,6 @@ requires = [
     "scipy          ~=1.2",
     "shap           >=0.34,<0.41a",
     "sklearndf      ~=2.0dev0",
-    # additional requirements of shap 0.38
-    "ipython        >=7",
 ]
 
 requires-python = ">=3.7,<4a"
@@ -58,7 +56,7 @@ docs = [
     "sphinx-autodoc-typehints ~= 1.12",
     "pydata-sphinx-theme ~= 0.7",
     "jinja2 ~= 2.11",
-    "nbsphinx ~= 0.7.1",
+    "nbsphinx ~= 0.8.5",
     "jupyter == 1",
     "docutils ~= 0.17",
     "xlrd ~= 1.2",
@@ -73,7 +71,7 @@ Repository = "https://github.com/BCG-Gamma/facet"
 # direct requirements of gamma-facet
 gamma-pytools  = "~=2.0.dev1"
 matplotlib     = "~=3.0.3"
-numpy          = ">=1.17.5,<18a"
+numpy          = "==1.17.5"
 packaging      = "~=20.9"
 pandas         = "~=0.24.2"
 python         = "~=3.7"
@@ -88,7 +86,7 @@ scikit-learn   = "~=0.21.3"
 joblib         = "~=0.14.1"
 typing_inspect = "~=0.4.0"
 # additional minimum requirements of shap
-ipython        = "~=7.0"
+ipython        = "==7.0"
 
 [build.matrix.max]
 # direct requirements of gamma-facet
