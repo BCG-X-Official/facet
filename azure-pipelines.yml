@@ -465,9 +465,9 @@ stages:
                 set -eux
                 echo "Getting version"
                 pip install packaging~=20.9
-                cd $(System.DefaultWorkingDirectory)/$(project_root)/src
+                package_path=$(System.DefaultWorkingDirectory)/$(project_root)/src/$(project_name)
                 export PYTHONPATH=$(System.DefaultWorkingDirectory)/pytools/sphinx/base
-                version=$(python -c "import make_base; print(make_base.get_package_version())")
+                version=$(python -c "import make_util; print(make_util.get_package_version(package_path='$package_path'))")
                 echo "Current version: $version"
                 echo "Detecting pre-release ('dev' or 'rc' in version)"
                 prerelease=False
@@ -525,7 +525,7 @@ stages:
                 )
               )
             inputs:
-              gitHubConnection: github_release
+              gitHubConnection: github-release
               repositoryName: $(Build.Repository.Name)
               action: create
               target: $(Build.SourceVersion)
