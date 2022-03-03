@@ -109,6 +109,8 @@ stages:
                 build_changed=0
                 echo "build config is unchanged";
                 fi
+                # set +x to prevent Azure from randomly appending a \' of the ## statement
+                set +x
                 echo "##vso[task.setvariable variable=conda_build_config_changed;isOutput=true]$build_changed"
 
 
@@ -473,6 +475,8 @@ stages:
                 prerelease=False
                 [[ $version == *dev* ]] && prerelease=True && echo "Development release identified"
                 [[ $version == *rc* ]] && prerelease=True && echo "Pre-release identified"
+                # set +x to prevent Azure from randomly appending a \' of the ## statement
+                set +x
                 echo "##vso[task.setvariable variable=current_version]$version"
                 echo "##vso[task.setvariable variable=is_prerelease]$prerelease"
             displayName: "Get package version"
@@ -493,6 +497,8 @@ stages:
               anaconda login --username "${CONDA_USERNAME}" --password "${CONDA_PASSWORD}"
               anaconda upload --user BCG_Gamma --force $(System.ArtifactsDirectory)/conda_default/conda/noarch/$(package_name)-*.tar.bz2
               anaconda logout
+              # set +x to prevent Azure from randomly appending a \' of the ## statement
+              set +x
               echo "##vso[task.setvariable variable=conda_published]True"
             displayName: 'Publish to Anaconda'
 
@@ -507,6 +513,8 @@ stages:
               pip install flit
               flit install -s
               flit publish
+              # set +x to prevent Azure from randomly appending a \' of the ## statement
+              set +x
               echo "##vso[task.setvariable variable=pypi_published]True"
             displayName: 'Publish to PyPi'
             condition: eq(variables['source_is_release_branch'], 'True')
