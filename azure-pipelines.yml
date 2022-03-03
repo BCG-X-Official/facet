@@ -525,7 +525,7 @@ stages:
                 )
               )
             inputs:
-              gitHubConnection: github_release
+              gitHubConnection: github-release
               repositoryName: $(Build.Repository.Name)
               action: create
               target: $(Build.SourceVersion)
