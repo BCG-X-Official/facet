@@ -66,6 +66,7 @@ fit the underlying crossfit.
 One example where this can be useful is to use only a recent period of a time series as
 the baseline of a simulation.
 
+
 1.2.2
 ~~~~~
 
@@ -96,13 +97,15 @@ FACET 1.1
 FACET 1.1 refines and enhances the association/synergy/redundancy calculations provided
 by the :class:`.LearnerInspector`.
 
+
 1.1.2
 ~~~~~
 
-- DOC: use downloadable dataset in the `getting started` notebook
+- DOC: use a downloadable dataset in the `getting started` notebook
 - FIX: import :mod:`catboost` if present, else create a local module mockup
 - FIX: correctly identify if ``sample_weights`` is undefined when re-fitting a model
   on the full dataset in a :class:`.LearnerCrossfit`
+- BUILD: relax package dependencies to support any `numpy` version 1.`x` from 1.16
 
 
 1.1.1
