@@ -314,7 +314,8 @@ class LearnerInspector(
         """
         The background sample used to fit this inspector.
         """
-        self._ensure_fitted()
+
+        self.ensure_fitted()
         assert self._sample is not None, "Inspector is fitted"
         return self._sample
 
@@ -332,7 +333,7 @@ class LearnerInspector(
         For non-binary classifiers, this is the list of all classes.
         """
 
-        self._ensure_fitted()
+        self.ensure_fitted()
         assert (
             self._shap_calculator is not None
             and self._shap_calculator.output_names_ is not None
@@ -356,7 +357,8 @@ class LearnerInspector(
 
         :return: a data frame with SHAP values
         """
-        self._ensure_fitted()
+
+        self.ensure_fitted()
         assert self._shap_calculator is not None, "Inspector is fitted"
         return self.__split_multi_output_df(self._shap_calculator.get_shap_values())
 
@@ -371,7 +373,7 @@ class LearnerInspector(
 
         :return: a data frame with SHAP interaction values
         """
-        self._ensure_fitted()
+        self.ensure_fitted()
         return self.__split_multi_output_df(
             self.__shap_interaction_values_calculator.get_shap_interaction_values()
         )
@@ -394,7 +396,7 @@ class LearnerInspector(
             data frame of shape (n_features, n_outputs) for multi-output models
         """
 
-        self._ensure_fitted()
+        self.ensure_fitted()
 
         methods = {"rms", "mav"}
         if method not in methods:
@@ -472,7 +474,7 @@ class LearnerInspector(
             `(n_features, n_features)`, or a list of data frames for multiple outputs
         """
 
-        self._ensure_fitted()
+        self.ensure_fitted()
 
         return self.__feature_affinity_matrix(
             explainer_fn=self.__interaction_explainer.synergy,
@@ -520,7 +522,7 @@ class LearnerInspector(
         :return: feature redundancy matrix as a data frame of shape
             `(n_features, n_features)`, or a list of data frames for multiple outputs
         """
-        self._ensure_fitted()
+        self.ensure_fitted()
 
         return self.__feature_affinity_matrix(
             explainer_fn=self.__interaction_explainer.redundancy,
@@ -571,7 +573,7 @@ class LearnerInspector(
             `(n_features, n_features)`, or a list of data frames for multiple outputs
         """
 
-        self._ensure_fitted()
+        self.ensure_fitted()
 
         return self.__feature_affinity_matrix(
             explainer_fn=self._shap_global_explainer.association,
@@ -593,7 +595,8 @@ class LearnerInspector(
         :return: linkage tree of feature synergies; list of linkage trees
             for multi-target regressors or non-binary classifiers
         """
-        self._ensure_fitted()
+
+        self.ensure_fitted()
         feature_affinity_matrix = self.__interaction_explainer.synergy(
             symmetrical=True, absolute=False, std=False
         )
@@ -618,7 +621,8 @@ class LearnerInspector(
         :return: linkage tree of feature redundancies; list of linkage trees
             for multi-target regressors or non-binary classifiers
         """
-        self._ensure_fitted()
+
+        self.ensure_fitted()
         feature_affinity_matrix = self.__interaction_explainer.redundancy(
             symmetrical=True, absolute=False, std=False
         )
@@ -643,7 +647,8 @@ class LearnerInspector(
         :return: linkage tree of feature associations; list of linkage trees
             for multi-target regressors or non-binary classifiers
         """
-        self._ensure_fitted()
+
+        self.ensure_fitted()
         feature_affinity_matrix = self._shap_global_explainer.association(
             absolute=False, symmetrical=True, std=False
         )

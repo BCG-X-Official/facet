@@ -238,7 +238,7 @@ class ModelSelector(
         """
         The model which obtained the best ranking score, fitted on the entire sample.
         """
-        self._ensure_fitted()
+        self.ensure_fitted()
         searcher = self.searcher_
         assert searcher is not None, "Ranker is fitted"
 
@@ -315,7 +315,7 @@ class ModelSelector(
         :return: the summary report of the grid search as a data frame
         """
 
-        self._ensure_fitted()
+        self.ensure_fitted()
 
         if sort_by is None:
             sort_by = self._DEFAULT_REPORT_SORT_COLUMN

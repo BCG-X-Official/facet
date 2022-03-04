@@ -333,7 +333,7 @@ class ShapValuesCalculator(
 
     def get_shap_values(self) -> pd.DataFrame:
         """[see superclass]"""
-        self._ensure_fitted()
+        self.ensure_fitted()
         return self.shap_
 
     def get_shap_interaction_values(self) -> pd.DataFrame:
@@ -402,13 +402,15 @@ class ShapInteractionValuesCalculator(
 
     def get_shap_values(self) -> pd.DataFrame:
         """[see superclass]"""
-        self._ensure_fitted()
+
+        self.ensure_fitted()
         assert self.shap_ is not None, "Calculator is fitted"
         return self.shap_.groupby(level=0).sum()
 
     def get_shap_interaction_values(self) -> pd.DataFrame:
         """[see superclass]"""
-        self._ensure_fitted()
+
+        self.ensure_fitted()
         assert self.shap_ is not None, "Calculator is fitted"
         return self.shap_
 
@@ -422,7 +424,8 @@ class ShapInteractionValuesCalculator(
             observation and output we get the feature interaction values of size
             n_features * n_features.
         """
-        self._ensure_fitted()
+
+        self.ensure_fitted()
         assert (
             self.shap_ is not None
             and self.sample_ is not None

@@ -94,7 +94,8 @@ class Partitioner(
         """
         The values representing the partitions.
         """
-        self._ensure_fitted()
+
+        self.ensure_fitted()
         assert self._partitions is not None, "Partitioner is fitted"
         return self._partitions
 
@@ -103,7 +104,8 @@ class Partitioner(
         """
         The count of values allocated to each partition.
         """
-        self._ensure_fitted()
+
+        self.ensure_fitted()
         assert self._frequencies is not None, "Partitioner is fitted"
         return self._frequencies
 
@@ -188,7 +190,8 @@ class RangePartitioner(
           inclusive lower bound of a partition range, and y is the exclusive upper
           bound of a partition range
         """
-        self._ensure_fitted()
+
+        self.ensure_fitted()
         assert self._partition_bounds is not None, "Partitioner is fitted"
         return self._partition_bounds
 
@@ -197,7 +200,8 @@ class RangePartitioner(
         """
         The width of each partition.
         """
-        self._ensure_fitted()
+
+        self.ensure_fitted()
         assert self._step is not None, "Partitioner is fitted"
         return self._step
 
