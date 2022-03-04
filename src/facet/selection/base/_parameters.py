@@ -184,13 +184,6 @@ class CandidateEstimatorDF(ClassifierDF, RegressorDF, TransformerDF):
         return self.candidate.predic(X, **predict_params)
 
     # noinspection PyPep8Naming
-    def fit_predict(
-        self, X: pd.DataFrame, y: pd.Series, **fit_params: Any
-    ) -> Union[pd.Series, pd.DataFrame]:
-        """[see superclass]"""
-        return self.candidate.fit_predict(X, y, **fit_params)
-
-    # noinspection PyPep8Naming
     def fit(
         self: T_CandidateEstimatorDF,
         X: pd.DataFrame,
