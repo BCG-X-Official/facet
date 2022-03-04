@@ -92,7 +92,7 @@ class Partitioner(
         """
         The values representing the partitions.
         """
-        self._ensure_fitted()
+        self.ensure_fitted()
         return self._partitions
 
     @property
@@ -100,7 +100,7 @@ class Partitioner(
         """
         The count of values allocated to each partition.
         """
-        self._ensure_fitted()
+        self.ensure_fitted()
         return self._frequencies
 
     @property
@@ -182,7 +182,7 @@ class RangePartitioner(
           inclusive lower bound of a partition range, and y is the exclusive upper
           bound of a partition range
         """
-        self._ensure_fitted()
+        self.ensure_fitted()
         return self._partition_bounds
 
     @property
@@ -190,7 +190,7 @@ class RangePartitioner(
         """
         The width of each partition.
         """
-        self._ensure_fitted()
+        self.ensure_fitted()
         return self._step
 
     # noinspection PyMissingOrEmptyDocstring,PyIncorrectDocstring
