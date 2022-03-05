@@ -15,14 +15,14 @@ license = "Apache Software License v2.0"
 
 requires = [
     # direct requirements of gamma-facet
-    "gamma-pytools  ~=2.0dev0",
+    "gamma-pytools  ~=2.0dev6",
     "matplotlib     ~=3.0",
     "numpy          >=1.17,<2a",
     "packaging      >=20",
     "pandas         >=0.24,<2a",
     "scipy          ~=1.2",
     "shap           >=0.34,<0.41a",
-    "sklearndf      ~=2.0dev0",
+    "sklearndf      ~=2.0dev3",
 ]
 
 requires-python = ">=3.7,<4a"
@@ -45,18 +45,19 @@ classifiers = [
 
 [tool.flit.metadata.requires-extra]
 testing = [
-    "pytest ~= 5.2",
-    "pytest-cov ~= 2.8",
+    "pytest ~= 5.4",
+    "pytest-cov ~= 2.12",
     "flake8 ~= 3.8",
     "flake8-comprehensions ~= 3.2",
-    "isort ~= 5.5",
+    "isort ~= 5.10",
+    "lightgbm ~=3.0.0",
 ]
 docs = [
-    "sphinx ~= 4.2",
+    "sphinx ~= 4.4",
     "sphinx-autodoc-typehints ~= 1.12",
     "pydata-sphinx-theme ~= 0.7",
     "jinja2 ~= 2.11",
-    "nbsphinx ~= 0.8.5",
+    "nbsphinx ~= 0.8.8",
     "jupyter == 1",
     "docutils ~= 0.17",
     "xlrd ~= 1.2",
@@ -69,15 +70,15 @@ Repository = "https://github.com/BCG-Gamma/facet"
 
 [build.matrix.min]
 # direct requirements of gamma-facet
-gamma-pytools  = "~=2.0.dev1"
+gamma-pytools  = "~=2dev6"
 matplotlib     = "~=3.0.3"
 numpy          = "==1.17.5"
 packaging      = "~=20.9"
 pandas         = "~=0.24.2"
-python         = "~=3.7"
+python         = ">=3.7.12,<3.8a"    # cannot use ~= due to conda bug
 scipy          = "~=1.2.1"
 shap           = "~=0.34.0"
-sklearndf      = "~=2.0.dev0"
+sklearndf      = "~=2.0.dev6"
 # additional minimum requirements of sklearndf
 boruta         = "~=0.3.0"
 lightgbm       = "~=3.0.0"
@@ -90,21 +91,21 @@ ipython        = "==7.0"
 
 [build.matrix.max]
 # direct requirements of gamma-facet
-gamma-pytools  = ">=2dev0,<3a"
-matplotlib     = "~=3.4"
+gamma-pytools  = ">=2dev6,<3a"
+matplotlib     = "~=3.5"
 numpy          = ">=1.22,<2a"
 packaging      = ">=20.9"
 pandas         = "~=1.4"
 python         = "~=3.9"
 scipy          = "~=1.7"
 shap           = "~=0.40.0"
-sklearndf      = ">=2dev0,<3a"
+sklearndf      = ">=2dev3,<3a"
 # additional maximum requirements of sklearndf
 boruta         = "~=0.3"
-lightgbm       = "~=3.2"
-scikit-learn   = "~=0.24.2"
+lightgbm       = "~=3.3"
+scikit-learn   = "~=1.0.2"
 # additional maximum requirements of gamma-pytools
-joblib         = "~=1.0"
+joblib         = "~=1.1"
 typing_inspect = "~=0.7"
 # additional maximum requirements of shap
 ipython        = ">=7"
