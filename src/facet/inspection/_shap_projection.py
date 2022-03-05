@@ -69,7 +69,7 @@ class ShapProjector(ShapGlobalExplainer, metaclass=ABCMeta):
         self, absolute: bool, symmetrical: bool, std: bool = False
     ) -> Optional[np.ndarray]:
         """[see superclass]"""
-        self._ensure_fitted()
+        self.ensure_fitted()
         return self.association_.get_values(
             symmetrical=symmetrical, absolute=absolute, std=std
         )
@@ -160,7 +160,7 @@ class ShapInteractionVectorProjector(ShapProjector, ShapInteractionGlobalExplain
         self, symmetrical: bool, absolute: bool, std: bool = False
     ) -> Optional[np.ndarray]:
         """[see superclass]"""
-        self._ensure_fitted()
+        self.ensure_fitted()
         return self.synergy_.get_values(
             symmetrical=symmetrical, absolute=absolute, std=std
         )
@@ -169,7 +169,7 @@ class ShapInteractionVectorProjector(ShapProjector, ShapInteractionGlobalExplain
         self, symmetrical: bool, absolute: bool, std: bool = False
     ) -> Optional[np.ndarray]:
         """[see superclass]"""
-        self._ensure_fitted()
+        self.ensure_fitted()
         return self.redundancy_.get_values(
             symmetrical=symmetrical, absolute=absolute, std=std
         )
