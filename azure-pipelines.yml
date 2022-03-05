@@ -51,8 +51,8 @@ stages:
         steps:
           - task: UsePythonVersion@0
             inputs:
-              versionSpec: '3.7.*'
-            displayName: 'use Python 3.7'
+              versionSpec: '3.8.*'
+            displayName: 'use Python 3.8'
           - script: |
               python -m pip install isort==5.5.4
               python -m isort --check --diff .
@@ -62,8 +62,8 @@ stages:
         steps:
           - task: UsePythonVersion@0
             inputs:
-              versionSpec: '3.7.*'
-            displayName: 'use Python 3.7'
+              versionSpec: '3.8.*'
+            displayName: 'use Python 3.8'
           - script: |
               python -m pip install black==20.8b1
               python -m black --check .
@@ -73,8 +73,8 @@ stages:
         steps:
           - task: UsePythonVersion@0
             inputs:
-              versionSpec: '3.7.*'
-            displayName: 'use Python 3.7'
+              versionSpec: '3.8.*'
+            displayName: 'use Python 3.8'
           - script: |
               python -m pip install flake8==3.9.0 flake8-comprehensions flake8-import-order
               python -m flake8 --config tox.ini -v .
@@ -109,6 +109,8 @@ stages:
                 build_changed=0
                 echo "build config is unchanged";
                 fi
+                # set +x to prevent Azure from randomly appending a \' of the ## statement
+                set +x
                 echo "##vso[task.setvariable variable=conda_build_config_changed;isOutput=true]$build_changed"
 
 
@@ -129,8 +131,8 @@ stages:
       steps:
         - task: UsePythonVersion@0
           inputs:
-            versionSpec: '3.7.*'
-          displayName: 'use Python 3.7'
+            versionSpec: '3.8.*'
+          displayName: 'use Python 3.8'
 
         - checkout: self
 
@@ -193,11 +195,11 @@ stages:
       strategy:
         matrix:
           maximum_dependencies_conda:
-            FACET_V_PYTHON_BUILD: '=3.8.*'
+            FACET_V_PYTHON_BUILD: '=3.9.*'
             BUILD_SYSTEM: 'conda'
             PKG_DEPENDENCIES: 'max'
           maximum_dependencies_tox:
-            FACET_V_PYTHON_BUILD: '=3.8.*'
+            FACET_V_PYTHON_BUILD: '=3.9.*'
             BUILD_SYSTEM: 'tox'
             PKG_DEPENDENCIES: 'max'
 
@@ -263,27 +265,27 @@ stages:
       strategy:
         matrix:
           default_dependencies_conda:
-            FACET_V_PYTHON_BUILD: '=3.7.*'
+            FACET_V_PYTHON_BUILD: '=3.8.*'
             BUILD_SYSTEM: 'conda'
             PKG_DEPENDENCIES: 'default'
           minimum_dependencies_conda:
-            FACET_V_PYTHON_BUILD: '=3.6.*'
+            FACET_V_PYTHON_BUILD: '=3.7.*'
             BUILD_SYSTEM: 'conda'
             PKG_DEPENDENCIES: 'min'
           maximum_dependencies_conda:
-            FACET_V_PYTHON_BUILD: '=3.8.*'
+            FACET_V_PYTHON_BUILD: '=3.9.*'
             BUILD_SYSTEM: 'conda'
             PKG_DEPENDENCIES: 'max'
           default_dependencies_tox:
-            FACET_V_PYTHON_BUILD: '=3.7.*'
+            FACET_V_PYTHON_BUILD: '=3.8.*'
             BUILD_SYSTEM: 'tox'
             PKG_DEPENDENCIES: 'default'
           minimum_dependencies_tox:
-            FACET_V_PYTHON_BUILD: '=3.6.*'
+            FACET_V_PYTHON_BUILD: '=3.7.*'
             BUILD_SYSTEM: 'tox'
             PKG_DEPENDENCIES: 'min'
           maximum_dependencies_tox:
-            FACET_V_PYTHON_BUILD: '=3.8.*'
+            FACET_V_PYTHON_BUILD: '=3.9.*'
             BUILD_SYSTEM: 'tox'
             PKG_DEPENDENCIES: 'max'
 
@@ -387,8 +389,8 @@ stages:
         steps:
           - task: UsePythonVersion@0
             inputs:
-              versionSpec: '3.7.*'
-            displayName: 'use Python 3.7'
+              versionSpec: '3.8.*'
+            displayName: 'use Python 3.8'
 
           - checkout: pytools
           - checkout: self
@@ -452,8 +454,8 @@ stages:
         steps:
           - task: UsePythonVersion@0
             inputs:
-              versionSpec: '3.7.*'
-            displayName: 'use Python 3.7'
+              versionSpec: '3.8.*'
+            displayName: 'use Python 3.8'
 
           - checkout: pytools
           - checkout: self
@@ -465,14 +467,16 @@ stages:
                 set -eux
                 echo "Getting version"
                 pip install packaging~=20.9
-                cd $(System.DefaultWorkingDirectory)/$(project_root)/src
+                package_path=$(System.DefaultWorkingDirectory)/$(project_root)/src/$(project_name)
                 export PYTHONPATH=$(System.DefaultWorkingDirectory)/pytools/sphinx/base
-                version=$(python -c "import make_base; print(make_base.get_package_version())")
+                version=$(python -c "import make_util; print(make_util.get_package_version(package_path='$package_path'))")
                 echo "Current version: $version"
                 echo "Detecting pre-release ('dev' or 'rc' in version)"
                 prerelease=False
                 [[ $version == *dev* ]] && prerelease=True && echo "Development release identified"
                 [[ $version == *rc* ]] && prerelease=True && echo "Pre-release identified"
+                # set +x to prevent Azure from randomly appending a \' of the ## statement
+                set +x
                 echo "##vso[task.setvariable variable=current_version]$version"
                 echo "##vso[task.setvariable variable=is_prerelease]$prerelease"
             displayName: "Get package version"
@@ -493,6 +497,8 @@ stages:
               anaconda login --username "${CONDA_USERNAME}" --password "${CONDA_PASSWORD}"
               anaconda upload --user BCG_Gamma --force $(System.ArtifactsDirectory)/conda_default/conda/noarch/$(package_name)-*.tar.bz2
               anaconda logout
+              # set +x to prevent Azure from randomly appending a \' of the ## statement
+              set +x
               echo "##vso[task.setvariable variable=conda_published]True"
             displayName: 'Publish to Anaconda'
 
@@ -507,6 +513,8 @@ stages:
               pip install flit
               flit install -s
               flit publish
+              # set +x to prevent Azure from randomly appending a \' of the ## statement
+              set +x
               echo "##vso[task.setvariable variable=pypi_published]True"
             displayName: 'Publish to PyPi'
             condition: eq(variables['source_is_release_branch'], 'True')
@@ -525,7 +533,7 @@ stages:
                 )
               )
             inputs:
-              gitHubConnection: github_release
+              gitHubConnection: github-release
               repositoryName: $(Build.Repository.Name)
               action: create
               target: $(Build.SourceVersion)
@@ -573,8 +581,8 @@ stages:
       steps:
         - task: UsePythonVersion@0
           inputs:
-            versionSpec: '3.7.*'
-          displayName: 'use Python 3.7'
+            versionSpec: '3.8.*'
+          displayName: 'use Python 3.8'
 
         - task: InstallSSHKey@0
           inputs:
