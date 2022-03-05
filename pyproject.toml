@@ -96,7 +96,7 @@ matplotlib     = "~=3.5"
 numpy          = ">=1.22,<2a"
 packaging      = ">=20.9"
 pandas         = "~=1.4"
-python         = "~=3.9"
+python         = ">=3.8.10,<4a"   # cannot use ~= due to conda bug
 scipy          = "~=1.7"
 shap           = "~=0.40.0"
 sklearndf      = ">=2dev3,<3a"
