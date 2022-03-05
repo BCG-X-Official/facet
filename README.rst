@@ -464,7 +464,7 @@ or have a look at
 .. |azure_code_cov| image:: https://img.shields.io/azure-devops/coverage/gamma-facet/facet/7/2.0.x
    :target: https://dev.azure.com/gamma-facet/facet/_build?definitionId=7&_a=summary
 
-.. |python_versions| image:: https://img.shields.io/badge/python-3.6|3.7|3.8-blue.svg
+.. |python_versions| image:: https://img.shields.io/badge/python-3.7|3.8|3.9-blue.svg
    :target: https://www.python.org/downloads/release/python-380/
 
 .. |code_style| image:: https://img.shields.io/badge/code%20style-black-000000.svg
