@@ -2,7 +2,7 @@
 Visualizations of simulation results.
 """
 
-from typing import Iterable, Optional, Type, TypeVar, Union
+from typing import Iterable, Optional, Type, TypeVar, Union, cast
 
 import pandas as pd
 
@@ -57,7 +57,7 @@ class SimulationDrawer(Drawer[UnivariateSimulationResult, SimulationStyle]):
         super().__init__(style=style)
         self.histogram = histogram
 
-    __init__.__doc__ = Drawer.__init__.__doc__ + __init__.__doc__
+    __init__.__doc__ = cast(str, Drawer.__init__.__doc__) + cast(str, __init__.__doc__)
 
     def draw(
         self, data: UnivariateSimulationResult, *, title: Optional[str] = None

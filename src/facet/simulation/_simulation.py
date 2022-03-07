@@ -14,6 +14,7 @@ from typing import (
     Type,
     TypeVar,
     Union,
+    cast,
 )
 
 import numpy as np
@@ -246,10 +247,13 @@ class BaseUnivariateSimulator(
 
         self.model = model
         self.sample = sample
+        self.output_name = cast(str, sample.target_name)
         self.confidence_level = confidence_level
 
     # add parallelization parameters to __init__ docstring
-    __init__.__doc__ += ParallelizableMixin.__init__.__doc__
+    __init__.__doc__ = cast(str, __init__.__doc__) + cast(
+        str, ParallelizableMixin.__init__.__doc__
+    )
 
     def simulate_feature(
         self,
@@ -270,16 +274,16 @@ class BaseUnivariateSimulator(
 
         mean, sem = self._simulate_feature_with_values(
             feature_name=feature_name,
-            simulation_values=(
-                partitioner.fit(sample.features.loc[:, feature_name]).partitions_
-            ),
+            simulation_values=partitioner.fit(
+                sample.features.loc[:, feature_name]
+            ).partitions_,
         )
         return UnivariateSimulationResult(
             partitioner=partitioner,
             mean=mean,
             sem=sem,
             feature_name=feature_name,
-            output_name=sample.target_name,
+            output_name=self.output_name,
             output_unit=self.output_unit,
             baseline=self.baseline(),
             confidence_level=self.confidence_level,

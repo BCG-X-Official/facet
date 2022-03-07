@@ -4,7 +4,7 @@ Drawing styles for simulation results.
 
 import logging
 from abc import ABCMeta, abstractmethod
-from typing import Any, Sequence, Tuple, TypeVar
+from typing import Any, Sequence, Tuple, TypeVar, Union
 
 from matplotlib.axes import Axes
 from mpl_toolkits.axes_grid1 import make_axes_locatable
@@ -47,7 +47,7 @@ class SimulationStyle(DrawingStyle, metaclass=ABCMeta):
     def draw_uplift(
         self,
         feature_name: str,
-        output_name: str,
+        output_name: Union[str, Sequence[str]],
         output_unit: str,
         outputs_mean: Sequence[float],
         outputs_lower_bound: Sequence[float],
@@ -126,7 +126,7 @@ class SimulationMatplotStyle(MatplotStyle, SimulationStyle):
     def draw_uplift(
         self,
         feature_name: str,
-        output_name: str,
+        output_name: Union[str, Sequence[str]],
         output_unit: str,
         outputs_mean: Sequence[float],
         outputs_lower_bound: Sequence[float],
@@ -141,6 +141,7 @@ class SimulationMatplotStyle(MatplotStyle, SimulationStyle):
 
         # draw the mean predicted uplift, showing mean and confidence ranges for
         # each prediction
+        x: Sequence[Any]
         if is_categorical_feature:
             x = range(len(partitions))
         else:
@@ -316,7 +317,7 @@ class SimulationReportStyle(SimulationStyle, TextStyle):
     def draw_uplift(
         self,
         feature_name: str,
-        output_name: str,
+        output_name: Union[str, Sequence[str]],
         output_unit: str,
         outputs_mean: Sequence[float],
         outputs_lower_bound: Sequence[float],

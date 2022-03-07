@@ -5,7 +5,7 @@ channels:
 dependencies:
   # run
   - boruta_py ~= 0.3
-  - gamma-pytools >= 2.0.dev5, <3a
+  - gamma-pytools >= 2dev6, <3a
   - joblib ~= 1.1
   - lightgbm ~= 3.3
   - matplotlib ~= 3.5
@@ -15,7 +15,7 @@ dependencies:
   - scikit-learn ~= 1.0.2
   - scipy ~= 1.8
   - shap ~=0.40
-  - sklearndf >= 2dev2, < 3a
+  - sklearndf >= 2dev3, < 3a
   # build/test
   - black ~= 22.1
   - conda-build ~= 3.21
@@ -26,13 +26,14 @@ dependencies:
   - jinja2 ~= 2.11
   - markupsafe < 2.1  # markupsafe 2.1 breaks support for jinja2
   - m2r ~= 0.2
+  - mypy ~= 0.931
   - pluggy ~= 0.13
   - pre-commit ~= 2.17
   - pydata-sphinx-theme ~= 0.7
   - pytest ~= 5.4
   - pytest-cov ~= 2.12
   - pyyaml ~= 5.4
-  - sphinx ~= 4.2
+  - sphinx ~= 4.4
   - sphinx-autodoc-typehints ~= 1.12
   - toml ~= 0.10
   - tox ~= 3.24
@@ -40,6 +41,6 @@ dependencies:
   # notebooks
   - jupyterlab ~= 3.2
   - nbclassic ~= 0.3
-  - nbsphinx ~= 0.7.1
+  - nbsphinx ~= 0.8.8
   - openpyxl ~= 3.0
   - seaborn ~= 0.11

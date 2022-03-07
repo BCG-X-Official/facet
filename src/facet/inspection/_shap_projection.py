@@ -65,14 +65,12 @@ class ShapProjector(ShapGlobalExplainer, metaclass=ABCMeta):
         super().__init__()
         self.association_: Optional[AffinityMatrix] = None
 
-    def association(
-        self, absolute: bool, symmetrical: bool, std: bool = False
-    ) -> Optional[np.ndarray]:
+    def association(self, absolute: bool, symmetrical: bool) -> np.ndarray:
         """[see superclass]"""
+
         self.ensure_fitted()
-        return self.association_.get_values(
-            symmetrical=symmetrical, absolute=absolute, std=std
-        )
+        assert self.association_ is not None
+        return self.association_.get_values(symmetrical=symmetrical, absolute=absolute)
 
     def _fit(self, shap_calculator: ShapCalculator) -> None:
         self._reset_fit()
@@ -156,23 +154,19 @@ class ShapInteractionVectorProjector(ShapProjector, ShapInteractionGlobalExplain
         self.synergy_: Optional[AffinityMatrix] = None
         self.redundancy_: Optional[AffinityMatrix] = None
 
-    def synergy(
-        self, symmetrical: bool, absolute: bool, std: bool = False
-    ) -> Optional[np.ndarray]:
+    def synergy(self, symmetrical: bool, absolute: bool) -> np.ndarray:
         """[see superclass]"""
-        self.ensure_fitted()
-        return self.synergy_.get_values(
-            symmetrical=symmetrical, absolute=absolute, std=std
-        )
 
-    def redundancy(
-        self, symmetrical: bool, absolute: bool, std: bool = False
-    ) -> Optional[np.ndarray]:
-        """[see superclass]"""
         self.ensure_fitted()
-        return self.redundancy_.get_values(
-            symmetrical=symmetrical, absolute=absolute, std=std
-        )
+        assert self.synergy_ is not None, "Projector is fitted"
+        return self.synergy_.get_values(symmetrical=symmetrical, absolute=absolute)
+
+    def redundancy(self, symmetrical: bool, absolute: bool) -> np.ndarray:
+        """[see superclass]"""
+
+        self.ensure_fitted()
+        assert self.redundancy_ is not None, "Projector is fitted"
+        return self.redundancy_.get_values(symmetrical=symmetrical, absolute=absolute)
 
     def _get_context(self, shap_calculator: ShapCalculator) -> ShapContext:
         return ShapInteractionValueContext(shap_calculator=shap_calculator)
@@ -191,6 +185,7 @@ class ShapInteractionVectorProjector(ShapProjector, ShapInteractionGlobalExplain
     ) -> Tuple[AffinityMatrix, AffinityMatrix]:
         p_i = context.p_i
         var_p_i = context.var_p_i
+        assert context.p_ij is not None, "Projector has interaction values enabled"
         p_ij = context.p_ij
         weight = context.weight
 
