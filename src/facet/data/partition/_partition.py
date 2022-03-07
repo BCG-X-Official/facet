@@ -6,7 +6,7 @@ import logging
 import math
 import operator as op
 from abc import ABCMeta, abstractmethod
-from typing import Any, Generic, Iterable, Optional, Sequence, Tuple, TypeVar
+from typing import Any, Generic, Optional, Sequence, Tuple, TypeVar
 
 import numpy as np
 
@@ -48,7 +48,7 @@ __tracker = AllTracker(globals())
 
 
 class Partitioner(
-    FittableMixin[Iterable[T_Values]], Generic[T_Values], metaclass=ABCMeta
+    FittableMixin[Sequence[T_Values]], Generic[T_Values], metaclass=ABCMeta
 ):
     """
     Abstract base class of all partitioners.
@@ -117,8 +117,11 @@ class Partitioner(
         """
 
     @abstractmethod
-    def fit(
-        self: T_Partitioner, values: Sequence[T_Values], **fit_params: Any
+    def fit(  # type: ignore[override]
+        # todo: remove 'type: ignore' once mypy correctly infers return type
+        self: T_Partitioner,
+        values: Sequence[T_Values],
+        **fit_params: Any,
     ) -> T_Partitioner:
         """
         Calculate the partitioning for the given observed values.
@@ -187,8 +190,8 @@ class RangePartitioner(
         assert self._step is not None, "Partitioner is fitted"
         return self._step
 
-    # noinspection PyMissingOrEmptyDocstring,PyIncorrectDocstring
-    def fit(
+    def fit(  # type: ignore[override]
+        # todo: remove 'type: ignore' once mypy correctly infers return type
         self: T_RangePartitioner,
         values: Sequence[T_Values_Numeric],
         *,
@@ -402,8 +405,11 @@ class CategoryPartitioner(Partitioner[T_Values]):
         return True
 
     # noinspection PyMissingOrEmptyDocstring
-    def fit(
-        self: T_CategoryPartitioner, values: Sequence[T_Values], **fit_params: Any
+    def fit(  # type: ignore[override]
+        # todo: remove 'type: ignore' once mypy correctly infers return type
+        self: T_CategoryPartitioner,
+        values: Sequence[T_Values],
+        **fit_params: Any,
     ) -> T_CategoryPartitioner:
         """[see superclass]"""
 

@@ -388,7 +388,10 @@ def get_default_estimator_name(estimator: EstimatorDF) -> str:
 
     while True:
         if isinstance(estimator, CandidateEstimatorDF):
-            estimator = estimator.candidate
+            if estimator.candidate is None:
+                return type(estimator).__name__
+            else:
+                estimator = estimator.candidate
 
         elif isinstance(estimator, PipelineDF) and estimator.steps:
             estimator = estimator.steps[-1]

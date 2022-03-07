@@ -12,6 +12,7 @@ from typing import (
     Optional,
     Sequence,
     Tuple,
+    Type,
     TypeVar,
     Union,
     cast,
@@ -58,7 +59,6 @@ __all__ = ["ShapPlotData", "LearnerInspector"]
 T_LearnerInspector = TypeVar("T_LearnerInspector", bound="LearnerInspector")
 T_LearnerPipelineDF = TypeVar("T_LearnerPipelineDF", bound=LearnerPipelineDF)
 T_SeriesOrDataFrame = TypeVar("T_SeriesOrDataFrame", pd.Series, pd.DataFrame)
-
 
 #
 # Ensure all symbols introduced below are included in __all__
@@ -223,10 +223,15 @@ class LearnerInspector(
         self._shap_global_projector: Optional[ShapGlobalExplainer] = None
         self._sample: Optional[Sample] = None
 
-    __init__.__doc__ += ParallelizableMixin.__init__.__doc__
+    __init__.__doc__ = cast(str, __init__.__doc__) + cast(
+        str, ParallelizableMixin.__init__.__doc__
+    )
 
-    def fit(
-        self: T_LearnerInspector, sample: Sample, **fit_params: Any
+    def fit(  # type: ignore[override]
+        # todo: remove 'type: ignore' once mypy correctly infers return type
+        self: T_LearnerInspector,
+        sample: Sample,
+        **fit_params: Any,
     ) -> T_LearnerInspector:
         """
         Fit the inspector with the given sample.
@@ -255,12 +260,15 @@ class LearnerInspector(
             ShapVectorProjector, ShapInteractionVectorProjector, None
         ]
 
+        shap_calculator_type: Type[ShapCalculator]
+        shap_calculator: ShapCalculator
+
         if self.shap_interaction:
-            shap_calculator_type = (
-                ClassifierShapInteractionValuesCalculator
-                if _is_classifier
-                else RegressorShapInteractionValuesCalculator
-            )
+            if _is_classifier:
+                shap_calculator_type = ClassifierShapInteractionValuesCalculator
+            else:
+                shap_calculator_type = RegressorShapInteractionValuesCalculator
+
             shap_calculator = shap_calculator_type(
                 pipeline=self.pipeline,
                 explainer_factory=self.explainer_factory,
@@ -273,11 +281,11 @@ class LearnerInspector(
             shap_global_projector = ShapInteractionVectorProjector()
 
         else:
-            shap_calculator_type = (
-                ClassifierShapValuesCalculator
-                if _is_classifier
-                else RegressorShapValuesCalculator
-            )
+            if _is_classifier:
+                shap_calculator_type = ClassifierShapValuesCalculator
+            else:
+                shap_calculator_type = RegressorShapValuesCalculator
+
             shap_calculator = shap_calculator_type(
                 pipeline=self.pipeline,
                 explainer_factory=self.explainer_factory,

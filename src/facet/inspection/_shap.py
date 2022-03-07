@@ -117,7 +117,12 @@ class ShapCalculator(
         """[see superclass]"""
         return self.shap_ is not None
 
-    def fit(self: T_ShapCalculator, sample: Sample, **fit_params) -> T_ShapCalculator:
+    def fit(  # type: ignore[override]
+        # todo: remove 'type: ignore' once mypy correctly infers return type
+        self: T_ShapCalculator,
+        sample: Sample,
+        **fit_params,
+    ) -> T_ShapCalculator:
         """
         Calculate the SHAP values.
 
@@ -601,16 +606,14 @@ class ClassifierShapCalculator(ShapCalculator[ClassifierPipelineDF], metaclass=A
             sample.target_name, list
         ), "classification model is single-output"
         classifier_df = self.pipeline.final_estimator
-        assert classifier_df.is_fitted, "classifier used in crossfit must be fitted"
+        assert classifier_df.is_fitted, "classifier must be fitted"
 
         try:
             # noinspection PyUnresolvedReferences
             output_names = classifier_df.classes_
 
         except Exception as cause:
-            raise AssertionError(
-                "classifier used in crossfit must define classes_ attribute"
-            ) from cause
+            raise AssertionError("classifier must define classes_ attribute") from cause
 
         n_outputs = len(output_names)
 

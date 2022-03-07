@@ -251,7 +251,9 @@ class BaseUnivariateSimulator(
         self.confidence_level = confidence_level
 
     # add parallelization parameters to __init__ docstring
-    __init__.__doc__ += ParallelizableMixin.__init__.__doc__
+    __init__.__doc__ = cast(str, __init__.__doc__) + cast(
+        str, ParallelizableMixin.__init__.__doc__
+    )
 
     def simulate_feature(
         self,

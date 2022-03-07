@@ -5,7 +5,7 @@ Factories for SHAP explainers from the ``shap`` package.
 import functools
 import logging
 from abc import ABCMeta, abstractmethod
-from typing import Any, Callable, Dict, Iterable, List, Mapping, Optional, Union
+from typing import Any, Callable, Dict, Iterable, List, Mapping, Optional, Union, cast
 
 import numpy as np
 import pandas as pd
@@ -224,7 +224,7 @@ class ExplainerJob(Job[Union[np.ndarray, List[np.ndarray]]]):
     def run(self) -> Union[np.ndarray, List[np.ndarray]]:
         """[see superclass]"""
 
-        shap_fn: Callable[..., np.ndarray] = (
+        shap_fn: Callable[..., Union[np.ndarray, List[np.ndarray]]] = (
             self.explainer.shap_interaction_values
             if self.interactions
             else self.explainer.shap_values
@@ -343,7 +343,7 @@ class ParallelExplainer(BaseExplainer, ParallelizableMixin):
         explainer: BaseExplainer,
         *,
         max_job_size: int = 10,
-        n_jobs: int,
+        n_jobs: Optional[int],
         shared_memory: Optional[bool] = None,
         pre_dispatch: Optional[Union[str, int]] = None,
         verbose: Optional[int] = None,
@@ -368,7 +368,8 @@ class ParallelExplainer(BaseExplainer, ParallelizableMixin):
         self.explainer = explainer
         self.max_job_size = max_job_size
 
-    __init__.__doc__ += ParallelizableMixin.__init__.__doc__
+    assert __init__.__doc__ is not None
+    __init__.__doc__ += cast(str, ParallelizableMixin.__init__.__doc__)
 
     # noinspection PyPep8Naming
     def shap_values(

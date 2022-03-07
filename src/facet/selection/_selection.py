@@ -17,6 +17,7 @@ from typing import (
     Tuple,
     TypeVar,
     Union,
+    cast,
 )
 
 import numpy as np
@@ -224,8 +225,9 @@ class ModelSelector(
         self.searcher_ = None
 
     # mypy - incorrect type inference for __doc__
-    __init__.__doc__ = __init__.__doc__.replace(  # type: ignore
-        "%%PARALLELIZABLE_PARAMS%%", ParallelizableMixin.__init__.__doc__.strip()
+    __init__.__doc__ = cast(str, __init__.__doc__).replace(
+        "%%PARALLELIZABLE_PARAMS%%",
+        cast(str, ParallelizableMixin.__init__.__doc__).strip(),
     )
 
     @property
@@ -254,7 +256,8 @@ class ModelSelector(
                 "best_estimator_ is not defined; use a CV searcher with refit=True"
             )
 
-    def fit(
+    def fit(  # type: ignore[override]
+        # todo: remove 'type: ignore' once mypy correctly infers return type
         self: T_ModelSelector,
         sample: Sample,
         groups: Union[pd.Series, np.ndarray, Sequence, None] = None,
@@ -435,6 +438,7 @@ class ModelSelector(
         # noinspection PyPep8Naming
         def _scorer_fn(estimator: EstimatorDF, X: pd.DataFrame, y: pd.Series) -> float:
             while isinstance(estimator, CandidateEstimatorDF):
+                assert estimator.candidate is not None, "estimator candidate is set"
                 estimator = estimator.candidate
 
             if isinstance(estimator, LearnerPipelineDF):

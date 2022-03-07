@@ -153,8 +153,11 @@ class ShapGlobalExplainer(FittableMixin[ShapCalculator], metaclass=ABCMeta):
         """[see superclass]"""
         return self.feature_index_ is not None
 
-    def fit(
-        self: T_ShapGlobalExplainer, shap_calculator: ShapCalculator, **fit_params: Any
+    def fit(  # type: ignore[override]
+        # todo: remove 'type: ignore' once mypy correctly infers return type
+        self: T_ShapGlobalExplainer,
+        shap_calculator: ShapCalculator,
+        **fit_params: Any,
     ) -> T_ShapGlobalExplainer:
         """
         Calculate the SHAP decomposition for the shap values produced by the
