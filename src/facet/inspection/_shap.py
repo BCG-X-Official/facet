@@ -39,7 +39,7 @@ __all__ = [
 # Type variables
 #
 
-T_Self = TypeVar("T_Self")
+T_ShapCalculator = TypeVar("T_ShapCalculator", bound="ShapCalculator")
 T_LearnerPipelineDF = TypeVar("T_LearnerPipelineDF", bound=LearnerPipelineDF)
 
 #
@@ -109,7 +109,7 @@ class ShapCalculator(
         self._explainer_factory = explainer_factory
         self.shap_: Optional[pd.DataFrame] = None
         self.feature_index_: Optional[pd.Index] = None
-        self.output_names_: Optional[List[str]] = None
+        self.output_names_: Optional[Sequence[str]] = None
         self.sample_: Optional[Sample] = None
 
     @property
@@ -117,7 +117,12 @@ class ShapCalculator(
         """[see superclass]"""
         return self.shap_ is not None
 
-    def fit(self: T_Self, sample: Sample, **fit_params) -> T_Self:
+    def fit(  # type: ignore[override]
+        # todo: remove 'type: ignore' once mypy correctly infers return type
+        self: T_ShapCalculator,
+        sample: Sample,
+        **fit_params,
+    ) -> T_ShapCalculator:
         """
         Calculate the SHAP values.
 
@@ -125,9 +130,6 @@ class ShapCalculator(
         :param fit_params: additional fit parameters (unused)
         :return: self
         """
-
-        # noinspection PyMethodFirstArgAssignment
-        self: ShapCalculator  # support type hinting in PyCharm
 
         # reset fit in case we get an exception along the way
         self.shap_ = None
@@ -365,6 +367,7 @@ class ShapValuesCalculator(
 
         multi_output_type = self.get_multi_output_type()
         multi_output_names = self.get_multi_output_names(sample=sample)
+        assert self.feature_index_ is not None, "Calculator is fitted"
         features_out = self.feature_index_
 
         # calculate the shap values, and ensure the result is a list of arrays
@@ -404,12 +407,16 @@ class ShapInteractionValuesCalculator(
 
     def get_shap_values(self) -> pd.DataFrame:
         """[see superclass]"""
+
         self.ensure_fitted()
+        assert self.shap_ is not None, "Calculator is fitted"
         return self.shap_.groupby(level=0).sum()
 
     def get_shap_interaction_values(self) -> pd.DataFrame:
         """[see superclass]"""
+
         self.ensure_fitted()
+        assert self.shap_ is not None, "Calculator is fitted"
         return self.shap_
 
     def get_diagonals(self) -> pd.DataFrame:
@@ -422,7 +429,13 @@ class ShapInteractionValuesCalculator(
             observation and output we get the feature interaction values of size
             n_features * n_features.
         """
+
         self.ensure_fitted()
+        assert (
+            self.shap_ is not None
+            and self.sample_ is not None
+            and self.feature_index_ is not None
+        ), "Calculator is fitted"
 
         n_observations = len(self.sample_)
         n_features = len(self.feature_index_)
@@ -449,6 +462,7 @@ class ShapInteractionValuesCalculator(
 
         multi_output_type = self.get_multi_output_type()
         multi_output_names = self.get_multi_output_names(sample)
+        assert self.feature_index_ is not None, "Calculator is fitted"
         features_out = self.feature_index_
 
         # calculate the shap interaction values; ensure the result is a list of arrays
@@ -577,6 +591,7 @@ class ClassifierShapCalculator(ShapCalculator[ClassifierPipelineDF], metaclass=A
             (shap_tensors,) = super()._convert_shap_tensors_to_list(
                 shap_tensors=shap_tensors, n_outputs=1
             )
+            shap_tensors = cast(np.ndarray, shap_tensors)
             return [-shap_tensors, shap_tensors]
         else:
             return super()._convert_shap_tensors_to_list(
@@ -586,21 +601,19 @@ class ClassifierShapCalculator(ShapCalculator[ClassifierPipelineDF], metaclass=A
     def _get_output_names(
         self,
         sample: Sample,
-    ) -> Sequence[str]:
+    ) -> List[str]:
         assert not isinstance(
             sample.target_name, list
         ), "classification model is single-output"
         classifier_df = self.pipeline.final_estimator
-        assert classifier_df.is_fitted, "classifier used in crossfit must be fitted"
+        assert classifier_df.is_fitted, "classifier must be fitted"
 
         try:
             # noinspection PyUnresolvedReferences
             output_names = classifier_df.classes_
 
         except Exception as cause:
-            raise AssertionError(
-                "classifier used in crossfit must define classes_ attribute"
-            ) from cause
+            raise AssertionError("classifier must define classes_ attribute") from cause
 
         n_outputs = len(output_names)
 
@@ -670,7 +683,7 @@ class ClassifierShapValuesCalculator(
                 )
 
             # all good: proceed with SHAP values for class 1 (positive class):
-            raw_shap_tensors: List[np.ndarray] = raw_shap_tensors[1:]
+            raw_shap_tensors = raw_shap_tensors[1:]
 
         return [
             pd.DataFrame(
@@ -717,7 +730,7 @@ class ClassifierShapInteractionValuesCalculator(
                 )
 
             # all good: proceed with SHAP values for class 1 (positive class):
-            raw_shap_tensors: List[np.ndarray] = raw_shap_tensors[1:]
+            raw_shap_tensors = raw_shap_tensors[1:]
 
         # each row is indexed by an observation and a feature
         row_index = pd.MultiIndex.from_product(

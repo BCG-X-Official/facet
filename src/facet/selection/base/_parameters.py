@@ -54,13 +54,11 @@ class BaseParameterSpace(HasExpressionRepr, Generic[T_Estimator], metaclass=ABCM
     optimization.
     """
 
-    #: The estimator associated with this parameter space.
-    estimator: T_Estimator
-
     def __init__(self, estimator: T_Estimator) -> None:
         """
         :param estimator: the estimator for which to specify parameter choices or
             distributions
+
         """
         self._estimator = estimator
 
@@ -128,7 +126,7 @@ class CandidateEstimatorDF(ClassifierDF, RegressorDF, TransformerDF):
 
     def __init__(
         self,
-        candidate: Optional[EstimatorDF] = None,
+        candidate: Optional[Union[ClassifierDF, RegressorDF, TransformerDF]] = None,
         candidate_name: Optional[str] = None,
     ) -> None:
         """
@@ -143,45 +141,53 @@ class CandidateEstimatorDF(ClassifierDF, RegressorDF, TransformerDF):
         self.candidate = candidate
         self.candidate_name = candidate_name
 
+    def _get_candidate(self) -> Union[ClassifierDF, RegressorDF, TransformerDF]:
+        # get the estimator candidate; raise an attribute error if it has not been set
+
+        if self.candidate is None:
+            raise AttributeError("no candidate has been assigned")
+        else:
+            return self.candidate
+
     @property
     def classes_(self) -> Sequence[Any]:
         """[see superclass]"""
-        return self.candidate.classes_
+        return self._get_candidate().classes_
 
     # noinspection PyPep8Naming
     def predict_proba(
         self, X: pd.DataFrame, **predict_params: Any
     ) -> Union[pd.DataFrame, List[pd.DataFrame]]:
         """[see superclass]"""
-        return self.candidate.predict_proba(X, **predict_params)
+        return self._get_candidate().predict_proba(X, **predict_params)
 
     # noinspection PyPep8Naming
     def predict_log_proba(
         self, X: pd.DataFrame, **predict_params: Any
     ) -> Union[pd.DataFrame, List[pd.DataFrame]]:
         """[see superclass]"""
-        return self.candidate.predict_log_proba(X, **predict_params)
+        return self._get_candidate().predict_log_proba(X, **predict_params)
 
     # noinspection PyPep8Naming
     def decision_function(
         self, X: pd.DataFrame, **predict_params: Any
     ) -> Union[pd.Series, pd.DataFrame]:
         """[see superclass]"""
-        return self.candidate.decision_function(X, **predict_params)
+        return self._get_candidate().decision_function(X, **predict_params)
 
     # noinspection PyPep8Naming
     def score(
         self, X: pd.DataFrame, y: pd.Series, sample_weight: Optional[pd.Series] = None
     ) -> float:
         """[see superclass]"""
-        return self.candidate.score(X, y, sample_weight)
+        return self._get_candidate().score(X, y, sample_weight)
 
     # noinspection PyPep8Naming
     def predict(
         self, X: pd.DataFrame, **predict_params: Any
     ) -> Union[pd.Series, pd.DataFrame]:
         """[see superclass]"""
-        return self.candidate.predic(X, **predict_params)
+        return self._get_candidate().predict(X, **predict_params)
 
     # noinspection PyPep8Naming
     def fit(
@@ -191,7 +197,7 @@ class CandidateEstimatorDF(ClassifierDF, RegressorDF, TransformerDF):
         **fit_params: Any,
     ) -> T_CandidateEstimatorDF:
         """[see superclass]"""
-        self.candidate.fit(X, y, **fit_params)
+        self._get_candidate().fit(X, y, **fit_params)
         return self
 
     @property
@@ -202,26 +208,26 @@ class CandidateEstimatorDF(ClassifierDF, RegressorDF, TransformerDF):
     # noinspection PyPep8Naming
     def inverse_transform(self, X: pd.DataFrame) -> pd.DataFrame:
         """[see superclass]"""
-        return self.candidate.inverse_transform(X)
+        return self._get_candidate().inverse_transform(X)
 
     # noinspection PyPep8Naming
     def transform(self, X: pd.DataFrame) -> pd.DataFrame:
         """[see superclass]"""
-        return self.candidate.transform(X)
+        return self._get_candidate().transform(X)
 
     @property
     def _estimator_type(self) -> str:
         # noinspection PyProtectedMember
-        return self.candidate._estimator_type
+        return self.candidate._estimator_type  # type: ignore
 
     def _get_features_in(self) -> pd.Index:
-        return self.candidate.feature_names_in_
+        return self._get_candidate().feature_names_in_
 
     def _get_n_outputs(self) -> int:
-        return self.candidate.n_outputs_
+        return self._get_candidate().n_outputs_
 
     def _get_features_original(self) -> pd.Series:
-        return self.candidate.feature_names_original_
+        return self._get_candidate().feature_names_original_
 
 
 __tracker.validate()

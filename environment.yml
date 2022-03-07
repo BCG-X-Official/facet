@@ -5,42 +5,42 @@ channels:
 dependencies:
   # run
   - boruta_py ~= 0.3
-  - gamma-pytools >= 2dev0, < 3a
+  - gamma-pytools >= 2dev6, <3a
   - joblib ~= 1.1
-  - lightgbm ~= 3.2
-  - matplotlib ~= 3.3
+  - lightgbm ~= 3.3
+  - matplotlib ~= 3.5
   - numpy ~= 1.22
   - pandas ~= 1.4
-  - python ~= 3.8
-  - scikit-learn ~= 0.24.2
-  - scipy ~= 1.7
+  - python ~= 3.8.12
+  - scikit-learn ~= 1.0.2
+  - scipy ~= 1.8
   - shap ~=0.40
-  - sklearndf >= 2dev0, < 3a
+  - sklearndf >= 2dev3, < 3a
   # build/test
-  - black = 20.8b1
+  - black ~= 22.1
   - conda-build ~= 3.21
   - conda-verify ~= 3.1
-  - docutils ~= 0.16
+  - docutils ~= 0.17
   - flit ~= 3.0
-  - isort ~= 5.5
+  - isort ~= 5.10
   - jinja2 ~= 2.11
   - markupsafe < 2.1  # markupsafe 2.1 breaks support for jinja2
   - m2r ~= 0.2
+  - mypy ~= 0.931
   - pluggy ~= 0.13
-  - pre-commit ~= 2.7
+  - pre-commit ~= 2.17
   - pydata-sphinx-theme ~= 0.7
-  - pytest ~= 5.2
-  - pytest-cov ~= 2.8
-  - pyyaml ~= 5.1
-  - sphinx ~= 3.4
-  - sphinx-autodoc-typehints ~= 1.11
+  - pytest ~= 5.4
+  - pytest-cov ~= 2.12
+  - pyyaml ~= 5.4
+  - sphinx ~= 4.4
+  - sphinx-autodoc-typehints ~= 1.12
   - toml ~= 0.10
-  - tox ~= 3.20
+  - tox ~= 3.24
   - yaml ~= 0.2
   # notebooks
-  - jupyterlab ~= 3.1
-  - nbclassic ~= 0.2.8
-  - nbsphinx ~= 0.7.1
+  - jupyterlab ~= 3.2
+  - nbclassic ~= 0.3
+  - nbsphinx ~= 0.8.8
   - openpyxl ~= 3.0
   - seaborn ~= 0.11
-  - tableone ~= 0.7

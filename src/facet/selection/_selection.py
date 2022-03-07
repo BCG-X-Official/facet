@@ -17,6 +17,7 @@ from typing import (
     Tuple,
     TypeVar,
     Union,
+    cast,
 )
 
 import numpy as np
@@ -53,7 +54,8 @@ BaseSearchCV = next(
 
 T_ModelSelector = TypeVar("T_ModelSelector", bound="ModelSelector")
 T_EstimatorDF = TypeVar("T_EstimatorDF", bound=EstimatorDF)
-T_SearchCV = TypeVar("T_SearchCV", bound=BaseSearchCV)
+# mypy - disabling due to lack of support for dynamic types
+T_SearchCV = TypeVar("T_SearchCV", bound=BaseSearchCV)  # type: ignore
 
 #
 # Constants
@@ -85,8 +87,9 @@ class ModelSelector(
     """
 
     #: A cross-validation searcher class, or any other callable
-    #: that instantiates a cross-validation searcher.
-    searcher_type: Callable[..., T_SearchCV]
+    #: that instantiates a cross-validation searcher, wrapped in
+    #: a tuple to avoid confusion with methods
+    searcher_type: Tuple[Callable[..., T_SearchCV]]
 
     #: The parameter space to search.
     parameter_space: BaseParameterSpace
@@ -124,6 +127,7 @@ class ModelSelector(
     _CV_RESULT_PATTERNS: List[Tuple[Pattern, str]] = [
         (re.compile(pattern), repl) for pattern, repl in _CV_RESULT_COLUMNS
     ]
+
     _CV_RESULT_CANDIDATE_PATTERN, _CV_RESULT_CANDIDATE_REPL = (
         re.compile(r"^(?:(param__)candidate__|param__(candidate(?:_name)?)$)"),
         r"\1\2",
@@ -176,7 +180,7 @@ class ModelSelector(
             verbose=verbose,
         )
 
-        self.searcher_type = searcher_type
+        self.searcher_type = (searcher_type,)
         self.parameter_space = parameter_space
         self.cv = cv
         self.scoring = scoring
@@ -220,8 +224,10 @@ class ModelSelector(
 
         self.searcher_ = None
 
-    __init__.__doc__ = __init__.__doc__.replace(
-        "%%PARALLELIZABLE_PARAMS%%", ParallelizableMixin.__init__.__doc__.strip()
+    # mypy - incorrect type inference for __doc__
+    __init__.__doc__ = cast(str, __init__.__doc__).replace(
+        "%%PARALLELIZABLE_PARAMS%%",
+        cast(str, ParallelizableMixin.__init__.__doc__).strip(),
     )
 
     @property
@@ -236,6 +242,7 @@ class ModelSelector(
         """
         self.ensure_fitted()
         searcher = self.searcher_
+        assert searcher is not None, "Ranker is fitted"
 
         if searcher.refit:
             best_estimator = searcher.best_estimator_
@@ -249,7 +256,8 @@ class ModelSelector(
                 "best_estimator_ is not defined; use a CV searcher with refit=True"
             )
 
-    def fit(
+    def fit(  # type: ignore[override]
+        # todo: remove 'type: ignore' once mypy correctly infers return type
         self: T_ModelSelector,
         sample: Sample,
         groups: Union[pd.Series, np.ndarray, Sequence, None] = None,
@@ -286,8 +294,8 @@ class ModelSelector(
                 )
 
         parameter_space = self.parameter_space
-        searcher: BaseSearchCV
-        searcher = self.searcher_ = self.searcher_type(
+        (searcher_type,) = self.searcher_type
+        searcher = self.searcher_ = searcher_type(
             parameter_space.estimator,
             parameter_space.parameters,
             **self._get_searcher_parameters(),
@@ -315,6 +323,7 @@ class ModelSelector(
         if sort_by is None:
             sort_by = self._DEFAULT_REPORT_SORT_COLUMN
 
+        assert self.searcher_ is not None, "Ranker is fitted"
         cv_results: Dict[str, Any] = self.searcher_.cv_results_
 
         # we create a table using a subset of the cv results, to keep the report
@@ -429,6 +438,7 @@ class ModelSelector(
         # noinspection PyPep8Naming
         def _scorer_fn(estimator: EstimatorDF, X: pd.DataFrame, y: pd.Series) -> float:
             while isinstance(estimator, CandidateEstimatorDF):
+                assert estimator.candidate is not None, "estimator candidate is set"
                 estimator = estimator.candidate
 
             if isinstance(estimator, LearnerPipelineDF):
@@ -440,7 +450,8 @@ class ModelSelector(
 
         return _scorer_fn
 
-    summary_report.__doc__ = summary_report.__doc__.replace(
+    # mypy - incorrect type inference for __doc__
+    summary_report.__doc__ = summary_report.__doc__.replace(  # type: ignore
         "%%SORT_COLUMN%%", _DEFAULT_REPORT_SORT_COLUMN
     )
 
