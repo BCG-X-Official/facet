@@ -336,7 +336,7 @@ def test_model_selector_classification(
 ) -> None:
     expected_learner_scores = [0.965, 0.964, 0.957, 0.956]
 
-    # define parameters and crossfit
+    # define parameters
     ps1 = ParameterSpace(
         ClassifierPipelineDF(classifier=RandomForestClassifierDF(random_state=42))
     )

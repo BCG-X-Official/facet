@@ -279,9 +279,6 @@ class FullSampleValidator(BaseCrossValidator):
     """
     A trivial validator where every test/train split has the full sample both in
     test and in train.
-
-    This can be useful to construct a :class:`.LearnerCrossfit` which
-    inspects a single model fitted on the full sample for quick, indicative results.
     """
 
     def __init__(self, n_splits: int = 1) -> None:
