@@ -157,24 +157,6 @@ class RangePartitioner(
         ] = None
 
     @property
-    def lower_bound(self) -> T_Values_Numeric:
-        """
-        The lower bound of the partitioning.
-
-        ``Null`` if no explicit lower bound is set.
-        """
-        return self._lower_bound
-
-    @property
-    def upper_bound(self) -> T_Values_Numeric:
-        """
-        The upper bound of the partitioning.
-
-        ``Null`` if no explicit upper bound is set.
-        """
-        return self._upper_bound
-
-    @property
     def is_categorical(self) -> bool:
         """
         ``False``
