@@ -202,7 +202,7 @@ class ShapInteractionVectorProjector(ShapProjector, ShapInteractionGlobalExplain
         # shape: (n_outputs, n_features, n_features)
         # variance of each feature interaction vector
         var_p_ij = np.average(
-            ensure_last_axis_is_fast(p_ij ** 2), axis=-1, weights=weight
+            ensure_last_axis_is_fast(p_ij**2), axis=-1, weights=weight
         )
 
         # cov(p[i], p[i, j])
