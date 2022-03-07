@@ -740,7 +740,7 @@ class LearnerInspector(
         # calculate the average interactions for each output and feature/feature
         # interaction, based on the standard deviation assuming a mean of 0.0.
         # The resulting matrix has shape (n_outputs, n_features, n_features)
-        _interaction_squared = im_matrix_per_observation_and_output ** 2
+        _interaction_squared = im_matrix_per_observation_and_output**2
         if weight is not None:
             _interaction_squared *= weight
         interaction_matrix = np.sqrt(_interaction_squared.mean(axis=0))

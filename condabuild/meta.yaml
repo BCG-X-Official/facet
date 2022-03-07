@@ -29,7 +29,7 @@ requirements:
 test:
   imports:
     - facet
-    - facet.crossfit
+    - facet.data
     - facet.inspection
     - facet.selection
     - facet.validation

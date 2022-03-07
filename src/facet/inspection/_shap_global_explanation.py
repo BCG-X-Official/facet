@@ -675,7 +675,7 @@ class ShapInteractionValueContext(ShapContext):
         _nominator = cov_p_ii_p_jj * transpose(cov_p_ii_p_ij) - cov_p_ii_p_ij * var_p_jj
         fill_diagonal(_nominator, 0.0)
 
-        _denominator = cov_p_ii_p_jj ** 2 - var_p_ii * var_p_jj
+        _denominator = cov_p_ii_p_jj**2 - var_p_ii * var_p_jj
 
         # The denominator is <= 0 due to the Cauchy-Schwarz inequality.
         # It is 0 only if the variance of p_ii or p_jj are zero (i.e., no main effect).
