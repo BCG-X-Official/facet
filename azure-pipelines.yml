@@ -65,7 +65,7 @@ stages:
               versionSpec: '3.8.*'
             displayName: 'use Python 3.8'
           - script: |
-              python -m pip install black==20.8b1
+              python -m pip install black==22.1
               python -m black --check .
             displayName: 'Run black'
       - job:
@@ -79,6 +79,20 @@ stages:
               python -m pip install flake8==3.9.0 flake8-comprehensions flake8-import-order
               python -m flake8 --config tox.ini -v .
             displayName: 'Run flake8'
+      - job:
+        displayName: 'mypy'
+        steps:
+          - task: UsePythonVersion@0
+            inputs:
+              versionSpec: '3.7.*'
+            displayName: 'use Python 3.7'
+          - script: |
+              set -eux
+              eval "$(conda shell.bash hook)"
+              conda env create
+              conda activate $(project_name)-develop
+              python -m mypy src
+            displayName: 'Run mypy'
 
   # detect whether the build config (pyproject.toml) was changed -> then we must run a build test
   - stage: detect_build_config_changes

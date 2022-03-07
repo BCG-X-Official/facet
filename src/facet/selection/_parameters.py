@@ -243,7 +243,6 @@ distribution:
 
         def _values_to_expression(values: ParameterSet) -> Expression:
             if isinstance(values, rv_frozen):
-                values: rv_frozen
                 return Id(values.dist.name)(*values.args, **values.kwds)
             elif isinstance(values, (stats.rv_continuous, stats.rv_discrete)):
                 try:
@@ -253,20 +252,18 @@ distribution:
 
             return make_expression(values)
 
-        path_prefix = (
-            []
-            if path_prefix is None
-            else to_list(path_prefix, element_type=str, arg_name="path_prefix")
+        path_prefix_list: List[str] = to_list(
+            path_prefix, element_type=str, optional=True, arg_name="path_prefix"
         )
 
         parameters = {
             ".".join(path): _values_to_expression(value)
-            for path, value in self._iter_parameters(path_prefix=path_prefix)
+            for path, value in self._iter_parameters(path_prefix=path_prefix_list)
         }
 
-        if path_prefix:
+        if path_prefix_list:
             return Id(type(self))(
-                **{".".join(path_prefix): self.estimator}, **parameters
+                **{".".join(path_prefix_list): self.estimator}, **parameters
             )
         else:
             return Id(type(self))(self.estimator, **parameters)
@@ -310,7 +307,6 @@ class MultiEstimatorParameterSpace(
     )
     def get_parameters(self, prefix: Optional[str] = None) -> List[ParameterDict]:
         """[see superclass]"""
-
         if prefix is None:
             prefix = ""
             candidate_prefixed = CandidateEstimatorDF.PARAM_CANDIDATE
@@ -365,8 +361,8 @@ def validate_spaces(spaces: Collection[ParameterSpace[T_Candidate_co]]) -> None:
     :param spaces: the candidates to check
     """
 
-    estimator_types = {
-        getattr(space.estimator, "_estimator_type", None) for space in spaces
+    estimator_types: Set[str] = {
+        getattr(space.estimator, "_estimator_type") for space in spaces
     }
 
     if len(estimator_types) > 1:
@@ -392,7 +388,10 @@ def get_default_estimator_name(estimator: EstimatorDF) -> str:
 
     while True:
         if isinstance(estimator, CandidateEstimatorDF):
-            estimator = estimator.candidate
+            if estimator.candidate is None:
+                return type(estimator).__name__
+            else:
+                estimator = estimator.candidate
 
         elif isinstance(estimator, PipelineDF) and estimator.steps:
             estimator = estimator.steps[-1]

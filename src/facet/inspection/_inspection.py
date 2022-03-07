@@ -1,9 +1,22 @@
 """
 Core implementation of :mod:`facet.inspection`
 """
-
 import logging
-from typing import Any, Generic, Iterable, List, Optional, Tuple, TypeVar, Union, cast
+from types import MethodType
+from typing import (
+    Any,
+    Callable,
+    Generic,
+    Iterable,
+    List,
+    Optional,
+    Sequence,
+    Tuple,
+    Type,
+    TypeVar,
+    Union,
+    cast,
+)
 
 import numpy as np
 import pandas as pd
@@ -43,10 +56,9 @@ __all__ = ["ShapPlotData", "LearnerInspector"]
 # Type variables
 #
 
-T_Self = TypeVar("T_Self")
+T_LearnerInspector = TypeVar("T_LearnerInspector", bound="LearnerInspector")
 T_LearnerPipelineDF = TypeVar("T_LearnerPipelineDF", bound=LearnerPipelineDF)
 T_SeriesOrDataFrame = TypeVar("T_SeriesOrDataFrame", pd.Series, pd.DataFrame)
-
 
 #
 # Ensure all symbols introduced below are included in __all__
@@ -211,9 +223,16 @@ class LearnerInspector(
         self._shap_global_projector: Optional[ShapGlobalExplainer] = None
         self._sample: Optional[Sample] = None
 
-    __init__.__doc__ += ParallelizableMixin.__init__.__doc__
+    __init__.__doc__ = cast(str, __init__.__doc__) + cast(
+        str, ParallelizableMixin.__init__.__doc__
+    )
 
-    def fit(self: T_Self, sample: Sample, **fit_params: Any) -> T_Self:
+    def fit(  # type: ignore[override]
+        # todo: remove 'type: ignore' once mypy correctly infers return type
+        self: T_LearnerInspector,
+        sample: Sample,
+        **fit_params: Any,
+    ) -> T_LearnerInspector:
         """
         Fit the inspector with the given sample.
 
@@ -226,8 +245,6 @@ class LearnerInspector(
             compatibility with :class:`.FittableMixin`)
         :return: ``self``
         """
-
-        self: LearnerInspector  # support type hinting in PyCharm
 
         learner: LearnerDF = self.pipeline.final_estimator
 
@@ -243,12 +260,15 @@ class LearnerInspector(
             ShapVectorProjector, ShapInteractionVectorProjector, None
         ]
 
+        shap_calculator_type: Type[ShapCalculator]
+        shap_calculator: ShapCalculator
+
         if self.shap_interaction:
-            shap_calculator_type = (
-                ClassifierShapInteractionValuesCalculator
-                if _is_classifier
-                else RegressorShapInteractionValuesCalculator
-            )
+            if _is_classifier:
+                shap_calculator_type = ClassifierShapInteractionValuesCalculator
+            else:
+                shap_calculator_type = RegressorShapInteractionValuesCalculator
+
             shap_calculator = shap_calculator_type(
                 pipeline=self.pipeline,
                 explainer_factory=self.explainer_factory,
@@ -261,11 +281,11 @@ class LearnerInspector(
             shap_global_projector = ShapInteractionVectorProjector()
 
         else:
-            shap_calculator_type = (
-                ClassifierShapValuesCalculator
-                if _is_classifier
-                else RegressorShapValuesCalculator
-            )
+            if _is_classifier:
+                shap_calculator_type = ClassifierShapValuesCalculator
+            else:
+                shap_calculator_type = RegressorShapValuesCalculator
+
             shap_calculator = shap_calculator_type(
                 pipeline=self.pipeline,
                 explainer_factory=self.explainer_factory,
@@ -288,6 +308,8 @@ class LearnerInspector(
 
     @property
     def _shap_global_explainer(self) -> ShapGlobalExplainer:
+        self.ensure_fitted()
+        assert self._shap_global_projector is not None, "Inspector is fitted"
         return self._shap_global_projector
 
     @property
@@ -300,11 +322,13 @@ class LearnerInspector(
         """
         The background sample used to fit this inspector.
         """
+
         self.ensure_fitted()
+        assert self._sample is not None, "Inspector is fitted"
         return self._sample
 
     @property
-    def output_names_(self) -> List[str]:
+    def output_names_(self) -> Sequence[str]:
         """
         The names of the outputs explained by this inspector.
 
@@ -318,6 +342,10 @@ class LearnerInspector(
         """
 
         self.ensure_fitted()
+        assert (
+            self._shap_calculator is not None
+            and self._shap_calculator.output_names_ is not None
+        ), "Inspector is fitted"
         return self._shap_calculator.output_names_
 
     @property
@@ -337,7 +365,9 @@ class LearnerInspector(
 
         :return: a data frame with SHAP values
         """
+
         self.ensure_fitted()
+        assert self._shap_calculator is not None, "Inspector is fitted"
         return self.__split_multi_output_df(self._shap_calculator.get_shap_values())
 
     def shap_interaction_values(self) -> Union[pd.DataFrame, List[pd.DataFrame]]:
@@ -380,6 +410,7 @@ class LearnerInspector(
         if method not in methods:
             raise ValueError(f'arg method="{method}" must be one of {methods}')
 
+        assert self._shap_calculator is not None
         shap_matrix: pd.DataFrame = self._shap_calculator.get_shap_values()
         weight: Optional[pd.Series] = self.sample_.weight
 
@@ -450,19 +481,13 @@ class LearnerInspector(
         :return: feature synergy matrix as a data frame of shape
             `(n_features, n_features)`, or a list of data frames for multiple outputs
         """
+
         self.ensure_fitted()
 
-        explainer = self.__interaction_explainer
         return self.__feature_affinity_matrix(
-            affinity_matrices=(
-                explainer.to_frames(
-                    explainer.synergy(symmetrical=symmetrical, absolute=absolute)
-                )
-            ),
-            affinity_symmetrical=explainer.synergy(
-                symmetrical=True, absolute=False, std=False
-            ),
-            affinity_metric="synergy",
+            explainer_fn=self.__interaction_explainer.synergy,
+            absolute=absolute,
+            symmetrical=symmetrical,
             clustered=clustered,
         )
 
@@ -507,17 +532,10 @@ class LearnerInspector(
         """
         self.ensure_fitted()
 
-        explainer = self.__interaction_explainer
         return self.__feature_affinity_matrix(
-            affinity_matrices=(
-                explainer.to_frames(
-                    explainer.redundancy(symmetrical=symmetrical, absolute=absolute)
-                )
-            ),
-            affinity_symmetrical=explainer.redundancy(
-                symmetrical=True, absolute=False, std=False
-            ),
-            affinity_metric="redundancy",
+            explainer_fn=self.__interaction_explainer.redundancy,
+            absolute=absolute,
+            symmetrical=symmetrical,
             clustered=clustered,
         )
 
@@ -562,21 +580,13 @@ class LearnerInspector(
         :return: feature association matrix as a data frame of shape
             `(n_features, n_features)`, or a list of data frames for multiple outputs
         """
+
         self.ensure_fitted()
 
-        global_explainer = self._shap_global_explainer
         return self.__feature_affinity_matrix(
-            affinity_matrices=(
-                global_explainer.to_frames(
-                    global_explainer.association(
-                        absolute=absolute, symmetrical=symmetrical
-                    )
-                )
-            ),
-            affinity_symmetrical=global_explainer.association(
-                symmetrical=True, absolute=False, std=False
-            ),
-            affinity_metric="association",
+            explainer_fn=self._shap_global_explainer.association,
+            absolute=absolute,
+            symmetrical=symmetrical,
             clustered=clustered,
         )
 
@@ -593,11 +603,17 @@ class LearnerInspector(
         :return: linkage tree of feature synergies; list of linkage trees
             for multi-target regressors or non-binary classifiers
         """
+
         self.ensure_fitted()
+        feature_affinity_matrix = self.__interaction_explainer.synergy(
+            symmetrical=True, absolute=False
+        )
+        assert (
+            feature_affinity_matrix is not None
+        ), "Shap interaction values are supported"
+
         return self.__linkages_from_affinity_matrices(
-            feature_affinity_matrix=self.__interaction_explainer.synergy(
-                symmetrical=True, absolute=False, std=False
-            )
+            feature_affinity_matrix=feature_affinity_matrix
         )
 
     def feature_redundancy_linkage(self) -> Union[LinkageTree, List[LinkageTree]]:
@@ -613,11 +629,17 @@ class LearnerInspector(
         :return: linkage tree of feature redundancies; list of linkage trees
             for multi-target regressors or non-binary classifiers
         """
+
         self.ensure_fitted()
+        feature_affinity_matrix = self.__interaction_explainer.redundancy(
+            symmetrical=True, absolute=False
+        )
+        assert (
+            feature_affinity_matrix is not None
+        ), "Shap interaction values are supported"
+
         return self.__linkages_from_affinity_matrices(
-            feature_affinity_matrix=self.__interaction_explainer.redundancy(
-                symmetrical=True, absolute=False, std=False
-            )
+            feature_affinity_matrix=feature_affinity_matrix
         )
 
     def feature_association_linkage(self) -> Union[LinkageTree, List[LinkageTree]]:
@@ -633,11 +655,17 @@ class LearnerInspector(
         :return: linkage tree of feature associations; list of linkage trees
             for multi-target regressors or non-binary classifiers
         """
+
         self.ensure_fitted()
+        feature_affinity_matrix = self._shap_global_explainer.association(
+            absolute=False, symmetrical=True
+        )
+        assert (
+            feature_affinity_matrix is not None
+        ), "Shap interaction values are supported"
+
         return self.__linkages_from_affinity_matrices(
-            feature_affinity_matrix=self._shap_global_explainer.association(
-                absolute=False, symmetrical=True, std=False
-            )
+            feature_affinity_matrix=feature_affinity_matrix
         )
 
     def feature_interaction_matrix(self) -> Union[Matrix, List[Matrix]]:
@@ -699,8 +727,9 @@ class LearnerInspector(
         # get a feature interaction array with shape
         # (n_observations, n_outputs, n_features, n_features)
         # where the innermost feature x feature arrays are symmetrical
-        im_matrix_per_observation_and_output = (
-            self.shap_interaction_values()
+        im_matrix_per_observation_and_output: np.ndarray = (
+            # TODO missing proper handling for list of data frames
+            self.shap_interaction_values()  # type: ignore
             .values.reshape((-1, n_features, n_outputs, n_features))
             .swapaxes(1, 2)
         )
@@ -719,7 +748,7 @@ class LearnerInspector(
         # calculate the average interactions for each output and feature/feature
         # interaction, based on the standard deviation assuming a mean of 0.0.
         # The resulting matrix has shape (n_outputs, n_features, n_features)
-        _interaction_squared = im_matrix_per_observation_and_output ** 2
+        _interaction_squared = im_matrix_per_observation_and_output**2
         if weight is not None:
             _interaction_squared *= weight
         interaction_matrix = np.sqrt(_interaction_squared.mean(axis=0))
@@ -777,16 +806,15 @@ class LearnerInspector(
 
         shap_values: Union[pd.DataFrame, List[pd.DataFrame]] = self.shap_values()
 
-        output_names: List[str] = self.output_names_
+        output_names: Sequence[str] = self.output_names_
         shap_values_numpy: Union[np.ndarray, List[np.ndarray]]
         included_observations: pd.Index
 
         if len(output_names) > 1:
-            shap_values: List[pd.DataFrame]
             shap_values_numpy = [s.values for s in shap_values]
             included_observations = shap_values[0].index
         else:
-            shap_values: pd.DataFrame
+            shap_values = cast(pd.DataFrame, shap_values)
             shap_values_numpy = shap_values.values
             included_observations = shap_values.index
 
@@ -829,18 +857,32 @@ class LearnerInspector(
 
     def __feature_affinity_matrix(
         self,
-        affinity_matrices: List[pd.DataFrame],
-        affinity_symmetrical: np.ndarray,
-        affinity_metric: str,
+        *,
+        explainer_fn: Callable[..., np.ndarray],
+        absolute: bool,
+        symmetrical: bool,
         clustered: bool,
-    ) -> Matrix:
+    ):
+        affinity_matrices = explainer_fn(symmetrical=symmetrical, absolute=absolute)
+
+        explainer: ShapGlobalExplainer = cast(
+            ShapGlobalExplainer, cast(MethodType, explainer_fn).__self__
+        )
+        affinity_matrices = explainer.to_frames(affinity_matrices)
+
         if clustered:
+            affinity_symmetrical = explainer_fn(symmetrical=True, absolute=False)
+            assert (
+                affinity_symmetrical is not None
+            ), "Shap interaction values are supported"
+
             affinity_matrices = self.__sort_affinity_matrices(
                 affinity_matrices=affinity_matrices,
                 symmetrical_affinity_matrices=affinity_symmetrical,
             )
+
         return self.__isolate_single_frame(
-            affinity_matrices, affinity_metric=affinity_metric
+            affinity_matrices, affinity_metric=explainer_fn.__name__
         )
 
     @staticmethod

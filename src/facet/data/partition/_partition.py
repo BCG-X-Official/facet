@@ -6,8 +6,7 @@ import logging
 import math
 import operator as op
 from abc import ABCMeta, abstractmethod
-from numbers import Number
-from typing import Any, Generic, Iterable, Optional, Sequence, Tuple, TypeVar
+from typing import Any, Generic, Optional, Sequence, Tuple, TypeVar
 
 import numpy as np
 
@@ -29,10 +28,12 @@ __all__ = [
 # Type variables
 #
 
-
-T_Self = TypeVar("T_Self")
+T_Partitioner = TypeVar("T_Partitioner", bound="Partitioner")
+T_RangePartitioner = TypeVar("T_RangePartitioner", bound="RangePartitioner")
+T_CategoryPartitioner = TypeVar("T_CategoryPartitioner", bound="CategoryPartitioner")
 T_Values = TypeVar("T_Values")
-T_Values_Numeric = TypeVar("T_Values_Numeric", bound=Number)
+T_Values_Numeric = TypeVar("T_Values_Numeric", float, int)
+
 
 #
 # Ensure all symbols introduced below are included in __all__
@@ -47,7 +48,7 @@ __tracker = AllTracker(globals())
 
 
 class Partitioner(
-    FittableMixin[Iterable[T_Values]], Generic[T_Values], metaclass=ABCMeta
+    FittableMixin[Sequence[T_Values]], Generic[T_Values], metaclass=ABCMeta
 ):
     """
     Abstract base class of all partitioners.
@@ -56,7 +57,7 @@ class Partitioner(
     DEFAULT_MAX_PARTITIONS = 20
 
     #: The values representing the partitions.
-    _partitions: Optional[np.ndarray]
+    _partitions: Optional[Sequence[T_Values]]
 
     #: The count of values allocated to each partition.
     _frequencies: Optional[np.ndarray]
@@ -76,7 +77,8 @@ class Partitioner(
         self._partitions = None
         self._frequencies = None
 
-    __init__.__doc__ = __init__.__doc__.replace(
+    # mypy - incorrect type inference for __doc__
+    __init__.__doc__ = __init__.__doc__.replace(  # type: ignore
         "{DEFAULT_MAX_PARTITIONS}", repr(DEFAULT_MAX_PARTITIONS)
     )
 
@@ -88,11 +90,13 @@ class Partitioner(
         return self._max_partitions
 
     @property
-    def partitions_(self) -> np.ndarray:
+    def partitions_(self) -> Sequence[T_Values]:
         """
         The values representing the partitions.
         """
+
         self.ensure_fitted()
+        assert self._partitions is not None, "Partitioner is fitted"
         return self._partitions
 
     @property
@@ -100,7 +104,9 @@ class Partitioner(
         """
         The count of values allocated to each partition.
         """
+
         self.ensure_fitted()
+        assert self._frequencies is not None, "Partitioner is fitted"
         return self._frequencies
 
     @property
@@ -111,7 +117,12 @@ class Partitioner(
         """
 
     @abstractmethod
-    def fit(self: T_Self, values: Iterable[T_Values], **fit_params: Any) -> T_Self:
+    def fit(  # type: ignore[override]
+        # todo: remove 'type: ignore' once mypy correctly infers return type
+        self: T_Partitioner,
+        values: Sequence[T_Values],
+        **fit_params: Any,
+    ) -> T_Partitioner:
         """
         Calculate the partitioning for the given observed values.
 
@@ -122,7 +133,7 @@ class Partitioner(
         """
 
     @staticmethod
-    def _as_non_empty_array(values: Iterable[Any]) -> np.ndarray:
+    def _as_non_empty_array(values: Sequence[Any]) -> np.ndarray:
         # ensure arg values is a non-empty array
         values = np.asarray(values)
         if len(values) == 0:
@@ -149,24 +160,6 @@ class RangePartitioner(
         ] = None
 
     @property
-    def lower_bound(self) -> T_Values_Numeric:
-        """
-        The lower bound of the partitioning.
-
-        ``Null`` if no explicit lower bound is set.
-        """
-        return self._lower_bound
-
-    @property
-    def upper_bound(self) -> T_Values_Numeric:
-        """
-        The upper bound of the partitioning.
-
-        ``Null`` if no explicit upper bound is set.
-        """
-        return self._upper_bound
-
-    @property
     def is_categorical(self) -> bool:
         """
         ``False``
@@ -182,7 +175,9 @@ class RangePartitioner(
           inclusive lower bound of a partition range, and y is the exclusive upper
           bound of a partition range
         """
+
         self.ensure_fitted()
+        assert self._partition_bounds is not None, "Partitioner is fitted"
         return self._partition_bounds
 
     @property
@@ -190,18 +185,20 @@ class RangePartitioner(
         """
         The width of each partition.
         """
+
         self.ensure_fitted()
+        assert self._step is not None, "Partitioner is fitted"
         return self._step
 
-    # noinspection PyMissingOrEmptyDocstring,PyIncorrectDocstring
-    def fit(
-        self: T_Self,
-        values: Iterable[T_Values_Numeric],
+    def fit(  # type: ignore[override]
+        # todo: remove 'type: ignore' once mypy correctly infers return type
+        self: T_RangePartitioner,
+        values: Sequence[T_Values_Numeric],
         *,
         lower_bound: Optional[T_Values_Numeric] = None,
         upper_bound: Optional[T_Values_Numeric] = None,
         **fit_params: Any,
-    ) -> T_Self:
+    ) -> T_RangePartitioner:
         r"""
         Calculate the partitioning for the given observed values.
 
@@ -219,8 +216,6 @@ class RangePartitioner(
         :param fit_params: optional fitting parameters
         :return: ``self``
         """
-
-        self: RangePartitioner  # support type hinting in PyCharm
 
         values = self._as_non_empty_array(values)
 
@@ -305,10 +300,9 @@ class RangePartitioner(
 
         return min(10 ** math.ceil(math.log10(step * m)) / m for m in [1, 2, 5])
 
-    @staticmethod
     @abstractmethod
     def _step_size(
-        lower_bound: T_Values_Numeric, upper_bound: T_Values_Numeric
+        self, lower_bound: T_Values_Numeric, upper_bound: T_Values_Numeric
     ) -> T_Values_Numeric:
         # Compute the step size (interval length) used in the partitions
         pass
@@ -348,6 +342,7 @@ class ContinuousRangePartitioner(RangePartitioner[float]):
 
     @property
     def _partition_center_offset(self) -> float:
+        assert self._step is not None, "Partitioner is fitted"
         return self._step / 2
 
 
@@ -384,6 +379,7 @@ class IntegerRangePartitioner(RangePartitioner[int]):
 
     @property
     def _partition_center_offset(self) -> int:
+        assert self._step is not None, "Partitioner is fitted"
         return self._step // 2
 
 
@@ -409,10 +405,13 @@ class CategoryPartitioner(Partitioner[T_Values]):
         return True
 
     # noinspection PyMissingOrEmptyDocstring
-    def fit(self: T_Self, values: Iterable[T_Values], **fit_params: Any) -> T_Self:
+    def fit(  # type: ignore[override]
+        # todo: remove 'type: ignore' once mypy correctly infers return type
+        self: T_CategoryPartitioner,
+        values: Sequence[T_Values],
+        **fit_params: Any,
+    ) -> T_CategoryPartitioner:
         """[see superclass]"""
-
-        self: CategoryPartitioner  # support type hinting in PyCharm
 
         values = self._as_non_empty_array(values)
 
