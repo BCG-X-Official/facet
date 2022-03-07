@@ -32,3 +32,7 @@ repos:
     hooks:
       - id: mypy
         files: src/
+        additional_dependencies:
+          - numpy>=1.22
+          - gamma-pytools>=2dev6,<3a
+          - sklearndf>=2dev3,<3a
