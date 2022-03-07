@@ -88,6 +88,8 @@ class SampleBalancer(metaclass=ABCMeta):
         if all(round(self._sampling_factors, 6) == 1.0):
             return sample
 
+        observations: pd.DataFrame
+
         if only_set_weights:
             weight_series = pd.Series(
                 index=sample.target.index, name=_F_FACET_SAMPLE_WEIGHT
@@ -97,7 +99,7 @@ class SampleBalancer(metaclass=ABCMeta):
             for label, weight in self._sampling_factors.iteritems():
                 weight_series[sample.target == label] = weight
 
-            observations: pd.DataFrame = pd.concat(
+            observations = pd.concat(
                 [sample.features, weight_series, sample.target], axis=1
             )
 
@@ -107,9 +109,7 @@ class SampleBalancer(metaclass=ABCMeta):
                 weight_name=_F_FACET_SAMPLE_WEIGHT,
             )
         else:
-            observations: pd.DataFrame = pd.concat(
-                [sample.features, sample.target], axis=1
-            )
+            observations = pd.concat([sample.features, sample.target], axis=1)
             needs_sampling = {
                 label
                 for label, factor in self._sampling_factors.iteritems()
