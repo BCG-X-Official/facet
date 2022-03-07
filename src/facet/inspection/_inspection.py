@@ -300,7 +300,7 @@ class LearnerInspector(
 
     @property
     def _shap_global_explainer(self) -> ShapGlobalExplainer:
-        self._ensure_fitted()
+        self.ensure_fitted()
         assert self._shap_global_projector is not None, "Inspector is fitted"
         return self._shap_global_projector
 
