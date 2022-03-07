@@ -68,20 +68,13 @@ class AffinityMatrix:
     # shape: (2, 2, n_outputs, n_features, n_features)
     _matrices: np.ndarray
 
-    # shape: (2, 2, n_outputs, n_features, n_features)
-    _matrices_std: Optional[np.ndarray]
-
-    def __init__(
-        self, matrices: np.ndarray, matrices_std: Optional[np.ndarray] = None
-    ) -> None:
+    def __init__(self, matrices: np.ndarray) -> None:
         shape = matrices.shape
         assert len(shape) == 5
         assert shape[:2] == (2, 2)
         assert shape[3] == shape[4]
-        assert matrices_std is None or matrices_std.shape == matrices.shape
 
         self._matrices = matrices
-        self._matrices_std = matrices_std
 
     @staticmethod
     def from_relative_affinity(
@@ -134,25 +127,14 @@ class AffinityMatrix:
             ).reshape((2, 2, *affinity_rel_ij.shape))
         )
 
-    def get_values(
-        self, symmetrical: bool, absolute: bool, std: bool
-    ) -> Optional[np.ndarray]:
+    def get_values(self, symmetrical: bool, absolute: bool) -> np.ndarray:
         """
         Get the matrix matching the given criteria.
         :param symmetrical: if ``True``, get the symmetrical version of the matrix
         :param absolute: if ``True``, get the absolute version of the matrix
-        :param std: if ``True``, return standard deviations instead of (mean) values;
-            return ``None`` if only a single affinity matrix had been calculated and
-            thus the standard deviation is not known
         :return: the affinity matrix
         """
-        if std:
-            matrices = self._matrices_std
-            if matrices is None:
-                return None
-        else:
-            matrices = self._matrices
-        return matrices[int(symmetrical), int(absolute)]
+        return self._matrices[int(symmetrical), int(absolute)]
 
 
 @inheritdoc(match="""[see superclass]""")
@@ -199,9 +181,7 @@ class ShapGlobalExplainer(FittableMixin[ShapCalculator], metaclass=ABCMeta):
         return self
 
     @abstractmethod
-    def association(
-        self, absolute: bool, symmetrical: bool, std: bool = False
-    ) -> Optional[np.ndarray]:
+    def association(self, absolute: bool, symmetrical: bool) -> np.ndarray:
         """
         The association matrix for all feature pairs.
 
@@ -214,9 +194,6 @@ class ShapGlobalExplainer(FittableMixin[ShapCalculator], metaclass=ABCMeta):
             quantifying unilateral association of the features represented by rows
             with the features represented by columns;
             if ``True``, return a symmetrical matrix quantifying mutual association
-        :param std: if ``True``, return a matrix of estimated standard deviations
-            instead of (mean) values; return ``None`` if the matrix was determined
-            from a single model and thus no standard deviation could be estimated
         :returns: the matrix as an array of shape (n_outputs, n_features, n_features)
         """
 
@@ -259,9 +236,7 @@ class ShapInteractionGlobalExplainer(ShapGlobalExplainer, metaclass=ABCMeta):
     """
 
     @abstractmethod
-    def synergy(
-        self, symmetrical: bool, absolute: bool, std: bool = False
-    ) -> Optional[np.ndarray]:
+    def synergy(self, symmetrical: bool, absolute: bool) -> np.ndarray:
         """
         The synergy matrix for all feature pairs.
 
@@ -274,16 +249,11 @@ class ShapInteractionGlobalExplainer(ShapGlobalExplainer, metaclass=ABCMeta):
             quantifying unilateral synergy of the features represented by rows
             with the features represented by columns;
             if ``True``, return a symmetrical matrix quantifying mutual synergy
-        :param std: if ``True``, return a matrix of estimated standard deviations
-            instead of (mean) values; return ``None`` if the matrix was determined
-            from a single model and thus no standard deviation could be estimated
         :returns: the matrix as an array of shape (n_outputs, n_features, n_features)
         """
 
     @abstractmethod
-    def redundancy(
-        self, symmetrical: bool, absolute: bool, std: bool = False
-    ) -> Optional[np.ndarray]:
+    def redundancy(self, symmetrical: bool, absolute: bool) -> np.ndarray:
         """
         The redundancy matrix for all feature pairs.
 
@@ -296,9 +266,6 @@ class ShapInteractionGlobalExplainer(ShapGlobalExplainer, metaclass=ABCMeta):
             quantifying unilateral redundancy of the features represented by rows
             with the features represented by columns;
             if ``True``, return a symmetrical matrix quantifying mutual redundancy
-        :param std: if ``True``, return a matrix of estimated standard deviations
-            instead of (mean) values; return ``None`` if the matrix was determined
-            from a single model and thus no standard deviation could be estimated
         :returns: the matrix as an array of shape (n_outputs, n_features, n_features)
         """
 

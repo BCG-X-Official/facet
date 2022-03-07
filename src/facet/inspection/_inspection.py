@@ -598,7 +598,7 @@ class LearnerInspector(
 
         self.ensure_fitted()
         feature_affinity_matrix = self.__interaction_explainer.synergy(
-            symmetrical=True, absolute=False, std=False
+            symmetrical=True, absolute=False
         )
         assert (
             feature_affinity_matrix is not None
@@ -624,7 +624,7 @@ class LearnerInspector(
 
         self.ensure_fitted()
         feature_affinity_matrix = self.__interaction_explainer.redundancy(
-            symmetrical=True, absolute=False, std=False
+            symmetrical=True, absolute=False
         )
         assert (
             feature_affinity_matrix is not None
@@ -650,7 +650,7 @@ class LearnerInspector(
 
         self.ensure_fitted()
         feature_affinity_matrix = self._shap_global_explainer.association(
-            absolute=False, symmetrical=True, std=False
+            absolute=False, symmetrical=True
         )
         assert (
             feature_affinity_matrix is not None
@@ -850,7 +850,7 @@ class LearnerInspector(
     def __feature_affinity_matrix(
         self,
         *,
-        explainer_fn: Callable[..., Optional[np.ndarray]],
+        explainer_fn: Callable[..., np.ndarray],
         absolute: bool,
         symmetrical: bool,
         clustered: bool,
