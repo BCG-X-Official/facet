@@ -1,6 +1,7 @@
 """
 Core implementation of :mod:`facet.selection`
 """
+from __future__ import annotations
 
 import logging
 import warnings
@@ -323,7 +324,7 @@ class MultiEstimatorParameterSpace(
             for space in self.spaces
         ]
 
-    def to_expression(self) -> "Expression":
+    def to_expression(self) -> Expression:
         """[see superclass]"""
         # noinspection PyProtectedMember
         return Id(type(self))(*self.spaces)
