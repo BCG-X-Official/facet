@@ -7,7 +7,6 @@ from typing import Any, Dict, List, Optional, Union
 
 import numpy as np
 import pandas as pd
-from numpy.random import SeedSequence
 
 from pytools.api import AllTracker
 
@@ -46,7 +45,9 @@ class SampleBalancer(metaclass=ABCMeta):
         *,
         oversample: bool = True,
         undersample: bool = True,
-        random_state: Optional[int] = None,
+        random_state: Optional[
+            Union[int, np.random.Generator, np.random.BitGenerator]
+        ] = None,
     ) -> None:
         """
         :param oversample: Whether to use oversampling.
@@ -62,7 +63,7 @@ class SampleBalancer(metaclass=ABCMeta):
 
         self._oversample = oversample
         self._undersample = undersample
-        self._seed_sequence = random_state and SeedSequence(random_state)
+        self.random_state = random_state
 
     def _balance(self, sample: Sample, only_set_weights: bool) -> Sample:
         """
@@ -109,43 +110,44 @@ class SampleBalancer(metaclass=ABCMeta):
                 weight_name=_F_FACET_SAMPLE_WEIGHT,
             )
         else:
-            observations = pd.concat([sample.features, sample.target], axis=1)
-            needs_sampling = {
-                label
-                for label, factor in self._sampling_factors.iteritems()
-                if not round(factor, 6) == 1.0
-            }
+            observation_idx = pd.Series(np.arange(len(sample)))
 
-            _length: int = self._sampling_factors.size
-            seeds: Union[np.ndarray, List[None]] = (
-                self._seed_sequence.generate_state(_length)
-                if self._seed_sequence is not None
-                else [None] * _length
+            rng = np.random.default_rng(self.random_state)
+
+            def _sample(_observation_idx: pd.Series, factor: float) -> pd.DataFrame:
+                n_observations = len(_observation_idx)
+                n_target = int(n_observations * factor)
+
+                idx_target = np.empty(n_target, dtype=int)
+
+                start = 0
+                if n_target > n_observations:
+                    idx_full = np.arange(n_observations)
+                    for i in range(n_target // n_observations):
+                        idx_target[start : start + n_observations] = idx_full
+                        start += n_observations
+
+                idx_target[start:] = rng.choice(
+                    n_observations, size=n_target % n_observations, replace=False
+                )
+
+                return _observation_idx.iloc[idx_target]
+
+            observations_by_label: Dict[Any, pd.Series] = dict(
+                tuple(observation_idx.groupby(sample.target.values))
             )
 
-            balanced_dfs = [
-                observations[sample.target == label].sample(
-                    frac=factor, replace=factor > 1.0, random_state=seed
-                )
-                for seed, (label, factor) in zip(
-                    seeds, self._sampling_factors.iteritems()
-                )
-                if label in needs_sampling
-            ]
-
-            keep_as_is_dfs = [
-                observations[sample.target == label]
-                for label, factor in self._sampling_factors.iteritems()
-                if label not in needs_sampling
-            ]
-
-            new_observations = balanced_dfs + keep_as_is_dfs
-            new_observations_df = pd.concat(new_observations, axis=0)
-
-            return Sample(
-                observations=new_observations_df,
-                target_name=sample.target_name,
+            new_observation_idx_sr = pd.concat(
+                [
+                    _sample(observations_by_label[label], factor)
+                    if not round(factor, 6) == 1.0
+                    else observation_idx[sample.target == label]
+                    for label, factor in (self._sampling_factors.iteritems())
+                ],
+                axis=0,
             )
+
+        return sample.subsample(iloc=new_observation_idx_sr)
 
     def balance(self, sample: Sample) -> Sample:
         """
