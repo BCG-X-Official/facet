@@ -123,7 +123,7 @@ def test_sample(boston_df: pd.DataFrame, boston_target: str) -> None:
     assert len(s) == len(boston_df)
 
     # test select_observations
-    sub = s2.subsample(iloc=[0, 1, 2, 3])
+    sub = s2.resample(iloc=[0, 1, 2, 3])
     assert len(sub) == 4
 
     # test subset of features

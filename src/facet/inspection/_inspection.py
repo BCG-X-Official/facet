@@ -818,7 +818,7 @@ class LearnerInspector(
             shap_values_numpy = shap_values.values
             included_observations = shap_values.index
 
-        sample: Sample = self.sample_.subsample(loc=included_observations)
+        sample: Sample = self.sample_.resample(loc=included_observations)
 
         return ShapPlotData(
             shap_values=shap_values_numpy,

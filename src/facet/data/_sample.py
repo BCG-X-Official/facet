@@ -241,23 +241,22 @@ class Sample:
         else:
             return None
 
-    def subsample(
+    def resample(
         self,
         *,
         loc: Optional[Union[slice, Sequence[Any]]] = None,
         iloc: Optional[Union[slice, Sequence[int]]] = None,
     ) -> "Sample":
         """
-        Return a new sample with a subset of this sample's observations.
+        Return a sample with a new selection of this sample's observations.
 
         Select observations either by indices (``loc``), or integer indices
         (``iloc``). Exactly one of both arguments must be provided when
-        calling this method, not both or none.
+        calling this method.
 
         :param loc: indices of observations to select
         :param iloc: integer indices of observations to select
-        :return: copy of this sample, comprising only the observations in the given
-            rows
+        :return: copy of this sample, comprising the observations in the given selection
         """
         subsample = copy(self)
         if iloc is None:

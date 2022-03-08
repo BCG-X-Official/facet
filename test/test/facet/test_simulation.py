@@ -39,7 +39,7 @@ def model(sample: Sample, simple_preprocessor: TransformerDF) -> RegressorPipeli
 
 @pytest.fixture
 def subsample(sample: Sample) -> Sample:
-    return sample.subsample(
+    return sample.resample(
         iloc=(
             [8, 77, 65, 43, 43, 85, 8, 69, 20, 9, 52, 97, 73, 76, 71, 78]
             + [51, 12, 83, 45, 50, 37, 18, 92, 78, 64, 40, 82, 54, 44, 45, 22]

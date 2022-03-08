@@ -309,7 +309,7 @@ def iris_sample_multi_class(iris_df: pd.DataFrame, iris_target_name: str) -> Sam
 @pytest.fixture
 def iris_sample_binary(iris_sample_multi_class) -> Sample:
     # the iris dataset, retaining only two categories so we can do binary classification
-    return iris_sample_multi_class.subsample(
+    return iris_sample_multi_class.resample(
         loc=iris_sample_multi_class.target.isin(["virginica", "versicolor"])
     )
 

@@ -90,6 +90,7 @@ class SampleBalancer(metaclass=ABCMeta):
             return sample
 
         if only_set_weights:
+            # todo: simplify, using pandas methods
             weight_series = pd.Series(
                 index=sample.target.index, name=_F_FACET_SAMPLE_WEIGHT
             )
@@ -145,7 +146,7 @@ class SampleBalancer(metaclass=ABCMeta):
                 axis=0,
             )
 
-        return sample.subsample(iloc=new_observation_idx_sr)
+        return sample.resample(iloc=new_observation_idx_sr)
 
     def balance(self, sample: Sample) -> Sample:
         """
