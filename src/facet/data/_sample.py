@@ -2,9 +2,11 @@
 Implementation of FACET's :class:`.Sample` class.
 """
 
+from __future__ import annotations
+
 import logging
 from copy import copy
-from typing import Any, Collection, Iterable, List, Optional, Sequence, Set, Union
+from typing import Any, Collection, Iterable, List, Optional, Sequence, Set, Union, cast
 
 import pandas as pd
 
@@ -61,6 +63,10 @@ class Sample:
     #: used when returning the targets.
     IDX_TARGET = "target"
 
+    #: Default name for the target series or target index (= column index)
+    #: used when returning the targets.
+    COL_WEIGHT = "weight"
+
     def __init__(
         self,
         observations: pd.DataFrame,
@@ -70,7 +76,7 @@ class Sample:
         weight_name: Optional[str] = None,
     ) -> None:
         """
-        :param observations: a table of observational data;
+        :param observations: a table of observational data as a data frame;
             each row represents one observation
         :param target_name: the name of the column representing the target
             variable; or an iterable of names representing multiple targets
@@ -246,7 +252,7 @@ class Sample:
         *,
         loc: Optional[Union[slice, Sequence[Any]]] = None,
         iloc: Optional[Union[slice, Sequence[int]]] = None,
-    ) -> "Sample":
+    ) -> Sample:
         """
         Return a sample with a new selection of this sample's observations.
 
@@ -272,7 +278,84 @@ class Sample:
             )
         return subsample
 
-    def keep(self, *, feature_names: Union[str, Collection[str]]) -> "Sample":
+    def rebalance(
+        self, weight: Union[Sequence[Union[int, float]], pd.Series]
+    ) -> Sample:
+        """
+        Return a sample where the given weights have been applied to the observations.
+
+        If no weight column is defined in the original sample, a new one is created;
+        otherwise, the weight in the current sample are updated and the original name
+        of the weight column is preserved.
+
+        The name of a weight column will be set to the name of the given series, or
+        to ``%%WEIGHT%%`` in case a sequence was passed.
+
+        :param weight: a sequence of weights that has the same length as the number
+            of observations in this sample, or a series with a unique index that matches
+            the index of the observations in this sample
+        :return: copy of this sample with new weights
+        """
+
+        observations: pd.DataFrame = self._observations
+
+        # the new weight name
+        weight_name: str
+
+        if isinstance(weight, pd.Series):
+            if not weight.index.is_unique():
+                raise ValueError("index of series passed in arg weight must be unique")
+
+            surplus_keys = weight.index.difference(observations.index)
+            if len(surplus_keys):
+                raise KeyError(
+                    f"index of series includes keys that are not in the index of this "
+                    f"sample: {surplus_keys.to_list()}"
+                )
+
+            missing_keys = observations.index.difference(weight.index)
+            if len(missing_keys):
+                raise KeyError(
+                    f"index of series misses keys that are in the index of this "
+                    f"sample: {missing_keys.to_list()}"
+                )
+
+            weight_name = str(weight.name)
+
+        else:
+            if len(weight) != len(self):
+                raise ValueError(
+                    f"arg weights has type {type(weight).__name__} and therefore must "
+                    f"have the same length as this sample: expected {len(self)} "
+                    f"but got {len(weight)}"
+                )
+
+            weight_name = Sample.COL_WEIGHT
+
+        # if a weight column exists, update it
+        existing_weight_name: Optional[str] = self.weight_name
+        if existing_weight_name is not None:
+            weight_updated = observations.loc[:, existing_weight_name].copy()
+            weight_updated.update(weight)
+            weight_name = existing_weight_name
+            observations = observations.assign(**{weight_name: weight_updated})
+        else:
+            if weight_name in observations.columns:
+                raise ValueError(
+                    "name of new weight column clashes with same name of existing data "
+                    f"column: {weight_name}"
+                )
+            observations = observations.assign(**{weight_name: weight})
+
+        # create the new rebalanced sample
+        sample_rebalanced = copy(self)
+        sample_rebalanced._observations = observations
+        sample_rebalanced._weight_name = weight_name
+        return sample_rebalanced
+
+    rebalance.__doc__ = cast(str, rebalance.__doc__).replace("%%WEIGHT%%", COL_WEIGHT)
+
+    def keep(self, *, feature_names: Union[str, Collection[str]]) -> Sample:
         """
         Return a new sample which only includes the features with the given names.
 
@@ -298,7 +381,7 @@ class Sample:
 
         return subsample
 
-    def drop(self, *, feature_names: Union[str, Collection[str]]) -> "Sample":
+    def drop(self, *, feature_names: Union[str, Collection[str]]) -> Sample:
         """
         Return a copy of this sample, dropping the features with the given names.
 

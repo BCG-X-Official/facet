@@ -90,23 +90,10 @@ class SampleBalancer(metaclass=ABCMeta):
             return sample
 
         if only_set_weights:
-            # todo: simplify, using pandas methods
-            weight_series = pd.Series(
-                index=sample.target.index, name=_F_FACET_SAMPLE_WEIGHT
-            )
-            weight_series.loc[:] = 1.0
-
-            for label, weight in self._sampling_factors.iteritems():
-                weight_series[sample.target == label] = weight
-
-            observations = pd.concat(
-                [sample.features, weight_series, sample.target], axis=1
-            )
-
-            return Sample(
-                observations=observations,
-                target_name=sample.target_name,
-                weight_name=_F_FACET_SAMPLE_WEIGHT,
+            return sample.rebalance(
+                weight=self._sampling_factors.reindex(sample.target)
+                .set_axis(sample.index)
+                .rename(_F_FACET_SAMPLE_WEIGHT)
             )
         else:
             observation_idx = pd.Series(np.arange(len(sample)))
