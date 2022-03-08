@@ -4,8 +4,14 @@ import logging
 import numpy as np
 import pandas as pd
 import pytest
+from pandas.testing import assert_series_equal
 
-from facet.data import Sample, TargetFrequencySampleBalancer, UniformSampleBalancer
+from facet.data import (
+    Sample,
+    SampleBalancer,
+    TargetFrequencySampleBalancer,
+    UniformSampleBalancer,
+)
 
 log = logging.getLogger(__name__)
 
@@ -269,14 +275,16 @@ def test_no_change(binary_target: Sample) -> None:
 
 
 def test_balancer_random_state(binary_target: Sample) -> None:
-    _get_target = lambda balancer: balancer.balance(binary_target).target
+    def _balanced_target(balancer: SampleBalancer) -> pd.Series:
+        return balancer.balance(binary_target).target
 
     test_balancer = TargetFrequencySampleBalancer(
         target_frequencies={0: 0.5}, random_state=42
     )
-
-    assert _get_target(test_balancer).equals(_get_target(test_balancer))
+    assert_series_equal(
+        _balanced_target(test_balancer), _balanced_target(test_balancer)
+    )
 
     test_balancer = TargetFrequencySampleBalancer(target_frequencies={0: 0.5})
 
-    assert not _get_target(test_balancer).equals(_get_target(test_balancer))
+    assert not _balanced_target(test_balancer).equals(_balanced_target(test_balancer))
