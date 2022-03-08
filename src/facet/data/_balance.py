@@ -89,8 +89,6 @@ class SampleBalancer(metaclass=ABCMeta):
         if all(round(self._sampling_factors, 6) == 1.0):
             return sample
 
-        observations: pd.DataFrame
-
         if only_set_weights:
             weight_series = pd.Series(
                 index=sample.target.index, name=_F_FACET_SAMPLE_WEIGHT
