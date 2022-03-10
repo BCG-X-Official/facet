@@ -15,14 +15,14 @@ license = "Apache Software License v2.0"
 
 requires = [
     # direct requirements of gamma-facet
-    "gamma-pytools  >=2.0dev7,<3a",
+    "gamma-pytools  ~=2.0.dev8",
     "matplotlib     ~=3.0",
     "numpy          >=1.17,<2a",
     "packaging      >=20",
     "pandas         >=0.24,<2a",
     "scipy          ~=1.2",
     "shap           >=0.34,<0.41a",
-    "sklearndf      ~=2.0dev3",
+    "sklearndf      ~=2.0.dev3",
 ]
 
 requires-python = ">=3.7,<4a"
@@ -70,7 +70,7 @@ Repository = "https://github.com/BCG-Gamma/facet"
 
 [build.matrix.min]
 # direct requirements of gamma-facet
-gamma-pytools  = "~=2.0dev7"
+gamma-pytools  = "~=2.0.dev8"
 matplotlib     = "~=3.0.3"
 numpy          = "==1.17.5"
 packaging      = "~=20.9"
@@ -91,7 +91,7 @@ ipython        = "==7.0"
 
 [build.matrix.max]
 # direct requirements of gamma-facet
-gamma-pytools  = ">=2.0dev7,<3a"
+gamma-pytools  = ">=2.0.dev8,<3a"
 matplotlib     = "~=3.5"
 numpy          = ">=1.22,<2a"
 packaging      = ">=20.9"
@@ -99,7 +99,7 @@ pandas         = "~=1.4"
 python         = ">=3.8.10,<4a"   # cannot use ~= due to conda bug
 scipy          = "~=1.7"
 shap           = "~=0.40.0"
-sklearndf      = ">=2dev3,<3a"
+sklearndf      = ">=2.0.dev3,<3a"
 # additional maximum requirements of sklearndf
 boruta         = "~=0.3"
 lightgbm       = "~=3.3"

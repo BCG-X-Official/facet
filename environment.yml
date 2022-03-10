@@ -5,7 +5,7 @@ channels:
 dependencies:
   # run
   - boruta_py ~= 0.3
-  - gamma-pytools >= 2dev7, <3a
+  - gamma-pytools >= 2.0.dev8, <3 a
   - joblib ~= 1.1
   - lightgbm ~= 3.3
   - matplotlib ~= 3.5
@@ -15,7 +15,7 @@ dependencies:
   - scikit-learn ~= 1.0.2
   - scipy ~= 1.8
   - shap ~=0.40
-  - sklearndf >= 2dev3, < 3a
+  - sklearndf >= 2.0.dev3, < 3a
   # build/test
   - black ~= 22.1
   - conda-build ~= 3.21
