@@ -5,7 +5,7 @@ channels:
 dependencies:
   # run
   - boruta_py ~= 0.3
-  - gamma-pytools >= 2.0.dev8, <3 a
+  - gamma-pytools >= 2.0.dev8, <3a
   - joblib ~= 1.1
   - lightgbm ~= 3.3
   - matplotlib ~= 3.5
