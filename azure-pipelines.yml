@@ -84,13 +84,10 @@ stages:
         steps:
           - task: UsePythonVersion@0
             inputs:
-              versionSpec: '3.7.*'
-            displayName: 'use Python 3.7'
+              versionSpec: '3.8.*'
+            displayName: 'use Python 3.8'
           - script: |
-              set -eux
-              eval "$(conda shell.bash hook)"
-              conda env create
-              conda activate $(project_name)-develop
+              python -m pip install mypy~=0.931 numpy~=1.21 "gamma-pytools>=2.0.dev8,<3a" "sklearndf>=2.0.dev3,<3a"
               python -m mypy src
             displayName: 'Run mypy'
 
@@ -185,8 +182,8 @@ stages:
 
   # conda env & tox build test
   # testing matrix of python & sklearn versions
-  # - for release branch: 3 build tests
-  # - otherwise: 1 build test
+  # - for release branch: 9 build tests
+  # - otherwise: 3 build tests
   - stage: conda_tox_build
     displayName: 'Conda/tox build & test'
     dependsOn: 'detect_build_config_changes'
@@ -195,7 +192,7 @@ stages:
 
     jobs:
     - job:
-      displayName: 'single'
+      displayName: 'essential'
       condition: >
         and(
         ne(variables.source_is_release_branch, 'True'),
@@ -208,10 +205,17 @@ stages:
           vmImage: 'ubuntu-latest'
       strategy:
         matrix:
+          # We run three tests to cover conda/tox and maximum/minimum.
+          # This comprises only one minimum dependencies test for tox,
+          # which is usually faster than conda.
           maximum_dependencies_conda:
             FACET_V_PYTHON_BUILD: '=3.9.*'
             BUILD_SYSTEM: 'conda'
             PKG_DEPENDENCIES: 'max'
+          minimum_dependencies_tox:
+            FACET_V_PYTHON_BUILD: '=3.7.*'
+            BUILD_SYSTEM: 'tox'
+            PKG_DEPENDENCIES: 'min'
           maximum_dependencies_tox:
             FACET_V_PYTHON_BUILD: '=3.9.*'
             BUILD_SYSTEM: 'tox'
