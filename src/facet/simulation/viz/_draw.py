@@ -40,6 +40,9 @@ class SimulationDrawer(Drawer[UnivariateSimulationResult, SimulationStyle]):
     :class:`.UnivariateSimulationResult` object.
     """
 
+    # defined in superclass, repeated here for Sphinx
+    style: SimulationStyle
+
     #: if ``True``, plot the histogram of observed values for the feature being
     #: simulated; if ``False``, do not plot the histogram
     histogram: bool

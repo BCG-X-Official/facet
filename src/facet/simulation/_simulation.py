@@ -193,6 +193,18 @@ class BaseUnivariateSimulator(
     Base class for univariate simulations.
     """
 
+    # defined in superclass, repeated here for Sphinx
+    n_jobs: Optional[int]
+
+    # defined in superclass, repeated here for Sphinx
+    shared_memory: Optional[bool]
+
+    # defined in superclass, repeated here for Sphinx
+    pre_dispatch: Optional[Union[str, int]]
+
+    # defined in superclass, repeated here for Sphinx
+    verbose: Optional[int]
+
     #: The learner pipeline used to conduct simulations
     model: T_LearnerDF
 
@@ -408,6 +420,27 @@ class UnivariateProbabilitySimulator(BaseUnivariateSimulator[ClassifierDF]):
     as the weighted samples will impact predicted class probabilities.
     """
 
+    # defined in superclass, repeated here for Sphinx
+    n_jobs: Optional[int]
+
+    # defined in superclass, repeated here for Sphinx
+    shared_memory: Optional[bool]
+
+    # defined in superclass, repeated here for Sphinx
+    pre_dispatch: Optional[Union[str, int]]
+
+    # defined in superclass, repeated here for Sphinx
+    verbose: Optional[int]
+
+    # defined in superclass, repeated here for Sphinx
+    model: ClassifierDF
+
+    # defined in superclass, repeated here for Sphinx
+    sample: Sample
+
+    # defined in superclass, repeated here for Sphinx
+    confidence_level: float
+
     @property
     def output_unit(self) -> str:
         """[see superclass]"""
@@ -507,6 +540,27 @@ class UnivariateTargetSimulator(_UnivariateRegressionSimulator):
     have been specified for the sample.
     """
 
+    # defined in superclass, repeated here for Sphinx
+    n_jobs: Optional[int]
+
+    # defined in superclass, repeated here for Sphinx
+    shared_memory: Optional[bool]
+
+    # defined in superclass, repeated here for Sphinx
+    pre_dispatch: Optional[Union[str, int]]
+
+    # defined in superclass, repeated here for Sphinx
+    verbose: Optional[int]
+
+    # defined in superclass, repeated here for Sphinx
+    model: RegressorDF
+
+    # defined in superclass, repeated here for Sphinx
+    sample: Sample
+
+    # defined in superclass, repeated here for Sphinx
+    confidence_level: float
+
     @property
     def output_unit(self) -> str:
         """[see superclass]"""
@@ -539,6 +593,27 @@ class UnivariateUpliftSimulator(_UnivariateRegressionSimulator):
     observation has the same weight in the simulation even if different weights
     have been specified for the sample.
     """
+
+    # defined in superclass, repeated here for Sphinx
+    n_jobs: Optional[int]
+
+    # defined in superclass, repeated here for Sphinx
+    shared_memory: Optional[bool]
+
+    # defined in superclass, repeated here for Sphinx
+    pre_dispatch: Optional[Union[str, int]]
+
+    # defined in superclass, repeated here for Sphinx
+    verbose: Optional[int]
+
+    # defined in superclass, repeated here for Sphinx
+    model: RegressorDF
+
+    # defined in superclass, repeated here for Sphinx
+    sample: Sample
+
+    # defined in superclass, repeated here for Sphinx
+    confidence_level: float
 
     @property
     def output_unit(self) -> str:

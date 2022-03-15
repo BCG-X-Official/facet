@@ -5,6 +5,7 @@ Factories for SHAP explainers from the ``shap`` package.
 import functools
 import logging
 from abc import ABCMeta, abstractmethod
+from multiprocessing.synchronize import Lock as LockType
 from typing import Any, Callable, Dict, Iterable, List, Mapping, Optional, Union, cast
 
 import numpy as np
@@ -244,6 +245,9 @@ class ExplainerQueue(
     A queue splitting a data set to be explained into multiple jobs.
     """
 
+    # defined in superclass, repeated here for Sphinx
+    lock: LockType
+
     #: the SHAP explainer to use
     explainer: BaseExplainer
 
@@ -330,6 +334,18 @@ class ParallelExplainer(BaseExplainer, ParallelizableMixin):
     A wrapper class, turning an explainer into a parallelized version, explaining
     chunks of observations in parallel.
     """
+
+    # defined in superclass, repeated here for Sphinx
+    n_jobs: Optional[int]
+
+    # defined in superclass, repeated here for Sphinx
+    shared_memory: Optional[bool]
+
+    # defined in superclass, repeated here for Sphinx
+    pre_dispatch: Optional[Union[str, int]]
+
+    # defined in superclass, repeated here for Sphinx
+    verbose: Optional[int]
 
     #: The explainer being parallelized by this wrapper
     explainer: BaseExplainer
