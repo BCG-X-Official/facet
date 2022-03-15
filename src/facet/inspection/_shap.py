@@ -73,8 +73,8 @@ class ShapCalculator(
     """
     Base class for all SHAP calculators.
 
-    A SHAP calculator uses the ``shap`` package to calculate SHAP tensors for OOB
-    samples across splits of a crossfit, then consolidates and aggregates results
+    A SHAP calculator uses the ``shap`` package to calculate SHAP tensors for all
+    observations in a given sample, then consolidates and aggregates results
     in a data frame.
     """
 

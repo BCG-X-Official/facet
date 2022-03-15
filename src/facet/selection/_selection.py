@@ -86,6 +86,18 @@ class ModelSelector(
     :class:`.MultiEstimatorParameterSpace`.
     """
 
+    # defined in superclass, repeated here for Sphinx
+    n_jobs: Optional[int]
+
+    # defined in superclass, repeated here for Sphinx
+    shared_memory: Optional[bool]
+
+    # defined in superclass, repeated here for Sphinx
+    pre_dispatch: Optional[Union[str, int]]
+
+    # defined in superclass, repeated here for Sphinx
+    verbose: Optional[int]
+
     #: A cross-validation searcher class, or any other callable
     #: that instantiates a cross-validation searcher, wrapped in
     #: a tuple to avoid confusion with methods

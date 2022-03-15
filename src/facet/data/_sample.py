@@ -2,6 +2,8 @@
 Implementation of FACET's :class:`.Sample` class.
 """
 
+from __future__ import annotations
+
 import logging
 from copy import copy
 from typing import Any, Collection, Iterable, List, Optional, Sequence, Set, Union
@@ -246,7 +248,7 @@ class Sample:
         *,
         loc: Optional[Union[slice, Sequence[Any]]] = None,
         iloc: Optional[Union[slice, Sequence[int]]] = None,
-    ) -> "Sample":
+    ) -> Sample:
         """
         Return a new sample with a subset of this sample's observations.
 
@@ -273,7 +275,7 @@ class Sample:
             )
         return subsample
 
-    def keep(self, *, feature_names: Union[str, Collection[str]]) -> "Sample":
+    def keep(self, *, feature_names: Union[str, Collection[str]]) -> Sample:
         """
         Return a new sample which only includes the features with the given names.
 
@@ -299,7 +301,7 @@ class Sample:
 
         return subsample
 
-    def drop(self, *, feature_names: Union[str, Collection[str]]) -> "Sample":
+    def drop(self, *, feature_names: Union[str, Collection[str]]) -> Sample:
         """
         Return a copy of this sample, dropping the features with the given names.
 

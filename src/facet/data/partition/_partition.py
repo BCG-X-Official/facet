@@ -169,11 +169,11 @@ class RangePartitioner(
     @property
     def partition_bounds_(self) -> Sequence[Tuple[T_Values_Numeric, T_Values_Numeric]]:
         """
-        Return the endpoints of the intervals that delineate each partitions.
+        Return the endpoints of the intervals that delineate each partition.
 
         :return: sequence of tuples (x, y) for every partition, where x is the
-          inclusive lower bound of a partition range, and y is the exclusive upper
-          bound of a partition range
+            inclusive lower bound of a partition range, and y is the exclusive upper
+            bound of a partition range
         """
 
         self.ensure_fitted()

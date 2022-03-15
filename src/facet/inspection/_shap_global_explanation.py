@@ -3,6 +3,8 @@ Projection of SHAP contribution scores (i.e, SHAP importance) of all possible
 pairings of features onto the SHAP importance vector in partitions of for synergy,
 redundancy, and independence.
 """
+from __future__ import annotations
+
 import logging
 from abc import ABCMeta, abstractmethod
 from typing import Any, List, Optional, TypeVar, Union
@@ -79,7 +81,7 @@ class AffinityMatrix:
     @staticmethod
     def from_relative_affinity(
         affinity_rel_ij: np.ndarray, std_p_i: np.ndarray
-    ) -> "AffinityMatrix":
+    ) -> AffinityMatrix:
         """
         :param affinity_rel_ij: the affinity matrix from which to create all variations,
             shaped `(n_outputs, n_features, n_features)`

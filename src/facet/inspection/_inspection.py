@@ -149,6 +149,18 @@ class LearnerInspector(
     specified in the underlying training sample.
     """
 
+    # defined in superclass, repeated here for Sphinx
+    n_jobs: Optional[int]
+
+    # defined in superclass, repeated here for Sphinx
+    shared_memory: Optional[bool]
+
+    # defined in superclass, repeated here for Sphinx
+    pre_dispatch: Optional[Union[str, int]]
+
+    # defined in superclass, repeated here for Sphinx
+    verbose: Optional[int]
+
     #: Name for feature importance series or column.
     COL_IMPORTANCE = "importance"
 
