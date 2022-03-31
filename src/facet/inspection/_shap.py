@@ -52,6 +52,12 @@ ShapToDataFrameFunction = Callable[
 
 
 #
+# Constants
+#
+ASSERTION__CALCULATOR_IS_FITTED = "calculator is fitted"
+
+
+#
 # Ensure all symbols introduced below are included in __all__
 #
 
@@ -367,7 +373,7 @@ class ShapValuesCalculator(
 
         multi_output_type = self.get_multi_output_type()
         multi_output_names = self.get_multi_output_names(sample=sample)
-        assert self.feature_index_ is not None, "Calculator is fitted"
+        assert self.feature_index_ is not None, ASSERTION__CALCULATOR_IS_FITTED
         features_out = self.feature_index_
 
         # calculate the shap values, and ensure the result is a list of arrays
@@ -409,14 +415,14 @@ class ShapInteractionValuesCalculator(
         """[see superclass]"""
 
         self.ensure_fitted()
-        assert self.shap_ is not None, "Calculator is fitted"
+        assert self.shap_ is not None, ASSERTION__CALCULATOR_IS_FITTED
         return self.shap_.groupby(level=0).sum()
 
     def get_shap_interaction_values(self) -> pd.DataFrame:
         """[see superclass]"""
 
         self.ensure_fitted()
-        assert self.shap_ is not None, "Calculator is fitted"
+        assert self.shap_ is not None, ASSERTION__CALCULATOR_IS_FITTED
         return self.shap_
 
     def get_diagonals(self) -> pd.DataFrame:
@@ -435,7 +441,7 @@ class ShapInteractionValuesCalculator(
             self.shap_ is not None
             and self.sample_ is not None
             and self.feature_index_ is not None
-        ), "Calculator is fitted"
+        ), ASSERTION__CALCULATOR_IS_FITTED
 
         n_observations = len(self.sample_)
         n_features = len(self.feature_index_)
@@ -462,7 +468,7 @@ class ShapInteractionValuesCalculator(
 
         multi_output_type = self.get_multi_output_type()
         multi_output_names = self.get_multi_output_names(sample)
-        assert self.feature_index_ is not None, "Calculator is fitted"
+        assert self.feature_index_ is not None, ASSERTION__CALCULATOR_IS_FITTED
         features_out = self.feature_index_
 
         # calculate the shap interaction values; ensure the result is a list of arrays
