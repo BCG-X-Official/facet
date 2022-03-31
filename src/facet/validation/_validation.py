@@ -107,7 +107,7 @@ class BaseBootstrapCV(BaseCrossValidator, metaclass=ABCMeta):
 
         rs = check_random_state(self.random_state)
         indices = np.arange(n)
-        for i in range(self.n_splits):
+        for _ in range(self.n_splits):
             while True:
                 train = self._select_train_indices(n_samples=n, random_state=rs, y=y)
                 test_mask = np.ones(n, dtype=bool)
