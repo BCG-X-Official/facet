@@ -36,6 +36,13 @@ T_Values_Numeric = TypeVar("T_Values_Numeric", float, int)
 
 
 #
+# Constants
+#
+
+ASSERTION__PARTITIONER_IS_FITTED = "partitioner is fitted"
+
+
+#
 # Ensure all symbols introduced below are included in __all__
 #
 
@@ -96,7 +103,7 @@ class Partitioner(
         """
 
         self.ensure_fitted()
-        assert self._partitions is not None, "Partitioner is fitted"
+        assert self._partitions is not None, ASSERTION__PARTITIONER_IS_FITTED
         return self._partitions
 
     @property
@@ -106,7 +113,7 @@ class Partitioner(
         """
 
         self.ensure_fitted()
-        assert self._frequencies is not None, "Partitioner is fitted"
+        assert self._frequencies is not None, ASSERTION__PARTITIONER_IS_FITTED
         return self._frequencies
 
     @property
@@ -177,7 +184,7 @@ class RangePartitioner(
         """
 
         self.ensure_fitted()
-        assert self._partition_bounds is not None, "Partitioner is fitted"
+        assert self._partition_bounds is not None, ASSERTION__PARTITIONER_IS_FITTED
         return self._partition_bounds
 
     @property
@@ -187,7 +194,7 @@ class RangePartitioner(
         """
 
         self.ensure_fitted()
-        assert self._step is not None, "Partitioner is fitted"
+        assert self._step is not None, ASSERTION__PARTITIONER_IS_FITTED
         return self._step
 
     def fit(  # type: ignore[override]
@@ -342,7 +349,7 @@ class ContinuousRangePartitioner(RangePartitioner[float]):
 
     @property
     def _partition_center_offset(self) -> float:
-        assert self._step is not None, "Partitioner is fitted"
+        assert self._step is not None, ASSERTION__PARTITIONER_IS_FITTED
         return self._step / 2
 
 
@@ -379,7 +386,7 @@ class IntegerRangePartitioner(RangePartitioner[int]):
 
     @property
     def _partition_center_offset(self) -> int:
-        assert self._step is not None, "Partitioner is fitted"
+        assert self._step is not None, ASSERTION__PARTITIONER_IS_FITTED
         return self._step // 2
 
 

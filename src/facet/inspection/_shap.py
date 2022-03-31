@@ -54,6 +54,7 @@ ShapToDataFrameFunction = Callable[
 #
 # Constants
 #
+
 ASSERTION__CALCULATOR_IS_FITTED = "calculator is fitted"
 
 
