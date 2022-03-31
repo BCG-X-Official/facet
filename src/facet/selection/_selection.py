@@ -141,7 +141,7 @@ class ModelSelector(
     ]
 
     _CV_RESULT_CANDIDATE_PATTERN, _CV_RESULT_CANDIDATE_REPL = (
-        re.compile(r"^(?:(param__)candidate__|param__(candidate(?:_name)?)$)"),
+        re.compile(r"^(?:(?:(param__)candidate__)|(?:param__(candidate(?:_name)?)$))"),
         r"\1\2",
     )
 
