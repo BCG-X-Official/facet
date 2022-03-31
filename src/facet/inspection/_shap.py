@@ -295,8 +295,6 @@ class ShapCalculator(
         return shap_tensors
 
     def _preprocess_features(self, sample: Sample) -> pd.DataFrame:
-        # get the out-of-bag subsample of the training sample, with feature columns
-        # in the sequence that was used to fit the learner
 
         # get the model
         pipeline = self.pipeline
