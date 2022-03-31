@@ -330,7 +330,7 @@ class ShapCalculator(
         pass
 
     @abstractmethod
-    def _get_output_names(self, sample: Sample) -> List[str]:
+    def _get_output_names(self, sample: Sample) -> Sequence[str]:
         pass
 
 
@@ -607,7 +607,7 @@ class ClassifierShapCalculator(ShapCalculator[ClassifierPipelineDF], metaclass=A
     def _get_output_names(
         self,
         sample: Sample,
-    ) -> List[str]:
+    ) -> Sequence[str]:
         assert not isinstance(
             sample.target_name, list
         ), "classification model is single-output"
