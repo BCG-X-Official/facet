@@ -455,7 +455,7 @@ class ShapContext(metaclass=ABCMeta):
     Contextual data for global SHAP calculations.
     """
 
-    #: SHAP vectors,
+    #: SHAP vectors
     #: with shape `(n_outputs, n_features, n_observations)`
     p_i: np.ndarray
 
@@ -471,7 +471,7 @@ class ShapContext(metaclass=ABCMeta):
     #: with shape `(n_outputs, n_features, 1)`
     var_p_i: np.ndarray
 
-    #: SHAP interaction vectors,
+    #: SHAP interaction vectors
     #: with shape `(n_outputs, n_features, n_features, n_observations)`
     p_ij: Optional[np.ndarray]
 
@@ -518,7 +518,7 @@ class ShapValueContext(ShapContext):
             n_features: int = len(shap_calculator.feature_index_)
             n_observations: int = len(shap_values)
 
-            # p[i] = p_i
+            # p[i]
             # shape: (n_outputs, n_features, n_observations)
             # the vector of shap values for every output and feature
             return ensure_last_axis_is_fast(
@@ -601,6 +601,7 @@ class ShapInteractionValueContext(ShapContext):
 
         # p[i]
         # shape: (n_outputs, n_features, n_observations)
+        # the vector of shap values for every output and feature
         super().__init__(
             p_i=ensure_last_axis_is_fast(p_ij.sum(axis=2)),
             p_ij=ensure_last_axis_is_fast(
