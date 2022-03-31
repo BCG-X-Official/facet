@@ -174,9 +174,8 @@ class SimulationMatplotStyle(MatplotStyle, SimulationStyle):
             bottom=True,
             labelrotation=45 if is_categorical_feature else 0,
         )
-        if is_categorical_feature or True:
-            ax.set_xticks(x)
-            ax.set_xticklabels(labels=partitions)
+        ax.set_xticks(x)
+        ax.set_xticklabels(labels=partitions)
 
         # remove the top and right spines
         for pos in ["top", "right"]:
