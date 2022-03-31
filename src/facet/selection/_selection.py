@@ -299,11 +299,10 @@ class ModelSelector(
                 raise ValueError(
                     "index of arg groups is not equal to index of arg sample"
                 )
-        elif groups is not None:
-            if len(groups) != len(sample):
-                raise ValueError(
-                    "length of arg groups is not equal to length of arg sample"
-                )
+        elif groups is not None and len(groups) != len(sample):
+            raise ValueError(
+                "length of arg groups is not equal to length of arg sample"
+            )
 
         parameter_space = self.parameter_space
         (searcher_type,) = self.searcher_type
