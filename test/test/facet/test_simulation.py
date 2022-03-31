@@ -73,7 +73,9 @@ def test_univariate_target_simulation(
     parameterized_feature = "LSTAT"
     partitioner = ContinuousRangePartitioner(max_partitions=10)
 
-    simulation_result: UnivariateSimulationResult = target_simulator.simulate_feature(
+    simulation_result: UnivariateSimulationResult[
+        float
+    ] = target_simulator.simulate_feature(
         feature_name=parameterized_feature,
         partitioner=partitioner,
     )
@@ -134,7 +136,9 @@ def test_univariate_target_subsample_simulation_80(
         model=model, sample=subsample, confidence_level=0.8, n_jobs=n_jobs, verbose=50
     )
 
-    simulation_result: UnivariateSimulationResult = target_simulator.simulate_feature(
+    simulation_result: UnivariateSimulationResult[
+        float
+    ] = target_simulator.simulate_feature(
         feature_name=parameterized_feature,
         partitioner=partitioner,
     )
@@ -198,7 +202,9 @@ def test_univariate_uplift_subsample_simulation_95(
         model=model, sample=subsample, confidence_level=0.95, n_jobs=n_jobs, verbose=50
     )
 
-    simulation_result: UnivariateSimulationResult = target_simulator.simulate_feature(
+    simulation_result: UnivariateSimulationResult[
+        float
+    ] = target_simulator.simulate_feature(
         feature_name=parameterized_feature,
         partitioner=partitioner,
     )
@@ -262,7 +268,9 @@ def test_univariate_uplift_simulation(
     parameterized_feature = "LSTAT"
     partitioner = ContinuousRangePartitioner(max_partitions=10)
 
-    simulation_result: UnivariateSimulationResult = uplift_simulator.simulate_feature(
+    simulation_result: UnivariateSimulationResult[
+        float
+    ] = uplift_simulator.simulate_feature(
         feature_name=parameterized_feature,
         partitioner=partitioner,
     )
@@ -323,7 +331,9 @@ def test_univariate_uplift_subsample_simulation(
         model=model, sample=subsample, confidence_level=0.8, n_jobs=n_jobs, verbose=50
     )
 
-    simulation_result: UnivariateSimulationResult = uplift_simulator.simulate_feature(
+    simulation_result: UnivariateSimulationResult[
+        float
+    ] = uplift_simulator.simulate_feature(
         feature_name=parameterized_feature, partitioner=partitioner
     )
 
@@ -389,7 +399,9 @@ def test_univariate_probability_simulation(
         verbose=50,
     )
 
-    simulation_result: UnivariateSimulationResult = proba_simulator.simulate_feature(
+    simulation_result: UnivariateSimulationResult[
+        float
+    ] = proba_simulator.simulate_feature(
         feature_name=parameterized_feature, partitioner=partitioner
     )
 
