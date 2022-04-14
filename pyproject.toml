@@ -20,7 +20,7 @@ requires = [
     "numpy          >=1.17,<2a",
     "packaging      >=20",
     "pandas         >=0.24,<2a",
-    "scipy          ~=1.4",
+    "scipy          ~=1.2",
     "shap           >=0.34,<0.41a",
     "sklearndf      ~=2.0.dev3",
 ]
@@ -76,7 +76,7 @@ numpy          = "==1.17.5"
 packaging      = "~=20.9"
 pandas         = "~=0.24.2"
 python         = ">=3.7.12,<3.8a"    # cannot use ~= due to conda bug
-scipy          = "~=1.4.1"
+scipy          = "~=1.2.3"
 shap           = "~=0.34.0"
 sklearndf      = "~=2.0.dev3"
 # additional minimum requirements of sklearndf
