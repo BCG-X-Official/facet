@@ -1,5 +1,8 @@
 [build-system]
-requires = ["flit_core >=2,<4"]
+requires = [
+    "flit_core >=2,<4",
+    "oldest-supported-numpy",
+]
 build-backend = "flit_core.buildapi"
 
 [tool.flit.sdist]
