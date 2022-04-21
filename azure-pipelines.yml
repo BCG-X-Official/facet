@@ -345,6 +345,11 @@ stages:
               ./make.py $(project_name) $(BUILD_SYSTEM) $(PKG_DEPENDENCIES)
           displayName: "build & test"
 
+        - script: |
+            python -m pip freeze
+          displayName: 'print pip environment'
+          condition: eq(variables['BUILD_SYSTEM'], 'tox')
+
         - task: CopyFiles@2
           inputs:
             sourceFolder: $(System.DefaultWorkingDirectory)/$(project_root)/dist
