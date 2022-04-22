@@ -1,7 +1,6 @@
 [build-system]
 requires = [
     "flit_core >=2,<4",
-    "oldest-supported-numpy",
 ]
 build-backend = "flit_core.buildapi"
 
@@ -79,13 +78,13 @@ numpy          = "==1.17.5"
 packaging      = "~=20.9"
 pandas         = "~=0.24.2"
 python         = ">=3.7.12,<3.8a"    # cannot use ~= due to conda bug
-scipy          = "~=1.2.1"
+scipy          = "~=1.3.0"
 shap           = "~=0.34.0"
 sklearndf      = "~=2.0.dev3"
 # additional minimum requirements of sklearndf
 boruta         = "~=0.3.0"
 lightgbm       = "~=3.0.0"
-scikit-learn   = "~=0.21.3"
+scikit-learn   = "~=0.22.0"
 # additional minimum requirements of gamma-pytools
 joblib         = "~=0.14.1"
 typing_inspect = "~=0.4.0"
