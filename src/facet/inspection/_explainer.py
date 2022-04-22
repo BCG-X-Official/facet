@@ -5,7 +5,7 @@ Factories for SHAP explainers from the ``shap`` package.
 import functools
 import logging
 from abc import ABCMeta, abstractmethod
-from typing import Any, Dict, List, Mapping, Optional, Union
+from typing import Any, Callable, Dict, Iterable, List, Mapping, Optional, Union, cast
 
 import numpy as np
 import pandas as pd
@@ -14,6 +14,9 @@ from packaging import version
 from sklearn.base import BaseEstimator
 
 from pytools.api import AllTracker, inheritdoc, validate_type
+from pytools.expression import Expression, HasExpressionRepr
+from pytools.expression.atomic import Id
+from pytools.parallelization import Job, JobQueue, JobRunner, ParallelizableMixin
 from sklearndf import ClassifierDF, LearnerDF, RegressorDF
 
 log = logging.getLogger(__name__)
@@ -21,10 +24,12 @@ log = logging.getLogger(__name__)
 __all__ = [
     "BaseExplainer",
     "ExplainerFactory",
+    "ExplainerJob",
+    "ExplainerQueue",
     "KernelExplainerFactory",
+    "ParallelExplainer",
     "TreeExplainerFactory",
 ]
-
 
 #
 # conditional and mock imports
@@ -41,6 +46,15 @@ else:
         log.warning(e)
         Explainer = type("Explainer", (), {})
 
+try:
+    import catboost
+except ImportError:
+    from types import ModuleType
+
+    catboost = ModuleType("catboost")
+    catboost.Pool = type("Pool", (), {})
+
+
 #
 # Ensure all symbols introduced below are included in __all__
 #
@@ -49,7 +63,7 @@ __tracker = AllTracker(globals())
 
 
 #
-# Class definitions
+# Base classes
 #
 
 
@@ -64,7 +78,7 @@ class BaseExplainer(metaclass=ABCMeta):
     @abstractmethod
     def shap_values(
         self,
-        X: Union[np.ndarray, pd.DataFrame, "catboost.Pool"],  # noqa: F821
+        X: Union[np.ndarray, pd.DataFrame, catboost.Pool],
         y: Union[None, np.ndarray, pd.Series] = None,
         **kwargs: Any,
     ) -> Union[np.ndarray, List[np.ndarray]]:
@@ -85,7 +99,7 @@ class BaseExplainer(metaclass=ABCMeta):
     @abstractmethod
     def shap_interaction_values(
         self,
-        X: Union[np.ndarray, pd.DataFrame, "catboost.Pool"],  # noqa: F821
+        X: Union[np.ndarray, pd.DataFrame, catboost.Pool],
         y: Union[None, np.ndarray, pd.Series] = None,
         **kwargs: Any,
     ) -> Union[np.ndarray, List[np.ndarray]]:
@@ -104,7 +118,7 @@ class BaseExplainer(metaclass=ABCMeta):
         pass
 
 
-class ExplainerFactory(metaclass=ABCMeta):
+class ExplainerFactory(HasExpressionRepr, metaclass=ABCMeta):
     """
     A factory for constructing :class:`~shap.Explainer` objects.
     """
@@ -157,10 +171,256 @@ class ExplainerFactory(metaclass=ABCMeta):
             )
 
 
+#
+# Parallelization support: class ParallelExplainer and helper classes
+#
+
+
+@inheritdoc(match="""[see superclass]""")
+class ExplainerJob(Job[Union[np.ndarray, List[np.ndarray]]]):
+    """
+    A call to an explainer function with given `X` and `y` values.
+    """
+
+    #: the SHAP explainer to use
+    explainer: BaseExplainer
+
+    #: if ``False``, calculate SHAp values; otherwise, calculate SHAP interaction values
+    interactions: bool
+
+    #: the feature values of the observations to be explained
+    X: Union[np.ndarray, pd.DataFrame]
+
+    #: the target values of the observations to be explained
+    y: Union[None, np.ndarray, pd.Series]
+
+    #: additional arguments specific to the explainer method
+    kwargs: Dict[str, Any]
+
+    # noinspection PyPep8Naming
+    def __init__(
+        self,
+        explainer: BaseExplainer,
+        X: Union[np.ndarray, pd.DataFrame],
+        y: Union[None, np.ndarray, pd.Series] = None,
+        *,
+        interactions: bool,
+        **kwargs: Any,
+    ) -> None:
+        """
+        :param explainer: the SHAP explainer to use
+        :param X: the feature values of the observations to be explained
+        :param y: the target values of the observations to be explained
+        :param interactions: if ``False``, calculate SHAP values; if ``True``,
+            calculate SHAP interaction values
+        :param kwargs: additional arguments specific to the explainer method
+        """
+        self.explainer = explainer
+        self.X = X
+        self.y = y
+        self.interactions = interactions
+        self.kwargs = kwargs
+
+    def run(self) -> Union[np.ndarray, List[np.ndarray]]:
+        """[see superclass]"""
+
+        shap_fn: Callable[..., Union[np.ndarray, List[np.ndarray]]] = (
+            self.explainer.shap_interaction_values
+            if self.interactions
+            else self.explainer.shap_values
+        )
+
+        if self.y is None:
+            return shap_fn(self.X, **self.kwargs)
+        else:
+            return shap_fn(self.X, self.y, **self.kwargs)
+
+
+@inheritdoc(match="""[see superclass]""")
+class ExplainerQueue(
+    JobQueue[Union[np.ndarray, List[np.ndarray]], Union[np.ndarray, List[np.ndarray]]]
+):
+    """
+    A queue splitting a data set to be explained into multiple jobs.
+    """
+
+    #: the SHAP explainer to use
+    explainer: BaseExplainer
+
+    #: if ``False``, calculate SHAp values; otherwise, calculate SHAP interaction values
+    interactions: bool
+
+    #: the feature values of the observations to be explained
+    X: np.ndarray
+
+    #: the target values of the observations to be explained
+    y: Optional[np.ndarray]
+
+    #: the maximum number of observations to allocate to each job
+    max_job_size: int
+
+    #: additional arguments specific to the explainer method
+    kwargs: Dict[str, Any]
+
+    # noinspection PyPep8Naming
+    def __init__(
+        self,
+        explainer: BaseExplainer,
+        X: Union[np.ndarray, pd.DataFrame],
+        y: Union[None, np.ndarray, pd.Series] = None,
+        *,
+        interactions: bool,
+        max_job_size: int,
+        **kwargs: Any,
+    ) -> None:
+        """
+        :param explainer: the SHAP explainer to use
+        :param X: the feature values of the observations to be explained
+        :param y: the target values of the observations to be explained
+        :param interactions: if ``False``, calculate SHAP values; if ``True``,
+            calculate SHAP interaction values
+        :param max_job_size: the maximum number of observations to allocate to each job
+        :param kwargs: additional arguments specific to the explainer method
+        """
+        super().__init__()
+
+        self.explainer = explainer
+        self.X = X.values if isinstance(X, pd.DataFrame) else X
+        self.y = y.values if isinstance(y, pd.Series) else y
+        self.interactions = interactions
+        self.max_job_size = max_job_size
+        self.kwargs = kwargs
+
+    def jobs(self) -> Iterable[Job[Union[np.ndarray, List[np.ndarray]]]]:
+        """[see superclass]"""
+
+        x = self.X
+        y = self.y
+        n = len(x)
+        job_size = (n - 1) // len(self) + 1
+        kwargs = self.kwargs
+
+        return (
+            ExplainerJob(
+                self.explainer,
+                X=x[start : start + job_size].copy(),
+                y=None if y is None else y[start : start + job_size].copy(),
+                interactions=self.interactions,
+                **kwargs,
+            )
+            for start in range(0, n, job_size)
+        )
+
+    def aggregate(
+        self, job_results: List[Union[np.ndarray, List[np.ndarray]]]
+    ) -> Union[np.ndarray, List[np.ndarray]]:
+        """[see superclass]"""
+        if isinstance(job_results[0], np.ndarray):
+            return np.vstack(job_results)
+        else:
+            return [np.vstack(arrays) for arrays in zip(*job_results)]
+
+    def __len__(self) -> int:
+        return (len(self.X) - 1) // self.max_job_size + 1
+
+
+@inheritdoc(match="""[see superclass]""")
+class ParallelExplainer(BaseExplainer, ParallelizableMixin):
+    """
+    A wrapper class, turning an explainer into a parallelized version, explaining
+    chunks of observations in parallel.
+    """
+
+    #: The explainer being parallelized by this wrapper
+    explainer: BaseExplainer
+
+    #: the maximum number of observations to allocate to any of the explainer jobs
+    #: running in parallel
+    max_job_size: int
+
+    def __init__(
+        self,
+        explainer: BaseExplainer,
+        *,
+        max_job_size: int = 10,
+        n_jobs: Optional[int],
+        shared_memory: Optional[bool] = None,
+        pre_dispatch: Optional[Union[str, int]] = None,
+        verbose: Optional[int] = None,
+    ) -> None:
+        """
+        :param explainer: the explainer to be parallelized by this wrapper
+        :param max_job_size: the maximum number of observations to allocate to any of
+            the explainer jobs running in parallel
+        """
+        super().__init__(
+            n_jobs=n_jobs,
+            shared_memory=shared_memory,
+            pre_dispatch=pre_dispatch,
+            verbose=verbose,
+        )
+
+        if isinstance(explainer, ParallelExplainer):
+            log.warning(
+                f"creating parallel explainer from parallel explainer {explainer!r}"
+            )
+
+        self.explainer = explainer
+        self.max_job_size = max_job_size
+
+    assert __init__.__doc__ is not None
+    __init__.__doc__ += cast(str, ParallelizableMixin.__init__.__doc__)
+
+    # noinspection PyPep8Naming
+    def shap_values(
+        self,
+        X: Union[np.ndarray, pd.DataFrame, catboost.Pool],
+        y: Union[None, np.ndarray, pd.Series] = None,
+        **kwargs: Any,
+    ) -> Union[np.ndarray, List[np.ndarray]]:
+        """[see superclass]"""
+        return self._run(self.explainer, X, y, interactions=False, **kwargs)
+
+    # noinspection PyPep8Naming
+    def shap_interaction_values(
+        self,
+        X: Union[np.ndarray, pd.DataFrame, catboost.Pool],
+        y: Union[None, np.ndarray, pd.Series] = None,
+        **kwargs: Any,
+    ) -> Union[np.ndarray, List[np.ndarray]]:
+        """[see superclass]"""
+        return self._run(self.explainer, X, y, interactions=True, **kwargs)
+
+    # noinspection PyPep8Naming
+    def _run(
+        self,
+        explainer: BaseExplainer,
+        X: Union[np.ndarray, pd.DataFrame, catboost.Pool],
+        y: Union[None, np.ndarray, pd.Series] = None,
+        *,
+        interactions: bool,
+        **kwargs: Any,
+    ):
+        return JobRunner.from_parallelizable(self).run_queue(
+            ExplainerQueue(
+                explainer=explainer,
+                X=X,
+                y=y,
+                interactions=interactions,
+                max_job_size=self.max_job_size,
+                **kwargs,
+            )
+        )
+
+
+#
+# TreeExplainer factory
+#
+
 _TreeExplainer: Optional[type] = None
 
 
-@inheritdoc(match="[see superclass]")
+@inheritdoc(match="""[see superclass]""")
 class TreeExplainerFactory(ExplainerFactory):
     """
     A factory constructing :class:`~shap.TreeExplainer` objects.
@@ -168,15 +428,16 @@ class TreeExplainerFactory(ExplainerFactory):
 
     def __init__(
         self,
+        *,
         model_output: Optional[str] = None,
         feature_perturbation: Optional[str] = None,
-        use_background_dataset: bool = True,
+        uses_background_dataset: bool = True,
     ) -> None:
         """
         :param model_output: (optional) override the default model output parameter
         :param feature_perturbation: (optional) override the default
             feature_perturbation parameter
-        :param use_background_dataset: if ``False``, don't pass the background
+        :param uses_background_dataset: if ``False``, don't pass the background
             dataset on to the tree explainer even if a background dataset is passed
             to :meth:`.make_explainer`
         """
@@ -192,7 +453,7 @@ class TreeExplainerFactory(ExplainerFactory):
         )
         self.model_output = model_output
         self.feature_perturbation = feature_perturbation
-        self._uses_background_dataset = use_background_dataset
+        self._uses_background_dataset = uses_background_dataset
 
         global _TreeExplainer
 
@@ -218,10 +479,12 @@ class TreeExplainerFactory(ExplainerFactory):
 
     def make_explainer(
         self, model: LearnerDF, data: Optional[pd.DataFrame] = None
-    ) -> Explainer:
+    ) -> BaseExplainer:
         """[see superclass]"""
 
         self._validate_background_dataset(data=data)
+
+        assert _TreeExplainer is not None, "Global tree explainer is set"
 
         explainer = _TreeExplainer(
             model=model.native_estimator,
@@ -240,12 +503,25 @@ class TreeExplainerFactory(ExplainerFactory):
 
         return explainer
 
+    def to_expression(self) -> Expression:
+        """[see superclass]"""
+        return Id(type(self))(
+            model_output=self.model_output,
+            feature_perturbation=self.feature_perturbation,
+            use_background_dataset=self._uses_background_dataset,
+        )
+
+
+#
+# KernelExplainer factory
+#
+
 
 class _KernelExplainer(shap.KernelExplainer, BaseExplainer):
     # noinspection PyPep8Naming,PyUnresolvedReferences
     def shap_interaction_values(
         self,
-        X: Union[np.ndarray, pd.DataFrame, "catboost.Pool"],  # noqa: F821
+        X: Union[np.ndarray, pd.DataFrame, catboost.Pool],
         y: Union[None, np.ndarray, pd.Series] = None,
         **kwargs,
     ) -> np.ndarray:
@@ -254,10 +530,8 @@ class _KernelExplainer(shap.KernelExplainer, BaseExplainer):
         """
         raise NotImplementedError()
 
-    pass
 
-
-@inheritdoc(match="[see superclass]")
+@inheritdoc(match="""[see superclass]""")
 class KernelExplainerFactory(ExplainerFactory):
     """
     A factory constructing :class:`~shap.KernelExplainer` objects.
@@ -265,6 +539,7 @@ class KernelExplainerFactory(ExplainerFactory):
 
     def __init__(
         self,
+        *,
         link: Optional[str] = None,
         l1_reg: Optional[str] = "num_features(10)",
         data_size_limit: Optional[int] = 100,
@@ -300,7 +575,7 @@ class KernelExplainerFactory(ExplainerFactory):
         """[see superclass]"""
         return True
 
-    def make_explainer(self, model: LearnerDF, data: pd.DataFrame) -> Explainer:
+    def make_explainer(self, model: LearnerDF, data: pd.DataFrame) -> BaseExplainer:
         """[see superclass]"""
 
         self._validate_background_dataset(data=data)
@@ -336,11 +611,20 @@ class KernelExplainerFactory(ExplainerFactory):
         )
 
         if self.l1_reg is not None:
-            explainer.shap_values = functools.partial(
+            # mypy - disabling type check due to method assignment
+            explainer.shap_values = functools.partial(  # type: ignore
                 explainer.shap_values, l1_reg=self.l1_reg
             )
 
         return explainer
+
+    def to_expression(self) -> Expression:
+        """[see superclass]"""
+        return Id(type(self))(
+            link=self.link,
+            l1_reg=self.l1_reg,
+            data_size_limit=self.data_size_limit,
+        )
 
 
 __tracker.validate()

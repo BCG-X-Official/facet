@@ -5,7 +5,7 @@ redundancy, and independence.
 """
 import logging
 from abc import ABCMeta, abstractmethod
-from typing import Iterable, List, Optional, Tuple, TypeVar
+from typing import Optional, Tuple, TypeVar
 
 import numpy as np
 
@@ -65,14 +65,12 @@ class ShapProjector(ShapGlobalExplainer, metaclass=ABCMeta):
         super().__init__()
         self.association_: Optional[AffinityMatrix] = None
 
-    def association(
-        self, absolute: bool, symmetrical: bool, std: bool = False
-    ) -> Optional[np.ndarray]:
+    def association(self, absolute: bool, symmetrical: bool) -> np.ndarray:
         """[see superclass]"""
-        self._ensure_fitted()
-        return self.association_.get_values(
-            symmetrical=symmetrical, absolute=absolute, std=std
-        )
+
+        self.ensure_fitted()
+        assert self.association_ is not None
+        return self.association_.get_values(symmetrical=symmetrical, absolute=absolute)
 
     def _fit(self, shap_calculator: ShapCalculator) -> None:
         self._reset_fit()
@@ -84,11 +82,11 @@ class ShapProjector(ShapGlobalExplainer, metaclass=ABCMeta):
         self.association_ = None
 
     @abstractmethod
-    def _get_context(self, shap_calculator: ShapCalculator) -> List[ShapContext]:
+    def _get_context(self, shap_calculator: ShapCalculator) -> ShapContext:
         pass
 
     @abstractmethod
-    def _calculate(self, contexts: Iterable[ShapContext]) -> AffinityMatrix:
+    def _calculate(self, context: ShapContext) -> None:
         pass
 
     @staticmethod
@@ -113,8 +111,8 @@ class ShapProjector(ShapGlobalExplainer, metaclass=ABCMeta):
         # calculate association as the coefficient of determination for p[i] and p[j]
         ass_ij = cov_p_i_p_j_over_var_p_i * transpose(cov_p_i_p_j_over_var_p_i)
 
-        # we define the association of a feature with itself as 1
-        fill_diagonal(ass_ij, 1.0)
+        # association of a feature with itself is undefined
+        fill_diagonal(ass_ij, np.nan)
 
         return AffinityMatrix.from_relative_affinity(
             affinity_rel_ij=ass_ij, std_p_i=sqrt(var_p_i)
@@ -129,17 +127,12 @@ class ShapVectorProjector(ShapProjector):
     onto a feature's main SHAP vector.
     """
 
-    def _get_context(self, shap_calculator: ShapCalculator) -> List[ShapContext]:
-        return [
-            ShapValueContext(shap_calculator=shap_calculator, split_id=split_id)
-            for split_id in range(shap_calculator.n_splits_)
-        ]
+    def _get_context(self, shap_calculator: ShapCalculator) -> ShapContext:
+        return ShapValueContext(shap_calculator=shap_calculator)
 
-    def _calculate(self, contexts: Iterable[ShapContext]) -> None:
+    def _calculate(self, context: ShapContext) -> None:
         # calculate association matrices for each SHAP context, then aggregate
-        self.association_ = AffinityMatrix.aggregate(
-            affinity_matrices=map(self._calculate_association, contexts)
-        )
+        self.association_ = self._calculate_association(context)
 
 
 @inheritdoc(match="""[see superclass]""")
@@ -161,53 +154,38 @@ class ShapInteractionVectorProjector(ShapProjector, ShapInteractionGlobalExplain
         self.synergy_: Optional[AffinityMatrix] = None
         self.redundancy_: Optional[AffinityMatrix] = None
 
-    def synergy(
-        self, symmetrical: bool, absolute: bool, std: bool = False
-    ) -> Optional[np.ndarray]:
+    def synergy(self, symmetrical: bool, absolute: bool) -> np.ndarray:
         """[see superclass]"""
-        self._ensure_fitted()
-        return self.synergy_.get_values(
-            symmetrical=symmetrical, absolute=absolute, std=std
-        )
 
-    def redundancy(
-        self, symmetrical: bool, absolute: bool, std: bool = False
-    ) -> Optional[np.ndarray]:
+        self.ensure_fitted()
+        assert self.synergy_ is not None, "Projector is fitted"
+        return self.synergy_.get_values(symmetrical=symmetrical, absolute=absolute)
+
+    def redundancy(self, symmetrical: bool, absolute: bool) -> np.ndarray:
         """[see superclass]"""
-        self._ensure_fitted()
-        return self.redundancy_.get_values(
-            symmetrical=symmetrical, absolute=absolute, std=std
+
+        self.ensure_fitted()
+        assert self.redundancy_ is not None, "Projector is fitted"
+        return self.redundancy_.get_values(symmetrical=symmetrical, absolute=absolute)
+
+    def _get_context(self, shap_calculator: ShapCalculator) -> ShapContext:
+        return ShapInteractionValueContext(shap_calculator=shap_calculator)
+
+    def _calculate(self, context: ShapContext) -> None:
+        # calculate association, synergy, and redundancy matrices for the SHAP context
+
+        self.association_ = self._calculate_association(context=context)
+        self.synergy_, self.redundancy_ = self._calculate_synergy_redundancy(
+            context=context
         )
 
-    def _get_context(self, shap_calculator: ShapCalculator) -> List[ShapContext]:
-        return [
-            ShapInteractionValueContext(
-                shap_calculator=shap_calculator, split_id=split_id
-            )
-            for split_id in range(shap_calculator.n_splits_)
-        ]
-
-    def _calculate(self, contexts: Iterable[ShapContext]) -> None:
-        # calculate association, synergy, and redundancy matrices for each SHAP context,
-        # then aggregate each of them
-        self.association_, self.synergy_, self.redundancy_ = map(
-            AffinityMatrix.aggregate,
-            zip(
-                *(
-                    (
-                        self._calculate_association(context=context),
-                        *self._calculate_synergy_redundancy(context=context),
-                    )
-                    for context in contexts
-                )
-            ),
-        )
-
+    @staticmethod
     def _calculate_synergy_redundancy(
-        self, context: ShapContext
+        context: ShapContext,
     ) -> Tuple[AffinityMatrix, AffinityMatrix]:
         p_i = context.p_i
         var_p_i = context.var_p_i
+        assert context.p_ij is not None, "Projector has interaction values enabled"
         p_ij = context.p_ij
         weight = context.weight
 
@@ -219,7 +197,7 @@ class ShapInteractionVectorProjector(ShapProjector, ShapInteractionGlobalExplain
         # shape: (n_outputs, n_features, n_features)
         # variance of each feature interaction vector
         var_p_ij = np.average(
-            ensure_last_axis_is_fast(p_ij ** 2), axis=-1, weights=weight
+            ensure_last_axis_is_fast(p_ij**2), axis=-1, weights=weight
         )
 
         # cov(p[i], p[i, j])
@@ -253,8 +231,8 @@ class ShapInteractionVectorProjector(ShapProjector, ShapInteractionGlobalExplain
         # this is the coefficient of determination of the interaction vector
         syn_ij = cov_p_i_p_ij_over_var_p_i * cov_p_i_p_ij_over_var_p_ij
 
-        # we define the synergy of a feature with itself as 1
-        fill_diagonal(syn_ij, 1.0)
+        # synergy of a feature with itself is undefined
+        fill_diagonal(syn_ij, np.nan)
 
         #
         # Redundancy: red[i, j]
@@ -291,8 +269,8 @@ class ShapInteractionVectorProjector(ShapProjector, ShapInteractionGlobalExplain
         # scale to accommodate variance already explained by synergy
         red_ij *= 1 - syn_ij
 
-        # we define the redundancy of a feature with itself as 1
-        fill_diagonal(red_ij, 1.0)
+        # redundancy of a feature with itself is undefined
+        fill_diagonal(red_ij, np.nan)
 
         #
         # SHAP decomposition as relative contributions of
