@@ -179,7 +179,7 @@ PARAM_CANDIDATE__ = "param_candidate__"
 
 @pytest.fixture
 def best_lgbm_model(
-    regressor_selector,
+    regressor_selector: ModelSelector[RegressorPipelineDF, GridSearchCV],
     sample: Sample,
 ) -> RegressorPipelineDF:
     # we get the best model_evaluation which is a LGBM - for the sake of test
