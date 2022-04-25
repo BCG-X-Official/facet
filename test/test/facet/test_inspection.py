@@ -199,7 +199,6 @@ def test_model_inspection_classifier_binary_single_shap_output() -> None:
 # noinspection DuplicatedCode
 def test_model_inspection_classifier_multi_class(
     iris_inspector_multi_class: LearnerInspector[ClassifierPipelineDF],
-    n_jobs: int,
 ) -> None:
     iris_classifier = iris_inspector_multi_class.pipeline
     iris_sample = iris_inspector_multi_class.sample_
