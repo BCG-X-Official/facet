@@ -65,7 +65,7 @@ stages:
               versionSpec: '3.7.*'
             displayName: 'use Python 3.7'
           - script: |
-              python -m pip install black==20.8b1
+              python -m pip install black==20.8b1 'click~=8.0.2'
               python -m black --check .
             displayName: 'Run black'
       - job:
