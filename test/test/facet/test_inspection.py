@@ -3,7 +3,7 @@ Model inspector tests.
 """
 import logging
 import warnings
-from typing import List, Optional, TypeVar, Union
+from typing import List, Optional, Set, TypeVar, Union
 
 import numpy as np
 import pandas as pd
@@ -36,29 +36,26 @@ log = logging.getLogger(__name__)
 T = TypeVar("T")
 
 
-def test_model_inspection(
-    regressor_selector,
-    best_lgbm_model: RegressorPipelineDF,
-    preprocessed_feature_names,
-    regressor_inspector: LearnerInspector,
-    sample: Sample,
-    n_jobs: int,
-) -> None:
-
-    ranking = regressor_selector.summary_report()
-
-    # define checksums for this test
-    log.debug(f"\n{ranking}")
-
+def test_regressor_selector(
+    regressor_selector: ModelSelector[RegressorPipelineDF, GridSearchCV]
+):
     check_ranking(
-        ranking=ranking,
+        ranking=regressor_selector.summary_report(),
         is_classifier=False,
         scores_expected=(
-            [0.693, 0.689, 0.677, 0.661, 0.615, 0.615, 0.367, 0.281, 0.281, 0.281]
+            [0.820, 0.818, 0.808, 0.806, 0.797, 0.797, 0.652, 0.651, 0.651, 0.651]
         ),
         params_expected=None,
     )
 
+
+def test_model_inspection(
+    best_lgbm_model: RegressorPipelineDF,
+    preprocessed_feature_names: Set[str],
+    regressor_inspector: LearnerInspector,
+    sample: Sample,
+    n_jobs: int,
+) -> None:
     shap_values: pd.DataFrame = regressor_inspector.shap_values()
 
     # the length of rows in shap_values should be equal to the unique observation
