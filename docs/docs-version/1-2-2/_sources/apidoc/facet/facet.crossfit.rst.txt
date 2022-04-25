@@ -1,0 +1,37 @@
+facet.crossfit
+==============
+
+.. automodule:: facet.crossfit
+   :no-imported-members:
+
+   
+
+   
+   
+   =======
+   Classes
+   =======
+
+   .. autosummary::
+      :toctree: crossfit
+      :template: custom-class-template.rst
+      :nosignatures:
+   
+      LearnerCrossfit
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+
+

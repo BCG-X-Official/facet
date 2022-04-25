@@ -1,0 +1,16 @@
+img.padded-logo {padding-top: 20pt; padding-bottom: 20pt}
+
+img.facet_icon {
+    height: 100px;
+    padding-top: 5pt;
+    padding-bottom: 5pt;
+    padding-left: 5pt;
+    padding-right: 5pt;
+}
+
+.hello {
+    font-size:150%;
+    text-align:left;
+    font-family: Palatino, serif;
+    padding:50px 10% 50px 10%
+}
