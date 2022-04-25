@@ -88,8 +88,6 @@ joblib         = "~=0.14.1"
 typing_inspect = "~=0.4.0"
 # additional minimum requirements of shap
 ipython        = "==7.0"
-# address incompatibility with Python 3.6
-typing-extensions = "<4.2"
 
 [build.matrix.max]
 # direct requirements of gamma-facet

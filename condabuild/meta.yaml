@@ -45,8 +45,6 @@ test:
     - typing_inspect {{ environ.get('FACET_V_TYPING_INSPECT') }}
     # additional requirements of shap
     - ipython        {{ environ.get('FACET_V_IPYTHON') }}
-    # address incompatibility with Python 3.6
-    - typing_extensions {{ environ.get('FACET_V_TYPING_EXTENSIONS', '') }}
   commands:
     - conda list
     - python -c 'import facet;
