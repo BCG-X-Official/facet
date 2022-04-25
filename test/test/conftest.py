@@ -4,7 +4,7 @@ from typing import Any, Dict, List, Mapping, Optional, Sequence, Set, Tuple
 import numpy as np
 import pandas as pd
 import pytest
-from numpy.testing import assert_array_almost_equal, assert_array_equal
+from numpy.testing import assert_allclose, assert_array_equal
 from sklearn import datasets
 from sklearn.model_selection import BaseCrossValidator, GridSearchCV, KFold
 from sklearn.utils import Bunch
@@ -75,7 +75,7 @@ def n_jobs() -> int:
 @pytest.fixture
 def cv_kfold() -> KFold:
     # define a CV
-    return KFold(n_splits=K_FOLDS)
+    return KFold(n_splits=K_FOLDS, shuffle=True, random_state=42)
 
 
 @pytest.fixture
@@ -361,14 +361,14 @@ def check_ranking(
         only required for multi estimator search
     """
 
-    col_score = COL_SCORE  # + ("-",) * (ranking.columns.nlevels - len(COL_SCORE))
-    scores_actual: pd.Series = ranking.loc[:, col_score].values[: len(scores_expected)]
-    assert_array_almost_equal(
+    scores_actual: pd.Series = ranking.loc[:, COL_SCORE].values[: len(scores_expected)]
+
+    assert_allclose(
         scores_actual,
         scores_expected,
-        decimal=3,
+        rtol=0.01,
         err_msg=(
-            f"unexpected scores: " f"got {scores_actual} but expected {scores_expected}"
+            f"unexpected scores: got {scores_actual} but expected {scores_expected}"
         ),
     )
 
