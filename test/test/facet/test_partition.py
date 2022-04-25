@@ -7,6 +7,12 @@ from facet.data.partition import (
     IntegerRangePartitioner,
 )
 
+# constants for error messages
+MSG_ARG_VALUES_EMPTY = "arg values is empty"
+MSG_CANNOT_INFER_BOUNDS = (
+    "insufficient variance in values; cannot infer partitioning bounds"
+)
+
 
 def test_discrete_partitioning() -> None:
     np.random.seed(42)
@@ -97,43 +103,43 @@ def test_partition_with_invalid_values() -> None:
 
     with pytest.raises(
         ValueError,
-        match="arg values is empty",
+        match=MSG_ARG_VALUES_EMPTY,
     ):
         ContinuousRangePartitioner().fit([])
 
     with pytest.raises(
         ValueError,
-        match="insufficient variance in values; cannot infer partitioning bounds",
+        match=MSG_CANNOT_INFER_BOUNDS,
     ):
         ContinuousRangePartitioner().fit([1])
 
     with pytest.raises(
         ValueError,
-        match="insufficient variance in values; cannot infer partitioning bounds",
+        match=MSG_CANNOT_INFER_BOUNDS,
     ):
         ContinuousRangePartitioner().fit([1, 1, 1, 10, 1])
 
     with pytest.raises(
         ValueError,
-        match="arg values is empty",
+        match=MSG_ARG_VALUES_EMPTY,
     ):
         IntegerRangePartitioner().fit([])
 
     with pytest.raises(
         ValueError,
-        match="insufficient variance in values; cannot infer partitioning bounds",
+        match=MSG_CANNOT_INFER_BOUNDS,
     ):
         IntegerRangePartitioner().fit([1])
 
     with pytest.raises(
         ValueError,
-        match="insufficient variance in values; cannot infer partitioning bounds",
+        match=MSG_CANNOT_INFER_BOUNDS,
     ):
         IntegerRangePartitioner().fit([1, 1, 1, 10, 1])
 
     with pytest.raises(
         ValueError,
-        match="arg values is empty",
+        match=MSG_ARG_VALUES_EMPTY,
     ):
         CategoryPartitioner().fit([])
 
