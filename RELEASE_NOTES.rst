@@ -10,6 +10,8 @@ FACET 2.0
 ``facet.data``
 ^^^^^^^^^^^^^^
 
+- API: class :class:`.Sample` raises an exception if the name of any used column is not
+  a string
 - API: class :class:`.RangePartitioner` supports new optional arguments ``lower_bound``
   and ``upper_bound`` in method :meth:`~.RangePartitioner.fit` and no longer accepts
   them in the class initializer
