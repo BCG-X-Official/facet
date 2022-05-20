@@ -17,7 +17,8 @@ repos:
         name: flake8
         entry: flake8 --config tox.ini
         language: python_venv
-        additional_dependencies: [ flake8-comprehensions, flake8-import-order ]
+        additional_dependencies:
+          - flake8-comprehensions ~= 3.10
         types: [ python ]
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
@@ -31,8 +32,9 @@ repos:
     rev: v0.931
     hooks:
       - id: mypy
-        files: src/
+        files: src|sphinx
         additional_dependencies:
-          - numpy>=1.22
+          - numpy~=1.22
+          - mypy~=0.940
           - gamma-pytools>=2.0.dev8,<3a
           - sklearndf>=2.0.dev3,<3a
