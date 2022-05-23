@@ -17,7 +17,7 @@ dependencies:
   - shap ~=0.40
   - sklearndf >= 2.0.dev3, < 3a
   # build/test
-  - black ~= 22.1
+  - black ~= 22.3
   - conda-build ~= 3.21
   - conda-verify ~= 3.1
   - docutils ~= 0.17
