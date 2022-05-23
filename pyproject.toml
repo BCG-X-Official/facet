@@ -1,5 +1,7 @@
 [build-system]
-requires = ["flit_core >=2,<4"]
+requires = [
+    "flit_core >=2,<4",
+]
 build-backend = "flit_core.buildapi"
 
 [tool.flit.sdist]
@@ -76,7 +78,7 @@ numpy          = "==1.17.5"
 packaging      = "~=20.9"
 pandas         = "~=0.24.2"
 python         = ">=3.7.12,<3.8a"    # cannot use ~= due to conda bug
-scipy          = "~=1.2.3"
+scipy          = "~=1.2.1"
 shap           = "~=0.34.0"
 sklearndf      = "~=2.0.dev3"
 # additional minimum requirements of sklearndf
@@ -97,7 +99,7 @@ numpy          = ">=1.22,<2a"
 packaging      = ">=20.9"
 pandas         = "~=1.4"
 python         = ">=3.8.10,<4a"   # cannot use ~= due to conda bug
-scipy          = "~=1.7"
+scipy          = "~=1.8"
 shap           = "~=0.40.0"
 sklearndf      = ">=2.0.dev3,<3a"
 # additional maximum requirements of sklearndf
