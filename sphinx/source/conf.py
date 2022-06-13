@@ -29,6 +29,5 @@ from conf_base import set_config
 set_config(
     globals(),
     project="facet",
-    modules=["facet", "pytools", "sklearndf"],
     html_logo="_static/Gamma_Facet_Logo_RGB_LB.svg",
 )
