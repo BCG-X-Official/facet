@@ -10,6 +10,12 @@ from urllib import request, parse
 from tempfile import TemporaryDirectory
 from packaging import version
 from contextlib import contextmanager
+from zipfile import ZipFile
+
+@contextmanager
+def ensure_path(path):
+    Path(path).mkdir(exist_ok=True, parents=True)
+    yield path
 
 def get_required_pytools_branch():
     """
@@ -36,20 +42,13 @@ def ensure_pytools_sphinx_deps(local_pytools_path):
         yield local_pytools_path
     else:
         pytools_branch = get_required_pytools_branch()
-        remote_pytools_path = f"https://raw.githubusercontent.com/BCG-Gamma/pytools/{pytools_branch}/sphinx/"
-        files = [
-            "base/make_base.py",
-            "base/make_util.py",
-            "base/conf_base.py",
-            "source/_static_base/js/versions.js",
-            "source/_templates/getting-started-header.rst"
-        ]
-        with TemporaryDirectory() as tmp_dir:
-            for file in files:
-                target = Path(tmp_dir, file)
-                target.parent.mkdir(exist_ok=True, parents=True)
-                request.urlretrieve(parse.urljoin(remote_pytools_path, file), target)
-            yield os.path.join(tmp_dir, "base")
+        remote_pytools_path = f"https://github.com/BCG-Gamma/pytools/archive/{pytools_branch}.zip"
+        with ensure_path(".cache") as tmp_dir:
+            target = os.path.join(tmp_dir, "pytools.zip")
+            request.urlretrieve(remote_pytools_path, target)
+            ZipFile(target).extractall(tmp_dir)
+            os.rename(os.path.join(tmp_dir, f"pytools-{pytools_branch}"), os.path.join(tmp_dir, f"pytools"))
+            yield os.path.join(tmp_dir, "pytools", "sphinx", "base")
 
 def make() -> None:
     """
@@ -67,6 +66,7 @@ def make() -> None:
             0,
             pytools_path,
         )
+        sys.path.insert(0, os.path.join(pytools_path, os.pardir, os.pardir, "src")) # pytools src
         # noinspection PyUnresolvedReferences
         from make_base import make
         from conf_base import set_config
