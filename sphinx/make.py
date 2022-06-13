@@ -14,8 +14,8 @@ from zipfile import ZipFile
 
 @contextmanager
 def ensure_path(path):
-    Path(path).mkdir(exist_ok=True, parents=True)
-    yield path
+    Path(path).resolve().mkdir(exist_ok=True, parents=True)
+    yield Path(path).resolve()
 
 def get_required_pytools_branch():
     """
@@ -37,13 +37,13 @@ def get_required_pytools_branch():
 
 
 @contextmanager
-def ensure_pytools_sphinx_deps(local_pytools_path):
-    if os.path.exists(local_pytools_path):
-        yield local_pytools_path
+def ensure_pytools_sphinx_deps(local_pytools_sphinx_base):
+    if os.path.exists(local_pytools_sphinx_base):
+        yield local_pytools_sphinx_base
     else:
         pytools_branch = get_required_pytools_branch()
         remote_pytools_path = f"https://github.com/BCG-Gamma/pytools/archive/{pytools_branch}.zip"
-        with ensure_path(".cache") as tmp_dir:
+        with ensure_path(os.path.join(local_pytools_sphinx_base, os.pardir, os.pardir, os.pardir)) as tmp_dir:
             target = os.path.join(tmp_dir, "pytools.zip")
             request.urlretrieve(remote_pytools_path, target)
             ZipFile(target).extractall(tmp_dir)
@@ -57,11 +57,11 @@ def make() -> None:
     cwd = os.path.dirname(os.path.realpath(__file__))
     os.chdir(cwd)
 
-    local_pytools_path = os.path.normpath(
+    local_pytools_sphinx_base = os.path.normpath(
         os.path.join(cwd, os.pardir, os.pardir, "pytools", "sphinx", "base")
     )
 
-    with ensure_pytools_sphinx_deps(local_pytools_path) as pytools_path:
+    with ensure_pytools_sphinx_deps(local_pytools_sphinx_base) as pytools_path:
         sys.path.insert(
             0,
             pytools_path,
