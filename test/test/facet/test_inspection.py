@@ -11,10 +11,9 @@ import pytest
 from numpy.testing import assert_allclose
 from pandas.testing import assert_frame_equal, assert_series_equal
 from sklearn.datasets import make_classification
-from sklearn.model_selection import GridSearchCV, KFold
+from sklearn.model_selection import GridSearchCV
 
 from pytools.viz.dendrogram import DendrogramDrawer, DendrogramReportStyle
-from sklearndf import TransformerDF
 from sklearndf.classification import (
     GradientBoostingClassifierDF,
     RandomForestClassifierDF,
@@ -42,9 +41,7 @@ def test_model_inspection(
     best_lgbm_model: RegressorPipelineDF,
     preprocessed_feature_names,
     regressor_inspector: LearnerInspector,
-    cv_kfold: KFold,
     sample: Sample,
-    simple_preprocessor: TransformerDF,
     n_jobs: int,
 ) -> None:
 
@@ -199,7 +196,6 @@ def test_model_inspection_classifier_binary_single_shap_output() -> None:
 # noinspection DuplicatedCode
 def test_model_inspection_classifier_multi_class(
     iris_inspector_multi_class: LearnerInspector[ClassifierPipelineDF],
-    n_jobs: int,
 ) -> None:
     iris_classifier = iris_inspector_multi_class.pipeline
     iris_sample = iris_inspector_multi_class.sample_
