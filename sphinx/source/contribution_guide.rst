@@ -315,18 +315,8 @@ scripts can be found in
 The reason for this was to minimise code given the standardization of the documentation
 build across multiple packages.
 
-Note: building the docs requires a local copy of ``pytools/sphinx/base`` in the python
-path. This can also be achieved by replicating the structure below:
-
-.. code-block::
-
-    ├ facet
-        ├ ...
-        └ sphinx
-    └ pytools
-        ├ ...
-        └ sphinx
-            └ base
+Note: dependencies from ``pytools/sphinx/base`` are downloaded automatically
+by ``sphinx/make.py``.
 
 **make.py**: All base configuration comes from ``pytools/sphinx/base/make_base.py`` and
 this script includes defined commands for key steps in the documentation build. Briefly,
