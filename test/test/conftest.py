@@ -43,8 +43,11 @@ print(facet.__logo__)
 logging.getLogger("shap").setLevel(logging.WARNING)
 
 # configure pandas text output
-pd.set_option("display.width", None)  # get display width from terminal
-pd.set_option("display.precision", 3)  # 3 digits precision for easier readability
+
+# get display width from terminal
+pd.set_option("display.width", None)
+# 3 digits precision for easier readability
+pd.set_option("display.precision", 3)
 
 K_FOLDS = 5
 N_BOOTSTRAPS = 30
@@ -357,14 +360,14 @@ def check_ranking(
         only required for multi estimator search
     """
 
-    col_score = COL_SCORE  # + ("-",) * (ranking.columns.nlevels - len(COL_SCORE))
+    col_score = COL_SCORE
     scores_actual: pd.Series = ranking.loc[:, col_score].values[: len(scores_expected)]
     assert_array_almost_equal(
         scores_actual,
         scores_expected,
         decimal=3,
         err_msg=(
-            f"unexpected scores: " f"got {scores_actual} but expected {scores_expected}"
+            f"unexpected scores: got {scores_actual} but expected {scores_expected}"
         ),
     )
 
