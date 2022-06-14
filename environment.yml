@@ -33,7 +33,7 @@ dependencies:
   - pytest ~= 5.4
   - pytest-cov ~= 2.12
   - pyyaml ~= 5.4
-  - sphinx ~= 4.4
+  - sphinx ~= 4.5
   - sphinx-autodoc-typehints ~= 1.12
   - toml ~= 0.10
   - tox ~= 3.24
