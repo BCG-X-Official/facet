@@ -7,7 +7,7 @@ from typing import List
 import numpy as np
 import pandas as pd
 import pytest
-from scipy.stats import loguniform, randint, zipfian
+from scipy.stats import randint, reciprocal
 from sklearn import datasets
 from sklearn.model_selection import GridSearchCV
 
@@ -157,9 +157,9 @@ def test_parameter_space(simple_preprocessor: TransformerDF) -> None:
     # distributions
 
     randint_3_10 = randint(3, 10)
-    loguniform_0_01_0_10 = loguniform(0.01, 0.1)
-    loguniform_0_05_0_10 = loguniform(0.05, 0.1)
-    zipfian_1_32 = zipfian(1.0, 32)
+    randint_1_32 = randint(1, 32)
+    reciprocal_0_01_0_10 = reciprocal(0.01, 0.1)
+    reciprocal_0_05_0_10 = reciprocal(0.05, 0.1)
 
     # parameter space 1
 
@@ -169,9 +169,9 @@ def test_parameter_space(simple_preprocessor: TransformerDF) -> None:
     )
     ps_1_name = "rf_regressor"
     ps_1 = ParameterSpace(pipeline_1, name=ps_1_name)
-    ps_1.regressor.min_weight_fraction_leaf = loguniform_0_01_0_10
+    ps_1.regressor.min_weight_fraction_leaf = reciprocal_0_01_0_10
     ps_1.regressor.max_depth = randint_3_10
-    ps_1.regressor.min_samples_leaf = loguniform_0_05_0_10
+    ps_1.regressor.min_samples_leaf = reciprocal_0_05_0_10
 
     with pytest.raises(
         AttributeError,
@@ -197,7 +197,7 @@ def test_parameter_space(simple_preprocessor: TransformerDF) -> None:
     ps_2_name = "lgbm"
     ps_2 = ParameterSpace(pipeline_2, name=ps_2_name)
     ps_2.regressor.max_depth = randint_3_10
-    ps_2.regressor.min_child_samples = zipfian_1_32
+    ps_2.regressor.min_child_samples = randint_1_32
 
     # multi parameter space
 
@@ -237,16 +237,16 @@ def test_parameter_space(simple_preprocessor: TransformerDF) -> None:
             Id.ParameterSpace(
                 regressor_repr(Id.RandomForestRegressorDF),
                 **{
-                    "regressor.min_weight_fraction_leaf": (Id.loguniform(0.01, 0.1)),
+                    "regressor.min_weight_fraction_leaf": (Id.reciprocal(0.01, 0.1)),
                     "regressor.max_depth": Id.randint(3, 10),
-                    "regressor.min_samples_leaf": (Id.loguniform(0.05, 0.1)),
+                    "regressor.min_samples_leaf": (Id.reciprocal(0.05, 0.1)),
                 },
             ),
             Id.ParameterSpace(
                 regressor_repr(Id.LGBMRegressorDF),
                 **{
                     "regressor.max_depth": Id.randint(3, 10),
-                    "regressor.min_child_samples": Id.zipfian(1.0, 32),
+                    "regressor.min_child_samples": Id.randint(1, 32),
                 },
             ),
         )
@@ -259,14 +259,14 @@ def test_parameter_space(simple_preprocessor: TransformerDF) -> None:
             "candidate": [pipeline_1],
             "candidate_name": [ps_1_name],
             "candidate__regressor__max_depth": randint_3_10,
-            "candidate__regressor__min_samples_leaf": loguniform_0_05_0_10,
-            "candidate__regressor__min_weight_fraction_leaf": loguniform_0_01_0_10,
+            "candidate__regressor__min_samples_leaf": reciprocal_0_05_0_10,
+            "candidate__regressor__min_weight_fraction_leaf": reciprocal_0_01_0_10,
         },
         {
             "candidate": [pipeline_2],
             "candidate_name": [ps_2_name],
             "candidate__regressor__max_depth": randint_3_10,
-            "candidate__regressor__min_child_samples": zipfian_1_32,
+            "candidate__regressor__min_child_samples": randint_1_32,
         },
     ]
 
@@ -275,16 +275,16 @@ def test_parameter_space(simple_preprocessor: TransformerDF) -> None:
             "my_prefix__candidate": [pipeline_1],
             "my_prefix__candidate_name": [ps_1_name],
             "my_prefix__candidate__regressor__max_depth": randint_3_10,
-            "my_prefix__candidate__regressor__min_samples_leaf": loguniform_0_05_0_10,
+            "my_prefix__candidate__regressor__min_samples_leaf": reciprocal_0_05_0_10,
             (
                 "my_prefix__candidate__regressor__min_weight_fraction_leaf"
-            ): loguniform_0_01_0_10,
+            ): reciprocal_0_01_0_10,
         },
         {
             "my_prefix__candidate": [pipeline_2],
             "my_prefix__candidate_name": [ps_2_name],
             "my_prefix__candidate__regressor__max_depth": randint_3_10,
-            "my_prefix__candidate__regressor__min_child_samples": zipfian_1_32,
+            "my_prefix__candidate__regressor__min_child_samples": randint_1_32,
         },
     ]
 
