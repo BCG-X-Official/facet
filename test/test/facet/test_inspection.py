@@ -401,7 +401,6 @@ def test_model_inspection_classifier_interaction(
     # shap interaction values add up to shap values
     # we have to live with differences of up to 0.020, given the different results
     # returned for SHAP values and SHAP interaction values
-    # todo: review accuracy after implementing use of a background dataset
     assert (
         model_inspector_no_interaction.shap_values() - shap_values
     ).abs().max().max() < 0.015
