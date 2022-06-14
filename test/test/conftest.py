@@ -43,8 +43,11 @@ print(facet.__logo__)
 logging.getLogger("shap").setLevel(logging.WARNING)
 
 # configure pandas text output
-pd.set_option("display.width", None)  # get display width from terminal
-pd.set_option("display.precision", 3)  # 3 digits precision for easier readability
+
+# get display width from terminal
+pd.set_option("display.width", None)
+# 3 digits precision for easier readability
+pd.set_option("display.precision", 3)
 
 K_FOLDS = 5
 N_BOOTSTRAPS = 30

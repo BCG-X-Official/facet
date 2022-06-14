@@ -36,6 +36,13 @@ T_Values_Numeric = TypeVar("T_Values_Numeric", float, int)
 
 
 #
+# Constants
+#
+
+ASSERTION__PARTITIONER_IS_FITTED = "partitioner is fitted"
+
+
+#
 # Ensure all symbols introduced below are included in __all__
 #
 
@@ -96,7 +103,7 @@ class Partitioner(
         """
 
         self.ensure_fitted()
-        assert self._partitions is not None, "Partitioner is fitted"
+        assert self._partitions is not None, ASSERTION__PARTITIONER_IS_FITTED
         return self._partitions
 
     @property
@@ -106,7 +113,7 @@ class Partitioner(
         """
 
         self.ensure_fitted()
-        assert self._frequencies is not None, "Partitioner is fitted"
+        assert self._frequencies is not None, ASSERTION__PARTITIONER_IS_FITTED
         return self._frequencies
 
     @property
@@ -177,7 +184,7 @@ class RangePartitioner(
         """
 
         self.ensure_fitted()
-        assert self._partition_bounds is not None, "Partitioner is fitted"
+        assert self._partition_bounds is not None, ASSERTION__PARTITIONER_IS_FITTED
         return self._partition_bounds
 
     @property
@@ -187,7 +194,7 @@ class RangePartitioner(
         """
 
         self.ensure_fitted()
-        assert self._step is not None, "Partitioner is fitted"
+        assert self._step is not None, ASSERTION__PARTITIONER_IS_FITTED
         return self._step
 
     def fit(  # type: ignore[override]
@@ -220,14 +227,16 @@ class RangePartitioner(
         values = self._as_non_empty_array(values)
 
         if lower_bound is None or upper_bound is None:
-            q3q1 = np.nanquantile(values, q=[0.75, 0.25])
-            inlier_range = op.sub(*q3q1) * 1.5  # iqr * 1.5
+            # calculate the inner quartile range (IQR)
+            iqr = np.nanquantile(values, q=[0.75, 0.25])
+            # calculate inlier range as IQR * 1.5
+            inlier_range = op.sub(*iqr) * 1.5
 
             if lower_bound is None:
-                lower_bound = values[values >= q3q1[1] - inlier_range].min()
+                lower_bound = values[values >= iqr[1] - inlier_range].min()
 
             if upper_bound is None:
-                upper_bound = values[values <= q3q1[0] + inlier_range].max()
+                upper_bound = values[values <= iqr[0] + inlier_range].max()
 
             if lower_bound == upper_bound:
                 raise ValueError(
@@ -342,7 +351,7 @@ class ContinuousRangePartitioner(RangePartitioner[float]):
 
     @property
     def _partition_center_offset(self) -> float:
-        assert self._step is not None, "Partitioner is fitted"
+        assert self._step is not None, ASSERTION__PARTITIONER_IS_FITTED
         return self._step / 2
 
 
@@ -379,7 +388,7 @@ class IntegerRangePartitioner(RangePartitioner[int]):
 
     @property
     def _partition_center_offset(self) -> int:
-        assert self._step is not None, "Partitioner is fitted"
+        assert self._step is not None, ASSERTION__PARTITIONER_IS_FITTED
         return self._step // 2
 
 

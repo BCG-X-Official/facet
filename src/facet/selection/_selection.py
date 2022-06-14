@@ -140,10 +140,10 @@ class ModelSelector(
         (re.compile(pattern), repl) for pattern, repl in _CV_RESULT_COLUMNS
     ]
 
-    _CV_RESULT_CANDIDATE_PATTERN, _CV_RESULT_CANDIDATE_REPL = (
-        re.compile(r"^(?:(param__)candidate__|param__(candidate(?:_name)?)$)"),
-        r"\1\2",
+    _CV_RESULT_CANDIDATE_PATTERN: Pattern = re.compile(
+        r"^(?:(param__)candidate__|param__(candidate(?:_name)?)$)"  # NOSONAR
     )
+    _CV_RESULT_CANDIDATE_REPL: str = r"\1\2"
 
     # Default column to sort by in the summary_report() method.
     # This has no influence on how the best model is selected.
@@ -299,11 +299,10 @@ class ModelSelector(
                 raise ValueError(
                     "index of arg groups is not equal to index of arg sample"
                 )
-        elif groups is not None:
-            if len(groups) != len(sample):
-                raise ValueError(
-                    "length of arg groups is not equal to length of arg sample"
-                )
+        elif groups is not None and len(groups) != len(sample):
+            raise ValueError(
+                "length of arg groups is not equal to length of arg sample"
+            )
 
         parameter_space = self.parameter_space
         (searcher_type,) = self.searcher_type

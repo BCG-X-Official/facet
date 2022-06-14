@@ -51,6 +51,12 @@ T_ShapCalculator = TypeVar("T_ShapCalculator", bound=ShapCalculator)
 
 
 #
+# Constants
+#
+ASSERTION__CALCULATOR_IS_FITTED = "calculator is fitted"
+
+
+#
 # Ensure all symbols introduced below are included in __all__
 #
 
@@ -449,7 +455,7 @@ class ShapContext(metaclass=ABCMeta):
     Contextual data for global SHAP calculations.
     """
 
-    #: SHAP vectors,
+    #: SHAP vectors
     #: with shape `(n_outputs, n_features, n_observations)`
     p_i: np.ndarray
 
@@ -465,7 +471,7 @@ class ShapContext(metaclass=ABCMeta):
     #: with shape `(n_outputs, n_features, 1)`
     var_p_i: np.ndarray
 
-    #: SHAP interaction vectors,
+    #: SHAP interaction vectors
     #: with shape `(n_outputs, n_features, n_features, n_observations)`
     p_ij: Optional[np.ndarray]
 
@@ -507,12 +513,12 @@ class ShapValueContext(ShapContext):
             assert (
                 shap_calculator.output_names_ is not None
                 and shap_calculator.feature_index_ is not None
-            ), "calculator is fitted"
+            ), ASSERTION__CALCULATOR_IS_FITTED
             n_outputs: int = len(shap_calculator.output_names_)
             n_features: int = len(shap_calculator.feature_index_)
             n_observations: int = len(shap_values)
 
-            # p[i] = p_i
+            # p[i]
             # shape: (n_outputs, n_features, n_observations)
             # the vector of shap values for every output and feature
             return ensure_last_axis_is_fast(
@@ -527,7 +533,9 @@ class ShapValueContext(ShapContext):
             # shape: (n_observations)
             # return a 1d array of weights that aligns with the observations axis of the
             # SHAP values tensor (axis 1)
-            assert shap_calculator.sample_ is not None and "calculator is fitted"
+            assert (
+                shap_calculator.sample_ is not None and ASSERTION__CALCULATOR_IS_FITTED
+            )
             _weight_sr = shap_calculator.sample_.weight
             if _weight_sr is not None:
                 return _weight_sr.loc[shap_values.index.get_level_values(-1)].values
@@ -548,7 +556,7 @@ class ShapInteractionValueContext(ShapContext):
         assert (
             shap_calculator.output_names_ is not None
             and shap_calculator.feature_index_ is not None
-        ), "calculator is fitted"
+        ), ASSERTION__CALCULATOR_IS_FITTED
         n_features: int = len(shap_calculator.feature_index_)
         n_outputs: int = len(shap_calculator.output_names_)
         n_observations: int = len(shap_values) // n_features
@@ -565,7 +573,7 @@ class ShapInteractionValueContext(ShapContext):
         # return a 1d array of weights that aligns with the observations axis of the
         # SHAP values tensor (axis 1)
         weight: Optional[np.ndarray]
-        assert shap_calculator.sample_ is not None and "calculator is fitted"
+        assert shap_calculator.sample_ is not None and ASSERTION__CALCULATOR_IS_FITTED
         _weight_sr = shap_calculator.sample_.weight
         if _weight_sr is not None:
             _observation_indices = shap_values.index.get_level_values(
@@ -593,6 +601,7 @@ class ShapInteractionValueContext(ShapContext):
 
         # p[i]
         # shape: (n_outputs, n_features, n_observations)
+        # the vector of shap values for every output and feature
         super().__init__(
             p_i=ensure_last_axis_is_fast(p_ij.sum(axis=2)),
             p_ij=ensure_last_axis_is_fast(

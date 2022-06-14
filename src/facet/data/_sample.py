@@ -83,22 +83,13 @@ class Sample:
             observation
         """
 
-        def _ensure_columns_exist(column_type: str, columns: List[str]):
-            # check if all provided feature names actually exist in the observations df
-            available_columns: pd.Index = observations.columns
-            missing_columns = {
-                name for name in columns if name not in available_columns
-            }
-            if missing_columns:
-                raise KeyError(
-                    f"observations table is missing {column_type} columns "
-                    f"{missing_columns}"
-                )
-
         # check that the observations are valid
 
-        if observations is None or not isinstance(observations, pd.DataFrame):
-            raise ValueError("arg observations is not a DataFrame")
+        if not isinstance(observations, pd.DataFrame):
+            raise ValueError(
+                "arg observations must be a data frame, but is a "
+                f"{type(observations).__qualname__}"
+            )
 
         observations_index = observations.index
 
@@ -113,18 +104,19 @@ class Sample:
         targets_list: List[str] = to_list(
             target_name, element_type=str, arg_name="target_name"
         )
-        _ensure_columns_exist(column_type="target", columns=targets_list)
+        _ensure_columns_exist(
+            observations=observations, column_type="target", columns=targets_list
+        )
 
         self._target_names = targets_list
 
         # process the weight
 
-        if weight_name is not None:
-            if weight_name not in observations.columns:
-                raise KeyError(
-                    f'arg weight_name="{weight_name}" '
-                    "is not a column in the observations table"
-                )
+        if weight_name is not None and weight_name not in observations.columns:
+            raise KeyError(
+                f'arg weight_name="{weight_name}" '
+                "is not a column in the observations table"
+            )
 
         self._weight_name = weight_name
 
@@ -144,7 +136,9 @@ class Sample:
             features_list = to_list(
                 feature_names, element_type=str, arg_name="feature_names"
             )
-            _ensure_columns_exist(column_type="feature", columns=features_list)
+            _ensure_columns_exist(
+                observations=observations, column_type="feature", columns=features_list
+            )
 
             # ensure features and target(s) do not overlap
             shared = set(targets_list).intersection(features_list)
@@ -264,7 +258,7 @@ class Sample:
         subsample = copy(self)
         if iloc is None:
             if loc is None:
-                ValueError("either arg loc or arg iloc must be specified")
+                raise ValueError("either arg loc or arg iloc must be specified")
             else:
                 subsample._observations = self._observations.loc[loc, :]
         elif loc is None:
@@ -327,3 +321,15 @@ class Sample:
 
 
 __tracker.validate()
+
+
+def _ensure_columns_exist(
+    observations: pd.DataFrame, column_type: str, columns: List[str]
+):
+    # check if all provided feature names actually exist in the observations df
+    available_columns: pd.Index = observations.columns
+    missing_columns = {name for name in columns if name not in available_columns}
+    if missing_columns:
+        raise KeyError(
+            f"observations table is missing {column_type} columns {missing_columns}"
+        )

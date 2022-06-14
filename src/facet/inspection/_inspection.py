@@ -60,6 +60,14 @@ T_LearnerInspector = TypeVar("T_LearnerInspector", bound="LearnerInspector")
 T_LearnerPipelineDF = TypeVar("T_LearnerPipelineDF", bound=LearnerPipelineDF)
 T_SeriesOrDataFrame = TypeVar("T_SeriesOrDataFrame", pd.Series, pd.DataFrame)
 
+
+#
+# Constants
+#
+
+ASSERTION__INSPECTOR_IS_FITTED = "inspector is fitted"
+ASSERTION__SHAP_INTERACTION_SUPPORTED = "SHAP interaction values are supported"
+
 #
 # Ensure all symbols introduced below are included in __all__
 #
@@ -321,7 +329,7 @@ class LearnerInspector(
     @property
     def _shap_global_explainer(self) -> ShapGlobalExplainer:
         self.ensure_fitted()
-        assert self._shap_global_projector is not None, "Inspector is fitted"
+        assert self._shap_global_projector is not None, ASSERTION__INSPECTOR_IS_FITTED
         return self._shap_global_projector
 
     @property
@@ -336,7 +344,7 @@ class LearnerInspector(
         """
 
         self.ensure_fitted()
-        assert self._sample is not None, "Inspector is fitted"
+        assert self._sample is not None, ASSERTION__INSPECTOR_IS_FITTED
         return self._sample
 
     @property
@@ -357,7 +365,7 @@ class LearnerInspector(
         assert (
             self._shap_calculator is not None
             and self._shap_calculator.output_names_ is not None
-        ), "Inspector is fitted"
+        ), ASSERTION__INSPECTOR_IS_FITTED
         return self._shap_calculator.output_names_
 
     @property
@@ -379,7 +387,7 @@ class LearnerInspector(
         """
 
         self.ensure_fitted()
-        assert self._shap_calculator is not None, "Inspector is fitted"
+        assert self._shap_calculator is not None, ASSERTION__INSPECTOR_IS_FITTED
         return self.__split_multi_output_df(self._shap_calculator.get_shap_values())
 
     def shap_interaction_values(self) -> Union[pd.DataFrame, List[pd.DataFrame]]:
@@ -622,7 +630,7 @@ class LearnerInspector(
         )
         assert (
             feature_affinity_matrix is not None
-        ), "Shap interaction values are supported"
+        ), ASSERTION__SHAP_INTERACTION_SUPPORTED
 
         return self.__linkages_from_affinity_matrices(
             feature_affinity_matrix=feature_affinity_matrix
@@ -648,7 +656,7 @@ class LearnerInspector(
         )
         assert (
             feature_affinity_matrix is not None
-        ), "Shap interaction values are supported"
+        ), ASSERTION__SHAP_INTERACTION_SUPPORTED
 
         return self.__linkages_from_affinity_matrices(
             feature_affinity_matrix=feature_affinity_matrix
@@ -674,7 +682,7 @@ class LearnerInspector(
         )
         assert (
             feature_affinity_matrix is not None
-        ), "Shap interaction values are supported"
+        ), ASSERTION__SHAP_INTERACTION_SUPPORTED
 
         return self.__linkages_from_affinity_matrices(
             feature_affinity_matrix=feature_affinity_matrix
@@ -886,7 +894,7 @@ class LearnerInspector(
             affinity_symmetrical = explainer_fn(symmetrical=True, absolute=False)
             assert (
                 affinity_symmetrical is not None
-            ), "Shap interaction values are supported"
+            ), ASSERTION__SHAP_INTERACTION_SUPPORTED
 
             affinity_matrices = self.__sort_affinity_matrices(
                 affinity_matrices=affinity_matrices,
