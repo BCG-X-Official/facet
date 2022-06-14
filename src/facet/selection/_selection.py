@@ -140,10 +140,10 @@ class ModelSelector(
         (re.compile(pattern), repl) for pattern, repl in _CV_RESULT_COLUMNS
     ]
 
-    _CV_RESULT_CANDIDATE_PATTERN, _CV_RESULT_CANDIDATE_REPL = (
-        re.compile(r"^(?:(?:(param__)candidate__)|(?:param__(candidate(?:_name)?)$))"),
-        r"\1\2",
+    _CV_RESULT_CANDIDATE_PATTERN: Pattern = re.compile(
+        r"^(?:(param__)candidate__|param__(candidate(?:_name)?)$)"  # NOSONAR
     )
+    _CV_RESULT_CANDIDATE_REPL: str = r"\1\2"
 
     # Default column to sort by in the summary_report() method.
     # This has no influence on how the best model is selected.
