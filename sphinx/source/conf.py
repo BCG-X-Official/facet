@@ -7,27 +7,15 @@ Receives majority of configuration from pytools conf_base.py
 import os
 import sys
 
-sys.path.insert(
-    0,
-    os.path.abspath(
-        os.path.join(
-            os.path.dirname(__file__),
-            os.pardir,
-            os.pardir,
-            os.pardir,
-            "pytools",
-            "sphinx",
-            "base",
-        )
-    ),
-)
+_dir_base = os.path.join(os.path.dirname(os.path.dirname(__file__)), "base")
+sys.path.insert(0, _dir_base)
 
 from conf_base import set_config
 
-# ----- custom configuration -----
+# ----- set custom configuration -----
 
 set_config(
     globals(),
     project="facet",
-    html_logo="_static/Gamma_Facet_Logo_RGB_LB.svg",
+    html_logo=os.path.join("_static", "Gamma_Facet_Logo_RGB_LB.svg"),
 )
