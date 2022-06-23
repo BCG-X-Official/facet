@@ -153,9 +153,7 @@ def test_model_selector_no_preprocessing(n_jobs) -> None:
     ), "expected a best performance of at least 0.8"
 
 
-def test_parameter_space(
-    sample: Sample, simple_preprocessor: TransformerDF, n_jobs: int
-) -> None:
+def test_parameter_space(simple_preprocessor: TransformerDF) -> None:
     # distributions
 
     randint_3_10 = randint(3, 10)
