@@ -43,8 +43,12 @@ print(facet.__logo__)
 logging.getLogger("shap").setLevel(logging.WARNING)
 
 # configure pandas text output
-pd.set_option("display.width", None)  # get display width from terminal
-pd.set_option("display.precision", 3)  # 3 digits precision for easier readability
+
+# get display width from terminal
+pd.set_option("display.width", None)
+
+# 3 digits precision for easier readability
+pd.set_option("display.precision", 3)
 
 K_FOLDS = 5
 N_BOOTSTRAPS = 30
@@ -179,7 +183,7 @@ PARAM_CANDIDATE__ = "param_candidate__"
 
 @pytest.fixture
 def best_lgbm_model(
-    regressor_selector,
+    regressor_selector: ModelSelector[RegressorPipelineDF, GridSearchCV],
     sample: Sample,
 ) -> RegressorPipelineDF:
     # we get the best model_evaluation which is a LGBM - for the sake of test
