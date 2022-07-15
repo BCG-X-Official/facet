@@ -47,7 +47,7 @@ classifiers = [
 
 [tool.flit.metadata.requires-extra]
 testing = [
-    "pytest ~= 5.4",
+    "pytest ~= 7.1",
     "pytest-cov ~= 2.12",
     "flake8 ~= 3.8",
     "flake8-comprehensions ~= 3.2",
