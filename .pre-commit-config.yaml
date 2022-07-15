@@ -35,6 +35,5 @@ repos:
         files: src|sphinx|test
         additional_dependencies:
           - numpy~=1.22
-          - mypy~=0.940
-          - gamma-pytools>=2.0.dev8,<3a
+          - gamma-pytools~=2.0,>=2.0.1
           - sklearndf>=2.0.dev3,<3a
