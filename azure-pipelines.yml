@@ -54,7 +54,7 @@ stages:
               versionSpec: '3.8'
             displayName: 'use Python 3.8'
           - script: |
-              python -m pip install isort==5.5.4
+              python -m pip install isort~=5.10
               python -m isort --check --diff .
             displayName: 'Run isort'
       - job:
@@ -65,7 +65,7 @@ stages:
               versionSpec: '3.8'
             displayName: 'use Python 3.8'
           - script: |
-              python -m pip install black==22.3
+              python -m pip install black~=22.6
               python -m black --check .
             displayName: 'Run black'
       - job:
@@ -76,7 +76,7 @@ stages:
               versionSpec: '3.8'
             displayName: 'use Python 3.8'
           - script: |
-              python -m pip install flake8==3.9.0 flake8-comprehensions
+              python -m pip install flake8~=4.0 flake8-comprehensions~=3.10
               python -m flake8 --config tox.ini -v .
             displayName: 'Run flake8'
       - job:
@@ -87,7 +87,7 @@ stages:
               versionSpec: '3.8'
             displayName: 'use Python 3.8'
           - script: |
-              python -m pip install mypy~=0.931 numpy~=1.22 "gamma-pytools~=2.0" "sklearndf>=2.0.dev3,<3a"
+              python -m pip install mypy~=0.961 numpy~=1.22
               python -m mypy src
             displayName: 'Run mypy'
 
