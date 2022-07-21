@@ -17,7 +17,7 @@ license = "Apache Software License v2.0"
 
 requires = [
     # direct requirements of gamma-facet
-    "gamma-pytools  ~=2.0",
+    "gamma-pytools  ~=2.0,>=2.0.1",
     "matplotlib     ~=3.0",
     "numpy          >=1.17,<2a",
     "packaging      >=20",
@@ -47,7 +47,7 @@ classifiers = [
 
 [tool.flit.metadata.requires-extra]
 testing = [
-    "pytest ~= 5.4",
+    "pytest ~= 7.1",
     "pytest-cov ~= 2.12",
     "flake8 ~= 3.8",
     "flake8-comprehensions ~= 3.2",
@@ -76,7 +76,7 @@ no-binary.min = ["matplotlib", "shap"]
 
 [build.matrix.min]
 # direct requirements of gamma-facet
-gamma-pytools  = "~=2.0.0"
+gamma-pytools  = "~=2.0.1"
 matplotlib     = "~=3.0.3"
 numpy          = "==1.17.5"
 packaging      = "~=20.9"
@@ -97,7 +97,7 @@ ipython        = "==7.0"
 
 [build.matrix.max]
 # direct requirements of gamma-facet
-gamma-pytools  = "~=2.0"
+gamma-pytools  = "~=2.0,>=2.0.1"
 matplotlib     = "~=3.5"
 numpy          = ">=1.22,<2a"
 packaging      = ">=20.9"

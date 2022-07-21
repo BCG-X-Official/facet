@@ -5,7 +5,7 @@ channels:
 dependencies:
   # run
   - boruta_py ~= 0.3
-  - gamma-pytools ~= 2.0
+  - gamma-pytools ~= 2.0, >= 2.0.1
   - joblib ~= 1.1
   - lightgbm ~= 3.3
   - matplotlib ~= 3.5
@@ -30,7 +30,7 @@ dependencies:
   - pluggy ~= 0.13
   - pre-commit ~= 2.17
   - pydata-sphinx-theme ~= 0.7
-  - pytest ~= 5.4
+  - pytest ~= 7.1
   - pytest-cov ~= 2.12
   - pyyaml ~= 5.4
   - toml ~= 0.10
