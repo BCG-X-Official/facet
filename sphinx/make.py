@@ -3,6 +3,7 @@
 Make sphinx documentation using the pytools make utility
 """
 import os
+import sys
 from typing import Callable
 from urllib import request
 
@@ -14,10 +15,11 @@ if __name__ == "__main__":
     # make sure that the current working directory is where this script lives
     wd_expected = os.path.realpath(os.path.dirname(__file__))
     if os.path.realpath(os.getcwd()) != wd_expected:
-        raise RuntimeError(
-            "Before running this script, the working directory must be changed to "
-            f"{wd_expected}"
+        print(
+            "Error: working directory is not " f"{wd_expected}",
+            file=sys.stderr,
         )
+        sys.exit(1)
 
     # run the common make file available in the pytools repo
     with request.urlopen(
