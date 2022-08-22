@@ -31,11 +31,11 @@ repos:
         exclude: condabuild/meta.yaml
 
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v0.961
+    rev: v0.971
     hooks:
       - id: mypy
         files: src|sphinx|test
         additional_dependencies:
           - numpy~=1.22
-          - gamma-pytools~=2.0,>=2.0.1
+          - gamma-pytools~=2.0,!=2.0.0
           - sklearndf>=2.0.dev3,<3a
