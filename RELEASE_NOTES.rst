@@ -13,6 +13,9 @@ FACET 2.0
 - API: class :class:`.RangePartitioner` supports new optional arguments ``lower_bound``
   and ``upper_bound`` in method :meth:`~.RangePartitioner.fit` and no longer accepts
   them in the class initializer
+- API: renamed method ``Sample.subsample()`` to :meth:`.Sample.resample`
+- API: added method ``Sample.rebalance()`` to create a sample with added or updated
+  weights
 
 ``facet.inspection``
 ^^^^^^^^^^^^^^^^^^^^
