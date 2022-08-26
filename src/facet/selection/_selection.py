@@ -5,7 +5,6 @@ import inspect
 import itertools
 import logging
 import re
-from re import Pattern
 from typing import (
     Any,
     Callable,
@@ -13,6 +12,7 @@ from typing import (
     Generic,
     List,
     Optional,
+    Pattern,
     Sequence,
     Tuple,
     TypeVar,
