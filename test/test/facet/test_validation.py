@@ -5,6 +5,7 @@ import warnings
 from typing import List
 
 import numpy as np
+import numpy.typing as npt
 import pytest
 from sklearn import datasets, svm, tree
 from sklearn.model_selection import GridSearchCV
@@ -37,10 +38,10 @@ def test_get_train_test_splits_as_indices() -> None:
 
     my_cv = BootstrapCV(n_splits=n_test_splits, random_state=42)
 
-    def _generate_splits() -> List[np.ndarray]:
+    def _generate_splits() -> List[npt.NDArray[np.int_]]:
         return [test_split for _, test_split in my_cv.split(X=test_x)]
 
-    test_splits: List[np.ndarray] = _generate_splits()
+    test_splits: List[npt.NDArray[np.int_]] = _generate_splits()
 
     # assert we get right amount of splits
 
@@ -56,7 +57,7 @@ def test_get_train_test_splits_as_indices() -> None:
 
     # check that re-generating the split yields the same result
 
-    test_splits_2: List[np.ndarray] = _generate_splits()
+    test_splits_2: List[npt.NDArray[np.int_]] = _generate_splits()
 
     assert len(test_splits) == len(
         test_splits_2
@@ -88,6 +89,7 @@ def test_bootstrap_cv_with_sk_learn() -> None:
     # use the defined my_cv bootstrap CV within GridSearchCV
 
     if __sklearn_version__ < __sklearn_0_22__:
+        # noinspection PyArgumentList
         clf = GridSearchCV(svc, parameters, cv=my_cv, iid=False)
     else:
         clf = GridSearchCV(svc, parameters, cv=my_cv)
@@ -137,7 +139,7 @@ def test_stratified_bootstrap_cv() -> None:
     ):
         next(my_cv.split(X=test_x, groups=test_groups))
 
-    with pytest.warns(None) as checker:
+    with pytest.warns() as checker:
         train1, test1 = next(my_cv.split(X=test_x, y=test_groups))
     assert len(checker) == 0
 
@@ -147,10 +149,10 @@ def test_stratified_bootstrap_cv() -> None:
     assert np.array_equal(train1, train2)
     assert np.array_equal(test1, test2)
 
-    def _generate_splits() -> List[np.ndarray]:
+    def _generate_splits() -> List[npt.NDArray[np.int_]]:
         return [test_split for _, test_split in my_cv.split(X=test_x, y=test_groups)]
 
-    test_splits: List[np.ndarray] = _generate_splits()
+    test_splits: List[npt.NDArray[np.int_]] = _generate_splits()
 
     # assert we get right amount of splits
 
@@ -177,7 +179,7 @@ def test_stratified_bootstrap_cv() -> None:
 
     # check that re-generating the split yields the same result
 
-    test_splits_2: List[np.ndarray] = _generate_splits()
+    test_splits_2: List[npt.NDArray[np.int_]] = _generate_splits()
 
     assert len(test_splits) == len(
         test_splits_2

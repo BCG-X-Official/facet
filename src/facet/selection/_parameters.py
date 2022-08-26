@@ -46,8 +46,12 @@ __all__ = [
 ParameterSet = Union[List[Any], stats.rv_continuous, stats.rv_discrete]
 ParameterDict = Dict[str, ParameterSet]
 
-rv_frozen = type(stats.uniform())
-assert rv_frozen.__name__ == "rv_frozen", "type of stats.uniform() is rv_frozen"
+try:
+    rv_frozen = next(
+        t for t in type(stats.uniform()).mro() if t.__name__ == "rv_frozen"
+    )
+except StopIteration:
+    raise AssertionError("stats.uniform() is based on class rv_frozen")
 
 
 #
@@ -127,7 +131,7 @@ distribution:
             if "__" not in name
         }
 
-        self._children: Dict[str, ParameterSpace] = {
+        self._children: Dict[str, ParameterSpace[BaseEstimator]] = {
             name: ParameterSpace(estimator=value)
             for name, value in params.items()
             if isinstance(value, BaseEstimator)
@@ -210,6 +214,8 @@ distribution:
     def __getattr__(self, key: str) -> Any:
         if not key.startswith("_"):
 
+            result: Union[ParameterSpace[Any], ParameterSet, None]
+
             result = self._children.get(key, None)
             if result is not None:
                 return result
@@ -243,7 +249,9 @@ distribution:
 
         def _values_to_expression(values: ParameterSet) -> Expression:
             if isinstance(values, rv_frozen):
-                return Id(values.dist.name)(*values.args, **values.kwds)
+                # disabling type-checks: mypy cannot access the class signature
+                # of private class rv_frozen, which is obtained dynamically at runtime
+                return Id(values.dist.name)(*values.args, **values.kwds)  # type: ignore
             elif isinstance(values, (stats.rv_continuous, stats.rv_discrete)):
                 try:
                     return Id(values.name)(values.a, values.b)

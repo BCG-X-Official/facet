@@ -11,7 +11,7 @@ from scipy.stats import randint, reciprocal
 from sklearn import datasets
 from sklearn.model_selection import GridSearchCV
 
-from pytools.expression import freeze
+from pytools.expression import Expression, freeze
 from pytools.expression.atomic import Id
 from sklearndf import TransformerDF
 from sklearndf.classification import SVCDF, RandomForestClassifierDF
@@ -32,7 +32,9 @@ log = logging.getLogger(__name__)
 
 
 def test_model_selector(
-    regressor_parameters: MultiEstimatorParameterSpace[RegressorPipelineDF],
+    regressor_parameters: MultiEstimatorParameterSpace[
+        RegressorPipelineDF[LGBMRegressorDF]
+    ],
     sample: Sample,
     n_jobs: int,
 ) -> None:
@@ -73,13 +75,17 @@ def test_model_selector(
     # define the circular cross validator with just 5 splits (to speed up testing)
     cv = BootstrapCV(n_splits=5, random_state=42)
 
-    ranker: ModelSelector[RegressorPipelineDF, GridSearchCV] = ModelSelector(
+    ranker: ModelSelector[
+        RegressorPipelineDF[LGBMRegressorDF], GridSearchCV
+    ] = ModelSelector(
         searcher_type=GridSearchCV,
         parameter_space=regressor_parameters,
         cv=cv,
         scoring="r2",
         n_jobs=n_jobs,
-    ).fit(sample=sample)
+    ).fit(
+        sample=sample
+    )
 
     log.debug(f"\n{ranker.summary_report()}")
 
@@ -103,7 +109,7 @@ def test_model_selector(
     )
 
 
-def test_model_selector_no_preprocessing(n_jobs) -> None:
+def test_model_selector_no_preprocessing(n_jobs: int) -> None:
     expected_learner_scores = [0.961, 0.957, 0.957, 0.936]
 
     # define a yield-engine circular CV:
@@ -168,7 +174,9 @@ def test_parameter_space(simple_preprocessor: TransformerDF) -> None:
         preprocessing=simple_preprocessor,
     )
     ps_1_name = "rf_regressor"
-    ps_1 = ParameterSpace(pipeline_1, name=ps_1_name)
+    ps_1: ParameterSpace[RegressorPipelineDF[RandomForestRegressorDF]] = ParameterSpace(
+        pipeline_1, name=ps_1_name
+    )
     ps_1.regressor.min_weight_fraction_leaf = reciprocal_0_01_0_10
     ps_1.regressor.max_depth = randint_3_10
     ps_1.regressor.min_samples_leaf = reciprocal_0_05_0_10
@@ -195,7 +203,9 @@ def test_parameter_space(simple_preprocessor: TransformerDF) -> None:
         preprocessing=simple_preprocessor,
     )
     ps_2_name = "lgbm"
-    ps_2 = ParameterSpace(pipeline_2, name=ps_2_name)
+    ps_2: ParameterSpace[RegressorPipelineDF[LGBMRegressorDF]] = ParameterSpace(
+        pipeline_2, name=ps_2_name
+    )
     ps_2.regressor.max_depth = randint_3_10
     ps_2.regressor.min_child_samples = randint_1_32
 
@@ -208,8 +218,7 @@ def test_parameter_space(simple_preprocessor: TransformerDF) -> None:
             r"but got multiple types: classifier, regressor$"
         ),
     ):
-        # noinspection PyTypeChecker
-        MultiEstimatorParameterSpace(
+        MultiEstimatorParameterSpace(  # type: ignore
             ps_1, ps_2, ParameterSpace(ClassifierPipelineDF(classifier=SVCDF()))
         )
 
@@ -217,7 +226,7 @@ def test_parameter_space(simple_preprocessor: TransformerDF) -> None:
 
     # test
 
-    def regressor_repr(model: Id):
+    def regressor_repr(model: Id) -> Expression:
         return Id.RegressorPipelineDF(
             preprocessing=Id.ColumnTransformerDF(
                 transformers=[
@@ -290,7 +299,9 @@ def test_parameter_space(simple_preprocessor: TransformerDF) -> None:
 
 
 def test_model_selector_regression(
-    regressor_parameters: MultiEstimatorParameterSpace[RegressorPipelineDF],
+    regressor_parameters: MultiEstimatorParameterSpace[
+        RegressorPipelineDF[LGBMRegressorDF]
+    ],
     sample: Sample,
     n_jobs: int,
 ) -> None:
@@ -306,13 +317,17 @@ def test_model_selector_regression(
     ):
         ModelSelector(GridSearchCV, regressor_parameters, param_grid=None)
 
-    ranker: ModelSelector[RegressorPipelineDF, GridSearchCV] = ModelSelector(
+    ranker: ModelSelector[
+        RegressorPipelineDF[LGBMRegressorDF], GridSearchCV
+    ] = ModelSelector(
         GridSearchCV,
         regressor_parameters,
         scoring="r2",
         cv=cv,
         n_jobs=n_jobs,
-    ).fit(sample=sample)
+    ).fit(
+        sample=sample
+    )
 
     assert isinstance(ranker.best_estimator_, RegressorPipelineDF)
 
@@ -330,7 +345,9 @@ def test_model_selector_regression(
 
 
 def test_model_selector_classification(
-    iris_sample_multi_class, cv_stratified_bootstrap: StratifiedBootstrapCV, n_jobs: int
+    iris_sample_multi_class: Sample,
+    cv_stratified_bootstrap: StratifiedBootstrapCV,
+    n_jobs: int,
 ) -> None:
     expected_learner_scores = [0.965, 0.964, 0.957, 0.956]
 
@@ -355,7 +372,7 @@ def test_model_selector_classification(
         ),
     ):
         # define an illegal grid list, mixing classification with regression
-        MultiEstimatorParameterSpace(ps1, ps2)
+        MultiEstimatorParameterSpace(ps1, ps2)  # type: ignore
 
     model_selector: ModelSelector[
         ClassifierPipelineDF[RandomForestClassifierDF], GridSearchCV
