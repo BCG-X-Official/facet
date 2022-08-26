@@ -45,6 +45,7 @@ test:
     - typing_inspect {{ environ.get('FACET_V_TYPING_INSPECT') }}
     # additional requirements of shap
     - ipython        {{ environ.get('FACET_V_IPYTHON') }}
+    - numba          {{ environ.get('FACET_V_NUMBA') }}
   commands:
     - conda list
     - python -c 'import facet;
