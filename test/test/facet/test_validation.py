@@ -141,6 +141,7 @@ def test_stratified_bootstrap_cv() -> None:
 
     with warnings.catch_warnings():
         warnings.simplefilter("error")
+        warnings.simplefilter("default", category=DeprecationWarning)
         train1, test1 = next(my_cv.split(X=test_x, y=test_groups))
 
     with pytest.warns(UserWarning, match=r"^ignoring arg groups=array\(\["):
