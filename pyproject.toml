@@ -103,7 +103,7 @@ packaging      = ">=20"
 pandas         = "~=1.4"
 python         = ">=3.8.10,<4a"   # cannot use ~= due to conda bug
 scipy          = "~=1.8"
-shap           = "~=0.40.0"
+shap           = "~=0.41"
 sklearndf      = "~=2.0"
 # additional maximum requirements of sklearndf
 boruta         = "~=0.3"
