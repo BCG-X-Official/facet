@@ -21,7 +21,7 @@ requires = [
     "pandas         >=1,<2a",  # cannot use ~= due to conda bug
     "scipy          ~=1.2",
     "shap           >=0.34,<0.41a",
-    "sklearndf      ~=2.0.dev3",
+    "sklearndf      ~=2.0",
 ]
 
 requires-python = ">=3.7,<4a"
@@ -82,7 +82,7 @@ pandas         = "~=1.0.5"
 python         = ">=3.7.12,<3.8a"    # cannot use ~= due to conda bug
 scipy          = "~=1.4.1"
 shap           = "~=0.34.0"
-sklearndf      = "~=2.0.dev3"
+sklearndf      = "~=2.0.0"
 # additional minimum requirements of sklearndf
 boruta         = "~=0.3.0"
 lightgbm       = "~=3.0.0"
@@ -104,7 +104,7 @@ pandas         = "~=1.4"
 python         = ">=3.8.10,<4a"   # cannot use ~= due to conda bug
 scipy          = "~=1.8"
 shap           = "~=0.40.0"
-sklearndf      = ">=2.0.dev3,<3a"
+sklearndf      = "~=2.0"
 # additional maximum requirements of sklearndf
 boruta         = "~=0.3"
 lightgbm       = "~=3.3"
