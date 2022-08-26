@@ -139,9 +139,9 @@ def test_stratified_bootstrap_cv() -> None:
     ):
         next(my_cv.split(X=test_x, groups=test_groups))
 
-    with pytest.warns() as checker:
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
         train1, test1 = next(my_cv.split(X=test_x, y=test_groups))
-    assert len(checker) == 0
 
     with pytest.warns(UserWarning, match=r"^ignoring arg groups=array\(\["):
         train2, test2 = next(my_cv.split(X=test_x, y=test_groups, groups=test_groups))
