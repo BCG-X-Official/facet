@@ -115,6 +115,7 @@ joblib         = "~=1.1"
 typing_inspect = "~=0.7"
 # additional maximum requirements of shap
 ipython        = ">=7"
+numba          = ">=0.55.2"  # required to support numpy 1.22
 
 [tool.black]
 # quiet = "True"
