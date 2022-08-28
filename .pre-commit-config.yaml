@@ -38,4 +38,4 @@ repos:
         additional_dependencies:
           - numpy~=1.22
           - gamma-pytools~=2.0,!=2.0.0
-          - sklearndf>=2.0.dev3,<3a
+          - sklearndf~=2.0

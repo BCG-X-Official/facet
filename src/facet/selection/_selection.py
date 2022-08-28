@@ -5,7 +5,6 @@ import inspect
 import itertools
 import logging
 import re
-from re import Pattern
 from typing import (
     Any,
     Callable,
@@ -13,6 +12,7 @@ from typing import (
     Generic,
     List,
     Optional,
+    Pattern,
     Sequence,
     Tuple,
     TypeVar,
@@ -21,7 +21,9 @@ from typing import (
 )
 
 import numpy as np
+import numpy.typing as npt
 import pandas as pd
+from sklearn.base import BaseEstimator
 from sklearn.metrics import get_scorer
 from sklearn.model_selection import BaseCrossValidator, GridSearchCV
 
@@ -52,7 +54,7 @@ BaseSearchCV = next(
 # Type variables
 #
 
-T_ModelSelector = TypeVar("T_ModelSelector", bound="ModelSelector")
+T_ModelSelector = TypeVar("T_ModelSelector", bound="ModelSelector[Any, Any]")
 T_EstimatorDF = TypeVar("T_EstimatorDF", bound=EstimatorDF)
 # mypy - disabling due to lack of support for dynamic types
 T_SearchCV = TypeVar("T_SearchCV", bound=BaseSearchCV)  # type: ignore
@@ -92,7 +94,7 @@ class ModelSelector(
     searcher_type: Tuple[Callable[..., T_SearchCV]]
 
     #: The parameter space to search.
-    parameter_space: BaseParameterSpace
+    parameter_space: BaseParameterSpace[T_EstimatorDF]
 
     #: The cross-validator to be used by the searcher.
     cv: Optional[BaseCrossValidator]
@@ -124,7 +126,7 @@ class ModelSelector(
         (r"(rank|mean|std)_(\w+)_(\w+)", r"\3__\2__\1"),
     ]
     # noinspection PyTypeChecker
-    _CV_RESULT_PATTERNS: List[Tuple[Pattern, str]] = [
+    _CV_RESULT_PATTERNS: List[Tuple[Pattern[str], str]] = [
         (re.compile(pattern), repl) for pattern, repl in _CV_RESULT_COLUMNS
     ]
 
@@ -140,7 +142,7 @@ class ModelSelector(
     def __init__(
         self,
         searcher_type: Callable[..., T_SearchCV],
-        parameter_space: BaseParameterSpace,
+        parameter_space: BaseParameterSpace[T_EstimatorDF],
         *,
         cv: Optional[BaseCrossValidator] = None,
         scoring: Union[
@@ -260,7 +262,7 @@ class ModelSelector(
         # todo: remove 'type: ignore' once mypy correctly infers return type
         self: T_ModelSelector,
         sample: Sample,
-        groups: Union[pd.Series, np.ndarray, Sequence, None] = None,
+        groups: Union[pd.Series, npt.NDArray[Any], Sequence[Any], None] = None,
         **fit_params: Any,
     ) -> T_ModelSelector:
         """
@@ -328,7 +330,7 @@ class ModelSelector(
 
         # we create a table using a subset of the cv results, to keep the report
         # relevant and readable
-        cv_results_processed: Dict[str, np.ndarray] = {}
+        cv_results_processed: Dict[str, Tuple[str, npt.NDArray[np.float_]]] = {}
 
         unpack_candidate: bool = isinstance(
             self.parameter_space.estimator, CandidateEstimatorDF
@@ -433,7 +435,9 @@ class ModelSelector(
             return None
 
         elif isinstance(scoring, str):
-            scorer = get_scorer(scoring)
+            scorer: Callable[
+                [BaseEstimator, pd.DataFrame, pd.Series], float
+            ] = get_scorer(scoring)
 
         # noinspection PyPep8Naming
         def _scorer_fn(estimator: EstimatorDF, X: pd.DataFrame, y: pd.Series) -> float:

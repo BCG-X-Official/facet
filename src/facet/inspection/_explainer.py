@@ -5,9 +5,21 @@ Factories for SHAP explainers from the ``shap`` package.
 import functools
 import logging
 from abc import ABCMeta, abstractmethod
-from typing import Any, Callable, Dict, Iterable, List, Mapping, Optional, Union, cast
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Iterable,
+    List,
+    Mapping,
+    Optional,
+    Type,
+    Union,
+    cast,
+)
 
 import numpy as np
+import numpy.typing as npt
 import pandas as pd
 import shap
 from packaging import version
@@ -56,6 +68,13 @@ except ImportError:
 
 
 #
+# Type variables and aliases
+#
+
+ArraysAny = Union[npt.NDArray[Any], List[npt.NDArray[Any]]]
+ArraysFloat = Union[npt.NDArray[np.float_], List[npt.NDArray[np.float_]]]
+
+#
 # Ensure all symbols introduced below are included in __all__
 #
 
@@ -74,14 +93,21 @@ class BaseExplainer(metaclass=ABCMeta):
     versions of the `shap` package.
     """
 
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        """
+        :param args: positional args (should usually be empty)
+        :param kwargs: keyword args (should usually be empty)
+        """
+        super().__init__(*args, **kwargs)
+
     # noinspection PyPep8Naming,PyUnresolvedReferences
     @abstractmethod
     def shap_values(
         self,
-        X: Union[np.ndarray, pd.DataFrame, catboost.Pool],
-        y: Union[None, np.ndarray, pd.Series] = None,
+        X: Union[npt.NDArray[Any], pd.DataFrame, catboost.Pool],
+        y: Union[npt.NDArray[Any], pd.Series, None] = None,
         **kwargs: Any,
-    ) -> Union[np.ndarray, List[np.ndarray]]:
+    ) -> ArraysFloat:
         """
         Estimate the SHAP values for a set of samples.
 
@@ -99,10 +125,10 @@ class BaseExplainer(metaclass=ABCMeta):
     @abstractmethod
     def shap_interaction_values(
         self,
-        X: Union[np.ndarray, pd.DataFrame, catboost.Pool],
-        y: Union[None, np.ndarray, pd.Series] = None,
+        X: Union[npt.NDArray[Any], pd.DataFrame, catboost.Pool],
+        y: Union[npt.NDArray[Any], pd.Series, None] = None,
         **kwargs: Any,
-    ) -> Union[np.ndarray, List[np.ndarray]]:
+    ) -> ArraysFloat:
         """
         Estimate the SHAP interaction values for a set of samples.
 
@@ -177,7 +203,7 @@ class ExplainerFactory(HasExpressionRepr, metaclass=ABCMeta):
 
 
 @inheritdoc(match="""[see superclass]""")
-class ExplainerJob(Job[Union[np.ndarray, List[np.ndarray]]]):
+class ExplainerJob(Job[ArraysAny]):
     """
     A call to an explainer function with given `X` and `y` values.
     """
@@ -189,10 +215,10 @@ class ExplainerJob(Job[Union[np.ndarray, List[np.ndarray]]]):
     interactions: bool
 
     #: the feature values of the observations to be explained
-    X: Union[np.ndarray, pd.DataFrame]
+    X: Union[npt.NDArray[Any], pd.DataFrame]
 
     #: the target values of the observations to be explained
-    y: Union[None, np.ndarray, pd.Series]
+    y: Union[None, npt.NDArray[Any], pd.Series]
 
     #: additional arguments specific to the explainer method
     kwargs: Dict[str, Any]
@@ -201,8 +227,8 @@ class ExplainerJob(Job[Union[np.ndarray, List[np.ndarray]]]):
     def __init__(
         self,
         explainer: BaseExplainer,
-        X: Union[np.ndarray, pd.DataFrame],
-        y: Union[None, np.ndarray, pd.Series] = None,
+        X: Union[npt.NDArray[Any], pd.DataFrame],
+        y: Union[None, npt.NDArray[Any], pd.Series] = None,
         *,
         interactions: bool,
         **kwargs: Any,
@@ -221,10 +247,10 @@ class ExplainerJob(Job[Union[np.ndarray, List[np.ndarray]]]):
         self.interactions = interactions
         self.kwargs = kwargs
 
-    def run(self) -> Union[np.ndarray, List[np.ndarray]]:
+    def run(self) -> ArraysAny:
         """[see superclass]"""
 
-        shap_fn: Callable[..., Union[np.ndarray, List[np.ndarray]]] = (
+        shap_fn: Callable[..., ArraysAny] = (
             self.explainer.shap_interaction_values
             if self.interactions
             else self.explainer.shap_values
@@ -237,9 +263,7 @@ class ExplainerJob(Job[Union[np.ndarray, List[np.ndarray]]]):
 
 
 @inheritdoc(match="""[see superclass]""")
-class ExplainerQueue(
-    JobQueue[Union[np.ndarray, List[np.ndarray]], Union[np.ndarray, List[np.ndarray]]]
-):
+class ExplainerQueue(JobQueue[ArraysAny, ArraysAny]):
     """
     A queue splitting a data set to be explained into multiple jobs.
     """
@@ -251,10 +275,10 @@ class ExplainerQueue(
     interactions: bool
 
     #: the feature values of the observations to be explained
-    X: np.ndarray
+    X: npt.NDArray[Any]
 
     #: the target values of the observations to be explained
-    y: Optional[np.ndarray]
+    y: Optional[npt.NDArray[Any]]
 
     #: the maximum number of observations to allocate to each job
     max_job_size: int
@@ -266,8 +290,8 @@ class ExplainerQueue(
     def __init__(
         self,
         explainer: BaseExplainer,
-        X: Union[np.ndarray, pd.DataFrame],
-        y: Union[None, np.ndarray, pd.Series] = None,
+        X: Union[npt.NDArray[Any], pd.DataFrame],
+        y: Union[None, npt.NDArray[Any], pd.Series] = None,
         *,
         interactions: bool,
         max_job_size: int,
@@ -291,7 +315,7 @@ class ExplainerQueue(
         self.max_job_size = max_job_size
         self.kwargs = kwargs
 
-    def jobs(self) -> Iterable[Job[Union[np.ndarray, List[np.ndarray]]]]:
+    def jobs(self) -> Iterable[Job[ArraysAny]]:
         """[see superclass]"""
 
         x = self.X
@@ -311,9 +335,7 @@ class ExplainerQueue(
             for start in range(0, n, job_size)
         )
 
-    def aggregate(
-        self, job_results: List[Union[np.ndarray, List[np.ndarray]]]
-    ) -> Union[np.ndarray, List[np.ndarray]]:
+    def aggregate(self, job_results: List[ArraysAny]) -> ArraysAny:
         """[see superclass]"""
         if isinstance(job_results[0], np.ndarray):
             return np.vstack(job_results)
@@ -374,20 +396,20 @@ class ParallelExplainer(BaseExplainer, ParallelizableMixin):
     # noinspection PyPep8Naming
     def shap_values(
         self,
-        X: Union[np.ndarray, pd.DataFrame, catboost.Pool],
-        y: Union[None, np.ndarray, pd.Series] = None,
+        X: Union[npt.NDArray[Any], pd.DataFrame, catboost.Pool],
+        y: Union[npt.NDArray[Any], pd.Series, None] = None,
         **kwargs: Any,
-    ) -> Union[np.ndarray, List[np.ndarray]]:
+    ) -> ArraysFloat:
         """[see superclass]"""
         return self._run(self.explainer, X, y, interactions=False, **kwargs)
 
     # noinspection PyPep8Naming
     def shap_interaction_values(
         self,
-        X: Union[np.ndarray, pd.DataFrame, catboost.Pool],
-        y: Union[None, np.ndarray, pd.Series] = None,
+        X: Union[npt.NDArray[Any], pd.DataFrame, catboost.Pool],
+        y: Union[npt.NDArray[Any], pd.Series, None] = None,
         **kwargs: Any,
-    ) -> Union[np.ndarray, List[np.ndarray]]:
+    ) -> ArraysFloat:
         """[see superclass]"""
         return self._run(self.explainer, X, y, interactions=True, **kwargs)
 
@@ -395,12 +417,12 @@ class ParallelExplainer(BaseExplainer, ParallelizableMixin):
     def _run(
         self,
         explainer: BaseExplainer,
-        X: Union[np.ndarray, pd.DataFrame, catboost.Pool],
-        y: Union[None, np.ndarray, pd.Series] = None,
+        X: Union[npt.NDArray[Any], pd.DataFrame, catboost.Pool],
+        y: Union[None, npt.NDArray[Any], pd.Series] = None,
         *,
         interactions: bool,
         **kwargs: Any,
-    ):
+    ) -> ArraysFloat:
         return JobRunner.from_parallelizable(self).run_queue(
             ExplainerQueue(
                 explainer=explainer,
@@ -417,7 +439,7 @@ class ParallelExplainer(BaseExplainer, ParallelizableMixin):
 # TreeExplainer factory
 #
 
-_TreeExplainer: Optional[type] = None
+_TreeExplainer: Optional[Type[BaseExplainer]] = None
 
 
 @inheritdoc(match="""[see superclass]""")
@@ -497,7 +519,9 @@ class TreeExplainerFactory(ExplainerFactory):
             ),
         )
 
-        explainer.shap_values = functools.partial(
+        # we overwrite the shap_values method - need to tell mypy to allow this
+        # as an exception
+        explainer.shap_values = functools.partial(  # type: ignore
             explainer.shap_values, check_additivity=False
         )
 
@@ -517,14 +541,17 @@ class TreeExplainerFactory(ExplainerFactory):
 #
 
 
-class _KernelExplainer(shap.KernelExplainer, BaseExplainer):
+class _KernelExplainer(
+    shap.KernelExplainer,  # type: ignore
+    BaseExplainer,
+):
     # noinspection PyPep8Naming,PyUnresolvedReferences
     def shap_interaction_values(
         self,
-        X: Union[np.ndarray, pd.DataFrame, catboost.Pool],
-        y: Union[None, np.ndarray, pd.Series] = None,
-        **kwargs,
-    ) -> np.ndarray:
+        X: Union[npt.NDArray[Any], pd.DataFrame, catboost.Pool],
+        y: Union[npt.NDArray[Any], pd.Series, None] = None,
+        **kwargs: Any,
+    ) -> ArraysFloat:
         """
         Not implemented.
         """

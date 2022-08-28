@@ -2,7 +2,7 @@
 Visualizations of simulation results.
 """
 
-from typing import Iterable, Optional, Type, TypeVar, Union, cast
+from typing import Any, Iterable, Optional, Type, TypeVar, Union, cast
 
 import pandas as pd
 
@@ -34,7 +34,7 @@ __tracker = AllTracker(globals())
 
 
 @inheritdoc(match="[see superclass]")
-class SimulationDrawer(Drawer[UnivariateSimulationResult, SimulationStyle]):
+class SimulationDrawer(Drawer[UnivariateSimulationResult[Any], SimulationStyle]):
     """
     Draws the result of a univariate simulation, represented by a
     :class:`.UnivariateSimulationResult` object.
@@ -60,7 +60,7 @@ class SimulationDrawer(Drawer[UnivariateSimulationResult, SimulationStyle]):
     __init__.__doc__ = cast(str, Drawer.__init__.__doc__) + cast(str, __init__.__doc__)
 
     def draw(
-        self, data: UnivariateSimulationResult, *, title: Optional[str] = None
+        self, data: UnivariateSimulationResult[Any], *, title: Optional[str] = None
     ) -> None:
         """
         Draw the simulation chart.
@@ -82,7 +82,7 @@ class SimulationDrawer(Drawer[UnivariateSimulationResult, SimulationStyle]):
             SimulationReportStyle,
         ]
 
-    def _draw(self, result: UnivariateSimulationResult) -> None:
+    def _draw(self, result: UnivariateSimulationResult[Any]) -> None:
         # If the partitioning of the simulation is categorical, sort partitions in
         # ascending order of the mean output
         simulation_result: pd.DataFrame = result.data.assign(
