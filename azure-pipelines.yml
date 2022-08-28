@@ -51,10 +51,10 @@ stages:
         steps:
           - task: UsePythonVersion@0
             inputs:
-              versionSpec: '3.8.*'
+              versionSpec: '3.8'
             displayName: 'use Python 3.8'
           - script: |
-              python -m pip install isort==5.5.4
+              python -m pip install isort~=5.10
               python -m isort --check --diff .
             displayName: 'Run isort'
       - job:
@@ -62,10 +62,10 @@ stages:
         steps:
           - task: UsePythonVersion@0
             inputs:
-              versionSpec: '3.8.*'
+              versionSpec: '3.8'
             displayName: 'use Python 3.8'
           - script: |
-              python -m pip install black==22.3
+              python -m pip install black~=22.6
               python -m black --check .
             displayName: 'Run black'
       - job:
@@ -73,10 +73,10 @@ stages:
         steps:
           - task: UsePythonVersion@0
             inputs:
-              versionSpec: '3.8.*'
+              versionSpec: '3.8'
             displayName: 'use Python 3.8'
           - script: |
-              python -m pip install flake8==3.9.0 flake8-comprehensions flake8-import-order
+              python -m pip install flake8~=4.0 flake8-comprehensions~=3.10
               python -m flake8 --config tox.ini -v .
             displayName: 'Run flake8'
       - job:
@@ -84,10 +84,10 @@ stages:
         steps:
           - task: UsePythonVersion@0
             inputs:
-              versionSpec: '3.8.*'
+              versionSpec: '3.8'
             displayName: 'use Python 3.8'
           - script: |
-              python -m pip install mypy~=0.931 numpy~=1.21 "gamma-pytools>=2.0.dev8,<3a" "sklearndf>=2.0.dev3,<3a"
+              python -m pip install mypy~=0.971 numpy~=1.22 gamma-pytools~=2.0,!=2.0.0 sklearndf~=2.0
               python -m mypy src
             displayName: 'Run mypy'
 
@@ -142,7 +142,7 @@ stages:
       steps:
         - task: UsePythonVersion@0
           inputs:
-            versionSpec: '3.8.*'
+            versionSpec: '3.8'
           displayName: 'use Python 3.8'
 
         - checkout: self
@@ -209,15 +209,15 @@ stages:
           # This comprises only one minimum dependencies test for tox,
           # which is usually faster than conda.
           maximum_dependencies_conda:
-            FACET_V_PYTHON_BUILD: '=3.9.*'
+            FACET_V_PYTHON_BUILD: '=3.9'
             BUILD_SYSTEM: 'conda'
             PKG_DEPENDENCIES: 'max'
           minimum_dependencies_tox:
-            FACET_V_PYTHON_BUILD: '=3.7.*'
+            FACET_V_PYTHON_BUILD: '=3.7'
             BUILD_SYSTEM: 'tox'
             PKG_DEPENDENCIES: 'min'
           maximum_dependencies_tox:
-            FACET_V_PYTHON_BUILD: '=3.9.*'
+            FACET_V_PYTHON_BUILD: '=3.9'
             BUILD_SYSTEM: 'tox'
             PKG_DEPENDENCIES: 'max'
 
@@ -233,15 +233,15 @@ stages:
         - script: dir $(Build.SourcesDirectory)
 
         - script: |
-            conda install -y -c anaconda conda-build~=3.21 conda-verify toml=0.10.* flit=3.0.* packaging~=20.9
+            conda install -y -c anaconda conda-build~=3.21 conda-verify~=3.4 toml~=0.10 flit~=3.6 packaging~=20.9
           displayName: 'Install conda-build, flit, toml'
           condition: eq(variables['BUILD_SYSTEM'], 'conda')
 
         - script: |
-            python -m pip install "toml==0.10.*"
-            python -m pip install "flit==3.0.*"
+            python -m pip install "toml~=0.10"
+            python -m pip install "flit~=3.7"
             flit --version
-            python -m pip install "tox==3.20.*"
+            python -m pip install "tox~=3.25"
             tox --version
           displayName: 'Install tox, flit & toml'
           condition: eq(variables['BUILD_SYSTEM'], 'tox')
@@ -283,27 +283,27 @@ stages:
       strategy:
         matrix:
           default_dependencies_conda:
-            FACET_V_PYTHON_BUILD: '=3.8.*'
+            FACET_V_PYTHON_BUILD: '=3.8'
             BUILD_SYSTEM: 'conda'
             PKG_DEPENDENCIES: 'default'
           minimum_dependencies_conda:
-            FACET_V_PYTHON_BUILD: '=3.7.*'
+            FACET_V_PYTHON_BUILD: '=3.7'
             BUILD_SYSTEM: 'conda'
             PKG_DEPENDENCIES: 'min'
           maximum_dependencies_conda:
-            FACET_V_PYTHON_BUILD: '=3.9.*'
+            FACET_V_PYTHON_BUILD: '=3.9'
             BUILD_SYSTEM: 'conda'
             PKG_DEPENDENCIES: 'max'
           default_dependencies_tox:
-            FACET_V_PYTHON_BUILD: '=3.8.*'
+            FACET_V_PYTHON_BUILD: '=3.8'
             BUILD_SYSTEM: 'tox'
             PKG_DEPENDENCIES: 'default'
           minimum_dependencies_tox:
-            FACET_V_PYTHON_BUILD: '=3.7.*'
+            FACET_V_PYTHON_BUILD: '=3.7'
             BUILD_SYSTEM: 'tox'
             PKG_DEPENDENCIES: 'min'
           maximum_dependencies_tox:
-            FACET_V_PYTHON_BUILD: '=3.9.*'
+            FACET_V_PYTHON_BUILD: '=3.9'
             BUILD_SYSTEM: 'tox'
             PKG_DEPENDENCIES: 'max'
 
@@ -320,7 +320,7 @@ stages:
         - script: dir $(Build.SourcesDirectory)
 
         - script: |
-            conda install -y -c anaconda conda-build~=3.21 conda-verify toml=0.10.* flit=3.0.* packaging~=20.9
+            conda install -y -c anaconda conda-build~=3.21 conda-verify~=3.4 toml~=0.10 flit~=3.6 packaging~=20.9
           displayName: 'Install conda-build, flit, toml'
           condition: eq(variables['BUILD_SYSTEM'], 'conda')
 
@@ -407,7 +407,7 @@ stages:
         steps:
           - task: UsePythonVersion@0
             inputs:
-              versionSpec: '3.8.*'
+              versionSpec: '3.8'
             displayName: 'use Python 3.8'
 
           - checkout: pytools
@@ -472,7 +472,7 @@ stages:
         steps:
           - task: UsePythonVersion@0
             inputs:
-              versionSpec: '3.8.*'
+              versionSpec: '3.8'
             displayName: 'use Python 3.8'
 
           - checkout: pytools
@@ -599,7 +599,7 @@ stages:
       steps:
         - task: UsePythonVersion@0
           inputs:
-            versionSpec: '3.8.*'
+            versionSpec: '3.8'
           displayName: 'use Python 3.8'
 
         - task: InstallSSHKey@0

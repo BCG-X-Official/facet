@@ -4,8 +4,9 @@ Core implementation of :mod:`facet.selection.base`
 
 import logging
 from abc import ABCMeta, abstractmethod
-from typing import Any, Dict, Generic, List, Optional, Sequence, TypeVar, Union
+from typing import Any, Dict, Generic, List, Optional, TypeVar, Union
 
+import numpy.typing as npt
 import pandas as pd
 from scipy import stats
 
@@ -150,7 +151,7 @@ class CandidateEstimatorDF(ClassifierDF, RegressorDF, TransformerDF):
             return self.candidate
 
     @property
-    def classes_(self) -> Sequence[Any]:
+    def classes_(self) -> Union[npt.NDArray[Any], List[npt.NDArray[Any]]]:
         """[see superclass]"""
         return self._get_candidate().classes_
 

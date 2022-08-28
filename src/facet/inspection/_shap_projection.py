@@ -5,9 +5,10 @@ redundancy, and independence.
 """
 import logging
 from abc import ABCMeta, abstractmethod
-from typing import Optional, Tuple, TypeVar
+from typing import Any, Optional, Tuple, TypeVar
 
 import numpy as np
+import numpy.typing as npt
 
 from pytools.api import AllTracker, inheritdoc
 
@@ -65,14 +66,14 @@ class ShapProjector(ShapGlobalExplainer, metaclass=ABCMeta):
         super().__init__()
         self.association_: Optional[AffinityMatrix] = None
 
-    def association(self, absolute: bool, symmetrical: bool) -> np.ndarray:
+    def association(self, absolute: bool, symmetrical: bool) -> npt.NDArray[np.float_]:
         """[see superclass]"""
 
         self.ensure_fitted()
         assert self.association_ is not None
         return self.association_.get_values(symmetrical=symmetrical, absolute=absolute)
 
-    def _fit(self, shap_calculator: ShapCalculator) -> None:
+    def _fit(self, shap_calculator: ShapCalculator[Any]) -> None:
         self._reset_fit()
         self._calculate(self._get_context(shap_calculator=shap_calculator))
 
@@ -82,7 +83,7 @@ class ShapProjector(ShapGlobalExplainer, metaclass=ABCMeta):
         self.association_ = None
 
     @abstractmethod
-    def _get_context(self, shap_calculator: ShapCalculator) -> ShapContext:
+    def _get_context(self, shap_calculator: ShapCalculator[Any]) -> ShapContext:
         pass
 
     @abstractmethod
@@ -127,7 +128,7 @@ class ShapVectorProjector(ShapProjector):
     onto a feature's main SHAP vector.
     """
 
-    def _get_context(self, shap_calculator: ShapCalculator) -> ShapContext:
+    def _get_context(self, shap_calculator: ShapCalculator[Any]) -> ShapContext:
         return ShapValueContext(shap_calculator=shap_calculator)
 
     def _calculate(self, context: ShapContext) -> None:
@@ -154,21 +155,21 @@ class ShapInteractionVectorProjector(ShapProjector, ShapInteractionGlobalExplain
         self.synergy_: Optional[AffinityMatrix] = None
         self.redundancy_: Optional[AffinityMatrix] = None
 
-    def synergy(self, symmetrical: bool, absolute: bool) -> np.ndarray:
+    def synergy(self, symmetrical: bool, absolute: bool) -> npt.NDArray[np.float_]:
         """[see superclass]"""
 
         self.ensure_fitted()
         assert self.synergy_ is not None, "Projector is fitted"
         return self.synergy_.get_values(symmetrical=symmetrical, absolute=absolute)
 
-    def redundancy(self, symmetrical: bool, absolute: bool) -> np.ndarray:
+    def redundancy(self, symmetrical: bool, absolute: bool) -> npt.NDArray[np.float_]:
         """[see superclass]"""
 
         self.ensure_fitted()
         assert self.redundancy_ is not None, "Projector is fitted"
         return self.redundancy_.get_values(symmetrical=symmetrical, absolute=absolute)
 
-    def _get_context(self, shap_calculator: ShapCalculator) -> ShapContext:
+    def _get_context(self, shap_calculator: ShapCalculator[Any]) -> ShapContext:
         return ShapInteractionValueContext(shap_calculator=shap_calculator)
 
     def _calculate(self, context: ShapContext) -> None:

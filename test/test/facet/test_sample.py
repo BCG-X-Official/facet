@@ -1,3 +1,5 @@
+from typing import Any, List, cast
+
 import numpy as np
 import pandas as pd
 import pytest
@@ -21,10 +23,10 @@ def test_sample_init(boston_df: pd.DataFrame, boston_target: str) -> None:
         # noinspection PyTypeChecker
         Sample(observations=[], target_name=boston_target)
 
-    # 2. no features and no target specified
+    # 2. no valid target specified
     with pytest.raises(TypeError):
         # noinspection PyTypeChecker
-        Sample(observations=boston_df, target_name=None)
+        Sample(observations=boston_df, target_name=None)  # type: ignore
 
     # store list of feature columns:
     f_columns = list(boston_df.columns)
@@ -69,8 +71,9 @@ def test_sample_init(boston_df: pd.DataFrame, boston_target: str) -> None:
 
 def test_sample(boston_df: pd.DataFrame, boston_target: str) -> None:
     # define various assertions we want to test:
-    def run_assertions(sample: Sample):
+    def run_assertions(sample: Sample) -> None:
         assert sample.target.name == boston_target
+        assert sample.weight is not None
         assert sample.weight.name == boston_target
         assert boston_target not in sample.feature_names
         assert len(sample.feature_names) == len(boston_df.columns) - 1
@@ -138,8 +141,8 @@ def test_sample(boston_df: pd.DataFrame, boston_target: str) -> None:
     # global python environment variable PYTHONHASHSEED
     parallel = Parallel(n_jobs=-3)
 
-    def get_column(sample: Sample):
-        return list(sample.features.columns)
+    def get_column(sample: Sample) -> List[Any]:
+        return cast(List[Any], sample.features.columns.to_list())
 
     columns1, columns2 = parallel(delayed(get_column)(sample) for sample in [s, s])
     assert columns1 == columns2
