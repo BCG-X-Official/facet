@@ -19,6 +19,7 @@ from typing import (
 )
 
 import numpy as np
+import numpy.typing as npt
 import pandas as pd
 from scipy.cluster import hierarchy
 from scipy.spatial import distance
@@ -53,12 +54,22 @@ __all__ = ["ShapPlotData", "LearnerInspector"]
 
 
 #
+# Type aliases
+#
+
+FloatArray = npt.NDArray[np.float_]
+FloatMatrix = Matrix[np.float_]
+IntegerArray = npt.NDArray["np.integer[Any]"]
+
+
+#
 # Type variables
 #
 
-T_LearnerInspector = TypeVar("T_LearnerInspector", bound="LearnerInspector")
-T_LearnerPipelineDF = TypeVar("T_LearnerPipelineDF", bound=LearnerPipelineDF)
+T_LearnerInspector = TypeVar("T_LearnerInspector", bound="LearnerInspector[Any]")
+T_LearnerPipelineDF = TypeVar("T_LearnerPipelineDF", bound=LearnerPipelineDF[Any])
 T_SeriesOrDataFrame = TypeVar("T_SeriesOrDataFrame", pd.Series, pd.DataFrame)
+T_Number = TypeVar("T_Number", bound="np.number[Any]")
 
 
 #
@@ -87,7 +98,7 @@ class ShapPlotData:
     """
 
     def __init__(
-        self, shap_values: Union[np.ndarray, List[np.ndarray]], sample: Sample
+        self, shap_values: Union[FloatArray, List[FloatArray]], sample: Sample
     ) -> None:
         """
         :param shap_values: the shap values for all observations and outputs
@@ -98,7 +109,7 @@ class ShapPlotData:
         self._sample = sample
 
     @property
-    def shap_values(self) -> Union[np.ndarray, List[np.ndarray]]:
+    def shap_values(self) -> Union[FloatArray, List[FloatArray]]:
         """
         Matrix of SHAP values (number of observations by number of features)
         or list of shap value matrices for multi-output models.
@@ -238,7 +249,7 @@ class LearnerInspector(
         self.explainer_factory = explainer_factory
         self.shap_interaction = shap_interaction
 
-        self._shap_calculator: Optional[ShapCalculator] = None
+        self._shap_calculator: Optional[ShapCalculator[T_LearnerPipelineDF]] = None
         self._shap_global_decomposer: Optional[ShapGlobalExplainer] = None
         self._shap_global_projector: Optional[ShapGlobalExplainer] = None
         self._sample: Optional[Sample] = None
@@ -280,8 +291,8 @@ class LearnerInspector(
             ShapVectorProjector, ShapInteractionVectorProjector, None
         ]
 
-        shap_calculator_type: Type[ShapCalculator]
-        shap_calculator: ShapCalculator
+        shap_calculator_type: Type[ShapCalculator[T_LearnerPipelineDF]]
+        shap_calculator: ShapCalculator[T_LearnerPipelineDF]
 
         if self.shap_interaction:
             if _is_classifier:
@@ -374,7 +385,7 @@ class LearnerInspector(
         The names of the features used to fit the learner pipeline explained by this
         inspector.
         """
-        return self.pipeline.feature_names_out_.to_list()
+        return cast(List[str], self.pipeline.feature_names_out_.to_list())
 
     def shap_values(self) -> Union[pd.DataFrame, List[pd.DataFrame]]:
         """
@@ -468,7 +479,7 @@ class LearnerInspector(
         absolute: bool = False,
         symmetrical: bool = False,
         clustered: bool = True,
-    ) -> Union[Matrix, List[Matrix]]:
+    ) -> Union[FloatMatrix, List[FloatMatrix]]:
         """
         Calculate the feature synergy matrix.
 
@@ -517,7 +528,7 @@ class LearnerInspector(
         absolute: bool = False,
         symmetrical: bool = False,
         clustered: bool = True,
-    ) -> Union[Matrix, List[Matrix]]:
+    ) -> Union[FloatMatrix, List[FloatMatrix]]:
         """
         Calculate the feature redundancy matrix.
 
@@ -565,7 +576,7 @@ class LearnerInspector(
         absolute: bool = False,
         symmetrical: bool = False,
         clustered: bool = True,
-    ) -> Union[Matrix, List[Matrix]]:
+    ) -> Union[FloatMatrix, List[FloatMatrix]]:
         """
         Calculate the feature association matrix.
 
@@ -688,7 +699,7 @@ class LearnerInspector(
             feature_affinity_matrix=feature_affinity_matrix
         )
 
-    def feature_interaction_matrix(self) -> Union[Matrix, List[Matrix]]:
+    def feature_interaction_matrix(self) -> Union[FloatMatrix, List[FloatMatrix]]:
         """
         Calculate relative shap interaction values for all feature pairings.
 
@@ -747,7 +758,7 @@ class LearnerInspector(
         # get a feature interaction array with shape
         # (n_observations, n_outputs, n_features, n_features)
         # where the innermost feature x feature arrays are symmetrical
-        im_matrix_per_observation_and_output: np.ndarray = (
+        im_matrix_per_observation_and_output: FloatArray = (
             # TODO missing proper handling for list of data frames
             self.shap_interaction_values()  # type: ignore
             .values.reshape((-1, n_features, n_outputs, n_features))
@@ -756,7 +767,7 @@ class LearnerInspector(
 
         # get the observation weights with shape
         # (n_observations, n_outputs, n_features, n_features)
-        weight: Optional[np.ndarray]
+        weight: Optional[FloatArray]
         _weight_sr = self.sample_.weight
         if _weight_sr is not None:
             # if sample weights are defined, convert them to an array
@@ -827,7 +838,7 @@ class LearnerInspector(
         shap_values: Union[pd.DataFrame, List[pd.DataFrame]] = self.shap_values()
 
         output_names: Sequence[str] = self.output_names_
-        shap_values_numpy: Union[np.ndarray, List[np.ndarray]]
+        shap_values_numpy: Union[FloatArray, List[FloatArray]]
         included_observations: pd.Index
 
         if len(output_names) > 1:
@@ -846,8 +857,8 @@ class LearnerInspector(
         )
 
     def __arrays_to_matrix(
-        self, matrix: np.ndarray, value_label: str
-    ) -> Union[Matrix, List[Matrix]]:
+        self, matrix: FloatArray, value_label: str
+    ) -> Union[FloatMatrix, List[FloatMatrix]]:
         # transform a matrix of shape (n_outputs, n_features, n_features)
         # to a data frame
 
@@ -878,17 +889,19 @@ class LearnerInspector(
     def __feature_affinity_matrix(
         self,
         *,
-        explainer_fn: Callable[..., np.ndarray],
+        explainer_fn: Callable[..., FloatArray],
         absolute: bool,
         symmetrical: bool,
         clustered: bool,
-    ):
+    ) -> Union[FloatMatrix, List[FloatMatrix]]:
         affinity_matrices = explainer_fn(symmetrical=symmetrical, absolute=absolute)
 
         explainer: ShapGlobalExplainer = cast(
             ShapGlobalExplainer, cast(MethodType, explainer_fn).__self__
         )
-        affinity_matrices = explainer.to_frames(affinity_matrices)
+        affinity_matrices_df: List[pd.DataFrame] = explainer.to_frames(
+            affinity_matrices
+        )
 
         if clustered:
             affinity_symmetrical = explainer_fn(symmetrical=True, absolute=False)
@@ -896,19 +909,19 @@ class LearnerInspector(
                 affinity_symmetrical is not None
             ), ASSERTION__SHAP_INTERACTION_SUPPORTED
 
-            affinity_matrices = self.__sort_affinity_matrices(
-                affinity_matrices=affinity_matrices,
+            affinity_matrices_df = self.__sort_affinity_matrices(
+                affinity_matrices=affinity_matrices_df,
                 symmetrical_affinity_matrices=affinity_symmetrical,
             )
 
         return self.__isolate_single_frame(
-            affinity_matrices, affinity_metric=explainer_fn.__name__
+            affinity_matrices_df, affinity_metric=explainer_fn.__name__
         )
 
     @staticmethod
     def __sort_affinity_matrices(
         affinity_matrices: List[pd.DataFrame],
-        symmetrical_affinity_matrices: np.ndarray,
+        symmetrical_affinity_matrices: FloatArray,
     ) -> List[pd.DataFrame]:
         # abbreviate a very long function name to stay within the permitted line length
         fn_linkage = LearnerInspector.__linkage_matrix_from_affinity_matrix_for_output
@@ -942,7 +955,7 @@ class LearnerInspector(
             ]
 
     def __linkages_from_affinity_matrices(
-        self, feature_affinity_matrix: np.ndarray
+        self, feature_affinity_matrix: FloatArray
     ) -> Union[LinkageTree, List[LinkageTree]]:
         # calculate the linkage trees for all outputs in a feature distance matrix;
         # matrix has shape (n_outputs, n_features, n_features) with values ranging from
@@ -978,14 +991,14 @@ class LearnerInspector(
 
     @staticmethod
     def __linkage_tree_from_affinity_matrix_for_output(
-        feature_affinity_matrix: np.ndarray, feature_importance: pd.Series
+        feature_affinity_matrix: FloatArray, feature_importance: pd.Series
     ) -> LinkageTree:
         # calculate the linkage tree from the a given output in a feature distance
         # matrix;
         # matrix has shape (n_features, n_features) with values ranging from
         # (1 = closest, 0 = most distant)
 
-        linkage_matrix: np.ndarray = (
+        linkage_matrix: FloatArray = (
             LearnerInspector.__linkage_matrix_from_affinity_matrix_for_output(
                 feature_affinity_matrix
             )
@@ -1008,8 +1021,8 @@ class LearnerInspector(
 
     @staticmethod
     def __linkage_matrix_from_affinity_matrix_for_output(
-        feature_affinity_matrix: np.ndarray,
-    ) -> np.ndarray:
+        feature_affinity_matrix: FloatArray,
+    ) -> FloatArray:
         # calculate the linkage matrix from the a given output in a feature distance
         # matrix;
         # matrix has shape (n_features, n_features) with values ranging from
@@ -1018,10 +1031,10 @@ class LearnerInspector(
         # compress the distance matrix (required by SciPy)
         distance_matrix = 1.0 - abs(feature_affinity_matrix)
         np.fill_diagonal(distance_matrix, 0.0)
-        compressed_distance_matrix: np.ndarray = distance.squareform(distance_matrix)
+        compressed_distance_matrix: FloatArray = distance.squareform(distance_matrix)
 
         # calculate the linkage matrix
-        leaf_ordering: np.ndarray = hierarchy.optimal_leaf_ordering(
+        leaf_ordering: FloatArray = hierarchy.optimal_leaf_ordering(
             Z=hierarchy.linkage(y=compressed_distance_matrix, method="single"),
             y=compressed_distance_matrix,
         )
@@ -1043,7 +1056,7 @@ class LearnerInspector(
         self,
         frames: List[pd.DataFrame],
         affinity_metric: str,
-    ) -> Union[Matrix, List[Matrix]]:
+    ) -> Union[FloatMatrix, List[FloatMatrix]]:
         feature_importance = self.feature_importance()
 
         if len(frames) == 1:
@@ -1068,11 +1081,11 @@ class LearnerInspector(
 
     @staticmethod
     def __array_to_matrix(
-        a: np.ndarray,
+        a: npt.NDArray[T_Number],
         *,
         feature_importance: pd.Series,
         value_label: str,
-    ) -> Matrix:
+    ) -> Matrix[T_Number]:
         return Matrix(
             a,
             names=(feature_importance.index, feature_importance.index),
@@ -1088,7 +1101,7 @@ class LearnerInspector(
         affinity_metric: str,
         feature_importance: pd.Series,
         feature_importance_category: Optional[str] = None,
-    ) -> Matrix:
+    ) -> FloatMatrix:
         return Matrix.from_frame(
             frame,
             weights=(
@@ -1104,9 +1117,13 @@ class LearnerInspector(
         )
 
     @property
-    def __shap_interaction_values_calculator(self) -> ShapInteractionValuesCalculator:
+    def __shap_interaction_values_calculator(
+        self,
+    ) -> ShapInteractionValuesCalculator[T_LearnerPipelineDF]:
         self._ensure_shap_interaction()
-        return cast(ShapInteractionValuesCalculator, self._shap_calculator)
+        return cast(
+            ShapInteractionValuesCalculator[T_LearnerPipelineDF], self._shap_calculator
+        )
 
     @property
     def __interaction_explainer(self) -> ShapInteractionGlobalExplainer:

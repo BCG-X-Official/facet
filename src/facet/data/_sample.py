@@ -269,7 +269,7 @@ class Sample:
             )
         return subsample
 
-    def keep(self, *, feature_names: Union[str, Collection[str]]) -> Sample:
+    def keep(self, *, feature_names: Union[str, Iterable[str]]) -> Sample:
         """
         Return a new sample which only includes the features with the given names.
 
@@ -277,17 +277,17 @@ class Sample:
         :return: copy of this sample, containing only the features with the given names
         """
 
-        feature_names: List[str] = to_list(feature_names, element_type=str)
+        feature_names_list: List[str] = to_list(feature_names, element_type=str)
 
-        if not set(feature_names).issubset(self._feature_names):
+        if not set(feature_names_list).issubset(self._feature_names):
             raise ValueError(
                 "arg feature_names is not a subset of the features in this sample"
             )
 
         subsample = copy(self)
-        subsample._feature_names = feature_names
+        subsample._feature_names = feature_names_list
 
-        columns = [*feature_names, *self._target_names]
+        columns = [*feature_names_list, *self._target_names]
         weight = self._weight_name
         if weight and weight not in columns:
             columns.append(weight)
@@ -302,9 +302,9 @@ class Sample:
         :param feature_names: name(s) of the features to be dropped
         :return: copy of this sample, excluding the features with the given names
         """
-        feature_names: Set[str] = to_set(feature_names, element_type=str)
+        feature_names_set: Set[str] = to_set(feature_names, element_type=str)
 
-        unknown = feature_names.difference(self._feature_names)
+        unknown = feature_names_set.difference(self._feature_names)
         if unknown:
             raise ValueError(f"unknown features in arg feature_names: {unknown}")
 
@@ -312,7 +312,7 @@ class Sample:
             feature_names=[
                 feature
                 for feature in self._feature_names
-                if feature not in feature_names
+                if feature not in feature_names_set
             ]
         )
 
@@ -325,7 +325,7 @@ __tracker.validate()
 
 def _ensure_columns_exist(
     observations: pd.DataFrame, column_type: str, columns: List[str]
-):
+) -> None:
     # check if all provided feature names actually exist in the observations df
     available_columns: pd.Index = observations.columns
     missing_columns = {name for name in columns if name not in available_columns}

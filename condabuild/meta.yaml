@@ -35,7 +35,7 @@ test:
     - facet.validation
     - facet.simulation
   requires:
-    - pytest=5.2.*
+    - pytest ~= 7.1
     # additional requirements of sklearndf
     - boruta_py      {{ environ.get('FACET_V_BORUTA') }}
     - lightgbm       {{ environ.get('FACET_V_LIGHTGBM') }}
@@ -45,6 +45,7 @@ test:
     - typing_inspect {{ environ.get('FACET_V_TYPING_INSPECT') }}
     # additional requirements of shap
     - ipython        {{ environ.get('FACET_V_IPYTHON') }}
+    - numba          {{ environ.get('FACET_V_NUMBA') }}
   commands:
     - conda list
     - python -c 'import facet;

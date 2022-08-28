@@ -40,7 +40,7 @@ __all__ = [
 # Type variables
 #
 
-T_Partition = TypeVar("T_Partition")
+T_Value = TypeVar("T_Value", bound=np.generic)
 T_LearnerDF = TypeVar("T_LearnerDF", bound=LearnerDF)
 
 
@@ -124,7 +124,7 @@ class BaseUnivariateSimulator(
 
         self.model = model
         self.sample = sample
-        self.output_name = cast(str, sample.target_name)
+        self.output_name = sample.target_name
         self.confidence_level = confidence_level
 
     # add parallelization parameters to __init__ docstring
@@ -133,8 +133,8 @@ class BaseUnivariateSimulator(
     )
 
     def simulate_feature(
-        self, feature_name: str, *, partitioner: Partitioner[T_Partition]
-    ) -> UnivariateSimulationResult[T_Partition]:
+        self, feature_name: str, *, partitioner: Partitioner[T_Value]
+    ) -> UnivariateSimulationResult[T_Value]:
         """
         Simulate the average target uplift when fixing the value of the given feature
         across all observations.
@@ -223,7 +223,7 @@ class BaseUnivariateSimulator(
     def _simulate_feature_with_values(
         self,
         feature_name: str,
-        simulation_values: Sequence,
+        simulation_values: Sequence[T_Value],
     ) -> Tuple[Sequence[float], Sequence[float]]:
         """
         Run a simulation on a feature.
@@ -268,7 +268,7 @@ class UnivariateRegressionSimulator(
 
         :return: mean observed value of the target
         """
-        return self.sample.target.mean()
+        return cast(float, self.sample.target.mean())
 
     @staticmethod
     def _expected_learner_type() -> Type[RegressorDF]:

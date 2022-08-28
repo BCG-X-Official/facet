@@ -25,7 +25,7 @@ __all__ = [
 # Type variables
 #
 
-T_Partition = TypeVar("T_Partition")
+T_Values = TypeVar("T_Values", bound=np.generic)
 
 
 #
@@ -35,7 +35,7 @@ T_Partition = TypeVar("T_Partition")
 __tracker = AllTracker(globals())
 
 
-class UnivariateSimulationResult(Generic[T_Partition]):
+class UnivariateSimulationResult(Generic[T_Values]):
     """
     Summary result of a univariate simulation.
     """
@@ -54,7 +54,7 @@ class UnivariateSimulationResult(Generic[T_Partition]):
     data: pd.DataFrame
 
     #: The partitioner used to generate feature values to be simulated.
-    partitioner: Partitioner
+    partitioner: Partitioner[T_Values]
 
     #: Name of the simulated feature.
     feature_name: str
@@ -91,7 +91,7 @@ class UnivariateSimulationResult(Generic[T_Partition]):
     def __init__(
         self,
         *,
-        partitioner: Partitioner,
+        partitioner: Partitioner[T_Values],
         mean: Sequence[float],
         sem: Sequence[float],
         feature_name: str,

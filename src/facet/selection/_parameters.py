@@ -128,7 +128,7 @@ distribution:
             if "__" not in name
         }
 
-        self._children: Dict[str, ParameterSpace] = {
+        self._children: Dict[str, ParameterSpace[BaseEstimator]] = {
             name: ParameterSpace(estimator=value)
             for name, value in params.items()
             if isinstance(value, BaseEstimator)
@@ -210,6 +210,8 @@ distribution:
 
     def __getattr__(self, key: str) -> Any:
         if not key.startswith("_"):
+
+            result: Union[ParameterSpace[Any], ParameterSet, None]
 
             result = self._children.get(key, None)
             if result is not None:

@@ -4,9 +4,10 @@ Helper classes for SHAP calculations.
 
 import logging
 from abc import ABCMeta, abstractmethod
-from typing import Callable, Generic, List, Optional, Sequence, TypeVar, Union, cast
+from typing import Any, Generic, List, Optional, Sequence, TypeVar, Union, cast
 
 import numpy as np
+import numpy.typing as npt
 import pandas as pd
 
 from pytools.api import AllTracker, inheritdoc
@@ -39,16 +40,8 @@ __all__ = [
 # Type variables
 #
 
-T_ShapCalculator = TypeVar("T_ShapCalculator", bound="ShapCalculator")
-T_LearnerPipelineDF = TypeVar("T_LearnerPipelineDF", bound=LearnerPipelineDF)
-
-#
-# Type definitions
-#
-
-ShapToDataFrameFunction = Callable[
-    [List[np.ndarray], pd.Index, pd.Index], List[pd.DataFrame]
-]
+T_ShapCalculator = TypeVar("T_ShapCalculator", bound="ShapCalculator[Any]")
+T_LearnerPipelineDF = TypeVar("T_LearnerPipelineDF", bound=LearnerPipelineDF[Any])
 
 
 #
@@ -125,10 +118,9 @@ class ShapCalculator(
         return self.shap_ is not None
 
     def fit(  # type: ignore[override]
-        # todo: remove 'type: ignore' once mypy correctly infers return type
         self: T_ShapCalculator,
         sample: Sample,
-        **fit_params,
+        **fit_params: Any,
     ) -> T_ShapCalculator:
         """
         Calculate the SHAP values.
@@ -269,9 +261,12 @@ class ShapCalculator(
         pass
 
     def _convert_shap_tensors_to_list(
-        self, *, shap_tensors: Union[np.ndarray, List[np.ndarray]], n_outputs: int
-    ):
-        def _validate_shap_tensor(_t: np.ndarray) -> None:
+        self,
+        *,
+        shap_tensors: Union[npt.NDArray[np.float_], List[npt.NDArray[np.float_]]],
+        n_outputs: int,
+    ) -> List[npt.NDArray[np.float_]]:
+        def _validate_shap_tensor(_t: npt.NDArray[np.float_]) -> None:
             if np.isnan(np.sum(_t)):
                 raise AssertionError(
                     "Output of SHAP explainer includes NaN values. "
@@ -313,7 +308,7 @@ class ShapCalculator(
     @staticmethod
     @abstractmethod
     def _convert_raw_shap_to_df(
-        raw_shap_tensors: List[np.ndarray],
+        raw_shap_tensors: List[npt.NDArray[np.float_]],
         observations: pd.Index,
         features_in_split: pd.Index,
     ) -> List[pd.DataFrame]:
@@ -376,7 +371,7 @@ class ShapValuesCalculator(
         features_out = self.feature_index_
 
         # calculate the shap values, and ensure the result is a list of arrays
-        shap_values: List[np.ndarray] = self._convert_shap_tensors_to_list(
+        shap_values: List[npt.NDArray[np.float_]] = self._convert_shap_tensors_to_list(
             shap_tensors=explainer.shap_values(x), n_outputs=len(multi_output_names)
         )
 
@@ -471,7 +466,9 @@ class ShapInteractionValuesCalculator(
         features_out = self.feature_index_
 
         # calculate the shap interaction values; ensure the result is a list of arrays
-        shap_interaction_tensors: List[np.ndarray] = self._convert_shap_tensors_to_list(
+        shap_interaction_tensors: List[
+            npt.NDArray[np.float_]
+        ] = self._convert_shap_tensors_to_list(
             shap_tensors=explainer.shap_interaction_values(x),
             n_outputs=len(multi_output_names),
         )
@@ -506,7 +503,9 @@ class ShapInteractionValuesCalculator(
 
 
 @inheritdoc(match="[see superclass]")
-class RegressorShapCalculator(ShapCalculator[RegressorPipelineDF], metaclass=ABCMeta):
+class RegressorShapCalculator(
+    ShapCalculator[RegressorPipelineDF[Any]], metaclass=ABCMeta
+):
     """
     Calculates SHAP (interaction) values for regression models.
     """
@@ -527,7 +526,7 @@ class RegressorShapCalculator(ShapCalculator[RegressorPipelineDF], metaclass=ABC
 
 
 class RegressorShapValuesCalculator(
-    RegressorShapCalculator, ShapValuesCalculator[RegressorPipelineDF]
+    RegressorShapCalculator, ShapValuesCalculator[RegressorPipelineDF[Any]]
 ):
     """
     Calculates SHAP values for regression models.
@@ -535,7 +534,7 @@ class RegressorShapValuesCalculator(
 
     @staticmethod
     def _convert_raw_shap_to_df(
-        raw_shap_tensors: List[np.ndarray],
+        raw_shap_tensors: List[npt.NDArray[np.float_]],
         observations: pd.Index,
         features_in_split: pd.Index,
     ) -> List[pd.DataFrame]:
@@ -548,7 +547,7 @@ class RegressorShapValuesCalculator(
 
 
 class RegressorShapInteractionValuesCalculator(
-    RegressorShapCalculator, ShapInteractionValuesCalculator[RegressorPipelineDF]
+    RegressorShapCalculator, ShapInteractionValuesCalculator[RegressorPipelineDF[Any]]
 ):
     """
     Calculates SHAP interaction matrices for regression models.
@@ -556,7 +555,7 @@ class RegressorShapInteractionValuesCalculator(
 
     @staticmethod
     def _convert_raw_shap_to_df(
-        raw_shap_tensors: List[np.ndarray],
+        raw_shap_tensors: List[npt.NDArray[np.float_]],
         observations: pd.Index,
         features_in_split: pd.Index,
     ) -> List[pd.DataFrame]:
@@ -578,7 +577,9 @@ class RegressorShapInteractionValuesCalculator(
 
 
 @inheritdoc(match="[see superclass]")
-class ClassifierShapCalculator(ShapCalculator[ClassifierPipelineDF], metaclass=ABCMeta):
+class ClassifierShapCalculator(
+    ShapCalculator[ClassifierPipelineDF[Any]], metaclass=ABCMeta
+):
     """
     Calculates SHAP (interaction) values for classification models.
     """
@@ -586,8 +587,11 @@ class ClassifierShapCalculator(ShapCalculator[ClassifierPipelineDF], metaclass=A
     COL_CLASS = "class"
 
     def _convert_shap_tensors_to_list(
-        self, *, shap_tensors: Union[np.ndarray, List[np.ndarray]], n_outputs: int
-    ):
+        self,
+        *,
+        shap_tensors: Union[npt.NDArray[np.float_], List[npt.NDArray[np.float_]]],
+        n_outputs: int,
+    ) -> List[npt.NDArray[np.float_]]:
 
         if n_outputs == 2 and isinstance(shap_tensors, np.ndarray):
             # if we have a single output *and* binary classification, the explainer
@@ -596,7 +600,6 @@ class ClassifierShapCalculator(ShapCalculator[ClassifierPipelineDF], metaclass=A
             (shap_tensors,) = super()._convert_shap_tensors_to_list(
                 shap_tensors=shap_tensors, n_outputs=1
             )
-            shap_tensors = cast(np.ndarray, shap_tensors)
             return [-shap_tensors, shap_tensors]
         else:
             return super()._convert_shap_tensors_to_list(
@@ -614,8 +617,7 @@ class ClassifierShapCalculator(ShapCalculator[ClassifierPipelineDF], metaclass=A
         assert classifier_df.is_fitted, "classifier must be fitted"
 
         try:
-            # noinspection PyUnresolvedReferences
-            output_names = classifier_df.classes_
+            output_names: List[str] = classifier_df.classes_.tolist()
 
         except Exception as cause:
             raise AssertionError("classifier must define classes_ attribute") from cause
@@ -653,7 +655,7 @@ class ClassifierShapCalculator(ShapCalculator[ClassifierPipelineDF], metaclass=A
 
 
 class ClassifierShapValuesCalculator(
-    ClassifierShapCalculator, ShapValuesCalculator[ClassifierPipelineDF]
+    ClassifierShapCalculator, ShapValuesCalculator[ClassifierPipelineDF[Any]]
 ):
     """
     Calculates SHAP matrices for classification models.
@@ -662,7 +664,7 @@ class ClassifierShapValuesCalculator(
     # noinspection DuplicatedCode
     @staticmethod
     def _convert_raw_shap_to_df(
-        raw_shap_tensors: List[np.ndarray],
+        raw_shap_tensors: List[npt.NDArray[np.float_]],
         observations: pd.Index,
         features_in_split: pd.Index,
     ) -> List[pd.DataFrame]:
@@ -699,7 +701,7 @@ class ClassifierShapValuesCalculator(
 
 
 class ClassifierShapInteractionValuesCalculator(
-    ClassifierShapCalculator, ShapInteractionValuesCalculator[ClassifierPipelineDF]
+    ClassifierShapCalculator, ShapInteractionValuesCalculator[ClassifierPipelineDF[Any]]
 ):
     """
     Calculates SHAP interaction matrices for classification models.
@@ -708,7 +710,7 @@ class ClassifierShapInteractionValuesCalculator(
     # noinspection DuplicatedCode
     @staticmethod
     def _convert_raw_shap_to_df(
-        raw_shap_tensors: List[np.ndarray],
+        raw_shap_tensors: List[npt.NDArray[np.float_]],
         observations: pd.Index,
         features_in_split: pd.Index,
     ) -> List[pd.DataFrame]:

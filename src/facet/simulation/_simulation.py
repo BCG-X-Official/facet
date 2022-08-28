@@ -3,8 +3,9 @@ Core implementation of :mod:`facet.simulation`
 """
 
 import logging
-from typing import Any, Optional, Tuple, Type, TypeVar, Union
+from typing import Any, Optional, Tuple, Type, TypeVar, Union, cast
 
+import numpy as np
 import pandas as pd
 
 from pytools.api import AllTracker, inheritdoc
@@ -28,7 +29,7 @@ __all__ = [
 # Type variables
 #
 
-T_Partition = TypeVar("T_Partition")
+T_Values = TypeVar("T_Values", bound=np.generic)
 
 
 #
@@ -103,9 +104,11 @@ class UnivariateProbabilitySimulator(BaseUnivariateSimulator[ClassifierDF]):
 
         :return: observed frequency of the positive class
         """
-        actual_outputs = self.sample.target
+        actual_outputs: pd.Series = self.sample.target
 
-        return (actual_outputs == self._positive_class()).sum() / len(actual_outputs)
+        return cast(int, (actual_outputs == self._positive_class()).sum()) / len(
+            actual_outputs
+        )
 
     def _positive_class(self) -> Any:
         """
@@ -253,8 +256,8 @@ class UnivariateUpliftSimulator(UnivariateRegressionSimulator):
         return 0.0
 
     def simulate_feature(
-        self, feature_name: str, *, partitioner: Partitioner[T_Partition]
-    ) -> UnivariateSimulationResult[T_Partition]:
+        self, feature_name: str, *, partitioner: Partitioner[T_Values]
+    ) -> UnivariateSimulationResult[T_Values]:
         """[see superclass]"""
 
         result = super().simulate_feature(
