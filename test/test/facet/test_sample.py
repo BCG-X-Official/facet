@@ -146,3 +146,16 @@ def test_sample(boston_df: pd.DataFrame, boston_target: str) -> None:
 
     columns1, columns2 = parallel(delayed(get_column)(sample) for sample in [s, s])
     assert columns1 == columns2
+
+    # creating a sample with non-string column names raises an exception
+    with pytest.raises(
+        TypeError,
+        match=(
+            "^all column names in arg observations must be strings, "
+            "but included: int$"
+        ),
+    ):
+        Sample(
+            boston_df.set_axis([*boston_df.columns[1:], 1], axis=1),
+            target_name=boston_target,
+        )
