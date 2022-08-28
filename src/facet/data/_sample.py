@@ -8,6 +8,7 @@ import logging
 from copy import copy
 from typing import Any, Collection, Iterable, List, Optional, Sequence, Set, Union
 
+import numpy as np
 import pandas as pd
 
 from pytools.api import AllTracker, to_list, to_set
@@ -39,7 +40,7 @@ class Sample:
     It provides basic methods for accessing features, targets and weights, and
     for selecting subsets of features and observations.
 
-    The underlying data structure is a :class:`pandas.DataFrame`.
+    The underlying data structure is a :class:`~pandas.DataFrame`.
 
     Supports :func:`.len`, returning the number of observations in this sample.
     """
@@ -73,7 +74,8 @@ class Sample:
     ) -> None:
         """
         :param observations: a table of observational data;
-            each row represents one observation
+            each row represents one observation, names of all used columns must be
+            strings
         :param target_name: the name of the column representing the target
             variable; or an iterable of names representing multiple targets
         :param feature_names: optional iterable of strings naming the columns that
@@ -84,18 +86,15 @@ class Sample:
         """
 
         # check that the observations are valid
-
         if not isinstance(observations, pd.DataFrame):
             raise ValueError(
                 "arg observations must be a data frame, but is a "
                 f"{type(observations).__qualname__}"
             )
 
-        observations_index = observations.index
-
-        if observations_index.nlevels != 1:
+        if observations.index.nlevels != 1:
             raise ValueError(
-                f"index of arg observations has {observations_index.nlevels} levels, "
+                f"index of arg observations has {observations.index.nlevels} levels, "
                 "but is required to have 1 level"
             )
 
@@ -104,9 +103,7 @@ class Sample:
         targets_list: List[str] = to_list(
             target_name, element_type=str, arg_name="target_name"
         )
-        _ensure_columns_exist(
-            observations=observations, column_type="target", columns=targets_list
-        )
+        _ensure_columns_exist(observations, column_type="target", columns=targets_list)
 
         self._target_names = targets_list
 
@@ -137,7 +134,7 @@ class Sample:
                 feature_names, element_type=str, arg_name="feature_names"
             )
             _ensure_columns_exist(
-                observations=observations, column_type="feature", columns=features_list
+                observations, column_type="feature", columns=features_list
             )
 
             # ensure features and target(s) do not overlap
@@ -147,18 +144,16 @@ class Sample:
 
         self._feature_names = features_list
 
-        # make sure the index has a name
-
-        if observations_index.name is None:
-            observations = observations.rename_axis(index=Sample.IDX_OBSERVATION)
-
         # keep only the columns we need
 
         observation_columns = [*features_list, *targets_list]
         if weight_name is not None and weight_name not in observation_columns:
             observation_columns.append(weight_name)
 
-        self._observations = observations.loc[:, observation_columns]
+        # select just the columns we need to retain and tidy up the observations table
+        self._observations = _tidy_up_observations(
+            observations.loc[:, observation_columns]
+        )
 
     @property
     def index(self) -> pd.Index:
@@ -322,6 +317,10 @@ class Sample:
 
 __tracker.validate()
 
+#
+# auxiliary functions
+#
+
 
 def _ensure_columns_exist(
     observations: pd.DataFrame, column_type: str, columns: List[str]
@@ -333,3 +332,30 @@ def _ensure_columns_exist(
         raise KeyError(
             f"observations table is missing {column_type} columns {missing_columns}"
         )
+
+
+def _tidy_up_observations(observations: pd.DataFrame) -> pd.DataFrame:
+    # ensure all column names are native Python strings
+    name_types = {type(name) for name in observations.columns}
+    name_types.discard(str)
+    invalid_name_types = [
+        name_type
+        for name_type in name_types
+        if not np.issubdtype(name_type, np.character)
+    ]
+    if invalid_name_types:
+        # not all names are strings
+        raise TypeError(
+            "all column names in arg observations must be strings, but included: "
+            + ", ".join(t.__qualname__ for t in invalid_name_types)
+        )
+
+    # convert numpy string types to native Python strings
+    if name_types:
+        observations = observations.set_axis(observations.columns.astype(str), axis=1)
+
+    # ensure the index has a name
+    if observations.index.name is None:
+        observations = observations.rename_axis(index=Sample.IDX_OBSERVATION)
+
+    return observations
