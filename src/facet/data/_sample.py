@@ -38,7 +38,7 @@ class Sample:
     It provides basic methods for accessing features, targets and weights, and
     for selecting subsets of features and observations.
 
-    The underlying data structure is a :class:`pandas.DataFrame`.
+    The underlying data structure is a :class:`~pandas.DataFrame`.
 
     Supports :func:`.len`, returning the number of observations in this sample.
     """
