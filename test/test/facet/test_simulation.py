@@ -1,5 +1,6 @@
 import logging
 
+import numpy as np
 import pandas as pd
 import pytest
 from numpy.testing import assert_array_equal
@@ -26,8 +27,10 @@ log = logging.getLogger(__name__)
 N_SPLITS = 10
 
 
-@pytest.fixture
-def model(sample: Sample, simple_preprocessor: TransformerDF) -> RegressorPipelineDF:
+@pytest.fixture  # type: ignore
+def model(
+    sample: Sample, simple_preprocessor: TransformerDF
+) -> RegressorPipelineDF[LGBMRegressorDF]:
     # use a pre-optimised model
     return RegressorPipelineDF(
         preprocessing=simple_preprocessor,
@@ -37,7 +40,7 @@ def model(sample: Sample, simple_preprocessor: TransformerDF) -> RegressorPipeli
     ).fit(X=sample.features, y=sample.target)
 
 
-@pytest.fixture
+@pytest.fixture  # type: ignore
 def subsample(sample: Sample) -> Sample:
     return sample.subsample(
         iloc=(
@@ -48,18 +51,18 @@ def subsample(sample: Sample) -> Sample:
     )
 
 
-@pytest.fixture
+@pytest.fixture  # type: ignore
 def target_simulator(
-    model: RegressorPipelineDF, sample: Sample, n_jobs: int
+    model: RegressorPipelineDF[LGBMRegressorDF], sample: Sample, n_jobs: int
 ) -> UnivariateTargetSimulator:
     return UnivariateTargetSimulator(
         model=model, sample=sample, confidence_level=0.8, n_jobs=n_jobs, verbose=50
     )
 
 
-@pytest.fixture
+@pytest.fixture  # type: ignore
 def uplift_simulator(
-    model: RegressorPipelineDF, sample: Sample, n_jobs: int
+    model: RegressorPipelineDF[LGBMRegressorDF], sample: Sample, n_jobs: int
 ) -> UnivariateUpliftSimulator:
     return UnivariateUpliftSimulator(
         model=model, sample=sample, confidence_level=0.8, n_jobs=n_jobs, verbose=50
@@ -73,7 +76,9 @@ def test_univariate_target_simulation(
     parameterized_feature = "LSTAT"
     partitioner = ContinuousRangePartitioner(max_partitions=10)
 
-    simulation_result: UnivariateSimulationResult = target_simulator.simulate_feature(
+    simulation_result: UnivariateSimulationResult[
+        np.float_
+    ] = target_simulator.simulate_feature(
         feature_name=parameterized_feature,
         partitioner=partitioner,
     )
@@ -124,7 +129,7 @@ def test_univariate_target_simulation(
 
 
 def test_univariate_target_subsample_simulation_80(
-    model: RegressorPipelineDF, subsample: Sample, n_jobs: int
+    model: RegressorPipelineDF[LGBMRegressorDF], subsample: Sample, n_jobs: int
 ) -> None:
 
     parameterized_feature = "LSTAT"
@@ -134,7 +139,9 @@ def test_univariate_target_subsample_simulation_80(
         model=model, sample=subsample, confidence_level=0.8, n_jobs=n_jobs, verbose=50
     )
 
-    simulation_result: UnivariateSimulationResult = target_simulator.simulate_feature(
+    simulation_result: UnivariateSimulationResult[
+        np.float_
+    ] = target_simulator.simulate_feature(
         feature_name=parameterized_feature,
         partitioner=partitioner,
     )
@@ -188,7 +195,7 @@ def test_univariate_target_subsample_simulation_80(
 
 
 def test_univariate_uplift_subsample_simulation_95(
-    model: RegressorPipelineDF, subsample: Sample, n_jobs: int
+    model: RegressorPipelineDF[LGBMRegressorDF], subsample: Sample, n_jobs: int
 ) -> None:
 
     parameterized_feature = "LSTAT"
@@ -198,7 +205,9 @@ def test_univariate_uplift_subsample_simulation_95(
         model=model, sample=subsample, confidence_level=0.95, n_jobs=n_jobs, verbose=50
     )
 
-    simulation_result: UnivariateSimulationResult = target_simulator.simulate_feature(
+    simulation_result: UnivariateSimulationResult[
+        np.float_
+    ] = target_simulator.simulate_feature(
         feature_name=parameterized_feature,
         partitioner=partitioner,
     )
@@ -262,7 +271,9 @@ def test_univariate_uplift_simulation(
     parameterized_feature = "LSTAT"
     partitioner = ContinuousRangePartitioner(max_partitions=10)
 
-    simulation_result: UnivariateSimulationResult = uplift_simulator.simulate_feature(
+    simulation_result: UnivariateSimulationResult[
+        np.float_
+    ] = uplift_simulator.simulate_feature(
         feature_name=parameterized_feature,
         partitioner=partitioner,
     )
@@ -313,7 +324,7 @@ def test_univariate_uplift_simulation(
 
 
 def test_univariate_uplift_subsample_simulation(
-    model: RegressorPipelineDF, subsample: Sample, n_jobs: int
+    model: RegressorPipelineDF[LGBMRegressorDF], subsample: Sample, n_jobs: int
 ) -> None:
 
     parameterized_feature = "LSTAT"
@@ -323,7 +334,9 @@ def test_univariate_uplift_subsample_simulation(
         model=model, sample=subsample, confidence_level=0.8, n_jobs=n_jobs, verbose=50
     )
 
-    simulation_result: UnivariateSimulationResult = uplift_simulator.simulate_feature(
+    simulation_result: UnivariateSimulationResult[
+        np.float_
+    ] = uplift_simulator.simulate_feature(
         feature_name=parameterized_feature, partitioner=partitioner
     )
 
@@ -389,7 +402,9 @@ def test_univariate_probability_simulation(
         verbose=50,
     )
 
-    simulation_result: UnivariateSimulationResult = proba_simulator.simulate_feature(
+    simulation_result: UnivariateSimulationResult[
+        np.float_
+    ] = proba_simulator.simulate_feature(
         feature_name=parameterized_feature, partitioner=partitioner
     )
 

@@ -44,7 +44,7 @@ __all__ = [
 #
 
 T_LearnerDF = TypeVar("T_LearnerDF", bound=LearnerDF)
-T_Partition = TypeVar("T_Partition")
+T_Values = TypeVar("T_Values", bound=np.generic)
 
 
 #
@@ -59,7 +59,7 @@ __tracker = AllTracker(globals())
 #
 
 
-class UnivariateSimulationResult(Generic[T_Partition]):
+class UnivariateSimulationResult(Generic[T_Values]):
     """
     Summary result of a univariate simulation.
     """
@@ -78,7 +78,7 @@ class UnivariateSimulationResult(Generic[T_Partition]):
     data: pd.DataFrame
 
     #: The partitioner used to generate feature values to be simulated.
-    partitioner: Partitioner
+    partitioner: Partitioner[T_Values]
 
     #: Name of the simulated feature.
     feature_name: str
@@ -115,7 +115,7 @@ class UnivariateSimulationResult(Generic[T_Partition]):
     def __init__(
         self,
         *,
-        partitioner: Partitioner,
+        partitioner: Partitioner[T_Values],
         mean: Sequence[float],
         sem: Sequence[float],
         feature_name: str,
@@ -211,6 +211,9 @@ class BaseUnivariateSimulator(
     #: The sample to be used in baseline calculations and simulations
     sample: Sample
 
+    #: The name of the output being simulated
+    output_name: str
+
     #: The width of the confidence interval used to calculate the lower/upper bound
     #: of the simulation
     confidence_level: float
@@ -259,7 +262,7 @@ class BaseUnivariateSimulator(
 
         self.model = model
         self.sample = sample
-        self.output_name = cast(str, sample.target_name)
+        self.output_name = sample.target_name
         self.confidence_level = confidence_level
 
     # add parallelization parameters to __init__ docstring
@@ -271,8 +274,8 @@ class BaseUnivariateSimulator(
         self,
         feature_name: str,
         *,
-        partitioner: Partitioner[T_Partition],
-    ) -> UnivariateSimulationResult:
+        partitioner: Partitioner[T_Values],
+    ) -> UnivariateSimulationResult[T_Values]:
         """
         Simulate the average target uplift when fixing the value of the given feature
         across all observations.
@@ -361,7 +364,7 @@ class BaseUnivariateSimulator(
     def _simulate_feature_with_values(
         self,
         feature_name: str,
-        simulation_values: Sequence[T_Partition],
+        simulation_values: Sequence[T_Values],
     ) -> Tuple[Sequence[float], Sequence[float]]:
         """
         Run a simulation on a feature.
@@ -453,9 +456,11 @@ class UnivariateProbabilitySimulator(BaseUnivariateSimulator[ClassifierDF]):
 
         :return: observed frequency of the positive class
         """
-        actual_outputs = self.sample.target
+        actual_outputs: pd.Series = self.sample.target
 
-        return (actual_outputs == self._positive_class()).sum() / len(actual_outputs)
+        return cast(int, (actual_outputs == self._positive_class()).sum()) / len(
+            actual_outputs
+        )
 
     def _positive_class(self) -> Any:
         """
@@ -499,7 +504,7 @@ class _UnivariateRegressionSimulator(
 
         :return: mean observed value of the target
         """
-        return self.sample.target.mean()
+        return cast(float, self.sample.target.mean())
 
     @staticmethod
     def _expected_learner_type() -> Type[RegressorDF]:
@@ -629,8 +634,8 @@ class UnivariateUpliftSimulator(_UnivariateRegressionSimulator):
         return 0.0
 
     def simulate_feature(
-        self, feature_name: str, *, partitioner: Partitioner[T_Partition]
-    ) -> UnivariateSimulationResult:
+        self, feature_name: str, *, partitioner: Partitioner[T_Values]
+    ) -> UnivariateSimulationResult[T_Values]:
         """[see superclass]"""
 
         result = super().simulate_feature(

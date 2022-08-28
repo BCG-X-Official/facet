@@ -8,6 +8,7 @@ import logging
 from copy import copy
 from typing import Any, Collection, Iterable, List, Optional, Sequence, Set, Union
 
+import numpy as np
 import pandas as pd
 
 from pytools.api import AllTracker, to_list, to_set
@@ -39,7 +40,7 @@ class Sample:
     It provides basic methods for accessing features, targets and weights, and
     for selecting subsets of features and observations.
 
-    The underlying data structure is a :class:`pandas.DataFrame`.
+    The underlying data structure is a :class:`~pandas.DataFrame`.
 
     Supports :func:`.len`, returning the number of observations in this sample.
     """
@@ -73,7 +74,8 @@ class Sample:
     ) -> None:
         """
         :param observations: a table of observational data;
-            each row represents one observation
+            each row represents one observation, names of all used columns must be
+            strings
         :param target_name: the name of the column representing the target
             variable; or an iterable of names representing multiple targets
         :param feature_names: optional iterable of strings naming the columns that
@@ -83,28 +85,13 @@ class Sample:
             observation
         """
 
-        def _ensure_columns_exist(column_type: str, columns: List[str]):
-            # check if all provided feature names actually exist in the observations df
-            available_columns: pd.Index = observations.columns
-            missing_columns = {
-                name for name in columns if name not in available_columns
-            }
-            if missing_columns:
-                raise KeyError(
-                    f"observations table is missing {column_type} columns "
-                    f"{missing_columns}"
-                )
-
         # check that the observations are valid
-
         if observations is None or not isinstance(observations, pd.DataFrame):
             raise ValueError("arg observations is not a DataFrame")
 
-        observations_index = observations.index
-
-        if observations_index.nlevels != 1:
+        if observations.index.nlevels != 1:
             raise ValueError(
-                f"index of arg observations has {observations_index.nlevels} levels, "
+                f"index of arg observations has {observations.index.nlevels} levels, "
                 "but is required to have 1 level"
             )
 
@@ -113,7 +100,7 @@ class Sample:
         targets_list: List[str] = to_list(
             target_name, element_type=str, arg_name="target_name"
         )
-        _ensure_columns_exist(column_type="target", columns=targets_list)
+        _ensure_columns_exist(observations, column_type="target", columns=targets_list)
 
         self._target_names = targets_list
 
@@ -144,7 +131,9 @@ class Sample:
             features_list = to_list(
                 feature_names, element_type=str, arg_name="feature_names"
             )
-            _ensure_columns_exist(column_type="feature", columns=features_list)
+            _ensure_columns_exist(
+                observations, column_type="feature", columns=features_list
+            )
 
             # ensure features and target(s) do not overlap
             shared = set(targets_list).intersection(features_list)
@@ -153,18 +142,16 @@ class Sample:
 
         self._feature_names = features_list
 
-        # make sure the index has a name
-
-        if observations_index.name is None:
-            observations = observations.rename_axis(index=Sample.IDX_OBSERVATION)
-
         # keep only the columns we need
 
         observation_columns = [*features_list, *targets_list]
         if weight_name is not None and weight_name not in observation_columns:
             observation_columns.append(weight_name)
 
-        self._observations = observations.loc[:, observation_columns]
+        # select just the columns we need to retain and tidy up the observations table
+        self._observations = _tidy_up_observations(
+            observations.loc[:, observation_columns]
+        )
 
     @property
     def index(self) -> pd.Index:
@@ -264,7 +251,7 @@ class Sample:
         subsample = copy(self)
         if iloc is None:
             if loc is None:
-                ValueError("either arg loc or arg iloc must be specified")
+                raise ValueError("either arg loc or arg iloc must be specified")
             else:
                 subsample._observations = self._observations.loc[loc, :]
         elif loc is None:
@@ -275,7 +262,7 @@ class Sample:
             )
         return subsample
 
-    def keep(self, *, feature_names: Union[str, Collection[str]]) -> Sample:
+    def keep(self, *, feature_names: Union[str, Iterable[str]]) -> Sample:
         """
         Return a new sample which only includes the features with the given names.
 
@@ -283,17 +270,17 @@ class Sample:
         :return: copy of this sample, containing only the features with the given names
         """
 
-        feature_names: List[str] = to_list(feature_names, element_type=str)
+        feature_names_list: List[str] = to_list(feature_names, element_type=str)
 
-        if not set(feature_names).issubset(self._feature_names):
+        if not set(feature_names_list).issubset(self._feature_names):
             raise ValueError(
                 "arg feature_names is not a subset of the features in this sample"
             )
 
         subsample = copy(self)
-        subsample._feature_names = feature_names
+        subsample._feature_names = feature_names_list
 
-        columns = [*feature_names, *self._target_names]
+        columns = [*feature_names_list, *self._target_names]
         weight = self._weight_name
         if weight and weight not in columns:
             columns.append(weight)
@@ -308,9 +295,9 @@ class Sample:
         :param feature_names: name(s) of the features to be dropped
         :return: copy of this sample, excluding the features with the given names
         """
-        feature_names: Set[str] = to_set(feature_names, element_type=str)
+        feature_names_set: Set[str] = to_set(feature_names, element_type=str)
 
-        unknown = feature_names.difference(self._feature_names)
+        unknown = feature_names_set.difference(self._feature_names)
         if unknown:
             raise ValueError(f"unknown features in arg feature_names: {unknown}")
 
@@ -318,7 +305,7 @@ class Sample:
             feature_names=[
                 feature
                 for feature in self._feature_names
-                if feature not in feature_names
+                if feature not in feature_names_set
             ]
         )
 
@@ -327,3 +314,46 @@ class Sample:
 
 
 __tracker.validate()
+
+#
+# auxiliary functions
+#
+
+
+def _ensure_columns_exist(
+    observations: pd.DataFrame, column_type: str, columns: List[str]
+) -> None:
+    # check if all provided feature names actually exist in the observations df
+    available_columns: pd.Index = observations.columns
+    missing_columns = {name for name in columns if name not in available_columns}
+    if missing_columns:
+        raise KeyError(
+            f"observations table is missing {column_type} columns {missing_columns}"
+        )
+
+
+def _tidy_up_observations(observations: pd.DataFrame) -> pd.DataFrame:
+    # ensure all column names are native Python strings
+    name_types = {type(name) for name in observations.columns}
+    name_types.discard(str)
+    invalid_name_types = [
+        name_type
+        for name_type in name_types
+        if not np.issubdtype(name_type, np.character)
+    ]
+    if invalid_name_types:
+        # not all names are strings
+        raise TypeError(
+            "all column names in arg observations must be strings, but included: "
+            + ", ".join(t.__qualname__ for t in invalid_name_types)
+        )
+
+    # convert numpy string types to native Python strings
+    if name_types:
+        observations = observations.set_axis(observations.columns.astype(str), axis=1)
+
+    # ensure the index has a name
+    if observations.index.name is None:
+        observations = observations.rename_axis(index=Sample.IDX_OBSERVATION)
+
+    return observations
