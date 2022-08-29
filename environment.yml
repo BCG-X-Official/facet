@@ -14,8 +14,8 @@ dependencies:
   - python ~= 3.8.12
   - scikit-learn ~= 1.0.2
   - scipy ~= 1.8
-  - shap ~=0.40
-  - sklearndf >= 2.0.dev3, < 3a
+  - shap ~= 0.41
+  - sklearndf ~= 2.0
   # build/test
   - conda-build ~= 3.21
   - conda-verify ~= 3.1

@@ -205,11 +205,15 @@ class SimulationMatplotStyle(MatplotStyle, SimulationStyle):
             uplift_height = abs(y_max - y_min)
 
             def _x_axis_height() -> float:
+                axis_below_size_pixels: float
                 _, axis_below_size_pixels = main_ax.get_xaxis().get_text_heights(
                     self.get_renderer()
                 )
+
+                y0: float
+                y1: float
                 ((_, y0), (_, y1)) = main_ax.transData.inverted().transform(
-                    ((0, 0), (0, axis_below_size_pixels))
+                    ((0.0, 0.0), (0.0, axis_below_size_pixels))
                 )
                 return abs(y1 - y0)
 
@@ -311,7 +315,7 @@ class SimulationReportStyle(SimulationStyle, TextStyle):
     __FREQUENCY_FORMAT = f"{__FREQUENCY_WIDTH}g"
 
     @staticmethod
-    def _num_format(heading: str):
+    def _num_format(heading: str) -> str:
         return f"> {len(heading)}.{SimulationReportStyle.__NUM_PRECISION}g"
 
     def draw_uplift(
