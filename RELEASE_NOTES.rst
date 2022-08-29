@@ -1,8 +1,15 @@
 Release Notes
 =============
 
+.. |mypy| replace:: :external+mypy:doc:`mypy <index>`
+
 FACET 2.0
 ---------
+
+FACET 2.0 brings numerous API enhancements and improvements, accelerates model
+inspection by factor 50 in many practical settings, makes major improvements to
+visualizations, and is now fully type-checked by |mypy|.
+
 
 2.0.0
 ~~~~~
