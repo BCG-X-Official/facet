@@ -72,13 +72,6 @@ class BaseBootstrapCV(
         :return: the number of splits
         """
 
-        for arg_name, arg in ("X", X), ("y", y), ("groups", groups):
-            if arg is not None:
-                warnings.warn(
-                    f"arg {arg_name} is not used but got {arg_name}={arg!r}",
-                    stacklevel=2,
-                )
-
         return self.n_splits
 
     # noinspection PyPep8Naming
