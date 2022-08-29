@@ -368,7 +368,7 @@ def fill_diagonal(
     m: npt.NDArray[np.float_], value: Union[float, npt.NDArray[np.float_]]
 ) -> None:
     """
-    Fill the diagonal of the `feature x feature` matrix for each output with the given
+    In each `feature x feature` matrix for each output, fill the diagonal with the given
     value.
 
     :param m: array of shape `(n_outputs, n_features, n_features)`
@@ -603,8 +603,8 @@ class ShapInteractionValueContext(ShapContext):
         # p[i, j]
         # shape: (n_outputs, n_features, n_features, n_observations)
         # the vector of interaction values for every output and feature pairing
-        # for improved numerical precision, we ensure the last axis is the fast axis
-        # i.e. stride size equals item size (see documentation for numpy.sum)
+        # for improved numerical precision, we ensure the last axis is the fast axis,
+        # i.e., stride size equals item size (see documentation for numpy.sum)
         p_ij = ensure_last_axis_is_fast(
             np.transpose(
                 shap_values.values.reshape(
@@ -673,9 +673,9 @@ class ShapInteractionValueContext(ShapContext):
 
         _denominator = cov_p_ii_p_jj**2 - var_p_ii * var_p_jj
 
-        # The denominator is <= 0 due to the Cauchy-Schwarz inequality.
+        # The denominator is ≤ 0 due to the Cauchy-Schwarz inequality.
         # It is 0 only if the variance of p_ii or p_jj are zero (i.e., no main effect).
-        # In that fringe case, the nominator will also be zero and we set the adjustment
+        # In that edge case, the nominator will also be zero, and we set the adjustment
         # factor to 0 (intuitively, there is nothing to adjust in a zero-length vector)
         adjustment_factors_ij = np.zeros(_nominator.shape)
         # todo: prevent catastrophic cancellation where nominator/denominator are ~0.0

@@ -77,10 +77,10 @@ __tracker = AllTracker(globals())
 class ParameterSpace(BaseParameterSpace[T_Candidate_co], Generic[T_Candidate_co]):
     """
     A set of parameter choices or distributions spanning a parameter space for
-    optimizing the hyper-parameters of a single estimator.
+    optimizing the hyperparameters of a single estimator.
 
     Parameter spaces provide an easy approach to define and validate search spaces
-    for hyper-parameter tuning of ML pipelines using `scikit-learn`'s
+    for hyperparameter tuning of ML pipelines using `scikit-learn`'s
     :class:`~sklearn.model_selection.GridSearchCV` and
     :class:`~sklearn.model_selection.RandomizedSearchCV`.
 
@@ -284,7 +284,7 @@ class MultiEstimatorParameterSpace(
 ):
     """
     A collection of parameter spaces, each representing a competing estimator from which
-    to select the best-performing candidate with optimal hyper-parameters.
+    to select the best-performing candidate with optimal hyperparameters.
 
     See :class:`.ParameterSpace` for details on setting up and using parameter spaces.
     """
