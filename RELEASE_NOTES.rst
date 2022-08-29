@@ -68,7 +68,7 @@ visualizations, and is now fully type-checked by |mypy|.
 Other
 ^^^^^
 
-- API: class ``LearnerCrossfit`` is no longer used in FACET 2 and has been removed
+- API: class ``LearnerCrossfit`` is no longer needed in FACET 2.0 and has been removed
 
 
 FACET 1.2
