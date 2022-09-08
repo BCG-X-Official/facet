@@ -51,7 +51,7 @@ __tracker = AllTracker(globals())
 
 class BaseParameterSpace(HasExpressionRepr, Generic[T_Estimator], metaclass=ABCMeta):
     """
-    A collection of parameters spanning a parameter space for hyper-parameter
+    A collection of parameters spanning a parameter space for hyperparameter
     optimization.
     """
 
