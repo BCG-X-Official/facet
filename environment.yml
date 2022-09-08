@@ -25,6 +25,7 @@ dependencies:
   - markupsafe ~= 2.0.1  # markupsafe 2.1 breaks support for jinja2
   - m2r ~= 0.2
   - pluggy ~= 0.13
+  - pre-commit ~= 2.20
   - pytest ~= 7.1
   - pytest-cov ~= 2.12
   - pyyaml ~= 5.4
