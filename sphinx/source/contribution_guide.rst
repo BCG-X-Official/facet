@@ -1,37 +1,37 @@
 .. _contribution-guide:
 
 Development Guidelines
-======================================
+======================
 
 Setup
------------------------
+-----
 
 Python environment
-~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~
 There is an ``environment.yml`` provided in the repository root, which installs all
 required development dependencies in the ``facet-develop`` environment.
 
 .. code-block:: sh
 
-    conda env create -f environment.yml
-    conda activate facet-develop
+  conda env create -f environment.yml
+  conda activate facet-develop
 
 
 Pre-commit hooks
-~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~
 This project uses a number of pre-commit hooks such as black and flake8 to enforce
 uniform coding standards in all commits. Before committing code, please run
 
 .. code-block:: sh
 
-    pre-commit install
+  pre-commit install
 
 You can use ``pre-commit run`` to manually run the pre-commit hooks from the command
 line.
 
 
 Pytest
-~~~~~~~~~~~~~~~
+~~~~~~
 Run ``pytest test/`` from the facet root folder or use the PyCharm test runner. To
 measure coverage, use ``pytest --cov=src/facet test/``. Note that the code coverage
 reports are also generated in the Azure Pipelines (see CI/CD section).
@@ -40,33 +40,31 @@ Note that you will need to set the PYTHONPATH to the ``src/`` directory by
 running ``export PYTHONPATH=./src/`` from the repository root.
 
 
-
-
 Git Guidelines
---------------------
+--------------
 
 For commits to GitHub, phrase commit comments as the completion of the sentence *This
 commit will …*, e.g.
 
 .. code-block:: RST
 
-    add method foo to class Bar
+  add method foo to class Bar
 
 but not
 
 .. code-block:: RST
 
-    added method foo to class Bar
+  added method foo to class Bar
 
 
 Documentation
----------------------------
+-------------
 
 This section provides a general guide to the documentation of FACET, including
 docstrings, Sphinx, the README and tutorial notebooks.
 
 Docstrings
-~~~~~~~~~~~
+~~~~~~~~~~
 
 The API documentation is generated from docstrings in the source code. Before writing
 your own, take some time to study the existing code documentation and emulate the same
@@ -110,7 +108,7 @@ explain usage patterns.
   which is too wordy and not imperative.
 
 
-- Write docstrings for modules, classes, modules, and attributes starting with a 
+- Write docstrings for modules, classes, modules, and attributes starting with a
   descriptive phrase (as you would expect in a dictionary entry). Be concise and avoid
   unnecessary or redundant phrases.
   For example:
@@ -122,6 +120,7 @@ explain usage patterns.
           Explains the inner workings of a predictive model using the SHAP approach.
 
           The inspector offers the following analyses:
+
           - ...
           - ...
 
@@ -143,7 +142,7 @@ explain usage patterns.
 
       @property
       def children(self) -> Foo:
-          """The child nodes of the tree"""
+          """The child nodes of the tree."""
           pass
 
   but not
@@ -155,7 +154,7 @@ explain usage patterns.
           """:return: the foo object"""
           pass
 
-- Start full sentences and phrases with a capitalised word and end each sentence with 
+- Start full sentences and phrases with a capitalised word and end each sentence with
   punctuation, e.g.,
 
   .. code-block:: python
@@ -196,32 +195,34 @@ explain usage patterns.
 
         :param sample: training sample"""
 
-- For method arguments, return value, and class parameters, one must hint the type using 
+- For method arguments, return value, and class parameters, one must hint the type using
   the typing module. Do not specify the parameter types in the docstrings, e.g.,
 
   .. code-block:: python
 
     def f(x: int) -> float:
-       """
-       Do something.
+      """
+      Do something.
 
-       :param x: input value
-       :return: output value
+      :param x: input value
+      :return: output value
+      """
 
   but not
 
   .. code-block:: python
 
     def f(x: int) -> float:
-       """
-       Do something.
+      """
+      Do something.
 
-       :param int x: input value
-       :return float: output value
+      :param int x: input value
+      :return float: output value
+      """
 
 
 Sphinx Build
-~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~
 
 Documentation for FACET is built using `sphinx <https://www.sphinx-doc.org/en/master/>`_.
 Before building the documentation ensure the ``facet-develop`` environment is active as
@@ -247,85 +248,72 @@ building and releasing FACET.
 
 The ``sphinx`` folder in the root directory contains the following:
 
-- a ``make.py`` script for executing the documentation build via python.
+- a ``make.py`` script for executing the documentation build via python
 
-- a ``source`` directory containing predefined ``.rst`` files for the documentation
-  build and other required elements, see below for more details.
+- a ``source`` directory containing predefined .rst files for the documentation build
+  and other required elements (see below for more details)
 
-- an ``auxiliary`` directory which contains the notebook used in the quickstart as well
-  as a template notebook to be used when generating new tutorials to be added to the
-  documentation. Note this is kept separate as it is used to generate the example for
-  the repository `README.rst`, which is the included in the documentation build.
+- a ``base`` folder which contains
+
+  * the ``make_base.py`` and ``conf_base.py`` scripts with nearly all configuration for
+    ``make.py`` and ``conf.py``
+  * ``_static`` directory, containing logos, icons, javascript and css used for
+    *pytools* and other packages documentation builds
+  * ``_templates`` directory, containing *autodoc* templates used in generating and
+    formatting the modules and classes for the API documentation
 
 
 The ``sphinx/source`` folder contains:
 
-- a ``conf.py`` script that is the `build configuration file 
-  <https://www.sphinx-doc.org/en/master/usage/configuration.html>`_ needed to customize the
-  input and output behavior of the Sphinx documentation build (see below for further
-  details).
+- a ``conf.py`` script that is the
+  `build configuration file <https://www.sphinx-doc.org/en/master/usage/configuration.html>`_
+  needed to customize the input and output behavior of the Sphinx documentation build
+  (see below for further details)
 
 - a ``tutorials`` directory that contains all the notebooks (and supporting data) used in
   the documentation build. Note that as some notebooks take a little while to generate, the
   notebooks are currently committed with cell output. This may change in the future where
-  notebooks are run as part of the sphinx build.
+  notebooks are run as part of the sphinx build
 
-- the base ``.rst`` files used for the documentation build, which are:
+- the essential ``.rst`` files used for the documentation build, which are:
 
-  *   ``index.rst``: definition of the high-level documentation structure which mainly
-      references the other rst files in this directory.
+  * ``index.rst``: definition of the high-level documentation structure which mainly
+    references the other ``.rst`` files in this directory
 
-  *   ``tutorials.rst``: a tutorial overview that incorporates the tutorial notebooks
-      from the ``tutorials`` directory.
+  * ``contribution_guide.rst``: detailed information on building and releasing
+    FACET.
 
-  *   ``contribution_guide.rst``: detailed information on building and releasing FACET.
+  * ``faqs.rst``: contains guidance on bug reports/feature requests, how to contribute
+    and answers to frequently asked questions including small code snippets
 
-  *   ``faqs.rst``: contains guidance on bug reports/feature requests, how to contribute
-      and answers to frequently asked questions including small code snippets.
+  * ``api_landing.rst``: for placing any API landing page preamble for documentation
+    as needed. This information will appear on the API landing page in the
+    documentation build after the short description in ``src/__init__.py``. This file
+    is included in the documentation build via the ``custom-module-template.rst``
 
-  *   ``about_us.rst``: description of the team behind open-sourcing FACET.
+- ``_static`` contains additional material used in the documentation build, in this
+  case, logos and icons
 
-  *   ``api_landing.rst``: for placing any API landing page preamble for documentation
-      as needed. This information will appear on the API landing page in the
-      documentation build after the short description in ``src/__init__.py``. This file
-      is included in the documentation build via the ``custom-module-template.rst``.
 
-- ``_static`` contains additional material used in the documentation build (mainly
-  figures) but also some formatting control:
-
-  *   ``team_contributors``: contains photos for the FACET team.
-
-  *   ``icons``: contains the icons used in describing the main elements of FACET
-      in the documentation getting started page.
-
-  *   ``css/facet.css``: contains additional customization for the display of HTML
-      elements in the documentation build.
-
-- ``_templates`` contains the ``autosummary.rst`` which relies on the 
-  ``custom-module-template.rst`` and ``custom-class-template.rst`` from
-  ``pytools/tree/develop/sphinx/source/_templates`` which is used in
-  generating/formatting the modules and classes for the API documentation.
-
-The two key scripts are ``make.py`` and ``conf.py``. The base configuration for these
-scripts can be found in 
-`pytools/sphinx <https://github.com/BCG-Gamma/pytools/tree/develop/sphinx>`_.
-The reason for this was to minimise code given the standardization of the documentation
+The two key scripts are ``make.py`` and ``conf.py``. The base configuration for the
+these scripts can be found in `pytools/sphinx <https://github.com/BCG-Gamma/pytools/tree/develop/sphinx/base>`_.
+The reason for this is to minimise code given the standardization of the documentation
 build across multiple packages.
 
 **make.py**: All base configuration comes from ``pytools/sphinx/base/make_base.py`` and
 this script includes defined commands for key steps in the documentation build. Briefly,
 the key steps for the documentation build are:
 
-- **Clean**: remove the existing documentation build.
+- **Clean**: remove the existing documentation build
 
-- **FetchPkgVersions**: fetch the available package versions with documentation.
+- **FetchPkgVersions**: fetch the available package versions with documentation
 
-- **ApiDoc**: generate API documentation from sources.
+- **ApiDoc**: generate API documentation from sources
 
-- **Html**: run Sphinx build to generate HTMl documentation.
+- **Html**: run Sphinx build to generate HTMl documentation
 
 The two other commands are **Help** and **PrepareDocsDeployment**, the latter of which
-is covered below under Building and releasing FACET.
+is covered below under *Building and releasing FACET*.
 
 **conf.py**: All base configuration comes from ``pytools/sphinx/base/conf_base.py``. This
 `build configuration file <https://www.sphinx-doc.org/en/master/usage/configuration.html>`_
@@ -333,35 +321,33 @@ is a requirement of Sphinx and is needed to customize the input and output behav
 the documentation build. In particular, this file highlights key extensions needed in
 the build process, of which some key ones are as follows:
 
-- `intersphinx <https://www.sphinx-doc.org/en/master/usage/extensions/intersphinx.html>`_ 
-  (external links to other documentations built with Sphinx: scikit-learn, numpy...).
+- `intersphinx <https://www.sphinx-doc.org/en/master/usage/extensions/intersphinx.html>`_
+  (external links to other documentations built with Sphinx: matplotlib, numpy, ...)
 
-- `viewcode <https://www.sphinx-doc.org/en/master/usage/extensions/viewcode.html>`_ to 
-  include source code in the documentation, and links to the source code from the objects 
-  documentation.
+- `viewcode <https://www.sphinx-doc.org/en/master/usage/extensions/viewcode.html>`_
+  to include source code in the documentation, and links to the source code from the objects documentation
 
-- `imgmath <https://www.sphinx-doc.org/en/master/usage/extensions/math.html>`_ to render 
-  math expressions in doc strings. Note that a local latex installation is required (e.g., 
-  `MiKTeX <https://miktex.org/>`_ for Windows).
+- `imgmath <https://www.sphinx-doc.org/en/master/usage/extensions/math.html>`_
+  to render math expressions in doc strings. Note that a local latex installation is
+  required (e.g., `MiKTeX <https://miktex.org/>`_ for Windows)
 
 
 README
-~~~~~~~
+~~~~~~
 
 The README file for the repo is .rst format instead of the perhaps more traditional
 markdown format. The reason for this is the ``README.rst`` is included as the quick start
 guide in the documentation build. This helped minimize code duplication. However,
 there are a few key points to be aware of:
 
-- The README has links to figures, logos and icons located in the ``sphinx/source/_static`` 
-  folder. To ensure these links are correct when the documentation is built, they are 
-  altered and then the contents of the ``README.rst`` is incorporated into the 
-  ``getting_started.rst`` which is generated during the build and can be found in 
-  ``sphinx/source/getting_started``.
+- The README has links to figures, logos and icons located in the ``sphinx/source/_static`` folder.
+  To ensure these links are correct when the documentation is built, they are altered and then the
+  contents of the ``README.rst`` is incorporated into the ``getting_started.rst`` which is generated
+  during the build and can be found in ``sphinx/source/getting_started``.
 
-- The quick start guide based on the ``Boston_getting_started_example.ipynb`` notebook in 
-  the ``sphinx/auxiliary`` folder is not automatically included (unlike all the other 
-  tutorials). For this reason any updates to this example in the README need to be 
+- The quick start guide based on the ``Diabetes_getting_started_example.ipynb`` notebook in
+  the ``sphinx/auxiliary`` folder is not automatically included (unlike all the other
+  tutorials). For this reason any updates to this example in the README need to be
   reflected in the source notebook and vice-versa.
 
 
@@ -374,13 +360,13 @@ created for documentation need to be placed in ``sphinx/source/tutorial`` folder
 If you intend to create a notebook for inclusion in the documentation please note the
 following:
 
-- The notebook should conform to the standard format employed for all notebooks included in 
-  the documentation. This template (``Facet_sphinx_tutorial_template.ipynb``) can be found 
+- The notebook should conform to the standard format employed for all notebooks included in
+  the documentation. This template (``Facet_sphinx_tutorial_template.ipynb``) can be found
   in ``sphinx/auxiliary``.
 
-- When creating/revising a tutorial notebook with the development environment the following 
-  code should be added to a cell at the start of the notebook. This will ensure your local 
-  clones (and any changes) are used when running the notebook. The jupyter notebook should  
+- When creating/revising a tutorial notebook with the development environment the following
+  code should be added to a cell at the start of the notebook. This will ensure your local
+  clones (and any changes) are used when running the notebook. The jupyter notebook should
   also be instigated from within the ``facet-develop`` environment.
 
   .. code-block:: python
@@ -412,10 +398,10 @@ following:
 
 
 
-- If you have a notebook cell you wish to be excluded from the generated documentation, add 
-  ``"nbsphinx": "hidden"`` to the metadata of the cell. To change the metadata of a cell, 
-  in the main menu of the jupyter notebook server, click on *View -> CellToolbar -> edit 
-  metadata*, then click on edit Metadata in the top right part of the cell. The modified 
+- If you have a notebook cell you wish to be excluded from the generated documentation, add
+  ``"nbsphinx": "hidden"`` to the metadata of the cell. To change the metadata of a cell,
+  in the main menu of the jupyter notebook server, click on *View -> CellToolbar -> edit
+  metadata*, then click on edit Metadata in the top right part of the cell. The modified
   metadata would then look something like:
 
   .. code-block:: json
@@ -424,11 +410,11 @@ following:
         "nbsphinx": "hidden"
       }
 
-- To interpret a notebook cell as reStructuredText by nbsphinx, make a Raw NBConvert cell, 
-  then click on the jupyter notebook main menu to *View -> CellToolbar -> Raw Cell Format*, 
+- To interpret a notebook cell as reStructuredText by nbsphinx, make a Raw NBConvert cell,
+  then click on the jupyter notebook main menu to *View -> CellToolbar -> Raw Cell Format*,
   then choose ReST in the dropdown in the top right part of the cell.
 
-- The notebook should be referenced in the ``tutorials.rst`` file with a section structure 
+- The notebook should be referenced in the ``tutorials.rst`` file with a section structure
   as follows:
 
   .. code-block:: RST
@@ -449,18 +435,18 @@ following:
 
           tutorial/name_of_new_tutorial_nb
 
-- The source data used for the notebook should also be added to the tutorial folder unless 
+- The source data used for the notebook should also be added to the tutorial folder unless
   the file is extremely large and/or can be accessed reliably another way.
 
-- For notebooks involving simulation studies, or very long run times consider saving 
-  intermediary outputs to make the notebook more user-friendly. Code the produces the 
-  output should be included as a markdown cell with code designated as python to ensure 
+- For notebooks involving simulation studies, or very long run times consider saving
+  intermediary outputs to make the notebook more user-friendly. Code the produces the
+  output should be included as a markdown cell with code designated as python to ensure
   appropriate formatting, while preventing the cell from executing should the user run
   all cells.
 
 
 Package builds
---------------------------------
+--------------
 
 The build process for the PyPI and conda distributions uses the following key
 files:
@@ -468,14 +454,14 @@ files:
 - ``make.py``: generic Python script for package builds. Most configuration is imported
   from pytools `make.py <https://github.com/BCG-Gamma/pytools/blob/develop/make.py>`__
   which is a build script that wraps the package build, as well as exposing the matrix
-  dependency definitions specified in the ``pyproject.toml`` as environment variables.
-- ``pyproject.toml``: metadata for PyPI, build settings and package dependencies.
-- ``tox.ini``: contains configurations for tox, testenv, flake8, isort, coverage report, 
-  and pytest.
-- ``condabuild/meta.yml``: metadata for conda, build settings and package dependencies.
+  dependency definitions specified in the ``pyproject.toml`` as environment variables
+- ``pyproject.toml``: metadata for PyPI, build settings and package dependencies
+- ``tox.ini``: contains configurations for tox, testenv, flake8, isort, coverage report,
+  and pytest
+- ``condabuild/meta.yml``: metadata for conda, build settings and package dependencies
 
 Versioning
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~
 
 FACET version numbering follows the `semantic versioning <https://semver.org/>`_
 approach, with the pattern ``MAJOR.MINOR.PATCH``.
@@ -483,7 +469,7 @@ The version can be bumped in the ``src/__init__.py`` by updating the
 ``__version__`` string accordingly.
 
 PyPI
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~
 
 PyPI project metadata, build settings and package dependencies
 are obtained from ``pyproject.toml``. To build and then publish the package to PyPI,
@@ -491,7 +477,7 @@ use the following commands:
 
 .. code-block:: sh
 
-    python make.py gamma-facet tox default
+    python make.py facet tox default
     flit publish
 
 Please note the following:
@@ -516,7 +502,7 @@ Please note the following:
 *   Build output will be stored in the ``dist/`` directory.
 
 Conda
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~
 
 conda build metadata, build settings and package dependencies
 are obtained from ``meta.yml``. To build and then publish the package to conda,
@@ -524,7 +510,7 @@ use the following commands:
 
 .. code-block:: sh
 
-    python make.py gamma-facet conda default
+    python make.py facet conda default
     anaconda upload --user BCG_Gamma dist/conda/noarch/<*package.tar.gz*>
 
 Please note the following:
@@ -532,28 +518,28 @@ Please note the following:
 - Build output will be stored in the ``dist/`` directory.
 - Some useful references for conda builds:
 
-    - `Conda build tutorial
-      <https://docs.conda.io/projects/conda-build/en/latest/user-guide/tutorials/building-conda-packages.html>`_
-    - `Conda build metadata reference
-      <https://docs.conda.io/projects/conda-build/en/latest/resources/define-metadata.html>`_
+  - `Conda build tutorial
+    <https://docs.conda.io/projects/conda-build/en/latest/user-guide/tutorials/building-conda-packages.html>`_
+  - `Conda build metadata reference
+    <https://docs.conda.io/projects/conda-build/en/latest/resources/define-metadata.html>`_
 
 Azure DevOps CI/CD
---------------------
+------------------
 
 This project uses `Azure DevOps <https://dev.azure.com/>`_ for CI/CD pipelines.
 The pipelines are defined in the ``azure-pipelines.yml`` file and are divided into
 the following stages:
 
-*   **code_quality_checks**: perform code quality checks for isort, black and flake8.
-*   **detect_build_config_changes**: detect whether the build configuration as specified
-    in the ``pyproject.yml`` has been modified. If it has, then a build test is run.
-*   **Unit tests**: runs all unit tests and then publishes test results and coverage.
-*   **conda_tox_build**: build the PyPI and conda distribution artifacts.
-*   **Release**: see release process below for more detail.
-*   **Docs**: build and publish documentation to GitHub Pages.
+* **code_quality_checks**: perform code quality checks for isort, black and flake8.
+* **detect_build_config_changes**: detect whether the build configuration as specified
+  in the ``pyproject.yml`` has been modified. If it has, then a build test is run.
+* **Unit tests**: runs all unit tests and then publishes test results and coverage.
+* **conda_tox_build**: build the PyPI and conda distribution artifacts.
+* **Release**: see release process below for more detail.
+* **Docs**: build and publish documentation to GitHub Pages.
 
 Release process
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~
 
 Before initiating the release process, please ensure the version number
 in ``src/__init__.py`` is correct and the format conforms to semantic
@@ -562,28 +548,35 @@ change and merge into develop before going any further.
 
 The release process has the following key steps:
 
-* Create a new release branch from develop and open a PR to master.
-* Opening the PR to master will automatically run all conda/pip build tests via
-  Azure Pipelines, triggering automatic upload of artifacts (conda and pip
-  packages) to Azure DevOps. At this stage, it is recommended that the pip package
+- Create a new release branch from the tag of the latest release named
+  ``release/<version>`` where ``<version>`` is the version number of the new release
+- Create a new branch from the baseline branch (e.g., ``2.0.x``) named
+  ``dev/<version>`` where ``<version>`` is the version number of the new release
+- Opening a PR to merge ``dev/<version>`` onto ``release/<version>``.
+  This will automatically run all conda/pip build tests via
+  Azure Pipelines prior to allowing to merge the PR.
+  This will trigger automatic upload of artifacts (conda and pip
+  packages) from Azure DevOps. At this stage, it is recommended that the pip package
   build is checked using `PyPI test <https://test.pypi.org/>`__ to ensure all
   metadata presents correctly. This is important as package versions in
   PyPI proper are immutable.
-* If everything passes and looks okay, merge the PR into master, this will
-  trigger the release pipeline which will:
+- If everything passes and looks okay, merge the PR using a *merge commit*
+  (not squashing).
+  This will trigger the release pipeline which will:
 
-  * Tag the release commit with version number as specified in ``src/__init__.py``.
-  * Create a release on GitHub for the new version, please check the `documentation 
+  * Tag the release commit with version number as specified in ``src/__init__.py``
+  * Create a release on GitHub for the new version, please check the `documentation
     <https://docs.github.com/en/free-pro-team@latest/github/administering-a-repository/releasing-projects-on-github>`__
-    for details.
-  * Pre-fill the GitHub release title and description, including the changelog based on 
+    for details
+  * Pre-fill the GitHub release title and description, including the changelog based on
     commits since the last release. Please note this can be manually edited to be more
-    succinct afterwards.
-  * Attach build artifacts (conda and pip packages) to GitHub release.
+    succinct afterwards
+  * Attach build artifacts (conda and pip packages) to GitHub release
+  * Upload build artifacts to conda/PyPI using ``anaconda upload`` and
+    ``flit publish``, respectively
 
-*  Manually upload build artifacts to conda/PyPI using ``anaconda upload`` and
-   ``flit publish``, respectively (see relevant sections under Package builds above)
-   This may be automated in the future.
-*  Remove any test versions for pip from PyPI test.
-*  Merge any changes from release branch also back to develop.
-*  Bump up version in ``src/__init__.py`` on develop to start work towards next release.
+-  Remove any test versions for pip from PyPI test
+-  Merge ``release/<version>`` back onto the baseline branch from which
+   ``dev/<version>`` was branched
+-  Bump up version in ``src/__init__.py`` on the baseline branch to start work towards
+   the next release
