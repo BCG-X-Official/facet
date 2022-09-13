@@ -52,6 +52,12 @@ T_ShapCalculator = TypeVar("T_ShapCalculator", bound=ShapCalculator[Any])
 
 
 #
+# Constants
+#
+ASSERTION__CALCULATOR_IS_FITTED = "calculator is fitted"
+
+
+#
 # Ensure all symbols introduced below are included in __all__
 #
 
@@ -362,7 +368,7 @@ def fill_diagonal(
     m: npt.NDArray[np.float_], value: Union[float, npt.NDArray[np.float_]]
 ) -> None:
     """
-    Fill the diagonal of the `feature x feature` matrix for each output with the given
+    In each `feature x feature` matrix for each output, fill the diagonal with the given
     value.
 
     :param m: array of shape `(n_outputs, n_features, n_features)`
@@ -461,7 +467,7 @@ class ShapContext(metaclass=ABCMeta):
     Contextual data for global SHAP calculations.
     """
 
-    #: SHAP vectors,
+    #: SHAP vectors
     #: with shape `(n_outputs, n_features, n_observations)`
     p_i: npt.NDArray[np.float_]
 
@@ -477,7 +483,7 @@ class ShapContext(metaclass=ABCMeta):
     #: with shape `(n_outputs, n_features, 1)`
     var_p_i: npt.NDArray[np.float_]
 
-    #: SHAP interaction vectors,
+    #: SHAP interaction vectors
     #: with shape `(n_outputs, n_features, n_features, n_observations)`
     p_ij: Optional[npt.NDArray[np.float_]]
 
@@ -519,12 +525,12 @@ class ShapValueContext(ShapContext):
             assert (
                 shap_calculator.output_names_ is not None
                 and shap_calculator.feature_index_ is not None
-            ), "calculator is fitted"
+            ), ASSERTION__CALCULATOR_IS_FITTED
             n_outputs: int = len(shap_calculator.output_names_)
             n_features: int = len(shap_calculator.feature_index_)
             n_observations: int = len(shap_values)
 
-            # p[i] = p_i
+            # p[i]
             # shape: (n_outputs, n_features, n_observations)
             # the vector of shap values for every output and feature
             return ensure_last_axis_is_fast(
@@ -539,7 +545,9 @@ class ShapValueContext(ShapContext):
             # shape: (n_observations)
             # return a 1d array of weights that aligns with the observations axis of the
             # SHAP values tensor (axis 1)
-            assert shap_calculator.sample_ is not None and "calculator is fitted"
+            assert (
+                shap_calculator.sample_ is not None and ASSERTION__CALCULATOR_IS_FITTED
+            )
             _weight_sr = shap_calculator.sample_.weight
             if _weight_sr is not None:
                 return cast(
@@ -563,7 +571,7 @@ class ShapInteractionValueContext(ShapContext):
         assert (
             shap_calculator.output_names_ is not None
             and shap_calculator.feature_index_ is not None
-        ), "calculator is fitted"
+        ), ASSERTION__CALCULATOR_IS_FITTED
         n_features: int = len(shap_calculator.feature_index_)
         n_outputs: int = len(shap_calculator.output_names_)
         n_observations: int = len(shap_values) // n_features
@@ -580,7 +588,7 @@ class ShapInteractionValueContext(ShapContext):
         # return a 1d array of weights that aligns with the observations axis of the
         # SHAP values tensor (axis 1)
         weight: Optional[npt.NDArray[np.float_]]
-        assert shap_calculator.sample_ is not None and "calculator is fitted"
+        assert shap_calculator.sample_ is not None and ASSERTION__CALCULATOR_IS_FITTED
         _weight_sr = shap_calculator.sample_.weight
         if _weight_sr is not None:
             _observation_indices = shap_values.index.get_level_values(
@@ -595,8 +603,8 @@ class ShapInteractionValueContext(ShapContext):
         # p[i, j]
         # shape: (n_outputs, n_features, n_features, n_observations)
         # the vector of interaction values for every output and feature pairing
-        # for improved numerical precision, we ensure the last axis is the fast axis
-        # i.e. stride size equals item size (see documentation for numpy.sum)
+        # for improved numerical precision, we ensure the last axis is the fast axis,
+        # i.e., stride size equals item size (see documentation for numpy.sum)
         p_ij = ensure_last_axis_is_fast(
             np.transpose(
                 shap_values.values.reshape(
@@ -608,6 +616,7 @@ class ShapInteractionValueContext(ShapContext):
 
         # p[i]
         # shape: (n_outputs, n_features, n_observations)
+        # the vector of shap values for every output and feature
         super().__init__(
             p_i=ensure_last_axis_is_fast(p_ij.sum(axis=2)),
             p_ij=ensure_last_axis_is_fast(
@@ -664,9 +673,9 @@ class ShapInteractionValueContext(ShapContext):
 
         _denominator = cov_p_ii_p_jj**2 - var_p_ii * var_p_jj
 
-        # The denominator is <= 0 due to the Cauchy-Schwarz inequality.
+        # The denominator is ≤ 0 due to the Cauchy-Schwarz inequality.
         # It is 0 only if the variance of p_ii or p_jj are zero (i.e., no main effect).
-        # In that fringe case, the nominator will also be zero and we set the adjustment
+        # In that edge case, the nominator will also be zero, and we set the adjustment
         # factor to 0 (intuitively, there is nothing to adjust in a zero-length vector)
         adjustment_factors_ij = np.zeros(_nominator.shape)
         # todo: prevent catastrophic cancellation where nominator/denominator are ~0.0

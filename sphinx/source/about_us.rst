@@ -48,6 +48,9 @@ okay that was the last geometry pun, we promise.
 | |SithanK|         | |RicardoK|        | |FlorentM|        | |JoergS|          |
 | Sithan Kanna      | Ricardo Kennedy   | Florent Martin    | Jörg Schneider    |
 +-------------------+-------------------+-------------------+-------------------+
+| |AndyS|           | |MateuszS|        |                   |                   |
+| Andy Shora        | Mateusz Sokół     |                   |                   |
++-------------------+-------------------+-------------------+-------------------+
 
 .. |JasonB| image:: _static/team_contributors/Jason_Bentley.jpg
     :class: team_pic
@@ -73,3 +76,8 @@ okay that was the last geometry pun, we promise.
 .. |JoergS| image:: _static/team_contributors/Joerg_Schneider.jpg
     :class: team_pic
 
+.. |AndyS| image:: _static/team_contributors/Andy_Shora.jpg
+    :class: team_pic
+
+.. |MateuszS| image:: _static/team_contributors/Mateusz_Sokol.jpg
+    :class: team_pic

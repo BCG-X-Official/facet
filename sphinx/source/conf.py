@@ -1,7 +1,7 @@
 """
 Configuration file for the Sphinx documentation builder.
 
-Receives majority of configuration from pytools conf_base.py
+Receives the majority of the configuration from pytools conf_base.py
 """
 
 import os

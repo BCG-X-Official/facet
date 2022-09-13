@@ -105,7 +105,7 @@ class BaseBootstrapCV(
 
         rs = check_random_state(self.random_state)
         indices: npt.NDArray[np.int_] = np.arange(n)
-        for i in range(self.n_splits):
+        for _ in range(self.n_splits):
             while True:
                 train: npt.NDArray[np.int_] = self._select_train_indices(
                     n_samples=n, random_state=rs, y=y

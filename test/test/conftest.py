@@ -47,7 +47,6 @@ logging.getLogger("shap").setLevel(logging.WARNING)
 
 # get display width from terminal
 pd.set_option("display.width", None)
-
 # 3 digits precision for easier readability
 pd.set_option("display.precision", 3)
 

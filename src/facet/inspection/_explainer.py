@@ -5,6 +5,7 @@ Factories for SHAP explainers from the ``shap`` package.
 import functools
 import logging
 from abc import ABCMeta, abstractmethod
+from multiprocessing.synchronize import Lock as LockType
 from typing import (
     Any,
     Callable,
@@ -268,6 +269,9 @@ class ExplainerQueue(JobQueue[ArraysAny, ArraysAny]):
     A queue splitting a data set to be explained into multiple jobs.
     """
 
+    # defined in superclass, repeated here for Sphinx
+    lock: LockType
+
     #: the SHAP explainer to use
     explainer: BaseExplainer
 
@@ -352,6 +356,18 @@ class ParallelExplainer(BaseExplainer, ParallelizableMixin):
     A wrapper class, turning an explainer into a parallelized version, explaining
     chunks of observations in parallel.
     """
+
+    # defined in superclass, repeated here for Sphinx
+    n_jobs: Optional[int]
+
+    # defined in superclass, repeated here for Sphinx
+    shared_memory: Optional[bool]
+
+    # defined in superclass, repeated here for Sphinx
+    pre_dispatch: Optional[Union[str, int]]
+
+    # defined in superclass, repeated here for Sphinx
+    verbose: Optional[int]
 
     #: The explainer being parallelized by this wrapper
     explainer: BaseExplainer
@@ -456,8 +472,8 @@ class TreeExplainerFactory(ExplainerFactory):
         uses_background_dataset: bool = True,
     ) -> None:
         """
-        :param model_output: (optional) override the default model output parameter
-        :param feature_perturbation: (optional) override the default
+        :param model_output: override the default model output parameter (optional)
+        :param feature_perturbation: override the default (optional)
             feature_perturbation parameter
         :param uses_background_dataset: if ``False``, don't pass the background
             dataset on to the tree explainer even if a background dataset is passed
@@ -572,14 +588,13 @@ class KernelExplainerFactory(ExplainerFactory):
         data_size_limit: Optional[int] = 100,
     ) -> None:
         """
-        :param link: (optional) override the default link parameter
-        :param l1_reg: (optional) override the default l1_reg parameter of method
+        :param link: override the default link parameter (optional)
+        :param l1_reg: override the default l1_reg parameter of method
             :meth:`~shap.KernelExplainer.shap_values`; pass ``None`` to use the
-            default value used by :meth:`~shap.KernelExplainer.shap_values`
-        :param data_size_limit: (optional) maximum number of observations to use as
+            default value used by :meth:`~shap.KernelExplainer.shap_values` (optional)
+        :param data_size_limit: maximum number of observations to use as
             the background data set; larger data sets will be down-sampled using
-            kmeans.
-            Pass ``None`` to prevent down-sampling the background data set
+            kmeans; don't downsample if omitted (optional)
         """
         super().__init__()
         validate_type(link, expected_type=str, optional=True, name="arg link")

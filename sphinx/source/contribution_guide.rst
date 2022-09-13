@@ -32,8 +32,8 @@ line.
 
 Pytest
 ~~~~~~
-Run ``pytest tests/`` from the facet root folder or use the PyCharm test runner. To
-measure coverage, use ``pytest --cov=src/facet tests/``. Note that the code coverage
+Run ``pytest test/`` from the facet root folder or use the PyCharm test runner. To
+measure coverage, use ``pytest --cov=src/facet test/``. Note that the code coverage
 reports are also generated in the Azure Pipelines (see CI/CD section).
 
 Note that you will need to set the PYTHONPATH to the ``src/`` directory by

@@ -41,9 +41,10 @@ on `stackoverflow <https://stackoverflow.com/>`_.
 
         # run inspector
         inspector = LearnerInspector(
+            pipeline=clf_selector.best_estimator_,
             n_jobs=-3,
             verbose=False,
-        ).fit(crossfit=ranker.best_model_crossfit)
+        ).fit(sample=sample)
 
         # get shap values and associated data
         shap_data = inspector.shap_plot_data()
@@ -51,21 +52,21 @@ on `stackoverflow <https://stackoverflow.com/>`_.
 
 
 
-5. **How can I extract CV performance from the LearnerRanker to create my
+5. **How can I extract CV performance from the ModelSelector to create my
    own summaries or figures?**
 
     You can extract the desired information as a data frame from the fitted
-    LearnerRanker object.
+    ModelSelector object.
 
     .. code-block:: Python
 
-        # after fitting a ranker
-        cv_result_df = ranker.summary_report()
+        # after fitting a selector
+        cv_result_df = selector.summary_report()
 
 
-6. **Can I use a custom scoring function with the LearnerRanker?**
+6. **Can I use a custom scoring function with the ModelSelector?**
 
-    The LearnerRanker works in a similar fashion to *scikit-learn*'s
+    The ModelSelector works in a similar fashion to *scikit-learn*'s
     `gridsearchCV <https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.GridSearchCV.html>`_
     so much of the functionality is equivalent. You can pass a custom scoring
     function much as you would for gridsearchCV.
@@ -84,11 +85,16 @@ on `stackoverflow <https://stackoverflow.com/>`_.
 
         my_score = make_scorer(huber_loss, greater_is_better=False)
 
-        # use the LearnerRanker with custom scorer and get summary report
-        ranker = LearnerRanker(grids=FACET_regressor_grid, cv=cv_iterator, scoring=my_score).fit(
+        # use the ModelSelector with custom scorer and get summary report
+        selector = ModelSelector(
+            searcher_type=GridSearchCV,
+            parameter_space=ps,
+            cv=cv_iterator,
+            scoring=my_score
+        ).fit(
             sample=FACET_sample_object
         )
-        ranker.summary_report()
+        selector.summary_report()
 
     You can see more information on custom scoring with *scikit-learn*
     `here <https://scikit-learn.org/stable/modules/model_evaluation.html#scoring>`__.
@@ -97,20 +103,25 @@ on `stackoverflow <https://stackoverflow.com/>`_.
 7. **How can I generate standard** *scikit-learn* **summaries for classifiers, such as a
    classification report, confusion matrix or ROC curve?**
 
-    You can extract the fitted best scored model from the LearnerRanker and
+    You can extract the fitted best scored model from the ModelSelector and
     then generate these summaries as you normally would in your *scikit-learn*
     workflow.
 
     .. code-block:: Python
 
         # get your ranking object
-        ranker = LearnerRanker(grids=FACET_classifier_grid, cv=cv_iterator).fit(
+        selector = ModelSelector(
+            searcher_type=GridSearchCV,
+            parameter_space=ps,
+            cv=cv_iterator,
+            scoring="accuracy"
+        ).fit(
             sample=FACET_sample
         )
 
         # obtain required quantities
-        y_pred = ranker.best_model_.predict(FACET_sample.features)
-        y_prob = ranker.best_model_.predict_proba(FACET_sample.features)[1]
+        y_pred = selector.best_estimator_.predict(FACET_sample.features)
+        y_prob = selector.best_estimator_.predict_proba(FACET_sample.features)[1]
         y_true = FACET_sample.target
 
         # generate outputs of interest
@@ -138,14 +149,6 @@ on `stackoverflow <https://stackoverflow.com/>`_.
         ax.set_ylabel('True Positive Rate')
         ax.set_title('ROC')
         ax.legend(loc='lower right')
-
-
-    For practical examples see
-    :ref:`Standard Scikit-learn Classification Summary with
-    FACET<scikit-learn-summary-tut>`,
-    which also covers using the fit for each cross-validation
-    fold (the FACET crossfit object) to generate summaries of mean performance with
-    assessments of variability.
 
 Citation
 --------
