@@ -31,7 +31,11 @@ from sklearndf.transformation import (
 import facet
 from facet.data import Sample
 from facet.inspection import LearnerInspector, TreeExplainerFactory
-from facet.selection import ModelSelector, MultiEstimatorParameterSpace, ParameterSpace
+from facet.selection import (
+    LearnerSelector,
+    MultiEstimatorParameterSpace,
+    ParameterSpace,
+)
 from facet.validation import BootstrapCV, StratifiedBootstrapCV
 
 logging.basicConfig(level=logging.DEBUG)
@@ -170,8 +174,8 @@ def regressor_selector(
     ],
     sample: Sample,
     n_jobs: int,
-) -> ModelSelector[RegressorPipelineDF[LGBMRegressorDF], GridSearchCV]:
-    return ModelSelector(
+) -> LearnerSelector[RegressorPipelineDF[LGBMRegressorDF], GridSearchCV]:
+    return LearnerSelector(
         searcher_type=GridSearchCV,
         parameter_space=regressor_parameters,
         cv=cv_kfold,
@@ -185,7 +189,7 @@ PARAM_CANDIDATE__ = "param_candidate__"
 
 @pytest.fixture  # type: ignore
 def best_lgbm_model(
-    regressor_selector: ModelSelector[
+    regressor_selector: LearnerSelector[
         RegressorPipelineDF[LGBMRegressorDF], GridSearchCV
     ],
     sample: Sample,
@@ -412,7 +416,7 @@ def iris_classifier_selector_binary(
     iris_sample_binary: Sample,
     cv_stratified_bootstrap: StratifiedBootstrapCV,
     n_jobs: int,
-) -> ModelSelector[ClassifierPipelineDF[RandomForestClassifierDF], GridSearchCV]:
+) -> LearnerSelector[ClassifierPipelineDF[RandomForestClassifierDF], GridSearchCV]:
     return fit_classifier_selector(
         sample=iris_sample_binary, cv=cv_stratified_bootstrap, n_jobs=n_jobs
     )
@@ -423,7 +427,7 @@ def iris_classifier_selector_multi_class(
     iris_sample_multi_class: Sample,
     cv_stratified_bootstrap: StratifiedBootstrapCV,
     n_jobs: int,
-) -> ModelSelector[ClassifierPipelineDF[RandomForestClassifierDF], GridSearchCV]:
+) -> LearnerSelector[ClassifierPipelineDF[RandomForestClassifierDF], GridSearchCV]:
     return fit_classifier_selector(
         sample=iris_sample_multi_class, cv=cv_stratified_bootstrap, n_jobs=n_jobs
     )
@@ -432,7 +436,7 @@ def iris_classifier_selector_multi_class(
 @pytest.fixture  # type: ignore
 def iris_classifier_selector_dual_target(
     iris_sample_binary_dual_target: Sample, cv_bootstrap: BootstrapCV, n_jobs: int
-) -> ModelSelector[ClassifierPipelineDF[RandomForestClassifierDF], GridSearchCV]:
+) -> LearnerSelector[ClassifierPipelineDF[RandomForestClassifierDF], GridSearchCV]:
     return fit_classifier_selector(
         sample=iris_sample_binary_dual_target, cv=cv_bootstrap, n_jobs=n_jobs
     )
@@ -440,7 +444,7 @@ def iris_classifier_selector_dual_target(
 
 @pytest.fixture  # type: ignore
 def iris_classifier_binary(
-    iris_classifier_selector_binary: ModelSelector[
+    iris_classifier_selector_binary: LearnerSelector[
         ClassifierPipelineDF[RandomForestClassifierDF], GridSearchCV
     ],
 ) -> ClassifierPipelineDF[RandomForestClassifierDF]:
@@ -449,7 +453,7 @@ def iris_classifier_binary(
 
 @pytest.fixture  # type: ignore
 def iris_classifier_multi_class(
-    iris_classifier_selector_multi_class: ModelSelector[
+    iris_classifier_selector_multi_class: LearnerSelector[
         ClassifierPipelineDF[RandomForestClassifierDF], GridSearchCV
     ],
 ) -> ClassifierPipelineDF[RandomForestClassifierDF]:
@@ -474,7 +478,7 @@ def iris_inspector_multi_class(
 
 def fit_classifier_selector(
     sample: Sample, cv: BaseCrossValidator, n_jobs: int
-) -> ModelSelector[ClassifierPipelineDF[RandomForestClassifierDF], GridSearchCV]:
+) -> LearnerSelector[ClassifierPipelineDF[RandomForestClassifierDF], GridSearchCV]:
     # define the parameter space
     parameter_space = ParameterSpace(
         ClassifierPipelineDF(
@@ -487,7 +491,7 @@ def fit_classifier_selector(
 
     # pipeline inspector only supports binary classification,
     # therefore filter the sample down to only 2 target classes
-    return ModelSelector(
+    return LearnerSelector(
         searcher_type=GridSearchCV,
         parameter_space=parameter_space,
         cv=cv,

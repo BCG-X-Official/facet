@@ -43,7 +43,7 @@ visualizations, and is now fully type-checked by |mypy|.
 ``facet.selection``
 ^^^^^^^^^^^^^^^^^^^
 
-- API: :class:`.ModelSelector` replaces FACET 1 class ``LearnerRanker``, and now
+- API: :class:`.LearnerSelector` replaces FACET 1 class ``LearnerRanker``, and now
   supports any CV searcher that supports `scikit-learn`'s CV search API, including
   `scikit-learn`'s native searchers such as :class:`.GridSearchCV` or
   :class:`.RandomizedSearchCV`

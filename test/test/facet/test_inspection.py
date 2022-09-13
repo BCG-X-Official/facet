@@ -29,7 +29,7 @@ from facet.inspection import (
     LearnerInspector,
     TreeExplainerFactory,
 )
-from facet.selection import ModelSelector
+from facet.selection import LearnerSelector
 
 # noinspection PyMissingOrEmptyDocstring
 
@@ -39,7 +39,7 @@ T = TypeVar("T")
 
 
 def test_regressor_selector(
-    regressor_selector: ModelSelector[
+    regressor_selector: LearnerSelector[
         RegressorPipelineDF[LGBMRegressorDF], GridSearchCV
     ]
 ) -> None:
@@ -99,7 +99,7 @@ def test_model_inspection(
 
 
 def test_binary_classifier_ranking(
-    iris_classifier_selector_binary: ModelSelector[
+    iris_classifier_selector_binary: LearnerSelector[
         ClassifierPipelineDF[RandomForestClassifierDF], GridSearchCV
     ]
 ) -> None:
@@ -661,7 +661,7 @@ def test_model_inspection_classifier_interaction(
 
 def test_model_inspection_classifier_interaction_dual_target(
     iris_sample_binary_dual_target: Sample,
-    iris_classifier_selector_dual_target: ModelSelector[
+    iris_classifier_selector_dual_target: LearnerSelector[
         ClassifierPipelineDF[RandomForestClassifierDF], GridSearchCV
     ],
     iris_target_name: str,

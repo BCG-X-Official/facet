@@ -38,7 +38,7 @@ from facet.selection.base import BaseParameterSpace, CandidateEstimatorDF
 
 log = logging.getLogger(__name__)
 
-__all__ = ["ModelSelector"]
+__all__ = ["LearnerSelector"]
 
 #
 # Type constants
@@ -54,7 +54,7 @@ BaseSearchCV = next(
 # Type variables
 #
 
-T_ModelSelector = TypeVar("T_ModelSelector", bound="ModelSelector[Any, Any]")
+T_LearnerSelector = TypeVar("T_LearnerSelector", bound="LearnerSelector[Any, Any]")
 T_EstimatorDF = TypeVar("T_EstimatorDF", bound=EstimatorDF)
 # mypy - disabling due to lack of support for dynamic types
 T_SearchCV = TypeVar("T_SearchCV", bound=BaseSearchCV)  # type: ignore
@@ -78,7 +78,7 @@ __tracker = AllTracker(globals())
 
 
 @inheritdoc(match="[see superclass]")
-class ModelSelector(
+class LearnerSelector(
     FittableMixin[Sample], ParallelizableMixin, Generic[T_EstimatorDF, T_SearchCV]
 ):
     """
@@ -125,7 +125,7 @@ class ModelSelector(
     #: Additional parameters to be passed on to the searcher.
     searcher_params: Dict[str, Any]
 
-    #: The searcher used to fit this ModelSelector; ``None`` if not fitted.
+    #: The searcher used to fit this LearnerSelector; ``None`` if not fitted.
     searcher_: Optional[T_SearchCV]
 
     # regular expressions and replacement patterns for selecting and renaming
@@ -272,11 +272,11 @@ class ModelSelector(
 
     def fit(  # type: ignore[override]
         # todo: remove 'type: ignore' once mypy correctly infers return type
-        self: T_ModelSelector,
+        self: T_LearnerSelector,
         sample: Sample,
         groups: Union[pd.Series, npt.NDArray[Any], Sequence[Any], None] = None,
         **fit_params: Any,
-    ) -> T_ModelSelector:
+    ) -> T_LearnerSelector:
         """
         Search this model selector's parameter space to identify the model with the
         best-performing hyper-parameter combination, using the given sample to fit and
@@ -361,8 +361,8 @@ class ModelSelector(
             if unpack_candidate:
                 # remove the "candidate" layer in the parameter output if we're dealing
                 # with a multi parameter space
-                return ModelSelector._CV_RESULT_CANDIDATE_PATTERN.sub(
-                    ModelSelector._CV_RESULT_CANDIDATE_REPL, name
+                return LearnerSelector._CV_RESULT_CANDIDATE_PATTERN.sub(
+                    LearnerSelector._CV_RESULT_CANDIDATE_REPL, name
                 )
             else:
                 return name

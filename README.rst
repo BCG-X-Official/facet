@@ -103,7 +103,7 @@ In this quickstart we will train a Random Forest regressor using 10 repeated
 *sklearndf* we can create a *pandas* DataFrame compatible workflow. However,
 FACET provides additional enhancements to keep track of our feature matrix
 and target vector using a sample object (`Sample`) and easily compare
-hyperparameter configurations and even multiple learners with the `ModelSelector`.
+hyperparameter configurations and even multiple learners with the `LearnerSelector`.
 
 .. code-block:: Python
 
@@ -117,7 +117,7 @@ hyperparameter configurations and even multiple learners with the `ModelSelector
 
     # relevant FACET imports
     from facet.data import Sample
-    from facet.selection import ModelSelector, ParameterSpace
+    from facet.selection import LearnerSelector, ParameterSpace
 
     # declaring url with data
     data_url = 'https://web.stanford.edu/~hastie/Papers/LARS/diabetes.data'
@@ -153,7 +153,7 @@ hyperparameter configurations and even multiple learners with the `ModelSelector
     rkf_cv = RepeatedKFold(n_splits=5, n_repeats=10, random_state=42)
 
     # rank your candidate models by performance
-    selector = ModelSelector(
+    selector = LearnerSelector(
         searcher_type=GridSearchCV,
         parameter_space=rnd_forest_ps,
         cv=rkf_cv,

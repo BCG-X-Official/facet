@@ -25,7 +25,11 @@ from sklearndf.regression.extra import LGBMRegressorDF
 
 from ..conftest import check_ranking
 from facet.data import Sample
-from facet.selection import ModelSelector, MultiEstimatorParameterSpace, ParameterSpace
+from facet.selection import (
+    LearnerSelector,
+    MultiEstimatorParameterSpace,
+    ParameterSpace,
+)
 from facet.validation import BootstrapCV, StratifiedBootstrapCV
 
 log = logging.getLogger(__name__)
@@ -75,9 +79,9 @@ def test_model_selector(
     # define the circular cross validator with just 5 splits (to speed up testing)
     cv = BootstrapCV(n_splits=5, random_state=42)
 
-    ranker: ModelSelector[
+    ranker: LearnerSelector[
         RegressorPipelineDF[LGBMRegressorDF], GridSearchCV
-    ] = ModelSelector(
+    ] = LearnerSelector(
         searcher_type=GridSearchCV,
         parameter_space=regressor_parameters,
         cv=cv,
@@ -130,9 +134,9 @@ def test_model_selector_no_preprocessing(n_jobs: int) -> None:
     )
     test_sample: Sample = Sample(observations=test_data, target_name="target")
 
-    model_selector: ModelSelector[
+    model_selector: LearnerSelector[
         ClassifierPipelineDF[SVCDF], GridSearchCV
-    ] = ModelSelector(
+    ] = LearnerSelector(
         searcher_type=GridSearchCV,
         parameter_space=parameter_space,
         cv=cv,
@@ -315,11 +319,11 @@ def test_model_selector_regression(
             "of arg searcher_type, but included: param_grid"
         ),
     ):
-        ModelSelector(GridSearchCV, regressor_parameters, param_grid=None)
+        LearnerSelector(GridSearchCV, regressor_parameters, param_grid=None)
 
-    ranker: ModelSelector[
+    ranker: LearnerSelector[
         RegressorPipelineDF[LGBMRegressorDF], GridSearchCV
-    ] = ModelSelector(
+    ] = LearnerSelector(
         GridSearchCV,
         regressor_parameters,
         scoring="r2",
@@ -374,9 +378,9 @@ def test_model_selector_classification(
         # define an illegal grid list, mixing classification with regression
         MultiEstimatorParameterSpace(ps1, ps2)  # type: ignore
 
-    model_selector: ModelSelector[
+    model_selector: LearnerSelector[
         ClassifierPipelineDF[RandomForestClassifierDF], GridSearchCV
-    ] = ModelSelector(
+    ] = LearnerSelector(
         searcher_type=GridSearchCV,
         parameter_space=ps1,
         cv=cv_stratified_bootstrap,
