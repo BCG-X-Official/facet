@@ -236,7 +236,7 @@ def regressor_inspector(
             feature_perturbation="tree_path_dependent", uses_background_dataset=True
         ),
         n_jobs=n_jobs,
-    ).fit(sample=sample)
+    ).fit(sample)
 
     return inspector
 
@@ -464,7 +464,7 @@ def iris_inspector_multi_class(
 ) -> LearnerInspector[ClassifierPipelineDF[RandomForestClassifierDF]]:
     return LearnerInspector(
         pipeline=iris_classifier_multi_class, shap_interaction=True, n_jobs=n_jobs
-    ).fit(sample=iris_sample_multi_class)
+    ).fit(iris_sample_multi_class)
 
 
 #

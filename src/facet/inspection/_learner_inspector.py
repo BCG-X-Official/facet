@@ -219,10 +219,9 @@ class LearnerInspector(
         str, ParallelizableMixin.__init__.__doc__
     )
 
-    def fit(  # type: ignore[override]
-        # todo: remove 'type: ignore' once mypy correctly infers return type
+    def fit(
         self: T_LearnerInspector,
-        sample: Sample,
+        __sample: Sample,
         **fit_params: Any,
     ) -> T_LearnerInspector:
         """
@@ -231,7 +230,7 @@ class LearnerInspector(
         This will calculate SHAP values and, if enabled in the underlying SHAP
         explainer, also SHAP interaction values.
 
-        :param sample: the background sample to be used for the global explanation
+        :param __sample: the background sample to be used for the global explanation
             of this model
         :param fit_params: additional keyword arguments (ignored; accepted for
             compatibility with :class:`.FittableMixin`)
@@ -241,11 +240,11 @@ class LearnerInspector(
         learner: LearnerDF = self.pipeline.final_estimator
 
         _is_classifier = is_classifier(learner)
-        if _is_classifier and isinstance(sample.target_name, list):
+        if _is_classifier and isinstance(__sample.target_name, list):
             raise ValueError(
                 "only single-output classifiers (binary or multi-class) are supported, "
                 "but the given classifier has been fitted on multiple columns "
-                f"{sample.target_name}"
+                f"{__sample.target_name}"
             )
 
         shap_global_projector: Union[
@@ -289,10 +288,10 @@ class LearnerInspector(
 
             shap_global_projector = ShapVectorProjector()
 
-        shap_calculator.fit(sample)
+        shap_calculator.fit(__sample)
         shap_global_projector.fit(shap_calculator=shap_calculator)
 
-        self._sample = sample
+        self._sample = __sample
         self._shap_calculator = shap_calculator
         self._shap_global_projector = shap_global_projector
 

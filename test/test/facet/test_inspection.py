@@ -89,7 +89,7 @@ def test_model_inspection(
         pipeline=best_lgbm_model,
         explainer_factory=KernelExplainerFactory(link="identity", data_size_limit=20),
         n_jobs=n_jobs,
-    ).fit(sample=sample)
+    ).fit(sample)
     inspector_2.shap_values()
 
     linkage_tree = cast(LinkageTree, inspector_2.feature_association_linkage())
@@ -132,7 +132,7 @@ def test_model_inspection_classifier_binary(
         pipeline=iris_classifier_binary,
         shap_interaction=False,
         n_jobs=n_jobs,
-    ).fit(sample=iris_sample_binary)
+    ).fit(iris_sample_binary)
 
     # calculate the shap value matrix, without any consolidation
     shap_values = model_inspector.shap_values()
@@ -198,7 +198,7 @@ def test_model_inspection_classifier_binary_single_shap_output() -> None:
     ).fit(sample_df.features, sample_df.target)
 
     # fit the inspector
-    LearnerInspector(pipeline=pipeline, n_jobs=-3).fit(sample=sample_df)
+    LearnerInspector(pipeline=pipeline, n_jobs=-3).fit(sample_df)
 
 
 # noinspection DuplicatedCode
@@ -398,7 +398,7 @@ def test_model_inspection_classifier_interaction(
             feature_perturbation="tree_path_dependent", uses_background_dataset=True
         ),
         n_jobs=n_jobs,
-    ).fit(sample=iris_sample_binary)
+    ).fit(iris_sample_binary)
 
     model_inspector_no_interaction = LearnerInspector(
         pipeline=iris_classifier_binary,
@@ -407,7 +407,7 @@ def test_model_inspection_classifier_interaction(
             feature_perturbation="tree_path_dependent", uses_background_dataset=True
         ),
         n_jobs=n_jobs,
-    ).fit(sample=iris_sample_binary)
+    ).fit(iris_sample_binary)
 
     # calculate shap interaction values
     shap_interaction_values: pd.DataFrame = model_inspector.shap_interaction_values()
@@ -677,7 +677,7 @@ def test_model_inspection_classifier_interaction_dual_target(
         ),
     ):
         LearnerInspector(pipeline=iris_classifier_dual_target, n_jobs=n_jobs).fit(
-            sample=iris_sample_binary_dual_target
+            iris_sample_binary_dual_target
         )
 
 
