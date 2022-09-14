@@ -175,7 +175,7 @@ hyperparameter configurations and even multiple learners with the `ModelSelector
         cv=rkf_cv,
         n_jobs=-3,
         scoring="r2"
-    ).fit(sample=diabetes_sample)
+    ).fit(diabetes_sample)
 
     # get summary report
     selector.summary_report()
@@ -250,7 +250,7 @@ The key global metrics for each pair of features in a model are:
     inspector = LearnerInspector(
         pipeline=selector.best_estimator_,
         n_jobs=-3
-    ).fit(sample=diabetes_sample)
+    ).fit(diabetes_sample)
 
 **Synergy**
 
