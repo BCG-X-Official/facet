@@ -10,6 +10,7 @@ from typing import (
     Callable,
     Dict,
     Generic,
+    Iterable,
     List,
     Optional,
     Pattern,
@@ -34,6 +35,7 @@ from sklearndf import EstimatorDF
 from sklearndf.pipeline import LearnerPipelineDF
 
 from facet.data import Sample
+from facet.selection import MultiEstimatorParameterSpace, ParameterSpace
 from facet.selection.base import BaseParameterSpace, CandidateEstimatorDF
 
 log = logging.getLogger(__name__)
@@ -83,7 +85,7 @@ class LearnerSelector(
 ):
     """
     Select the best model obtained by fitting an estimator using different
-    choices of hyper-parameters from a :class:`.ParameterSpace`, or even
+    choices of hyperparameters from a :class:`.ParameterSpace`, or even
     simultaneously evaluating multiple competing estimators from a
     :class:`.MultiEstimatorParameterSpace`.
     """
@@ -154,8 +156,11 @@ class LearnerSelector(
     def __init__(
         self,
         searcher_type: Callable[..., T_SearchCV],
-        parameter_space: BaseParameterSpace[T_EstimatorDF],
-        *,
+        parameter_space: Union[
+            ParameterSpace[T_EstimatorDF],
+            MultiEstimatorParameterSpace[T_EstimatorDF],
+            Iterable[ParameterSpace[T_EstimatorDF]],
+        ],
         cv: Optional[BaseCrossValidator] = None,
         scoring: Union[
             str,
@@ -174,7 +179,9 @@ class LearnerSelector(
         """
         :param searcher_type: a cross-validation searcher class, or any other
             callable that instantiates a cross-validation searcher
-        :param parameter_space: the parameter space to search
+        :param parameter_space: one or more parameter spaces to search; when passing
+            multiple parameter spaces as an iterable, they are combined into a
+            :class:`.MultiEstimatorParameterSpace`
         :param cv: the cross-validator to be used by the searcher
             (e.g., :class:`~sklearn.model_selection.RepeatedKFold`)
         :param scoring: a scoring function (by name, or as a callable) to be used by the
@@ -195,7 +202,11 @@ class LearnerSelector(
         )
 
         self.searcher_type = (searcher_type,)
-        self.parameter_space = parameter_space
+        self.parameter_space = (
+            parameter_space
+            if isinstance(parameter_space, BaseParameterSpace)
+            else MultiEstimatorParameterSpace(*parameter_space)
+        )
         self.cv = cv
         self.scoring = scoring
         self.searcher_params = searcher_params
@@ -279,7 +290,7 @@ class LearnerSelector(
     ) -> T_LearnerSelector:
         """
         Search this model selector's parameter space to identify the model with the
-        best-performing hyper-parameter combination, using the given sample to fit and
+        best-performing hyperparameter combination, using the given sample to fit and
         score the candidate estimators.
 
         :param sample: the sample used to fit and score the estimators
@@ -293,7 +304,8 @@ class LearnerSelector(
 
         if ARG_SAMPLE_WEIGHT in fit_params:
             raise ValueError(
-                "arg sample_weight is not supported, use arg sample.weight instead"
+                "arg sample_weight is not supported, use 'weight' property of arg "
+                "sample instead"
             )
 
         if isinstance(groups, pd.Series):
@@ -354,7 +366,7 @@ class LearnerSelector(
             match = pattern.fullmatch(name)
             if match is None:
                 # we could not match the name:
-                # return None so we don't include it in the summary report
+                # return None, so we don't include it in the summary report
                 return None
 
             name = match.expand(repl)

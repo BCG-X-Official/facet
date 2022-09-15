@@ -36,9 +36,7 @@ log = logging.getLogger(__name__)
 
 
 def test_model_selector(
-    regressor_parameters: MultiEstimatorParameterSpace[
-        RegressorPipelineDF[LGBMRegressorDF]
-    ],
+    regressor_parameters: List[ParameterSpace[RegressorPipelineDF[LGBMRegressorDF]]],
     sample: Sample,
     n_jobs: int,
 ) -> None:
@@ -304,9 +302,7 @@ def test_parameter_space(simple_preprocessor: TransformerDF) -> None:
 
 
 def test_model_selector_regression(
-    regressor_parameters: MultiEstimatorParameterSpace[
-        RegressorPipelineDF[LGBMRegressorDF]
-    ],
+    regressor_parameters: List[ParameterSpace[RegressorPipelineDF[LGBMRegressorDF]]],
     sample: Sample,
     n_jobs: int,
 ) -> None:

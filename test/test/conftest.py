@@ -31,11 +31,7 @@ from sklearndf.transformation import (
 import facet
 from facet.data import Sample
 from facet.inspection import LearnerInspector, TreeExplainerFactory
-from facet.selection import (
-    LearnerSelector,
-    MultiEstimatorParameterSpace,
-    ParameterSpace,
-)
+from facet.selection import LearnerSelector, ParameterSpace
 from facet.validation import BootstrapCV, StratifiedBootstrapCV
 
 logging.basicConfig(level=logging.DEBUG)
@@ -97,7 +93,7 @@ def cv_stratified_bootstrap() -> BaseCrossValidator:
 @pytest.fixture  # type: ignore
 def regressor_parameters(
     simple_preprocessor: TransformerDF,
-) -> MultiEstimatorParameterSpace[RegressorPipelineDF[LGBMRegressorDF]]:
+) -> List[ParameterSpace[RegressorPipelineDF[LGBMRegressorDF]]]:
     random_state = {"random_state": 42}
 
     space_1 = ParameterSpace(
@@ -155,23 +151,13 @@ def regressor_parameters(
     )
     space_7.regressor.fit_intercept = [False, True]
 
-    return MultiEstimatorParameterSpace(
-        space_1,
-        space_2,
-        space_3,
-        space_4,
-        space_5,
-        space_6,
-        space_7,
-    )
+    return [space_1, space_2, space_3, space_4, space_5, space_6, space_7]
 
 
 @pytest.fixture  # type: ignore
 def regressor_selector(
     cv_kfold: KFold,
-    regressor_parameters: MultiEstimatorParameterSpace[
-        RegressorPipelineDF[LGBMRegressorDF]
-    ],
+    regressor_parameters: List[ParameterSpace[RegressorPipelineDF[LGBMRegressorDF]]],
     sample: Sample,
     n_jobs: int,
 ) -> LearnerSelector[RegressorPipelineDF[LGBMRegressorDF], GridSearchCV]:
