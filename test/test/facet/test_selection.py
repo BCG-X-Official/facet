@@ -387,7 +387,10 @@ def test_model_selector_classification(
 
     with pytest.raises(
         ValueError,
-        match="arg sample_weight is not supported, use arg sample.weight instead",
+        match=(
+            "arg sample_weight is not supported, use 'weight' property "
+            "of arg sample instead"
+        ),
     ):
         model_selector.fit(
             sample=iris_sample_multi_class, sample_weight=iris_sample_multi_class.weight
