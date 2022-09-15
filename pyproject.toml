@@ -82,7 +82,7 @@ pandas         = "~=1.0.5"
 python         = ">=3.7.12,<3.8a"    # cannot use ~= due to conda bug
 scipy          = "~=1.4.1"
 shap           = "~=0.34.0"
-sklearndf      = "~=2.0.0"
+sklearndf      = "~=2.0.1"
 # additional minimum requirements of sklearndf
 boruta         = "~=0.3.0"
 lightgbm       = "~=3.0.0"
@@ -105,11 +105,11 @@ pandas         = "~=1.4"
 python         = ">=3.9,<4a"   # cannot use ~= due to conda bug
 scipy          = "~=1.8"
 shap           = "~=0.41"
-sklearndf      = "~=2.0"
+sklearndf      = "~=2.1"
 # additional maximum requirements of sklearndf
 boruta         = "~=0.3"
 lightgbm       = "~=3.3"
-scikit-learn   = "~=1.0.2"
+scikit-learn   = "~=1.1"
 xgboost        = "~=1.5"
 # additional maximum requirements of gamma-pytools
 joblib         = "~=1.1"
