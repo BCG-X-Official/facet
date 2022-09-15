@@ -157,9 +157,10 @@ def test_model_selector_no_preprocessing(n_jobs: int) -> None:
         },
     )
 
+    min_best_performance = 0.8
     assert (
-        summary_report[("score", "test", "mean")].iloc[0] >= 0.8
-    ), "expected a best performance of at least 0.8"
+        summary_report[("score", "test", "mean")].iloc[0] >= min_best_performance
+    ), f"expected the best performance to be at least {min_best_performance}"
 
 
 def test_parameter_space(simple_preprocessor: TransformerDF) -> None:
@@ -190,11 +191,11 @@ def test_parameter_space(simple_preprocessor: TransformerDF) -> None:
     ):
         ps_1.regressor.unknown = 1
 
+    # noinspection GrazieInspection
     with pytest.raises(
         TypeError,
         match=(
-            "^expected list or distribution for parameter min_samples_leaf "
-            "but got: 1$"
+            r"^expected list or distribution for parameter min_samples_leaf but got: 1$"
         ),
     ):
         ps_1.regressor.min_samples_leaf = 1
