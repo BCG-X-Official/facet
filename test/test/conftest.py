@@ -131,7 +131,7 @@ def regressor_parameters(
             regressor=DecisionTreeRegressorDF(**random_state),
         )
     )
-    space_4.regressor.max_depth = [0.5, 1.0]
+    space_4.regressor.max_depth = [3, 5]
     space_4.regressor.max_features = [0.5, 1.0]
 
     space_5 = ParameterSpace(
@@ -153,7 +153,7 @@ def regressor_parameters(
             preprocessing=simple_preprocessor, regressor=LinearRegressionDF()
         )
     )
-    space_7.regressor.normalize = [False, True]
+    space_7.regressor.fit_intercept = [False, True]
 
     return MultiEstimatorParameterSpace(
         space_1,
@@ -333,7 +333,8 @@ def iris_sample_binary(iris_sample_multi_class: Sample) -> Sample:
 def iris_sample_binary_dual_target(
     iris_sample_binary: Sample, iris_target_name: str
 ) -> Sample:
-    # the iris dataset, retaining only two categories so we can do binary classification
+    # the iris dataset, retaining only two categories,
+    # so we can do binary classification
     target = pd.Series(
         index=iris_sample_binary.index,
         data=pd.Categorical(iris_sample_binary.target).codes,

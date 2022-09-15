@@ -47,7 +47,7 @@ def test_regressor_selector(
         ranking=regressor_selector.summary_report(),
         is_classifier=False,
         scores_expected=(
-            [0.820, 0.818, 0.808, 0.806, 0.797, 0.797, 0.652, 0.651, 0.651, 0.651]
+            [0.820, 0.818, 0.808, 0.806, 0.797, 0.768, 0.652, 0.651, 0.651, 0.651]
         ),
         params_expected=None,
     )
@@ -78,7 +78,7 @@ def test_model_inspection(
 
     # calculate the difference between total SHAP values and prediction
     # for every observation. This is always the same constant value,
-    # therefore the mean absolute deviation is zero
+    # therefore the mean absolute deviation is zero.
 
     shap_minus_pred = shap_totals - best_lgbm_model.predict(X=sample.features)
     assert round(shap_minus_pred.mad(), 12) == 0.0, "predictions matching total SHAP"

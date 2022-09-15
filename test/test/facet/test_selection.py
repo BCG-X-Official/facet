@@ -46,9 +46,9 @@ def test_model_selector(
         0.840,
         0.837,
         0.812,
-        0.812,
         0.793,
         0.790,
+        0.777,
         0.758,
         0.758,
         0.758,
@@ -60,9 +60,9 @@ def test_model_selector(
             RandomForestRegressorDF,
             RandomForestRegressorDF,
             LinearRegressionDF,
+            AdaBoostRegressorDF,
+            AdaBoostRegressorDF,
             LinearRegressionDF,
-            AdaBoostRegressorDF,
-            AdaBoostRegressorDF,
             LGBMRegressorDF,
             LGBMRegressorDF,
             LGBMRegressorDF,
@@ -72,8 +72,8 @@ def test_model_selector(
     expected_parameters = {
         0: dict(n_estimators=80),
         1: dict(n_estimators=50),
-        4: dict(n_estimators=50),
-        5: dict(n_estimators=80),
+        3: dict(n_estimators=50),
+        4: dict(n_estimators=80),
     }
 
     # define the circular cross validator with just 5 splits (to speed up testing)
@@ -87,6 +87,7 @@ def test_model_selector(
         cv=cv,
         scoring="r2",
         n_jobs=n_jobs,
+        error_score="raise",
     ).fit(
         sample=sample
     )
