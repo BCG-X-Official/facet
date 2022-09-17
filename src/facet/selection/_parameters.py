@@ -59,7 +59,7 @@ except StopIteration:
 # Type variables
 #
 
-T_Candidate_co = TypeVar("T_Candidate_co", covariant=True, bound=EstimatorDF)
+T_Estimator_co = TypeVar("T_Estimator_co", covariant=True, bound=EstimatorDF)
 
 #
 # Ensure all symbols introduced below are included in __all__
@@ -74,7 +74,7 @@ __tracker = AllTracker(globals())
 
 
 @inheritdoc(match="""[see superclass]""")
-class ParameterSpace(BaseParameterSpace[T_Candidate_co], Generic[T_Candidate_co]):
+class ParameterSpace(BaseParameterSpace[T_Estimator_co], Generic[T_Estimator_co]):
     """
     A set of parameter choices or distributions spanning a parameter space for
     optimizing the hyperparameters of a single estimator.
@@ -116,12 +116,12 @@ distribution:
 
     """
 
-    def __init__(self, estimator: T_Candidate_co, name: Optional[str] = None) -> None:
+    def __init__(self, estimator: T_Estimator_co, name: Optional[str] = None) -> None:
         """
-        :param estimator: the estimator candidate to which to apply the parameters to
-        :param name: a name for the estimator candidate to be used in summary reports;
-            defaults to the type of the estimator, or the type of the final estimator
-            if arg estimator is a pipeline
+        :param estimator: the estimator to which to apply the parameters
+        :param name: a name for the estimator to be used in summary reports;
+            defaults to the name of the estimator's class, or the name of the final
+            estimator's class if arg ``estimator`` is a pipeline
         """
 
         super().__init__(estimator=estimator)
@@ -144,16 +144,16 @@ distribution:
 
     def get_name(self) -> str:
         """
-        Get the name for this parameter space.
+        Get the name for this parameter space's estimator.
 
-        If no name was passed to the constructor, determine the `default name`
+        If no name was passed to the constructor, determine the default name
         recursively as follows:
 
-        - for meta-estimators, this is the `default name` of the delegate estimator
-        - for pipelines, this is the `default name` of the final estimator
-        - for all other estimators, this is the name of the estimator's type
+        - for meta-estimators, this is the default name of the delegate estimator
+        - for pipelines, this is the default name of the final estimator
+        - for all other estimators, this is the name of the estimator's class
 
-        :return: the name for this parameter space
+        :return: the name for this parameter space's estimator
         """
 
         if self._name is None:
@@ -280,7 +280,7 @@ distribution:
 
 @inheritdoc(match="""[see superclass]""")
 class MultiEstimatorParameterSpace(
-    BaseParameterSpace[T_Candidate_co], Generic[T_Candidate_co]
+    BaseParameterSpace[T_Estimator_co], Generic[T_Estimator_co]
 ):
     """
     A collection of parameter spaces, each representing a competing estimator from which
@@ -290,9 +290,9 @@ class MultiEstimatorParameterSpace(
     """
 
     #: The parameter spaces constituting this multi-estimator parameter space.
-    spaces: Tuple[ParameterSpace[T_Candidate_co], ...]
+    spaces: Tuple[ParameterSpace[T_Estimator_co], ...]
 
-    def __init__(self, *spaces: ParameterSpace[T_Candidate_co]) -> None:
+    def __init__(self, *spaces: ParameterSpace[T_Estimator_co]) -> None:
         """
         :param spaces: the parameter spaces from which to select the best estimator
         """
@@ -347,7 +347,7 @@ __tracker.validate()
 
 
 def ensure_subclass(
-    estimator_type: Type[T_Candidate_co], expected_type: Type[T_Candidate_co]
+    estimator_type: Type[T_Estimator_co], expected_type: Type[T_Estimator_co]
 ) -> None:
     """
     Ensure that the given estimator type is a subclass of the expected estimator type.
@@ -362,12 +362,12 @@ def ensure_subclass(
         )
 
 
-def validate_spaces(spaces: Collection[ParameterSpace[T_Candidate_co]]) -> None:
+def validate_spaces(spaces: Collection[ParameterSpace[T_Estimator_co]]) -> None:
     """
-    Ensure that all candidates implement the same estimator type (typically regressors
+    Ensure that all parameter spaces use the same estimator type (typically regressors
     or classifiers)
 
-    :param spaces: the candidates to check
+    :param spaces: the parameter spaces to check
     """
 
     estimator_types: Set[str] = {
@@ -376,7 +376,7 @@ def validate_spaces(spaces: Collection[ParameterSpace[T_Candidate_co]]) -> None:
 
     if len(estimator_types) > 1:
         raise TypeError(
-            "all candidate estimators must have the same estimator type, "
+            "all parameter spaces must use the same estimator type, "
             "but got multiple types: " + ", ".join(sorted(estimator_types))
         )
 
@@ -385,11 +385,10 @@ def get_default_estimator_name(estimator: EstimatorDF) -> str:
     """
     Get a default name of the estimator.
 
-    For meta-estimators, this is the default name of the delegate estimator.
+    - for meta-estimators, this is the default name of the delegate estimator
+    - for pipelines, this is the default name of the final estimator
+    - for all other estimators, this is the name of the estimator's class
 
-    For pipelines, this is the default name of the final estimator.
-
-    For all other estimators, this is the name of the estimator's type.
 
     :param estimator: the estimator to get the default name for
     :return: the default name

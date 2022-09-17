@@ -260,7 +260,7 @@ def test_parameter_space(simple_preprocessor: TransformerDF) -> None:
     with pytest.raises(
         TypeError,
         match=(
-            r"^all candidate estimators must have the same estimator type, "
+            r"^all parameter spaces must use the same estimator type, "
             r"but got multiple types: classifier, regressor$"
         ),
     ):
@@ -411,7 +411,7 @@ def test_model_selector_classification(
     with pytest.raises(
         TypeError,
         match=(
-            "^all candidate estimators must have the same estimator type, "
+            r"^all parameter spaces must use the same estimator type, "
             "but got multiple types: classifier, regressor$"
         ),
     ):
