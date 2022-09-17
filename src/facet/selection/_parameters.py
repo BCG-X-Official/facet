@@ -296,7 +296,7 @@ class MultiEstimatorParameterSpace(
         """
         :param spaces: the parameter spaces from which to select the best estimator
         """
-        validate_element_types(spaces, expected_type=ParameterSpace)
+        validate_element_types(spaces, expected_type=ParameterSpace, name="arg spaces")
         validate_spaces(spaces)
 
         if len(spaces) == 0:

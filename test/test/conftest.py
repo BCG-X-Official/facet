@@ -336,7 +336,6 @@ def iris_sample_binary_dual_target(
 
 COL_PARAM = "param"
 COL_CANDIDATE = "candidate"
-COL_CANDIDATE_NAME = "candidate_name"
 COL_CLASSIFIER = "classifier"
 COL_REGRESSOR = "regressor"
 COL_SCORE = ("score", "test", "mean")
@@ -386,7 +385,7 @@ def check_ranking(
 
     if candidate_names_expected:
         candidates_actual: npt.NDArray[np.object_] = ranking.loc[
-            :, (COL_CANDIDATE_NAME, "-", "-")
+            :, (COL_CANDIDATE, "-", "-")
         ].values[: len(candidate_names_expected)]
         assert_array_equal(
             candidates_actual,

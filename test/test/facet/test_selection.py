@@ -35,11 +35,12 @@ from facet.validation import BootstrapCV, StratifiedBootstrapCV
 log = logging.getLogger(__name__)
 
 
-def test_model_selector(
+def test_learner_selector(
     regressor_parameters: List[ParameterSpace[RegressorPipelineDF[LGBMRegressorDF]]],
     sample: Sample,
     n_jobs: int,
 ) -> None:
+
     expected_scores = [
         0.840,
         0.837,
@@ -77,6 +78,47 @@ def test_model_selector(
     # define the circular cross validator with just 5 splits (to speed up testing)
     cv = BootstrapCV(n_splits=5, random_state=42)
 
+    with pytest.raises(
+        TypeError,
+        match=(
+            r"^arg parameter_space requires instances of one of "
+            r"{ParameterSpace, MultiEstimatorParameterSpace} but got: int$"
+        ),
+    ):
+        LearnerSelector(
+            searcher_type=GridSearchCV,
+            parameter_space=1,  # type: ignore
+            cv=cv,
+        )
+
+    with pytest.raises(
+        TypeError,
+        match=(
+            r"^arg parameter_space requires instances of one of "
+            r"{ParameterSpace, MultiEstimatorParameterSpace} but got: int$"
+        ),
+    ):
+        LearnerSelector(
+            searcher_type=GridSearchCV,
+            parameter_space=[1],  # type: ignore
+            cv=cv,
+        )
+
+    with pytest.raises(
+        TypeError,
+        match=(
+            r"^arg spaces requires instances of ParameterSpace but got: "
+            r"MultiEstimatorParameterSpace$"
+        ),
+    ):
+        multi_ps = MultiEstimatorParameterSpace(*regressor_parameters)
+        LearnerSelector(
+            searcher_type=GridSearchCV,
+            parameter_space=[multi_ps, multi_ps],  # type: ignore
+            cv=cv,
+        )
+
+    # define the learner selector
     ranker: LearnerSelector[
         RegressorPipelineDF[LGBMRegressorDF], GridSearchCV
     ] = LearnerSelector(

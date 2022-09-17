@@ -28,7 +28,7 @@ from sklearn.base import BaseEstimator
 from sklearn.metrics import get_scorer
 from sklearn.model_selection import BaseCrossValidator, GridSearchCV
 
-from pytools.api import AllTracker, inheritdoc
+from pytools.api import AllTracker, inheritdoc, to_list
 from pytools.fit import FittableMixin
 from pytools.parallelization import ParallelizableMixin
 from sklearndf import EstimatorDF
@@ -135,19 +135,28 @@ class LearnerSelector(
     _CV_RESULT_COLUMNS = [
         (r"rank_test_(\w+)", r"\1__test__rank"),
         (r"(mean|std)_test_(\w+)", r"\2__test__\1"),
+        (r"candidate_name", r"candidate"),
         (r"param_(\w+)", r"param__\1"),
         (r"(rank|mean|std)_(\w+)_time", r"time__\2__\1"),
         (r"(rank|mean|std)_(\w+)_(\w+)", r"\3__\2__\1"),
     ]
-    # noinspection PyTypeChecker
+
     _CV_RESULT_PATTERNS: List[Tuple[Pattern[str], str]] = [
         (re.compile(pattern), repl) for pattern, repl in _CV_RESULT_COLUMNS
     ]
 
-    _CV_RESULT_CANDIDATE_PATTERN: Pattern[str] = re.compile(
-        r"^(?:(param__)candidate__|param__(candidate(?:_name)?)$)"  # NOSONAR
+    _CV_RESULT_CANDIDATE_PATTERN, _CV_RESULT_CANDIDATE_REPL = (
+        re.compile(
+            r"^(?:"
+            # remove the candidate prefix from proper params
+            r"(param_)candidate__"
+            r"|"
+            # remove the param prefix from candidate properties
+            r"param_(candidate(?:_name)?)$"
+            r")"
+        ),
+        r"\1\2",
     )
-    _CV_RESULT_CANDIDATE_REPL: str = r"\1\2"
 
     # Default column to sort by in the summary_report() method.
     # This has no influence on how the best model is selected.
@@ -202,11 +211,25 @@ class LearnerSelector(
         )
 
         self.searcher_type = (searcher_type,)
-        self.parameter_space = (
-            parameter_space
-            if isinstance(parameter_space, BaseParameterSpace)
-            else MultiEstimatorParameterSpace(*parameter_space)
-        )
+        if not isinstance(parameter_space, BaseParameterSpace):
+            parameter_spaces: List[
+                Union[
+                    ParameterSpace[T_EstimatorDF],
+                    MultiEstimatorParameterSpace[T_EstimatorDF],
+                ]
+            ] = to_list(
+                parameter_space,
+                element_type=(ParameterSpace, MultiEstimatorParameterSpace),
+                arg_name="parameter_space",
+            )
+            if len(parameter_spaces) == 1:
+                parameter_space = parameter_spaces[0]
+            else:
+                parameter_space = MultiEstimatorParameterSpace(
+                    *cast(List[ParameterSpace[T_EstimatorDF]], parameter_spaces)
+                )
+
+        self.parameter_space = parameter_space
         self.cv = cv
         self.scoring = scoring
         self.searcher_params = searcher_params
@@ -289,7 +312,7 @@ class LearnerSelector(
         **fit_params: Any,
     ) -> T_LearnerSelector:
         """
-        Search this model selector's parameter space to identify the model with the
+        Search this learner selector's parameter space to identify the model with the
         best-performing hyperparameter combination, using the given sample to fit and
         score the candidate estimators.
 
@@ -349,15 +372,25 @@ class LearnerSelector(
             sort_by = self._DEFAULT_REPORT_SORT_COLUMN
 
         assert self.searcher_ is not None, "Ranker is fitted"
+
+        # get the raw CV results
         cv_results: Dict[str, Any] = self.searcher_.cv_results_
+
+        if isinstance(self.parameter_space.estimator, CandidateEstimatorDF):
+            # our estimator is a candidate estimator, so we need to unpack the
+            # candidate's parameter names
+            cv_results = {
+                self._CV_RESULT_CANDIDATE_PATTERN.sub(
+                    self._CV_RESULT_CANDIDATE_REPL, name
+                ): values
+                for name, values in cv_results.items()
+            }
 
         # we create a table using a subset of the cv results, to keep the report
         # relevant and readable
-        cv_results_processed: Dict[str, Tuple[str, npt.NDArray[np.float_]]] = {}
 
-        unpack_candidate: bool = isinstance(
-            self.parameter_space.estimator, CandidateEstimatorDF
-        )
+        pattern: Pattern[str]
+        repl: str
 
         def _process(name: str) -> Optional[str]:
             # process the name of the original cv_results_ record
@@ -368,18 +401,13 @@ class LearnerSelector(
                 # we could not match the name:
                 # return None, so we don't include it in the summary report
                 return None
-
-            name = match.expand(repl)
-            if unpack_candidate:
-                # remove the "candidate" layer in the parameter output if we're dealing
-                # with a multi parameter space
-                return LearnerSelector._CV_RESULT_CANDIDATE_PATTERN.sub(
-                    LearnerSelector._CV_RESULT_CANDIDATE_REPL, name
-                )
             else:
-                return name
+                return match.expand(repl)
 
         # add all columns that match any of the pre-defined patterns
+
+        cv_results_processed: Dict[str, Tuple[str, npt.NDArray[np.float_]]] = {}
+
         for pattern, repl in self._CV_RESULT_PATTERNS:
             cv_results_processed.update(
                 {
@@ -395,6 +423,7 @@ class LearnerSelector(
             )
 
         # add the sorting column as the leftmost column of the report
+
         sort_column_processed: Optional[str]
 
         sort_column_processed, _ = cv_results_processed.get(sort_by, None)
@@ -407,6 +436,7 @@ class LearnerSelector(
                 cv_results_processed[sort_by] = cv_results[sort_by]
 
         # convert the results into a data frame and sort
+
         report = pd.DataFrame(
             {
                 name_processed: values
@@ -415,6 +445,7 @@ class LearnerSelector(
         )
 
         # sort the report, if applicable
+
         if sort_column_processed is not None:
             report = report.sort_values(by=sort_column_processed)
 
