@@ -143,7 +143,7 @@ by the :class:`.LearnerInspector`.
   across matrices as an indication of confidence for each calculated value.
 - API: Method :meth:`.LearnerInspector.shap_plot_data` now returns SHAP values for the
   positive class of binary classifiers.
-- API: Increase efficiency of :class:`.ModelSelector` parallelization by adopting the
+- API: Increase efficiency of ``ModelSelector`` parallelization by adopting the
   new :class:`pytools.parallelization.JobRunner` API provided by :mod:`pytools`
 - BUILD: add support for :mod:`shap` 0.38 and 0.39
 

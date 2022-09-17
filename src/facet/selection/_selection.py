@@ -85,9 +85,7 @@ class LearnerSelector(
 ):
     """
     Select the best model obtained by fitting an estimator using different
-    choices of hyperparameters from a :class:`.ParameterSpace`, or even
-    simultaneously evaluating multiple competing estimators from a
-    :class:`.MultiEstimatorParameterSpace`.
+    choices of hyperparameters from one or more :class:`.ParameterSpace` objects.
     """
 
     # defined in superclass, repeated here for Sphinx
@@ -117,10 +115,7 @@ class LearnerSelector(
     #: (optional; use learner's default scorer if not specified here)
     scoring: Union[
         str,
-        Callable[
-            [EstimatorDF, pd.Series, pd.Series],
-            float,
-        ],
+        Callable[[EstimatorDF, pd.Series, pd.Series], float],
         None,
     ]
 

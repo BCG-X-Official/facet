@@ -226,7 +226,8 @@ class LearnerInspector(
         **fit_params: Any,
     ) -> T_LearnerInspector:
         """
-        Fit the inspector with the given sample.
+        Fit the inspector with the given sample, creating global explanations including
+        feature redundancy and synergy.
 
         This will calculate SHAP values and, if enabled in the underlying SHAP
         explainer, also SHAP interaction values.
