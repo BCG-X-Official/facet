@@ -164,6 +164,10 @@ distribution:
     @subsdoc(
         pattern="or a list of such dictionaries, ",
         replacement="",
+    )
+    @subsdoc(
+        pattern="one or more dictionaries, each mapping",
+        replacement="a dictionary mapping",
         using=BaseParameterSpace.get_parameters,
     )
     def get_parameters(self, prefix: Optional[str] = None) -> ParameterDict:
@@ -312,6 +316,10 @@ class MultiEstimatorParameterSpace(
             r"or a list of such dictionaries"
         ),
         replacement="a list of dictionaries of parameter distributions",
+    )
+    @subsdoc(
+        pattern="one or more dictionaries,",
+        replacement="a list of dictionaries,",
         using=BaseParameterSpace.get_parameters,
     )
     def get_parameters(self, prefix: Optional[str] = None) -> List[ParameterDict]:

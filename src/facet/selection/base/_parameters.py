@@ -94,7 +94,7 @@ class BaseParameterSpace(HasExpressionRepr, Generic[T_Estimator], metaclass=ABCM
         :param prefix: an optional prefix to prepend to all parameter names in the
             resulting dictionary, separated by two underscore characters (``__``) as
             per `scikit-learn`'s convention for hierarchical parameter names
-        :return: a dictionary mapping parameter names to parameter
+        :return: one or more dictionaries, each mapping parameter names to parameter
             choices (as lists) or distributions (from :mod:`scipy.stats`)
         """
         pass
