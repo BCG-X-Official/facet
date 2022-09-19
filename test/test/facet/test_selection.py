@@ -11,7 +11,7 @@ from scipy.stats import randint, reciprocal
 from sklearn import datasets
 from sklearn.model_selection import GridSearchCV
 
-from pytools.expression import freeze
+from pytools.expression import Expression, freeze
 from pytools.expression.atomic import Id
 from sklearndf import TransformerDF
 from sklearndf.classification import SVCDF, RandomForestClassifierDF
@@ -25,24 +25,29 @@ from sklearndf.regression.extra import LGBMRegressorDF
 
 from ..conftest import check_ranking
 from facet.data import Sample
-from facet.selection import ModelSelector, MultiEstimatorParameterSpace, ParameterSpace
+from facet.selection import (
+    LearnerSelector,
+    MultiEstimatorParameterSpace,
+    ParameterSpace,
+)
 from facet.validation import BootstrapCV, StratifiedBootstrapCV
 
 log = logging.getLogger(__name__)
 
 
-def test_model_selector(
-    regressor_parameters: MultiEstimatorParameterSpace[RegressorPipelineDF],
+def test_learner_selector(
+    regressor_parameters: List[ParameterSpace[RegressorPipelineDF[LGBMRegressorDF]]],
     sample: Sample,
     n_jobs: int,
 ) -> None:
+
     expected_scores = [
         0.840,
         0.837,
         0.812,
-        0.812,
         0.793,
         0.790,
+        0.777,
         0.758,
         0.758,
         0.758,
@@ -54,9 +59,9 @@ def test_model_selector(
             RandomForestRegressorDF,
             RandomForestRegressorDF,
             LinearRegressionDF,
+            AdaBoostRegressorDF,
+            AdaBoostRegressorDF,
             LinearRegressionDF,
-            AdaBoostRegressorDF,
-            AdaBoostRegressorDF,
             LGBMRegressorDF,
             LGBMRegressorDF,
             LGBMRegressorDF,
@@ -66,20 +71,66 @@ def test_model_selector(
     expected_parameters = {
         0: dict(n_estimators=80),
         1: dict(n_estimators=50),
-        4: dict(n_estimators=50),
-        5: dict(n_estimators=80),
+        3: dict(n_estimators=50),
+        4: dict(n_estimators=80),
     }
 
     # define the circular cross validator with just 5 splits (to speed up testing)
     cv = BootstrapCV(n_splits=5, random_state=42)
 
-    ranker: ModelSelector[RegressorPipelineDF, GridSearchCV] = ModelSelector(
+    with pytest.raises(
+        TypeError,
+        match=(
+            r"^arg parameter_space requires instances of one of "
+            r"{ParameterSpace, MultiEstimatorParameterSpace} but got: int$"
+        ),
+    ):
+        LearnerSelector(
+            searcher_type=GridSearchCV,
+            parameter_space=1,  # type: ignore
+            cv=cv,
+        )
+
+    with pytest.raises(
+        TypeError,
+        match=(
+            r"^arg parameter_space requires instances of one of "
+            r"{ParameterSpace, MultiEstimatorParameterSpace} but got: int$"
+        ),
+    ):
+        LearnerSelector(
+            searcher_type=GridSearchCV,
+            parameter_space=[1],  # type: ignore
+            cv=cv,
+        )
+
+    with pytest.raises(
+        TypeError,
+        match=(
+            r"^arg spaces requires instances of ParameterSpace but got: "
+            r"MultiEstimatorParameterSpace$"
+        ),
+    ):
+        multi_ps = MultiEstimatorParameterSpace(*regressor_parameters)
+        LearnerSelector(
+            searcher_type=GridSearchCV,
+            parameter_space=[multi_ps, multi_ps],  # type: ignore
+            cv=cv,
+        )
+
+    # define the learner selector
+    ranker: LearnerSelector[
+        RegressorPipelineDF[LGBMRegressorDF], GridSearchCV
+    ] = LearnerSelector(
         searcher_type=GridSearchCV,
         parameter_space=regressor_parameters,
         cv=cv,
         scoring="r2",
         n_jobs=n_jobs,
-    ).fit(sample=sample)
+        error_score="raise",
+    ).fit(
+        sample=sample
+    )
 
     log.debug(f"\n{ranker.summary_report()}")
 
@@ -103,7 +154,7 @@ def test_model_selector(
     )
 
 
-def test_model_selector_no_preprocessing(n_jobs) -> None:
+def test_model_selector_no_preprocessing(n_jobs: int) -> None:
     expected_learner_scores = [0.961, 0.957, 0.957, 0.936]
 
     # define a yield-engine circular CV:
@@ -124,9 +175,9 @@ def test_model_selector_no_preprocessing(n_jobs) -> None:
     )
     test_sample: Sample = Sample(observations=test_data, target_name="target")
 
-    model_selector: ModelSelector[
+    model_selector: LearnerSelector[
         ClassifierPipelineDF[SVCDF], GridSearchCV
-    ] = ModelSelector(
+    ] = LearnerSelector(
         searcher_type=GridSearchCV,
         parameter_space=parameter_space,
         cv=cv,
@@ -148,14 +199,13 @@ def test_model_selector_no_preprocessing(n_jobs) -> None:
         },
     )
 
+    min_best_performance = 0.8
     assert (
-        summary_report[("score", "test", "mean")].iloc[0] >= 0.8
-    ), "expected a best performance of at least 0.8"
+        summary_report[("score", "test", "mean")].iloc[0] >= min_best_performance
+    ), f"expected the best performance to be at least {min_best_performance}"
 
 
-def test_parameter_space(
-    sample: Sample, simple_preprocessor: TransformerDF, n_jobs: int
-) -> None:
+def test_parameter_space(simple_preprocessor: TransformerDF) -> None:
     # distributions
 
     randint_3_10 = randint(3, 10)
@@ -170,7 +220,9 @@ def test_parameter_space(
         preprocessing=simple_preprocessor,
     )
     ps_1_name = "rf_regressor"
-    ps_1 = ParameterSpace(pipeline_1, name=ps_1_name)
+    ps_1: ParameterSpace[RegressorPipelineDF[RandomForestRegressorDF]] = ParameterSpace(
+        pipeline_1, name=ps_1_name
+    )
     ps_1.regressor.min_weight_fraction_leaf = reciprocal_0_01_0_10
     ps_1.regressor.max_depth = randint_3_10
     ps_1.regressor.min_samples_leaf = reciprocal_0_05_0_10
@@ -181,11 +233,11 @@ def test_parameter_space(
     ):
         ps_1.regressor.unknown = 1
 
+    # noinspection GrazieInspection
     with pytest.raises(
         TypeError,
         match=(
-            "^expected list or distribution for parameter min_samples_leaf "
-            "but got: 1$"
+            r"^expected list or distribution for parameter min_samples_leaf but got: 1$"
         ),
     ):
         ps_1.regressor.min_samples_leaf = 1
@@ -197,7 +249,9 @@ def test_parameter_space(
         preprocessing=simple_preprocessor,
     )
     ps_2_name = "lgbm"
-    ps_2 = ParameterSpace(pipeline_2, name=ps_2_name)
+    ps_2: ParameterSpace[RegressorPipelineDF[LGBMRegressorDF]] = ParameterSpace(
+        pipeline_2, name=ps_2_name
+    )
     ps_2.regressor.max_depth = randint_3_10
     ps_2.regressor.min_child_samples = randint_1_32
 
@@ -206,12 +260,11 @@ def test_parameter_space(
     with pytest.raises(
         TypeError,
         match=(
-            r"^all candidate estimators must have the same estimator type, "
+            r"^all parameter spaces must use the same estimator type, "
             r"but got multiple types: classifier, regressor$"
         ),
     ):
-        # noinspection PyTypeChecker
-        MultiEstimatorParameterSpace(
+        MultiEstimatorParameterSpace(  # type: ignore
             ps_1, ps_2, ParameterSpace(ClassifierPipelineDF(classifier=SVCDF()))
         )
 
@@ -219,7 +272,7 @@ def test_parameter_space(
 
     # test
 
-    def regressor_repr(model: Id):
+    def regressor_repr(model: Id) -> Expression:
         return Id.RegressorPipelineDF(
             preprocessing=Id.ColumnTransformerDF(
                 transformers=[
@@ -292,7 +345,7 @@ def test_parameter_space(
 
 
 def test_model_selector_regression(
-    regressor_parameters: MultiEstimatorParameterSpace[RegressorPipelineDF],
+    regressor_parameters: List[ParameterSpace[RegressorPipelineDF[LGBMRegressorDF]]],
     sample: Sample,
     n_jobs: int,
 ) -> None:
@@ -306,15 +359,19 @@ def test_model_selector_regression(
             "of arg searcher_type, but included: param_grid"
         ),
     ):
-        ModelSelector(GridSearchCV, regressor_parameters, param_grid=None)
+        LearnerSelector(GridSearchCV, regressor_parameters, param_grid=None)
 
-    ranker: ModelSelector[RegressorPipelineDF, GridSearchCV] = ModelSelector(
+    ranker: LearnerSelector[
+        RegressorPipelineDF[LGBMRegressorDF], GridSearchCV
+    ] = LearnerSelector(
         GridSearchCV,
         regressor_parameters,
         scoring="r2",
         cv=cv,
         n_jobs=n_jobs,
-    ).fit(sample=sample)
+    ).fit(
+        sample=sample
+    )
 
     assert isinstance(ranker.best_estimator_, RegressorPipelineDF)
 
@@ -332,11 +389,13 @@ def test_model_selector_regression(
 
 
 def test_model_selector_classification(
-    iris_sample_multi_class, cv_stratified_bootstrap: StratifiedBootstrapCV, n_jobs: int
+    iris_sample_multi_class: Sample,
+    cv_stratified_bootstrap: StratifiedBootstrapCV,
+    n_jobs: int,
 ) -> None:
     expected_learner_scores = [0.965, 0.964, 0.957, 0.956]
 
-    # define parameters and crossfit
+    # define parameters
     ps1 = ParameterSpace(
         ClassifierPipelineDF(classifier=RandomForestClassifierDF(random_state=42))
     )
@@ -352,16 +411,16 @@ def test_model_selector_classification(
     with pytest.raises(
         TypeError,
         match=(
-            "^all candidate estimators must have the same estimator type, "
+            r"^all parameter spaces must use the same estimator type, "
             "but got multiple types: classifier, regressor$"
         ),
     ):
         # define an illegal grid list, mixing classification with regression
-        MultiEstimatorParameterSpace(ps1, ps2)
+        MultiEstimatorParameterSpace(ps1, ps2)  # type: ignore
 
-    model_selector: ModelSelector[
+    model_selector: LearnerSelector[
         ClassifierPipelineDF[RandomForestClassifierDF], GridSearchCV
-    ] = ModelSelector(
+    ] = LearnerSelector(
         searcher_type=GridSearchCV,
         parameter_space=ps1,
         cv=cv_stratified_bootstrap,
@@ -371,7 +430,10 @@ def test_model_selector_classification(
 
     with pytest.raises(
         ValueError,
-        match="arg sample_weight is not supported, use arg sample.weight instead",
+        match=(
+            "arg sample_weight is not supported, use 'weight' property "
+            "of arg sample instead"
+        ),
     ):
         model_selector.fit(
             sample=iris_sample_multi_class, sample_weight=iris_sample_multi_class.weight

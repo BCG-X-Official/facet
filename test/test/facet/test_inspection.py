@@ -3,7 +3,7 @@ Model inspector tests.
 """
 import logging
 import warnings
-from typing import List, Optional, Set, TypeVar, Union
+from typing import List, Optional, Set, TypeVar, cast
 
 import numpy as np
 import pandas as pd
@@ -13,12 +13,14 @@ from pandas.testing import assert_frame_equal, assert_series_equal
 from sklearn.datasets import make_classification
 from sklearn.model_selection import GridSearchCV
 
+from pytools.data import LinkageTree, Matrix
 from pytools.viz.dendrogram import DendrogramDrawer, DendrogramReportStyle
 from sklearndf.classification import (
     GradientBoostingClassifierDF,
     RandomForestClassifierDF,
 )
 from sklearndf.pipeline import ClassifierPipelineDF, RegressorPipelineDF
+from sklearndf.regression.extra import LGBMRegressorDF
 
 from ..conftest import check_ranking
 from facet.data import Sample
@@ -27,7 +29,7 @@ from facet.inspection import (
     LearnerInspector,
     TreeExplainerFactory,
 )
-from facet.selection import ModelSelector
+from facet.selection import LearnerSelector
 
 # noinspection PyMissingOrEmptyDocstring
 
@@ -37,22 +39,24 @@ T = TypeVar("T")
 
 
 def test_regressor_selector(
-    regressor_selector: ModelSelector[RegressorPipelineDF, GridSearchCV]
-):
+    regressor_selector: LearnerSelector[
+        RegressorPipelineDF[LGBMRegressorDF], GridSearchCV
+    ]
+) -> None:
     check_ranking(
         ranking=regressor_selector.summary_report(),
         is_classifier=False,
         scores_expected=(
-            [0.820, 0.818, 0.808, 0.806, 0.797, 0.797, 0.652, 0.651, 0.651, 0.651]
+            [0.820, 0.818, 0.808, 0.806, 0.797, 0.768, 0.652, 0.651, 0.651, 0.651]
         ),
         params_expected=None,
     )
 
 
 def test_model_inspection(
-    best_lgbm_model: RegressorPipelineDF,
+    best_lgbm_model: RegressorPipelineDF[LGBMRegressorDF],
     preprocessed_feature_names: Set[str],
-    regressor_inspector: LearnerInspector,
+    regressor_inspector: LearnerInspector[RegressorPipelineDF[LGBMRegressorDF]],
     sample: Sample,
     n_jobs: int,
 ) -> None:
@@ -74,7 +78,7 @@ def test_model_inspection(
 
     # calculate the difference between total SHAP values and prediction
     # for every observation. This is always the same constant value,
-    # therefore the mean absolute deviation is zero
+    # therefore the mean absolute deviation is zero.
 
     shap_minus_pred = shap_totals - best_lgbm_model.predict(X=sample.features)
     assert round(shap_minus_pred.mad(), 12) == 0.0, "predictions matching total SHAP"
@@ -88,13 +92,17 @@ def test_model_inspection(
     ).fit(sample=sample)
     inspector_2.shap_values()
 
-    linkage_tree = inspector_2.feature_association_linkage()
+    linkage_tree = cast(LinkageTree, inspector_2.feature_association_linkage())
 
     print()
     DendrogramDrawer(style="text").draw(data=linkage_tree, title="Test")
 
 
-def test_binary_classifier_ranking(iris_classifier_selector_binary) -> None:
+def test_binary_classifier_ranking(
+    iris_classifier_selector_binary: LearnerSelector[
+        ClassifierPipelineDF[RandomForestClassifierDF], GridSearchCV
+    ]
+) -> None:
 
     expected_learner_scores = [0.938, 0.936, 0.936, 0.929]
 
@@ -115,7 +123,7 @@ def test_binary_classifier_ranking(iris_classifier_selector_binary) -> None:
 
 # noinspection DuplicatedCode
 def test_model_inspection_classifier_binary(
-    iris_classifier_binary: ClassifierPipelineDF,
+    iris_classifier_binary: ClassifierPipelineDF[RandomForestClassifierDF],
     iris_sample_binary: Sample,
     n_jobs: int,
 ) -> None:
@@ -141,8 +149,11 @@ def test_model_inspection_classifier_binary(
     # Shap decomposition matrices (feature dependencies)
 
     try:
-        association_matrix = model_inspector.feature_association_matrix(
-            clustered=True, symmetrical=True
+        association_matrix = cast(
+            Matrix[np.float_],
+            model_inspector.feature_association_matrix(
+                clustered=True, symmetrical=True
+            ),
         )
         assert_allclose(
             association_matrix.values,
@@ -160,7 +171,7 @@ def test_model_inspection_classifier_binary(
         print_expected_matrix(error=error)
         raise
 
-    linkage_tree = model_inspector.feature_association_linkage()
+    linkage_tree = cast(LinkageTree, model_inspector.feature_association_linkage())
 
     print()
     DendrogramDrawer(style=DendrogramReportStyle()).draw(
@@ -192,8 +203,9 @@ def test_model_inspection_classifier_binary_single_shap_output() -> None:
 
 # noinspection DuplicatedCode
 def test_model_inspection_classifier_multi_class(
-    iris_inspector_multi_class: LearnerInspector[ClassifierPipelineDF],
-    n_jobs: int,
+    iris_inspector_multi_class: LearnerInspector[
+        ClassifierPipelineDF[RandomForestClassifierDF]
+    ],
 ) -> None:
     iris_classifier = iris_inspector_multi_class.pipeline
     iris_sample = iris_inspector_multi_class.sample_
@@ -231,8 +243,9 @@ def test_model_inspection_classifier_multi_class(
     # Shap decomposition matrices (feature dependencies)
 
     try:
-        synergy_matrix = iris_inspector_multi_class.feature_synergy_matrix(
-            clustered=False
+        synergy_matrix = cast(
+            List[Matrix[np.float_]],
+            iris_inspector_multi_class.feature_synergy_matrix(clustered=False),
         )
 
         assert_allclose(
@@ -252,8 +265,9 @@ def test_model_inspection_classifier_multi_class(
             atol=0.02,
         )
 
-        redundancy_matrix = iris_inspector_multi_class.feature_redundancy_matrix(
-            clustered=False
+        redundancy_matrix = cast(
+            List[Matrix[np.float_]],
+            iris_inspector_multi_class.feature_redundancy_matrix(clustered=False),
         )
         assert_allclose(
             np.hstack([m.values for m in redundancy_matrix]),
@@ -272,8 +286,9 @@ def test_model_inspection_classifier_multi_class(
             atol=0.02,
         )
 
-        association_matrix = iris_inspector_multi_class.feature_association_matrix(
-            clustered=False
+        association_matrix = cast(
+            List[Matrix[np.float_]],
+            iris_inspector_multi_class.feature_association_matrix(clustered=False),
         )
         assert_allclose(
             np.hstack([m.values for m in association_matrix]),
@@ -295,7 +310,9 @@ def test_model_inspection_classifier_multi_class(
         print_expected_matrix(error=error, split=True)
         raise
 
-    linkage_trees = iris_inspector_multi_class.feature_association_linkage()
+    linkage_trees = cast(
+        List[LinkageTree], iris_inspector_multi_class.feature_association_linkage()
+    )
 
     for output, linkage_tree in zip(
         iris_inspector_multi_class.output_names_, linkage_trees
@@ -307,8 +324,10 @@ def test_model_inspection_classifier_multi_class(
 
 
 def _validate_shap_values_against_predictions(
-    shap_values: pd.DataFrame, model: ClassifierPipelineDF, sample: Sample
-):
+    shap_values: pd.DataFrame,
+    model: ClassifierPipelineDF[RandomForestClassifierDF],
+    sample: Sample,
+) -> None:
 
     # calculate the matching predictions, so we can check if the SHAP values add up
     # correctly
@@ -391,7 +410,7 @@ def test_model_inspection_classifier_interaction(
     ).fit(sample=iris_sample_binary)
 
     # calculate shap interaction values
-    shap_interaction_values = model_inspector.shap_interaction_values()
+    shap_interaction_values: pd.DataFrame = model_inspector.shap_interaction_values()
 
     # calculate shap values from interaction values
     shap_values = shap_interaction_values.groupby(by="observation").sum()
@@ -399,7 +418,6 @@ def test_model_inspection_classifier_interaction(
     # shap interaction values add up to shap values
     # we have to live with differences of up to 0.020, given the different results
     # returned for SHAP values and SHAP interaction values
-    # todo: review accuracy after implementing use of a background dataset
     assert (
         model_inspector_no_interaction.shap_values() - shap_values
     ).abs().max().max() < 0.015
@@ -420,7 +438,7 @@ def test_model_inspection_classifier_interaction(
 
     # do the shap values add up to predictions minus a constant value?
     _validate_shap_values_against_predictions(
-        shap_values=model_inspector.shap_interaction_values().groupby(level=0).sum(),
+        shap_values=shap_interaction_values.groupby(level=0).sum(),
         model=iris_classifier_binary,
         sample=iris_sample_binary,
     )
@@ -430,11 +448,13 @@ def test_model_inspection_classifier_interaction(
     )
 
     try:
-        synergy_matrix = model_inspector.feature_synergy_matrix(
-            clustered=False, symmetrical=True
-        )
         assert_allclose(
-            synergy_matrix.values,
+            cast(
+                Matrix[np.float_],
+                model_inspector.feature_synergy_matrix(
+                    clustered=False, symmetrical=True
+                ),
+            ).values,
             np.array(
                 [
                     [np.nan, 0.011, 0.006, 0.007],
@@ -446,8 +466,9 @@ def test_model_inspection_classifier_interaction(
             atol=0.02,
         )
         assert_allclose(
-            model_inspector.feature_synergy_matrix(
-                absolute=True, symmetrical=True
+            cast(
+                Matrix[np.float_],
+                model_inspector.feature_synergy_matrix(absolute=True, symmetrical=True),
             ).values,
             np.array(
                 [
@@ -461,7 +482,10 @@ def test_model_inspection_classifier_interaction(
         )
 
         assert_allclose(
-            model_inspector.feature_synergy_matrix(clustered=True).values,
+            cast(
+                Matrix[np.float_],
+                model_inspector.feature_synergy_matrix(clustered=True),
+            ).values,
             np.array(
                 [
                     [np.nan, 0.000, 0.000, 0.001],
@@ -474,7 +498,9 @@ def test_model_inspection_classifier_interaction(
         )
 
         assert_allclose(
-            model_inspector.feature_synergy_matrix(absolute=True).values,
+            cast(
+                Matrix[np.float_], model_inspector.feature_synergy_matrix(absolute=True)
+            ).values,
             np.array(
                 [
                     [np.nan, 0.000, 0.000, 0.001],
@@ -487,8 +513,11 @@ def test_model_inspection_classifier_interaction(
         )
 
         assert_allclose(
-            model_inspector.feature_redundancy_matrix(
-                clustered=False, symmetrical=True
+            cast(
+                Matrix[np.float_],
+                model_inspector.feature_redundancy_matrix(
+                    clustered=False, symmetrical=True
+                ),
             ).values,
             np.array(
                 [
@@ -501,8 +530,11 @@ def test_model_inspection_classifier_interaction(
             atol=0.02,
         )
         assert_allclose(
-            model_inspector.feature_redundancy_matrix(
-                absolute=True, symmetrical=True
+            cast(
+                Matrix[np.float_],
+                model_inspector.feature_redundancy_matrix(
+                    absolute=True, symmetrical=True
+                ),
             ).values,
             np.array(
                 [
@@ -516,7 +548,10 @@ def test_model_inspection_classifier_interaction(
         )
 
         assert_allclose(
-            model_inspector.feature_redundancy_matrix(clustered=True).values,
+            cast(
+                Matrix[np.float_],
+                model_inspector.feature_redundancy_matrix(clustered=True),
+            ).values,
             np.array(
                 [
                     [np.nan, 0.677, 0.384, 0.003],
@@ -529,7 +564,10 @@ def test_model_inspection_classifier_interaction(
         )
 
         assert_allclose(
-            model_inspector.feature_redundancy_matrix(absolute=True).values,
+            cast(
+                Matrix[np.float_],
+                model_inspector.feature_redundancy_matrix(absolute=True),
+            ).values,
             np.array(
                 [
                     [np.nan, 0.323, 0.183, 0.002],
@@ -541,11 +579,13 @@ def test_model_inspection_classifier_interaction(
             atol=0.02,
         )
 
-        association_matrix = model_inspector.feature_association_matrix(
-            clustered=False, symmetrical=True
-        )
         assert_allclose(
-            association_matrix.values,
+            cast(
+                Matrix[np.float_],
+                model_inspector.feature_association_matrix(
+                    clustered=False, symmetrical=True
+                ),
+            ).values,
             np.array(
                 [
                     [np.nan, 0.009, 0.447, 0.383],
@@ -558,8 +598,11 @@ def test_model_inspection_classifier_interaction(
         )
 
         assert_allclose(
-            model_inspector.feature_association_matrix(
-                absolute=True, symmetrical=True
+            cast(
+                Matrix[np.float_],
+                model_inspector.feature_association_matrix(
+                    absolute=True, symmetrical=True
+                ),
             ).values,
             np.array(
                 [
@@ -573,7 +616,10 @@ def test_model_inspection_classifier_interaction(
         )
 
         assert_allclose(
-            model_inspector.feature_association_matrix(clustered=True).values,
+            cast(
+                Matrix[np.float_],
+                model_inspector.feature_association_matrix(clustered=True),
+            ).values,
             np.array(
                 [
                     [np.nan, 0.678, 0.383, 0.001],
@@ -586,7 +632,10 @@ def test_model_inspection_classifier_interaction(
         )
 
         assert_allclose(
-            model_inspector.feature_association_matrix(absolute=True).values,
+            cast(
+                Matrix[np.float_],
+                model_inspector.feature_association_matrix(absolute=True),
+            ).values,
             np.array(
                 [
                     [np.nan, 0.323, 0.182, 0.001],
@@ -602,7 +651,7 @@ def test_model_inspection_classifier_interaction(
         print_expected_matrix(error=error)
         raise
 
-    linkage_tree = model_inspector.feature_redundancy_linkage()
+    linkage_tree = cast(LinkageTree, model_inspector.feature_redundancy_linkage())
 
     print()
     DendrogramDrawer(style=DendrogramReportStyle()).draw(
@@ -612,10 +661,10 @@ def test_model_inspection_classifier_interaction(
 
 def test_model_inspection_classifier_interaction_dual_target(
     iris_sample_binary_dual_target: Sample,
-    iris_classifier_selector_dual_target: ModelSelector[
+    iris_classifier_selector_dual_target: LearnerSelector[
         ClassifierPipelineDF[RandomForestClassifierDF], GridSearchCV
     ],
-    iris_target_name,
+    iris_target_name: str,
     n_jobs: int,
 ) -> None:
     iris_classifier_dual_target = iris_classifier_selector_dual_target.best_estimator_
@@ -633,8 +682,10 @@ def test_model_inspection_classifier_interaction_dual_target(
 
 
 def test_shap_plot_data(
-    iris_sample_multi_class,
-    iris_inspector_multi_class: LearnerInspector[ClassifierPipelineDF],
+    iris_sample_multi_class: Sample,
+    iris_inspector_multi_class: LearnerInspector[
+        ClassifierPipelineDF[RandomForestClassifierDF]
+    ],
 ) -> None:
     shap_plot_data = iris_inspector_multi_class.shap_plot_data()
     # noinspection SpellCheckingInspection
@@ -665,12 +716,12 @@ def test_shap_plot_data(
 #
 
 
-def print_expected_matrix(error: AssertionError, *, split: bool = False):
+def print_expected_matrix(error: AssertionError, *, split: bool = False) -> None:
     # print expected output for copy/paste into assertion statement
 
     import re
 
-    array: Optional[re.Match] = re.search(r"array\(([^)]+)\)", error.args[0])
+    array: Optional[re.Match[str]] = re.search(r"array\(([^)]+)\)", error.args[0])
     if array is not None:
         matrix: List[List[float]] = eval(
             array[1].replace(r"\n", "\n").replace("nan", "np.nan")
@@ -679,7 +730,7 @@ def print_expected_matrix(error: AssertionError, *, split: bool = False):
         print_matrix(matrix, split=split)
 
 
-def print_matrix(matrix: Union[List[List[float]], np.ndarray], *, split: bool):
+def print_matrix(matrix: List[List[float]], *, split: bool) -> None:
     print("==== matrix assertion failed ====\nExpected Matrix:")
     print("[")
     for row in matrix:

@@ -1,7 +1,8 @@
 import logging
-from typing import Any, Dict, List, Mapping, Optional, Sequence, Set, Tuple
+from typing import Any, Dict, List, Mapping, Optional, Sequence, Set, Tuple, cast
 
 import numpy as np
+import numpy.typing as npt
 import pandas as pd
 import pytest
 from numpy.testing import assert_allclose, assert_array_equal
@@ -30,7 +31,7 @@ from sklearndf.transformation import (
 import facet
 from facet.data import Sample
 from facet.inspection import LearnerInspector, TreeExplainerFactory
-from facet.selection import ModelSelector, MultiEstimatorParameterSpace, ParameterSpace
+from facet.selection import LearnerSelector, ParameterSpace
 from facet.validation import BootstrapCV, StratifiedBootstrapCV
 
 logging.basicConfig(level=logging.DEBUG)
@@ -43,8 +44,11 @@ print(facet.__logo__)
 logging.getLogger("shap").setLevel(logging.WARNING)
 
 # configure pandas text output
-pd.set_option("display.width", None)  # get display width from terminal
-pd.set_option("display.precision", 3)  # 3 digits precision for easier readability
+
+# get display width from terminal
+pd.set_option("display.width", None)
+# 3 digits precision for easier readability
+pd.set_option("display.precision", 3)
 
 K_FOLDS = 5
 N_BOOTSTRAPS = 30
@@ -53,43 +57,43 @@ STEP_IMPUTE = "impute"
 STEP_ONE_HOT_ENCODE = "one-hot-encode"
 
 
-@pytest.fixture
+@pytest.fixture  # type: ignore
 def boston_target() -> str:
     return "price"
 
 
-@pytest.fixture
+@pytest.fixture  # type: ignore
 def iris_target_name() -> str:
     return "species"
 
 
-@pytest.fixture
+@pytest.fixture  # type: ignore
 def n_jobs() -> int:
     return -1
 
 
-@pytest.fixture
+@pytest.fixture  # type: ignore
 def cv_kfold() -> KFold:
     # define a CV
     return KFold(n_splits=K_FOLDS, shuffle=True, random_state=42)
 
 
-@pytest.fixture
+@pytest.fixture  # type: ignore
 def cv_bootstrap() -> BaseCrossValidator:
     # define a CV
     return BootstrapCV(n_splits=N_BOOTSTRAPS, random_state=42)
 
 
-@pytest.fixture
+@pytest.fixture  # type: ignore
 def cv_stratified_bootstrap() -> BaseCrossValidator:
     # define a CV
     return StratifiedBootstrapCV(n_splits=N_BOOTSTRAPS, random_state=42)
 
 
-@pytest.fixture
+@pytest.fixture  # type: ignore
 def regressor_parameters(
     simple_preprocessor: TransformerDF,
-) -> MultiEstimatorParameterSpace[RegressorPipelineDF]:
+) -> List[ParameterSpace[RegressorPipelineDF[LGBMRegressorDF]]]:
     random_state = {"random_state": 42}
 
     space_1 = ParameterSpace(
@@ -123,7 +127,7 @@ def regressor_parameters(
             regressor=DecisionTreeRegressorDF(**random_state),
         )
     )
-    space_4.regressor.max_depth = [0.5, 1.0]
+    space_4.regressor.max_depth = [3, 5]
     space_4.regressor.max_features = [0.5, 1.0]
 
     space_5 = ParameterSpace(
@@ -145,27 +149,19 @@ def regressor_parameters(
             preprocessing=simple_preprocessor, regressor=LinearRegressionDF()
         )
     )
-    space_7.regressor.normalize = [False, True]
+    space_7.regressor.fit_intercept = [False, True]
 
-    return MultiEstimatorParameterSpace(
-        space_1,
-        space_2,
-        space_3,
-        space_4,
-        space_5,
-        space_6,
-        space_7,
-    )
+    return [space_1, space_2, space_3, space_4, space_5, space_6, space_7]
 
 
-@pytest.fixture
+@pytest.fixture  # type: ignore
 def regressor_selector(
     cv_kfold: KFold,
-    regressor_parameters: MultiEstimatorParameterSpace[RegressorPipelineDF],
+    regressor_parameters: List[ParameterSpace[RegressorPipelineDF[LGBMRegressorDF]]],
     sample: Sample,
     n_jobs: int,
-) -> ModelSelector[RegressorPipelineDF, GridSearchCV]:
-    return ModelSelector(
+) -> LearnerSelector[RegressorPipelineDF[LGBMRegressorDF], GridSearchCV]:
+    return LearnerSelector(
         searcher_type=GridSearchCV,
         parameter_space=regressor_parameters,
         cv=cv_kfold,
@@ -177,14 +173,16 @@ def regressor_selector(
 PARAM_CANDIDATE__ = "param_candidate__"
 
 
-@pytest.fixture
+@pytest.fixture  # type: ignore
 def best_lgbm_model(
-    regressor_selector,
+    regressor_selector: LearnerSelector[
+        RegressorPipelineDF[LGBMRegressorDF], GridSearchCV
+    ],
     sample: Sample,
-) -> RegressorPipelineDF:
+) -> RegressorPipelineDF[LGBMRegressorDF]:
     # we get the best model_evaluation which is a LGBM - for the sake of test
     # performance
-    # noinspection PyTypeChecker
+    assert regressor_selector.searcher_ is not None
     best_lgbm_params: Dict[str, Any] = (
         pd.DataFrame(regressor_selector.searcher_.cv_results_)
         .pipe(
@@ -195,7 +193,7 @@ def best_lgbm_model(
 
     len_param_candidate = len(PARAM_CANDIDATE__)
     return (
-        best_lgbm_params["candidate"]
+        cast(RegressorPipelineDF[LGBMRegressorDF], best_lgbm_params["candidate"])
         .clone()
         .set_params(
             **{
@@ -208,18 +206,20 @@ def best_lgbm_model(
     )
 
 
-@pytest.fixture
-def preprocessed_feature_names(best_lgbm_model: RegressorPipelineDF) -> Set[str]:
+@pytest.fixture  # type: ignore
+def preprocessed_feature_names(
+    best_lgbm_model: RegressorPipelineDF[LGBMRegressorDF],
+) -> Set[str]:
     """
     Names of all features after preprocessing
     """
     return set(best_lgbm_model.feature_names_out_)
 
 
-@pytest.fixture
+@pytest.fixture  # type: ignore
 def regressor_inspector(
-    best_lgbm_model: RegressorPipelineDF, sample: Sample, n_jobs: int
-) -> LearnerInspector:
+    best_lgbm_model: RegressorPipelineDF[LGBMRegressorDF], sample: Sample, n_jobs: int
+) -> LearnerInspector[RegressorPipelineDF[LGBMRegressorDF]]:
     inspector = LearnerInspector(
         pipeline=best_lgbm_model,
         explainer_factory=TreeExplainerFactory(
@@ -231,7 +231,7 @@ def regressor_inspector(
     return inspector
 
 
-@pytest.fixture
+@pytest.fixture  # type: ignore
 def simple_preprocessor(sample: Sample) -> TransformerDF:
     features = sample.features
 
@@ -260,7 +260,7 @@ def simple_preprocessor(sample: Sample) -> TransformerDF:
     return ColumnTransformerDF(transformers=column_transforms)
 
 
-@pytest.fixture
+@pytest.fixture  # type: ignore
 def boston_df(boston_target: str) -> pd.DataFrame:
     #  load sklearn test-data and convert to pd
     boston: Bunch = datasets.load_boston()
@@ -271,12 +271,12 @@ def boston_df(boston_target: str) -> pd.DataFrame:
     )
 
 
-@pytest.fixture
+@pytest.fixture  # type: ignore
 def sample(boston_df: pd.DataFrame, boston_target: str) -> Sample:
     return Sample(observations=boston_df.iloc[:100, :], target_name=boston_target)
 
 
-@pytest.fixture
+@pytest.fixture  # type: ignore
 def iris_df(iris_target_name: str) -> pd.DataFrame:
     #  load sklearn test-data and convert to pd
     iris: Bunch = datasets.load_iris()
@@ -296,7 +296,7 @@ def iris_df(iris_target_name: str) -> pd.DataFrame:
     return iris_df
 
 
-@pytest.fixture
+@pytest.fixture  # type: ignore
 def iris_sample_multi_class(iris_df: pd.DataFrame, iris_target_name: str) -> Sample:
     # the iris dataset
     return Sample(
@@ -306,25 +306,28 @@ def iris_sample_multi_class(iris_df: pd.DataFrame, iris_target_name: str) -> Sam
     )
 
 
-@pytest.fixture
-def iris_sample_binary(iris_sample_multi_class) -> Sample:
-    # the iris dataset, retaining only two categories so we can do binary classification
+@pytest.fixture  # type: ignore
+def iris_sample_binary(iris_sample_multi_class: Sample) -> Sample:
+    # the iris dataset, retaining only two categories,
+    # so we can do binary classification
     return iris_sample_multi_class.subsample(
         loc=iris_sample_multi_class.target.isin(["virginica", "versicolor"])
     )
 
 
-@pytest.fixture
+@pytest.fixture  # type: ignore
 def iris_sample_binary_dual_target(
-    iris_sample_binary: Sample, iris_target_name
+    iris_sample_binary: Sample, iris_target_name: str
 ) -> Sample:
-    # the iris dataset, retaining only two categories so we can do binary classification
+    # the iris dataset, retaining only two categories,
+    # so we can do binary classification
     target = pd.Series(
         index=iris_sample_binary.index,
         data=pd.Categorical(iris_sample_binary.target).codes,
         name=iris_target_name,
     )
     iris_target_2 = f"{iris_target_name}2"
+    assert isinstance(iris_sample_binary.target_name, str)
     return Sample(
         iris_sample_binary.features.join(target).join(target.rename(iris_target_2)),
         target_name=[iris_sample_binary.target_name, iris_target_2],
@@ -333,7 +336,6 @@ def iris_sample_binary_dual_target(
 
 COL_PARAM = "param"
 COL_CANDIDATE = "candidate"
-COL_CANDIDATE_NAME = "candidate_name"
 COL_CLASSIFIER = "classifier"
 COL_REGRESSOR = "regressor"
 COL_SCORE = ("score", "test", "mean")
@@ -382,8 +384,8 @@ def check_ranking(
             )
 
     if candidate_names_expected:
-        candidates_actual: np.ndarray = ranking.loc[
-            :, (COL_CANDIDATE_NAME, "-", "-")
+        candidates_actual: npt.NDArray[np.object_] = ranking.loc[
+            :, (COL_CANDIDATE, "-", "-")
         ].values[: len(candidate_names_expected)]
         assert_array_equal(
             candidates_actual,
@@ -395,54 +397,56 @@ def check_ranking(
         )
 
 
-@pytest.fixture
+@pytest.fixture  # type: ignore
 def iris_classifier_selector_binary(
     iris_sample_binary: Sample,
     cv_stratified_bootstrap: StratifiedBootstrapCV,
     n_jobs: int,
-) -> ModelSelector[ClassifierPipelineDF[RandomForestClassifierDF], GridSearchCV]:
+) -> LearnerSelector[ClassifierPipelineDF[RandomForestClassifierDF], GridSearchCV]:
     return fit_classifier_selector(
         sample=iris_sample_binary, cv=cv_stratified_bootstrap, n_jobs=n_jobs
     )
 
 
-@pytest.fixture
+@pytest.fixture  # type: ignore
 def iris_classifier_selector_multi_class(
     iris_sample_multi_class: Sample,
     cv_stratified_bootstrap: StratifiedBootstrapCV,
     n_jobs: int,
-) -> ModelSelector[ClassifierPipelineDF[RandomForestClassifierDF], GridSearchCV]:
+) -> LearnerSelector[ClassifierPipelineDF[RandomForestClassifierDF], GridSearchCV]:
     return fit_classifier_selector(
         sample=iris_sample_multi_class, cv=cv_stratified_bootstrap, n_jobs=n_jobs
     )
 
 
-@pytest.fixture
+@pytest.fixture  # type: ignore
 def iris_classifier_selector_dual_target(
     iris_sample_binary_dual_target: Sample, cv_bootstrap: BootstrapCV, n_jobs: int
-) -> ModelSelector[ClassifierPipelineDF[RandomForestClassifierDF], GridSearchCV]:
+) -> LearnerSelector[ClassifierPipelineDF[RandomForestClassifierDF], GridSearchCV]:
     return fit_classifier_selector(
         sample=iris_sample_binary_dual_target, cv=cv_bootstrap, n_jobs=n_jobs
     )
 
 
-@pytest.fixture
+@pytest.fixture  # type: ignore
 def iris_classifier_binary(
-    iris_classifier_selector_binary: ModelSelector[ClassifierPipelineDF, GridSearchCV],
+    iris_classifier_selector_binary: LearnerSelector[
+        ClassifierPipelineDF[RandomForestClassifierDF], GridSearchCV
+    ],
 ) -> ClassifierPipelineDF[RandomForestClassifierDF]:
     return iris_classifier_selector_binary.best_estimator_
 
 
-@pytest.fixture
+@pytest.fixture  # type: ignore
 def iris_classifier_multi_class(
-    iris_classifier_selector_multi_class: ModelSelector[
-        ClassifierPipelineDF, GridSearchCV
+    iris_classifier_selector_multi_class: LearnerSelector[
+        ClassifierPipelineDF[RandomForestClassifierDF], GridSearchCV
     ],
 ) -> ClassifierPipelineDF[RandomForestClassifierDF]:
     return iris_classifier_selector_multi_class.best_estimator_
 
 
-@pytest.fixture
+@pytest.fixture  # type: ignore
 def iris_inspector_multi_class(
     iris_classifier_multi_class: ClassifierPipelineDF[RandomForestClassifierDF],
     iris_sample_multi_class: Sample,
@@ -460,7 +464,7 @@ def iris_inspector_multi_class(
 
 def fit_classifier_selector(
     sample: Sample, cv: BaseCrossValidator, n_jobs: int
-) -> ModelSelector[ClassifierPipelineDF[RandomForestClassifierDF], GridSearchCV]:
+) -> LearnerSelector[ClassifierPipelineDF[RandomForestClassifierDF], GridSearchCV]:
     # define the parameter space
     parameter_space = ParameterSpace(
         ClassifierPipelineDF(
@@ -473,7 +477,7 @@ def fit_classifier_selector(
 
     # pipeline inspector only supports binary classification,
     # therefore filter the sample down to only 2 target classes
-    return ModelSelector(
+    return LearnerSelector(
         searcher_type=GridSearchCV,
         parameter_space=parameter_space,
         cv=cv,

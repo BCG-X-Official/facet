@@ -1,34 +1,27 @@
 """
 Configuration file for the Sphinx documentation builder.
 
-Receives majority of configuration from pytools conf_base.py
+Receives the majority of the configuration from pytools conf_base.py
 """
 
 import os
 import sys
 
-sys.path.insert(
-    0,
-    os.path.abspath(
-        os.path.join(
-            os.path.dirname(__file__),
-            os.pardir,
-            os.pardir,
-            os.pardir,
-            "pytools",
-            "sphinx",
-            "base",
-        )
-    ),
-)
+_dir_base = os.path.join(os.path.dirname(os.path.dirname(__file__)), "base")
+sys.path.insert(0, _dir_base)
 
 from conf_base import set_config
 
-# ----- custom configuration -----
+# ----- set custom configuration -----
 
 set_config(
     globals(),
     project="facet",
-    modules=["facet", "pytools", "sklearndf"],
-    html_logo="_static/Gamma_Facet_Logo_RGB_LB.svg",
+    html_logo=os.path.join("_images", "Gamma_Facet_Logo_RGB_LB.svg"),
+    intersphinx_mapping={
+        "pytools": ("https://bcg-gamma.github.io/pytools/", None),
+        "shap": ("https://shap.readthedocs.io/en/stable", None),
+        "sklearn": ("https://scikit-learn.org/stable", None),
+        "sklearndf": ("https://bcg-gamma.github.io/sklearndf/", None),
+    },
 )

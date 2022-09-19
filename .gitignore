@@ -414,3 +414,4 @@ TSWLatexianTemp*
 
 # exclude notebooks directory: this is generated during build
 /notebooks/
+/sphinx/base/

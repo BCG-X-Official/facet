@@ -6,9 +6,10 @@ import logging
 import math
 import operator as op
 from abc import ABCMeta, abstractmethod
-from typing import Any, Generic, Optional, Sequence, Tuple, TypeVar
+from typing import Any, Generic, Optional, Sequence, Tuple, TypeVar, Union, cast
 
 import numpy as np
+import numpy.typing as npt
 
 from pytools.api import AllTracker, inheritdoc
 from pytools.fit import FittableMixin
@@ -28,11 +29,19 @@ __all__ = [
 # Type variables
 #
 
-T_Partitioner = TypeVar("T_Partitioner", bound="Partitioner")
-T_RangePartitioner = TypeVar("T_RangePartitioner", bound="RangePartitioner")
+T_Partitioner = TypeVar("T_Partitioner", bound="Partitioner[Any]")
+T_RangePartitioner = TypeVar("T_RangePartitioner", bound="RangePartitioner[Any, Any]")
 T_CategoryPartitioner = TypeVar("T_CategoryPartitioner", bound="CategoryPartitioner")
-T_Values = TypeVar("T_Values")
-T_Values_Numeric = TypeVar("T_Values_Numeric", float, int)
+T_Values = TypeVar("T_Values", bound=np.generic)
+T_Values_Numeric = TypeVar("T_Values_Numeric", np.int_, np.float_)
+T_Values_Scalar = TypeVar("T_Values_Scalar", int, float)
+
+
+#
+# Constants
+#
+
+ASSERTION__PARTITIONER_IS_FITTED = "partitioner is fitted"
 
 
 #
@@ -48,7 +57,7 @@ __tracker = AllTracker(globals())
 
 
 class Partitioner(
-    FittableMixin[Sequence[T_Values]], Generic[T_Values], metaclass=ABCMeta
+    FittableMixin[npt.NDArray[T_Values]], Generic[T_Values], metaclass=ABCMeta
 ):
     """
     Abstract base class of all partitioners.
@@ -60,7 +69,7 @@ class Partitioner(
     _partitions: Optional[Sequence[T_Values]]
 
     #: The count of values allocated to each partition.
-    _frequencies: Optional[np.ndarray]
+    _frequencies: Optional[npt.NDArray[np.int_]]
 
     def __init__(self, max_partitions: Optional[int] = None) -> None:
         """
@@ -96,17 +105,17 @@ class Partitioner(
         """
 
         self.ensure_fitted()
-        assert self._partitions is not None, "Partitioner is fitted"
+        assert self._partitions is not None, ASSERTION__PARTITIONER_IS_FITTED
         return self._partitions
 
     @property
-    def frequencies_(self) -> np.ndarray:
+    def frequencies_(self) -> npt.NDArray[np.int_]:
         """
         The count of values allocated to each partition.
         """
 
         self.ensure_fitted()
-        assert self._frequencies is not None, "Partitioner is fitted"
+        assert self._frequencies is not None, ASSERTION__PARTITIONER_IS_FITTED
         return self._frequencies
 
     @property
@@ -118,9 +127,8 @@ class Partitioner(
 
     @abstractmethod
     def fit(  # type: ignore[override]
-        # todo: remove 'type: ignore' once mypy correctly infers return type
         self: T_Partitioner,
-        values: Sequence[T_Values],
+        values: npt.NDArray[T_Values],
         **fit_params: Any,
     ) -> T_Partitioner:
         """
@@ -133,17 +141,19 @@ class Partitioner(
         """
 
     @staticmethod
-    def _as_non_empty_array(values: Sequence[Any]) -> np.ndarray:
+    def _as_non_empty_array(values: npt.NDArray[T_Values]) -> npt.NDArray[T_Values]:
         # ensure arg values is a non-empty array
-        values = np.asarray(values)
-        if len(values) == 0:
+        values_arr = np.asarray(values)
+        if len(values_arr) == 0:
             raise ValueError("arg values is empty")
-        return values
+        return values_arr
 
 
 @inheritdoc(match="""[see superclass]""")
 class RangePartitioner(
-    Partitioner[T_Values_Numeric], Generic[T_Values_Numeric], metaclass=ABCMeta
+    Partitioner[T_Values_Numeric],
+    Generic[T_Values_Numeric, T_Values_Scalar],
+    metaclass=ABCMeta,
 ):
     """
     Abstract base class of partitioners for numerical ranges.
@@ -154,9 +164,9 @@ class RangePartitioner(
 
         super().__init__(max_partitions)
 
-        self._step: Optional[T_Values_Numeric] = None
+        self._step: Optional[T_Values_Scalar] = None
         self._partition_bounds: Optional[
-            Sequence[Tuple[T_Values_Numeric, T_Values_Numeric]]
+            Sequence[Tuple[T_Values_Scalar, T_Values_Scalar]]
         ] = None
 
     @property
@@ -167,36 +177,35 @@ class RangePartitioner(
         return False
 
     @property
-    def partition_bounds_(self) -> Sequence[Tuple[T_Values_Numeric, T_Values_Numeric]]:
+    def partition_bounds_(self) -> Sequence[Tuple[T_Values_Scalar, T_Values_Scalar]]:
         """
-        Return the endpoints of the intervals that delineate each partitions.
+        Return the endpoints of the intervals that delineate each partition.
 
         :return: sequence of tuples (x, y) for every partition, where x is the
-          inclusive lower bound of a partition range, and y is the exclusive upper
-          bound of a partition range
+            inclusive lower bound of a partition range, and y is the exclusive upper
+            bound of a partition range
         """
 
         self.ensure_fitted()
-        assert self._partition_bounds is not None, "Partitioner is fitted"
+        assert self._partition_bounds is not None, ASSERTION__PARTITIONER_IS_FITTED
         return self._partition_bounds
 
     @property
-    def partition_width_(self) -> T_Values_Numeric:
+    def partition_width_(self) -> T_Values_Scalar:
         """
         The width of each partition.
         """
 
         self.ensure_fitted()
-        assert self._step is not None, "Partitioner is fitted"
+        assert self._step is not None, ASSERTION__PARTITIONER_IS_FITTED
         return self._step
 
     def fit(  # type: ignore[override]
-        # todo: remove 'type: ignore' once mypy correctly infers return type
         self: T_RangePartitioner,
-        values: Sequence[T_Values_Numeric],
+        values: npt.NDArray[T_Values_Numeric],
         *,
-        lower_bound: Optional[T_Values_Numeric] = None,
-        upper_bound: Optional[T_Values_Numeric] = None,
+        lower_bound: Union[T_Values_Numeric, float, int, None] = None,
+        upper_bound: Union[T_Values_Numeric, float, int, None] = None,
         **fit_params: Any,
     ) -> T_RangePartitioner:
         r"""
@@ -220,14 +229,16 @@ class RangePartitioner(
         values = self._as_non_empty_array(values)
 
         if lower_bound is None or upper_bound is None:
-            q3q1 = np.nanquantile(values, q=[0.75, 0.25])
-            inlier_range = op.sub(*q3q1) * 1.5  # iqr * 1.5
+            # calculate the inner quartile range (IQR)
+            iqr = np.nanquantile(values, q=[0.75, 0.25])
+            # calculate inlier range as IQR * 1.5
+            inlier_range = op.sub(*iqr) * 1.5
 
             if lower_bound is None:
-                lower_bound = values[values >= q3q1[1] - inlier_range].min()
+                lower_bound = values[values >= iqr[1] - inlier_range].min()
 
             if upper_bound is None:
-                upper_bound = values[values <= q3q1[0] + inlier_range].max()
+                upper_bound = values[values <= iqr[0] + inlier_range].max()
 
             if lower_bound == upper_bound:
                 raise ValueError(
@@ -273,7 +284,7 @@ class RangePartitioner(
         )
         partition_indices = np.digitize(values, bins=partition_bins)
 
-        # frequency counts will include left and right outliers, hence n_partitions + 2
+        # frequency counts will include left and right outliers, hence n_partitions + 2,
         # and we exclude the first and last element of the result
         frequencies = np.bincount(partition_indices, minlength=n_partitions + 2)[1:-1]
 
@@ -286,35 +297,21 @@ class RangePartitioner(
         """[see superclass]"""
         return self._frequencies is not None
 
-    @staticmethod
-    def _ceil_step(step: float):
-        """
-        Round the step size (arbitrary float) to a human-readable number like 0.5, 1, 2.
-
-        :param step: the step size to round by
-        :return: the nearest greater or equal step size in the series
-                 (..., 0.1, 0.2, 0.5, 1, 2, 5, 10, 20, 50, ...)
-        """
-        if step <= 0:
-            raise ValueError("arg step must be positive")
-
-        return min(10 ** math.ceil(math.log10(step * m)) / m for m in [1, 2, 5])
-
     @abstractmethod
     def _step_size(
-        self, lower_bound: T_Values_Numeric, upper_bound: T_Values_Numeric
-    ) -> T_Values_Numeric:
+        self, lower_bound: T_Values_Scalar, upper_bound: T_Values_Scalar
+    ) -> T_Values_Scalar:
         # Compute the step size (interval length) used in the partitions
         pass
 
     @property
     @abstractmethod
-    def _partition_center_offset(self) -> T_Values_Numeric:
+    def _partition_center_offset(self) -> T_Values_Scalar:
         # Offset between center and endpoints of an interval
         pass
 
 
-class ContinuousRangePartitioner(RangePartitioner[float]):
+class ContinuousRangePartitioner(RangePartitioner[np.float_, float]):
     """
     Partition numerical values in adjacent intervals of the same length.
 
@@ -336,17 +333,15 @@ class ContinuousRangePartitioner(RangePartitioner[float]):
     """
 
     def _step_size(self, lower_bound: float, upper_bound: float) -> float:
-        return RangePartitioner._ceil_step(
-            (upper_bound - lower_bound) / (self.max_partitions - 1)
-        )
+        return _ceil_step((upper_bound - lower_bound) / (self.max_partitions - 1))
 
     @property
     def _partition_center_offset(self) -> float:
-        assert self._step is not None, "Partitioner is fitted"
+        assert self._step is not None, ASSERTION__PARTITIONER_IS_FITTED
         return self._step / 2
 
 
-class IntegerRangePartitioner(RangePartitioner[int]):
+class IntegerRangePartitioner(RangePartitioner[np.int_, int]):
     """
     Partition integer values in adjacent intervals of the same length.
 
@@ -370,21 +365,17 @@ class IntegerRangePartitioner(RangePartitioner[int]):
     def _step_size(self, lower_bound: int, upper_bound: int) -> int:
         return max(
             1,
-            int(
-                RangePartitioner._ceil_step(
-                    (upper_bound - lower_bound) / (self.max_partitions - 1)
-                )
-            ),
+            int(_ceil_step((upper_bound - lower_bound) / (self.max_partitions - 1))),
         )
 
     @property
     def _partition_center_offset(self) -> int:
-        assert self._step is not None, "Partitioner is fitted"
+        assert self._step is not None, ASSERTION__PARTITIONER_IS_FITTED
         return self._step // 2
 
 
 @inheritdoc(match="[see superclass]")
-class CategoryPartitioner(Partitioner[T_Values]):
+class CategoryPartitioner(Partitioner[Any]):
     """
     Partition categorical values.
 
@@ -406,9 +397,8 @@ class CategoryPartitioner(Partitioner[T_Values]):
 
     # noinspection PyMissingOrEmptyDocstring
     def fit(  # type: ignore[override]
-        # todo: remove 'type: ignore' once mypy correctly infers return type
         self: T_CategoryPartitioner,
-        values: Sequence[T_Values],
+        values: npt.NDArray[Any],
         **fit_params: Any,
     ) -> T_CategoryPartitioner:
         """[see superclass]"""
@@ -425,3 +415,24 @@ class CategoryPartitioner(Partitioner[T_Values]):
 
 
 __tracker.validate()
+
+#
+# Auxiliary functions
+#
+
+
+def _ceil_step(step: T_Values_Scalar) -> T_Values_Scalar:
+    """
+    Round the step size (arbitrary float) to a human-readable number like 0.5, 1, 2.
+
+    :param step: the step size to round by
+    :return: the nearest greater or equal step size in the series
+             (..., 0.1, 0.2, 0.5, 1, 2, 5, 10, 20, 50, ...)
+    """
+    if step <= 0:
+        raise ValueError("arg step must be positive")
+
+    return cast(
+        T_Values_Scalar,
+        min(10 ** math.ceil(math.log10(step * m)) / m for m in [1, 2, 5]),
+    )

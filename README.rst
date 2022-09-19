@@ -1,4 +1,4 @@
-.. image:: sphinx/source/_static/Gamma_Facet_Logo_RGB_LB.svg
+.. image:: sphinx/source/_images/Gamma_Facet_Logo_RGB_LB.svg
 
 |
 
@@ -103,13 +103,13 @@ In this quickstart we will train a Random Forest regressor using 10 repeated
 *sklearndf* we can create a *pandas* DataFrame compatible workflow. However,
 FACET provides additional enhancements to keep track of our feature matrix
 and target vector using a sample object (`Sample`) and easily compare
-hyperparameter configurations and even multiple learners with the `LearnerRanker`.
+hyperparameter configurations and even multiple learners with the `LearnerSelector`.
 
 .. code-block:: Python
 
     # standard imports
     import pandas as pd
-    from sklearn.model_selection import RepeatedKFold
+    from sklearn.model_selection import RepeatedKFold, GridSearchCV
 
     # some helpful imports from sklearndf
     from sklearndf.pipeline import RegressorPipelineDF
@@ -117,7 +117,7 @@ hyperparameter configurations and even multiple learners with the `LearnerRanker
 
     # relevant FACET imports
     from facet.data import Sample
-    from facet.selection import LearnerRanker, LearnerGrid
+    from facet.selection import LearnerSelector, ParameterSpace
 
     # declaring url with data
     data_url = 'https://web.stanford.edu/~hastie/Papers/LARS/diabetes.data'
@@ -144,29 +144,27 @@ hyperparameter configurations and even multiple learners with the `LearnerRanker
         regressor=RandomForestRegressorDF(n_estimators=200, random_state=42)
     )
 
-    # define grid of models which are "competing" against each other
-    rnd_forest_grid = [
-        LearnerGrid(
-            pipeline=rnd_forest_reg,
-            learner_parameters={
-                "min_samples_leaf": [8, 11, 15],
-                "max_depth": [4, 5, 6],
-            }
-        ),
-    ]
+    # define parameter space for models which are "competing" against each other
+    rnd_forest_ps = ParameterSpace(rnd_forest_reg)
+    rnd_forest_ps.regressor.min_samples_leaf = [8, 11, 15]
+    rnd_forest_ps.regressor.max_depth = [4, 5, 6]
 
     # create repeated k-fold CV iterator
     rkf_cv = RepeatedKFold(n_splits=5, n_repeats=10, random_state=42)
 
-    # rank your candidate models by performance (default is mean CV score - 2*SD)
-    ranker = LearnerRanker(
-        grids=rnd_forest_grid, cv=rkf_cv, n_jobs=-3
+    # rank your candidate models by performance
+    selector = LearnerSelector(
+        searcher_type=GridSearchCV,
+        parameter_space=rnd_forest_ps,
+        cv=rkf_cv,
+        n_jobs=-3,
+        scoring="r2"
     ).fit(sample=diabetes_sample)
 
     # get summary report
-    ranker.summary_report()
+    selector.summary_report()
 
-.. image:: sphinx/source/_static/ranker_summary.png
+.. image:: sphinx/source/_images/ranker_summary.png
    :width: 600
 
 We can see based on this minimal workflow that a value of 11 for minimum
@@ -233,8 +231,10 @@ The key global metrics for each pair of features in a model are:
 
     # fit the model inspector
     from facet.inspection import LearnerInspector
-    inspector = LearnerInspector(n_jobs=-3)
-    inspector.fit(crossfit=ranker.best_model_crossfit_)
+    inspector = LearnerInspector(
+        pipeline=selector.best_estimator_,
+        n_jobs=-3
+    ).fit(sample=diabetes_sample)
 
 **Synergy**
 
@@ -245,7 +245,7 @@ The key global metrics for each pair of features in a model are:
     synergy_matrix = inspector.feature_synergy_matrix()
     MatrixDrawer(style="matplot%").draw(synergy_matrix, title="Synergy Matrix")
 
-.. image:: sphinx/source/_static/synergy_matrix.png
+.. image:: sphinx/source/_images/synergy_matrix.png
     :width: 600
 
 For any feature pair (A, B), the first feature (A) is the row, and the second
@@ -273,7 +273,7 @@ to 27% synergy of `LDL` with `LTG` for predicting progression after one year.
     redundancy_matrix = inspector.feature_redundancy_matrix()
     MatrixDrawer(style="matplot%").draw(redundancy_matrix, title="Redundancy Matrix")
 
-.. image:: sphinx/source/_static/redundancy_matrix.png
+.. image:: sphinx/source/_images/redundancy_matrix.png
     :width: 600
 
 
@@ -312,7 +312,7 @@ Let's look at the example for redundancy.
     redundancy = inspector.feature_redundancy_linkage()
     DendrogramDrawer().draw(data=redundancy, title="Redundancy Dendrogram")
 
-.. image:: sphinx/source/_static/redundancy_dendrogram.png
+.. image:: sphinx/source/_images/redundancy_dendrogram.png
     :width: 600
 
 Based on the dendrogram we can see that the feature pairs (`LDL`, `TC`)
@@ -337,22 +337,17 @@ we do the following for the simulation:
   of that partition.
 - For each partition, the simulator creates an artificial copy of the original sample
   assuming the variable to be simulated has the same value across all observations –
-  which is the value representing the partition. Using the best `LearnerCrossfit`
-  acquired from the ranker, the simulator now re-predicts all targets using the models
-  trained for all folds and determines the average uplift of the target variable
+  which is the value representing the partition. Using the best estimator
+  acquired from the selector, the simulator now re-predicts all targets using the models
+  trained for full sample and determines the uplift of the target variable
   resulting from this.
 - The FACET `SimulationDrawer` allows us to visualise the result; both in a
   *matplotlib* and a plain-text style.
-
-Finally, because FACET can use bootstrap cross validation, we can create a crossfit
-from our previous `LearnerRanker` best model to perform the simulation, so we can
-quantify the uncertainty by using bootstrap confidence intervals.
 
 .. code-block:: Python
 
     # FACET imports
     from facet.validation import BootstrapCV
-    from facet.crossfit import LearnerCrossfit
     from facet.simulation import UnivariateUpliftSimulator
     from facet.data.partition import ContinuousRangePartitioner
     from facet.simulation.viz import SimulationDrawer
@@ -360,16 +355,12 @@ quantify the uncertainty by using bootstrap confidence intervals.
     # create bootstrap CV iterator
     bscv = BootstrapCV(n_splits=1000, random_state=42)
 
-    # create a bootstrap CV crossfit for simulation using best model
-    boot_crossfit = LearnerCrossfit(
-        pipeline=ranker.best_model_,
-        cv=bscv,
-        n_jobs=-3,
-        verbose=False,
-    ).fit(sample=diabetes_sample)
-
     SIM_FEAT = "BMI"
-    simulator = UnivariateUpliftSimulator(crossfit=boot_crossfit, n_jobs=-3)
+    simulator = UnivariateUpliftSimulator(
+        model=selector.best_estimator_,
+        sample=diabetes_sample,
+        n_jobs=-3
+    )
 
     # split the simulation range into equal sized partitions
     partitioner = ContinuousRangePartitioner()
@@ -380,7 +371,7 @@ quantify the uncertainty by using bootstrap confidence intervals.
     # visualise results
     SimulationDrawer().draw(data=simulation, title=SIM_FEAT)
 
-.. image:: sphinx/source/_static/simulation_output.png
+.. image:: sphinx/source/_images/simulation_output.png
 
 We would conclude from the figure that higher values of `BMI` are associated with
 an increase in disease progression after one year, and that for a `BMI` of 28
@@ -436,15 +427,15 @@ BCG GAMMA team. If you would like to know more you can find out about
 or have a look at
 `career opportunities <https://www.bcg.com/en-gb/beyond-consulting/bcg-gamma/careers>`_.
 
-.. |pipe| image:: sphinx/source/_static/icons/pipe_icon.png
+.. |pipe| image:: sphinx/source/_images/icons/pipe_icon.png
    :width: 100px
    :class: facet_icon
 
-.. |inspect| image:: sphinx/source/_static/icons/inspect_icon.png
+.. |inspect| image:: sphinx/source/_images/icons/inspect_icon.png
    :width: 100px
    :class: facet_icon
 
-.. |sim| image:: sphinx/source/_static/icons/sim_icon.png
+.. |sim| image:: sphinx/source/_images/icons/sim_icon.png
    :width: 100px
    :class: facet_icon
 

@@ -1,6 +1,7 @@
 """
 Core implementation of :mod:`facet.selection`
 """
+from __future__ import annotations
 
 import logging
 import warnings
@@ -46,15 +47,19 @@ __all__ = [
 ParameterSet = Union[List[Any], stats.rv_continuous, stats.rv_discrete]
 ParameterDict = Dict[str, ParameterSet]
 
-rv_frozen = type(stats.uniform())
-assert rv_frozen.__name__ == "rv_frozen", "type of stats.uniform() is rv_frozen"
+try:
+    rv_frozen = next(
+        t for t in type(stats.uniform()).mro() if t.__name__ == "rv_frozen"
+    )
+except StopIteration:
+    raise AssertionError("stats.uniform() is based on class rv_frozen")
 
 
 #
 # Type variables
 #
 
-T_Candidate_co = TypeVar("T_Candidate_co", covariant=True, bound=EstimatorDF)
+T_Estimator_co = TypeVar("T_Estimator_co", covariant=True, bound=EstimatorDF)
 
 #
 # Ensure all symbols introduced below are included in __all__
@@ -69,13 +74,13 @@ __tracker = AllTracker(globals())
 
 
 @inheritdoc(match="""[see superclass]""")
-class ParameterSpace(BaseParameterSpace[T_Candidate_co], Generic[T_Candidate_co]):
+class ParameterSpace(BaseParameterSpace[T_Estimator_co], Generic[T_Estimator_co]):
     """
     A set of parameter choices or distributions spanning a parameter space for
-    optimizing the hyper-parameters of a single estimator.
+    optimizing the hyperparameters of a single estimator.
 
     Parameter spaces provide an easy approach to define and validate search spaces
-    for hyper-parameter tuning of ML pipelines using `scikit-learn`'s
+    for hyperparameter tuning of ML pipelines using `scikit-learn`'s
     :class:`~sklearn.model_selection.GridSearchCV` and
     :class:`~sklearn.model_selection.RandomizedSearchCV`.
 
@@ -111,12 +116,12 @@ distribution:
 
     """
 
-    def __init__(self, estimator: T_Candidate_co, name: Optional[str] = None) -> None:
+    def __init__(self, estimator: T_Estimator_co, name: Optional[str] = None) -> None:
         """
-        :param estimator: the estimator candidate to which to apply the parameters to
-        :param name: a name for the estimator candidate to be used in summary reports;
-            defaults to the type of the estimator, or the type of the final estimator
-            if arg estimator is a pipeline
+        :param estimator: the estimator to which to apply the parameters
+        :param name: a name for the estimator to be used in summary reports;
+            defaults to the name of the estimator's class, or the name of the final
+            estimator's class if arg ``estimator`` is a pipeline
         """
 
         super().__init__(estimator=estimator)
@@ -127,7 +132,7 @@ distribution:
             if "__" not in name
         }
 
-        self._children: Dict[str, ParameterSpace] = {
+        self._children: Dict[str, ParameterSpace[BaseEstimator]] = {
             name: ParameterSpace(estimator=value)
             for name, value in params.items()
             if isinstance(value, BaseEstimator)
@@ -139,16 +144,16 @@ distribution:
 
     def get_name(self) -> str:
         """
-        Get the name for this parameter space.
+        Get the name for this parameter space's estimator.
 
-        If no name was passed to the constructor, determine the `default name`
+        If no name was passed to the constructor, determine the default name
         recursively as follows:
 
-        - for meta-estimators, this is the `default name` of the delegate estimator
-        - for pipelines, this is the `default name` of the final estimator
-        - for all other estimators, this is the name of the estimator's type
+        - for meta-estimators, this is the default name of the delegate estimator
+        - for pipelines, this is the default name of the final estimator
+        - for all other estimators, this is the name of the estimator's class
 
-        :return: the name for this parameter space
+        :return: the name for this parameter space's estimator
         """
 
         if self._name is None:
@@ -159,6 +164,10 @@ distribution:
     @subsdoc(
         pattern="or a list of such dictionaries, ",
         replacement="",
+    )
+    @subsdoc(
+        pattern="one or more dictionaries, each mapping",
+        replacement="a dictionary mapping",
         using=BaseParameterSpace.get_parameters,
     )
     def get_parameters(self, prefix: Optional[str] = None) -> ParameterDict:
@@ -210,6 +219,8 @@ distribution:
     def __getattr__(self, key: str) -> Any:
         if not key.startswith("_"):
 
+            result: Union[ParameterSpace[Any], ParameterSet, None]
+
             result = self._children.get(key, None)
             if result is not None:
                 return result
@@ -243,7 +254,9 @@ distribution:
 
         def _values_to_expression(values: ParameterSet) -> Expression:
             if isinstance(values, rv_frozen):
-                return Id(values.dist.name)(*values.args, **values.kwds)
+                # disabling type-checks: mypy cannot access the class signature
+                # of private class rv_frozen, which is obtained dynamically at runtime
+                return Id(values.dist.name)(*values.args, **values.kwds)  # type: ignore
             elif isinstance(values, (stats.rv_continuous, stats.rv_discrete)):
                 try:
                     return Id(values.name)(values.a, values.b)
@@ -271,23 +284,23 @@ distribution:
 
 @inheritdoc(match="""[see superclass]""")
 class MultiEstimatorParameterSpace(
-    BaseParameterSpace[T_Candidate_co], Generic[T_Candidate_co]
+    BaseParameterSpace[T_Estimator_co], Generic[T_Estimator_co]
 ):
     """
     A collection of parameter spaces, each representing a competing estimator from which
-    to select the best-performing candidate with optimal hyper-parameters.
+    to select the best-performing candidate with optimal hyperparameters.
 
     See :class:`.ParameterSpace` for details on setting up and using parameter spaces.
     """
 
     #: The parameter spaces constituting this multi-estimator parameter space.
-    spaces: Tuple[ParameterSpace[T_Candidate_co], ...]
+    spaces: Tuple[ParameterSpace[T_Estimator_co], ...]
 
-    def __init__(self, *spaces: ParameterSpace[T_Candidate_co]) -> None:
+    def __init__(self, *spaces: ParameterSpace[T_Estimator_co]) -> None:
         """
         :param spaces: the parameter spaces from which to select the best estimator
         """
-        validate_element_types(spaces, expected_type=ParameterSpace)
+        validate_element_types(spaces, expected_type=ParameterSpace, name="arg spaces")
         validate_spaces(spaces)
 
         if len(spaces) == 0:
@@ -303,6 +316,10 @@ class MultiEstimatorParameterSpace(
             r"or a list of such dictionaries"
         ),
         replacement="a list of dictionaries of parameter distributions",
+    )
+    @subsdoc(
+        pattern="one or more dictionaries,",
+        replacement="a list of dictionaries,",
         using=BaseParameterSpace.get_parameters,
     )
     def get_parameters(self, prefix: Optional[str] = None) -> List[ParameterDict]:
@@ -323,7 +340,7 @@ class MultiEstimatorParameterSpace(
             for space in self.spaces
         ]
 
-    def to_expression(self) -> "Expression":
+    def to_expression(self) -> Expression:
         """[see superclass]"""
         # noinspection PyProtectedMember
         return Id(type(self))(*self.spaces)
@@ -338,7 +355,7 @@ __tracker.validate()
 
 
 def ensure_subclass(
-    estimator_type: Type[T_Candidate_co], expected_type: Type[T_Candidate_co]
+    estimator_type: Type[T_Estimator_co], expected_type: Type[T_Estimator_co]
 ) -> None:
     """
     Ensure that the given estimator type is a subclass of the expected estimator type.
@@ -353,12 +370,12 @@ def ensure_subclass(
         )
 
 
-def validate_spaces(spaces: Collection[ParameterSpace[T_Candidate_co]]) -> None:
+def validate_spaces(spaces: Collection[ParameterSpace[T_Estimator_co]]) -> None:
     """
-    Ensure that all candidates implement the same estimator type (typically regressors
+    Ensure that all parameter spaces use the same estimator type (typically regressors
     or classifiers)
 
-    :param spaces: the candidates to check
+    :param spaces: the parameter spaces to check
     """
 
     estimator_types: Set[str] = {
@@ -367,7 +384,7 @@ def validate_spaces(spaces: Collection[ParameterSpace[T_Candidate_co]]) -> None:
 
     if len(estimator_types) > 1:
         raise TypeError(
-            "all candidate estimators must have the same estimator type, "
+            "all parameter spaces must use the same estimator type, "
             "but got multiple types: " + ", ".join(sorted(estimator_types))
         )
 
@@ -376,11 +393,10 @@ def get_default_estimator_name(estimator: EstimatorDF) -> str:
     """
     Get a default name of the estimator.
 
-    For meta-estimators, this is the default name of the delegate estimator.
+    - for meta-estimators, this is the default name of the delegate estimator
+    - for pipelines, this is the default name of the final estimator
+    - for all other estimators, this is the name of the estimator's class
 
-    For pipelines, this is the default name of the final estimator.
-
-    For all other estimators, this is the name of the estimator's type.
 
     :param estimator: the estimator to get the default name for
     :return: the default name

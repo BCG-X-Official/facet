@@ -4,7 +4,7 @@ Drawing styles for simulation results.
 
 import logging
 from abc import ABCMeta, abstractmethod
-from typing import Any, Sequence, Tuple, TypeVar, Union
+from typing import Any, Sequence, TextIO, Tuple, TypeVar, Union
 
 from matplotlib.axes import Axes
 from mpl_toolkits.axes_grid1 import make_axes_locatable
@@ -174,9 +174,8 @@ class SimulationMatplotStyle(MatplotStyle, SimulationStyle):
             bottom=True,
             labelrotation=45 if is_categorical_feature else 0,
         )
-        if is_categorical_feature or True:
-            ax.set_xticks(x)
-            ax.set_xticklabels(labels=partitions)
+        ax.set_xticks(x)
+        ax.set_xticklabels(labels=partitions)
 
         # remove the top and right spines
         for pos in ["top", "right"]:
@@ -205,11 +204,15 @@ class SimulationMatplotStyle(MatplotStyle, SimulationStyle):
             uplift_height = abs(y_max - y_min)
 
             def _x_axis_height() -> float:
+                axis_below_size_pixels: float
                 _, axis_below_size_pixels = main_ax.get_xaxis().get_text_heights(
                     self.get_renderer()
                 )
+
+                y0: float
+                y1: float
                 ((_, y0), (_, y1)) = main_ax.transData.inverted().transform(
-                    ((0, 0), (0, axis_below_size_pixels))
+                    ((0.0, 0.0), (0.0, axis_below_size_pixels))
                 )
                 return abs(y1 - y0)
 
@@ -293,6 +296,12 @@ class SimulationReportStyle(SimulationStyle, TextStyle):
     Renders simulation results as a text report.
     """
 
+    # defined in superclass, repeated here for Sphinx
+    out: TextIO
+
+    # defined in superclass, repeated here for Sphinx
+    width: int
+
     # general format wih sufficient space for potential sign and "e" notation
     __NUM_PRECISION = 3
     __NUM_WIDTH = __NUM_PRECISION + 6
@@ -311,7 +320,7 @@ class SimulationReportStyle(SimulationStyle, TextStyle):
     __FREQUENCY_FORMAT = f"{__FREQUENCY_WIDTH}g"
 
     @staticmethod
-    def _num_format(heading: str):
+    def _num_format(heading: str) -> str:
         return f"> {len(heading)}.{SimulationReportStyle.__NUM_PRECISION}g"
 
     def draw_uplift(

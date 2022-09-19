@@ -4,8 +4,9 @@ Core implementation of :mod:`facet.selection.base`
 
 import logging
 from abc import ABCMeta, abstractmethod
-from typing import Any, Dict, Generic, List, Optional, Sequence, TypeVar, Union
+from typing import Any, Dict, Generic, List, Optional, TypeVar, Union
 
+import numpy.typing as npt
 import pandas as pd
 from scipy import stats
 
@@ -50,7 +51,7 @@ __tracker = AllTracker(globals())
 
 class BaseParameterSpace(HasExpressionRepr, Generic[T_Estimator], metaclass=ABCMeta):
     """
-    A collection of parameters spanning a parameter space for hyper-parameter
+    A collection of parameters spanning a parameter space for hyperparameter
     optimization.
     """
 
@@ -93,7 +94,7 @@ class BaseParameterSpace(HasExpressionRepr, Generic[T_Estimator], metaclass=ABCM
         :param prefix: an optional prefix to prepend to all parameter names in the
             resulting dictionary, separated by two underscore characters (``__``) as
             per `scikit-learn`'s convention for hierarchical parameter names
-        :return: a dictionary mapping parameter names to parameter
+        :return: one or more dictionaries, each mapping parameter names to parameter
             choices (as lists) or distributions (from :mod:`scipy.stats`)
         """
         pass
@@ -150,7 +151,7 @@ class CandidateEstimatorDF(ClassifierDF, RegressorDF, TransformerDF):
             return self.candidate
 
     @property
-    def classes_(self) -> Sequence[Any]:
+    def classes_(self) -> Union[npt.NDArray[Any], List[npt.NDArray[Any]]]:
         """[see superclass]"""
         return self._get_candidate().classes_
 
