@@ -2,10 +2,7 @@ img.padded-logo {padding-top: 20pt; padding-bottom: 20pt}
 
 img.facet_icon {
     height: 100px;
-    padding-top: 5pt;
-    padding-bottom: 5pt;
-    padding-left: 5pt;
-    padding-right: 5pt;
+    padding: 5pt;
 }
 
 .hello {

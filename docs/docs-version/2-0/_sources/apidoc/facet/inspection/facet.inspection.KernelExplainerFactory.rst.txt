@@ -17,6 +17,7 @@ facet.inspection.KernelExplainerFactory
       :nosignatures:
    
       ~KernelExplainerFactory.make_explainer
+      ~KernelExplainerFactory.to_expression
    
    
 

@@ -17,6 +17,7 @@ facet.inspection.ExplainerFactory
       :nosignatures:
    
       ~ExplainerFactory.make_explainer
+      ~ExplainerFactory.to_expression
    
    
 

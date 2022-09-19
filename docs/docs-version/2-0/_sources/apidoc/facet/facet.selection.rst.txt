@@ -17,9 +17,9 @@ facet.selection
       :template: custom-class-template.rst
       :nosignatures:
    
-      LearnerEvaluation
-      LearnerGrid
-      LearnerRanker
+      LearnerSelector
+      MultiEstimatorParameterSpace
+      ParameterSpace
    
    
 
@@ -36,4 +36,15 @@ facet.selection
    
 
 
+
+
+==========
+Submodules
+==========
+.. autosummary::
+   :toctree: selection
+   :template: custom-module-template.rst
+   :recursive:
+
+   facet.selection.base
 

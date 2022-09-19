@@ -1,0 +1,540 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>Release Notes &#8212; facet  documentation</title>
+    
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+
+    
+  <link rel="stylesheet"
+    href="../_static/vendor/fontawesome/5.13.0/css/all.min.css">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/gamma.css" />
+    
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
+
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/js/gamma.js"></script>
+    <script src="../_static/js/versions.js"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="prev" title="About us" href="../about_us.html" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="docsearch:language" content="None">
+    
+
+    <!-- Google Analytics -->
+    
+  </head>
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="60">
+    
+    <div class="container-fluid" id="banner"></div>
+
+    
+    <nav class="navbar navbar-light navbar-expand-lg bg-light fixed-top bd-navbar" id="navbar-main"><div class="container-xl">
+
+  <div id="navbar-start">
+    
+    
+
+<a class="navbar-brand" href="../index.html">
+  <img src="../_static/Gamma_Facet_Logo_RGB_LB.svg" class="logo" alt="logo">
+</a>
+
+
+    
+  </div>
+
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar-collapsible" aria-controls="navbar-collapsible" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+
+  
+  <div id="navbar-collapsible" class="col-lg-9 collapse navbar-collapse">
+    <div id="navbar-center" class="mr-auto">
+      
+      <div class="navbar-center-item">
+        <ul id="navbar-main-elements" class="navbar-nav">
+    <li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="getting_started.html">
+  Getting started
+ </a>
+</li>
+
+<li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="../apidoc/facet.html">
+  API reference
+ </a>
+</li>
+
+<li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="../tutorials.html">
+  Tutorials
+ </a>
+</li>
+
+<li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="../contribution_guide.html">
+  Development Guidelines
+ </a>
+</li>
+
+<li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="../faqs.html">
+  FAQ
+ </a>
+</li>
+
+<li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="../about_us.html">
+  About us
+ </a>
+</li>
+
+<li class="toctree-l1 current active nav-item">
+ <a class="current reference internal nav-link" href="#">
+  Release Notes
+ </a>
+</li>
+
+    
+</ul>
+      </div>
+      
+    </div>
+
+    <div id="navbar-end">
+      
+      <div class="navbar-end-item">
+        <ul id="navbar-icon-links" class="navbar-nav" aria-label="Icon Links">
+      </ul>
+      </div>
+      
+    </div>
+  </div>
+</div>
+    </nav>
+    
+
+    <div class="container-xl">
+      <div class="row">
+          
+            
+            <!-- Only show if we have sidebars configured, else just a small margin  -->
+            <div class="col-12 col-md-3 bd-sidebar">
+              <div class="sidebar-start-items"><form class="bd-search d-flex align-items-center" action="../search.html" method="get">
+  <i class="icon fas fa-search"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
+</form><nav class="bd-links" id="bd-docs-nav" aria-label="Main navigation">
+  <div class="bd-toc-item active">
+    
+  </div>
+</nav>
+              </div>
+              <div class="sidebar-end-items">
+              </div>
+            </div>
+            
+          
+
+          
+          <div class="d-none d-xl-block col-xl-2 bd-toc">
+            
+              
+              <div class="toc-item">
+                
+<div class="tocsection onthispage mt-5 pt-1 pb-3">
+    <i class="fas fa-list"></i> On this page
+</div>
+
+<nav id="bd-toc-nav">
+    <ul class="visible nav section-nav flex-column">
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#facet-2-0">
+   FACET 2.0
+  </a>
+  <ul class="nav section-nav flex-column">
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#id2">
+     2.0.0
+    </a>
+    <ul class="nav section-nav flex-column">
+     <li class="toc-h4 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#facet-data">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         facet.data
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h4 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#facet-inspection">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         facet.inspection
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h4 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#facet-selection">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         facet.selection
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h4 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#facet-simulation">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         facet.simulation
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h4 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#facet-validation">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         facet.validation
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h4 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#other">
+       Other
+      </a>
+     </li>
+    </ul>
+   </li>
+  </ul>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#facet-1-2">
+   FACET 1.2
+  </a>
+  <ul class="nav section-nav flex-column">
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#id3">
+     1.2.2
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#id4">
+     1.2.1
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#id5">
+     1.2.0
+    </a>
+   </li>
+  </ul>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#facet-1-1">
+   FACET 1.1
+  </a>
+  <ul class="nav section-nav flex-column">
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#id6">
+     1.1.2
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#id7">
+     1.1.1
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#id8">
+     1.1.0
+    </a>
+   </li>
+  </ul>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#facet-1-0">
+   FACET 1.0
+  </a>
+  <ul class="nav section-nav flex-column">
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#id9">
+     1.0.3
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#id10">
+     1.0.2
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#id11">
+     1.0.1
+    </a>
+   </li>
+  </ul>
+ </li>
+</ul>
+
+</nav>
+              </div>
+              
+              <div class="toc-item">
+                
+              </div>
+              
+            
+          </div>
+          
+
+          
+          
+            
+          
+          <main class="col-12 col-md-9 col-xl-7 py-md-5 pl-md-5 pr-md-4 bd-content" role="main">
+              
+              <div>
+                
+  <section id="release-notes">
+<span id="id1"></span><h1>Release Notes<a class="headerlink" href="#release-notes" title="Permalink to this headline">#</a></h1>
+<section id="facet-2-0">
+<h2>FACET 2.0<a class="headerlink" href="#facet-2-0" title="Permalink to this headline">#</a></h2>
+<p>FACET 2.0 brings numerous API enhancements and improvements, accelerates model
+inspection by factor 50 in many practical settings, makes major improvements to
+visualizations, and is now fully type-checked by <a class="reference external" href="https://mypy.readthedocs.io/en/latest/index.html" title="(in mypy v0.990+dev.1d4395f14a0b2a923dd24e881887ff9360ec50fa.dirty)"><span class="xref std std-doc">mypy</span></a>.</p>
+<section id="id2">
+<h3>2.0.0<a class="headerlink" href="#id2" title="Permalink to this headline">#</a></h3>
+<section id="facet-data">
+<h4><code class="docutils literal notranslate"><span class="pre">facet.data</span></code><a class="headerlink" href="#facet-data" title="Permalink to this headline">#</a></h4>
+<ul class="simple">
+<li><p>API: class <a class="reference internal" href="../apidoc/facet/data/facet.data.Sample.html#facet.data.Sample" title="facet.data.Sample"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sample</span></code></a> raises an exception if the name of any used column is not
+a string</p></li>
+<li><p>API: class <a class="reference internal" href="../apidoc/facet/data/partition/facet.data.partition.RangePartitioner.html#facet.data.partition.RangePartitioner" title="facet.data.partition.RangePartitioner"><code class="xref py py-class docutils literal notranslate"><span class="pre">RangePartitioner</span></code></a> supports new optional arguments <code class="docutils literal notranslate"><span class="pre">lower_bound</span></code>
+and <code class="docutils literal notranslate"><span class="pre">upper_bound</span></code> in method <a class="reference internal" href="../apidoc/facet/data/partition/facet.data.partition.RangePartitioner.html#facet.data.partition.RangePartitioner.fit" title="facet.data.partition.RangePartitioner.fit"><code class="xref py py-meth docutils literal notranslate"><span class="pre">fit()</span></code></a> and no longer accepts
+them in the class initializer</p></li>
+</ul>
+</section>
+<section id="facet-inspection">
+<h4><code class="docutils literal notranslate"><span class="pre">facet.inspection</span></code><a class="headerlink" href="#facet-inspection" title="Permalink to this headline">#</a></h4>
+<ul class="simple">
+<li><p>API: <a class="reference internal" href="../apidoc/facet/inspection/facet.inspection.LearnerInspector.html#facet.inspection.LearnerInspector" title="facet.inspection.LearnerInspector"><code class="xref py py-class docutils literal notranslate"><span class="pre">LearnerInspector</span></code></a> no longer uses learner crossfits and instead inspects
+models using a single pass of SHAP calculations, usually leading to performance gains
+of up to a factor of 50</p></li>
+<li><p>API: return <a class="reference internal" href="../apidoc/facet/inspection/facet.inspection.LearnerInspector.html#facet.inspection.LearnerInspector" title="facet.inspection.LearnerInspector"><code class="xref py py-class docutils literal notranslate"><span class="pre">LearnerInspector</span></code></a> matrix outputs as <a class="reference external" href="https://bcg-gamma.github.io/pytools/apidoc/pytools/data/pytools.data.Matrix.html#pytools.data.Matrix" title="(in pytools v2.0.4)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Matrix</span></code></a>
+instances</p></li>
+<li><p>API: diagonals of feature synergy, redundancy, and association matrices are now
+<code class="docutils literal notranslate"><span class="pre">nan</span></code> instead of 1.0</p></li>
+<li><p>API: the leaf order of <a class="reference external" href="https://bcg-gamma.github.io/pytools/apidoc/pytools/data/pytools.data.LinkageTree.html#pytools.data.LinkageTree" title="(in pytools v2.0.4)"><code class="xref py py-class docutils literal notranslate"><span class="pre">LinkageTree</span></code></a> objects generated by
+<code class="docutils literal notranslate"><span class="pre">feature_…_linkage</span></code> methods of <a class="reference internal" href="../apidoc/facet/inspection/facet.inspection.LearnerInspector.html#facet.inspection.LearnerInspector" title="facet.inspection.LearnerInspector"><code class="xref py py-class docutils literal notranslate"><span class="pre">LearnerInspector</span></code></a> is now the same as the
+row and column order of <a class="reference external" href="https://bcg-gamma.github.io/pytools/apidoc/pytools/data/pytools.data.Matrix.html#pytools.data.Matrix" title="(in pytools v2.0.4)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Matrix</span></code></a> objects returned by the
+corresponding <code class="docutils literal notranslate"><span class="pre">feature_…_matrix</span></code> methods of <a class="reference internal" href="../apidoc/facet/inspection/facet.inspection.LearnerInspector.html#facet.inspection.LearnerInspector" title="facet.inspection.LearnerInspector"><code class="xref py py-class docutils literal notranslate"><span class="pre">LearnerInspector</span></code></a>, minimizing
+the distance between adjacent leaves.
+The old sorting behaviour of FACET 1.x can be restored using method
+<a class="reference external" href="https://bcg-gamma.github.io/pytools/apidoc/pytools/data/pytools.data.LinkageTree.html#pytools.data.LinkageTree.sort_by_weight" title="(in pytools v2.0.4)"><code class="xref py py-meth docutils literal notranslate"><span class="pre">sort_by_weight()</span></code></a></p></li>
+</ul>
+</section>
+<section id="facet-selection">
+<h4><code class="docutils literal notranslate"><span class="pre">facet.selection</span></code><a class="headerlink" href="#facet-selection" title="Permalink to this headline">#</a></h4>
+<ul class="simple">
+<li><p>API: <a class="reference internal" href="../apidoc/facet/selection/facet.selection.LearnerSelector.html#facet.selection.LearnerSelector" title="facet.selection.LearnerSelector"><code class="xref py py-class docutils literal notranslate"><span class="pre">LearnerSelector</span></code></a> replaces FACET 1.x class <code class="docutils literal notranslate"><span class="pre">LearnerRanker</span></code>, and
+now supports any CV searcher that supports <cite>scikit-learn</cite>’s CV search API, including
+<cite>scikit-learn</cite>’s native searchers such as
+<a class="reference external" href="https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.GridSearchCV.html#sklearn.model_selection.GridSearchCV" title="(in scikit-learn v1.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">GridSearchCV</span></code></a> or
+<a class="reference external" href="https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.RandomizedSearchCV.html#sklearn.model_selection.RandomizedSearchCV" title="(in scikit-learn v1.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">RandomizedSearchCV</span></code></a></p></li>
+<li><p>API: new classes <a class="reference internal" href="../apidoc/facet/selection/facet.selection.ParameterSpace.html#facet.selection.ParameterSpace" title="facet.selection.ParameterSpace"><code class="xref py py-class docutils literal notranslate"><span class="pre">ParameterSpace</span></code></a> and <a class="reference internal" href="../apidoc/facet/selection/facet.selection.MultiEstimatorParameterSpace.html#facet.selection.MultiEstimatorParameterSpace" title="facet.selection.MultiEstimatorParameterSpace"><code class="xref py py-class docutils literal notranslate"><span class="pre">MultiEstimatorParameterSpace</span></code></a>
+offer a more convenient and robust mechanism for declaring options or distributions
+for hyperparameter tuning</p></li>
+</ul>
+</section>
+<section id="facet-simulation">
+<h4><code class="docutils literal notranslate"><span class="pre">facet.simulation</span></code><a class="headerlink" href="#facet-simulation" title="Permalink to this headline">#</a></h4>
+<ul class="simple">
+<li><p>API: simulations no longer depend on learner crossfits and instead are carried out
+as a single pass on the full dataset, using the <em>standard error of mean predictions</em>
+to obtain confidence intervals that less conservative yet more realistic</p></li>
+<li><p>VIZ: minor tweaks to simulation plots and reports generated by
+<a class="reference internal" href="../apidoc/facet/simulation/viz/facet.simulation.viz.SimulationDrawer.html#facet.simulation.viz.SimulationDrawer" title="facet.simulation.viz.SimulationDrawer"><code class="xref py py-class docutils literal notranslate"><span class="pre">SimulationDrawer</span></code></a></p></li>
+</ul>
+</section>
+<section id="facet-validation">
+<h4><code class="docutils literal notranslate"><span class="pre">facet.validation</span></code><a class="headerlink" href="#facet-validation" title="Permalink to this headline">#</a></h4>
+<ul class="simple">
+<li><p>API: removed class <code class="docutils literal notranslate"><span class="pre">FullSampleValidator</span></code></p></li>
+</ul>
+</section>
+<section id="other">
+<h4>Other<a class="headerlink" href="#other" title="Permalink to this headline">#</a></h4>
+<ul class="simple">
+<li><p>API: class <code class="docutils literal notranslate"><span class="pre">LearnerCrossfit</span></code> is no longer needed in FACET 2.0 and has been
+removed</p></li>
+</ul>
+</section>
+</section>
+</section>
+<section id="facet-1-2">
+<h2>FACET 1.2<a class="headerlink" href="#facet-1-2" title="Permalink to this headline">#</a></h2>
+<p>FACET 1.2 adds support for <em>sklearndf</em> 1.2 and <em>scikit-learn</em> 0.24.
+It also introduces the ability to run simulations on a subsample of the data used to
+fit the underlying crossfit.
+One example where this can be useful is to use only a recent period of a time series as
+the baseline of a simulation.</p>
+<section id="id3">
+<h3>1.2.2<a class="headerlink" href="#id3" title="Permalink to this headline">#</a></h3>
+<ul class="simple">
+<li><p>catch up with FACET 1.1.2</p></li>
+</ul>
+</section>
+<section id="id4">
+<h3>1.2.1<a class="headerlink" href="#id4" title="Permalink to this headline">#</a></h3>
+<ul class="simple">
+<li><p>FIX: fix a bug in <a class="reference internal" href="../apidoc/facet/simulation/facet.simulation.UnivariateProbabilitySimulator.html#facet.simulation.UnivariateProbabilitySimulator" title="facet.simulation.UnivariateProbabilitySimulator"><code class="xref py py-class docutils literal notranslate"><span class="pre">UnivariateProbabilitySimulator</span></code></a> that was introduced in
+FACET 1.2.0</p></li>
+<li><p>catch up with FACET 1.1.1</p></li>
+</ul>
+</section>
+<section id="id5">
+<h3>1.2.0<a class="headerlink" href="#id5" title="Permalink to this headline">#</a></h3>
+<ul class="simple">
+<li><p>BUILD: added support for <em>sklearndf</em> 1.2 and <em>scikit-learn</em> 0.24</p></li>
+<li><p>API: new optional parameter <code class="docutils literal notranslate"><span class="pre">subsample</span></code> in method
+<a class="reference internal" href="../apidoc/facet/simulation/base/facet.simulation.base.BaseUnivariateSimulator.html#facet.simulation.base.BaseUnivariateSimulator.simulate_feature" title="facet.simulation.base.BaseUnivariateSimulator.simulate_feature"><code class="xref py py-meth docutils literal notranslate"><span class="pre">BaseUnivariateSimulator.simulate_feature()</span></code></a> can be used to specify a subsample
+to be used in the simulation (but simulating using a crossfit based on the full
+sample)</p></li>
+</ul>
+</section>
+</section>
+<section id="facet-1-1">
+<h2>FACET 1.1<a class="headerlink" href="#facet-1-1" title="Permalink to this headline">#</a></h2>
+<p>FACET 1.1 refines and enhances the association/synergy/redundancy calculations
+provided by the <a class="reference internal" href="../apidoc/facet/inspection/facet.inspection.LearnerInspector.html#facet.inspection.LearnerInspector" title="facet.inspection.LearnerInspector"><code class="xref py py-class docutils literal notranslate"><span class="pre">LearnerInspector</span></code></a>.</p>
+<section id="id6">
+<h3>1.1.2<a class="headerlink" href="#id6" title="Permalink to this headline">#</a></h3>
+<ul class="simple">
+<li><p>DOC: use a downloadable dataset in the <cite>getting started</cite> notebook</p></li>
+<li><p>FIX: import <a class="reference external" href="https://catboost.ai/en/docs/">catboost</a> if present, else create a local
+module mockup</p></li>
+<li><p>FIX: correctly identify if <code class="docutils literal notranslate"><span class="pre">sample_weights</span></code> is undefined when re-fitting a model
+on the full dataset in a <code class="docutils literal notranslate"><span class="pre">LearnerCrossfit</span></code></p></li>
+<li><p>BUILD: relax package dependencies to support any <cite>numpy</cite> version 1.`x` from 1.16</p></li>
+</ul>
+</section>
+<section id="id7">
+<h3>1.1.1<a class="headerlink" href="#id7" title="Permalink to this headline">#</a></h3>
+<ul class="simple">
+<li><p>DOC: add reference to FACET research paper on the project landing page</p></li>
+<li><p>FIX: correctly count positive class frequency in UnivariateProbabilitySimulator</p></li>
+</ul>
+</section>
+<section id="id8">
+<h3>1.1.0<a class="headerlink" href="#id8" title="Permalink to this headline">#</a></h3>
+<ul class="simple">
+<li><p>API: SHAP interaction vectors can (in part) also be influenced by redundancy among
+features. This can inflate quantifications of synergy, especially in cases where two
+variables are highly redundant. FACET now corrects interaction vectors for redundancy
+prior to calculating synergy. Technically we ensure that each interaction vector is
+orthogonal w.r.t the main effect vectors of both associated features.</p></li>
+<li><p>API: FACET now calculates synergy, redundancy, and association separately for each
+model in a crossfit, then returns the mean of all resulting matrices. This leads to a
+slight increase in accuracy, and also allows us to calculate the standard deviation
+across matrices as an indication of confidence for each calculated value.</p></li>
+<li><p>API: Method <a class="reference internal" href="../apidoc/facet/inspection/facet.inspection.LearnerInspector.html#facet.inspection.LearnerInspector.shap_plot_data" title="facet.inspection.LearnerInspector.shap_plot_data"><code class="xref py py-meth docutils literal notranslate"><span class="pre">LearnerInspector.shap_plot_data()</span></code></a> now returns SHAP values for the
+positive class of binary classifiers.</p></li>
+<li><p>API: Increase efficiency of <code class="docutils literal notranslate"><span class="pre">ModelSelector</span></code> parallelization by adopting the
+new <a class="reference external" href="https://bcg-gamma.github.io/pytools/apidoc/pytools/parallelization/pytools.parallelization.JobRunner.html#pytools.parallelization.JobRunner" title="(in pytools v2.0.4)"><code class="xref py py-class docutils literal notranslate"><span class="pre">pytools.parallelization.JobRunner</span></code></a> API provided by <a class="reference external" href="https://bcg-gamma.github.io/pytools/apidoc/pytools.html#module-pytools" title="(in pytools v2.0.4)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pytools</span></code></a></p></li>
+<li><p>BUILD: add support for <code class="xref py py-mod docutils literal notranslate"><span class="pre">shap</span></code> 0.38 and 0.39</p></li>
+</ul>
+</section>
+</section>
+<section id="facet-1-0">
+<h2>FACET 1.0<a class="headerlink" href="#facet-1-0" title="Permalink to this headline">#</a></h2>
+<section id="id9">
+<h3>1.0.3<a class="headerlink" href="#id9" title="Permalink to this headline">#</a></h3>
+<ul class="simple">
+<li><p>FIX: restrict package requirements to <em>gamma-pytools</em> 1.0.* and
+<em>sklearndf</em> 1.0.x, since FACET 1.0 is not compatible with
+<em>gamma-pytools</em> 1.1.*</p></li>
+</ul>
+</section>
+<section id="id10">
+<h3>1.0.2<a class="headerlink" href="#id10" title="Permalink to this headline">#</a></h3>
+<p>This is a maintenance release focusing on enhancements to the CI/CD pipeline and bug
+fixes.</p>
+<ul class="simple">
+<li><p>API: add support for <a class="reference external" href="https://shap.readthedocs.io/en/stable/index.html" title="(in SHAP vlatest)"><span class="xref std std-doc">shap</span></a> 0.36 and 0.37 via a new
+<a class="reference internal" href="../apidoc/facet/inspection/facet.inspection.BaseExplainer.html#facet.inspection.BaseExplainer" title="facet.inspection.BaseExplainer"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseExplainer</span></code></a> stub class</p></li>
+<li><p>FIX: apply color scheme to the histogram section in <a class="reference internal" href="../apidoc/facet/simulation/viz/facet.simulation.viz.SimulationMatplotStyle.html#facet.simulation.viz.SimulationMatplotStyle" title="facet.simulation.viz.SimulationMatplotStyle"><code class="xref py py-class docutils literal notranslate"><span class="pre">SimulationMatplotStyle</span></code></a></p></li>
+<li><p>BUILD: add support for <a class="reference external" href="https://numpy.org/doc/stable/reference/index.html#module-numpy" title="(in NumPy v1.23)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">numpy</span></code></a> 1.20</p></li>
+<li><p>BUILD: updates and changes to the CI/CD pipeline</p></li>
+</ul>
+</section>
+<section id="id11">
+<h3>1.0.1<a class="headerlink" href="#id11" title="Permalink to this headline">#</a></h3>
+<p>Initial release.</p>
+</section>
+</section>
+</section>
+
+
+              </div>
+              
+              
+              <!-- Previous / next buttons -->
+<div class='prev-next-area'>
+    <a class='left-prev' id="prev-link" href="../about_us.html" title="previous page">
+        <i class="fas fa-angle-left"></i>
+        <div class="prev-next-info">
+            <p class="prev-next-subtitle">previous</p>
+            <p class="prev-next-title">About us</p>
+        </div>
+    </a>
+</div>
+              
+          </main>
+          
+
+      </div>
+    </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
+<footer class="footer mt-5 mt-md-0">
+  <div class="container">
+    
+    <div class="footer-item">
+      <p class="copyright">
+    &copy; Copyright 2022, Boston Consulting Group (BCG).<br>
+</p>
+    </div>
+    
+    <div class="footer-item">
+      <p class="sphinx-version">
+Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.5.0.<br>
+</p>
+    </div>
+    
+  </div>
+</footer>
+  </body>
+</html>

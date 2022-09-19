@@ -35,7 +35,6 @@ Submodules
    :template: custom-module-template.rst
    :recursive:
 
-   facet.crossfit
    facet.data
    facet.inspection
    facet.selection

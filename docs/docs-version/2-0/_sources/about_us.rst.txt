@@ -48,28 +48,36 @@ okay that was the last geometry pun, we promise.
 | |SithanK|         | |RicardoK|        | |FlorentM|        | |JoergS|          |
 | Sithan Kanna      | Ricardo Kennedy   | Florent Martin    | Jörg Schneider    |
 +-------------------+-------------------+-------------------+-------------------+
+| |AndyS|           | |MateuszS|        |                   |                   |
+| Andy Shora        | Mateusz Sokół     |                   |                   |
++-------------------+-------------------+-------------------+-------------------+
 
-.. |JasonB| image:: _static/team_contributors/Jason_Bentley.jpg
+.. |JasonB| image:: /_images/team_contributors/Jason_Bentley.jpg
     :class: team_pic
 
-.. |MaloG| image:: _static/team_contributors/Malo_Grisard.jpg
+.. |MaloG| image:: /_images/team_contributors/Malo_Grisard.jpg
     :class: team_pic
 
-.. |KonstantinH| image:: _static/team_contributors/Konstantin_Hemker.jpg
+.. |KonstantinH| image:: /_images/team_contributors/Konstantin_Hemker.jpg
     :class: team_pic
 
-.. |JanI| image:: _static/team_contributors/Jan_Ittner.jpg
+.. |JanI| image:: /_images/team_contributors/Jan_Ittner.jpg
     :class: team_pic
 
-.. |SithanK| image:: _static/team_contributors/Sithan_Kanna.jpg
+.. |SithanK| image:: /_images/team_contributors/Sithan_Kanna.jpg
     :class: team_pic
 
-.. |RicardoK| image:: _static/team_contributors/Ricardo_Kennedy.jpg
+.. |RicardoK| image:: /_images/team_contributors/Ricardo_Kennedy.jpg
     :class: team_pic
 
-.. |FlorentM| image:: _static/team_contributors/Florent_Martin.jpg
+.. |FlorentM| image:: /_images/team_contributors/Florent_Martin.jpg
     :class: team_pic
 
-.. |JoergS| image:: _static/team_contributors/Joerg_Schneider.jpg
+.. |JoergS| image:: /_images/team_contributors/Joerg_Schneider.jpg
     :class: team_pic
 
+.. |AndyS| image:: /_images/team_contributors/Andy_Shora.jpg
+    :class: team_pic
+
+.. |MateuszS| image:: /_images/team_contributors/Mateusz_Sokol.jpg
+    :class: team_pic

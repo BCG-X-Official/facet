@@ -1,0 +1,681 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>Getting started with &#8212; facet  documentation</title>
+    
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+
+    
+  <link rel="stylesheet"
+    href="../_static/vendor/fontawesome/5.13.0/css/all.min.css">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/gamma.css" />
+    
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
+
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/js/gamma.js"></script>
+    <script src="../_static/js/versions.js"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="facet" href="../apidoc/facet.html" />
+    <link rel="prev" title="Table of contents" href="../index.html" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="docsearch:language" content="None">
+    
+
+    <!-- Google Analytics -->
+    
+  </head>
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="60">
+    
+    <div class="container-fluid" id="banner"></div>
+
+    
+    <nav class="navbar navbar-light navbar-expand-lg bg-light fixed-top bd-navbar" id="navbar-main"><div class="container-xl">
+
+  <div id="navbar-start">
+    
+    
+
+<a class="navbar-brand" href="../index.html">
+  <img src="../_static/Gamma_Facet_Logo_RGB_LB.svg" class="logo" alt="logo">
+</a>
+
+
+    
+  </div>
+
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar-collapsible" aria-controls="navbar-collapsible" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+
+  
+  <div id="navbar-collapsible" class="col-lg-9 collapse navbar-collapse">
+    <div id="navbar-center" class="mr-auto">
+      
+      <div class="navbar-center-item">
+        <ul id="navbar-main-elements" class="navbar-nav">
+    <li class="toctree-l1 current active nav-item">
+ <a class="current reference internal nav-link" href="#">
+  Getting started
+ </a>
+</li>
+
+<li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="../apidoc/facet.html">
+  API reference
+ </a>
+</li>
+
+<li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="../tutorials.html">
+  Tutorials
+ </a>
+</li>
+
+<li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="../contribution_guide.html">
+  Development Guidelines
+ </a>
+</li>
+
+<li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="../faqs.html">
+  FAQ
+ </a>
+</li>
+
+<li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="../about_us.html">
+  About us
+ </a>
+</li>
+
+<li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="release_notes.html">
+  Release Notes
+ </a>
+</li>
+
+    
+</ul>
+      </div>
+      
+    </div>
+
+    <div id="navbar-end">
+      
+      <div class="navbar-end-item">
+        <ul id="navbar-icon-links" class="navbar-nav" aria-label="Icon Links">
+      </ul>
+      </div>
+      
+    </div>
+  </div>
+</div>
+    </nav>
+    
+
+    <div class="container-xl">
+      <div class="row">
+          
+            
+            <!-- Only show if we have sidebars configured, else just a small margin  -->
+            <div class="col-12 col-md-3 bd-sidebar">
+              <div class="sidebar-start-items"><form class="bd-search d-flex align-items-center" action="../search.html" method="get">
+  <i class="icon fas fa-search"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
+</form><nav class="bd-links" id="bd-docs-nav" aria-label="Main navigation">
+  <div class="bd-toc-item active">
+    
+  </div>
+</nav>
+              </div>
+              <div class="sidebar-end-items">
+              </div>
+            </div>
+            
+          
+
+          
+          <div class="d-none d-xl-block col-xl-2 bd-toc">
+            
+              
+              <div class="toc-item">
+                
+<div class="tocsection onthispage mt-5 pt-1 pb-3">
+    <i class="fas fa-list"></i> On this page
+</div>
+
+<nav id="bd-toc-nav">
+    <ul class="visible nav section-nav flex-column">
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#installation">
+   Installation
+  </a>
+  <ul class="nav section-nav flex-column">
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#anaconda">
+     Anaconda
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#pip">
+     Pip
+    </a>
+   </li>
+  </ul>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#quickstart">
+   Quickstart
+  </a>
+  <ul class="nav section-nav flex-column">
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#enhanced-machine-learning-workflow">
+     Enhanced Machine Learning Workflow
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#model-inspection">
+     Model Inspection
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#model-simulation">
+     Model Simulation
+    </a>
+   </li>
+  </ul>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#contributing">
+   Contributing
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#license">
+   License
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#acknowledgements">
+   Acknowledgements
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#bcg-gamma">
+   BCG GAMMA
+  </a>
+ </li>
+</ul>
+
+</nav>
+              </div>
+              
+              <div class="toc-item">
+                
+              </div>
+              
+            
+          </div>
+          
+
+          
+          
+            
+          
+          <main class="col-12 col-md-9 col-xl-7 py-md-5 pl-md-5 pr-md-4 bd-content" role="main">
+              
+              <div>
+                
+  <section id="getting-started-with">
+<span id="getting-started"></span><h1>Getting started with<a class="headerlink" href="#getting-started-with" title="Permalink to this headline">#</a></h1>
+<img alt="../_images/Gamma_Facet_Logo_RGB_LB.svg" src="../_images/Gamma_Facet_Logo_RGB_LB.svg" /><div class="line-block">
+<div class="line"><br /></div>
+</div>
+<p>FACET is an open source library for human-explainable AI.
+It combines sophisticated model inspection and model-based simulation to enable better
+explanations of your supervised machine learning models.</p>
+<p>FACET is composed of the following key components:</p>
+<table class="table">
+<colgroup>
+<col style="width: 19%" />
+<col style="width: 81%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p>      </p>
+<p><a class="facet-icon reference internal" href="../_images/inspect_icon.png"><img alt="inspect" class="facet-icon" src="../_images/inspect_icon.png" style="width: 100px;" /></a></p>
+</td>
+<td><p><strong>Model Inspection</strong></p>
+<p>FACET introduces a new algorithm to quantify dependencies and
+interactions between features in ML models.
+This new tool for human-explainable AI adds a new, global
+perspective to the observation-level explanations provided by the
+popular <a class="reference external" href="https://shap.readthedocs.io/en/stable/">SHAP</a> approach.
+To learn more about FACET’s model inspection capabilities, see the
+getting started example below.</p>
+</td>
+</tr>
+<tr class="row-even"><td><p>      </p>
+<p><a class="facet-icon reference internal" href="../_images/sim_icon.png"><img alt="sim" class="facet-icon" src="../_images/sim_icon.png" style="width: 100px;" /></a></p>
+</td>
+<td><p><strong>Model Simulation</strong></p>
+<p>FACET’s model simulation algorithms use ML models for
+<em>virtual experiments</em> to help identify scenarios that optimise
+predicted outcomes.
+To quantify the uncertainty in simulations, FACET utilises a range
+of bootstrapping algorithms including stationary and stratified
+bootstraps.
+For an example of FACET’s bootstrap simulations, see the
+quickstart example below.</p>
+</td>
+</tr>
+<tr class="row-odd"><td><p>      </p>
+<p><a class="facet-icon reference internal" href="../_images/pipe_icon.png"><img alt="pipe" class="facet-icon" src="../_images/pipe_icon.png" style="width: 100px;" /></a></p>
+</td>
+<td><p><strong>Enhanced Machine Learning Workflow</strong></p>
+<p>FACET offers an efficient and transparent machine learning
+workflow, enhancing
+<a class="reference external" href="https://scikit-learn.org/stable/index.html">scikit-learn</a>’s
+tried and tested pipelining paradigm with new capabilities for model
+selection, inspection, and simulation.
+FACET also introduces
+<a class="reference external" href="https://github.com/BCG-Gamma/sklearndf">sklearndf</a>
+[<a class="reference external" href="https://bcg-gamma.github.io/sklearndf/index.html">documentation</a>]
+an augmented version of <em>scikit-learn</em> with enhanced support for
+<em>pandas</em> data frames that ensures end-to-end traceability of features.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<section id="installation">
+<h2>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">#</a></h2>
+<p>FACET supports both PyPI and Anaconda.</p>
+<section id="anaconda">
+<h3>Anaconda<a class="headerlink" href="#anaconda" title="Permalink to this headline">#</a></h3>
+<div class="highlight-RST notranslate"><div class="highlight"><pre><span></span>conda install gamma-facet -c bcg_gamma -c conda-forge
+</pre></div>
+</div>
+</section>
+<section id="pip">
+<h3>Pip<a class="headerlink" href="#pip" title="Permalink to this headline">#</a></h3>
+<div class="highlight-RST notranslate"><div class="highlight"><pre><span></span>pip install gamma-facet
+</pre></div>
+</div>
+</section>
+</section>
+<section id="quickstart">
+<h2>Quickstart<a class="headerlink" href="#quickstart" title="Permalink to this headline">#</a></h2>
+<p>The following quickstart guide provides a minimal example workflow to get you
+up and running with FACET.
+For additional tutorials and the API reference,
+see the <a class="reference external" href="https://bcg-gamma.github.io/facet/">FACET documentation</a>.</p>
+<p>Changes and additions to new versions are summarized in the
+<a class="reference external" href="https://bcg-gamma.github.io/facet/release_notes.html">release notes</a>.</p>
+<section id="enhanced-machine-learning-workflow">
+<h3>Enhanced Machine Learning Workflow<a class="headerlink" href="#enhanced-machine-learning-workflow" title="Permalink to this headline">#</a></h3>
+<p>To demonstrate the model inspection capability of FACET, we first create a
+pipeline to fit a learner. In this simple example we will use the
+<a class="reference external" href="https://web.stanford.edu/~hastie/Papers/LARS/diabetes.data">diabetes dataset</a>
+which contains age, sex, BMI and blood pressure along with 6 blood serum
+measurements as features. This dataset was used in this
+<a class="reference external" href="https://statweb.stanford.edu/~tibs/ftp/lars.pdf">publication</a>.
+A transformed version of this dataset is also available on scikit-learn
+<a class="reference external" href="https://scikit-learn.org/stable/datasets/toy_dataset.html#diabetes-dataset">here</a>.</p>
+<p>In this quickstart we will train a Random Forest regressor using 10 repeated
+5-fold CV to predict disease progression after one year. With the use of
+<em>sklearndf</em> we can create a <em>pandas</em> DataFrame compatible workflow. However,
+FACET provides additional enhancements to keep track of our feature matrix
+and target vector using a sample object (<cite>Sample</cite>) and easily compare
+hyperparameter configurations and even multiple learners with the <cite>LearnerSelector</cite>.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="c1"># standard imports</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">from</span> <span class="nn">sklearn.model_selection</span> <span class="kn">import</span> <span class="n">RepeatedKFold</span><span class="p">,</span> <span class="n">GridSearchCV</span>
+
+<span class="c1"># some helpful imports from sklearndf</span>
+<span class="kn">from</span> <span class="nn">sklearndf.pipeline</span> <span class="kn">import</span> <span class="n">RegressorPipelineDF</span>
+<span class="kn">from</span> <span class="nn">sklearndf.regression</span> <span class="kn">import</span> <span class="n">RandomForestRegressorDF</span>
+
+<span class="c1"># relevant FACET imports</span>
+<span class="kn">from</span> <span class="nn">facet.data</span> <span class="kn">import</span> <span class="n">Sample</span>
+<span class="kn">from</span> <span class="nn">facet.selection</span> <span class="kn">import</span> <span class="n">LearnerSelector</span><span class="p">,</span> <span class="n">ParameterSpace</span>
+
+<span class="c1"># declaring url with data</span>
+<span class="n">data_url</span> <span class="o">=</span> <span class="s1">&#39;https://web.stanford.edu/~hastie/Papers/LARS/diabetes.data&#39;</span>
+
+<span class="c1">#importing data from url</span>
+<span class="n">diabetes_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">data_url</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="s1">&#39;</span><span class="se">\t</span><span class="s1">&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span>
+    <span class="c1"># renaming columns for better readability</span>
+    <span class="n">columns</span><span class="o">=</span><span class="p">{</span>
+        <span class="s1">&#39;S1&#39;</span><span class="p">:</span> <span class="s1">&#39;TC&#39;</span><span class="p">,</span> <span class="c1"># total serum cholesterol</span>
+        <span class="s1">&#39;S2&#39;</span><span class="p">:</span> <span class="s1">&#39;LDL&#39;</span><span class="p">,</span> <span class="c1"># low-density lipoproteins</span>
+        <span class="s1">&#39;S3&#39;</span><span class="p">:</span> <span class="s1">&#39;HDL&#39;</span><span class="p">,</span> <span class="c1"># high-density lipoproteins</span>
+        <span class="s1">&#39;S4&#39;</span><span class="p">:</span> <span class="s1">&#39;TCH&#39;</span><span class="p">,</span> <span class="c1"># total cholesterol/ HDL</span>
+        <span class="s1">&#39;S5&#39;</span><span class="p">:</span> <span class="s1">&#39;LTG&#39;</span><span class="p">,</span> <span class="c1"># lamotrigine level</span>
+        <span class="s1">&#39;S6&#39;</span><span class="p">:</span> <span class="s1">&#39;GLU&#39;</span><span class="p">,</span> <span class="c1"># blood sugar level</span>
+        <span class="s1">&#39;Y&#39;</span><span class="p">:</span> <span class="s1">&#39;Disease_progression&#39;</span> <span class="c1"># measure of progress since 1yr of baseline</span>
+    <span class="p">}</span>
+<span class="p">)</span>
+
+<span class="c1"># create FACET sample object</span>
+<span class="n">diabetes_sample</span> <span class="o">=</span> <span class="n">Sample</span><span class="p">(</span><span class="n">observations</span><span class="o">=</span><span class="n">diabetes_df</span><span class="p">,</span> <span class="n">target_name</span><span class="o">=</span><span class="s2">&quot;Disease_progression&quot;</span><span class="p">)</span>
+
+<span class="c1"># create a (trivial) pipeline for a random forest regressor</span>
+<span class="n">rnd_forest_reg</span> <span class="o">=</span> <span class="n">RegressorPipelineDF</span><span class="p">(</span>
+    <span class="n">regressor</span><span class="o">=</span><span class="n">RandomForestRegressorDF</span><span class="p">(</span><span class="n">n_estimators</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="mi">42</span><span class="p">)</span>
+<span class="p">)</span>
+
+<span class="c1"># define parameter space for models which are &quot;competing&quot; against each other</span>
+<span class="n">rnd_forest_ps</span> <span class="o">=</span> <span class="n">ParameterSpace</span><span class="p">(</span><span class="n">rnd_forest_reg</span><span class="p">)</span>
+<span class="n">rnd_forest_ps</span><span class="o">.</span><span class="n">regressor</span><span class="o">.</span><span class="n">min_samples_leaf</span> <span class="o">=</span> <span class="p">[</span><span class="mi">8</span><span class="p">,</span> <span class="mi">11</span><span class="p">,</span> <span class="mi">15</span><span class="p">]</span>
+<span class="n">rnd_forest_ps</span><span class="o">.</span><span class="n">regressor</span><span class="o">.</span><span class="n">max_depth</span> <span class="o">=</span> <span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">]</span>
+
+<span class="c1"># create repeated k-fold CV iterator</span>
+<span class="n">rkf_cv</span> <span class="o">=</span> <span class="n">RepeatedKFold</span><span class="p">(</span><span class="n">n_splits</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">n_repeats</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="mi">42</span><span class="p">)</span>
+
+<span class="c1"># rank your candidate models by performance</span>
+<span class="n">selector</span> <span class="o">=</span> <span class="n">LearnerSelector</span><span class="p">(</span>
+    <span class="n">searcher_type</span><span class="o">=</span><span class="n">GridSearchCV</span><span class="p">,</span>
+    <span class="n">parameter_space</span><span class="o">=</span><span class="n">rnd_forest_ps</span><span class="p">,</span>
+    <span class="n">cv</span><span class="o">=</span><span class="n">rkf_cv</span><span class="p">,</span>
+    <span class="n">n_jobs</span><span class="o">=-</span><span class="mi">3</span><span class="p">,</span>
+    <span class="n">scoring</span><span class="o">=</span><span class="s2">&quot;r2&quot;</span>
+<span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">sample</span><span class="o">=</span><span class="n">diabetes_sample</span><span class="p">)</span>
+
+<span class="c1"># get summary report</span>
+<span class="n">selector</span><span class="o">.</span><span class="n">summary_report</span><span class="p">()</span>
+</pre></div>
+</div>
+<a class="reference internal image-reference" href="../_images/ranker_summary.png"><img alt="../_images/ranker_summary.png" src="../_images/ranker_summary.png" style="width: 600px;" /></a>
+<p>We can see based on this minimal workflow that a value of 11 for minimum
+samples in the leaf and 5 for maximum tree depth was the best performing
+of the three considered values.
+This approach easily extends to additional hyperparameters for the learner,
+and for multiple learners.</p>
+</section>
+<section id="model-inspection">
+<h3>Model Inspection<a class="headerlink" href="#model-inspection" title="Permalink to this headline">#</a></h3>
+<p>FACET implements several model inspection methods for
+<a class="reference external" href="https://scikit-learn.org/stable/index.html">scikit-learn</a> estimators.
+FACET enhances model inspection by providing global metrics that complement
+the local perspective of SHAP (see
+<a class="reference external" href="https://arxiv.org/abs/2107.12436">[arXiv:2107.12436]</a> for a formal description).</p>
+<p>The key global metrics for each pair of features in a model are:</p>
+<ul>
+<li><p><strong>Synergy</strong></p>
+<p>The degree to which the model combines information from one feature with
+another to predict the target. For example, let’s assume we are predicting
+cardiovascular health using age and gender and the fitted model includes
+a complex interaction between them. This means these two features are
+synergistic for predicting cardiovascular health. Further, both features
+are important to the model and removing either one would significantly
+impact performance. Let’s assume age brings more information to the joint
+contribution than gender. This asymmetric contribution means the synergy for
+(age, gender) is less than the synergy for (gender, age). To think about it another
+way, imagine the prediction is a coordinate you are trying to reach.
+From your starting point, age gets you much closer to this point than
+gender, however, you need both to get there. Synergy reflects the fact
+that gender gets more help from age (higher synergy from the perspective
+of gender) than age does from gender (lower synergy from the perspective of
+age) to reach the prediction. <em>This leads to an important point: synergy
+is a naturally asymmetric property of the global information two interacting
+features contribute to the model predictions.</em> Synergy is expressed as a
+percentage ranging from 0% (full autonomy) to 100% (full synergy).</p>
+</li>
+<li><p><strong>Redundancy</strong></p>
+<p>The degree to which a feature in a model duplicates the information of a
+second feature to predict the target. For example, let’s assume we had
+house size and number of bedrooms for predicting house price. These
+features capture similar information as the more bedrooms the larger
+the house and likely a higher price on average. The redundancy for
+(number of bedrooms, house size) will be greater than the redundancy
+for (house size, number of bedrooms). This is because house size
+“knows” more of what number of bedrooms does for predicting house price
+than vice-versa. Hence, there is greater redundancy from the perspective
+of number of bedrooms. Another way to think about it is removing house
+size will be more detrimental to model performance than removing number
+of bedrooms, as house size can better compensate for the absence of
+number of bedrooms. This also implies that house size would be a more
+important feature than number of bedrooms in the model. <em>The important
+point here is that like synergy, redundancy is a naturally asymmetric
+property of the global information feature pairs have for predicting
+an outcome.</em> Redundancy is expressed as a percentage ranging from 0%
+(full uniqueness) to 100% (full redundancy).</p>
+</li>
+</ul>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="c1"># fit the model inspector</span>
+<span class="kn">from</span> <span class="nn">facet.inspection</span> <span class="kn">import</span> <span class="n">LearnerInspector</span>
+<span class="n">inspector</span> <span class="o">=</span> <span class="n">LearnerInspector</span><span class="p">(</span>
+    <span class="n">pipeline</span><span class="o">=</span><span class="n">selector</span><span class="o">.</span><span class="n">best_estimator_</span><span class="p">,</span>
+    <span class="n">n_jobs</span><span class="o">=-</span><span class="mi">3</span>
+<span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">sample</span><span class="o">=</span><span class="n">diabetes_sample</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>Synergy</strong></p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="c1"># visualise synergy as a matrix</span>
+<span class="kn">from</span> <span class="nn">pytools.viz.matrix</span> <span class="kn">import</span> <span class="n">MatrixDrawer</span>
+<span class="n">synergy_matrix</span> <span class="o">=</span> <span class="n">inspector</span><span class="o">.</span><span class="n">feature_synergy_matrix</span><span class="p">()</span>
+<span class="n">MatrixDrawer</span><span class="p">(</span><span class="n">style</span><span class="o">=</span><span class="s2">&quot;matplot%&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="n">synergy_matrix</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Synergy Matrix&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<a class="reference internal image-reference" href="../_images/synergy_matrix.png"><img alt="../_images/synergy_matrix.png" src="../_images/synergy_matrix.png" style="width: 600px;" /></a>
+<p>For any feature pair (A, B), the first feature (A) is the row, and the second
+feature (B) the column. For example, looking across the row for <cite>LTG</cite> (Lamotrigine)
+there is hardly any synergy with other features in the model (≤ 1%).
+However, looking down the column for <cite>LTG</cite> (i.e., from the perspective of other features
+relative with <cite>LTG</cite>) we find that many features (the rows) are aided by synergy with
+with <cite>LTG</cite> (up to 27% in the case of LDL). We conclude that:</p>
+<ul class="simple">
+<li><p><cite>LTG</cite> is a strongly autonomous feature, displaying minimal synergy with other
+features for predicting disease progression after one year.</p></li>
+<li><p>The contribution of other features to predicting disease progression after one
+year is partly enabled by the presence of <cite>LTG</cite>.</p></li>
+</ul>
+<p>High synergy between pairs of features must be considered carefully when investigating
+impact, as the values of both features jointly determine the outcome. It would not make
+much sense to consider <cite>LDL</cite> without the context provided by <cite>LTG</cite> given close
+to 27% synergy of <cite>LDL</cite> with <cite>LTG</cite> for predicting progression after one year.</p>
+<p><strong>Redundancy</strong></p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="c1"># visualise redundancy as a matrix</span>
+<span class="n">redundancy_matrix</span> <span class="o">=</span> <span class="n">inspector</span><span class="o">.</span><span class="n">feature_redundancy_matrix</span><span class="p">()</span>
+<span class="n">MatrixDrawer</span><span class="p">(</span><span class="n">style</span><span class="o">=</span><span class="s2">&quot;matplot%&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="n">redundancy_matrix</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Redundancy Matrix&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<a class="reference internal image-reference" href="../_images/redundancy_matrix.png"><img alt="../_images/redundancy_matrix.png" src="../_images/redundancy_matrix.png" style="width: 600px;" /></a>
+<p>For any feature pair (A, B), the first feature (A) is the row, and the second feature
+(B) the column. For example, if we look at the feature pair (<cite>LDL</cite>, <cite>TC</cite>) from the
+perspective of <cite>LDL</cite> (Low-Density Lipoproteins), then we look-up the row for <cite>LDL</cite>
+and the column for <cite>TC</cite> and find 38% redundancy. This means that 38% of the information
+in <cite>LDL</cite> to predict disease progression is duplicated in <cite>TC</cite>. This
+redundancy is the same when looking “from the perspective” of <cite>TC</cite> for (<cite>TC</cite>, <cite>LDL</cite>),
+but need not be symmetrical in all cases (see <cite>LTG</cite> vs. <cite>TCH</cite>).</p>
+<p>If we look at <cite>TCH</cite>, it has between 22–32% redundancy each with <cite>LTG</cite> and <cite>HDL</cite>, but
+the same does not hold between <cite>LTG</cite> and <cite>HDL</cite> – meaning <cite>TCH</cite> shares different
+information with each of the two features.</p>
+<p><strong>Clustering redundancy</strong></p>
+<p>As detailed above redundancy and synergy for a feature pair is from the
+“perspective” of one of the features in the pair, and so yields two distinct
+values. However, a symmetric version can also be computed that provides not
+only a simplified perspective but allows the use of (1 - metric) as a
+feature distance. With this distance hierarchical, single linkage clustering
+is applied to create a dendrogram visualization. This helps to identify
+groups of low distance, features which activate “in tandem” to predict the
+outcome. Such information can then be used to either reduce clusters of
+highly redundant features to a subset or highlight clusters of highly
+synergistic features that should always be considered together.</p>
+<p>Let’s look at the example for redundancy.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="c1"># visualise redundancy using a dendrogram</span>
+<span class="kn">from</span> <span class="nn">pytools.viz.dendrogram</span> <span class="kn">import</span> <span class="n">DendrogramDrawer</span>
+<span class="n">redundancy</span> <span class="o">=</span> <span class="n">inspector</span><span class="o">.</span><span class="n">feature_redundancy_linkage</span><span class="p">()</span>
+<span class="n">DendrogramDrawer</span><span class="p">()</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">redundancy</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Redundancy Dendrogram&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<a class="reference internal image-reference" href="../_images/redundancy_dendrogram.png"><img alt="../_images/redundancy_dendrogram.png" src="../_images/redundancy_dendrogram.png" style="width: 600px;" /></a>
+<p>Based on the dendrogram we can see that the feature pairs (<cite>LDL</cite>, <cite>TC</cite>)
+and (<cite>HDL</cite>, <cite>TCH</cite>) each represent a cluster in the dendrogram and that <cite>LTG</cite> and <cite>BMI</cite>
+have the highest importance. As potential next actions we could explore the impact of
+removing <cite>TCH</cite>, and one of <cite>TC</cite> or <cite>LDL</cite> to further simplify the model and obtain a
+reduced set of independent features.</p>
+<p>Please see the
+<a class="reference external" href="https://bcg-gamma.github.io/facet/apidoc/facet.html">API reference</a>
+for more detail.</p>
+</section>
+<section id="model-simulation">
+<h3>Model Simulation<a class="headerlink" href="#model-simulation" title="Permalink to this headline">#</a></h3>
+<p>Taking the <cite>BMI</cite> feature as an example of an important and highly independent feature,
+we do the following for the simulation:</p>
+<ul class="simple">
+<li><p>We use FACET’s <cite>ContinuousRangePartitioner</cite> to split the range of observed values of
+<cite>BMI</cite> into intervals of equal size. Each partition is represented by the central value
+of that partition.</p></li>
+<li><p>For each partition, the simulator creates an artificial copy of the original sample
+assuming the variable to be simulated has the same value across all observations –
+which is the value representing the partition. Using the best estimator
+acquired from the selector, the simulator now re-predicts all targets using the models
+trained for full sample and determines the uplift of the target variable
+resulting from this.</p></li>
+<li><p>The FACET <cite>SimulationDrawer</cite> allows us to visualise the result; both in a
+<em>matplotlib</em> and a plain-text style.</p></li>
+</ul>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="c1"># FACET imports</span>
+<span class="kn">from</span> <span class="nn">facet.validation</span> <span class="kn">import</span> <span class="n">BootstrapCV</span>
+<span class="kn">from</span> <span class="nn">facet.simulation</span> <span class="kn">import</span> <span class="n">UnivariateUpliftSimulator</span>
+<span class="kn">from</span> <span class="nn">facet.data.partition</span> <span class="kn">import</span> <span class="n">ContinuousRangePartitioner</span>
+<span class="kn">from</span> <span class="nn">facet.simulation.viz</span> <span class="kn">import</span> <span class="n">SimulationDrawer</span>
+
+<span class="c1"># create bootstrap CV iterator</span>
+<span class="n">bscv</span> <span class="o">=</span> <span class="n">BootstrapCV</span><span class="p">(</span><span class="n">n_splits</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="mi">42</span><span class="p">)</span>
+
+<span class="n">SIM_FEAT</span> <span class="o">=</span> <span class="s2">&quot;BMI&quot;</span>
+<span class="n">simulator</span> <span class="o">=</span> <span class="n">UnivariateUpliftSimulator</span><span class="p">(</span>
+    <span class="n">model</span><span class="o">=</span><span class="n">selector</span><span class="o">.</span><span class="n">best_estimator_</span><span class="p">,</span>
+    <span class="n">sample</span><span class="o">=</span><span class="n">diabetes_sample</span><span class="p">,</span>
+    <span class="n">n_jobs</span><span class="o">=-</span><span class="mi">3</span>
+<span class="p">)</span>
+
+<span class="c1"># split the simulation range into equal sized partitions</span>
+<span class="n">partitioner</span> <span class="o">=</span> <span class="n">ContinuousRangePartitioner</span><span class="p">()</span>
+
+<span class="c1"># run the simulation</span>
+<span class="n">simulation</span> <span class="o">=</span> <span class="n">simulator</span><span class="o">.</span><span class="n">simulate_feature</span><span class="p">(</span><span class="n">feature_name</span><span class="o">=</span><span class="n">SIM_FEAT</span><span class="p">,</span> <span class="n">partitioner</span><span class="o">=</span><span class="n">partitioner</span><span class="p">)</span>
+
+<span class="c1"># visualise results</span>
+<span class="n">SimulationDrawer</span><span class="p">()</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">simulation</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="n">SIM_FEAT</span><span class="p">)</span>
+</pre></div>
+</div>
+<img alt="../_images/simulation_output.png" src="../_images/simulation_output.png" />
+<p>We would conclude from the figure that higher values of <cite>BMI</cite> are associated with
+an increase in disease progression after one year, and that for a <cite>BMI</cite> of 28
+and above, there is a significant increase in disease progression after one year
+of at least 26 points.</p>
+</section>
+</section>
+<section id="contributing">
+<h2>Contributing<a class="headerlink" href="#contributing" title="Permalink to this headline">#</a></h2>
+<p>FACET is stable and is being supported long-term.</p>
+<p>Contributions to FACET are welcome and appreciated.
+For any bug reports or feature requests/enhancements please use the appropriate
+<a class="reference external" href="https://github.com/BCG-Gamma/facet/issues">GitHub form</a>, and if you wish to do so,
+please open a PR addressing the issue.</p>
+<p>We do ask that for any major changes please discuss these with us first via an issue or
+using our team email: <a class="reference external" href="mailto:FacetTeam&#37;&#52;&#48;bcg&#46;com">FacetTeam<span>&#64;</span>bcg<span>&#46;</span>com</a>.</p>
+<p>For further information on contributing please see our
+<a class="reference external" href="https://bcg-gamma.github.io/facet/contribution_guide.html">contribution guide</a>.</p>
+</section>
+<section id="license">
+<h2>License<a class="headerlink" href="#license" title="Permalink to this headline">#</a></h2>
+<p>FACET is licensed under Apache 2.0 as described in the
+<a class="reference external" href="https://github.com/BCG-Gamma/facet/blob/develop/LICENSE">LICENSE</a> file.</p>
+</section>
+<section id="acknowledgements">
+<h2>Acknowledgements<a class="headerlink" href="#acknowledgements" title="Permalink to this headline">#</a></h2>
+<p>FACET is built on top of two popular packages for Machine Learning:</p>
+<ul class="simple">
+<li><p>The <a class="reference external" href="https://scikit-learn.org/stable/index.html">scikit-learn</a> learners and
+pipelining make up implementation of the underlying algorithms. Moreover, we tried
+to design the FACET API to align with the scikit-learn API.</p></li>
+<li><p>The <a class="reference external" href="https://shap.readthedocs.io/en/latest/">SHAP</a> implementation is used to
+estimate the shapley vectors which FACET then decomposes into synergy, redundancy,
+and independence vectors.</p></li>
+</ul>
+</section>
+<section id="bcg-gamma">
+<h2>BCG GAMMA<a class="headerlink" href="#bcg-gamma" title="Permalink to this headline">#</a></h2>
+<p>If you would like to know more about the team behind FACET please see the
+<a class="reference external" href="https://bcg-gamma.github.io/facet/about_us.html">about us</a> page.</p>
+<p>We are always on the lookout for passionate and talented data scientists to join the
+BCG GAMMA team. If you would like to know more you can find out about
+<a class="reference external" href="https://www.bcg.com/en-gb/beyond-consulting/bcg-gamma/default">BCG GAMMA</a>,
+or have a look at
+<a class="reference external" href="https://www.bcg.com/en-gb/beyond-consulting/bcg-gamma/careers">career opportunities</a>.</p>
+</section>
+</section>
+
+
+              </div>
+              
+              
+              <!-- Previous / next buttons -->
+<div class='prev-next-area'>
+    <a class='left-prev' id="prev-link" href="../index.html" title="previous page">
+        <i class="fas fa-angle-left"></i>
+        <div class="prev-next-info">
+            <p class="prev-next-subtitle">previous</p>
+            <p class="prev-next-title">Table of contents</p>
+        </div>
+    </a>
+    <a class='right-next' id="next-link" href="../apidoc/facet.html" title="next page">
+    <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">facet</p>
+    </div>
+    <i class="fas fa-angle-right"></i>
+    </a>
+</div>
+              
+          </main>
+          
+
+      </div>
+    </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
+<footer class="footer mt-5 mt-md-0">
+  <div class="container">
+    
+    <div class="footer-item">
+      <p class="copyright">
+    &copy; Copyright 2022, Boston Consulting Group (BCG).<br>
+</p>
+    </div>
+    
+    <div class="footer-item">
+      <p class="sphinx-version">
+Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.5.0.<br>
+</p>
+    </div>
+    
+  </div>
+</footer>
+  </body>
+</html>

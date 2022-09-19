@@ -16,6 +16,7 @@ facet.inspection.LearnerInspector
    .. autosummary::
       :nosignatures:
    
+      ~LearnerInspector.ensure_fitted
       ~LearnerInspector.feature_association_linkage
       ~LearnerInspector.feature_association_matrix
       ~LearnerInspector.feature_importance
@@ -37,15 +38,16 @@ facet.inspection.LearnerInspector
 
    .. autosummary::
    
-      ~LearnerInspector.AGG_MEAN
-      ~LearnerInspector.AGG_STD
       ~LearnerInspector.COL_IMPORTANCE
       ~LearnerInspector.DEFAULT_EXPLAINER_FACTORY
-      ~LearnerInspector.crossfit_
       ~LearnerInspector.features_
       ~LearnerInspector.is_fitted
       ~LearnerInspector.output_names_
       ~LearnerInspector.sample_
+      ~LearnerInspector.n_jobs
+      ~LearnerInspector.shared_memory
+      ~LearnerInspector.pre_dispatch
+      ~LearnerInspector.verbose
    
    
 

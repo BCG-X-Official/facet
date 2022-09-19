@@ -1,0 +1,34 @@
+facet.inspection.ModelInspector
+===============================
+
+.. currentmodule:: facet.inspection
+
+.. autoclass:: ModelInspector
+   :members:
+   :no-show-inheritance:
+   :inherited-members:
+   :special-members: __call__
+
+   
+   
+   .. rubric:: Method summary
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~ModelInspector.ensure_fitted
+      ~ModelInspector.fit
+   
+   
+
+   
+   
+   .. rubric:: Attribute summary
+
+   .. autosummary::
+   
+      ~ModelInspector.is_fitted
+   
+   
+
+   .. rubric:: Definitions

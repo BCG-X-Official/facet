@@ -7,7 +7,8 @@ $(document).ready(function() {
 
 const buildVersionSelector = function() {
 
-    const versionSelector = $('<select/>');
+    const versionDropdown = $('<div class="navbar-end-item"><select/></div>');
+    const versionSelector = versionDropdown.children()
 
     versionSelector.change(function() {
         navigateToDocsVersion($(this).val());
@@ -24,7 +25,7 @@ const buildVersionSelector = function() {
             );
     });
 
-    $("#navbar-menu").append(versionSelector);
+    $("#navbar-end").append(versionDropdown);
 }
 
 const getActiveDocsVersion = function() {
@@ -45,15 +46,12 @@ const getActiveDocsVersion = function() {
 
 const navigateToDocsVersion = function(targetVersion) {
     const currentLocation = window.location + "";
-    let newLocation = currentLocation;
-
     const subUrl = "docs-version/" + targetVersion.split(".").slice(0, 2).join("-") + "/index.html";
+
     if (currentLocation.indexOf("docs-version/") > 0) {
         const startIndex = currentLocation.indexOf("docs-version/")
-        newLocation = currentLocation.substring(0, startIndex) + subUrl
+        window.location = currentLocation.substring(0, startIndex) + subUrl
     } else {
-        newLocation = subUrl
+        window.location = subUrl
     }
-
-    window.location = newLocation;
 }

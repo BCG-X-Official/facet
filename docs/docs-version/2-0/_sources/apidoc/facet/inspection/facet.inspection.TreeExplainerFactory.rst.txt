@@ -17,6 +17,7 @@ facet.inspection.TreeExplainerFactory
       :nosignatures:
    
       ~TreeExplainerFactory.make_explainer
+      ~TreeExplainerFactory.to_expression
    
    
 

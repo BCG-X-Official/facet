@@ -1,0 +1,39 @@
+facet.inspection.ParallelExplainer
+==================================
+
+.. currentmodule:: facet.inspection
+
+.. autoclass:: ParallelExplainer
+   :members:
+   :no-show-inheritance:
+   :inherited-members:
+   :special-members: __call__
+
+   
+   
+   .. rubric:: Method summary
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~ParallelExplainer.shap_interaction_values
+      ~ParallelExplainer.shap_values
+   
+   
+
+   
+   
+   .. rubric:: Attribute summary
+
+   .. autosummary::
+   
+      ~ParallelExplainer.n_jobs
+      ~ParallelExplainer.shared_memory
+      ~ParallelExplainer.pre_dispatch
+      ~ParallelExplainer.verbose
+      ~ParallelExplainer.explainer
+      ~ParallelExplainer.max_job_size
+   
+   
+
+   .. rubric:: Definitions

@@ -8,7 +8,9 @@
 
     <title>Development Guidelines &#8212; facet  documentation</title>
     
-  <link rel="stylesheet" href="_static/css/index.f658d18f9b420779cfdf24aa0a7e2d77.css">
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+<link href="_static/styles/pydata-sphinx-theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
 
     
   <link rel="stylesheet"
@@ -18,21 +20,13 @@
   <link rel="preload" as="font" type="font/woff2" crossorigin
     href="_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
 
-    
-      
-  <link rel="stylesheet"
-    href="_static/vendor/open-sans_all/1.44.1/index.css">
-  <link rel="stylesheet"
-    href="_static/vendor/lato_latin-ext/1.44.1/index.css">
-
-    
-    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    <link rel="stylesheet" href="_static/basic.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/css/gamma.css" />
     
-  <link rel="preload" as="script" href="_static/js/index.d3f166471bb80abb5163.js">
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
 
-    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
     <script src="_static/doctools.js"></script>
@@ -42,67 +36,100 @@
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="FAQ" href="faqs.html" />
-    <link rel="prev" title="&lt;no title&gt;" href="tutorial/Scikit-learn_classifier_summaries_using_FACET.html" />
+    <link rel="prev" title="Standard Scikit-learn Classification Summary with FACET" href="tutorial/Scikit-learn_classifier_summaries_using_FACET.html" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="docsearch:language" content="en" />
+    <meta name="docsearch:language" content="None">
+    
+
+    <!-- Google Analytics -->
+    
   </head>
-  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="60">
     
-    <nav class="navbar navbar-light navbar-expand-lg bg-light fixed-top bd-navbar" id="navbar-main">
-<div class="container-xl">
+    <div class="container-fluid" id="banner"></div>
 
-    <a class="navbar-brand" href="index.html">
     
-      <img src="_static/Gamma_Facet_Logo_RGB_LB.svg" class="logo" alt="logo" />
+    <nav class="navbar navbar-light navbar-expand-lg bg-light fixed-top bd-navbar" id="navbar-main"><div class="container-xl">
+
+  <div id="navbar-start">
     
-    </a>
-    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar-menu" aria-controls="navbar-menu" aria-expanded="false" aria-label="Toggle navigation">
-        <span class="navbar-toggler-icon"></span>
-    </button>
+    
 
-    <div id="navbar-menu" class="col-lg-9 collapse navbar-collapse">
-      <ul id="navbar-main-elements" class="navbar-nav mr-auto">
-        
-        
-        <li class="nav-item ">
-            <a class="nav-link" href="getting_started/getting_started.html">Getting started</a>
-        </li>
-        
-        <li class="nav-item ">
-            <a class="nav-link" href="apidoc/facet.html">API reference</a>
-        </li>
-        
-        <li class="nav-item ">
-            <a class="nav-link" href="tutorials.html">Tutorials</a>
-        </li>
-        
-        <li class="nav-item active">
-            <a class="nav-link" href="">Development Guidelines</a>
-        </li>
-        
-        <li class="nav-item ">
-            <a class="nav-link" href="faqs.html">FAQ</a>
-        </li>
-        
-        <li class="nav-item ">
-            <a class="nav-link" href="about_us.html">About us</a>
-        </li>
-        
-        <li class="nav-item ">
-            <a class="nav-link" href="release_notes.html">Release Notes</a>
-        </li>
-        
-        
-      </ul>
+<a class="navbar-brand" href="index.html">
+  <img src="_static/Gamma_Facet_Logo_RGB_LB.svg" class="logo" alt="logo">
+</a>
 
 
+    
+  </div>
+
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar-collapsible" aria-controls="navbar-collapsible" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+
+  
+  <div id="navbar-collapsible" class="col-lg-9 collapse navbar-collapse">
+    <div id="navbar-center" class="mr-auto">
       
+      <div class="navbar-center-item">
+        <ul id="navbar-main-elements" class="navbar-nav">
+    <li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="_generated/getting_started.html">
+  Getting started
+ </a>
+</li>
 
-      <ul class="navbar-nav">
-        
-        
-      </ul>
+<li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="apidoc/facet.html">
+  API reference
+ </a>
+</li>
+
+<li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="tutorials.html">
+  Tutorials
+ </a>
+</li>
+
+<li class="toctree-l1 current active nav-item">
+ <a class="current reference internal nav-link" href="#">
+  Development Guidelines
+ </a>
+</li>
+
+<li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="faqs.html">
+  FAQ
+ </a>
+</li>
+
+<li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="about_us.html">
+  About us
+ </a>
+</li>
+
+<li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="_generated/release_notes.html">
+  Release Notes
+ </a>
+</li>
+
+    
+</ul>
+      </div>
+      
     </div>
+
+    <div id="navbar-end">
+      
+      <div class="navbar-end-item">
+        <ul id="navbar-icon-links" class="navbar-nav" aria-label="Icon Links">
+      </ul>
+      </div>
+      
+    </div>
+  </div>
 </div>
     </nav>
     
@@ -110,140 +137,151 @@
     <div class="container-xl">
       <div class="row">
           
-          <div class="col-12 col-md-3 bd-sidebar"><form class="bd-search d-flex align-items-center" action="search.html" method="get">
+            
+            <!-- Only show if we have sidebars configured, else just a small margin  -->
+            <div class="col-12 col-md-3 bd-sidebar">
+              <div class="sidebar-start-items"><form class="bd-search d-flex align-items-center" action="search.html" method="get">
   <i class="icon fas fa-search"></i>
   <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
-</form>
-<nav class="bd-links" id="bd-docs-nav" aria-label="Main navigation">
-
-    <div class="bd-toc-item active">
+</form><nav class="bd-links" id="bd-docs-nav" aria-label="Main navigation">
+  <div class="bd-toc-item active">
     
-  
-    <ul class="nav bd-sidenav">
-        
-        
-        
-        
-        
-        
-        
-        
-          
-        
-        
-        
-        
-        
-        
-        
-        
-      </ul>
-  
-  </nav>
-          </div>
+  </div>
+</nav>
+              </div>
+              <div class="sidebar-end-items">
+              </div>
+            </div>
+            
           
 
           
           <div class="d-none d-xl-block col-xl-2 bd-toc">
+            
               
-<div class="tocsection onthispage pt-5 pb-3">
+              <div class="toc-item">
+                
+<div class="tocsection onthispage mt-5 pt-1 pb-3">
     <i class="fas fa-list"></i> On this page
 </div>
 
 <nav id="bd-toc-nav">
-    <ul class="nav section-nav flex-column">
-    
-        <li class="nav-item toc-entry toc-h2">
-            <a href="#setup" class="nav-link">Setup</a><ul class="nav section-nav flex-column">
-                
-        <li class="nav-item toc-entry toc-h3">
-            <a href="#python-environment" class="nav-link">Python environment</a>
-        </li>
-    
-        <li class="nav-item toc-entry toc-h3">
-            <a href="#pre-commit-hooks" class="nav-link">Pre-commit hooks</a>
-        </li>
-    
-        <li class="nav-item toc-entry toc-h3">
-            <a href="#pytest" class="nav-link">Pytest</a>
-        </li>
-    
-            </ul>
-        </li>
-    
-        <li class="nav-item toc-entry toc-h2">
-            <a href="#git-guidelines" class="nav-link">Git Guidelines</a>
-        </li>
-    
-        <li class="nav-item toc-entry toc-h2">
-            <a href="#documentation" class="nav-link">Documentation</a><ul class="nav section-nav flex-column">
-                
-        <li class="nav-item toc-entry toc-h3">
-            <a href="#docstrings" class="nav-link">Docstrings</a>
-        </li>
-    
-        <li class="nav-item toc-entry toc-h3">
-            <a href="#sphinx-build" class="nav-link">Sphinx Build</a>
-        </li>
-    
-        <li class="nav-item toc-entry toc-h3">
-            <a href="#readme" class="nav-link">README</a>
-        </li>
-    
-        <li class="nav-item toc-entry toc-h3">
-            <a href="#tutorial-notebooks" class="nav-link">Tutorial Notebooks</a>
-        </li>
-    
-            </ul>
-        </li>
-    
-        <li class="nav-item toc-entry toc-h2">
-            <a href="#package-builds" class="nav-link">Package builds</a><ul class="nav section-nav flex-column">
-                
-        <li class="nav-item toc-entry toc-h3">
-            <a href="#versioning" class="nav-link">Versioning</a>
-        </li>
-    
-        <li class="nav-item toc-entry toc-h3">
-            <a href="#pypi" class="nav-link">PyPI</a>
-        </li>
-    
-        <li class="nav-item toc-entry toc-h3">
-            <a href="#conda" class="nav-link">Conda</a>
-        </li>
-    
-            </ul>
-        </li>
-    
-        <li class="nav-item toc-entry toc-h2">
-            <a href="#azure-devops-ci-cd" class="nav-link">Azure DevOps CI/CD</a><ul class="nav section-nav flex-column">
-                
-        <li class="nav-item toc-entry toc-h3">
-            <a href="#release-process" class="nav-link">Release process</a>
-        </li>
-    
-            </ul>
-        </li>
-    
-    </ul>
+    <ul class="visible nav section-nav flex-column">
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#setup">
+   Setup
+  </a>
+  <ul class="nav section-nav flex-column">
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#python-environment">
+     Python environment
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#pre-commit-hooks">
+     Pre-commit hooks
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#pytest">
+     Pytest
+    </a>
+   </li>
+  </ul>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#git-guidelines">
+   Git Guidelines
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#documentation">
+   Documentation
+  </a>
+  <ul class="nav section-nav flex-column">
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#docstrings">
+     Docstrings
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#sphinx-build">
+     Sphinx Build
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#readme">
+     README
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#tutorial-notebooks">
+     Tutorial Notebooks
+    </a>
+   </li>
+  </ul>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#package-builds">
+   Package builds
+  </a>
+  <ul class="nav section-nav flex-column">
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#versioning">
+     Versioning
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#pypi">
+     PyPI
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#conda">
+     Conda
+    </a>
+   </li>
+  </ul>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#azure-devops-ci-cd">
+   Azure DevOps CI/CD
+  </a>
+  <ul class="nav section-nav flex-column">
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#release-process">
+     Release process
+    </a>
+   </li>
+  </ul>
+ </li>
+</ul>
+
 </nav>
-
-
+              </div>
               
+              <div class="toc-item">
+                
+              </div>
+              
+            
           </div>
           
 
+          
+          
+            
           
           <main class="col-12 col-md-9 col-xl-7 py-md-5 pl-md-5 pr-md-4 bd-content" role="main">
               
               <div>
                 
   <section id="development-guidelines">
-<span id="contribution-guide"></span><h1>Development Guidelines<a class="headerlink" href="#development-guidelines" title="Permalink to this headline">¶</a></h1>
+<span id="contribution-guide"></span><h1>Development Guidelines<a class="headerlink" href="#development-guidelines" title="Permalink to this headline">#</a></h1>
 <section id="setup">
-<h2>Setup<a class="headerlink" href="#setup" title="Permalink to this headline">¶</a></h2>
+<h2>Setup<a class="headerlink" href="#setup" title="Permalink to this headline">#</a></h2>
 <section id="python-environment">
-<h3>Python environment<a class="headerlink" href="#python-environment" title="Permalink to this headline">¶</a></h3>
+<h3>Python environment<a class="headerlink" href="#python-environment" title="Permalink to this headline">#</a></h3>
 <p>There is an <code class="docutils literal notranslate"><span class="pre">environment.yml</span></code> provided in the repository root, which installs all
 required development dependencies in the <code class="docutils literal notranslate"><span class="pre">facet-develop</span></code> environment.</p>
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>conda env create -f environment.yml
@@ -252,7 +290,7 @@ conda activate facet-develop
 </div>
 </section>
 <section id="pre-commit-hooks">
-<h3>Pre-commit hooks<a class="headerlink" href="#pre-commit-hooks" title="Permalink to this headline">¶</a></h3>
+<h3>Pre-commit hooks<a class="headerlink" href="#pre-commit-hooks" title="Permalink to this headline">#</a></h3>
 <p>This project uses a number of pre-commit hooks such as black and flake8 to enforce
 uniform coding standards in all commits. Before committing code, please run</p>
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>pre-commit install
@@ -262,16 +300,16 @@ uniform coding standards in all commits. Before committing code, please run</p>
 line.</p>
 </section>
 <section id="pytest">
-<h3>Pytest<a class="headerlink" href="#pytest" title="Permalink to this headline">¶</a></h3>
-<p>Run <code class="docutils literal notranslate"><span class="pre">pytest</span> <span class="pre">tests/</span></code> from the facet root folder or use the PyCharm test runner. To
-measure coverage, use <code class="docutils literal notranslate"><span class="pre">pytest</span> <span class="pre">--cov=src/facet</span> <span class="pre">tests/</span></code>. Note that the code coverage
+<h3>Pytest<a class="headerlink" href="#pytest" title="Permalink to this headline">#</a></h3>
+<p>Run <code class="docutils literal notranslate"><span class="pre">pytest</span> <span class="pre">test/</span></code> from the facet root folder or use the PyCharm test runner. To
+measure coverage, use <code class="docutils literal notranslate"><span class="pre">pytest</span> <span class="pre">--cov=src/facet</span> <span class="pre">test/</span></code>. Note that the code coverage
 reports are also generated in the Azure Pipelines (see CI/CD section).</p>
 <p>Note that you will need to set the PYTHONPATH to the <code class="docutils literal notranslate"><span class="pre">src/</span></code> directory by
 running <code class="docutils literal notranslate"><span class="pre">export</span> <span class="pre">PYTHONPATH=./src/</span></code> from the repository root.</p>
 </section>
 </section>
 <section id="git-guidelines">
-<h2>Git Guidelines<a class="headerlink" href="#git-guidelines" title="Permalink to this headline">¶</a></h2>
+<h2>Git Guidelines<a class="headerlink" href="#git-guidelines" title="Permalink to this headline">#</a></h2>
 <p>For commits to GitHub, phrase commit comments as the completion of the sentence <em>This
 commit will …</em>, e.g.</p>
 <div class="highlight-RST notranslate"><div class="highlight"><pre><span></span>add method foo to class Bar
@@ -283,11 +321,11 @@ commit will …</em>, e.g.</p>
 </div>
 </section>
 <section id="documentation">
-<h2>Documentation<a class="headerlink" href="#documentation" title="Permalink to this headline">¶</a></h2>
+<h2>Documentation<a class="headerlink" href="#documentation" title="Permalink to this headline">#</a></h2>
 <p>This section provides a general guide to the documentation of FACET, including
 docstrings, Sphinx, the README and tutorial notebooks.</p>
 <section id="docstrings">
-<h3>Docstrings<a class="headerlink" href="#docstrings" title="Permalink to this headline">¶</a></h3>
+<h3>Docstrings<a class="headerlink" href="#docstrings" title="Permalink to this headline">#</a></h3>
 <p>The API documentation is generated from docstrings in the source code. Before writing
 your own, take some time to study the existing code documentation and emulate the same
 style. Describe not only what the code does, but also why, including the rationale for
@@ -329,6 +367,7 @@ For example:</p>
 <span class="s2">    Explains the inner workings of a predictive model using the SHAP approach.</span>
 
 <span class="s2">    The inspector offers the following analyses:</span>
+
 <span class="s2">    - ...</span>
 <span class="s2">    - ...</span>
 </pre></div>
@@ -346,7 +385,7 @@ any information.</p>
 <li><p>Properties should be documented as if they were attributes, not as methods, e.g.,</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nd">@property</span>
 <span class="k">def</span> <span class="nf">children</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Foo</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;The child nodes of the tree&quot;&quot;&quot;</span>
+    <span class="sd">&quot;&quot;&quot;The child nodes of the tree.&quot;&quot;&quot;</span>
     <span class="k">pass</span>
 </pre></div>
 </div>
@@ -395,27 +434,29 @@ the trailing triple quote, e.g.,</p>
 <li><p>For method arguments, return value, and class parameters, one must hint the type using
 the typing module. Do not specify the parameter types in the docstrings, e.g.,</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">f</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-   <span class="s2">&quot;&quot;&quot;</span>
-<span class="s2">   Do something.</span>
+  <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">  Do something.</span>
 
-<span class="s2">   :param x: input value</span>
-<span class="s2">   :return: output value</span>
+<span class="sd">  :param x: input value</span>
+<span class="sd">  :return: output value</span>
+<span class="sd">  &quot;&quot;&quot;</span>
 </pre></div>
 </div>
 <p>but not</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">f</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-   <span class="s2">&quot;&quot;&quot;</span>
-<span class="s2">   Do something.</span>
+  <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">  Do something.</span>
 
-<span class="s2">   :param int x: input value</span>
-<span class="s2">   :return float: output value</span>
+<span class="sd">  :param int x: input value</span>
+<span class="sd">  :return float: output value</span>
+<span class="sd">  &quot;&quot;&quot;</span>
 </pre></div>
 </div>
 </li>
 </ul>
 </section>
 <section id="sphinx-build">
-<h3>Sphinx Build<a class="headerlink" href="#sphinx-build" title="Permalink to this headline">¶</a></h3>
+<h3>Sphinx Build<a class="headerlink" href="#sphinx-build" title="Permalink to this headline">#</a></h3>
 <p>Documentation for FACET is built using <a class="reference external" href="https://www.sphinx-doc.org/en/master/">sphinx</a>.
 Before building the documentation ensure the <code class="docutils literal notranslate"><span class="pre">facet-develop</span></code> environment is active as
 the documentation build has a number of key dependencies specified in the
@@ -436,70 +477,62 @@ documentation for FACET can then be found at <code class="docutils literal notra
 building and releasing FACET.</p>
 <p>The <code class="docutils literal notranslate"><span class="pre">sphinx</span></code> folder in the root directory contains the following:</p>
 <ul class="simple">
-<li><p>a <code class="docutils literal notranslate"><span class="pre">make.py</span></code> script for executing the documentation build via python.</p></li>
-<li><p>a <code class="docutils literal notranslate"><span class="pre">source</span></code> directory containing predefined <code class="docutils literal notranslate"><span class="pre">.rst</span></code> files for the documentation
-build and other required elements, see below for more details.</p></li>
-<li><p>an <code class="docutils literal notranslate"><span class="pre">auxiliary</span></code> directory which contains the notebook used in the quickstart as well
-as a template notebook to be used when generating new tutorials to be added to the
-documentation. Note this is kept separate as it is used to generate the example for
-the repository <cite>README.rst</cite>, which is the included in the documentation build.</p></li>
+<li><p>a <code class="docutils literal notranslate"><span class="pre">make.py</span></code> script for executing the documentation build via python</p></li>
+<li><p>a <code class="docutils literal notranslate"><span class="pre">source</span></code> directory containing predefined .rst files for the documentation build
+and other required elements (see below for more details)</p></li>
+<li><p>a <code class="docutils literal notranslate"><span class="pre">base</span></code> folder which contains</p>
+<ul>
+<li><p>the <code class="docutils literal notranslate"><span class="pre">make_base.py</span></code> and <code class="docutils literal notranslate"><span class="pre">conf_base.py</span></code> scripts with nearly all configuration for
+<code class="docutils literal notranslate"><span class="pre">make.py</span></code> and <code class="docutils literal notranslate"><span class="pre">conf.py</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">_static</span></code> directory, containing logos, icons, javascript and css used for
+<em>pytools</em> and other packages documentation builds</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">_templates</span></code> directory, containing <em>autodoc</em> templates used in generating and
+formatting the modules and classes for the API documentation</p></li>
+</ul>
+</li>
 </ul>
 <p>The <code class="docutils literal notranslate"><span class="pre">sphinx/source</span></code> folder contains:</p>
 <ul class="simple">
-<li><p>a <code class="docutils literal notranslate"><span class="pre">conf.py</span></code> script that is the <a class="reference external" href="https://www.sphinx-doc.org/en/master/usage/configuration.html">build configuration file</a> needed to customize the
-input and output behavior of the Sphinx documentation build (see below for further
-details).</p></li>
+<li><p>a <code class="docutils literal notranslate"><span class="pre">conf.py</span></code> script that is the
+<a class="reference external" href="https://www.sphinx-doc.org/en/master/usage/configuration.html">build configuration file</a>
+needed to customize the input and output behavior of the Sphinx documentation build
+(see below for further details)</p></li>
 <li><p>a <code class="docutils literal notranslate"><span class="pre">tutorials</span></code> directory that contains all the notebooks (and supporting data) used in
 the documentation build. Note that as some notebooks take a little while to generate, the
 notebooks are currently committed with cell output. This may change in the future where
-notebooks are run as part of the sphinx build.</p></li>
-<li><p>the base <code class="docutils literal notranslate"><span class="pre">.rst</span></code> files used for the documentation build, which are:</p>
+notebooks are run as part of the sphinx build</p></li>
+<li><p>the essential <code class="docutils literal notranslate"><span class="pre">.rst</span></code> files used for the documentation build, which are:</p>
 <ul>
 <li><p><code class="docutils literal notranslate"><span class="pre">index.rst</span></code>: definition of the high-level documentation structure which mainly
-references the other rst files in this directory.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">tutorials.rst</span></code>: a tutorial overview that incorporates the tutorial notebooks
-from the <code class="docutils literal notranslate"><span class="pre">tutorials</span></code> directory.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">contribution_guide.rst</span></code>: detailed information on building and releasing FACET.</p></li>
+references the other <code class="docutils literal notranslate"><span class="pre">.rst</span></code> files in this directory</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">contribution_guide.rst</span></code>: detailed information on building and releasing
+FACET.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">faqs.rst</span></code>: contains guidance on bug reports/feature requests, how to contribute
-and answers to frequently asked questions including small code snippets.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">about_us.rst</span></code>: description of the team behind open-sourcing FACET.</p></li>
+and answers to frequently asked questions including small code snippets</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">api_landing.rst</span></code>: for placing any API landing page preamble for documentation
 as needed. This information will appear on the API landing page in the
 documentation build after the short description in <code class="docutils literal notranslate"><span class="pre">src/__init__.py</span></code>. This file
-is included in the documentation build via the <code class="docutils literal notranslate"><span class="pre">custom-module-template.rst</span></code>.</p></li>
+is included in the documentation build via the <code class="docutils literal notranslate"><span class="pre">custom-module-template.rst</span></code></p></li>
 </ul>
 </li>
-<li><p><code class="docutils literal notranslate"><span class="pre">_static</span></code> contains additional material used in the documentation build (mainly
-figures) but also some formatting control:</p>
-<ul>
-<li><p><code class="docutils literal notranslate"><span class="pre">team_contributors</span></code>: contains photos for the FACET team.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">icons</span></code>: contains the icons used in describing the main elements of FACET
-in the documentation getting started page.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">css/facet.css</span></code>: contains additional customization for the display of HTML
-elements in the documentation build.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">_static</span></code> contains additional material used in the documentation build, in this
+case, logos and icons</p></li>
 </ul>
-</li>
-<li><p><code class="docutils literal notranslate"><span class="pre">_templates</span></code> contains the <code class="docutils literal notranslate"><span class="pre">autosummary.rst</span></code> which relies on the
-<code class="docutils literal notranslate"><span class="pre">custom-module-template.rst</span></code> and <code class="docutils literal notranslate"><span class="pre">custom-class-template.rst</span></code> from
-<code class="docutils literal notranslate"><span class="pre">pytools/tree/develop/sphinx/source/_templates</span></code> which is used in
-generating/formatting the modules and classes for the API documentation.</p></li>
-</ul>
-<p>The two key scripts are <code class="docutils literal notranslate"><span class="pre">make.py</span></code> and <code class="docutils literal notranslate"><span class="pre">conf.py</span></code>. The base configuration for these
-scripts can be found in
-<a class="reference external" href="https://github.com/BCG-Gamma/pytools/tree/develop/sphinx">pytools/sphinx</a>.
-The reason for this was to minimise code given the standardization of the documentation
+<p>The two key scripts are <code class="docutils literal notranslate"><span class="pre">make.py</span></code> and <code class="docutils literal notranslate"><span class="pre">conf.py</span></code>. The base configuration for the
+these scripts can be found in <a class="reference external" href="https://github.com/BCG-Gamma/pytools/tree/develop/sphinx/base">pytools/sphinx</a>.
+The reason for this is to minimise code given the standardization of the documentation
 build across multiple packages.</p>
 <p><strong>make.py</strong>: All base configuration comes from <code class="docutils literal notranslate"><span class="pre">pytools/sphinx/base/make_base.py</span></code> and
 this script includes defined commands for key steps in the documentation build. Briefly,
 the key steps for the documentation build are:</p>
 <ul class="simple">
-<li><p><strong>Clean</strong>: remove the existing documentation build.</p></li>
-<li><p><strong>FetchPkgVersions</strong>: fetch the available package versions with documentation.</p></li>
-<li><p><strong>ApiDoc</strong>: generate API documentation from sources.</p></li>
-<li><p><strong>Html</strong>: run Sphinx build to generate HTMl documentation.</p></li>
+<li><p><strong>Clean</strong>: remove the existing documentation build</p></li>
+<li><p><strong>FetchPkgVersions</strong>: fetch the available package versions with documentation</p></li>
+<li><p><strong>ApiDoc</strong>: generate API documentation from sources</p></li>
+<li><p><strong>Html</strong>: run Sphinx build to generate HTMl documentation</p></li>
 </ul>
 <p>The two other commands are <strong>Help</strong> and <strong>PrepareDocsDeployment</strong>, the latter of which
-is covered below under Building and releasing FACET.</p>
+is covered below under <em>Building and releasing FACET</em>.</p>
 <p><strong>conf.py</strong>: All base configuration comes from <code class="docutils literal notranslate"><span class="pre">pytools/sphinx/base/conf_base.py</span></code>. This
 <a class="reference external" href="https://www.sphinx-doc.org/en/master/usage/configuration.html">build configuration file</a>
 is a requirement of Sphinx and is needed to customize the input and output behavior of
@@ -507,35 +540,33 @@ the documentation build. In particular, this file highlights key extensions need
 the build process, of which some key ones are as follows:</p>
 <ul class="simple">
 <li><p><a class="reference external" href="https://www.sphinx-doc.org/en/master/usage/extensions/intersphinx.html">intersphinx</a>
-(external links to other documentations built with Sphinx: scikit-learn, numpy…).</p></li>
-<li><p><a class="reference external" href="https://www.sphinx-doc.org/en/master/usage/extensions/viewcode.html">viewcode</a> to
-include source code in the documentation, and links to the source code from the objects
-documentation.</p></li>
-<li><p><a class="reference external" href="https://www.sphinx-doc.org/en/master/usage/extensions/math.html">imgmath</a> to render
-math expressions in doc strings. Note that a local latex installation is required (e.g.,
-<a class="reference external" href="https://miktex.org/">MiKTeX</a> for Windows).</p></li>
+(external links to other documentations built with Sphinx: matplotlib, numpy, …)</p></li>
+<li><p><a class="reference external" href="https://www.sphinx-doc.org/en/master/usage/extensions/viewcode.html">viewcode</a>
+to include source code in the documentation, and links to the source code from the objects documentation</p></li>
+<li><p><a class="reference external" href="https://www.sphinx-doc.org/en/master/usage/extensions/math.html">imgmath</a>
+to render math expressions in doc strings. Note that a local latex installation is
+required (e.g., <a class="reference external" href="https://miktex.org/">MiKTeX</a> for Windows)</p></li>
 </ul>
 </section>
 <section id="readme">
-<h3>README<a class="headerlink" href="#readme" title="Permalink to this headline">¶</a></h3>
+<h3>README<a class="headerlink" href="#readme" title="Permalink to this headline">#</a></h3>
 <p>The README file for the repo is .rst format instead of the perhaps more traditional
 markdown format. The reason for this is the <code class="docutils literal notranslate"><span class="pre">README.rst</span></code> is included as the quick start
 guide in the documentation build. This helped minimize code duplication. However,
 there are a few key points to be aware of:</p>
 <ul class="simple">
-<li><p>The README has links to figures, logos and icons located in the <code class="docutils literal notranslate"><span class="pre">sphinx/source/_static</span></code>
-folder. To ensure these links are correct when the documentation is built, they are
-altered and then the contents of the <code class="docutils literal notranslate"><span class="pre">README.rst</span></code> is incorporated into the
-<code class="docutils literal notranslate"><span class="pre">getting_started.rst</span></code> which is generated during the build and can be found in
-<code class="docutils literal notranslate"><span class="pre">sphinx/source/getting_started</span></code>.</p></li>
-<li><p>The quick start guide based on the <code class="docutils literal notranslate"><span class="pre">Boston_getting_started_example.ipynb</span></code> notebook in
+<li><p>The README has links to figures, logos and icons located in the <code class="docutils literal notranslate"><span class="pre">sphinx/source/_static</span></code> folder.
+To ensure these links are correct when the documentation is built, they are altered and then the
+contents of the <code class="docutils literal notranslate"><span class="pre">README.rst</span></code> is incorporated into the <code class="docutils literal notranslate"><span class="pre">getting_started.rst</span></code> which is generated
+during the build and can be found in <code class="docutils literal notranslate"><span class="pre">sphinx/source/getting_started</span></code>.</p></li>
+<li><p>The quick start guide based on the <code class="docutils literal notranslate"><span class="pre">Diabetes_getting_started_example.ipynb</span></code> notebook in
 the <code class="docutils literal notranslate"><span class="pre">sphinx/auxiliary</span></code> folder is not automatically included (unlike all the other
 tutorials). For this reason any updates to this example in the README need to be
 reflected in the source notebook and vice-versa.</p></li>
 </ul>
 </section>
 <section id="tutorial-notebooks">
-<h3>Tutorial Notebooks<a class="headerlink" href="#tutorial-notebooks" title="Permalink to this headline">¶</a></h3>
+<h3>Tutorial Notebooks<a class="headerlink" href="#tutorial-notebooks" title="Permalink to this headline">#</a></h3>
 <p>Notebooks are used as the basis for detailed tutorials in the documentation. Tutorials
 created for documentation need to be placed in <code class="docutils literal notranslate"><span class="pre">sphinx/source/tutorial</span></code> folder.</p>
 <p>If you intend to create a notebook for inclusion in the documentation please note the
@@ -580,9 +611,9 @@ also be instigated from within the <code class="docutils literal notranslate"><s
 in the main menu of the jupyter notebook server, click on <em>View -&gt; CellToolbar -&gt; edit
 metadata</em>, then click on edit Metadata in the top right part of the cell. The modified
 metadata would then look something like:</p>
-<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
-  <span class="nt">&quot;nbsphinx&quot;</span><span class="p">:</span> <span class="s2">&quot;hidden&quot;</span>
-<span class="p">}</span>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="w"></span>
+<span class="w">  </span><span class="nt">&quot;nbsphinx&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;hidden&quot;</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
 </pre></div>
 </div>
 </li>
@@ -620,32 +651,32 @@ all cells.</p></li>
 </section>
 </section>
 <section id="package-builds">
-<h2>Package builds<a class="headerlink" href="#package-builds" title="Permalink to this headline">¶</a></h2>
+<h2>Package builds<a class="headerlink" href="#package-builds" title="Permalink to this headline">#</a></h2>
 <p>The build process for the PyPI and conda distributions uses the following key
 files:</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">make.py</span></code>: generic Python script for package builds. Most configuration is imported
 from pytools <a class="reference external" href="https://github.com/BCG-Gamma/pytools/blob/develop/make.py">make.py</a>
 which is a build script that wraps the package build, as well as exposing the matrix
-dependency definitions specified in the <code class="docutils literal notranslate"><span class="pre">pyproject.toml</span></code> as environment variables.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">pyproject.toml</span></code>: metadata for PyPI, build settings and package dependencies.</p></li>
+dependency definitions specified in the <code class="docutils literal notranslate"><span class="pre">pyproject.toml</span></code> as environment variables</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">pyproject.toml</span></code>: metadata for PyPI, build settings and package dependencies</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">tox.ini</span></code>: contains configurations for tox, testenv, flake8, isort, coverage report,
-and pytest.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">condabuild/meta.yml</span></code>: metadata for conda, build settings and package dependencies.</p></li>
+and pytest</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">condabuild/meta.yml</span></code>: metadata for conda, build settings and package dependencies</p></li>
 </ul>
 <section id="versioning">
-<h3>Versioning<a class="headerlink" href="#versioning" title="Permalink to this headline">¶</a></h3>
+<h3>Versioning<a class="headerlink" href="#versioning" title="Permalink to this headline">#</a></h3>
 <p>FACET version numbering follows the <a class="reference external" href="https://semver.org/">semantic versioning</a>
 approach, with the pattern <code class="docutils literal notranslate"><span class="pre">MAJOR.MINOR.PATCH</span></code>.
 The version can be bumped in the <code class="docutils literal notranslate"><span class="pre">src/__init__.py</span></code> by updating the
 <code class="docutils literal notranslate"><span class="pre">__version__</span></code> string accordingly.</p>
 </section>
 <section id="pypi">
-<h3>PyPI<a class="headerlink" href="#pypi" title="Permalink to this headline">¶</a></h3>
+<h3>PyPI<a class="headerlink" href="#pypi" title="Permalink to this headline">#</a></h3>
 <p>PyPI project metadata, build settings and package dependencies
 are obtained from <code class="docutils literal notranslate"><span class="pre">pyproject.toml</span></code>. To build and then publish the package to PyPI,
 use the following commands:</p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>python make.py gamma-facet tox default
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>python make.py facet tox default
 flit publish
 </pre></div>
 </div>
@@ -670,30 +701,28 @@ PyPI, also has the flexibility to support package building (wheel/sdist) via
 </ul>
 </section>
 <section id="conda">
-<h3>Conda<a class="headerlink" href="#conda" title="Permalink to this headline">¶</a></h3>
+<h3>Conda<a class="headerlink" href="#conda" title="Permalink to this headline">#</a></h3>
 <p>conda build metadata, build settings and package dependencies
 are obtained from <code class="docutils literal notranslate"><span class="pre">meta.yml</span></code>. To build and then publish the package to conda,
 use the following commands:</p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>python make.py gamma-facet conda default
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>python make.py facet conda default
 anaconda upload --user BCG_Gamma dist/conda/noarch/&lt;*package.tar.gz*&gt;
 </pre></div>
 </div>
 <p>Please note the following:</p>
-<ul>
+<ul class="simple">
 <li><p>Build output will be stored in the <code class="docutils literal notranslate"><span class="pre">dist/</span></code> directory.</p></li>
 <li><p>Some useful references for conda builds:</p>
-<blockquote>
-<div><ul class="simple">
+<ul>
 <li><p><a class="reference external" href="https://docs.conda.io/projects/conda-build/en/latest/user-guide/tutorials/building-conda-packages.html">Conda build tutorial</a></p></li>
 <li><p><a class="reference external" href="https://docs.conda.io/projects/conda-build/en/latest/resources/define-metadata.html">Conda build metadata reference</a></p></li>
 </ul>
-</div></blockquote>
 </li>
 </ul>
 </section>
 </section>
 <section id="azure-devops-ci-cd">
-<h2>Azure DevOps CI/CD<a class="headerlink" href="#azure-devops-ci-cd" title="Permalink to this headline">¶</a></h2>
+<h2>Azure DevOps CI/CD<a class="headerlink" href="#azure-devops-ci-cd" title="Permalink to this headline">#</a></h2>
 <p>This project uses <a class="reference external" href="https://dev.azure.com/">Azure DevOps</a> for CI/CD pipelines.
 The pipelines are defined in the <code class="docutils literal notranslate"><span class="pre">azure-pipelines.yml</span></code> file and are divided into
 the following stages:</p>
@@ -707,38 +736,45 @@ in the <code class="docutils literal notranslate"><span class="pre">pyproject.ym
 <li><p><strong>Docs</strong>: build and publish documentation to GitHub Pages.</p></li>
 </ul>
 <section id="release-process">
-<h3>Release process<a class="headerlink" href="#release-process" title="Permalink to this headline">¶</a></h3>
+<h3>Release process<a class="headerlink" href="#release-process" title="Permalink to this headline">#</a></h3>
 <p>Before initiating the release process, please ensure the version number
 in <code class="docutils literal notranslate"><span class="pre">src/__init__.py</span></code> is correct and the format conforms to semantic
 versioning. If the version needs to be corrected/bumped then open a PR for the
 change and merge into develop before going any further.</p>
 <p>The release process has the following key steps:</p>
 <ul class="simple">
-<li><p>Create a new release branch from develop and open a PR to master.</p></li>
-<li><p>Opening the PR to master will automatically run all conda/pip build tests via
-Azure Pipelines, triggering automatic upload of artifacts (conda and pip
-packages) to Azure DevOps. At this stage, it is recommended that the pip package
+<li><p>Create a new release branch from the tag of the latest release named
+<code class="docutils literal notranslate"><span class="pre">release/&lt;version&gt;</span></code> where <code class="docutils literal notranslate"><span class="pre">&lt;version&gt;</span></code> is the version number of the new release</p></li>
+<li><p>Create a new branch from the baseline branch (e.g., <code class="docutils literal notranslate"><span class="pre">2.0.x</span></code>) named
+<code class="docutils literal notranslate"><span class="pre">dev/&lt;version&gt;</span></code> where <code class="docutils literal notranslate"><span class="pre">&lt;version&gt;</span></code> is the version number of the new release</p></li>
+<li><p>Opening a PR to merge <code class="docutils literal notranslate"><span class="pre">dev/&lt;version&gt;</span></code> onto <code class="docutils literal notranslate"><span class="pre">release/&lt;version&gt;</span></code>.
+This will automatically run all conda/pip build tests via
+Azure Pipelines prior to allowing to merge the PR.
+This will trigger automatic upload of artifacts (conda and pip
+packages) from Azure DevOps. At this stage, it is recommended that the pip package
 build is checked using <a class="reference external" href="https://test.pypi.org/">PyPI test</a> to ensure all
 metadata presents correctly. This is important as package versions in
 PyPI proper are immutable.</p></li>
-<li><p>If everything passes and looks okay, merge the PR into master, this will
-trigger the release pipeline which will:</p>
+<li><p>If everything passes and looks okay, merge the PR using a <em>merge commit</em>
+(not squashing).
+This will trigger the release pipeline which will:</p>
 <ul>
-<li><p>Tag the release commit with version number as specified in <code class="docutils literal notranslate"><span class="pre">src/__init__.py</span></code>.</p></li>
+<li><p>Tag the release commit with version number as specified in <code class="docutils literal notranslate"><span class="pre">src/__init__.py</span></code></p></li>
 <li><p>Create a release on GitHub for the new version, please check the <a class="reference external" href="https://docs.github.com/en/free-pro-team&#64;latest/github/administering-a-repository/releasing-projects-on-github">documentation</a>
-for details.</p></li>
+for details</p></li>
 <li><p>Pre-fill the GitHub release title and description, including the changelog based on
 commits since the last release. Please note this can be manually edited to be more
-succinct afterwards.</p></li>
-<li><p>Attach build artifacts (conda and pip packages) to GitHub release.</p></li>
+succinct afterwards</p></li>
+<li><p>Attach build artifacts (conda and pip packages) to GitHub release</p></li>
+<li><p>Upload build artifacts to conda/PyPI using <code class="docutils literal notranslate"><span class="pre">anaconda</span> <span class="pre">upload</span></code> and
+<code class="docutils literal notranslate"><span class="pre">flit</span> <span class="pre">publish</span></code>, respectively</p></li>
 </ul>
 </li>
-<li><p>Manually upload build artifacts to conda/PyPI using <code class="docutils literal notranslate"><span class="pre">anaconda</span> <span class="pre">upload</span></code> and
-<code class="docutils literal notranslate"><span class="pre">flit</span> <span class="pre">publish</span></code>, respectively (see relevant sections under Package builds above)
-This may be automated in the future.</p></li>
-<li><p>Remove any test versions for pip from PyPI test.</p></li>
-<li><p>Merge any changes from release branch also back to develop.</p></li>
-<li><p>Bump up version in <code class="docutils literal notranslate"><span class="pre">src/__init__.py</span></code> on develop to start work towards next release.</p></li>
+<li><p>Remove any test versions for pip from PyPI test</p></li>
+<li><p>Merge <code class="docutils literal notranslate"><span class="pre">release/&lt;version&gt;</span></code> back onto the baseline branch from which
+<code class="docutils literal notranslate"><span class="pre">dev/&lt;version&gt;</span></code> was branched</p></li>
+<li><p>Bump up version in <code class="docutils literal notranslate"><span class="pre">src/__init__.py</span></code> on the baseline branch to start work towards
+the next release</p></li>
 </ul>
 </section>
 </section>
@@ -748,29 +784,47 @@ This may be automated in the future.</p></li>
               </div>
               
               
-              <div class='prev-next-bottom'>
-                
-    <a class='left-prev' id="prev-link" href="tutorial/Scikit-learn_classifier_summaries_using_FACET.html" title="previous page">&lt;no title&gt;</a>
-    <a class='right-next' id="next-link" href="faqs.html" title="next page">FAQ</a>
-
-              </div>
+              <!-- Previous / next buttons -->
+<div class='prev-next-area'>
+    <a class='left-prev' id="prev-link" href="tutorial/Scikit-learn_classifier_summaries_using_FACET.html" title="previous page">
+        <i class="fas fa-angle-left"></i>
+        <div class="prev-next-info">
+            <p class="prev-next-subtitle">previous</p>
+            <p class="prev-next-title">Standard Scikit-learn Classification Summary with FACET</p>
+        </div>
+    </a>
+    <a class='right-next' id="next-link" href="faqs.html" title="next page">
+    <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">FAQ</p>
+    </div>
+    <i class="fas fa-angle-right"></i>
+    </a>
+</div>
               
           </main>
           
 
       </div>
     </div>
-
-    
-  <script src="_static/js/index.d3f166471bb80abb5163.js"></script>
-
-
-    <footer class="footer mt-5 mt-md-0">
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
+<footer class="footer mt-5 mt-md-0">
   <div class="container">
-    <p>
-          &copy; Copyright 2021, Boston Consulting Group (BCG).<br/>
-        Created using <a href="http://sphinx-doc.org/">Sphinx</a> 3.5.3.<br/>
-    </p>
+    
+    <div class="footer-item">
+      <p class="copyright">
+    &copy; Copyright 2022, Boston Consulting Group (BCG).<br>
+</p>
+    </div>
+    
+    <div class="footer-item">
+      <p class="sphinx-version">
+Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.5.0.<br>
+</p>
+    </div>
+    
   </div>
 </footer>
   </body>

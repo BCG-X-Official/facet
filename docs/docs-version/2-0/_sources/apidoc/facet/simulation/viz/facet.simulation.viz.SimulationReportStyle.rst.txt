@@ -27,6 +27,13 @@ facet.simulation.viz.SimulationReportStyle
 
    
    
+   .. rubric:: Attribute summary
+
+   .. autosummary::
+   
+      ~SimulationReportStyle.out
+      ~SimulationReportStyle.width
+   
    
 
    .. rubric:: Definitions

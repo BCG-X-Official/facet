@@ -7,7 +7,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Index &#8212; facet  documentation</title>
     
-  <link rel="stylesheet" href="_static/css/index.f658d18f9b420779cfdf24aa0a7e2d77.css">
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+<link href="_static/styles/pydata-sphinx-theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
 
     
   <link rel="stylesheet"
@@ -17,21 +19,13 @@
   <link rel="preload" as="font" type="font/woff2" crossorigin
     href="_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
 
-    
-      
-  <link rel="stylesheet"
-    href="_static/vendor/open-sans_all/1.44.1/index.css">
-  <link rel="stylesheet"
-    href="_static/vendor/lato_latin-ext/1.44.1/index.css">
-
-    
-    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    <link rel="stylesheet" href="_static/basic.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/css/gamma.css" />
     
-  <link rel="preload" as="script" href="_static/js/index.d3f166471bb80abb5163.js">
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
 
-    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
     <script src="_static/doctools.js"></script>
@@ -41,65 +35,98 @@
     <link rel="index" title="Index" href="#" />
     <link rel="search" title="Search" href="search.html" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="docsearch:language" content="en" />
+    <meta name="docsearch:language" content="None">
+    
+
+    <!-- Google Analytics -->
+    
   </head>
-  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="60">
     
-    <nav class="navbar navbar-light navbar-expand-lg bg-light fixed-top bd-navbar" id="navbar-main">
-<div class="container-xl">
+    <div class="container-fluid" id="banner"></div>
 
-    <a class="navbar-brand" href="index.html">
     
-      <img src="_static/Gamma_Facet_Logo_RGB_LB.svg" class="logo" alt="logo" />
+    <nav class="navbar navbar-light navbar-expand-lg bg-light fixed-top bd-navbar" id="navbar-main"><div class="container-xl">
+
+  <div id="navbar-start">
     
-    </a>
-    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar-menu" aria-controls="navbar-menu" aria-expanded="false" aria-label="Toggle navigation">
-        <span class="navbar-toggler-icon"></span>
-    </button>
+    
 
-    <div id="navbar-menu" class="col-lg-9 collapse navbar-collapse">
-      <ul id="navbar-main-elements" class="navbar-nav mr-auto">
-        
-        
-        <li class="nav-item ">
-            <a class="nav-link" href="getting_started/getting_started.html">Getting started</a>
-        </li>
-        
-        <li class="nav-item ">
-            <a class="nav-link" href="apidoc/facet.html">API reference</a>
-        </li>
-        
-        <li class="nav-item ">
-            <a class="nav-link" href="tutorials.html">Tutorials</a>
-        </li>
-        
-        <li class="nav-item ">
-            <a class="nav-link" href="contribution_guide.html">Development Guidelines</a>
-        </li>
-        
-        <li class="nav-item ">
-            <a class="nav-link" href="faqs.html">FAQ</a>
-        </li>
-        
-        <li class="nav-item ">
-            <a class="nav-link" href="about_us.html">About us</a>
-        </li>
-        
-        <li class="nav-item ">
-            <a class="nav-link" href="release_notes.html">Release Notes</a>
-        </li>
-        
-        
-      </ul>
+<a class="navbar-brand" href="index.html">
+  <img src="_static/Gamma_Facet_Logo_RGB_LB.svg" class="logo" alt="logo">
+</a>
 
 
+    
+  </div>
+
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar-collapsible" aria-controls="navbar-collapsible" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+
+  
+  <div id="navbar-collapsible" class="col-lg-9 collapse navbar-collapse">
+    <div id="navbar-center" class="mr-auto">
       
+      <div class="navbar-center-item">
+        <ul id="navbar-main-elements" class="navbar-nav">
+    <li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="_generated/getting_started.html">
+  Getting started
+ </a>
+</li>
 
-      <ul class="navbar-nav">
-        
-        
-      </ul>
+<li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="apidoc/facet.html">
+  API reference
+ </a>
+</li>
+
+<li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="tutorials.html">
+  Tutorials
+ </a>
+</li>
+
+<li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="contribution_guide.html">
+  Development Guidelines
+ </a>
+</li>
+
+<li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="faqs.html">
+  FAQ
+ </a>
+</li>
+
+<li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="about_us.html">
+  About us
+ </a>
+</li>
+
+<li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="_generated/release_notes.html">
+  Release Notes
+ </a>
+</li>
+
+    
+</ul>
+      </div>
+      
     </div>
+
+    <div id="navbar-end">
+      
+      <div class="navbar-end-item">
+        <ul id="navbar-icon-links" class="navbar-nav" aria-label="Icon Links">
+      </ul>
+      </div>
+      
+    </div>
+  </div>
 </div>
     </nav>
     
@@ -107,52 +134,33 @@
     <div class="container-xl">
       <div class="row">
           
-          <div class="col-12 col-md-3 bd-sidebar"><form class="bd-search d-flex align-items-center" action="search.html" method="get">
+            
+            <!-- Only show if we have sidebars configured, else just a small margin  -->
+            <div class="col-12 col-md-3 bd-sidebar">
+              <div class="sidebar-start-items"><form class="bd-search d-flex align-items-center" action="search.html" method="get">
   <i class="icon fas fa-search"></i>
   <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
-</form>
-<nav class="bd-links" id="bd-docs-nav" aria-label="Main navigation">
-
-    <div class="bd-toc-item active">
+</form><nav class="bd-links" id="bd-docs-nav" aria-label="Main navigation">
+  <div class="bd-toc-item active">
     
-  
-    <ul class="nav bd-sidenav">
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-      </ul>
-  
-  </nav>
-          </div>
+  </div>
+</nav>
+              </div>
+              <div class="sidebar-end-items">
+              </div>
+            </div>
+            
           
 
           
           <div class="d-none d-xl-block col-xl-2 bd-toc">
-              
-
-<nav id="bd-toc-nav">
-    <ul class="nav section-nav flex-column">
-    
-    </ul>
-</nav>
-
-
-              
+            
           </div>
           
 
+          
+          
+            
           
           <main class="col-12 col-md-9 col-xl-7 py-md-5 pl-md-5 pr-md-4 bd-content" role="main">
               
@@ -172,6 +180,7 @@
  | <a href="#G"><strong>G</strong></a>
  | <a href="#H"><strong>H</strong></a>
  | <a href="#I"><strong>I</strong></a>
+ | <a href="#J"><strong>J</strong></a>
  | <a href="#K"><strong>K</strong></a>
  | <a href="#L"><strong>L</strong></a>
  | <a href="#M"><strong>M</strong></a>
@@ -182,8 +191,9 @@
  | <a href="#S"><strong>S</strong></a>
  | <a href="#T"><strong>T</strong></a>
  | <a href="#U"><strong>U</strong></a>
- | <a href="#V"><strong>V</strong></a>
  | <a href="#W"><strong>W</strong></a>
+ | <a href="#X"><strong>X</strong></a>
+ | <a href="#Y"><strong>Y</strong></a>
  
 </div>
 <h2 id="_">_</h2>
@@ -191,43 +201,19 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="apidoc/facet/simulation/viz/facet.simulation.viz.SimulationDrawer.html#facet.simulation.viz.SimulationDrawer._draw">_draw() (facet.simulation.viz.SimulationDrawer method)</a>
 </li>
-      <li><a href="apidoc/facet/crossfit/facet.crossfit.LearnerCrossfit.html#facet.crossfit.LearnerCrossfit._ensure_fitted">_ensure_fitted() (facet.crossfit.LearnerCrossfit method)</a>
-
-      <ul>
-        <li><a href="apidoc/facet/data/partition/facet.data.partition.CategoryPartitioner.html#facet.data.partition.CategoryPartitioner._ensure_fitted">(facet.data.partition.CategoryPartitioner method)</a>
-</li>
-        <li><a href="apidoc/facet/data/partition/facet.data.partition.ContinuousRangePartitioner.html#facet.data.partition.ContinuousRangePartitioner._ensure_fitted">(facet.data.partition.ContinuousRangePartitioner method)</a>
-</li>
-        <li><a href="apidoc/facet/data/partition/facet.data.partition.IntegerRangePartitioner.html#facet.data.partition.IntegerRangePartitioner._ensure_fitted">(facet.data.partition.IntegerRangePartitioner method)</a>
-</li>
-        <li><a href="apidoc/facet/data/partition/facet.data.partition.Partitioner.html#facet.data.partition.Partitioner._ensure_fitted">(facet.data.partition.Partitioner method)</a>
-</li>
-        <li><a href="apidoc/facet/data/partition/facet.data.partition.RangePartitioner.html#facet.data.partition.RangePartitioner._ensure_fitted">(facet.data.partition.RangePartitioner method)</a>
-</li>
-        <li><a href="apidoc/facet/inspection/facet.inspection.LearnerInspector.html#facet.inspection.LearnerInspector._ensure_fitted">(facet.inspection.LearnerInspector method)</a>
-</li>
-        <li><a href="apidoc/facet/selection/facet.selection.LearnerRanker.html#facet.selection.LearnerRanker._ensure_fitted">(facet.selection.LearnerRanker method)</a>
-</li>
-      </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="apidoc/facet/simulation/viz/facet.simulation.viz.SimulationDrawer.html#facet.simulation.viz.SimulationDrawer._get_style_kwargs">_get_style_kwargs() (facet.simulation.viz.SimulationDrawer method)</a>
-</li>
   </ul></td>
 </tr></table>
 
 <h2 id="A">A</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="apidoc/facet/inspection/facet.inspection.LearnerInspector.html#facet.inspection.LearnerInspector.AGG_MEAN">AGG_MEAN (facet.inspection.LearnerInspector attribute)</a>
-</li>
-      <li><a href="apidoc/facet/inspection/facet.inspection.LearnerInspector.html#facet.inspection.LearnerInspector.AGG_STD">AGG_STD (facet.inspection.LearnerInspector attribute)</a>
+      <li><a href="apidoc/facet/inspection/facet.inspection.ExplainerQueue.html#facet.inspection.ExplainerQueue.aggregate">aggregate() (facet.inspection.ExplainerQueue method)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="apidoc/facet/simulation/viz/facet.simulation.viz.SimulationMatplotStyle.html#facet.simulation.viz.SimulationMatplotStyle.apply_color_scheme">apply_color_scheme() (facet.simulation.viz.SimulationMatplotStyle method)</a>
 </li>
-      <li><a href="apidoc/facet/simulation/viz/facet.simulation.viz.SimulationMatplotStyle.html#facet.simulation.viz.SimulationMatplotStyle.ax">ax() (facet.simulation.viz.SimulationMatplotStyle property)</a>
+      <li><a href="apidoc/facet/simulation/viz/facet.simulation.viz.SimulationMatplotStyle.html#facet.simulation.viz.SimulationMatplotStyle.ax">ax (facet.simulation.viz.SimulationMatplotStyle property)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -241,9 +227,11 @@
 </li>
       <li><a href="apidoc/facet/simulation/facet.simulation.UnivariateSimulationResult.html#facet.simulation.UnivariateSimulationResult.baseline">baseline (facet.simulation.UnivariateSimulationResult attribute)</a>
 </li>
-      <li><a href="apidoc/facet/simulation/facet.simulation.BaseUnivariateSimulator.html#facet.simulation.BaseUnivariateSimulator.baseline">baseline() (facet.simulation.BaseUnivariateSimulator method)</a>
+      <li><a href="apidoc/facet/simulation/base/facet.simulation.base.BaseUnivariateSimulator.html#facet.simulation.base.BaseUnivariateSimulator.baseline">baseline() (facet.simulation.base.BaseUnivariateSimulator method)</a>
 
       <ul>
+        <li><a href="apidoc/facet/simulation/base/facet.simulation.base.UnivariateRegressionSimulator.html#facet.simulation.base.UnivariateRegressionSimulator.baseline">(facet.simulation.base.UnivariateRegressionSimulator method)</a>
+</li>
         <li><a href="apidoc/facet/simulation/facet.simulation.UnivariateProbabilitySimulator.html#facet.simulation.UnivariateProbabilitySimulator.baseline">(facet.simulation.UnivariateProbabilitySimulator method)</a>
 </li>
         <li><a href="apidoc/facet/simulation/facet.simulation.UnivariateTargetSimulator.html#facet.simulation.UnivariateTargetSimulator.baseline">(facet.simulation.UnivariateTargetSimulator method)</a>
@@ -253,11 +241,11 @@
       </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="apidoc/facet/simulation/facet.simulation.BaseUnivariateSimulator.html#facet.simulation.BaseUnivariateSimulator">BaseUnivariateSimulator (class in facet.simulation)</a>
+      <li><a href="apidoc/facet/selection/base/facet.selection.base.BaseParameterSpace.html#facet.selection.base.BaseParameterSpace">BaseParameterSpace (class in facet.selection.base)</a>
 </li>
-      <li><a href="apidoc/facet/selection/facet.selection.LearnerRanker.html#facet.selection.LearnerRanker.best_model_">best_model_() (facet.selection.LearnerRanker property)</a>
+      <li><a href="apidoc/facet/simulation/base/facet.simulation.base.BaseUnivariateSimulator.html#facet.simulation.base.BaseUnivariateSimulator">BaseUnivariateSimulator (class in facet.simulation.base)</a>
 </li>
-      <li><a href="apidoc/facet/selection/facet.selection.LearnerRanker.html#facet.selection.LearnerRanker.best_model_crossfit_">best_model_crossfit_() (facet.selection.LearnerRanker property)</a>
+      <li><a href="apidoc/facet/selection/facet.selection.LearnerSelector.html#facet.selection.LearnerSelector.best_estimator_">best_estimator_ (facet.selection.LearnerSelector property)</a>
 </li>
       <li><a href="apidoc/facet/validation/facet.validation.BootstrapCV.html#facet.validation.BootstrapCV">BootstrapCV (class in facet.validation)</a>
 </li>
@@ -267,23 +255,33 @@
 <h2 id="C">C</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="apidoc/facet/selection/base/facet.selection.base.CandidateEstimatorDF.html#facet.selection.base.CandidateEstimatorDF.candidate">candidate (facet.selection.base.CandidateEstimatorDF attribute)</a>
+</li>
+      <li><a href="apidoc/facet/selection/base/facet.selection.base.CandidateEstimatorDF.html#facet.selection.base.CandidateEstimatorDF.candidate_name">candidate_name (facet.selection.base.CandidateEstimatorDF attribute)</a>
+</li>
+      <li><a href="apidoc/facet/selection/base/facet.selection.base.CandidateEstimatorDF.html#facet.selection.base.CandidateEstimatorDF">CandidateEstimatorDF (class in facet.selection.base)</a>
+</li>
       <li><a href="apidoc/facet/data/partition/facet.data.partition.CategoryPartitioner.html#facet.data.partition.CategoryPartitioner">CategoryPartitioner (class in facet.data.partition)</a>
+</li>
+      <li><a href="apidoc/facet/selection/base/facet.selection.base.CandidateEstimatorDF.html#facet.selection.base.CandidateEstimatorDF.classes_">classes_ (facet.selection.base.CandidateEstimatorDF property)</a>
+</li>
+      <li><a href="apidoc/facet/selection/base/facet.selection.base.CandidateEstimatorDF.html#facet.selection.base.CandidateEstimatorDF.clone">clone() (facet.selection.base.CandidateEstimatorDF method)</a>
 </li>
       <li><a href="apidoc/facet/inspection/facet.inspection.LearnerInspector.html#facet.inspection.LearnerInspector.COL_IMPORTANCE">COL_IMPORTANCE (facet.inspection.LearnerInspector attribute)</a>
 </li>
       <li><a href="apidoc/facet/simulation/facet.simulation.UnivariateSimulationResult.html#facet.simulation.UnivariateSimulationResult.COL_LOWER_BOUND">COL_LOWER_BOUND (facet.simulation.UnivariateSimulationResult attribute)</a>
 </li>
-      <li><a href="apidoc/facet/simulation/facet.simulation.UnivariateSimulationResult.html#facet.simulation.UnivariateSimulationResult.COL_MEDIAN">COL_MEDIAN (facet.simulation.UnivariateSimulationResult attribute)</a>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="apidoc/facet/simulation/facet.simulation.UnivariateSimulationResult.html#facet.simulation.UnivariateSimulationResult.COL_MEAN">COL_MEAN (facet.simulation.UnivariateSimulationResult attribute)</a>
 </li>
-      <li><a href="apidoc/facet/simulation/facet.simulation.BaseUnivariateSimulator.html#facet.simulation.BaseUnivariateSimulator.COL_OUTPUT">COL_OUTPUT (facet.simulation.BaseUnivariateSimulator attribute)</a>
+      <li><a href="apidoc/facet/simulation/facet.simulation.UnivariateSimulationResult.html#facet.simulation.UnivariateSimulationResult.COL_SEM">COL_SEM (facet.simulation.UnivariateSimulationResult attribute)</a>
 </li>
       <li><a href="apidoc/facet/simulation/facet.simulation.UnivariateSimulationResult.html#facet.simulation.UnivariateSimulationResult.COL_UPPER_BOUND">COL_UPPER_BOUND (facet.simulation.UnivariateSimulationResult attribute)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="apidoc/facet/simulation/viz/facet.simulation.viz.SimulationMatplotStyle.html#facet.simulation.viz.SimulationMatplotStyle.colors">colors() (facet.simulation.viz.SimulationMatplotStyle property)</a>
+      <li><a href="apidoc/facet/simulation/viz/facet.simulation.viz.SimulationMatplotStyle.html#facet.simulation.viz.SimulationMatplotStyle.colors">colors (facet.simulation.viz.SimulationMatplotStyle property)</a>
 </li>
-      <li><a href="apidoc/facet/simulation/facet.simulation.BaseUnivariateSimulator.html#facet.simulation.BaseUnivariateSimulator.confidence_level">confidence_level (facet.simulation.BaseUnivariateSimulator attribute)</a>
+      <li><a href="apidoc/facet/simulation/base/facet.simulation.base.BaseUnivariateSimulator.html#facet.simulation.base.BaseUnivariateSimulator.confidence_level">confidence_level (facet.simulation.base.BaseUnivariateSimulator attribute)</a>
 
       <ul>
         <li><a href="apidoc/facet/simulation/facet.simulation.UnivariateSimulationResult.html#facet.simulation.UnivariateSimulationResult.confidence_level">(facet.simulation.UnivariateSimulationResult attribute)</a>
@@ -291,9 +289,7 @@
       </ul></li>
       <li><a href="apidoc/facet/data/partition/facet.data.partition.ContinuousRangePartitioner.html#facet.data.partition.ContinuousRangePartitioner">ContinuousRangePartitioner (class in facet.data.partition)</a>
 </li>
-      <li><a href="apidoc/facet/simulation/facet.simulation.BaseUnivariateSimulator.html#facet.simulation.BaseUnivariateSimulator.crossfit">crossfit (facet.simulation.BaseUnivariateSimulator attribute)</a>
-</li>
-      <li><a href="apidoc/facet/inspection/facet.inspection.LearnerInspector.html#facet.inspection.LearnerInspector.crossfit_">crossfit_() (facet.inspection.LearnerInspector property)</a>
+      <li><a href="apidoc/facet/selection/facet.selection.LearnerSelector.html#facet.selection.LearnerSelector.cv">cv (facet.selection.LearnerSelector attribute)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -301,11 +297,13 @@
 <h2 id="D">D</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="apidoc/facet/simulation/viz/facet.simulation.viz.SimulationMatplotStyle.html#facet.simulation.viz.SimulationMatplotStyle.dark">dark() (facet.simulation.viz.SimulationMatplotStyle class method)</a>
+      <li><a href="apidoc/facet/simulation/facet.simulation.UnivariateSimulationResult.html#facet.simulation.UnivariateSimulationResult.data">data (facet.simulation.UnivariateSimulationResult attribute)</a>
+</li>
+      <li><a href="apidoc/facet/selection/base/facet.selection.base.CandidateEstimatorDF.html#facet.selection.base.CandidateEstimatorDF.decision_function">decision_function() (facet.selection.base.CandidateEstimatorDF method)</a>
 </li>
       <li><a href="apidoc/facet/inspection/facet.inspection.LearnerInspector.html#facet.inspection.LearnerInspector.DEFAULT_EXPLAINER_FACTORY">DEFAULT_EXPLAINER_FACTORY (facet.inspection.LearnerInspector attribute)</a>
 </li>
-      <li><a href="apidoc/facet/selection/facet.selection.LearnerRanker.html#facet.selection.LearnerRanker.default_ranking_scorer">default_ranking_scorer() (facet.selection.LearnerRanker static method)</a>
+      <li><a href="apidoc/facet/inspection/facet.inspection.ExplainerJob.html#facet.inspection.ExplainerJob.delayed">delayed() (facet.inspection.ExplainerJob class method)</a>
 </li>
       <li><a href="apidoc/facet/simulation/viz/facet.simulation.viz.SimulationDrawer.html#facet.simulation.viz.SimulationDrawer.draw">draw() (facet.simulation.viz.SimulationDrawer method)</a>
 </li>
@@ -335,9 +333,39 @@
 <h2 id="E">E</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="apidoc/facet/simulation/facet.simulation.BaseUnivariateSimulator.html#facet.simulation.BaseUnivariateSimulator.expected_output">expected_output() (facet.simulation.BaseUnivariateSimulator method)</a>
+      <li><a href="apidoc/facet/data/partition/facet.data.partition.CategoryPartitioner.html#facet.data.partition.CategoryPartitioner.ensure_fitted">ensure_fitted() (facet.data.partition.CategoryPartitioner method)</a>
 
       <ul>
+        <li><a href="apidoc/facet/data/partition/facet.data.partition.ContinuousRangePartitioner.html#facet.data.partition.ContinuousRangePartitioner.ensure_fitted">(facet.data.partition.ContinuousRangePartitioner method)</a>
+</li>
+        <li><a href="apidoc/facet/data/partition/facet.data.partition.IntegerRangePartitioner.html#facet.data.partition.IntegerRangePartitioner.ensure_fitted">(facet.data.partition.IntegerRangePartitioner method)</a>
+</li>
+        <li><a href="apidoc/facet/data/partition/facet.data.partition.Partitioner.html#facet.data.partition.Partitioner.ensure_fitted">(facet.data.partition.Partitioner method)</a>
+</li>
+        <li><a href="apidoc/facet/data/partition/facet.data.partition.RangePartitioner.html#facet.data.partition.RangePartitioner.ensure_fitted">(facet.data.partition.RangePartitioner method)</a>
+</li>
+        <li><a href="apidoc/facet/inspection/facet.inspection.LearnerInspector.html#facet.inspection.LearnerInspector.ensure_fitted">(facet.inspection.LearnerInspector method)</a>
+</li>
+        <li><a href="apidoc/facet/inspection/facet.inspection.ModelInspector.html#facet.inspection.ModelInspector.ensure_fitted">(facet.inspection.ModelInspector method)</a>
+</li>
+        <li><a href="apidoc/facet/selection/base/facet.selection.base.CandidateEstimatorDF.html#facet.selection.base.CandidateEstimatorDF.ensure_fitted">(facet.selection.base.CandidateEstimatorDF method)</a>
+</li>
+        <li><a href="apidoc/facet/selection/facet.selection.LearnerSelector.html#facet.selection.LearnerSelector.ensure_fitted">(facet.selection.LearnerSelector method)</a>
+</li>
+      </ul></li>
+      <li><a href="apidoc/facet/selection/base/facet.selection.base.BaseParameterSpace.html#facet.selection.base.BaseParameterSpace.estimator">estimator (facet.selection.base.BaseParameterSpace property)</a>
+
+      <ul>
+        <li><a href="apidoc/facet/selection/facet.selection.MultiEstimatorParameterSpace.html#facet.selection.MultiEstimatorParameterSpace.estimator">(facet.selection.MultiEstimatorParameterSpace property)</a>
+</li>
+        <li><a href="apidoc/facet/selection/facet.selection.ParameterSpace.html#facet.selection.ParameterSpace.estimator">(facet.selection.ParameterSpace property)</a>
+</li>
+      </ul></li>
+      <li><a href="apidoc/facet/simulation/base/facet.simulation.base.BaseUnivariateSimulator.html#facet.simulation.base.BaseUnivariateSimulator.expected_output">expected_output() (facet.simulation.base.BaseUnivariateSimulator method)</a>
+
+      <ul>
+        <li><a href="apidoc/facet/simulation/base/facet.simulation.base.UnivariateRegressionSimulator.html#facet.simulation.base.UnivariateRegressionSimulator.expected_output">(facet.simulation.base.UnivariateRegressionSimulator method)</a>
+</li>
         <li><a href="apidoc/facet/simulation/facet.simulation.UnivariateProbabilitySimulator.html#facet.simulation.UnivariateProbabilitySimulator.expected_output">(facet.simulation.UnivariateProbabilitySimulator method)</a>
 </li>
         <li><a href="apidoc/facet/simulation/facet.simulation.UnivariateTargetSimulator.html#facet.simulation.UnivariateTargetSimulator.expected_output">(facet.simulation.UnivariateTargetSimulator method)</a>
@@ -347,9 +375,21 @@
       </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="apidoc/facet/inspection/facet.inspection.ExplainerJob.html#facet.inspection.ExplainerJob.explainer">explainer (facet.inspection.ExplainerJob attribute)</a>
+
+      <ul>
+        <li><a href="apidoc/facet/inspection/facet.inspection.ExplainerQueue.html#facet.inspection.ExplainerQueue.explainer">(facet.inspection.ExplainerQueue attribute)</a>
+</li>
+        <li><a href="apidoc/facet/inspection/facet.inspection.ParallelExplainer.html#facet.inspection.ParallelExplainer.explainer">(facet.inspection.ParallelExplainer attribute)</a>
+</li>
+      </ul></li>
       <li><a href="apidoc/facet/inspection/facet.inspection.ExplainerFactory.html#facet.inspection.ExplainerFactory">ExplainerFactory (class in facet.inspection)</a>
 </li>
-      <li><a href="apidoc/facet/inspection/facet.inspection.ExplainerFactory.html#facet.inspection.ExplainerFactory.explains_raw_output">explains_raw_output() (facet.inspection.ExplainerFactory property)</a>
+      <li><a href="apidoc/facet/inspection/facet.inspection.ExplainerJob.html#facet.inspection.ExplainerJob">ExplainerJob (class in facet.inspection)</a>
+</li>
+      <li><a href="apidoc/facet/inspection/facet.inspection.ExplainerQueue.html#facet.inspection.ExplainerQueue">ExplainerQueue (class in facet.inspection)</a>
+</li>
+      <li><a href="apidoc/facet/inspection/facet.inspection.ExplainerFactory.html#facet.inspection.ExplainerFactory.explains_raw_output">explains_raw_output (facet.inspection.ExplainerFactory property)</a>
 
       <ul>
         <li><a href="apidoc/facet/inspection/facet.inspection.KernelExplainerFactory.html#facet.inspection.KernelExplainerFactory.explains_raw_output">(facet.inspection.KernelExplainerFactory property)</a>
@@ -368,13 +408,6 @@
 
       <ul>
         <li><a href="apidoc/facet.html#module-facet">module</a>
-</li>
-      </ul></li>
-      <li>
-    facet.crossfit
-
-      <ul>
-        <li><a href="apidoc/facet/facet.crossfit.html#module-facet.crossfit">module</a>
 </li>
       </ul></li>
       <li>
@@ -406,10 +439,24 @@
 </li>
       </ul></li>
       <li>
+    facet.selection.base
+
+      <ul>
+        <li><a href="apidoc/facet/selection/facet.selection.base.html#module-facet.selection.base">module</a>
+</li>
+      </ul></li>
+      <li>
     facet.simulation
 
       <ul>
         <li><a href="apidoc/facet/facet.simulation.html#module-facet.simulation">module</a>
+</li>
+      </ul></li>
+      <li>
+    facet.simulation.base
+
+      <ul>
+        <li><a href="apidoc/facet/simulation/facet.simulation.base.html#module-facet.simulation.base">module</a>
 </li>
       </ul></li>
       <li>
@@ -436,25 +483,31 @@
 </li>
       <li><a href="apidoc/facet/simulation/facet.simulation.UnivariateSimulationResult.html#facet.simulation.UnivariateSimulationResult.feature_name">feature_name (facet.simulation.UnivariateSimulationResult attribute)</a>
 </li>
-      <li><a href="apidoc/facet/data/facet.data.Sample.html#facet.data.Sample.feature_names">feature_names() (facet.data.Sample property)</a>
+      <li><a href="apidoc/facet/data/facet.data.Sample.html#facet.data.Sample.feature_names">feature_names (facet.data.Sample property)</a>
 </li>
-      <li><a href="apidoc/facet/inspection/facet.inspection.LearnerInspector.html#facet.inspection.LearnerInspector.feature_redundancy_linkage">feature_redundancy_linkage() (facet.inspection.LearnerInspector method)</a>
+      <li><a href="apidoc/facet/selection/base/facet.selection.base.CandidateEstimatorDF.html#facet.selection.base.CandidateEstimatorDF.feature_names_in_">feature_names_in_ (facet.selection.base.CandidateEstimatorDF property)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="apidoc/facet/selection/base/facet.selection.base.CandidateEstimatorDF.html#facet.selection.base.CandidateEstimatorDF.feature_names_original_">feature_names_original_ (facet.selection.base.CandidateEstimatorDF property)</a>
+</li>
+      <li><a href="apidoc/facet/selection/base/facet.selection.base.CandidateEstimatorDF.html#facet.selection.base.CandidateEstimatorDF.feature_names_out_">feature_names_out_ (facet.selection.base.CandidateEstimatorDF property)</a>
+</li>
+      <li><a href="apidoc/facet/inspection/facet.inspection.LearnerInspector.html#facet.inspection.LearnerInspector.feature_redundancy_linkage">feature_redundancy_linkage() (facet.inspection.LearnerInspector method)</a>
+</li>
       <li><a href="apidoc/facet/inspection/facet.inspection.LearnerInspector.html#facet.inspection.LearnerInspector.feature_redundancy_matrix">feature_redundancy_matrix() (facet.inspection.LearnerInspector method)</a>
 </li>
       <li><a href="apidoc/facet/inspection/facet.inspection.LearnerInspector.html#facet.inspection.LearnerInspector.feature_synergy_linkage">feature_synergy_linkage() (facet.inspection.LearnerInspector method)</a>
 </li>
       <li><a href="apidoc/facet/inspection/facet.inspection.LearnerInspector.html#facet.inspection.LearnerInspector.feature_synergy_matrix">feature_synergy_matrix() (facet.inspection.LearnerInspector method)</a>
 </li>
-      <li><a href="apidoc/facet/data/facet.data.Sample.html#facet.data.Sample.features">features() (facet.data.Sample property)</a>
+      <li><a href="apidoc/facet/data/facet.data.Sample.html#facet.data.Sample.features">features (facet.data.Sample property)</a>
 
       <ul>
         <li><a href="apidoc/facet/inspection/facet.inspection.ShapPlotData.html#facet.inspection.ShapPlotData.features">(facet.inspection.ShapPlotData property)</a>
 </li>
       </ul></li>
-      <li><a href="apidoc/facet/inspection/facet.inspection.LearnerInspector.html#facet.inspection.LearnerInspector.features_">features_() (facet.inspection.LearnerInspector property)</a>
+      <li><a href="apidoc/facet/inspection/facet.inspection.LearnerInspector.html#facet.inspection.LearnerInspector.features_">features_ (facet.inspection.LearnerInspector property)</a>
 </li>
       <li><a href="apidoc/facet/simulation/viz/facet.simulation.viz.SimulationMatplotStyle.html#facet.simulation.viz.SimulationMatplotStyle.finalize_drawing">finalize_drawing() (facet.simulation.viz.SimulationMatplotStyle method)</a>
 
@@ -464,11 +517,9 @@
         <li><a href="apidoc/facet/simulation/viz/facet.simulation.viz.SimulationStyle.html#facet.simulation.viz.SimulationStyle.finalize_drawing">(facet.simulation.viz.SimulationStyle method)</a>
 </li>
       </ul></li>
-      <li><a href="apidoc/facet/crossfit/facet.crossfit.LearnerCrossfit.html#facet.crossfit.LearnerCrossfit.fit">fit() (facet.crossfit.LearnerCrossfit method)</a>
+      <li><a href="apidoc/facet/data/partition/facet.data.partition.CategoryPartitioner.html#facet.data.partition.CategoryPartitioner.fit">fit() (facet.data.partition.CategoryPartitioner method)</a>
 
       <ul>
-        <li><a href="apidoc/facet/data/partition/facet.data.partition.CategoryPartitioner.html#facet.data.partition.CategoryPartitioner.fit">(facet.data.partition.CategoryPartitioner method)</a>
-</li>
         <li><a href="apidoc/facet/data/partition/facet.data.partition.ContinuousRangePartitioner.html#facet.data.partition.ContinuousRangePartitioner.fit">(facet.data.partition.ContinuousRangePartitioner method)</a>
 </li>
         <li><a href="apidoc/facet/data/partition/facet.data.partition.IntegerRangePartitioner.html#facet.data.partition.IntegerRangePartitioner.fit">(facet.data.partition.IntegerRangePartitioner method)</a>
@@ -479,14 +530,16 @@
 </li>
         <li><a href="apidoc/facet/inspection/facet.inspection.LearnerInspector.html#facet.inspection.LearnerInspector.fit">(facet.inspection.LearnerInspector method)</a>
 </li>
-        <li><a href="apidoc/facet/selection/facet.selection.LearnerRanker.html#facet.selection.LearnerRanker.fit">(facet.selection.LearnerRanker method)</a>
+        <li><a href="apidoc/facet/inspection/facet.inspection.ModelInspector.html#facet.inspection.ModelInspector.fit">(facet.inspection.ModelInspector method)</a>
+</li>
+        <li><a href="apidoc/facet/selection/base/facet.selection.base.CandidateEstimatorDF.html#facet.selection.base.CandidateEstimatorDF.fit">(facet.selection.base.CandidateEstimatorDF method)</a>
+</li>
+        <li><a href="apidoc/facet/selection/facet.selection.LearnerSelector.html#facet.selection.LearnerSelector.fit">(facet.selection.LearnerSelector method)</a>
 </li>
       </ul></li>
-      <li><a href="apidoc/facet/crossfit/facet.crossfit.LearnerCrossfit.html#facet.crossfit.LearnerCrossfit.fit_score">fit_score() (facet.crossfit.LearnerCrossfit method)</a>
+      <li><a href="apidoc/facet/selection/base/facet.selection.base.CandidateEstimatorDF.html#facet.selection.base.CandidateEstimatorDF.fit_transform">fit_transform() (facet.selection.base.CandidateEstimatorDF method)</a>
 </li>
-      <li><a href="apidoc/facet/crossfit/facet.crossfit.LearnerCrossfit.html#facet.crossfit.LearnerCrossfit.fit_score_queue">fit_score_queue() (facet.crossfit.LearnerCrossfit method)</a>
-</li>
-      <li><a href="apidoc/facet/data/partition/facet.data.partition.CategoryPartitioner.html#facet.data.partition.CategoryPartitioner.frequencies_">frequencies_() (facet.data.partition.CategoryPartitioner property)</a>
+      <li><a href="apidoc/facet/data/partition/facet.data.partition.CategoryPartitioner.html#facet.data.partition.CategoryPartitioner.frequencies_">frequencies_ (facet.data.partition.CategoryPartitioner property)</a>
 
       <ul>
         <li><a href="apidoc/facet/data/partition/facet.data.partition.ContinuousRangePartitioner.html#facet.data.partition.ContinuousRangePartitioner.frequencies_">(facet.data.partition.ContinuousRangePartitioner property)</a>
@@ -498,8 +551,6 @@
         <li><a href="apidoc/facet/data/partition/facet.data.partition.RangePartitioner.html#facet.data.partition.RangePartitioner.frequencies_">(facet.data.partition.RangePartitioner property)</a>
 </li>
       </ul></li>
-      <li><a href="apidoc/facet/validation/facet.validation.FullSampleValidator.html#facet.validation.FullSampleValidator">FullSampleValidator (class in facet.validation)</a>
-</li>
   </ul></td>
 </tr></table>
 
@@ -519,15 +570,13 @@
       <ul>
         <li><a href="apidoc/facet/validation/facet.validation.BootstrapCV.html#facet.validation.BootstrapCV.get_n_splits">(facet.validation.BootstrapCV method)</a>
 </li>
-        <li><a href="apidoc/facet/validation/facet.validation.FullSampleValidator.html#facet.validation.FullSampleValidator.get_n_splits">(facet.validation.FullSampleValidator method)</a>
-</li>
         <li><a href="apidoc/facet/validation/facet.validation.StationaryBootstrapCV.html#facet.validation.StationaryBootstrapCV.get_n_splits">(facet.validation.StationaryBootstrapCV method)</a>
 </li>
         <li><a href="apidoc/facet/validation/facet.validation.StratifiedBootstrapCV.html#facet.validation.StratifiedBootstrapCV.get_n_splits">(facet.validation.StratifiedBootstrapCV method)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="apidoc/facet/selection/facet.selection.ParameterSpace.html#facet.selection.ParameterSpace.get_name">get_name() (facet.selection.ParameterSpace method)</a>
+</li>
       <li><a href="apidoc/facet/simulation/viz/facet.simulation.viz.SimulationDrawer.html#facet.simulation.viz.SimulationDrawer.get_named_styles">get_named_styles() (facet.simulation.viz.SimulationDrawer class method)</a>
 
       <ul>
@@ -538,7 +587,23 @@
         <li><a href="apidoc/facet/simulation/viz/facet.simulation.viz.SimulationStyle.html#facet.simulation.viz.SimulationStyle.get_named_styles">(facet.simulation.viz.SimulationStyle class method)</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="apidoc/facet/selection/base/facet.selection.base.BaseParameterSpace.html#facet.selection.base.BaseParameterSpace.get_parameters">get_parameters() (facet.selection.base.BaseParameterSpace method)</a>
+
+      <ul>
+        <li><a href="apidoc/facet/selection/facet.selection.MultiEstimatorParameterSpace.html#facet.selection.MultiEstimatorParameterSpace.get_parameters">(facet.selection.MultiEstimatorParameterSpace method)</a>
+</li>
+        <li><a href="apidoc/facet/selection/facet.selection.ParameterSpace.html#facet.selection.ParameterSpace.get_parameters">(facet.selection.ParameterSpace method)</a>
+</li>
+      </ul></li>
+      <li><a href="apidoc/facet/selection/base/facet.selection.base.CandidateEstimatorDF.html#facet.selection.base.CandidateEstimatorDF.get_params">get_params() (facet.selection.base.CandidateEstimatorDF method)</a>
+</li>
+      <li><a href="apidoc/facet/simulation/viz/facet.simulation.viz.SimulationMatplotStyle.html#facet.simulation.viz.SimulationMatplotStyle.get_renderer">get_renderer() (facet.simulation.viz.SimulationMatplotStyle method)</a>
+</li>
       <li><a href="apidoc/facet/simulation/viz/facet.simulation.viz.SimulationDrawer.html#facet.simulation.viz.SimulationDrawer.get_style_classes">get_style_classes() (facet.simulation.viz.SimulationDrawer class method)</a>
+</li>
+      <li><a href="apidoc/facet/simulation/viz/facet.simulation.viz.SimulationDrawer.html#facet.simulation.viz.SimulationDrawer.get_style_kwargs">get_style_kwargs() (facet.simulation.viz.SimulationDrawer method)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -558,17 +623,23 @@
 </li>
       <li><a href="apidoc/facet/data/facet.data.Sample.html#facet.data.Sample.IDX_OBSERVATION">IDX_OBSERVATION (facet.data.Sample attribute)</a>
 </li>
-      <li><a href="apidoc/facet/simulation/facet.simulation.BaseUnivariateSimulator.html#facet.simulation.BaseUnivariateSimulator.IDX_PARTITION">IDX_PARTITION (facet.simulation.BaseUnivariateSimulator attribute)</a>
-</li>
-      <li><a href="apidoc/facet/simulation/facet.simulation.BaseUnivariateSimulator.html#facet.simulation.BaseUnivariateSimulator.IDX_SPLIT">IDX_SPLIT (facet.simulation.BaseUnivariateSimulator attribute)</a>
+      <li><a href="apidoc/facet/simulation/facet.simulation.UnivariateSimulationResult.html#facet.simulation.UnivariateSimulationResult.IDX_PARTITION">IDX_PARTITION (facet.simulation.UnivariateSimulationResult attribute)</a>
 </li>
       <li><a href="apidoc/facet/data/facet.data.Sample.html#facet.data.Sample.IDX_TARGET">IDX_TARGET (facet.data.Sample attribute)</a>
 </li>
-      <li><a href="apidoc/facet/data/facet.data.Sample.html#facet.data.Sample.index">index() (facet.data.Sample property)</a>
+      <li><a href="apidoc/facet/data/facet.data.Sample.html#facet.data.Sample.index">index (facet.data.Sample property)</a>
 </li>
       <li><a href="apidoc/facet/data/partition/facet.data.partition.IntegerRangePartitioner.html#facet.data.partition.IntegerRangePartitioner">IntegerRangePartitioner (class in facet.data.partition)</a>
 </li>
-      <li><a href="apidoc/facet/data/partition/facet.data.partition.CategoryPartitioner.html#facet.data.partition.CategoryPartitioner.is_categorical">is_categorical() (facet.data.partition.CategoryPartitioner property)</a>
+      <li><a href="apidoc/facet/inspection/facet.inspection.ExplainerJob.html#facet.inspection.ExplainerJob.interactions">interactions (facet.inspection.ExplainerJob attribute)</a>
+
+      <ul>
+        <li><a href="apidoc/facet/inspection/facet.inspection.ExplainerQueue.html#facet.inspection.ExplainerQueue.interactions">(facet.inspection.ExplainerQueue attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="apidoc/facet/selection/base/facet.selection.base.CandidateEstimatorDF.html#facet.selection.base.CandidateEstimatorDF.inverse_transform">inverse_transform() (facet.selection.base.CandidateEstimatorDF method)</a>
+</li>
+      <li><a href="apidoc/facet/data/partition/facet.data.partition.CategoryPartitioner.html#facet.data.partition.CategoryPartitioner.is_categorical">is_categorical (facet.data.partition.CategoryPartitioner property)</a>
 
       <ul>
         <li><a href="apidoc/facet/data/partition/facet.data.partition.ContinuousRangePartitioner.html#facet.data.partition.ContinuousRangePartitioner.is_categorical">(facet.data.partition.ContinuousRangePartitioner property)</a>
@@ -582,11 +653,9 @@
       </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="apidoc/facet/crossfit/facet.crossfit.LearnerCrossfit.html#facet.crossfit.LearnerCrossfit.is_fitted">is_fitted() (facet.crossfit.LearnerCrossfit property)</a>
+      <li><a href="apidoc/facet/data/partition/facet.data.partition.CategoryPartitioner.html#facet.data.partition.CategoryPartitioner.is_fitted">is_fitted (facet.data.partition.CategoryPartitioner property)</a>
 
       <ul>
-        <li><a href="apidoc/facet/data/partition/facet.data.partition.CategoryPartitioner.html#facet.data.partition.CategoryPartitioner.is_fitted">(facet.data.partition.CategoryPartitioner property)</a>
-</li>
         <li><a href="apidoc/facet/data/partition/facet.data.partition.ContinuousRangePartitioner.html#facet.data.partition.ContinuousRangePartitioner.is_fitted">(facet.data.partition.ContinuousRangePartitioner property)</a>
 </li>
         <li><a href="apidoc/facet/data/partition/facet.data.partition.IntegerRangePartitioner.html#facet.data.partition.IntegerRangePartitioner.is_fitted">(facet.data.partition.IntegerRangePartitioner property)</a>
@@ -597,9 +666,21 @@
 </li>
         <li><a href="apidoc/facet/inspection/facet.inspection.LearnerInspector.html#facet.inspection.LearnerInspector.is_fitted">(facet.inspection.LearnerInspector property)</a>
 </li>
-        <li><a href="apidoc/facet/selection/facet.selection.LearnerRanker.html#facet.selection.LearnerRanker.is_fitted">(facet.selection.LearnerRanker property)</a>
+        <li><a href="apidoc/facet/inspection/facet.inspection.ModelInspector.html#facet.inspection.ModelInspector.is_fitted">(facet.inspection.ModelInspector property)</a>
+</li>
+        <li><a href="apidoc/facet/selection/base/facet.selection.base.CandidateEstimatorDF.html#facet.selection.base.CandidateEstimatorDF.is_fitted">(facet.selection.base.CandidateEstimatorDF property)</a>
+</li>
+        <li><a href="apidoc/facet/selection/facet.selection.LearnerSelector.html#facet.selection.LearnerSelector.is_fitted">(facet.selection.LearnerSelector property)</a>
 </li>
       </ul></li>
+  </ul></td>
+</tr></table>
+
+<h2 id="J">J</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="apidoc/facet/inspection/facet.inspection.ExplainerQueue.html#facet.inspection.ExplainerQueue.jobs">jobs() (facet.inspection.ExplainerQueue method)</a>
+</li>
   </ul></td>
 </tr></table>
 
@@ -608,36 +689,28 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="apidoc/facet/data/facet.data.Sample.html#facet.data.Sample.keep">keep() (facet.data.Sample method)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="apidoc/facet/inspection/facet.inspection.KernelExplainerFactory.html#facet.inspection.KernelExplainerFactory">KernelExplainerFactory (class in facet.inspection)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="apidoc/facet/inspection/facet.inspection.ExplainerJob.html#facet.inspection.ExplainerJob.kwargs">kwargs (facet.inspection.ExplainerJob attribute)</a>
+
+      <ul>
+        <li><a href="apidoc/facet/inspection/facet.inspection.ExplainerQueue.html#facet.inspection.ExplainerQueue.kwargs">(facet.inspection.ExplainerQueue attribute)</a>
+</li>
+      </ul></li>
   </ul></td>
 </tr></table>
 
 <h2 id="L">L</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="apidoc/facet/crossfit/facet.crossfit.LearnerCrossfit.html#facet.crossfit.LearnerCrossfit">LearnerCrossfit (class in facet.crossfit)</a>
-</li>
-      <li><a href="apidoc/facet/selection/facet.selection.LearnerEvaluation.html#facet.selection.LearnerEvaluation">LearnerEvaluation (class in facet.selection)</a>
-</li>
-      <li><a href="apidoc/facet/selection/facet.selection.LearnerGrid.html#facet.selection.LearnerGrid">LearnerGrid (class in facet.selection)</a>
-</li>
       <li><a href="apidoc/facet/inspection/facet.inspection.LearnerInspector.html#facet.inspection.LearnerInspector">LearnerInspector (class in facet.inspection)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="apidoc/facet/selection/facet.selection.LearnerRanker.html#facet.selection.LearnerRanker">LearnerRanker (class in facet.selection)</a>
+      <li><a href="apidoc/facet/selection/facet.selection.LearnerSelector.html#facet.selection.LearnerSelector">LearnerSelector (class in facet.selection)</a>
 </li>
-      <li><a href="apidoc/facet/data/partition/facet.data.partition.ContinuousRangePartitioner.html#facet.data.partition.ContinuousRangePartitioner.lower_bound">lower_bound() (facet.data.partition.ContinuousRangePartitioner property)</a>
-
-      <ul>
-        <li><a href="apidoc/facet/data/partition/facet.data.partition.IntegerRangePartitioner.html#facet.data.partition.IntegerRangePartitioner.lower_bound">(facet.data.partition.IntegerRangePartitioner property)</a>
-</li>
-        <li><a href="apidoc/facet/data/partition/facet.data.partition.RangePartitioner.html#facet.data.partition.RangePartitioner.lower_bound">(facet.data.partition.RangePartitioner property)</a>
-</li>
-      </ul></li>
   </ul></td>
 </tr></table>
 
@@ -652,7 +725,13 @@
         <li><a href="apidoc/facet/inspection/facet.inspection.TreeExplainerFactory.html#facet.inspection.TreeExplainerFactory.make_explainer">(facet.inspection.TreeExplainerFactory method)</a>
 </li>
       </ul></li>
-      <li><a href="apidoc/facet/data/partition/facet.data.partition.CategoryPartitioner.html#facet.data.partition.CategoryPartitioner.max_partitions">max_partitions() (facet.data.partition.CategoryPartitioner property)</a>
+      <li><a href="apidoc/facet/inspection/facet.inspection.ExplainerQueue.html#facet.inspection.ExplainerQueue.max_job_size">max_job_size (facet.inspection.ExplainerQueue attribute)</a>
+
+      <ul>
+        <li><a href="apidoc/facet/inspection/facet.inspection.ParallelExplainer.html#facet.inspection.ParallelExplainer.max_job_size">(facet.inspection.ParallelExplainer attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="apidoc/facet/data/partition/facet.data.partition.CategoryPartitioner.html#facet.data.partition.CategoryPartitioner.max_partitions">max_partitions (facet.data.partition.CategoryPartitioner property)</a>
 
       <ul>
         <li><a href="apidoc/facet/data/partition/facet.data.partition.ContinuousRangePartitioner.html#facet.data.partition.ContinuousRangePartitioner.max_partitions">(facet.data.partition.ContinuousRangePartitioner property)</a>
@@ -664,7 +743,9 @@
         <li><a href="apidoc/facet/data/partition/facet.data.partition.RangePartitioner.html#facet.data.partition.RangePartitioner.max_partitions">(facet.data.partition.RangePartitioner property)</a>
 </li>
       </ul></li>
-      <li><a href="apidoc/facet/crossfit/facet.crossfit.LearnerCrossfit.html#facet.crossfit.LearnerCrossfit.models">models() (facet.crossfit.LearnerCrossfit method)</a>
+      <li><a href="apidoc/facet/simulation/base/facet.simulation.base.BaseUnivariateSimulator.html#facet.simulation.base.BaseUnivariateSimulator.model">model (facet.simulation.base.BaseUnivariateSimulator attribute)</a>
+</li>
+      <li><a href="apidoc/facet/inspection/facet.inspection.ModelInspector.html#facet.inspection.ModelInspector">ModelInspector (class in facet.inspection)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
@@ -674,8 +755,6 @@
       <ul>
         <li><a href="apidoc/facet.html#module-facet">facet</a>
 </li>
-        <li><a href="apidoc/facet/facet.crossfit.html#module-facet.crossfit">facet.crossfit</a>
-</li>
         <li><a href="apidoc/facet/facet.data.html#module-facet.data">facet.data</a>
 </li>
         <li><a href="apidoc/facet/data/facet.data.partition.html#module-facet.data.partition">facet.data.partition</a>
@@ -684,38 +763,32 @@
 </li>
         <li><a href="apidoc/facet/facet.selection.html#module-facet.selection">facet.selection</a>
 </li>
+        <li><a href="apidoc/facet/selection/facet.selection.base.html#module-facet.selection.base">facet.selection.base</a>
+</li>
         <li><a href="apidoc/facet/facet.simulation.html#module-facet.simulation">facet.simulation</a>
+</li>
+        <li><a href="apidoc/facet/simulation/facet.simulation.base.html#module-facet.simulation.base">facet.simulation.base</a>
 </li>
         <li><a href="apidoc/facet/simulation/facet.simulation.viz.html#module-facet.simulation.viz">facet.simulation.viz</a>
 </li>
         <li><a href="apidoc/facet/facet.validation.html#module-facet.validation">facet.validation</a>
 </li>
       </ul></li>
+      <li><a href="apidoc/facet/selection/facet.selection.MultiEstimatorParameterSpace.html#facet.selection.MultiEstimatorParameterSpace">MultiEstimatorParameterSpace (class in facet.selection)</a>
+</li>
   </ul></td>
 </tr></table>
 
 <h2 id="N">N</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="apidoc/facet/crossfit/facet.crossfit.LearnerCrossfit.html#facet.crossfit.LearnerCrossfit.n_jobs">n_jobs (facet.crossfit.LearnerCrossfit attribute)</a>
-
-      <ul>
-        <li><a href="apidoc/facet/inspection/facet.inspection.LearnerInspector.html#facet.inspection.LearnerInspector.n_jobs">(facet.inspection.LearnerInspector attribute)</a>
+      <li><a href="apidoc/facet/selection/base/facet.selection.base.CandidateEstimatorDF.html#facet.selection.base.CandidateEstimatorDF.n_features_in_">n_features_in_ (facet.selection.base.CandidateEstimatorDF property)</a>
 </li>
-        <li><a href="apidoc/facet/selection/facet.selection.LearnerRanker.html#facet.selection.LearnerRanker.n_jobs">(facet.selection.LearnerRanker attribute)</a>
-</li>
-        <li><a href="apidoc/facet/simulation/facet.simulation.BaseUnivariateSimulator.html#facet.simulation.BaseUnivariateSimulator.n_jobs">(facet.simulation.BaseUnivariateSimulator attribute)</a>
-</li>
-        <li><a href="apidoc/facet/simulation/facet.simulation.UnivariateProbabilitySimulator.html#facet.simulation.UnivariateProbabilitySimulator.n_jobs">(facet.simulation.UnivariateProbabilitySimulator attribute)</a>
-</li>
-        <li><a href="apidoc/facet/simulation/facet.simulation.UnivariateTargetSimulator.html#facet.simulation.UnivariateTargetSimulator.n_jobs">(facet.simulation.UnivariateTargetSimulator attribute)</a>
-</li>
-        <li><a href="apidoc/facet/simulation/facet.simulation.UnivariateUpliftSimulator.html#facet.simulation.UnivariateUpliftSimulator.n_jobs">(facet.simulation.UnivariateUpliftSimulator attribute)</a>
-</li>
-      </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="apidoc/facet/crossfit/facet.crossfit.LearnerCrossfit.html#facet.crossfit.LearnerCrossfit.n_splits_">n_splits_() (facet.crossfit.LearnerCrossfit property)</a>
+      <li><a href="apidoc/facet/selection/base/facet.selection.base.CandidateEstimatorDF.html#facet.selection.base.CandidateEstimatorDF.n_outputs_">n_outputs_ (facet.selection.base.CandidateEstimatorDF property)</a>
+</li>
+      <li><a href="apidoc/facet/selection/base/facet.selection.base.CandidateEstimatorDF.html#facet.selection.base.CandidateEstimatorDF.native_estimator">native_estimator (facet.selection.base.CandidateEstimatorDF property)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -723,16 +796,20 @@
 <h2 id="O">O</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="apidoc/facet/inspection/facet.inspection.ExplainerQueue.html#facet.inspection.ExplainerQueue.on_run">on_run() (facet.inspection.ExplainerQueue method)</a>
+</li>
       <li><a href="apidoc/facet/simulation/facet.simulation.UnivariateSimulationResult.html#facet.simulation.UnivariateSimulationResult.output_name">output_name (facet.simulation.UnivariateSimulationResult attribute)</a>
 </li>
-      <li><a href="apidoc/facet/inspection/facet.inspection.LearnerInspector.html#facet.inspection.LearnerInspector.output_names_">output_names_() (facet.inspection.LearnerInspector property)</a>
+      <li><a href="apidoc/facet/inspection/facet.inspection.LearnerInspector.html#facet.inspection.LearnerInspector.output_names_">output_names_ (facet.inspection.LearnerInspector property)</a>
 </li>
-      <li><a href="apidoc/facet/simulation/facet.simulation.UnivariateSimulationResult.html#facet.simulation.UnivariateSimulationResult.output_unit">output_unit (facet.simulation.UnivariateSimulationResult attribute)</a>
-</li>
-      <li><a href="apidoc/facet/simulation/facet.simulation.BaseUnivariateSimulator.html#facet.simulation.BaseUnivariateSimulator.output_unit">output_unit() (facet.simulation.BaseUnivariateSimulator property)</a>
+      <li><a href="apidoc/facet/simulation/base/facet.simulation.base.BaseUnivariateSimulator.html#facet.simulation.base.BaseUnivariateSimulator.output_unit">output_unit (facet.simulation.base.BaseUnivariateSimulator property)</a>
 
       <ul>
+        <li><a href="apidoc/facet/simulation/base/facet.simulation.base.UnivariateRegressionSimulator.html#facet.simulation.base.UnivariateRegressionSimulator.output_unit">(facet.simulation.base.UnivariateRegressionSimulator property)</a>
+</li>
         <li><a href="apidoc/facet/simulation/facet.simulation.UnivariateProbabilitySimulator.html#facet.simulation.UnivariateProbabilitySimulator.output_unit">(facet.simulation.UnivariateProbabilitySimulator property)</a>
+</li>
+        <li><a href="apidoc/facet/simulation/facet.simulation.UnivariateSimulationResult.html#facet.simulation.UnivariateSimulationResult.output_unit">(facet.simulation.UnivariateSimulationResult attribute)</a>
 </li>
         <li><a href="apidoc/facet/simulation/facet.simulation.UnivariateTargetSimulator.html#facet.simulation.UnivariateTargetSimulator.output_unit">(facet.simulation.UnivariateTargetSimulator property)</a>
 </li>
@@ -740,26 +817,30 @@
 </li>
       </ul></li>
   </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="apidoc/facet/simulation/facet.simulation.UnivariateSimulationResult.html#facet.simulation.UnivariateSimulationResult.outputs">outputs (facet.simulation.UnivariateSimulationResult attribute)</a>
-</li>
-      <li><a href="apidoc/facet/simulation/facet.simulation.UnivariateSimulationResult.html#facet.simulation.UnivariateSimulationResult.outputs_lower_bound">outputs_lower_bound() (facet.simulation.UnivariateSimulationResult method)</a>
-</li>
-      <li><a href="apidoc/facet/simulation/facet.simulation.UnivariateSimulationResult.html#facet.simulation.UnivariateSimulationResult.outputs_median">outputs_median() (facet.simulation.UnivariateSimulationResult method)</a>
-</li>
-      <li><a href="apidoc/facet/simulation/facet.simulation.UnivariateSimulationResult.html#facet.simulation.UnivariateSimulationResult.outputs_upper_bound">outputs_upper_bound() (facet.simulation.UnivariateSimulationResult method)</a>
-</li>
-  </ul></td>
 </tr></table>
 
 <h2 id="P">P</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="apidoc/facet/selection/facet.selection.LearnerEvaluation.html#facet.selection.LearnerEvaluation.parameters">parameters (facet.selection.LearnerEvaluation attribute)</a>
+      <li><a href="apidoc/facet/inspection/facet.inspection.ParallelExplainer.html#facet.inspection.ParallelExplainer">ParallelExplainer (class in facet.inspection)</a>
 </li>
-      <li><a href="apidoc/facet/selection/facet.selection.LearnerGrid.html#facet.selection.LearnerGrid.parameters">parameters() (facet.selection.LearnerGrid property)</a>
+      <li><a href="apidoc/facet/selection/base/facet.selection.base.CandidateEstimatorDF.html#facet.selection.base.CandidateEstimatorDF.PARAM_CANDIDATE">PARAM_CANDIDATE (facet.selection.base.CandidateEstimatorDF attribute)</a>
 </li>
-      <li><a href="apidoc/facet/data/partition/facet.data.partition.ContinuousRangePartitioner.html#facet.data.partition.ContinuousRangePartitioner.partition_bounds_">partition_bounds_() (facet.data.partition.ContinuousRangePartitioner property)</a>
+      <li><a href="apidoc/facet/selection/base/facet.selection.base.CandidateEstimatorDF.html#facet.selection.base.CandidateEstimatorDF.PARAM_CANDIDATE_NAME">PARAM_CANDIDATE_NAME (facet.selection.base.CandidateEstimatorDF attribute)</a>
+</li>
+      <li><a href="apidoc/facet/selection/facet.selection.LearnerSelector.html#facet.selection.LearnerSelector.parameter_space">parameter_space (facet.selection.LearnerSelector attribute)</a>
+</li>
+      <li><a href="apidoc/facet/selection/base/facet.selection.base.BaseParameterSpace.html#facet.selection.base.BaseParameterSpace.parameters">parameters (facet.selection.base.BaseParameterSpace property)</a>
+
+      <ul>
+        <li><a href="apidoc/facet/selection/facet.selection.MultiEstimatorParameterSpace.html#facet.selection.MultiEstimatorParameterSpace.parameters">(facet.selection.MultiEstimatorParameterSpace property)</a>
+</li>
+        <li><a href="apidoc/facet/selection/facet.selection.ParameterSpace.html#facet.selection.ParameterSpace.parameters">(facet.selection.ParameterSpace property)</a>
+</li>
+      </ul></li>
+      <li><a href="apidoc/facet/selection/facet.selection.ParameterSpace.html#facet.selection.ParameterSpace">ParameterSpace (class in facet.selection)</a>
+</li>
+      <li><a href="apidoc/facet/data/partition/facet.data.partition.ContinuousRangePartitioner.html#facet.data.partition.ContinuousRangePartitioner.partition_bounds_">partition_bounds_ (facet.data.partition.ContinuousRangePartitioner property)</a>
 
       <ul>
         <li><a href="apidoc/facet/data/partition/facet.data.partition.IntegerRangePartitioner.html#facet.data.partition.IntegerRangePartitioner.partition_bounds_">(facet.data.partition.IntegerRangePartitioner property)</a>
@@ -767,7 +848,7 @@
         <li><a href="apidoc/facet/data/partition/facet.data.partition.RangePartitioner.html#facet.data.partition.RangePartitioner.partition_bounds_">(facet.data.partition.RangePartitioner property)</a>
 </li>
       </ul></li>
-      <li><a href="apidoc/facet/data/partition/facet.data.partition.ContinuousRangePartitioner.html#facet.data.partition.ContinuousRangePartitioner.partition_width_">partition_width_() (facet.data.partition.ContinuousRangePartitioner property)</a>
+      <li><a href="apidoc/facet/data/partition/facet.data.partition.ContinuousRangePartitioner.html#facet.data.partition.ContinuousRangePartitioner.partition_width_">partition_width_ (facet.data.partition.ContinuousRangePartitioner property)</a>
 
       <ul>
         <li><a href="apidoc/facet/data/partition/facet.data.partition.IntegerRangePartitioner.html#facet.data.partition.IntegerRangePartitioner.partition_width_">(facet.data.partition.IntegerRangePartitioner property)</a>
@@ -775,11 +856,13 @@
         <li><a href="apidoc/facet/data/partition/facet.data.partition.RangePartitioner.html#facet.data.partition.RangePartitioner.partition_width_">(facet.data.partition.RangePartitioner property)</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="apidoc/facet/data/partition/facet.data.partition.Partitioner.html#facet.data.partition.Partitioner">Partitioner (class in facet.data.partition)</a>
 </li>
       <li><a href="apidoc/facet/simulation/facet.simulation.UnivariateSimulationResult.html#facet.simulation.UnivariateSimulationResult.partitioner">partitioner (facet.simulation.UnivariateSimulationResult attribute)</a>
 </li>
-      <li><a href="apidoc/facet/data/partition/facet.data.partition.CategoryPartitioner.html#facet.data.partition.CategoryPartitioner.partitions_">partitions_() (facet.data.partition.CategoryPartitioner property)</a>
+      <li><a href="apidoc/facet/data/partition/facet.data.partition.CategoryPartitioner.html#facet.data.partition.CategoryPartitioner.partitions_">partitions_ (facet.data.partition.CategoryPartitioner property)</a>
 
       <ul>
         <li><a href="apidoc/facet/data/partition/facet.data.partition.ContinuousRangePartitioner.html#facet.data.partition.ContinuousRangePartitioner.partitions_">(facet.data.partition.ContinuousRangePartitioner property)</a>
@@ -791,26 +874,12 @@
         <li><a href="apidoc/facet/data/partition/facet.data.partition.RangePartitioner.html#facet.data.partition.RangePartitioner.partitions_">(facet.data.partition.RangePartitioner property)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="apidoc/facet/selection/facet.selection.LearnerEvaluation.html#facet.selection.LearnerEvaluation.pipeline">pipeline (facet.selection.LearnerEvaluation attribute)</a>
+      <li><a href="apidoc/facet/selection/base/facet.selection.base.CandidateEstimatorDF.html#facet.selection.base.CandidateEstimatorDF.predict">predict() (facet.selection.base.CandidateEstimatorDF method)</a>
 </li>
-      <li><a href="apidoc/facet/crossfit/facet.crossfit.LearnerCrossfit.html#facet.crossfit.LearnerCrossfit.pre_dispatch">pre_dispatch (facet.crossfit.LearnerCrossfit attribute)</a>
-
-      <ul>
-        <li><a href="apidoc/facet/inspection/facet.inspection.LearnerInspector.html#facet.inspection.LearnerInspector.pre_dispatch">(facet.inspection.LearnerInspector attribute)</a>
+      <li><a href="apidoc/facet/selection/base/facet.selection.base.CandidateEstimatorDF.html#facet.selection.base.CandidateEstimatorDF.predict_log_proba">predict_log_proba() (facet.selection.base.CandidateEstimatorDF method)</a>
 </li>
-        <li><a href="apidoc/facet/selection/facet.selection.LearnerRanker.html#facet.selection.LearnerRanker.pre_dispatch">(facet.selection.LearnerRanker attribute)</a>
+      <li><a href="apidoc/facet/selection/base/facet.selection.base.CandidateEstimatorDF.html#facet.selection.base.CandidateEstimatorDF.predict_proba">predict_proba() (facet.selection.base.CandidateEstimatorDF method)</a>
 </li>
-        <li><a href="apidoc/facet/simulation/facet.simulation.BaseUnivariateSimulator.html#facet.simulation.BaseUnivariateSimulator.pre_dispatch">(facet.simulation.BaseUnivariateSimulator attribute)</a>
-</li>
-        <li><a href="apidoc/facet/simulation/facet.simulation.UnivariateProbabilitySimulator.html#facet.simulation.UnivariateProbabilitySimulator.pre_dispatch">(facet.simulation.UnivariateProbabilitySimulator attribute)</a>
-</li>
-        <li><a href="apidoc/facet/simulation/facet.simulation.UnivariateTargetSimulator.html#facet.simulation.UnivariateTargetSimulator.pre_dispatch">(facet.simulation.UnivariateTargetSimulator attribute)</a>
-</li>
-        <li><a href="apidoc/facet/simulation/facet.simulation.UnivariateUpliftSimulator.html#facet.simulation.UnivariateUpliftSimulator.pre_dispatch">(facet.simulation.UnivariateUpliftSimulator attribute)</a>
-</li>
-      </ul></li>
   </ul></td>
 </tr></table>
 
@@ -819,15 +888,9 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="apidoc/facet/data/partition/facet.data.partition.RangePartitioner.html#facet.data.partition.RangePartitioner">RangePartitioner (class in facet.data.partition)</a>
 </li>
-      <li><a href="apidoc/facet/selection/facet.selection.LearnerRanker.html#facet.selection.LearnerRanker.ranking_">ranking_() (facet.selection.LearnerRanker property)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="apidoc/facet/selection/facet.selection.LearnerEvaluation.html#facet.selection.LearnerEvaluation.ranking_score">ranking_score (facet.selection.LearnerEvaluation attribute)</a>
-</li>
-      <li><a href="apidoc/facet/simulation/viz/facet.simulation.viz.SimulationMatplotStyle.html#facet.simulation.viz.SimulationMatplotStyle.renderer">renderer() (facet.simulation.viz.SimulationMatplotStyle property)</a>
-</li>
-      <li><a href="apidoc/facet/crossfit/facet.crossfit.LearnerCrossfit.html#facet.crossfit.LearnerCrossfit.resize">resize() (facet.crossfit.LearnerCrossfit method)</a>
+      <li><a href="apidoc/facet/inspection/facet.inspection.ExplainerJob.html#facet.inspection.ExplainerJob.run">run() (facet.inspection.ExplainerJob method)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -837,71 +900,49 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="apidoc/facet/data/facet.data.Sample.html#facet.data.Sample">Sample (class in facet.data)</a>
 </li>
-      <li><a href="apidoc/facet/simulation/facet.simulation.BaseUnivariateSimulator.html#facet.simulation.BaseUnivariateSimulator.sample">sample (facet.simulation.BaseUnivariateSimulator attribute)</a>
+      <li><a href="apidoc/facet/simulation/base/facet.simulation.base.BaseUnivariateSimulator.html#facet.simulation.base.BaseUnivariateSimulator.sample">sample (facet.simulation.base.BaseUnivariateSimulator attribute)</a>
 </li>
-      <li><a href="apidoc/facet/crossfit/facet.crossfit.LearnerCrossfit.html#facet.crossfit.LearnerCrossfit.sample_">sample_() (facet.crossfit.LearnerCrossfit property)</a>
-
-      <ul>
-        <li><a href="apidoc/facet/inspection/facet.inspection.LearnerInspector.html#facet.inspection.LearnerInspector.sample_">(facet.inspection.LearnerInspector property)</a>
+      <li><a href="apidoc/facet/inspection/facet.inspection.LearnerInspector.html#facet.inspection.LearnerInspector.sample_">sample_ (facet.inspection.LearnerInspector property)</a>
 </li>
-      </ul></li>
-      <li><a href="apidoc/facet/crossfit/facet.crossfit.LearnerCrossfit.html#facet.crossfit.LearnerCrossfit.score">score() (facet.crossfit.LearnerCrossfit method)</a>
+      <li><a href="apidoc/facet/selection/base/facet.selection.base.CandidateEstimatorDF.html#facet.selection.base.CandidateEstimatorDF.score">score() (facet.selection.base.CandidateEstimatorDF method)</a>
 </li>
-      <li><a href="apidoc/facet/selection/facet.selection.LearnerEvaluation.html#facet.selection.LearnerEvaluation.scores">scores (facet.selection.LearnerEvaluation attribute)</a>
+      <li><a href="apidoc/facet/selection/facet.selection.LearnerSelector.html#facet.selection.LearnerSelector.scoring">scoring (facet.selection.LearnerSelector attribute)</a>
 </li>
-      <li><a href="apidoc/facet/selection/facet.selection.LearnerEvaluation.html#facet.selection.LearnerEvaluation.scoring_name">scoring_name (facet.selection.LearnerEvaluation attribute)</a>
+      <li><a href="apidoc/facet/selection/facet.selection.LearnerSelector.html#facet.selection.LearnerSelector.searcher_">searcher_ (facet.selection.LearnerSelector attribute)</a>
 </li>
-      <li><a href="apidoc/facet/selection/facet.selection.LearnerRanker.html#facet.selection.LearnerRanker.scoring_name">scoring_name() (facet.selection.LearnerRanker property)</a>
+      <li><a href="apidoc/facet/selection/facet.selection.LearnerSelector.html#facet.selection.LearnerSelector.searcher_params">searcher_params (facet.selection.LearnerSelector attribute)</a>
+</li>
+      <li><a href="apidoc/facet/selection/facet.selection.LearnerSelector.html#facet.selection.LearnerSelector.searcher_type">searcher_type (facet.selection.LearnerSelector attribute)</a>
+</li>
+      <li><a href="apidoc/facet/selection/base/facet.selection.base.CandidateEstimatorDF.html#facet.selection.base.CandidateEstimatorDF.set_params">set_params() (facet.selection.base.CandidateEstimatorDF method)</a>
 </li>
       <li><a href="apidoc/facet/inspection/facet.inspection.BaseExplainer.html#facet.inspection.BaseExplainer.shap_interaction_values">shap_interaction_values() (facet.inspection.BaseExplainer method)</a>
 
       <ul>
         <li><a href="apidoc/facet/inspection/facet.inspection.LearnerInspector.html#facet.inspection.LearnerInspector.shap_interaction_values">(facet.inspection.LearnerInspector method)</a>
 </li>
+        <li><a href="apidoc/facet/inspection/facet.inspection.ParallelExplainer.html#facet.inspection.ParallelExplainer.shap_interaction_values">(facet.inspection.ParallelExplainer method)</a>
+</li>
       </ul></li>
       <li><a href="apidoc/facet/inspection/facet.inspection.LearnerInspector.html#facet.inspection.LearnerInspector.shap_plot_data">shap_plot_data() (facet.inspection.LearnerInspector method)</a>
+</li>
+      <li><a href="apidoc/facet/inspection/facet.inspection.ShapPlotData.html#facet.inspection.ShapPlotData.shap_values">shap_values (facet.inspection.ShapPlotData property)</a>
 </li>
       <li><a href="apidoc/facet/inspection/facet.inspection.BaseExplainer.html#facet.inspection.BaseExplainer.shap_values">shap_values() (facet.inspection.BaseExplainer method)</a>
 
       <ul>
         <li><a href="apidoc/facet/inspection/facet.inspection.LearnerInspector.html#facet.inspection.LearnerInspector.shap_values">(facet.inspection.LearnerInspector method)</a>
 </li>
-        <li><a href="apidoc/facet/inspection/facet.inspection.ShapPlotData.html#facet.inspection.ShapPlotData.shap_values">(facet.inspection.ShapPlotData property)</a>
+        <li><a href="apidoc/facet/inspection/facet.inspection.ParallelExplainer.html#facet.inspection.ParallelExplainer.shap_values">(facet.inspection.ParallelExplainer method)</a>
 </li>
       </ul></li>
       <li><a href="apidoc/facet/inspection/facet.inspection.ShapPlotData.html#facet.inspection.ShapPlotData">ShapPlotData (class in facet.inspection)</a>
 </li>
-      <li><a href="apidoc/facet/crossfit/facet.crossfit.LearnerCrossfit.html#facet.crossfit.LearnerCrossfit.shared_memory">shared_memory (facet.crossfit.LearnerCrossfit attribute)</a>
+      <li><a href="apidoc/facet/simulation/base/facet.simulation.base.BaseUnivariateSimulator.html#facet.simulation.base.BaseUnivariateSimulator.simulate_feature">simulate_feature() (facet.simulation.base.BaseUnivariateSimulator method)</a>
 
       <ul>
-        <li><a href="apidoc/facet/inspection/facet.inspection.LearnerInspector.html#facet.inspection.LearnerInspector.shared_memory">(facet.inspection.LearnerInspector attribute)</a>
+        <li><a href="apidoc/facet/simulation/base/facet.simulation.base.UnivariateRegressionSimulator.html#facet.simulation.base.UnivariateRegressionSimulator.simulate_feature">(facet.simulation.base.UnivariateRegressionSimulator method)</a>
 </li>
-        <li><a href="apidoc/facet/selection/facet.selection.LearnerRanker.html#facet.selection.LearnerRanker.shared_memory">(facet.selection.LearnerRanker attribute)</a>
-</li>
-        <li><a href="apidoc/facet/simulation/facet.simulation.BaseUnivariateSimulator.html#facet.simulation.BaseUnivariateSimulator.shared_memory">(facet.simulation.BaseUnivariateSimulator attribute)</a>
-</li>
-        <li><a href="apidoc/facet/simulation/facet.simulation.UnivariateProbabilitySimulator.html#facet.simulation.UnivariateProbabilitySimulator.shared_memory">(facet.simulation.UnivariateProbabilitySimulator attribute)</a>
-</li>
-        <li><a href="apidoc/facet/simulation/facet.simulation.UnivariateTargetSimulator.html#facet.simulation.UnivariateTargetSimulator.shared_memory">(facet.simulation.UnivariateTargetSimulator attribute)</a>
-</li>
-        <li><a href="apidoc/facet/simulation/facet.simulation.UnivariateUpliftSimulator.html#facet.simulation.UnivariateUpliftSimulator.shared_memory">(facet.simulation.UnivariateUpliftSimulator attribute)</a>
-</li>
-      </ul></li>
-      <li><a href="apidoc/facet/simulation/facet.simulation.BaseUnivariateSimulator.html#facet.simulation.BaseUnivariateSimulator.simulate_actuals">simulate_actuals() (facet.simulation.BaseUnivariateSimulator method)</a>
-
-      <ul>
-        <li><a href="apidoc/facet/simulation/facet.simulation.UnivariateProbabilitySimulator.html#facet.simulation.UnivariateProbabilitySimulator.simulate_actuals">(facet.simulation.UnivariateProbabilitySimulator method)</a>
-</li>
-        <li><a href="apidoc/facet/simulation/facet.simulation.UnivariateTargetSimulator.html#facet.simulation.UnivariateTargetSimulator.simulate_actuals">(facet.simulation.UnivariateTargetSimulator method)</a>
-</li>
-        <li><a href="apidoc/facet/simulation/facet.simulation.UnivariateUpliftSimulator.html#facet.simulation.UnivariateUpliftSimulator.simulate_actuals">(facet.simulation.UnivariateUpliftSimulator method)</a>
-</li>
-      </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="apidoc/facet/simulation/facet.simulation.BaseUnivariateSimulator.html#facet.simulation.BaseUnivariateSimulator.simulate_feature">simulate_feature() (facet.simulation.BaseUnivariateSimulator method)</a>
-
-      <ul>
         <li><a href="apidoc/facet/simulation/facet.simulation.UnivariateProbabilitySimulator.html#facet.simulation.UnivariateProbabilitySimulator.simulate_feature">(facet.simulation.UnivariateProbabilitySimulator method)</a>
 </li>
         <li><a href="apidoc/facet/simulation/facet.simulation.UnivariateTargetSimulator.html#facet.simulation.UnivariateTargetSimulator.simulate_feature">(facet.simulation.UnivariateTargetSimulator method)</a>
@@ -909,6 +950,8 @@
         <li><a href="apidoc/facet/simulation/facet.simulation.UnivariateUpliftSimulator.html#facet.simulation.UnivariateUpliftSimulator.simulate_feature">(facet.simulation.UnivariateUpliftSimulator method)</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="apidoc/facet/simulation/viz/facet.simulation.viz.SimulationDrawer.html#facet.simulation.viz.SimulationDrawer">SimulationDrawer (class in facet.simulation.viz)</a>
 </li>
       <li><a href="apidoc/facet/simulation/viz/facet.simulation.viz.SimulationMatplotStyle.html#facet.simulation.viz.SimulationMatplotStyle">SimulationMatplotStyle (class in facet.simulation.viz)</a>
@@ -917,20 +960,18 @@
 </li>
       <li><a href="apidoc/facet/simulation/viz/facet.simulation.viz.SimulationStyle.html#facet.simulation.viz.SimulationStyle">SimulationStyle (class in facet.simulation.viz)</a>
 </li>
+      <li><a href="apidoc/facet/selection/facet.selection.MultiEstimatorParameterSpace.html#facet.selection.MultiEstimatorParameterSpace.spaces">spaces (facet.selection.MultiEstimatorParameterSpace attribute)</a>
+</li>
       <li><a href="apidoc/facet/validation/facet.validation.BaseBootstrapCV.html#facet.validation.BaseBootstrapCV.split">split() (facet.validation.BaseBootstrapCV method)</a>
 
       <ul>
         <li><a href="apidoc/facet/validation/facet.validation.BootstrapCV.html#facet.validation.BootstrapCV.split">(facet.validation.BootstrapCV method)</a>
-</li>
-        <li><a href="apidoc/facet/validation/facet.validation.FullSampleValidator.html#facet.validation.FullSampleValidator.split">(facet.validation.FullSampleValidator method)</a>
 </li>
         <li><a href="apidoc/facet/validation/facet.validation.StationaryBootstrapCV.html#facet.validation.StationaryBootstrapCV.split">(facet.validation.StationaryBootstrapCV method)</a>
 </li>
         <li><a href="apidoc/facet/validation/facet.validation.StratifiedBootstrapCV.html#facet.validation.StratifiedBootstrapCV.split">(facet.validation.StratifiedBootstrapCV method)</a>
 </li>
       </ul></li>
-      <li><a href="apidoc/facet/crossfit/facet.crossfit.LearnerCrossfit.html#facet.crossfit.LearnerCrossfit.splits">splits() (facet.crossfit.LearnerCrossfit method)</a>
-</li>
       <li><a href="apidoc/facet/simulation/viz/facet.simulation.viz.SimulationMatplotStyle.html#facet.simulation.viz.SimulationMatplotStyle.start_drawing">start_drawing() (facet.simulation.viz.SimulationMatplotStyle method)</a>
 
       <ul>
@@ -943,13 +984,11 @@
 </li>
       <li><a href="apidoc/facet/validation/facet.validation.StratifiedBootstrapCV.html#facet.validation.StratifiedBootstrapCV">StratifiedBootstrapCV (class in facet.validation)</a>
 </li>
-      <li><a href="apidoc/facet/simulation/viz/facet.simulation.viz.SimulationDrawer.html#facet.simulation.viz.SimulationDrawer.style">style (facet.simulation.viz.SimulationDrawer attribute)</a>
-</li>
       <li><a href="apidoc/facet/data/facet.data.Sample.html#facet.data.Sample.subsample">subsample() (facet.data.Sample method)</a>
 </li>
-      <li><a href="apidoc/facet/selection/facet.selection.LearnerRanker.html#facet.selection.LearnerRanker.summary_report">summary_report() (facet.selection.LearnerRanker method)</a>
+      <li><a href="apidoc/facet/selection/facet.selection.LearnerSelector.html#facet.selection.LearnerSelector.summary_report">summary_report() (facet.selection.LearnerSelector method)</a>
 </li>
-      <li><a href="apidoc/facet/inspection/facet.inspection.ExplainerFactory.html#facet.inspection.ExplainerFactory.supports_shap_interaction_values">supports_shap_interaction_values() (facet.inspection.ExplainerFactory property)</a>
+      <li><a href="apidoc/facet/inspection/facet.inspection.ExplainerFactory.html#facet.inspection.ExplainerFactory.supports_shap_interaction_values">supports_shap_interaction_values (facet.inspection.ExplainerFactory property)</a>
 
       <ul>
         <li><a href="apidoc/facet/inspection/facet.inspection.KernelExplainerFactory.html#facet.inspection.KernelExplainerFactory.supports_shap_interaction_values">(facet.inspection.KernelExplainerFactory property)</a>
@@ -963,17 +1002,33 @@
 <h2 id="T">T</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="apidoc/facet/data/facet.data.Sample.html#facet.data.Sample.target">target() (facet.data.Sample property)</a>
+      <li><a href="apidoc/facet/data/facet.data.Sample.html#facet.data.Sample.target">target (facet.data.Sample property)</a>
 
       <ul>
         <li><a href="apidoc/facet/inspection/facet.inspection.ShapPlotData.html#facet.inspection.ShapPlotData.target">(facet.inspection.ShapPlotData property)</a>
 </li>
       </ul></li>
+      <li><a href="apidoc/facet/data/facet.data.Sample.html#facet.data.Sample.target_name">target_name (facet.data.Sample property)</a>
+</li>
+      <li><a href="apidoc/facet/inspection/facet.inspection.ExplainerFactory.html#facet.inspection.ExplainerFactory.to_expression">to_expression() (facet.inspection.ExplainerFactory method)</a>
+
+      <ul>
+        <li><a href="apidoc/facet/inspection/facet.inspection.KernelExplainerFactory.html#facet.inspection.KernelExplainerFactory.to_expression">(facet.inspection.KernelExplainerFactory method)</a>
+</li>
+        <li><a href="apidoc/facet/inspection/facet.inspection.TreeExplainerFactory.html#facet.inspection.TreeExplainerFactory.to_expression">(facet.inspection.TreeExplainerFactory method)</a>
+</li>
+        <li><a href="apidoc/facet/selection/base/facet.selection.base.BaseParameterSpace.html#facet.selection.base.BaseParameterSpace.to_expression">(facet.selection.base.BaseParameterSpace method)</a>
+</li>
+        <li><a href="apidoc/facet/selection/base/facet.selection.base.CandidateEstimatorDF.html#facet.selection.base.CandidateEstimatorDF.to_expression">(facet.selection.base.CandidateEstimatorDF method)</a>
+</li>
+        <li><a href="apidoc/facet/selection/facet.selection.MultiEstimatorParameterSpace.html#facet.selection.MultiEstimatorParameterSpace.to_expression">(facet.selection.MultiEstimatorParameterSpace method)</a>
+</li>
+        <li><a href="apidoc/facet/selection/facet.selection.ParameterSpace.html#facet.selection.ParameterSpace.to_expression">(facet.selection.ParameterSpace method)</a>
+</li>
+      </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="apidoc/facet/data/facet.data.Sample.html#facet.data.Sample.target_name">target_name() (facet.data.Sample property)</a>
-</li>
-      <li><a href="apidoc/facet/simulation/viz/facet.simulation.viz.SimulationMatplotStyle.html#facet.simulation.viz.SimulationMatplotStyle.text_dimensions">text_dimensions() (facet.simulation.viz.SimulationMatplotStyle method)</a>
+      <li><a href="apidoc/facet/selection/base/facet.selection.base.CandidateEstimatorDF.html#facet.selection.base.CandidateEstimatorDF.transform">transform() (facet.selection.base.CandidateEstimatorDF method)</a>
 </li>
       <li><a href="apidoc/facet/inspection/facet.inspection.TreeExplainerFactory.html#facet.inspection.TreeExplainerFactory">TreeExplainerFactory (class in facet.inspection)</a>
 </li>
@@ -985,23 +1040,17 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="apidoc/facet/simulation/facet.simulation.UnivariateProbabilitySimulator.html#facet.simulation.UnivariateProbabilitySimulator">UnivariateProbabilitySimulator (class in facet.simulation)</a>
 </li>
+      <li><a href="apidoc/facet/simulation/base/facet.simulation.base.UnivariateRegressionSimulator.html#facet.simulation.base.UnivariateRegressionSimulator">UnivariateRegressionSimulator (class in facet.simulation.base)</a>
+</li>
       <li><a href="apidoc/facet/simulation/facet.simulation.UnivariateSimulationResult.html#facet.simulation.UnivariateSimulationResult">UnivariateSimulationResult (class in facet.simulation)</a>
 </li>
       <li><a href="apidoc/facet/simulation/facet.simulation.UnivariateTargetSimulator.html#facet.simulation.UnivariateTargetSimulator">UnivariateTargetSimulator (class in facet.simulation)</a>
 </li>
-      <li><a href="apidoc/facet/simulation/facet.simulation.UnivariateUpliftSimulator.html#facet.simulation.UnivariateUpliftSimulator">UnivariateUpliftSimulator (class in facet.simulation)</a>
-</li>
-      <li><a href="apidoc/facet/data/partition/facet.data.partition.ContinuousRangePartitioner.html#facet.data.partition.ContinuousRangePartitioner.upper_bound">upper_bound() (facet.data.partition.ContinuousRangePartitioner property)</a>
-
-      <ul>
-        <li><a href="apidoc/facet/data/partition/facet.data.partition.IntegerRangePartitioner.html#facet.data.partition.IntegerRangePartitioner.upper_bound">(facet.data.partition.IntegerRangePartitioner property)</a>
-</li>
-        <li><a href="apidoc/facet/data/partition/facet.data.partition.RangePartitioner.html#facet.data.partition.RangePartitioner.upper_bound">(facet.data.partition.RangePartitioner property)</a>
-</li>
-      </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="apidoc/facet/inspection/facet.inspection.ExplainerFactory.html#facet.inspection.ExplainerFactory.uses_background_dataset">uses_background_dataset() (facet.inspection.ExplainerFactory property)</a>
+      <li><a href="apidoc/facet/simulation/facet.simulation.UnivariateUpliftSimulator.html#facet.simulation.UnivariateUpliftSimulator">UnivariateUpliftSimulator (class in facet.simulation)</a>
+</li>
+      <li><a href="apidoc/facet/inspection/facet.inspection.ExplainerFactory.html#facet.inspection.ExplainerFactory.uses_background_dataset">uses_background_dataset (facet.inspection.ExplainerFactory property)</a>
 
       <ul>
         <li><a href="apidoc/facet/inspection/facet.inspection.KernelExplainerFactory.html#facet.inspection.KernelExplainerFactory.uses_background_dataset">(facet.inspection.KernelExplainerFactory property)</a>
@@ -1012,37 +1061,39 @@
   </ul></td>
 </tr></table>
 
-<h2 id="V">V</h2>
+<h2 id="W">W</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="apidoc/facet/crossfit/facet.crossfit.LearnerCrossfit.html#facet.crossfit.LearnerCrossfit.verbose">verbose (facet.crossfit.LearnerCrossfit attribute)</a>
+      <li><a href="apidoc/facet/data/facet.data.Sample.html#facet.data.Sample.weight">weight (facet.data.Sample property)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="apidoc/facet/data/facet.data.Sample.html#facet.data.Sample.weight_name">weight_name (facet.data.Sample property)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="X">X</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="apidoc/facet/inspection/facet.inspection.ExplainerJob.html#facet.inspection.ExplainerJob.X">X (facet.inspection.ExplainerJob attribute)</a>
 
       <ul>
-        <li><a href="apidoc/facet/inspection/facet.inspection.LearnerInspector.html#facet.inspection.LearnerInspector.verbose">(facet.inspection.LearnerInspector attribute)</a>
-</li>
-        <li><a href="apidoc/facet/selection/facet.selection.LearnerRanker.html#facet.selection.LearnerRanker.verbose">(facet.selection.LearnerRanker attribute)</a>
-</li>
-        <li><a href="apidoc/facet/simulation/facet.simulation.BaseUnivariateSimulator.html#facet.simulation.BaseUnivariateSimulator.verbose">(facet.simulation.BaseUnivariateSimulator attribute)</a>
-</li>
-        <li><a href="apidoc/facet/simulation/facet.simulation.UnivariateProbabilitySimulator.html#facet.simulation.UnivariateProbabilitySimulator.verbose">(facet.simulation.UnivariateProbabilitySimulator attribute)</a>
-</li>
-        <li><a href="apidoc/facet/simulation/facet.simulation.UnivariateTargetSimulator.html#facet.simulation.UnivariateTargetSimulator.verbose">(facet.simulation.UnivariateTargetSimulator attribute)</a>
-</li>
-        <li><a href="apidoc/facet/simulation/facet.simulation.UnivariateUpliftSimulator.html#facet.simulation.UnivariateUpliftSimulator.verbose">(facet.simulation.UnivariateUpliftSimulator attribute)</a>
+        <li><a href="apidoc/facet/inspection/facet.inspection.ExplainerQueue.html#facet.inspection.ExplainerQueue.X">(facet.inspection.ExplainerQueue attribute)</a>
 </li>
       </ul></li>
   </ul></td>
 </tr></table>
 
-<h2 id="W">W</h2>
+<h2 id="Y">Y</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="apidoc/facet/data/facet.data.Sample.html#facet.data.Sample.weight">weight() (facet.data.Sample property)</a>
+      <li><a href="apidoc/facet/inspection/facet.inspection.ExplainerJob.html#facet.inspection.ExplainerJob.y">y (facet.inspection.ExplainerJob attribute)</a>
+
+      <ul>
+        <li><a href="apidoc/facet/inspection/facet.inspection.ExplainerQueue.html#facet.inspection.ExplainerQueue.y">(facet.inspection.ExplainerQueue attribute)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="apidoc/facet/data/facet.data.Sample.html#facet.data.Sample.weight_name">weight_name() (facet.data.Sample property)</a>
-</li>
+      </ul></li>
   </ul></td>
 </tr></table>
 
@@ -1051,27 +1102,33 @@
               </div>
               
               
-              <div class='prev-next-bottom'>
-                
-
-              </div>
+              <!-- Previous / next buttons -->
+<div class='prev-next-area'>
+</div>
               
           </main>
           
 
       </div>
     </div>
-
-    
-  <script src="_static/js/index.d3f166471bb80abb5163.js"></script>
-
-
-    <footer class="footer mt-5 mt-md-0">
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
+<footer class="footer mt-5 mt-md-0">
   <div class="container">
-    <p>
-          &copy; Copyright 2021, Boston Consulting Group (BCG).<br/>
-        Created using <a href="http://sphinx-doc.org/">Sphinx</a> 3.5.3.<br/>
-    </p>
+    
+    <div class="footer-item">
+      <p class="copyright">
+    &copy; Copyright 2022, Boston Consulting Group (BCG).<br>
+</p>
+    </div>
+    
+    <div class="footer-item">
+      <p class="sphinx-version">
+Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.5.0.<br>
+</p>
+    </div>
+    
   </div>
 </footer>
   </body>

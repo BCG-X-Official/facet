@@ -19,8 +19,12 @@ facet.inspection
    
       BaseExplainer
       ExplainerFactory
+      ExplainerJob
+      ExplainerQueue
       KernelExplainerFactory
       LearnerInspector
+      ModelInspector
+      ParallelExplainer
       ShapPlotData
       TreeExplainerFactory
    
