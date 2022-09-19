@@ -31,7 +31,7 @@ from sklearndf.transformation import (
 import facet
 from facet.data import Sample
 from facet.inspection import LearnerInspector, TreeExplainerFactory
-from facet.selection import ModelSelector, MultiEstimatorParameterSpace, ParameterSpace
+from facet.selection import LearnerSelector, ParameterSpace
 from facet.validation import BootstrapCV, StratifiedBootstrapCV
 
 logging.basicConfig(level=logging.DEBUG)
@@ -93,7 +93,7 @@ def cv_stratified_bootstrap() -> BaseCrossValidator:
 @pytest.fixture  # type: ignore
 def regressor_parameters(
     simple_preprocessor: TransformerDF,
-) -> MultiEstimatorParameterSpace[RegressorPipelineDF[LGBMRegressorDF]]:
+) -> List[ParameterSpace[RegressorPipelineDF[LGBMRegressorDF]]]:
     random_state = {"random_state": 42}
 
     space_1 = ParameterSpace(
@@ -127,7 +127,7 @@ def regressor_parameters(
             regressor=DecisionTreeRegressorDF(**random_state),
         )
     )
-    space_4.regressor.max_depth = [0.5, 1.0]
+    space_4.regressor.max_depth = [3, 5]
     space_4.regressor.max_features = [0.5, 1.0]
 
     space_5 = ParameterSpace(
@@ -149,29 +149,19 @@ def regressor_parameters(
             preprocessing=simple_preprocessor, regressor=LinearRegressionDF()
         )
     )
-    space_7.regressor.normalize = [False, True]
+    space_7.regressor.fit_intercept = [False, True]
 
-    return MultiEstimatorParameterSpace(
-        space_1,
-        space_2,
-        space_3,
-        space_4,
-        space_5,
-        space_6,
-        space_7,
-    )
+    return [space_1, space_2, space_3, space_4, space_5, space_6, space_7]
 
 
 @pytest.fixture  # type: ignore
 def regressor_selector(
     cv_kfold: KFold,
-    regressor_parameters: MultiEstimatorParameterSpace[
-        RegressorPipelineDF[LGBMRegressorDF]
-    ],
+    regressor_parameters: List[ParameterSpace[RegressorPipelineDF[LGBMRegressorDF]]],
     sample: Sample,
     n_jobs: int,
-) -> ModelSelector[RegressorPipelineDF[LGBMRegressorDF], GridSearchCV]:
-    return ModelSelector(
+) -> LearnerSelector[RegressorPipelineDF[LGBMRegressorDF], GridSearchCV]:
+    return LearnerSelector(
         searcher_type=GridSearchCV,
         parameter_space=regressor_parameters,
         cv=cv_kfold,
@@ -185,7 +175,7 @@ PARAM_CANDIDATE__ = "param_candidate__"
 
 @pytest.fixture  # type: ignore
 def best_lgbm_model(
-    regressor_selector: ModelSelector[
+    regressor_selector: LearnerSelector[
         RegressorPipelineDF[LGBMRegressorDF], GridSearchCV
     ],
     sample: Sample,
@@ -329,7 +319,8 @@ def iris_sample_binary(iris_sample_multi_class: Sample) -> Sample:
 def iris_sample_binary_dual_target(
     iris_sample_binary: Sample, iris_target_name: str
 ) -> Sample:
-    # the iris dataset, retaining only two categories so we can do binary classification
+    # the iris dataset, retaining only two categories,
+    # so we can do binary classification
     target = pd.Series(
         index=iris_sample_binary.index,
         data=pd.Categorical(iris_sample_binary.target).codes,
@@ -345,7 +336,6 @@ def iris_sample_binary_dual_target(
 
 COL_PARAM = "param"
 COL_CANDIDATE = "candidate"
-COL_CANDIDATE_NAME = "candidate_name"
 COL_CLASSIFIER = "classifier"
 COL_REGRESSOR = "regressor"
 COL_SCORE = ("score", "test", "mean")
@@ -395,7 +385,7 @@ def check_ranking(
 
     if candidate_names_expected:
         candidates_actual: npt.NDArray[np.object_] = ranking.loc[
-            :, (COL_CANDIDATE_NAME, "-", "-")
+            :, (COL_CANDIDATE, "-", "-")
         ].values[: len(candidate_names_expected)]
         assert_array_equal(
             candidates_actual,
@@ -412,7 +402,7 @@ def iris_classifier_selector_binary(
     iris_sample_binary: Sample,
     cv_stratified_bootstrap: StratifiedBootstrapCV,
     n_jobs: int,
-) -> ModelSelector[ClassifierPipelineDF[RandomForestClassifierDF], GridSearchCV]:
+) -> LearnerSelector[ClassifierPipelineDF[RandomForestClassifierDF], GridSearchCV]:
     return fit_classifier_selector(
         sample=iris_sample_binary, cv=cv_stratified_bootstrap, n_jobs=n_jobs
     )
@@ -423,7 +413,7 @@ def iris_classifier_selector_multi_class(
     iris_sample_multi_class: Sample,
     cv_stratified_bootstrap: StratifiedBootstrapCV,
     n_jobs: int,
-) -> ModelSelector[ClassifierPipelineDF[RandomForestClassifierDF], GridSearchCV]:
+) -> LearnerSelector[ClassifierPipelineDF[RandomForestClassifierDF], GridSearchCV]:
     return fit_classifier_selector(
         sample=iris_sample_multi_class, cv=cv_stratified_bootstrap, n_jobs=n_jobs
     )
@@ -432,7 +422,7 @@ def iris_classifier_selector_multi_class(
 @pytest.fixture  # type: ignore
 def iris_classifier_selector_dual_target(
     iris_sample_binary_dual_target: Sample, cv_bootstrap: BootstrapCV, n_jobs: int
-) -> ModelSelector[ClassifierPipelineDF[RandomForestClassifierDF], GridSearchCV]:
+) -> LearnerSelector[ClassifierPipelineDF[RandomForestClassifierDF], GridSearchCV]:
     return fit_classifier_selector(
         sample=iris_sample_binary_dual_target, cv=cv_bootstrap, n_jobs=n_jobs
     )
@@ -440,7 +430,7 @@ def iris_classifier_selector_dual_target(
 
 @pytest.fixture  # type: ignore
 def iris_classifier_binary(
-    iris_classifier_selector_binary: ModelSelector[
+    iris_classifier_selector_binary: LearnerSelector[
         ClassifierPipelineDF[RandomForestClassifierDF], GridSearchCV
     ],
 ) -> ClassifierPipelineDF[RandomForestClassifierDF]:
@@ -449,7 +439,7 @@ def iris_classifier_binary(
 
 @pytest.fixture  # type: ignore
 def iris_classifier_multi_class(
-    iris_classifier_selector_multi_class: ModelSelector[
+    iris_classifier_selector_multi_class: LearnerSelector[
         ClassifierPipelineDF[RandomForestClassifierDF], GridSearchCV
     ],
 ) -> ClassifierPipelineDF[RandomForestClassifierDF]:
@@ -474,7 +464,7 @@ def iris_inspector_multi_class(
 
 def fit_classifier_selector(
     sample: Sample, cv: BaseCrossValidator, n_jobs: int
-) -> ModelSelector[ClassifierPipelineDF[RandomForestClassifierDF], GridSearchCV]:
+) -> LearnerSelector[ClassifierPipelineDF[RandomForestClassifierDF], GridSearchCV]:
     # define the parameter space
     parameter_space = ParameterSpace(
         ClassifierPipelineDF(
@@ -487,7 +477,7 @@ def fit_classifier_selector(
 
     # pipeline inspector only supports binary classification,
     # therefore filter the sample down to only 2 target classes
-    return ModelSelector(
+    return LearnerSelector(
         searcher_type=GridSearchCV,
         parameter_space=parameter_space,
         cv=cv,

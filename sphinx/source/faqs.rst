@@ -52,11 +52,11 @@ on `stackoverflow <https://stackoverflow.com/>`_.
 
 
 
-5. **How can I extract CV performance from the ModelSelector to create my
+5. **How can I extract CV performance from the LearnerSelector to create my
    own summaries or figures?**
 
     You can extract the desired information as a data frame from the fitted
-    ModelSelector object.
+    LearnerSelector object.
 
     .. code-block:: Python
 
@@ -64,9 +64,9 @@ on `stackoverflow <https://stackoverflow.com/>`_.
         cv_result_df = selector.summary_report()
 
 
-6. **Can I use a custom scoring function with the ModelSelector?**
+6. **Can I use a custom scoring function with the LearnerSelector?**
 
-    The ModelSelector works in a similar fashion to *scikit-learn*'s
+    The LearnerSelector works in a similar fashion to *scikit-learn*'s
     `gridsearchCV <https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.GridSearchCV.html>`_
     so much of the functionality is equivalent. You can pass a custom scoring
     function much as you would for gridsearchCV.
@@ -85,8 +85,8 @@ on `stackoverflow <https://stackoverflow.com/>`_.
 
         my_score = make_scorer(huber_loss, greater_is_better=False)
 
-        # use the ModelSelector with custom scorer and get summary report
-        selector = ModelSelector(
+        # use the LearnerSelector with custom scorer and get summary report
+        selector = LearnerSelector(
             searcher_type=GridSearchCV,
             parameter_space=ps,
             cv=cv_iterator,
@@ -103,14 +103,14 @@ on `stackoverflow <https://stackoverflow.com/>`_.
 7. **How can I generate standard** *scikit-learn* **summaries for classifiers, such as a
    classification report, confusion matrix or ROC curve?**
 
-    You can extract the fitted best scored model from the ModelSelector and
+    You can extract the fitted best scored model from the LearnerSelector and
     then generate these summaries as you normally would in your *scikit-learn*
     workflow.
 
     .. code-block:: Python
 
         # get your ranking object
-        selector = ModelSelector(
+        selector = LearnerSelector(
             searcher_type=GridSearchCV,
             parameter_space=ps,
             cv=cv_iterator,

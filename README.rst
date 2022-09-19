@@ -1,4 +1,4 @@
-.. image:: sphinx/source/_static/Gamma_Facet_Logo_RGB_LB.svg
+.. image:: sphinx/source/_images/Gamma_Facet_Logo_RGB_LB.svg
 
 |
 
@@ -103,7 +103,7 @@ In this quickstart we will train a Random Forest regressor using 10 repeated
 *sklearndf* we can create a *pandas* DataFrame compatible workflow. However,
 FACET provides additional enhancements to keep track of our feature matrix
 and target vector using a sample object (`Sample`) and easily compare
-hyperparameter configurations and even multiple learners with the `ModelSelector`.
+hyperparameter configurations and even multiple learners with the `LearnerSelector`.
 
 .. code-block:: Python
 
@@ -117,7 +117,7 @@ hyperparameter configurations and even multiple learners with the `ModelSelector
 
     # relevant FACET imports
     from facet.data import Sample
-    from facet.selection import ModelSelector, ParameterSpace
+    from facet.selection import LearnerSelector, ParameterSpace
 
     # declaring url with data
     data_url = 'https://web.stanford.edu/~hastie/Papers/LARS/diabetes.data'
@@ -153,7 +153,7 @@ hyperparameter configurations and even multiple learners with the `ModelSelector
     rkf_cv = RepeatedKFold(n_splits=5, n_repeats=10, random_state=42)
 
     # rank your candidate models by performance
-    selector = ModelSelector(
+    selector = LearnerSelector(
         searcher_type=GridSearchCV,
         parameter_space=rnd_forest_ps,
         cv=rkf_cv,
@@ -164,7 +164,7 @@ hyperparameter configurations and even multiple learners with the `ModelSelector
     # get summary report
     selector.summary_report()
 
-.. image:: sphinx/source/_static/ranker_summary.png
+.. image:: sphinx/source/_images/ranker_summary.png
    :width: 600
 
 We can see based on this minimal workflow that a value of 11 for minimum
@@ -245,7 +245,7 @@ The key global metrics for each pair of features in a model are:
     synergy_matrix = inspector.feature_synergy_matrix()
     MatrixDrawer(style="matplot%").draw(synergy_matrix, title="Synergy Matrix")
 
-.. image:: sphinx/source/_static/synergy_matrix.png
+.. image:: sphinx/source/_images/synergy_matrix.png
     :width: 600
 
 For any feature pair (A, B), the first feature (A) is the row, and the second
@@ -273,7 +273,7 @@ to 27% synergy of `LDL` with `LTG` for predicting progression after one year.
     redundancy_matrix = inspector.feature_redundancy_matrix()
     MatrixDrawer(style="matplot%").draw(redundancy_matrix, title="Redundancy Matrix")
 
-.. image:: sphinx/source/_static/redundancy_matrix.png
+.. image:: sphinx/source/_images/redundancy_matrix.png
     :width: 600
 
 
@@ -312,7 +312,7 @@ Let's look at the example for redundancy.
     redundancy = inspector.feature_redundancy_linkage()
     DendrogramDrawer().draw(data=redundancy, title="Redundancy Dendrogram")
 
-.. image:: sphinx/source/_static/redundancy_dendrogram.png
+.. image:: sphinx/source/_images/redundancy_dendrogram.png
     :width: 600
 
 Based on the dendrogram we can see that the feature pairs (`LDL`, `TC`)
@@ -371,7 +371,7 @@ we do the following for the simulation:
     # visualise results
     SimulationDrawer().draw(data=simulation, title=SIM_FEAT)
 
-.. image:: sphinx/source/_static/simulation_output.png
+.. image:: sphinx/source/_images/simulation_output.png
 
 We would conclude from the figure that higher values of `BMI` are associated with
 an increase in disease progression after one year, and that for a `BMI` of 28
@@ -427,15 +427,15 @@ BCG GAMMA team. If you would like to know more you can find out about
 or have a look at
 `career opportunities <https://www.bcg.com/en-gb/beyond-consulting/bcg-gamma/careers>`_.
 
-.. |pipe| image:: sphinx/source/_static/icons/pipe_icon.png
+.. |pipe| image:: sphinx/source/_images/icons/pipe_icon.png
    :width: 100px
    :class: facet_icon
 
-.. |inspect| image:: sphinx/source/_static/icons/inspect_icon.png
+.. |inspect| image:: sphinx/source/_images/icons/inspect_icon.png
    :width: 100px
    :class: facet_icon
 
-.. |sim| image:: sphinx/source/_static/icons/sim_icon.png
+.. |sim| image:: sphinx/source/_images/icons/sim_icon.png
    :width: 100px
    :class: facet_icon
 

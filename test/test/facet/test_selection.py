@@ -25,26 +25,29 @@ from sklearndf.regression.extra import LGBMRegressorDF
 
 from ..conftest import check_ranking
 from facet.data import Sample
-from facet.selection import ModelSelector, MultiEstimatorParameterSpace, ParameterSpace
+from facet.selection import (
+    LearnerSelector,
+    MultiEstimatorParameterSpace,
+    ParameterSpace,
+)
 from facet.validation import BootstrapCV, StratifiedBootstrapCV
 
 log = logging.getLogger(__name__)
 
 
-def test_model_selector(
-    regressor_parameters: MultiEstimatorParameterSpace[
-        RegressorPipelineDF[LGBMRegressorDF]
-    ],
+def test_learner_selector(
+    regressor_parameters: List[ParameterSpace[RegressorPipelineDF[LGBMRegressorDF]]],
     sample: Sample,
     n_jobs: int,
 ) -> None:
+
     expected_scores = [
         0.840,
         0.837,
         0.812,
-        0.812,
         0.793,
         0.790,
+        0.777,
         0.758,
         0.758,
         0.758,
@@ -56,9 +59,9 @@ def test_model_selector(
             RandomForestRegressorDF,
             RandomForestRegressorDF,
             LinearRegressionDF,
+            AdaBoostRegressorDF,
+            AdaBoostRegressorDF,
             LinearRegressionDF,
-            AdaBoostRegressorDF,
-            AdaBoostRegressorDF,
             LGBMRegressorDF,
             LGBMRegressorDF,
             LGBMRegressorDF,
@@ -68,21 +71,63 @@ def test_model_selector(
     expected_parameters = {
         0: dict(n_estimators=80),
         1: dict(n_estimators=50),
-        4: dict(n_estimators=50),
-        5: dict(n_estimators=80),
+        3: dict(n_estimators=50),
+        4: dict(n_estimators=80),
     }
 
     # define the circular cross validator with just 5 splits (to speed up testing)
     cv = BootstrapCV(n_splits=5, random_state=42)
 
-    ranker: ModelSelector[
+    with pytest.raises(
+        TypeError,
+        match=(
+            r"^arg parameter_space requires instances of one of "
+            r"{ParameterSpace, MultiEstimatorParameterSpace} but got: int$"
+        ),
+    ):
+        LearnerSelector(
+            searcher_type=GridSearchCV,
+            parameter_space=1,  # type: ignore
+            cv=cv,
+        )
+
+    with pytest.raises(
+        TypeError,
+        match=(
+            r"^arg parameter_space requires instances of one of "
+            r"{ParameterSpace, MultiEstimatorParameterSpace} but got: int$"
+        ),
+    ):
+        LearnerSelector(
+            searcher_type=GridSearchCV,
+            parameter_space=[1],  # type: ignore
+            cv=cv,
+        )
+
+    with pytest.raises(
+        TypeError,
+        match=(
+            r"^arg spaces requires instances of ParameterSpace but got: "
+            r"MultiEstimatorParameterSpace$"
+        ),
+    ):
+        multi_ps = MultiEstimatorParameterSpace(*regressor_parameters)
+        LearnerSelector(
+            searcher_type=GridSearchCV,
+            parameter_space=[multi_ps, multi_ps],  # type: ignore
+            cv=cv,
+        )
+
+    # define the learner selector
+    ranker: LearnerSelector[
         RegressorPipelineDF[LGBMRegressorDF], GridSearchCV
-    ] = ModelSelector(
+    ] = LearnerSelector(
         searcher_type=GridSearchCV,
         parameter_space=regressor_parameters,
         cv=cv,
         scoring="r2",
         n_jobs=n_jobs,
+        error_score="raise",
     ).fit(
         sample=sample
     )
@@ -130,9 +175,9 @@ def test_model_selector_no_preprocessing(n_jobs: int) -> None:
     )
     test_sample: Sample = Sample(observations=test_data, target_name="target")
 
-    model_selector: ModelSelector[
+    model_selector: LearnerSelector[
         ClassifierPipelineDF[SVCDF], GridSearchCV
-    ] = ModelSelector(
+    ] = LearnerSelector(
         searcher_type=GridSearchCV,
         parameter_space=parameter_space,
         cv=cv,
@@ -154,9 +199,10 @@ def test_model_selector_no_preprocessing(n_jobs: int) -> None:
         },
     )
 
+    min_best_performance = 0.8
     assert (
-        summary_report[("score", "test", "mean")].iloc[0] >= 0.8
-    ), "expected a best performance of at least 0.8"
+        summary_report[("score", "test", "mean")].iloc[0] >= min_best_performance
+    ), f"expected the best performance to be at least {min_best_performance}"
 
 
 def test_parameter_space(simple_preprocessor: TransformerDF) -> None:
@@ -187,11 +233,11 @@ def test_parameter_space(simple_preprocessor: TransformerDF) -> None:
     ):
         ps_1.regressor.unknown = 1
 
+    # noinspection GrazieInspection
     with pytest.raises(
         TypeError,
         match=(
-            "^expected list or distribution for parameter min_samples_leaf "
-            "but got: 1$"
+            r"^expected list or distribution for parameter min_samples_leaf but got: 1$"
         ),
     ):
         ps_1.regressor.min_samples_leaf = 1
@@ -214,7 +260,7 @@ def test_parameter_space(simple_preprocessor: TransformerDF) -> None:
     with pytest.raises(
         TypeError,
         match=(
-            r"^all candidate estimators must have the same estimator type, "
+            r"^all parameter spaces must use the same estimator type, "
             r"but got multiple types: classifier, regressor$"
         ),
     ):
@@ -299,9 +345,7 @@ def test_parameter_space(simple_preprocessor: TransformerDF) -> None:
 
 
 def test_model_selector_regression(
-    regressor_parameters: MultiEstimatorParameterSpace[
-        RegressorPipelineDF[LGBMRegressorDF]
-    ],
+    regressor_parameters: List[ParameterSpace[RegressorPipelineDF[LGBMRegressorDF]]],
     sample: Sample,
     n_jobs: int,
 ) -> None:
@@ -315,11 +359,11 @@ def test_model_selector_regression(
             "of arg searcher_type, but included: param_grid"
         ),
     ):
-        ModelSelector(GridSearchCV, regressor_parameters, param_grid=None)
+        LearnerSelector(GridSearchCV, regressor_parameters, param_grid=None)
 
-    ranker: ModelSelector[
+    ranker: LearnerSelector[
         RegressorPipelineDF[LGBMRegressorDF], GridSearchCV
-    ] = ModelSelector(
+    ] = LearnerSelector(
         GridSearchCV,
         regressor_parameters,
         scoring="r2",
@@ -367,16 +411,16 @@ def test_model_selector_classification(
     with pytest.raises(
         TypeError,
         match=(
-            "^all candidate estimators must have the same estimator type, "
+            r"^all parameter spaces must use the same estimator type, "
             "but got multiple types: classifier, regressor$"
         ),
     ):
         # define an illegal grid list, mixing classification with regression
         MultiEstimatorParameterSpace(ps1, ps2)  # type: ignore
 
-    model_selector: ModelSelector[
+    model_selector: LearnerSelector[
         ClassifierPipelineDF[RandomForestClassifierDF], GridSearchCV
-    ] = ModelSelector(
+    ] = LearnerSelector(
         searcher_type=GridSearchCV,
         parameter_space=ps1,
         cv=cv_stratified_bootstrap,
@@ -386,7 +430,10 @@ def test_model_selector_classification(
 
     with pytest.raises(
         ValueError,
-        match="arg sample_weight is not supported, use arg sample.weight instead",
+        match=(
+            "arg sample_weight is not supported, use 'weight' property "
+            "of arg sample instead"
+        ),
     ):
         model_selector.fit(
             sample=iris_sample_multi_class, sample_weight=iris_sample_multi_class.weight

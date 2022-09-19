@@ -262,6 +262,27 @@ class UnivariateRegressionSimulator(
     Base class for univariate simulations using regression models.
     """
 
+    # defined in superclass, repeated here for Sphinx
+    n_jobs: Optional[int]
+
+    # defined in superclass, repeated here for Sphinx
+    shared_memory: Optional[bool]
+
+    # defined in superclass, repeated here for Sphinx
+    pre_dispatch: Optional[Union[str, int]]
+
+    # defined in superclass, repeated here for Sphinx
+    verbose: Optional[int]
+
+    # defined in superclass, repeated here for Sphinx
+    model: RegressorDF
+
+    # defined in superclass, repeated here for Sphinx
+    sample: Sample
+
+    # defined in superclass, repeated here for Sphinx
+    confidence_level: float
+
     def expected_output(self) -> float:
         """
         Calculate the mean of actually observed values for the target.
