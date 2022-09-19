@@ -121,7 +121,8 @@ provided by the :class:`.LearnerInspector`.
 ~~~~~
 
 - DOC: use a downloadable dataset in the `getting started` notebook
-- FIX: import :mod:`catboost` if present, else create a local module mockup
+- FIX: import `catboost <https://catboost.ai/en/docs/>`_ if present, else create a local
+  module mockup
 - FIX: correctly identify if ``sample_weights`` is undefined when re-fitting a model
   on the full dataset in a ``LearnerCrossfit``
 - BUILD: relax package dependencies to support any `numpy` version |nbsp| 1.`x` from

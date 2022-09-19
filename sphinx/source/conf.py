@@ -19,7 +19,6 @@ set_config(
     project="facet",
     html_logo=os.path.join("_static", "Gamma_Facet_Logo_RGB_LB.svg"),
     intersphinx_mapping={
-        "catboost": ("https://catboost.ai/docs/", None),
         "pytools": ("https://bcg-gamma.github.io/pytools/", None),
         "shap": ("https://shap.readthedocs.io/en/stable", None),
         "sklearn": ("https://scikit-learn.org/stable", None),
