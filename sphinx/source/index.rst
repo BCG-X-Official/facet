@@ -1,4 +1,4 @@
-.. image:: _static/Gamma_Facet_Logo_RGB_LB.svg
+.. image:: /_images/Gamma_Facet_Logo_RGB_LB.svg
 
 |
 

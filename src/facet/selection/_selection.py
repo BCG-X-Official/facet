@@ -10,6 +10,7 @@ from typing import (
     Callable,
     Dict,
     Generic,
+    Iterable,
     List,
     Optional,
     Pattern,
@@ -27,18 +28,19 @@ from sklearn.base import BaseEstimator
 from sklearn.metrics import get_scorer
 from sklearn.model_selection import BaseCrossValidator, GridSearchCV
 
-from pytools.api import AllTracker, inheritdoc
+from pytools.api import AllTracker, inheritdoc, to_list
 from pytools.fit import FittableMixin
 from pytools.parallelization import ParallelizableMixin
 from sklearndf import EstimatorDF
 from sklearndf.pipeline import LearnerPipelineDF
 
 from facet.data import Sample
+from facet.selection import MultiEstimatorParameterSpace, ParameterSpace
 from facet.selection.base import BaseParameterSpace, CandidateEstimatorDF
 
 log = logging.getLogger(__name__)
 
-__all__ = ["ModelSelector"]
+__all__ = ["LearnerSelector"]
 
 #
 # Type constants
@@ -54,7 +56,7 @@ BaseSearchCV = next(
 # Type variables
 #
 
-T_ModelSelector = TypeVar("T_ModelSelector", bound="ModelSelector[Any, Any]")
+T_LearnerSelector = TypeVar("T_LearnerSelector", bound="LearnerSelector[Any, Any]")
 T_EstimatorDF = TypeVar("T_EstimatorDF", bound=EstimatorDF)
 # mypy - disabling due to lack of support for dynamic types
 T_SearchCV = TypeVar("T_SearchCV", bound=BaseSearchCV)  # type: ignore
@@ -78,14 +80,12 @@ __tracker = AllTracker(globals())
 
 
 @inheritdoc(match="[see superclass]")
-class ModelSelector(
+class LearnerSelector(
     FittableMixin[Sample], ParallelizableMixin, Generic[T_EstimatorDF, T_SearchCV]
 ):
     """
     Select the best model obtained by fitting an estimator using different
-    choices of hyper-parameters from a :class:`.ParameterSpace`, or even
-    simultaneously evaluating multiple competing estimators from a
-    :class:`.MultiEstimatorParameterSpace`.
+    choices of hyperparameters from one or more :class:`.ParameterSpace` objects.
     """
 
     # defined in superclass, repeated here for Sphinx
@@ -115,17 +115,14 @@ class ModelSelector(
     #: (optional; use learner's default scorer if not specified here)
     scoring: Union[
         str,
-        Callable[
-            [EstimatorDF, pd.Series, pd.Series],
-            float,
-        ],
+        Callable[[EstimatorDF, pd.Series, pd.Series], float],
         None,
     ]
 
     #: Additional parameters to be passed on to the searcher.
     searcher_params: Dict[str, Any]
 
-    #: The searcher used to fit this ModelSelector; ``None`` if not fitted.
+    #: The searcher used to fit this LearnerSelector; ``None`` if not fitted.
     searcher_: Optional[T_SearchCV]
 
     # regular expressions and replacement patterns for selecting and renaming
@@ -133,19 +130,28 @@ class ModelSelector(
     _CV_RESULT_COLUMNS = [
         (r"rank_test_(\w+)", r"\1__test__rank"),
         (r"(mean|std)_test_(\w+)", r"\2__test__\1"),
+        (r"candidate_name", r"candidate"),
         (r"param_(\w+)", r"param__\1"),
         (r"(rank|mean|std)_(\w+)_time", r"time__\2__\1"),
         (r"(rank|mean|std)_(\w+)_(\w+)", r"\3__\2__\1"),
     ]
-    # noinspection PyTypeChecker
+
     _CV_RESULT_PATTERNS: List[Tuple[Pattern[str], str]] = [
         (re.compile(pattern), repl) for pattern, repl in _CV_RESULT_COLUMNS
     ]
 
-    _CV_RESULT_CANDIDATE_PATTERN: Pattern[str] = re.compile(
-        r"^(?:(param__)candidate__|param__(candidate(?:_name)?)$)"  # NOSONAR
+    _CV_RESULT_CANDIDATE_PATTERN, _CV_RESULT_CANDIDATE_REPL = (
+        re.compile(
+            r"^(?:"
+            # remove the candidate prefix from proper params
+            r"(param_)candidate__"
+            r"|"
+            # remove the param prefix from candidate properties
+            r"param_(candidate(?:_name)?)$"
+            r")"
+        ),
+        r"\1\2",
     )
-    _CV_RESULT_CANDIDATE_REPL: str = r"\1\2"
 
     # Default column to sort by in the summary_report() method.
     # This has no influence on how the best model is selected.
@@ -154,8 +160,11 @@ class ModelSelector(
     def __init__(
         self,
         searcher_type: Callable[..., T_SearchCV],
-        parameter_space: BaseParameterSpace[T_EstimatorDF],
-        *,
+        parameter_space: Union[
+            ParameterSpace[T_EstimatorDF],
+            MultiEstimatorParameterSpace[T_EstimatorDF],
+            Iterable[ParameterSpace[T_EstimatorDF]],
+        ],
         cv: Optional[BaseCrossValidator] = None,
         scoring: Union[
             str,
@@ -174,7 +183,9 @@ class ModelSelector(
         """
         :param searcher_type: a cross-validation searcher class, or any other
             callable that instantiates a cross-validation searcher
-        :param parameter_space: the parameter space to search
+        :param parameter_space: one or more parameter spaces to search; when passing
+            multiple parameter spaces as an iterable, they are combined into a
+            :class:`.MultiEstimatorParameterSpace`
         :param cv: the cross-validator to be used by the searcher
             (e.g., :class:`~sklearn.model_selection.RepeatedKFold`)
         :param scoring: a scoring function (by name, or as a callable) to be used by the
@@ -195,6 +206,24 @@ class ModelSelector(
         )
 
         self.searcher_type = (searcher_type,)
+        if not isinstance(parameter_space, BaseParameterSpace):
+            parameter_spaces: List[
+                Union[
+                    ParameterSpace[T_EstimatorDF],
+                    MultiEstimatorParameterSpace[T_EstimatorDF],
+                ]
+            ] = to_list(
+                parameter_space,
+                element_type=(ParameterSpace, MultiEstimatorParameterSpace),
+                arg_name="parameter_space",
+            )
+            if len(parameter_spaces) == 1:
+                parameter_space = parameter_spaces[0]
+            else:
+                parameter_space = MultiEstimatorParameterSpace(
+                    *cast(List[ParameterSpace[T_EstimatorDF]], parameter_spaces)
+                )
+
         self.parameter_space = parameter_space
         self.cv = cv
         self.scoring = scoring
@@ -272,14 +301,14 @@ class ModelSelector(
 
     def fit(  # type: ignore[override]
         # todo: remove 'type: ignore' once mypy correctly infers return type
-        self: T_ModelSelector,
+        self: T_LearnerSelector,
         sample: Sample,
         groups: Union[pd.Series, npt.NDArray[Any], Sequence[Any], None] = None,
         **fit_params: Any,
-    ) -> T_ModelSelector:
+    ) -> T_LearnerSelector:
         """
-        Search this model selector's parameter space to identify the model with the
-        best-performing hyper-parameter combination, using the given sample to fit and
+        Search this learner selector's parameter space to identify the model with the
+        best-performing hyperparameter combination, using the given sample to fit and
         score the candidate estimators.
 
         :param sample: the sample used to fit and score the estimators
@@ -293,7 +322,8 @@ class ModelSelector(
 
         if ARG_SAMPLE_WEIGHT in fit_params:
             raise ValueError(
-                "arg sample_weight is not supported, use arg sample.weight instead"
+                "arg sample_weight is not supported, use 'weight' property of arg "
+                "sample instead"
             )
 
         if isinstance(groups, pd.Series):
@@ -337,15 +367,25 @@ class ModelSelector(
             sort_by = self._DEFAULT_REPORT_SORT_COLUMN
 
         assert self.searcher_ is not None, "Ranker is fitted"
+
+        # get the raw CV results
         cv_results: Dict[str, Any] = self.searcher_.cv_results_
+
+        if isinstance(self.parameter_space.estimator, CandidateEstimatorDF):
+            # our estimator is a candidate estimator, so we need to unpack the
+            # candidate's parameter names
+            cv_results = {
+                self._CV_RESULT_CANDIDATE_PATTERN.sub(
+                    self._CV_RESULT_CANDIDATE_REPL, name
+                ): values
+                for name, values in cv_results.items()
+            }
 
         # we create a table using a subset of the cv results, to keep the report
         # relevant and readable
-        cv_results_processed: Dict[str, Tuple[str, npt.NDArray[np.float_]]] = {}
 
-        unpack_candidate: bool = isinstance(
-            self.parameter_space.estimator, CandidateEstimatorDF
-        )
+        pattern: Pattern[str]
+        repl: str
 
         def _process(name: str) -> Optional[str]:
             # process the name of the original cv_results_ record
@@ -354,20 +394,15 @@ class ModelSelector(
             match = pattern.fullmatch(name)
             if match is None:
                 # we could not match the name:
-                # return None so we don't include it in the summary report
+                # return None, so we don't include it in the summary report
                 return None
-
-            name = match.expand(repl)
-            if unpack_candidate:
-                # remove the "candidate" layer in the parameter output if we're dealing
-                # with a multi parameter space
-                return ModelSelector._CV_RESULT_CANDIDATE_PATTERN.sub(
-                    ModelSelector._CV_RESULT_CANDIDATE_REPL, name
-                )
             else:
-                return name
+                return match.expand(repl)
 
         # add all columns that match any of the pre-defined patterns
+
+        cv_results_processed: Dict[str, Tuple[str, npt.NDArray[np.float_]]] = {}
+
         for pattern, repl in self._CV_RESULT_PATTERNS:
             cv_results_processed.update(
                 {
@@ -383,6 +418,7 @@ class ModelSelector(
             )
 
         # add the sorting column as the leftmost column of the report
+
         sort_column_processed: Optional[str]
 
         sort_column_processed, _ = cv_results_processed.get(sort_by, None)
@@ -395,6 +431,7 @@ class ModelSelector(
                 cv_results_processed[sort_by] = cv_results[sort_by]
 
         # convert the results into a data frame and sort
+
         report = pd.DataFrame(
             {
                 name_processed: values
@@ -403,6 +440,7 @@ class ModelSelector(
         )
 
         # sort the report, if applicable
+
         if sort_column_processed is not None:
             report = report.sort_values(by=sort_column_processed)
 

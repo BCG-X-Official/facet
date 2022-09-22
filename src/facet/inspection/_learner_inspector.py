@@ -2,6 +2,7 @@
 Core implementation of :mod:`facet.inspection`
 """
 import logging
+from abc import ABCMeta
 from types import MethodType
 from typing import (
     Any,
@@ -53,6 +54,7 @@ log = logging.getLogger(__name__)
 
 __all__ = [
     "LearnerInspector",
+    "ModelInspector",
 ]
 
 
@@ -94,9 +96,18 @@ __tracker = AllTracker(globals())
 #
 
 
+class ModelInspector(FittableMixin[Sample], metaclass=ABCMeta):
+    """
+    Base class of `inspectors` to explain different kinds of `models` based on SHAP
+    values.
+    """
+
+    pass
+
+
 @inheritdoc(match="[see superclass]")
 class LearnerInspector(
-    FittableMixin[Sample], ParallelizableMixin, Generic[T_LearnerPipelineDF]
+    ModelInspector, ParallelizableMixin, Generic[T_LearnerPipelineDF]
 ):
     """
     Explain regressors and classifiers based on SHAP values.
@@ -225,7 +236,8 @@ class LearnerInspector(
         **fit_params: Any,
     ) -> T_LearnerInspector:
         """
-        Fit the inspector with the given sample.
+        Fit the inspector with the given sample, creating global explanations including
+        feature redundancy and synergy.
 
         This will calculate SHAP values and, if enabled in the underlying SHAP
         explainer, also SHAP interaction values.

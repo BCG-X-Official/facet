@@ -60,7 +60,7 @@ Generating Standard Scikit-learn Classifier Performance Summaries
 *******************************************************************
 
 Find quick clear examples of how to generate standard *scikit-learn* performance
-summaries for the best identified classifier from your FACET `ModelSelector()`.
+summaries for the best identified classifier from your FACET `LearnerSelector()`.
 
 Start exploring the tutorial by clicking on the section links below, and run
 the code for yourself by downloading the notebook
