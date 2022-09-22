@@ -2,7 +2,7 @@
 Core implementation of :mod:`facet.inspection`
 """
 import logging
-from abc import ABCMeta
+from abc import ABCMeta, abstractmethod
 from types import MethodType
 from typing import (
     Any,
@@ -26,7 +26,7 @@ from scipy.cluster import hierarchy
 from scipy.spatial import distance
 from sklearn.base import is_classifier
 
-from pytools.api import AllTracker, inheritdoc
+from pytools.api import AllTracker, inheritdoc, subsdoc
 from pytools.data import LinkageTree, Matrix
 from pytools.fit import FittableMixin, fitted_only
 from pytools.parallelization import ParallelizableMixin
@@ -39,6 +39,7 @@ from ._inspection import ShapPlotData
 from ._shap import (
     ClassifierShapInteractionValuesCalculator,
     ClassifierShapValuesCalculator,
+    LearnerShapCalculator,
     RegressorShapInteractionValuesCalculator,
     RegressorShapValuesCalculator,
     ShapCalculator,
@@ -96,20 +97,13 @@ __tracker = AllTracker(globals())
 #
 
 
-class ModelInspector(FittableMixin[Sample], metaclass=ABCMeta):
+class ModelInspector(ParallelizableMixin, FittableMixin[Sample], metaclass=ABCMeta):
     """
-    Base class of `inspectors` to explain different kinds of `models` based on SHAP
-    values.
-    """
+    .. note::
+        This is an abstract base class for inspectors explaining different kinds of
+        models based on SHAP values.
+        It is not intended to be used directly.
 
-    pass
-
-
-@inheritdoc(match="[see superclass]")
-class LearnerInspector(
-    ModelInspector, ParallelizableMixin, Generic[T_LearnerPipelineDF]
-):
-    """
     Explain regressors and classifiers based on SHAP values.
 
     Focus is on explaining the overall model, but the inspector also delivers
@@ -155,18 +149,9 @@ class LearnerInspector(
     #: Name for feature importance series or column.
     COL_IMPORTANCE = "importance"
 
-    #: The default explainer factory used by this inspector.
-    #: This is a tree explainer using the tree_path_dependent method for
-    #: feature perturbation, so we can calculate SHAP interaction values.
-    DEFAULT_EXPLAINER_FACTORY = TreeExplainerFactory(
-        feature_perturbation="tree_path_dependent", uses_background_dataset=False
-    )
-
     def __init__(
         self,
         *,
-        pipeline: T_LearnerPipelineDF,
-        explainer_factory: Optional[ExplainerFactory] = None,
         shap_interaction: bool = True,
         n_jobs: Optional[int] = None,
         shared_memory: Optional[bool] = None,
@@ -174,9 +159,6 @@ class LearnerInspector(
         verbose: Optional[int] = None,
     ) -> None:
         """
-        :param pipeline: the learner pipeline to inspect
-        :param explainer_factory: optional function that creates a shap Explainer
-            (default: ``TreeExplainerFactory``)
         :param shap_interaction: if ``True``, calculate SHAP interaction values, else
             only calculate SHAP contribution values.
             SHAP interaction values are needed to determine feature synergy and
@@ -190,35 +172,6 @@ class LearnerInspector(
             verbose=verbose,
         )
 
-        if not pipeline.is_fitted:
-            raise ValueError("arg pipeline must be fitted")
-
-        if not isinstance(pipeline.final_estimator, (ClassifierDF, RegressorDF)):
-            raise TypeError(
-                "learner in arg pipeline must be a classifier or a regressor,"
-                f"but is a {type(pipeline.final_estimator).__name__}"
-            )
-
-        if explainer_factory:
-            if not explainer_factory.explains_raw_output:
-                raise ValueError(
-                    "arg explainer_factory is not configured to explain raw output"
-                )
-        else:
-            explainer_factory = self.DEFAULT_EXPLAINER_FACTORY
-            assert explainer_factory.explains_raw_output
-
-        if shap_interaction:
-            if not explainer_factory.supports_shap_interaction_values:
-                log.warning(
-                    "ignoring arg shap_interaction=True: "
-                    f"explainers made by {explainer_factory!r} do not support "
-                    "SHAP interaction values"
-                )
-                shap_interaction = False
-
-        self.pipeline = pipeline
-        self.explainer_factory = explainer_factory
         self.shap_interaction = shap_interaction
 
         self._shap_calculator: Optional[ShapCalculator] = None
@@ -230,87 +183,7 @@ class LearnerInspector(
         str, ParallelizableMixin.__init__.__doc__
     )
 
-    def fit(
-        self: T_LearnerInspector,
-        __sample: Sample,
-        **fit_params: Any,
-    ) -> T_LearnerInspector:
-        """
-        Fit the inspector with the given sample, creating global explanations including
-        feature redundancy and synergy.
-
-        This will calculate SHAP values and, if enabled in the underlying SHAP
-        explainer, also SHAP interaction values.
-
-        :param __sample: the background sample to be used for the global explanation
-            of this model
-        :param fit_params: additional keyword arguments (ignored; accepted for
-            compatibility with :class:`.FittableMixin`)
-        :return: ``self``
-        """
-
-        learner: LearnerDF = self.pipeline.final_estimator
-
-        _is_classifier = is_classifier(learner)
-        if _is_classifier and isinstance(__sample.target_name, list):
-            raise ValueError(
-                "only single-output classifiers (binary or multi-class) are supported, "
-                "but the given classifier has been fitted on multiple columns "
-                f"{__sample.target_name}"
-            )
-
-        shap_global_projector: Union[
-            ShapVectorProjector, ShapInteractionVectorProjector, None
-        ]
-
-        shap_calculator_type: Type[ShapCalculator[T_LearnerPipelineDF]]
-        shap_calculator: ShapCalculator[T_LearnerPipelineDF]
-
-        if self.shap_interaction:
-            if _is_classifier:
-                shap_calculator_type = ClassifierShapInteractionValuesCalculator
-            else:
-                shap_calculator_type = RegressorShapInteractionValuesCalculator
-
-            shap_calculator = shap_calculator_type(
-                pipeline=self.pipeline,
-                explainer_factory=self.explainer_factory,
-                n_jobs=self.n_jobs,
-                shared_memory=self.shared_memory,
-                pre_dispatch=self.pre_dispatch,
-                verbose=self.verbose,
-            )
-
-            shap_global_projector = ShapInteractionVectorProjector()
-
-        else:
-            if _is_classifier:
-                shap_calculator_type = ClassifierShapValuesCalculator
-            else:
-                shap_calculator_type = RegressorShapValuesCalculator
-
-            shap_calculator = shap_calculator_type(
-                pipeline=self.pipeline,
-                explainer_factory=self.explainer_factory,
-                n_jobs=self.n_jobs,
-                shared_memory=self.shared_memory,
-                pre_dispatch=self.pre_dispatch,
-                verbose=self.verbose,
-            )
-
-            shap_global_projector = ShapVectorProjector()
-
-        shap_calculator.fit(__sample)
-        shap_global_projector.fit(shap_calculator=shap_calculator)
-
-        self._sample = __sample
-        self._shap_calculator = shap_calculator
-        self._shap_global_projector = shap_global_projector
-
-        return self
-
     @property
-    @fitted_only
     def _shap_global_explainer(self) -> ShapGlobalExplainer:
         assert self._shap_global_projector is not None, ASSERTION__INSPECTOR_IS_FITTED
         return self._shap_global_projector
@@ -329,6 +202,19 @@ class LearnerInspector(
 
         assert self._sample is not None, ASSERTION__INSPECTOR_IS_FITTED
         return self._sample
+
+    @property
+    @abstractmethod
+    def feature_names_(self) -> List[str]:
+        """
+        The feature names of the background sample used to calculate SHAP values.
+
+        These names may differ from the feature names of the raw sample if the feature
+        set has been preprocessed before calculating SHAP values.
+
+        :return: the feature names
+        """
+        pass
 
     @property
     @fitted_only
@@ -350,15 +236,6 @@ class LearnerInspector(
             and self._shap_calculator.output_names_ is not None
         ), ASSERTION__INSPECTOR_IS_FITTED
         return self._shap_calculator.output_names_
-
-    @property
-    @fitted_only
-    def features_(self) -> List[str]:
-        """
-        The names of the features used to fit the learner pipeline explained by this
-        inspector.
-        """
-        return cast(List[str], self.pipeline.feature_names_out_.to_list())
 
     @fitted_only
     def shap_values(self) -> Union[pd.DataFrame, List[pd.DataFrame]]:
@@ -394,6 +271,7 @@ class LearnerInspector(
     def feature_importance(
         self, *, method: str = "rms"
     ) -> Union[pd.Series, pd.DataFrame]:
+        # noinspection GrazieInspection
         """
         Calculate the relative importance of each feature based on SHAP values.
 
@@ -723,7 +601,7 @@ class LearnerInspector(
             `(n_features, n_features)`; or a list of such data frames
         """
 
-        n_features = len(self.features_)
+        n_features = len(self.feature_names_)
         n_outputs = len(self.output_names_)
 
         # get a feature interaction array with shape
@@ -783,14 +661,14 @@ class LearnerInspector(
         `shap <https://shap.readthedocs.io/en/stable/>`__ package.
 
         The `shap` package provides functions for creating various SHAP plots.
-        Most of these functions require
+        Most of these functions require:
 
         - one or more SHAP value matrices as a single `numpy` array,
           or a list of `numpy` arrays of shape `(n_observations, n_features)`
         - a feature matrix of shape `(n_observations, n_features)`, which can be
           provided as a data frame to preserve feature names
 
-        This method provides this data inside a :class:`.ShapPlotData` object, plus
+        This method provides this data inside a :class:`.ShapPlotData` object, plus:
 
         - the names of all outputs (i.e., the target names in case of regression,
           or the class names in case of classification)
@@ -834,7 +712,7 @@ class LearnerInspector(
         # transform a matrix of shape (n_outputs, n_features, n_features)
         # to a data frame
 
-        feature_index = self.pipeline.feature_names_out_.rename(Sample.IDX_FEATURE)
+        feature_index = self.feature_names_
 
         n_features = len(feature_index)
         assert matrix.shape == (len(self.output_names_), n_features, n_features)
@@ -965,7 +843,7 @@ class LearnerInspector(
     def __linkage_tree_from_affinity_matrix_for_output(
         feature_affinity_matrix: FloatArray, feature_importance: pd.Series
     ) -> LinkageTree:
-        # calculate the linkage tree from the a given output in a feature distance
+        # calculate the linkage tree from the given output in a feature distance
         # matrix;
         # matrix has shape (n_features, n_features) with values ranging from
         # (1 = closest, 0 = most distant)
@@ -978,7 +856,7 @@ class LearnerInspector(
 
         # Feature labels and weights will be used as the leaves of the linkage tree.
         # Select only the features that appear in the distance matrix, and in the
-        # correct order
+        # correct order.
 
         # build and return the linkage tree
         return LinkageTree(
@@ -995,7 +873,7 @@ class LearnerInspector(
     def __linkage_matrix_from_affinity_matrix_for_output(
         feature_affinity_matrix: FloatArray,
     ) -> FloatArray:
-        # calculate the linkage matrix from the a given output in a feature distance
+        # calculate the linkage matrix from the given output in a feature distance
         # matrix;
         # matrix has shape (n_features, n_features) with values ranging from
         # (1 = closest, 0 = most distant)
@@ -1091,16 +969,179 @@ class LearnerInspector(
     @property
     def __shap_interaction_values_calculator(
         self,
-    ) -> ShapInteractionValuesCalculator[T_LearnerPipelineDF]:
+    ) -> ShapInteractionValuesCalculator:
         self._ensure_shap_interaction()
-        return cast(
-            ShapInteractionValuesCalculator[T_LearnerPipelineDF], self._shap_calculator
-        )
+        return cast(ShapInteractionValuesCalculator, self._shap_calculator)
 
     @property
     def __interaction_explainer(self) -> ShapInteractionGlobalExplainer:
         self._ensure_shap_interaction()
         return cast(ShapInteractionGlobalExplainer, self._shap_global_explainer)
+
+
+@subsdoc(
+    pattern=(
+        r"(?m)"  # match multiline
+        r"(^\s+)\.\. note::\s*"  # .. note:: at start of line
+        r"(?:\1.*\n)+"  # followed by one or more indented lines
+        r"(?:\1?\n)*"  # followed by zero or more blank lines
+    ),
+    replacement="",
+)
+@inheritdoc(match="""[see superclass]""")
+class LearnerInspector(ModelInspector, Generic[T_LearnerPipelineDF]):
+    """[see superclass]"""
+
+    #: The default explainer factory used by this inspector.
+    #: This is a tree explainer using the tree_path_dependent method for
+    #: feature perturbation, so we can calculate SHAP interaction values.
+    DEFAULT_EXPLAINER_FACTORY = TreeExplainerFactory(
+        feature_perturbation="tree_path_dependent", uses_background_dataset=False
+    )
+
+    def __init__(
+        self,
+        *,
+        pipeline: T_LearnerPipelineDF,
+        explainer_factory: Optional[ExplainerFactory] = None,
+        shap_interaction: bool = True,
+        n_jobs: Optional[int] = None,
+        shared_memory: Optional[bool] = None,
+        pre_dispatch: Optional[Union[str, int]] = None,
+        verbose: Optional[int] = None,
+    ) -> None:
+        """
+        :param pipeline: the learner pipeline to inspect
+        :param explainer_factory: optional function that creates a shap Explainer
+            (default: ``TreeExplainerFactory``)
+        """
+
+        if not pipeline.is_fitted:
+            raise ValueError("arg pipeline must be fitted")
+
+        if not isinstance(pipeline.final_estimator, (ClassifierDF, RegressorDF)):
+            raise TypeError(
+                "learner in arg pipeline must be a classifier or a regressor,"
+                f"but is a {type(pipeline.final_estimator).__name__}"
+            )
+
+        if explainer_factory:
+            if not explainer_factory.explains_raw_output:
+                raise ValueError(
+                    "arg explainer_factory is not configured to explain raw output"
+                )
+        else:
+            explainer_factory = self.DEFAULT_EXPLAINER_FACTORY
+            assert explainer_factory.explains_raw_output
+
+        if shap_interaction:
+            if not explainer_factory.supports_shap_interaction_values:
+                log.warning(
+                    "ignoring arg shap_interaction=True: "
+                    f"explainers made by {explainer_factory!r} do not support "
+                    "SHAP interaction values"
+                )
+                shap_interaction = False
+
+        super().__init__(
+            shap_interaction=shap_interaction,
+            n_jobs=n_jobs,
+            shared_memory=shared_memory,
+            pre_dispatch=pre_dispatch,
+            verbose=verbose,
+        )
+
+        self.pipeline = pipeline
+        self.explainer_factory = explainer_factory
+
+    __init__.__doc__ = cast(str, __init__.__doc__) + cast(
+        str, ModelInspector.__init__.__doc__
+    )
+
+    @property
+    @fitted_only
+    def feature_names_(self) -> List[str]:
+        """[see superclass]"""
+        return self.pipeline.feature_names_out_.rename(Sample.IDX_FEATURE).to_list()
+
+    def fit(
+        self: T_LearnerInspector,
+        __sample: Sample,
+        **fit_params: Any,
+    ) -> T_LearnerInspector:
+        """
+        Fit the inspector with the given sample, creating global explanations including
+        feature redundancy and synergy.
+
+        This will calculate SHAP values and, if enabled in the underlying SHAP
+        explainer, also SHAP interaction values.
+
+        :param __sample: the background sample to be used for the global explanation
+            of this model
+        :param fit_params: additional keyword arguments (ignored; accepted for
+            compatibility with :class:`.FittableMixin`)
+        :return: ``self``
+        """
+
+        learner: LearnerDF = self.pipeline.final_estimator
+
+        _is_classifier = is_classifier(learner)
+        if _is_classifier and isinstance(__sample.target_name, list):
+            raise ValueError(
+                "only single-output classifiers (binary or multi-class) are supported, "
+                "but the given classifier has been fitted on multiple columns "
+                f"{__sample.target_name}"
+            )
+
+        shap_global_projector: Union[
+            ShapVectorProjector, ShapInteractionVectorProjector, None
+        ]
+
+        shap_calculator_type: Type[LearnerShapCalculator[T_LearnerPipelineDF]]
+        shap_calculator: LearnerShapCalculator[T_LearnerPipelineDF]
+
+        if self.shap_interaction:
+            if _is_classifier:
+                shap_calculator_type = ClassifierShapInteractionValuesCalculator
+            else:
+                shap_calculator_type = RegressorShapInteractionValuesCalculator
+
+            shap_calculator = shap_calculator_type(
+                pipeline=self.pipeline,
+                explainer_factory=self.explainer_factory,
+                n_jobs=self.n_jobs,
+                shared_memory=self.shared_memory,
+                pre_dispatch=self.pre_dispatch,
+                verbose=self.verbose,
+            )
+
+            shap_global_projector = ShapInteractionVectorProjector()
+
+        else:
+            if _is_classifier:
+                shap_calculator_type = ClassifierShapValuesCalculator
+            else:
+                shap_calculator_type = RegressorShapValuesCalculator
+
+            shap_calculator = shap_calculator_type(
+                pipeline=self.pipeline,
+                explainer_factory=self.explainer_factory,
+                n_jobs=self.n_jobs,
+                shared_memory=self.shared_memory,
+                pre_dispatch=self.pre_dispatch,
+                verbose=self.verbose,
+            )
+
+            shap_global_projector = ShapVectorProjector()
+
+        shap_calculator.fit(__sample)
+        shap_global_projector.fit(shap_calculator=shap_calculator)
+
+        self._sample = __sample
+        self._shap_calculator = shap_calculator
+        self._shap_global_projector = shap_global_projector
+
+        return self
 
 
 __tracker.validate()
