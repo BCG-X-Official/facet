@@ -30,6 +30,7 @@ from sklearn.model_selection import BaseCrossValidator, GridSearchCV
 
 from pytools.api import AllTracker, inheritdoc, to_list
 from pytools.fit import FittableMixin
+from pytools.fit._fit import fitted_only
 from pytools.parallelization import ParallelizableMixin
 from sklearndf import EstimatorDF
 from sklearndf.pipeline import LearnerPipelineDF
@@ -279,11 +280,11 @@ class LearnerSelector(
         return self.searcher_ is not None
 
     @property
+    @fitted_only
     def best_estimator_(self) -> T_EstimatorDF:
         """
         The model which obtained the best ranking score, fitted on the entire sample.
         """
-        self.ensure_fitted()
         searcher = self.searcher_
         assert searcher is not None, "Ranker is fitted"
 
@@ -350,6 +351,7 @@ class LearnerSelector(
 
         return self
 
+    @fitted_only
     def summary_report(self, *, sort_by: Optional[str] = None) -> pd.DataFrame:
         """
         Create a summary table of the scores achieved by all learners in the grid
@@ -360,8 +362,6 @@ class LearnerSelector(
 
         :return: the summary report of the grid search as a data frame
         """
-
-        self.ensure_fitted()
 
         if sort_by is None:
             sort_by = self._DEFAULT_REPORT_SORT_COLUMN

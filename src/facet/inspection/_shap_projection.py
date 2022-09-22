@@ -11,6 +11,7 @@ import numpy as np
 import numpy.typing as npt
 
 from pytools.api import AllTracker, inheritdoc
+from pytools.fit._fit import fitted_only
 
 from ._shap import ShapCalculator
 from ._shap_global_explanation import (
@@ -66,10 +67,10 @@ class ShapProjector(ShapGlobalExplainer, metaclass=ABCMeta):
         super().__init__()
         self.association_: Optional[AffinityMatrix] = None
 
+    @fitted_only
     def association(self, absolute: bool, symmetrical: bool) -> npt.NDArray[np.float_]:
         """[see superclass]"""
 
-        self.ensure_fitted()
         assert self.association_ is not None
         return self.association_.get_values(symmetrical=symmetrical, absolute=absolute)
 
@@ -155,17 +156,17 @@ class ShapInteractionVectorProjector(ShapProjector, ShapInteractionGlobalExplain
         self.synergy_: Optional[AffinityMatrix] = None
         self.redundancy_: Optional[AffinityMatrix] = None
 
+    @fitted_only
     def synergy(self, symmetrical: bool, absolute: bool) -> npt.NDArray[np.float_]:
         """[see superclass]"""
 
-        self.ensure_fitted()
         assert self.synergy_ is not None, "Projector is fitted"
         return self.synergy_.get_values(symmetrical=symmetrical, absolute=absolute)
 
+    @fitted_only
     def redundancy(self, symmetrical: bool, absolute: bool) -> npt.NDArray[np.float_]:
         """[see superclass]"""
 
-        self.ensure_fitted()
         assert self.redundancy_ is not None, "Projector is fitted"
         return self.redundancy_.get_values(symmetrical=symmetrical, absolute=absolute)
 

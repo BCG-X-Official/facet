@@ -13,6 +13,7 @@ import numpy.typing as npt
 
 from pytools.api import AllTracker, inheritdoc
 from pytools.fit import FittableMixin
+from pytools.fit._fit import fitted_only
 
 log = logging.getLogger(__name__)
 
@@ -99,22 +100,22 @@ class Partitioner(
         return self._max_partitions
 
     @property
+    @fitted_only
     def partitions_(self) -> Sequence[T_Values]:
         """
         The values representing the partitions.
         """
 
-        self.ensure_fitted()
         assert self._partitions is not None, ASSERTION__PARTITIONER_IS_FITTED
         return self._partitions
 
     @property
+    @fitted_only
     def frequencies_(self) -> npt.NDArray[np.int_]:
         """
         The count of values allocated to each partition.
         """
 
-        self.ensure_fitted()
         assert self._frequencies is not None, ASSERTION__PARTITIONER_IS_FITTED
         return self._frequencies
 
@@ -177,6 +178,7 @@ class RangePartitioner(
         return False
 
     @property
+    @fitted_only
     def partition_bounds_(self) -> Sequence[Tuple[T_Values_Scalar, T_Values_Scalar]]:
         """
         Return the endpoints of the intervals that delineate each partition.
@@ -186,17 +188,16 @@ class RangePartitioner(
             bound of a partition range
         """
 
-        self.ensure_fitted()
         assert self._partition_bounds is not None, ASSERTION__PARTITIONER_IS_FITTED
         return self._partition_bounds
 
     @property
+    @fitted_only
     def partition_width_(self) -> T_Values_Scalar:
         """
         The width of each partition.
         """
 
-        self.ensure_fitted()
         assert self._step is not None, ASSERTION__PARTITIONER_IS_FITTED
         return self._step
 
