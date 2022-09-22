@@ -25,15 +25,16 @@ from ._explainer import BaseExplainer, ExplainerFactory, ParallelExplainer
 log = logging.getLogger(__name__)
 
 __all__ = [
-    "ShapCalculator",
-    "ShapValuesCalculator",
-    "ShapInteractionValuesCalculator",
-    "RegressorShapCalculator",
-    "RegressorShapValuesCalculator",
-    "RegressorShapInteractionValuesCalculator",
     "ClassifierShapCalculator",
-    "ClassifierShapValuesCalculator",
     "ClassifierShapInteractionValuesCalculator",
+    "ClassifierShapValuesCalculator",
+    "LearnerShapCalculator",
+    "RegressorShapCalculator",
+    "RegressorShapInteractionValuesCalculator",
+    "RegressorShapValuesCalculator",
+    "ShapCalculator",
+    "ShapInteractionValuesCalculator",
+    "ShapValuesCalculator",
 ]
 
 #
@@ -63,13 +64,7 @@ __tracker = AllTracker(globals())
 #
 
 
-@inheritdoc(match="[see superclass]")
-class ShapCalculator(
-    FittableMixin[Sample],
-    ParallelizableMixin,
-    Generic[T_LearnerPipelineDF],
-    metaclass=ABCMeta,
-):
+class ShapCalculator(FittableMixin[Sample], ParallelizableMixin, metaclass=ABCMeta):
     """
     Base class for all SHAP calculators.
 
@@ -91,7 +86,6 @@ class ShapCalculator(
 
     def __init__(
         self,
-        pipeline: T_LearnerPipelineDF,
         explainer_factory: ExplainerFactory,
         *,
         n_jobs: Optional[int] = None,
@@ -105,8 +99,9 @@ class ShapCalculator(
             pre_dispatch=pre_dispatch,
             verbose=verbose,
         )
-        self.pipeline = pipeline
         self._explainer_factory = explainer_factory
+
+        # the following attributes are set in fit()
         self.shap_: Optional[pd.DataFrame] = None
         self.feature_index_: Optional[pd.Index] = None
         self.output_names_: Optional[Sequence[str]] = None
@@ -117,15 +112,13 @@ class ShapCalculator(
         """[see superclass]"""
         return self.shap_ is not None
 
-    def fit(  # type: ignore[override]
-        self: T_ShapCalculator,
-        sample: Sample,
-        **fit_params: Any,
+    def fit(
+        self: T_ShapCalculator, __sample: Sample, **fit_params: Any
     ) -> T_ShapCalculator:
         """
         Calculate the SHAP values.
 
-        :param sample: the observations for which to calculate SHAP values
+        :param __sample: the observations for which to calculate SHAP values
         :param fit_params: additional fit parameters (unused)
         :return: self
         """
@@ -133,22 +126,20 @@ class ShapCalculator(
         # reset fit in case we get an exception along the way
         self.shap_ = None
 
-        self.feature_index_ = self.pipeline.feature_names_out_.rename(
-            Sample.IDX_FEATURE
-        )
-        self.output_names_ = self._get_output_names(sample)
-        self.sample_ = sample
+        self.feature_index_ = self.get_feature_names()
+        self.output_names_ = self._get_output_names(__sample)
+        self.sample_ = __sample
 
         # calculate shap values and re-order the observation index to match the
         # sequence in the original training sample
-        shap_df: pd.DataFrame = self._get_shap(sample)
+        shap_df: pd.DataFrame = self._get_shap(__sample)
 
         n_levels = shap_df.index.nlevels
         assert 1 <= n_levels <= 2
-        assert shap_df.index.names[0] == sample.index.name
+        assert shap_df.index.names[0] == __sample.index.name
 
         self.shap_ = shap_df.reindex(
-            index=sample.index.intersection(
+            index=__sample.index.intersection(
                 (
                     shap_df.index
                     if n_levels == 1
@@ -161,6 +152,15 @@ class ShapCalculator(
         )
 
         return self
+
+    @abstractmethod
+    def get_feature_names(self) -> pd.Index:
+        """
+        Get the feature names for which SHAP values are calculated.
+
+        :return: the feature names
+        """
+        pass
 
     @abstractmethod
     def get_shap_values(self) -> pd.DataFrame:
@@ -194,6 +194,38 @@ class ShapCalculator(
         :return: a name for each of the outputs
         """
         pass
+
+
+@inheritdoc(match="""[see superclass]""")
+class LearnerShapCalculator(
+    ShapCalculator, Generic[T_LearnerPipelineDF], metaclass=ABCMeta
+):
+    """
+    Base class for SHAP calculators based on :mod:`sklearndf` leadners.
+    """
+
+    def __init__(
+        self,
+        pipeline: T_LearnerPipelineDF,
+        explainer_factory: ExplainerFactory,
+        *,
+        n_jobs: Optional[int] = None,
+        shared_memory: Optional[bool] = None,
+        pre_dispatch: Optional[Union[str, int]] = None,
+        verbose: Optional[int] = None,
+    ) -> None:
+        super().__init__(
+            explainer_factory=explainer_factory,
+            n_jobs=n_jobs,
+            shared_memory=shared_memory,
+            pre_dispatch=pre_dispatch,
+            verbose=verbose,
+        )
+        self.pipeline = pipeline
+
+    def get_feature_names(self) -> pd.Index:
+        """[see superclass]"""
+        return self.pipeline.feature_names_out_.rename(Sample.IDX_FEATURE)
 
     def _get_shap(self, sample: Sample) -> pd.DataFrame:
 
@@ -328,10 +360,8 @@ class ShapCalculator(
         pass
 
 
-@inheritdoc(match="[see superclass]")
-class ShapValuesCalculator(
-    ShapCalculator[T_LearnerPipelineDF], Generic[T_LearnerPipelineDF], metaclass=ABCMeta
-):
+@inheritdoc(match="""[see superclass]""")
+class ShapValuesCalculator(ShapCalculator, metaclass=ABCMeta):
     """
     Base class for calculating SHAP contribution values.
     """
@@ -397,10 +427,8 @@ class ShapValuesCalculator(
             )
 
 
-@inheritdoc(match="[see superclass]")
-class ShapInteractionValuesCalculator(
-    ShapCalculator[T_LearnerPipelineDF], Generic[T_LearnerPipelineDF], metaclass=ABCMeta
-):
+@inheritdoc(match="""[see superclass]""")
+class ShapInteractionValuesCalculator(ShapCalculator, metaclass=ABCMeta):
     """
     Base class for calculating SHAP interaction values.
     """
@@ -502,9 +530,9 @@ class ShapInteractionValuesCalculator(
             )
 
 
-@inheritdoc(match="[see superclass]")
+@inheritdoc(match="""[see superclass]""")
 class RegressorShapCalculator(
-    ShapCalculator[RegressorPipelineDF[Any]], metaclass=ABCMeta
+    LearnerShapCalculator[RegressorPipelineDF[Any]], metaclass=ABCMeta
 ):
     """
     Calculates SHAP (interaction) values for regression models.
@@ -525,9 +553,7 @@ class RegressorShapCalculator(
         return sample._target_names
 
 
-class RegressorShapValuesCalculator(
-    RegressorShapCalculator, ShapValuesCalculator[RegressorPipelineDF[Any]]
-):
+class RegressorShapValuesCalculator(ShapValuesCalculator, RegressorShapCalculator):
     """
     Calculates SHAP values for regression models.
     """
@@ -547,7 +573,7 @@ class RegressorShapValuesCalculator(
 
 
 class RegressorShapInteractionValuesCalculator(
-    RegressorShapCalculator, ShapInteractionValuesCalculator[RegressorPipelineDF[Any]]
+    ShapInteractionValuesCalculator, RegressorShapCalculator
 ):
     """
     Calculates SHAP interaction matrices for regression models.
@@ -576,9 +602,9 @@ class RegressorShapInteractionValuesCalculator(
         ]
 
 
-@inheritdoc(match="[see superclass]")
+@inheritdoc(match="""[see superclass]""")
 class ClassifierShapCalculator(
-    ShapCalculator[ClassifierPipelineDF[Any]], metaclass=ABCMeta
+    LearnerShapCalculator[ClassifierPipelineDF[Any]], metaclass=ABCMeta
 ):
     """
     Calculates SHAP (interaction) values for classification models.
@@ -617,6 +643,7 @@ class ClassifierShapCalculator(
         assert classifier_df.is_fitted, "classifier must be fitted"
 
         try:
+            # noinspection PyTypeChecker
             output_names: List[str] = classifier_df.classes_.tolist()
 
         except Exception as cause:
@@ -654,9 +681,7 @@ class ClassifierShapCalculator(
         return list(map(str, root_classifier.classes_))
 
 
-class ClassifierShapValuesCalculator(
-    ClassifierShapCalculator, ShapValuesCalculator[ClassifierPipelineDF[Any]]
-):
+class ClassifierShapValuesCalculator(ShapValuesCalculator, ClassifierShapCalculator):
     """
     Calculates SHAP matrices for classification models.
     """
@@ -701,7 +726,7 @@ class ClassifierShapValuesCalculator(
 
 
 class ClassifierShapInteractionValuesCalculator(
-    ClassifierShapCalculator, ShapInteractionValuesCalculator[ClassifierPipelineDF[Any]]
+    ShapInteractionValuesCalculator, ClassifierShapCalculator
 ):
     """
     Calculates SHAP interaction matrices for classification models.

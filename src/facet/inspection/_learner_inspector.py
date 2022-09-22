@@ -221,7 +221,7 @@ class LearnerInspector(
         self.explainer_factory = explainer_factory
         self.shap_interaction = shap_interaction
 
-        self._shap_calculator: Optional[ShapCalculator[T_LearnerPipelineDF]] = None
+        self._shap_calculator: Optional[ShapCalculator] = None
         self._shap_global_decomposer: Optional[ShapGlobalExplainer] = None
         self._shap_global_projector: Optional[ShapGlobalExplainer] = None
         self._sample: Optional[Sample] = None

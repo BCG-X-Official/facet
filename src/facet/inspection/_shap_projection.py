@@ -5,7 +5,7 @@ redundancy, and independence.
 """
 import logging
 from abc import ABCMeta, abstractmethod
-from typing import Any, Optional, Tuple, TypeVar
+from typing import Optional, Tuple, TypeVar
 
 import numpy as np
 import numpy.typing as npt
@@ -74,7 +74,7 @@ class ShapProjector(ShapGlobalExplainer, metaclass=ABCMeta):
         assert self.association_ is not None
         return self.association_.get_values(symmetrical=symmetrical, absolute=absolute)
 
-    def _fit(self, shap_calculator: ShapCalculator[Any]) -> None:
+    def _fit(self, shap_calculator: ShapCalculator) -> None:
         self._reset_fit()
         self._calculate(self._get_context(shap_calculator=shap_calculator))
 
@@ -84,7 +84,7 @@ class ShapProjector(ShapGlobalExplainer, metaclass=ABCMeta):
         self.association_ = None
 
     @abstractmethod
-    def _get_context(self, shap_calculator: ShapCalculator[Any]) -> ShapContext:
+    def _get_context(self, shap_calculator: ShapCalculator) -> ShapContext:
         pass
 
     @abstractmethod
@@ -129,7 +129,7 @@ class ShapVectorProjector(ShapProjector):
     onto a feature's main SHAP vector.
     """
 
-    def _get_context(self, shap_calculator: ShapCalculator[Any]) -> ShapContext:
+    def _get_context(self, shap_calculator: ShapCalculator) -> ShapContext:
         return ShapValueContext(shap_calculator=shap_calculator)
 
     def _calculate(self, context: ShapContext) -> None:
@@ -170,7 +170,7 @@ class ShapInteractionVectorProjector(ShapProjector, ShapInteractionGlobalExplain
         assert self.redundancy_ is not None, "Projector is fitted"
         return self.redundancy_.get_values(symmetrical=symmetrical, absolute=absolute)
 
-    def _get_context(self, shap_calculator: ShapCalculator[Any]) -> ShapContext:
+    def _get_context(self, shap_calculator: ShapCalculator) -> ShapContext:
         return ShapInteractionValueContext(shap_calculator=shap_calculator)
 
     def _calculate(self, context: ShapContext) -> None:
@@ -285,10 +285,12 @@ class ShapInteractionVectorProjector(ShapProjector, ShapInteractionGlobalExplain
 
         # Calculate relative synergy and redundancy (ranging from 0.0 to 1.0),
         # as a symmetric and an asymmetric measure.
+        #
         # For the symmetric case, we ensure perfect symmetry by removing potential
-        # round-off errors
+        # round-off errors.
+        #
         # NOTE: we do not store independence, so technically it could be removed from
-        # the code above
+        # the code above.
 
         std_p_i = sqrt(var_p_i)
         return (
