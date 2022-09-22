@@ -11,8 +11,7 @@ import numpy.typing as npt
 import pandas as pd
 
 from pytools.api import AllTracker, inheritdoc
-from pytools.fit import FittableMixin
-from pytools.fit._fit import fitted_only
+from pytools.fit import FittableMixin, fitted_only
 from pytools.parallelization import ParallelizableMixin
 from sklearndf.pipeline import (
     ClassifierPipelineDF,
