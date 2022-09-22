@@ -16,7 +16,7 @@ import pandas as pd
 from pytools.api import AllTracker, inheritdoc
 from pytools.fit import FittableMixin
 
-from ._shap import ShapCalculator
+from .shap import ShapCalculator
 
 log = logging.getLogger(__name__)
 

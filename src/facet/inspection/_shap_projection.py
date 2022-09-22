@@ -13,7 +13,6 @@ import numpy.typing as npt
 from pytools.api import AllTracker, inheritdoc
 from pytools.fit import fitted_only
 
-from ._shap import ShapCalculator
 from ._shap_global_explanation import (
     AffinityMatrix,
     ShapContext,
@@ -28,6 +27,7 @@ from ._shap_global_explanation import (
     sqrt,
     transpose,
 )
+from .shap import ShapCalculator
 
 log = logging.getLogger(__name__)
 

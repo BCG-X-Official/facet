@@ -36,20 +36,19 @@ from sklearndf.pipeline import LearnerPipelineDF
 from ..data import Sample
 from ._explainer import ExplainerFactory, TreeExplainerFactory
 from ._inspection import ShapPlotData
-from ._shap import (
-    ClassifierShapInteractionValuesCalculator,
-    ClassifierShapValuesCalculator,
-    LearnerShapCalculator,
-    RegressorShapInteractionValuesCalculator,
-    RegressorShapValuesCalculator,
-    ShapCalculator,
-    ShapInteractionValuesCalculator,
-)
 from ._shap_global_explanation import (
     ShapGlobalExplainer,
     ShapInteractionGlobalExplainer,
 )
 from ._shap_projection import ShapInteractionVectorProjector, ShapVectorProjector
+from .shap import ShapCalculator, ShapInteractionValuesCalculator
+from .shap.learner import (
+    ClassifierShapInteractionValuesCalculator,
+    ClassifierShapValuesCalculator,
+    LearnerShapCalculator,
+    RegressorShapInteractionValuesCalculator,
+    RegressorShapValuesCalculator,
+)
 
 log = logging.getLogger(__name__)
 
