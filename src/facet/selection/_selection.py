@@ -29,8 +29,7 @@ from sklearn.metrics import get_scorer
 from sklearn.model_selection import BaseCrossValidator, GridSearchCV
 
 from pytools.api import AllTracker, inheritdoc, to_list
-from pytools.fit import FittableMixin
-from pytools.fit._fit import fitted_only
+from pytools.fit import FittableMixin, fitted_only
 from pytools.parallelization import ParallelizableMixin
 from sklearndf import EstimatorDF
 from sklearndf.pipeline import LearnerPipelineDF

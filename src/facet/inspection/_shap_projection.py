@@ -11,7 +11,7 @@ import numpy as np
 import numpy.typing as npt
 
 from pytools.api import AllTracker, inheritdoc
-from pytools.fit._fit import fitted_only
+from pytools.fit import fitted_only
 
 from ._shap import ShapCalculator
 from ._shap_global_explanation import (

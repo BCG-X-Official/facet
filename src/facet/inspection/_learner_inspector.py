@@ -28,8 +28,7 @@ from sklearn.base import is_classifier
 
 from pytools.api import AllTracker, inheritdoc
 from pytools.data import LinkageTree, Matrix
-from pytools.fit import FittableMixin
-from pytools.fit._fit import fitted_only
+from pytools.fit import FittableMixin, fitted_only
 from pytools.parallelization import ParallelizableMixin
 from sklearndf import ClassifierDF, LearnerDF, RegressorDF
 from sklearndf.pipeline import LearnerPipelineDF

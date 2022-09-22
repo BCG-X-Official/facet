@@ -12,8 +12,7 @@ import numpy as np
 import numpy.typing as npt
 
 from pytools.api import AllTracker, inheritdoc
-from pytools.fit import FittableMixin
-from pytools.fit._fit import fitted_only
+from pytools.fit import FittableMixin, fitted_only
 
 log = logging.getLogger(__name__)
 
