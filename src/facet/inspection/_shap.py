@@ -12,6 +12,7 @@ import pandas as pd
 
 from pytools.api import AllTracker, inheritdoc
 from pytools.fit import FittableMixin
+from pytools.fit._fit import fitted_only
 from pytools.parallelization import ParallelizableMixin
 from sklearndf.pipeline import (
     ClassifierPipelineDF,
@@ -336,9 +337,9 @@ class ShapValuesCalculator(
     Base class for calculating SHAP contribution values.
     """
 
+    @fitted_only
     def get_shap_values(self) -> pd.DataFrame:
         """[see superclass]"""
-        self.ensure_fitted()
         return self.shap_
 
     def get_shap_interaction_values(self) -> pd.DataFrame:
@@ -405,20 +406,21 @@ class ShapInteractionValuesCalculator(
     Base class for calculating SHAP interaction values.
     """
 
+    @fitted_only
     def get_shap_values(self) -> pd.DataFrame:
         """[see superclass]"""
 
-        self.ensure_fitted()
         assert self.shap_ is not None, ASSERTION__CALCULATOR_IS_FITTED
         return self.shap_.groupby(level=0).sum()
 
+    @fitted_only
     def get_shap_interaction_values(self) -> pd.DataFrame:
         """[see superclass]"""
 
-        self.ensure_fitted()
         assert self.shap_ is not None, ASSERTION__CALCULATOR_IS_FITTED
         return self.shap_
 
+    @fitted_only
     def get_diagonals(self) -> pd.DataFrame:
         """
         The get_diagonals of all SHAP interaction matrices, of shape
@@ -430,7 +432,6 @@ class ShapInteractionValuesCalculator(
             n_features * n_features.
         """
 
-        self.ensure_fitted()
         assert (
             self.shap_ is not None
             and self.sample_ is not None
