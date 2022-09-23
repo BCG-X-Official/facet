@@ -134,12 +134,6 @@ class LearnerShapCalculator(
         # so the result is a list with a single data frame of shap values
         return self._calculate_shap(sample=sample, explainer=explainer)
 
-    @abstractmethod
-    def _calculate_shap(
-        self, *, sample: Sample, explainer: BaseExplainer
-    ) -> pd.DataFrame:
-        pass
-
     def _convert_shap_tensors_to_list(
         self,
         *,

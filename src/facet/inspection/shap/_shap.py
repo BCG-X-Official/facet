@@ -192,6 +192,12 @@ class ShapCalculator(FittableMixin[Sample], ParallelizableMixin, metaclass=ABCMe
         """
         pass
 
+    @abstractmethod
+    def _calculate_shap(
+        self, *, sample: Sample, explainer: BaseExplainer
+    ) -> pd.DataFrame:
+        pass
+
 
 @inheritdoc(match="""[see superclass]""")
 class ShapValuesCalculator(ShapCalculator, metaclass=ABCMeta):
