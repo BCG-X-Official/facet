@@ -14,7 +14,7 @@ dist-name = "gamma-facet"
 license = "Apache Software License v2.0"
 
 requires = [
-    "gamma-pytools  ~=2.0",
+    "gamma-pytools  ~=2.0.4",
     "matplotlib     ~=3.0",
     "numpy          >=1.21,<2a",  # cannot use ~= due to conda bug
     "packaging      >=20",
