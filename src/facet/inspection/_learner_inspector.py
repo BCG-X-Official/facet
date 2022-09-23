@@ -311,7 +311,6 @@ class LearnerInspector(
         return self
 
     @property
-    @fitted_only
     def _shap_global_explainer(self) -> ShapGlobalExplainer:
         assert self._shap_global_projector is not None, ASSERTION__INSPECTOR_IS_FITTED
         return self._shap_global_projector
@@ -321,7 +320,7 @@ class LearnerInspector(
         """[see superclass]"""
         return self._sample is not None
 
-    @property
+    @property  # type: ignore
     @fitted_only
     def sample_(self) -> Sample:
         """
@@ -331,7 +330,7 @@ class LearnerInspector(
         assert self._sample is not None, ASSERTION__INSPECTOR_IS_FITTED
         return self._sample
 
-    @property
+    @property  # type: ignore
     @fitted_only
     def output_names_(self) -> Sequence[str]:
         """
@@ -352,7 +351,7 @@ class LearnerInspector(
         ), ASSERTION__INSPECTOR_IS_FITTED
         return self._shap_calculator.output_names_
 
-    @property
+    @property  # type: ignore
     @fitted_only
     def features_(self) -> List[str]:
         """
