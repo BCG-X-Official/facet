@@ -93,18 +93,12 @@ class LearnerShapCalculator(
 
     def _get_shap(self, sample: Sample) -> pd.DataFrame:
 
-        pipeline = self.pipeline
-
         # prepare the background dataset
 
         background_dataset: Optional[pd.DataFrame]
 
         if self._explainer_factory.uses_background_dataset:
-            background_dataset = sample.features
-            if pipeline.preprocessing:
-                background_dataset = pipeline.preprocessing.transform(
-                    X=background_dataset
-                )
+            background_dataset: pd.DataFrame = self.preprocess_features(sample)
 
             background_dataset_not_na = background_dataset.dropna()
 
@@ -122,19 +116,9 @@ class LearnerShapCalculator(
         else:
             background_dataset = None
 
+        pipeline = self.pipeline
         explainer = self._explainer_factory.make_explainer(
-            model=pipeline.final_estimator,
-            # we re-index the columns of the background dataset to match
-            # the column sequence of the model (in case feature order
-            # was shuffled, or train split pre-processing removed columns)
-            data=(
-                None
-                if background_dataset is None
-                else background_dataset.reindex(
-                    columns=pipeline.final_estimator.feature_names_in_,
-                    copy=False,
-                )
-            ),
+            model=pipeline.final_estimator, data=background_dataset
         )
 
         if self.n_jobs != 1:
@@ -186,7 +170,7 @@ class LearnerShapCalculator(
 
         return shap_tensors
 
-    def _preprocess_features(self, sample: Sample) -> pd.DataFrame:
+    def preprocess_features(self, sample: Sample) -> pd.DataFrame:
 
         # get the model
         pipeline = self.pipeline
@@ -199,6 +183,8 @@ class LearnerShapCalculator(
             x = pipeline.preprocessing.transform(x)
 
         # re-index the features to fit the sequence that was used to fit the learner
+        # (in case feature order was shuffled during preprocessing, or train split
+        # pre-processing removed columns)
         return x.reindex(columns=pipeline.final_estimator.feature_names_in_, copy=False)
 
     @staticmethod

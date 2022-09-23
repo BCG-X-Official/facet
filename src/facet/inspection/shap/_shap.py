@@ -182,6 +182,16 @@ class ShapCalculator(FittableMixin[Sample], ParallelizableMixin, metaclass=ABCMe
         """
         pass
 
+    @abstractmethod
+    def preprocess_features(self, sample: Sample) -> pd.DataFrame:
+        """
+        Preprocess the features in the sample prior to SHAP calculation.
+
+        :param sample:
+        :return:
+        """
+        pass
+
 
 @inheritdoc(match="""[see superclass]""")
 class ShapValuesCalculator(ShapCalculator, metaclass=ABCMeta):
@@ -210,7 +220,7 @@ class ShapValuesCalculator(ShapCalculator, metaclass=ABCMeta):
     def _calculate_shap(
         self, *, sample: Sample, explainer: BaseExplainer
     ) -> pd.DataFrame:
-        x = self._preprocess_features(sample=sample)
+        x = self.preprocess_features(sample=sample)
 
         if x.isna().values.any():
             log.warning(
@@ -309,7 +319,7 @@ class ShapInteractionValuesCalculator(ShapCalculator, metaclass=ABCMeta):
     def _calculate_shap(
         self, *, sample: Sample, explainer: BaseExplainer
     ) -> pd.DataFrame:
-        x = self._preprocess_features(sample=sample)
+        x = self.preprocess_features(sample=sample)
 
         multi_output_type = self.get_multi_output_type()
         multi_output_names = self.get_multi_output_names(sample)
