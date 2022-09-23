@@ -42,7 +42,7 @@ from ._shap_global_explanation import (
 )
 from ._shap_projection import ShapInteractionVectorProjector, ShapVectorProjector
 from .shap import ShapCalculator, ShapInteractionValuesCalculator
-from .shap.learner import (
+from .shap.sklearndf import (
     ClassifierShapInteractionValuesCalculator,
     ClassifierShapValuesCalculator,
     LearnerShapCalculator,
