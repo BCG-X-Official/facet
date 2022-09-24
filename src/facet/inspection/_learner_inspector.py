@@ -25,6 +25,7 @@ import pandas as pd
 from scipy.cluster import hierarchy
 from scipy.spatial import distance
 from sklearn.base import is_classifier
+from typing_extensions import TypeAlias
 
 from pytools.api import AllTracker, inheritdoc, subsdoc
 from pytools.data import LinkageTree, Matrix
@@ -62,8 +63,8 @@ __all__ = [
 # Type aliases
 #
 
-FloatArray = npt.NDArray[np.float_]
-FloatMatrix = Matrix[np.float_]
+FloatArray: TypeAlias = npt.NDArray[np.float_]
+FloatMatrix: TypeAlias = Matrix[np.float_]
 
 
 #

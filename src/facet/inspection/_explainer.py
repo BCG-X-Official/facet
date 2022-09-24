@@ -25,6 +25,7 @@ import pandas as pd
 import shap
 from packaging import version
 from sklearn.base import BaseEstimator
+from typing_extensions import TypeAlias
 
 from pytools.api import AllTracker, inheritdoc, validate_type
 from pytools.expression import Expression, HasExpressionRepr
@@ -72,8 +73,8 @@ except ImportError:
 # Type variables and aliases
 #
 
-ArraysAny = Union[npt.NDArray[Any], List[npt.NDArray[Any]]]
-ArraysFloat = Union[npt.NDArray[np.float_], List[npt.NDArray[np.float_]]]
+ArraysAny: TypeAlias = Union[npt.NDArray[Any], List[npt.NDArray[Any]]]
+ArraysFloat: TypeAlias = Union[npt.NDArray[np.float_], List[npt.NDArray[np.float_]]]
 
 #
 # Ensure all symbols introduced below are included in __all__

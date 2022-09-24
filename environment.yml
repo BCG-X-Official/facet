@@ -16,6 +16,7 @@ dependencies:
   - scipy ~= 1.8
   - shap ~= 0.41
   - sklearndf ~= 2.0
+  - typing_extensions ~= 4.3
   # build/test
   - conda-build ~= 3.21
   - conda-verify ~= 3.1

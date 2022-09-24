@@ -23,6 +23,7 @@ from typing import (
 
 from scipy import stats
 from sklearn.base import BaseEstimator
+from typing_extensions import TypeAlias
 
 from pytools.api import AllTracker, inheritdoc, subsdoc, to_list, validate_element_types
 from pytools.expression import Expression, make_expression
@@ -41,11 +42,11 @@ __all__ = [
 
 
 #
-# Type constants
+# Type aliases
 #
 
-ParameterSet = Union[List[Any], stats.rv_continuous, stats.rv_discrete]
-ParameterDict = Dict[str, ParameterSet]
+ParameterSet: TypeAlias = Union[List[Any], stats.rv_continuous, stats.rv_discrete]
+ParameterDict: TypeAlias = Dict[str, ParameterSet]
 
 try:
     rv_frozen = next(
