@@ -206,14 +206,35 @@ class ShapCalculator(FittableMixin[Sample], ParallelizableMixin, metaclass=ABCMe
     ) -> pd.DataFrame:
         pass
 
-    @abstractmethod
     def _convert_shap_tensors_to_list(
         self,
         *,
         shap_tensors: Union[npt.NDArray[np.float_], List[npt.NDArray[np.float_]]],
         n_outputs: int,
     ) -> List[npt.NDArray[np.float_]]:
-        pass
+        def _validate_shap_tensor(_t: npt.NDArray[np.float_]) -> None:
+            if np.isnan(np.sum(_t)):
+                raise AssertionError(
+                    "Output of SHAP explainer includes NaN values. "
+                    "This should not happen; consider initialising the "
+                    "LearnerInspector with an ExplainerFactory that has a different "
+                    "configuration, or that makes SHAP explainers of a different type."
+                )
+
+        if isinstance(shap_tensors, List):
+            for shap_tensor in shap_tensors:
+                _validate_shap_tensor(shap_tensor)
+        else:
+            _validate_shap_tensor(shap_tensors)
+            shap_tensors = [shap_tensors]
+
+        if n_outputs != len(shap_tensors):
+            raise AssertionError(
+                f"count of SHAP tensors (n={len(shap_tensors)}) "
+                f"should match number of outputs (n={n_outputs})"
+            )
+
+        return shap_tensors
 
     @staticmethod
     @abstractmethod
