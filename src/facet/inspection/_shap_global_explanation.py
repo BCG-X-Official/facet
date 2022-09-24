@@ -48,7 +48,6 @@ _PAIRWISE_PARTIAL_SUMMATION = False
 #
 
 T_ShapGlobalExplainer = TypeVar("T_ShapGlobalExplainer", bound="ShapGlobalExplainer")
-T_ShapCalculator = TypeVar("T_ShapCalculator", bound=ShapCalculator)
 
 
 #
@@ -149,7 +148,7 @@ class AffinityMatrix:
 
 
 @inheritdoc(match="""[see superclass]""")
-class ShapGlobalExplainer(FittableMixin[ShapCalculator], metaclass=ABCMeta):
+class ShapGlobalExplainer(FittableMixin[ShapCalculator[Any]], metaclass=ABCMeta):
     """
     Derives feature association as a global metric of SHAP values for multiple
     observations.
@@ -166,7 +165,7 @@ class ShapGlobalExplainer(FittableMixin[ShapCalculator], metaclass=ABCMeta):
 
     def fit(  # type: ignore[override]
         self: T_ShapGlobalExplainer,
-        shap_calculator: ShapCalculator,
+        shap_calculator: ShapCalculator[Any],
         **fit_params: Any,
     ) -> T_ShapGlobalExplainer:
         """
@@ -235,7 +234,7 @@ class ShapGlobalExplainer(FittableMixin[ShapCalculator], metaclass=ABCMeta):
         ]
 
     @abstractmethod
-    def _fit(self, shap_calculator: ShapCalculator) -> None:
+    def _fit(self, shap_calculator: ShapCalculator[Any]) -> None:
         pass
 
     def _reset_fit(self) -> None:
@@ -518,7 +517,7 @@ class ShapValueContext(ShapContext):
     Contextual data for global SHAP calculations based on SHAP values.
     """
 
-    def __init__(self, shap_calculator: ShapCalculator) -> None:
+    def __init__(self, shap_calculator: ShapCalculator[Any]) -> None:
         shap_values: pd.DataFrame = shap_calculator.get_shap_values()
 
         def _p_i() -> npt.NDArray[np.float_]:
@@ -565,7 +564,7 @@ class ShapInteractionValueContext(ShapContext):
     Contextual data for global SHAP calculations based on SHAP interaction values.
     """
 
-    def __init__(self, shap_calculator: ShapCalculator) -> None:
+    def __init__(self, shap_calculator: ShapCalculator[Any]) -> None:
         shap_values: pd.DataFrame = shap_calculator.get_shap_interaction_values()
 
         assert (

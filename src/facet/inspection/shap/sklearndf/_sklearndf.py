@@ -4,18 +4,15 @@ Implementation of package ``facet.inspection.shap.learner``.
 
 import logging
 from abc import ABCMeta
-from typing import Any, Generic, List, Optional, Sequence, TypeVar, Union
+from typing import Any, Generic, List, Optional, Sequence, TypeVar, Union, cast
 
 import numpy as np
 import numpy.typing as npt
 import pandas as pd
 
 from pytools.api import AllTracker, inheritdoc
-from sklearndf.pipeline import (
-    ClassifierPipelineDF,
-    LearnerPipelineDF,
-    RegressorPipelineDF,
-)
+from sklearndf import ClassifierDF, RegressorDF, SupervisedLearnerDF
+from sklearndf.pipeline import LearnerPipelineDF
 
 from facet.data import Sample
 from facet.inspection._explainer import ExplainerFactory, ParallelExplainer
@@ -41,7 +38,9 @@ __all__ = [
 # Type variables
 #
 
-T_LearnerPipelineDF = TypeVar("T_LearnerPipelineDF", bound=LearnerPipelineDF[Any])
+T_ClassifierDF = TypeVar("T_ClassifierDF", bound=ClassifierDF)
+T_SupervisedLearnerDF = TypeVar("T_SupervisedLearnerDF", bound=SupervisedLearnerDF)
+T_RegressorDF = TypeVar("T_RegressorDF", bound=RegressorDF)
 
 
 #
@@ -58,7 +57,9 @@ __tracker = AllTracker(globals())
 
 @inheritdoc(match="""[see superclass]""")
 class LearnerShapCalculator(
-    ShapCalculator, Generic[T_LearnerPipelineDF], metaclass=ABCMeta
+    ShapCalculator[T_SupervisedLearnerDF],
+    Generic[T_SupervisedLearnerDF],
+    metaclass=ABCMeta,
 ):
     """
     Base class for SHAP calculators based on :mod:`sklearndf` learners.
@@ -66,8 +67,8 @@ class LearnerShapCalculator(
 
     def __init__(
         self,
-        pipeline: T_LearnerPipelineDF,
-        explainer_factory: ExplainerFactory,
+        pipeline: LearnerPipelineDF[T_SupervisedLearnerDF],
+        explainer_factory: ExplainerFactory[T_SupervisedLearnerDF],
         *,
         n_jobs: Optional[int] = None,
         shared_memory: Optional[bool] = None,
@@ -93,7 +94,7 @@ class LearnerShapCalculator(
 
         background_dataset: Optional[pd.DataFrame]
 
-        if self._explainer_factory.uses_background_dataset:
+        if self.explainer_factory.uses_background_dataset:
             background_dataset = self.preprocess_features(sample)
 
             background_dataset_not_na = background_dataset.dropna()
@@ -113,7 +114,7 @@ class LearnerShapCalculator(
             background_dataset = None
 
         pipeline = self.pipeline
-        explainer = self._explainer_factory.make_explainer(
+        explainer = self.explainer_factory.make_explainer(
             model=pipeline.final_estimator, data=background_dataset
         )
 
@@ -151,7 +152,9 @@ class LearnerShapCalculator(
 
 @inheritdoc(match="""[see superclass]""")
 class RegressorShapCalculator(
-    LearnerShapCalculator[RegressorPipelineDF[Any]], metaclass=ABCMeta
+    LearnerShapCalculator[T_RegressorDF],
+    Generic[T_RegressorDF],
+    metaclass=ABCMeta,
 ):
     """
     Calculates SHAP (interaction) values for regression models.
@@ -172,7 +175,11 @@ class RegressorShapCalculator(
         return sample._target_names
 
 
-class RegressorShapValuesCalculator(ShapValuesCalculator, RegressorShapCalculator):
+class RegressorShapValuesCalculator(
+    ShapValuesCalculator[T_RegressorDF],
+    RegressorShapCalculator[T_RegressorDF],
+    Generic[T_RegressorDF],
+):
     """
     Calculates SHAP values for regression models.
     """
@@ -192,7 +199,9 @@ class RegressorShapValuesCalculator(ShapValuesCalculator, RegressorShapCalculato
 
 
 class RegressorShapInteractionValuesCalculator(
-    ShapInteractionValuesCalculator, RegressorShapCalculator
+    ShapInteractionValuesCalculator[T_RegressorDF],
+    RegressorShapCalculator[T_RegressorDF],
+    Generic[T_RegressorDF],
 ):
     """
     Calculates SHAP interaction matrices for regression models.
@@ -223,7 +232,9 @@ class RegressorShapInteractionValuesCalculator(
 
 @inheritdoc(match="""[see superclass]""")
 class ClassifierShapCalculator(
-    LearnerShapCalculator[ClassifierPipelineDF[Any]], metaclass=ABCMeta
+    LearnerShapCalculator[T_ClassifierDF],
+    Generic[T_ClassifierDF],
+    metaclass=ABCMeta,
 ):
     """
     Calculates SHAP (interaction) values for classification models.
@@ -257,13 +268,15 @@ class ClassifierShapCalculator(
     ) -> Sequence[str]:
         assert not isinstance(
             sample.target_name, list
-        ), "classification model is single-output"
+        ), "classification model must be single-output"
         classifier_df = self.pipeline.final_estimator
         assert classifier_df.is_fitted, "classifier must be fitted"
 
         try:
             # noinspection PyTypeChecker
-            output_names: List[str] = classifier_df.classes_.tolist()
+            output_names: List[str] = cast(
+                npt.NDArray[Any], classifier_df.classes_
+            ).tolist()
 
         except Exception as cause:
             raise AssertionError("classifier must define classes_ attribute") from cause
@@ -300,7 +313,11 @@ class ClassifierShapCalculator(
         return list(map(str, root_classifier.classes_))
 
 
-class ClassifierShapValuesCalculator(ShapValuesCalculator, ClassifierShapCalculator):
+class ClassifierShapValuesCalculator(
+    ShapValuesCalculator[T_ClassifierDF],
+    ClassifierShapCalculator[T_ClassifierDF],
+    Generic[T_ClassifierDF],
+):
     """
     Calculates SHAP matrices for classification models.
     """
@@ -345,7 +362,9 @@ class ClassifierShapValuesCalculator(ShapValuesCalculator, ClassifierShapCalcula
 
 
 class ClassifierShapInteractionValuesCalculator(
-    ShapInteractionValuesCalculator, ClassifierShapCalculator
+    ShapInteractionValuesCalculator[T_ClassifierDF],
+    ClassifierShapCalculator[T_ClassifierDF],
+    Generic[T_ClassifierDF],
 ):
     """
     Calculates SHAP interaction matrices for classification models.

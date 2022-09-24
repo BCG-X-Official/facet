@@ -10,11 +10,13 @@ from typing import (
     Any,
     Callable,
     Dict,
+    Generic,
     Iterable,
     List,
     Mapping,
     Optional,
     Type,
+    TypeVar,
     Union,
     cast,
 )
@@ -31,7 +33,7 @@ from pytools.api import AllTracker, inheritdoc, validate_type
 from pytools.expression import Expression, HasExpressionRepr
 from pytools.expression.atomic import Id
 from pytools.parallelization import Job, JobQueue, JobRunner, ParallelizableMixin
-from sklearndf import ClassifierDF, LearnerDF, RegressorDF
+from sklearndf import ClassifierDF, RegressorDF, SupervisedLearnerDF
 
 log = logging.getLogger(__name__)
 
@@ -70,11 +72,19 @@ except ImportError:
 
 
 #
-# Type variables and aliases
+# Type variables
+#
+
+T_Model_contra = TypeVar("T_Model_contra", contravariant=True)
+
+
+#
+# Type aliases
 #
 
 ArraysAny: TypeAlias = Union[npt.NDArray[Any], List[npt.NDArray[Any]]]
 ArraysFloat: TypeAlias = Union[npt.NDArray[np.float_], List[npt.NDArray[np.float_]]]
+
 
 #
 # Ensure all symbols introduced below are included in __all__
@@ -146,7 +156,7 @@ class BaseExplainer(metaclass=ABCMeta):
         pass
 
 
-class ExplainerFactory(HasExpressionRepr, metaclass=ABCMeta):
+class ExplainerFactory(HasExpressionRepr, Generic[T_Model_contra], metaclass=ABCMeta):
     """
     A factory for constructing :class:`~shap.Explainer` objects.
     """
@@ -177,7 +187,7 @@ class ExplainerFactory(HasExpressionRepr, metaclass=ABCMeta):
 
     @abstractmethod
     def make_explainer(
-        self, model: LearnerDF, data: Optional[pd.DataFrame]
+        self, model: T_Model_contra, data: Optional[pd.DataFrame]
     ) -> BaseExplainer:
         """
         Construct a new :class:`~shap.Explainer` to compute shap values.
@@ -460,7 +470,7 @@ _TreeExplainer: Optional[Type[BaseExplainer]] = None
 
 
 @inheritdoc(match="""[see superclass]""")
-class TreeExplainerFactory(ExplainerFactory):
+class TreeExplainerFactory(ExplainerFactory[SupervisedLearnerDF]):
     """
     A factory constructing :class:`~shap.TreeExplainer` objects.
     """
@@ -517,7 +527,7 @@ class TreeExplainerFactory(ExplainerFactory):
         return self._uses_background_dataset
 
     def make_explainer(
-        self, model: LearnerDF, data: Optional[pd.DataFrame] = None
+        self, model: SupervisedLearnerDF, data: Optional[pd.DataFrame] = None
     ) -> BaseExplainer:
         """[see superclass]"""
 
@@ -576,7 +586,7 @@ class _KernelExplainer(
 
 
 @inheritdoc(match="""[see superclass]""")
-class KernelExplainerFactory(ExplainerFactory):
+class KernelExplainerFactory(ExplainerFactory[SupervisedLearnerDF]):
     """
     A factory constructing :class:`~shap.KernelExplainer` objects.
     """
@@ -618,7 +628,9 @@ class KernelExplainerFactory(ExplainerFactory):
         """[see superclass]"""
         return True
 
-    def make_explainer(self, model: LearnerDF, data: pd.DataFrame) -> BaseExplainer:
+    def make_explainer(
+        self, model: SupervisedLearnerDF, data: pd.DataFrame
+    ) -> BaseExplainer:
         """[see superclass]"""
 
         self._validate_background_dataset(data=data)

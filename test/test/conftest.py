@@ -219,7 +219,7 @@ def preprocessed_feature_names(
 @pytest.fixture  # type: ignore
 def regressor_inspector(
     best_lgbm_model: RegressorPipelineDF[LGBMRegressorDF], sample: Sample, n_jobs: int
-) -> LearnerInspector[RegressorPipelineDF[LGBMRegressorDF]]:
+) -> LearnerInspector[LGBMRegressorDF]:
     inspector = LearnerInspector(
         pipeline=best_lgbm_model,
         explainer_factory=TreeExplainerFactory(

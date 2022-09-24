@@ -7,7 +7,6 @@ from typing import Set
 import numpy as np
 
 from pytools.data import Matrix
-from sklearndf.pipeline import RegressorPipelineDF
 from sklearndf.regression.extra import LGBMRegressorDF
 
 from facet.inspection import LearnerInspector
@@ -17,7 +16,7 @@ log = logging.getLogger(__name__)
 
 def test_feature_affinity_matrices(
     preprocessed_feature_names: Set[str],
-    regressor_inspector: LearnerInspector[RegressorPipelineDF[LGBMRegressorDF]],
+    regressor_inspector: LearnerInspector[LGBMRegressorDF],
 ) -> None:
     # feature affinity matrices (feature dependencies)
     # check that dimensions of pairwise feature matrices are equal to # of features,

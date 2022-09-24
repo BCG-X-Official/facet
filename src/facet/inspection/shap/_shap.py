@@ -4,7 +4,7 @@ Implementation of package ``facet.inspection.shap``.
 
 import logging
 from abc import ABCMeta, abstractmethod
-from typing import Any, List, Optional, Sequence, TypeVar, Union, cast
+from typing import Any, Generic, List, Optional, Sequence, TypeVar, Union, cast
 
 import numpy as np
 import numpy.typing as npt
@@ -29,7 +29,8 @@ __all__ = [
 # Type variables
 #
 
-T_ShapCalculator = TypeVar("T_ShapCalculator", bound="ShapCalculator")
+T_Model = TypeVar("T_Model")
+T_ShapCalculator = TypeVar("T_ShapCalculator", bound="ShapCalculator[Any]")
 
 
 #
@@ -51,7 +52,9 @@ __tracker = AllTracker(globals())
 #
 
 
-class ShapCalculator(FittableMixin[Sample], ParallelizableMixin, metaclass=ABCMeta):
+class ShapCalculator(
+    FittableMixin[Sample], ParallelizableMixin, Generic[T_Model], metaclass=ABCMeta
+):
     """
     Base class for all SHAP calculators.
 
@@ -60,9 +63,12 @@ class ShapCalculator(FittableMixin[Sample], ParallelizableMixin, metaclass=ABCMe
     in a data frame.
     """
 
+    #: The explainer factory used to create the SHAP explainer for this calculator.
+    explainer_factory: ExplainerFactory[T_Model]
+
     def __init__(
         self,
-        explainer_factory: ExplainerFactory,
+        explainer_factory: ExplainerFactory[T_Model],
         *,
         n_jobs: Optional[int] = None,
         shared_memory: Optional[bool] = None,
@@ -75,7 +81,7 @@ class ShapCalculator(FittableMixin[Sample], ParallelizableMixin, metaclass=ABCMe
             pre_dispatch=pre_dispatch,
             verbose=verbose,
         )
-        self._explainer_factory = explainer_factory
+        self.explainer_factory = explainer_factory
 
         # the following attributes are set in fit()
         self.shap_: Optional[pd.DataFrame] = None
@@ -246,7 +252,9 @@ class ShapCalculator(FittableMixin[Sample], ParallelizableMixin, metaclass=ABCMe
 
 
 @inheritdoc(match="""[see superclass]""")
-class ShapValuesCalculator(ShapCalculator, metaclass=ABCMeta):
+class ShapValuesCalculator(
+    ShapCalculator[T_Model], Generic[T_Model], metaclass=ABCMeta
+):
     """
     Base class for calculating SHAP contribution values.
     """
@@ -313,7 +321,9 @@ class ShapValuesCalculator(ShapCalculator, metaclass=ABCMeta):
 
 
 @inheritdoc(match="""[see superclass]""")
-class ShapInteractionValuesCalculator(ShapCalculator, metaclass=ABCMeta):
+class ShapInteractionValuesCalculator(
+    ShapCalculator[T_Model], Generic[T_Model], metaclass=ABCMeta
+):
     """
     Base class for calculating SHAP interaction values.
     """

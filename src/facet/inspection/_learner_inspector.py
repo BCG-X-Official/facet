@@ -31,7 +31,7 @@ from pytools.api import AllTracker, inheritdoc, subsdoc
 from pytools.data import LinkageTree, Matrix
 from pytools.fit import FittableMixin, fitted_only
 from pytools.parallelization import ParallelizableMixin
-from sklearndf import ClassifierDF, LearnerDF, RegressorDF
+from sklearndf import ClassifierDF, LearnerDF, RegressorDF, SupervisedLearnerDF
 from sklearndf.pipeline import LearnerPipelineDF
 
 from ..data import Sample
@@ -72,9 +72,9 @@ FloatMatrix: TypeAlias = Matrix[np.float_]
 #
 
 T_LearnerInspector = TypeVar("T_LearnerInspector", bound="LearnerInspector[Any]")
-T_LearnerPipelineDF = TypeVar("T_LearnerPipelineDF", bound=LearnerPipelineDF[Any])
-T_SeriesOrDataFrame = TypeVar("T_SeriesOrDataFrame", pd.Series, pd.DataFrame)
 T_Number = TypeVar("T_Number", bound="np.number[Any]")
+T_SeriesOrDataFrame = TypeVar("T_SeriesOrDataFrame", pd.Series, pd.DataFrame)
+T_SupervisedLearnerDF = TypeVar("T_SupervisedLearnerDF", bound=SupervisedLearnerDF)
 
 
 #
@@ -174,7 +174,7 @@ class ModelInspector(ParallelizableMixin, FittableMixin[Sample], metaclass=ABCMe
 
         self.shap_interaction = shap_interaction
 
-        self._shap_calculator: Optional[ShapCalculator] = None
+        self._shap_calculator: Optional[ShapCalculator[Any]] = None
         self._shap_global_decomposer: Optional[ShapGlobalExplainer] = None
         self._shap_global_projector: Optional[ShapGlobalExplainer] = None
         self._sample: Optional[Sample] = None
@@ -969,9 +969,9 @@ class ModelInspector(ParallelizableMixin, FittableMixin[Sample], metaclass=ABCMe
     @property
     def __shap_interaction_values_calculator(
         self,
-    ) -> ShapInteractionValuesCalculator:
+    ) -> ShapInteractionValuesCalculator[Any]:
         self._ensure_shap_interaction()
-        return cast(ShapInteractionValuesCalculator, self._shap_calculator)
+        return cast(ShapInteractionValuesCalculator[Any], self._shap_calculator)
 
     @property
     def __interaction_explainer(self) -> ShapInteractionGlobalExplainer:
@@ -989,7 +989,7 @@ class ModelInspector(ParallelizableMixin, FittableMixin[Sample], metaclass=ABCMe
     replacement="",
 )
 @inheritdoc(match="""[see superclass]""")
-class LearnerInspector(ModelInspector, Generic[T_LearnerPipelineDF]):
+class LearnerInspector(ModelInspector, Generic[T_SupervisedLearnerDF]):
     """[see superclass]"""
 
     #: The default explainer factory used by this inspector.
@@ -1002,8 +1002,8 @@ class LearnerInspector(ModelInspector, Generic[T_LearnerPipelineDF]):
     def __init__(
         self,
         *,
-        pipeline: T_LearnerPipelineDF,
-        explainer_factory: Optional[ExplainerFactory] = None,
+        pipeline: LearnerPipelineDF[T_SupervisedLearnerDF],
+        explainer_factory: Optional[ExplainerFactory[T_SupervisedLearnerDF]] = None,
         shap_interaction: bool = True,
         n_jobs: Optional[int] = None,
         shared_memory: Optional[bool] = None,
@@ -1100,8 +1100,8 @@ class LearnerInspector(ModelInspector, Generic[T_LearnerPipelineDF]):
             ShapVectorProjector, ShapInteractionVectorProjector, None
         ]
 
-        shap_calculator_type: Type[LearnerShapCalculator[T_LearnerPipelineDF]]
-        shap_calculator: LearnerShapCalculator[T_LearnerPipelineDF]
+        shap_calculator_type: Type[LearnerShapCalculator[T_SupervisedLearnerDF]]
+        shap_calculator: LearnerShapCalculator[T_SupervisedLearnerDF]
 
         if self.shap_interaction:
             if _is_classifier:
