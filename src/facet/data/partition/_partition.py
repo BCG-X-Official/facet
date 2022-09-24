@@ -98,7 +98,7 @@ class Partitioner(
         """
         return self._max_partitions
 
-    @property
+    @property  # type: ignore
     @fitted_only
     def partitions_(self) -> Sequence[T_Values]:
         """
@@ -108,7 +108,7 @@ class Partitioner(
         assert self._partitions is not None, ASSERTION__PARTITIONER_IS_FITTED
         return self._partitions
 
-    @property
+    @property  # type: ignore
     @fitted_only
     def frequencies_(self) -> npt.NDArray[np.int_]:
         """
@@ -176,7 +176,7 @@ class RangePartitioner(
         """
         return False
 
-    @property
+    @property  # type: ignore
     @fitted_only
     def partition_bounds_(self) -> Sequence[Tuple[T_Values_Scalar, T_Values_Scalar]]:
         """
@@ -190,7 +190,7 @@ class RangePartitioner(
         assert self._partition_bounds is not None, ASSERTION__PARTITIONER_IS_FITTED
         return self._partition_bounds
 
-    @property
+    @property  # type: ignore
     @fitted_only
     def partition_width_(self) -> T_Values_Scalar:
         """

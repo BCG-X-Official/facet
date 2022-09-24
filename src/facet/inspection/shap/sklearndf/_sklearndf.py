@@ -3,7 +3,7 @@ Implementation of package ``facet.inspection.shap.learner``.
 """
 
 import logging
-from abc import ABCMeta, abstractmethod
+from abc import ABCMeta
 from typing import Any, Generic, List, Optional, Sequence, TypeVar, Union
 
 import numpy as np
@@ -18,11 +18,7 @@ from sklearndf.pipeline import (
 )
 
 from facet.data import Sample
-from facet.inspection._explainer import (
-    BaseExplainer,
-    ExplainerFactory,
-    ParallelExplainer,
-)
+from facet.inspection._explainer import ExplainerFactory, ParallelExplainer
 from facet.inspection.shap import (
     ShapCalculator,
     ShapInteractionValuesCalculator,
@@ -98,7 +94,7 @@ class LearnerShapCalculator(
         background_dataset: Optional[pd.DataFrame]
 
         if self._explainer_factory.uses_background_dataset:
-            background_dataset: pd.DataFrame = self.preprocess_features(sample)
+            background_dataset = self.preprocess_features(sample)
 
             background_dataset_not_na = background_dataset.dropna()
 
@@ -180,28 +176,6 @@ class LearnerShapCalculator(
         # (in case feature order was shuffled during preprocessing, or train split
         # pre-processing removed columns)
         return x.reindex(columns=pipeline.final_estimator.feature_names_in_, copy=False)
-
-    @staticmethod
-    @abstractmethod
-    def _convert_raw_shap_to_df(
-        raw_shap_tensors: List[npt.NDArray[np.float_]],
-        observations: pd.Index,
-        features_in_split: pd.Index,
-    ) -> List[pd.DataFrame]:
-        """
-        Convert the SHAP tensors for a single split to a data frame.
-
-        :param raw_shap_tensors: the raw values returned by the SHAP explainer
-        :param observations: the ids used for indexing the explained observations
-        :param features_in_split: the features in the current split,
-            explained by the SHAP explainer
-        :return: SHAP values of a single split as data frame
-        """
-        pass
-
-    @abstractmethod
-    def _get_output_names(self, sample: Sample) -> Sequence[str]:
-        pass
 
 
 @inheritdoc(match="""[see superclass]""")

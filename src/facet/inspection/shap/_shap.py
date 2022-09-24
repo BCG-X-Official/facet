@@ -29,7 +29,7 @@ __all__ = [
 # Type variables
 #
 
-T_ShapCalculator = TypeVar("T_ShapCalculator", bound="ShapCalculator[Any]")
+T_ShapCalculator = TypeVar("T_ShapCalculator", bound="ShapCalculator")
 
 
 #
@@ -193,9 +193,44 @@ class ShapCalculator(FittableMixin[Sample], ParallelizableMixin, metaclass=ABCMe
         pass
 
     @abstractmethod
+    def _get_shap(self, sample: Sample) -> pd.DataFrame:
+        pass
+
+    @abstractmethod
+    def _get_output_names(self, sample: Sample) -> Sequence[str]:
+        return self.get_multi_output_names(sample)
+
+    @abstractmethod
     def _calculate_shap(
         self, *, sample: Sample, explainer: BaseExplainer
     ) -> pd.DataFrame:
+        pass
+
+    @abstractmethod
+    def _convert_shap_tensors_to_list(
+        self,
+        *,
+        shap_tensors: Union[npt.NDArray[np.float_], List[npt.NDArray[np.float_]]],
+        n_outputs: int,
+    ) -> List[npt.NDArray[np.float_]]:
+        pass
+
+    @staticmethod
+    @abstractmethod
+    def _convert_raw_shap_to_df(
+        raw_shap_tensors: List[npt.NDArray[np.float_]],
+        observations: pd.Index,
+        features_in_split: pd.Index,
+    ) -> List[pd.DataFrame]:
+        """
+        Convert the SHAP tensors for a single split to a data frame.
+
+        :param raw_shap_tensors: the raw values returned by the SHAP explainer
+        :param observations: the ids used for indexing the explained observations
+        :param features_in_split: the features in the current split,
+            explained by the SHAP explainer
+        :return: SHAP values of a single split as data frame
+        """
         pass
 
 

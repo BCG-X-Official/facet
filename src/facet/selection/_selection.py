@@ -278,7 +278,7 @@ class LearnerSelector(
         """[see superclass]"""
         return self.searcher_ is not None
 
-    @property
+    @property  # type: ignore
     @fitted_only
     def best_estimator_(self) -> T_EstimatorDF:
         """

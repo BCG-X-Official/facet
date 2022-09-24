@@ -192,7 +192,7 @@ class ModelInspector(ParallelizableMixin, FittableMixin[Sample], metaclass=ABCMe
         """[see superclass]"""
         return self._sample is not None
 
-    @property
+    @property  # type: ignore
     @fitted_only
     def sample_(self) -> Sample:
         """
@@ -215,7 +215,7 @@ class ModelInspector(ParallelizableMixin, FittableMixin[Sample], metaclass=ABCMe
         """
         pass
 
-    @property
+    @property  # type: ignore
     @fitted_only
     def output_names_(self) -> Sequence[str]:
         """
@@ -1057,11 +1057,14 @@ class LearnerInspector(ModelInspector, Generic[T_LearnerPipelineDF]):
         str, ModelInspector.__init__.__doc__
     )
 
-    @property
+    @property  # type: ignore
     @fitted_only
     def feature_names_(self) -> List[str]:
         """[see superclass]"""
-        return self.pipeline.feature_names_out_.rename(Sample.IDX_FEATURE).to_list()
+        return cast(
+            List[str],
+            self.pipeline.feature_names_out_.rename(Sample.IDX_FEATURE).to_list(),
+        )
 
     def fit(
         self: T_LearnerInspector,
