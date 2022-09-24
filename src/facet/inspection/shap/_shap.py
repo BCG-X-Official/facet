@@ -60,17 +60,6 @@ class ShapCalculator(FittableMixin[Sample], ParallelizableMixin, metaclass=ABCMe
     in a data frame.
     """
 
-    #: constant for "mean" aggregation method, to be passed as arg ``aggregation``
-    #: to :class:`.ShapCalculator` methods that implement it
-    AGG_MEAN = "mean"
-
-    #: constant for "std" aggregation method, to be passed as arg ``aggregation``
-    #: to :class:`.ShapCalculator` methods that implement it
-    AGG_STD = "std"
-
-    #: name of index level indicating the split ID
-    IDX_SPLIT = "split"
-
     def __init__(
         self,
         explainer_factory: ExplainerFactory,
