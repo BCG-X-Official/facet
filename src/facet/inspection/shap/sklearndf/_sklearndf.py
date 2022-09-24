@@ -131,6 +131,7 @@ class LearnerShapCalculator(
         return self._calculate_shap(sample=sample, explainer=explainer)
 
     def preprocess_features(self, sample: Sample) -> pd.DataFrame:
+        """[see superclass]"""
 
         # get the model
         pipeline = self.pipeline

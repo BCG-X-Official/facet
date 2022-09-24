@@ -178,6 +178,7 @@ class ShapCalculator(FittableMixin[Sample], ParallelizableMixin, metaclass=ABCMe
     @abstractmethod
     def get_multi_output_names(self, sample: Sample) -> List[str]:
         """
+        :param sample: the sample for which to get the multi-output names
         :return: a name for each of the outputs
         """
         pass
