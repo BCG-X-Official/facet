@@ -320,7 +320,7 @@ class LearnerInspector(
         """[see superclass]"""
         return self._sample is not None
 
-    @property  # type: ignore
+    @property
     @fitted_only
     def sample_(self) -> Sample:
         """
@@ -330,7 +330,7 @@ class LearnerInspector(
         assert self._sample is not None, ASSERTION__INSPECTOR_IS_FITTED
         return self._sample
 
-    @property  # type: ignore
+    @property
     @fitted_only
     def output_names_(self) -> Sequence[str]:
         """
@@ -351,7 +351,7 @@ class LearnerInspector(
         ), ASSERTION__INSPECTOR_IS_FITTED
         return self._shap_calculator.output_names_
 
-    @property  # type: ignore
+    @property
     @fitted_only
     def features_(self) -> List[str]:
         """
