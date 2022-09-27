@@ -193,7 +193,7 @@ class ModelInspector(ParallelizableMixin, FittableMixin[Sample], metaclass=ABCMe
         """[see superclass]"""
         return self._sample is not None
 
-    @property  # type: ignore
+    @property
     @fitted_only
     def sample_(self) -> Sample:
         """
@@ -216,7 +216,7 @@ class ModelInspector(ParallelizableMixin, FittableMixin[Sample], metaclass=ABCMe
         """
         pass
 
-    @property  # type: ignore
+    @property
     @fitted_only
     def output_names_(self) -> Sequence[str]:
         """
@@ -1058,7 +1058,7 @@ class LearnerInspector(ModelInspector, Generic[T_SupervisedLearnerDF]):
         str, ModelInspector.__init__.__doc__
     )
 
-    @property  # type: ignore
+    @property
     @fitted_only
     def feature_names_(self) -> List[str]:
         """[see superclass]"""
