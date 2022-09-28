@@ -145,17 +145,16 @@ class LearnerShapCalculator(
         # get the model
         pipeline = self.pipeline
 
-        # get the features of all out-of-bag observations
-        x = features.features
-
         # pre-process the features
         if pipeline.preprocessing is not None:
-            x = pipeline.preprocessing.transform(x)
+            features = pipeline.preprocessing.transform(features)
 
         # re-index the features to fit the sequence that was used to fit the learner
         # (in case feature order was shuffled during preprocessing, or train split
         # pre-processing removed columns)
-        return x.reindex(columns=pipeline.final_estimator.feature_names_in_, copy=False)
+        return features.reindex(
+            columns=pipeline.final_estimator.feature_names_in_, copy=False
+        )
 
 
 @inheritdoc(match="""[see superclass]""")
