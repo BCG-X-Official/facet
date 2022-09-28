@@ -15,7 +15,7 @@ dependencies:
   - scikit-learn ~= 1.1
   - scipy ~= 1.8
   - shap ~= 0.41
-  - sklearndf ~= 2.0
+  - sklearndf ~= 2.2.dev
   - typing_extensions ~= 4.3
   # build/test
   - conda-build ~= 3.21
