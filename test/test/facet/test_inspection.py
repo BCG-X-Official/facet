@@ -19,7 +19,11 @@ from sklearndf.classification import (
     GradientBoostingClassifierDF,
     RandomForestClassifierDF,
 )
-from sklearndf.pipeline import ClassifierPipelineDF, RegressorPipelineDF
+from sklearndf.pipeline import (
+    ClassifierPipelineDF,
+    RegressorPipelineDF,
+    SupervisedLearnerPipelineDF,
+)
 from sklearndf.regression.extra import LGBMRegressorDF
 
 from ..conftest import check_ranking
@@ -203,9 +207,7 @@ def test_model_inspection_classifier_binary_single_shap_output() -> None:
 
 # noinspection DuplicatedCode
 def test_model_inspection_classifier_multi_class(
-    iris_inspector_multi_class: LearnerInspector[
-        ClassifierPipelineDF[RandomForestClassifierDF]
-    ],
+    iris_inspector_multi_class: LearnerInspector[RandomForestClassifierDF],
 ) -> None:
     iris_classifier = iris_inspector_multi_class.pipeline
     iris_sample = iris_inspector_multi_class.sample_
@@ -325,7 +327,7 @@ def test_model_inspection_classifier_multi_class(
 
 def _validate_shap_values_against_predictions(
     shap_values: pd.DataFrame,
-    model: ClassifierPipelineDF[RandomForestClassifierDF],
+    model: SupervisedLearnerPipelineDF[RandomForestClassifierDF],
     sample: Sample,
 ) -> None:
 

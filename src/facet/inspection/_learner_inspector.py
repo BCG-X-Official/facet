@@ -32,7 +32,7 @@ from pytools.data import LinkageTree, Matrix
 from pytools.fit import FittableMixin, fitted_only
 from pytools.parallelization import ParallelizableMixin
 from sklearndf import ClassifierDF, LearnerDF, RegressorDF, SupervisedLearnerDF
-from sklearndf.pipeline import LearnerPipelineDF
+from sklearndf.pipeline import SupervisedLearnerPipelineDF
 
 from ..data import Sample
 from ._explainer import ExplainerFactory, TreeExplainerFactory
@@ -1002,7 +1002,7 @@ class LearnerInspector(ModelInspector, Generic[T_SupervisedLearnerDF]):
     def __init__(
         self,
         *,
-        pipeline: LearnerPipelineDF[T_SupervisedLearnerDF],
+        pipeline: SupervisedLearnerPipelineDF[T_SupervisedLearnerDF],
         explainer_factory: Optional[ExplainerFactory[T_SupervisedLearnerDF]] = None,
         shap_interaction: bool = True,
         n_jobs: Optional[int] = None,
@@ -1068,9 +1068,7 @@ class LearnerInspector(ModelInspector, Generic[T_SupervisedLearnerDF]):
         )
 
     def fit(
-        self: T_LearnerInspector,
-        __sample: Sample,
-        **fit_params: Any,
+        self: T_LearnerInspector, __sample: Sample, **fit_params: Any
     ) -> T_LearnerInspector:
         """
         Fit the inspector with the given sample, creating global explanations including
