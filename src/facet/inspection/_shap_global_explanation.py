@@ -545,9 +545,10 @@ class ShapValueContext(ShapContext):
             # return a 1d array of weights that aligns with the observations axis of the
             # SHAP values tensor (axis 1)
             assert (
-                shap_calculator.sample_ is not None and ASSERTION__CALCULATOR_IS_FITTED
+                shap_calculator.features_ is not None
+                and ASSERTION__CALCULATOR_IS_FITTED
             )
-            _weight_sr = shap_calculator.sample_.weight
+            _weight_sr = shap_calculator.features_.weight
             if _weight_sr is not None:
                 return cast(
                     npt.NDArray[np.float_],
@@ -587,8 +588,8 @@ class ShapInteractionValueContext(ShapContext):
         # return a 1d array of weights that aligns with the observations axis of the
         # SHAP values tensor (axis 1)
         weight: Optional[npt.NDArray[np.float_]]
-        assert shap_calculator.sample_ is not None and ASSERTION__CALCULATOR_IS_FITTED
-        _weight_sr = shap_calculator.sample_.weight
+        assert shap_calculator.features_ is not None and ASSERTION__CALCULATOR_IS_FITTED
+        _weight_sr = shap_calculator.features_.weight
         if _weight_sr is not None:
             _observation_indices = shap_values.index.get_level_values(
                 -2

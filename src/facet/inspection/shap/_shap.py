@@ -14,7 +14,6 @@ from pytools.api import AllTracker, inheritdoc
 from pytools.fit import FittableMixin, fitted_only
 from pytools.parallelization import ParallelizableMixin
 
-from facet.data import Sample
 from facet.inspection._explainer import BaseExplainer, ExplainerFactory
 
 log = logging.getLogger(__name__)
@@ -53,18 +52,25 @@ __tracker = AllTracker(globals())
 
 
 class ShapCalculator(
-    FittableMixin[Sample], ParallelizableMixin, Generic[T_Model], metaclass=ABCMeta
+    FittableMixin[pd.DataFrame],
+    ParallelizableMixin,
+    Generic[T_Model],
+    metaclass=ABCMeta,
 ):
     """
     Base class for all SHAP calculators.
 
     A SHAP calculator uses the ``shap`` package to calculate SHAP tensors for all
-    observations in a given sample, then consolidates and aggregates results
-    in a data frame.
+    observations in a given sample of feature values, then consolidates and aggregates
+    results in a data frame.
     """
 
     #: The explainer factory used to create the SHAP explainer for this calculator.
     explainer_factory: ExplainerFactory[T_Model]
+
+    #: Name of the index that is used to identify multiple outputs for which SHAP
+    #: values are calculated. To be overloaded by subclasses.
+    MULTI_OUTPUT_INDEX_NAME = "output"
 
     def __init__(
         self,
@@ -87,20 +93,21 @@ class ShapCalculator(
         self.shap_: Optional[pd.DataFrame] = None
         self.feature_index_: Optional[pd.Index] = None
         self.output_names_: Optional[Sequence[str]] = None
-        self.sample_: Optional[Sample] = None
+        self.features_: Optional[pd.DataFrame] = None
 
     @property
     def is_fitted(self) -> bool:
         """[see superclass]"""
         return self.shap_ is not None
 
+    # noinspection PyPep8Naming
     def fit(
-        self: T_ShapCalculator, __sample: Sample, **fit_params: Any
+        self: T_ShapCalculator, __X: pd.DataFrame, **fit_params: Any
     ) -> T_ShapCalculator:
         """
         Calculate the SHAP values.
 
-        :param __sample: the observations for which to calculate SHAP values
+        :param __X: the observations for which to calculate SHAP values
         :param fit_params: additional fit parameters (unused)
         :return: self
         """
@@ -109,19 +116,19 @@ class ShapCalculator(
         self.shap_ = None
 
         self.feature_index_ = self.get_feature_names()
-        self.output_names_ = self._get_output_names(__sample)
-        self.sample_ = __sample
+        self.output_names_ = self._get_output_names(__X)
+        self.features_ = __X
 
         # calculate shap values and re-order the observation index to match the
         # sequence in the original training sample
-        shap_df: pd.DataFrame = self._get_shap(__sample)
+        shap_df: pd.DataFrame = self._get_shap(__X)
 
         n_levels = shap_df.index.nlevels
         assert 1 <= n_levels <= 2
-        assert shap_df.index.names[0] == __sample.index.name
+        assert shap_df.index.names[0] == __X.index.name
 
         self.shap_ = shap_df.reindex(
-            index=__sample.index.intersection(
+            index=__X.index.intersection(
                 (
                     shap_df.index
                     if n_levels == 1
@@ -163,42 +170,34 @@ class ShapCalculator(
         :raise TypeError: this SHAP calculator does not support interaction values
         """
 
-    @staticmethod
     @abstractmethod
-    def get_multi_output_type() -> str:
+    def get_multi_output_names(self) -> List[str]:
         """
-        :return: a category name for the dimensions represented by multiple outputs
-        """
-
-    @abstractmethod
-    def get_multi_output_names(self, sample: Sample) -> List[str]:
-        """
-        :param sample: the sample for which to get the multi-output names
         :return: a name for each of the outputs
         """
         pass
 
     @abstractmethod
-    def preprocess_features(self, sample: Sample) -> pd.DataFrame:
+    def preprocess_features(self, features: pd.DataFrame) -> pd.DataFrame:
         """
-        Preprocess the features in the sample prior to SHAP calculation.
+        Preprocess the features prior to SHAP calculation.
 
-        :param sample:
-        :return:
+        :param features: the features to be preprocessed
+        :return: the preprocessed features
         """
         pass
 
     @abstractmethod
-    def _get_shap(self, sample: Sample) -> pd.DataFrame:
+    def _get_shap(self, features: pd.DataFrame) -> pd.DataFrame:
         pass
 
     @abstractmethod
-    def _get_output_names(self, sample: Sample) -> Sequence[str]:
-        return self.get_multi_output_names(sample)
+    def _get_output_names(self, features: pd.DataFrame) -> Sequence[str]:
+        return self.get_multi_output_names()
 
     @abstractmethod
     def _calculate_shap(
-        self, *, sample: Sample, explainer: BaseExplainer
+        self, *, features: pd.DataFrame, explainer: BaseExplainer
     ) -> pd.DataFrame:
         pass
 
@@ -278,18 +277,18 @@ class ShapValuesCalculator(
         )
 
     def _calculate_shap(
-        self, *, sample: Sample, explainer: BaseExplainer
+        self, *, features: pd.DataFrame, explainer: BaseExplainer
     ) -> pd.DataFrame:
-        x = self.preprocess_features(sample=sample)
+        x = self.preprocess_features(features=features)
 
         if x.isna().values.any():
             log.warning(
-                "preprocessed sample passed to SHAP explainer contains NaN values; "
+                "preprocessed features passed to SHAP explainer include NaN values; "
                 "try to change preprocessing to impute all NaN values"
             )
 
-        multi_output_type = self.get_multi_output_type()
-        multi_output_names = self.get_multi_output_names(sample=sample)
+        multi_output_index_name = self.MULTI_OUTPUT_INDEX_NAME
+        multi_output_names = self.get_multi_output_names()
         assert self.feature_index_ is not None, ASSERTION__CALCULATOR_IS_FITTED
         features_out = self.feature_index_
 
@@ -316,7 +315,7 @@ class ShapValuesCalculator(
                 shap_values_df_per_output,
                 axis=1,
                 keys=multi_output_names,
-                names=[multi_output_type, features_out.name],
+                names=[multi_output_index_name, features_out.name],
             )
 
 
@@ -356,11 +355,11 @@ class ShapInteractionValuesCalculator(
 
         assert (
             self.shap_ is not None
-            and self.sample_ is not None
+            and self.features_ is not None
             and self.feature_index_ is not None
         ), ASSERTION__CALCULATOR_IS_FITTED
 
-        n_observations = len(self.sample_)
+        n_observations = len(self.features_)
         n_features = len(self.feature_index_)
         interaction_matrix = self.shap_
 
@@ -379,12 +378,12 @@ class ShapInteractionValuesCalculator(
         )
 
     def _calculate_shap(
-        self, *, sample: Sample, explainer: BaseExplainer
+        self, *, features: pd.DataFrame, explainer: BaseExplainer
     ) -> pd.DataFrame:
-        x = self.preprocess_features(sample=sample)
+        x = self.preprocess_features(features=features)
 
-        multi_output_type = self.get_multi_output_type()
-        multi_output_names = self.get_multi_output_names(sample)
+        multi_output_index_name = self.MULTI_OUTPUT_INDEX_NAME
+        multi_output_names = self.get_multi_output_names()
         assert self.feature_index_ is not None, ASSERTION__CALCULATOR_IS_FITTED
         features_out = self.feature_index_
 
@@ -421,7 +420,7 @@ class ShapInteractionValuesCalculator(
                 interaction_matrix_per_output,
                 axis=1,
                 keys=multi_output_names,
-                names=[multi_output_type, features_out.name],
+                names=[multi_output_index_name, features_out.name],
             )
 
 

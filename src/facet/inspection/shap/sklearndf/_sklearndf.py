@@ -12,9 +12,8 @@ import pandas as pd
 
 from pytools.api import AllTracker, inheritdoc
 from sklearndf import ClassifierDF, RegressorDF, SupervisedLearnerDF
-from sklearndf.pipeline import LearnerPipelineDF
+from sklearndf.pipeline import SupervisedLearnerPipelineDF
 
-from facet.data import Sample
 from facet.inspection._explainer import ExplainerFactory, ParallelExplainer
 from facet.inspection.shap import (
     ShapCalculator,
@@ -65,9 +64,15 @@ class LearnerShapCalculator(
     Base class for SHAP calculators based on :mod:`sklearndf` learners.
     """
 
+    #: Default name for the feature index (= column index)
+    IDX_FEATURE = "feature"
+
+    #: The supervised learner pipeline used to calculate SHAP values.
+    pipeline: SupervisedLearnerPipelineDF[T_SupervisedLearnerDF]
+
     def __init__(
         self,
-        pipeline: LearnerPipelineDF[T_SupervisedLearnerDF],
+        pipeline: SupervisedLearnerPipelineDF[T_SupervisedLearnerDF],
         explainer_factory: ExplainerFactory[T_SupervisedLearnerDF],
         *,
         n_jobs: Optional[int] = None,
@@ -86,16 +91,19 @@ class LearnerShapCalculator(
 
     def get_feature_names(self) -> pd.Index:
         """[see superclass]"""
-        return self.pipeline.feature_names_out_.rename(Sample.IDX_FEATURE)
 
-    def _get_shap(self, sample: Sample) -> pd.DataFrame:
+        return self.pipeline.final_estimator.feature_names_in_.rename(
+            LearnerShapCalculator.IDX_FEATURE
+        )
+
+    def _get_shap(self, features: pd.DataFrame) -> pd.DataFrame:
 
         # prepare the background dataset
 
         background_dataset: Optional[pd.DataFrame]
 
         if self.explainer_factory.uses_background_dataset:
-            background_dataset = self.preprocess_features(sample)
+            background_dataset = self.preprocess_features(features)
 
             background_dataset_not_na = background_dataset.dropna()
 
@@ -103,9 +111,9 @@ class LearnerShapCalculator(
                 n_original = len(background_dataset)
                 n_dropped = n_original - len(background_dataset_not_na)
                 log.warning(
-                    f"{n_dropped} out of {n_original} observations in the sample "
-                    "contain NaN values after pre-processing and will not be included "
-                    "in the background dataset"
+                    f"{n_dropped} out of {n_original} observations in the background "
+                    f"dataset have missing values after pre-processing and will be "
+                    f"dropped."
                 )
 
                 background_dataset = background_dataset_not_na
@@ -127,18 +135,18 @@ class LearnerShapCalculator(
                 verbose=self.verbose,
             )
 
-        # we explain the full sample using the model fitted on the full sample
-        # so the result is a list with a single data frame of shap values
-        return self._calculate_shap(sample=sample, explainer=explainer)
+        # we explain all observations using the model, resulting in a matrix of
+        # SHAP values for each observation and feature
+        return self._calculate_shap(features=features, explainer=explainer)
 
-    def preprocess_features(self, sample: Sample) -> pd.DataFrame:
+    def preprocess_features(self, features: pd.DataFrame) -> pd.DataFrame:
         """[see superclass]"""
 
         # get the model
         pipeline = self.pipeline
 
         # get the features of all out-of-bag observations
-        x = sample.features
+        x = features.features
 
         # pre-process the features
         if pipeline.preprocessing is not None:
@@ -160,19 +168,18 @@ class RegressorShapCalculator(
     Calculates SHAP (interaction) values for regression models.
     """
 
-    def _get_output_names(self, sample: Sample) -> List[str]:
-        # noinspection PyProtectedMember
-        return sample._target_names
+    #: Multi-output SHAP values are determined by target.
+    MULTI_OUTPUT_INDEX_NAME = "target"
 
-    @staticmethod
-    def get_multi_output_type() -> str:
-        """[see superclass]"""
-        return Sample.IDX_TARGET
+    def _get_output_names(self, features: pd.DataFrame) -> List[str]:
+        regressor_df = self.pipeline.final_estimator
+        assert regressor_df is not None, "pipeline must be fitted"
 
-    def get_multi_output_names(self, sample: Sample) -> List[str]:
+        return regressor_df.output_names_
+
+    def get_multi_output_names(self) -> List[str]:
         """[see superclass]"""
-        # noinspection PyProtectedMember
-        return sample._target_names
+        return self.pipeline.output_names_
 
 
 class RegressorShapValuesCalculator(
@@ -240,7 +247,8 @@ class ClassifierShapCalculator(
     Calculates SHAP (interaction) values for classification models.
     """
 
-    COL_CLASS = "class"
+    #: Multi-output SHAP values are determined by class.
+    MULTI_OUTPUT_INDEX_NAME = "class"
 
     def _convert_shap_tensors_to_list(
         self,
@@ -262,55 +270,45 @@ class ClassifierShapCalculator(
                 shap_tensors=shap_tensors, n_outputs=n_outputs
             )
 
-    def _get_output_names(
-        self,
-        sample: Sample,
-    ) -> Sequence[str]:
-        assert not isinstance(
-            sample.target_name, list
-        ), "classification model must be single-output"
+    def _get_output_names(self, features: pd.DataFrame) -> Sequence[str]:
         classifier_df = self.pipeline.final_estimator
         assert classifier_df.is_fitted, "classifier must be fitted"
 
+        assert (
+            classifier_df.n_outputs_ == 1
+        ), "classification model must be single-output"
+
         try:
             # noinspection PyTypeChecker
-            output_names: List[str] = cast(
+            class_names: List[str] = cast(
                 npt.NDArray[Any], classifier_df.classes_
             ).tolist()
-
         except Exception as cause:
             raise AssertionError("classifier must define classes_ attribute") from cause
 
-        n_outputs = len(output_names)
+        n_classes = len(class_names)
 
-        if n_outputs == 1:
+        if n_classes == 1:
             raise RuntimeError(
                 "cannot explain a (sub)sample with one single category "
-                f"{repr(output_names[0])}: "
+                f"{repr(class_names[0])}: "
                 "consider using a stratified cross-validation strategy"
             )
 
-        elif n_outputs == 2:
+        elif n_classes == 2:
             # for binary classifiers, we will generate only output for the first class
             # as the probabilities for the second class are trivially linked to class 1
-            return output_names[:1]
+            return class_names[:1]
 
         else:
-            return output_names
+            return class_names
 
-    @staticmethod
-    def get_multi_output_type() -> str:
+    def get_multi_output_names(self) -> List[str]:
         """[see superclass]"""
-        return ClassifierShapCalculator.COL_CLASS
-
-    def get_multi_output_names(self, sample: Sample) -> List[str]:
-        """[see superclass]"""
-        assert isinstance(
-            sample.target, pd.Series
+        assert (
+            self.pipeline.final_estimator.n_outputs_ == 1
         ), "only single-output classifiers are currently supported"
-        root_classifier = self.pipeline.final_estimator.native_estimator
-        # noinspection PyUnresolvedReferences
-        return list(map(str, root_classifier.classes_))
+        return list(map(str, self.pipeline.final_estimator.classes_))
 
 
 class ClassifierShapValuesCalculator(
