@@ -224,6 +224,9 @@ class CandidateEstimatorDF(ClassifierDF, RegressorDF, TransformerDF):
     def _get_features_in(self) -> pd.Index:
         return self._get_candidate().feature_names_in_
 
+    def _get_outputs(self) -> Optional[List[str]]:
+        return self._get_candidate()._get_outputs()
+
     def _get_n_outputs(self) -> int:
         return self._get_candidate().n_outputs_
 
