@@ -9,6 +9,7 @@ from typing import Any, Optional, Tuple, TypeVar
 
 import numpy as np
 import numpy.typing as npt
+import pandas as pd
 
 from pytools.api import AllTracker, inheritdoc
 from pytools.fit import fitted_only
@@ -74,9 +75,15 @@ class ShapProjector(ShapGlobalExplainer, metaclass=ABCMeta):
         assert self.association_ is not None
         return self.association_.get_values(symmetrical=symmetrical, absolute=absolute)
 
-    def _fit(self, shap_calculator: ShapCalculator[Any]) -> None:
+    def _fit(
+        self, shap_calculator: ShapCalculator[Any], sample_weight: Optional[pd.Series]
+    ) -> None:
         self._reset_fit()
-        self._calculate(self._get_context(shap_calculator=shap_calculator))
+        self._calculate(
+            self._get_context(
+                shap_calculator=shap_calculator, sample_weight=sample_weight
+            )
+        )
 
     def _reset_fit(self) -> None:
         # revert status of this object to not fitted
@@ -84,7 +91,9 @@ class ShapProjector(ShapGlobalExplainer, metaclass=ABCMeta):
         self.association_ = None
 
     @abstractmethod
-    def _get_context(self, shap_calculator: ShapCalculator[Any]) -> ShapContext:
+    def _get_context(
+        self, shap_calculator: ShapCalculator[Any], sample_weight: Optional[pd.Series]
+    ) -> ShapContext:
         pass
 
     @abstractmethod
@@ -129,8 +138,12 @@ class ShapVectorProjector(ShapProjector):
     onto a feature's main SHAP vector.
     """
 
-    def _get_context(self, shap_calculator: ShapCalculator[Any]) -> ShapContext:
-        return ShapValueContext(shap_calculator=shap_calculator)
+    def _get_context(
+        self, shap_calculator: ShapCalculator[Any], sample_weight: Optional[pd.Series]
+    ) -> ShapContext:
+        return ShapValueContext(
+            shap_calculator=shap_calculator, sample_weight=sample_weight
+        )
 
     def _calculate(self, context: ShapContext) -> None:
         # calculate association matrices for each SHAP context, then aggregate
@@ -170,8 +183,12 @@ class ShapInteractionVectorProjector(ShapProjector, ShapInteractionGlobalExplain
         assert self.redundancy_ is not None, "Projector is fitted"
         return self.redundancy_.get_values(symmetrical=symmetrical, absolute=absolute)
 
-    def _get_context(self, shap_calculator: ShapCalculator[Any]) -> ShapContext:
-        return ShapInteractionValueContext(shap_calculator=shap_calculator)
+    def _get_context(
+        self, shap_calculator: ShapCalculator[Any], sample_weight: Optional[pd.Series]
+    ) -> ShapContext:
+        return ShapInteractionValueContext(
+            shap_calculator=shap_calculator, sample_weight=sample_weight
+        )
 
     def _calculate(self, context: ShapContext) -> None:
         # calculate association, synergy, and redundancy matrices for the SHAP context

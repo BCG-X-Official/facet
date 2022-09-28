@@ -1137,8 +1137,8 @@ class LearnerInspector(ModelInspector, Generic[T_SupervisedLearnerDF]):
 
             shap_global_projector = ShapVectorProjector()
 
-        shap_calculator.fit(__sample)
-        shap_global_projector.fit(shap_calculator=shap_calculator)
+        shap_calculator.fit(__sample.features)
+        shap_global_projector.fit(shap_calculator, sample_weight=__sample.weight)
 
         self._sample = __sample
         self._shap_calculator = shap_calculator

@@ -166,6 +166,8 @@ class ShapGlobalExplainer(FittableMixin[ShapCalculator[Any]], metaclass=ABCMeta)
     def fit(  # type: ignore[override]
         self: T_ShapGlobalExplainer,
         shap_calculator: ShapCalculator[Any],
+        *,
+        sample_weight: Optional[pd.Series] = None,
         **fit_params: Any,
     ) -> T_ShapGlobalExplainer:
         """
@@ -173,6 +175,9 @@ class ShapGlobalExplainer(FittableMixin[ShapCalculator[Any]], metaclass=ABCMeta)
         given SHAP calculator.
 
         :param shap_calculator: the fitted calculator from which to get the shap values
+        :param sample_weight: optional sample weights to apply for the global
+            explanations; the index must match the index of the features used to
+            fit the SHAP calculator
         """
 
         try:
@@ -181,7 +186,7 @@ class ShapGlobalExplainer(FittableMixin[ShapCalculator[Any]], metaclass=ABCMeta)
                     f'unsupported fit parameters: {", ".join(fit_params.values())}'
                 )
 
-            self._fit(shap_calculator=shap_calculator)
+            self._fit(shap_calculator=shap_calculator, sample_weight=sample_weight)
 
             self.feature_index_ = shap_calculator.feature_index_
 
@@ -234,7 +239,9 @@ class ShapGlobalExplainer(FittableMixin[ShapCalculator[Any]], metaclass=ABCMeta)
         ]
 
     @abstractmethod
-    def _fit(self, shap_calculator: ShapCalculator[Any]) -> None:
+    def _fit(
+        self, shap_calculator: ShapCalculator[Any], sample_weight: Optional[pd.Series]
+    ) -> None:
         pass
 
     def _reset_fit(self) -> None:
@@ -517,7 +524,9 @@ class ShapValueContext(ShapContext):
     Contextual data for global SHAP calculations based on SHAP values.
     """
 
-    def __init__(self, shap_calculator: ShapCalculator[Any]) -> None:
+    def __init__(
+        self, shap_calculator: ShapCalculator[Any], sample_weight: Optional[pd.Series]
+    ) -> None:
         shap_values: pd.DataFrame = shap_calculator.get_shap_values()
 
         def _p_i() -> npt.NDArray[np.float_]:
@@ -548,11 +557,10 @@ class ShapValueContext(ShapContext):
                 shap_calculator.features_ is not None
                 and ASSERTION__CALCULATOR_IS_FITTED
             )
-            _weight_sr = shap_calculator.features_.weight
-            if _weight_sr is not None:
+            if sample_weight is not None:
                 return cast(
                     npt.NDArray[np.float_],
-                    _weight_sr.loc[shap_values.index.get_level_values(-1)].values,
+                    sample_weight.loc[shap_values.index.get_level_values(-1)].values,
                 )
             else:
                 return None
@@ -565,7 +573,9 @@ class ShapInteractionValueContext(ShapContext):
     Contextual data for global SHAP calculations based on SHAP interaction values.
     """
 
-    def __init__(self, shap_calculator: ShapCalculator[Any]) -> None:
+    def __init__(
+        self, shap_calculator: ShapCalculator[Any], sample_weight: Optional[pd.Series]
+    ) -> None:
         shap_values: pd.DataFrame = shap_calculator.get_shap_interaction_values()
 
         assert (
@@ -589,13 +599,12 @@ class ShapInteractionValueContext(ShapContext):
         # SHAP values tensor (axis 1)
         weight: Optional[npt.NDArray[np.float_]]
         assert shap_calculator.features_ is not None and ASSERTION__CALCULATOR_IS_FITTED
-        _weight_sr = shap_calculator.features_.weight
-        if _weight_sr is not None:
+        if sample_weight is not None:
             _observation_indices = shap_values.index.get_level_values(
                 -2
             ).values.reshape((n_observations, n_features))[:, 0]
             weight = ensure_last_axis_is_fast(
-                _weight_sr.loc[_observation_indices].values
+                sample_weight.loc[_observation_indices].values
             )
         else:
             weight = None
