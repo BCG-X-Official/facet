@@ -18,7 +18,7 @@ schedules:
   displayName: Nightly full build
   branches:
     include:
-    - 1.2.x
+    - 2.0.x
 
 resources:
   repositories:
@@ -565,13 +565,19 @@ stages:
     variables:
     - group: github_ssh
 
+    # Doc build has been disabled since the documentation format has changed from
+    # version 2.0.0 onwards.
+    # The new documentation format is not compatible with the old doc build process.
     jobs:
     - job:
       displayName: 'Build and publish docs'
       condition: >
+        and(
+        false,
         or(
         eq(variables.source_is_release_branch, 'True'),
         eq(variables.source_is_develop_branch, 'True')
+        )
         )
 
 

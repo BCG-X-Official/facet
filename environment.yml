@@ -8,12 +8,12 @@ dependencies:
   - gamma-pytools ~= 1.2, >= 1.2.1
   - joblib ~= 1.1
   - lightgbm ~= 3.2
-  - matplotlib ~= 3.3
+  - matplotlib ~= 3.5.2
   - numpy ~= 1.22
   - pandas ~= 1.4
   - python ~= 3.8
   - scikit-learn ~= 0.24.2
-  - scipy ~= 1.6
+  - scipy ~= 1.8.1
   - shap ~= 0.39.0
   - sklearndf ~= 1.2
   # build/test
