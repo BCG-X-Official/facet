@@ -144,19 +144,20 @@ def test_univariate_target_subsample_simulation_80(
     ] = target_simulator.simulate_feature(
         feature_name=parameterized_feature,
         partitioner=partitioner,
+        lower_bound=3.8,
     )
 
     # test simulation results
 
     index = pd.Index(
-        data=[2.0, 4.0, 6.0, 8.0, 10.0, 12.0, 14.0, 16.0, 18.0],
+        data=[4.0, 6.0, 8.0, 10.0, 12.0, 14.0, 16.0, 18.0],
         name=UnivariateSimulationResult.IDX_PARTITION,
     )
 
     assert_series_equal(
         simulation_result.data.loc[:, UnivariateSimulationResult.COL_LOWER_BOUND],
         pd.Series(
-            [25.05676, 25.05676, 25.05676, 22.96243, 21.43395]
+            [25.05676, 25.05676, 22.96243, 21.43395]
             + [21.21544, 20.76824, 20.49282, 20.49282],
             name=UnivariateSimulationResult.COL_LOWER_BOUND,
             index=index,
@@ -166,7 +167,7 @@ def test_univariate_target_subsample_simulation_80(
     assert_series_equal(
         simulation_result.data.loc[:, UnivariateSimulationResult.COL_MEAN],
         pd.Series(
-            [25.642227, 25.642227, 25.642227, 23.598706, 22.067057]
+            [25.642227, 25.642227, 23.598706, 22.067057]
             + [21.864828, 21.451056, 21.195954, 21.195954],
             name=UnivariateSimulationResult.COL_MEAN,
             index=index,
@@ -176,7 +177,7 @@ def test_univariate_target_subsample_simulation_80(
     assert_series_equal(
         simulation_result.data.loc[:, UnivariateSimulationResult.COL_UPPER_BOUND],
         pd.Series(
-            [26.22769, 26.22769, 26.22769, 24.23498, 22.70016]
+            [26.22769, 26.22769, 24.23498, 22.70016]
             + [22.51422, 22.13387, 21.89909, 21.89909],
             name=UnivariateSimulationResult.COL_UPPER_BOUND,
             index=index,
@@ -184,7 +185,7 @@ def test_univariate_target_subsample_simulation_80(
     )
 
     assert_array_equal(
-        simulation_result.partitioner.frequencies_, [1, 4, 9, 10, 10, 6, 2, 1, 4]
+        simulation_result.partitioner.frequencies_, [4, 9, 10, 10, 6, 2, 1, 4]
     )
 
     SimulationDrawer(style="text").draw(
