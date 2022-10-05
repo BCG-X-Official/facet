@@ -252,7 +252,7 @@ def simple_preprocessor(sample: Sample) -> TransformerDF:
         column_transforms.append(
             (
                 STEP_ONE_HOT_ENCODE,
-                OneHotEncoderDF(sparse=False, handle_unknown="ignore"),
+                OneHotEncoderDF(handle_unknown="ignore"),
                 list(map(str, category_columns)),
             )
         )
