@@ -213,7 +213,8 @@ def preprocessed_feature_names(
     """
     Names of all features after preprocessing
     """
-    return set(best_lgbm_model.feature_names_out_)
+    assert best_lgbm_model.preprocessing is not None
+    return set(best_lgbm_model.preprocessing.feature_names_out_)
 
 
 @pytest.fixture  # type: ignore
