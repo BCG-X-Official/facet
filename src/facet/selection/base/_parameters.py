@@ -4,7 +4,7 @@ Core implementation of :mod:`facet.selection.base`
 
 import logging
 from abc import ABCMeta, abstractmethod
-from typing import Any, Dict, Generic, List, Optional, TypeVar, Union
+from typing import Any, Dict, Generic, List, Optional, TypeVar, Union, cast
 
 import numpy.typing as npt
 import pandas as pd
@@ -151,9 +151,12 @@ class CandidateEstimatorDF(ClassifierDF, RegressorDF, TransformerDF):
             return self.candidate
 
     @property
-    def classes_(self) -> Union[npt.NDArray[Any], List[npt.NDArray[Any]]]:
+    def _get_classes(self) -> Union[npt.NDArray[Any], List[npt.NDArray[Any]]]:
         """[see superclass]"""
-        return self._get_candidate().classes_
+        return cast(
+            Union[npt.NDArray[Any], List[npt.NDArray[Any]]],
+            self._get_candidate()._get_classes(),
+        )
 
     # noinspection PyPep8Naming
     def predict_proba(
