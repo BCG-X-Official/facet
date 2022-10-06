@@ -1064,7 +1064,7 @@ class LearnerInspector(ModelInspector, Generic[T_SupervisedLearnerDF]):
         """[see superclass]"""
         return cast(
             List[str],
-            self.pipeline.feature_names_out_.rename(Sample.IDX_FEATURE).to_list(),
+            self.pipeline.final_estimator.feature_names_in_.to_list(),
         )
 
     def fit(
@@ -1108,7 +1108,7 @@ class LearnerInspector(ModelInspector, Generic[T_SupervisedLearnerDF]):
                 shap_calculator_type = RegressorShapInteractionValuesCalculator
 
             shap_calculator = shap_calculator_type(
-                pipeline=self.pipeline,
+                learner=self.pipeline.final_estimator,
                 explainer_factory=self.explainer_factory,
                 n_jobs=self.n_jobs,
                 shared_memory=self.shared_memory,
@@ -1125,7 +1125,7 @@ class LearnerInspector(ModelInspector, Generic[T_SupervisedLearnerDF]):
                 shap_calculator_type = RegressorShapValuesCalculator
 
             shap_calculator = shap_calculator_type(
-                pipeline=self.pipeline,
+                learner=self.pipeline.final_estimator,
                 explainer_factory=self.explainer_factory,
                 n_jobs=self.n_jobs,
                 shared_memory=self.shared_memory,
@@ -1135,7 +1135,7 @@ class LearnerInspector(ModelInspector, Generic[T_SupervisedLearnerDF]):
 
             shap_global_projector = ShapVectorProjector()
 
-        shap_calculator.fit(__sample.features)
+        shap_calculator.fit(self.pipeline.preprocess(__sample.features))
         shap_global_projector.fit(shap_calculator, sample_weight=__sample.weight)
 
         self._sample = __sample

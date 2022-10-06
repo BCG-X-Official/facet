@@ -178,16 +178,6 @@ class ShapCalculator(
         pass
 
     @abstractmethod
-    def preprocess_features(self, features: pd.DataFrame) -> pd.DataFrame:
-        """
-        Preprocess the features prior to SHAP calculation.
-
-        :param features: the features to be preprocessed
-        :return: the preprocessed features
-        """
-        pass
-
-    @abstractmethod
     def _get_shap(self, features: pd.DataFrame) -> pd.DataFrame:
         pass
 
@@ -279,9 +269,7 @@ class ShapValuesCalculator(
     def _calculate_shap(
         self, *, features: pd.DataFrame, explainer: BaseExplainer
     ) -> pd.DataFrame:
-        x = self.preprocess_features(features=features)
-
-        if x.isna().values.any():
+        if features.isna().values.any():
             log.warning(
                 "preprocessed features passed to SHAP explainer include NaN values; "
                 "try to change preprocessing to impute all NaN values"
@@ -294,7 +282,8 @@ class ShapValuesCalculator(
 
         # calculate the shap values, and ensure the result is a list of arrays
         shap_values: List[npt.NDArray[np.float_]] = self._convert_shap_tensors_to_list(
-            shap_tensors=explainer.shap_values(x), n_outputs=len(multi_output_names)
+            shap_tensors=explainer.shap_values(features),
+            n_outputs=len(multi_output_names),
         )
 
         # convert to a data frame per output (different logic depending on whether
@@ -302,7 +291,9 @@ class ShapValuesCalculator(
         # shap_matrix_for_split_to_df_fn)
         shap_values_df_per_output: List[pd.DataFrame] = [
             shap.reindex(columns=features_out, copy=False, fill_value=0.0)
-            for shap in self._convert_raw_shap_to_df(shap_values, x.index, x.columns)
+            for shap in self._convert_raw_shap_to_df(
+                shap_values, features.index, features.columns
+            )
         ]
 
         # if we have a single output, return the data frame for that output;
@@ -380,8 +371,6 @@ class ShapInteractionValuesCalculator(
     def _calculate_shap(
         self, *, features: pd.DataFrame, explainer: BaseExplainer
     ) -> pd.DataFrame:
-        x = self.preprocess_features(features=features)
-
         multi_output_index_name = self.MULTI_OUTPUT_INDEX_NAME
         multi_output_names = self.get_multi_output_names()
         assert self.feature_index_ is not None, ASSERTION__CALCULATOR_IS_FITTED
@@ -391,22 +380,22 @@ class ShapInteractionValuesCalculator(
         shap_interaction_tensors: List[
             npt.NDArray[np.float_]
         ] = self._convert_shap_tensors_to_list(
-            shap_tensors=explainer.shap_interaction_values(x),
+            shap_tensors=explainer.shap_interaction_values(features),
             n_outputs=len(multi_output_names),
         )
 
         interaction_matrix_per_output: List[pd.DataFrame] = [
             im.reindex(
                 index=pd.MultiIndex.from_product(
-                    iterables=(x.index, features_out),
-                    names=(x.index.name, features_out.name),
+                    iterables=(features.index, features_out),
+                    names=(features.index.name, features_out.name),
                 ),
                 columns=features_out,
                 copy=False,
                 fill_value=0.0,
             )
             for im in self._convert_raw_shap_to_df(
-                shap_interaction_tensors, x.index, x.columns
+                shap_interaction_tensors, features.index, features.columns
             )
         ]
 

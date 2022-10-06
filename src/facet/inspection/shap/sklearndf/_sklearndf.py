@@ -12,7 +12,6 @@ import pandas as pd
 
 from pytools.api import AllTracker, inheritdoc
 from sklearndf import ClassifierDF, RegressorDF, SupervisedLearnerDF
-from sklearndf.pipeline import SupervisedLearnerPipelineDF
 
 from facet.inspection._explainer import ExplainerFactory, ParallelExplainer
 from facet.inspection.shap import (
@@ -67,12 +66,12 @@ class LearnerShapCalculator(
     #: Default name for the feature index (= column index)
     IDX_FEATURE = "feature"
 
-    #: The supervised learner pipeline used to calculate SHAP values.
-    pipeline: SupervisedLearnerPipelineDF[T_SupervisedLearnerDF]
+    #: The supervised learner used to calculate SHAP values.
+    learner: T_SupervisedLearnerDF
 
     def __init__(
         self,
-        pipeline: SupervisedLearnerPipelineDF[T_SupervisedLearnerDF],
+        learner: T_SupervisedLearnerDF,
         explainer_factory: ExplainerFactory[T_SupervisedLearnerDF],
         *,
         n_jobs: Optional[int] = None,
@@ -87,14 +86,12 @@ class LearnerShapCalculator(
             pre_dispatch=pre_dispatch,
             verbose=verbose,
         )
-        self.pipeline = pipeline
+        self.learner = learner
 
     def get_feature_names(self) -> pd.Index:
         """[see superclass]"""
 
-        return self.pipeline.final_estimator.feature_names_in_.rename(
-            LearnerShapCalculator.IDX_FEATURE
-        )
+        return self.learner.feature_names_in_.rename(LearnerShapCalculator.IDX_FEATURE)
 
     def _get_shap(self, features: pd.DataFrame) -> pd.DataFrame:
 
@@ -103,7 +100,7 @@ class LearnerShapCalculator(
         background_dataset: Optional[pd.DataFrame]
 
         if self.explainer_factory.uses_background_dataset:
-            background_dataset = self.preprocess_features(features)
+            background_dataset = features
 
             background_dataset_not_na = background_dataset.dropna()
 
@@ -121,9 +118,9 @@ class LearnerShapCalculator(
         else:
             background_dataset = None
 
-        pipeline = self.pipeline
+        learner = self.learner
         explainer = self.explainer_factory.make_explainer(
-            model=pipeline.final_estimator, data=background_dataset
+            model=learner, data=background_dataset
         )
 
         if self.n_jobs != 1:
@@ -138,23 +135,6 @@ class LearnerShapCalculator(
         # we explain all observations using the model, resulting in a matrix of
         # SHAP values for each observation and feature
         return self._calculate_shap(features=features, explainer=explainer)
-
-    def preprocess_features(self, features: pd.DataFrame) -> pd.DataFrame:
-        """[see superclass]"""
-
-        # get the model
-        pipeline = self.pipeline
-
-        # pre-process the features
-        if pipeline.preprocessing is not None:
-            features = pipeline.preprocessing.transform(features)
-
-        # re-index the features to fit the sequence that was used to fit the learner
-        # (in case feature order was shuffled during preprocessing, or train split
-        # pre-processing removed columns)
-        return features.reindex(
-            columns=pipeline.final_estimator.feature_names_in_, copy=False
-        )
 
 
 @inheritdoc(match="""[see superclass]""")
@@ -171,14 +151,11 @@ class RegressorShapCalculator(
     MULTI_OUTPUT_INDEX_NAME = "target"
 
     def _get_output_names(self, features: pd.DataFrame) -> List[str]:
-        regressor_df = self.pipeline.final_estimator
-        assert regressor_df is not None, "pipeline must be fitted"
-
-        return regressor_df.output_names_
+        return self.learner.output_names_
 
     def get_multi_output_names(self) -> List[str]:
         """[see superclass]"""
-        return self.pipeline.output_names_
+        return self.learner.output_names_
 
 
 class RegressorShapValuesCalculator(
@@ -270,7 +247,7 @@ class ClassifierShapCalculator(
             )
 
     def _get_output_names(self, features: pd.DataFrame) -> Sequence[str]:
-        classifier_df = self.pipeline.final_estimator
+        classifier_df = self.learner
         assert classifier_df.is_fitted, "classifier must be fitted"
 
         assert (
@@ -305,9 +282,9 @@ class ClassifierShapCalculator(
     def get_multi_output_names(self) -> List[str]:
         """[see superclass]"""
         assert (
-            self.pipeline.final_estimator.n_outputs_ == 1
+            self.learner.n_outputs_ == 1
         ), "only single-output classifiers are currently supported"
-        return list(map(str, self.pipeline.final_estimator.classes_))
+        return list(map(str, self.learner.classes_))
 
 
 class ClassifierShapValuesCalculator(
