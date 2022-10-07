@@ -96,6 +96,15 @@ class ShapCalculator(
         self.features_: Optional[pd.DataFrame] = None
 
     @property
+    @abstractmethod
+    def interaction_values(self) -> bool:
+        """
+        ``True`` if this calculator calculates SHAP interaction values, ``False`` if it
+        calculates SHAP values.
+        """
+        pass
+
+    @property
     def is_fitted(self) -> bool:
         """[see superclass]"""
         return self.shap_ is not None
@@ -185,11 +194,50 @@ class ShapCalculator(
     def _get_output_names(self, features: pd.DataFrame) -> Sequence[str]:
         return self.get_multi_output_names()
 
-    @abstractmethod
     def _calculate_shap(
         self, *, features: pd.DataFrame, explainer: BaseExplainer
     ) -> pd.DataFrame:
-        pass
+        if features.isna().values.any():
+            log.warning(
+                "preprocessed features passed to SHAP explainer include NaN values; "
+                "try to change preprocessing to impute all NaN values"
+            )
+
+        multi_output_index_name = self.MULTI_OUTPUT_INDEX_NAME
+        multi_output_names = self.get_multi_output_names()
+        assert self.feature_index_ is not None, ASSERTION__CALCULATOR_IS_FITTED
+        features_out = self.feature_index_
+
+        # calculate the shap values, and ensure the result is a list of arrays
+        shap_values: List[npt.NDArray[np.float_]] = self._convert_shap_tensors_to_list(
+            shap_tensors=(
+                explainer.shap_interaction_values(features)
+                if self.interaction_values
+                else explainer.shap_values(features)
+            ),
+            n_outputs=len(multi_output_names),
+        )
+
+        # convert to a data frame per output (different logic depending on whether
+        # we have a regressor or a classifier, implemented by method
+        # shap_matrix_for_split_to_df_fn)
+
+        shap_values_df_per_output: List[pd.DataFrame] = self._convert_raw_shap_to_df(
+            shap_values, features.index, features_out
+        )
+
+        # if we have a single output, return the data frame for that output;
+        # else, add a top level to the column index indicating each output
+
+        if len(shap_values_df_per_output) == 1:
+            return shap_values_df_per_output[0]
+        else:
+            return pd.concat(
+                shap_values_df_per_output,
+                axis=1,
+                keys=multi_output_names,
+                names=[multi_output_index_name, features_out.name],
+            )
 
     def _convert_shap_tensors_to_list(
         self,
@@ -248,6 +296,11 @@ class ShapValuesCalculator(
     Base class for calculating SHAP contribution values.
     """
 
+    @property
+    def interaction_values(self) -> bool:
+        """[see superclass]"""
+        return False
+
     @fitted_only
     def get_shap_values(self) -> pd.DataFrame:
         """[see superclass]"""
@@ -266,49 +319,6 @@ class ShapValuesCalculator(
             "is not defined"
         )
 
-    def _calculate_shap(
-        self, *, features: pd.DataFrame, explainer: BaseExplainer
-    ) -> pd.DataFrame:
-        if features.isna().values.any():
-            log.warning(
-                "preprocessed features passed to SHAP explainer include NaN values; "
-                "try to change preprocessing to impute all NaN values"
-            )
-
-        multi_output_index_name = self.MULTI_OUTPUT_INDEX_NAME
-        multi_output_names = self.get_multi_output_names()
-        assert self.feature_index_ is not None, ASSERTION__CALCULATOR_IS_FITTED
-        features_out = self.feature_index_
-
-        # calculate the shap values, and ensure the result is a list of arrays
-        shap_values: List[npt.NDArray[np.float_]] = self._convert_shap_tensors_to_list(
-            shap_tensors=explainer.shap_values(features),
-            n_outputs=len(multi_output_names),
-        )
-
-        # convert to a data frame per output (different logic depending on whether
-        # we have a regressor or a classifier, implemented by method
-        # shap_matrix_for_split_to_df_fn)
-        shap_values_df_per_output: List[pd.DataFrame] = [
-            shap.reindex(columns=features_out, copy=False, fill_value=0.0)
-            for shap in self._convert_raw_shap_to_df(
-                shap_values, features.index, features.columns
-            )
-        ]
-
-        # if we have a single output, return the data frame for that output;
-        # else, add a top level to the column index indicating each output
-
-        if len(shap_values_df_per_output) == 1:
-            return shap_values_df_per_output[0]
-        else:
-            return pd.concat(
-                shap_values_df_per_output,
-                axis=1,
-                keys=multi_output_names,
-                names=[multi_output_index_name, features_out.name],
-            )
-
 
 @inheritdoc(match="""[see superclass]""")
 class ShapInteractionValuesCalculator(
@@ -317,6 +327,11 @@ class ShapInteractionValuesCalculator(
     """
     Base class for calculating SHAP interaction values.
     """
+
+    @property
+    def interaction_values(self) -> bool:
+        """[see superclass]"""
+        return True
 
     @fitted_only
     def get_shap_values(self) -> pd.DataFrame:
@@ -367,50 +382,6 @@ class ShapInteractionValuesCalculator(
             index=cast(pd.MultiIndex, interaction_matrix.index).levels[0],
             columns=interaction_matrix.columns,
         )
-
-    def _calculate_shap(
-        self, *, features: pd.DataFrame, explainer: BaseExplainer
-    ) -> pd.DataFrame:
-        multi_output_index_name = self.MULTI_OUTPUT_INDEX_NAME
-        multi_output_names = self.get_multi_output_names()
-        assert self.feature_index_ is not None, ASSERTION__CALCULATOR_IS_FITTED
-        features_out = self.feature_index_
-
-        # calculate the shap interaction values; ensure the result is a list of arrays
-        shap_interaction_tensors: List[
-            npt.NDArray[np.float_]
-        ] = self._convert_shap_tensors_to_list(
-            shap_tensors=explainer.shap_interaction_values(features),
-            n_outputs=len(multi_output_names),
-        )
-
-        interaction_matrix_per_output: List[pd.DataFrame] = [
-            im.reindex(
-                index=pd.MultiIndex.from_product(
-                    iterables=(features.index, features_out),
-                    names=(features.index.name, features_out.name),
-                ),
-                columns=features_out,
-                copy=False,
-                fill_value=0.0,
-            )
-            for im in self._convert_raw_shap_to_df(
-                shap_interaction_tensors, features.index, features.columns
-            )
-        ]
-
-        # if we have a single output, use the data frame for that output;
-        # else, concatenate the values data frame for all outputs horizontally
-        # and add a top level to the column index indicating each output
-        if len(interaction_matrix_per_output) == 1:
-            return interaction_matrix_per_output[0]
-        else:
-            return pd.concat(
-                interaction_matrix_per_output,
-                axis=1,
-                keys=multi_output_names,
-                names=[multi_output_index_name, features_out.name],
-            )
 
 
 __tracker.validate()
