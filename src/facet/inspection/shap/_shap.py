@@ -128,9 +128,14 @@ class ShapCalculator(
         self.output_names_ = self._get_output_names(__X)
         self.features_ = __X
 
-        # calculate shap values and re-order the observation index to match the
-        # sequence in the original training sample
-        shap_df: pd.DataFrame = self._get_shap(__X)
+        # explain all observations using the model, resulting in a matrix of
+        # SHAP values for each observation and feature
+        shap_df: pd.DataFrame = self._calculate_shap(
+            features=__X, explainer=self._get_explainer(__X)
+        )
+
+        # re-order the observation index to match the sequence in the original
+        # training sample
 
         n_levels = shap_df.index.nlevels
         assert 1 <= n_levels <= 2
@@ -187,7 +192,7 @@ class ShapCalculator(
         pass
 
     @abstractmethod
-    def _get_shap(self, features: pd.DataFrame) -> pd.DataFrame:
+    def _get_explainer(self, features: pd.DataFrame) -> BaseExplainer:
         pass
 
     @abstractmethod

@@ -13,7 +13,11 @@ import pandas as pd
 from pytools.api import AllTracker, inheritdoc
 from sklearndf import ClassifierDF, RegressorDF, SupervisedLearnerDF
 
-from facet.inspection._explainer import ExplainerFactory, ParallelExplainer
+from facet.inspection._explainer import (
+    BaseExplainer,
+    ExplainerFactory,
+    ParallelExplainer,
+)
 from facet.inspection.shap import (
     ShapCalculator,
     ShapInteractionValuesCalculator,
@@ -93,7 +97,7 @@ class LearnerShapCalculator(
 
         return self.learner.feature_names_in_.rename(LearnerShapCalculator.IDX_FEATURE)
 
-    def _get_shap(self, features: pd.DataFrame) -> pd.DataFrame:
+    def _get_explainer(self, features: pd.DataFrame) -> BaseExplainer:
 
         # prepare the background dataset
 
@@ -132,9 +136,7 @@ class LearnerShapCalculator(
                 verbose=self.verbose,
             )
 
-        # we explain all observations using the model, resulting in a matrix of
-        # SHAP values for each observation and feature
-        return self._calculate_shap(features=features, explainer=explainer)
+        return explainer
 
 
 @inheritdoc(match="""[see superclass]""")
