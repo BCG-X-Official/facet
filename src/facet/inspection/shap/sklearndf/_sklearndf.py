@@ -67,9 +67,6 @@ class LearnerShapCalculator(
     Base class for SHAP calculators based on :mod:`sklearndf` learners.
     """
 
-    #: Default name for the feature index (= column index)
-    IDX_FEATURE = "feature"
-
     #: The supervised learner used to calculate SHAP values.
     learner: T_SupervisedLearnerDF
 
@@ -91,11 +88,6 @@ class LearnerShapCalculator(
             verbose=verbose,
         )
         self.learner = learner
-
-    def get_feature_names(self) -> pd.Index:
-        """[see superclass]"""
-
-        return self.learner.feature_names_in_.rename(LearnerShapCalculator.IDX_FEATURE)
 
     def validate_features(self, features: pd.DataFrame) -> None:
         """[see superclass]"""

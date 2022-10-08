@@ -65,6 +65,9 @@ class ShapCalculator(
     results in a data frame.
     """
 
+    #: Name for the feature index (= column index) of the resulting SHAP data frame.
+    IDX_FEATURE = "feature"
+
     #: The explainer factory used to create the SHAP explainer for this calculator.
     explainer_factory: ExplainerFactory[T_Model]
 
@@ -137,7 +140,7 @@ class ShapCalculator(
         # validate the feature matrix
         self.validate_features(__X)
 
-        self.feature_index_ = self.get_feature_names()
+        self.feature_index_ = __X.columns.rename(ShapCalculator.IDX_FEATURE)
         self.output_names_ = self._get_output_names(__X)
 
         # explain all observations using the model, resulting in a matrix of
@@ -167,15 +170,6 @@ class ShapCalculator(
         )
 
         return self
-
-    @abstractmethod
-    def get_feature_names(self) -> pd.Index:
-        """
-        Get the feature names for which SHAP values are calculated.
-
-        :return: the feature names
-        """
-        pass
 
     @abstractmethod
     def get_shap_values(self) -> pd.DataFrame:
