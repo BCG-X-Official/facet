@@ -97,6 +97,18 @@ class LearnerShapCalculator(
 
         return self.learner.feature_names_in_.rename(LearnerShapCalculator.IDX_FEATURE)
 
+    def validate_features(self, features: pd.DataFrame) -> None:
+        """[see superclass]"""
+
+        features_expected = self.learner.feature_names_in_
+        diff = features_expected.symmetric_difference(features.columns)
+        if not diff.empty:
+            raise ValueError(
+                f"Features to be explained do not match the features used to train the"
+                f"learner: expected {features_expected.tolist()}, got "
+                f"{features.columns.tolist()}."
+            )
+
     def _get_explainer(self, features: pd.DataFrame) -> BaseExplainer:
 
         # prepare the background dataset

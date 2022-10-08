@@ -119,10 +119,15 @@ class ShapCalculator(
         :param __X: the observations for which to calculate SHAP values
         :param fit_params: additional fit parameters (unused)
         :return: self
+        :raises ValueError: if the observations are not a valid feature matrix
+            for this calculator
         """
 
         # reset fit in case we get an exception along the way
         self.shap_ = None
+
+        # validate the feature matrix
+        self.validate_features(__X)
 
         self.feature_index_ = self.get_feature_names()
         self.output_names_ = self._get_output_names(__X)
@@ -188,6 +193,17 @@ class ShapCalculator(
     def get_multi_output_names(self) -> List[str]:
         """
         :return: a name for each of the outputs
+        """
+        pass
+
+    @abstractmethod
+    def validate_features(self, features: pd.DataFrame) -> None:
+        """
+        Check that the given feature matrix is valid for this calculator.
+
+        :param features: the feature matrix to validate
+        :raise ValueError: if the feature matrix is not compatible with this
+            calculator
         """
         pass
 
