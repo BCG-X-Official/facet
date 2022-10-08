@@ -81,9 +81,6 @@ class ShapCalculator(
     #: The names of the outputs for which SHAP values were calculated.
     output_names_: Optional[Sequence[str]]
 
-    #: The observations for which SHAP values were calculated.
-    features_: Optional[pd.DataFrame]
-
     def __init__(
         self,
         explainer_factory: ExplainerFactory[T_Model],
@@ -105,7 +102,6 @@ class ShapCalculator(
         self.shap_: Optional[pd.DataFrame] = None
         self.feature_index_: Optional[pd.Index] = None
         self.output_names_: Optional[Sequence[str]] = None
-        self.features_: Optional[pd.DataFrame] = None
 
     @property
     @abstractmethod
@@ -143,7 +139,6 @@ class ShapCalculator(
 
         self.feature_index_ = self.get_feature_names()
         self.output_names_ = self._get_output_names(__X)
-        self.features_ = __X
 
         # explain all observations using the model, resulting in a matrix of
         # SHAP values for each observation and feature
@@ -224,7 +219,6 @@ class ShapCalculator(
         self.shap_ = None
         self.feature_index_ = None
         self.output_names_ = None
-        self.features_ = None
 
     @abstractmethod
     def _get_explainer(self, features: pd.DataFrame) -> BaseExplainer:
@@ -400,12 +394,10 @@ class ShapInteractionValuesCalculator(
         """
 
         assert (
-            self.shap_ is not None
-            and self.features_ is not None
-            and self.feature_index_ is not None
+            self.shap_ is not None and self.feature_index_ is not None
         ), ASSERTION__CALCULATOR_IS_FITTED
 
-        n_observations = len(self.features_)
+        n_observations = len(self.shap_)
         n_features = len(self.feature_index_)
         interaction_matrix = self.shap_
 
