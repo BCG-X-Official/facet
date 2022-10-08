@@ -72,6 +72,18 @@ class ShapCalculator(
     #: values are calculated. To be overloaded by subclasses.
     MULTI_OUTPUT_INDEX_NAME = "output"
 
+    #: The SHAP values for all observations this calculator has been fitted to.
+    shap_: Optional[pd.DataFrame]
+
+    #: The names of the features for which SHAP values were calculated.
+    feature_index_: Optional[pd.Index]
+
+    #: The names of the outputs for which SHAP values were calculated.
+    output_names_: Optional[Sequence[str]]
+
+    #: The observations for which SHAP values were calculated.
+    features_: Optional[pd.DataFrame]
+
     def __init__(
         self,
         explainer_factory: ExplainerFactory[T_Model],
@@ -124,7 +136,7 @@ class ShapCalculator(
         """
 
         # reset fit in case we get an exception along the way
-        self.shap_ = None
+        self._reset_fit()
 
         # validate the feature matrix
         self.validate_features(__X)
@@ -206,6 +218,13 @@ class ShapCalculator(
             calculator
         """
         pass
+
+    def _reset_fit(self) -> None:
+        # set this calculator to its initial unfitted state
+        self.shap_ = None
+        self.feature_index_ = None
+        self.output_names_ = None
+        self.features_ = None
 
     @abstractmethod
     def _get_explainer(self, features: pd.DataFrame) -> BaseExplainer:
