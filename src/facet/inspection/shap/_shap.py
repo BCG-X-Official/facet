@@ -10,7 +10,7 @@ import numpy as np
 import numpy.typing as npt
 import pandas as pd
 
-from pytools.api import AllTracker, inheritdoc
+from pytools.api import AllTracker
 from pytools.fit import FittableMixin, fitted_only
 from pytools.parallelization import ParallelizableMixin
 
@@ -20,8 +20,6 @@ log = logging.getLogger(__name__)
 
 __all__ = [
     "ShapCalculator",
-    "ShapInteractionValuesCalculator",
-    "ShapValuesCalculator",
 ]
 
 #
@@ -86,13 +84,20 @@ class ShapCalculator(
 
     def __init__(
         self,
-        explainer_factory: ExplainerFactory[T_Model],
         *,
+        explainer_factory: ExplainerFactory[T_Model],
+        interaction_values: bool,
         n_jobs: Optional[int] = None,
         shared_memory: Optional[bool] = None,
         pre_dispatch: Optional[Union[str, int]] = None,
         verbose: Optional[int] = None,
     ) -> None:
+        """
+        :param explainer_factory: the explainer factory used to create the SHAP
+            explainer for this calculator
+        :param interaction_values: if ``True``, calculate SHAP interaction values,
+            otherwise calculate SHAP values
+        """
         super().__init__(
             n_jobs=n_jobs,
             shared_memory=shared_memory,
@@ -100,20 +105,16 @@ class ShapCalculator(
             verbose=verbose,
         )
         self.explainer_factory = explainer_factory
+        self.interaction_values = interaction_values
 
         # the following attributes are set in fit()
         self.shap_: Optional[pd.DataFrame] = None
         self.feature_index_: Optional[pd.Index] = None
         self.output_names_: Optional[Sequence[str]] = None
 
-    @property
-    @abstractmethod
-    def interaction_values(self) -> bool:
-        """
-        ``True`` if this calculator calculates SHAP interaction values, ``False`` if it
-        calculates SHAP values.
-        """
-        pass
+    __init__.__doc__ = cast(str, __init__.__doc__) + cast(
+        str, ParallelizableMixin.__init__.__doc__
+    )
 
     @property
     def is_fitted(self) -> bool:
@@ -357,34 +358,6 @@ class ShapCalculator(
         :return: SHAP values of a single split as data frame
         """
         pass
-
-
-@inheritdoc(match="""[see superclass]""")
-class ShapValuesCalculator(
-    ShapCalculator[T_Model], Generic[T_Model], metaclass=ABCMeta
-):
-    """
-    Base class for calculating SHAP contribution values.
-    """
-
-    @property
-    def interaction_values(self) -> bool:
-        """[see superclass]"""
-        return False
-
-
-@inheritdoc(match="""[see superclass]""")
-class ShapInteractionValuesCalculator(
-    ShapCalculator[T_Model], Generic[T_Model], metaclass=ABCMeta
-):
-    """
-    Base class for calculating SHAP interaction values.
-    """
-
-    @property
-    def interaction_values(self) -> bool:
-        """[see superclass]"""
-        return True
 
 
 __tracker.validate()

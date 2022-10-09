@@ -4,7 +4,7 @@ Implementation of package ``facet.inspection.shap.learner``.
 
 import logging
 from abc import ABCMeta
-from typing import Generic, List, Optional, TypeVar, Union
+from typing import Generic, List, Optional, TypeVar, Union, cast
 
 import numpy as np
 import numpy.typing as npt
@@ -18,11 +18,7 @@ from facet.inspection._explainer import (
     ExplainerFactory,
     ParallelExplainer,
 )
-from facet.inspection.shap import (
-    ShapCalculator,
-    ShapInteractionValuesCalculator,
-    ShapValuesCalculator,
-)
+from facet.inspection.shap import ShapCalculator
 
 log = logging.getLogger(__name__)
 
@@ -73,21 +69,30 @@ class LearnerShapCalculator(
     def __init__(
         self,
         learner: T_SupervisedLearnerDF,
-        explainer_factory: ExplainerFactory[T_SupervisedLearnerDF],
         *,
+        explainer_factory: ExplainerFactory[T_SupervisedLearnerDF],
+        interaction_values: bool,
         n_jobs: Optional[int] = None,
         shared_memory: Optional[bool] = None,
         pre_dispatch: Optional[Union[str, int]] = None,
         verbose: Optional[int] = None,
     ) -> None:
+        """
+        :param learner: The supervised learner used to calculate SHAP values.
+        """
         super().__init__(
             explainer_factory=explainer_factory,
+            interaction_values=interaction_values,
             n_jobs=n_jobs,
             shared_memory=shared_memory,
             pre_dispatch=pre_dispatch,
             verbose=verbose,
         )
         self.learner = learner
+
+    __init__.__doc__ = cast(str, __init__.__doc__) + cast(
+        str, ShapCalculator.__init__.__doc__
+    )
 
     def validate_features(self, features: pd.DataFrame) -> None:
         """[see superclass]"""
@@ -162,7 +167,6 @@ class RegressorShapCalculator(
 
 
 class RegressorShapValuesCalculator(
-    ShapValuesCalculator[T_RegressorDF],
     RegressorShapCalculator[T_RegressorDF],
     Generic[T_RegressorDF],
 ):
@@ -185,7 +189,6 @@ class RegressorShapValuesCalculator(
 
 
 class RegressorShapInteractionValuesCalculator(
-    ShapInteractionValuesCalculator[T_RegressorDF],
     RegressorShapCalculator[T_RegressorDF],
     Generic[T_RegressorDF],
 ):
@@ -304,7 +307,6 @@ class ClassifierShapCalculator(
 
 
 class ClassifierShapValuesCalculator(
-    ShapValuesCalculator[T_ClassifierDF],
     ClassifierShapCalculator[T_ClassifierDF],
     Generic[T_ClassifierDF],
 ):
@@ -330,7 +332,6 @@ class ClassifierShapValuesCalculator(
 
 
 class ClassifierShapInteractionValuesCalculator(
-    ShapInteractionValuesCalculator[T_ClassifierDF],
     ClassifierShapCalculator[T_ClassifierDF],
     Generic[T_ClassifierDF],
 ):

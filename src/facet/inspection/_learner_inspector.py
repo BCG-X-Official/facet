@@ -42,7 +42,7 @@ from ._shap_global_explanation import (
     ShapInteractionGlobalExplainer,
 )
 from ._shap_projection import ShapInteractionVectorProjector, ShapVectorProjector
-from .shap import ShapCalculator, ShapInteractionValuesCalculator
+from .shap import ShapCalculator
 from .shap.sklearndf import (
     ClassifierShapInteractionValuesCalculator,
     ClassifierShapValuesCalculator,
@@ -263,8 +263,9 @@ class ModelInspector(ParallelizableMixin, FittableMixin[Sample], metaclass=ABCMe
 
         :return: a data frame with SHAP interaction values
         """
+        assert self._shap_calculator is not None, ASSERTION__INSPECTOR_IS_FITTED
         return self.__split_multi_output_df(
-            self.__shap_interaction_values_calculator.shap_interaction_values
+            self._shap_calculator.shap_interaction_values
         )
 
     @fitted_only
@@ -967,13 +968,6 @@ class ModelInspector(ParallelizableMixin, FittableMixin[Sample], metaclass=ABCMe
         )
 
     @property
-    def __shap_interaction_values_calculator(
-        self,
-    ) -> ShapInteractionValuesCalculator[Any]:
-        self._ensure_shap_interaction()
-        return cast(ShapInteractionValuesCalculator[Any], self._shap_calculator)
-
-    @property
     def __interaction_explainer(self) -> ShapInteractionGlobalExplainer:
         self._ensure_shap_interaction()
         return cast(ShapInteractionGlobalExplainer, self._shap_global_explainer)
@@ -1107,8 +1101,9 @@ class LearnerInspector(ModelInspector, Generic[T_SupervisedLearnerDF]):
             else:
                 shap_calculator_type = RegressorShapInteractionValuesCalculator
 
-            shap_calculator = shap_calculator_type(
+            shap_calculator = shap_calculator_type(  # type: ignore
                 learner=self.pipeline.final_estimator,
+                interaction_values=True,
                 explainer_factory=self.explainer_factory,
                 n_jobs=self.n_jobs,
                 shared_memory=self.shared_memory,
@@ -1124,9 +1119,10 @@ class LearnerInspector(ModelInspector, Generic[T_SupervisedLearnerDF]):
             else:
                 shap_calculator_type = RegressorShapValuesCalculator
 
-            shap_calculator = shap_calculator_type(
+            shap_calculator = shap_calculator_type(  # type: ignore
                 learner=self.pipeline.final_estimator,
                 explainer_factory=self.explainer_factory,
+                interaction_values=False,
                 n_jobs=self.n_jobs,
                 shared_memory=self.shared_memory,
                 pre_dispatch=self.pre_dispatch,
