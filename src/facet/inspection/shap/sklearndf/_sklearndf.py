@@ -4,7 +4,7 @@ Implementation of package ``facet.inspection.shap.learner``.
 
 import logging
 from abc import ABCMeta
-from typing import Any, Generic, List, Optional, Sequence, TypeVar, Union, cast
+from typing import Generic, List, Optional, TypeVar, Union
 
 import numpy as np
 import numpy.typing as npt
@@ -156,10 +156,7 @@ class RegressorShapCalculator(
     #: Multi-output SHAP values are determined by target.
     MULTI_OUTPUT_INDEX_NAME = "target"
 
-    def _get_output_names(self, features: pd.DataFrame) -> List[str]:
-        return self.learner.output_names_
-
-    def get_multi_output_names(self) -> List[str]:
+    def get_output_names(self) -> List[str]:
         """[see superclass]"""
         return self.learner.output_names_
 
@@ -239,20 +236,42 @@ class ClassifierShapCalculator(
         n_outputs: int,
     ) -> List[npt.NDArray[np.float_]]:
 
-        if n_outputs == 2 and isinstance(shap_tensors, np.ndarray):
-            # if we have a single output *and* binary classification, the explainer
-            # will have returned a single tensor for the positive class;
-            # the SHAP values for the negative class will have the opposite sign
-            (shap_tensors,) = super()._convert_shap_tensors_to_list(
-                shap_tensors=shap_tensors, n_outputs=1
+        # if n_outputs == 2 and isinstance(shap_tensors, np.ndarray):
+        #     # if we have a single output *and* binary classification, the explainer
+        #     # will have returned a single tensor for the positive class;
+        #     # the SHAP values for the negative class will have the opposite sign
+        #     (shap_tensors,) = super()._convert_shap_tensors_to_list(
+        #         shap_tensors=shap_tensors, n_outputs=1
+        #     )
+        #     return [-shap_tensors, shap_tensors]
+        if n_outputs == 1 and isinstance(shap_tensors, list) and len(shap_tensors) == 2:
+            # in the binary classification case, we will proceed with SHAP values
+            # for class 0 only, since values for class 1 will just be the same
+            # values times (*-1)  (the opposite delta probability)
+
+            # to ensure the values are returned as expected above,
+            # and no information of class 1 is discarded, assert the
+            # following:
+            if not np.allclose(shap_tensors[0], -shap_tensors[1]):
+                _raw_shap_tensor_totals = shap_tensors[0] + shap_tensors[1]
+                log.warning(
+                    "shap values of binary classifiers should add up to 0.0 "
+                    "for each observation and feature, but total shap values range "
+                    f"from {_raw_shap_tensor_totals.min():g} "
+                    f"to {_raw_shap_tensor_totals.max():g}"
+                )
+
+            return super()._convert_shap_tensors_to_list(
+                shap_tensors=shap_tensors[1], n_outputs=1
             )
-            return [-shap_tensors, shap_tensors]
         else:
             return super()._convert_shap_tensors_to_list(
                 shap_tensors=shap_tensors, n_outputs=n_outputs
             )
 
-    def _get_output_names(self, features: pd.DataFrame) -> Sequence[str]:
+    def get_output_names(self) -> List[str]:
+        """[see superclass]"""
+
         classifier_df = self.learner
         assert classifier_df.is_fitted, "classifier must be fitted"
 
@@ -262,35 +281,26 @@ class ClassifierShapCalculator(
 
         try:
             # noinspection PyTypeChecker
-            class_names: List[str] = cast(
-                npt.NDArray[Any], classifier_df.classes_
-            ).tolist()
-        except Exception as cause:
+            classes = classifier_df.classes_
+        except AttributeError as cause:
             raise AssertionError("classifier must define classes_ attribute") from cause
 
+        class_names: List[str] = list(map(str, classes))
         n_classes = len(class_names)
 
         if n_classes == 1:
-            raise RuntimeError(
-                "cannot explain a (sub)sample with one single category "
-                f"{repr(class_names[0])}: "
-                "consider using a stratified cross-validation strategy"
+            raise AssertionError(
+                f"cannot explain a model with single class {class_names[0]!r}"
             )
 
         elif n_classes == 2:
-            # for binary classifiers, we will generate only output for the first class
-            # as the probabilities for the second class are trivially linked to class 1
+            # for binary classifiers, we will generate only output for the second
+            # (positive) class as the probabilities for the second class are trivially
+            # linked to class 1
             return class_names[:1]
 
         else:
             return class_names
-
-    def get_multi_output_names(self) -> List[str]:
-        """[see superclass]"""
-        assert (
-            self.learner.n_outputs_ == 1
-        ), "only single-output classifiers are currently supported"
-        return list(map(str, self.learner.classes_))
 
 
 class ClassifierShapValuesCalculator(
@@ -310,28 +320,6 @@ class ClassifierShapValuesCalculator(
         features_in_split: pd.Index,
     ) -> List[pd.DataFrame]:
         # return a list of data frame [obs x features], one for each of the outputs
-
-        n_arrays = len(raw_shap_tensors)
-
-        if n_arrays == 2:
-            # in the binary classification case, we will proceed with SHAP values
-            # for class 0 only, since values for class 1 will just be the same
-            # values times (*-1)  (the opposite delta probability)
-
-            # to ensure the values are returned as expected above,
-            # and no information of class 1 is discarded, assert the
-            # following:
-            if not np.allclose(raw_shap_tensors[0], -raw_shap_tensors[1]):
-                _raw_shap_tensor_totals = raw_shap_tensors[0] + raw_shap_tensors[1]
-                log.warning(
-                    "shap values of binary classifiers should add up to 0.0 "
-                    "for each observation and feature, but total shap values range "
-                    f"from {_raw_shap_tensor_totals.min():g} "
-                    f"to {_raw_shap_tensor_totals.max():g}"
-                )
-
-            # all good: proceed with SHAP values for class 1 (positive class):
-            raw_shap_tensors = raw_shap_tensors[1:]
 
         return [
             pd.DataFrame(
@@ -359,28 +347,6 @@ class ClassifierShapInteractionValuesCalculator(
     ) -> List[pd.DataFrame]:
         # return a list of data frame [(obs x features) x features],
         # one for each of the outputs
-
-        n_arrays = len(raw_shap_tensors)
-
-        if n_arrays == 2:
-            # in the binary classification case, we will proceed with SHAP values
-            # for class 0 only, since values for class 1 will just be the same
-            # values times (*-1)  (the opposite delta probability)
-
-            # to ensure the values are returned as expected above,
-            # and no information of class 1 is discarded, assert the
-            # following:
-            if not np.allclose(raw_shap_tensors[0], -raw_shap_tensors[1]):
-                _raw_shap_tensor_totals = raw_shap_tensors[0] + raw_shap_tensors[1]
-                log.warning(
-                    "shap interaction values of binary classifiers must add up to 0.0 "
-                    "for each observation and feature pair, but total shap values "
-                    f"range from {_raw_shap_tensor_totals.min():g} "
-                    f"to {_raw_shap_tensor_totals.max():g}"
-                )
-
-            # all good: proceed with SHAP values for class 1 (positive class):
-            raw_shap_tensors = raw_shap_tensors[1:]
 
         # each row is indexed by an observation and a feature
         row_index = pd.MultiIndex.from_product(

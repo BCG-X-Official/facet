@@ -141,7 +141,7 @@ class ShapCalculator(
         self.validate_features(__X)
 
         self.feature_index_ = __X.columns.rename(ShapCalculator.IDX_FEATURE)
-        self.output_names_ = self._get_output_names(__X)
+        self.output_names_ = self.get_output_names()
 
         # explain all observations using the model, resulting in a matrix of
         # SHAP values for each observation and feature
@@ -172,6 +172,13 @@ class ShapCalculator(
         return self
 
     @abstractmethod
+    def get_output_names(self) -> List[str]:
+        """
+        :return: a name for each of the outputs explained by this calculator
+        """
+        pass
+
+    @abstractmethod
     def get_shap_values(self) -> pd.DataFrame:
         """
         The resulting shap values, per observation and feature, as a data frame.
@@ -189,13 +196,6 @@ class ShapCalculator(
             (n_observations * n_features, n_outputs * n_features)
         :raise TypeError: this SHAP calculator does not support interaction values
         """
-
-    @abstractmethod
-    def get_multi_output_names(self) -> List[str]:
-        """
-        :return: a name for each of the outputs
-        """
-        pass
 
     @abstractmethod
     def validate_features(self, features: pd.DataFrame) -> None:
@@ -218,10 +218,6 @@ class ShapCalculator(
     def _get_explainer(self, features: pd.DataFrame) -> BaseExplainer:
         pass
 
-    @abstractmethod
-    def _get_output_names(self, features: pd.DataFrame) -> Sequence[str]:
-        return self.get_multi_output_names()
-
     def _calculate_shap(
         self, *, features: pd.DataFrame, explainer: BaseExplainer
     ) -> pd.DataFrame:
@@ -232,7 +228,7 @@ class ShapCalculator(
             )
 
         multi_output_index_name = self.MULTI_OUTPUT_INDEX_NAME
-        multi_output_names = self.get_multi_output_names()
+        multi_output_names = self.get_output_names()
         assert self.feature_index_ is not None, ASSERTION__CALCULATOR_IS_FITTED
         features_out = self.feature_index_
 
