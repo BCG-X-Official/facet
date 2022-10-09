@@ -178,24 +178,71 @@ class ShapCalculator(
         """
         pass
 
-    @abstractmethod
+    @fitted_only
     def get_shap_values(self) -> pd.DataFrame:
-        """
+        r"""
         The resulting shap values, per observation and feature, as a data frame.
 
         :return: SHAP contribution values with shape
-            (n_observations, n_outputs * n_features)
+            :math:`(\mathit{n_observations}, \mathit{n_outputs} * \mathit{n_features})`
         """
 
-    @abstractmethod
+        assert self.shap_ is not None, ASSERTION__CALCULATOR_IS_FITTED
+        if self.interaction_values:
+            return self.shap_.groupby(level=0).sum()
+        else:
+            return self.shap_
+
+    @fitted_only
     def get_shap_interaction_values(self) -> pd.DataFrame:
-        """
+        r"""
         Get the resulting shap interaction values as a data frame.
 
         :return: SHAP contribution values with shape
-            (n_observations * n_features, n_outputs * n_features)
-        :raise TypeError: this SHAP calculator does not support interaction values
+            :math:`(\mathit{n_observations} * \mathit{n_features},
+                \mathit{n_outputs} * \mathit{n_features})`
+        :raise AttributeError: this SHAP calculator does not support interaction values
         """
+        if self.interaction_values:
+            assert self.shap_ is not None, ASSERTION__CALCULATOR_IS_FITTED
+            return self.shap_
+        else:
+            raise AttributeError("interaction values not supported")
+
+    @fitted_only
+    def get_diagonals(self) -> pd.DataFrame:
+        r"""
+        The diagonals (i.e., main effect values) of all SHAP interaction matrices.
+
+        :return: main effects, of shape
+            :math:`(\mathit{n_observations}, \mathit{n_outputs} * \mathit{n_features})`.
+        :raise AttributeError: this SHAP calculator does not support interaction values
+        """
+
+        if not self.interaction_values:
+            raise AttributeError(f"{self.get_diagonals.__name__} is not supported")
+
+        assert (
+            self.shap_ is not None and self.feature_index_ is not None
+        ), ASSERTION__CALCULATOR_IS_FITTED
+
+        n_observations = len(self.shap_)
+        n_features = len(self.feature_index_)
+        interaction_matrix = self.shap_
+
+        return pd.DataFrame(
+            np.diagonal(
+                interaction_matrix.values.reshape(
+                    (n_observations, n_features, -1, n_features)
+                    # observations x features x outputs x features
+                ),
+                axis1=1,
+                axis2=3,
+            ).reshape((n_observations, -1)),
+            # observations x (outputs * features)
+            index=cast(pd.MultiIndex, interaction_matrix.index).levels[0],
+            columns=interaction_matrix.columns,
+        )
 
     @abstractmethod
     def validate_features(self, features: pd.DataFrame) -> None:
@@ -325,24 +372,6 @@ class ShapValuesCalculator(
         """[see superclass]"""
         return False
 
-    @fitted_only
-    def get_shap_values(self) -> pd.DataFrame:
-        """[see superclass]"""
-        return self.shap_
-
-    def get_shap_interaction_values(self) -> pd.DataFrame:
-        """
-        Not implemented.
-
-        :return: (never returns anything)
-        :raise TypeError: SHAP interaction values are not supported - always raised
-        """
-        raise TypeError(
-            f"{type(self).__name__}"
-            f".{ShapValuesCalculator.get_shap_interaction_values.__name__}() "
-            "is not defined"
-        )
-
 
 @inheritdoc(match="""[see superclass]""")
 class ShapInteractionValuesCalculator(
@@ -356,54 +385,6 @@ class ShapInteractionValuesCalculator(
     def interaction_values(self) -> bool:
         """[see superclass]"""
         return True
-
-    @fitted_only
-    def get_shap_values(self) -> pd.DataFrame:
-        """[see superclass]"""
-
-        assert self.shap_ is not None, ASSERTION__CALCULATOR_IS_FITTED
-        return self.shap_.groupby(level=0).sum()
-
-    @fitted_only
-    def get_shap_interaction_values(self) -> pd.DataFrame:
-        """[see superclass]"""
-
-        assert self.shap_ is not None, ASSERTION__CALCULATOR_IS_FITTED
-        return self.shap_
-
-    @fitted_only
-    def get_diagonals(self) -> pd.DataFrame:
-        """
-        The get_diagonals of all SHAP interaction matrices, of shape
-        (n_observations, n_outputs * n_features).
-
-        :return: SHAP interaction values with shape
-            (n_observations * n_features, n_outputs * n_features), i.e., for each
-            observation and output we get the feature interaction values of size
-            n_features * n_features.
-        """
-
-        assert (
-            self.shap_ is not None and self.feature_index_ is not None
-        ), ASSERTION__CALCULATOR_IS_FITTED
-
-        n_observations = len(self.shap_)
-        n_features = len(self.feature_index_)
-        interaction_matrix = self.shap_
-
-        return pd.DataFrame(
-            np.diagonal(
-                interaction_matrix.values.reshape(
-                    (n_observations, n_features, -1, n_features)
-                    # observations x features x outputs x features
-                ),
-                axis1=1,
-                axis2=3,
-            ).reshape((n_observations, -1)),
-            # observations x (outputs * features)
-            index=cast(pd.MultiIndex, interaction_matrix.index).levels[0],
-            columns=interaction_matrix.columns,
-        )
 
 
 __tracker.validate()
