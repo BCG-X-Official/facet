@@ -527,7 +527,7 @@ class ShapValueContext(ShapContext):
     def __init__(
         self, shap_calculator: ShapCalculator[Any], sample_weight: Optional[pd.Series]
     ) -> None:
-        shap_values: pd.DataFrame = shap_calculator.get_shap_values()
+        shap_values: pd.DataFrame = shap_calculator.shap_values
 
         def _p_i() -> npt.NDArray[np.float_]:
             assert (
@@ -573,7 +573,7 @@ class ShapInteractionValueContext(ShapContext):
     def __init__(
         self, shap_calculator: ShapCalculator[Any], sample_weight: Optional[pd.Series]
     ) -> None:
-        shap_values: pd.DataFrame = shap_calculator.get_shap_interaction_values()
+        shap_values: pd.DataFrame = shap_calculator.shap_interaction_values
 
         assert (
             shap_calculator.feature_index_ is not None

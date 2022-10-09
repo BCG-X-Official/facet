@@ -178,13 +178,12 @@ class ShapCalculator(
         """
         pass
 
+    @property
     @fitted_only
-    def get_shap_values(self) -> pd.DataFrame:
+    def shap_values(self) -> pd.DataFrame:
         r"""
-        The resulting shap values, per observation and feature, as a data frame.
-
-        :return: SHAP contribution values with shape
-            :math:`(\mathit{n_observations}, \mathit{n_outputs} * \mathit{n_features})`
+        The SHAP values per observation and feature, with shape
+        :math:`(\mathit{n_observations}, \mathit{n_outputs} * \mathit{n_features})`
         """
 
         assert self.shap_ is not None, ASSERTION__CALCULATOR_IS_FITTED
@@ -193,34 +192,35 @@ class ShapCalculator(
         else:
             return self.shap_
 
+    @property
     @fitted_only
-    def get_shap_interaction_values(self) -> pd.DataFrame:
+    def shap_interaction_values(self) -> pd.DataFrame:
         r"""
-        Get the resulting shap interaction values as a data frame.
-
-        :return: SHAP contribution values with shape
-            :math:`(\mathit{n_observations} * \mathit{n_features},
+        The SHAP interaction values per observation and feature pair, with shape
+        :math:`(\mathit{n_observations} * \mathit{n_features},
                 \mathit{n_outputs} * \mathit{n_features})`
+
         :raise AttributeError: this SHAP calculator does not support interaction values
         """
         if self.interaction_values:
             assert self.shap_ is not None, ASSERTION__CALCULATOR_IS_FITTED
             return self.shap_
         else:
-            raise AttributeError("interaction values not supported")
+            raise AttributeError("interaction values are not supported")
 
+    @property
     @fitted_only
-    def get_diagonals(self) -> pd.DataFrame:
+    def main_effects(self) -> pd.DataFrame:
         r"""
-        The diagonals (i.e., main effect values) of all SHAP interaction matrices.
+        The main effects per observation and featuren (i.e., the diagonals of the
+        interaction matrices), with shape
+        :math:`(\mathit{n_observations}, \mathit{n_outputs} * \mathit{n_features})`.
 
-        :return: main effects, of shape
-            :math:`(\mathit{n_observations}, \mathit{n_outputs} * \mathit{n_features})`.
         :raise AttributeError: this SHAP calculator does not support interaction values
         """
 
         if not self.interaction_values:
-            raise AttributeError(f"{self.get_diagonals.__name__} is not supported")
+            raise AttributeError("main effects are only defined for interaction values")
 
         assert (
             self.shap_ is not None and self.feature_index_ is not None

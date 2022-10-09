@@ -249,7 +249,7 @@ class ModelInspector(ParallelizableMixin, FittableMixin[Sample], metaclass=ABCMe
         """
 
         assert self._shap_calculator is not None, ASSERTION__INSPECTOR_IS_FITTED
-        return self.__split_multi_output_df(self._shap_calculator.get_shap_values())
+        return self.__split_multi_output_df(self._shap_calculator.shap_values)
 
     @fitted_only
     def shap_interaction_values(self) -> Union[pd.DataFrame, List[pd.DataFrame]]:
@@ -264,7 +264,7 @@ class ModelInspector(ParallelizableMixin, FittableMixin[Sample], metaclass=ABCMe
         :return: a data frame with SHAP interaction values
         """
         return self.__split_multi_output_df(
-            self.__shap_interaction_values_calculator.get_shap_interaction_values()
+            self.__shap_interaction_values_calculator.shap_interaction_values
         )
 
     @fitted_only
@@ -292,7 +292,7 @@ class ModelInspector(ParallelizableMixin, FittableMixin[Sample], metaclass=ABCMe
             raise ValueError(f'arg method="{method}" must be one of {methods}')
 
         assert self._shap_calculator is not None
-        shap_matrix: pd.DataFrame = self._shap_calculator.get_shap_values()
+        shap_matrix: pd.DataFrame = self._shap_calculator.shap_values
         weight: Optional[pd.Series] = self.sample_.weight
 
         abs_importance: pd.Series
