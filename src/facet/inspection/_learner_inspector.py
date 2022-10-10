@@ -31,7 +31,7 @@ from pytools.api import AllTracker, inheritdoc, subsdoc
 from pytools.data import LinkageTree, Matrix
 from pytools.fit import FittableMixin, fitted_only
 from pytools.parallelization import ParallelizableMixin
-from sklearndf import ClassifierDF, LearnerDF, RegressorDF, SupervisedLearnerDF
+from sklearndf import ClassifierDF, RegressorDF, SupervisedLearnerDF
 from sklearndf.pipeline import SupervisedLearnerPipelineDF
 
 from ..data import Sample
@@ -43,7 +43,7 @@ from ._shap_global_explanation import (
 )
 from ._shap_projection import ShapInteractionVectorProjector, ShapVectorProjector
 from .shap import ShapCalculator
-from .shap.sklearndf import (
+from .shap.sklearn import (
     ClassifierShapCalculator,
     LearnerShapCalculator,
     RegressorShapCalculator,
@@ -1076,7 +1076,7 @@ class LearnerInspector(ModelInspector, Generic[T_SupervisedLearnerDF]):
         :return: ``self``
         """
 
-        learner: LearnerDF = self.pipeline.final_estimator
+        learner: SupervisedLearnerDF = self.pipeline.final_estimator
 
         _is_classifier = is_classifier(learner)
         if _is_classifier and isinstance(__sample.target_name, list):
@@ -1093,7 +1093,7 @@ class LearnerInspector(ModelInspector, Generic[T_SupervisedLearnerDF]):
         shap_calculator: LearnerShapCalculator[T_SupervisedLearnerDF]
 
         shap_calculator_params: Dict[str, Any] = dict(
-            learner=self.pipeline.final_estimator,
+            learner=self.pipeline.final_estimator.native_estimator,
             interaction_values=self.shap_interaction,
             explainer_factory=self.explainer_factory,
             n_jobs=self.n_jobs,
@@ -1105,7 +1105,9 @@ class LearnerInspector(ModelInspector, Generic[T_SupervisedLearnerDF]):
         if _is_classifier:
             shap_calculator = ClassifierShapCalculator(**shap_calculator_params)
         else:
-            shap_calculator = RegressorShapCalculator(**shap_calculator_params)
+            shap_calculator = RegressorShapCalculator(
+                **shap_calculator_params, output_names=learner.output_names_
+            )
 
         shap_global_projector = (
             ShapInteractionVectorProjector()

@@ -26,14 +26,13 @@ import numpy.typing as npt
 import pandas as pd
 import shap
 from packaging import version
-from sklearn.base import BaseEstimator
+from sklearn.base import ClassifierMixin, RegressorMixin
 from typing_extensions import TypeAlias
 
 from pytools.api import AllTracker, inheritdoc, validate_type
 from pytools.expression import Expression, HasExpressionRepr
 from pytools.expression.atomic import Id
 from pytools.parallelization import Job, JobQueue, JobRunner, ParallelizableMixin
-from sklearndf import ClassifierDF, RegressorDF, SupervisedLearnerDF
 
 log = logging.getLogger(__name__)
 
@@ -84,6 +83,7 @@ T_Model_contra = TypeVar("T_Model_contra", contravariant=True)
 
 ArraysAny: TypeAlias = Union[npt.NDArray[Any], List[npt.NDArray[Any]]]
 ArraysFloat: TypeAlias = Union[npt.NDArray[np.float_], List[npt.NDArray[np.float_]]]
+Learner: TypeAlias = Union[RegressorMixin, ClassifierMixin]
 
 
 #
@@ -470,7 +470,7 @@ _TreeExplainer: Optional[Type[BaseExplainer]] = None
 
 
 @inheritdoc(match="""[see superclass]""")
-class TreeExplainerFactory(ExplainerFactory[SupervisedLearnerDF]):
+class TreeExplainerFactory(ExplainerFactory[Learner]):
     """
     A factory constructing :class:`~shap.TreeExplainer` objects.
     """
@@ -527,7 +527,7 @@ class TreeExplainerFactory(ExplainerFactory[SupervisedLearnerDF]):
         return self._uses_background_dataset
 
     def make_explainer(
-        self, model: SupervisedLearnerDF, data: Optional[pd.DataFrame] = None
+        self, model: Learner, data: Optional[pd.DataFrame] = None
     ) -> BaseExplainer:
         """[see superclass]"""
 
@@ -536,7 +536,7 @@ class TreeExplainerFactory(ExplainerFactory[SupervisedLearnerDF]):
         assert _TreeExplainer is not None, "Global tree explainer is set"
 
         explainer = _TreeExplainer(
-            model=model.native_estimator,
+            model=model,
             data=data if self._uses_background_dataset else None,
             **self._remove_null_kwargs(
                 dict(
@@ -586,7 +586,7 @@ class _KernelExplainer(
 
 
 @inheritdoc(match="""[see superclass]""")
-class KernelExplainerFactory(ExplainerFactory[SupervisedLearnerDF]):
+class KernelExplainerFactory(ExplainerFactory[Learner]):
     """
     A factory constructing :class:`~shap.KernelExplainer` objects.
     """
@@ -628,22 +628,18 @@ class KernelExplainerFactory(ExplainerFactory[SupervisedLearnerDF]):
         """[see superclass]"""
         return True
 
-    def make_explainer(
-        self, model: SupervisedLearnerDF, data: pd.DataFrame
-    ) -> BaseExplainer:
+    def make_explainer(self, model: Learner, data: pd.DataFrame) -> BaseExplainer:
         """[see superclass]"""
 
         self._validate_background_dataset(data=data)
 
-        model_root_estimator: BaseEstimator = model.native_estimator
-
         try:
-            if isinstance(model, RegressorDF):
+            if isinstance(model, RegressorMixin):
                 # noinspection PyUnresolvedReferences
-                model_fn = model_root_estimator.predict
-            elif isinstance(model, ClassifierDF):
+                model_fn = model.predict
+            elif isinstance(model, ClassifierMixin):
                 # noinspection PyUnresolvedReferences
-                model_fn = model_root_estimator.predict_proba
+                model_fn = model.predict_proba
             else:
                 model_fn = None
         except AttributeError as cause:
