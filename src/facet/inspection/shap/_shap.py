@@ -341,9 +341,9 @@ class ShapCalculator(
 
         return shap_tensors
 
-    @staticmethod
     @abstractmethod
     def _convert_raw_shap_to_df(
+        self,
         raw_shap_tensors: List[npt.NDArray[np.float_]],
         observations: pd.Index,
         features_in_split: pd.Index,

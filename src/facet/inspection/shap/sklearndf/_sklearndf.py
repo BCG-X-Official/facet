@@ -24,12 +24,8 @@ log = logging.getLogger(__name__)
 
 __all__ = [
     "ClassifierShapCalculator",
-    "ClassifierShapInteractionValuesCalculator",
-    "ClassifierShapValuesCalculator",
     "LearnerShapCalculator",
     "RegressorShapCalculator",
-    "RegressorShapInteractionValuesCalculator",
-    "RegressorShapValuesCalculator",
 ]
 
 #
@@ -165,58 +161,35 @@ class RegressorShapCalculator(
         """[see superclass]"""
         return self.learner.output_names_
 
-
-class RegressorShapValuesCalculator(
-    RegressorShapCalculator[T_RegressorDF],
-    Generic[T_RegressorDF],
-):
-    """
-    Calculates SHAP values for regression models.
-    """
-
-    @staticmethod
     def _convert_raw_shap_to_df(
+        self,
         raw_shap_tensors: List[npt.NDArray[np.float_]],
         observations: pd.Index,
         features_in_split: pd.Index,
     ) -> List[pd.DataFrame]:
-        return [
-            pd.DataFrame(
-                data=raw_shap_matrix, index=observations, columns=features_in_split
+        if self.interaction_values:
+            row_index = pd.MultiIndex.from_product(
+                iterables=(observations, features_in_split),
+                names=(observations.name, features_in_split.name),
             )
-            for raw_shap_matrix in raw_shap_tensors
-        ]
 
-
-class RegressorShapInteractionValuesCalculator(
-    RegressorShapCalculator[T_RegressorDF],
-    Generic[T_RegressorDF],
-):
-    """
-    Calculates SHAP interaction matrices for regression models.
-    """
-
-    @staticmethod
-    def _convert_raw_shap_to_df(
-        raw_shap_tensors: List[npt.NDArray[np.float_]],
-        observations: pd.Index,
-        features_in_split: pd.Index,
-    ) -> List[pd.DataFrame]:
-        row_index = pd.MultiIndex.from_product(
-            iterables=(observations, features_in_split),
-            names=(observations.name, features_in_split.name),
-        )
-
-        return [
-            pd.DataFrame(
-                data=raw_interaction_tensor.reshape(
-                    (-1, raw_interaction_tensor.shape[2])
-                ),
-                index=row_index,
-                columns=features_in_split,
-            )
-            for raw_interaction_tensor in raw_shap_tensors
-        ]
+            return [
+                pd.DataFrame(
+                    data=raw_interaction_tensor.reshape(
+                        (-1, raw_interaction_tensor.shape[2])
+                    ),
+                    index=row_index,
+                    columns=features_in_split,
+                )
+                for raw_interaction_tensor in raw_shap_tensors
+            ]
+        else:
+            return [
+                pd.DataFrame(
+                    data=raw_shap_matrix, index=observations, columns=features_in_split
+                )
+                for raw_shap_matrix in raw_shap_tensors
+            ]
 
 
 @inheritdoc(match="""[see superclass]""")
@@ -305,66 +278,43 @@ class ClassifierShapCalculator(
         else:
             return class_names
 
-
-class ClassifierShapValuesCalculator(
-    ClassifierShapCalculator[T_ClassifierDF],
-    Generic[T_ClassifierDF],
-):
-    """
-    Calculates SHAP matrices for classification models.
-    """
-
-    # noinspection DuplicatedCode
-    @staticmethod
     def _convert_raw_shap_to_df(
+        self,
         raw_shap_tensors: List[npt.NDArray[np.float_]],
         observations: pd.Index,
         features_in_split: pd.Index,
     ) -> List[pd.DataFrame]:
-        # return a list of data frame [obs x features], one for each of the outputs
 
-        return [
-            pd.DataFrame(
-                data=raw_shap_matrix, index=observations, columns=features_in_split
+        if self.interaction_values:
+            # return a list of data frame [(obs x features) x features],
+            # one for each of the outputs
+
+            # each row is indexed by an observation and a feature
+            row_index = pd.MultiIndex.from_product(
+                iterables=(observations, features_in_split),
+                names=(observations.name, features_in_split.name),
             )
-            for raw_shap_matrix in raw_shap_tensors
-        ]
 
+            return [
+                pd.DataFrame(
+                    data=raw_shap_interaction_matrix.reshape(
+                        (-1, raw_shap_interaction_matrix.shape[2])
+                    ),
+                    index=row_index,
+                    columns=features_in_split,
+                )
+                for raw_shap_interaction_matrix in raw_shap_tensors
+            ]
 
-class ClassifierShapInteractionValuesCalculator(
-    ClassifierShapCalculator[T_ClassifierDF],
-    Generic[T_ClassifierDF],
-):
-    """
-    Calculates SHAP interaction matrices for classification models.
-    """
+        else:
+            # return a list of data frame [obs x features], one for each of the outputs
 
-    # noinspection DuplicatedCode
-    @staticmethod
-    def _convert_raw_shap_to_df(
-        raw_shap_tensors: List[npt.NDArray[np.float_]],
-        observations: pd.Index,
-        features_in_split: pd.Index,
-    ) -> List[pd.DataFrame]:
-        # return a list of data frame [(obs x features) x features],
-        # one for each of the outputs
-
-        # each row is indexed by an observation and a feature
-        row_index = pd.MultiIndex.from_product(
-            iterables=(observations, features_in_split),
-            names=(observations.name, features_in_split.name),
-        )
-
-        return [
-            pd.DataFrame(
-                data=raw_shap_interaction_matrix.reshape(
-                    (-1, raw_shap_interaction_matrix.shape[2])
-                ),
-                index=row_index,
-                columns=features_in_split,
-            )
-            for raw_shap_interaction_matrix in raw_shap_tensors
-        ]
+            return [
+                pd.DataFrame(
+                    data=raw_shap_matrix, index=observations, columns=features_in_split
+                )
+                for raw_shap_matrix in raw_shap_tensors
+            ]
 
 
 __tracker.validate()

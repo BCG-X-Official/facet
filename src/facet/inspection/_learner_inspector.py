@@ -7,13 +7,13 @@ from types import MethodType
 from typing import (
     Any,
     Callable,
+    Dict,
     Generic,
     Iterable,
     List,
     Optional,
     Sequence,
     Tuple,
-    Type,
     TypeVar,
     Union,
     cast,
@@ -44,11 +44,9 @@ from ._shap_global_explanation import (
 from ._shap_projection import ShapInteractionVectorProjector, ShapVectorProjector
 from .shap import ShapCalculator
 from .shap.sklearndf import (
-    ClassifierShapInteractionValuesCalculator,
-    ClassifierShapValuesCalculator,
+    ClassifierShapCalculator,
     LearnerShapCalculator,
-    RegressorShapInteractionValuesCalculator,
-    RegressorShapValuesCalculator,
+    RegressorShapCalculator,
 )
 
 log = logging.getLogger(__name__)
@@ -1092,44 +1090,28 @@ class LearnerInspector(ModelInspector, Generic[T_SupervisedLearnerDF]):
             ShapVectorProjector, ShapInteractionVectorProjector, None
         ]
 
-        shap_calculator_type: Type[LearnerShapCalculator[T_SupervisedLearnerDF]]
         shap_calculator: LearnerShapCalculator[T_SupervisedLearnerDF]
 
-        if self.shap_interaction:
-            if _is_classifier:
-                shap_calculator_type = ClassifierShapInteractionValuesCalculator
-            else:
-                shap_calculator_type = RegressorShapInteractionValuesCalculator
+        shap_calculator_params: Dict[str, Any] = dict(
+            learner=self.pipeline.final_estimator,
+            interaction_values=self.shap_interaction,
+            explainer_factory=self.explainer_factory,
+            n_jobs=self.n_jobs,
+            shared_memory=self.shared_memory,
+            pre_dispatch=self.pre_dispatch,
+            verbose=self.verbose,
+        )
 
-            shap_calculator = shap_calculator_type(  # type: ignore
-                learner=self.pipeline.final_estimator,
-                interaction_values=True,
-                explainer_factory=self.explainer_factory,
-                n_jobs=self.n_jobs,
-                shared_memory=self.shared_memory,
-                pre_dispatch=self.pre_dispatch,
-                verbose=self.verbose,
-            )
-
-            shap_global_projector = ShapInteractionVectorProjector()
-
+        if _is_classifier:
+            shap_calculator = ClassifierShapCalculator(**shap_calculator_params)
         else:
-            if _is_classifier:
-                shap_calculator_type = ClassifierShapValuesCalculator
-            else:
-                shap_calculator_type = RegressorShapValuesCalculator
+            shap_calculator = RegressorShapCalculator(**shap_calculator_params)
 
-            shap_calculator = shap_calculator_type(  # type: ignore
-                learner=self.pipeline.final_estimator,
-                explainer_factory=self.explainer_factory,
-                interaction_values=False,
-                n_jobs=self.n_jobs,
-                shared_memory=self.shared_memory,
-                pre_dispatch=self.pre_dispatch,
-                verbose=self.verbose,
-            )
-
-            shap_global_projector = ShapVectorProjector()
+        shap_global_projector = (
+            ShapInteractionVectorProjector()
+            if self.shap_interaction
+            else ShapVectorProjector()
+        )
 
         shap_calculator.fit(self.pipeline.preprocess(__sample.features))
         shap_global_projector.fit(shap_calculator, sample_weight=__sample.weight)
