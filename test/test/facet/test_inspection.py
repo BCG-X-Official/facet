@@ -674,7 +674,7 @@ def test_model_inspection_classifier_interaction_dual_target(
     with pytest.raises(
         ValueError,
         match=(
-            f"only single-output classifiers .* are supported.*"
+            f"only single-target classifiers .* are supported.*"
             f"{iris_target_name}.*{iris_target_name}2"
         ),
     ):

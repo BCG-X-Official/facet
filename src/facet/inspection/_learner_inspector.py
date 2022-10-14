@@ -41,7 +41,11 @@ from ._shap_global_explanation import (
     ShapGlobalExplainer,
     ShapInteractionGlobalExplainer,
 )
-from ._shap_projection import ShapInteractionVectorProjector, ShapVectorProjector
+from ._shap_projection import (
+    ShapInteractionVectorProjector,
+    ShapProjector,
+    ShapVectorProjector,
+)
 from .shap import ShapCalculator
 from .shap.sklearn import (
     ClassifierShapCalculator,
@@ -69,6 +73,7 @@ FloatMatrix: TypeAlias = Matrix[np.float_]
 # Type variables
 #
 
+T_ModelInspector = TypeVar("T_ModelInspector", bound="ModelInspector")
 T_LearnerInspector = TypeVar("T_LearnerInspector", bound="LearnerInspector[Any]")
 T_Number = TypeVar("T_Number", bound="np.number[Any]")
 T_SeriesOrDataFrame = TypeVar("T_SeriesOrDataFrame", pd.Series, pd.DataFrame)
@@ -185,6 +190,55 @@ class ModelInspector(ParallelizableMixin, FittableMixin[Sample], metaclass=ABCMe
     def _shap_global_explainer(self) -> ShapGlobalExplainer:
         assert self._shap_global_projector is not None, ASSERTION__INSPECTOR_IS_FITTED
         return self._shap_global_projector
+
+    def preprocess_features(
+        self, features: Union[pd.DataFrame, pd.Series]
+    ) -> pd.DataFrame:
+        """
+        Preprocess the features prior to calculating SHAP values.
+
+        This method is called by :meth:`.fit` before fitting the inspector.
+        By default, returns the features unchanged.
+
+        :param features: features to preprocess
+        :return: preprocessed features
+        """
+        return features
+
+    def fit(
+        self: T_ModelInspector, __sample: Sample, **fit_params: Any
+    ) -> T_ModelInspector:
+        """
+        Fit the inspector with the given sample, creating global explanations including
+        feature redundancy and synergy.
+
+        This will calculate SHAP values and, if enabled in the underlying SHAP
+        explainer, also SHAP interaction values.
+
+        :param __sample: the background sample to be used for the global explanation
+            of this model
+        :param fit_params: additional keyword arguments (ignored; accepted for
+            compatibility with :class:`.FittableMixin`)
+        :return: ``self``
+        """
+
+        shap_calculator: ShapCalculator[Any] = self.make_shap_calculator()
+
+        shap_calculator.fit(self.preprocess_features(__sample.features))
+
+        shap_global_projector: ShapProjector = (
+            ShapInteractionVectorProjector()
+            if self.shap_interaction
+            else ShapVectorProjector()
+        )
+
+        shap_global_projector.fit(shap_calculator, sample_weight=__sample.weight)
+
+        self._sample = __sample
+        self._shap_calculator = shap_calculator
+        self._shap_global_projector = shap_global_projector
+
+        return self
 
     @property
     def is_fitted(self) -> bool:
@@ -705,6 +759,14 @@ class ModelInspector(ParallelizableMixin, FittableMixin[Sample], metaclass=ABCMe
             sample=sample,
         )
 
+    @abstractmethod
+    def make_shap_calculator(self) -> ShapCalculator[Any]:
+        """
+        Create a :class:`.ShapCalculator` for this inspector.
+
+        :return: a new shap calculator
+        """
+
     def __arrays_to_matrix(
         self, matrix: FloatArray, value_label: str
     ) -> Union[FloatMatrix, List[FloatMatrix]]:
@@ -1059,38 +1121,15 @@ class LearnerInspector(ModelInspector, Generic[T_SupervisedLearnerDF]):
             self.pipeline.final_estimator.feature_names_in_.to_list(),
         )
 
-    def fit(
-        self: T_LearnerInspector, __sample: Sample, **fit_params: Any
-    ) -> T_LearnerInspector:
-        """
-        Fit the inspector with the given sample, creating global explanations including
-        feature redundancy and synergy.
+    def preprocess_features(
+        self, features: Union[pd.DataFrame, pd.Series]
+    ) -> pd.DataFrame:
+        """[see superclass]"""
+        return self.pipeline.preprocess(features)
 
-        This will calculate SHAP values and, if enabled in the underlying SHAP
-        explainer, also SHAP interaction values.
-
-        :param __sample: the background sample to be used for the global explanation
-            of this model
-        :param fit_params: additional keyword arguments (ignored; accepted for
-            compatibility with :class:`.FittableMixin`)
-        :return: ``self``
-        """
-
+    def make_shap_calculator(self) -> LearnerShapCalculator[Any]:
+        """[see superclass]"""
         learner: SupervisedLearnerDF = self.pipeline.final_estimator
-
-        _is_classifier = is_classifier(learner)
-        if _is_classifier and isinstance(__sample.target_name, list):
-            raise ValueError(
-                "only single-output classifiers (binary or multi-class) are supported, "
-                "but the given classifier has been fitted on multiple columns "
-                f"{__sample.target_name}"
-            )
-
-        shap_global_projector: Union[
-            ShapVectorProjector, ShapInteractionVectorProjector, None
-        ]
-
-        shap_calculator: LearnerShapCalculator[T_SupervisedLearnerDF]
 
         shap_calculator_params: Dict[str, Any] = dict(
             learner=self.pipeline.final_estimator.native_estimator,
@@ -1102,27 +1141,21 @@ class LearnerInspector(ModelInspector, Generic[T_SupervisedLearnerDF]):
             verbose=self.verbose,
         )
 
-        if _is_classifier:
-            shap_calculator = ClassifierShapCalculator(**shap_calculator_params)
+        output_names_ = learner.output_names_
+
+        if is_classifier(learner):
+            if len(output_names_) > 1:
+                raise ValueError(
+                    "only single-target classifiers (binary or multi-class) are "
+                    "supported, but the given classifier has been fitted on "
+                    f"multiple targets: {', '.join(output_names_)}"
+                )
+
+            return ClassifierShapCalculator(**shap_calculator_params)
         else:
-            shap_calculator = RegressorShapCalculator(
-                **shap_calculator_params, output_names=learner.output_names_
+            return RegressorShapCalculator(
+                **shap_calculator_params, output_names=output_names_
             )
-
-        shap_global_projector = (
-            ShapInteractionVectorProjector()
-            if self.shap_interaction
-            else ShapVectorProjector()
-        )
-
-        shap_calculator.fit(self.pipeline.preprocess(__sample.features))
-        shap_global_projector.fit(shap_calculator, sample_weight=__sample.weight)
-
-        self._sample = __sample
-        self._shap_calculator = shap_calculator
-        self._shap_global_projector = shap_global_projector
-
-        return self
 
 
 __tracker.validate()
