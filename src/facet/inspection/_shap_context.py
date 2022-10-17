@@ -6,15 +6,13 @@ redundancy, and independence.
 from __future__ import annotations
 
 import logging
-from abc import ABCMeta, abstractmethod
-from typing import Any, List, Optional, TypeVar, Union, cast
+from typing import Any, Optional, Union, cast
 
 import numpy as np
 import numpy.typing as npt
 import pandas as pd
 
-from pytools.api import AllTracker, inheritdoc
-from pytools.fit import FittableMixin
+from pytools.api import AllTracker
 
 from .shap import ShapCalculator
 
@@ -23,8 +21,6 @@ log = logging.getLogger(__name__)
 __all__ = [
     "AffinityMatrix",
     "ShapContext",
-    "ShapGlobalExplainer",
-    "ShapInteractionGlobalExplainer",
     "ShapInteractionValueContext",
     "ShapValueContext",
     "cov",
@@ -42,12 +38,6 @@ __all__ = [
 #: to a few thousand of them in the base case, the loss of accuracy with regular
 #: (sequential) summation will be negligible in practice
 _PAIRWISE_PARTIAL_SUMMATION = False
-
-#
-# Type variables
-#
-
-T_ShapGlobalExplainer = TypeVar("T_ShapGlobalExplainer", bound="ShapGlobalExplainer")
 
 
 #
@@ -145,148 +135,6 @@ class AffinityMatrix:
         return cast(
             npt.NDArray[np.float_], self._matrices[int(symmetrical), int(absolute)]
         )
-
-
-@inheritdoc(match="""[see superclass]""")
-class ShapGlobalExplainer(FittableMixin[ShapCalculator[Any]], metaclass=ABCMeta):
-    """
-    Derives feature association as a global metric of SHAP values for multiple
-    observations.
-    """
-
-    def __init__(self) -> None:
-        super().__init__()
-        self.feature_index_: Optional[pd.Index] = None
-
-    @property
-    def is_fitted(self) -> bool:
-        """[see superclass]"""
-        return self.feature_index_ is not None
-
-    def fit(  # type: ignore[override]
-        self: T_ShapGlobalExplainer,
-        shap_calculator: ShapCalculator[Any],
-        *,
-        sample_weight: Optional[pd.Series] = None,
-        **fit_params: Any,
-    ) -> T_ShapGlobalExplainer:
-        """
-        Calculate the SHAP decomposition for the shap values produced by the
-        given SHAP calculator.
-
-        :param shap_calculator: the fitted calculator from which to get the shap values
-        :param sample_weight: optional sample weights to apply for the global
-            explanations; the index must match the index of the features used to
-            fit the SHAP calculator
-        """
-
-        try:
-            if len(fit_params) > 0:
-                raise ValueError(
-                    f'unsupported fit parameters: {", ".join(fit_params.values())}'
-                )
-
-            self._fit(shap_calculator=shap_calculator, sample_weight=sample_weight)
-
-            self.feature_index_ = shap_calculator.feature_index_
-
-        except Exception:
-            # reset fit in case we get an exception along the way
-            self._reset_fit()
-            raise
-
-        return self
-
-    @abstractmethod
-    def association(self, absolute: bool, symmetrical: bool) -> npt.NDArray[np.float_]:
-        """
-        The association matrix for all feature pairs.
-
-        Raises an error if this global explainer has not been fitted.
-
-        :param absolute: if ``False``, return relative association as a percentage of
-            total feature importance;
-            if ``True``, return absolute association as a portion of feature importance
-        :param symmetrical: if ``False``, return an asymmetrical matrix
-            quantifying unilateral association of the features represented by rows
-            with the features represented by columns;
-            if ``True``, return a symmetrical matrix quantifying mutual association
-        :returns: the matrix as an array of shape (n_outputs, n_features, n_features)
-        """
-
-    def to_frames(self, matrix: npt.NDArray[np.float_]) -> List[pd.DataFrame]:
-        """
-        Transforms one or more affinity matrices into a list of data frames.
-
-        :param matrix: an array of shape `(n_outputs, n_features, n_features)`,
-            representing one or more affinity matrices
-        :return: a list of `n_outputs` data frames of shape `(n_features, n_features)`
-        """
-        assert self.feature_index_ is not None, "explainer is fitted"
-        index = self.feature_index_
-
-        n_features = len(index)
-        assert matrix.ndim == 3
-        assert matrix.shape[1:] == (n_features, n_features)
-
-        return [
-            pd.DataFrame(
-                m,
-                index=index,
-                columns=index,
-            )
-            for m in matrix
-        ]
-
-    @abstractmethod
-    def _fit(
-        self, shap_calculator: ShapCalculator[Any], sample_weight: Optional[pd.Series]
-    ) -> None:
-        pass
-
-    def _reset_fit(self) -> None:
-        self.feature_index_ = None
-
-
-class ShapInteractionGlobalExplainer(ShapGlobalExplainer, metaclass=ABCMeta):
-    """
-    Derives feature association, synergy, and redundancy as a global metric of SHAP
-    interaction values for multiple observations.
-    """
-
-    @abstractmethod
-    def synergy(self, symmetrical: bool, absolute: bool) -> npt.NDArray[np.float_]:
-        """
-        The synergy matrix for all feature pairs.
-
-        Raises an error if this global explainer has not been fitted.
-
-        :param absolute: if ``False``, return relative synergy as a percentage of
-            total feature importance;
-            if ``True``, return absolute synergy as a portion of feature importance
-        :param symmetrical: if ``False``, return an asymmetrical matrix
-            quantifying unilateral synergy of the features represented by rows
-            with the features represented by columns;
-            if ``True``, return a symmetrical matrix quantifying mutual synergy
-        :returns: the matrix as an array of shape (n_outputs, n_features, n_features)
-        """
-
-    @abstractmethod
-    def redundancy(self, symmetrical: bool, absolute: bool) -> npt.NDArray[np.float_]:
-        """
-        The redundancy matrix for all feature pairs.
-
-        Raises an error if this global explainer has not been fitted.
-
-        :param absolute: if ``False``, return relative redundancy as a percentage of
-            total feature importance;
-            if ``True``, return absolute redundancy as a portion of feature importance
-        :param symmetrical: if ``False``, return an asymmetrical matrix
-            quantifying unilateral redundancy of the features represented by rows
-            with the features represented by columns;
-            if ``True``, return a symmetrical matrix quantifying mutual redundancy
-        :returns: the matrix as an array of shape (n_outputs, n_features, n_features)
-        """
 
 
 #
@@ -468,7 +316,7 @@ def cov_broadcast(
     )
 
 
-class ShapContext(metaclass=ABCMeta):
+class ShapContext:
     """
     Contextual data for global SHAP calculations.
     """

@@ -36,10 +36,6 @@ from sklearndf.pipeline import SupervisedLearnerPipelineDF
 from ..data import Sample
 from ._explainer import ExplainerFactory, TreeExplainerFactory
 from ._inspection import ShapPlotData
-from ._shap_global_explanation import (
-    ShapGlobalExplainer,
-    ShapInteractionGlobalExplainer,
-)
 from ._shap_projection import (
     ShapInteractionVectorProjector,
     ShapProjector,
@@ -176,17 +172,12 @@ class ModelInspector(ParallelizableMixin, FittableMixin[Sample], metaclass=ABCMe
 
         self.shap_interaction = shap_interaction
 
-        self._shap_global_projector: Optional[ShapGlobalExplainer] = None
+        self._shap_projector: Optional[ShapProjector] = None
         self._sample: Optional[Sample] = None
 
     __init__.__doc__ = cast(str, __init__.__doc__) + cast(
         str, ParallelizableMixin.__init__.__doc__
     )
-
-    @property
-    def _shap_global_explainer(self) -> ShapGlobalExplainer:
-        assert self._shap_global_projector is not None, ASSERTION__INSPECTOR_IS_FITTED
-        return self._shap_global_projector
 
     def preprocess_features(
         self, features: Union[pd.DataFrame, pd.Series]
@@ -232,7 +223,7 @@ class ModelInspector(ParallelizableMixin, FittableMixin[Sample], metaclass=ABCMe
         shap_global_projector.fit(shap_calculator, sample_weight=__sample.weight)
 
         self._sample = __sample
-        self._shap_global_projector = shap_global_projector
+        self._shap_projector = shap_global_projector
 
         return self
 
@@ -405,7 +396,7 @@ class ModelInspector(ParallelizableMixin, FittableMixin[Sample], metaclass=ABCMe
         """
 
         return self.__feature_affinity_matrix(
-            explainer_fn=self.__interaction_explainer.synergy,
+            explainer_fn=self.__interaction_projector.synergy,
             absolute=absolute,
             symmetrical=symmetrical,
             clustered=clustered,
@@ -453,7 +444,7 @@ class ModelInspector(ParallelizableMixin, FittableMixin[Sample], metaclass=ABCMe
         """
 
         return self.__feature_affinity_matrix(
-            explainer_fn=self.__interaction_explainer.redundancy,
+            explainer_fn=self.__interaction_projector.redundancy,
             absolute=absolute,
             symmetrical=symmetrical,
             clustered=clustered,
@@ -502,8 +493,9 @@ class ModelInspector(ParallelizableMixin, FittableMixin[Sample], metaclass=ABCMe
             `(n_features, n_features)`, or a list of data frames for multiple outputs
         """
 
+        assert self._shap_projector is not None, ASSERTION__INSPECTOR_IS_FITTED
         return self.__feature_affinity_matrix(
-            explainer_fn=self._shap_global_explainer.association,
+            explainer_fn=self._shap_projector.association,
             absolute=absolute,
             symmetrical=symmetrical,
             clustered=clustered,
@@ -524,7 +516,7 @@ class ModelInspector(ParallelizableMixin, FittableMixin[Sample], metaclass=ABCMe
             for multi-target regressors or non-binary classifiers
         """
 
-        feature_affinity_matrix = self.__interaction_explainer.synergy(
+        feature_affinity_matrix = self.__interaction_projector.synergy(
             symmetrical=True, absolute=False
         )
         assert (
@@ -550,7 +542,7 @@ class ModelInspector(ParallelizableMixin, FittableMixin[Sample], metaclass=ABCMe
             for multi-target regressors or non-binary classifiers
         """
 
-        feature_affinity_matrix = self.__interaction_explainer.redundancy(
+        feature_affinity_matrix = self.__interaction_projector.redundancy(
             symmetrical=True, absolute=False
         )
         assert (
@@ -576,7 +568,8 @@ class ModelInspector(ParallelizableMixin, FittableMixin[Sample], metaclass=ABCMe
             for multi-target regressors or non-binary classifiers
         """
 
-        feature_affinity_matrix = self._shap_global_explainer.association(
+        assert self._shap_projector is not None, ASSERTION__INSPECTOR_IS_FITTED
+        feature_affinity_matrix = self._shap_projector.association(
             absolute=False, symmetrical=True
         )
         assert (
@@ -793,8 +786,8 @@ class ModelInspector(ParallelizableMixin, FittableMixin[Sample], metaclass=ABCMe
     ) -> Union[FloatMatrix, List[FloatMatrix]]:
         affinity_matrices = explainer_fn(symmetrical=symmetrical, absolute=absolute)
 
-        explainer: ShapGlobalExplainer = cast(
-            ShapGlobalExplainer, cast(MethodType, explainer_fn).__self__
+        explainer: ShapProjector = cast(
+            ShapProjector, cast(MethodType, explainer_fn).__self__
         )
         affinity_matrices_df: List[pd.DataFrame] = explainer.to_frames(
             affinity_matrices
@@ -1014,9 +1007,9 @@ class ModelInspector(ParallelizableMixin, FittableMixin[Sample], metaclass=ABCMe
         )
 
     @property
-    def __interaction_explainer(self) -> ShapInteractionGlobalExplainer:
+    def __interaction_projector(self) -> ShapInteractionVectorProjector:
         self._ensure_shap_interaction()
-        return cast(ShapInteractionGlobalExplainer, self._shap_global_explainer)
+        return cast(ShapInteractionVectorProjector, self._shap_projector)
 
 
 @subsdoc(
