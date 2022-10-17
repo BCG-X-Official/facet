@@ -7,4 +7,4 @@ of a learner pipeline which has been fitted using cross-validation.
 """
 from ._explainer import *
 from ._inspection import *
-from ._learner_inspector import *
+from ._model_inspector import *
