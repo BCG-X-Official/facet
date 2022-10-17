@@ -12,7 +12,6 @@ from typing import (
     Iterable,
     List,
     Optional,
-    Sequence,
     Tuple,
     TypeVar,
     Union,
@@ -24,14 +23,14 @@ import numpy.typing as npt
 import pandas as pd
 from scipy.cluster import hierarchy
 from scipy.spatial import distance
-from sklearn.base import is_classifier
+from sklearn.base import is_classifier, is_regressor
 from typing_extensions import TypeAlias
 
 from pytools.api import AllTracker, inheritdoc, subsdoc
 from pytools.data import LinkageTree, Matrix
 from pytools.fit import FittableMixin, fitted_only
 from pytools.parallelization import ParallelizableMixin
-from sklearndf import ClassifierDF, RegressorDF, SupervisedLearnerDF
+from sklearndf import SupervisedLearnerDF
 from sklearndf.pipeline import SupervisedLearnerPipelineDF
 
 from ..data import Sample
@@ -177,8 +176,6 @@ class ModelInspector(ParallelizableMixin, FittableMixin[Sample], metaclass=ABCMe
 
         self.shap_interaction = shap_interaction
 
-        self._shap_calculator: Optional[ShapCalculator[Any]] = None
-        self._shap_global_decomposer: Optional[ShapGlobalExplainer] = None
         self._shap_global_projector: Optional[ShapGlobalExplainer] = None
         self._sample: Optional[Sample] = None
 
@@ -222,7 +219,7 @@ class ModelInspector(ParallelizableMixin, FittableMixin[Sample], metaclass=ABCMe
         :return: ``self``
         """
 
-        shap_calculator: ShapCalculator[Any] = self.make_shap_calculator()
+        shap_calculator: ShapCalculator[Any] = self.shap_calculator
 
         shap_calculator.fit(self.preprocess_features(__sample.features))
 
@@ -235,7 +232,6 @@ class ModelInspector(ParallelizableMixin, FittableMixin[Sample], metaclass=ABCMe
         shap_global_projector.fit(shap_calculator, sample_weight=__sample.weight)
 
         self._sample = __sample
-        self._shap_calculator = shap_calculator
         self._shap_global_projector = shap_global_projector
 
         return self
@@ -257,11 +253,11 @@ class ModelInspector(ParallelizableMixin, FittableMixin[Sample], metaclass=ABCMe
 
     @property
     @abstractmethod
-    def feature_names_(self) -> List[str]:
+    def feature_names(self) -> List[str]:
         """
-        The feature names of the background sample used to calculate SHAP values.
+        The feature names of the model being inspected.
 
-        These names may differ from the feature names of the raw sample if the feature
+        These names may differ from the feature names expected for the sample
         set has been preprocessed before calculating SHAP values.
 
         :return: the feature names
@@ -269,8 +265,7 @@ class ModelInspector(ParallelizableMixin, FittableMixin[Sample], metaclass=ABCMe
         pass
 
     @property
-    @fitted_only
-    def output_names_(self) -> Sequence[str]:
+    def output_names(self) -> List[str]:
         """
         The names of the outputs explained by this inspector.
 
@@ -282,12 +277,7 @@ class ModelInspector(ParallelizableMixin, FittableMixin[Sample], metaclass=ABCMe
 
         For non-binary classifiers, this is the list of all classes.
         """
-
-        assert (
-            self._shap_calculator is not None
-            and self._shap_calculator.output_names_ is not None
-        ), ASSERTION__INSPECTOR_IS_FITTED
-        return self._shap_calculator.output_names_
+        return self.shap_calculator.output_names
 
     @fitted_only
     def shap_values(self) -> Union[pd.DataFrame, List[pd.DataFrame]]:
@@ -300,8 +290,7 @@ class ModelInspector(ParallelizableMixin, FittableMixin[Sample], metaclass=ABCMe
         :return: a data frame with SHAP values
         """
 
-        assert self._shap_calculator is not None, ASSERTION__INSPECTOR_IS_FITTED
-        return self.__split_multi_output_df(self._shap_calculator.shap_values)
+        return self.__split_multi_output_df(self.shap_calculator.shap_values)
 
     @fitted_only
     def shap_interaction_values(self) -> Union[pd.DataFrame, List[pd.DataFrame]]:
@@ -315,9 +304,8 @@ class ModelInspector(ParallelizableMixin, FittableMixin[Sample], metaclass=ABCMe
 
         :return: a data frame with SHAP interaction values
         """
-        assert self._shap_calculator is not None, ASSERTION__INSPECTOR_IS_FITTED
         return self.__split_multi_output_df(
-            self._shap_calculator.shap_interaction_values
+            self.shap_calculator.shap_interaction_values
         )
 
     @fitted_only
@@ -344,8 +332,7 @@ class ModelInspector(ParallelizableMixin, FittableMixin[Sample], metaclass=ABCMe
         if method not in methods:
             raise ValueError(f'arg method="{method}" must be one of {methods}')
 
-        assert self._shap_calculator is not None
-        shap_matrix: pd.DataFrame = self._shap_calculator.shap_values
+        shap_matrix: pd.DataFrame = self.shap_calculator.shap_values
         weight: Optional[pd.Series] = self.sample_.weight
 
         abs_importance: pd.Series
@@ -366,8 +353,8 @@ class ModelInspector(ParallelizableMixin, FittableMixin[Sample], metaclass=ABCMe
         ) -> T_SeriesOrDataFrame:
             return _importance.divide(_importance.sum())
 
-        if len(self.output_names_) == 1:
-            return _normalize_importance(abs_importance).rename(self.output_names_[0])
+        if len(self.output_names) == 1:
+            return _normalize_importance(abs_importance).rename(self.output_names[0])
 
         else:
             assert (
@@ -654,8 +641,8 @@ class ModelInspector(ParallelizableMixin, FittableMixin[Sample], metaclass=ABCMe
             `(n_features, n_features)`; or a list of such data frames
         """
 
-        n_features = len(self.feature_names_)
-        n_outputs = len(self.output_names_)
+        n_features = len(self.feature_names)
+        n_outputs = len(self.output_names)
 
         # get a feature interaction array with shape
         # (n_observations, n_outputs, n_features, n_features)
@@ -740,7 +727,7 @@ class ModelInspector(ParallelizableMixin, FittableMixin[Sample], metaclass=ABCMe
 
         shap_values: Union[pd.DataFrame, List[pd.DataFrame]] = self.shap_values()
 
-        output_names: Sequence[str] = self.output_names_
+        output_names: List[str] = self.output_names
         shap_values_numpy: Union[FloatArray, List[FloatArray]]
         included_observations: pd.Index
 
@@ -759,12 +746,11 @@ class ModelInspector(ParallelizableMixin, FittableMixin[Sample], metaclass=ABCMe
             sample=sample,
         )
 
+    @property
     @abstractmethod
-    def make_shap_calculator(self) -> ShapCalculator[Any]:
+    def shap_calculator(self) -> ShapCalculator[Any]:
         """
-        Create a :class:`.ShapCalculator` for this inspector.
-
-        :return: a new shap calculator
+        The SHAP calculator used by this inspector.
         """
 
     def __arrays_to_matrix(
@@ -773,10 +759,10 @@ class ModelInspector(ParallelizableMixin, FittableMixin[Sample], metaclass=ABCMe
         # transform a matrix of shape (n_outputs, n_features, n_features)
         # to a data frame
 
-        feature_index = self.feature_names_
+        feature_index = self.feature_names
 
         n_features = len(feature_index)
-        assert matrix.shape == (len(self.output_names_), n_features, n_features)
+        assert matrix.shape == (len(self.output_names), n_features, n_features)
 
         # convert array to data frame(s) with features as row and column indices
         if len(matrix) == 1:
@@ -793,7 +779,7 @@ class ModelInspector(ParallelizableMixin, FittableMixin[Sample], metaclass=ABCMe
                     value_label=f"{value_label} ({output_name})",
                 )
                 for m, (_, feature_importance), output_name in zip(
-                    matrix, self.feature_importance().items(), self.output_names_
+                    matrix, self.feature_importance().items(), self.output_names
                 )
             ]
 
@@ -1073,10 +1059,23 @@ class LearnerInspector(ModelInspector, Generic[T_SupervisedLearnerDF]):
         if not pipeline.is_fitted:
             raise ValueError("arg pipeline must be fitted")
 
-        if not isinstance(pipeline.final_estimator, (ClassifierDF, RegressorDF)):
+        final_estimator: T_SupervisedLearnerDF = pipeline.final_estimator
+        if is_classifier(final_estimator):
+            try:
+                n_outputs = final_estimator.n_outputs_
+            except AttributeError:
+                pass
+            else:
+                if n_outputs > 1:
+                    raise ValueError(
+                        "only single-target classifiers (binary or multi-class) are "
+                        "supported, but the given classifier has been fitted on "
+                        f"multiple targets: {', '.join(final_estimator.output_names_)}"
+                    )
+        elif not is_regressor(final_estimator):
             raise TypeError(
                 "learner in arg pipeline must be a classifier or a regressor,"
-                f"but is a {type(pipeline.final_estimator).__name__}"
+                f"but is a {type(final_estimator).__name__}"
             )
 
         if explainer_factory:
@@ -1107,14 +1106,14 @@ class LearnerInspector(ModelInspector, Generic[T_SupervisedLearnerDF]):
 
         self.pipeline = pipeline
         self.explainer_factory = explainer_factory
+        self._shap_calculator: Optional[LearnerShapCalculator[Any]] = None
 
     __init__.__doc__ = cast(str, __init__.__doc__) + cast(
         str, ModelInspector.__init__.__doc__
     )
 
     @property
-    @fitted_only
-    def feature_names_(self) -> List[str]:
+    def feature_names(self) -> List[str]:
         """[see superclass]"""
         return cast(
             List[str],
@@ -1127,8 +1126,13 @@ class LearnerInspector(ModelInspector, Generic[T_SupervisedLearnerDF]):
         """[see superclass]"""
         return self.pipeline.preprocess(features)
 
-    def make_shap_calculator(self) -> LearnerShapCalculator[Any]:
+    @property
+    def shap_calculator(self) -> LearnerShapCalculator[Any]:
         """[see superclass]"""
+
+        if self._shap_calculator is not None:
+            return self._shap_calculator
+
         learner: SupervisedLearnerDF = self.pipeline.final_estimator
 
         shap_calculator_params: Dict[str, Any] = dict(
@@ -1141,21 +1145,16 @@ class LearnerInspector(ModelInspector, Generic[T_SupervisedLearnerDF]):
             verbose=self.verbose,
         )
 
-        output_names_ = learner.output_names_
-
+        shap_calculator: LearnerShapCalculator[Any]
         if is_classifier(learner):
-            if len(output_names_) > 1:
-                raise ValueError(
-                    "only single-target classifiers (binary or multi-class) are "
-                    "supported, but the given classifier has been fitted on "
-                    f"multiple targets: {', '.join(output_names_)}"
-                )
-
-            return ClassifierShapCalculator(**shap_calculator_params)
+            shap_calculator = ClassifierShapCalculator(**shap_calculator_params)
         else:
-            return RegressorShapCalculator(
-                **shap_calculator_params, output_names=output_names_
+            shap_calculator = RegressorShapCalculator(
+                **shap_calculator_params, output_names=learner.output_names_
             )
+
+        self._shap_calculator = shap_calculator
+        return shap_calculator
 
 
 __tracker.validate()

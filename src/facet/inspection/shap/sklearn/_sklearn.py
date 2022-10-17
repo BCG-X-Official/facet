@@ -3,13 +3,13 @@ Implementation of package ``facet.inspection.shap.learner``.
 """
 
 import logging
-from abc import ABCMeta
+from abc import ABCMeta, abstractmethod
 from typing import Any, Generic, List, Optional, TypeVar, Union, cast
 
 import numpy as np
 import numpy.typing as npt
 import pandas as pd
-from sklearn.base import ClassifierMixin, RegressorMixin
+from sklearn.base import ClassifierMixin, RegressorMixin, is_classifier, is_regressor
 
 from pytools.api import AllTracker, inheritdoc, subsdoc
 
@@ -72,7 +72,7 @@ class LearnerShapCalculator(
         verbose: Optional[int] = None,
     ) -> None:
         """
-        :param learner: The supervised learner used to calculate SHAP values.
+        :param learner: the supervised learner used to calculate SHAP values
         """
         super().__init__(
             explainer_factory=explainer_factory,
@@ -82,11 +82,22 @@ class LearnerShapCalculator(
             pre_dispatch=pre_dispatch,
             verbose=verbose,
         )
+        self.validate_learner(learner)
         self.learner = learner
 
     __init__.__doc__ = cast(str, __init__.__doc__) + cast(
         str, ShapCalculator.__init__.__doc__
     )
+
+    @staticmethod
+    @abstractmethod
+    def validate_learner(learner: T_Learner) -> None:
+        """
+        Validate the learner for this SHAP calculator.
+
+        :param learner: The learner to validate.
+        :raises ValueError: If the learner is invalid.
+        """
 
     def validate_features(self, features: pd.DataFrame) -> None:
         """[see superclass]"""
@@ -94,12 +105,14 @@ class LearnerShapCalculator(
         try:
             features_expected: npt.NDArray[Any] = self.learner.feature_names_in_
         except AttributeError:
+            # the learner does not have a feature_names_in_ attribute,
+            # so we cannot validate the features
             return
 
         diff = features.columns.symmetric_difference(features_expected)
         if not diff.empty:
             raise ValueError(
-                f"Features to be explained do not match the features used to train the"
+                f"Features to be explained do not match the features used to fit the"
                 f"learner: expected {features_expected.tolist()}, got "
                 f"{features.columns.tolist()}."
             )
@@ -157,12 +170,12 @@ class RegressorShapCalculator(
     @subsdoc(
         pattern=r"(?m)(^\s*)(:param learner: .*$)",
         replacement=r"\1\2\n"
-        r"\1:param output_names: The names of the outputs of the regressor.",
+        r"\1:param output_names: the names of the outputs of the regressor",
         using=LearnerShapCalculator.__init__,
     )
     def __init__(
         self,
-        learner: T_Learner,
+        learner: T_Regressor,
         *,
         output_names: List[str],
         explainer_factory: ExplainerFactory[T_Learner],
@@ -196,14 +209,24 @@ class RegressorShapCalculator(
                 f"number of outputs of the regressor ({n_outputs})."
             )
 
-        self.output_names = output_names
+        self._output_names = output_names
 
     #: Multi-output SHAP values are determined by target.
     MULTI_OUTPUT_INDEX_NAME = "target"
 
-    def get_output_names(self) -> List[str]:
+    @property
+    def output_names(self) -> List[str]:
         """[see superclass]"""
-        return self.output_names
+        return self._output_names
+
+    @staticmethod
+    def validate_learner(learner: T_Regressor) -> None:
+        """[see superclass]"""
+        if not is_regressor(learner):
+            raise ValueError(
+                f"regressor SHAP calculator requires a regressor, "
+                f"but got a {type(learner)}"
+            )
 
     def _convert_raw_shap_to_df(
         self,
@@ -247,6 +270,56 @@ class ClassifierShapCalculator(
     #: Multi-output SHAP values are determined by class.
     MULTI_OUTPUT_INDEX_NAME = "class"
 
+    def __init__(
+        self,
+        learner: T_Regressor,
+        *,
+        explainer_factory: ExplainerFactory[T_Learner],
+        interaction_values: bool,
+        n_jobs: Optional[int] = None,
+        shared_memory: Optional[bool] = None,
+        pre_dispatch: Optional[Union[str, int]] = None,
+        verbose: Optional[int] = None,
+    ) -> None:
+        super().__init__(
+            learner=learner,
+            explainer_factory=explainer_factory,
+            interaction_values=interaction_values,
+            n_jobs=n_jobs,
+            shared_memory=shared_memory,
+            pre_dispatch=pre_dispatch,
+            verbose=verbose,
+        )
+        self._output_names = classifier_shap_output_names(learner)
+
+    @property
+    def output_names(self) -> List[str]:
+        """[see superclass]"""
+        return self._output_names
+
+    @staticmethod
+    def validate_learner(learner: T_Classifier) -> None:
+        """[see superclass]"""
+
+        if not is_classifier(learner):
+            raise ValueError(
+                f"classifier SHAP calculator requires a classifier, "
+                f"but got a {type(learner)}"
+            )
+
+        try:
+            n_outputs_ = learner.n_outputs_
+        except AttributeError:
+            # no n_outputs_ defined; we assume the classifier is not multi-target
+            pass
+        else:
+            if n_outputs_ > 1:
+                raise ValueError(
+                    "classifier SHAP calculator does not support multi-output "
+                    "classifiers, but got a classifier with n_outputs_="
+                    f"{n_outputs_}"
+                )
+
     def _convert_shap_tensors_to_list(
         self,
         *,
@@ -254,14 +327,6 @@ class ClassifierShapCalculator(
         n_outputs: int,
     ) -> List[npt.NDArray[np.float_]]:
 
-        # if n_outputs == 2 and isinstance(shap_tensors, np.ndarray):
-        #     # if we have a single output *and* binary classification, the explainer
-        #     # will have returned a single tensor for the positive class;
-        #     # the SHAP values for the negative class will have the opposite sign
-        #     (shap_tensors,) = super()._convert_shap_tensors_to_list(
-        #         shap_tensors=shap_tensors, n_outputs=1
-        #     )
-        #     return [-shap_tensors, shap_tensors]
         if n_outputs == 1 and isinstance(shap_tensors, list) and len(shap_tensors) == 2:
             # in the binary classification case, we will proceed with SHAP values
             # for class 0 only, since values for class 1 will just be the same
@@ -286,42 +351,6 @@ class ClassifierShapCalculator(
             return super()._convert_shap_tensors_to_list(
                 shap_tensors=shap_tensors, n_outputs=n_outputs
             )
-
-    def get_output_names(self) -> List[str]:
-        """[see superclass]"""
-
-        classifier = self.learner
-
-        try:
-            n_outputs_ = classifier.n_outputs_
-        except AttributeError:
-            # no n_outputs_ defined; we assume the classifier is not multi-target
-            pass
-        else:
-            assert n_outputs_ == 1, "classification model must be single-output"
-
-        try:
-            # noinspection PyTypeChecker
-            classes = classifier.classes_
-        except AttributeError as cause:
-            raise AssertionError("classifier must define classes_ attribute") from cause
-
-        class_names: List[str] = list(map(str, classes))
-        n_classes = len(class_names)
-
-        if n_classes == 1:
-            raise AssertionError(
-                f"cannot explain a model with single class {class_names[0]!r}"
-            )
-
-        elif n_classes == 2:
-            # for binary classifiers, we will generate only output for the second
-            # (positive) class as the probabilities for the second class are trivially
-            # linked to class 1
-            return class_names[:1]
-
-        else:
-            return class_names
 
     def _convert_raw_shap_to_df(
         self,
@@ -363,3 +392,49 @@ class ClassifierShapCalculator(
 
 
 __tracker.validate()
+
+
+#
+# auxiliary methods
+#
+
+
+def classifier_shap_output_names(classifier: ClassifierMixin) -> List[str]:
+    """
+    Get the names of the SHAP outputs that will be generated for the given classifier.
+
+    For binary classifiers, the only output name is the name of the positive class.
+    For multi-class classifiers, the output names are the names of all classes.
+
+    The classifier must be fitted, and must have a ``classes_`` attribute.
+
+    :param classifier: a classifier
+    :return: the names of the SHAP outputs
+    :raises ValueError: if the classifier does not define the ``classes_`` attribute,
+        is multi-output, or has only a single class
+    """
+    try:
+        # noinspection PyUnresolvedReferences
+        classes = classifier.classes_
+    except AttributeError as cause:
+        raise ValueError("classifier must define classes_ attribute") from cause
+
+    if not isinstance(classes, np.ndarray):
+        raise ValueError(
+            "classifier must be single-output, with classes_ as a numpy array"
+        )
+
+    class_names: List[str] = list(map(str, classes))
+    n_classes = len(class_names)
+
+    if n_classes == 1:
+        raise ValueError(f"cannot explain a model with single class {class_names[0]!r}")
+
+    elif n_classes == 2:
+        # for binary classifiers, we will generate only output for the second
+        # (positive) class as the probabilities for the second class are trivially
+        # linked to class 1
+        return class_names[:1]
+
+    else:
+        return class_names

@@ -4,7 +4,7 @@ Implementation of package ``facet.inspection.shap``.
 
 import logging
 from abc import ABCMeta, abstractmethod
-from typing import Any, Generic, List, Optional, Sequence, TypeVar, Union, cast
+from typing import Any, Generic, List, Optional, TypeVar, Union, cast
 
 import numpy as np
 import numpy.typing as npt
@@ -79,9 +79,6 @@ class ShapCalculator(
     #: The names of the features for which SHAP values were calculated.
     feature_index_: Optional[pd.Index]
 
-    #: The names of the outputs for which SHAP values were calculated.
-    output_names_: Optional[Sequence[str]]
-
     def __init__(
         self,
         *,
@@ -110,11 +107,18 @@ class ShapCalculator(
         # the following attributes are set in fit()
         self.shap_: Optional[pd.DataFrame] = None
         self.feature_index_: Optional[pd.Index] = None
-        self.output_names_: Optional[Sequence[str]] = None
 
     __init__.__doc__ = cast(str, __init__.__doc__) + cast(
         str, ParallelizableMixin.__init__.__doc__
     )
+
+    @property
+    @abstractmethod
+    def output_names(self) -> List[str]:
+        """
+        The names of the outputs explained by this SHAP calculator.
+        """
+        pass
 
     @property
     def is_fitted(self) -> bool:
@@ -142,7 +146,6 @@ class ShapCalculator(
         self.validate_features(__X)
 
         self.feature_index_ = __X.columns.rename(ShapCalculator.IDX_FEATURE)
-        self.output_names_ = self.get_output_names()
 
         # explain all observations using the model, resulting in a matrix of
         # SHAP values for each observation and feature
@@ -171,13 +174,6 @@ class ShapCalculator(
         )
 
         return self
-
-    @abstractmethod
-    def get_output_names(self) -> List[str]:
-        """
-        :return: a name for each of the outputs explained by this calculator
-        """
-        pass
 
     @property
     @fitted_only
@@ -276,7 +272,7 @@ class ShapCalculator(
             )
 
         multi_output_index_name = self.MULTI_OUTPUT_INDEX_NAME
-        multi_output_names = self.get_output_names()
+        multi_output_names = self.output_names
         assert self.feature_index_ is not None, ASSERTION__CALCULATOR_IS_FITTED
         features_out = self.feature_index_
 

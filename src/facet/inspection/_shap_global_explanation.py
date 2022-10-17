@@ -531,10 +531,9 @@ class ShapValueContext(ShapContext):
 
         def _p_i() -> npt.NDArray[np.float_]:
             assert (
-                shap_calculator.output_names_ is not None
-                and shap_calculator.feature_index_ is not None
+                shap_calculator.feature_index_ is not None
             ), ASSERTION__CALCULATOR_IS_FITTED
-            n_outputs: int = len(shap_calculator.output_names_)
+            n_outputs: int = len(shap_calculator.output_names)
             n_features: int = len(shap_calculator.feature_index_)
             n_observations: int = len(shap_values)
 
@@ -577,10 +576,9 @@ class ShapInteractionValueContext(ShapContext):
 
         assert (
             shap_calculator.feature_index_ is not None
-            and shap_calculator.output_names_ is not None
         ), ASSERTION__CALCULATOR_IS_FITTED
         n_features: int = len(shap_calculator.feature_index_)
-        n_outputs: int = len(shap_calculator.output_names_)
+        n_outputs: int = len(shap_calculator.output_names)
         n_observations: int = len(shap_values) // n_features
 
         assert shap_values.shape == (

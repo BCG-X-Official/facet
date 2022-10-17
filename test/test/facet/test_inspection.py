@@ -227,7 +227,7 @@ def test_model_inspection_classifier_multi_class(
         pd.Index(iris_sample.feature_names, name="feature")
     )
     assert feature_importance.columns.equals(
-        pd.Index(iris_inspector_multi_class.output_names_, name="class")
+        pd.Index(iris_inspector_multi_class.output_names, name="class")
     )
     assert_allclose(
         feature_importance.values,
@@ -317,7 +317,7 @@ def test_model_inspection_classifier_multi_class(
     )
 
     for output, linkage_tree in zip(
-        iris_inspector_multi_class.output_names_, linkage_trees
+        iris_inspector_multi_class.output_names, linkage_trees
     ):
         print()
         DendrogramDrawer(style=DendrogramReportStyle()).draw(
@@ -691,7 +691,7 @@ def test_shap_plot_data(
 ) -> None:
     shap_plot_data = iris_inspector_multi_class.shap_plot_data()
     # noinspection SpellCheckingInspection
-    assert tuple(iris_inspector_multi_class.output_names_) == (
+    assert tuple(iris_inspector_multi_class.output_names) == (
         "setosa",
         "versicolor",
         "virginica",
