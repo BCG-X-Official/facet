@@ -2,6 +2,10 @@
 
 |
 
+**Release Candidate 2.0rc available now!**
+
+|
+
 FACET is an open source library for human-explainable AI.
 It combines sophisticated model inspection and model-based simulation to enable better 
 explanations of your supervised machine learning models.
@@ -80,10 +84,10 @@ Quickstart
 The following quickstart guide provides a minimal example workflow to get you
 up and running with FACET.
 For additional tutorials and the API reference,
-see the `FACET documentation <https://bcg-gamma.github.io/facet/>`__.
+see the `FACET documentation <https://bcg-gamma.github.io/facet/docs-version/2-0>`__.
 
 Changes and additions to new versions are summarized in the
-`release notes <https://bcg-gamma.github.io/facet/release_notes.html>`__.
+`release notes <https://bcg-gamma.github.io/facet/docs-version/2-0/release_notes.html>`__.
 
 
 Enhanced Machine Learning Workflow
