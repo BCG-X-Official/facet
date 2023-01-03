@@ -3,7 +3,7 @@ Core implementation of :mod:`facet.validation`.
 """
 import warnings
 from abc import ABCMeta, abstractmethod
-from typing import Any, Generator, Iterator, Optional, Tuple, Union, cast
+from typing import Any, Generator, Optional, Tuple, Union, cast
 
 import numpy as np
 import numpy.typing as npt
@@ -137,7 +137,7 @@ class BaseBootstrapCV(
     # noinspection PyPep8Naming
     def _iter_test_indices(
         self, X: Any = None, y: Any = None, groups: Any = None
-    ) -> Iterator[Any]:
+    ) -> None:
         # adding this stub just so all abstract methods are implemented
         pass
 

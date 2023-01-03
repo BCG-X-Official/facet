@@ -154,10 +154,8 @@ stages:
               script: |
                 set -eux
                 eval "$(conda shell.bash hook)"
-
-                conda env create
+                conda env create --verbose
                 conda activate $(project_name)-develop
-
                 export PYTHONPATH=$(System.DefaultWorkingDirectory)/src/
                 export RUN_PACKAGE_VERSION_TEST=$(project_name)
 
