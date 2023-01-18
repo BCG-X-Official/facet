@@ -17,7 +17,7 @@ repos:
         name: flake8
         entry: flake8 --config tox.ini
         language: python_venv
-        additional_dependencies: [ flake8-comprehensions, flake8-import-order ]
+        additional_dependencies: [ flake8-comprehensions, flake8-import-order, importlib-metadata<5 ]
         types: [ python ]
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
