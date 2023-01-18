@@ -150,9 +150,7 @@ class CandidateEstimatorDF(ClassifierDF, RegressorDF, TransformerDF):
         else:
             return self.candidate
 
-    @property
     def _get_classes(self) -> Union[npt.NDArray[Any], List[npt.NDArray[Any]]]:
-        """[see superclass]"""
         return cast(
             Union[npt.NDArray[Any], List[npt.NDArray[Any]]],
             self._get_candidate()._get_classes(),
