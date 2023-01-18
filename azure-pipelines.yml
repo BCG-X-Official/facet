@@ -76,7 +76,7 @@ stages:
               versionSpec: '3.7.*'
             displayName: 'use Python 3.7'
           - script: |
-              python -m pip install flake8==3.9.0 flake8-comprehensions flake8-import-order
+              python -m pip install flake8==3.9.0 flake8-comprehensions flake8-import-order importlib-metadata<5
               python -m flake8 --config tox.ini -v .
             displayName: 'Run flake8'
 
