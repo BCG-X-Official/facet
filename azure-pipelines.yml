@@ -124,6 +124,7 @@ stages:
     - job:
       displayName: 'pytest @ develop environment'
       condition: ne(variables.source_is_release_branch, 'True')
+      timeoutInMinutes: 60
 
       pool:
           vmImage: 'ubuntu-latest'
