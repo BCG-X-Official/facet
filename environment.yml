@@ -1,4 +1,4 @@
-name: facet-develop_test
+name: facet-develop
 channels:
   - conda-forge
   - bcg_gamma
