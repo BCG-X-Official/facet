@@ -132,6 +132,8 @@ stages:
 
     jobs:
       - job:
+        timeoutInMinutes: 120
+        cancelTimeoutInMinutes: 3
         displayName: 'pytest @ develop environment'
         condition: ne(variables.source_is_release_branch, 'True')
 
