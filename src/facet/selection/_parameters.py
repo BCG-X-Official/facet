@@ -52,7 +52,10 @@ try:
         t for t in type(stats.uniform()).mro() if t.__name__ == "rv_frozen"
     )
 except StopIteration:
-    raise AssertionError("stats.uniform() is based on class rv_frozen")
+    warnings.warn(
+        "stats.uniform() should be based on class rv_frozen", category=UserWarning
+    )
+    rv_frozen = type(None)
 
 
 #
