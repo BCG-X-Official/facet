@@ -133,14 +133,22 @@ class BaseUnivariateSimulator(
     )
 
     def simulate_feature(
-        self, feature_name: str, *, partitioner: Partitioner[T_Value]
+        self,
+        feature_name: str,
+        *,
+        partitioner: Partitioner[T_Value],
+        **partitioner_params: Any,
     ) -> UnivariateSimulationResult[T_Value]:
         """
         Simulate the average target uplift when fixing the value of the given feature
         across all observations.
 
+        Simulations are run for a set of values determined by the given partitioner,
+        which is fitted to the observed values for the feature being simulated.
+
         :param feature_name: the feature to run the simulation for
         :param partitioner: the partitioner of feature values to run simulations for
+        :param partitioner_params: additional parameters to pass to the partitioner
         :return: a mapping of output names to simulation results
         """
 
@@ -149,7 +157,7 @@ class BaseUnivariateSimulator(
         mean, sem = self._simulate_feature_with_values(
             feature_name=feature_name,
             simulation_values=partitioner.fit(
-                sample.features.loc[:, feature_name]
+                sample.features.loc[:, feature_name], **partitioner_params
             ).partitions_,
         )
         return UnivariateSimulationResult(

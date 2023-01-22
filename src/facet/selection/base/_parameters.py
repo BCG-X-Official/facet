@@ -34,7 +34,7 @@ ParameterDict = Dict[str, Union[List[Any], stats.rv_continuous, stats.rv_discret
 #
 
 T_CandidateEstimatorDF = TypeVar("T_CandidateEstimatorDF", bound="CandidateEstimatorDF")
-T_Estimator = TypeVar("T_Estimator", bound=EstimatorDF)
+T_Estimator = TypeVar("T_Estimator", covariant=True, bound=EstimatorDF)
 
 
 #

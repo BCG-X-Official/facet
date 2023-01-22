@@ -256,12 +256,16 @@ class UnivariateUpliftSimulator(UnivariateRegressionSimulator):
         return 0.0
 
     def simulate_feature(
-        self, feature_name: str, *, partitioner: Partitioner[T_Values]
+        self,
+        feature_name: str,
+        *,
+        partitioner: Partitioner[T_Values],
+        **partitioner_params: Any,
     ) -> UnivariateSimulationResult[T_Values]:
         """[see superclass]"""
 
         result = super().simulate_feature(
-            feature_name=feature_name, partitioner=partitioner
+            feature_name=feature_name, partitioner=partitioner, **partitioner_params
         )
 
         # offset the mean values to get uplift instead of absolute outputs

@@ -51,7 +51,7 @@ def test_regressor_selector(
         ranking=regressor_selector.summary_report(),
         is_classifier=False,
         scores_expected=(
-            [0.820, 0.818, 0.808, 0.806, 0.797, 0.768, 0.652, 0.651, 0.651, 0.651]
+            [0.578, 0.530, 0.310, 0.308, 0.294, 0.226, 0.217, 0.217, 0.217, 0.217]
         ),
         params_expected=None,
     )

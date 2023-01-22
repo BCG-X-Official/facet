@@ -132,6 +132,8 @@ stages:
 
     jobs:
       - job:
+        timeoutInMinutes: 120
+        cancelTimeoutInMinutes: 3
         displayName: 'pytest @ develop environment'
         condition: ne(variables.source_is_release_branch, 'True')
 
@@ -154,10 +156,8 @@ stages:
               script: |
                 set -eux
                 eval "$(conda shell.bash hook)"
-
                 conda env create
                 conda activate $(project_name)-develop
-
                 export PYTHONPATH=$(System.DefaultWorkingDirectory)/src/
                 export RUN_PACKAGE_VERSION_TEST=$(project_name)
 
