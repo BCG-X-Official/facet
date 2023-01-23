@@ -214,7 +214,7 @@ def preprocessed_feature_names(
     """
     Names of all features after preprocessing
     """
-    return set(best_lgbm_model.feature_names_out_)
+    return set(best_lgbm_model.final_estimator.feature_names_in_)
 
 
 @pytest.fixture  # type: ignore

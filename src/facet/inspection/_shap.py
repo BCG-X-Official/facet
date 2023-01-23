@@ -133,9 +133,7 @@ class ShapCalculator(
         # reset fit in case we get an exception along the way
         self.shap_ = None
 
-        self.feature_index_ = self.pipeline.feature_names_out_.rename(
-            Sample.IDX_FEATURE
-        )
+        self.feature_index_ = self.pipeline.final_estimator.feature_names_in_
         self.output_names_ = self._get_output_names(sample)
         self.sample_ = sample
 

@@ -150,9 +150,7 @@ class CandidateEstimatorDF(ClassifierDF, RegressorDF, TransformerDF):
         else:
             return self.candidate
 
-    @property
-    def classes_(self) -> Union[npt.NDArray[Any], List[npt.NDArray[Any]]]:
-        """[see superclass]"""
+    def _get_classes(self) -> Union[npt.NDArray[Any], List[npt.NDArray[Any]]]:
         return self._get_candidate().classes_
 
     # noinspection PyPep8Naming
