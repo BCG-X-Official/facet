@@ -16,7 +16,6 @@ facet.data.partition.Partitioner
    .. autosummary::
       :nosignatures:
    
-      ~Partitioner.ensure_fitted
       ~Partitioner.fit
    
    

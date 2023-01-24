@@ -323,7 +323,7 @@
 <h2>FACET 2.0<a class="headerlink" href="#facet-2-0" title="Permalink to this headline">#</a></h2>
 <p>FACET 2.0 brings numerous API enhancements and improvements, accelerates model
 inspection by factor 50 in many practical settings, makes major improvements to
-visualizations, and is now fully type-checked by <a class="reference external" href="https://mypy.readthedocs.io/en/latest/index.html" title="(in mypy v0.990+dev.a3a5d73f7407f9565abcfd04689870e7c992f833.dirty)"><span class="xref std std-doc">mypy</span></a>.</p>
+visualizations, and is now fully type-checked by <a class="reference external" href="https://mypy.readthedocs.io/en/latest/index.html" title="(in mypy v1.0.0+dev.9ca303501ecbb2f235b75961d3711c6fce657c0f.dirty)"><span class="xref std std-doc">mypy</span></a>.</p>
 <section id="id2">
 <h3>2.0.0<a class="headerlink" href="#id2" title="Permalink to this headline">#</a></h3>
 <section id="facet-data">
@@ -361,8 +361,8 @@ The old sorting behaviour of FACET 1.x can be restored using method
 <li><p>API: <a class="reference internal" href="../apidoc/facet/selection/facet.selection.LearnerSelector.html#facet.selection.LearnerSelector" title="facet.selection.LearnerSelector"><code class="xref py py-class docutils literal notranslate"><span class="pre">LearnerSelector</span></code></a> replaces FACET 1.x class <code class="docutils literal notranslate"><span class="pre">LearnerRanker</span></code>, and
 now supports any CV searcher that supports <cite>scikit-learn</cite>’s CV search API, including
 <cite>scikit-learn</cite>’s native searchers such as
-<a class="reference external" href="https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.GridSearchCV.html#sklearn.model_selection.GridSearchCV" title="(in scikit-learn v1.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">GridSearchCV</span></code></a> or
-<a class="reference external" href="https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.RandomizedSearchCV.html#sklearn.model_selection.RandomizedSearchCV" title="(in scikit-learn v1.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">RandomizedSearchCV</span></code></a></p></li>
+<a class="reference external" href="https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.GridSearchCV.html#sklearn.model_selection.GridSearchCV" title="(in scikit-learn v1.2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">GridSearchCV</span></code></a> or
+<a class="reference external" href="https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.RandomizedSearchCV.html#sklearn.model_selection.RandomizedSearchCV" title="(in scikit-learn v1.2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">RandomizedSearchCV</span></code></a></p></li>
 <li><p>API: new classes <a class="reference internal" href="../apidoc/facet/selection/facet.selection.ParameterSpace.html#facet.selection.ParameterSpace" title="facet.selection.ParameterSpace"><code class="xref py py-class docutils literal notranslate"><span class="pre">ParameterSpace</span></code></a> and <a class="reference internal" href="../apidoc/facet/selection/facet.selection.MultiEstimatorParameterSpace.html#facet.selection.MultiEstimatorParameterSpace" title="facet.selection.MultiEstimatorParameterSpace"><code class="xref py py-class docutils literal notranslate"><span class="pre">MultiEstimatorParameterSpace</span></code></a>
 offer a more convenient and robust mechanism for declaring options or distributions
 for hyperparameter tuning</p></li>
@@ -389,6 +389,7 @@ to obtain confidence intervals that less conservative yet more realistic</p></li
 <ul class="simple">
 <li><p>API: class <code class="docutils literal notranslate"><span class="pre">LearnerCrossfit</span></code> is no longer needed in FACET 2.0 and has been
 removed</p></li>
+<li><p>API: support new <code class="xref py py-obj docutils literal notranslate"><span class="pre">fitted_only</span></code> decorator introduced in <em>pytools</em> 2.1.</p></li>
 </ul>
 </section>
 </section>
@@ -485,7 +486,7 @@ fixes.</p>
 <li><p>API: add support for <a class="reference external" href="https://shap.readthedocs.io/en/stable/index.html" title="(in SHAP vlatest)"><span class="xref std std-doc">shap</span></a> 0.36 and 0.37 via a new
 <a class="reference internal" href="../apidoc/facet/inspection/facet.inspection.BaseExplainer.html#facet.inspection.BaseExplainer" title="facet.inspection.BaseExplainer"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseExplainer</span></code></a> stub class</p></li>
 <li><p>FIX: apply color scheme to the histogram section in <a class="reference internal" href="../apidoc/facet/simulation/viz/facet.simulation.viz.SimulationMatplotStyle.html#facet.simulation.viz.SimulationMatplotStyle" title="facet.simulation.viz.SimulationMatplotStyle"><code class="xref py py-class docutils literal notranslate"><span class="pre">SimulationMatplotStyle</span></code></a></p></li>
-<li><p>BUILD: add support for <a class="reference external" href="https://numpy.org/doc/stable/reference/index.html#module-numpy" title="(in NumPy v1.23)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">numpy</span></code></a> 1.20</p></li>
+<li><p>BUILD: add support for <a class="reference external" href="https://numpy.org/doc/stable/reference/index.html#module-numpy" title="(in NumPy v1.24)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">numpy</span></code></a> 1.20</p></li>
 <li><p>BUILD: updates and changes to the CI/CD pipeline</p></li>
 </ul>
 </section>

@@ -355,10 +355,11 @@ div.nboutput.container div.prompt > div {
     }
 }
 
-/* disable scrollbars on prompts */
+/* disable scrollbars and line breaks on prompts */
 div.nbinput.container div.prompt pre,
 div.nboutput.container div.prompt pre {
     overflow: hidden;
+    white-space: pre;
 }
 
 /* input/output area */
@@ -501,7 +502,7 @@ div.rendered_html tbody tr:hover {
   background: rgba(66, 165, 245, 0.2);
 }
 </style>
-<p><img alt="9a1d9890e3874933ab7782af8f5c1630" class="no-scaled-link" src="../_images/Gamma_Facet_Logo_RGB_LB.svg" width="500" /></p>
+<p><img alt="875d1d39b27440c2b3499495478dfeca" class="no-scaled-link" src="../_images/Gamma_Facet_Logo_RGB_LB.svg" width="500" /></p>
 <section id="Work-in-progress">
 <h1>Work in progress<a class="headerlink" href="#Work-in-progress" title="Permalink to this headline">#</a></h1>
 <p>FACET 2 no longer relies on bootstrapping in simulations, and instead calculates confidence intervals based on the standard error of mean predictions. This notebook will be updated accordingly for the release of FACET 2.0.</p>
@@ -727,7 +728,7 @@ feature traceability and usability associated with Pandas data frames. Additiona
 <section id="Bootstrap-simulation-overview">
 <h1>Bootstrap simulation overview<a class="headerlink" href="#Bootstrap-simulation-overview" title="Permalink to this headline">#</a></h1>
 <p>The figure above provides and overview of the simulation process for a single bootstrap split. This process is repeated many time to create a distribution of predicted impact for each value of a feature.</p>
-<p><img alt="b092a99445cb4c68b2fe425c4574257b" class="no-scaled-link" src="../_images/Facet-Simulator-BlockDiagram.png" style="width: 750px;" /></p>
+<p><img alt="a7210b5ad9034e97b764b7d031c94a76" class="no-scaled-link" src="../_images/Facet-Simulator-BlockDiagram.png" style="width: 750px;" /></p>
 <section id="Partitioning">
 <h2>Partitioning<a class="headerlink" href="#Partitioning" title="Permalink to this headline">#</a></h2>
 <p>The first step to simulate feature effects on the target is to set the scope of the study for the feature we want to simulate. Let’s take the ROP measured in feet per hour (ft/h) as the feature to simulate.</p>
@@ -865,7 +866,7 @@ Text(0, 0.5, &#39;frequency&#39;)
 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Resampled training set n = </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">train_split_1</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Resampled training set number of unique values = </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">train_split_1</span><span class="p">))</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Test set n = </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">test_split_1</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Overlap between index for train and test = </span><span class="si">{</span><span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">train_split_1</span><span class="p">)</span> <span class="o">&amp;</span> <span class="nb">set</span><span class="p">(</span><span class="n">test_split_1</span><span class="p">))</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Overlap between index for train and test = </span><span class="si">{</span><span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">train_split_1</span><span class="p">)</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="nb">set</span><span class="p">(</span><span class="n">test_split_1</span><span class="p">))</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>

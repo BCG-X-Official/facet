@@ -257,14 +257,14 @@
 
 
 <div class="viewcode-block" id="BaseExplainer"><a class="viewcode-back" href="../../../apidoc/facet/inspection/facet.inspection.BaseExplainer.html#facet.inspection.BaseExplainer">[docs]</a><span class="k">class</span> <span class="nc">BaseExplainer</span><span class="p">(</span><span class="n">metaclass</span><span class="o">=</span><span class="n">ABCMeta</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Abstract base class of SHAP explainers, providing stubs for methods used by FACET</span>
 <span class="sd">    but not consistently supported by class :class:`shap.Explainer` across different</span>
 <span class="sd">    versions of the `shap` package.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        :param args: positional args (should usually be empty)</span>
 <span class="sd">        :param kwargs: keyword args (should usually be empty)</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -278,7 +278,7 @@
         <span class="n">y</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">Any</span><span class="p">],</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ArraysFloat</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Estimate the SHAP values for a set of samples.</span>
 
 <span class="sd">        :param X: matrix of samples (# samples x # features) on which to explain the</span>
@@ -299,7 +299,7 @@
         <span class="n">y</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">Any</span><span class="p">],</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ArraysFloat</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Estimate the SHAP interaction values for a set of samples.</span>
 
 <span class="sd">        :param X: matrix of samples (# samples x # features) on which to explain the</span>
@@ -315,14 +315,14 @@
 
 
 <div class="viewcode-block" id="ExplainerFactory"><a class="viewcode-back" href="../../../apidoc/facet/inspection/facet.inspection.ExplainerFactory.html#facet.inspection.ExplainerFactory">[docs]</a><span class="k">class</span> <span class="nc">ExplainerFactory</span><span class="p">(</span><span class="n">HasExpressionRepr</span><span class="p">,</span> <span class="n">metaclass</span><span class="o">=</span><span class="n">ABCMeta</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A factory for constructing :class:`~shap.Explainer` objects.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="nd">@property</span>
     <span class="nd">@abstractmethod</span>
     <span class="k">def</span> <span class="nf">explains_raw_output</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        ``True`` if explainers made by this factory explain raw model output,</span>
 <span class="sd">        ``False`` otherwise.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -330,7 +330,7 @@
     <span class="nd">@property</span>
     <span class="nd">@abstractmethod</span>
     <span class="k">def</span> <span class="nf">supports_shap_interaction_values</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        ``True`` if explainers made by this factory allow for calculating</span>
 <span class="sd">        SHAP interaction values, ``False`` otherwise.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -338,7 +338,7 @@
     <span class="nd">@property</span>
     <span class="nd">@abstractmethod</span>
     <span class="k">def</span> <span class="nf">uses_background_dataset</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        ``True`` if explainers made by this factory will use a background dataset</span>
 <span class="sd">        passed to method :meth:`.make_explainer`, ``False`` otherwise.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -347,7 +347,7 @@
     <span class="k">def</span> <span class="nf">make_explainer</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">:</span> <span class="n">LearnerDF</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">]</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">BaseExplainer</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Construct a new :class:`~shap.Explainer` to compute shap values.</span>
 
 <span class="sd">        :param model: fitted learner for which to compute shap values</span>
@@ -374,7 +374,7 @@
 
 <div class="viewcode-block" id="ExplainerJob"><a class="viewcode-back" href="../../../apidoc/facet/inspection/facet.inspection.ExplainerJob.html#facet.inspection.ExplainerJob">[docs]</a><span class="nd">@inheritdoc</span><span class="p">(</span><span class="n">match</span><span class="o">=</span><span class="s2">&quot;&quot;&quot;[see superclass]&quot;&quot;&quot;</span><span class="p">)</span>
 <span class="k">class</span> <span class="nc">ExplainerJob</span><span class="p">(</span><span class="n">Job</span><span class="p">[</span><span class="n">ArraysAny</span><span class="p">]):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A call to an explainer function with given `X` and `y` values.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
@@ -403,7 +403,7 @@
         <span class="n">interactions</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
         <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        :param explainer: the SHAP explainer to use</span>
 <span class="sd">        :param X: the feature values of the observations to be explained</span>
 <span class="sd">        :param y: the target values of the observations to be explained</span>
@@ -418,7 +418,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span> <span class="o">=</span> <span class="n">kwargs</span>
 
 <div class="viewcode-block" id="ExplainerJob.run"><a class="viewcode-back" href="../../../apidoc/facet/inspection/facet.inspection.ExplainerJob.html#facet.inspection.ExplainerJob.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ArraysAny</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;[see superclass]&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;[see superclass]&quot;&quot;&quot;</span>
 
         <span class="n">shap_fn</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">ArraysAny</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">explainer</span><span class="o">.</span><span class="n">shap_interaction_values</span>
@@ -434,7 +434,7 @@
 
 <div class="viewcode-block" id="ExplainerQueue"><a class="viewcode-back" href="../../../apidoc/facet/inspection/facet.inspection.ExplainerQueue.html#facet.inspection.ExplainerQueue">[docs]</a><span class="nd">@inheritdoc</span><span class="p">(</span><span class="n">match</span><span class="o">=</span><span class="s2">&quot;&quot;&quot;[see superclass]&quot;&quot;&quot;</span><span class="p">)</span>
 <span class="k">class</span> <span class="nc">ExplainerQueue</span><span class="p">(</span><span class="n">JobQueue</span><span class="p">[</span><span class="n">ArraysAny</span><span class="p">,</span> <span class="n">ArraysAny</span><span class="p">]):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A queue splitting a data set to be explained into multiple jobs.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
@@ -470,7 +470,7 @@
         <span class="n">max_job_size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
         <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        :param explainer: the SHAP explainer to use</span>
 <span class="sd">        :param X: the feature values of the observations to be explained</span>
 <span class="sd">        :param y: the target values of the observations to be explained</span>
@@ -489,7 +489,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span> <span class="o">=</span> <span class="n">kwargs</span>
 
 <div class="viewcode-block" id="ExplainerQueue.jobs"><a class="viewcode-back" href="../../../apidoc/facet/inspection/facet.inspection.ExplainerQueue.html#facet.inspection.ExplainerQueue.jobs">[docs]</a>    <span class="k">def</span> <span class="nf">jobs</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Job</span><span class="p">[</span><span class="n">ArraysAny</span><span class="p">]]:</span>
-        <span class="sd">&quot;&quot;&quot;[see superclass]&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;[see superclass]&quot;&quot;&quot;</span>
 
         <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">X</span>
         <span class="n">y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">y</span>
@@ -509,7 +509,7 @@
         <span class="p">)</span></div>
 
 <div class="viewcode-block" id="ExplainerQueue.aggregate"><a class="viewcode-back" href="../../../apidoc/facet/inspection/facet.inspection.ExplainerQueue.html#facet.inspection.ExplainerQueue.aggregate">[docs]</a>    <span class="k">def</span> <span class="nf">aggregate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">job_results</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">ArraysAny</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">ArraysAny</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;[see superclass]&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;[see superclass]&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">job_results</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
             <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">(</span><span class="n">job_results</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
@@ -521,7 +521,7 @@
 
 <div class="viewcode-block" id="ParallelExplainer"><a class="viewcode-back" href="../../../apidoc/facet/inspection/facet.inspection.ParallelExplainer.html#facet.inspection.ParallelExplainer">[docs]</a><span class="nd">@inheritdoc</span><span class="p">(</span><span class="n">match</span><span class="o">=</span><span class="s2">&quot;&quot;&quot;[see superclass]&quot;&quot;&quot;</span><span class="p">)</span>
 <span class="k">class</span> <span class="nc">ParallelExplainer</span><span class="p">(</span><span class="n">BaseExplainer</span><span class="p">,</span> <span class="n">ParallelizableMixin</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A wrapper class, turning an explainer into a parallelized version, explaining</span>
 <span class="sd">    chunks of observations in parallel.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -555,7 +555,7 @@
         <span class="n">pre_dispatch</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">verbose</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        :param explainer: the explainer to be parallelized by this wrapper</span>
 <span class="sd">        :param max_job_size: the maximum number of observations to allocate to any of</span>
 <span class="sd">            the explainer jobs running in parallel</span>
@@ -585,7 +585,7 @@
         <span class="n">y</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">Any</span><span class="p">],</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ArraysFloat</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;[see superclass]&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;[see superclass]&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_run</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">explainer</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">interactions</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
 
     <span class="c1"># noinspection PyPep8Naming</span>
@@ -595,7 +595,7 @@
         <span class="n">y</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">Any</span><span class="p">],</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ArraysFloat</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;[see superclass]&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;[see superclass]&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_run</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">explainer</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">interactions</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
 
     <span class="c1"># noinspection PyPep8Naming</span>
@@ -629,7 +629,7 @@
 
 <div class="viewcode-block" id="TreeExplainerFactory"><a class="viewcode-back" href="../../../apidoc/facet/inspection/facet.inspection.TreeExplainerFactory.html#facet.inspection.TreeExplainerFactory">[docs]</a><span class="nd">@inheritdoc</span><span class="p">(</span><span class="n">match</span><span class="o">=</span><span class="s2">&quot;&quot;&quot;[see superclass]&quot;&quot;&quot;</span><span class="p">)</span>
 <span class="k">class</span> <span class="nc">TreeExplainerFactory</span><span class="p">(</span><span class="n">ExplainerFactory</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A factory constructing :class:`~shap.TreeExplainer` objects.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
@@ -640,7 +640,7 @@
         <span class="n">feature_perturbation</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">uses_background_dataset</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        :param model_output: override the default model output parameter (optional)</span>
 <span class="sd">        :param feature_perturbation: override the default (optional)</span>
 <span class="sd">            feature_perturbation parameter</span>
@@ -671,23 +671,23 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">explains_raw_output</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;[see superclass]&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;[see superclass]&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_output</span> <span class="ow">in</span> <span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;raw&quot;</span><span class="p">]</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">supports_shap_interaction_values</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;[see superclass]&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;[see superclass]&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">feature_perturbation</span> <span class="o">==</span> <span class="s2">&quot;tree_path_dependent&quot;</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">uses_background_dataset</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;[see superclass]&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;[see superclass]&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_uses_background_dataset</span>
 
 <div class="viewcode-block" id="TreeExplainerFactory.make_explainer"><a class="viewcode-back" href="../../../apidoc/facet/inspection/facet.inspection.TreeExplainerFactory.html#facet.inspection.TreeExplainerFactory.make_explainer">[docs]</a>    <span class="k">def</span> <span class="nf">make_explainer</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">:</span> <span class="n">LearnerDF</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">BaseExplainer</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;[see superclass]&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;[see superclass]&quot;&quot;&quot;</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_validate_background_dataset</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">)</span>
 
@@ -713,7 +713,7 @@
         <span class="k">return</span> <span class="n">explainer</span></div>
 
 <div class="viewcode-block" id="TreeExplainerFactory.to_expression"><a class="viewcode-back" href="../../../apidoc/facet/inspection/facet.inspection.TreeExplainerFactory.html#facet.inspection.TreeExplainerFactory.to_expression">[docs]</a>    <span class="k">def</span> <span class="nf">to_expression</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Expression</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;[see superclass]&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;[see superclass]&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">Id</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">))(</span>
             <span class="n">model_output</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model_output</span><span class="p">,</span>
             <span class="n">feature_perturbation</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">feature_perturbation</span><span class="p">,</span>
@@ -737,7 +737,7 @@
         <span class="n">y</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">Any</span><span class="p">],</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ArraysFloat</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Not implemented.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span>
@@ -745,7 +745,7 @@
 
 <div class="viewcode-block" id="KernelExplainerFactory"><a class="viewcode-back" href="../../../apidoc/facet/inspection/facet.inspection.KernelExplainerFactory.html#facet.inspection.KernelExplainerFactory">[docs]</a><span class="nd">@inheritdoc</span><span class="p">(</span><span class="n">match</span><span class="o">=</span><span class="s2">&quot;&quot;&quot;[see superclass]&quot;&quot;&quot;</span><span class="p">)</span>
 <span class="k">class</span> <span class="nc">KernelExplainerFactory</span><span class="p">(</span><span class="n">ExplainerFactory</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A factory constructing :class:`~shap.KernelExplainer` objects.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
@@ -756,7 +756,7 @@
         <span class="n">l1_reg</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;num_features(10)&quot;</span><span class="p">,</span>
         <span class="n">data_size_limit</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="mi">100</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        :param link: override the default link parameter (optional)</span>
 <span class="sd">        :param l1_reg: override the default l1_reg parameter of method</span>
 <span class="sd">            :meth:`~shap.KernelExplainer.shap_values`; pass ``None`` to use the</span>
@@ -773,21 +773,21 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">explains_raw_output</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;[see superclass]&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;[see superclass]&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">link</span> <span class="ow">in</span> <span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;identity&quot;</span><span class="p">]</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">supports_shap_interaction_values</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;[see superclass]&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;[see superclass]&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="kc">False</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">uses_background_dataset</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;[see superclass]&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;[see superclass]&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="kc">True</span>
 
 <div class="viewcode-block" id="KernelExplainerFactory.make_explainer"><a class="viewcode-back" href="../../../apidoc/facet/inspection/facet.inspection.KernelExplainerFactory.html#facet.inspection.KernelExplainerFactory.make_explainer">[docs]</a>    <span class="k">def</span> <span class="nf">make_explainer</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">:</span> <span class="n">LearnerDF</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">BaseExplainer</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;[see superclass]&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;[see superclass]&quot;&quot;&quot;</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_validate_background_dataset</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">)</span>
 
@@ -830,7 +830,7 @@
         <span class="k">return</span> <span class="n">explainer</span></div>
 
 <div class="viewcode-block" id="KernelExplainerFactory.to_expression"><a class="viewcode-back" href="../../../apidoc/facet/inspection/facet.inspection.KernelExplainerFactory.html#facet.inspection.KernelExplainerFactory.to_expression">[docs]</a>    <span class="k">def</span> <span class="nf">to_expression</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Expression</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;[see superclass]&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;[see superclass]&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">Id</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">))(</span>
             <span class="n">link</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">link</span><span class="p">,</span>
             <span class="n">l1_reg</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">l1_reg</span><span class="p">,</span>

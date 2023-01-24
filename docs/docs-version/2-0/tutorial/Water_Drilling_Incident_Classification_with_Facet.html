@@ -373,10 +373,11 @@ div.nboutput.container div.prompt > div {
     }
 }
 
-/* disable scrollbars on prompts */
+/* disable scrollbars and line breaks on prompts */
 div.nbinput.container div.prompt pre,
 div.nboutput.container div.prompt pre {
     overflow: hidden;
+    white-space: pre;
 }
 
 /* input/output area */
@@ -519,7 +520,7 @@ div.rendered_html tbody tr:hover {
   background: rgba(66, 165, 245, 0.2);
 }
 </style>
-<p><img alt="d64b8457a5a34b328981ad2a7daaf260" class="no-scaled-link" src="../_images/Gamma_Facet_Logo_RGB_LB.svg" width="500" /></p>
+<p><img alt="c6ce98062b6848ecb5e436fd404d8210" class="no-scaled-link" src="../_images/Gamma_Facet_Logo_RGB_LB.svg" width="500" /></p>
 <section id="Introduction-to-FACET">
 <h1>Introduction to FACET<a class="headerlink" href="#Introduction-to-FACET" title="Permalink to this headline">#</a></h1>
 <p>FACET is composed of the following key components:</p>
@@ -1411,7 +1412,7 @@ error of the mean predicted probability.</p></li>
               <span class="n">feature_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
               <span class="n">min_</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
               <span class="n">max_</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Takes in a data frame and applies a min-max scaler to given bounds for a single column</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 

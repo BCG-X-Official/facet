@@ -223,7 +223,7 @@
 <div class="viewcode-block" id="BaseUnivariateSimulator"><a class="viewcode-back" href="../../../../apidoc/facet/simulation/base/facet.simulation.base.BaseUnivariateSimulator.html#facet.simulation.base.BaseUnivariateSimulator">[docs]</a><span class="k">class</span> <span class="nc">BaseUnivariateSimulator</span><span class="p">(</span>
     <span class="n">ParallelizableMixin</span><span class="p">,</span> <span class="n">Generic</span><span class="p">[</span><span class="n">T_LearnerDF</span><span class="p">],</span> <span class="n">metaclass</span><span class="o">=</span><span class="n">ABCMeta</span>
 <span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Base class for univariate simulations.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
@@ -260,7 +260,7 @@
         <span class="n">pre_dispatch</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">verbose</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        :param model: a fitted learner to use for calculating simulated outputs</span>
 <span class="sd">        :param sample: the sample to be used for baseline calculations and simulations</span>
 <span class="sd">        :param confidence_level: the width :math:`\\alpha` of the confidence interval</span>
@@ -302,14 +302,22 @@
     <span class="p">)</span>
 
 <div class="viewcode-block" id="BaseUnivariateSimulator.simulate_feature"><a class="viewcode-back" href="../../../../apidoc/facet/simulation/base/facet.simulation.base.BaseUnivariateSimulator.html#facet.simulation.base.BaseUnivariateSimulator.simulate_feature">[docs]</a>    <span class="k">def</span> <span class="nf">simulate_feature</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">feature_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">partitioner</span><span class="p">:</span> <span class="n">Partitioner</span><span class="p">[</span><span class="n">T_Value</span><span class="p">]</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">feature_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">partitioner</span><span class="p">:</span> <span class="n">Partitioner</span><span class="p">[</span><span class="n">T_Value</span><span class="p">],</span>
+        <span class="o">**</span><span class="n">partitioner_params</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">UnivariateSimulationResult</span><span class="p">[</span><span class="n">T_Value</span><span class="p">]:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Simulate the average target uplift when fixing the value of the given feature</span>
 <span class="sd">        across all observations.</span>
 
+<span class="sd">        Simulations are run for a set of values determined by the given partitioner,</span>
+<span class="sd">        which is fitted to the observed values for the feature being simulated.</span>
+
 <span class="sd">        :param feature_name: the feature to run the simulation for</span>
 <span class="sd">        :param partitioner: the partitioner of feature values to run simulations for</span>
+<span class="sd">        :param partitioner_params: additional parameters to pass to the partitioner</span>
 <span class="sd">        :return: a mapping of output names to simulation results</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
@@ -318,7 +326,7 @@
         <span class="n">mean</span><span class="p">,</span> <span class="n">sem</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_simulate_feature_with_values</span><span class="p">(</span>
             <span class="n">feature_name</span><span class="o">=</span><span class="n">feature_name</span><span class="p">,</span>
             <span class="n">simulation_values</span><span class="o">=</span><span class="n">partitioner</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span>
-                <span class="n">sample</span><span class="o">.</span><span class="n">features</span><span class="o">.</span><span class="n">loc</span><span class="p">[:,</span> <span class="n">feature_name</span><span class="p">]</span>
+                <span class="n">sample</span><span class="o">.</span><span class="n">features</span><span class="o">.</span><span class="n">loc</span><span class="p">[:,</span> <span class="n">feature_name</span><span class="p">],</span> <span class="o">**</span><span class="n">partitioner_params</span>
             <span class="p">)</span><span class="o">.</span><span class="n">partitions_</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="k">return</span> <span class="n">UnivariateSimulationResult</span><span class="p">(</span>
@@ -335,12 +343,12 @@
     <span class="nd">@property</span>
     <span class="nd">@abstractmethod</span>
     <span class="k">def</span> <span class="nf">output_unit</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Unit of the output values calculated by the simulation.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
 <div class="viewcode-block" id="BaseUnivariateSimulator.baseline"><a class="viewcode-back" href="../../../../apidoc/facet/simulation/base/facet.simulation.base.BaseUnivariateSimulator.html#facet.simulation.base.BaseUnivariateSimulator.baseline">[docs]</a>    <span class="k">def</span> <span class="nf">baseline</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Calculate the expectation value of the simulation result, based on historically</span>
 <span class="sd">        observed actuals.</span>
 
@@ -350,7 +358,7 @@
 
 <div class="viewcode-block" id="BaseUnivariateSimulator.expected_output"><a class="viewcode-back" href="../../../../apidoc/facet/simulation/base/facet.simulation.base.BaseUnivariateSimulator.html#facet.simulation.base.BaseUnivariateSimulator.expected_output">[docs]</a>    <span class="nd">@abstractmethod</span>
     <span class="k">def</span> <span class="nf">expected_output</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Calculate the expectation value of the actual model output, based on</span>
 <span class="sd">        historically observed actuals.</span>
 
@@ -394,7 +402,7 @@
         <span class="n">feature_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
         <span class="n">simulation_values</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">T_Value</span><span class="p">],</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">float</span><span class="p">]]:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Run a simulation on a feature.</span>
 
 <span class="sd">        For each simulation value, compute the mean and sem of predictions when</span>
@@ -427,7 +435,7 @@
 <div class="viewcode-block" id="UnivariateRegressionSimulator"><a class="viewcode-back" href="../../../../apidoc/facet/simulation/base/facet.simulation.base.UnivariateRegressionSimulator.html#facet.simulation.base.UnivariateRegressionSimulator">[docs]</a><span class="k">class</span> <span class="nc">UnivariateRegressionSimulator</span><span class="p">(</span>
     <span class="n">BaseUnivariateSimulator</span><span class="p">[</span><span class="n">RegressorDF</span><span class="p">],</span> <span class="n">metaclass</span><span class="o">=</span><span class="n">ABCMeta</span>
 <span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Base class for univariate simulations using regression models.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
@@ -453,7 +461,7 @@
     <span class="n">confidence_level</span><span class="p">:</span> <span class="nb">float</span>
 
 <div class="viewcode-block" id="UnivariateRegressionSimulator.expected_output"><a class="viewcode-back" href="../../../../apidoc/facet/simulation/base/facet.simulation.base.UnivariateRegressionSimulator.html#facet.simulation.base.UnivariateRegressionSimulator.expected_output">[docs]</a>    <span class="k">def</span> <span class="nf">expected_output</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Calculate the mean of actually observed values for the target.</span>
 
 <span class="sd">        :return: mean observed value of the target</span>

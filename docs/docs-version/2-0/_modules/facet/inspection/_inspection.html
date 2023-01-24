@@ -208,7 +208,7 @@
 
 
 <div class="viewcode-block" id="ShapPlotData"><a class="viewcode-back" href="../../../apidoc/facet/inspection/facet.inspection.ShapPlotData.html#facet.inspection.ShapPlotData">[docs]</a><span class="k">class</span> <span class="nc">ShapPlotData</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Data for use in SHAP plots provided by the</span>
 <span class="sd">    `shap &lt;https://shap.readthedocs.io/en/stable/&gt;`__ package.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -216,7 +216,7 @@
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">shap_values</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">FloatArray</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">FloatArray</span><span class="p">]],</span> <span class="n">sample</span><span class="p">:</span> <span class="n">Sample</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        :param shap_values: the shap values for all observations and outputs</span>
 <span class="sd">        :param sample: (sub)sample of all observations for which SHAP values are</span>
 <span class="sd">            available; aligned with param ``shap_values``</span>
@@ -226,7 +226,7 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">shap_values</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">FloatArray</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">FloatArray</span><span class="p">]]:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Matrix of SHAP values (number of observations by number of features)</span>
 <span class="sd">        or list of shap value matrices for multi-output models.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -234,14 +234,14 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">features</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Matrix of feature values (number of observations by number of features).</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sample</span><span class="o">.</span><span class="n">features</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">target</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">]:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Series of target values (number of observations)</span>
 <span class="sd">        or matrix of target values for multi-output models</span>
 <span class="sd">        (number of observations by number of outputs).</span>

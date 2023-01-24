@@ -208,7 +208,7 @@
 
 
 <div class="viewcode-block" id="SimulationStyle"><a class="viewcode-back" href="../../../../apidoc/facet/simulation/viz/facet.simulation.viz.SimulationStyle.html#facet.simulation.viz.SimulationStyle">[docs]</a><span class="k">class</span> <span class="nc">SimulationStyle</span><span class="p">(</span><span class="n">DrawingStyle</span><span class="p">,</span> <span class="n">metaclass</span><span class="o">=</span><span class="n">ABCMeta</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Base class of styles used by :class:`.SimulationDrawer`.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
@@ -227,7 +227,7 @@
         <span class="n">frequencies</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span>
         <span class="n">is_categorical_feature</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Draw the simulation results as the mean simulated outputs with their</span>
 <span class="sd">        confidence intervals.</span>
 
@@ -253,7 +253,7 @@
         <span class="n">frequencies</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span>
         <span class="n">is_categorical_feature</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Draw the histogram of observed value counts per partition.</span>
 
 <span class="sd">        :param partitions: the partitioning (center values) of the simulated feature</span>
@@ -271,14 +271,14 @@
         <span class="k">return</span> <span class="p">(</span>
             <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">tail_percentile</span><span class="si">}</span><span class="s2">th percentile&quot;</span><span class="p">,</span>
             <span class="s2">&quot;Mean&quot;</span><span class="p">,</span>
-            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="mf">100.0</span> <span class="o">-</span> <span class="n">tail_percentile</span><span class="si">}</span><span class="s2">th percentile&quot;</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="mf">100.0</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">tail_percentile</span><span class="si">}</span><span class="s2">th percentile&quot;</span><span class="p">,</span>
             <span class="s2">&quot;Baseline&quot;</span><span class="p">,</span>
         <span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="SimulationMatplotStyle"><a class="viewcode-back" href="../../../../apidoc/facet/simulation/viz/facet.simulation.viz.SimulationMatplotStyle.html#facet.simulation.viz.SimulationMatplotStyle">[docs]</a><span class="nd">@inheritdoc</span><span class="p">(</span><span class="n">match</span><span class="o">=</span><span class="s2">&quot;[see superclass]&quot;</span><span class="p">)</span>
 <span class="k">class</span> <span class="nc">SimulationMatplotStyle</span><span class="p">(</span><span class="n">MatplotStyle</span><span class="p">,</span> <span class="n">SimulationStyle</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    `matplotlib` style for simulation chart.</span>
 
 <span class="sd">    Along the range of simulated feature values on the x axis, plots the mean and</span>
@@ -306,7 +306,7 @@
         <span class="n">frequencies</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span>
         <span class="n">is_categorical_feature</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;[see superclass]&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;[see superclass]&quot;&quot;&quot;</span>
 
         <span class="c1"># draw the mean predicted uplift, showing mean and confidence ranges for</span>
         <span class="c1"># each prediction</span>
@@ -356,7 +356,7 @@
         <span class="n">frequencies</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span>
         <span class="n">is_categorical_feature</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;[see superclass]&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;[see superclass]&quot;&quot;&quot;</span>
 
         <span class="c1"># get histogram size and values (horizontally, we count bars from 0..n-1</span>
         <span class="n">n_partitions</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">partitions</span><span class="p">)</span>
@@ -461,7 +461,7 @@
 
 <div class="viewcode-block" id="SimulationReportStyle"><a class="viewcode-back" href="../../../../apidoc/facet/simulation/viz/facet.simulation.viz.SimulationReportStyle.html#facet.simulation.viz.SimulationReportStyle">[docs]</a><span class="nd">@inheritdoc</span><span class="p">(</span><span class="n">match</span><span class="o">=</span><span class="s2">&quot;[see superclass]&quot;</span><span class="p">)</span>
 <span class="k">class</span> <span class="nc">SimulationReportStyle</span><span class="p">(</span><span class="n">SimulationStyle</span><span class="p">,</span> <span class="n">TextStyle</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Renders simulation results as a text report.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
@@ -506,7 +506,7 @@
         <span class="n">frequencies</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span>
         <span class="n">is_categorical_feature</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;[see superclass]&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;[see superclass]&quot;&quot;&quot;</span>
 
         <span class="n">out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">out</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">out</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="si">{</span><span class="n">output_unit</span><span class="si">}</span><span class="s2">:</span><span class="se">\n\n</span><span class="s2">Baseline = </span><span class="si">{</span><span class="n">baseline</span><span class="si">}</span><span class="se">\n\n</span><span class="s2">&quot;</span><span class="p">)</span>
@@ -538,7 +538,7 @@
         <span class="n">frequencies</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span>
         <span class="n">is_categorical_feature</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;[see superclass]&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;[see superclass]&quot;&quot;&quot;</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">out</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Observed frequencies:</span><span class="se">\n\n</span><span class="s2">&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">out</span><span class="o">.</span><span class="n">write</span><span class="p">(</span>

@@ -284,8 +284,8 @@
 <h3>Python environment<a class="headerlink" href="#python-environment" title="Permalink to this headline">#</a></h3>
 <p>There is an <code class="docutils literal notranslate"><span class="pre">environment.yml</span></code> provided in the repository root, which installs all
 required development dependencies in the <code class="docutils literal notranslate"><span class="pre">facet-develop</span></code> environment.</p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>conda env create -f environment.yml
-conda activate facet-develop
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>conda<span class="w"> </span>env<span class="w"> </span>create<span class="w"> </span>-f<span class="w"> </span>environment.yml
+conda<span class="w"> </span>activate<span class="w"> </span>facet-develop
 </pre></div>
 </div>
 </section>
@@ -293,7 +293,7 @@ conda activate facet-develop
 <h3>Pre-commit hooks<a class="headerlink" href="#pre-commit-hooks" title="Permalink to this headline">#</a></h3>
 <p>This project uses a number of pre-commit hooks such as black and flake8 to enforce
 uniform coding standards in all commits. Before committing code, please run</p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>pre-commit install
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>pre-commit<span class="w"> </span>install
 </pre></div>
 </div>
 <p>You can use <code class="docutils literal notranslate"><span class="pre">pre-commit</span> <span class="pre">run</span></code> to manually run the pre-commit hooks from the command
@@ -385,14 +385,14 @@ any information.</p>
 <li><p>Properties should be documented as if they were attributes, not as methods, e.g.,</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nd">@property</span>
 <span class="k">def</span> <span class="nf">children</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Foo</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;The child nodes of the tree.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;The child nodes of the tree.&quot;&quot;&quot;</span>
     <span class="k">pass</span>
 </pre></div>
 </div>
 <p>but not</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nd">@property</span>
 <span class="k">def</span> <span class="nf">foo</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Foo</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;:return: the foo object&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;:return: the foo object&quot;&quot;&quot;</span>
     <span class="k">pass</span>
 </pre></div>
 </div>
@@ -410,7 +410,7 @@ punctuation, e.g.,</p>
 <li><p>For multi-line docstrings, insert a line break after the leading triple quote and before
 the trailing triple quote, e.g.,</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">fit</span><span class="p">():</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Fit the model.</span>
 
 <span class="sd">    Use the underlying estimator&#39;s ``fit`` method</span>
@@ -422,7 +422,7 @@ the trailing triple quote, e.g.,</p>
 </div>
 <p>but not</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">fit</span><span class="p">():</span>
-    <span class="sd">&quot;&quot;&quot;Fit the model.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Fit the model.</span>
 
 <span class="sd">    Use the underlying estimator&#39;s ``fit`` method</span>
 <span class="sd">    to fit the model using the given training sample.</span>
@@ -434,7 +434,7 @@ the trailing triple quote, e.g.,</p>
 <li><p>For method arguments, return value, and class parameters, one must hint the type using
 the typing module. Do not specify the parameter types in the docstrings, e.g.,</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">f</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-  <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">  </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">  Do something.</span>
 
 <span class="sd">  :param x: input value</span>
@@ -444,7 +444,7 @@ the typing module. Do not specify the parameter types in the docstrings, e.g.,</
 </div>
 <p>but not</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">f</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-  <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">  </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">  Do something.</span>
 
 <span class="sd">  :param int x: input value</span>
@@ -468,7 +468,7 @@ the documentation build has a number of key dependencies specified in the
 <li><p><code class="docutils literal notranslate"><span class="pre">sphinx-autodoc-typehints</span></code></p></li>
 </ul>
 <p>To generate the Sphinx documentation locally navigate to <code class="docutils literal notranslate"><span class="pre">/sphinx</span></code> and run</p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>python make.py html
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>make.py<span class="w"> </span>html
 </pre></div>
 </div>
 <p>By default this will clean any previous build. The generated Sphinx
@@ -611,9 +611,9 @@ also be instigated from within the <code class="docutils literal notranslate"><s
 in the main menu of the jupyter notebook server, click on <em>View -&gt; CellToolbar -&gt; edit
 metadata</em>, then click on edit Metadata in the top right part of the cell. The modified
 metadata would then look something like:</p>
-<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="w"></span>
-<span class="w">  </span><span class="nt">&quot;nbsphinx&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;hidden&quot;</span><span class="w"></span>
-<span class="p">}</span><span class="w"></span>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;nbsphinx&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;hidden&quot;</span>
+<span class="p">}</span>
 </pre></div>
 </div>
 </li>
@@ -676,8 +676,8 @@ The version can be bumped in the <code class="docutils literal notranslate"><spa
 <p>PyPI project metadata, build settings and package dependencies
 are obtained from <code class="docutils literal notranslate"><span class="pre">pyproject.toml</span></code>. To build and then publish the package to PyPI,
 use the following commands:</p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>python make.py facet tox default
-flit publish
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>make.py<span class="w"> </span>facet<span class="w"> </span>tox<span class="w"> </span>default
+flit<span class="w"> </span>publish
 </pre></div>
 </div>
 <p>Please note the following:</p>
@@ -685,7 +685,7 @@ flit publish
 <li><p>Because the PyPI package index is immutable, it is recommended to do a test
 upload to <a class="reference external" href="https://test.pypi.org/">PyPI test</a> first. Ensure all metadata presents
 correctly before proceeding to proper publishing. The command to publish to test is</p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>flit publish --repository testpypi
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>flit<span class="w"> </span>publish<span class="w"> </span>--repository<span class="w"> </span>testpypi
 </pre></div>
 </div>
 <p>which requires the specification of testpypi in a special <code class="docutils literal notranslate"><span class="pre">.pypirc</span></code> file
@@ -705,8 +705,8 @@ PyPI, also has the flexibility to support package building (wheel/sdist) via
 <p>conda build metadata, build settings and package dependencies
 are obtained from <code class="docutils literal notranslate"><span class="pre">meta.yml</span></code>. To build and then publish the package to conda,
 use the following commands:</p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>python make.py facet conda default
-anaconda upload --user BCG_Gamma dist/conda/noarch/&lt;*package.tar.gz*&gt;
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>make.py<span class="w"> </span>facet<span class="w"> </span>conda<span class="w"> </span>default
+anaconda<span class="w"> </span>upload<span class="w"> </span>--user<span class="w"> </span>BCG_Gamma<span class="w"> </span>dist/conda/noarch/&lt;*package.tar.gz*&gt;
 </pre></div>
 </div>
 <p>Please note the following:</p>

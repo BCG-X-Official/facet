@@ -221,7 +221,10 @@
         <span class="n">t</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">type</span><span class="p">(</span><span class="n">stats</span><span class="o">.</span><span class="n">uniform</span><span class="p">())</span><span class="o">.</span><span class="n">mro</span><span class="p">()</span> <span class="k">if</span> <span class="n">t</span><span class="o">.</span><span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;rv_frozen&quot;</span>
     <span class="p">)</span>
 <span class="k">except</span> <span class="ne">StopIteration</span><span class="p">:</span>
-    <span class="k">raise</span> <span class="ne">AssertionError</span><span class="p">(</span><span class="s2">&quot;stats.uniform() is based on class rv_frozen&quot;</span><span class="p">)</span>
+    <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+        <span class="s2">&quot;stats.uniform() should be based on class rv_frozen&quot;</span><span class="p">,</span> <span class="n">category</span><span class="o">=</span><span class="ne">UserWarning</span>
+    <span class="p">)</span>
+    <span class="n">rv_frozen</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
 
 
 <span class="c1">#</span>
@@ -244,7 +247,7 @@
 
 <div class="viewcode-block" id="ParameterSpace"><a class="viewcode-back" href="../../../apidoc/facet/selection/facet.selection.ParameterSpace.html#facet.selection.ParameterSpace">[docs]</a><span class="nd">@inheritdoc</span><span class="p">(</span><span class="n">match</span><span class="o">=</span><span class="s2">&quot;&quot;&quot;[see superclass]&quot;&quot;&quot;</span><span class="p">)</span>
 <span class="k">class</span> <span class="nc">ParameterSpace</span><span class="p">(</span><span class="n">BaseParameterSpace</span><span class="p">[</span><span class="n">T_Estimator_co</span><span class="p">],</span> <span class="n">Generic</span><span class="p">[</span><span class="n">T_Estimator_co</span><span class="p">]):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A set of parameter choices or distributions spanning a parameter space for</span>
 <span class="sd">    optimizing the hyperparameters of a single estimator.</span>
 
@@ -286,7 +289,7 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">estimator</span><span class="p">:</span> <span class="n">T_Estimator_co</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        :param estimator: the estimator to which to apply the parameters</span>
 <span class="sd">        :param name: a name for the estimator to be used in summary reports;</span>
 <span class="sd">            defaults to the name of the estimator&#39;s class, or the name of the final</span>
@@ -312,7 +315,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_params</span><span class="p">:</span> <span class="n">Set</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">params</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
 
 <div class="viewcode-block" id="ParameterSpace.get_name"><a class="viewcode-back" href="../../../apidoc/facet/selection/facet.selection.ParameterSpace.html#facet.selection.ParameterSpace.get_name">[docs]</a>    <span class="k">def</span> <span class="nf">get_name</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get the name for this parameter space&#39;s estimator.</span>
 
 <span class="sd">        If no name was passed to the constructor, determine the default name</span>
@@ -340,7 +343,7 @@
         <span class="n">using</span><span class="o">=</span><span class="n">BaseParameterSpace</span><span class="o">.</span><span class="n">get_parameters</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="k">def</span> <span class="nf">get_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prefix</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ParameterDict</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;[see superclass]&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;[see superclass]&quot;&quot;&quot;</span>
 
         <span class="k">return</span> <span class="p">{</span>
             <span class="s2">&quot;__&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">name</span><span class="p">):</span> <span class="n">values</span>
@@ -415,7 +418,7 @@
             <span class="k">yield from</span> <span class="n">child</span><span class="o">.</span><span class="n">_iter_parameters</span><span class="p">([</span><span class="o">*</span><span class="n">path_prefix</span><span class="p">,</span> <span class="n">name</span><span class="p">])</span>
 
 <div class="viewcode-block" id="ParameterSpace.to_expression"><a class="viewcode-back" href="../../../apidoc/facet/selection/facet.selection.ParameterSpace.html#facet.selection.ParameterSpace.to_expression">[docs]</a>    <span class="k">def</span> <span class="nf">to_expression</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Expression</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;[see superclass]&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;[see superclass]&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_to_expression</span><span class="p">([])</span></div>
 
     <span class="k">def</span> <span class="nf">_to_expression</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path_prefix</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="n">Expression</span><span class="p">:</span>
@@ -455,7 +458,7 @@
 <span class="k">class</span> <span class="nc">MultiEstimatorParameterSpace</span><span class="p">(</span>
     <span class="n">BaseParameterSpace</span><span class="p">[</span><span class="n">T_Estimator_co</span><span class="p">],</span> <span class="n">Generic</span><span class="p">[</span><span class="n">T_Estimator_co</span><span class="p">]</span>
 <span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A collection of parameter spaces, each representing a competing estimator from which</span>
 <span class="sd">    to select the best-performing candidate with optimal hyperparameters.</span>
 
@@ -466,7 +469,7 @@
     <span class="n">spaces</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">ParameterSpace</span><span class="p">[</span><span class="n">T_Estimator_co</span><span class="p">],</span> <span class="o">...</span><span class="p">]</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">spaces</span><span class="p">:</span> <span class="n">ParameterSpace</span><span class="p">[</span><span class="n">T_Estimator_co</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        :param spaces: the parameter spaces from which to select the best estimator</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">validate_element_types</span><span class="p">(</span><span class="n">spaces</span><span class="p">,</span> <span class="n">expected_type</span><span class="o">=</span><span class="n">ParameterSpace</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;arg spaces&quot;</span><span class="p">)</span>
@@ -492,7 +495,7 @@
         <span class="n">using</span><span class="o">=</span><span class="n">BaseParameterSpace</span><span class="o">.</span><span class="n">get_parameters</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="k">def</span> <span class="nf">get_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prefix</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">ParameterDict</span><span class="p">]:</span>
-        <span class="sd">&quot;&quot;&quot;[see superclass]&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;[see superclass]&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">prefix</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">prefix</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
             <span class="n">candidate_prefixed</span> <span class="o">=</span> <span class="n">CandidateEstimatorDF</span><span class="o">.</span><span class="n">PARAM_CANDIDATE</span>
@@ -510,7 +513,7 @@
         <span class="p">]</span></div>
 
 <div class="viewcode-block" id="MultiEstimatorParameterSpace.to_expression"><a class="viewcode-back" href="../../../apidoc/facet/selection/facet.selection.MultiEstimatorParameterSpace.html#facet.selection.MultiEstimatorParameterSpace.to_expression">[docs]</a>    <span class="k">def</span> <span class="nf">to_expression</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Expression</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;[see superclass]&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;[see superclass]&quot;&quot;&quot;</span>
         <span class="c1"># noinspection PyProtectedMember</span>
         <span class="k">return</span> <span class="n">Id</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">))(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">spaces</span><span class="p">)</span></div></div>
 
@@ -526,7 +529,7 @@
 <span class="k">def</span> <span class="nf">ensure_subclass</span><span class="p">(</span>
     <span class="n">estimator_type</span><span class="p">:</span> <span class="n">Type</span><span class="p">[</span><span class="n">T_Estimator_co</span><span class="p">],</span> <span class="n">expected_type</span><span class="p">:</span> <span class="n">Type</span><span class="p">[</span><span class="n">T_Estimator_co</span><span class="p">]</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Ensure that the given estimator type is a subclass of the expected estimator type.</span>
 
 <span class="sd">    :param estimator_type: the estimator type to validate</span>
@@ -540,7 +543,7 @@
 
 
 <span class="k">def</span> <span class="nf">validate_spaces</span><span class="p">(</span><span class="n">spaces</span><span class="p">:</span> <span class="n">Collection</span><span class="p">[</span><span class="n">ParameterSpace</span><span class="p">[</span><span class="n">T_Estimator_co</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Ensure that all parameter spaces use the same estimator type (typically regressors</span>
 <span class="sd">    or classifiers)</span>
 
@@ -559,7 +562,7 @@
 
 
 <span class="k">def</span> <span class="nf">get_default_estimator_name</span><span class="p">(</span><span class="n">estimator</span><span class="p">:</span> <span class="n">EstimatorDF</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Get a default name of the estimator.</span>
 
 <span class="sd">    - for meta-estimators, this is the default name of the delegate estimator</span>

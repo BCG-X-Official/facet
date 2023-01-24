@@ -16,7 +16,6 @@ facet.data.partition.ContinuousRangePartitioner
    .. autosummary::
       :nosignatures:
    
-      ~ContinuousRangePartitioner.ensure_fitted
       ~ContinuousRangePartitioner.fit
    
    

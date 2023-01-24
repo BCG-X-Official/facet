@@ -503,7 +503,7 @@ dendrogram)</p></li>
 specified in the underlying training sample.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Bases</dt>
-<dd class="field-odd"><p><a class="reference internal" href="facet.inspection.ModelInspector.html#facet.inspection.ModelInspector" title="facet.inspection.ModelInspector"><code class="xref py py-class docutils literal notranslate"><span class="pre">ModelInspector</span></code></a>, <a class="reference external" href="https://bcg-gamma.github.io/pytools/apidoc/pytools/parallelization/pytools.parallelization.ParallelizableMixin.html#pytools.parallelization.ParallelizableMixin" title="(in pytools v2.0.4)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ParallelizableMixin</span></code></a></p>
+<dd class="field-odd"><p><a class="reference external" href="https://bcg-gamma.github.io/pytools/apidoc/pytools/parallelization/pytools.parallelization.ParallelizableMixin.html#pytools.parallelization.ParallelizableMixin" title="(in pytools v2.0.4)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ParallelizableMixin</span></code></a>, <a class="reference internal" href="facet.inspection.ModelInspector.html#facet.inspection.ModelInspector" title="facet.inspection.ModelInspector"><code class="xref py py-class docutils literal notranslate"><span class="pre">ModelInspector</span></code></a></p>
 </dd>
 <dt class="field-even">Generic types</dt>
 <dd class="field-even"><p>~T_LearnerPipelineDF(bound= <a class="reference external" href="https://bcg-gamma.github.io/sklearndf/apidoc/sklearndf/pipeline/sklearndf.pipeline.LearnerPipelineDF.html#sklearndf.pipeline.LearnerPipelineDF" title="(in sklearndf v2.1.0)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">LearnerPipelineDF</span></code></a> [<a class="reference external" href="https://docs.python.org/3.7/library/typing.html#typing.Any" title="(in Python v3.7)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Any</span></code></a>])</p>
@@ -539,43 +539,40 @@ if <code class="docutils literal notranslate"><span class="pre">None</span></cod
 <col style="width: 90%" />
 </colgroup>
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#facet.inspection.LearnerInspector.ensure_fitted" title="facet.inspection.LearnerInspector.ensure_fitted"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ensure_fitted</span></code></a></p></td>
-<td><p>See <a class="reference external" href="https://bcg-gamma.github.io/pytools/apidoc/pytools/fit/pytools.fit.FittableMixin.html#pytools.fit.FittableMixin.ensure_fitted" title="(in pytools v2.0.4)"><code class="xref py py-meth docutils literal notranslate"><span class="pre">pytools.fit.FittableMixin.ensure_fitted()</span></code></a></p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#facet.inspection.LearnerInspector.feature_association_linkage" title="facet.inspection.LearnerInspector.feature_association_linkage"><code class="xref py py-obj docutils literal notranslate"><span class="pre">feature_association_linkage</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#facet.inspection.LearnerInspector.feature_association_linkage" title="facet.inspection.LearnerInspector.feature_association_linkage"><code class="xref py py-obj docutils literal notranslate"><span class="pre">feature_association_linkage</span></code></a></p></td>
 <td><p>Calculate a linkage tree based on the <a class="reference internal" href="#facet.inspection.LearnerInspector.feature_association_matrix" title="facet.inspection.LearnerInspector.feature_association_matrix"><code class="xref py py-meth docutils literal notranslate"><span class="pre">feature_association_matrix()</span></code></a>.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#facet.inspection.LearnerInspector.feature_association_matrix" title="facet.inspection.LearnerInspector.feature_association_matrix"><code class="xref py py-obj docutils literal notranslate"><span class="pre">feature_association_matrix</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#facet.inspection.LearnerInspector.feature_association_matrix" title="facet.inspection.LearnerInspector.feature_association_matrix"><code class="xref py py-obj docutils literal notranslate"><span class="pre">feature_association_matrix</span></code></a></p></td>
 <td><p>Calculate the feature association matrix.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#facet.inspection.LearnerInspector.feature_importance" title="facet.inspection.LearnerInspector.feature_importance"><code class="xref py py-obj docutils literal notranslate"><span class="pre">feature_importance</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#facet.inspection.LearnerInspector.feature_importance" title="facet.inspection.LearnerInspector.feature_importance"><code class="xref py py-obj docutils literal notranslate"><span class="pre">feature_importance</span></code></a></p></td>
 <td><p>Calculate the relative importance of each feature based on SHAP values.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#facet.inspection.LearnerInspector.feature_interaction_matrix" title="facet.inspection.LearnerInspector.feature_interaction_matrix"><code class="xref py py-obj docutils literal notranslate"><span class="pre">feature_interaction_matrix</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#facet.inspection.LearnerInspector.feature_interaction_matrix" title="facet.inspection.LearnerInspector.feature_interaction_matrix"><code class="xref py py-obj docutils literal notranslate"><span class="pre">feature_interaction_matrix</span></code></a></p></td>
 <td><p>Calculate relative shap interaction values for all feature pairings.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#facet.inspection.LearnerInspector.feature_redundancy_linkage" title="facet.inspection.LearnerInspector.feature_redundancy_linkage"><code class="xref py py-obj docutils literal notranslate"><span class="pre">feature_redundancy_linkage</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#facet.inspection.LearnerInspector.feature_redundancy_linkage" title="facet.inspection.LearnerInspector.feature_redundancy_linkage"><code class="xref py py-obj docutils literal notranslate"><span class="pre">feature_redundancy_linkage</span></code></a></p></td>
 <td><p>Calculate a linkage tree based on the <a class="reference internal" href="#facet.inspection.LearnerInspector.feature_redundancy_matrix" title="facet.inspection.LearnerInspector.feature_redundancy_matrix"><code class="xref py py-meth docutils literal notranslate"><span class="pre">feature_redundancy_matrix()</span></code></a>.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#facet.inspection.LearnerInspector.feature_redundancy_matrix" title="facet.inspection.LearnerInspector.feature_redundancy_matrix"><code class="xref py py-obj docutils literal notranslate"><span class="pre">feature_redundancy_matrix</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#facet.inspection.LearnerInspector.feature_redundancy_matrix" title="facet.inspection.LearnerInspector.feature_redundancy_matrix"><code class="xref py py-obj docutils literal notranslate"><span class="pre">feature_redundancy_matrix</span></code></a></p></td>
 <td><p>Calculate the feature redundancy matrix.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#facet.inspection.LearnerInspector.feature_synergy_linkage" title="facet.inspection.LearnerInspector.feature_synergy_linkage"><code class="xref py py-obj docutils literal notranslate"><span class="pre">feature_synergy_linkage</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#facet.inspection.LearnerInspector.feature_synergy_linkage" title="facet.inspection.LearnerInspector.feature_synergy_linkage"><code class="xref py py-obj docutils literal notranslate"><span class="pre">feature_synergy_linkage</span></code></a></p></td>
 <td><p>Calculate a linkage tree based on the <a class="reference internal" href="#facet.inspection.LearnerInspector.feature_synergy_matrix" title="facet.inspection.LearnerInspector.feature_synergy_matrix"><code class="xref py py-meth docutils literal notranslate"><span class="pre">feature_synergy_matrix()</span></code></a>.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#facet.inspection.LearnerInspector.feature_synergy_matrix" title="facet.inspection.LearnerInspector.feature_synergy_matrix"><code class="xref py py-obj docutils literal notranslate"><span class="pre">feature_synergy_matrix</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#facet.inspection.LearnerInspector.feature_synergy_matrix" title="facet.inspection.LearnerInspector.feature_synergy_matrix"><code class="xref py py-obj docutils literal notranslate"><span class="pre">feature_synergy_matrix</span></code></a></p></td>
 <td><p>Calculate the feature synergy matrix.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#facet.inspection.LearnerInspector.fit" title="facet.inspection.LearnerInspector.fit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fit</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#facet.inspection.LearnerInspector.fit" title="facet.inspection.LearnerInspector.fit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fit</span></code></a></p></td>
 <td><p>Fit the inspector with the given sample, creating global explanations including feature redundancy and synergy.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#facet.inspection.LearnerInspector.shap_interaction_values" title="facet.inspection.LearnerInspector.shap_interaction_values"><code class="xref py py-obj docutils literal notranslate"><span class="pre">shap_interaction_values</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#facet.inspection.LearnerInspector.shap_interaction_values" title="facet.inspection.LearnerInspector.shap_interaction_values"><code class="xref py py-obj docutils literal notranslate"><span class="pre">shap_interaction_values</span></code></a></p></td>
 <td><p>Calculate the SHAP interaction values for all observations and pairs of features.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#facet.inspection.LearnerInspector.shap_plot_data" title="facet.inspection.LearnerInspector.shap_plot_data"><code class="xref py py-obj docutils literal notranslate"><span class="pre">shap_plot_data</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#facet.inspection.LearnerInspector.shap_plot_data" title="facet.inspection.LearnerInspector.shap_plot_data"><code class="xref py py-obj docutils literal notranslate"><span class="pre">shap_plot_data</span></code></a></p></td>
 <td><p>Consolidate SHAP values and corresponding feature values from this inspector for use in SHAP plots offered by the <a class="reference external" href="https://shap.readthedocs.io/en/stable/">shap</a> package.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#facet.inspection.LearnerInspector.shap_values" title="facet.inspection.LearnerInspector.shap_values"><code class="xref py py-obj docutils literal notranslate"><span class="pre">shap_values</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#facet.inspection.LearnerInspector.shap_values" title="facet.inspection.LearnerInspector.shap_values"><code class="xref py py-obj docutils literal notranslate"><span class="pre">shap_values</span></code></a></p></td>
 <td><p>Calculate the SHAP values for all observations and features.</p></td>
 </tr>
 </tbody>
@@ -620,12 +617,6 @@ if <code class="docutils literal notranslate"><span class="pre">None</span></cod
 </tbody>
 </table>
 <p class="rubric">Definitions</p>
-<dl class="py method">
-<dt class="sig sig-object py" id="facet.inspection.LearnerInspector.ensure_fitted">
-<span class="sig-name descname"><span class="pre">ensure_fitted</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#facet.inspection.LearnerInspector.ensure_fitted" title="Permalink to this definition">#</a></dt>
-<dd><p>See <a class="reference external" href="https://bcg-gamma.github.io/pytools/apidoc/pytools/fit/pytools.fit.FittableMixin.html#pytools.fit.FittableMixin.ensure_fitted" title="(in pytools v2.0.4)"><code class="xref py py-meth docutils literal notranslate"><span class="pre">pytools.fit.FittableMixin.ensure_fitted()</span></code></a></p>
-</dd></dl>
-
 <dl class="py method">
 <dt class="sig sig-object py" id="facet.inspection.LearnerInspector.feature_association_linkage">
 <span class="sig-name descname"><span class="pre">feature_association_linkage</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/facet/inspection/_learner_inspector.html#LearnerInspector.feature_association_linkage"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#facet.inspection.LearnerInspector.feature_association_linkage" title="Permalink to this definition">#</a></dt>
@@ -701,7 +692,7 @@ are <code class="docutils literal notranslate"><span class="pre">rms</span></cod
 values)</p>
 </dd>
 <dt class="field-even">Return type</dt>
-<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3.7/library/typing.html#typing.Union" title="(in Python v3.7)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code></a>[<a class="reference external" href="https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Series.html#pandas.Series" title="(in pandas v1.5.0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Series</span></code></a>, <a class="reference external" href="https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v1.5.0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></a>]</p>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3.7/library/typing.html#typing.Union" title="(in Python v3.7)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code></a>[<a class="reference external" href="https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Series.html#pandas.Series" title="(in pandas v1.5.3)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Series</span></code></a>, <a class="reference external" href="https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v1.5.3)"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></a>]</p>
 </dd>
 <dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p>a series of length <cite>n_features</cite> for single-output models, or a
@@ -911,7 +902,7 @@ observation and a feature (identified by a hierarchical index with two levels),
 and each column corresponds to a feature.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.7/library/typing.html#typing.Union" title="(in Python v3.7)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code></a>[<a class="reference external" href="https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v1.5.0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></a>, <a class="reference external" href="https://docs.python.org/3.7/library/typing.html#typing.List" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a>[<a class="reference external" href="https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v1.5.0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></a>]]</p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.7/library/typing.html#typing.Union" title="(in Python v3.7)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code></a>[<a class="reference external" href="https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v1.5.3)"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></a>, <a class="reference external" href="https://docs.python.org/3.7/library/typing.html#typing.List" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a>[<a class="reference external" href="https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v1.5.3)"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></a>]]</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>a data frame with SHAP interaction values</p>
@@ -963,7 +954,7 @@ splits for which SHAP values were calculated.</p>
 observation, and each column corresponds to a feature.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.7/library/typing.html#typing.Union" title="(in Python v3.7)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code></a>[<a class="reference external" href="https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v1.5.0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></a>, <a class="reference external" href="https://docs.python.org/3.7/library/typing.html#typing.List" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a>[<a class="reference external" href="https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v1.5.0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></a>]]</p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.7/library/typing.html#typing.Union" title="(in Python v3.7)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code></a>[<a class="reference external" href="https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v1.5.3)"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></a>, <a class="reference external" href="https://docs.python.org/3.7/library/typing.html#typing.List" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a>[<a class="reference external" href="https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v1.5.3)"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></a>]]</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>a data frame with SHAP values</p>

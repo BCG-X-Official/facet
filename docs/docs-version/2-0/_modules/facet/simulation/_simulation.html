@@ -215,7 +215,7 @@
 
 <div class="viewcode-block" id="UnivariateProbabilitySimulator"><a class="viewcode-back" href="../../../apidoc/facet/simulation/facet.simulation.UnivariateProbabilitySimulator.html#facet.simulation.UnivariateProbabilitySimulator">[docs]</a><span class="nd">@inheritdoc</span><span class="p">(</span><span class="n">match</span><span class="o">=</span><span class="s2">&quot;[see superclass]&quot;</span><span class="p">)</span>
 <span class="k">class</span> <span class="nc">UnivariateProbabilitySimulator</span><span class="p">(</span><span class="n">BaseUnivariateSimulator</span><span class="p">[</span><span class="n">ClassifierDF</span><span class="p">]):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Univariate simulation of positive class probabilities based on a binary classifier.</span>
 
 <span class="sd">    The simulation is carried out for one specific feature `x[i]` of a model, and for a</span>
@@ -263,11 +263,11 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">output_unit</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;[see superclass]&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;[see superclass]&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;probability(</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_positive_class</span><span class="p">()</span><span class="si">}</span><span class="s2">)&quot;</span>
 
 <div class="viewcode-block" id="UnivariateProbabilitySimulator.expected_output"><a class="viewcode-back" href="../../../apidoc/facet/simulation/facet.simulation.UnivariateProbabilitySimulator.html#facet.simulation.UnivariateProbabilitySimulator.expected_output">[docs]</a>    <span class="k">def</span> <span class="nf">expected_output</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Calculate the actual observed frequency of the positive class as the baseline</span>
 <span class="sd">        of the simulation.</span>
 
@@ -280,7 +280,7 @@
         <span class="p">)</span></div>
 
     <span class="k">def</span> <span class="nf">_positive_class</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        The label of the positive class of the binary classifier being simulated.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">classifier</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span>
@@ -314,7 +314,7 @@
 
 <div class="viewcode-block" id="UnivariateTargetSimulator"><a class="viewcode-back" href="../../../apidoc/facet/simulation/facet.simulation.UnivariateTargetSimulator.html#facet.simulation.UnivariateTargetSimulator">[docs]</a><span class="nd">@inheritdoc</span><span class="p">(</span><span class="n">match</span><span class="o">=</span><span class="s2">&quot;[see superclass]&quot;</span><span class="p">)</span>
 <span class="k">class</span> <span class="nc">UnivariateTargetSimulator</span><span class="p">(</span><span class="n">UnivariateRegressionSimulator</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Univariate simulation of the absolute output of a regression model.</span>
 
 <span class="sd">    The simulation is carried out for one specific feature `x[i]` of a model, and for a</span>
@@ -359,13 +359,13 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">output_unit</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;[see superclass]&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;[see superclass]&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;Mean predicted target (</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">sample</span><span class="o">.</span><span class="n">target_name</span><span class="si">}</span><span class="s2">)&quot;</span></div>
 
 
 <div class="viewcode-block" id="UnivariateUpliftSimulator"><a class="viewcode-back" href="../../../apidoc/facet/simulation/facet.simulation.UnivariateUpliftSimulator.html#facet.simulation.UnivariateUpliftSimulator">[docs]</a><span class="nd">@inheritdoc</span><span class="p">(</span><span class="n">match</span><span class="o">=</span><span class="s2">&quot;[see superclass]&quot;</span><span class="p">)</span>
 <span class="k">class</span> <span class="nc">UnivariateUpliftSimulator</span><span class="p">(</span><span class="n">UnivariateRegressionSimulator</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Univariate simulation of the relative uplift of the output of a regression model.</span>
 
 <span class="sd">    The simulation is carried out for one specific feature `x[i]` of a model, and for a</span>
@@ -413,11 +413,11 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">output_unit</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;[see superclass]&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;[see superclass]&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;Mean predicted uplift (</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">sample</span><span class="o">.</span><span class="n">target_name</span><span class="si">}</span><span class="s2">)&quot;</span>
 
 <div class="viewcode-block" id="UnivariateUpliftSimulator.baseline"><a class="viewcode-back" href="../../../apidoc/facet/simulation/facet.simulation.UnivariateUpliftSimulator.html#facet.simulation.UnivariateUpliftSimulator.baseline">[docs]</a>    <span class="k">def</span> <span class="nf">baseline</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        The baseline of uplift simulations is always ``0.0``</span>
 
 <span class="sd">        :return: 0.0</span>
@@ -425,12 +425,16 @@
         <span class="k">return</span> <span class="mf">0.0</span></div>
 
 <div class="viewcode-block" id="UnivariateUpliftSimulator.simulate_feature"><a class="viewcode-back" href="../../../apidoc/facet/simulation/facet.simulation.UnivariateUpliftSimulator.html#facet.simulation.UnivariateUpliftSimulator.simulate_feature">[docs]</a>    <span class="k">def</span> <span class="nf">simulate_feature</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">feature_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">partitioner</span><span class="p">:</span> <span class="n">Partitioner</span><span class="p">[</span><span class="n">T_Values</span><span class="p">]</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">feature_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">partitioner</span><span class="p">:</span> <span class="n">Partitioner</span><span class="p">[</span><span class="n">T_Values</span><span class="p">],</span>
+        <span class="o">**</span><span class="n">partitioner_params</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">UnivariateSimulationResult</span><span class="p">[</span><span class="n">T_Values</span><span class="p">]:</span>
-        <span class="sd">&quot;&quot;&quot;[see superclass]&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;[see superclass]&quot;&quot;&quot;</span>
 
         <span class="n">result</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">simulate_feature</span><span class="p">(</span>
-            <span class="n">feature_name</span><span class="o">=</span><span class="n">feature_name</span><span class="p">,</span> <span class="n">partitioner</span><span class="o">=</span><span class="n">partitioner</span>
+            <span class="n">feature_name</span><span class="o">=</span><span class="n">feature_name</span><span class="p">,</span> <span class="n">partitioner</span><span class="o">=</span><span class="n">partitioner</span><span class="p">,</span> <span class="o">**</span><span class="n">partitioner_params</span>
         <span class="p">)</span>
 
         <span class="c1"># offset the mean values to get uplift instead of absolute outputs</span>

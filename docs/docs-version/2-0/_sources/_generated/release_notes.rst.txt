@@ -77,6 +77,8 @@ Other
 
 - API: class ``LearnerCrossfit`` is no longer needed in FACET |nbsp| 2.0 and has been
   removed
+- API: support new :obj:`~pytools.fit.fitted_only` decorator introduced in *pytools*
+  |nbsp| 2.1.
 
 
 FACET 1.2

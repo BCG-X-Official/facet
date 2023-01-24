@@ -197,7 +197,7 @@
 
 <span class="kn">from</span> <span class="nn">pytools.api</span> <span class="kn">import</span> <span class="n">AllTracker</span><span class="p">,</span> <span class="n">inheritdoc</span>
 <span class="kn">from</span> <span class="nn">pytools.data</span> <span class="kn">import</span> <span class="n">LinkageTree</span><span class="p">,</span> <span class="n">Matrix</span>
-<span class="kn">from</span> <span class="nn">pytools.fit</span> <span class="kn">import</span> <span class="n">FittableMixin</span>
+<span class="kn">from</span> <span class="nn">pytools.fit</span> <span class="kn">import</span> <span class="n">FittableMixin</span><span class="p">,</span> <span class="n">fitted_only</span>
 <span class="kn">from</span> <span class="nn">pytools.parallelization</span> <span class="kn">import</span> <span class="n">ParallelizableMixin</span>
 <span class="kn">from</span> <span class="nn">sklearndf</span> <span class="kn">import</span> <span class="n">ClassifierDF</span><span class="p">,</span> <span class="n">LearnerDF</span><span class="p">,</span> <span class="n">RegressorDF</span>
 <span class="kn">from</span> <span class="nn">sklearndf.pipeline</span> <span class="kn">import</span> <span class="n">LearnerPipelineDF</span>
@@ -266,7 +266,7 @@
 
 
 <div class="viewcode-block" id="ModelInspector"><a class="viewcode-back" href="../../../apidoc/facet/inspection/facet.inspection.ModelInspector.html#facet.inspection.ModelInspector">[docs]</a><span class="k">class</span> <span class="nc">ModelInspector</span><span class="p">(</span><span class="n">FittableMixin</span><span class="p">[</span><span class="n">Sample</span><span class="p">],</span> <span class="n">metaclass</span><span class="o">=</span><span class="n">ABCMeta</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Base class of `inspectors` to explain different kinds of `models` based on SHAP</span>
 <span class="sd">    values.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -278,7 +278,7 @@
 <span class="k">class</span> <span class="nc">LearnerInspector</span><span class="p">(</span>
     <span class="n">ModelInspector</span><span class="p">,</span> <span class="n">ParallelizableMixin</span><span class="p">,</span> <span class="n">Generic</span><span class="p">[</span><span class="n">T_LearnerPipelineDF</span><span class="p">]</span>
 <span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Explain regressors and classifiers based on SHAP values.</span>
 
 <span class="sd">    Focus is on explaining the overall model, but the inspector also delivers</span>
@@ -342,7 +342,7 @@
         <span class="n">pre_dispatch</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">verbose</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        :param pipeline: the learner pipeline to inspect</span>
 <span class="sd">        :param explainer_factory: optional function that creates a shap Explainer</span>
 <span class="sd">            (default: ``TreeExplainerFactory``)</span>
@@ -405,7 +405,7 @@
         <span class="n">sample</span><span class="p">:</span> <span class="n">Sample</span><span class="p">,</span>
         <span class="o">**</span><span class="n">fit_params</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">T_LearnerInspector</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Fit the inspector with the given sample, creating global explanations including</span>
 <span class="sd">        feature redundancy and synergy.</span>
 
@@ -481,28 +481,28 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">_shap_global_explainer</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ShapGlobalExplainer</span><span class="p">:</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">ensure_fitted</span><span class="p">()</span>
         <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shap_global_projector</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span> <span class="n">ASSERTION__INSPECTOR_IS_FITTED</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shap_global_projector</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">is_fitted</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;[see superclass]&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;[see superclass]&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sample</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
 
     <span class="nd">@property</span>
+    <span class="nd">@fitted_only</span>
     <span class="k">def</span> <span class="nf">sample_</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Sample</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        The background sample used to fit this inspector.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">ensure_fitted</span><span class="p">()</span>
         <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sample</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span> <span class="n">ASSERTION__INSPECTOR_IS_FITTED</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sample</span>
 
     <span class="nd">@property</span>
+    <span class="nd">@fitted_only</span>
     <span class="k">def</span> <span class="nf">output_names_</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        The names of the outputs explained by this inspector.</span>
 
 <span class="sd">        For regressors, these are the names of the target columns.</span>
@@ -514,7 +514,6 @@
 <span class="sd">        For non-binary classifiers, this is the list of all classes.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">ensure_fitted</span><span class="p">()</span>
         <span class="k">assert</span> <span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_shap_calculator</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
             <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shap_calculator</span><span class="o">.</span><span class="n">output_names_</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
@@ -522,15 +521,17 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shap_calculator</span><span class="o">.</span><span class="n">output_names_</span>
 
     <span class="nd">@property</span>
+    <span class="nd">@fitted_only</span>
     <span class="k">def</span> <span class="nf">features_</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        The names of the features used to fit the learner pipeline explained by this</span>
 <span class="sd">        inspector.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">cast</span><span class="p">(</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">pipeline</span><span class="o">.</span><span class="n">feature_names_out_</span><span class="o">.</span><span class="n">to_list</span><span class="p">())</span>
 
-<div class="viewcode-block" id="LearnerInspector.shap_values"><a class="viewcode-back" href="../../../apidoc/facet/inspection/facet.inspection.LearnerInspector.html#facet.inspection.LearnerInspector.shap_values">[docs]</a>    <span class="k">def</span> <span class="nf">shap_values</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">]]:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<div class="viewcode-block" id="LearnerInspector.shap_values"><a class="viewcode-back" href="../../../apidoc/facet/inspection/facet.inspection.LearnerInspector.html#facet.inspection.LearnerInspector.shap_values">[docs]</a>    <span class="nd">@fitted_only</span>
+    <span class="k">def</span> <span class="nf">shap_values</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Calculate the SHAP values for all observations and features.</span>
 
 <span class="sd">        Returns a data frame of SHAP values where each row corresponds to an</span>
@@ -539,12 +540,12 @@
 <span class="sd">        :return: a data frame with SHAP values</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">ensure_fitted</span><span class="p">()</span>
         <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shap_calculator</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span> <span class="n">ASSERTION__INSPECTOR_IS_FITTED</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__split_multi_output_df</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_shap_calculator</span><span class="o">.</span><span class="n">get_shap_values</span><span class="p">())</span></div>
 
-<div class="viewcode-block" id="LearnerInspector.shap_interaction_values"><a class="viewcode-back" href="../../../apidoc/facet/inspection/facet.inspection.LearnerInspector.html#facet.inspection.LearnerInspector.shap_interaction_values">[docs]</a>    <span class="k">def</span> <span class="nf">shap_interaction_values</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">]]:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<div class="viewcode-block" id="LearnerInspector.shap_interaction_values"><a class="viewcode-back" href="../../../apidoc/facet/inspection/facet.inspection.LearnerInspector.html#facet.inspection.LearnerInspector.shap_interaction_values">[docs]</a>    <span class="nd">@fitted_only</span>
+    <span class="k">def</span> <span class="nf">shap_interaction_values</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Calculate the SHAP interaction values for all observations and pairs of</span>
 <span class="sd">        features.</span>
 
@@ -554,15 +555,15 @@
 
 <span class="sd">        :return: a data frame with SHAP interaction values</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">ensure_fitted</span><span class="p">()</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__split_multi_output_df</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">__shap_interaction_values_calculator</span><span class="o">.</span><span class="n">get_shap_interaction_values</span><span class="p">()</span>
         <span class="p">)</span></div>
 
-<div class="viewcode-block" id="LearnerInspector.feature_importance"><a class="viewcode-back" href="../../../apidoc/facet/inspection/facet.inspection.LearnerInspector.html#facet.inspection.LearnerInspector.feature_importance">[docs]</a>    <span class="k">def</span> <span class="nf">feature_importance</span><span class="p">(</span>
+<div class="viewcode-block" id="LearnerInspector.feature_importance"><a class="viewcode-back" href="../../../apidoc/facet/inspection/facet.inspection.LearnerInspector.html#facet.inspection.LearnerInspector.feature_importance">[docs]</a>    <span class="nd">@fitted_only</span>
+    <span class="k">def</span> <span class="nf">feature_importance</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">method</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;rms&quot;</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">]:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Calculate the relative importance of each feature based on SHAP values.</span>
 
 <span class="sd">        The importance values of all features always add up to `1.0`.</span>
@@ -576,8 +577,6 @@
 <span class="sd">        :return: a series of length `n_features` for single-output models, or a</span>
 <span class="sd">            data frame of shape (n_features, n_outputs) for multi-output models</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">ensure_fitted</span><span class="p">()</span>
 
         <span class="n">methods</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;rms&quot;</span><span class="p">,</span> <span class="s2">&quot;mav&quot;</span><span class="p">}</span>
         <span class="k">if</span> <span class="n">method</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">methods</span><span class="p">:</span>
@@ -615,14 +614,15 @@
 
             <span class="k">return</span> <span class="n">_normalize_importance</span><span class="p">(</span><span class="n">abs_importance</span><span class="o">.</span><span class="n">unstack</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="mi">0</span><span class="p">))</span></div>
 
-<div class="viewcode-block" id="LearnerInspector.feature_synergy_matrix"><a class="viewcode-back" href="../../../apidoc/facet/inspection/facet.inspection.LearnerInspector.html#facet.inspection.LearnerInspector.feature_synergy_matrix">[docs]</a>    <span class="k">def</span> <span class="nf">feature_synergy_matrix</span><span class="p">(</span>
+<div class="viewcode-block" id="LearnerInspector.feature_synergy_matrix"><a class="viewcode-back" href="../../../apidoc/facet/inspection/facet.inspection.LearnerInspector.html#facet.inspection.LearnerInspector.feature_synergy_matrix">[docs]</a>    <span class="nd">@fitted_only</span>
+    <span class="k">def</span> <span class="nf">feature_synergy_matrix</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="o">*</span><span class="p">,</span>
         <span class="n">absolute</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">symmetrical</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">clustered</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">FloatMatrix</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">FloatMatrix</span><span class="p">]]:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Calculate the feature synergy matrix.</span>
 
 <span class="sd">        This yields an asymmetric matrix where each row and column represents one</span>
@@ -655,8 +655,6 @@
 <span class="sd">            `(n_features, n_features)`, or a list of data frames for multiple outputs</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">ensure_fitted</span><span class="p">()</span>
-
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__feature_affinity_matrix</span><span class="p">(</span>
             <span class="n">explainer_fn</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">__interaction_explainer</span><span class="o">.</span><span class="n">synergy</span><span class="p">,</span>
             <span class="n">absolute</span><span class="o">=</span><span class="n">absolute</span><span class="p">,</span>
@@ -664,14 +662,15 @@
             <span class="n">clustered</span><span class="o">=</span><span class="n">clustered</span><span class="p">,</span>
         <span class="p">)</span></div>
 
-<div class="viewcode-block" id="LearnerInspector.feature_redundancy_matrix"><a class="viewcode-back" href="../../../apidoc/facet/inspection/facet.inspection.LearnerInspector.html#facet.inspection.LearnerInspector.feature_redundancy_matrix">[docs]</a>    <span class="k">def</span> <span class="nf">feature_redundancy_matrix</span><span class="p">(</span>
+<div class="viewcode-block" id="LearnerInspector.feature_redundancy_matrix"><a class="viewcode-back" href="../../../apidoc/facet/inspection/facet.inspection.LearnerInspector.html#facet.inspection.LearnerInspector.feature_redundancy_matrix">[docs]</a>    <span class="nd">@fitted_only</span>
+    <span class="k">def</span> <span class="nf">feature_redundancy_matrix</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="o">*</span><span class="p">,</span>
         <span class="n">absolute</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">symmetrical</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">clustered</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">FloatMatrix</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">FloatMatrix</span><span class="p">]]:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Calculate the feature redundancy matrix.</span>
 
 <span class="sd">        This yields an asymmetric matrix where each row and column represents one</span>
@@ -703,7 +702,6 @@
 <span class="sd">        :return: feature redundancy matrix as a data frame of shape</span>
 <span class="sd">            `(n_features, n_features)`, or a list of data frames for multiple outputs</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">ensure_fitted</span><span class="p">()</span>
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__feature_affinity_matrix</span><span class="p">(</span>
             <span class="n">explainer_fn</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">__interaction_explainer</span><span class="o">.</span><span class="n">redundancy</span><span class="p">,</span>
@@ -712,14 +710,15 @@
             <span class="n">clustered</span><span class="o">=</span><span class="n">clustered</span><span class="p">,</span>
         <span class="p">)</span></div>
 
-<div class="viewcode-block" id="LearnerInspector.feature_association_matrix"><a class="viewcode-back" href="../../../apidoc/facet/inspection/facet.inspection.LearnerInspector.html#facet.inspection.LearnerInspector.feature_association_matrix">[docs]</a>    <span class="k">def</span> <span class="nf">feature_association_matrix</span><span class="p">(</span>
+<div class="viewcode-block" id="LearnerInspector.feature_association_matrix"><a class="viewcode-back" href="../../../apidoc/facet/inspection/facet.inspection.LearnerInspector.html#facet.inspection.LearnerInspector.feature_association_matrix">[docs]</a>    <span class="nd">@fitted_only</span>
+    <span class="k">def</span> <span class="nf">feature_association_matrix</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="o">*</span><span class="p">,</span>
         <span class="n">absolute</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">symmetrical</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">clustered</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">FloatMatrix</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">FloatMatrix</span><span class="p">]]:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Calculate the feature association matrix.</span>
 
 <span class="sd">        This yields an asymmetric matrix where each row and column represents one</span>
@@ -754,8 +753,6 @@
 <span class="sd">            `(n_features, n_features)`, or a list of data frames for multiple outputs</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">ensure_fitted</span><span class="p">()</span>
-
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__feature_affinity_matrix</span><span class="p">(</span>
             <span class="n">explainer_fn</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_shap_global_explainer</span><span class="o">.</span><span class="n">association</span><span class="p">,</span>
             <span class="n">absolute</span><span class="o">=</span><span class="n">absolute</span><span class="p">,</span>
@@ -763,8 +760,9 @@
             <span class="n">clustered</span><span class="o">=</span><span class="n">clustered</span><span class="p">,</span>
         <span class="p">)</span></div>
 
-<div class="viewcode-block" id="LearnerInspector.feature_synergy_linkage"><a class="viewcode-back" href="../../../apidoc/facet/inspection/facet.inspection.LearnerInspector.html#facet.inspection.LearnerInspector.feature_synergy_linkage">[docs]</a>    <span class="k">def</span> <span class="nf">feature_synergy_linkage</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">LinkageTree</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">LinkageTree</span><span class="p">]]:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<div class="viewcode-block" id="LearnerInspector.feature_synergy_linkage"><a class="viewcode-back" href="../../../apidoc/facet/inspection/facet.inspection.LearnerInspector.html#facet.inspection.LearnerInspector.feature_synergy_linkage">[docs]</a>    <span class="nd">@fitted_only</span>
+    <span class="k">def</span> <span class="nf">feature_synergy_linkage</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">LinkageTree</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">LinkageTree</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Calculate a linkage tree based on the :meth:`.feature_synergy_matrix`.</span>
 
 <span class="sd">        The linkage tree can be used to render a dendrogram indicating clusters of</span>
@@ -777,7 +775,6 @@
 <span class="sd">            for multi-target regressors or non-binary classifiers</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">ensure_fitted</span><span class="p">()</span>
         <span class="n">feature_affinity_matrix</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__interaction_explainer</span><span class="o">.</span><span class="n">synergy</span><span class="p">(</span>
             <span class="n">symmetrical</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">absolute</span><span class="o">=</span><span class="kc">False</span>
         <span class="p">)</span>
@@ -789,8 +786,9 @@
             <span class="n">feature_affinity_matrix</span><span class="o">=</span><span class="n">feature_affinity_matrix</span>
         <span class="p">)</span></div>
 
-<div class="viewcode-block" id="LearnerInspector.feature_redundancy_linkage"><a class="viewcode-back" href="../../../apidoc/facet/inspection/facet.inspection.LearnerInspector.html#facet.inspection.LearnerInspector.feature_redundancy_linkage">[docs]</a>    <span class="k">def</span> <span class="nf">feature_redundancy_linkage</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">LinkageTree</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">LinkageTree</span><span class="p">]]:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<div class="viewcode-block" id="LearnerInspector.feature_redundancy_linkage"><a class="viewcode-back" href="../../../apidoc/facet/inspection/facet.inspection.LearnerInspector.html#facet.inspection.LearnerInspector.feature_redundancy_linkage">[docs]</a>    <span class="nd">@fitted_only</span>
+    <span class="k">def</span> <span class="nf">feature_redundancy_linkage</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">LinkageTree</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">LinkageTree</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Calculate a linkage tree based on the :meth:`.feature_redundancy_matrix`.</span>
 
 <span class="sd">        The linkage tree can be used to render a dendrogram indicating clusters of</span>
@@ -803,7 +801,6 @@
 <span class="sd">            for multi-target regressors or non-binary classifiers</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">ensure_fitted</span><span class="p">()</span>
         <span class="n">feature_affinity_matrix</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__interaction_explainer</span><span class="o">.</span><span class="n">redundancy</span><span class="p">(</span>
             <span class="n">symmetrical</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">absolute</span><span class="o">=</span><span class="kc">False</span>
         <span class="p">)</span>
@@ -815,8 +812,9 @@
             <span class="n">feature_affinity_matrix</span><span class="o">=</span><span class="n">feature_affinity_matrix</span>
         <span class="p">)</span></div>
 
-<div class="viewcode-block" id="LearnerInspector.feature_association_linkage"><a class="viewcode-back" href="../../../apidoc/facet/inspection/facet.inspection.LearnerInspector.html#facet.inspection.LearnerInspector.feature_association_linkage">[docs]</a>    <span class="k">def</span> <span class="nf">feature_association_linkage</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">LinkageTree</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">LinkageTree</span><span class="p">]]:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<div class="viewcode-block" id="LearnerInspector.feature_association_linkage"><a class="viewcode-back" href="../../../apidoc/facet/inspection/facet.inspection.LearnerInspector.html#facet.inspection.LearnerInspector.feature_association_linkage">[docs]</a>    <span class="nd">@fitted_only</span>
+    <span class="k">def</span> <span class="nf">feature_association_linkage</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">LinkageTree</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">LinkageTree</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Calculate a linkage tree based on the :meth:`.feature_association_matrix`.</span>
 
 <span class="sd">        The linkage tree can be used to render a dendrogram indicating clusters of</span>
@@ -829,7 +827,6 @@
 <span class="sd">            for multi-target regressors or non-binary classifiers</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">ensure_fitted</span><span class="p">()</span>
         <span class="n">feature_affinity_matrix</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shap_global_explainer</span><span class="o">.</span><span class="n">association</span><span class="p">(</span>
             <span class="n">absolute</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">symmetrical</span><span class="o">=</span><span class="kc">True</span>
         <span class="p">)</span>
@@ -841,8 +838,9 @@
             <span class="n">feature_affinity_matrix</span><span class="o">=</span><span class="n">feature_affinity_matrix</span>
         <span class="p">)</span></div>
 
-<div class="viewcode-block" id="LearnerInspector.feature_interaction_matrix"><a class="viewcode-back" href="../../../apidoc/facet/inspection/facet.inspection.LearnerInspector.html#facet.inspection.LearnerInspector.feature_interaction_matrix">[docs]</a>    <span class="k">def</span> <span class="nf">feature_interaction_matrix</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">FloatMatrix</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">FloatMatrix</span><span class="p">]]:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<div class="viewcode-block" id="LearnerInspector.feature_interaction_matrix"><a class="viewcode-back" href="../../../apidoc/facet/inspection/facet.inspection.LearnerInspector.html#facet.inspection.LearnerInspector.feature_interaction_matrix">[docs]</a>    <span class="nd">@fitted_only</span>
+    <span class="k">def</span> <span class="nf">feature_interaction_matrix</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">FloatMatrix</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">FloatMatrix</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Calculate relative shap interaction values for all feature pairings.</span>
 
 <span class="sd">        Shap interactions quantify direct interactions between pairs of features.</span>
@@ -946,8 +944,9 @@
             <span class="n">interaction_matrix</span><span class="p">,</span> <span class="n">value_label</span><span class="o">=</span><span class="s2">&quot;relative shap interaction&quot;</span>
         <span class="p">)</span></div>
 
-<div class="viewcode-block" id="LearnerInspector.shap_plot_data"><a class="viewcode-back" href="../../../apidoc/facet/inspection/facet.inspection.LearnerInspector.html#facet.inspection.LearnerInspector.shap_plot_data">[docs]</a>    <span class="k">def</span> <span class="nf">shap_plot_data</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ShapPlotData</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<div class="viewcode-block" id="LearnerInspector.shap_plot_data"><a class="viewcode-back" href="../../../apidoc/facet/inspection/facet.inspection.LearnerInspector.html#facet.inspection.LearnerInspector.shap_plot_data">[docs]</a>    <span class="nd">@fitted_only</span>
+    <span class="k">def</span> <span class="nf">shap_plot_data</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ShapPlotData</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Consolidate SHAP values and corresponding feature values from this inspector</span>
 <span class="sd">        for use in SHAP plots offered by the</span>
 <span class="sd">        `shap &lt;https://shap.readthedocs.io/en/stable/&gt;`__ package.</span>

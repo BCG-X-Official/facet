@@ -16,7 +16,6 @@ facet.selection.LearnerSelector
    .. autosummary::
       :nosignatures:
    
-      ~LearnerSelector.ensure_fitted
       ~LearnerSelector.fit
       ~LearnerSelector.summary_report
    

@@ -18,7 +18,6 @@ facet.selection.base.CandidateEstimatorDF
    
       ~CandidateEstimatorDF.clone
       ~CandidateEstimatorDF.decision_function
-      ~CandidateEstimatorDF.ensure_fitted
       ~CandidateEstimatorDF.fit
       ~CandidateEstimatorDF.fit_transform
       ~CandidateEstimatorDF.get_params
@@ -27,6 +26,7 @@ facet.selection.base.CandidateEstimatorDF
       ~CandidateEstimatorDF.predict_log_proba
       ~CandidateEstimatorDF.predict_proba
       ~CandidateEstimatorDF.score
+      ~CandidateEstimatorDF.set_output
       ~CandidateEstimatorDF.set_params
       ~CandidateEstimatorDF.to_expression
       ~CandidateEstimatorDF.transform
@@ -39,8 +39,8 @@ facet.selection.base.CandidateEstimatorDF
 
    .. autosummary::
    
-      ~CandidateEstimatorDF.COL_FEATURE_IN
-      ~CandidateEstimatorDF.COL_FEATURE_OUT
+      ~CandidateEstimatorDF.COL_FEATURE
+      ~CandidateEstimatorDF.COL_FEATURE_ORIGINAL
       ~CandidateEstimatorDF.PARAM_CANDIDATE
       ~CandidateEstimatorDF.PARAM_CANDIDATE_NAME
       ~CandidateEstimatorDF.classes_
@@ -51,6 +51,7 @@ facet.selection.base.CandidateEstimatorDF
       ~CandidateEstimatorDF.n_features_in_
       ~CandidateEstimatorDF.n_outputs_
       ~CandidateEstimatorDF.native_estimator
+      ~CandidateEstimatorDF.output_names_
       ~CandidateEstimatorDF.candidate
       ~CandidateEstimatorDF.candidate_name
    

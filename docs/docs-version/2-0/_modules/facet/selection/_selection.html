@@ -198,7 +198,7 @@
 <span class="kn">from</span> <span class="nn">sklearn.model_selection</span> <span class="kn">import</span> <span class="n">BaseCrossValidator</span><span class="p">,</span> <span class="n">GridSearchCV</span>
 
 <span class="kn">from</span> <span class="nn">pytools.api</span> <span class="kn">import</span> <span class="n">AllTracker</span><span class="p">,</span> <span class="n">inheritdoc</span><span class="p">,</span> <span class="n">to_list</span>
-<span class="kn">from</span> <span class="nn">pytools.fit</span> <span class="kn">import</span> <span class="n">FittableMixin</span>
+<span class="kn">from</span> <span class="nn">pytools.fit</span> <span class="kn">import</span> <span class="n">FittableMixin</span><span class="p">,</span> <span class="n">fitted_only</span>
 <span class="kn">from</span> <span class="nn">pytools.parallelization</span> <span class="kn">import</span> <span class="n">ParallelizableMixin</span>
 <span class="kn">from</span> <span class="nn">sklearndf</span> <span class="kn">import</span> <span class="n">EstimatorDF</span>
 <span class="kn">from</span> <span class="nn">sklearndf.pipeline</span> <span class="kn">import</span> <span class="n">LearnerPipelineDF</span>
@@ -252,7 +252,7 @@
 <span class="k">class</span> <span class="nc">LearnerSelector</span><span class="p">(</span>
     <span class="n">FittableMixin</span><span class="p">[</span><span class="n">Sample</span><span class="p">],</span> <span class="n">ParallelizableMixin</span><span class="p">,</span> <span class="n">Generic</span><span class="p">[</span><span class="n">T_EstimatorDF</span><span class="p">,</span> <span class="n">T_SearchCV</span><span class="p">]</span>
 <span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Select the best model obtained by fitting an estimator using different</span>
 <span class="sd">    choices of hyperparameters from one or more :class:`.ParameterSpace` objects.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -349,7 +349,7 @@
         <span class="n">verbose</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="o">**</span><span class="n">searcher_params</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        :param searcher_type: a cross-validation searcher class, or any other</span>
 <span class="sd">            callable that instantiates a cross-validation searcher</span>
 <span class="sd">        :param parameter_space: one or more parameter spaces to search; when passing</span>
@@ -444,15 +444,15 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">is_fitted</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;[see superclass]&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;[see superclass]&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">searcher_</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
 
     <span class="nd">@property</span>
+    <span class="nd">@fitted_only</span>
     <span class="k">def</span> <span class="nf">best_estimator_</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">T_EstimatorDF</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        The model which obtained the best ranking score, fitted on the entire sample.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">ensure_fitted</span><span class="p">()</span>
         <span class="n">searcher</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">searcher_</span>
         <span class="k">assert</span> <span class="n">searcher</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;Ranker is fitted&quot;</span>
 
@@ -475,7 +475,7 @@
         <span class="n">groups</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">Any</span><span class="p">],</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Any</span><span class="p">],</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="o">**</span><span class="n">fit_params</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">T_LearnerSelector</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Search this learner selector&#39;s parameter space to identify the model with the</span>
 <span class="sd">        best-performing hyperparameter combination, using the given sample to fit and</span>
 <span class="sd">        score the candidate estimators.</span>
@@ -519,8 +519,9 @@
 
         <span class="k">return</span> <span class="bp">self</span></div>
 
-<div class="viewcode-block" id="LearnerSelector.summary_report"><a class="viewcode-back" href="../../../apidoc/facet/selection/facet.selection.LearnerSelector.html#facet.selection.LearnerSelector.summary_report">[docs]</a>    <span class="k">def</span> <span class="nf">summary_report</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">sort_by</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<div class="viewcode-block" id="LearnerSelector.summary_report"><a class="viewcode-back" href="../../../apidoc/facet/selection/facet.selection.LearnerSelector.html#facet.selection.LearnerSelector.summary_report">[docs]</a>    <span class="nd">@fitted_only</span>
+    <span class="k">def</span> <span class="nf">summary_report</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">sort_by</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Create a summary table of the scores achieved by all learners in the grid</span>
 <span class="sd">        search, sorted by ranking score in descending order.</span>
 
@@ -529,8 +530,6 @@
 
 <span class="sd">        :return: the summary report of the grid search as a data frame</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">ensure_fitted</span><span class="p">()</span>
 
         <span class="k">if</span> <span class="n">sort_by</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">sort_by</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_DEFAULT_REPORT_SORT_COLUMN</span>

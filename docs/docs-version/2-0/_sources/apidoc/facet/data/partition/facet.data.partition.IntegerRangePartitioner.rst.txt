@@ -16,7 +16,6 @@ facet.data.partition.IntegerRangePartitioner
    .. autosummary::
       :nosignatures:
    
-      ~IntegerRangePartitioner.ensure_fitted
       ~IntegerRangePartitioner.fit
    
    

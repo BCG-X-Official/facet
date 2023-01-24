@@ -16,7 +16,6 @@ facet.inspection.ModelInspector
    .. autosummary::
       :nosignatures:
    
-      ~ModelInspector.ensure_fitted
       ~ModelInspector.fit
    
    

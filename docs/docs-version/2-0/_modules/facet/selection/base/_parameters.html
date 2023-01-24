@@ -203,7 +203,7 @@
 <span class="c1">#</span>
 
 <span class="n">T_CandidateEstimatorDF</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">&quot;T_CandidateEstimatorDF&quot;</span><span class="p">,</span> <span class="n">bound</span><span class="o">=</span><span class="s2">&quot;CandidateEstimatorDF&quot;</span><span class="p">)</span>
-<span class="n">T_Estimator</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">&quot;T_Estimator&quot;</span><span class="p">,</span> <span class="n">bound</span><span class="o">=</span><span class="n">EstimatorDF</span><span class="p">)</span>
+<span class="n">T_Estimator</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">&quot;T_Estimator&quot;</span><span class="p">,</span> <span class="n">covariant</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">bound</span><span class="o">=</span><span class="n">EstimatorDF</span><span class="p">)</span>
 
 
 <span class="c1">#</span>
@@ -219,13 +219,13 @@
 
 
 <div class="viewcode-block" id="BaseParameterSpace"><a class="viewcode-back" href="../../../../apidoc/facet/selection/base/facet.selection.base.BaseParameterSpace.html#facet.selection.base.BaseParameterSpace">[docs]</a><span class="k">class</span> <span class="nc">BaseParameterSpace</span><span class="p">(</span><span class="n">HasExpressionRepr</span><span class="p">,</span> <span class="n">Generic</span><span class="p">[</span><span class="n">T_Estimator</span><span class="p">],</span> <span class="n">metaclass</span><span class="o">=</span><span class="n">ABCMeta</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A collection of parameters spanning a parameter space for hyperparameter</span>
 <span class="sd">    optimization.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">estimator</span><span class="p">:</span> <span class="n">T_Estimator</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        :param estimator: the estimator for which to specify parameter choices or</span>
 <span class="sd">            distributions</span>
 
@@ -234,14 +234,14 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">estimator</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">T_Estimator</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        The estimator associated with this parameter space.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_estimator</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">ParameterDict</span><span class="p">],</span> <span class="n">ParameterDict</span><span class="p">]:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        The parameter choices (as lists) or distributions (from :mod:`scipy.stats`)</span>
 <span class="sd">        that constitute this parameter space.</span>
 
@@ -254,7 +254,7 @@
     <span class="k">def</span> <span class="nf">get_parameters</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">prefix</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">ParameterDict</span><span class="p">],</span> <span class="n">ParameterDict</span><span class="p">]:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Generate a dictionary of parameter choices and distributions,</span>
 <span class="sd">        or a list of such dictionaries, compatible with `scikit-learn`&#39;s CV search API</span>
 <span class="sd">        (e.g., :class:`~sklearn.model_selection.GridSearchCV` or</span>
@@ -271,7 +271,7 @@
 
 <div class="viewcode-block" id="CandidateEstimatorDF"><a class="viewcode-back" href="../../../../apidoc/facet/selection/base/facet.selection.base.CandidateEstimatorDF.html#facet.selection.base.CandidateEstimatorDF">[docs]</a><span class="nd">@inheritdoc</span><span class="p">(</span><span class="n">match</span><span class="o">=</span><span class="s2">&quot;&quot;&quot;[see superclass]&quot;&quot;&quot;</span><span class="p">)</span>
 <span class="k">class</span> <span class="nc">CandidateEstimatorDF</span><span class="p">(</span><span class="n">ClassifierDF</span><span class="p">,</span> <span class="n">RegressorDF</span><span class="p">,</span> <span class="n">TransformerDF</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A trivial wrapper for classifiers, regressors and transformers, acting</span>
 <span class="sd">    like a pipeline with a single step.</span>
 
@@ -299,7 +299,7 @@
         <span class="n">candidate</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">ClassifierDF</span><span class="p">,</span> <span class="n">RegressorDF</span><span class="p">,</span> <span class="n">TransformerDF</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">candidate_name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        :param candidate: the current estimator candidate; usually not specified on</span>
 <span class="sd">            class creation but set as a parameter during multi-estimator model selection</span>
 <span class="sd">        :param candidate_name: a name for the estimator candidate; usually not specified</span>
@@ -319,44 +319,42 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">candidate</span>
 
-    <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">classes_</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">Any</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">Any</span><span class="p">]]]:</span>
-        <span class="sd">&quot;&quot;&quot;[see superclass]&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">_get_classes</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">Any</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">Any</span><span class="p">]]]:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_candidate</span><span class="p">()</span><span class="o">.</span><span class="n">classes_</span>
 
     <span class="c1"># noinspection PyPep8Naming</span>
 <div class="viewcode-block" id="CandidateEstimatorDF.predict_proba"><a class="viewcode-back" href="../../../../apidoc/facet/selection/base/facet.selection.base.CandidateEstimatorDF.html#facet.selection.base.CandidateEstimatorDF.predict_proba">[docs]</a>    <span class="k">def</span> <span class="nf">predict_proba</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="o">**</span><span class="n">predict_params</span><span class="p">:</span> <span class="n">Any</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">]]:</span>
-        <span class="sd">&quot;&quot;&quot;[see superclass]&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;[see superclass]&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_candidate</span><span class="p">()</span><span class="o">.</span><span class="n">predict_proba</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="o">**</span><span class="n">predict_params</span><span class="p">)</span></div>
 
     <span class="c1"># noinspection PyPep8Naming</span>
 <div class="viewcode-block" id="CandidateEstimatorDF.predict_log_proba"><a class="viewcode-back" href="../../../../apidoc/facet/selection/base/facet.selection.base.CandidateEstimatorDF.html#facet.selection.base.CandidateEstimatorDF.predict_log_proba">[docs]</a>    <span class="k">def</span> <span class="nf">predict_log_proba</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="o">**</span><span class="n">predict_params</span><span class="p">:</span> <span class="n">Any</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">]]:</span>
-        <span class="sd">&quot;&quot;&quot;[see superclass]&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;[see superclass]&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_candidate</span><span class="p">()</span><span class="o">.</span><span class="n">predict_log_proba</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="o">**</span><span class="n">predict_params</span><span class="p">)</span></div>
 
     <span class="c1"># noinspection PyPep8Naming</span>
 <div class="viewcode-block" id="CandidateEstimatorDF.decision_function"><a class="viewcode-back" href="../../../../apidoc/facet/selection/base/facet.selection.base.CandidateEstimatorDF.html#facet.selection.base.CandidateEstimatorDF.decision_function">[docs]</a>    <span class="k">def</span> <span class="nf">decision_function</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="o">**</span><span class="n">predict_params</span><span class="p">:</span> <span class="n">Any</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">]:</span>
-        <span class="sd">&quot;&quot;&quot;[see superclass]&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;[see superclass]&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_candidate</span><span class="p">()</span><span class="o">.</span><span class="n">decision_function</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="o">**</span><span class="n">predict_params</span><span class="p">)</span></div>
 
     <span class="c1"># noinspection PyPep8Naming</span>
 <div class="viewcode-block" id="CandidateEstimatorDF.score"><a class="viewcode-back" href="../../../../apidoc/facet/selection/base/facet.selection.base.CandidateEstimatorDF.html#facet.selection.base.CandidateEstimatorDF.score">[docs]</a>    <span class="k">def</span> <span class="nf">score</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span> <span class="n">sample_weight</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;[see superclass]&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;[see superclass]&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_candidate</span><span class="p">()</span><span class="o">.</span><span class="n">score</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">sample_weight</span><span class="p">)</span></div>
 
     <span class="c1"># noinspection PyPep8Naming</span>
 <div class="viewcode-block" id="CandidateEstimatorDF.predict"><a class="viewcode-back" href="../../../../apidoc/facet/selection/base/facet.selection.base.CandidateEstimatorDF.html#facet.selection.base.CandidateEstimatorDF.predict">[docs]</a>    <span class="k">def</span> <span class="nf">predict</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="o">**</span><span class="n">predict_params</span><span class="p">:</span> <span class="n">Any</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">]:</span>
-        <span class="sd">&quot;&quot;&quot;[see superclass]&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;[see superclass]&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_candidate</span><span class="p">()</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="o">**</span><span class="n">predict_params</span><span class="p">)</span></div>
 
     <span class="c1"># noinspection PyPep8Naming</span>
@@ -366,23 +364,23 @@
         <span class="n">y</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="o">**</span><span class="n">fit_params</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">T_CandidateEstimatorDF</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;[see superclass]&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;[see superclass]&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_get_candidate</span><span class="p">()</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="o">**</span><span class="n">fit_params</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span></div>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">is_fitted</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;[see superclass]&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;[see superclass]&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">candidate</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">candidate</span><span class="o">.</span><span class="n">is_fitted</span>
 
     <span class="c1"># noinspection PyPep8Naming</span>
 <div class="viewcode-block" id="CandidateEstimatorDF.inverse_transform"><a class="viewcode-back" href="../../../../apidoc/facet/selection/base/facet.selection.base.CandidateEstimatorDF.html#facet.selection.base.CandidateEstimatorDF.inverse_transform">[docs]</a>    <span class="k">def</span> <span class="nf">inverse_transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;[see superclass]&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;[see superclass]&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_candidate</span><span class="p">()</span><span class="o">.</span><span class="n">inverse_transform</span><span class="p">(</span><span class="n">X</span><span class="p">)</span></div>
 
     <span class="c1"># noinspection PyPep8Naming</span>
 <div class="viewcode-block" id="CandidateEstimatorDF.transform"><a class="viewcode-back" href="../../../../apidoc/facet/selection/base/facet.selection.base.CandidateEstimatorDF.html#facet.selection.base.CandidateEstimatorDF.transform">[docs]</a>    <span class="k">def</span> <span class="nf">transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;[see superclass]&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;[see superclass]&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_candidate</span><span class="p">()</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">X</span><span class="p">)</span></div>
 
     <span class="nd">@property</span>
@@ -392,6 +390,9 @@
 
     <span class="k">def</span> <span class="nf">_get_features_in</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_candidate</span><span class="p">()</span><span class="o">.</span><span class="n">feature_names_in_</span>
+
+    <span class="k">def</span> <span class="nf">_get_outputs</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_candidate</span><span class="p">()</span><span class="o">.</span><span class="n">_get_outputs</span><span class="p">()</span>
 
     <span class="k">def</span> <span class="nf">_get_n_outputs</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_candidate</span><span class="p">()</span><span class="o">.</span><span class="n">n_outputs_</span>
