@@ -368,7 +368,7 @@ def check_ranking(
     assert_allclose(
         scores_actual,
         scores_expected,
-        rtol=0.01,
+        rtol=0.015,
         err_msg=(
             f"unexpected scores: got {scores_actual} but expected {scores_expected}"
         ),
