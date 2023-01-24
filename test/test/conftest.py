@@ -7,6 +7,7 @@ import pandas as pd
 import pytest
 from numpy.testing import assert_allclose, assert_array_equal
 from sklearn import datasets
+from sklearn.datasets import fetch_california_housing
 from sklearn.model_selection import BaseCrossValidator, GridSearchCV, KFold
 from sklearn.utils import Bunch
 
@@ -58,8 +59,8 @@ STEP_ONE_HOT_ENCODE = "one-hot-encode"
 
 
 @pytest.fixture  # type: ignore
-def boston_target() -> str:
-    return "price"
+def california_target() -> str:
+    return "MedHouseVal"
 
 
 @pytest.fixture  # type: ignore
@@ -213,7 +214,7 @@ def preprocessed_feature_names(
     """
     Names of all features after preprocessing
     """
-    return set(best_lgbm_model.feature_names_out_)
+    return set(best_lgbm_model.final_estimator.feature_names_in_)
 
 
 @pytest.fixture  # type: ignore
@@ -261,19 +262,22 @@ def simple_preprocessor(sample: Sample) -> TransformerDF:
 
 
 @pytest.fixture  # type: ignore
-def boston_df(boston_target: str) -> pd.DataFrame:
+def california_df(california_target: str) -> pd.DataFrame:
     #  load sklearn test-data and convert to pd
-    boston: Bunch = datasets.load_boston()
+    california: Bunch = fetch_california_housing()
 
     return pd.DataFrame(
-        data=np.c_[boston.data, boston.target],
-        columns=[*boston.feature_names, boston_target],
+        data=np.c_[california.data, california.target],
+        columns=[*california.feature_names, california_target],
     )
 
 
 @pytest.fixture  # type: ignore
-def sample(boston_df: pd.DataFrame, boston_target: str) -> Sample:
-    return Sample(observations=boston_df.iloc[:100, :], target_name=boston_target)
+def sample(california_df: pd.DataFrame, california_target: str) -> Sample:
+    return Sample(
+        observations=california_df.sample(n=100, random_state=42),
+        target_name=california_target,
+    )
 
 
 @pytest.fixture  # type: ignore
@@ -364,7 +368,7 @@ def check_ranking(
     assert_allclose(
         scores_actual,
         scores_expected,
-        rtol=0.01,
+        rtol=0.015,
         err_msg=(
             f"unexpected scores: got {scores_actual} but expected {scores_expected}"
         ),

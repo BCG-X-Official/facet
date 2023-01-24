@@ -42,26 +42,26 @@ def test_learner_selector(
 ) -> None:
 
     expected_scores = [
-        0.840,
-        0.837,
-        0.812,
-        0.793,
-        0.790,
-        0.777,
-        0.758,
-        0.758,
-        0.758,
-        0.758,
+        0.669,
+        0.649,
+        0.493,
+        0.477,
+        0.464,
+        0.451,
+        0.448,
+        0.448,
+        0.448,
+        0.448,
     ]
     expected_learners: List[str] = [
         cls.__name__
         for cls in (
+            LinearRegressionDF,
+            LinearRegressionDF,
             RandomForestRegressorDF,
             RandomForestRegressorDF,
-            LinearRegressionDF,
             AdaBoostRegressorDF,
             AdaBoostRegressorDF,
-            LinearRegressionDF,
             LGBMRegressorDF,
             LGBMRegressorDF,
             LGBMRegressorDF,
@@ -69,10 +69,10 @@ def test_learner_selector(
         )
     ]
     expected_parameters = {
-        0: dict(n_estimators=80),
-        1: dict(n_estimators=50),
-        3: dict(n_estimators=50),
-        4: dict(n_estimators=80),
+        0: dict(fit_intercept=True),
+        1: dict(fit_intercept=False),
+        3: dict(n_estimators=80),
+        4: dict(n_estimators=50),
     }
 
     # define the circular cross validator with just 5 splits (to speed up testing)
@@ -279,8 +279,16 @@ def test_parameter_space(simple_preprocessor: TransformerDF) -> None:
                     (
                         "impute",
                         Id.SimpleImputerDF(strategy="median"),
-                        ["CRIM", "ZN", "INDUS", "CHAS", "NOX", "RM", "AGE"]
-                        + ["DIS", "RAD", "TAX", "PTRATIO", "B", "LSTAT"],
+                        [
+                            "MedInc",
+                            "HouseAge",
+                            "AveRooms",
+                            "AveBedrms",
+                            "Population",
+                            "AveOccup",
+                            "Latitude",
+                            "Longitude",
+                        ],
                     )
                 ]
             ),

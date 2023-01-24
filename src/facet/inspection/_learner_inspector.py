@@ -28,7 +28,7 @@ from sklearn.base import is_classifier
 
 from pytools.api import AllTracker, inheritdoc
 from pytools.data import LinkageTree, Matrix
-from pytools.fit import FittableMixin
+from pytools.fit import FittableMixin, fitted_only
 from pytools.parallelization import ParallelizableMixin
 from sklearndf import ClassifierDF, LearnerDF, RegressorDF
 from sklearndf.pipeline import LearnerPipelineDF
@@ -312,7 +312,6 @@ class LearnerInspector(
 
     @property
     def _shap_global_explainer(self) -> ShapGlobalExplainer:
-        self.ensure_fitted()
         assert self._shap_global_projector is not None, ASSERTION__INSPECTOR_IS_FITTED
         return self._shap_global_projector
 
@@ -322,16 +321,17 @@ class LearnerInspector(
         return self._sample is not None
 
     @property
+    @fitted_only
     def sample_(self) -> Sample:
         """
         The background sample used to fit this inspector.
         """
 
-        self.ensure_fitted()
         assert self._sample is not None, ASSERTION__INSPECTOR_IS_FITTED
         return self._sample
 
     @property
+    @fitted_only
     def output_names_(self) -> Sequence[str]:
         """
         The names of the outputs explained by this inspector.
@@ -345,7 +345,6 @@ class LearnerInspector(
         For non-binary classifiers, this is the list of all classes.
         """
 
-        self.ensure_fitted()
         assert (
             self._shap_calculator is not None
             and self._shap_calculator.output_names_ is not None
@@ -353,6 +352,7 @@ class LearnerInspector(
         return self._shap_calculator.output_names_
 
     @property
+    @fitted_only
     def features_(self) -> List[str]:
         """
         The names of the features used to fit the learner pipeline explained by this
@@ -360,6 +360,7 @@ class LearnerInspector(
         """
         return cast(List[str], self.pipeline.feature_names_out_.to_list())
 
+    @fitted_only
     def shap_values(self) -> Union[pd.DataFrame, List[pd.DataFrame]]:
         """
         Calculate the SHAP values for all observations and features.
@@ -370,10 +371,10 @@ class LearnerInspector(
         :return: a data frame with SHAP values
         """
 
-        self.ensure_fitted()
         assert self._shap_calculator is not None, ASSERTION__INSPECTOR_IS_FITTED
         return self.__split_multi_output_df(self._shap_calculator.get_shap_values())
 
+    @fitted_only
     def shap_interaction_values(self) -> Union[pd.DataFrame, List[pd.DataFrame]]:
         """
         Calculate the SHAP interaction values for all observations and pairs of
@@ -385,11 +386,11 @@ class LearnerInspector(
 
         :return: a data frame with SHAP interaction values
         """
-        self.ensure_fitted()
         return self.__split_multi_output_df(
             self.__shap_interaction_values_calculator.get_shap_interaction_values()
         )
 
+    @fitted_only
     def feature_importance(
         self, *, method: str = "rms"
     ) -> Union[pd.Series, pd.DataFrame]:
@@ -407,8 +408,6 @@ class LearnerInspector(
         :return: a series of length `n_features` for single-output models, or a
             data frame of shape (n_features, n_outputs) for multi-output models
         """
-
-        self.ensure_fitted()
 
         methods = {"rms", "mav"}
         if method not in methods:
@@ -446,6 +445,7 @@ class LearnerInspector(
 
             return _normalize_importance(abs_importance.unstack(level=0))
 
+    @fitted_only
     def feature_synergy_matrix(
         self,
         *,
@@ -486,8 +486,6 @@ class LearnerInspector(
             `(n_features, n_features)`, or a list of data frames for multiple outputs
         """
 
-        self.ensure_fitted()
-
         return self.__feature_affinity_matrix(
             explainer_fn=self.__interaction_explainer.synergy,
             absolute=absolute,
@@ -495,6 +493,7 @@ class LearnerInspector(
             clustered=clustered,
         )
 
+    @fitted_only
     def feature_redundancy_matrix(
         self,
         *,
@@ -534,7 +533,6 @@ class LearnerInspector(
         :return: feature redundancy matrix as a data frame of shape
             `(n_features, n_features)`, or a list of data frames for multiple outputs
         """
-        self.ensure_fitted()
 
         return self.__feature_affinity_matrix(
             explainer_fn=self.__interaction_explainer.redundancy,
@@ -543,6 +541,7 @@ class LearnerInspector(
             clustered=clustered,
         )
 
+    @fitted_only
     def feature_association_matrix(
         self,
         *,
@@ -585,8 +584,6 @@ class LearnerInspector(
             `(n_features, n_features)`, or a list of data frames for multiple outputs
         """
 
-        self.ensure_fitted()
-
         return self.__feature_affinity_matrix(
             explainer_fn=self._shap_global_explainer.association,
             absolute=absolute,
@@ -594,6 +591,7 @@ class LearnerInspector(
             clustered=clustered,
         )
 
+    @fitted_only
     def feature_synergy_linkage(self) -> Union[LinkageTree, List[LinkageTree]]:
         """
         Calculate a linkage tree based on the :meth:`.feature_synergy_matrix`.
@@ -608,7 +606,6 @@ class LearnerInspector(
             for multi-target regressors or non-binary classifiers
         """
 
-        self.ensure_fitted()
         feature_affinity_matrix = self.__interaction_explainer.synergy(
             symmetrical=True, absolute=False
         )
@@ -620,6 +617,7 @@ class LearnerInspector(
             feature_affinity_matrix=feature_affinity_matrix
         )
 
+    @fitted_only
     def feature_redundancy_linkage(self) -> Union[LinkageTree, List[LinkageTree]]:
         """
         Calculate a linkage tree based on the :meth:`.feature_redundancy_matrix`.
@@ -634,7 +632,6 @@ class LearnerInspector(
             for multi-target regressors or non-binary classifiers
         """
 
-        self.ensure_fitted()
         feature_affinity_matrix = self.__interaction_explainer.redundancy(
             symmetrical=True, absolute=False
         )
@@ -646,6 +643,7 @@ class LearnerInspector(
             feature_affinity_matrix=feature_affinity_matrix
         )
 
+    @fitted_only
     def feature_association_linkage(self) -> Union[LinkageTree, List[LinkageTree]]:
         """
         Calculate a linkage tree based on the :meth:`.feature_association_matrix`.
@@ -660,7 +658,6 @@ class LearnerInspector(
             for multi-target regressors or non-binary classifiers
         """
 
-        self.ensure_fitted()
         feature_affinity_matrix = self._shap_global_explainer.association(
             absolute=False, symmetrical=True
         )
@@ -672,6 +669,7 @@ class LearnerInspector(
             feature_affinity_matrix=feature_affinity_matrix
         )
 
+    @fitted_only
     def feature_interaction_matrix(self) -> Union[FloatMatrix, List[FloatMatrix]]:
         """
         Calculate relative shap interaction values for all feature pairings.
@@ -777,6 +775,7 @@ class LearnerInspector(
             interaction_matrix, value_label="relative shap interaction"
         )
 
+    @fitted_only
     def shap_plot_data(self) -> ShapPlotData:
         """
         Consolidate SHAP values and corresponding feature values from this inspector

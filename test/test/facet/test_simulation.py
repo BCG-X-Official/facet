@@ -73,7 +73,7 @@ def test_univariate_target_simulation(
     target_simulator: UnivariateTargetSimulator,
 ) -> None:
 
-    parameterized_feature = "LSTAT"
+    parameterized_feature = "HouseAge"
     partitioner = ContinuousRangePartitioner(max_partitions=10)
 
     simulation_result: UnivariateSimulationResult[
@@ -86,39 +86,43 @@ def test_univariate_target_simulation(
     # test simulation results
 
     index = pd.Index(
-        data=[0.0, 5.0, 10.0, 15.0, 20.0, 25.0],
+        data=[0.0, 10.0, 20.0, 30.0, 40.0, 50.0],
         name=UnivariateSimulationResult.IDX_PARTITION,
     )
 
     assert_series_equal(
-        simulation_result.data.loc[:, UnivariateSimulationResult.COL_LOWER_BOUND],
+        simulation_result.data.loc[:, UnivariateSimulationResult.COL_LOWER_BOUND].round(
+            4
+        ),
         pd.Series(
-            [24.98646, 24.98646, 21.15398, 20.23877, 20.23877, 20.23877],
+            [1.4621, 1.4621, 1.6542, 1.9865, 2.2322, 2.2322],
             name=UnivariateSimulationResult.COL_LOWER_BOUND,
             index=index,
         ),
     )
 
     assert_series_equal(
-        simulation_result.data.loc[:, UnivariateSimulationResult.COL_MEAN],
+        simulation_result.data.loc[:, UnivariateSimulationResult.COL_MEAN].round(4),
         pd.Series(
-            [25.4571, 25.4571, 21.67744, 20.81063, 20.81063, 20.81063],
+            [1.5430, 1.5430, 1.7444, 2.0929, 2.3398, 2.3398],
             name=UnivariateSimulationResult.COL_MEAN,
             index=index,
         ),
     )
 
     assert_series_equal(
-        simulation_result.data.loc[:, UnivariateSimulationResult.COL_UPPER_BOUND],
+        simulation_result.data.loc[:, UnivariateSimulationResult.COL_UPPER_BOUND].round(
+            5
+        ),
         pd.Series(
-            [25.92774, 25.92774, 22.2009, 21.38249, 21.38249, 21.38249],
+            [1.62397, 1.62397, 1.8346, 2.19933, 2.44734, 2.44734],
             name=UnivariateSimulationResult.COL_UPPER_BOUND,
             index=index,
         ),
     )
 
     assert_array_equal(
-        simulation_result.partitioner.frequencies_, [1, 31, 37, 19, 8, 1]
+        simulation_result.partitioner.frequencies_, [1, 9, 23, 32, 23, 12]
     )
 
     SimulationDrawer(style="text").draw(
@@ -132,7 +136,7 @@ def test_univariate_target_subsample_simulation_80(
     model: RegressorPipelineDF[LGBMRegressorDF], subsample: Sample, n_jobs: int
 ) -> None:
 
-    parameterized_feature = "LSTAT"
+    parameterized_feature = "HouseAge"
     partitioner = ContinuousRangePartitioner(max_partitions=10)
 
     target_simulator = UnivariateTargetSimulator(
@@ -144,48 +148,48 @@ def test_univariate_target_subsample_simulation_80(
     ] = target_simulator.simulate_feature(
         feature_name=parameterized_feature,
         partitioner=partitioner,
+        lower_bound=3.8,
     )
 
     # test simulation results
 
     index = pd.Index(
-        data=[2.0, 4.0, 6.0, 8.0, 10.0, 12.0, 14.0, 16.0, 18.0],
+        data=[0.0, 10.0, 20.0, 30.0, 40.0, 50.0],
         name=UnivariateSimulationResult.IDX_PARTITION,
     )
 
     assert_series_equal(
-        simulation_result.data.loc[:, UnivariateSimulationResult.COL_LOWER_BOUND],
+        simulation_result.data.loc[:, UnivariateSimulationResult.COL_LOWER_BOUND].round(
+            5
+        ),
         pd.Series(
-            [25.05676, 25.05676, 25.05676, 22.96243, 21.43395]
-            + [21.21544, 20.76824, 20.49282, 20.49282],
+            [1.63804, 1.63804, 1.86338, 2.23901, 2.44907, 2.44907],
             name=UnivariateSimulationResult.COL_LOWER_BOUND,
             index=index,
         ),
     )
 
     assert_series_equal(
-        simulation_result.data.loc[:, UnivariateSimulationResult.COL_MEAN],
+        simulation_result.data.loc[:, UnivariateSimulationResult.COL_MEAN].round(5),
         pd.Series(
-            [25.642227, 25.642227, 25.642227, 23.598706, 22.067057]
-            + [21.864828, 21.451056, 21.195954, 21.195954],
+            [1.74114, 1.74114, 1.97514, 2.36965, 2.58642, 2.58642],
             name=UnivariateSimulationResult.COL_MEAN,
             index=index,
         ),
     )
 
     assert_series_equal(
-        simulation_result.data.loc[:, UnivariateSimulationResult.COL_UPPER_BOUND],
+        simulation_result.data.loc[:, UnivariateSimulationResult.COL_UPPER_BOUND].round(
+            5
+        ),
         pd.Series(
-            [26.22769, 26.22769, 26.22769, 24.23498, 22.70016]
-            + [22.51422, 22.13387, 21.89909, 21.89909],
+            [1.84423, 1.84423, 2.08689, 2.50029, 2.72377, 2.72377],
             name=UnivariateSimulationResult.COL_UPPER_BOUND,
             index=index,
         ),
     )
 
-    assert_array_equal(
-        simulation_result.partitioner.frequencies_, [1, 4, 9, 10, 10, 6, 2, 1, 4]
-    )
+    assert_array_equal(simulation_result.partitioner.frequencies_, [2, 5, 18, 8, 11, 6])
 
     SimulationDrawer(style="text").draw(
         data=target_simulator.simulate_feature(
@@ -198,7 +202,7 @@ def test_univariate_uplift_subsample_simulation_95(
     model: RegressorPipelineDF[LGBMRegressorDF], subsample: Sample, n_jobs: int
 ) -> None:
 
-    parameterized_feature = "LSTAT"
+    parameterized_feature = "HouseAge"
     partitioner = ContinuousRangePartitioner(max_partitions=10)
 
     target_simulator = UnivariateUpliftSimulator(
@@ -215,7 +219,7 @@ def test_univariate_uplift_subsample_simulation_95(
     # test simulation results
 
     index = pd.Index(
-        data=[2.0, 4.0, 6.0, 8.0, 10.0, 12.0, 14.0, 16.0, 18.0],
+        data=[0.0, 10.0, 20.0, 30.0, 40.0, 50.0],
         name=UnivariateSimulationResult.IDX_PARTITION,
     )
 
@@ -224,8 +228,7 @@ def test_univariate_uplift_subsample_simulation_95(
             6
         ),
         pd.Series(
-            [1.800835, 1.800835, 1.800835, -0.320393, -1.847194]
-            + [-2.074327, -2.539217, -2.825394, -2.825394],
+            [-0.47617, -0.47617, -0.255413, 0.110223, 0.316729, 0.316729],
             name=UnivariateSimulationResult.COL_LOWER_BOUND,
             index=index,
         ),
@@ -234,8 +237,7 @@ def test_univariate_uplift_subsample_simulation_95(
     assert_series_equal(
         simulation_result.data.loc[:, UnivariateSimulationResult.COL_MEAN].round(6),
         pd.Series(
-            [2.696227, 2.696227, 2.696227, 0.652706, -0.878943]
-            + [-1.081172, -1.494944, -1.750046, -1.750046],
+            [-0.318501, -0.318501, -0.084503, 0.310012, 0.526783, 0.526783],
             name=UnivariateSimulationResult.COL_MEAN,
             index=index,
         ),
@@ -246,16 +248,13 @@ def test_univariate_uplift_subsample_simulation_95(
             6
         ),
         pd.Series(
-            [3.59162, 3.59162, 3.59162, 1.625805, 0.089307]
-            + [-0.088017, -0.450671, -0.674698, -0.674698],
+            [-0.160831, -0.160831, 0.086407, 0.509801, 0.736836, 0.736836],
             name=UnivariateSimulationResult.COL_UPPER_BOUND,
             index=index,
         ),
     )
 
-    assert_array_equal(
-        simulation_result.partitioner.frequencies_, [1, 4, 9, 10, 10, 6, 2, 1, 4]
-    )
+    assert_array_equal(simulation_result.partitioner.frequencies_, [2, 5, 18, 8, 11, 6])
 
     SimulationDrawer(style="text").draw(
         data=target_simulator.simulate_feature(
@@ -268,7 +267,7 @@ def test_univariate_uplift_simulation(
     uplift_simulator: UnivariateUpliftSimulator,
 ) -> None:
 
-    parameterized_feature = "LSTAT"
+    parameterized_feature = "HouseAge"
     partitioner = ContinuousRangePartitioner(max_partitions=10)
 
     simulation_result: UnivariateSimulationResult[
@@ -281,39 +280,43 @@ def test_univariate_uplift_simulation(
     # test simulation results
 
     index = pd.Index(
-        data=[0.0, 5.0, 10.0, 15.0, 20.0, 25.0],
+        data=[0.0, 10.0, 20.0, 30.0, 40.0, 50.0],
         name=UnivariateSimulationResult.IDX_PARTITION,
     )
 
     assert_series_equal(
-        simulation_result.data.loc[:, UnivariateSimulationResult.COL_LOWER_BOUND],
+        simulation_result.data.loc[:, UnivariateSimulationResult.COL_LOWER_BOUND].round(
+            5
+        ),
         pd.Series(
-            [2.677461, 2.677461, -1.155017, -2.070234, -2.070234, -2.070234],
+            [-0.48552, -0.48552, -0.2934, 0.03889, 0.28455, 0.28455],
             name=UnivariateSimulationResult.COL_LOWER_BOUND,
             index=index,
         ),
     )
 
     assert_series_equal(
-        simulation_result.data.loc[:, UnivariateSimulationResult.COL_MEAN],
+        simulation_result.data.loc[:, UnivariateSimulationResult.COL_MEAN].round(5),
         pd.Series(
-            [3.148100, 3.148100, -0.631560, -1.498371, -1.498371, -1.498371],
+            [-0.40459, -0.40459, -0.20322, 0.14529, 0.39212, 0.39212],
             name=UnivariateSimulationResult.COL_MEAN,
             index=index,
         ),
     )
 
     assert_series_equal(
-        simulation_result.data.loc[:, UnivariateSimulationResult.COL_UPPER_BOUND],
+        simulation_result.data.loc[:, UnivariateSimulationResult.COL_UPPER_BOUND].round(
+            5
+        ),
         pd.Series(
-            [3.618739, 3.618739, -0.108103, -0.926508, -0.926508, -0.926508],
+            [-0.32367, -0.32367, -0.11304, 0.25169, 0.4997, 0.4997],
             name=UnivariateSimulationResult.COL_UPPER_BOUND,
             index=index,
         ),
     )
 
     assert_array_equal(
-        simulation_result.partitioner.frequencies_, [1, 31, 37, 19, 8, 1]
+        simulation_result.partitioner.frequencies_, [1, 9, 23, 32, 23, 12]
     )
 
     SimulationDrawer(style="text").draw(
@@ -327,7 +330,7 @@ def test_univariate_uplift_subsample_simulation(
     model: RegressorPipelineDF[LGBMRegressorDF], subsample: Sample, n_jobs: int
 ) -> None:
 
-    parameterized_feature = "LSTAT"
+    parameterized_feature = "HouseAge"
     partitioner = ContinuousRangePartitioner(max_partitions=10)
 
     uplift_simulator = UnivariateUpliftSimulator(
@@ -343,43 +346,42 @@ def test_univariate_uplift_subsample_simulation(
     # test simulation results
 
     index = pd.Index(
-        data=[2.0, 4.0, 6.0, 8.0, 10.0, 12.0, 14.0, 16.0, 18.0],
+        data=[0.0, 10.0, 20.0, 30.0, 40.0, 50.0],
         name=UnivariateSimulationResult.IDX_PARTITION,
     )
 
     assert_series_equal(
-        simulation_result.data.loc[:, UnivariateSimulationResult.COL_LOWER_BOUND],
+        simulation_result.data.loc[:, UnivariateSimulationResult.COL_LOWER_BOUND].round(
+            5
+        ),
         pd.Series(
-            [2.110762, 2.110762, 2.110762, 0.0164306, -1.512048]
-            + [-1.730561, -2.177757, -2.453179, -2.453179],
+            [-0.4216, -0.4216, -0.19626, 0.17938, 0.38944, 0.38944],
             name=UnivariateSimulationResult.COL_LOWER_BOUND,
             index=index,
         ),
     )
 
     assert_series_equal(
-        simulation_result.data.loc[:, UnivariateSimulationResult.COL_MEAN],
+        simulation_result.data.loc[:, UnivariateSimulationResult.COL_MEAN].round(5),
         pd.Series(
-            [2.696227, 2.696227, 2.696227, 0.652706, -0.878943]
-            + [-1.081172, -1.494944, -1.750046, -1.750046],
+            [-0.3185, -0.3185, -0.0845, 0.31001, 0.52678, 0.52678],
             name=UnivariateSimulationResult.COL_MEAN,
             index=index,
         ),
     )
 
     assert_series_equal(
-        simulation_result.data.loc[:, UnivariateSimulationResult.COL_UPPER_BOUND],
+        simulation_result.data.loc[:, UnivariateSimulationResult.COL_UPPER_BOUND].round(
+            5
+        ),
         pd.Series(
-            [3.281693, 3.281693, 3.281693, 1.288981, -0.245838]
-            + [-0.431783, -0.81213, -1.046914, -1.046914],
+            [-0.21541, -0.21541, 0.02725, 0.44065, 0.66413, 0.66413],
             name=UnivariateSimulationResult.COL_UPPER_BOUND,
             index=index,
         ),
     )
 
-    assert_array_equal(
-        simulation_result.partitioner.frequencies_, [1, 4, 9, 10, 10, 6, 2, 1, 4]
-    )
+    assert_array_equal(simulation_result.partitioner.frequencies_, [2, 5, 18, 8, 11, 6])
 
     SimulationDrawer(style="text").draw(data=simulation_result)
 

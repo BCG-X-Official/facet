@@ -34,7 +34,7 @@ ParameterDict = Dict[str, Union[List[Any], stats.rv_continuous, stats.rv_discret
 #
 
 T_CandidateEstimatorDF = TypeVar("T_CandidateEstimatorDF", bound="CandidateEstimatorDF")
-T_Estimator = TypeVar("T_Estimator", bound=EstimatorDF)
+T_Estimator = TypeVar("T_Estimator", covariant=True, bound=EstimatorDF)
 
 
 #
@@ -150,9 +150,7 @@ class CandidateEstimatorDF(ClassifierDF, RegressorDF, TransformerDF):
         else:
             return self.candidate
 
-    @property
-    def classes_(self) -> Union[npt.NDArray[Any], List[npt.NDArray[Any]]]:
-        """[see superclass]"""
+    def _get_classes(self) -> Union[npt.NDArray[Any], List[npt.NDArray[Any]]]:
         return self._get_candidate().classes_
 
     # noinspection PyPep8Naming
@@ -223,6 +221,9 @@ class CandidateEstimatorDF(ClassifierDF, RegressorDF, TransformerDF):
 
     def _get_features_in(self) -> pd.Index:
         return self._get_candidate().feature_names_in_
+
+    def _get_outputs(self) -> Optional[List[str]]:
+        return self._get_candidate()._get_outputs()
 
     def _get_n_outputs(self) -> int:
         return self._get_candidate().n_outputs_

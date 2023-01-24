@@ -10,8 +10,6 @@ import pytest
 from sklearn import datasets, svm, tree
 from sklearn.model_selection import GridSearchCV
 
-from sklearndf import __sklearn_0_22__, __sklearn_version__
-
 from facet.validation import BootstrapCV, StratifiedBootstrapCV
 
 
@@ -88,11 +86,7 @@ def test_bootstrap_cv_with_sk_learn() -> None:
 
     # use the defined my_cv bootstrap CV within GridSearchCV
 
-    if __sklearn_version__ < __sklearn_0_22__:
-        # noinspection PyArgumentList
-        clf = GridSearchCV(svc, parameters, cv=my_cv, iid=False)
-    else:
-        clf = GridSearchCV(svc, parameters, cv=my_cv)
+    clf = GridSearchCV(svc, parameters, cv=my_cv)
     clf.fit(iris.data, iris.target)
 
     # test if the number of received splits is correct
