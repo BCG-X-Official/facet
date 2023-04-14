@@ -2,7 +2,7 @@
 Tests for module facet.selection
 """
 import logging
-from typing import List
+from typing import Any, List, Mapping
 
 import numpy as np
 import pandas as pd
@@ -68,7 +68,7 @@ def test_learner_selector(
             LGBMRegressorDF,
         )
     ]
-    expected_parameters = {
+    expected_parameters: Mapping[int, Mapping[str, Any]] = {
         0: dict(fit_intercept=True),
         1: dict(fit_intercept=False),
         3: dict(n_estimators=80),
@@ -264,7 +264,7 @@ def test_parameter_space(simple_preprocessor: TransformerDF) -> None:
             r"but got multiple types: classifier, regressor$"
         ),
     ):
-        MultiEstimatorParameterSpace(  # type: ignore
+        MultiEstimatorParameterSpace(
             ps_1, ps_2, ParameterSpace(ClassifierPipelineDF(classifier=SVCDF()))
         )
 
@@ -424,7 +424,7 @@ def test_model_selector_classification(
         ),
     ):
         # define an illegal grid list, mixing classification with regression
-        MultiEstimatorParameterSpace(ps1, ps2)  # type: ignore
+        MultiEstimatorParameterSpace(ps1, ps2)
 
     model_selector: LearnerSelector[
         ClassifierPipelineDF[RandomForestClassifierDF], GridSearchCV
