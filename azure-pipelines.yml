@@ -54,7 +54,7 @@ stages:
               versionSpec: '3.9'
             displayName: 'use Python 3.9'
           - script: |
-              python -m pip install isort~=5.10
+              python -m pip install isort~=5.12
               python -m isort --check --diff .
             displayName: 'Run isort'
       - job:
@@ -87,7 +87,7 @@ stages:
               versionSpec: '3.9'
             displayName: 'use Python 3.9'
           - script: |
-              python -m pip install mypy~=0.981 numpy~=1.22 'gamma-pytools~=2.1rc' sklearndf~=2.2.dev
+              python -m pip install mypy~=1.2.0 numpy~=1.24 'gamma-pytools~=2.1rc2' sklearndf~=2.2.dev
               python -m mypy src
             displayName: 'Run mypy'
 
@@ -143,8 +143,8 @@ stages:
         steps:
           - task: UsePythonVersion@0
             inputs:
-              versionSpec: '3.8'
-            displayName: 'use Python 3.8'
+              versionSpec: '3.9'
+            displayName: 'use Python 3.9'
 
           - checkout: self
 
@@ -409,8 +409,8 @@ stages:
         steps:
           - task: UsePythonVersion@0
             inputs:
-              versionSpec: '3.8'
-            displayName: 'use Python 3.8'
+              versionSpec: '3.9'
+            displayName: 'use Python 3.9'
 
           - checkout: pytools
           - checkout: self
@@ -474,8 +474,8 @@ stages:
         steps:
           - task: UsePythonVersion@0
             inputs:
-              versionSpec: '3.8'
-            displayName: 'use Python 3.8'
+              versionSpec: '3.9'
+            displayName: 'use Python 3.9'
 
           - checkout: pytools
           - checkout: self
@@ -601,8 +601,8 @@ stages:
         steps:
           - task: UsePythonVersion@0
             inputs:
-              versionSpec: '3.8'
-            displayName: 'use Python 3.8'
+              versionSpec: '3.9'
+            displayName: 'use Python 3.9'
 
           - task: InstallSSHKey@0
             inputs:
