@@ -87,7 +87,7 @@ stages:
               versionSpec: '3.9'
             displayName: 'use Python 3.9'
           - script: |
-              python -m pip install mypy~=1.2.0 numpy~=1.24 gamma-pytools~=2.1rc2 sklearndf~=2.2rc2
+              python -m pip install mypy~=1.2.0 numpy~=1.24 gamma-pytools~=2.1rc2 sklearndf~=2.2rc1
               python -m mypy src
             displayName: 'Run mypy'
 
