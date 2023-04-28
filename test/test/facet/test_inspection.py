@@ -88,7 +88,9 @@ def test_model_inspection(
     # therefore the mean absolute deviation is zero.
 
     shap_minus_pred = shap_totals - best_lgbm_model.predict(X=sample.features)
-    assert round(shap_minus_pred.mad(), 12) == 0.0, "predictions matching total SHAP"
+    assert (
+        round((shap_minus_pred - shap_minus_pred.mean()).abs().mean(), 12) == 0.0
+    ), "predictions matching total SHAP"
 
     #  test the ModelInspector with a KernelExplainer:
 
@@ -102,7 +104,7 @@ def test_model_inspection(
     linkage_tree = cast(LinkageTree, inspector_2.feature_association_linkage())
 
     print()
-    DendrogramDrawer(style="text").draw(data=linkage_tree, title="Test")
+    DendrogramDrawer(style="text").draw(data=linkage_tree, title="Association")
 
 
 def test_binary_classifier_ranking(
