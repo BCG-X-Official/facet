@@ -15,6 +15,7 @@ from sklearn.model_selection import GridSearchCV
 
 from pytools.data import LinkageTree, Matrix
 from pytools.viz.dendrogram import DendrogramDrawer, DendrogramReportStyle
+from sklearndf import __sklearn_1_1__, __sklearn_version__
 from sklearndf.classification import (
     GradientBoostingClassifierDF,
     RandomForestClassifierDF,
@@ -43,12 +44,18 @@ def test_regressor_selector(
         RegressorPipelineDF[LGBMRegressorDF], GridSearchCV
     ]
 ) -> None:
+    print(regressor_selector.summary_report())
+    scores_expected: List[float]
+
+    scores_expected = (
+        [0.578, 0.530, 0.310, 0.308, 0.294, 0.226, 0.217, 0.217, 0.217, 0.217]
+        if __sklearn_version__ < __sklearn_1_1__
+        else [0.579, 0.531, 0.311, 0.308, 0.246, 0.217, 0.217, 0.217, 0.217, 0.217]
+    )
     check_ranking(
         ranking=regressor_selector.summary_report(),
         is_classifier=False,
-        scores_expected=(
-            [0.578, 0.530, 0.310, 0.308, 0.294, 0.226, 0.217, 0.217, 0.217, 0.217]
-        ),
+        scores_expected=(scores_expected),
         params_expected=None,
     )
 
