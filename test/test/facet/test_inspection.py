@@ -2,6 +2,7 @@
 Model inspector tests.
 """
 import logging
+import platform
 import warnings
 from typing import List, Optional, Set, TypeVar, cast
 
@@ -49,7 +50,12 @@ def test_regressor_selector(
 
     scores_expected = (
         [0.578, 0.530, 0.310, 0.308, 0.294, 0.226, 0.217, 0.217, 0.217, 0.217]
-        if __sklearn_version__ < __sklearn_1_1__
+        if (
+            __sklearn_version__ < __sklearn_1_1__
+            or platform.machine() != "arm64"
+            or platform.system() != "Darwin"
+        )
+        # on M1 macs, we get different results starting with scikit-learn 1.1
         else [0.579, 0.531, 0.311, 0.308, 0.246, 0.217, 0.217, 0.217, 0.217, 0.217]
     )
     check_ranking(
