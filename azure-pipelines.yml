@@ -26,7 +26,7 @@ resources:
       type: github
       endpoint: BCG-Gamma
       name: BCG-Gamma/pytools
-      ref: 2.0.x
+      ref: 2.1.x
 
 variables:
   ${{ if not(startsWith(variables['Build.SourceBranch'], 'refs/pull/')) }}:
