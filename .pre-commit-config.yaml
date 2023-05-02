@@ -1,6 +1,6 @@
 repos:
   - repo: https://github.com/PyCQA/isort
-    rev: 5.10.1
+    rev: 5.12.0
     hooks:
       - id: isort
 
@@ -8,16 +8,16 @@ repos:
     rev: 22.8.0
     hooks:
       - id: black
-        language: python_venv
+        language: python
         language_version: python39
 
-  - repo: https://gitlab.com/pycqa/flake8
+  - repo: https://github.com/pycqa/flake8
     rev: 5.0.4
     hooks:
       - id: flake8
         name: flake8
         entry: flake8 --config tox.ini
-        language: python_venv
+        language: python
         language_version: python39
         additional_dependencies:
           - flake8-comprehensions ~= 3.10
@@ -30,15 +30,15 @@ repos:
       - id: check-json
       - id: check-xml
       - id: check-yaml
-        language: python_venv
+        language: python
         exclude: condabuild/meta.yaml
 
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v0.981
+    rev: v1.2.0
     hooks:
       - id: mypy
         files: src|sphinx|test
-        language: python_venv
+        language: python
         language_version: python39
         additional_dependencies:
           - numpy~=1.22

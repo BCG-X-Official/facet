@@ -945,10 +945,9 @@ class LearnerInspector(
             )
 
         else:
-            # noinspection PyCompatibility
             feature_importance_iter: (
                 Iterable[Tuple[Any, pd.Series]]
-            ) = feature_importance.iteritems()
+            ) = feature_importance.items()
 
             return [
                 self.__linkage_tree_from_affinity_matrix_for_output(
