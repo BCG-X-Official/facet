@@ -2,6 +2,7 @@
 Model inspector tests.
 """
 import logging
+import platform
 import warnings
 from typing import List, Optional, Set, TypeVar, cast
 
@@ -15,6 +16,7 @@ from sklearn.model_selection import GridSearchCV
 
 from pytools.data import LinkageTree, Matrix
 from pytools.viz.dendrogram import DendrogramDrawer, DendrogramReportStyle
+from sklearndf import __sklearn_1_1__, __sklearn_version__
 from sklearndf.classification import (
     GradientBoostingClassifierDF,
     RandomForestClassifierDF,
@@ -47,12 +49,20 @@ def test_regressor_selector(
         RegressorPipelineDF[LGBMRegressorDF], GridSearchCV
     ]
 ) -> None:
+    scores_expected: List[float] = (
+        [0.578, 0.530, 0.310, 0.308, 0.294, 0.226, 0.217, 0.217, 0.217, 0.217]
+        if (
+            __sklearn_version__ < __sklearn_1_1__
+            or platform.machine() != "arm64"
+            or platform.system() != "Darwin"
+        )
+        # on M1 macs, we get different results starting with scikit-learn 1.1
+        else [0.579, 0.531, 0.311, 0.308, 0.246, 0.217, 0.217, 0.217, 0.217, 0.217]
+    )
     check_ranking(
         ranking=regressor_selector.summary_report(),
         is_classifier=False,
-        scores_expected=(
-            [0.578, 0.530, 0.310, 0.308, 0.294, 0.226, 0.217, 0.217, 0.217, 0.217]
-        ),
+        scores_expected=scores_expected,
         params_expected=None,
     )
 
@@ -85,7 +95,9 @@ def test_model_inspection(
     # therefore the mean absolute deviation is zero.
 
     shap_minus_pred = shap_totals - best_lgbm_model.predict(X=sample.features)
-    assert round(shap_minus_pred.mad(), 12) == 0.0, "predictions matching total SHAP"
+    assert (
+        round((shap_minus_pred - shap_minus_pred.mean()).abs().mean(), 12) == 0.0
+    ), "predictions matching total SHAP"
 
     #  test the ModelInspector with a KernelExplainer:
 
@@ -99,7 +111,7 @@ def test_model_inspection(
     linkage_tree = cast(LinkageTree, inspector_2.feature_association_linkage())
 
     print()
-    DendrogramDrawer(style="text").draw(data=linkage_tree, title="Test")
+    DendrogramDrawer(style="text").draw(data=linkage_tree, title="Association")
 
 
 def test_binary_classifier_ranking(

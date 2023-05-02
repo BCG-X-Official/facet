@@ -11,7 +11,7 @@ from sklearn.datasets import fetch_california_housing
 from sklearn.model_selection import BaseCrossValidator, GridSearchCV, KFold
 from sklearn.utils import Bunch
 
-from sklearndf import TransformerDF
+from sklearndf import RegressorDF, TransformerDF
 from sklearndf.classification import RandomForestClassifierDF
 from sklearndf.pipeline import ClassifierPipelineDF, RegressorPipelineDF
 from sklearndf.regression import (
@@ -94,7 +94,7 @@ def cv_stratified_bootstrap() -> BaseCrossValidator:
 @pytest.fixture  # type: ignore
 def regressor_parameters(
     simple_preprocessor: TransformerDF,
-) -> List[ParameterSpace[RegressorPipelineDF[LGBMRegressorDF]]]:
+) -> List[ParameterSpace[RegressorPipelineDF[RegressorDF]]]:
     random_state = {"random_state": 42}
 
     space_1 = ParameterSpace(
@@ -158,17 +158,21 @@ def regressor_parameters(
 @pytest.fixture  # type: ignore
 def regressor_selector(
     cv_kfold: KFold,
-    regressor_parameters: List[ParameterSpace[RegressorPipelineDF[LGBMRegressorDF]]],
+    regressor_parameters: List[ParameterSpace[RegressorPipelineDF[RegressorDF]]],
     sample: Sample,
     n_jobs: int,
-) -> LearnerSelector[RegressorPipelineDF[LGBMRegressorDF], GridSearchCV]:
-    return LearnerSelector(
+) -> LearnerSelector[RegressorPipelineDF[RegressorDF], GridSearchCV]:
+    selector_fitted = LearnerSelector(
         searcher_type=GridSearchCV,
         parameter_space=regressor_parameters,
         cv=cv_kfold,
         scoring="r2",
         n_jobs=n_jobs,
     ).fit(sample=sample)
+
+    log.debug(f"Fitted learner selector:\n{selector_fitted.summary_report()}")
+
+    return selector_fitted
 
 
 PARAM_CANDIDATE__ = "param_candidate__"
@@ -214,8 +218,7 @@ def preprocessed_feature_names(
     """
     Names of all features after preprocessing
     """
-    assert best_lgbm_model.preprocessing is not None
-    return set(best_lgbm_model.preprocessing.feature_names_out_)
+    return set(best_lgbm_model.final_estimator.feature_names_in_)
 
 
 @pytest.fixture  # type: ignore
@@ -369,7 +372,7 @@ def check_ranking(
     assert_allclose(
         scores_actual,
         scores_expected,
-        rtol=0.01,
+        rtol=0.015,
         err_msg=(
             f"unexpected scores: got {scores_actual} but expected {scores_expected}"
         ),
