@@ -58,7 +58,7 @@ def test_regressor_selector(
     check_ranking(
         ranking=regressor_selector.summary_report(),
         is_classifier=False,
-        scores_expected=(scores_expected),
+        scores_expected=scores_expected,
         params_expected=None,
     )
 
