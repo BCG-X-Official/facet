@@ -162,13 +162,17 @@ def regressor_selector(
     sample: Sample,
     n_jobs: int,
 ) -> LearnerSelector[RegressorPipelineDF[RegressorDF], GridSearchCV]:
-    return LearnerSelector(
+    selector_fitted = LearnerSelector(
         searcher_type=GridSearchCV,
         parameter_space=regressor_parameters,
         cv=cv_kfold,
         scoring="r2",
         n_jobs=n_jobs,
     ).fit(sample=sample)
+
+    log.debug(f"Fitted learner selector:\n{selector_fitted.summary_report()}")
+
+    return selector_fitted
 
 
 PARAM_CANDIDATE__ = "param_candidate__"

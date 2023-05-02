@@ -45,10 +45,7 @@ def test_regressor_selector(
         RegressorPipelineDF[LGBMRegressorDF], GridSearchCV
     ]
 ) -> None:
-    print(regressor_selector.summary_report())
-    scores_expected: List[float]
-
-    scores_expected = (
+    scores_expected: List[float] = (
         [0.578, 0.530, 0.310, 0.308, 0.294, 0.226, 0.217, 0.217, 0.217, 0.217]
         if (
             __sklearn_version__ < __sklearn_1_1__
