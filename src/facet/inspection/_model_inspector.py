@@ -4,7 +4,18 @@ Implementation of :class:`.ModelInspector`.
 import logging
 from abc import ABCMeta, abstractmethod
 from types import MethodType
-from typing import Any, Callable, Iterable, List, Optional, Tuple, TypeVar, Union, cast
+from typing import (
+    Any,
+    Callable,
+    Generic,
+    Iterable,
+    List,
+    Optional,
+    Tuple,
+    TypeVar,
+    Union,
+    cast,
+)
 
 import numpy as np
 import numpy.typing as npt
@@ -46,7 +57,8 @@ FloatMatrix: TypeAlias = Matrix[np.float_]
 # Type variables
 #
 
-T_ModelInspector = TypeVar("T_ModelInspector", bound="ModelInspector")
+T_Model = TypeVar("T_Model")
+T_ModelInspector = TypeVar("T_ModelInspector", bound="ModelInspector[Any]")
 T_Number = TypeVar("T_Number", bound="np.number[Any]")
 T_SeriesOrDataFrame = TypeVar("T_SeriesOrDataFrame", pd.Series, pd.DataFrame)
 
@@ -71,7 +83,9 @@ __tracker = AllTracker(globals())
 #
 
 
-class ModelInspector(ParallelizableMixin, FittableMixin[Sample], metaclass=ABCMeta):
+class ModelInspector(
+    ParallelizableMixin, FittableMixin[Sample], Generic[T_Model], metaclass=ABCMeta
+):
     """
     .. note::
         This is an abstract base class for inspectors explaining different kinds of
@@ -120,11 +134,20 @@ class ModelInspector(ParallelizableMixin, FittableMixin[Sample], metaclass=ABCMe
     # defined in superclass, repeated here for Sphinx
     verbose: Optional[int]
 
+    #: The model to inspect.
+    model: T_Model
+
+    #: If ``True``, calculate SHAP interaction values, else only calculate SHAP
+    #: contribution values.
+    #: SHAP interaction values are needed to determine feature synergy and redundancy.
+    shap_interaction: bool
+
     #: Name for feature importance series or column.
     COL_IMPORTANCE = "importance"
 
     def __init__(
         self,
+        model: T_Model,
         *,
         shap_interaction: bool = True,
         n_jobs: Optional[int] = None,
@@ -133,10 +156,11 @@ class ModelInspector(ParallelizableMixin, FittableMixin[Sample], metaclass=ABCMe
         verbose: Optional[int] = None,
     ) -> None:
         """
+        :param model: the model to inspect
         :param shap_interaction: if ``True``, calculate SHAP interaction values, else
-            only calculate SHAP contribution values.
+            only calculate SHAP contribution values;
             SHAP interaction values are needed to determine feature synergy and
-            redundancy.
+            redundancy
             (default: ``True``)
         """
         super().__init__(
@@ -146,6 +170,7 @@ class ModelInspector(ParallelizableMixin, FittableMixin[Sample], metaclass=ABCMe
             verbose=verbose,
         )
 
+        self.model = model
         self.shap_interaction = shap_interaction
 
         self._shap_projector: Optional[ShapProjector] = None

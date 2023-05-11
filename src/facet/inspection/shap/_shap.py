@@ -14,7 +14,11 @@ from pytools.api import AllTracker
 from pytools.fit import FittableMixin, fitted_only
 from pytools.parallelization import ParallelizableMixin
 
-from facet.inspection._explainer import BaseExplainer, ExplainerFactory
+from facet.inspection._explainer import (
+    BaseExplainer,
+    ExplainerFactory,
+    ParallelExplainer,
+)
 
 log = logging.getLogger(__name__)
 
@@ -66,12 +70,15 @@ class ShapCalculator(
     #: Name for the feature index (= column index) of the resulting SHAP data frame.
     IDX_FEATURE = "feature"
 
-    #: The explainer factory used to create the SHAP explainer for this calculator.
-    explainer_factory: ExplainerFactory[T_Model]
-
     #: Name of the index that is used to identify multiple outputs for which SHAP
     #: values are calculated. To be overloaded by subclasses.
     MULTI_OUTPUT_INDEX_NAME = "output"
+
+    #: The model for which to calculate SHAP values.
+    model: T_Model
+
+    #: The explainer factory used to create the SHAP explainer for this calculator.
+    explainer_factory: ExplainerFactory[T_Model]
 
     #: The SHAP values for all observations this calculator has been fitted to.
     shap_: Optional[pd.DataFrame]
@@ -81,6 +88,7 @@ class ShapCalculator(
 
     def __init__(
         self,
+        model: T_Model,
         *,
         explainer_factory: ExplainerFactory[T_Model],
         interaction_values: bool,
@@ -90,6 +98,7 @@ class ShapCalculator(
         verbose: Optional[int] = None,
     ) -> None:
         """
+        :param model: the model for which to calculate SHAP values
         :param explainer_factory: the explainer factory used to create the SHAP
             explainer for this calculator
         :param interaction_values: if ``True``, calculate SHAP interaction values,
@@ -101,6 +110,7 @@ class ShapCalculator(
             pre_dispatch=pre_dispatch,
             verbose=verbose,
         )
+        self.model = model
         self.explainer_factory = explainer_factory
         self.interaction_values = interaction_values
 
@@ -114,11 +124,18 @@ class ShapCalculator(
 
     @property
     @abstractmethod
+    def input_names(self) -> Optional[List[str]]:
+        """
+        The names of the inputs explained by this SHAP calculator, or ``None`` if
+        no names are defined.
+        """
+
+    @property
+    @abstractmethod
     def output_names(self) -> List[str]:
         """
         The names of the outputs explained by this SHAP calculator.
         """
-        pass
 
     @property
     def is_fitted(self) -> bool:
@@ -150,7 +167,7 @@ class ShapCalculator(
         # explain all observations using the model, resulting in a matrix of
         # SHAP values for each observation and feature
         shap_df: pd.DataFrame = self._calculate_shap(
-            features=__X, explainer=self._get_explainer(__X)
+            features=__X, explainer=self._make_explainer(__X)
         )
 
         # re-order the observation index to match the sequence in the original
@@ -241,7 +258,6 @@ class ShapCalculator(
             columns=interaction_matrix.columns,
         )
 
-    @abstractmethod
     def validate_features(self, features: pd.DataFrame) -> None:
         """
         Check that the given feature matrix is valid for this calculator.
@@ -250,7 +266,19 @@ class ShapCalculator(
         :raise ValueError: if the feature matrix is not compatible with this
             calculator
         """
-        pass
+
+        features_expected = self.input_names
+        if features_expected is None:
+            # no input names defined, so we cannot validate the features
+            return
+
+        diff = features.columns.symmetric_difference(features_expected)
+        if not diff.empty:
+            raise ValueError(
+                f"Features to be explained do not match the features used to fit the"
+                f"learner: expected {features_expected}, got "
+                f"{features.columns.tolist()}."
+            )
 
     def _reset_fit(self) -> None:
         # set this calculator to its initial unfitted state
@@ -258,9 +286,46 @@ class ShapCalculator(
         self.feature_index_ = None
         self.output_names_ = None
 
-    @abstractmethod
-    def _get_explainer(self, features: pd.DataFrame) -> BaseExplainer:
-        pass
+    def _make_explainer(self, features: pd.DataFrame) -> BaseExplainer:
+
+        # prepare the background dataset
+
+        background_dataset: Optional[pd.DataFrame]
+
+        if self.explainer_factory.uses_background_dataset:
+            background_dataset = features
+
+            background_dataset_not_na = background_dataset.dropna()
+
+            if len(background_dataset_not_na) != len(background_dataset):
+                n_original = len(background_dataset)
+                n_dropped = n_original - len(background_dataset_not_na)
+                log.warning(
+                    f"{n_dropped} out of {n_original} observations in the background "
+                    f"dataset have missing values after pre-processing and will be "
+                    f"dropped."
+                )
+
+                background_dataset = background_dataset_not_na
+
+        else:
+            background_dataset = None
+
+        model = self.model
+        explainer = self.explainer_factory.make_explainer(
+            model=model, data=background_dataset
+        )
+
+        if self.n_jobs != 1:
+            explainer = ParallelExplainer(
+                explainer,
+                n_jobs=self.n_jobs,
+                shared_memory=self.shared_memory,
+                pre_dispatch=self.pre_dispatch,
+                verbose=self.verbose,
+            )
+
+        return explainer
 
     def _calculate_shap(
         self, *, features: pd.DataFrame, explainer: BaseExplainer
@@ -274,7 +339,7 @@ class ShapCalculator(
         multi_output_index_name = self.MULTI_OUTPUT_INDEX_NAME
         multi_output_names = self.output_names
         assert self.feature_index_ is not None, ASSERTION__CALCULATOR_IS_FITTED
-        features_out = self.feature_index_
+        feature_names = self.feature_index_
 
         # calculate the shap values, and ensure the result is a list of arrays
         shap_values: List[npt.NDArray[np.float_]] = self._convert_shap_tensors_to_list(
@@ -290,8 +355,10 @@ class ShapCalculator(
         # we have a regressor or a classifier, implemented by method
         # shap_matrix_for_split_to_df_fn)
 
-        shap_values_df_per_output: List[pd.DataFrame] = self._convert_raw_shap_to_df(
-            shap_values, features.index, features_out
+        shap_values_df_per_output: List[pd.DataFrame] = self._convert_shap_to_df(
+            raw_shap_tensors=shap_values,
+            observation_idx=features.index,
+            feature_idx=feature_names,
         )
 
         # if we have a single output, return the data frame for that output;
@@ -304,7 +371,7 @@ class ShapCalculator(
                 shap_values_df_per_output,
                 axis=1,
                 keys=multi_output_names,
-                names=[multi_output_index_name, features_out.name],
+                names=[multi_output_index_name, feature_names.name],
             )
 
     def _convert_shap_tensors_to_list(
@@ -314,7 +381,12 @@ class ShapCalculator(
         n_outputs: int,
     ) -> List[npt.NDArray[np.float_]]:
         def _validate_shap_tensor(_t: npt.NDArray[np.float_]) -> None:
-            if np.isnan(np.sum(_t)):
+            try:
+                isnan = np.isnan(np.sum(_t))
+            except TypeError as e:
+                print(e)
+                raise
+            if isnan:
                 raise AssertionError(
                     "Output of SHAP explainer includes NaN values. "
                     "This should not happen; consider initialising the "
@@ -338,22 +410,53 @@ class ShapCalculator(
         return shap_tensors
 
     @abstractmethod
-    def _convert_raw_shap_to_df(
+    def _convert_shap_to_df(
         self,
         raw_shap_tensors: List[npt.NDArray[np.float_]],
-        observations: pd.Index,
-        features_in_split: pd.Index,
+        observation_idx: pd.Index,
+        feature_idx: pd.Index,
     ) -> List[pd.DataFrame]:
         """
         Convert the SHAP tensors for a single split to a data frame.
 
         :param raw_shap_tensors: the raw values returned by the SHAP explainer
-        :param observations: the ids used for indexing the explained observations
-        :param features_in_split: the features in the current split,
-            explained by the SHAP explainer
+        :param observation_idx: the ids used for indexing the explained observations
+        :param feature_idx: the feature names
         :return: SHAP values of a single split as data frame
         """
         pass
+
+    def _convert_raw_shap_to_df(
+        self,
+        raw_shap_tensors: List[npt.NDArray[np.float_]],
+        observation_idx: pd.Index,
+        feature_idx: pd.Index,
+    ) -> List[pd.DataFrame]:
+        # Convert "raw output" shap tensors to data frames.
+        # This is typically the output obtained for regressors, or generic functions.
+        if self.interaction_values:
+            row_index = pd.MultiIndex.from_product(
+                iterables=(observation_idx, feature_idx),
+                names=(observation_idx.name, feature_idx.name),
+            )
+
+            return [
+                pd.DataFrame(
+                    data=raw_interaction_tensor.reshape(
+                        (-1, raw_interaction_tensor.shape[2])
+                    ),
+                    index=row_index,
+                    columns=feature_idx,
+                )
+                for raw_interaction_tensor in raw_shap_tensors
+            ]
+        else:
+            return [
+                pd.DataFrame(
+                    data=raw_shap_matrix, index=observation_idx, columns=feature_idx
+                )
+                for raw_shap_matrix in raw_shap_tensors
+            ]
 
 
 __tracker.validate()

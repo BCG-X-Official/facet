@@ -1,5 +1,5 @@
 import logging
-from typing import Any, Dict, List, Mapping, Optional, Sequence, Set, Tuple, cast
+from typing import Any, Dict, List, Mapping, Optional, Sequence, Tuple, cast
 
 import numpy as np
 import numpy.typing as npt
@@ -31,7 +31,7 @@ from sklearndf.transformation import (
 
 import facet
 from facet.data import Sample
-from facet.inspection import LearnerInspector, TreeExplainerFactory
+from facet.inspection import LearnerInspector
 from facet.selection import LearnerSelector, ParameterSpace
 from facet.validation import BootstrapCV, StratifiedBootstrapCV
 
@@ -209,31 +209,6 @@ def best_lgbm_model(
         )
         .fit(X=sample.features, y=sample.target)
     )
-
-
-@pytest.fixture  # type: ignore
-def preprocessed_feature_names(
-    best_lgbm_model: RegressorPipelineDF[LGBMRegressorDF],
-) -> Set[str]:
-    """
-    Names of all features after preprocessing
-    """
-    return set(best_lgbm_model.final_estimator.feature_names_in_)
-
-
-@pytest.fixture  # type: ignore
-def regressor_inspector(
-    best_lgbm_model: RegressorPipelineDF[LGBMRegressorDF], sample: Sample, n_jobs: int
-) -> LearnerInspector[LGBMRegressorDF]:
-    inspector = LearnerInspector(
-        pipeline=best_lgbm_model,
-        explainer_factory=TreeExplainerFactory(
-            feature_perturbation="tree_path_dependent", uses_background_dataset=True
-        ),
-        n_jobs=n_jobs,
-    ).fit(sample)
-
-    return inspector
 
 
 @pytest.fixture  # type: ignore
@@ -461,7 +436,7 @@ def iris_inspector_multi_class(
     n_jobs: int,
 ) -> LearnerInspector[ClassifierPipelineDF[RandomForestClassifierDF]]:
     return LearnerInspector(
-        pipeline=iris_classifier_multi_class, shap_interaction=True, n_jobs=n_jobs
+        model=iris_classifier_multi_class, shap_interaction=True, n_jobs=n_jobs
     ).fit(iris_sample_multi_class)
 
 

@@ -219,7 +219,6 @@ class ShapVectorProjector(ShapProjector):
         self.association_ = self._calculate_association(context)
 
 
-@inheritdoc(match="""[see superclass]""")
 class ShapInteractionVectorProjector(ShapProjector):
     """
     Derives feature association, synergy, and redundancy as a global metric of SHAP

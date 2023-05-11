@@ -4,7 +4,7 @@ Model inspector tests.
 import logging
 import platform
 import warnings
-from typing import List, Optional, Set, TypeVar, cast
+from typing import Any, Dict, List, Optional, Type, TypeVar, cast
 
 import numpy as np
 import pandas as pd
@@ -16,23 +16,23 @@ from sklearn.model_selection import GridSearchCV
 
 from pytools.data import LinkageTree, Matrix
 from pytools.viz.dendrogram import DendrogramDrawer, DendrogramReportStyle
-from sklearndf import __sklearn_1_1__, __sklearn_version__
+from sklearndf import ClassifierDF, __sklearn_1_1__, __sklearn_version__
 from sklearndf.classification import (
     GradientBoostingClassifierDF,
     RandomForestClassifierDF,
 )
-from sklearndf.pipeline import (
-    ClassifierPipelineDF,
-    RegressorPipelineDF,
-    SupervisedLearnerPipelineDF,
-)
+from sklearndf.pipeline import ClassifierPipelineDF, RegressorPipelineDF
 from sklearndf.regression.extra import LGBMRegressorDF
 
 from ..conftest import check_ranking
 from facet.data import Sample
 from facet.inspection import (
+    ExactExplainerFactory,
+    ExplainerFactory,
+    FunctionInspector,
     KernelExplainerFactory,
     LearnerInspector,
+    PermutationExplainerFactory,
     TreeExplainerFactory,
 )
 from facet.selection import LearnerSelector
@@ -67,51 +67,36 @@ def test_regressor_selector(
     )
 
 
+@pytest.mark.parametrize(  # type: ignore
+    argnames=("explainer_factory_cls", "explainer_factory_args"),
+    argvalues=[
+        (
+            TreeExplainerFactory,
+            dict(
+                feature_perturbation="tree_path_dependent", uses_background_dataset=True
+            ),
+        ),
+        (KernelExplainerFactory, dict(link="identity", data_size_limit=8)),
+        (ExactExplainerFactory, {}),
+        (PermutationExplainerFactory, {}),
+    ],
+)
 def test_model_inspection(
+    explainer_factory_cls: Type[ExplainerFactory[LGBMRegressorDF]],
+    explainer_factory_args: Dict[str, Any],
     best_lgbm_model: RegressorPipelineDF[LGBMRegressorDF],
-    preprocessed_feature_names: Set[str],
-    regressor_inspector: LearnerInspector[RegressorPipelineDF[LGBMRegressorDF]],
     sample: Sample,
     n_jobs: int,
 ) -> None:
-    shap_values: pd.DataFrame = regressor_inspector.shap_values()
+    # test the ModelInspector with the given explainer factory:
 
-    # the length of rows in shap_values should be equal to the unique observation
-    # indices we have had in the predictions_df
-    assert len(shap_values) == len(sample)
-
-    # index names
-    assert shap_values.index.names == [Sample.IDX_OBSERVATION]
-    assert shap_values.columns.names == [Sample.IDX_FEATURE]
-
-    # column index
-    assert set(shap_values.columns) == preprocessed_feature_names
-
-    # check that the SHAP values add up to the predictions
-    shap_totals = shap_values.sum(axis=1)
-
-    # calculate the difference between total SHAP values and prediction
-    # for every observation. This is always the same constant value,
-    # therefore the mean absolute deviation is zero.
-
-    shap_minus_pred = shap_totals - best_lgbm_model.predict(X=sample.features)
-    assert (
-        round((shap_minus_pred - shap_minus_pred.mean()).abs().mean(), 12) == 0.0
-    ), "predictions matching total SHAP"
-
-    #  test the ModelInspector with a KernelExplainer:
-
-    inspector_2 = LearnerInspector(
-        pipeline=best_lgbm_model,
-        explainer_factory=KernelExplainerFactory(link="identity", data_size_limit=20),
+    inspector = LearnerInspector(
+        model=best_lgbm_model,
+        explainer_factory=explainer_factory_cls(**explainer_factory_args),
         n_jobs=n_jobs,
     ).fit(sample)
-    inspector_2.shap_values()
 
-    linkage_tree = cast(LinkageTree, inspector_2.feature_association_linkage())
-
-    print()
-    DendrogramDrawer(style="text").draw(data=linkage_tree, title="Association")
+    validate_linkage(inspector=inspector, sample=sample)
 
 
 def test_binary_classifier_ranking(
@@ -145,7 +130,7 @@ def test_model_inspection_classifier_binary(
 ) -> None:
 
     model_inspector = LearnerInspector(
-        pipeline=iris_classifier_binary,
+        model=iris_classifier_binary,
         shap_interaction=False,
         n_jobs=n_jobs,
     ).fit(iris_sample_binary)
@@ -214,14 +199,14 @@ def test_model_inspection_classifier_binary_single_shap_output() -> None:
     ).fit(sample_df.features, sample_df.target)
 
     # fit the inspector
-    LearnerInspector(pipeline=pipeline, n_jobs=-3).fit(sample_df)
+    LearnerInspector(model=pipeline, n_jobs=-3).fit(sample_df)
 
 
 # noinspection DuplicatedCode
 def test_model_inspection_classifier_multi_class(
     iris_inspector_multi_class: LearnerInspector[RandomForestClassifierDF],
 ) -> None:
-    iris_classifier = iris_inspector_multi_class.pipeline
+    iris_classifier = iris_inspector_multi_class.model
     iris_sample = iris_inspector_multi_class.sample_
 
     # calculate the shap value matrix, without any consolidation
@@ -338,9 +323,7 @@ def test_model_inspection_classifier_multi_class(
 
 
 def _validate_shap_values_against_predictions(
-    shap_values: pd.DataFrame,
-    model: SupervisedLearnerPipelineDF[RandomForestClassifierDF],
-    sample: Sample,
+    shap_values: pd.DataFrame, model: ClassifierDF, sample: Sample
 ) -> None:
 
     # calculate the matching predictions, so we can check if the SHAP values add up
@@ -407,7 +390,7 @@ def test_model_inspection_classifier_interaction(
     warnings.filterwarnings("ignore", message="You are accessing a training score")
 
     model_inspector = LearnerInspector(
-        pipeline=iris_classifier_binary,
+        model=iris_classifier_binary,
         explainer_factory=TreeExplainerFactory(
             feature_perturbation="tree_path_dependent", uses_background_dataset=True
         ),
@@ -415,7 +398,7 @@ def test_model_inspection_classifier_interaction(
     ).fit(iris_sample_binary)
 
     model_inspector_no_interaction = LearnerInspector(
-        pipeline=iris_classifier_binary,
+        model=iris_classifier_binary,
         shap_interaction=False,
         explainer_factory=TreeExplainerFactory(
             feature_perturbation="tree_path_dependent", uses_background_dataset=True
@@ -690,7 +673,7 @@ def test_model_inspection_classifier_interaction_dual_target(
             f"{iris_target_name}.*{iris_target_name}2"
         ),
     ):
-        LearnerInspector(pipeline=iris_classifier_dual_target, n_jobs=n_jobs).fit(
+        LearnerInspector(model=iris_classifier_dual_target, n_jobs=n_jobs).fit(
             iris_sample_binary_dual_target
         )
 
@@ -722,6 +705,52 @@ def test_shap_plot_data(
     )
     assert_series_equal(
         shap_plot_data.target, iris_sample_multi_class.target.loc[shap_index]
+    )
+
+
+def test_function_inspector(n_jobs: int) -> None:
+    # define a function to inspect, taking a 2D array with 3 columns as input,
+    # calculating (x1 + x2) * x3
+
+    pi2 = 2 * np.pi
+
+    def model_function(x: pd.DataFrame) -> pd.Series:
+        return np.sin(pi2 * x.x1) * np.sin(pi2 * (x.x2 + x.x3) / 2.0) + x.x4 + x.x5
+
+    # create a background dataset, with 1000 random samples
+    observations = pd.DataFrame(
+        np.random.random(size=(1000, 4)), columns=["x1", "x2", "x4", "x5"]
+    )
+    # column x3 is the same as x2
+    observations["x3"] = observations["x2"]
+    # add a column with the target values
+    observations["y"] = model_function(observations)
+    # create a sample from the background dataset
+    background = Sample(
+        observations=observations,
+        target_name="y",
+    )
+
+    # create a function inspector
+    inspector = FunctionInspector(
+        model=model_function,
+        feature_names=background.feature_names,
+        explainer_factory=ExactExplainerFactory(),
+        n_jobs=1,
+    )
+
+    # fit the inspector
+    inspector.fit(background)
+
+    # print the redundancy and synergy linkage using dendrogram drawers
+    print()
+    DendrogramDrawer(style="text").draw(
+        data=cast(LinkageTree, inspector.feature_redundancy_linkage()),
+        title="FunctionInspector (Redundancy)",
+    )
+    DendrogramDrawer(style="text").draw(
+        data=cast(LinkageTree, inspector.feature_synergy_linkage()),
+        title="FunctionInspector (Synergy)",
     )
 
 
@@ -758,3 +787,68 @@ def print_matrix(matrix: List[List[float]], *, split: bool) -> None:
             txt += "np.nan" if np.isnan(x) else f"{x:.3f}"
         print(txt + "],")
     print("]")
+
+
+def validate_linkage(
+    inspector: LearnerInspector[RegressorPipelineDF[Any]], sample: Sample
+) -> None:
+    shap_values: pd.DataFrame = inspector.shap_values()
+
+    # the length of rows in shap_values should be equal to the unique observation
+    # indices we have had in the predictions_df
+    assert len(shap_values) == len(sample)
+
+    # index names
+    assert shap_values.index.names == [Sample.IDX_OBSERVATION]
+    assert shap_values.columns.names == [Sample.IDX_FEATURE]
+
+    # column index
+    assert set(shap_values.columns) == set(
+        inspector.model.final_estimator.feature_names_in_
+    )
+
+    # check that the SHAP values add up to the predictions
+    shap_totals = shap_values.sum(axis=1)
+
+    # calculate the difference between total SHAP values and prediction
+    # for every observation. This is always the same constant value,
+    # therefore the mean absolute deviation is zero.
+
+    shap_minus_pred = shap_totals - inspector.model.predict(X=sample.features)
+    assert (
+        round((shap_minus_pred - shap_minus_pred.mean()).abs().mean(), 12) == 0.0
+    ), "predictions matching total SHAP"
+    # validate the linkage tree of the resulting inspector
+
+    # if the inspector supports interaction values, test the redundancy linkage
+    # otherwise test the association linkage
+    if inspector.shap_interaction:
+        linkage = inspector.feature_redundancy_linkage()
+        mode = "Redundancy"
+    else:
+        linkage = inspector.feature_association_linkage()
+        mode = "Association"
+
+    # validate the linkage tree
+
+    assert isinstance(linkage, LinkageTree)
+    # get the node whose child distance is < 0.8, and confirm it is the only one
+    cluster_nodes = [
+        node
+        for node in linkage.iter_nodes()
+        if not node.is_leaf and node.children_distance < 0.7
+    ]
+    assert len(cluster_nodes) == 1, "only two features form a cluster"
+    # check the child nodes are Longitude and Latitude
+    children = linkage.children(cluster_nodes[0])
+    assert children is not None, "a cluster node has children"
+    assert {child.name for child in children} == {
+        "impute__Longitude",
+        "impute__Latitude",
+    }, "the cluster is Longitude and Latitude features"
+
+    print()
+    DendrogramDrawer(style="text").draw(
+        data=linkage,
+        title=f"{inspector.explainer_factory.__class__.__name__} ({mode})",
+    )

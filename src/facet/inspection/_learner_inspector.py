@@ -2,6 +2,7 @@
 Implementation of :class:`.LearnerInspector`.
 """
 import logging
+import re
 from typing import Any, Dict, Generic, List, Optional, TypeVar, Union, cast
 
 import pandas as pd
@@ -55,7 +56,9 @@ __tracker = AllTracker(globals())
     replacement="",
 )
 @inheritdoc(match="""[see superclass]""")
-class LearnerInspector(ModelInspector, Generic[T_SupervisedLearnerDF]):
+class LearnerInspector(
+    ModelInspector[T_SupervisedLearnerDF], Generic[T_SupervisedLearnerDF]
+):
     """[see superclass]"""
 
     #: The default explainer factory used by this inspector.
@@ -67,8 +70,8 @@ class LearnerInspector(ModelInspector, Generic[T_SupervisedLearnerDF]):
 
     def __init__(
         self,
+        model: SupervisedLearnerPipelineDF[T_SupervisedLearnerDF],
         *,
-        pipeline: SupervisedLearnerPipelineDF[T_SupervisedLearnerDF],
         explainer_factory: Optional[ExplainerFactory[T_SupervisedLearnerDF]] = None,
         shap_interaction: bool = True,
         n_jobs: Optional[int] = None,
@@ -77,15 +80,15 @@ class LearnerInspector(ModelInspector, Generic[T_SupervisedLearnerDF]):
         verbose: Optional[int] = None,
     ) -> None:
         """
-        :param pipeline: the learner pipeline to inspect
+        :param model: the learner pipeline to inspect
         :param explainer_factory: optional function that creates a shap Explainer
             (default: ``TreeExplainerFactory``)
         """
 
-        if not pipeline.is_fitted:
+        if not model.is_fitted:
             raise ValueError("arg pipeline must be fitted")
 
-        final_estimator: T_SupervisedLearnerDF = pipeline.final_estimator
+        final_estimator: T_SupervisedLearnerDF = model.final_estimator
         if is_classifier(final_estimator):
             try:
                 n_outputs = final_estimator.n_outputs_
@@ -123,6 +126,7 @@ class LearnerInspector(ModelInspector, Generic[T_SupervisedLearnerDF]):
                 shap_interaction = False
 
         super().__init__(
+            model=model,
             shap_interaction=shap_interaction,
             n_jobs=n_jobs,
             shared_memory=shared_memory,
@@ -130,12 +134,11 @@ class LearnerInspector(ModelInspector, Generic[T_SupervisedLearnerDF]):
             verbose=verbose,
         )
 
-        self.pipeline = pipeline
         self.explainer_factory = explainer_factory
         self._shap_calculator: Optional[LearnerShapCalculator[Any]] = None
 
-    __init__.__doc__ = cast(str, __init__.__doc__) + cast(
-        str, ModelInspector.__init__.__doc__
+    __init__.__doc__ = str(__init__.__doc__) + re.sub(
+        r"(?m)^\s*:param model:\s+.*$", "", str(ModelInspector.__init__.__doc__)
     )
 
     @property
@@ -143,14 +146,14 @@ class LearnerInspector(ModelInspector, Generic[T_SupervisedLearnerDF]):
         """[see superclass]"""
         return cast(
             List[str],
-            self.pipeline.final_estimator.feature_names_in_.to_list(),
+            self.model.final_estimator.feature_names_in_.to_list(),
         )
 
     def preprocess_features(
         self, features: Union[pd.DataFrame, pd.Series]
     ) -> pd.DataFrame:
         """[see superclass]"""
-        return self.pipeline.preprocess(features)
+        return self.model.preprocess(features)
 
     @property
     def shap_calculator(self) -> LearnerShapCalculator[Any]:
@@ -159,10 +162,10 @@ class LearnerInspector(ModelInspector, Generic[T_SupervisedLearnerDF]):
         if self._shap_calculator is not None:
             return self._shap_calculator
 
-        learner: SupervisedLearnerDF = self.pipeline.final_estimator
+        learner: SupervisedLearnerDF = self.model.final_estimator
 
         shap_calculator_params: Dict[str, Any] = dict(
-            learner=self.pipeline.final_estimator.native_estimator,
+            model=self.model.final_estimator.native_estimator,
             interaction_values=self.shap_interaction,
             explainer_factory=self.explainer_factory,
             n_jobs=self.n_jobs,
