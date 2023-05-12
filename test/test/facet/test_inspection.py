@@ -842,10 +842,9 @@ def validate_linkage(
     # check the child nodes are Longitude and Latitude
     children = linkage.children(cluster_nodes[0])
     assert children is not None, "a cluster node has children"
-    assert {child.name for child in children} == {
-        "impute__Longitude",
-        "impute__Latitude",
-    }, "the cluster is Longitude and Latitude features"
+    assert {child.name.split("__")[-1] for child in children} == (
+        {"Longitude", "Latitude"}
+    ), "the cluster is Longitude and Latitude features"
 
     print()
     DendrogramDrawer(style="text").draw(
