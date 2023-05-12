@@ -20,7 +20,7 @@ requires = [
     "packaging         >=20",
     "pandas         >=1.0",
     "scipy             ~=1.2",
-    "shap              >=0.34,<0.42a",
+    "shap              >=0.36",
     "sklearndf         >=2.2rc,<3a",
     "typing_extensions ~=4.0",
 ]
@@ -79,7 +79,7 @@ packaging         = "~=20.9"
 pandas            = "~=1.0.5"
 python            = ">=3.7.12,<3.8a"    # cannot use ~= due to conda bug
 scipy             = "~=1.4.1"
-shap              = "~=0.34.0"
+shap              = "~=0.36.0"
 sklearndf         = "~=2.2rc"
 typing_extensions = "~=4.0.0"
 # additional minimum requirements of sklearndf

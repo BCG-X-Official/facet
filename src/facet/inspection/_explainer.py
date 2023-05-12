@@ -117,10 +117,17 @@ class BaseExplainer(metaclass=ABCMeta):
       to compute SHAP values and interaction values, respectively. They return
       *numpy* arrays for single-output or single-class models, and lists of *numpy*
       arrays for multi-output or multi-class models.
-    - The new API makes explainer objects callable, and returns an :class:`.Explanation`
-      object that contains the SHAP values and interaction values. For multi-output
-      or multi-class models, the array has an additional dimension for the outputs
-      or classes as the last axis.
+    - The new API introduced in :mod:`shap` 0.36 makes explainer objects callable;
+      direct calls to an explainer object return an :class:`.Explanation` object
+      that contains the SHAP values and interaction values.
+      For multi-output or multi-class models, the array has an additional dimension for
+      the outputs or classes as the last axis.
+
+    As of :mod:`shap` 0.36, the old API is deprecated for the majority of explainers
+    while the :class:`shap.KernelExplainer` still uses the old API exclusively
+    in :mod:`shap` 0.41.
+    We remedy this by adding support for both APIs to all explainers created through
+    an :class:`ExplainerFactory` object.
     """
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
