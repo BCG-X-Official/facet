@@ -14,13 +14,13 @@ dist-name = "gamma-facet"
 license = "Apache Software License v2.0"
 
 requires = [
-    "gamma-pytools  >=2.1rc2,<3a",
+    "gamma-pytools     >=2.1rc2,<3a",
     "matplotlib        ~=3.0",
     "numpy             >=1.21,<2a",  # cannot use ~= due to conda bug
     "packaging         >=20",
-    "pandas         >=1.0",
+    "pandas            >=1.0",
     "scipy             ~=1.2",
-    "shap              >=0.36",
+    "shap              >=0.39",
     "sklearndf         >=2.2rc,<3a",
     "typing_extensions ~=4.0",
 ]
@@ -79,7 +79,7 @@ packaging         = "~=20.9"
 pandas            = "~=1.0.5"
 python            = ">=3.7.12,<3.8a"    # cannot use ~= due to conda bug
 scipy             = "~=1.4.1"
-shap              = "~=0.36.0"
+shap              = "~=0.39.0"
 sklearndf         = "~=2.2rc"
 typing_extensions = "~=4.0.0"
 # additional minimum requirements of sklearndf

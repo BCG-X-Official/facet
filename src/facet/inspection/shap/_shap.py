@@ -344,9 +344,9 @@ class ShapCalculator(
         # calculate the shap values, and ensure the result is a list of arrays
         shap_values: List[npt.NDArray[np.float_]] = self._convert_shap_tensors_to_list(
             shap_tensors=(
-                explainer.shap_interaction_values(features)
+                explainer.shap_interaction_values(X=features)
                 if self.interaction_values
-                else explainer.shap_values(features)
+                else explainer.shap_values(X=features)
             ),
             n_outputs=len(multi_output_names),
         )

@@ -24,7 +24,6 @@ import numpy as np
 import numpy.typing as npt
 import pandas as pd
 import shap
-from packaging import version
 from sklearn.base import ClassifierMixin, RegressorMixin
 from typing_extensions import TypeAlias
 
@@ -52,16 +51,8 @@ __all__ = [
 # conditional and mock imports
 #
 
-if version.parse(shap.__version__) < version.parse("0.36"):
-    # noinspection PyUnresolvedReferences
-    from shap.explainers.explainer import Explainer
-else:
-    try:
-        # noinspection PyUnresolvedReferences
-        from shap import Explainer, Explanation
-    except ImportError as e:
-        log.warning(e)
-        Explainer = type("Explainer", (), {})
+
+from shap import Explainer, Explanation
 
 try:
     import catboost
@@ -105,7 +96,10 @@ __tracker = AllTracker(globals())
 #
 
 
-class BaseExplainer(metaclass=ABCMeta):
+class BaseExplainer(
+    Explainer,  # type: ignore
+    metaclass=ABCMeta,
+):
     """
     Abstract base class of SHAP explainers, providing stubs for methods used by FACET
     but not consistently supported by class :class:`shap.Explainer` across different
@@ -130,23 +124,12 @@ class BaseExplainer(metaclass=ABCMeta):
     an :class:`ExplainerFactory` object.
     """
 
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
-        """
-        :param args: positional args (should usually be empty)
-        :param kwargs: keyword args (should usually be empty)
-        """
-        super().__init__(*args, **kwargs)
-
     @property
     @abstractmethod
     def supports_interaction(self) -> bool:
         """
         ``True`` if the explainer supports interaction effects, ``False`` otherwise.
         """
-        pass
-
-    @abstractmethod
-    def __call__(self, *args: Any, **kwargs: Any) -> Explanation:
         pass
 
     # noinspection PyPep8Naming
@@ -476,7 +459,9 @@ class ParallelExplainer(BaseExplainer, ParallelizableMixin):
         :param max_job_size: the maximum number of observations to allocate to any of
             the explainer jobs running in parallel
         """
-        super().__init__(
+        Explainer.__init__(self, model=explainer.model)
+        ParallelizableMixin.__init__(
+            self,
             n_jobs=n_jobs,
             shared_memory=shared_memory,
             pre_dispatch=pre_dispatch,
@@ -572,20 +557,10 @@ class _TreeExplainer(
     def shap_values(
         self, X: XType, y: YType = None, check_additivity: bool = False, **kwargs: Any
     ) -> ArraysFloat:
+        """[see superclass]"""
         return cast(
             ArraysFloat,
-            shap.explainers.Tree.shap_values(
-                self, X=X, y=y, check_additivity=check_additivity, **kwargs
-            ),
-        )
-
-    # noinspection PyPep8Naming
-    def shap_interaction_values(
-        self, X: XType, y: YType = None, **kwargs: Any
-    ) -> ArraysFloat:
-        return cast(
-            ArraysFloat,
-            shap.explainers.Tree.shap_interaction_values(self, X=X, y=y, **kwargs),
+            super().shap_values(X=X, y=y, check_additivity=check_additivity, **kwargs),
         )
 
 
