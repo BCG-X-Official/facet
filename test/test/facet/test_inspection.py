@@ -96,7 +96,65 @@ def test_model_inspection(
         n_jobs=n_jobs,
     ).fit(sample)
 
-    validate_linkage(inspector=inspector, sample=sample)
+    shap_values: pd.DataFrame = inspector.shap_values()
+
+    # the length of rows in shap_values should be equal to the unique observation
+    # indices we have had in the predictions_df
+    assert len(shap_values) == len(sample)
+
+    # index names
+    assert shap_values.index.names == [Sample.IDX_OBSERVATION]
+    assert shap_values.columns.names == [Sample.IDX_FEATURE]
+
+    # column index
+    assert set(shap_values.columns) == set(
+        inspector.model.final_estimator.feature_names_in_
+    )
+
+    # check that the SHAP values add up to the predictions
+    shap_totals = shap_values.sum(axis=1)
+
+    # calculate the difference between total SHAP values and prediction
+    # for every observation. This is always the same constant value,
+    # therefore the mean absolute deviation is zero.
+
+    shap_minus_pred = shap_totals - inspector.model.predict(X=sample.features)
+    assert (
+        round((shap_minus_pred - shap_minus_pred.mean()).abs().mean(), 12) == 0.0
+    ), "predictions matching total SHAP"
+    # validate the linkage tree of the resulting inspector
+
+    # if the inspector supports interaction values, test the redundancy linkage
+    # otherwise test the association linkage
+    if inspector.shap_interaction:
+        linkage = inspector.feature_redundancy_linkage()
+        mode = "Redundancy"
+    else:
+        linkage = inspector.feature_association_linkage()
+        mode = "Association"
+
+    # validate the linkage tree
+
+    assert isinstance(linkage, LinkageTree)
+    # get the node whose child distance is < 0.8, and confirm it is the only one
+    cluster_nodes = [
+        node
+        for node in linkage.iter_nodes()
+        if not node.is_leaf and node.children_distance < 0.7
+    ]
+    assert len(cluster_nodes) == 1, "only two features form a cluster"
+    # check the child nodes are Longitude and Latitude
+    children = linkage.children(cluster_nodes[0])
+    assert children is not None, "a cluster node has children"
+    assert {child.name.split("__")[-1] for child in children} == (
+        {"Longitude", "Latitude"}
+    ), "the cluster is Longitude and Latitude features"
+
+    print()
+    DendrogramDrawer(style="text").draw(
+        data=linkage,
+        title=f"{inspector.explainer_factory.__class__.__name__} ({mode})",
+    )
 
 
 def test_binary_classifier_ranking(
@@ -787,67 +845,3 @@ def print_matrix(matrix: List[List[float]], *, split: bool) -> None:
             txt += "np.nan" if np.isnan(x) else f"{x:.3f}"
         print(txt + "],")
     print("]")
-
-
-def validate_linkage(
-    inspector: LearnerInspector[RegressorPipelineDF[Any]], sample: Sample
-) -> None:
-    shap_values: pd.DataFrame = inspector.shap_values()
-
-    # the length of rows in shap_values should be equal to the unique observation
-    # indices we have had in the predictions_df
-    assert len(shap_values) == len(sample)
-
-    # index names
-    assert shap_values.index.names == [Sample.IDX_OBSERVATION]
-    assert shap_values.columns.names == [Sample.IDX_FEATURE]
-
-    # column index
-    assert set(shap_values.columns) == set(
-        inspector.model.final_estimator.feature_names_in_
-    )
-
-    # check that the SHAP values add up to the predictions
-    shap_totals = shap_values.sum(axis=1)
-
-    # calculate the difference between total SHAP values and prediction
-    # for every observation. This is always the same constant value,
-    # therefore the mean absolute deviation is zero.
-
-    shap_minus_pred = shap_totals - inspector.model.predict(X=sample.features)
-    assert (
-        round((shap_minus_pred - shap_minus_pred.mean()).abs().mean(), 12) == 0.0
-    ), "predictions matching total SHAP"
-    # validate the linkage tree of the resulting inspector
-
-    # if the inspector supports interaction values, test the redundancy linkage
-    # otherwise test the association linkage
-    if inspector.shap_interaction:
-        linkage = inspector.feature_redundancy_linkage()
-        mode = "Redundancy"
-    else:
-        linkage = inspector.feature_association_linkage()
-        mode = "Association"
-
-    # validate the linkage tree
-
-    assert isinstance(linkage, LinkageTree)
-    # get the node whose child distance is < 0.8, and confirm it is the only one
-    cluster_nodes = [
-        node
-        for node in linkage.iter_nodes()
-        if not node.is_leaf and node.children_distance < 0.7
-    ]
-    assert len(cluster_nodes) == 1, "only two features form a cluster"
-    # check the child nodes are Longitude and Latitude
-    children = linkage.children(cluster_nodes[0])
-    assert children is not None, "a cluster node has children"
-    assert {child.name.split("__")[-1] for child in children} == (
-        {"Longitude", "Latitude"}
-    ), "the cluster is Longitude and Latitude features"
-
-    print()
-    DendrogramDrawer(style="text").draw(
-        data=linkage,
-        title=f"{inspector.explainer_factory.__class__.__name__} ({mode})",
-    )
