@@ -180,7 +180,7 @@ def test_model_inspection_classifier_binary(
     )
 
 
-def test_model_inspection_classifier_binary_single_shap_output() -> None:
+def test_model_inspection_classifier_binary_single_shap_output(n_jobs: int) -> None:
     # simulate some data
     x, y = make_classification(
         n_samples=200, n_features=5, n_informative=5, n_redundant=0, random_state=42
@@ -199,7 +199,7 @@ def test_model_inspection_classifier_binary_single_shap_output() -> None:
     ).fit(sample_df.features, sample_df.target)
 
     # fit the inspector
-    LearnerInspector(model=pipeline, n_jobs=-3).fit(sample_df)
+    LearnerInspector(model=pipeline, n_jobs=n_jobs).fit(sample_df)
 
 
 # noinspection DuplicatedCode

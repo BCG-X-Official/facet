@@ -15,7 +15,6 @@ from typing import (
     List,
     Mapping,
     Optional,
-    Type,
     TypeVar,
     Union,
     cast,
@@ -38,7 +37,6 @@ log = logging.getLogger(__name__)
 
 __all__ = [
     "BaseExplainer",
-    "CallableExplainer",
     "ExactExplainerFactory",
     "ExplainerFactory",
     "ExplainerJob",
@@ -73,7 +71,6 @@ except ImportError:
     catboost = ModuleType("catboost")
     catboost.Pool = type("Pool", (), {})
 
-
 #
 # Type aliases
 #
@@ -84,7 +81,8 @@ Learner: TypeAlias = Union[RegressorMixin, ClassifierMixin]
 ModelFunction = Callable[
     [Union[pd.Series, pd.DataFrame]], Union[float, np.ndarray, pd.Series]
 ]
-
+XType = Union[npt.NDArray[Any], pd.DataFrame, catboost.Pool]
+YType = Union[npt.NDArray[Any], pd.Series, None]
 
 #
 # Type variables
@@ -112,6 +110,17 @@ class BaseExplainer(metaclass=ABCMeta):
     Abstract base class of SHAP explainers, providing stubs for methods used by FACET
     but not consistently supported by class :class:`shap.Explainer` across different
     versions of the `shap` package.
+
+    Provides unified support for the old and new explainer APIs:
+
+    - The old API uses methods :meth:`.shap_values` and :meth:`.shap_interaction_values`
+      to compute SHAP values and interaction values, respectively. They return
+      *numpy* arrays for single-output or single-class models, and lists of *numpy*
+      arrays for multi-output or multi-class models.
+    - The new API makes explainer objects callable, and returns an :class:`.Explanation`
+      object that contains the SHAP values and interaction values. For multi-output
+      or multi-class models, the array has an additional dimension for the outputs
+      or classes as the last axis.
     """
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
@@ -121,14 +130,20 @@ class BaseExplainer(metaclass=ABCMeta):
         """
         super().__init__(*args, **kwargs)
 
-    # noinspection PyPep8Naming,PyUnresolvedReferences
+    @property
     @abstractmethod
-    def shap_values(
-        self,
-        X: Union[npt.NDArray[Any], pd.DataFrame, catboost.Pool],
-        y: Union[npt.NDArray[Any], pd.Series, None] = None,
-        **kwargs: Any,
-    ) -> ArraysFloat:
+    def supports_interaction(self) -> bool:
+        """
+        ``True`` if the explainer supports interaction effects, ``False`` otherwise.
+        """
+        pass
+
+    @abstractmethod
+    def __call__(self, *args: Any, **kwargs: Any) -> Explanation:
+        pass
+
+    # noinspection PyPep8Naming
+    def shap_values(self, X: XType, y: YType = None, **kwargs: Any) -> ArraysFloat:
         """
         Estimate the SHAP values for a set of samples.
 
@@ -140,15 +155,38 @@ class BaseExplainer(metaclass=ABCMeta):
         :return: SHAP values as an array of shape `(n_observations, n_features)`;
             a list of such arrays in the case of a multi-output model
         """
-        pass
+
+        explanation: Explanation
+        if y is None:
+            explanation = self(X, **kwargs)
+        else:
+            explanation = self(X, y, **kwargs)
+
+        values = explanation.values
+
+        interactions: int = kwargs.get("interactions", 1)
+        if isinstance(values, np.ndarray):
+            if values.ndim == 2 + interactions:
+                # convert the array of shape
+                # (n_observations, n_features, ..., n_outputs)
+                # to a list of arrays of shape (n_observations, n_features, ...)
+                return [values[..., i] for i in range(values.shape[-1])]
+            elif values.ndim == 1 + interactions:
+                # return a single array of shape (n_observations, n_features)
+                return values
+            else:
+                raise ValueError(
+                    f"SHAP values have unexpected shape {values.shape}; "
+                    "expected shape (n_observations, n_features, ..., n_outputs) "
+                    "or (n_observations, n_features, ...)"
+                )
+        else:
+            assert isinstance(values, list), "SHAP values must be a list or array"
+            return values
 
     # noinspection PyPep8Naming,PyUnresolvedReferences
-    @abstractmethod
     def shap_interaction_values(
-        self,
-        X: Union[npt.NDArray[Any], pd.DataFrame, catboost.Pool],
-        y: Union[npt.NDArray[Any], pd.Series, None] = None,
-        **kwargs: Any,
+        self, X: XType, y: YType = None, **kwargs: Any
     ) -> ArraysFloat:
         """
         Estimate the SHAP interaction values for a set of samples.
@@ -162,7 +200,12 @@ class BaseExplainer(metaclass=ABCMeta):
             `(n_observations, n_features, n_features)`;
             a list of such arrays in the case of a multi-output model
         """
-        pass
+        if self.supports_interaction:
+            return self.shap_values(X, y, interactions=2, **kwargs)
+        else:
+            raise NotImplementedError(
+                f"{self.__class__.__name__} does not support interaction values"
+            )
 
 
 class ExplainerFactory(HasExpressionRepr, Generic[T_Model_contra], metaclass=ABCMeta):
@@ -246,10 +289,10 @@ class ExplainerJob(Job[ArraysAny]):
     interactions: bool
 
     #: the feature values of the observations to be explained
-    X: Union[npt.NDArray[Any], pd.DataFrame]
+    X: XType
 
     #: the target values of the observations to be explained
-    y: Union[None, npt.NDArray[Any], pd.Series]
+    y: YType
 
     #: additional arguments specific to the explainer method
     kwargs: Dict[str, Any]
@@ -258,8 +301,8 @@ class ExplainerJob(Job[ArraysAny]):
     def __init__(
         self,
         explainer: BaseExplainer,
-        X: Union[npt.NDArray[Any], pd.DataFrame],
-        y: Union[None, npt.NDArray[Any], pd.Series] = None,
+        X: XType,
+        y: YType = None,
         *,
         interactions: bool,
         **kwargs: Any,
@@ -324,8 +367,8 @@ class ExplainerQueue(JobQueue[ArraysAny, ArraysAny]):
     def __init__(
         self,
         explainer: BaseExplainer,
-        X: Union[npt.NDArray[Any], pd.DataFrame],
-        y: Union[None, npt.NDArray[Any], pd.Series] = None,
+        X: XType,
+        y: YType = None,
         *,
         interactions: bool,
         max_job_size: int,
@@ -339,9 +382,14 @@ class ExplainerQueue(JobQueue[ArraysAny, ArraysAny]):
             calculate SHAP interaction values
         :param max_job_size: the maximum number of observations to allocate to each job
         :param kwargs: additional arguments specific to the explainer method
+
+        :raise NotImplementedError: if `X` is a :class:`~catboost.Pool`;
+            this is currently not supported
         """
         super().__init__()
 
+        if isinstance(X, catboost.Pool):
+            raise NotImplementedError("CatBoost Pool is not supported")
         self.explainer = explainer
         self.X = X.values if isinstance(X, pd.DataFrame) else X
         self.y = y.values if isinstance(y, pd.Series) else y
@@ -439,32 +487,38 @@ class ParallelExplainer(BaseExplainer, ParallelizableMixin):
     assert __init__.__doc__ is not None
     __init__.__doc__ += cast(str, ParallelizableMixin.__init__.__doc__)
 
-    # noinspection PyPep8Naming
-    def shap_values(
-        self,
-        X: Union[npt.NDArray[Any], pd.DataFrame, catboost.Pool],
-        y: Union[npt.NDArray[Any], pd.Series, None] = None,
-        **kwargs: Any,
-    ) -> ArraysFloat:
+    @property
+    def supports_interaction(self) -> bool:
         """[see superclass]"""
-        return self._run(self.explainer, X, y, interactions=False, **kwargs)
+        return self.explainer.supports_interaction
+
+    def __call__(self, *args: Any, **kwargs: Any) -> Explanation:
+        return self.explainer(*args, **kwargs)
+
+    # noinspection PyPep8Naming
+    def shap_values(self, X: XType, y: YType = None, **kwargs: Any) -> ArraysFloat:
+        """[see superclass]"""
+        if y is None:
+            return self.explainer.shap_values(X=X, **kwargs)
+        else:
+            return self.explainer.shap_values(X=X, y=y, **kwargs)
 
     # noinspection PyPep8Naming
     def shap_interaction_values(
-        self,
-        X: Union[npt.NDArray[Any], pd.DataFrame, catboost.Pool],
-        y: Union[npt.NDArray[Any], pd.Series, None] = None,
-        **kwargs: Any,
+        self, X: XType, y: YType = None, **kwargs: Any
     ) -> ArraysFloat:
         """[see superclass]"""
-        return self._run(self.explainer, X, y, interactions=True, **kwargs)
+        if y is None:
+            return self.explainer.shap_interaction_values(X=X, **kwargs)
+        else:
+            return self.explainer.shap_interaction_values(X=X, y=y, **kwargs)
 
     # noinspection PyPep8Naming
     def _run(
         self,
         explainer: BaseExplainer,
-        X: Union[npt.NDArray[Any], pd.DataFrame, catboost.Pool],
-        y: Union[None, npt.NDArray[Any], pd.Series] = None,
+        X: XType,
+        y: YType = None,
         *,
         interactions: bool,
         **kwargs: Any,
@@ -482,43 +536,50 @@ class ParallelExplainer(BaseExplainer, ParallelizableMixin):
 
 
 #
-# CallableExplainer: abstract base class of SHAP explainers that are callable objects
+# TreeExplainer factory
 #
 
 
 @inheritdoc(match="""[see superclass]""")
-class CallableExplainer(BaseExplainer, metaclass=ABCMeta):
-    """
-    Abstract base class of SHAP explainers that are callable objects.
-    """
+class _TreeExplainer(
+    shap.explainers.Tree,  # type: ignore
+    BaseExplainer,
+):
+    @property
+    def supports_interaction(self) -> bool:
+        """[see superclass]"""
+        return True
 
-    @abstractmethod
-    def __call__(self, *args: Any, **kwargs: Any) -> Explanation:
-        pass
+    # noinspection PyPep8Naming
+    def __call__(
+        self, X: XType, y: YType = None, check_additivity: bool = False, **kwargs: Any
+    ) -> Explanation:
+        # we override the __call__ method to change the default value of
+        # arg check_additivity to False
+        return cast(
+            Explanation,
+            super().__call__(X=X, y=y, check_additivity=check_additivity, **kwargs),
+        )
 
     # noinspection PyPep8Naming
     def shap_values(
-        self,
-        X: Union[npt.NDArray[Any], pd.DataFrame, catboost.Pool],
-        y: Union[npt.NDArray[Any], pd.Series, None] = None,
-        **kwargs: Any,
+        self, X: XType, y: YType = None, check_additivity: bool = False, **kwargs: Any
     ) -> ArraysFloat:
-        """[see superclass]"""
+        return cast(
+            ArraysFloat,
+            shap.explainers.Tree.shap_values(
+                self, X=X, y=y, check_additivity=check_additivity, **kwargs
+            ),
+        )
 
-        explanation: Explanation
-        if y is None:
-            explanation = self(X, **kwargs)
-        else:
-            explanation = self(X, y, **kwargs)
-
-        return cast(ArraysFloat, explanation.values)
-
-
-#
-# TreeExplainer factory
-#
-
-_TreeExplainer: Optional[Type[BaseExplainer]] = None
+    # noinspection PyPep8Naming
+    def shap_interaction_values(
+        self, X: XType, y: YType = None, **kwargs: Any
+    ) -> ArraysFloat:
+        return cast(
+            ArraysFloat,
+            shap.explainers.Tree.shap_interaction_values(self, X=X, y=y, **kwargs),
+        )
 
 
 @inheritdoc(match="""[see superclass]""")
@@ -557,13 +618,6 @@ class TreeExplainerFactory(ExplainerFactory[Learner]):
         self.feature_perturbation = feature_perturbation
         self._uses_background_dataset = uses_background_dataset
 
-        global _TreeExplainer
-
-        if _TreeExplainer is None:
-            _TreeExplainer = type(
-                "_TreeExplainer", (shap.TreeExplainer, BaseExplainer), {}
-            )
-
     __init__.__doc__ = f"{__init__.__doc__}{ExplainerFactory.__init__.__doc__}"
 
     @property
@@ -600,12 +654,6 @@ class TreeExplainerFactory(ExplainerFactory[Learner]):
                 )
             ),
             **self.explainer_kwargs,
-        )
-
-        # we overwrite the shap_values method - need to tell mypy to allow this
-        # as an exception
-        explainer.shap_values = functools.partial(  # type: ignore
-            explainer.shap_values, check_additivity=False
         )
 
         return explainer
@@ -688,19 +736,26 @@ class _KernelExplainer(
     shap.KernelExplainer,  # type: ignore
     BaseExplainer,
 ):
-    # noinspection PyPep8Naming,PyUnresolvedReferences
-    def shap_interaction_values(
-        self,
-        X: Union[npt.NDArray[Any], pd.DataFrame, catboost.Pool],
-        y: Union[npt.NDArray[Any], pd.Series, None] = None,
-        **kwargs: Any,
-    ) -> ArraysFloat:
+    def __call__(self, *args: Any, **kwargs: Any) -> Explanation:
+        """[see superclass]"""
+
+        # we override the BaseExplainer implementation because the shap.KernelExplainer
+        # implementation does not support __call__
+        shap_values = shap.KernelExplainer.shap_values(self, *args, **kwargs)
+
+        if isinstance(shap_values, list):
+            # combine the shap values into a single array, along an additional axis
+            shap_values = np.stack(shap_values, axis=-1)
+
+        return Explanation(shap_values)
+
+    @property
+    def supports_interaction(self) -> bool:
         """
-        Not supported by :class:`~shap.KernelExplainer`.
+        :return: ``False`` because :class:`~shap.KernelExplainer` does not support
+            interaction values
         """
-        raise NotImplementedError(
-            "shap_interaction_values is not supported by class KernelExplainer"
-        )
+        return False
 
 
 @inheritdoc(match="""[see superclass]""")
@@ -788,18 +843,15 @@ class KernelExplainerFactory(FunctionExplainerFactory):
 @inheritdoc(match="""[see superclass]""")
 class _ExactExplainer(
     shap.explainers.Exact,  # type: ignore
-    CallableExplainer,
+    BaseExplainer,
 ):
-
-    # noinspection PyPep8Naming,PyUnresolvedReferences
-    def shap_interaction_values(
-        self,
-        X: Union[npt.NDArray[Any], pd.DataFrame, catboost.Pool],
-        y: Union[npt.NDArray[Any], pd.Series, None] = None,
-        **kwargs: Any,
-    ) -> ArraysFloat:
-        """[see superclass]"""
-        return self.shap_values(X=X, y=y, interactions=2, **kwargs)
+    @property
+    def supports_interaction(self) -> bool:
+        """
+        :return: ``True`` because :class:`~shap.explainers.Exact` supports interaction
+            values
+        """
+        return True
 
 
 @inheritdoc(match="""[see superclass]""")
@@ -843,31 +895,20 @@ class ExactExplainerFactory(FunctionExplainerFactory):
 # noinspection PyPep8Naming
 class _PermutationExplainer(
     shap.explainers.Permutation,  # type: ignore
-    CallableExplainer,
+    BaseExplainer,
 ):
-    # noinspection PyPep8Naming
-    def shap_values(
-        self,
-        X: Union[npt.NDArray[Any], pd.DataFrame, catboost.Pool],
-        y: Union[npt.NDArray[Any], pd.Series, None] = None,
-        **kwargs: Any,
-    ) -> ArraysFloat:
-        """[see superclass]"""
-        return CallableExplainer.shap_values(self, X=X, y=y, **kwargs)
+    @property
+    def supports_interaction(self) -> bool:
+        """
+        :return: ``False`` because :class:`~shap.explainers.Permutation` does not
+            support interaction values
+        """
+        return False
 
-    # noinspection PyPep8Naming,PyUnresolvedReferences
-    def shap_interaction_values(
-        self,
-        X: Union[npt.NDArray[Any], pd.DataFrame, catboost.Pool],
-        y: Union[npt.NDArray[Any], pd.Series, None] = None,
-        **kwargs: Any,
-    ) -> ArraysFloat:
-        """
-        Not supported by :class:`~shap.Permutation`.
-        """
-        raise NotImplementedError(
-            "shap_interaction_values is not supported by class Permutation"
-        )
+    def shap_values(self, X: XType, y: YType = None, **kwargs: Any) -> ArraysFloat:
+        # skip the call to super().shap_values() because would raise
+        # an AttributeError exception due to a bug in the shap library
+        return BaseExplainer.shap_values(self, X, y, **kwargs)
 
 
 @inheritdoc(match="""[see superclass]""")

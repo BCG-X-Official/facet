@@ -381,12 +381,7 @@ class ShapCalculator(
         n_outputs: int,
     ) -> List[npt.NDArray[np.float_]]:
         def _validate_shap_tensor(_t: npt.NDArray[np.float_]) -> None:
-            try:
-                isnan = np.isnan(np.sum(_t))
-            except TypeError as e:
-                print(e)
-                raise
-            if isnan:
+            if np.isnan(np.sum(_t)):
                 raise AssertionError(
                     "Output of SHAP explainer includes NaN values. "
                     "This should not happen; consider initialising the "
@@ -394,7 +389,7 @@ class ShapCalculator(
                     "configuration, or that makes SHAP explainers of a different type."
                 )
 
-        if isinstance(shap_tensors, List):
+        if isinstance(shap_tensors, list):
             for shap_tensor in shap_tensors:
                 _validate_shap_tensor(shap_tensor)
         else:
