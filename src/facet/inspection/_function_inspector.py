@@ -3,7 +3,7 @@ Implementation of :class:`.LearnerInspector`.
 """
 import logging
 import re
-from typing import Any, Generic, List, Optional, Sequence, TypeVar, Union
+from typing import Any, Generic, List, Optional, Sequence, TypeVar, Union, cast
 
 from pytools.api import AllTracker, inheritdoc, subsdoc, to_list
 
@@ -77,21 +77,25 @@ class FunctionInspector(ModelInspector[T_Function], Generic[T_Function]):
             (default: a :class:`.KernelExplainerFactory` instance; see
             :attr:`.DEFAULT_EXPLAINER_FACTORY`)
         """
+        _explainer_factory: ExplainerFactory[T_Function]
 
         if explainer_factory:
             if not explainer_factory.explains_raw_output:
                 raise ValueError(
                     "arg explainer_factory must be configured to explain raw output"
                 )
+            _explainer_factory = explainer_factory
         else:
-            explainer_factory = self.DEFAULT_EXPLAINER_FACTORY
-            assert explainer_factory.explains_raw_output
+            _explainer_factory = cast(
+                ExplainerFactory[T_Function], self.DEFAULT_EXPLAINER_FACTORY
+            )
+            assert _explainer_factory.explains_raw_output
 
         if shap_interaction:
-            if not explainer_factory.supports_shap_interaction_values:
+            if not _explainer_factory.supports_shap_interaction_values:
                 log.warning(
                     "ignoring arg shap_interaction=True: "
-                    f"explainers made by {explainer_factory!r} do not support "
+                    f"explainers made by {_explainer_factory!r} do not support "
                     "SHAP interaction values"
                 )
                 shap_interaction = False
@@ -109,7 +113,7 @@ class FunctionInspector(ModelInspector[T_Function], Generic[T_Function]):
         self._feature_names = to_list(
             feature_names, element_type=str, arg_name="feature_names"
         )
-        self.explainer_factory = explainer_factory
+        self.explainer_factory: ExplainerFactory[T_Function] = _explainer_factory
         self._shap_calculator: Optional[ShapCalculator[Any]] = None
 
     __init__.__doc__ = str(__init__.__doc__) + re.sub(
