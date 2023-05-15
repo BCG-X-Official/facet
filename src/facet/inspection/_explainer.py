@@ -10,11 +10,12 @@ from typing import (
     Any,
     Callable,
     Dict,
+    Generic,
     Iterable,
     List,
     Mapping,
     Optional,
-    Type,
+    TypeVar,
     Union,
     cast,
 )
@@ -23,24 +24,28 @@ import numpy as np
 import numpy.typing as npt
 import pandas as pd
 import shap
-from packaging import version
-from sklearn.base import BaseEstimator
+from sklearn.base import ClassifierMixin, RegressorMixin
+from typing_extensions import TypeAlias
 
 from pytools.api import AllTracker, inheritdoc, validate_type
 from pytools.expression import Expression, HasExpressionRepr
 from pytools.expression.atomic import Id
 from pytools.parallelization import Job, JobQueue, JobRunner, ParallelizableMixin
-from sklearndf import ClassifierDF, LearnerDF, RegressorDF
+
+from ._types import ModelFunction
 
 log = logging.getLogger(__name__)
 
 __all__ = [
     "BaseExplainer",
+    "ExactExplainerFactory",
     "ExplainerFactory",
     "ExplainerJob",
     "ExplainerQueue",
+    "FunctionExplainerFactory",
     "KernelExplainerFactory",
     "ParallelExplainer",
+    "PermutationExplainerFactory",
     "TreeExplainerFactory",
 ]
 
@@ -48,16 +53,8 @@ __all__ = [
 # conditional and mock imports
 #
 
-if version.parse(shap.__version__) < version.parse("0.36"):
-    # noinspection PyUnresolvedReferences
-    from shap.explainers.explainer import Explainer
-else:
-    try:
-        # noinspection PyUnresolvedReferences
-        from shap import Explainer
-    except ImportError as e:
-        log.warning(e)
-        Explainer = type("Explainer", (), {})
+
+from shap import Explainer, Explanation
 
 try:
     import catboost
@@ -67,13 +64,22 @@ except ImportError:
     catboost = ModuleType("catboost")
     catboost.Pool = type("Pool", (), {})
 
+#
+# Type aliases
+#
+
+ArraysAny: TypeAlias = Union[npt.NDArray[Any], List[npt.NDArray[Any]]]
+ArraysFloat: TypeAlias = Union[npt.NDArray[np.float_], List[npt.NDArray[np.float_]]]
+Learner: TypeAlias = Union[RegressorMixin, ClassifierMixin]
+XType = Union[npt.NDArray[Any], pd.DataFrame, catboost.Pool]
+YType = Union[npt.NDArray[Any], pd.Series, None]
 
 #
-# Type variables and aliases
+# Type variables
 #
 
-ArraysAny = Union[npt.NDArray[Any], List[npt.NDArray[Any]]]
-ArraysFloat = Union[npt.NDArray[np.float_], List[npt.NDArray[np.float_]]]
+T_Model = TypeVar("T_Model")
+
 
 #
 # Ensure all symbols introduced below are included in __all__
@@ -87,48 +93,87 @@ __tracker = AllTracker(globals())
 #
 
 
-class BaseExplainer(metaclass=ABCMeta):
+class BaseExplainer(
+    Explainer,  # type: ignore
+    metaclass=ABCMeta,
+):
     """
     Abstract base class of SHAP explainers, providing stubs for methods used by FACET
     but not consistently supported by class :class:`shap.Explainer` across different
     versions of the `shap` package.
+
+    Provides unified support for the old and new explainer APIs:
+
+    - The old API uses methods :meth:`.shap_values` and :meth:`.shap_interaction_values`
+      to compute SHAP values and interaction values, respectively. They return
+      *numpy* arrays for single-output or single-class models, and lists of *numpy*
+      arrays for multi-output or multi-class models.
+    - The new API introduced in :mod:`shap` 0.36 makes explainer objects callable;
+      direct calls to an explainer object return an :class:`.Explanation` object
+      that contains the SHAP values and interaction values.
+      For multi-output or multi-class models, the array has an additional dimension for
+      the outputs or classes as the last axis.
+
+    As of :mod:`shap` 0.36, the old API is deprecated for the majority of explainers
+    while the :class:`shap.KernelExplainer` still uses the old API exclusively
+    in :mod:`shap` 0.41.
+    We remedy this by adding support for both APIs to all explainers created through
+    an :class:`ExplainerFactory` object.
     """
 
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
-        """
-        :param args: positional args (should usually be empty)
-        :param kwargs: keyword args (should usually be empty)
-        """
-        super().__init__(*args, **kwargs)
-
-    # noinspection PyPep8Naming,PyUnresolvedReferences
+    @property
     @abstractmethod
-    def shap_values(
-        self,
-        X: Union[npt.NDArray[Any], pd.DataFrame, catboost.Pool],
-        y: Union[npt.NDArray[Any], pd.Series, None] = None,
-        **kwargs: Any,
-    ) -> ArraysFloat:
+    def supports_interaction(self) -> bool:
+        """
+        ``True`` if the explainer supports interaction effects, ``False`` otherwise.
+        """
+        pass
+
+    # noinspection PyPep8Naming
+    def shap_values(self, X: XType, y: YType = None, **kwargs: Any) -> ArraysFloat:
         """
         Estimate the SHAP values for a set of samples.
 
         :param X: matrix of samples (# samples x # features) on which to explain the
             model's output
         :param y: array of label values for each sample, used when explaining loss
-            functions
+            functions (optional)
         :param kwargs: additional arguments specific to the explainer implementation
         :return: SHAP values as an array of shape `(n_observations, n_features)`;
             a list of such arrays in the case of a multi-output model
         """
-        pass
+
+        explanation: Explanation
+        if y is None:
+            explanation = self(X, **kwargs)
+        else:
+            explanation = self(X, y, **kwargs)
+
+        values = explanation.values
+
+        interactions: int = kwargs.get("interactions", 1)
+        if isinstance(values, np.ndarray):
+            if values.ndim == 2 + interactions:
+                # convert the array of shape
+                # (n_observations, n_features, ..., n_outputs)
+                # to a list of arrays of shape (n_observations, n_features, ...)
+                return [values[..., i] for i in range(values.shape[-1])]
+            elif values.ndim == 1 + interactions:
+                # return a single array of shape (n_observations, n_features)
+                return values
+            else:
+                raise ValueError(
+                    f"SHAP values have unexpected shape {values.shape}; "
+                    "expected shape (n_observations, n_features, ..., n_outputs) "
+                    "or (n_observations, n_features, ...)"
+                )
+        else:
+            assert isinstance(values, list), "SHAP values must be a list or array"
+            return values
 
     # noinspection PyPep8Naming,PyUnresolvedReferences
-    @abstractmethod
     def shap_interaction_values(
-        self,
-        X: Union[npt.NDArray[Any], pd.DataFrame, catboost.Pool],
-        y: Union[npt.NDArray[Any], pd.Series, None] = None,
-        **kwargs: Any,
+        self, X: XType, y: YType = None, **kwargs: Any
     ) -> ArraysFloat:
         """
         Estimate the SHAP interaction values for a set of samples.
@@ -136,19 +181,34 @@ class BaseExplainer(metaclass=ABCMeta):
         :param X: matrix of samples (# samples x # features) on which to explain the
             model's output
         :param y: array of label values for each sample, used when explaining loss
-            functions
+            functions (optional)
         :param kwargs: additional arguments specific to the explainer implementation
         :return: SHAP values as an array of shape
             `(n_observations, n_features, n_features)`;
             a list of such arrays in the case of a multi-output model
         """
-        pass
+        if self.supports_interaction:
+            return self.shap_values(X, y, interactions=2, **kwargs)
+        else:
+            raise NotImplementedError(
+                f"{self.__class__.__name__} does not support interaction values"
+            )
 
 
-class ExplainerFactory(HasExpressionRepr, metaclass=ABCMeta):
+class ExplainerFactory(HasExpressionRepr, Generic[T_Model], metaclass=ABCMeta):
     """
     A factory for constructing :class:`~shap.Explainer` objects.
     """
+
+    #: Additional keyword arguments to be passed to the explainer constructor.
+    kwargs: Dict[str, Any]
+
+    def __init__(self, **kwargs: Any) -> None:
+        """
+        :param kwargs: additional keyword arguments to be passed to the explainer
+        """
+        super().__init__()
+        self.explainer_kwargs = kwargs
 
     @property
     @abstractmethod
@@ -176,7 +236,7 @@ class ExplainerFactory(HasExpressionRepr, metaclass=ABCMeta):
 
     @abstractmethod
     def make_explainer(
-        self, model: LearnerDF, data: Optional[pd.DataFrame]
+        self, model: T_Model, data: Optional[pd.DataFrame]
     ) -> BaseExplainer:
         """
         Construct a new :class:`~shap.Explainer` to compute shap values.
@@ -216,10 +276,10 @@ class ExplainerJob(Job[ArraysAny]):
     interactions: bool
 
     #: the feature values of the observations to be explained
-    X: Union[npt.NDArray[Any], pd.DataFrame]
+    X: XType
 
     #: the target values of the observations to be explained
-    y: Union[None, npt.NDArray[Any], pd.Series]
+    y: YType
 
     #: additional arguments specific to the explainer method
     kwargs: Dict[str, Any]
@@ -228,8 +288,8 @@ class ExplainerJob(Job[ArraysAny]):
     def __init__(
         self,
         explainer: BaseExplainer,
-        X: Union[npt.NDArray[Any], pd.DataFrame],
-        y: Union[None, npt.NDArray[Any], pd.Series] = None,
+        X: XType,
+        y: YType = None,
         *,
         interactions: bool,
         **kwargs: Any,
@@ -294,8 +354,8 @@ class ExplainerQueue(JobQueue[ArraysAny, ArraysAny]):
     def __init__(
         self,
         explainer: BaseExplainer,
-        X: Union[npt.NDArray[Any], pd.DataFrame],
-        y: Union[None, npt.NDArray[Any], pd.Series] = None,
+        X: XType,
+        y: YType = None,
         *,
         interactions: bool,
         max_job_size: int,
@@ -309,9 +369,14 @@ class ExplainerQueue(JobQueue[ArraysAny, ArraysAny]):
             calculate SHAP interaction values
         :param max_job_size: the maximum number of observations to allocate to each job
         :param kwargs: additional arguments specific to the explainer method
+
+        :raise NotImplementedError: if `X` is a :class:`~catboost.Pool`;
+            this is currently not supported
         """
         super().__init__()
 
+        if isinstance(X, catboost.Pool):
+            raise NotImplementedError("CatBoost Pool is not supported")
         self.explainer = explainer
         self.X = X.values if isinstance(X, pd.DataFrame) else X
         self.y = y.values if isinstance(y, pd.Series) else y
@@ -391,7 +456,9 @@ class ParallelExplainer(BaseExplainer, ParallelizableMixin):
         :param max_job_size: the maximum number of observations to allocate to any of
             the explainer jobs running in parallel
         """
-        super().__init__(
+        Explainer.__init__(self, model=explainer.model)
+        ParallelizableMixin.__init__(
+            self,
             n_jobs=n_jobs,
             shared_memory=shared_memory,
             pre_dispatch=pre_dispatch,
@@ -409,32 +476,38 @@ class ParallelExplainer(BaseExplainer, ParallelizableMixin):
     assert __init__.__doc__ is not None
     __init__.__doc__ += cast(str, ParallelizableMixin.__init__.__doc__)
 
-    # noinspection PyPep8Naming
-    def shap_values(
-        self,
-        X: Union[npt.NDArray[Any], pd.DataFrame, catboost.Pool],
-        y: Union[npt.NDArray[Any], pd.Series, None] = None,
-        **kwargs: Any,
-    ) -> ArraysFloat:
+    @property
+    def supports_interaction(self) -> bool:
         """[see superclass]"""
-        return self._run(self.explainer, X, y, interactions=False, **kwargs)
+        return self.explainer.supports_interaction
+
+    def __call__(self, *args: Any, **kwargs: Any) -> Explanation:
+        return self.explainer(*args, **kwargs)
+
+    # noinspection PyPep8Naming
+    def shap_values(self, X: XType, y: YType = None, **kwargs: Any) -> ArraysFloat:
+        """[see superclass]"""
+        if y is None:
+            return self.explainer.shap_values(X=X, **kwargs)
+        else:
+            return self.explainer.shap_values(X=X, y=y, **kwargs)
 
     # noinspection PyPep8Naming
     def shap_interaction_values(
-        self,
-        X: Union[npt.NDArray[Any], pd.DataFrame, catboost.Pool],
-        y: Union[npt.NDArray[Any], pd.Series, None] = None,
-        **kwargs: Any,
+        self, X: XType, y: YType = None, **kwargs: Any
     ) -> ArraysFloat:
         """[see superclass]"""
-        return self._run(self.explainer, X, y, interactions=True, **kwargs)
+        if y is None:
+            return self.explainer.shap_interaction_values(X=X, **kwargs)
+        else:
+            return self.explainer.shap_interaction_values(X=X, y=y, **kwargs)
 
     # noinspection PyPep8Naming
     def _run(
         self,
         explainer: BaseExplainer,
-        X: Union[npt.NDArray[Any], pd.DataFrame, catboost.Pool],
-        y: Union[None, npt.NDArray[Any], pd.Series] = None,
+        X: XType,
+        y: YType = None,
         *,
         interactions: bool,
         **kwargs: Any,
@@ -455,13 +528,43 @@ class ParallelExplainer(BaseExplainer, ParallelizableMixin):
 # TreeExplainer factory
 #
 
-_TreeExplainer: Optional[Type[BaseExplainer]] = None
+
+@inheritdoc(match="""[see superclass]""")
+class _TreeExplainer(
+    shap.explainers.Tree,  # type: ignore
+    BaseExplainer,
+):
+    @property
+    def supports_interaction(self) -> bool:
+        """[see superclass]"""
+        return True
+
+    # noinspection PyPep8Naming
+    def __call__(
+        self, X: XType, y: YType = None, check_additivity: bool = False, **kwargs: Any
+    ) -> Explanation:
+        # we override the __call__ method to change the default value of
+        # arg check_additivity to False
+        return cast(
+            Explanation,
+            super().__call__(X=X, y=y, check_additivity=check_additivity, **kwargs),
+        )
+
+    # noinspection PyPep8Naming
+    def shap_values(
+        self, X: XType, y: YType = None, check_additivity: bool = False, **kwargs: Any
+    ) -> ArraysFloat:
+        """[see superclass]"""
+        return cast(
+            ArraysFloat,
+            super().shap_values(X=X, y=y, check_additivity=check_additivity, **kwargs),
+        )
 
 
 @inheritdoc(match="""[see superclass]""")
-class TreeExplainerFactory(ExplainerFactory):
+class TreeExplainerFactory(ExplainerFactory[Learner]):
     """
-    A factory constructing :class:`~shap.TreeExplainer` objects.
+    A factory constructing :class:`~shap.TreeExplainer` instances.
     """
 
     def __init__(
@@ -470,6 +573,7 @@ class TreeExplainerFactory(ExplainerFactory):
         model_output: Optional[str] = None,
         feature_perturbation: Optional[str] = None,
         uses_background_dataset: bool = True,
+        **kwargs: Any,
     ) -> None:
         """
         :param model_output: override the default model output parameter (optional)
@@ -479,7 +583,7 @@ class TreeExplainerFactory(ExplainerFactory):
             dataset on to the tree explainer even if a background dataset is passed
             to :meth:`.make_explainer`
         """
-        super().__init__()
+        super().__init__(**kwargs)
         validate_type(
             model_output, expected_type=str, optional=True, name="arg model_output"
         )
@@ -493,12 +597,7 @@ class TreeExplainerFactory(ExplainerFactory):
         self.feature_perturbation = feature_perturbation
         self._uses_background_dataset = uses_background_dataset
 
-        global _TreeExplainer
-
-        if _TreeExplainer is None:
-            _TreeExplainer = type(
-                "_TreeExplainer", (shap.TreeExplainer, BaseExplainer), {}
-            )
+    __init__.__doc__ = f"{__init__.__doc__}{ExplainerFactory.__init__.__doc__}"
 
     @property
     def explains_raw_output(self) -> bool:
@@ -516,7 +615,7 @@ class TreeExplainerFactory(ExplainerFactory):
         return self._uses_background_dataset
 
     def make_explainer(
-        self, model: LearnerDF, data: Optional[pd.DataFrame] = None
+        self, model: Learner, data: Optional[pd.DataFrame] = None
     ) -> BaseExplainer:
         """[see superclass]"""
 
@@ -525,7 +624,7 @@ class TreeExplainerFactory(ExplainerFactory):
         assert _TreeExplainer is not None, "Global tree explainer is set"
 
         explainer = _TreeExplainer(
-            model=model.native_estimator,
+            model=model,
             data=data if self._uses_background_dataset else None,
             **self._remove_null_kwargs(
                 dict(
@@ -533,12 +632,7 @@ class TreeExplainerFactory(ExplainerFactory):
                     feature_perturbation=self.feature_perturbation,
                 )
             ),
-        )
-
-        # we overwrite the shap_values method - need to tell mypy to allow this
-        # as an exception
-        explainer.shap_values = functools.partial(  # type: ignore
-            explainer.shap_values, check_additivity=False
+            **self.explainer_kwargs,
         )
 
         return explainer
@@ -553,6 +647,68 @@ class TreeExplainerFactory(ExplainerFactory):
 
 
 #
+# Abstract function explainer factory
+#
+
+
+@inheritdoc(match="""[see superclass]""")
+class FunctionExplainerFactory(
+    ExplainerFactory[Union[Learner, ModelFunction]], metaclass=ABCMeta
+):
+    """
+    A factory constructing :class:`~shap.Explainer` instances that use Python functions
+    as the underlying model.
+    """
+
+    @property
+    def uses_background_dataset(self) -> bool:
+        """``True``, since function explainers typically use a background dataset"""
+        return True
+
+    def make_explainer(
+        self, model: Union[Learner, ModelFunction], data: Optional[pd.DataFrame]
+    ) -> BaseExplainer:
+        """[see superclass]"""
+        self._validate_background_dataset(data=data)
+
+        # create a model function from the model
+        try:
+            if isinstance(model, RegressorMixin):
+                # noinspection PyUnresolvedReferences
+                model_fn = model.predict
+            elif isinstance(model, ClassifierMixin):
+                # noinspection PyUnresolvedReferences
+                model_fn = model.predict_proba
+            elif callable(model):
+                model_fn = model
+            else:
+                model_fn = None
+        except AttributeError as cause:
+            raise TypeError(
+                f"arg model does not support default prediction method: {cause}"
+            ) from cause
+        if not model_fn:
+            raise TypeError(
+                "arg model is neither a regressor nor a classifier: "
+                f"{type(model).__name__}"
+            )
+
+        return self.make_explainer_from_function(model_fn=model_fn, data=data)
+
+    @abstractmethod
+    def make_explainer_from_function(
+        self, model_fn: ModelFunction, data: Optional[pd.DataFrame]
+    ) -> BaseExplainer:
+        """
+        Construct an explainer from a function.
+
+        :param model_fn: the function representing the model
+        :param data: the background dataset
+        :return: the explainer
+        """
+
+
+#
 # KernelExplainer factory
 #
 
@@ -561,23 +717,32 @@ class _KernelExplainer(
     shap.KernelExplainer,  # type: ignore
     BaseExplainer,
 ):
-    # noinspection PyPep8Naming,PyUnresolvedReferences
-    def shap_interaction_values(
-        self,
-        X: Union[npt.NDArray[Any], pd.DataFrame, catboost.Pool],
-        y: Union[npt.NDArray[Any], pd.Series, None] = None,
-        **kwargs: Any,
-    ) -> ArraysFloat:
+    def __call__(self, *args: Any, **kwargs: Any) -> Explanation:
+        """[see superclass]"""
+
+        # we override the BaseExplainer implementation because the shap.KernelExplainer
+        # implementation does not support __call__
+        shap_values = shap.KernelExplainer.shap_values(self, *args, **kwargs)
+
+        if isinstance(shap_values, list):
+            # combine the shap values into a single array, along an additional axis
+            shap_values = np.stack(shap_values, axis=-1)
+
+        return Explanation(shap_values)
+
+    @property
+    def supports_interaction(self) -> bool:
         """
-        Not implemented.
+        :return: ``False`` because :class:`~shap.KernelExplainer` does not support
+            interaction values
         """
-        raise NotImplementedError()
+        return False
 
 
 @inheritdoc(match="""[see superclass]""")
-class KernelExplainerFactory(ExplainerFactory):
+class KernelExplainerFactory(FunctionExplainerFactory):
     """
-    A factory constructing :class:`~shap.KernelExplainer` objects.
+    A factory constructing :class:`~shap.KernelExplainer` instances.
     """
 
     def __init__(
@@ -586,6 +751,7 @@ class KernelExplainerFactory(ExplainerFactory):
         link: Optional[str] = None,
         l1_reg: Optional[str] = "num_features(10)",
         data_size_limit: Optional[int] = 100,
+        **kwargs: Any,
     ) -> None:
         """
         :param link: override the default link parameter (optional)
@@ -596,11 +762,13 @@ class KernelExplainerFactory(ExplainerFactory):
             the background data set; larger data sets will be down-sampled using
             kmeans; don't downsample if omitted (optional)
         """
-        super().__init__()
+        super().__init__(**kwargs)
         validate_type(link, expected_type=str, optional=True, name="arg link")
         self.link = link
         self.l1_reg = l1_reg if l1_reg is not None else "num_features(10)"
         self.data_size_limit = data_size_limit
+
+    __init__.__doc__ = f"{__init__.__doc__}{FunctionExplainerFactory.__init__.__doc__}"
 
     @property
     def explains_raw_output(self) -> bool:
@@ -612,44 +780,23 @@ class KernelExplainerFactory(ExplainerFactory):
         """[see superclass]"""
         return False
 
-    @property
-    def uses_background_dataset(self) -> bool:
-        """[see superclass]"""
-        return True
-
-    def make_explainer(self, model: LearnerDF, data: pd.DataFrame) -> BaseExplainer:
+    def make_explainer_from_function(
+        self, model_fn: ModelFunction, data: Optional[pd.DataFrame]
+    ) -> BaseExplainer:
         """[see superclass]"""
 
         self._validate_background_dataset(data=data)
-
-        model_root_estimator: BaseEstimator = model.native_estimator
-
-        try:
-            if isinstance(model, RegressorDF):
-                # noinspection PyUnresolvedReferences
-                model_fn = model_root_estimator.predict
-            elif isinstance(model, ClassifierDF):
-                # noinspection PyUnresolvedReferences
-                model_fn = model_root_estimator.predict_proba
-            else:
-                model_fn = None
-        except AttributeError as cause:
-            raise TypeError(
-                f"arg model does not support default prediction method: {cause}"
-            ) from cause
-
-        if not model_fn:
-            raise TypeError(
-                "arg model is neither a regressor nor a classifier: "
-                f"{type(model).__name__}"
-            )
+        assert data is not None, "this explainer requires a background dataset"
 
         data_size_limit = self.data_size_limit
         if data_size_limit is not None and len(data) > data_size_limit:
             data = shap.kmeans(data, data_size_limit, round_values=True)
 
         explainer = _KernelExplainer(
-            model=model_fn, data=data, **self._remove_null_kwargs(dict(link=self.link))
+            model=model_fn,
+            data=data,
+            **self._remove_null_kwargs(dict(link=self.link)),
+            **self.explainer_kwargs,
         )
 
         if self.l1_reg is not None:
@@ -667,6 +814,116 @@ class KernelExplainerFactory(ExplainerFactory):
             l1_reg=self.l1_reg,
             data_size_limit=self.data_size_limit,
         )
+
+
+#
+# Exact explainer factory
+#
+
+# noinspection PyPep8Naming
+@inheritdoc(match="""[see superclass]""")
+class _ExactExplainer(
+    shap.explainers.Exact,  # type: ignore
+    BaseExplainer,
+):
+    @property
+    def supports_interaction(self) -> bool:
+        """
+        :return: ``True`` because :class:`~shap.explainers.Exact` supports interaction
+            values
+        """
+        return True
+
+
+@inheritdoc(match="""[see superclass]""")
+class ExactExplainerFactory(FunctionExplainerFactory):
+    """
+    A factory constructing :class:`~shap.Exact` explainer instances.
+    """
+
+    def __init__(self) -> None:
+        super().__init__()
+
+    @property
+    def explains_raw_output(self) -> bool:
+        """[see superclass]"""
+        return True
+
+    @property
+    def supports_shap_interaction_values(self) -> bool:
+        """[see superclass]"""
+        return True
+
+    def make_explainer_from_function(
+        self, model_fn: ModelFunction, data: Optional[pd.DataFrame]
+    ) -> BaseExplainer:
+        """[see superclass]"""
+        self._validate_background_dataset(data=data)
+        # noinspection PyTypeChecker
+        return _ExactExplainer(model=model_fn, masker=data)
+
+    def to_expression(self) -> Expression:
+        """[see superclass]"""
+        return Id(type(self))()
+
+
+#
+# Permutation explainer factory
+#
+
+
+@inheritdoc(match="""[see superclass]""")
+# noinspection PyPep8Naming
+class _PermutationExplainer(
+    shap.explainers.Permutation,  # type: ignore
+    BaseExplainer,
+):
+    @property
+    def supports_interaction(self) -> bool:
+        """
+        :return: ``False`` because :class:`~shap.explainers.Permutation` does not
+            support interaction values
+        """
+        return False
+
+    # noinspection PyPep8Naming
+    def shap_values(self, X: XType, y: YType = None, **kwargs: Any) -> ArraysFloat:
+        # skip the call to super().shap_values() because would raise
+        # an AttributeError exception due to a bug in the shap library
+        return BaseExplainer.shap_values(self, X, y, **kwargs)
+
+
+@inheritdoc(match="""[see superclass]""")
+class PermutationExplainerFactory(FunctionExplainerFactory):
+    """
+    A factory constructing :class:`~shap.Permutation` explainer instances.
+    """
+
+    @property
+    def explains_raw_output(self) -> bool:
+        """[see superclass]"""
+        return True
+
+    @property
+    def supports_shap_interaction_values(self) -> bool:
+        """[see superclass]"""
+        return False
+
+    def make_explainer_from_function(
+        self,
+        model_fn: ModelFunction,
+        data: Optional[pd.DataFrame],
+    ) -> BaseExplainer:
+        """[see superclass]"""
+        self._validate_background_dataset(data=data)
+        # noinspection PyTypeChecker
+        return _PermutationExplainer(
+            model=model_fn, masker=data, **self.explainer_kwargs
+        )
+
+    def to_expression(self) -> Expression:
+        """[see superclass]"""
+        return Id(type(self))()
 
 
 __tracker.validate()

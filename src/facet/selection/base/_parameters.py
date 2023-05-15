@@ -4,7 +4,7 @@ Core implementation of :mod:`facet.selection.base`
 
 import logging
 from abc import ABCMeta, abstractmethod
-from typing import Any, Dict, Generic, List, Optional, TypeVar, Union
+from typing import Any, Dict, Generic, List, Optional, TypeVar, Union, cast
 
 import numpy.typing as npt
 import pandas as pd
@@ -151,39 +151,45 @@ class CandidateEstimatorDF(ClassifierDF, RegressorDF, TransformerDF):
             return self.candidate
 
     def _get_classes(self) -> Union[npt.NDArray[Any], List[npt.NDArray[Any]]]:
-        return self._get_candidate().classes_
+        return cast(
+            Union[npt.NDArray[Any], List[npt.NDArray[Any]]],
+            self._get_candidate()._get_classes(),
+        )
 
     # noinspection PyPep8Naming
     def predict_proba(
-        self, X: pd.DataFrame, **predict_params: Any
+        self, X: Union[pd.Series, pd.DataFrame], **predict_params: Any
     ) -> Union[pd.DataFrame, List[pd.DataFrame]]:
         """[see superclass]"""
         return self._get_candidate().predict_proba(X, **predict_params)
 
     # noinspection PyPep8Naming
     def predict_log_proba(
-        self, X: pd.DataFrame, **predict_params: Any
+        self, X: Union[pd.Series, pd.DataFrame], **predict_params: Any
     ) -> Union[pd.DataFrame, List[pd.DataFrame]]:
         """[see superclass]"""
         return self._get_candidate().predict_log_proba(X, **predict_params)
 
     # noinspection PyPep8Naming
     def decision_function(
-        self, X: pd.DataFrame, **predict_params: Any
+        self, X: Union[pd.Series, pd.DataFrame], **predict_params: Any
     ) -> Union[pd.Series, pd.DataFrame]:
         """[see superclass]"""
         return self._get_candidate().decision_function(X, **predict_params)
 
     # noinspection PyPep8Naming
     def score(
-        self, X: pd.DataFrame, y: pd.Series, sample_weight: Optional[pd.Series] = None
+        self,
+        X: Union[pd.Series, pd.DataFrame],
+        y: pd.Series,
+        sample_weight: Optional[pd.Series] = None,
     ) -> float:
         """[see superclass]"""
         return self._get_candidate().score(X, y, sample_weight)
 
     # noinspection PyPep8Naming
     def predict(
-        self, X: pd.DataFrame, **predict_params: Any
+        self, X: Union[pd.Series, pd.DataFrame], **predict_params: Any
     ) -> Union[pd.Series, pd.DataFrame]:
         """[see superclass]"""
         return self._get_candidate().predict(X, **predict_params)
@@ -191,7 +197,7 @@ class CandidateEstimatorDF(ClassifierDF, RegressorDF, TransformerDF):
     # noinspection PyPep8Naming
     def fit(
         self: T_CandidateEstimatorDF,
-        X: pd.DataFrame,
+        X: Union[pd.Series, pd.DataFrame],
         y: Optional[Union[pd.Series, pd.DataFrame]] = None,
         **fit_params: Any,
     ) -> T_CandidateEstimatorDF:
@@ -205,12 +211,12 @@ class CandidateEstimatorDF(ClassifierDF, RegressorDF, TransformerDF):
         return self.candidate is not None and self.candidate.is_fitted
 
     # noinspection PyPep8Naming
-    def inverse_transform(self, X: pd.DataFrame) -> pd.DataFrame:
+    def inverse_transform(self, X: Union[pd.Series, pd.DataFrame]) -> pd.DataFrame:
         """[see superclass]"""
         return self._get_candidate().inverse_transform(X)
 
     # noinspection PyPep8Naming
-    def transform(self, X: pd.DataFrame) -> pd.DataFrame:
+    def transform(self, X: Union[pd.Series, pd.DataFrame]) -> pd.DataFrame:
         """[see superclass]"""
         return self._get_candidate().transform(X)
 

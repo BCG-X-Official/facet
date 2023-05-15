@@ -7,6 +7,7 @@ from typing import List, Union
 import numpy as np
 import numpy.typing as npt
 import pandas as pd
+from typing_extensions import TypeAlias
 
 from pytools.api import AllTracker
 
@@ -23,7 +24,7 @@ __all__ = [
 # Type aliases
 #
 
-FloatArray = npt.NDArray[np.float_]
+FloatArray: TypeAlias = npt.NDArray[np.float_]
 
 
 #

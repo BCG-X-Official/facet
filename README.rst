@@ -60,21 +60,37 @@ Installation
 ------------
 
 FACET supports both PyPI and Anaconda.
-
+We recommend to install FACET into a dedicated environment.
 
 Anaconda
 ~~~~~~~~
 
-.. code-block:: RST
+.. code-block:: sh
 
-    conda install gamma-facet -c bcg_gamma -c conda-forge
+    conda create -n facet
+    conda activate facet
+    conda install -c bcg_gamma -c conda-forge gamma-facet
 
 
 Pip
 ~~~
 
-.. code-block:: RST
+macOS and Linux:
+^^^^^^^^^^^^^^^^
 
+.. code-block:: sh
+
+    python -m venv facet
+    source facet/bin/activate
+    pip install gamma-facet
+
+Windows:
+^^^^^^^^
+
+.. code-block:: dosbatch
+
+    python -m venv facet
+    facet\Scripts\activate.bat
     pip install gamma-facet
 
 
@@ -163,7 +179,7 @@ hyperparameter configurations and even multiple learners with the `LearnerSelect
         cv=rkf_cv,
         n_jobs=-3,
         scoring="r2"
-    ).fit(sample=diabetes_sample)
+    ).fit(diabetes_sample)
 
     # get summary report
     selector.summary_report()
@@ -238,7 +254,7 @@ The key global metrics for each pair of features in a model are:
     inspector = LearnerInspector(
         pipeline=selector.best_estimator_,
         n_jobs=-3
-    ).fit(sample=diabetes_sample)
+    ).fit(diabetes_sample)
 
 **Synergy**
 
