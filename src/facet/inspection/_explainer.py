@@ -32,6 +32,8 @@ from pytools.expression import Expression, HasExpressionRepr
 from pytools.expression.atomic import Id
 from pytools.parallelization import Job, JobQueue, JobRunner, ParallelizableMixin
 
+from ._types import ModelFunction
+
 log = logging.getLogger(__name__)
 
 __all__ = [
@@ -69,9 +71,6 @@ except ImportError:
 ArraysAny: TypeAlias = Union[npt.NDArray[Any], List[npt.NDArray[Any]]]
 ArraysFloat: TypeAlias = Union[npt.NDArray[np.float_], List[npt.NDArray[np.float_]]]
 Learner: TypeAlias = Union[RegressorMixin, ClassifierMixin]
-ModelFunction = Callable[
-    [Union[pd.Series, pd.DataFrame]], Union[float, np.ndarray, pd.Series]
-]
 XType = Union[npt.NDArray[Any], pd.DataFrame, catboost.Pool]
 YType = Union[npt.NDArray[Any], pd.Series, None]
 
@@ -79,9 +78,7 @@ YType = Union[npt.NDArray[Any], pd.Series, None]
 # Type variables
 #
 
-T_Model_contra = TypeVar(
-    "T_Model_contra", bound=Union[Learner, ModelFunction], contravariant=True
-)
+T_Model = TypeVar("T_Model")
 
 
 #
@@ -198,7 +195,7 @@ class BaseExplainer(
             )
 
 
-class ExplainerFactory(HasExpressionRepr, Generic[T_Model_contra], metaclass=ABCMeta):
+class ExplainerFactory(HasExpressionRepr, Generic[T_Model], metaclass=ABCMeta):
     """
     A factory for constructing :class:`~shap.Explainer` objects.
     """
@@ -239,7 +236,7 @@ class ExplainerFactory(HasExpressionRepr, Generic[T_Model_contra], metaclass=ABC
 
     @abstractmethod
     def make_explainer(
-        self, model: T_Model_contra, data: Optional[pd.DataFrame]
+        self, model: T_Model, data: Optional[pd.DataFrame]
     ) -> BaseExplainer:
         """
         Construct a new :class:`~shap.Explainer` to compute shap values.
@@ -655,7 +652,9 @@ class TreeExplainerFactory(ExplainerFactory[Learner]):
 
 
 @inheritdoc(match="""[see superclass]""")
-class FunctionExplainerFactory(ExplainerFactory[ModelFunction], metaclass=ABCMeta):
+class FunctionExplainerFactory(
+    ExplainerFactory[Union[Learner, ModelFunction]], metaclass=ABCMeta
+):
     """
     A factory constructing :class:`~shap.Explainer` instances that use Python functions
     as the underlying model.
@@ -887,6 +886,7 @@ class _PermutationExplainer(
         """
         return False
 
+    # noinspection PyPep8Naming
     def shap_values(self, X: XType, y: YType = None, **kwargs: Any) -> ArraysFloat:
         # skip the call to super().shap_values() because would raise
         # an AttributeError exception due to a bug in the shap library

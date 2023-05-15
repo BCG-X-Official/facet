@@ -7,7 +7,7 @@ from typing import Any, Generic, List, Optional, Sequence, TypeVar, Union
 
 from pytools.api import AllTracker, inheritdoc, subsdoc, to_list
 
-from ._explainer import ExactExplainerFactory, ExplainerFactory
+from ._explainer import ExactExplainerFactory, FunctionExplainerFactory
 from ._model_inspector import ModelInspector
 from ._types import ModelFunction
 from .shap import FunctionShapCalculator, ShapCalculator
@@ -52,7 +52,10 @@ class FunctionInspector(ModelInspector[T_Function], Generic[T_Function]):
     """[see superclass]"""
 
     #: The default explainer factory used by this inspector.
-    DEFAULT_EXPLAINER_FACTORY: ExplainerFactory[ModelFunction] = ExactExplainerFactory()
+    DEFAULT_EXPLAINER_FACTORY: FunctionExplainerFactory = ExactExplainerFactory()
+
+    #: The factory used to create the explainer for the model function.
+    explainer_factory: FunctionExplainerFactory
 
     # the feature names of the model function
     _feature_names: List[str]
@@ -62,7 +65,7 @@ class FunctionInspector(ModelInspector[T_Function], Generic[T_Function]):
         model: T_Function,
         *,
         feature_names: Sequence[str],
-        explainer_factory: Optional[ExplainerFactory[T_Function]] = None,
+        explainer_factory: Optional[FunctionExplainerFactory] = None,
         shap_interaction: bool = True,
         n_jobs: Optional[int] = None,
         shared_memory: Optional[bool] = None,
