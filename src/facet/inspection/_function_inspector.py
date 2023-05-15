@@ -3,11 +3,11 @@ Implementation of :class:`.LearnerInspector`.
 """
 import logging
 import re
-from typing import Any, Generic, List, Optional, Sequence, TypeVar, Union, cast
+from typing import Any, Generic, List, Optional, Sequence, TypeVar, Union
 
 from pytools.api import AllTracker, inheritdoc, subsdoc, to_list
 
-from ._explainer import ExactExplainerFactory, ExplainerFactory
+from ._explainer import ExactExplainerFactory, FunctionExplainerFactory
 from ._model_inspector import ModelInspector
 from ._types import ModelFunction
 from .shap import FunctionShapCalculator, ShapCalculator
@@ -52,7 +52,10 @@ class FunctionInspector(ModelInspector[T_Function], Generic[T_Function]):
     """[see superclass]"""
 
     #: The default explainer factory used by this inspector.
-    DEFAULT_EXPLAINER_FACTORY: ExplainerFactory[ModelFunction] = ExactExplainerFactory()
+    DEFAULT_EXPLAINER_FACTORY: FunctionExplainerFactory = ExactExplainerFactory()
+
+    #: The factory used to create the explainer for the model function.
+    explainer_factory: FunctionExplainerFactory
 
     # the feature names of the model function
     _feature_names: List[str]
@@ -62,7 +65,7 @@ class FunctionInspector(ModelInspector[T_Function], Generic[T_Function]):
         model: T_Function,
         *,
         feature_names: Sequence[str],
-        explainer_factory: Optional[ExplainerFactory[T_Function]] = None,
+        explainer_factory: Optional[FunctionExplainerFactory] = None,
         shap_interaction: bool = True,
         n_jobs: Optional[int] = None,
         shared_memory: Optional[bool] = None,
@@ -77,25 +80,21 @@ class FunctionInspector(ModelInspector[T_Function], Generic[T_Function]):
             (default: a :class:`.KernelExplainerFactory` instance; see
             :attr:`.DEFAULT_EXPLAINER_FACTORY`)
         """
-        _explainer_factory: ExplainerFactory[T_Function]
 
         if explainer_factory:
             if not explainer_factory.explains_raw_output:
                 raise ValueError(
                     "arg explainer_factory must be configured to explain raw output"
                 )
-            _explainer_factory = explainer_factory
         else:
-            _explainer_factory = cast(
-                ExplainerFactory[T_Function], self.DEFAULT_EXPLAINER_FACTORY
-            )
-            assert _explainer_factory.explains_raw_output
+            explainer_factory = self.DEFAULT_EXPLAINER_FACTORY
+            assert explainer_factory.explains_raw_output
 
         if shap_interaction:
-            if not _explainer_factory.supports_shap_interaction_values:
+            if not explainer_factory.supports_shap_interaction_values:
                 log.warning(
                     "ignoring arg shap_interaction=True: "
-                    f"explainers made by {_explainer_factory!r} do not support "
+                    f"explainers made by {explainer_factory!r} do not support "
                     "SHAP interaction values"
                 )
                 shap_interaction = False
@@ -113,7 +112,7 @@ class FunctionInspector(ModelInspector[T_Function], Generic[T_Function]):
         self._feature_names = to_list(
             feature_names, element_type=str, arg_name="feature_names"
         )
-        self.explainer_factory: ExplainerFactory[T_Function] = _explainer_factory
+        self.explainer_factory = explainer_factory
         self._shap_calculator: Optional[ShapCalculator[Any]] = None
 
     __init__.__doc__ = str(__init__.__doc__) + re.sub(

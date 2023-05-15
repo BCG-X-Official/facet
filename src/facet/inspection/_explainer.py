@@ -78,7 +78,7 @@ YType = Union[npt.NDArray[Any], pd.Series, None]
 # Type variables
 #
 
-T_Model = TypeVar("T_Model", bound=Union[Learner, ModelFunction])
+T_Model = TypeVar("T_Model")
 
 
 #
@@ -652,7 +652,9 @@ class TreeExplainerFactory(ExplainerFactory[Learner]):
 
 
 @inheritdoc(match="""[see superclass]""")
-class FunctionExplainerFactory(ExplainerFactory[ModelFunction], metaclass=ABCMeta):
+class FunctionExplainerFactory(
+    ExplainerFactory[Union[Learner, ModelFunction]], metaclass=ABCMeta
+):
     """
     A factory constructing :class:`~shap.Explainer` instances that use Python functions
     as the underlying model.
@@ -884,6 +886,7 @@ class _PermutationExplainer(
         """
         return False
 
+    # noinspection PyPep8Naming
     def shap_values(self, X: XType, y: YType = None, **kwargs: Any) -> ArraysFloat:
         # skip the call to super().shap_values() because would raise
         # an AttributeError exception due to a bug in the shap library
