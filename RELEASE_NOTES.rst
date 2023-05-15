@@ -10,6 +10,12 @@ fit the underlying crossfit.
 One example where this can be useful is to use only a recent period of a time series as
 the baseline of a simulation.
 
+1.2.3
+~~~~~
+
+- BUILD: pin down *matplotlib* version to < 3.6 and *scipy* version to < 1.9 to ensure
+  compatibility with *pytools* 1.2 and *sklearndf* 1.2
+
 
 1.2.2
 ~~~~~
