@@ -42,5 +42,5 @@ repos:
         language_version: python39
         additional_dependencies:
           - numpy~=1.22
-          - gamma-pytools~=2.1rc
-          - sklearndf~=2.2.dev
+          - gamma-pytools~=2.1
+          - sklearndf~=2.2
