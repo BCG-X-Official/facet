@@ -83,6 +83,13 @@ class BaseExplainer(
     an :class:`ExplainerFactory` object.
     """
 
+    def __init__(self, *args: Any, **kwargs: Any):
+        """
+        :param args: positional arguments passed to the explainer constructor
+        :param kwargs: keyword arguments passed to the explainer constructor
+        """
+        super().__init__(*args, **kwargs)
+
     @property
     @abstractmethod
     def supports_interaction(self) -> bool:
