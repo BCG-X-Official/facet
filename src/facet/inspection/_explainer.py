@@ -66,15 +66,17 @@ except ImportError:
 
 
 # Apply a hack to address shap's incompatibility with numpy >= 1.24:
-# shap relies on the np.bool type, which was deprecated in numpy 1.20
-# and removed in numpy 1.24.
+# shap relies on the np.bool, np.int, and np.float types, which were deprecated in
+# numpy 1.20 and removed in numpy 1.24.
 #
-# We check if the type is defined and, if not, define it as an alias
-# for np.bool_.
+# We check if the types are defined and, if not, define them as an alias
+# for the corresponding type with a trailing underscore.
 
 
-if not hasattr(np, "bool"):
-    np.bool = np.bool_  # type: ignore
+for __attr in ("bool", "int", "float"):
+    if not hasattr(np, __attr):
+        setattr(np, __attr, getattr(np, f"{__attr}_"))
+del __attr
 
 
 #
