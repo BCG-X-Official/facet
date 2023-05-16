@@ -15,8 +15,8 @@ flexible and user-friendly API for hyperparameter tuning with support for
 `scikit-learn`'s native hyperparameter searchers, and improves the styling of all
 visualizations.
 
-FACET 2.0 requires *pytools* |nbsp| 2.0 and *sklearndf* |nbsp| 2.2, and is now fully
-type-checked by |mypy|.
+FACET 2.0 requires :mod:`pytools` |nbsp| 2.0 and :mod:`sklearndf` |nbsp| 2.2, and is now
+fully type-checked by |mypy|.
 
 
 2.0.0
@@ -83,11 +83,11 @@ Other
 
 - VIZ: significant updates to the styling of all visualizations, especially those
   generated for output of :class:`.LearnerInspector`, using the all-new versions of
-  *pytools*' matrix and dendrogram drawers
+  :mod:`pytools` matrix and dendrogram drawers
 - API: class ``LearnerCrossfit`` is no longer needed in FACET |nbsp| 2.0 and has been
   removed
-- API: support new :obj:`~pytools.fit.fitted_only` decorator introduced in *pytools*
-  |nbsp| 2.1.
+- API: support new :obj:`~pytools.fit.fitted_only` decorator introduced in
+  :mod:`pytools` |nbsp| 2.1.
 
 
 FACET 1.2
@@ -181,9 +181,9 @@ FACET 1.0
 1.0.3
 ~~~~~
 
-- FIX: restrict package requirements to *gamma-pytools* |nbsp| 1.0.* and
-  *sklearndf* |nbsp| 1.0.x, since FACET |nbsp| 1.0 is not compatible with
-  *gamma-pytools* |nbsp| 1.1.*
+- FIX: restrict package requirements to *gamma-pytools* |nbsp| 1.0 and
+  *sklearndf* |nbsp| 1.0, since FACET |nbsp| 1.0 is not compatible with
+  *gamma-pytools* |nbsp| 1.1
 
 1.0.2
 ~~~~~
