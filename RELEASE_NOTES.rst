@@ -10,8 +10,13 @@ FACET 2.0
 ---------
 
 FACET |nbsp| 2.0 brings numerous API enhancements and improvements, accelerates model
-inspection by factor |nbsp| 50 in many practical settings, makes major improvements to
-visualizations, and is now fully type-checked by |mypy|.
+inspection by factor |nbsp| 50 in many practical settings, introduces a new, more
+flexible and user-friendly API for hyperparameter tuning with support for
+`scikit-learn`'s native hyperparameter searchers, and improves the styling of all
+visualizations.
+
+FACET 2.0 requires *pytools* |nbsp| 2.0 and *sklearndf* |nbsp| 2.2, and is now fully
+type-checked by |mypy|.
 
 
 2.0.0
@@ -48,13 +53,16 @@ visualizations, and is now fully type-checked by |mypy|.
 ^^^^^^^^^^^^^^^^^^^
 
 - API: :class:`.LearnerSelector` replaces FACET |nbsp| 1.x class ``LearnerRanker``, and
-  now supports any CV searcher that supports `scikit-learn`'s CV search API, including
-  `scikit-learn`'s native searchers such as
+  provides a new, more flexible and user-friendly API for hyperparameter tuning
+- API: :class:`.LearnerSelector` introduces support for any CV searcher implementing
+  `scikit-learn`'s CV search API, including `scikit-learn`'s native searchers such as
   :class:`~sklearn.model_selection.GridSearchCV` or
   :class:`~sklearn.model_selection.RandomizedSearchCV`
 - API: new classes :class:`.ParameterSpace` and :class:`.MultiEstimatorParameterSpace`
   offer a more convenient and robust mechanism for declaring options or distributions
   for hyperparameter tuning
+- API: new class :class:`.LearnerSelector` supports a new, more flexible and
+  user-friendly API for hyperparameter tuning
 
 ``facet.simulation``
 ^^^^^^^^^^^^^^^^^^^^
@@ -73,6 +81,9 @@ visualizations, and is now fully type-checked by |mypy|.
 Other
 ^^^^^
 
+- VIZ: significant updates to the styling of all visualizations, especially those
+  generated for output of :class:`.LearnerInspector`, using the all-new versions of
+  *pytools*' matrix and dendrogram drawers
 - API: class ``LearnerCrossfit`` is no longer needed in FACET |nbsp| 2.0 and has been
   removed
 - API: support new :obj:`~pytools.fit.fitted_only` decorator introduced in *pytools*
