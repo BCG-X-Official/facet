@@ -123,7 +123,7 @@ class BaseExplainer(
     def shap_interaction_values(
         self, X: XType, y: YType = None, **kwargs: Any
     ) -> ArraysFloat:
-        """
+        r"""
         Estimate the SHAP interaction values for a set of samples.
 
         :param X: matrix of samples (# samples x # features) on which to explain the
