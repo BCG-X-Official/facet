@@ -83,6 +83,12 @@ class ShapCalculator(
     #: The names of the features for which SHAP values were calculated.
     feature_index_: Optional[pd.Index]
 
+    # defined in superclass, repeated here for Sphinx:
+    n_jobs: Optional[int]
+    shared_memory: Optional[bool]
+    pre_dispatch: Optional[Union[str, int]]
+    verbose: Optional[int]
+
     def __init__(
         self,
         model: T_Model,
@@ -194,7 +200,7 @@ class ShapCalculator(
     def shap_values(self) -> pd.DataFrame:
         r"""
         The SHAP values per observation and feature, with shape
-        :math:`(\mathit{n_observations}, \mathit{n_outputs} * \mathit{n_features})`
+        :math:`(n_\mathrm{observations}, n_\mathrm{outputs} * n_\mathrm{features})`
         """
 
         assert self.shap_ is not None, ASSERTION__CALCULATOR_IS_FITTED
@@ -208,8 +214,8 @@ class ShapCalculator(
     def shap_interaction_values(self) -> pd.DataFrame:
         r"""
         The SHAP interaction values per observation and feature pair, with shape
-        :math:`(\mathit{n_observations} * \mathit{n_features},
-                \mathit{n_outputs} * \mathit{n_features})`
+        :math:`(n_\mathrm{observations} * n_\mathrm{features}, n_\mathrm{outputs} *
+        n_\mathrm{features})`
 
         :raise AttributeError: this SHAP calculator does not support interaction values
         """
@@ -225,7 +231,7 @@ class ShapCalculator(
         r"""
         The main effects per observation and featuren (i.e., the diagonals of the
         interaction matrices), with shape
-        :math:`(\mathit{n_observations}, \mathit{n_outputs} * \mathit{n_features})`.
+        :math:`(n_\mathrm{observations}, n_\mathrm{outputs} * n_\mathrm{features})`.
 
         :raise AttributeError: this SHAP calculator does not support interaction values
         """

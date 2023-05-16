@@ -49,8 +49,18 @@ class LearnerShapCalculator(
     ShapCalculator[T_Learner], Generic[T_Learner], metaclass=ABCMeta
 ):
     """
-    Base class for SHAP calculators based on :mod:`sklearndf` learners.
+    Base class for SHAP calculators based on :mod:`sklearndf` supervised learners.
     """
+
+    # defined in superclass, repeated here for Sphinx:
+    model: T_Learner
+    explainer_factory: ExplainerFactory[T_Learner]
+    shap_: Optional[pd.DataFrame]
+    feature_index_: Optional[pd.Index]
+    n_jobs: Optional[int]
+    shared_memory: Optional[bool]
+    pre_dispatch: Optional[Union[str, int]]
+    verbose: Optional[int]
 
     @property
     def input_names(self) -> Optional[List[str]]:
@@ -68,6 +78,16 @@ class RegressorShapCalculator(
     """
     Calculates SHAP (interaction) values for regression models.
     """
+
+    # defined in superclass, repeated here for Sphinx:
+    model: T_Learner
+    explainer_factory: ExplainerFactory[T_Regressor]
+    shap_: Optional[pd.DataFrame]
+    feature_index_: Optional[pd.Index]
+    n_jobs: Optional[int]
+    shared_memory: Optional[bool]
+    pre_dispatch: Optional[Union[str, int]]
+    verbose: Optional[int]
 
     @subsdoc(
         pattern=r"(?m)(^\s*)(:param model: .*$)",
@@ -152,6 +172,16 @@ class ClassifierShapCalculator(
 
     #: Multi-output SHAP values are determined by class.
     MULTI_OUTPUT_INDEX_NAME = "class"
+
+    # defined in superclass, repeated here for Sphinx:
+    model: T_Learner
+    explainer_factory: ExplainerFactory[T_Classifier]
+    shap_: Optional[pd.DataFrame]
+    feature_index_: Optional[pd.Index]
+    n_jobs: Optional[int]
+    shared_memory: Optional[bool]
+    pre_dispatch: Optional[Union[str, int]]
+    verbose: Optional[int]
 
     def __init__(
         self,

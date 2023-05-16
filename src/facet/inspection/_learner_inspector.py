@@ -50,12 +50,15 @@ __tracker = AllTracker(globals())
 
 @subsdoc(
     pattern=(
-        r"(?m)"  # match multiline
-        r"(^\s+)\.\. note::\s*"  # .. note:: at start of line
-        r"(?:\1.*\n)+"  # followed by one or more indented lines
-        r"(?:\1?\n)*"  # followed by zero or more blank lines
+        r"\n( *)\.\. note:: *\n"  # .. note:: at start of line
+        r"(?:\1.*\S\n)+"  # followed by one or more indented lines
+        r"(?: *\n)*"  # followed by zero or more blank lines
     ),
-    replacement="",
+    replacement="\n\n",
+)
+@subsdoc(
+    pattern="Explain a model based on SHAP",
+    replacement="Explain a regressor or classifier based on SHAP",
 )
 @inheritdoc(match="""[see superclass]""")
 class LearnerInspector(
@@ -69,6 +72,17 @@ class LearnerInspector(
     DEFAULT_EXPLAINER_FACTORY = TreeExplainerFactory(
         feature_perturbation="tree_path_dependent", uses_background_dataset=False
     )
+
+    #: The factory instance used to create the explainer for the learner.
+    explainer_factory: ExplainerFactory[NativeSupervisedLearner]
+
+    # defined in superclass, repeated here for Sphinx:
+    model: T_SupervisedLearnerDF
+    shap_interaction: bool
+    n_jobs: Optional[int]
+    shared_memory: Optional[bool]
+    pre_dispatch: Optional[Union[str, int]]
+    verbose: Optional[int]
 
     def __init__(
         self,

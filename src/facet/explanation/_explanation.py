@@ -338,7 +338,6 @@ class KernelExplainerFactory(FunctionExplainerFactory):
 #
 
 # noinspection PyPep8Naming
-@inheritdoc(match="""[see superclass]""")
 class _ExactExplainer(
     shap.explainers.Exact,  # type: ignore
     BaseExplainer,
@@ -405,6 +404,7 @@ class _PermutationExplainer(
 
     # noinspection PyPep8Naming
     def shap_values(self, X: XType, y: YType = None, **kwargs: Any) -> ArraysFloat:
+        """[see superclass]"""
         # skip the call to super().shap_values() because would raise
         # an AttributeError exception due to a bug in the shap library
         return BaseExplainer.shap_values(self, X, y, **kwargs)

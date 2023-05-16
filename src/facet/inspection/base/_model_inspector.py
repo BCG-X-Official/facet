@@ -87,12 +87,11 @@ class ModelInspector(
     ParallelizableMixin, FittableMixin[Sample], Generic[T_Model], metaclass=ABCMeta
 ):
     """
+    Explain a model based on SHAP values.
+
     .. note::
         This is an abstract base class for inspectors explaining different kinds of
         models based on SHAP values.
-        It is not intended to be used directly.
-
-    Explain regressors and classifiers based on SHAP values.
 
     Focus is on explaining the overall model, but the inspector also delivers
     SHAP explanations of the individual observations.

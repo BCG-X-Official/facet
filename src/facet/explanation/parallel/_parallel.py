@@ -192,18 +192,6 @@ class ParallelExplainer(BaseExplainer, ParallelizableMixin):
     chunks of observations in parallel.
     """
 
-    # defined in superclass, repeated here for Sphinx
-    n_jobs: Optional[int]
-
-    # defined in superclass, repeated here for Sphinx
-    shared_memory: Optional[bool]
-
-    # defined in superclass, repeated here for Sphinx
-    pre_dispatch: Optional[Union[str, int]]
-
-    # defined in superclass, repeated here for Sphinx
-    verbose: Optional[int]
-
     #: The explainer being parallelized by this wrapper
     explainer: BaseExplainer
 
@@ -258,6 +246,13 @@ class ParallelExplainer(BaseExplainer, ParallelizableMixin):
         return self.explainer.supports_interaction
 
     def __call__(self, *args: Any, **kwargs: Any) -> Explanation:
+        """
+        Forward the call to the wrapped explainer.
+
+        :param args: positional arguments to be forwarded to the wrapped explainer
+        :param kwargs: keyword arguments to be forwarded to the wrapped explainer
+        :return: the explanation returned by the wrapped explainer
+        """
         return self.explainer(*args, **kwargs)
 
     # noinspection PyPep8Naming

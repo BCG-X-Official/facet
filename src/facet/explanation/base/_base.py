@@ -132,7 +132,7 @@ class BaseExplainer(
             functions (optional)
         :param kwargs: additional arguments specific to the explainer implementation
         :return: SHAP values as an array of shape
-            `(n_observations, n_features, n_features)`;
+            :math:`(n_\mathrm{observations}, n_\mathrm{features}, n_\mathrm{features})`;
             a list of such arrays in the case of a multi-output model
         """
         if self.supports_interaction:
