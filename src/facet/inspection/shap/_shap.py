@@ -14,8 +14,8 @@ from pytools.api import AllTracker
 from pytools.fit import FittableMixin, fitted_only
 from pytools.parallelization import ParallelizableMixin
 
-from ...explainer.base import BaseExplainer, ExplainerFactory
-from ...explainer.parallel import ParallelExplainer
+from ...explanation.base import BaseExplainer, ExplainerFactory
+from ...explanation.parallel import ParallelExplainer
 
 log = logging.getLogger(__name__)
 
@@ -74,7 +74,7 @@ class ShapCalculator(
     #: The model for which to calculate SHAP values.
     model: T_Model
 
-    #: The explainer factory used to create the SHAP explainer for this calculator.
+    #: The explanation factory used to create the SHAP explanation for this calculator.
     explainer_factory: ExplainerFactory[T_Model]
 
     #: The SHAP values for all observations this calculator has been fitted to.
@@ -96,8 +96,8 @@ class ShapCalculator(
     ) -> None:
         """
         :param model: the model for which to calculate SHAP values
-        :param explainer_factory: the explainer factory used to create the SHAP
-            explainer for this calculator
+        :param explainer_factory: the explanation factory used to create the SHAP
+            explanation for this calculator
         :param interaction_values: if ``True``, calculate SHAP interaction values,
             otherwise calculate SHAP values
         """
@@ -329,7 +329,7 @@ class ShapCalculator(
     ) -> pd.DataFrame:
         if features.isna().values.any():
             log.warning(
-                "preprocessed features passed to SHAP explainer include NaN values; "
+                "preprocessed features passed to SHAP explanation include NaN values; "
                 "try to change preprocessing to impute all NaN values"
             )
 
@@ -380,7 +380,7 @@ class ShapCalculator(
         def _validate_shap_tensor(_t: npt.NDArray[np.float_]) -> None:
             if np.isnan(np.sum(_t)):
                 raise AssertionError(
-                    "Output of SHAP explainer includes NaN values. "
+                    "Output of SHAP explanation includes NaN values. "
                     "This should not happen; consider initialising the "
                     "LearnerInspector with an ExplainerFactory that has a different "
                     "configuration, or that makes SHAP explainers of a different type."
@@ -411,7 +411,7 @@ class ShapCalculator(
         """
         Convert the SHAP tensors for a single split to a data frame.
 
-        :param raw_shap_tensors: the raw values returned by the SHAP explainer
+        :param raw_shap_tensors: the raw values returned by the SHAP explanation
         :param observation_idx: the ids used for indexing the explained observations
         :param feature_idx: the feature names
         :return: SHAP values of a single split as data frame

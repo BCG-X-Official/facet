@@ -7,4 +7,4 @@ Used by :class:`.LearnerInspector` and :class:`.FunctionInspector` to create exp
 for the learner or function under inspection.
 """
 
-from ._explainer import *
+from ._explanation import *

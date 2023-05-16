@@ -26,13 +26,13 @@ from sklearndf.regression.extra import LGBMRegressorDF
 
 from ..conftest import check_ranking
 from facet.data import Sample
-from facet.explainer import (
+from facet.explanation import (
     ExactExplainerFactory,
     KernelExplainerFactory,
     PermutationExplainerFactory,
     TreeExplainerFactory,
 )
-from facet.explainer.base import ExplainerFactory
+from facet.explanation.base import ExplainerFactory
 from facet.inspection import FunctionInspector, LearnerInspector
 from facet.selection import LearnerSelector
 
@@ -87,7 +87,7 @@ def test_model_inspection(
     sample: Sample,
     n_jobs: int,
 ) -> None:
-    # test the ModelInspector with the given explainer factory:
+    # test the ModelInspector with the given explanation factory:
 
     inspector = LearnerInspector(
         model=best_lgbm_model,

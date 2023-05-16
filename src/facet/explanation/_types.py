@@ -1,5 +1,5 @@
 """
-Type aliases and constants for common use in the ``facet.explainer`` package
+Type aliases and constants for common use in the ``facet.explanation`` package
 """
 from typing import Any, List, Union
 

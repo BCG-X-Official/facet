@@ -36,10 +36,10 @@ __tracker = AllTracker(globals())
 @inheritdoc(match="""[see superclass]""")
 class ExplainerJob(Job[ArraysAny]):
     """
-    A call to an explainer function with given `X` and `y` values.
+    A call to an explanation function with given `X` and `y` values.
     """
 
-    #: the SHAP explainer to use
+    #: the SHAP explanation to use
     explainer: BaseExplainer
 
     #: if ``False``, calculate SHAp values; otherwise, calculate SHAP interaction values
@@ -51,7 +51,7 @@ class ExplainerJob(Job[ArraysAny]):
     #: the target values of the observations to be explained
     y: YType
 
-    #: additional arguments specific to the explainer method
+    #: additional arguments specific to the explanation method
     kwargs: Dict[str, Any]
 
     # noinspection PyPep8Naming
@@ -65,12 +65,12 @@ class ExplainerJob(Job[ArraysAny]):
         **kwargs: Any,
     ) -> None:
         """
-        :param explainer: the SHAP explainer to use
+        :param explainer: the SHAP explanation to use
         :param X: the feature values of the observations to be explained
         :param y: the target values of the observations to be explained
         :param interactions: if ``False``, calculate SHAP values; if ``True``,
             calculate SHAP interaction values
-        :param kwargs: additional arguments specific to the explainer method
+        :param kwargs: additional arguments specific to the explanation method
         """
         self.explainer = explainer
         self.X = X
@@ -102,7 +102,7 @@ class ExplainerQueue(JobQueue[ArraysAny, ArraysAny]):
     # defined in superclass, repeated here for Sphinx
     lock: LockType
 
-    #: the SHAP explainer to use
+    #: the SHAP explanation to use
     explainer: BaseExplainer
 
     #: if ``False``, calculate SHAp values; otherwise, calculate SHAP interaction values
@@ -117,7 +117,7 @@ class ExplainerQueue(JobQueue[ArraysAny, ArraysAny]):
     #: the maximum number of observations to allocate to each job
     max_job_size: int
 
-    #: additional arguments specific to the explainer method
+    #: additional arguments specific to the explanation method
     kwargs: Dict[str, Any]
 
     # noinspection PyPep8Naming
@@ -132,13 +132,13 @@ class ExplainerQueue(JobQueue[ArraysAny, ArraysAny]):
         **kwargs: Any,
     ) -> None:
         """
-        :param explainer: the SHAP explainer to use
+        :param explainer: the SHAP explanation to use
         :param X: the feature values of the observations to be explained
         :param y: the target values of the observations to be explained
         :param interactions: if ``False``, calculate SHAP values; if ``True``,
             calculate SHAP interaction values
         :param max_job_size: the maximum number of observations to allocate to each job
-        :param kwargs: additional arguments specific to the explainer method
+        :param kwargs: additional arguments specific to the explanation method
 
         :raise NotImplementedError: if `X` is a :class:`~catboost.Pool`;
             this is currently not supported
@@ -188,7 +188,7 @@ class ExplainerQueue(JobQueue[ArraysAny, ArraysAny]):
 @inheritdoc(match="""[see superclass]""")
 class ParallelExplainer(BaseExplainer, ParallelizableMixin):
     """
-    A wrapper class, turning an explainer into a parallelized version, explaining
+    A wrapper class, turning an explanation into a parallelized version, explaining
     chunks of observations in parallel.
     """
 
@@ -204,10 +204,10 @@ class ParallelExplainer(BaseExplainer, ParallelizableMixin):
     # defined in superclass, repeated here for Sphinx
     verbose: Optional[int]
 
-    #: The explainer being parallelized by this wrapper
+    #: The explanation being parallelized by this wrapper
     explainer: BaseExplainer
 
-    #: the maximum number of observations to allocate to any of the explainer jobs
+    #: the maximum number of observations to allocate to any of the explanation jobs
     #: running in parallel
     max_job_size: int
 
@@ -222,9 +222,9 @@ class ParallelExplainer(BaseExplainer, ParallelizableMixin):
         verbose: Optional[int] = None,
     ) -> None:
         """
-        :param explainer: the explainer to be parallelized by this wrapper
+        :param explainer: the explanation to be parallelized by this wrapper
         :param max_job_size: the maximum number of observations to allocate to any of
-            the explainer jobs running in parallel
+            the explanation jobs running in parallel
         """
         Explainer.__init__(self, model=explainer.model)
         ParallelizableMixin.__init__(
@@ -237,7 +237,7 @@ class ParallelExplainer(BaseExplainer, ParallelizableMixin):
 
         if isinstance(explainer, ParallelExplainer):
             log.warning(
-                f"creating parallel explainer from parallel explainer {explainer!r}"
+                f"creating parallel explanation from parallel explanation {explainer!r}"
             )
 
         self.explainer = explainer

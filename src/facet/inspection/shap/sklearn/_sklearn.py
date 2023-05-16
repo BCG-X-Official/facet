@@ -13,7 +13,7 @@ from sklearn.base import ClassifierMixin, RegressorMixin, is_classifier, is_regr
 
 from pytools.api import AllTracker, inheritdoc, subsdoc
 
-from ....explainer.base import ExplainerFactory
+from ....explanation.base import ExplainerFactory
 from .. import ShapCalculator
 
 log = logging.getLogger(__name__)
