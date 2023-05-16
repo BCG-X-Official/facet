@@ -29,14 +29,14 @@ from pytools.data import LinkageTree, Matrix
 from pytools.fit import FittableMixin, fitted_only
 from pytools.parallelization import ParallelizableMixin
 
-from ..data import Sample
-from ._inspection import ShapPlotData
-from ._shap_projection import (
+from facet.data import Sample
+from facet.inspection._inspection import ShapPlotData
+from facet.inspection._shap_projection import (
     ShapInteractionVectorProjector,
     ShapProjector,
     ShapVectorProjector,
 )
-from .shap import ShapCalculator
+from facet.inspection.shap import ShapCalculator
 
 log = logging.getLogger(__name__)
 
@@ -87,8 +87,11 @@ class ModelInspector(
     ParallelizableMixin, FittableMixin[Sample], Generic[T_Model], metaclass=ABCMeta
 ):
     """
-    Abstract base class for inspectors explaining different kinds of
-    models based on SHAP values.
+    Explain a model based on SHAP values.
+
+    .. note::
+        This is an abstract base class for inspectors explaining different kinds of
+        models based on SHAP values.
 
     Focus is on explaining the overall model, but the inspector also delivers
     SHAP explanations of the individual observations.

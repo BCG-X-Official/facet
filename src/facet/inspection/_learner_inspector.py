@@ -12,8 +12,10 @@ from pytools.api import AllTracker, inheritdoc, subsdoc
 from sklearndf import SupervisedLearnerDF
 from sklearndf.pipeline import SupervisedLearnerPipelineDF
 
-from ._explainer import ExplainerFactory, TreeExplainerFactory
-from ._model_inspector import ModelInspector
+from .._types import NativeSupervisedLearner
+from ..explanation import TreeExplainerFactory
+from ..explanation.base import ExplainerFactory
+from .base import ModelInspector
 from .shap.sklearn import (
     ClassifierShapCalculator,
     LearnerShapCalculator,
@@ -47,12 +49,16 @@ __tracker = AllTracker(globals())
 
 
 @subsdoc(
-    pattern=(  # match super class 1-line description ...
-        r"Abstract base class[^.]*(?:\n[^.]*)*\.\n\n"
+    pattern=(
+        r"\n( *)\.\. note:: *\n"  # .. note:: at start of line
+        r"(?:\1.*\S\n)+"  # followed by one or more indented lines
+        r"(?: *\n)*"  # followed by zero or more blank lines
     ),
-    replacement=(  # ... and replace it
-        "Explain regressors and classifiers based on SHAP values.\n\n"
-    ),
+    replacement="\n\n",
+)
+@subsdoc(
+    pattern="Explain a model based on SHAP",
+    replacement="Explain a regressor or classifier based on SHAP",
 )
 @inheritdoc(match="""[see superclass]""")
 class LearnerInspector(
@@ -67,11 +73,22 @@ class LearnerInspector(
         feature_perturbation="tree_path_dependent", uses_background_dataset=False
     )
 
+    #: The factory instance used to create the explainer for the learner.
+    explainer_factory: ExplainerFactory[NativeSupervisedLearner]
+
+    # defined in superclass, repeated here for Sphinx:
+    model: T_SupervisedLearnerDF
+    shap_interaction: bool
+    n_jobs: Optional[int]
+    shared_memory: Optional[bool]
+    pre_dispatch: Optional[Union[str, int]]
+    verbose: Optional[int]
+
     def __init__(
         self,
         model: SupervisedLearnerPipelineDF[T_SupervisedLearnerDF],
         *,
-        explainer_factory: Optional[ExplainerFactory[T_SupervisedLearnerDF]] = None,
+        explainer_factory: Optional[ExplainerFactory[NativeSupervisedLearner]] = None,
         shap_interaction: bool = True,
         n_jobs: Optional[int] = None,
         shared_memory: Optional[bool] = None,

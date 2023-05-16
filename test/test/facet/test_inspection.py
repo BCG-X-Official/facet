@@ -26,15 +26,14 @@ from sklearndf.regression.extra import LGBMRegressorDF
 
 from ..conftest import check_ranking
 from facet.data import Sample
-from facet.inspection import (
+from facet.explanation import (
     ExactExplainerFactory,
-    ExplainerFactory,
-    FunctionInspector,
     KernelExplainerFactory,
-    LearnerInspector,
     PermutationExplainerFactory,
     TreeExplainerFactory,
 )
+from facet.explanation.base import ExplainerFactory
+from facet.inspection import FunctionInspector, LearnerInspector
 from facet.selection import LearnerSelector
 
 # noinspection PyMissingOrEmptyDocstring

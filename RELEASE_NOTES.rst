@@ -31,9 +31,21 @@ fully type-checked by |mypy|.
   and ``upper_bound`` in method :meth:`~.RangePartitioner.fit` and no longer accepts
   them in the class initializer
 
+``facet.explanation``
+^^^^^^^^^^^^^^^^^^^^^
+
+- REFACTOR: moved explainer factories from module :mod:`facet.inspection` to module
+  :mod:`facet.explanation`.
+- API: new explainer factories :class:`.ExactExplainerFactory` and
+  :class:`.PermutationExplainerFactory`, in addition to the
+  :class:`.TreeExplainerFactory` and :class:`.KernelExplainerFactory` introduced in
+  FACET |nbsp| 1.0
+
 ``facet.inspection``
 ^^^^^^^^^^^^^^^^^^^^
 
+- API: new :class:`.FunctionInspector` class for inspecting arbitrary functions,
+  using a :class:`.ExactExplainerFactory` by default
 - API: :class:`.LearnerInspector` no longer uses learner crossfits and instead inspects
   models using a single pass of SHAP calculations, usually leading to performance gains
   of up to a factor of |nbsp| 50

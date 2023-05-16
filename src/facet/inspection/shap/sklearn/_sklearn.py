@@ -13,8 +13,9 @@ from sklearn.base import ClassifierMixin, RegressorMixin, is_classifier, is_regr
 
 from pytools.api import AllTracker, inheritdoc, subsdoc
 
-from facet.inspection._explainer import ExplainerFactory
-from facet.inspection.shap import ShapCalculator
+from ...._types import NativeSupervisedLearner
+from ....explanation.base import ExplainerFactory
+from .. import ShapCalculator
 
 log = logging.getLogger(__name__)
 
@@ -29,7 +30,7 @@ __all__ = [
 #
 
 T_Classifier = TypeVar("T_Classifier", bound=ClassifierMixin)
-T_Learner = TypeVar("T_Learner", bound=Union[RegressorMixin, ClassifierMixin])
+T_Learner = TypeVar("T_Learner", bound=NativeSupervisedLearner)
 T_Regressor = TypeVar("T_Regressor", bound=RegressorMixin)
 
 
@@ -49,8 +50,18 @@ class LearnerShapCalculator(
     ShapCalculator[T_Learner], Generic[T_Learner], metaclass=ABCMeta
 ):
     """
-    Base class for SHAP calculators based on :mod:`sklearndf` learners.
+    Base class for SHAP calculators based on :mod:`sklearndf` supervised learners.
     """
+
+    # defined in superclass, repeated here for Sphinx:
+    model: T_Learner
+    explainer_factory: ExplainerFactory[T_Learner]
+    shap_: Optional[pd.DataFrame]
+    feature_index_: Optional[pd.Index]
+    n_jobs: Optional[int]
+    shared_memory: Optional[bool]
+    pre_dispatch: Optional[Union[str, int]]
+    verbose: Optional[int]
 
     @property
     def input_names(self) -> Optional[List[str]]:
@@ -69,6 +80,16 @@ class RegressorShapCalculator(
     Calculates SHAP (interaction) values for regression models.
     """
 
+    # defined in superclass, repeated here for Sphinx:
+    model: T_Regressor
+    explainer_factory: ExplainerFactory[T_Regressor]
+    shap_: Optional[pd.DataFrame]
+    feature_index_: Optional[pd.Index]
+    n_jobs: Optional[int]
+    shared_memory: Optional[bool]
+    pre_dispatch: Optional[Union[str, int]]
+    verbose: Optional[int]
+
     @subsdoc(
         pattern=r"(?m)(^\s*)(:param model: .*$)",
         replacement=r"\1\2\n"
@@ -80,7 +101,7 @@ class RegressorShapCalculator(
         model: T_Regressor,
         *,
         output_names: List[str],
-        explainer_factory: ExplainerFactory[T_Learner],
+        explainer_factory: ExplainerFactory[T_Regressor],
         interaction_values: bool,
         n_jobs: Optional[int] = None,
         shared_memory: Optional[bool] = None,
@@ -153,11 +174,21 @@ class ClassifierShapCalculator(
     #: Multi-output SHAP values are determined by class.
     MULTI_OUTPUT_INDEX_NAME = "class"
 
+    # defined in superclass, repeated here for Sphinx:
+    model: T_Classifier
+    explainer_factory: ExplainerFactory[T_Classifier]
+    shap_: Optional[pd.DataFrame]
+    feature_index_: Optional[pd.Index]
+    n_jobs: Optional[int]
+    shared_memory: Optional[bool]
+    pre_dispatch: Optional[Union[str, int]]
+    verbose: Optional[int]
+
     def __init__(
         self,
         model: T_Classifier,
         *,
-        explainer_factory: ExplainerFactory[T_Learner],
+        explainer_factory: ExplainerFactory[T_Classifier],
         interaction_values: bool,
         n_jobs: Optional[int] = None,
         shared_memory: Optional[bool] = None,
