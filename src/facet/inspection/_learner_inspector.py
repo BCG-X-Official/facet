@@ -15,7 +15,7 @@ from sklearndf.pipeline import SupervisedLearnerPipelineDF
 from .._types import NativeSupervisedLearner
 from ..explanation import TreeExplainerFactory
 from ..explanation.base import ExplainerFactory
-from ._model_inspector import ModelInspector
+from .base import ModelInspector
 from .shap.sklearn import (
     ClassifierShapCalculator,
     LearnerShapCalculator,

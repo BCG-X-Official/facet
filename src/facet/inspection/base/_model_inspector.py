@@ -29,14 +29,14 @@ from pytools.data import LinkageTree, Matrix
 from pytools.fit import FittableMixin, fitted_only
 from pytools.parallelization import ParallelizableMixin
 
-from ..data import Sample
-from ._inspection import ShapPlotData
-from ._shap_projection import (
+from facet.data import Sample
+from facet.inspection._inspection import ShapPlotData
+from facet.inspection._shap_projection import (
     ShapInteractionVectorProjector,
     ShapProjector,
     ShapVectorProjector,
 )
-from .shap import ShapCalculator
+from facet.inspection.shap import ShapCalculator
 
 log = logging.getLogger(__name__)
 

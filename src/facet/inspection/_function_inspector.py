@@ -9,7 +9,7 @@ from pytools.api import AllTracker, inheritdoc, subsdoc, to_list
 
 from .._types import ModelFunction
 from ..explanation import ExactExplainerFactory, FunctionExplainerFactory
-from ._model_inspector import ModelInspector
+from .base import ModelInspector
 from .shap import FunctionShapCalculator, ShapCalculator
 
 log = logging.getLogger(__name__)
