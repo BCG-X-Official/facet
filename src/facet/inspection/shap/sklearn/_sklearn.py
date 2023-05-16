@@ -13,6 +13,7 @@ from sklearn.base import ClassifierMixin, RegressorMixin, is_classifier, is_regr
 
 from pytools.api import AllTracker, inheritdoc, subsdoc
 
+from ...._types import NativeSupervisedLearner
 from ....explanation.base import ExplainerFactory
 from .. import ShapCalculator
 
@@ -29,7 +30,7 @@ __all__ = [
 #
 
 T_Classifier = TypeVar("T_Classifier", bound=ClassifierMixin)
-T_Learner = TypeVar("T_Learner", bound=Union[RegressorMixin, ClassifierMixin])
+T_Learner = TypeVar("T_Learner", bound=NativeSupervisedLearner)
 T_Regressor = TypeVar("T_Regressor", bound=RegressorMixin)
 
 
