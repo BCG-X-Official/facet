@@ -39,13 +39,10 @@ __tracker = AllTracker(globals())
 
 
 @subsdoc(
-    pattern=(
-        r"(?m)"  # match multiline
-        r"(^\s+)\.\. note::\s*"  # .. note:: at start of line
-        r"(?:\1.*\n)+"  # followed by one or more indented lines
-        r"(?:\1?\n)*"  # followed by zero or more blank lines
+    pattern=(  # match super class 1-line description ...
+        r"Abstract base class[^.]*(?:\n[^.]*)*\.\n\n"
     ),
-    replacement="",
+    replacement="Explain functions based on SHAP values.\n\n",  # ... and replace it
 )
 @inheritdoc(match="""[see superclass]""")
 class FunctionInspector(ModelInspector[T_Function], Generic[T_Function]):
