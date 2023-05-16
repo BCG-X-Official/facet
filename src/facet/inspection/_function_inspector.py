@@ -7,9 +7,9 @@ from typing import Any, Generic, List, Optional, Sequence, TypeVar, Union
 
 from pytools.api import AllTracker, inheritdoc, subsdoc, to_list
 
-from ._explainer import ExactExplainerFactory, FunctionExplainerFactory
-from ._model_inspector import ModelInspector
-from ._types import ModelFunction
+from .._types import ModelFunction
+from ..explanation import ExactExplainerFactory, FunctionExplainerFactory
+from .base import ModelInspector
 from .shap import FunctionShapCalculator, ShapCalculator
 
 log = logging.getLogger(__name__)
@@ -40,12 +40,15 @@ __tracker = AllTracker(globals())
 
 @subsdoc(
     pattern=(
-        r"(?m)"  # match multiline
-        r"(^\s+)\.\. note::\s*"  # .. note:: at start of line
-        r"(?:\1.*\n)+"  # followed by one or more indented lines
-        r"(?:\1?\n)*"  # followed by zero or more blank lines
+        r"\n( *)\.\. note:: *\n"  # .. note:: at start of line
+        r"(?:\1.*\S\n)+"  # followed by one or more indented lines
+        r"(?: *\n)*"  # followed by zero or more blank lines
     ),
-    replacement="",
+    replacement="\n\n",
+)
+@subsdoc(
+    pattern="Explain a model based on SHAP",
+    replacement="Explain a function based on SHAP",
 )
 @inheritdoc(match="""[see superclass]""")
 class FunctionInspector(ModelInspector[T_Function], Generic[T_Function]):
@@ -54,8 +57,16 @@ class FunctionInspector(ModelInspector[T_Function], Generic[T_Function]):
     #: The default explainer factory used by this inspector.
     DEFAULT_EXPLAINER_FACTORY: FunctionExplainerFactory = ExactExplainerFactory()
 
-    #: The factory used to create the explainer for the model function.
+    #: The factory instance used to create the explainer for the model function.
     explainer_factory: FunctionExplainerFactory
+
+    # defined in superclass, repeated here for Sphinx:
+    model: T_Function
+    shap_interaction: bool
+    n_jobs: Optional[int]
+    shared_memory: Optional[bool]
+    pre_dispatch: Optional[Union[str, int]]
+    verbose: Optional[int]
 
     # the feature names of the model function
     _feature_names: List[str]

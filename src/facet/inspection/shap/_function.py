@@ -3,7 +3,7 @@ Shap calculations for functions
 """
 
 import logging
-from typing import Generic, List, TypeVar
+from typing import Generic, List, Optional, TypeVar, Union
 
 import numpy as np
 import numpy.typing as npt
@@ -11,7 +11,8 @@ import pandas as pd
 
 from pytools.api import AllTracker, inheritdoc
 
-from .._types import ModelFunction
+from ..._types import ModelFunction
+from ...explanation.base import ExplainerFactory
 from ._shap import ShapCalculator
 
 log = logging.getLogger(__name__)
@@ -44,6 +45,16 @@ class FunctionShapCalculator(ShapCalculator[T_ModelFunction], Generic[T_ModelFun
     """
     Calculate SHAP values for a function.
     """
+
+    # defined in superclass, repeated here for Sphinx:
+    model: T_ModelFunction
+    explainer_factory: ExplainerFactory[T_ModelFunction]
+    shap_: Optional[pd.DataFrame]
+    feature_index_: Optional[pd.Index]
+    n_jobs: Optional[int]
+    shared_memory: Optional[bool]
+    pre_dispatch: Optional[Union[str, int]]
+    verbose: Optional[int]
 
     @property
     def input_names(self) -> None:
