@@ -14,11 +14,8 @@ from pytools.api import AllTracker
 from pytools.fit import FittableMixin, fitted_only
 from pytools.parallelization import ParallelizableMixin
 
-from facet.inspection._explainer import (
-    BaseExplainer,
-    ExplainerFactory,
-    ParallelExplainer,
-)
+from ...explainer.base import BaseExplainer, ExplainerFactory
+from ...explainer.parallel import ParallelExplainer
 
 log = logging.getLogger(__name__)
 

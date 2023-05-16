@@ -7,9 +7,9 @@ from typing import Any, Generic, List, Optional, Sequence, TypeVar, Union
 
 from pytools.api import AllTracker, inheritdoc, subsdoc, to_list
 
-from ._explainer import ExactExplainerFactory, FunctionExplainerFactory
+from .._types import ModelFunction
+from ..explainer import ExactExplainerFactory, FunctionExplainerFactory
 from ._model_inspector import ModelInspector
-from ._types import ModelFunction
 from .shap import FunctionShapCalculator, ShapCalculator
 
 log = logging.getLogger(__name__)

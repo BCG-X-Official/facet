@@ -13,8 +13,8 @@ from sklearn.base import ClassifierMixin, RegressorMixin, is_classifier, is_regr
 
 from pytools.api import AllTracker, inheritdoc, subsdoc
 
-from facet.inspection._explainer import ExplainerFactory
-from facet.inspection.shap import ShapCalculator
+from ....explainer.base import ExplainerFactory
+from .. import ShapCalculator
 
 log = logging.getLogger(__name__)
 

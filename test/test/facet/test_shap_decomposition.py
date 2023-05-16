@@ -11,7 +11,8 @@ from sklearndf.pipeline import RegressorPipelineDF
 from sklearndf.regression.extra import LGBMRegressorDF
 
 from facet.data import Sample
-from facet.inspection import LearnerInspector, TreeExplainerFactory
+from facet.explainer import TreeExplainerFactory
+from facet.inspection import LearnerInspector
 
 log = logging.getLogger(__name__)
 

@@ -12,7 +12,9 @@ from pytools.api import AllTracker, inheritdoc, subsdoc
 from sklearndf import SupervisedLearnerDF
 from sklearndf.pipeline import SupervisedLearnerPipelineDF
 
-from ._explainer import ExplainerFactory, TreeExplainerFactory
+from .._types import NativeSupervisedLearner
+from ..explainer import TreeExplainerFactory
+from ..explainer.base import ExplainerFactory
 from ._model_inspector import ModelInspector
 from .shap.sklearn import (
     ClassifierShapCalculator,
@@ -72,7 +74,7 @@ class LearnerInspector(
         self,
         model: SupervisedLearnerPipelineDF[T_SupervisedLearnerDF],
         *,
-        explainer_factory: Optional[ExplainerFactory[T_SupervisedLearnerDF]] = None,
+        explainer_factory: Optional[ExplainerFactory[NativeSupervisedLearner]] = None,
         shap_interaction: bool = True,
         n_jobs: Optional[int] = None,
         shared_memory: Optional[bool] = None,

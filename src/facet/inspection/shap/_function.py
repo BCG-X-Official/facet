@@ -11,7 +11,7 @@ import pandas as pd
 
 from pytools.api import AllTracker, inheritdoc
 
-from .._types import ModelFunction
+from ..._types import ModelFunction
 from ._shap import ShapCalculator
 
 log = logging.getLogger(__name__)
