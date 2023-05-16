@@ -149,15 +149,15 @@ class ExplainerFactory(HasExpressionRepr, Generic[T_Model], metaclass=ABCMeta):
     """
 
     #: Additional keyword arguments to be passed to the explainer constructor.
-    kwargs: Dict[str, Any]
+    explainer_kwargs: Dict[str, Any]
 
-    def __init__(self, **kwargs: Any) -> None:
+    def __init__(self, **explainer_kwargs: Any) -> None:
         """
-        :param kwargs: additional keyword arguments to be passed to the
+        :param explainer_kwargs: additional keyword arguments to be passed to the
             explainer
         """
         super().__init__()
-        self.explainer_kwargs = kwargs
+        self.explainer_kwargs = explainer_kwargs
 
     @property
     @abstractmethod

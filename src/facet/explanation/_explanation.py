@@ -5,7 +5,7 @@ Factories for SHAP explainers from the ``shap`` package.
 import functools
 import logging
 from abc import ABCMeta, abstractmethod
-from typing import Any, Optional, Union, cast
+from typing import Any, Dict, Optional, Union, cast
 
 import numpy as np
 import pandas as pd
@@ -82,13 +82,16 @@ class TreeExplainerFactory(ExplainerFactory[NativeSupervisedLearner]):
     A factory constructing :class:`~shap.TreeExplainer` instances.
     """
 
+    # defined in superclass, repeated here for Sphinx
+    explainer_kwargs: Dict[str, Any]
+
     def __init__(
         self,
         *,
         model_output: Optional[str] = None,
         feature_perturbation: Optional[str] = None,
         uses_background_dataset: bool = True,
-        **kwargs: Any,
+        **explainer_kwargs: Any,
     ) -> None:
         """
         :param model_output: override the default model output parameter (optional)
@@ -98,7 +101,7 @@ class TreeExplainerFactory(ExplainerFactory[NativeSupervisedLearner]):
             dataset on to the tree explainer even if a background dataset is passed
             to :meth:`.make_explainer`
         """
-        super().__init__(**kwargs)
+        super().__init__(**explainer_kwargs)
         validate_type(
             model_output, expected_type=str, optional=True, name="arg model_output"
         )
@@ -174,6 +177,9 @@ class FunctionExplainerFactory(
     A factory constructing :class:`~shap.Explainer` instances that use Python functions
     as the underlying model.
     """
+
+    # defined in superclass, repeated here for Sphinx
+    explainer_kwargs: Dict[str, Any]
 
     @property
     def uses_background_dataset(self) -> bool:
@@ -262,13 +268,16 @@ class KernelExplainerFactory(FunctionExplainerFactory):
     A factory constructing :class:`~shap.KernelExplainer` instances.
     """
 
+    # defined in superclass, repeated here for Sphinx
+    explainer_kwargs: Dict[str, Any]
+
     def __init__(
         self,
         *,
         link: Optional[str] = None,
         l1_reg: Optional[str] = "num_features(10)",
         data_size_limit: Optional[int] = 100,
-        **kwargs: Any,
+        **explainer_kwargs: Any,
     ) -> None:
         """
         :param link: override the default link parameter (optional)
@@ -279,7 +288,7 @@ class KernelExplainerFactory(FunctionExplainerFactory):
             the background data set; larger data sets will be down-sampled using
             kmeans; don't downsample if omitted (optional)
         """
-        super().__init__(**kwargs)
+        super().__init__(**explainer_kwargs)
         validate_type(link, expected_type=str, optional=True, name="arg link")
         self.link = link
         self.l1_reg = l1_reg if l1_reg is not None else "num_features(10)"
@@ -357,8 +366,8 @@ class ExactExplainerFactory(FunctionExplainerFactory):
     A factory constructing :class:`~shap.Exact` explainer instances.
     """
 
-    def __init__(self) -> None:
-        super().__init__()
+    # defined in superclass, repeated here for Sphinx
+    explainer_kwargs: Dict[str, Any]
 
     @property
     def explains_raw_output(self) -> bool:
@@ -415,6 +424,9 @@ class PermutationExplainerFactory(FunctionExplainerFactory):
     """
     A factory constructing :class:`~shap.Permutation` explainer instances.
     """
+
+    # defined in superclass, repeated here for Sphinx
+    explainer_kwargs: Dict[str, Any]
 
     @property
     def explains_raw_output(self) -> bool:
