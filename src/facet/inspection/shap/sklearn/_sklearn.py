@@ -81,7 +81,7 @@ class RegressorShapCalculator(
     """
 
     # defined in superclass, repeated here for Sphinx:
-    model: T_Learner
+    model: T_Regressor
     explainer_factory: ExplainerFactory[T_Regressor]
     shap_: Optional[pd.DataFrame]
     feature_index_: Optional[pd.Index]
@@ -101,7 +101,7 @@ class RegressorShapCalculator(
         model: T_Regressor,
         *,
         output_names: List[str],
-        explainer_factory: ExplainerFactory[T_Learner],
+        explainer_factory: ExplainerFactory[T_Regressor],
         interaction_values: bool,
         n_jobs: Optional[int] = None,
         shared_memory: Optional[bool] = None,
@@ -175,7 +175,7 @@ class ClassifierShapCalculator(
     MULTI_OUTPUT_INDEX_NAME = "class"
 
     # defined in superclass, repeated here for Sphinx:
-    model: T_Learner
+    model: T_Classifier
     explainer_factory: ExplainerFactory[T_Classifier]
     shap_: Optional[pd.DataFrame]
     feature_index_: Optional[pd.Index]
@@ -188,7 +188,7 @@ class ClassifierShapCalculator(
         self,
         model: T_Classifier,
         *,
-        explainer_factory: ExplainerFactory[T_Learner],
+        explainer_factory: ExplainerFactory[T_Classifier],
         interaction_values: bool,
         n_jobs: Optional[int] = None,
         shared_memory: Optional[bool] = None,
