@@ -64,6 +64,19 @@ except ImportError:
     catboost = ModuleType("catboost")
     catboost.Pool = type("Pool", (), {})
 
+
+# Apply a hack to address shap's incompatibility with numpy >= 1.24:
+# shap relies on the np.bool type, which was deprecated in numpy 1.20
+# and removed in numpy 1.24.
+#
+# We check if the type is defined and, if not, define it as an alias
+# for np.bool_.
+
+
+if not hasattr(np, "bool"):
+    np.bool = np.bool_  # type: ignore
+
+
 #
 # Type aliases
 #
