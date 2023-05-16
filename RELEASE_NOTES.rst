@@ -33,7 +33,7 @@ visualizations, and is now fully type-checked by |mypy|.
   :mod:`facet.explanation`.
 - API: new explainer factories :class:`.ExactExplainerFactory` and
   :class:`.PermutationExplainerFactory`, in addition to the
-  :class:`TreeExplainerFactory` and :class:`KernelExplainerFactory` introduced in
+  :class:`.TreeExplainerFactory` and :class:`.KernelExplainerFactory` introduced in
   FACET |nbsp| 1.0
 
 ``facet.inspection``
