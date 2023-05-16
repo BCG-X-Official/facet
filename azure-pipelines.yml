@@ -696,19 +696,9 @@ stages:
                 mv docs $(Build.ArtifactStagingDirectory)/docs
             displayName: 'Merge previous and latest docs'
 
-          - task: ArchiveFiles@2
-            inputs:
-              rootFolderOrFile: $(Build.ArtifactStagingDirectory)/docs
-              includeRootFolder: false
-              archiveType: 'zip' # Options: zip, 7z, tar, wim
-              archiveFile: $(Build.ArtifactStagingDirectory)/docs.zip
-              replaceExistingArchive: true
-              verbose: false
-              quiet: false
-
           - task: PublishBuildArtifacts@1
             inputs:
-              pathtoPublish: $(Build.ArtifactStagingDirectory)/docs.zip
+              pathtoPublish: $(Build.ArtifactStagingDirectory)/docs
               artifactName: $(project_name)_docs
               publishLocation: Container
 
