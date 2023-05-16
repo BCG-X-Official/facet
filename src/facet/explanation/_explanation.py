@@ -95,7 +95,7 @@ class TreeExplainerFactory(ExplainerFactory[NativeSupervisedLearner]):
         :param feature_perturbation: override the default (optional)
             feature_perturbation parameter
         :param uses_background_dataset: if ``False``, don't pass the background
-            dataset on to the tree explanation even if a background dataset is passed
+            dataset on to the tree explainer even if a background dataset is passed
             to :meth:`.make_explainer`
         """
         super().__init__(**kwargs)
@@ -162,7 +162,7 @@ class TreeExplainerFactory(ExplainerFactory[NativeSupervisedLearner]):
 
 
 #
-# Abstract function explanation factory
+# Abstract function explainer factory
 #
 
 
@@ -217,11 +217,11 @@ class FunctionExplainerFactory(
         self, model_fn: ModelFunction, data: Optional[pd.DataFrame]
     ) -> BaseExplainer:
         """
-        Construct an explanation from a function.
+        Construct an explainer from a function.
 
         :param model_fn: the function representing the model
         :param data: the background dataset
-        :return: the explanation
+        :return: the explainer
         """
 
 
@@ -303,7 +303,7 @@ class KernelExplainerFactory(FunctionExplainerFactory):
         """[see superclass]"""
 
         self._validate_background_dataset(data=data)
-        assert data is not None, "this explanation requires a background dataset"
+        assert data is not None, "this explainer requires a background dataset"
 
         data_size_limit = self.data_size_limit
         if data_size_limit is not None and len(data) > data_size_limit:
@@ -334,7 +334,7 @@ class KernelExplainerFactory(FunctionExplainerFactory):
 
 
 #
-# Exact explanation factory
+# Exact explainer factory
 #
 
 # noinspection PyPep8Naming
@@ -355,7 +355,7 @@ class _ExactExplainer(
 @inheritdoc(match="""[see superclass]""")
 class ExactExplainerFactory(FunctionExplainerFactory):
     """
-    A factory constructing :class:`~shap.Exact` explanation instances.
+    A factory constructing :class:`~shap.Exact` explainer instances.
     """
 
     def __init__(self) -> None:
@@ -385,7 +385,7 @@ class ExactExplainerFactory(FunctionExplainerFactory):
 
 
 #
-# Permutation explanation factory
+# Permutation explainer factory
 #
 
 
@@ -413,7 +413,7 @@ class _PermutationExplainer(
 @inheritdoc(match="""[see superclass]""")
 class PermutationExplainerFactory(FunctionExplainerFactory):
     """
-    A factory constructing :class:`~shap.Permutation` explanation instances.
+    A factory constructing :class:`~shap.Permutation` explainer instances.
     """
 
     @property

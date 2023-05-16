@@ -115,7 +115,7 @@ class ShapProjector(FittableMixin[ShapCalculator[Any]], metaclass=ABCMeta):
         """
         The association matrix for all feature pairs.
 
-        Raises an error if this global explanation has not been fitted.
+        Raises an error if this global explainer has not been fitted.
 
         :param absolute: if ``False``, return relative association as a percentage of
             total feature importance;
@@ -138,7 +138,7 @@ class ShapProjector(FittableMixin[ShapCalculator[Any]], metaclass=ABCMeta):
             representing one or more affinity matrices
         :return: a list of `n_outputs` data frames of shape `(n_features, n_features)`
         """
-        assert self.feature_index_ is not None, "explanation is fitted"
+        assert self.feature_index_ is not None, "explainer is fitted"
         index = self.feature_index_
 
         n_features = len(index)
@@ -245,7 +245,7 @@ class ShapInteractionVectorProjector(ShapProjector):
         """
         The synergy matrix for all feature pairs.
 
-        Raises an error if this global explanation has not been fitted.
+        Raises an error if this global explainer has not been fitted.
 
         :param absolute: if ``False``, return relative synergy as a percentage of
             total feature importance;
@@ -265,7 +265,7 @@ class ShapInteractionVectorProjector(ShapProjector):
         """
         The redundancy matrix for all feature pairs.
 
-        Raises an error if this global explanation has not been fitted.
+        Raises an error if this global explainer has not been fitted.
 
         :param absolute: if ``False``, return relative redundancy as a percentage of
             total feature importance;

@@ -39,7 +39,7 @@ class ExplainerJob(Job[ArraysAny]):
     A call to an explanation function with given `X` and `y` values.
     """
 
-    #: the SHAP explanation to use
+    #: the SHAP explainer to use
     explainer: BaseExplainer
 
     #: if ``False``, calculate SHAp values; otherwise, calculate SHAP interaction values
@@ -65,7 +65,7 @@ class ExplainerJob(Job[ArraysAny]):
         **kwargs: Any,
     ) -> None:
         """
-        :param explainer: the SHAP explanation to use
+        :param explainer: the SHAP explainer to use
         :param X: the feature values of the observations to be explained
         :param y: the target values of the observations to be explained
         :param interactions: if ``False``, calculate SHAP values; if ``True``,
@@ -102,10 +102,10 @@ class ExplainerQueue(JobQueue[ArraysAny, ArraysAny]):
     # defined in superclass, repeated here for Sphinx
     lock: LockType
 
-    #: the SHAP explanation to use
+    #: the SHAP explainer to use
     explainer: BaseExplainer
 
-    #: if ``False``, calculate SHAp values; otherwise, calculate SHAP interaction values
+    #: if ``False``, calculate SHAP values; otherwise, calculate SHAP interaction values
     interactions: bool
 
     #: the feature values of the observations to be explained
@@ -132,7 +132,7 @@ class ExplainerQueue(JobQueue[ArraysAny, ArraysAny]):
         **kwargs: Any,
     ) -> None:
         """
-        :param explainer: the SHAP explanation to use
+        :param explainer: the SHAP explainer to use
         :param X: the feature values of the observations to be explained
         :param y: the target values of the observations to be explained
         :param interactions: if ``False``, calculate SHAP values; if ``True``,
@@ -188,7 +188,7 @@ class ExplainerQueue(JobQueue[ArraysAny, ArraysAny]):
 @inheritdoc(match="""[see superclass]""")
 class ParallelExplainer(BaseExplainer, ParallelizableMixin):
     """
-    A wrapper class, turning an explanation into a parallelized version, explaining
+    A wrapper class, turning an explainer into a parallelized version, explaining
     chunks of observations in parallel.
     """
 
@@ -204,12 +204,18 @@ class ParallelExplainer(BaseExplainer, ParallelizableMixin):
     # defined in superclass, repeated here for Sphinx
     verbose: Optional[int]
 
-    #: The explanation being parallelized by this wrapper
+    #: The explainer being parallelized by this wrapper
     explainer: BaseExplainer
 
     #: the maximum number of observations to allocate to any of the explanation jobs
     #: running in parallel
     max_job_size: int
+
+    # defined in superclass, repeated here for Sphinx:
+    n_jobs: Optional[int]
+    shared_memory: Optional[bool]
+    pre_dispatch: Optional[Union[str, int]]
+    verbose: Optional[int]
 
     def __init__(
         self,
@@ -222,7 +228,7 @@ class ParallelExplainer(BaseExplainer, ParallelizableMixin):
         verbose: Optional[int] = None,
     ) -> None:
         """
-        :param explainer: the explanation to be parallelized by this wrapper
+        :param explainer: the explainer to be parallelized by this wrapper
         :param max_job_size: the maximum number of observations to allocate to any of
             the explanation jobs running in parallel
         """
@@ -237,7 +243,7 @@ class ParallelExplainer(BaseExplainer, ParallelizableMixin):
 
         if isinstance(explainer, ParallelExplainer):
             log.warning(
-                f"creating parallel explanation from parallel explanation {explainer!r}"
+                f"creating parallel explainer from parallel explainer {explainer!r}"
             )
 
         self.explainer = explainer

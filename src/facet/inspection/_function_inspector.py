@@ -51,10 +51,10 @@ __tracker = AllTracker(globals())
 class FunctionInspector(ModelInspector[T_Function], Generic[T_Function]):
     """[see superclass]"""
 
-    #: The default explanation factory used by this inspector.
+    #: The default explainer factory used by this inspector.
     DEFAULT_EXPLAINER_FACTORY: FunctionExplainerFactory = ExactExplainerFactory()
 
-    #: The factory used to create the explanation for the model function.
+    #: The factory instance used to create the explainer for the model function.
     explainer_factory: FunctionExplainerFactory
 
     # the feature names of the model function

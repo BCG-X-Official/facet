@@ -87,7 +87,7 @@ def test_model_inspection(
     sample: Sample,
     n_jobs: int,
 ) -> None:
-    # test the ModelInspector with the given explanation factory:
+    # test the ModelInspector with the given explainer factory:
 
     inspector = LearnerInspector(
         model=best_lgbm_model,

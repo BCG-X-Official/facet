@@ -63,8 +63,8 @@ class LearnerInspector(
 ):
     """[see superclass]"""
 
-    #: The default explanation factory used by this inspector.
-    #: This is a tree explanation using the tree_path_dependent method for
+    #: The default explainer factory used by this inspector.
+    #: This is a tree explainer using the tree_path_dependent method for
     #: feature perturbation, so we can calculate SHAP interaction values.
     DEFAULT_EXPLAINER_FACTORY = TreeExplainerFactory(
         feature_perturbation="tree_path_dependent", uses_background_dataset=False

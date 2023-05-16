@@ -50,14 +50,14 @@ class BaseExplainer(
     but not consistently supported by class :class:`shap.Explainer` across different
     versions of the `shap` package.
 
-    Provides unified support for the old and new explanation APIs:
+    Provides unified support for the old and new explainer APIs:
 
     - The old API uses methods :meth:`.shap_values` and :meth:`.shap_interaction_values`
       to compute SHAP values and interaction values, respectively. They return
       *numpy* arrays for single-output or single-class models, and lists of *numpy*
       arrays for multi-output or multi-class models.
-    - The new API introduced in :mod:`shap` 0.36 makes explanation objects callable;
-      direct calls to an explanation object return an :class:`.Explanation` object
+    - The new API introduced in :mod:`shap` 0.36 makes explainer objects callable;
+      direct calls to an explainer object return an :class:`.Explanation` object
       that contains the SHAP values and interaction values.
       For multi-output or multi-class models, the array has an additional dimension for
       the outputs or classes as the last axis.
@@ -73,7 +73,7 @@ class BaseExplainer(
     @abstractmethod
     def supports_interaction(self) -> bool:
         """
-        ``True`` if the explanation supports interaction effects, ``False`` otherwise.
+        ``True`` if the explainer supports interaction effects, ``False`` otherwise.
         """
         pass
 
@@ -86,7 +86,7 @@ class BaseExplainer(
             model's output
         :param y: array of label values for each sample, used when explaining loss
             functions (optional)
-        :param kwargs: additional arguments specific to the explanation implementation
+        :param kwargs: additional arguments specific to the explainer implementation
         :return: SHAP values as an array of shape `(n_observations, n_features)`;
             a list of such arrays in the case of a multi-output model
         """
@@ -130,7 +130,7 @@ class BaseExplainer(
             model's output
         :param y: array of label values for each sample, used when explaining loss
             functions (optional)
-        :param kwargs: additional arguments specific to the explanation implementation
+        :param kwargs: additional arguments specific to the explainer implementation
         :return: SHAP values as an array of shape
             `(n_observations, n_features, n_features)`;
             a list of such arrays in the case of a multi-output model
@@ -148,12 +148,13 @@ class ExplainerFactory(HasExpressionRepr, Generic[T_Model], metaclass=ABCMeta):
     A factory for constructing :class:`~shap.Explainer` objects.
     """
 
-    #: Additional keyword arguments to be passed to the explanation constructor.
+    #: Additional keyword arguments to be passed to the explainer constructor.
     kwargs: Dict[str, Any]
 
     def __init__(self, **kwargs: Any) -> None:
         """
-        :param kwargs: additional keyword arguments to be passed to the explanation
+        :param kwargs: additional keyword arguments to be passed to the
+            explainer
         """
         super().__init__()
         self.explainer_kwargs = kwargs
@@ -191,7 +192,7 @@ class ExplainerFactory(HasExpressionRepr, Generic[T_Model], metaclass=ABCMeta):
 
         :param model: fitted learner for which to compute shap values
         :param data: background dataset (optional)
-        :return: the new explanation object
+        :return: the new explainer instance
         """
 
     @staticmethod
@@ -201,6 +202,6 @@ class ExplainerFactory(HasExpressionRepr, Generic[T_Model], metaclass=ABCMeta):
     def _validate_background_dataset(self, data: Optional[pd.DataFrame]) -> None:
         if data is None and self.uses_background_dataset:
             raise ValueError(
-                "a background dataset is required to make an explanation with this "
+                "a background dataset is required to make an explainer with this "
                 "factory"
             )

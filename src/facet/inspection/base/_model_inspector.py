@@ -202,7 +202,7 @@ class ModelInspector(
         feature redundancy and synergy.
 
         This will calculate SHAP values and, if enabled in the underlying SHAP
-        explanation, also SHAP interaction values.
+        explainer, also SHAP interaction values.
 
         :param __sample: the background sample to be used for the global explanation
             of this model
