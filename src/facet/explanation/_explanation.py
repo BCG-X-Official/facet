@@ -139,8 +139,6 @@ class TreeExplainerFactory(ExplainerFactory[NativeSupervisedLearner]):
 
         self._validate_background_dataset(data=data)
 
-        assert _TreeExplainer is not None, "Global tree explanation is set"
-
         explainer = _TreeExplainer(
             model=model,
             data=data if self._uses_background_dataset else None,
