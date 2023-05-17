@@ -10,9 +10,9 @@ FACET 2.0
 ---------
 
 FACET |nbsp| 2.0 brings numerous API enhancements and improvements, accelerates model
-inspection by factor |nbsp| 50 in many practical settings, introduces a new, more
-flexible and user-friendly API for hyperparameter tuning with support for
-`scikit-learn`'s native hyperparameter searchers, and improves the styling of all
+inspection by up to a factor of 50 in many practical applications, introduces a new,
+more flexible and user-friendly API for hyperparameter tuning – with support for
+`scikit-learn`'s native hyperparameter searchers – and improves the styling of all
 visualizations.
 
 FACET 2.0 requires :mod:`pytools` |nbsp| 2.0 and :mod:`sklearndf` |nbsp| 2.2, and is now

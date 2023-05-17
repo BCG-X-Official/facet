@@ -1,10 +1,17 @@
 .. image:: sphinx/source/_images/Gamma_Facet_Logo_RGB_LB.svg
 
-|
+.. note:: **FACET 2.0 now available!**
 
-**Release Candidate 2.0rc available now!**
+    FACET 2.0 brings numerous API enhancements and improvements, accelerates model
+    inspection by up to a factor of 50 in many practical applications, introduces a new,
+    more flexible and user-friendly API for hyperparameter tuning – with support for
+    `scikit-learn`'s native hyperparameter searchers – and improves the styling of all
+    visualizations.
 
-|
+    See the `release notes <https://bcg-gamma.github.io/facet/docs-version/2-0/_generated/release_notes.html>`__
+    for more details.
+
+
 
 FACET is an open source library for human-explainable AI.
 It combines sophisticated model inspection and model-based simulation to enable better 
