@@ -26,7 +26,7 @@ resources:
       type: github
       endpoint: BCG-Gamma
       name: BCG-Gamma/pytools
-      ref: 2.0.x
+      ref: 2.1.x
 
 variables:
   ${{ if not(startsWith(variables['Build.SourceBranch'], 'refs/pull/')) }}:
@@ -54,7 +54,7 @@ stages:
               versionSpec: '3.9'
             displayName: 'use Python 3.9'
           - script: |
-              python -m pip install isort~=5.10
+              python -m pip install isort~=5.12
               python -m isort --check --diff .
             displayName: 'Run isort'
       - job:
@@ -87,7 +87,7 @@ stages:
               versionSpec: '3.9'
             displayName: 'use Python 3.9'
           - script: |
-              python -m pip install mypy~=0.981 numpy~=1.22 'gamma-pytools~=2.1rc' sklearndf~=2.2.dev
+              python -m pip install mypy~=1.2.0 numpy~=1.23 gamma-pytools~=2.1 sklearndf~=2.2
               python -m mypy src
             displayName: 'Run mypy'
 
@@ -101,17 +101,20 @@ stages:
         displayName: 'detect changes'
         steps:
           - checkout: self
+            fetchDepth: 2
 
           - task: Bash@3
             name: diff
             inputs:
               targetType: 'inline'
               script: |
+                set -eux
+
                 echo Repo: $(Build.DefinitionName)
                 cd $(System.DefaultWorkingDirectory)
-                files_changed=$(git diff $(Build.SourceVersion)^! --name-only)
+                files_changed=$(git diff $(Build.SourceVersion)^ --name-only)
                 echo "Files changed since last commit: ${files_changed}"
-                n_files_changed=$(git diff $(Build.SourceVersion)^! --name-only | grep -i -E 'meta\.yaml|pyproject\.toml|azure-pipelines\.yml|tox\.ini|make\.py'  | wc -l | xargs)
+                n_files_changed=$(git diff $(Build.SourceVersion)^ --name-only | grep -i -E 'meta\.yaml|pyproject\.toml|azure-pipelines\.yml|tox\.ini|make\.py'  | wc -l | xargs)
                 if [ ${n_files_changed} -gt 0 ]
                 then
                 build_changed=1
@@ -132,8 +135,6 @@ stages:
 
     jobs:
       - job:
-        timeoutInMinutes: 120
-        cancelTimeoutInMinutes: 3
         displayName: 'pytest @ develop environment'
         condition: ne(variables.source_is_release_branch, 'True')
 
@@ -143,8 +144,8 @@ stages:
         steps:
           - task: UsePythonVersion@0
             inputs:
-              versionSpec: '3.8'
-            displayName: 'use Python 3.8'
+              versionSpec: '3.9'
+            displayName: 'use Python 3.9'
 
           - checkout: self
 
@@ -155,9 +156,16 @@ stages:
               targetType: 'inline'
               script: |
                 set -eux
-                eval "$(conda shell.bash hook)"
-                conda env create
-                conda activate $(project_name)-develop
+
+                # install micromamba
+                curl -Ls https://micro.mamba.pm/api/micromamba/linux-64/latest | tar -xvj bin/micromamba
+                export MAMBA_ROOT_PREFIX=~/micromamba
+                eval "$(./bin/micromamba shell hook -s posix)"
+
+                # install the develop environment
+                micromamba env create --yes --file environment.yml
+                micromamba activate $(project_name)-develop
+
                 export PYTHONPATH=$(System.DefaultWorkingDirectory)/src/
                 export RUN_PACKAGE_VERSION_TEST=$(project_name)
 
@@ -409,8 +417,8 @@ stages:
         steps:
           - task: UsePythonVersion@0
             inputs:
-              versionSpec: '3.8'
-            displayName: 'use Python 3.8'
+              versionSpec: '3.9'
+            displayName: 'use Python 3.9'
 
           - checkout: pytools
           - checkout: self
@@ -474,8 +482,8 @@ stages:
         steps:
           - task: UsePythonVersion@0
             inputs:
-              versionSpec: '3.8'
-            displayName: 'use Python 3.8'
+              versionSpec: '3.9'
+            displayName: 'use Python 3.9'
 
           - checkout: pytools
           - checkout: self
@@ -601,8 +609,8 @@ stages:
         steps:
           - task: UsePythonVersion@0
             inputs:
-              versionSpec: '3.8'
-            displayName: 'use Python 3.8'
+              versionSpec: '3.9'
+            displayName: 'use Python 3.9'
 
           - task: InstallSSHKey@0
             inputs:
@@ -641,14 +649,18 @@ stages:
               targetType: 'inline'
               script: |
                 set -eux
-                eval "$(conda shell.bash hook)"
 
                 cd $(System.DefaultWorkingDirectory)
                 echo "Checking out $(branchName)"
                 git checkout $(branchName)
 
-                conda env create
-                conda activate $(project_name)-develop
+                # install micromamba
+                curl -Ls https://micro.mamba.pm/api/micromamba/linux-64/latest | tar -xvj bin/micromamba
+                export MAMBA_ROOT_PREFIX=~/micromamba
+                eval "$(./bin/micromamba shell hook -s posix)"
+                # install the develop environment
+                micromamba env create --yes --file environment.yml
+                micromamba activate $(project_name)-develop
 
                 export PYTHONPATH=$(System.DefaultWorkingDirectory)/src/
 
@@ -661,7 +673,8 @@ stages:
               targetType: 'inline'
               script: |
                 set -eux
-                eval "$(conda shell.bash hook)"
+                export MAMBA_ROOT_PREFIX=~/micromamba
+                eval "$(./bin/micromamba shell hook -s posix)"
 
                 # install the tree utility
                 sudo apt-get install tree
@@ -675,7 +688,7 @@ stages:
 
                 mkdir -p $(System.DefaultWorkingDirectory)/sphinx/build/
 
-                conda activate $(project_name)-develop
+                micromamba activate $(project_name)-develop
                 python sphinx/make.py prepare_docs_deployment
 
                 echo "Current docs contents:"
@@ -683,19 +696,9 @@ stages:
                 mv docs $(Build.ArtifactStagingDirectory)/docs
             displayName: 'Merge previous and latest docs'
 
-          - task: ArchiveFiles@2
-            inputs:
-              rootFolderOrFile: $(Build.ArtifactStagingDirectory)/docs
-              includeRootFolder: false
-              archiveType: 'zip' # Options: zip, 7z, tar, wim
-              archiveFile: $(Build.ArtifactStagingDirectory)/docs.zip
-              replaceExistingArchive: true
-              verbose: false
-              quiet: false
-
           - task: PublishBuildArtifacts@1
             inputs:
-              pathtoPublish: $(Build.ArtifactStagingDirectory)/docs.zip
+              pathtoPublish: $(Build.ArtifactStagingDirectory)/docs
               artifactName: $(project_name)_docs
               publishLocation: Container
 

@@ -36,16 +36,17 @@ test:
     - facet.simulation
   requires:
     - pytest ~= 7.1
-    # additional requirements of sklearndf
-    - boruta_py      {{ environ.get('FACET_V_BORUTA') }}
-    - lightgbm       {{ environ.get('FACET_V_LIGHTGBM') }}
-    - scikit-learn   {{ environ.get('FACET_V_SCIKIT_LEARN') }}
+    # we always need lightgbm for testing; version spec is optional
+    - lightgbm       {{ environ.get('FACET_V_LIGHTGBM', '') }}
+    # optional libraries of sklearndf, needed for testing
+    - boruta_py      {{ environ.get('FACET_V_BORUTA', '[False]') }}
+    - scikit-learn   {{ environ.get('FACET_V_SCIKIT_LEARN', '[False]') }}
     # additional requirements of gamma-pytools
-    - joblib         {{ environ.get('FACET_V_JOBLIB') }}
-    - typing_inspect {{ environ.get('FACET_V_TYPING_INSPECT') }}
+    - joblib         {{ environ.get('FACET_V_JOBLIB', '[False]') }}
+    - typing_inspect {{ environ.get('FACET_V_TYPING_INSPECT', '[False]') }}
     # additional requirements of shap
-    - ipython        {{ environ.get('FACET_V_IPYTHON') }}
-    - numba          {{ environ.get('FACET_V_NUMBA') }}
+    - ipython        {{ environ.get('FACET_V_IPYTHON', '[False]') }}
+    - numba          {{ environ.get('FACET_V_NUMBA', '[False]') }}
   commands:
     - conda list
     - python -c 'import facet;

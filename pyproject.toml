@@ -14,14 +14,15 @@ dist-name = "gamma-facet"
 license = "Apache Software License v2.0"
 
 requires = [
-    "gamma-pytools  >=2.1rc,<3a",
-    "matplotlib     ~=3.0",
-    "numpy          >=1.21,<2a",  # cannot use ~= due to conda bug
-    "packaging      >=20",
-    "pandas         ~=1.0",
-    "scipy          ~=1.2",
-    "shap           >=0.34,<0.42a",
-    "sklearndf      >=2.2rc,<3a",
+    "gamma-pytools     ~=2.1",
+    "matplotlib        ~=3.0",
+    "numpy             >=1.21,<2a",  # cannot use ~= due to conda bug
+    "packaging         >=20",
+    "pandas            >=1.0",
+    "scipy             ~=1.2",
+    "shap              >=0.39",
+    "sklearndf         ~=2.2",
+    "typing_extensions ~=4.0",
 ]
 
 requires-python = ">=3.7,<4a"
@@ -46,9 +47,6 @@ classifiers = [
 testing = [
     "pytest ~= 7.1",
     "pytest-cov ~= 2.12",
-    "flake8 ~= 3.8",
-    "flake8-comprehensions ~= 3.2",
-    "isort ~= 5.10",
     "lightgbm ~=3.0.0",
     "xgboost ~= 1.5",
 ]
@@ -74,54 +72,56 @@ no-binary.min = ["matplotlib", "shap"]
 
 [build.matrix.min]
 # direct requirements of gamma-facet
-gamma-pytools  = "~=2.1rc"
-matplotlib     = "~=3.0.3"
-numpy          = "==1.21.6"  # cannot use ~= due to conda bug
-packaging      = "~=20.9"
-pandas         = "~=1.0.5"
-python         = ">=3.7.12,<3.8a"    # cannot use ~= due to conda bug
-scipy          = "~=1.4.1"
-shap           = "~=0.34.0"
-sklearndf      = "~=2.2rc"
+gamma-pytools     = "~=2.1.0"
+matplotlib        = "~=3.0.3"
+numpy             = "==1.21.6"  # cannot use ~= due to conda bug
+packaging         = "~=20.9"
+pandas            = "~=1.0.5"
+python            = ">=3.7.12,<3.8a"    # cannot use ~= due to conda bug
+scipy             = "~=1.4.1"
+shap              = "~=0.39.0"
+sklearndf         = "~=2.2.0"
+typing_extensions = "~=4.0.0"
 # additional minimum requirements of sklearndf
-boruta         = "~=0.3.0"
-lightgbm       = "~=3.0.0"
-scikit-learn   = "~=0.24.2"
-xgboost        = "~=1.5"
+boruta            = "~=0.3.0"
+lightgbm          = "~=3.0.0"
+scikit-learn      = "~=0.24.2"
+xgboost           = "~=1.5"
 # additional minimum requirements of gamma-pytools
-joblib         = "~=0.14.1"
-typing_inspect = "~=0.4.0"
+joblib            = "~=0.14.1"
+typing_inspect    = "~=0.4.0"
 # additional minimum requirements of shap
-ipython        = "==7.0"
-numba          = "~=0.55"  # required to support numpy 1.21
+ipython           = "==7.0"
+numba             = "~=0.55"  # required to support numpy 1.21
 
 [build.matrix.max]
 # direct requirements of gamma-facet
-gamma-pytools  = ">=2.1rc,<3a"
-matplotlib     = "~=3.5"
-numpy          = ">=1.22,<2a"  # cannot use ~= due to conda bug
-packaging      = ">=20"
-pandas         = "~=1.4"
-python         = ">=3.9,<4a"   # cannot use ~= due to conda bug
-scipy          = "~=1.8"
-shap           = "~=0.41"
-sklearndf      = ">=2.2rc,<3a"
+gamma-pytools     = "~=2.1"
+matplotlib        = "~=3.6"
+numpy             = ">=1.23,<2a"  # cannot use ~= due to conda bug
+packaging         = ">=20"
+pandas            = "~=2.0"
+python            = ">=3.9,<4a"   # cannot use ~= due to conda bug
+scipy             = "~=1.10"
+shap              = "~=0.41"
+sklearndf         = "~=2.2"
+typing_extensions = "~=4.3"
 # additional maximum requirements of sklearndf
-boruta         = "~=0.3"
-lightgbm       = "~=3.3"
-scikit-learn   = "~=1.1"
-xgboost        = "~=1.5"
+boruta            = "~=0.3"
+lightgbm          = "~=3.3"
+scikit-learn      = "~=1.1"
+xgboost           = "~=1.5"
 # additional maximum requirements of gamma-pytools
-joblib         = "~=1.1"
-typing_inspect = "~=0.7"
+joblib            = "~=1.1"
+typing_inspect    = "~=0.7"
 # additional maximum requirements of shap
-ipython        = ">=7"
-numba          = ">=0.55.2"  # required to support numpy 1.22
+ipython           = ">=7"
+numba             = ">=0.55.2"  # required to support numpy 1.22
 
 [tool.black]
 # quiet = "True"
 line-length = 88
-target_version = ['py36']
+target_version = ['py37']
 include = '\.pyi?$'
 exclude = '''
 (

@@ -10,8 +10,13 @@ FACET 2.0
 ---------
 
 FACET |nbsp| 2.0 brings numerous API enhancements and improvements, accelerates model
-inspection by factor |nbsp| 50 in many practical settings, makes major improvements to
-visualizations, and is now fully type-checked by |mypy|.
+inspection by up to a factor of 50 in many practical applications, introduces a new,
+more flexible and user-friendly API for hyperparameter tuning – with support for
+`scikit-learn`'s native hyperparameter searchers – and improves the styling of all
+visualizations.
+
+FACET 2.0 requires :mod:`pytools` |nbsp| 2.0 and :mod:`sklearndf` |nbsp| 2.2, and is now
+fully type-checked by |mypy|.
 
 
 2.0.0
@@ -26,9 +31,21 @@ visualizations, and is now fully type-checked by |mypy|.
   and ``upper_bound`` in method :meth:`~.RangePartitioner.fit` and no longer accepts
   them in the class initializer
 
+``facet.explanation``
+^^^^^^^^^^^^^^^^^^^^^
+
+- REFACTOR: moved explainer factories from module :mod:`facet.inspection` to new module
+  :mod:`facet.explanation`.
+- API: new explainer factories :class:`.ExactExplainerFactory` and
+  :class:`.PermutationExplainerFactory`, in addition to the
+  :class:`.TreeExplainerFactory` and :class:`.KernelExplainerFactory` introduced in
+  FACET |nbsp| 1.0
+
 ``facet.inspection``
 ^^^^^^^^^^^^^^^^^^^^
 
+- API: new :class:`.FunctionInspector` class for inspecting arbitrary functions,
+  using a :class:`.ExactExplainerFactory` by default
 - API: :class:`.LearnerInspector` no longer uses learner crossfits and instead inspects
   models using a single pass of SHAP calculations, usually leading to performance gains
   of up to a factor of |nbsp| 50
@@ -48,13 +65,16 @@ visualizations, and is now fully type-checked by |mypy|.
 ^^^^^^^^^^^^^^^^^^^
 
 - API: :class:`.LearnerSelector` replaces FACET |nbsp| 1.x class ``LearnerRanker``, and
-  now supports any CV searcher that supports `scikit-learn`'s CV search API, including
-  `scikit-learn`'s native searchers such as
+  provides a new, more flexible and user-friendly API for hyperparameter tuning
+- API: :class:`.LearnerSelector` introduces support for any CV searcher implementing
+  `scikit-learn`'s CV search API, including `scikit-learn`'s native searchers such as
   :class:`~sklearn.model_selection.GridSearchCV` or
   :class:`~sklearn.model_selection.RandomizedSearchCV`
 - API: new classes :class:`.ParameterSpace` and :class:`.MultiEstimatorParameterSpace`
   offer a more convenient and robust mechanism for declaring options or distributions
   for hyperparameter tuning
+- API: new class :class:`.LearnerSelector` supports a new, more flexible and
+  user-friendly API for hyperparameter tuning
 
 ``facet.simulation``
 ^^^^^^^^^^^^^^^^^^^^
@@ -73,10 +93,13 @@ visualizations, and is now fully type-checked by |mypy|.
 Other
 ^^^^^
 
+- VIZ: significant updates to the styling of all visualizations, especially those
+  generated for output of :class:`.LearnerInspector`, using the all-new versions of
+  :mod:`pytools` matrix and dendrogram drawers
 - API: class ``LearnerCrossfit`` is no longer needed in FACET |nbsp| 2.0 and has been
   removed
-- API: support new :obj:`~pytools.fit.fitted_only` decorator introduced in *pytools*
-  |nbsp| 2.1.
+- API: support new :obj:`~pytools.fit.fitted_only` decorator introduced in
+  :mod:`pytools` |nbsp| 2.1.
 
 
 FACET 1.2
@@ -87,6 +110,12 @@ It also introduces the ability to run simulations on a subsample of the data use
 fit the underlying crossfit.
 One example where this can be useful is to use only a recent period of a time series as
 the baseline of a simulation.
+
+1.2.3
+~~~~~
+
+- BUILD: pin down *matplotlib* version to < 3.6 and *scipy* version to < 1.9 to ensure
+  compatibility with *pytools* 1.2 and *sklearndf* 1.2
 
 
 1.2.2
@@ -164,9 +193,9 @@ FACET 1.0
 1.0.3
 ~~~~~
 
-- FIX: restrict package requirements to *gamma-pytools* |nbsp| 1.0.* and
-  *sklearndf* |nbsp| 1.0.x, since FACET |nbsp| 1.0 is not compatible with
-  *gamma-pytools* |nbsp| 1.1.*
+- FIX: restrict package requirements to *gamma-pytools* |nbsp| 1.0 and
+  *sklearndf* |nbsp| 1.0, since FACET |nbsp| 1.0 is not compatible with
+  *gamma-pytools* |nbsp| 1.1
 
 1.0.2
 ~~~~~

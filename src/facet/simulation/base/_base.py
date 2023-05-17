@@ -22,7 +22,7 @@ import pandas as pd
 
 from pytools.api import AllTracker
 from pytools.parallelization import Job, JobRunner, ParallelizableMixin
-from sklearndf import LearnerDF, RegressorDF
+from sklearndf import RegressorDF, SupervisedLearnerDF
 
 from facet.data import Sample
 from facet.data.partition import Partitioner
@@ -41,7 +41,7 @@ __all__ = [
 #
 
 T_Value = TypeVar("T_Value", bound=np.generic)
-T_LearnerDF = TypeVar("T_LearnerDF", bound=LearnerDF)
+T_SupervisedLearnerDF = TypeVar("T_SupervisedLearnerDF", bound=SupervisedLearnerDF)
 
 
 #
@@ -52,7 +52,7 @@ __tracker = AllTracker(globals())
 
 
 class BaseUnivariateSimulator(
-    ParallelizableMixin, Generic[T_LearnerDF], metaclass=ABCMeta
+    ParallelizableMixin, Generic[T_SupervisedLearnerDF], metaclass=ABCMeta
 ):
     """
     Base class for univariate simulations.
@@ -71,7 +71,7 @@ class BaseUnivariateSimulator(
     verbose: Optional[int]
 
     #: The learner pipeline used to conduct simulations
-    model: T_LearnerDF
+    model: T_SupervisedLearnerDF
 
     #: The sample to be used in baseline calculations and simulations
     sample: Sample
@@ -82,7 +82,7 @@ class BaseUnivariateSimulator(
 
     def __init__(
         self,
-        model: T_LearnerDF,
+        model: T_SupervisedLearnerDF,
         sample: Sample,
         *,
         confidence_level: float = 0.95,
@@ -199,13 +199,13 @@ class BaseUnivariateSimulator(
 
     @staticmethod
     @abstractmethod
-    def _expected_learner_type() -> Type[T_LearnerDF]:
+    def _expected_learner_type() -> Type[T_SupervisedLearnerDF]:
         pass
 
     @staticmethod
     @abstractmethod
     def _simulate(
-        model: T_LearnerDF, x: pd.DataFrame, name: str, value: Any
+        model: T_SupervisedLearnerDF, x: pd.DataFrame, name: str, value: Any
     ) -> Tuple[float, float]:
         pass
 

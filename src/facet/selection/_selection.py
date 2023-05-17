@@ -431,12 +431,7 @@ class LearnerSelector(
 
         # convert the results into a data frame and sort
 
-        report = pd.DataFrame(
-            {
-                name_processed: values
-                for name_processed, values in cv_results_processed.values()
-            }
-        )
+        report = pd.DataFrame(dict(cv_results_processed.values()))
 
         # sort the report, if applicable
 

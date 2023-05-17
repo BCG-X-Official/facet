@@ -1,5 +1,5 @@
 import logging
-from typing import Any, Dict, List, Mapping, Optional, Sequence, Set, Tuple, cast
+from typing import Any, Dict, List, Mapping, Optional, Sequence, Tuple, cast
 
 import numpy as np
 import numpy.typing as npt
@@ -11,7 +11,7 @@ from sklearn.datasets import fetch_california_housing
 from sklearn.model_selection import BaseCrossValidator, GridSearchCV, KFold
 from sklearn.utils import Bunch
 
-from sklearndf import TransformerDF
+from sklearndf import RegressorDF, TransformerDF
 from sklearndf.classification import RandomForestClassifierDF
 from sklearndf.pipeline import ClassifierPipelineDF, RegressorPipelineDF
 from sklearndf.regression import (
@@ -31,7 +31,7 @@ from sklearndf.transformation import (
 
 import facet
 from facet.data import Sample
-from facet.inspection import LearnerInspector, TreeExplainerFactory
+from facet.inspection import LearnerInspector
 from facet.selection import LearnerSelector, ParameterSpace
 from facet.validation import BootstrapCV, StratifiedBootstrapCV
 
@@ -94,7 +94,7 @@ def cv_stratified_bootstrap() -> BaseCrossValidator:
 @pytest.fixture  # type: ignore
 def regressor_parameters(
     simple_preprocessor: TransformerDF,
-) -> List[ParameterSpace[RegressorPipelineDF[LGBMRegressorDF]]]:
+) -> List[ParameterSpace[RegressorPipelineDF[RegressorDF]]]:
     random_state = {"random_state": 42}
 
     space_1 = ParameterSpace(
@@ -158,17 +158,21 @@ def regressor_parameters(
 @pytest.fixture  # type: ignore
 def regressor_selector(
     cv_kfold: KFold,
-    regressor_parameters: List[ParameterSpace[RegressorPipelineDF[LGBMRegressorDF]]],
+    regressor_parameters: List[ParameterSpace[RegressorPipelineDF[RegressorDF]]],
     sample: Sample,
     n_jobs: int,
-) -> LearnerSelector[RegressorPipelineDF[LGBMRegressorDF], GridSearchCV]:
-    return LearnerSelector(
+) -> LearnerSelector[RegressorPipelineDF[RegressorDF], GridSearchCV]:
+    selector_fitted = LearnerSelector(
         searcher_type=GridSearchCV,
         parameter_space=regressor_parameters,
         cv=cv_kfold,
         scoring="r2",
         n_jobs=n_jobs,
     ).fit(sample=sample)
+
+    log.debug(f"Fitted learner selector:\n{selector_fitted.summary_report()}")
+
+    return selector_fitted
 
 
 PARAM_CANDIDATE__ = "param_candidate__"
@@ -208,31 +212,6 @@ def best_lgbm_model(
 
 
 @pytest.fixture  # type: ignore
-def preprocessed_feature_names(
-    best_lgbm_model: RegressorPipelineDF[LGBMRegressorDF],
-) -> Set[str]:
-    """
-    Names of all features after preprocessing
-    """
-    return set(best_lgbm_model.final_estimator.feature_names_in_)
-
-
-@pytest.fixture  # type: ignore
-def regressor_inspector(
-    best_lgbm_model: RegressorPipelineDF[LGBMRegressorDF], sample: Sample, n_jobs: int
-) -> LearnerInspector[RegressorPipelineDF[LGBMRegressorDF]]:
-    inspector = LearnerInspector(
-        pipeline=best_lgbm_model,
-        explainer_factory=TreeExplainerFactory(
-            feature_perturbation="tree_path_dependent", uses_background_dataset=True
-        ),
-        n_jobs=n_jobs,
-    ).fit(sample=sample)
-
-    return inspector
-
-
-@pytest.fixture  # type: ignore
 def simple_preprocessor(sample: Sample) -> TransformerDF:
     features = sample.features
 
@@ -253,7 +232,7 @@ def simple_preprocessor(sample: Sample) -> TransformerDF:
         column_transforms.append(
             (
                 STEP_ONE_HOT_ENCODE,
-                OneHotEncoderDF(sparse=False, handle_unknown="ignore"),
+                OneHotEncoderDF(handle_unknown="ignore"),
                 list(map(str, category_columns)),
             )
         )
@@ -457,8 +436,8 @@ def iris_inspector_multi_class(
     n_jobs: int,
 ) -> LearnerInspector[ClassifierPipelineDF[RandomForestClassifierDF]]:
     return LearnerInspector(
-        pipeline=iris_classifier_multi_class, shap_interaction=True, n_jobs=n_jobs
-    ).fit(sample=iris_sample_multi_class)
+        model=iris_classifier_multi_class, shap_interaction=True, n_jobs=n_jobs
+    ).fit(iris_sample_multi_class)
 
 
 #

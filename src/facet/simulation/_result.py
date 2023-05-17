@@ -113,7 +113,7 @@ class UnivariateSimulationResult(Generic[T_Values]):
         :param baseline: the average observed actual output, acting as the baseline
             of the simulation
         :param confidence_level: the width of the confidence interval determined by
-            bootstrapping, ranging between 0.0 and 1.0 (exclusive)
+            the standard error of the mean, ranging between 0.0 and 1.0 (exclusive)
         """
         super().__init__()
 

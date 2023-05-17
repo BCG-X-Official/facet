@@ -10,15 +10,34 @@ from pytools.data import Matrix
 from sklearndf.pipeline import RegressorPipelineDF
 from sklearndf.regression.extra import LGBMRegressorDF
 
+from facet.data import Sample
+from facet.explanation import TreeExplainerFactory
 from facet.inspection import LearnerInspector
 
 log = logging.getLogger(__name__)
 
 
 def test_feature_affinity_matrices(
-    preprocessed_feature_names: Set[str],
-    regressor_inspector: LearnerInspector[RegressorPipelineDF[LGBMRegressorDF]],
+    best_lgbm_model: RegressorPipelineDF[LGBMRegressorDF],
+    sample: Sample,
+    n_jobs: int,
 ) -> None:
+    regressor_inspector: LearnerInspector[
+        RegressorPipelineDF[LGBMRegressorDF]
+    ] = LearnerInspector(
+        model=best_lgbm_model,
+        explainer_factory=TreeExplainerFactory(
+            feature_perturbation="tree_path_dependent", uses_background_dataset=True
+        ),
+        n_jobs=n_jobs,
+    ).fit(
+        sample
+    )
+
+    preprocessed_feature_names: Set[str] = set(
+        best_lgbm_model.final_estimator.feature_names_in_
+    )
+
     # feature affinity matrices (feature dependencies)
     # check that dimensions of pairwise feature matrices are equal to # of features,
     # and value ranges:
