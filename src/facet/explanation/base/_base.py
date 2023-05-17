@@ -83,7 +83,7 @@ class BaseExplainer(
     an :class:`ExplainerFactory` object.
     """
 
-    def __init__(self, *args: Any, **kwargs: Any):
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         """
         :param args: positional arguments passed to the explainer constructor
         :param kwargs: keyword arguments passed to the explainer constructor
