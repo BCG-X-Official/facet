@@ -17,7 +17,6 @@ facet.simulation
       :template: custom-class-template.rst
       :nosignatures:
    
-      BaseUnivariateSimulator
       UnivariateProbabilitySimulator
       UnivariateSimulationResult
       UnivariateTargetSimulator
@@ -48,5 +47,6 @@ Submodules
    :template: custom-module-template.rst
    :recursive:
 
+   facet.simulation.base
    facet.simulation.viz
 

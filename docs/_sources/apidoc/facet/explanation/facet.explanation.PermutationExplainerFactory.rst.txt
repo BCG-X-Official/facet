@@ -1,0 +1,38 @@
+facet.explanation.PermutationExplainerFactory
+=============================================
+
+.. currentmodule:: facet.explanation
+
+.. autoclass:: PermutationExplainerFactory
+   :members:
+   :no-show-inheritance:
+   :inherited-members:
+   :special-members: __call__
+
+   
+   
+   .. rubric:: Method summary
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~PermutationExplainerFactory.make_explainer
+      ~PermutationExplainerFactory.make_explainer_from_function
+      ~PermutationExplainerFactory.to_expression
+   
+   
+
+   
+   
+   .. rubric:: Attribute summary
+
+   .. autosummary::
+   
+      ~PermutationExplainerFactory.explains_raw_output
+      ~PermutationExplainerFactory.supports_shap_interaction_values
+      ~PermutationExplainerFactory.uses_background_dataset
+      ~PermutationExplainerFactory.explainer_kwargs
+   
+   
+
+   .. rubric:: Definitions

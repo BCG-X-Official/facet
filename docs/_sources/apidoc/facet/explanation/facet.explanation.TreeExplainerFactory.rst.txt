@@ -1,0 +1,37 @@
+facet.explanation.TreeExplainerFactory
+======================================
+
+.. currentmodule:: facet.explanation
+
+.. autoclass:: TreeExplainerFactory
+   :members:
+   :no-show-inheritance:
+   :inherited-members:
+   :special-members: __call__
+
+   
+   
+   .. rubric:: Method summary
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~TreeExplainerFactory.make_explainer
+      ~TreeExplainerFactory.to_expression
+   
+   
+
+   
+   
+   .. rubric:: Attribute summary
+
+   .. autosummary::
+   
+      ~TreeExplainerFactory.explains_raw_output
+      ~TreeExplainerFactory.supports_shap_interaction_values
+      ~TreeExplainerFactory.uses_background_dataset
+      ~TreeExplainerFactory.explainer_kwargs
+   
+   
+
+   .. rubric:: Definitions

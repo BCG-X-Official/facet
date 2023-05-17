@@ -17,16 +17,9 @@ facet.inspection
       :template: custom-class-template.rst
       :nosignatures:
    
-      BaseExplainer
-      ExplainerFactory
-      ExplainerJob
-      ExplainerQueue
-      KernelExplainerFactory
+      FunctionInspector
       LearnerInspector
-      ModelInspector
-      ParallelExplainer
       ShapPlotData
-      TreeExplainerFactory
    
    
 
@@ -43,4 +36,16 @@ facet.inspection
    
 
 
+
+
+==========
+Submodules
+==========
+.. autosummary::
+   :toctree: inspection
+   :template: custom-module-template.rst
+   :recursive:
+
+   facet.inspection.base
+   facet.inspection.shap
 

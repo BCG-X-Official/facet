@@ -402,7 +402,7 @@
         <span class="c1"># validate parameters for the searcher factory</span>
         <span class="c1">#</span>
 
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">callable</span><span class="p">(</span><span class="n">searcher_type</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">callable</span><span class="p">(</span><span class="n">searcher_type</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
                 <span class="s2">&quot;arg searcher_type expected to be a callable, &quot;</span>
                 <span class="sa">f</span><span class="s2">&quot;but is a </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">searcher_type</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&quot;</span>
@@ -600,12 +600,7 @@
 
         <span class="c1"># convert the results into a data frame and sort</span>
 
-        <span class="n">report</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
-            <span class="p">{</span>
-                <span class="n">name_processed</span><span class="p">:</span> <span class="n">values</span>
-                <span class="k">for</span> <span class="n">name_processed</span><span class="p">,</span> <span class="n">values</span> <span class="ow">in</span> <span class="n">cv_results_processed</span><span class="o">.</span><span class="n">values</span><span class="p">()</span>
-            <span class="p">}</span>
-        <span class="p">)</span>
+        <span class="n">report</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">cv_results_processed</span><span class="o">.</span><span class="n">values</span><span class="p">()))</span>
 
         <span class="c1"># sort the report, if applicable</span>
 

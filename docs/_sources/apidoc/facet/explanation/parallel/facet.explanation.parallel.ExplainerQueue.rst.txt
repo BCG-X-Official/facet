@@ -1,0 +1,41 @@
+facet.explanation.parallel.ExplainerQueue
+=========================================
+
+.. currentmodule:: facet.explanation.parallel
+
+.. autoclass:: ExplainerQueue
+   :members:
+   :no-show-inheritance:
+   :inherited-members:
+   :special-members: __call__
+
+   
+   
+   .. rubric:: Method summary
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~ExplainerQueue.aggregate
+      ~ExplainerQueue.jobs
+      ~ExplainerQueue.on_run
+   
+   
+
+   
+   
+   .. rubric:: Attribute summary
+
+   .. autosummary::
+   
+      ~ExplainerQueue.lock
+      ~ExplainerQueue.explainer
+      ~ExplainerQueue.interactions
+      ~ExplainerQueue.X
+      ~ExplainerQueue.y
+      ~ExplainerQueue.max_job_size
+      ~ExplainerQueue.kwargs
+   
+   
+
+   .. rubric:: Definitions

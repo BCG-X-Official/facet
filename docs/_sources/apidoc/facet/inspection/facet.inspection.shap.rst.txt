@@ -1,0 +1,49 @@
+facet.inspection.shap
+=====================
+
+.. automodule:: facet.inspection.shap
+   :no-imported-members:
+
+   
+
+   
+   
+   =======
+   Classes
+   =======
+
+   .. autosummary::
+      :toctree: shap
+      :template: custom-class-template.rst
+      :nosignatures:
+   
+      FunctionShapCalculator
+      ShapCalculator
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+
+
+
+==========
+Submodules
+==========
+.. autosummary::
+   :toctree: shap
+   :template: custom-module-template.rst
+   :recursive:
+
+   facet.inspection.shap.sklearn
+

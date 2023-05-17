@@ -25,6 +25,7 @@ facet.inspection.LearnerInspector
       ~LearnerInspector.feature_synergy_linkage
       ~LearnerInspector.feature_synergy_matrix
       ~LearnerInspector.fit
+      ~LearnerInspector.preprocess_features
       ~LearnerInspector.shap_interaction_values
       ~LearnerInspector.shap_plot_data
       ~LearnerInspector.shap_values
@@ -39,14 +40,18 @@ facet.inspection.LearnerInspector
    
       ~LearnerInspector.COL_IMPORTANCE
       ~LearnerInspector.DEFAULT_EXPLAINER_FACTORY
-      ~LearnerInspector.features_
+      ~LearnerInspector.feature_names
       ~LearnerInspector.is_fitted
-      ~LearnerInspector.output_names_
+      ~LearnerInspector.output_names
       ~LearnerInspector.sample_
+      ~LearnerInspector.shap_calculator
       ~LearnerInspector.n_jobs
       ~LearnerInspector.shared_memory
       ~LearnerInspector.pre_dispatch
       ~LearnerInspector.verbose
+      ~LearnerInspector.model
+      ~LearnerInspector.shap_interaction
+      ~LearnerInspector.explainer_factory
    
    
 

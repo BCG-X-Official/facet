@@ -1,0 +1,39 @@
+facet.inspection.shap.sklearn
+=============================
+
+.. automodule:: facet.inspection.shap.sklearn
+   :no-imported-members:
+
+   
+
+   
+   
+   =======
+   Classes
+   =======
+
+   .. autosummary::
+      :toctree: sklearn
+      :template: custom-class-template.rst
+      :nosignatures:
+   
+      ClassifierShapCalculator
+      LearnerShapCalculator
+      RegressorShapCalculator
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+
+

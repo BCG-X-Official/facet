@@ -17,14 +17,13 @@ facet.simulation.viz.SimulationMatplotStyle
       :nosignatures:
    
       ~SimulationMatplotStyle.apply_color_scheme
-      ~SimulationMatplotStyle.dark
       ~SimulationMatplotStyle.draw_histogram
       ~SimulationMatplotStyle.draw_uplift
       ~SimulationMatplotStyle.finalize_drawing
       ~SimulationMatplotStyle.get_default_style_name
       ~SimulationMatplotStyle.get_named_styles
+      ~SimulationMatplotStyle.get_renderer
       ~SimulationMatplotStyle.start_drawing
-      ~SimulationMatplotStyle.text_dimensions
    
    
 
@@ -36,7 +35,6 @@ facet.simulation.viz.SimulationMatplotStyle
    
       ~SimulationMatplotStyle.ax
       ~SimulationMatplotStyle.colors
-      ~SimulationMatplotStyle.renderer
    
    
 

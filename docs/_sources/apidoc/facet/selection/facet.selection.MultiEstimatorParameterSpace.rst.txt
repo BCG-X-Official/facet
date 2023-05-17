@@ -1,0 +1,36 @@
+facet.selection.MultiEstimatorParameterSpace
+============================================
+
+.. currentmodule:: facet.selection
+
+.. autoclass:: MultiEstimatorParameterSpace
+   :members:
+   :no-show-inheritance:
+   :inherited-members:
+   :special-members: __call__
+
+   
+   
+   .. rubric:: Method summary
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~MultiEstimatorParameterSpace.get_parameters
+      ~MultiEstimatorParameterSpace.to_expression
+   
+   
+
+   
+   
+   .. rubric:: Attribute summary
+
+   .. autosummary::
+   
+      ~MultiEstimatorParameterSpace.estimator
+      ~MultiEstimatorParameterSpace.parameters
+      ~MultiEstimatorParameterSpace.spaces
+   
+   
+
+   .. rubric:: Definitions

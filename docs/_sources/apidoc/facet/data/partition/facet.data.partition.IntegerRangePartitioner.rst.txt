@@ -30,12 +30,10 @@ facet.data.partition.IntegerRangePartitioner
       ~IntegerRangePartitioner.frequencies_
       ~IntegerRangePartitioner.is_categorical
       ~IntegerRangePartitioner.is_fitted
-      ~IntegerRangePartitioner.lower_bound
       ~IntegerRangePartitioner.max_partitions
       ~IntegerRangePartitioner.partition_bounds_
       ~IntegerRangePartitioner.partition_width_
       ~IntegerRangePartitioner.partitions_
-      ~IntegerRangePartitioner.upper_bound
    
    
 

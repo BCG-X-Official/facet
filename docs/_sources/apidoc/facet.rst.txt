@@ -5,7 +5,7 @@ facet
    :no-imported-members:
 
    
-   .. include:: ../_templates/api_landing.rst
+   .. include:: ../api_landing.rst
    
 
    
@@ -35,8 +35,8 @@ Submodules
    :template: custom-module-template.rst
    :recursive:
 
-   facet.crossfit
    facet.data
+   facet.explanation
    facet.inspection
    facet.selection
    facet.simulation

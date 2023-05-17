@@ -4,10 +4,13 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
     <title>Introduction to FACET &#8212; facet  documentation</title>
     
-  <link rel="stylesheet" href="../_static/css/index.f658d18f9b420779cfdf24aa0a7e2d77.css">
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
 
     
   <link rel="stylesheet"
@@ -17,91 +20,118 @@
   <link rel="preload" as="font" type="font/woff2" crossorigin
     href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
 
-    
-      
-  <link rel="stylesheet"
-    href="../_static/vendor/open-sans_all/1.44.1/index.css">
-  <link rel="stylesheet"
-    href="../_static/vendor/lato_latin-ext/1.44.1/index.css">
-
-    
-    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../_static/css/gamma.css" />
     
-  <link rel="preload" as="script" href="../_static/js/index.d3f166471bb80abb5163.js">
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
 
-    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
     <script src="../_static/jquery.js"></script>
     <script src="../_static/underscore.js"></script>
     <script src="../_static/doctools.js"></script>
     <script src="../_static/js/gamma.js"></script>
     <script src="../_static/js/versions.js"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Classification with FACET: Prediabetes Study" href="Classification_with_Facet.html" />
     <link rel="prev" title="Tutorials" href="../tutorials.html" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="docsearch:language" content="en" />
+    <meta name="docsearch:language" content="None">
+    
+
+    <!-- Google Analytics -->
+    
   </head>
-  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="60">
     
-    <nav class="navbar navbar-light navbar-expand-lg bg-light fixed-top bd-navbar" id="navbar-main">
-<div class="container-xl">
+    <div class="container-fluid" id="banner"></div>
 
-    <a class="navbar-brand" href="../index.html">
     
-      <img src="../_static/Gamma_Facet_Logo_RGB_LB.svg" class="logo" alt="logo" />
+    <nav class="navbar navbar-light navbar-expand-lg bg-light fixed-top bd-navbar" id="navbar-main"><div class="container-xl">
+
+  <div id="navbar-start">
     
-    </a>
-    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar-menu" aria-controls="navbar-menu" aria-expanded="false" aria-label="Toggle navigation">
-        <span class="navbar-toggler-icon"></span>
-    </button>
+    
 
-    <div id="navbar-menu" class="col-lg-9 collapse navbar-collapse">
-      <ul id="navbar-main-elements" class="navbar-nav mr-auto">
-        
-        
-        <li class="nav-item ">
-            <a class="nav-link" href="../getting_started/getting_started.html">Getting started</a>
-        </li>
-        
-        <li class="nav-item ">
-            <a class="nav-link" href="../apidoc/facet.html">API reference</a>
-        </li>
-        
-        <li class="nav-item active">
-            <a class="nav-link" href="../tutorials.html">Tutorials</a>
-        </li>
-        
-        <li class="nav-item ">
-            <a class="nav-link" href="../contribution_guide.html">Development Guidelines</a>
-        </li>
-        
-        <li class="nav-item ">
-            <a class="nav-link" href="../faqs.html">FAQ</a>
-        </li>
-        
-        <li class="nav-item ">
-            <a class="nav-link" href="../about_us.html">About us</a>
-        </li>
-        
-        <li class="nav-item ">
-            <a class="nav-link" href="../release_notes.html">Release Notes</a>
-        </li>
-        
-        
-      </ul>
+<a class="navbar-brand" href="../index.html">
+  <img src="../_static/Gamma_Facet_Logo_RGB_LB.svg" class="logo" alt="logo">
+</a>
 
 
+    
+  </div>
+
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar-collapsible" aria-controls="navbar-collapsible" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+
+  
+  <div id="navbar-collapsible" class="col-lg-9 collapse navbar-collapse">
+    <div id="navbar-center" class="mr-auto">
       
+      <div class="navbar-center-item">
+        <ul id="navbar-main-elements" class="navbar-nav">
+    <li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="../_generated/getting_started.html">
+  Getting started
+ </a>
+</li>
 
-      <ul class="navbar-nav">
-        
-        
-      </ul>
+<li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="../apidoc/facet.html">
+  API reference
+ </a>
+</li>
+
+<li class="toctree-l1 current active nav-item">
+ <a class="reference internal nav-link" href="../tutorials.html">
+  Tutorials
+ </a>
+</li>
+
+<li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="../contribution_guide.html">
+  Development Guidelines
+ </a>
+</li>
+
+<li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="../faqs.html">
+  FAQ
+ </a>
+</li>
+
+<li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="../about_us.html">
+  About us
+ </a>
+</li>
+
+<li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="../_generated/release_notes.html">
+  Release Notes
+ </a>
+</li>
+
+    
+</ul>
+      </div>
+      
     </div>
+
+    <div id="navbar-end">
+      
+      <div class="navbar-end-item">
+        <ul id="navbar-icon-links" class="navbar-nav" aria-label="Icon Links">
+      </ul>
+      </div>
+      
+    </div>
+  </div>
 </div>
     </nav>
     
@@ -109,123 +139,125 @@
     <div class="container-xl">
       <div class="row">
           
-          <div class="col-12 col-md-3 bd-sidebar"><form class="bd-search d-flex align-items-center" action="../search.html" method="get">
+            
+            <!-- Only show if we have sidebars configured, else just a small margin  -->
+            <div class="col-12 col-md-3 bd-sidebar">
+              <div class="sidebar-start-items"><form class="bd-search d-flex align-items-center" action="../search.html" method="get">
   <i class="icon fas fa-search"></i>
   <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
-</form>
-<nav class="bd-links" id="bd-docs-nav" aria-label="Main navigation">
+</form><nav class="bd-links" id="bd-docs-nav" aria-label="Main navigation">
+  <div class="bd-toc-item active">
+    <ul class="current nav bd-sidenav">
+ <li class="toctree-l1 current active">
+  <a class="current reference internal" href="#">
+   Introduction to FACET
+  </a>
+ </li>
+</ul>
+<ul class="nav bd-sidenav">
+ <li class="toctree-l1">
+  <a class="reference internal" href="Classification_with_Facet.html">
+   Classification with FACET: Prediabetes Study
+  </a>
+ </li>
+</ul>
+<ul class="nav bd-sidenav">
+ <li class="toctree-l1">
+  <a class="reference internal" href="Scikit-learn_classifier_summaries_using_FACET.html">
+   Standard Scikit-learn Classification Summary with FACET
+  </a>
+ </li>
+</ul>
 
-    <div class="bd-toc-item active">
-    
-  
-    <ul class="nav bd-sidenav">
-        
-        
-        
-        
-        
-        
-          
+  </div>
+</nav>
+              </div>
+              <div class="sidebar-end-items">
+              </div>
+            </div>
             
-                <li class="active">
-                    <a href="">Introduction to FACET</a>
-                </li>
-            
-          
-            
-                <li class="">
-                    <a href="Classification_with_Facet.html">Classification with FACET: Prediabetes Study</a>
-                </li>
-            
-          
-            
-                <li class="">
-                    <a href="Model_simulation_deep_dive.html">Bootstrap simulation with FACET</a>
-                </li>
-            
-          
-            
-                <li class="">
-                    <a href="Scikit-learn_classifier_summaries_using_FACET.html">Standard Scikit-learn Classification Summary with FACET</a>
-                </li>
-            
-          
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-      </ul>
-  
-  </nav>
-          </div>
           
 
           
           <div class="d-none d-xl-block col-xl-2 bd-toc">
+            
               
-<div class="tocsection onthispage pt-5 pb-3">
+              <div class="toc-item">
+                
+<div class="tocsection onthispage mt-5 pt-1 pb-3">
     <i class="fas fa-list"></i> On this page
 </div>
 
 <nav id="bd-toc-nav">
-    <ul class="nav section-nav flex-column">
-    
-        <li class="nav-item toc-entry toc-h2">
-            <a href="#" class="nav-link">Introduction to FACET</a>
-        </li>
-    
-        <li class="nav-item toc-entry toc-h2">
-            <a href="#Required-imports" class="nav-link">Required imports</a>
-        </li>
-    
-        <li class="nav-item toc-entry toc-h2">
-            <a href="#Data-and-initial-feature-selection" class="nav-link">Data and initial feature selection</a>
-        </li>
-    
-        <li class="nav-item toc-entry toc-h2">
-            <a href="#Selecting-a-learner-using-FACET-ranker" class="nav-link">Selecting a learner using FACET ranker</a>
-        </li>
-    
-        <li class="nav-item toc-entry toc-h2">
-            <a href="#Using-FACET-for-advanced-model-inspection" class="nav-link">Using FACET for advanced model inspection</a><ul class="nav section-nav flex-column">
-                
-        <li class="nav-item toc-entry toc-h3">
-            <a href="#Synergy" class="nav-link">Synergy</a>
-        </li>
-    
-        <li class="nav-item toc-entry toc-h3">
-            <a href="#Redundancy" class="nav-link">Redundancy</a>
-        </li>
-    
-        <li class="nav-item toc-entry toc-h3">
-            <a href="#Feature-clustering" class="nav-link">Feature clustering</a>
-        </li>
-    
-            </ul>
-        </li>
-    
-        <li class="nav-item toc-entry toc-h2">
-            <a href="#FACET-univariate-simulator:-the-impact-of-rate-of-penetration" class="nav-link">FACET univariate simulator: the impact of rate of penetration</a>
-        </li>
-    
-        <li class="nav-item toc-entry toc-h2">
-            <a href="#Appendix:-generating-the-dataset" class="nav-link">Appendix: generating the dataset</a>
-        </li>
-    
-    </ul>
+    <ul class="visible nav section-nav flex-column">
+ <li class="toc-h1 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#">
+   Introduction to FACET
+  </a>
+ </li>
+ <li class="toc-h1 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#Required-imports">
+   Required imports
+  </a>
+ </li>
+ <li class="toc-h1 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#Data-and-initial-feature-selection">
+   Data and initial feature selection
+  </a>
+ </li>
+ <li class="toc-h1 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#Selecting-a-learner-using-FACET-selector">
+   Selecting a learner using FACET selector
+  </a>
+ </li>
+ <li class="toc-h1 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#Using-FACET-for-advanced-model-inspection">
+   Using FACET for advanced model inspection
+  </a>
+  <ul class="visible nav section-nav flex-column">
+   <li class="toc-h2 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#Synergy">
+     Synergy
+    </a>
+   </li>
+   <li class="toc-h2 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#Redundancy">
+     Redundancy
+    </a>
+   </li>
+   <li class="toc-h2 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#Feature-clustering">
+     Feature clustering
+    </a>
+   </li>
+  </ul>
+ </li>
+ <li class="toc-h1 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#FACET-univariate-simulator:-the-impact-of-rate-of-penetration">
+   FACET univariate simulator: the impact of rate of penetration
+  </a>
+ </li>
+ <li class="toc-h1 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#Appendix:-generating-the-dataset">
+   Appendix: generating the dataset
+  </a>
+ </li>
+</ul>
+
 </nav>
-
-
+              </div>
               
+              <div class="toc-item">
+                
+              </div>
+              
+            
           </div>
           
 
+          
+          
+            
           
           <main class="col-12 col-md-9 col-xl-7 py-md-5 pl-md-5 pr-md-4 bd-content" role="main">
               
@@ -236,21 +268,35 @@
 /* CSS for nbsphinx extension */
 
 /* remove conflicting styling from Sphinx themes */
-div.nbinput.container,
-div.nbinput.container div.prompt,
-div.nbinput.container div.input_area,
-div.nbinput.container div[class*=highlight],
-div.nbinput.container div[class*=highlight] pre,
-div.nboutput.container,
-div.nboutput.container div.prompt,
-div.nboutput.container div.output_area,
-div.nboutput.container div[class*=highlight],
-div.nboutput.container div[class*=highlight] pre {
-    background: none;
+div.nbinput.container div.prompt *,
+div.nboutput.container div.prompt *,
+div.nbinput.container div.input_area pre,
+div.nboutput.container div.output_area pre,
+div.nbinput.container div.input_area .highlight,
+div.nboutput.container div.output_area .highlight {
     border: none;
-    padding: 0 0;
+    padding: 0;
     margin: 0;
     box-shadow: none;
+}
+
+div.nbinput.container > div[class*=highlight],
+div.nboutput.container > div[class*=highlight] {
+    margin: 0;
+}
+
+div.nbinput.container div.prompt *,
+div.nboutput.container div.prompt * {
+    background: none;
+}
+
+div.nboutput.container div.output_area .highlight,
+div.nboutput.container div.output_area pre {
+    background: unset;
+}
+
+div.nboutput.container div.output_area div.highlight {
+    color: unset;  /* override Pygments text color */
 }
 
 /* avoid gaps between output lines */
@@ -327,10 +373,11 @@ div.nboutput.container div.prompt > div {
     }
 }
 
-/* disable scrollbars on prompts */
+/* disable scrollbars and line breaks on prompts */
 div.nbinput.container div.prompt pre,
 div.nboutput.container div.prompt pre {
     overflow: hidden;
+    white-space: pre;
 }
 
 /* input/output area */
@@ -351,7 +398,7 @@ div.nboutput.container div.output_area {
 div.nbinput.container div.input_area {
     border: 1px solid #e0e0e0;
     border-radius: 2px;
-    background: #f5f5f5;
+    /*background: #f5f5f5;*/
 }
 
 /* override MathJax center alignment in output cells */
@@ -417,6 +464,7 @@ div.nboutput.container div.output_area.rendered_html,
 div.nboutput.container div.output_area > div.output_javascript,
 div.nboutput.container div.output_area:not(.rendered_html) > img{
     padding: 5px;
+    margin: 0;
 }
 
 /* fix copybtn overflow problem in chromium (needed for 'sphinx_copybutton') */
@@ -426,11 +474,12 @@ div.nboutput.container div.output_area > div[class^='highlight']{
 }
 
 /* hide copybtn icon on prompts (needed for 'sphinx_copybutton') */
-.prompt a.copybtn {
+.prompt .copybtn {
     display: none;
 }
 
 /* Some additional styling taken form the Jupyter notebook CSS */
+.jp-RenderedHTMLCommon table,
 div.rendered_html table {
   border: none;
   border-collapse: collapse;
@@ -439,10 +488,14 @@ div.rendered_html table {
   font-size: 12px;
   table-layout: fixed;
 }
+.jp-RenderedHTMLCommon thead,
 div.rendered_html thead {
   border-bottom: 1px solid black;
   vertical-align: bottom;
 }
+.jp-RenderedHTMLCommon tr,
+.jp-RenderedHTMLCommon th,
+.jp-RenderedHTMLCommon td,
 div.rendered_html tr,
 div.rendered_html th,
 div.rendered_html td {
@@ -454,20 +507,22 @@ div.rendered_html td {
   max-width: none;
   border: none;
 }
+.jp-RenderedHTMLCommon th,
 div.rendered_html th {
   font-weight: bold;
 }
+.jp-RenderedHTMLCommon tbody tr:nth-child(odd),
 div.rendered_html tbody tr:nth-child(odd) {
   background: #f5f5f5;
 }
+.jp-RenderedHTMLCommon tbody tr:hover,
 div.rendered_html tbody tr:hover {
   background: rgba(66, 165, 245, 0.2);
 }
 </style>
-<p><img alt="3fecc55ad8834b45a19014d7934149fc" class="no-scaled-link" src="../_images/Gamma_Facet_Logo_RGB_LB.svg" width="500" /></p>
-<div class="section" id="Introduction-to-FACET">
-<h1>Introduction to FACET<a class="headerlink" href="#Introduction-to-FACET" title="Permalink to this headline">¶</a></h1>
-<hr class="docutils" />
+<p><img alt="fdf098fb1e90473588e50ff84b66b3a7" class="no-scaled-link" src="../_images/Gamma_Facet_Logo_RGB_LB.svg" width="500" /></p>
+<section id="Introduction-to-FACET">
+<h1>Introduction to FACET<a class="headerlink" href="#Introduction-to-FACET" title="Permalink to this headline">#</a></h1>
 <p>FACET is composed of the following key components:</p>
 <ul>
 <li><p><strong>Model Inspection</strong></p>
@@ -493,14 +548,14 @@ div.rendered_html tbody tr:hover {
 <ol class="arabic simple">
 <li><p><a class="reference external" href="#Required-imports">Required imports</a></p></li>
 <li><p><a class="reference external" href="#Data-and-initial-feature-selection">Data and initial feature selection</a></p></li>
-<li><p><a class="reference external" href="#Selecting-a-learner-using-FACET-ranker">Selecting a learner using FACET ranker</a></p></li>
+<li><p><a class="reference external" href="#Selecting-a-learner-using-FACET-selector">Selecting a learner using FACET selector</a></p></li>
 <li><p><a class="reference external" href="#Using-FACET-for-advanced-model-inspection">Using FACET for advanced model inspection</a></p></li>
 <li><p><a class="reference external" href="#FACET-univariate-simulator:-the-impact-of-rate-of-penetration">FACET univariate simulator: the impact of rate of penetration</a></p></li>
 <li><p><a class="reference external" href="#Appendix:-generating-the-dataset">Appendix: generating the dataset</a></p></li>
 </ol>
-</div>
-<div class="section" id="Required-imports">
-<h1>Required imports<a class="headerlink" href="#Required-imports" title="Permalink to this headline">¶</a></h1>
+</section>
+<section id="Required-imports">
+<h1>Required imports<a class="headerlink" href="#Required-imports" title="Permalink to this headline">#</a></h1>
 <p>In order to run this notebook, we will import not only the FACET package, but also other packages useful to solve this task. Overall, we can break down the imports into three categories:</p>
 <ol class="arabic simple">
 <li><p>Common packages (pandas, matplotlib, etc.)</p></li>
@@ -512,10 +567,10 @@ div.rendered_html tbody tr:hover {
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">from</span> <span class="nn">sklearn.model_selection</span> <span class="kn">import</span> <span class="n">RepeatedKFold</span>
+<span class="kn">from</span> <span class="nn">scipy</span> <span class="kn">import</span> <span class="n">stats</span>
+<span class="kn">from</span> <span class="nn">sklearn.model_selection</span> <span class="kn">import</span> <span class="n">RandomizedSearchCV</span><span class="p">,</span> <span class="n">RepeatedKFold</span>
 </pre></div>
 </div>
 </div>
@@ -524,15 +579,13 @@ div.rendered_html tbody tr:hover {
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="kn">from</span> <span class="nn">facet.data</span> <span class="kn">import</span> <span class="n">Sample</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">facet.data</span> <span class="kn">import</span> <span class="n">Sample</span>
 <span class="kn">from</span> <span class="nn">facet.inspection</span> <span class="kn">import</span> <span class="n">LearnerInspector</span>
-<span class="kn">from</span> <span class="nn">facet.selection</span> <span class="kn">import</span> <span class="n">LearnerRanker</span><span class="p">,</span> <span class="n">LearnerGrid</span>
+<span class="kn">from</span> <span class="nn">facet.selection</span> <span class="kn">import</span> <span class="n">LearnerSelector</span><span class="p">,</span> <span class="n">ParameterSpace</span>
 <span class="kn">from</span> <span class="nn">facet.validation</span> <span class="kn">import</span> <span class="n">BootstrapCV</span>
 <span class="kn">from</span> <span class="nn">facet.data.partition</span> <span class="kn">import</span> <span class="n">ContinuousRangePartitioner</span>
 <span class="kn">from</span> <span class="nn">facet.simulation</span> <span class="kn">import</span> <span class="n">UnivariateProbabilitySimulator</span>
 <span class="kn">from</span> <span class="nn">facet.simulation.viz</span> <span class="kn">import</span> <span class="n">SimulationDrawer</span>
-<span class="kn">from</span> <span class="nn">facet.crossfit</span> <span class="kn">import</span> <span class="n">LearnerCrossfit</span>
 </pre></div>
 </div>
 </div>
@@ -546,8 +599,7 @@ and usability associated with Pandas data frames. Additionally, the names of all
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="kn">from</span> <span class="nn">sklearndf.pipeline</span> <span class="kn">import</span> <span class="n">PipelineDF</span><span class="p">,</span> <span class="n">ClassifierPipelineDF</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">sklearndf.pipeline</span> <span class="kn">import</span> <span class="n">PipelineDF</span><span class="p">,</span> <span class="n">ClassifierPipelineDF</span>
 <span class="kn">from</span> <span class="nn">sklearndf.classification</span> <span class="kn">import</span> <span class="n">RandomForestClassifierDF</span>
 <span class="kn">from</span> <span class="nn">sklearndf.classification.extra</span> <span class="kn">import</span> <span class="n">LGBMClassifierDF</span>
 <span class="kn">from</span> <span class="nn">sklearndf.transformation.extra</span> <span class="kn">import</span> <span class="n">BorutaDF</span>
@@ -561,23 +613,21 @@ and usability associated with Pandas data frames. Additionally, the names of all
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="kn">from</span> <span class="nn">pytools.viz.dendrogram</span> <span class="kn">import</span> <span class="n">DendrogramDrawer</span><span class="p">,</span> <span class="n">DendrogramReportStyle</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">pytools.viz.dendrogram</span> <span class="kn">import</span> <span class="n">DendrogramDrawer</span><span class="p">,</span> <span class="n">DendrogramReportStyle</span>
 <span class="kn">from</span> <span class="nn">pytools.viz.distribution</span> <span class="kn">import</span> <span class="n">ECDFDrawer</span>
 <span class="kn">from</span> <span class="nn">pytools.viz.matrix</span> <span class="kn">import</span> <span class="n">MatrixDrawer</span>
 </pre></div>
 </div>
 </div>
-</div>
-<div class="section" id="Data-and-initial-feature-selection">
-<h1>Data and initial feature selection<a class="headerlink" href="#Data-and-initial-feature-selection" title="Permalink to this headline">¶</a></h1>
+</section>
+<section id="Data-and-initial-feature-selection">
+<h1>Data and initial feature selection<a class="headerlink" href="#Data-and-initial-feature-selection" title="Permalink to this headline">#</a></h1>
 <p>For the sake of simplicity, we use a simplified artificial dataset, it contains 500 observations, each row representing a drilling operation of the past, the target is the occurrence of drill breakdown (incident). Details and the code used to simulate this dataset can be found in the <a class="reference external" href="#Appendix:-generating-the-dataset">Appendix</a>.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="c1"># load the prepared dataframe</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># load the prepared dataframe</span>
 <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span>
     <span class="s2">&quot;water_drilling_classification_data.csv&quot;</span><span class="p">,</span>
     <span class="n">sep</span><span class="o">=</span><span class="s2">&quot;;&quot;</span><span class="p">,</span>
@@ -585,7 +635,7 @@ and usability associated with Pandas data frames. Additionally, the names of all
 <span class="p">)</span>
 
 <span class="c1"># quick look</span>
-<span class="n">df</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
+<span class="n">df</span><span class="o">.</span><span class="n">head</span><span class="p">()</span><span class="o">.</span><span class="n">T</span>
 </pre></div>
 </div>
 </div>
@@ -612,82 +662,92 @@ and usability associated with Pandas data frames. Additionally, the names of all
   <thead>
     <tr style="text-align: right;">
       <th></th>
-      <th>Weight on bit (kg)</th>
-      <th>Rotation speed (rpm)</th>
-      <th>Depth of operation (m)</th>
-      <th>Mud density (kg/L)</th>
-      <th>Rate of Penetration (ft/h)</th>
-      <th>Temperature (C)</th>
-      <th>Mud Flow in (m3/s)</th>
-      <th>Hole diameter (m)</th>
-      <th>Incident</th>
-      <th>Inverse Rate of Penetration (h/ft)</th>
+      <th>0</th>
+      <th>1</th>
+      <th>2</th>
+      <th>3</th>
+      <th>4</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <th>0</th>
+      <th>Weight on bit (kg)</th>
       <td>289.201651</td>
-      <td>10594.222670</td>
-      <td>790.947541</td>
-      <td>2.898840</td>
-      <td>28.403279</td>
-      <td>39.539919</td>
-      <td>50.299606</td>
-      <td>5.369813</td>
-      <td>0.0</td>
-      <td>0.035207</td>
-    </tr>
-    <tr>
-      <th>1</th>
       <td>341.949835</td>
-      <td>6962.659505</td>
-      <td>811.833996</td>
-      <td>1.677378</td>
-      <td>27.066685</td>
-      <td>74.050548</td>
-      <td>72.140061</td>
-      <td>5.580490</td>
-      <td>1.0</td>
-      <td>0.036946</td>
-    </tr>
-    <tr>
-      <th>2</th>
       <td>266.831213</td>
-      <td>11065.697315</td>
-      <td>619.497649</td>
-      <td>2.213403</td>
-      <td>30.556081</td>
-      <td>45.194728</td>
-      <td>10.908230</td>
-      <td>4.374240</td>
-      <td>0.0</td>
-      <td>0.032727</td>
-    </tr>
-    <tr>
-      <th>3</th>
       <td>267.340585</td>
-      <td>7890.678632</td>
-      <td>1048.481202</td>
-      <td>2.683010</td>
-      <td>23.735377</td>
-      <td>55.135234</td>
-      <td>51.029350</td>
-      <td>6.981177</td>
-      <td>0.0</td>
-      <td>0.042131</td>
+      <td>305.977342</td>
     </tr>
     <tr>
-      <th>4</th>
-      <td>305.977342</td>
+      <th>Rotation speed (rpm)</th>
+      <td>10594.222670</td>
+      <td>6962.659505</td>
+      <td>11065.697315</td>
+      <td>7890.678632</td>
       <td>12017.344224</td>
+    </tr>
+    <tr>
+      <th>Depth of operation (m)</th>
+      <td>790.947541</td>
+      <td>811.833996</td>
+      <td>619.497649</td>
+      <td>1048.481202</td>
       <td>613.434303</td>
+    </tr>
+    <tr>
+      <th>Mud density (kg/L)</th>
+      <td>2.898840</td>
+      <td>1.677378</td>
+      <td>2.213403</td>
+      <td>2.683010</td>
       <td>2.360972</td>
+    </tr>
+    <tr>
+      <th>Rate of Penetration (ft/h)</th>
+      <td>28.403279</td>
+      <td>27.066685</td>
+      <td>30.556081</td>
+      <td>23.735377</td>
       <td>28.502248</td>
+    </tr>
+    <tr>
+      <th>Temperature (C)</th>
+      <td>39.539919</td>
+      <td>74.050548</td>
+      <td>45.194728</td>
+      <td>55.135234</td>
       <td>60.585239</td>
+    </tr>
+    <tr>
+      <th>Mud Flow in (m3/s)</th>
+      <td>50.299606</td>
+      <td>72.140061</td>
+      <td>10.908230</td>
+      <td>51.029350</td>
       <td>44.159394</td>
+    </tr>
+    <tr>
+      <th>Hole diameter (m)</th>
+      <td>5.369813</td>
+      <td>5.580490</td>
+      <td>4.374240</td>
+      <td>6.981177</td>
       <td>4.217036</td>
-      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>Incident</th>
+      <td>0.000000</td>
+      <td>1.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>1.000000</td>
+    </tr>
+    <tr>
+      <th>Inverse Rate of Penetration (h/ft)</th>
+      <td>0.035207</td>
+      <td>0.036946</td>
+      <td>0.032727</td>
+      <td>0.042131</td>
       <td>0.035085</td>
     </tr>
   </tbody>
@@ -698,8 +758,7 @@ and usability associated with Pandas data frames. Additionally, the names of all
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="c1"># create a FACET sample object</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># create a FACET sample object</span>
 <span class="n">drilling_obs</span> <span class="o">=</span> <span class="n">Sample</span><span class="p">(</span><span class="n">observations</span><span class="o">=</span><span class="n">df</span><span class="p">,</span> <span class="n">target_name</span><span class="o">=</span><span class="s2">&quot;Incident&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -712,8 +771,7 @@ Boruta feature selector argument <code class="docutils literal notranslate"><spa
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">df</span><span class="o">.</span><span class="n">columns</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">df</span><span class="o">.</span><span class="n">columns</span>
 </pre></div>
 </div>
 </div>
@@ -734,8 +792,7 @@ Index([&#39;Weight on bit (kg)&#39;, &#39;Rotation speed (rpm)&#39;, &#39;Depth 
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="c1"># wrapper class to implement Boruta feature selection</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># wrapper class to implement Boruta feature selection</span>
 <span class="n">feature_selector</span> <span class="o">=</span> <span class="n">BorutaDF</span><span class="p">(</span>
     <span class="n">estimator</span><span class="o">=</span><span class="n">RandomForestClassifierDF</span><span class="p">(</span><span class="n">max_depth</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="mi">42</span><span class="p">,</span> <span class="n">n_jobs</span><span class="o">=-</span><span class="mi">3</span><span class="p">),</span>
     <span class="n">n_estimators</span><span class="o">=</span><span class="s2">&quot;auto&quot;</span><span class="p">,</span>
@@ -777,8 +834,7 @@ Selected features: [&#39;Weight on bit (kg)&#39;, &#39;Rotation speed (rpm)&#39;
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="c1"># get original feature names</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># get original feature names</span>
 <span class="n">feature_preprocessing</span><span class="o">.</span><span class="n">feature_names_original_</span><span class="o">.</span><span class="n">unique</span><span class="p">()</span>
 </pre></div>
 </div>
@@ -799,21 +855,20 @@ array([&#39;Weight on bit (kg)&#39;, &#39;Rotation speed (rpm)&#39;,
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="c1"># create a FACET sample object with features selected by Boruta</span>
-<span class="n">drilling_obs_reduced_featset</span> <span class="o">=</span> <span class="n">drilling_obs</span><span class="o">.</span><span class="n">keep</span><span class="p">(</span><span class="n">feature_names</span><span class="o">=</span>
-    <span class="n">feature_preprocessing</span><span class="o">.</span><span class="n">feature_names_original_</span><span class="o">.</span><span class="n">unique</span><span class="p">()</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># create a FACET sample object with features selected by Boruta</span>
+<span class="n">drilling_obs_reduced_featset</span> <span class="o">=</span> <span class="n">drilling_obs</span><span class="o">.</span><span class="n">keep</span><span class="p">(</span>
+    <span class="n">feature_names</span><span class="o">=</span><span class="n">feature_preprocessing</span><span class="o">.</span><span class="n">feature_names_original_</span><span class="o">.</span><span class="n">unique</span><span class="p">()</span>
 <span class="p">)</span>
 </pre></div>
 </div>
 </div>
-</div>
-<div class="section" id="Selecting-a-learner-using-FACET-ranker">
-<h1>Selecting a learner using FACET ranker<a class="headerlink" href="#Selecting-a-learner-using-FACET-ranker" title="Permalink to this headline">¶</a></h1>
+</section>
+<section id="Selecting-a-learner-using-FACET-selector">
+<h1>Selecting a learner using FACET selector<a class="headerlink" href="#Selecting-a-learner-using-FACET-selector" title="Permalink to this headline">#</a></h1>
 <p>FACET implements several additional useful wrappers which further simplify comparing and tuning a larger number of models and configurations:</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">LearnerGrid</span></code>: allows you to pass a learner pipeline (i.e., classifier + any preprocessing) and a set of hyperparameters</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">LearnerRanker</span></code>: multiple LearnerGrids can be passed into this class as a list - this allows tuning hyperparameters both across different types of learners in a single step and ranks the resulting models accordingly</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ParameterSpace</span></code>: allows you to pass a learner pipeline (i.e., classifier + any preprocessing) and a set of hyperparameters</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">LearnerSelector</span></code>: multiple ParameterSpaces can be passed into this class as MultiEstimatorClassifierParameterSpace - this allows tuning hyperparameters both across different types of learners in a single step and ranks the resulting models accordingly</p></li>
 </ul>
 <p>The following learners and hyperparameter ranges will be assessed using 5 repeated 5-fold cross-validation:</p>
 <ol class="arabic simple">
@@ -824,19 +879,18 @@ array([&#39;Weight on bit (kg)&#39;, &#39;Rotation speed (rpm)&#39;,
 </li>
 <li><p><strong>Light gradient boosting</strong>: with hyperparameters</p>
 <ul class="simple">
-<li><p>min_samples_leaf: [8, 11, 15]</p></li>
+<li><p>min_child_samples: [8, 11, 15]</p></li>
 </ul>
 </li>
 </ol>
 <p>Note if you want to see a list of hyperparameters you can use <code class="docutils literal notranslate"><span class="pre">classifier_name().get_params().keys()</span></code> where <code class="docutils literal notranslate"><span class="pre">classifier_name</span></code> could be for example <code class="docutils literal notranslate"><span class="pre">RandomForestClassifierDF</span></code> and if you want to see the default values, just use <code class="docutils literal notranslate"><span class="pre">classifier_name().get_params()</span></code>.</p>
-<p>Note that ranking uses the average performance minus two times the standard deviation, so that we consider both the average performance and variability when selecting a classifier. The default scoring metric for classification is accuracy.</p>
+<p>Finally, for this exercise we will use accuracy which is the default performance metric for scoring and ranking our classifiers.</p>
 <p>First, we specify the classifiers we want to train using <code class="docutils literal notranslate"><span class="pre">ClassifierPipelineDF</span></code> from sklearndf. Note here we also include feature preprocessing steps.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="c1"># random forest learner</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># random forest learner</span>
 <span class="n">rforest_clf</span> <span class="o">=</span> <span class="n">ClassifierPipelineDF</span><span class="p">(</span>
     <span class="n">classifier</span><span class="o">=</span><span class="n">RandomForestClassifierDF</span><span class="p">(</span><span class="n">n_estimators</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="mi">42</span><span class="p">),</span>
 <span class="p">)</span>
@@ -848,55 +902,51 @@ array([&#39;Weight on bit (kg)&#39;, &#39;Rotation speed (rpm)&#39;,
 </pre></div>
 </div>
 </div>
-<p>Then we create a list of learner grids where each learner grid is created using <code class="docutils literal notranslate"><span class="pre">LearnerGrid</span></code> and allows us to associate a <code class="docutils literal notranslate"><span class="pre">ClassifierPipelineDF</span></code> with a specified set of hyperparameter via the <code class="docutils literal notranslate"><span class="pre">learner_parameters</span></code> argument. Note this structure allows us to easily include additional classifiers and hyperparameters.</p>
+<p>Then we create parameter spaces with <code class="docutils literal notranslate"><span class="pre">ParameterSpace</span></code> for each classifier and specify set of hyperparameters for each one of them. Contrary to standard <code class="docutils literal notranslate"><span class="pre">sklearn</span></code> workflow, in this approach setting wrong hyperparameter will throw an exception as setting an attribute comes with a proper check.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="c1"># define learner grid</span>
-<span class="n">clf_grid</span> <span class="o">=</span> <span class="p">[</span>
-    <span class="n">LearnerGrid</span><span class="p">(</span>
-        <span class="n">pipeline</span><span class="o">=</span><span class="n">rforest_clf</span><span class="p">,</span> <span class="n">learner_parameters</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;min_samples_leaf&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">8</span><span class="p">,</span> <span class="mi">11</span><span class="p">,</span> <span class="mi">15</span><span class="p">]}</span>
-    <span class="p">),</span>
-    <span class="n">LearnerGrid</span><span class="p">(</span>
-        <span class="n">pipeline</span><span class="o">=</span><span class="n">lgbm_clf</span><span class="p">,</span> <span class="n">learner_parameters</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;min_data_in_leaf&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">8</span><span class="p">,</span> <span class="mi">11</span><span class="p">,</span> <span class="mi">15</span><span class="p">]}</span>
-    <span class="p">),</span>
-<span class="p">]</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">rforest_ps</span> <span class="o">=</span> <span class="n">ParameterSpace</span><span class="p">(</span><span class="n">rforest_clf</span><span class="p">)</span>
+
+<span class="c1"># random ints 8 &lt;= x &lt;= 19; smaller ints are more frequent (zipfian distribution)</span>
+<span class="n">rforest_ps</span><span class="o">.</span><span class="n">classifier</span><span class="o">.</span><span class="n">min_samples_leaf</span> <span class="o">=</span> <span class="n">stats</span><span class="o">.</span><span class="n">zipfian</span><span class="p">(</span><span class="n">a</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="mi">7</span><span class="p">)</span>
+
+<span class="n">lgbm_ps</span> <span class="o">=</span> <span class="n">ParameterSpace</span><span class="p">(</span><span class="n">lgbm_clf</span><span class="p">)</span>
+
+<span class="c1"># random ints 8 &lt;= x &lt;= 19; smaller ints are more frequent (zipfian distribution)</span>
+<span class="n">lgbm_ps</span><span class="o">.</span><span class="n">classifier</span><span class="o">.</span><span class="n">min_child_samples</span> <span class="o">=</span> <span class="n">stats</span><span class="o">.</span><span class="n">zipfian</span><span class="p">(</span><span class="n">a</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="mi">7</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
-<p>We now fit the grid defined above using the <code class="docutils literal notranslate"><span class="pre">LeanerRanker</span></code>, which will run a gridsearch (or random search if defined) using 5 repeated 5-fold cross-validation.</p>
-<div class="nbinput docutils container">
+<p>We now the <code class="docutils literal notranslate"><span class="pre">LearnerSelector</span></code> using the parameter spaces defined above, which will run a gridsearch using 10 repeated 5-fold cross-validation on our selected set of features from Boruta.</p>
+<div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="c1"># create cv iterator 5 repeated 5-fold</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># create cv iterator 5 repeated 5-fold</span>
 <span class="n">cv_approach</span> <span class="o">=</span> <span class="n">RepeatedKFold</span><span class="p">(</span><span class="n">n_splits</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">n_repeats</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="mi">42</span><span class="p">)</span>
 
-<span class="c1"># fit ranker</span>
-<span class="n">model_ranker</span> <span class="o">=</span> <span class="n">LearnerRanker</span><span class="p">(</span><span class="n">grids</span><span class="o">=</span><span class="n">clf_grid</span><span class="p">,</span> <span class="n">cv</span><span class="o">=</span><span class="n">cv_approach</span><span class="p">,</span> <span class="n">n_jobs</span><span class="o">=-</span><span class="mi">3</span><span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span>
-    <span class="n">sample</span><span class="o">=</span><span class="n">drilling_obs_reduced_featset</span>
+<span class="c1"># fit selector</span>
+<span class="n">model_selector</span> <span class="o">=</span> <span class="n">LearnerSelector</span><span class="p">(</span>
+    <span class="n">searcher_type</span><span class="o">=</span><span class="n">RandomizedSearchCV</span><span class="p">,</span>
+    <span class="n">parameter_space</span><span class="o">=</span><span class="p">[</span><span class="n">rforest_ps</span><span class="p">,</span> <span class="n">lgbm_ps</span><span class="p">],</span>
+    <span class="n">cv</span><span class="o">=</span><span class="n">cv_approach</span><span class="p">,</span>
+    <span class="n">n_jobs</span><span class="o">=-</span><span class="mi">3</span><span class="p">,</span>
+    <span class="n">scoring</span><span class="o">=</span><span class="s2">&quot;accuracy&quot;</span><span class="p">,</span>
+    <span class="n">random_state</span><span class="o">=</span><span class="mi">42</span><span class="p">,</span>
+<span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span>
+    <span class="n">drilling_obs_reduced_featset</span>
 <span class="p">)</span>
 </pre></div>
 </div>
 </div>
-<div class="nboutput nblast docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-[LightGBM] [Warning] min_data_in_leaf is set=8, min_child_samples=20 will be ignored. Current value: min_data_in_leaf=8
-</pre></div></div>
-</div>
-<p>To see the configuration of the best selected model, we can access the <code class="docutils literal notranslate"><span class="pre">best_model_</span></code> property of the fitted <code class="docutils literal notranslate"><span class="pre">LearnerRanker</span></code> object.</p>
+<p>To see the configuration of the best selected model, we can access the <code class="docutils literal notranslate"><span class="pre">best_estimator_</span></code> property of the fitted <code class="docutils literal notranslate"><span class="pre">LearnerSelector</span></code> object.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">model_ranker</span><span class="o">.</span><span class="n">best_model_</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">model_selector</span><span class="o">.</span><span class="n">best_estimator_</span>
 </pre></div>
 </div>
 </div>
@@ -904,20 +954,20 @@ array([&#39;Weight on bit (kg)&#39;, &#39;Rotation speed (rpm)&#39;,
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
 </pre></div>
 </div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-ClassifierPipelineDF(classifier=LGBMClassifierDF(min_data_in_leaf=15,
-                                                 random_state=42))
-</pre></div></div>
+<div class="output_area rendered_html docutils container">
+<style>#sk-container-id-1 {color: black;background-color: white;}#sk-container-id-1 pre{padding: 0;}#sk-container-id-1 div.sk-toggleable {background-color: white;}#sk-container-id-1 label.sk-toggleable__label {cursor: pointer;display: block;width: 100%;margin-bottom: 0;padding: 0.3em;box-sizing: border-box;text-align: center;}#sk-container-id-1 label.sk-toggleable__label-arrow:before {content: "▸";float: left;margin-right: 0.25em;color: #696969;}#sk-container-id-1 label.sk-toggleable__label-arrow:hover:before {color: black;}#sk-container-id-1 div.sk-estimator:hover label.sk-toggleable__label-arrow:before {color: black;}#sk-container-id-1 div.sk-toggleable__content {max-height: 0;max-width: 0;overflow: hidden;text-align: left;background-color: #f0f8ff;}#sk-container-id-1 div.sk-toggleable__content pre {margin: 0.2em;color: black;border-radius: 0.25em;background-color: #f0f8ff;}#sk-container-id-1 input.sk-toggleable__control:checked~div.sk-toggleable__content {max-height: 200px;max-width: 100%;overflow: auto;}#sk-container-id-1 input.sk-toggleable__control:checked~label.sk-toggleable__label-arrow:before {content: "▾";}#sk-container-id-1 div.sk-estimator input.sk-toggleable__control:checked~label.sk-toggleable__label {background-color: #d4ebff;}#sk-container-id-1 div.sk-label input.sk-toggleable__control:checked~label.sk-toggleable__label {background-color: #d4ebff;}#sk-container-id-1 input.sk-hidden--visually {border: 0;clip: rect(1px 1px 1px 1px);clip: rect(1px, 1px, 1px, 1px);height: 1px;margin: -1px;overflow: hidden;padding: 0;position: absolute;width: 1px;}#sk-container-id-1 div.sk-estimator {font-family: monospace;background-color: #f0f8ff;border: 1px dotted black;border-radius: 0.25em;box-sizing: border-box;margin-bottom: 0.5em;}#sk-container-id-1 div.sk-estimator:hover {background-color: #d4ebff;}#sk-container-id-1 div.sk-parallel-item::after {content: "";width: 100%;border-bottom: 1px solid gray;flex-grow: 1;}#sk-container-id-1 div.sk-label:hover label.sk-toggleable__label {background-color: #d4ebff;}#sk-container-id-1 div.sk-serial::before {content: "";position: absolute;border-left: 1px solid gray;box-sizing: border-box;top: 0;bottom: 0;left: 50%;z-index: 0;}#sk-container-id-1 div.sk-serial {display: flex;flex-direction: column;align-items: center;background-color: white;padding-right: 0.2em;padding-left: 0.2em;position: relative;}#sk-container-id-1 div.sk-item {position: relative;z-index: 1;}#sk-container-id-1 div.sk-parallel {display: flex;align-items: stretch;justify-content: center;background-color: white;position: relative;}#sk-container-id-1 div.sk-item::before, #sk-container-id-1 div.sk-parallel-item::before {content: "";position: absolute;border-left: 1px solid gray;box-sizing: border-box;top: 0;bottom: 0;left: 50%;z-index: -1;}#sk-container-id-1 div.sk-parallel-item {display: flex;flex-direction: column;z-index: 1;position: relative;background-color: white;}#sk-container-id-1 div.sk-parallel-item:first-child::after {align-self: flex-end;width: 50%;}#sk-container-id-1 div.sk-parallel-item:last-child::after {align-self: flex-start;width: 50%;}#sk-container-id-1 div.sk-parallel-item:only-child::after {width: 0;}#sk-container-id-1 div.sk-dashed-wrapped {border: 1px dashed gray;margin: 0 0.4em 0.5em 0.4em;box-sizing: border-box;padding-bottom: 0.4em;background-color: white;}#sk-container-id-1 div.sk-label label {font-family: monospace;font-weight: bold;display: inline-block;line-height: 1.2em;}#sk-container-id-1 div.sk-label-container {text-align: center;}#sk-container-id-1 div.sk-container {/* jupyter's `normalize.less` sets `[hidden] { display: none; }` but bootstrap.min.css set `[hidden] { display: none !important; }` so we also need the `!important` here to be able to override the default hidden behavior on the sphinx rendered scikit-learn.org. See: https://github.com/scikit-learn/scikit-learn/issues/21755 */display: inline-block !important;position: relative;}#sk-container-id-1 div.sk-text-repr-fallback {display: none;}</style><div id="sk-container-id-1" class="sk-top-container"><div class="sk-text-repr-fallback"><pre>ClassifierPipelineDF(
+    classifier=LGBMClassifierDF(min_child_samples=17, random_state=42)
+)</pre><b>In a Jupyter environment, please rerun this cell to show the HTML representation or trust the notebook. <br />On GitHub, the HTML representation is unable to render, please try loading this page with nbviewer.org.</b></div><div class="sk-container" hidden><div class="sk-item sk-dashed-wrapped"><div class="sk-label-container"><div class="sk-label sk-toggleable"><input class="sk-toggleable__control sk-hidden--visually" id="sk-estimator-id-1" type="checkbox" ><label for="sk-estimator-id-1" class="sk-toggleable__label sk-toggleable__label-arrow">ClassifierPipelineDF</label><div class="sk-toggleable__content"><pre>ClassifierPipelineDF(
+    classifier=LGBMClassifierDF(min_child_samples=17, random_state=42)
+)</pre></div></div></div><div class="sk-parallel"><div class="sk-parallel-item"><div class="sk-item"><div class="sk-label-container"><div class="sk-label sk-toggleable"><input class="sk-toggleable__control sk-hidden--visually" id="sk-estimator-id-2" type="checkbox" ><label for="sk-estimator-id-2" class="sk-toggleable__label sk-toggleable__label-arrow">classifier: LGBMClassifierDF</label><div class="sk-toggleable__content"><pre>LGBMClassifierDF(min_child_samples=17, random_state=42)</pre></div></div></div><div class="sk-serial"><div class="sk-item"><div class="sk-estimator sk-toggleable"><input class="sk-toggleable__control sk-hidden--visually" id="sk-estimator-id-3" type="checkbox" ><label for="sk-estimator-id-3" class="sk-toggleable__label sk-toggleable__label-arrow">LGBMClassifierDF</label><div class="sk-toggleable__content"><pre>LGBMClassifierDF(min_child_samples=17, random_state=42)</pre></div></div></div></div></div></div></div></div></div></div></div>
 </div>
-<p>We can see how each model scored using the <code class="docutils literal notranslate"><span class="pre">summary_report()</span></code> method of the <code class="docutils literal notranslate"><span class="pre">LearnerRanker</span></code>.</p>
+<p>We can see how each model scored using the <code class="docutils literal notranslate"><span class="pre">summary_report()</span></code> method of the <code class="docutils literal notranslate"><span class="pre">LearnerSelector</span></code>.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[16]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="c1"># let&#39;s look at performance for the top ranked classifiers</span>
-<span class="n">model_ranker</span><span class="o">.</span><span class="n">summary_report</span><span class="p">()</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># let&#39;s look at performance for the top ranked classifiers</span>
+<span class="n">model_selector</span><span class="o">.</span><span class="n">summary_report</span><span class="p">()</span>
 </pre></div>
 </div>
 </div>
@@ -939,102 +989,178 @@ ClassifierPipelineDF(classifier=LGBMClassifierDF(min_data_in_leaf=15,
     .dataframe thead tr th {
         text-align: left;
     }
-
-    .dataframe thead tr:last-of-type th {
-        text-align: right;
-    }
 </style>
 <table border="1" class="dataframe">
   <thead>
     <tr>
       <th></th>
-      <th>ranking_score</th>
-      <th colspan="2" halign="left">accuracy_score</th>
-      <th colspan="3" halign="left">classifier</th>
+      <th colspan="3" halign="left">score</th>
+      <th>candidate</th>
+      <th colspan="2" halign="left">param</th>
+      <th colspan="4" halign="left">time</th>
     </tr>
     <tr>
       <th></th>
+      <th colspan="3" halign="left">test</th>
+      <th>-</th>
+      <th colspan="2" halign="left">classifier</th>
+      <th colspan="2" halign="left">fit</th>
+      <th colspan="2" halign="left">score</th>
+    </tr>
+    <tr>
       <th></th>
+      <th>rank</th>
       <th>mean</th>
       <th>std</th>
-      <th>type</th>
+      <th>-</th>
       <th>min_samples_leaf</th>
-      <th>min_data_in_leaf</th>
-    </tr>
-    <tr>
-      <th>rank</th>
-      <th></th>
-      <th></th>
-      <th></th>
-      <th></th>
-      <th></th>
-      <th></th>
+      <th>min_child_samples</th>
+      <th>mean</th>
+      <th>std</th>
+      <th>mean</th>
+      <th>std</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <th>0</th>
-      <td>0.766365</td>
-      <td>0.8520</td>
-      <td>0.042817</td>
+      <th>8</th>
+      <td>1</td>
+      <td>0.8544</td>
+      <td>0.036341</td>
       <td>LGBMClassifierDF</td>
       <td>NaN</td>
-      <td>15.0</td>
+      <td>17</td>
+      <td>0.015063</td>
+      <td>0.000635</td>
+      <td>0.001186</td>
+      <td>0.000078</td>
     </tr>
     <tr>
-      <th>1</th>
-      <td>0.753891</td>
+      <th>6</th>
+      <td>2</td>
       <td>0.8452</td>
-      <td>0.045654</td>
+      <td>0.044732</td>
       <td>LGBMClassifierDF</td>
       <td>NaN</td>
-      <td>11.0</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>0.739825</td>
-      <td>0.8316</td>
-      <td>0.045888</td>
-      <td>LGBMClassifierDF</td>
-      <td>NaN</td>
-      <td>8.0</td>
+      <td>11</td>
+      <td>0.021619</td>
+      <td>0.001111</td>
+      <td>0.001393</td>
+      <td>0.000095</td>
     </tr>
     <tr>
       <th>3</th>
-      <td>0.703298</td>
-      <td>0.7712</td>
-      <td>0.033951</td>
-      <td>RandomForestClassifierDF</td>
-      <td>8.0</td>
+      <td>3</td>
+      <td>0.8316</td>
+      <td>0.044960</td>
+      <td>LGBMClassifierDF</td>
       <td>NaN</td>
+      <td>8</td>
+      <td>0.023706</td>
+      <td>0.001044</td>
+      <td>0.001507</td>
+      <td>0.000059</td>
+    </tr>
+    <tr>
+      <th>9</th>
+      <td>3</td>
+      <td>0.8316</td>
+      <td>0.044960</td>
+      <td>LGBMClassifierDF</td>
+      <td>NaN</td>
+      <td>8</td>
+      <td>0.022872</td>
+      <td>0.000284</td>
+      <td>0.001427</td>
+      <td>0.000067</td>
     </tr>
     <tr>
       <th>4</th>
-      <td>0.685410</td>
-      <td>0.7552</td>
-      <td>0.034895</td>
+      <td>5</td>
+      <td>0.7648</td>
+      <td>0.032634</td>
       <td>RandomForestClassifierDF</td>
-      <td>11.0</td>
+      <td>9</td>
       <td>NaN</td>
+      <td>0.281148</td>
+      <td>0.012409</td>
+      <td>0.016739</td>
+      <td>0.000678</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>6</td>
+      <td>0.7552</td>
+      <td>0.034190</td>
+      <td>RandomForestClassifierDF</td>
+      <td>11</td>
+      <td>NaN</td>
+      <td>0.280517</td>
+      <td>0.013183</td>
+      <td>0.017294</td>
+      <td>0.001392</td>
     </tr>
     <tr>
       <th>5</th>
-      <td>0.677873</td>
-      <td>0.7464</td>
-      <td>0.034264</td>
+      <td>6</td>
+      <td>0.7552</td>
+      <td>0.034190</td>
       <td>RandomForestClassifierDF</td>
-      <td>15.0</td>
+      <td>11</td>
       <td>NaN</td>
+      <td>0.275385</td>
+      <td>0.012340</td>
+      <td>0.016589</td>
+      <td>0.000584</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>8</td>
+      <td>0.7508</td>
+      <td>0.032486</td>
+      <td>RandomForestClassifierDF</td>
+      <td>12</td>
+      <td>NaN</td>
+      <td>0.264602</td>
+      <td>0.005580</td>
+      <td>0.016063</td>
+      <td>0.000214</td>
+    </tr>
+    <tr>
+      <th>0</th>
+      <td>9</td>
+      <td>0.7488</td>
+      <td>0.035589</td>
+      <td>RandomForestClassifierDF</td>
+      <td>14</td>
+      <td>NaN</td>
+      <td>0.268346</td>
+      <td>0.011811</td>
+      <td>0.016440</td>
+      <td>0.000448</td>
+    </tr>
+    <tr>
+      <th>7</th>
+      <td>10</td>
+      <td>0.7404</td>
+      <td>0.035268</td>
+      <td>RandomForestClassifierDF</td>
+      <td>18</td>
+      <td>NaN</td>
+      <td>0.266838</td>
+      <td>0.012662</td>
+      <td>0.016058</td>
+      <td>0.000363</td>
     </tr>
   </tbody>
 </table>
 </div></div>
 </div>
-</div>
-<div class="section" id="Using-FACET-for-advanced-model-inspection">
-<h1>Using FACET for advanced model inspection<a class="headerlink" href="#Using-FACET-for-advanced-model-inspection" title="Permalink to this headline">¶</a></h1>
+</section>
+<section id="Using-FACET-for-advanced-model-inspection">
+<h1>Using FACET for advanced model inspection<a class="headerlink" href="#Using-FACET-for-advanced-model-inspection" title="Permalink to this headline">#</a></h1>
 <p>The <a class="reference external" href="http://papers.nips.cc/paper/7062-a-unified-approach-to-interpreting-model-predictions">SHAP approach</a> has become the standard method for model inspection. SHAP values are used to explain the additive contribution of each feature to the prediction for each observation (i.e., explain <strong>individual</strong> predictions).</p>
-<p>The FACET <code class="docutils literal notranslate"><span class="pre">LearnerInspector</span></code> computes SHAP values for each crossfit (i.e., a CV fold or bootstrap resample) using the best model identified by the <code class="docutils literal notranslate"><span class="pre">LearnerRanker</span></code>. The FACET <code class="docutils literal notranslate"><span class="pre">LearnerInspector</span></code> then provides advanced model inspection through new SHAP-based summary metrics for understanding pairwise feature redundancy and synergy. Redundancy and synergy are calculated using a new algorithm to understand model predictions from a <strong>global perspective</strong> to complement local SHAP.</p>
+<p>The FACET <code class="docutils literal notranslate"><span class="pre">LearnerInspector</span></code> computes SHAP values using the best model identified by the <code class="docutils literal notranslate"><span class="pre">LearnerSelector</span></code>. The FACET <code class="docutils literal notranslate"><span class="pre">LearnerInspector</span></code> then provides advanced model inspection through new SHAP-based summary metrics for understanding pairwise feature redundancy and synergy. Redundancy and synergy are calculated using a new algorithm to understand model predictions from a <strong>global perspective</strong> to complement local SHAP.</p>
 <p>The definitions of synergy and redundancy are as follows:</p>
 <ul>
 <li><p><strong>Synergy</strong></p>
@@ -1051,31 +1177,24 @@ that like synergy, redundancy is a naturally asymmetric property of the global i
 <p>Note that cases can apply at the same time so a feature pair can use some information synergistically and some information redundantly.</p>
 <p>The FACET <code class="docutils literal notranslate"><span class="pre">LearnerInspector</span></code> can calculate all of this with a single method call, but also offers methods to access the intermediate results of each step. A lightweight visualization framework is available to render the results in different styles.</p>
 <p>SHAP values from the <code class="docutils literal notranslate"><span class="pre">LearnerInspector</span></code> can also be used with the SHAP package plotting functions for sample and observation level SHAP visualizations, such as SHAP distribution plots, dependency plots, force plots and waterfall plots.</p>
-<div class="nbinput docutils container">
+<div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[17]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">model_inspector</span> <span class="o">=</span> <span class="n">LearnerInspector</span><span class="p">(</span><span class="n">n_jobs</span><span class="o">=-</span><span class="mi">3</span><span class="p">)</span>
-<span class="n">model_inspector</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">crossfit</span><span class="o">=</span><span class="n">model_ranker</span><span class="o">.</span><span class="n">best_model_crossfit_</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">model_inspector</span> <span class="o">=</span> <span class="n">LearnerInspector</span><span class="p">(</span>
+    <span class="n">pipeline</span><span class="o">=</span><span class="n">model_selector</span><span class="o">.</span><span class="n">best_estimator_</span><span class="p">,</span>
+    <span class="n">n_jobs</span><span class="o">=-</span><span class="mi">3</span>
+<span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span>
+    <span class="n">drilling_obs_reduced_featset</span>
+<span class="p">)</span>
 </pre></div>
 </div>
-</div>
-<div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[17]:
-</pre></div>
-</div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-&lt;facet.inspection._inspection.LearnerInspector at 0x7fe5bc536f10&gt;
-</pre></div></div>
 </div>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[18]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="c1"># quick look at feature importance</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># quick look at feature importance</span>
 <span class="n">model_inspector</span><span class="o">.</span><span class="n">feature_importance</span><span class="p">()</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="n">ascending</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -1087,24 +1206,23 @@ that like synergy, redundancy is a naturally asymmetric property of the global i
 <div class="output_area docutils container">
 <div class="highlight"><pre>
 feature
-Rate of Penetration (ft/h)            0.181858
-Inverse Rate of Penetration (h/ft)    0.180741
-Weight on bit (kg)                    0.155553
-Mud density (kg/L)                    0.150201
-Rotation speed (rpm)                  0.141218
-Depth of operation (m)                0.100157
-Hole diameter (m)                     0.090272
+Rate of Penetration (ft/h)            0.184227
+Weight on bit (kg)                    0.164185
+Inverse Rate of Penetration (h/ft)    0.163715
+Rotation speed (rpm)                  0.147971
+Mud density (kg/L)                    0.145815
+Hole diameter (m)                     0.104211
+Depth of operation (m)                0.089876
 Name: 0.0, dtype: float64
 </pre></div></div>
 </div>
-<div class="section" id="Synergy">
-<h2>Synergy<a class="headerlink" href="#Synergy" title="Permalink to this headline">¶</a></h2>
+<section id="Synergy">
+<h2>Synergy<a class="headerlink" href="#Synergy" title="Permalink to this headline">#</a></h2>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[19]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">synergy_matrix</span> <span class="o">=</span> <span class="n">model_inspector</span><span class="o">.</span><span class="n">feature_synergy_matrix</span><span class="p">(</span><span class="n">clustered</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">synergy_matrix</span> <span class="o">=</span> <span class="n">model_inspector</span><span class="o">.</span><span class="n">feature_synergy_matrix</span><span class="p">()</span>
 <span class="n">MatrixDrawer</span><span class="p">(</span><span class="n">style</span><span class="o">=</span><span class="s2">&quot;matplot%&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="n">synergy_matrix</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Synergy&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -1116,17 +1234,16 @@ Name: 0.0, dtype: float64
 <img alt="../_images/tutorial_Water_Drilling_Incident_Classification_with_Facet_36_0.png" src="../_images/tutorial_Water_Drilling_Incident_Classification_with_Facet_36_0.png" />
 </div>
 </div>
-<p>To interpret the synergy matrix, the first feature in a pair is the row (“perspective from”), and the second feature the column. For example, let’s take the highest synergy value of 78% for the feature pair rotation speed and weight on the bit. From the perspective of rotation speed we find that 78% of the information is combined with weight on the bit to predict failure. This seems sensible in context, as drilling with both a high bit weight and a high rotation can have a disproportionately
-large impact on the wear of the equipment, and so drastically increase the likelihood of failure. It is understandable that the synergy is also high from the perspective of weight on the bit (68%). This also means if we want to reduce the impact of either of these factors on the likelihood of failure, we should consider them both together and not independently.</p>
-</div>
-<div class="section" id="Redundancy">
-<h2>Redundancy<a class="headerlink" href="#Redundancy" title="Permalink to this headline">¶</a></h2>
+<p>To interpret the synergy matrix, the first feature in a pair is the row (“perspective from”), and the second feature the column. For example, let’s take the highest synergy value of 81% for the feature pair rotation speed and weight on the bit. From the perspective of rotation speed we find that 81% of the information is combined with weight on the bit to predict failure. This seems sensible in context, as drilling with both a high bit weight and a high rotation can have a disproportionately
+large impact on the wear of the equipment, and so drastically increase the likelihood of failure. It is understandable that the synergy is also high from the perspective of weight on the bit (70%). This also means if we want to reduce the impact of either of these factors on the likelihood of failure, we should consider them both together and not independently.</p>
+</section>
+<section id="Redundancy">
+<h2>Redundancy<a class="headerlink" href="#Redundancy" title="Permalink to this headline">#</a></h2>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[20]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">redundancy_matrix</span> <span class="o">=</span> <span class="n">model_inspector</span><span class="o">.</span><span class="n">feature_redundancy_matrix</span><span class="p">(</span><span class="n">clustered</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">redundancy_matrix</span> <span class="o">=</span> <span class="n">model_inspector</span><span class="o">.</span><span class="n">feature_redundancy_matrix</span><span class="p">()</span>
 <span class="n">MatrixDrawer</span><span class="p">(</span><span class="n">style</span><span class="o">=</span><span class="s2">&quot;matplot%&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="n">redundancy_matrix</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Redundancy&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -1138,11 +1255,11 @@ large impact on the wear of the equipment, and so drastically increase the likel
 <img alt="../_images/tutorial_Water_Drilling_Incident_Classification_with_Facet_39_0.png" src="../_images/tutorial_Water_Drilling_Incident_Classification_with_Facet_39_0.png" />
 </div>
 </div>
-<p>As with synergy, the matrix row is the “perspective from” feature in the row-column feature pair. First let’s consider the feature pair (ROP, Inverse ROP). The redundancy here is similar from the perspective of either (73%) and this is because one feature is the inverse of the other and so can substitute one another in the model for predicting failure. Next let’s consider the feature pair (depth of the operation, hole diameter) which have the highest redundancies after (ROP, Inverse ROP). From
-the perspective of hole diameter 50% of the information is duplicated with depth of the operation to predict failure. Intuitively, we can see why, as the depth of operation and the hole diameter are highly connected as drillers use thinner drilling bits as they drill deeper into the earth.</p>
-</div>
-<div class="section" id="Feature-clustering">
-<h2>Feature clustering<a class="headerlink" href="#Feature-clustering" title="Permalink to this headline">¶</a></h2>
+<p>As with synergy, the matrix row is the “perspective from” feature in the row-column feature pair. First let’s consider the feature pair (ROP, Inverse ROP). The redundancy here is similar from the perspective of either (85%) and this is because one feature is the inverse of the other and so can substitute one another in the model for predicting failure. Next let’s consider the feature pair (depth of the operation, hole diameter) which have the highest redundancies after (ROP, Inverse ROP). From
+the perspective of hole diameter 51% of the information is duplicated with depth of the operation to predict failure. Intuitively, we can see why, as the depth of operation and the hole diameter are highly connected as drillers use thinner drilling bits as they drill deeper into the earth.</p>
+</section>
+<section id="Feature-clustering">
+<h2>Feature clustering<a class="headerlink" href="#Feature-clustering" title="Permalink to this headline">#</a></h2>
 <p>As detailed above redundancy and synergy for a feature pair is from the “perspective” of one of the features in the pair, and so yields two distinct values. However, a symmetric version can also be computed that provides not only a simplified perspective but allows the use of (1 - metric) as a feature distance. With this distance hierarchical, single linkage clustering is applied to create a dendrogram visualization. This helps to identify groups of low distance, features which activate “in
 tandem” to predict the outcome. Such information can then be used to either reduce clusters of highly redundant features to a subset or highlight clusters of highly synergistic features that should always be considered together.</p>
 <p>For this example, let’s apply clustering to redundancy to see how the apparent grouping observed in the heatmap appears in the dendrogram. Ideally, we want to see features only start to cluster as close to the right-hand side of the dendrogram as possible. This implies all features in the model are contributing uniquely to our predictions.</p>
@@ -1150,8 +1267,7 @@ tandem” to predict the outcome. Such information can then be used to either re
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[21]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">redundancy</span> <span class="o">=</span> <span class="n">model_inspector</span><span class="o">.</span><span class="n">feature_redundancy_linkage</span><span class="p">()</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">redundancy</span> <span class="o">=</span> <span class="n">model_inspector</span><span class="o">.</span><span class="n">feature_redundancy_linkage</span><span class="p">()</span>
 <span class="n">DendrogramDrawer</span><span class="p">()</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s2">&quot;Redundancy linkage&quot;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">redundancy</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -1165,39 +1281,38 @@ tandem” to predict the outcome. Such information can then be used to either re
 </div>
 <p>As expected the dendrogram shows a high redundancy (left-most feature cluster) between the ROP and the Inverse ROP, as both features compete in terms of feature importance. The dendrogram below shows that we should remove one to help orthogonalise the feature set before simulation. We could also consider removing one of Hole diameter and Depth of Operation. For the purpose of this tutorial, we will remove Inverse ROP and retain ROP, which is more interpretable.</p>
 <p>The reason we want to engineer an orthogonal set of features is so we can use the univariate simulator. An orthogonal feature set of is needed so that the artificially created samples stay plausible. Indeed, not removing the Inverse ROP feature from the set would lead to unrealistic artificial observations while using the univariate simulator.</p>
-<div class="nbinput docutils container">
+<div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[22]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="c1"># remove redundant feature Inverse ROP</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># remove redundant feature Inverse ROP</span>
 <span class="n">redundant_features</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;Inverse Rate of Penetration (h/ft)&quot;</span><span class="p">]</span>
 <span class="n">drilling_obs_not_redundant</span> <span class="o">=</span> <span class="n">drilling_obs_reduced_featset</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">feature_names</span><span class="o">=</span><span class="n">redundant_features</span><span class="p">)</span>
 
-<span class="n">model_ranker</span> <span class="o">=</span> <span class="n">LearnerRanker</span><span class="p">(</span><span class="n">grids</span><span class="o">=</span><span class="n">clf_grid</span><span class="p">,</span> <span class="n">cv</span><span class="o">=</span><span class="n">cv_approach</span><span class="p">,</span> <span class="n">n_jobs</span><span class="o">=-</span><span class="mi">3</span><span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span>
-    <span class="n">sample</span><span class="o">=</span><span class="n">drilling_obs_not_redundant</span>
+<span class="n">model_selector_2</span> <span class="o">=</span> <span class="n">LearnerSelector</span><span class="p">(</span>
+    <span class="n">searcher_type</span><span class="o">=</span><span class="n">RandomizedSearchCV</span><span class="p">,</span>
+    <span class="n">parameter_space</span><span class="o">=</span><span class="p">[</span><span class="n">rforest_ps</span><span class="p">,</span> <span class="n">lgbm_ps</span><span class="p">],</span>
+    <span class="n">cv</span><span class="o">=</span><span class="n">cv_approach</span><span class="p">,</span>
+    <span class="n">n_jobs</span><span class="o">=-</span><span class="mi">3</span><span class="p">,</span>
+    <span class="n">scoring</span><span class="o">=</span><span class="s2">&quot;accuracy&quot;</span>
+<span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span>
+    <span class="n">drilling_obs_not_redundant</span>
 <span class="p">)</span>
 
-<span class="n">model_inspector</span> <span class="o">=</span> <span class="n">LearnerInspector</span><span class="p">(</span><span class="n">n_jobs</span><span class="o">=-</span><span class="mi">3</span><span class="p">)</span>
-<span class="n">model_inspector</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">crossfit</span><span class="o">=</span><span class="n">model_ranker</span><span class="o">.</span><span class="n">best_model_crossfit_</span><span class="p">)</span>
+<span class="n">model_inspector_2</span> <span class="o">=</span> <span class="n">LearnerInspector</span><span class="p">(</span>
+    <span class="n">pipeline</span><span class="o">=</span><span class="n">model_selector_2</span><span class="o">.</span><span class="n">best_estimator_</span><span class="p">,</span>
+    <span class="n">n_jobs</span><span class="o">=-</span><span class="mi">3</span>
+<span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span>
+    <span class="n">drilling_obs_not_redundant</span>
+<span class="p">)</span>
 </pre></div>
 </div>
-</div>
-<div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[22]:
-</pre></div>
-</div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-&lt;facet.inspection._inspection.LearnerInspector at 0x7fe5b5b65be0&gt;
-</pre></div></div>
 </div>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[23]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">redundancy</span> <span class="o">=</span> <span class="n">model_inspector</span><span class="o">.</span><span class="n">feature_redundancy_linkage</span><span class="p">()</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">redundancy</span> <span class="o">=</span> <span class="n">model_inspector_2</span><span class="o">.</span><span class="n">feature_redundancy_linkage</span><span class="p">()</span>
 <span class="n">DendrogramDrawer</span><span class="p">()</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s2">&quot;Redundancy linkage&quot;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">redundancy</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -1211,35 +1326,30 @@ tandem” to predict the outcome. Such information can then be used to either re
 </div>
 <p>Now that our feature set is looking more linearly independent, we can start making simulations to gain knowledge into how ROP will impact failure likelihood.</p>
 <p>Note that removing the Inverse ROP has given more feature importance to the ROP, which is now the most important feature.</p>
-</div>
-</div>
-<div class="section" id="FACET-univariate-simulator:-the-impact-of-rate-of-penetration">
-<h1>FACET univariate simulator: the impact of rate of penetration<a class="headerlink" href="#FACET-univariate-simulator:-the-impact-of-rate-of-penetration" title="Permalink to this headline">¶</a></h1>
+</section>
+</section>
+<section id="FACET-univariate-simulator:-the-impact-of-rate-of-penetration">
+<h1>FACET univariate simulator: the impact of rate of penetration<a class="headerlink" href="#FACET-univariate-simulator:-the-impact-of-rate-of-penetration" title="Permalink to this headline">#</a></h1>
 <p>The ROP is a parameter very much monitored while drilling a well as it is a tradeoff between safety and economy, it is safer to drill at a low pace but much costlier as it takes more time. It has also the highest feature importance in our model (see dendrogram above). Let’s use a simulation to get a sense of how the failure likelihood behaves if we simulate changes in the ROP applied.</p>
 <p>As the basis for the simulation, we divide the feature into relevant partitions:</p>
 <ul class="simple">
 <li><p>We use FACET’s <code class="docutils literal notranslate"><span class="pre">ContinuousRangePartitioner</span></code> to split the range of observed values of ROP into intervals of equal size. Each partition is represented by the central value of that partition.</p></li>
-<li><p>For each partition, the simulator creates an artificial copy of the original sample assuming the variable to be simulated has the same value across all observations - which is the value representing the partition. Using the best <code class="docutils literal notranslate"><span class="pre">LearnerCrossfit</span></code> acquired from the ranker, the simulator now re-predicts all targets using the models trained for all folds and determines the average predicted probability of the target variable resulting from this.</p></li>
+<li><p>For each partition, the simulator creates an artificial copy of the original sample assuming the variable to be simulated has the same value across all observations - which is the value representing the partition. Using the best estimator acquired from the selector, the simulator now re-predicts all targets using the models trained on full sample and determines the mean predicted probability of the target variable resulting from this, as well as a confidence interval derived from the standard
+error of the mean predicted probability.</p></li>
 <li><p>The FACET <code class="docutils literal notranslate"><span class="pre">SimulationDrawer</span></code> allows us to visualise the result; both in a matplotlib and a plain-text style</p></li>
 </ul>
-<p>Finally, because FACET can use bootstrap cross validation, we can create a crossfit from our previous <code class="docutils literal notranslate"><span class="pre">LearnerRanker</span></code> best model to perform the simulation so we can quantify the uncertainty by using bootstrap confidence intervals.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[24]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="c1"># create a bootstrap CV crossfit for simulation using best model</span>
-<span class="n">boot_crossfit</span> <span class="o">=</span> <span class="n">LearnerCrossfit</span><span class="p">(</span>
-    <span class="n">pipeline</span><span class="o">=</span><span class="n">model_ranker</span><span class="o">.</span><span class="n">best_model_</span><span class="p">,</span>
-    <span class="n">cv</span><span class="o">=</span><span class="n">BootstrapCV</span><span class="p">(</span><span class="n">n_splits</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="mi">42</span><span class="p">),</span>
-    <span class="n">n_jobs</span><span class="o">=-</span><span class="mi">3</span><span class="p">,</span>
-    <span class="n">verbose</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
-<span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">sample</span><span class="o">=</span><span class="n">drilling_obs_not_redundant</span><span class="p">)</span>
-
-<span class="c1"># set-up and run a simulation</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># set-up and run a simulation</span>
 <span class="n">SIM_FEATURE</span> <span class="o">=</span> <span class="s2">&quot;Rate of Penetration (ft/h)&quot;</span>
 <span class="n">rop_bins</span> <span class="o">=</span> <span class="n">ContinuousRangePartitioner</span><span class="p">()</span>
-<span class="n">rop_simulator</span> <span class="o">=</span> <span class="n">UnivariateProbabilitySimulator</span><span class="p">(</span><span class="n">crossfit</span><span class="o">=</span><span class="n">boot_crossfit</span><span class="p">,</span> <span class="n">n_jobs</span><span class="o">=-</span><span class="mi">3</span><span class="p">)</span>
+<span class="n">rop_simulator</span> <span class="o">=</span> <span class="n">UnivariateProbabilitySimulator</span><span class="p">(</span>
+    <span class="n">model</span><span class="o">=</span><span class="n">model_selector_2</span><span class="o">.</span><span class="n">best_estimator_</span><span class="p">,</span>
+    <span class="n">sample</span><span class="o">=</span><span class="n">drilling_obs_not_redundant</span><span class="p">,</span>
+    <span class="n">n_jobs</span><span class="o">=-</span><span class="mi">3</span>
+<span class="p">)</span>
 <span class="n">rop_simulation</span> <span class="o">=</span> <span class="n">rop_simulator</span><span class="o">.</span><span class="n">simulate_feature</span><span class="p">(</span><span class="n">feature_name</span><span class="o">=</span><span class="n">SIM_FEATURE</span><span class="p">,</span> <span class="n">partitioner</span><span class="o">=</span><span class="n">rop_bins</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -1248,8 +1358,7 @@ tandem” to predict the outcome. Such information can then be used to either re
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[25]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">SimulationDrawer</span><span class="p">()</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">rop_simulation</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="n">SIM_FEATURE</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">SimulationDrawer</span><span class="p">()</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">rop_simulation</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="n">SIM_FEATURE</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -1261,9 +1370,9 @@ tandem” to predict the outcome. Such information can then be used to either re
 </div>
 </div>
 <p>The simulation can be used to obtain insight on failure likelihood changes depending on the ROP applied. As an example, the simulation suggests that operating with an ROP above 30ft/h can lead to an incident likelihood above 70%.</p>
-</div>
-<div class="section" id="Appendix:-generating-the-dataset">
-<h1>Appendix: generating the dataset<a class="headerlink" href="#Appendix:-generating-the-dataset" title="Permalink to this headline">¶</a></h1>
+</section>
+<section id="Appendix:-generating-the-dataset">
+<h1>Appendix: generating the dataset<a class="headerlink" href="#Appendix:-generating-the-dataset" title="Permalink to this headline">#</a></h1>
 <p>For the sake of simplicity, we use a simplified artificial dataset, it contains 500 observations, each row representing a drilling operation of the past, the target is the occurrence of drill breakdown (incident).</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># additional imports</span>
 <span class="kn">from</span> <span class="nn">scipy.linalg</span> <span class="kn">import</span> <span class="n">toeplitz</span>
@@ -1303,7 +1412,7 @@ tandem” to predict the outcome. Such information can then be used to either re
               <span class="n">feature_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
               <span class="n">min_</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
               <span class="n">max_</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Takes in a data frame and applies a min-max scaler to given bounds for a single column</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
@@ -1352,35 +1461,53 @@ tandem” to predict the outcome. Such information can then be used to either re
 <span class="n">df</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="s2">&quot;sphinx/source/tutorial/water_drilling_classification_data.csv&quot;</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s2">&quot;;&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 </pre></div>
 </div>
+</section>
+
+
+              </div>
+              
+              
+              <!-- Previous / next buttons -->
+<div class='prev-next-area'>
+    <a class='left-prev' id="prev-link" href="../tutorials.html" title="previous page">
+        <i class="fas fa-angle-left"></i>
+        <div class="prev-next-info">
+            <p class="prev-next-subtitle">previous</p>
+            <p class="prev-next-title">Tutorials</p>
+        </div>
+    </a>
+    <a class='right-next' id="next-link" href="Classification_with_Facet.html" title="next page">
+    <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Classification with FACET: Prediabetes Study</p>
+    </div>
+    <i class="fas fa-angle-right"></i>
+    </a>
 </div>
-
-
-              </div>
-              
-              
-              <div class='prev-next-bottom'>
-                
-    <a class='left-prev' id="prev-link" href="../tutorials.html" title="previous page">Tutorials</a>
-    <a class='right-next' id="next-link" href="Classification_with_Facet.html" title="next page">Classification with FACET: Prediabetes Study</a>
-
-              </div>
               
           </main>
           
 
       </div>
     </div>
-
-    
-  <script src="../_static/js/index.d3f166471bb80abb5163.js"></script>
-
-
-    <footer class="footer mt-5 mt-md-0">
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
+<footer class="footer mt-5 mt-md-0">
   <div class="container">
-    <p>
-          &copy; Copyright 2022, Boston Consulting Group (BCG).<br/>
-        Created using <a href="http://sphinx-doc.org/">Sphinx</a> 3.5.4.<br/>
-    </p>
+    
+    <div class="footer-item">
+      <p class="copyright">
+    &copy; Copyright 2022, Boston Consulting Group (BCG).<br>
+</p>
+    </div>
+    
+    <div class="footer-item">
+      <p class="sphinx-version">
+Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.5.0.<br>
+</p>
+    </div>
+    
   </div>
 </footer>
   </body>

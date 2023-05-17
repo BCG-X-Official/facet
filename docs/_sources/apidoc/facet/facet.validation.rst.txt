@@ -19,7 +19,6 @@ facet.validation
    
       BaseBootstrapCV
       BootstrapCV
-      FullSampleValidator
       StationaryBootstrapCV
       StratifiedBootstrapCV
    

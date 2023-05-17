@@ -18,7 +18,6 @@ facet.simulation.UnivariateUpliftSimulator
    
       ~UnivariateUpliftSimulator.baseline
       ~UnivariateUpliftSimulator.expected_output
-      ~UnivariateUpliftSimulator.simulate_actuals
       ~UnivariateUpliftSimulator.simulate_feature
    
    
@@ -29,10 +28,14 @@ facet.simulation.UnivariateUpliftSimulator
 
    .. autosummary::
    
-      ~UnivariateUpliftSimulator.COL_OUTPUT
-      ~UnivariateUpliftSimulator.IDX_PARTITION
-      ~UnivariateUpliftSimulator.IDX_SPLIT
       ~UnivariateUpliftSimulator.output_unit
+      ~UnivariateUpliftSimulator.n_jobs
+      ~UnivariateUpliftSimulator.shared_memory
+      ~UnivariateUpliftSimulator.pre_dispatch
+      ~UnivariateUpliftSimulator.verbose
+      ~UnivariateUpliftSimulator.model
+      ~UnivariateUpliftSimulator.sample
+      ~UnivariateUpliftSimulator.confidence_level
    
    
 

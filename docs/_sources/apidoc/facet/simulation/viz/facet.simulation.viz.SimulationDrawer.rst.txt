@@ -19,6 +19,7 @@ facet.simulation.viz.SimulationDrawer
       ~SimulationDrawer.draw
       ~SimulationDrawer.get_named_styles
       ~SimulationDrawer.get_style_classes
+      ~SimulationDrawer.get_style_kwargs
    
    
 
@@ -29,6 +30,8 @@ facet.simulation.viz.SimulationDrawer
    .. autosummary::
    
       ~SimulationDrawer.DEFAULT_STYLE
+      ~SimulationDrawer.style
+      ~SimulationDrawer.histogram
    
    
 

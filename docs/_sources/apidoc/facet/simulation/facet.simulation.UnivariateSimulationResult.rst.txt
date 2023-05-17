@@ -11,15 +11,6 @@ facet.simulation.UnivariateSimulationResult
 
    
    
-   .. rubric:: Method summary
-
-   .. autosummary::
-      :nosignatures:
-   
-      ~UnivariateSimulationResult.outputs_lower_bound
-      ~UnivariateSimulationResult.outputs_median
-      ~UnivariateSimulationResult.outputs_upper_bound
-   
    
 
    
@@ -29,8 +20,17 @@ facet.simulation.UnivariateSimulationResult
    .. autosummary::
    
       ~UnivariateSimulationResult.COL_LOWER_BOUND
-      ~UnivariateSimulationResult.COL_MEDIAN
+      ~UnivariateSimulationResult.COL_MEAN
+      ~UnivariateSimulationResult.COL_SEM
       ~UnivariateSimulationResult.COL_UPPER_BOUND
+      ~UnivariateSimulationResult.IDX_PARTITION
+      ~UnivariateSimulationResult.data
+      ~UnivariateSimulationResult.partitioner
+      ~UnivariateSimulationResult.feature_name
+      ~UnivariateSimulationResult.output_name
+      ~UnivariateSimulationResult.output_unit
+      ~UnivariateSimulationResult.baseline
+      ~UnivariateSimulationResult.confidence_level
    
    
 

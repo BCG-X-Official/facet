@@ -1,0 +1,44 @@
+facet.explanation.parallel.ParallelExplainer
+============================================
+
+.. currentmodule:: facet.explanation.parallel
+
+.. autoclass:: ParallelExplainer
+   :members:
+   :no-show-inheritance:
+   :inherited-members:
+   :special-members: __call__
+
+   
+   
+   .. rubric:: Method summary
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~ParallelExplainer.explain_row
+      ~ParallelExplainer.load
+      ~ParallelExplainer.save
+      ~ParallelExplainer.shap_interaction_values
+      ~ParallelExplainer.shap_values
+      ~ParallelExplainer.supports_model_with_masker
+   
+   
+
+   
+   
+   .. rubric:: Attribute summary
+
+   .. autosummary::
+   
+      ~ParallelExplainer.supports_interaction
+      ~ParallelExplainer.explainer
+      ~ParallelExplainer.max_job_size
+      ~ParallelExplainer.n_jobs
+      ~ParallelExplainer.shared_memory
+      ~ParallelExplainer.pre_dispatch
+      ~ParallelExplainer.verbose
+   
+   
+
+   .. rubric:: Definitions

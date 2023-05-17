@@ -4,10 +4,13 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Bootstrap simulation with FACET &#8212; facet  documentation</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>Work in progress &#8212; facet  documentation</title>
     
-  <link rel="stylesheet" href="../_static/css/index.f658d18f9b420779cfdf24aa0a7e2d77.css">
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
 
     
   <link rel="stylesheet"
@@ -17,91 +20,116 @@
   <link rel="preload" as="font" type="font/woff2" crossorigin
     href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
 
-    
-      
-  <link rel="stylesheet"
-    href="../_static/vendor/open-sans_all/1.44.1/index.css">
-  <link rel="stylesheet"
-    href="../_static/vendor/lato_latin-ext/1.44.1/index.css">
-
-    
-    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../_static/css/gamma.css" />
     
-  <link rel="preload" as="script" href="../_static/js/index.d3f166471bb80abb5163.js">
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
 
-    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
     <script src="../_static/jquery.js"></script>
     <script src="../_static/underscore.js"></script>
     <script src="../_static/doctools.js"></script>
     <script src="../_static/js/gamma.js"></script>
     <script src="../_static/js/versions.js"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Standard Scikit-learn Classification Summary with FACET" href="Scikit-learn_classifier_summaries_using_FACET.html" />
-    <link rel="prev" title="Classification with FACET: Prediabetes Study" href="Classification_with_Facet.html" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="docsearch:language" content="en" />
+    <meta name="docsearch:language" content="None">
+    
+
+    <!-- Google Analytics -->
+    
   </head>
-  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="60">
     
-    <nav class="navbar navbar-light navbar-expand-lg bg-light fixed-top bd-navbar" id="navbar-main">
-<div class="container-xl">
+    <div class="container-fluid" id="banner"></div>
 
-    <a class="navbar-brand" href="../index.html">
     
-      <img src="../_static/Gamma_Facet_Logo_RGB_LB.svg" class="logo" alt="logo" />
+    <nav class="navbar navbar-light navbar-expand-lg bg-light fixed-top bd-navbar" id="navbar-main"><div class="container-xl">
+
+  <div id="navbar-start">
     
-    </a>
-    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar-menu" aria-controls="navbar-menu" aria-expanded="false" aria-label="Toggle navigation">
-        <span class="navbar-toggler-icon"></span>
-    </button>
+    
 
-    <div id="navbar-menu" class="col-lg-9 collapse navbar-collapse">
-      <ul id="navbar-main-elements" class="navbar-nav mr-auto">
-        
-        
-        <li class="nav-item ">
-            <a class="nav-link" href="../getting_started/getting_started.html">Getting started</a>
-        </li>
-        
-        <li class="nav-item ">
-            <a class="nav-link" href="../apidoc/facet.html">API reference</a>
-        </li>
-        
-        <li class="nav-item active">
-            <a class="nav-link" href="../tutorials.html">Tutorials</a>
-        </li>
-        
-        <li class="nav-item ">
-            <a class="nav-link" href="../contribution_guide.html">Development Guidelines</a>
-        </li>
-        
-        <li class="nav-item ">
-            <a class="nav-link" href="../faqs.html">FAQ</a>
-        </li>
-        
-        <li class="nav-item ">
-            <a class="nav-link" href="../about_us.html">About us</a>
-        </li>
-        
-        <li class="nav-item ">
-            <a class="nav-link" href="../release_notes.html">Release Notes</a>
-        </li>
-        
-        
-      </ul>
+<a class="navbar-brand" href="../index.html">
+  <img src="../_static/Gamma_Facet_Logo_RGB_LB.svg" class="logo" alt="logo">
+</a>
 
 
+    
+  </div>
+
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar-collapsible" aria-controls="navbar-collapsible" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+
+  
+  <div id="navbar-collapsible" class="col-lg-9 collapse navbar-collapse">
+    <div id="navbar-center" class="mr-auto">
       
+      <div class="navbar-center-item">
+        <ul id="navbar-main-elements" class="navbar-nav">
+    <li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="../_generated/getting_started.html">
+  Getting started
+ </a>
+</li>
 
-      <ul class="navbar-nav">
-        
-        
-      </ul>
+<li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="../apidoc/facet.html">
+  API reference
+ </a>
+</li>
+
+<li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="../tutorials.html">
+  Tutorials
+ </a>
+</li>
+
+<li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="../contribution_guide.html">
+  Development Guidelines
+ </a>
+</li>
+
+<li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="../faqs.html">
+  FAQ
+ </a>
+</li>
+
+<li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="../about_us.html">
+  About us
+ </a>
+</li>
+
+<li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="../_generated/release_notes.html">
+  Release Notes
+ </a>
+</li>
+
+    
+</ul>
+      </div>
+      
     </div>
+
+    <div id="navbar-end">
+      
+      <div class="navbar-end-item">
+        <ul id="navbar-icon-links" class="navbar-nav" aria-label="Icon Links">
+      </ul>
+      </div>
+      
+    </div>
+  </div>
 </div>
     </nav>
     
@@ -109,127 +137,109 @@
     <div class="container-xl">
       <div class="row">
           
-          <div class="col-12 col-md-3 bd-sidebar"><form class="bd-search d-flex align-items-center" action="../search.html" method="get">
+            
+            <!-- Only show if we have sidebars configured, else just a small margin  -->
+            <div class="col-12 col-md-3 bd-sidebar">
+              <div class="sidebar-start-items"><form class="bd-search d-flex align-items-center" action="../search.html" method="get">
   <i class="icon fas fa-search"></i>
   <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
-</form>
-<nav class="bd-links" id="bd-docs-nav" aria-label="Main navigation">
-
-    <div class="bd-toc-item active">
+</form><nav class="bd-links" id="bd-docs-nav" aria-label="Main navigation">
+  <div class="bd-toc-item active">
     
-  
-    <ul class="nav bd-sidenav">
-        
-        
-        
-        
-        
-        
-          
+  </div>
+</nav>
+              </div>
+              <div class="sidebar-end-items">
+              </div>
+            </div>
             
-                <li class="">
-                    <a href="Water_Drilling_Incident_Classification_with_Facet.html">Introduction to FACET</a>
-                </li>
-            
-          
-            
-                <li class="">
-                    <a href="Classification_with_Facet.html">Classification with FACET: Prediabetes Study</a>
-                </li>
-            
-          
-            
-                <li class="active">
-                    <a href="">Bootstrap simulation with FACET</a>
-                </li>
-            
-          
-            
-                <li class="">
-                    <a href="Scikit-learn_classifier_summaries_using_FACET.html">Standard Scikit-learn Classification Summary with FACET</a>
-                </li>
-            
-          
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-      </ul>
-  
-  </nav>
-          </div>
           
 
           
           <div class="d-none d-xl-block col-xl-2 bd-toc">
+            
               
-<div class="tocsection onthispage pt-5 pb-3">
+              <div class="toc-item">
+                
+<div class="tocsection onthispage mt-5 pt-1 pb-3">
     <i class="fas fa-list"></i> On this page
 </div>
 
 <nav id="bd-toc-nav">
-    <ul class="nav section-nav flex-column">
-    
-        <li class="nav-item toc-entry toc-h2">
-            <a href="#" class="nav-link">Bootstrap simulation with FACET</a>
-        </li>
-    
-        <li class="nav-item toc-entry toc-h2">
-            <a href="#Required-imports" class="nav-link">Required imports</a>
-        </li>
-    
-        <li class="nav-item toc-entry toc-h2">
-            <a href="#Data" class="nav-link">Data</a>
-        </li>
-    
-        <li class="nav-item toc-entry toc-h2">
-            <a href="#Bootstrap-simulation-overview" class="nav-link">Bootstrap simulation overview</a><ul class="nav section-nav flex-column">
-                
-        <li class="nav-item toc-entry toc-h3">
-            <a href="#Partitioning" class="nav-link">Partitioning</a>
-        </li>
-    
-        <li class="nav-item toc-entry toc-h3">
-            <a href="#Creating-multiple-train-and-test-splits-with-bootstrap-resampling" class="nav-link">Creating multiple train and test splits with bootstrap resampling</a>
-        </li>
-    
-        <li class="nav-item toc-entry toc-h3">
-            <a href="#Model-fitting-using-resampled-training-sets" class="nav-link">Model fitting using resampled training sets</a>
-        </li>
-    
-        <li class="nav-item toc-entry toc-h3">
-            <a href="#Simulating-actuals" class="nav-link">Simulating actuals</a>
-        </li>
-    
-        <li class="nav-item toc-entry toc-h3">
-            <a href="#Simulating-response" class="nav-link">Simulating response</a>
-        </li>
-    
-            </ul>
-        </li>
-    
-        <li class="nav-item toc-entry toc-h2">
-            <a href="#Summary" class="nav-link">Summary</a>
-        </li>
-    
-        <li class="nav-item toc-entry toc-h2">
-            <a href="#What-can-you-do-next?" class="nav-link">What can you do next?</a>
-        </li>
-    
-    </ul>
+    <ul class="visible nav section-nav flex-column">
+ <li class="toc-h1 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#">
+   Work in progress
+  </a>
+ </li>
+ <li class="toc-h1 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#Model-Simulation-with-FACET">
+   Model Simulation with FACET
+  </a>
+ </li>
+ <li class="toc-h1 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#Required-imports">
+   Required imports
+  </a>
+ </li>
+ <li class="toc-h1 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#Data">
+   Data
+  </a>
+ </li>
+ <li class="toc-h1 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#Bootstrap-simulation-overview">
+   Bootstrap simulation overview
+  </a>
+  <ul class="visible nav section-nav flex-column">
+   <li class="toc-h2 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#Partitioning">
+     Partitioning
+    </a>
+   </li>
+   <li class="toc-h2 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#Creating-multiple-train-and-test-splits-with-bootstrap-resampling">
+     Creating multiple train and test splits with bootstrap resampling
+    </a>
+   </li>
+   <li class="toc-h2 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#Model-fitting-using-resampled-training-sets">
+     Model fitting using resampled training sets
+    </a>
+   </li>
+   <li class="toc-h2 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#Simulating-response">
+     Simulating response
+    </a>
+   </li>
+  </ul>
+ </li>
+ <li class="toc-h1 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#Summary">
+   Summary
+  </a>
+ </li>
+ <li class="toc-h1 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#What-can-you-do-next?">
+   What can you do next?
+  </a>
+ </li>
+</ul>
+
 </nav>
-
-
+              </div>
               
+              <div class="toc-item">
+                
+              </div>
+              
+            
           </div>
           
 
+          
+          
+            
           
           <main class="col-12 col-md-9 col-xl-7 py-md-5 pl-md-5 pr-md-4 bd-content" role="main">
               
@@ -240,21 +250,35 @@
 /* CSS for nbsphinx extension */
 
 /* remove conflicting styling from Sphinx themes */
-div.nbinput.container,
-div.nbinput.container div.prompt,
-div.nbinput.container div.input_area,
-div.nbinput.container div[class*=highlight],
-div.nbinput.container div[class*=highlight] pre,
-div.nboutput.container,
-div.nboutput.container div.prompt,
-div.nboutput.container div.output_area,
-div.nboutput.container div[class*=highlight],
-div.nboutput.container div[class*=highlight] pre {
-    background: none;
+div.nbinput.container div.prompt *,
+div.nboutput.container div.prompt *,
+div.nbinput.container div.input_area pre,
+div.nboutput.container div.output_area pre,
+div.nbinput.container div.input_area .highlight,
+div.nboutput.container div.output_area .highlight {
     border: none;
-    padding: 0 0;
+    padding: 0;
     margin: 0;
     box-shadow: none;
+}
+
+div.nbinput.container > div[class*=highlight],
+div.nboutput.container > div[class*=highlight] {
+    margin: 0;
+}
+
+div.nbinput.container div.prompt *,
+div.nboutput.container div.prompt * {
+    background: none;
+}
+
+div.nboutput.container div.output_area .highlight,
+div.nboutput.container div.output_area pre {
+    background: unset;
+}
+
+div.nboutput.container div.output_area div.highlight {
+    color: unset;  /* override Pygments text color */
 }
 
 /* avoid gaps between output lines */
@@ -331,10 +355,11 @@ div.nboutput.container div.prompt > div {
     }
 }
 
-/* disable scrollbars on prompts */
+/* disable scrollbars and line breaks on prompts */
 div.nbinput.container div.prompt pre,
 div.nboutput.container div.prompt pre {
     overflow: hidden;
+    white-space: pre;
 }
 
 /* input/output area */
@@ -355,7 +380,7 @@ div.nboutput.container div.output_area {
 div.nbinput.container div.input_area {
     border: 1px solid #e0e0e0;
     border-radius: 2px;
-    background: #f5f5f5;
+    /*background: #f5f5f5;*/
 }
 
 /* override MathJax center alignment in output cells */
@@ -421,6 +446,7 @@ div.nboutput.container div.output_area.rendered_html,
 div.nboutput.container div.output_area > div.output_javascript,
 div.nboutput.container div.output_area:not(.rendered_html) > img{
     padding: 5px;
+    margin: 0;
 }
 
 /* fix copybtn overflow problem in chromium (needed for 'sphinx_copybutton') */
@@ -430,11 +456,12 @@ div.nboutput.container div.output_area > div[class^='highlight']{
 }
 
 /* hide copybtn icon on prompts (needed for 'sphinx_copybutton') */
-.prompt a.copybtn {
+.prompt .copybtn {
     display: none;
 }
 
 /* Some additional styling taken form the Jupyter notebook CSS */
+.jp-RenderedHTMLCommon table,
 div.rendered_html table {
   border: none;
   border-collapse: collapse;
@@ -443,10 +470,14 @@ div.rendered_html table {
   font-size: 12px;
   table-layout: fixed;
 }
+.jp-RenderedHTMLCommon thead,
 div.rendered_html thead {
   border-bottom: 1px solid black;
   vertical-align: bottom;
 }
+.jp-RenderedHTMLCommon tr,
+.jp-RenderedHTMLCommon th,
+.jp-RenderedHTMLCommon td,
 div.rendered_html tr,
 div.rendered_html th,
 div.rendered_html td {
@@ -458,20 +489,26 @@ div.rendered_html td {
   max-width: none;
   border: none;
 }
+.jp-RenderedHTMLCommon th,
 div.rendered_html th {
   font-weight: bold;
 }
+.jp-RenderedHTMLCommon tbody tr:nth-child(odd),
 div.rendered_html tbody tr:nth-child(odd) {
   background: #f5f5f5;
 }
+.jp-RenderedHTMLCommon tbody tr:hover,
 div.rendered_html tbody tr:hover {
   background: rgba(66, 165, 245, 0.2);
 }
 </style>
-<p><img alt="3bb767f2172048ea8950d1f5b8adb049" class="no-scaled-link" src="../_images/Gamma_Facet_Logo_RGB_LB.svg" width="500" /></p>
-<div class="section" id="Bootstrap-simulation-with-FACET">
-<h1>Bootstrap simulation with FACET<a class="headerlink" href="#Bootstrap-simulation-with-FACET" title="Permalink to this headline">¶</a></h1>
-<hr class="docutils" />
+<p><img alt="754312a890074eeca906afa72c62a28c" class="no-scaled-link" src="../_images/Gamma_Facet_Logo_RGB_LB.svg" width="500" /></p>
+<section id="Work-in-progress">
+<h1>Work in progress<a class="headerlink" href="#Work-in-progress" title="Permalink to this headline">#</a></h1>
+<p>FACET 2 no longer relies on bootstrapping in simulations, and instead calculates confidence intervals based on the standard error of mean predictions. This notebook will be updated accordingly for the release of FACET 2.0.</p>
+</section>
+<section id="Model-Simulation-with-FACET">
+<h1>Model Simulation with FACET<a class="headerlink" href="#Model-Simulation-with-FACET" title="Permalink to this headline">#</a></h1>
 <p>FACET is composed of the following key components:</p>
 <ul>
 <li><p><strong>Model Inspection</strong></p>
@@ -505,9 +542,9 @@ infiltration. We will therefore built a machine-learning model to understand the
 <li><p><a class="reference external" href="#Summary">Summary</a></p></li>
 <li><p><a class="reference external" href="#What-can-you-do-next?">What can you do next?</a></p></li>
 </ol>
-</div>
-<div class="section" id="Required-imports">
-<h1>Required imports<a class="headerlink" href="#Required-imports" title="Permalink to this headline">¶</a></h1>
+</section>
+<section id="Required-imports">
+<h1>Required imports<a class="headerlink" href="#Required-imports" title="Permalink to this headline">#</a></h1>
 <p>In order to run this notebook, we will import not only the FACET package, but also other packages useful to solve this task. Overall, we can break down the imports into three categories:</p>
 <ol class="arabic simple">
 <li><p>Common packages (pandas, matplotlib, etc.)</p></li>
@@ -519,10 +556,7 @@ infiltration. We will therefore built a machine-learning model to understand the
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="c1"># list your usual imports here such as pandas, numpy and others</span>
-<span class="c1"># not covered by FACET, sklearndf or pytools</span>
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
 <span class="kn">import</span> <span class="nn">seaborn</span> <span class="k">as</span> <span class="nn">sns</span>
 </pre></div>
@@ -533,9 +567,7 @@ infiltration. We will therefore built a machine-learning model to understand the
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="kn">from</span> <span class="nn">facet.crossfit</span> <span class="kn">import</span> <span class="n">LearnerCrossfit</span>
-<span class="kn">from</span> <span class="nn">facet.data</span> <span class="kn">import</span> <span class="n">Sample</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">facet.data</span> <span class="kn">import</span> <span class="n">Sample</span>
 <span class="kn">from</span> <span class="nn">facet.data.partition</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">ContinuousRangePartitioner</span><span class="p">,</span>
     <span class="n">IntegerRangePartitioner</span><span class="p">,</span>
@@ -548,8 +580,8 @@ infiltration. We will therefore built a machine-learning model to understand the
 </div>
 </div>
 <p><strong>sklearndf imports</strong></p>
-<p>Instead of using the “regular” scikit-learn package, we are going to use sklearndf (see on <a class="reference external" href="https://github.com/orgs/BCG-Gamma/sklearndf/">GitHub</a>). sklearndf is an open source library designed to address a common issue with scikit-learn: the outputs of transformers are numpy arrays, even when the input is a data frame. However, to inspect a model it is essential to keep track of the feature names. sklearndf retains all the functionality available through scikit-learn plus the feature
-traceability and usability associated with Pandas data frames. Additionally, the names of all your favourite scikit-learn functions are the same except for <code class="docutils literal notranslate"><span class="pre">DF</span></code> on the end. For example, the standard scikit-learn import:</p>
+<p>Instead of using the “regular” <em>scikit-learn</em> package, we are going to use <em>sklearndf</em> (see on <a class="reference external" href="https://github.com/orgs/BCG-Gamma/sklearndf/">GitHub</a>). <em>sklearndf</em> is an open source library designed to address a common issue with <em>scikit-learn</em>: the outputs of transformers are numpy arrays, even when the input is a data frame. However, to inspect a model it is essential to keep track of the feature names. <em>sklearndf</em> retains all the functionality available through scikit-learn plus the
+feature traceability and usability associated with Pandas data frames. Additionally, the names of all your favourite scikit-learn functions are the same except for <code class="docutils literal notranslate"><span class="pre">DF</span></code> on the end. For example, the standard <em>scikit-learn</em> import:</p>
 <p><code class="docutils literal notranslate"><span class="pre">from</span> <span class="pre">sklearn.pipeline</span> <span class="pre">import</span> <span class="pre">Pipeline</span></code></p>
 <p>becomes:</p>
 <p><code class="docutils literal notranslate"><span class="pre">from</span> <span class="pre">sklearndf.pipeline</span> <span class="pre">import</span> <span class="pre">PipelineDF</span></code></p>
@@ -557,8 +589,7 @@ traceability and usability associated with Pandas data frames. Additionally, the
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="kn">from</span> <span class="nn">sklearndf.pipeline</span> <span class="kn">import</span> <span class="n">ClassifierPipelineDF</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">sklearndf.pipeline</span> <span class="kn">import</span> <span class="n">ClassifierPipelineDF</span>
 <span class="kn">from</span> <span class="nn">sklearndf.classification.extra</span> <span class="kn">import</span> <span class="n">LGBMClassifierDF</span>
 </pre></div>
 </div>
@@ -569,21 +600,19 @@ traceability and usability associated with Pandas data frames. Additionally, the
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="kn">from</span> <span class="nn">pytools.viz.distribution</span> <span class="kn">import</span> <span class="n">ECDFDrawer</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">pytools.viz.distribution</span> <span class="kn">import</span> <span class="n">ECDFDrawer</span>
 </pre></div>
 </div>
 </div>
-</div>
-<div class="section" id="Data">
-<h1>Data<a class="headerlink" href="#Data" title="Permalink to this headline">¶</a></h1>
+</section>
+<section id="Data">
+<h1>Data<a class="headerlink" href="#Data" title="Permalink to this headline">#</a></h1>
 <p>Based on the water well drilling tutorial, we select a feature set all most linearly independent with the Rate of Penetration (ROP).</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="c1"># load the prepared dataframe</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># load the prepared dataframe</span>
 <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span>
     <span class="s2">&quot;water_drilling_classification_data.csv&quot;</span><span class="p">,</span>
     <span class="n">sep</span><span class="o">=</span><span class="s2">&quot;;&quot;</span><span class="p">,</span>
@@ -695,21 +724,20 @@ traceability and usability associated with Pandas data frames. Additionally, the
 </table>
 </div></div>
 </div>
-</div>
-<div class="section" id="Bootstrap-simulation-overview">
-<h1>Bootstrap simulation overview<a class="headerlink" href="#Bootstrap-simulation-overview" title="Permalink to this headline">¶</a></h1>
+</section>
+<section id="Bootstrap-simulation-overview">
+<h1>Bootstrap simulation overview<a class="headerlink" href="#Bootstrap-simulation-overview" title="Permalink to this headline">#</a></h1>
 <p>The figure above provides and overview of the simulation process for a single bootstrap split. This process is repeated many time to create a distribution of predicted impact for each value of a feature.</p>
-<p><img alt="8e1298e93c2c4c96840344c04d7662c8" class="no-scaled-link" src="../_images/Facet-Simulator-BlockDiagram.png" style="width: 750px;" /></p>
-<div class="section" id="Partitioning">
-<h2>Partitioning<a class="headerlink" href="#Partitioning" title="Permalink to this headline">¶</a></h2>
+<p><img alt="51c1ed4d1a1c46d1a289adfcf889076e" class="no-scaled-link" src="../_images/Facet-Simulator-BlockDiagram.png" style="width: 750px;" /></p>
+<section id="Partitioning">
+<h2>Partitioning<a class="headerlink" href="#Partitioning" title="Permalink to this headline">#</a></h2>
 <p>The first step to simulate feature effects on the target is to set the scope of the study for the feature we want to simulate. Let’s take the ROP measured in feet per hour (ft/h) as the feature to simulate.</p>
 <p>The plot below shows that the ROP is centered around 25 ft/h with a range of 10 to 40ft/h.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">SIM_FEATURE</span> <span class="o">=</span> <span class="s2">&quot;Rate of Penetration (ft/h)&quot;</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">SIM_FEATURE</span> <span class="o">=</span> <span class="s2">&quot;Rate of Penetration (ft/h)&quot;</span>
 <span class="n">ECDFDrawer</span><span class="p">()</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="n">drilling_obs</span><span class="o">.</span><span class="n">features</span><span class="p">[</span><span class="n">SIM_FEATURE</span><span class="p">])</span>
 </pre></div>
 </div>
@@ -718,7 +746,7 @@ traceability and usability associated with Pandas data frames. Additionally, the
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/tutorial_Model_simulation_deep_dive_18_0.png" src="../_images/tutorial_Model_simulation_deep_dive_18_0.png" />
+<img alt="../_images/tutorial_Model_simulation_deep_dive_19_0.png" src="../_images/tutorial_Model_simulation_deep_dive_19_0.png" />
 </div>
 </div>
 <p>As ROP is a continuous variable we use the <code class="docutils literal notranslate"><span class="pre">ContinuousRangePartitioner()</span></code> to generate partitions.</p>
@@ -726,8 +754,7 @@ traceability and usability associated with Pandas data frames. Additionally, the
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="c1"># instantiate the partitioner</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># instantiate the partitioner</span>
 <span class="n">rop_bins</span> <span class="o">=</span> <span class="n">ContinuousRangePartitioner</span><span class="p">()</span>
 
 <span class="c1"># fit the partitioner on the observations&#39; distribution</span>
@@ -757,15 +784,14 @@ True
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">plt</span><span class="o">.</span><span class="n">bar</span><span class="p">(</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">plt</span><span class="o">.</span><span class="n">bar</span><span class="p">(</span>
     <span class="n">x</span><span class="o">=</span><span class="n">rop_bins</span><span class="o">.</span><span class="n">partitions_</span><span class="p">,</span>
-    <span class="n">height</span><span class="o">=</span><span class="n">rop_bins</span><span class="o">.</span><span class="n">frequencies_</span><span class="o">/</span><span class="n">drilling_obs</span><span class="o">.</span><span class="n">features</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+    <span class="n">height</span><span class="o">=</span><span class="n">rop_bins</span><span class="o">.</span><span class="n">frequencies_</span> <span class="o">/</span> <span class="nb">sum</span><span class="p">(</span><span class="n">rop_bins</span><span class="o">.</span><span class="n">frequencies_</span><span class="p">),</span>
     <span class="n">width</span><span class="o">=</span><span class="n">rop_bins</span><span class="o">.</span><span class="n">partition_width_</span><span class="p">,</span>
-    <span class="n">edgecolor</span><span class="o">=</span><span class="s2">&quot;k&quot;</span>
+    <span class="n">edgecolor</span><span class="o">=</span><span class="s2">&quot;w&quot;</span><span class="p">,</span>
 <span class="p">)</span>
-
-<span class="n">sns</span><span class="o">.</span><span class="n">kdeplot</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">drilling_obs</span><span class="o">.</span><span class="n">features</span><span class="p">[</span><span class="n">SIM_FEATURE</span><span class="p">])</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;partition&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&quot;frequency&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -775,14 +801,14 @@ True
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-&lt;AxesSubplot:xlabel=&#39;Rate of Penetration (ft/h)&#39;, ylabel=&#39;Density&#39;&gt;
+Text(0, 0.5, &#39;frequency&#39;)
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/tutorial_Model_simulation_deep_dive_22_1.png" src="../_images/tutorial_Model_simulation_deep_dive_22_1.png" />
+<img alt="../_images/tutorial_Model_simulation_deep_dive_23_1.png" src="../_images/tutorial_Model_simulation_deep_dive_23_1.png" />
 </div>
 </div>
 <p>If you want to know the bounds for each partition you can use <code class="docutils literal notranslate"><span class="pre">rop_bins.partition_bounds_</span></code>. A quick way to list the midpoint and bounds for each partition is as follows:</p>
@@ -790,8 +816,7 @@ True
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="nb">list</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">rop_bins</span><span class="o">.</span><span class="n">partitions_</span><span class="p">,</span> <span class="n">rop_bins</span><span class="o">.</span><span class="n">partition_bounds_</span><span class="p">))</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">rop_bins</span><span class="o">.</span><span class="n">partitions_</span><span class="p">,</span> <span class="n">rop_bins</span><span class="o">.</span><span class="n">partition_bounds_</span><span class="p">))</span>
 </pre></div>
 </div>
 </div>
@@ -801,25 +826,19 @@ True
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-[(17.0, (16.5, 17.5)),
- (18.0, (17.5, 18.5)),
- (19.0, (18.5, 19.5)),
- (20.0, (19.5, 20.5)),
- (21.0, (20.5, 21.5)),
- (22.0, (21.5, 22.5)),
- (23.0, (22.5, 23.5)),
- (24.0, (23.5, 24.5)),
- (25.0, (24.5, 25.5)),
- (26.0, (25.5, 26.5)),
- (27.0, (26.5, 27.5)),
- (28.0, (27.5, 28.5)),
- (29.0, (28.5, 29.5)),
- (30.0, (29.5, 30.5)),
- (31.0, (30.5, 31.5)),
- (32.0, (31.5, 32.5)),
- (33.0, (32.5, 33.5)),
- (34.0, (33.5, 34.5)),
- (35.0, (34.5, 35.5))]
+{16.0: (15.0, 17.0),
+ 18.0: (17.0, 19.0),
+ 20.0: (19.0, 21.0),
+ 22.0: (21.0, 23.0),
+ 24.0: (23.0, 25.0),
+ 26.0: (25.0, 27.0),
+ 28.0: (27.0, 29.0),
+ 30.0: (29.0, 31.0),
+ 32.0: (31.0, 33.0),
+ 34.0: (33.0, 35.0),
+ 36.0: (35.0, 37.0),
+ 38.0: (37.0, 39.0),
+ 40.0: (39.0, 41.0)}
 </pre></div></div>
 </div>
 <p>The above example utilized the <code class="docutils literal notranslate"><span class="pre">ContinuousRangePartitioner()</span></code>. FACET has three variations of partitioner available depending on the feature type, <code class="docutils literal notranslate"><span class="pre">ContinuousRangePartitioner()</span></code>, <code class="docutils literal notranslate"><span class="pre">IntegerRangePartitioner()</span></code> and <code class="docutils literal notranslate"><span class="pre">CategoryPartitioner()</span></code>. In summary:</p>
@@ -828,16 +847,15 @@ True
 <li><p>The <code class="docutils literal notranslate"><span class="pre">IntegerRangePartitioner()</span></code> will subdivide the feature range of values into almost equal-sized partitions while ensuring the partition bounds are integers. Each partition is represented by an integer value. If your integer feature is positive or strictly positive or has an upper bound, be sure to use the <code class="docutils literal notranslate"><span class="pre">lower_bound</span></code> and/or <code class="docutils literal notranslate"><span class="pre">upper_bound</span></code> arguments.</p></li>
 <li><p>The <code class="docutils literal notranslate"><span class="pre">ContinuousRangePartitioner()</span></code> will subdivide the feature range of values into equal-sized partitions. Each partition is represented by the partition mid-point.</p></li>
 </ul>
-</div>
-<div class="section" id="Creating-multiple-train-and-test-splits-with-bootstrap-resampling">
-<h2>Creating multiple train and test splits with bootstrap resampling<a class="headerlink" href="#Creating-multiple-train-and-test-splits-with-bootstrap-resampling" title="Permalink to this headline">¶</a></h2>
+</section>
+<section id="Creating-multiple-train-and-test-splits-with-bootstrap-resampling">
+<h2>Creating multiple train and test splits with bootstrap resampling<a class="headerlink" href="#Creating-multiple-train-and-test-splits-with-bootstrap-resampling" title="Permalink to this headline">#</a></h2>
 <p>Bootstrapping is the process of resampling data with replacement to generate a data set of the same size as the original. Bootstrapping lends itself naturally to use as a cross-validation mechanism as we get a training dataset of the same size as the original data representing a theoretical draw from the same population as the original data, and a hold-out test set of unique observations also from a similar population as the original dataset and with a reasonable size (~37%).</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="c1"># instantiate bootstrap cross validation iterator with 1000 splits</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># instantiate bootstrap cross validation iterator with 1000 splits</span>
 <span class="n">boot_cv</span> <span class="o">=</span> <span class="n">BootstrapCV</span><span class="p">(</span><span class="n">n_splits</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="mi">42</span><span class="p">)</span>
 
 <span class="c1"># extract the sample index for the first test-train split</span>
@@ -848,7 +866,7 @@ True
 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Resampled training set n = </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">train_split_1</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Resampled training set number of unique values = </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">train_split_1</span><span class="p">))</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Test set n = </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">test_split_1</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Overlap between index for train and test = </span><span class="si">{</span><span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">train_split_1</span><span class="p">)</span> <span class="o">&amp;</span> <span class="nb">set</span><span class="p">(</span><span class="n">test_split_1</span><span class="p">))</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Overlap between index for train and test = </span><span class="si">{</span><span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">train_split_1</span><span class="p">)</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="nb">set</span><span class="p">(</span><span class="n">test_split_1</span><span class="p">))</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -870,8 +888,7 @@ constant.</p>
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="c1"># extract index lengths for each bootstrap test train split</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># extract index lengths for each bootstrap test train split</span>
 <span class="n">rows</span> <span class="o">=</span> <span class="p">[[</span><span class="nb">len</span><span class="p">(</span><span class="n">train_index</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">test_index</span><span class="p">)]</span> <span class="k">for</span> <span class="n">train_index</span><span class="p">,</span> <span class="n">test_index</span> <span class="ow">in</span> <span class="n">boot_cv</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">X</span><span class="o">=</span><span class="n">drilling_obs</span><span class="o">.</span><span class="n">features</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">drilling_obs</span><span class="o">.</span><span class="n">target</span><span class="p">)]</span>
 <span class="n">num_obs_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">rows</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;n_train&#39;</span><span class="p">,</span> <span class="s1">&#39;n_test&#39;</span><span class="p">])</span>
 <span class="n">num_obs_df</span><span class="o">.</span><span class="n">describe</span><span class="p">()</span>
@@ -955,8 +972,7 @@ constant.</p>
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="c1"># compare ECDF for test and train first split with original</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># compare ECDF for test and train first split with original</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
 <span class="n">ECDFDrawer</span><span class="p">()</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">drilling_obs</span><span class="o">.</span><span class="n">features</span><span class="o">.</span><span class="n">loc</span><span class="p">[:,</span> <span class="n">SIM_FEATURE</span><span class="p">],</span> <span class="n">title</span><span class="o">=</span><span class="s1">&#39;Original data&#39;</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
@@ -970,219 +986,90 @@ constant.</p>
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/tutorial_Model_simulation_deep_dive_31_0.png" src="../_images/tutorial_Model_simulation_deep_dive_31_0.png" />
+<img alt="../_images/tutorial_Model_simulation_deep_dive_32_0.png" src="../_images/tutorial_Model_simulation_deep_dive_32_0.png" />
 </div>
 </div>
 <p>We can also see that bootstrap resampling with sufficient sample size provides feature distributions in the train and test sets that are representative of the original data.</p>
-</div>
-<div class="section" id="Model-fitting-using-resampled-training-sets">
-<h2>Model fitting using resampled training sets<a class="headerlink" href="#Model-fitting-using-resampled-training-sets" title="Permalink to this headline">¶</a></h2>
+</section>
+<section id="Model-fitting-using-resampled-training-sets">
+<h2>Model fitting using resampled training sets<a class="headerlink" href="#Model-fitting-using-resampled-training-sets" title="Permalink to this headline">#</a></h2>
 <p>With our resampled training sets the idea is to use the model we identified previously and fit the model on each one in order to generate a series of models that will give slightly different predictions for the same feature combination.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="c1"># best perfoming light gradient boosting learner identified previously</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># best perfoming light gradient boosting learner identified previously</span>
 <span class="n">lgbm_clf</span> <span class="o">=</span> <span class="n">ClassifierPipelineDF</span><span class="p">(</span>
     <span class="n">classifier</span><span class="o">=</span><span class="n">LGBMClassifierDF</span><span class="p">(</span><span class="n">random_state</span><span class="o">=</span><span class="mi">42</span><span class="p">,</span> <span class="n">min_child_samples</span><span class="o">=</span><span class="mi">15</span><span class="p">),</span>
 <span class="p">)</span>
 
-<span class="c1"># instantiate the crossfit</span>
-<span class="n">boot_crossfit</span> <span class="o">=</span> <span class="n">LearnerCrossfit</span><span class="p">(</span>
-    <span class="n">pipeline</span><span class="o">=</span><span class="n">lgbm_clf</span><span class="p">,</span>
-    <span class="n">cv</span><span class="o">=</span><span class="n">boot_cv</span><span class="p">,</span>
-    <span class="n">n_jobs</span><span class="o">=-</span><span class="mi">3</span><span class="p">,</span>
-    <span class="n">verbose</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
-<span class="p">)</span>
-
-<span class="c1"># fit the model</span>
-<span class="n">boot_crossfit</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">sample</span><span class="o">=</span><span class="n">drilling_obs</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">lgbm_clf</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">drilling_obs</span><span class="o">.</span><span class="n">features</span><span class="p">,</span> <span class="n">drilling_obs</span><span class="o">.</span><span class="n">target</span><span class="p">)</span>
 </pre></div>
 </div>
-</div>
-<div class="nboutput docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area stderr docutils container">
-<div class="highlight"><pre>
-[Parallel(n_jobs=-3)]: Using backend LokyBackend with 10 concurrent workers.
-[Parallel(n_jobs=-3)]: Done  30 tasks      | elapsed:    3.3s
-[Parallel(n_jobs=-3)]: Done 180 tasks      | elapsed:    5.9s
-[Parallel(n_jobs=-3)]: Done 430 tasks      | elapsed:   10.5s
-[Parallel(n_jobs=-3)]: Done 780 tasks      | elapsed:   17.7s
-[Parallel(n_jobs=-3)]: Done 1000 out of 1000 | elapsed:   22.6s finished
-</pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
 </pre></div>
 </div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-&lt;facet.crossfit._crossfit.LearnerCrossfit at 0x7fe6dcdb8730&gt;
-</pre></div></div>
+<div class="output_area rendered_html docutils container">
+<style>#sk-container-id-1 {color: black;background-color: white;}#sk-container-id-1 pre{padding: 0;}#sk-container-id-1 div.sk-toggleable {background-color: white;}#sk-container-id-1 label.sk-toggleable__label {cursor: pointer;display: block;width: 100%;margin-bottom: 0;padding: 0.3em;box-sizing: border-box;text-align: center;}#sk-container-id-1 label.sk-toggleable__label-arrow:before {content: "▸";float: left;margin-right: 0.25em;color: #696969;}#sk-container-id-1 label.sk-toggleable__label-arrow:hover:before {color: black;}#sk-container-id-1 div.sk-estimator:hover label.sk-toggleable__label-arrow:before {color: black;}#sk-container-id-1 div.sk-toggleable__content {max-height: 0;max-width: 0;overflow: hidden;text-align: left;background-color: #f0f8ff;}#sk-container-id-1 div.sk-toggleable__content pre {margin: 0.2em;color: black;border-radius: 0.25em;background-color: #f0f8ff;}#sk-container-id-1 input.sk-toggleable__control:checked~div.sk-toggleable__content {max-height: 200px;max-width: 100%;overflow: auto;}#sk-container-id-1 input.sk-toggleable__control:checked~label.sk-toggleable__label-arrow:before {content: "▾";}#sk-container-id-1 div.sk-estimator input.sk-toggleable__control:checked~label.sk-toggleable__label {background-color: #d4ebff;}#sk-container-id-1 div.sk-label input.sk-toggleable__control:checked~label.sk-toggleable__label {background-color: #d4ebff;}#sk-container-id-1 input.sk-hidden--visually {border: 0;clip: rect(1px 1px 1px 1px);clip: rect(1px, 1px, 1px, 1px);height: 1px;margin: -1px;overflow: hidden;padding: 0;position: absolute;width: 1px;}#sk-container-id-1 div.sk-estimator {font-family: monospace;background-color: #f0f8ff;border: 1px dotted black;border-radius: 0.25em;box-sizing: border-box;margin-bottom: 0.5em;}#sk-container-id-1 div.sk-estimator:hover {background-color: #d4ebff;}#sk-container-id-1 div.sk-parallel-item::after {content: "";width: 100%;border-bottom: 1px solid gray;flex-grow: 1;}#sk-container-id-1 div.sk-label:hover label.sk-toggleable__label {background-color: #d4ebff;}#sk-container-id-1 div.sk-serial::before {content: "";position: absolute;border-left: 1px solid gray;box-sizing: border-box;top: 0;bottom: 0;left: 50%;z-index: 0;}#sk-container-id-1 div.sk-serial {display: flex;flex-direction: column;align-items: center;background-color: white;padding-right: 0.2em;padding-left: 0.2em;position: relative;}#sk-container-id-1 div.sk-item {position: relative;z-index: 1;}#sk-container-id-1 div.sk-parallel {display: flex;align-items: stretch;justify-content: center;background-color: white;position: relative;}#sk-container-id-1 div.sk-item::before, #sk-container-id-1 div.sk-parallel-item::before {content: "";position: absolute;border-left: 1px solid gray;box-sizing: border-box;top: 0;bottom: 0;left: 50%;z-index: -1;}#sk-container-id-1 div.sk-parallel-item {display: flex;flex-direction: column;z-index: 1;position: relative;background-color: white;}#sk-container-id-1 div.sk-parallel-item:first-child::after {align-self: flex-end;width: 50%;}#sk-container-id-1 div.sk-parallel-item:last-child::after {align-self: flex-start;width: 50%;}#sk-container-id-1 div.sk-parallel-item:only-child::after {width: 0;}#sk-container-id-1 div.sk-dashed-wrapped {border: 1px dashed gray;margin: 0 0.4em 0.5em 0.4em;box-sizing: border-box;padding-bottom: 0.4em;background-color: white;}#sk-container-id-1 div.sk-label label {font-family: monospace;font-weight: bold;display: inline-block;line-height: 1.2em;}#sk-container-id-1 div.sk-label-container {text-align: center;}#sk-container-id-1 div.sk-container {/* jupyter's `normalize.less` sets `[hidden] { display: none; }` but bootstrap.min.css set `[hidden] { display: none !important; }` so we also need the `!important` here to be able to override the default hidden behavior on the sphinx rendered scikit-learn.org. See: https://github.com/scikit-learn/scikit-learn/issues/21755 */display: inline-block !important;position: relative;}#sk-container-id-1 div.sk-text-repr-fallback {display: none;}</style><div id="sk-container-id-1" class="sk-top-container"><div class="sk-text-repr-fallback"><pre>ClassifierPipelineDF(
+    classifier=LGBMClassifierDF(min_child_samples=15, random_state=42)
+)</pre><b>In a Jupyter environment, please rerun this cell to show the HTML representation or trust the notebook. <br />On GitHub, the HTML representation is unable to render, please try loading this page with nbviewer.org.</b></div><div class="sk-container" hidden><div class="sk-item sk-dashed-wrapped"><div class="sk-label-container"><div class="sk-label sk-toggleable"><input class="sk-toggleable__control sk-hidden--visually" id="sk-estimator-id-1" type="checkbox" ><label for="sk-estimator-id-1" class="sk-toggleable__label sk-toggleable__label-arrow">ClassifierPipelineDF</label><div class="sk-toggleable__content"><pre>ClassifierPipelineDF(
+    classifier=LGBMClassifierDF(min_child_samples=15, random_state=42)
+)</pre></div></div></div><div class="sk-parallel"><div class="sk-parallel-item"><div class="sk-item"><div class="sk-label-container"><div class="sk-label sk-toggleable"><input class="sk-toggleable__control sk-hidden--visually" id="sk-estimator-id-2" type="checkbox" ><label for="sk-estimator-id-2" class="sk-toggleable__label sk-toggleable__label-arrow">classifier: LGBMClassifierDF</label><div class="sk-toggleable__content"><pre>LGBMClassifierDF(min_child_samples=15, random_state=42)</pre></div></div></div><div class="sk-serial"><div class="sk-item"><div class="sk-estimator sk-toggleable"><input class="sk-toggleable__control sk-hidden--visually" id="sk-estimator-id-3" type="checkbox" ><label for="sk-estimator-id-3" class="sk-toggleable__label sk-toggleable__label-arrow">LGBMClassifierDF</label><div class="sk-toggleable__content"><pre>LGBMClassifierDF(min_child_samples=15, random_state=42)</pre></div></div></div></div></div></div></div></div></div></div></div>
 </div>
 <p>After fitting the crossfit, <code class="docutils literal notranslate"><span class="pre">boot_crossfit.models()</span></code> contains the model fitted on each resampled training set. We can check this as follows:</p>
-<div class="nbinput docutils container">
+<div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">model_split_1</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">boot_crossfit</span><span class="o">.</span><span class="n">models</span><span class="p">())</span>
-<span class="n">model_split_1</span><span class="o">.</span><span class="n">is_fitted</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># model_split_1 = next(boot_crossfit.models())</span>
+<span class="c1"># model_split_1.is_fitted</span>
 </pre></div>
 </div>
-</div>
-<div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
-</pre></div>
-</div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-True
-</pre></div></div>
 </div>
 <p>We can also get a sense of the variation in prediction for a single feature combination across the different splits and hence, trained models.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[16]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">single_test_obs</span> <span class="o">=</span> <span class="n">drilling_obs</span><span class="o">.</span><span class="n">features</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="mi">2</span><span class="p">:</span><span class="mi">2</span><span class="p">]</span>
-<span class="n">rows</span> <span class="o">=</span> <span class="p">[</span><span class="n">model</span><span class="o">.</span><span class="n">predict_proba</span><span class="p">(</span><span class="n">X</span><span class="o">=</span><span class="n">single_test_obs</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span> <span class="k">for</span> <span class="n">model</span> <span class="ow">in</span> <span class="n">boot_crossfit</span><span class="o">.</span><span class="n">models</span><span class="p">()]</span>
-<span class="n">pred_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">rows</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;pred_prob&#39;</span><span class="p">])</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># single_test_obs = drilling_obs.features.loc[2:2]</span>
+<span class="c1"># rows = [model.predict_proba(X=single_test_obs)[1].ravel() for model in boot_crossfit.models()]</span>
+<span class="c1"># pred_df = pd.DataFrame(rows, columns=[&#39;pred_prob&#39;])</span>
 </pre></div>
 </div>
 </div>
-<div class="nbinput docutils container">
+<div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[17]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">pred_df</span><span class="p">[</span><span class="s1">&#39;pred_prob&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">describe</span><span class="p">()</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># pred_df[&#39;pred_prob&#39;].describe()</span>
 </pre></div>
 </div>
-</div>
-<div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[17]:
-</pre></div>
-</div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-count    1000.000000
-mean        0.187645
-std         0.293122
-min         0.000658
-25%         0.006171
-50%         0.011662
-75%         0.279029
-max         0.996891
-Name: pred_prob, dtype: float64
-</pre></div></div>
 </div>
 <p>In this case for the observation we choose, we see that the 1000 models produce an average predicted probability of the positive class of 0.03 with an IQR of 0.003 to 0.015.</p>
-</div>
-<div class="section" id="Simulating-actuals">
-<h2>Simulating actuals<a class="headerlink" href="#Simulating-actuals" title="Permalink to this headline">¶</a></h2>
-<p>For each test split we can predict the outcome and look at the deviation between the average prediction for a test split and the actual average of the target in the original dataset. The spread and offset of these deviations can serve as an indication of how the bias of the model contributes to the uncertainty of simulations.</p>
+</section>
+<section id="Simulating-response">
+<h2>Simulating response<a class="headerlink" href="#Simulating-response" title="Permalink to this headline">#</a></h2>
+<p>With the 1000 bootstrap splits in place and our preferred model trained on each each resampled training split, the last step is to perform prediction for the partitions of the selected feature. For each test set the selected feature is set equal to the value for a partition and the outcome predicted using the trained model for that split. The average value of the outcome is then calculated. This is repeated for each partition and in our example we have 19 partitions, so one bootstrap split will
+yield 19 values (one for each split). This is repeated for every bootstrap split, so with a 1000 splits, we end up with 1000 by 19 average predicted values. This means for each partition we have a distribution of a 1000 values from which we can summarize to describe the likely outcome (and associated variability) for a specific value of our feature.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[18]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="c1"># instantiate simulator</span>
-<span class="n">rop_simulator</span> <span class="o">=</span> <span class="n">UnivariateProbabilitySimulator</span><span class="p">(</span><span class="n">crossfit</span><span class="o">=</span><span class="n">boot_crossfit</span><span class="p">,</span> <span class="n">n_jobs</span><span class="o">=-</span><span class="mi">3</span><span class="p">)</span>
-</pre></div>
-</div>
-</div>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[19]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="c1"># simulate average difference between</span>
-<span class="n">actual_distribution</span> <span class="o">=</span> <span class="n">rop_simulator</span><span class="o">.</span><span class="n">simulate_actuals</span><span class="p">()</span>
-</pre></div>
-</div>
-</div>
-<div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[20]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">ECDFDrawer</span><span class="p">()</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="n">actual_distribution</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># create the simulator</span>
+<span class="n">rop_simulator</span> <span class="o">=</span> <span class="n">UnivariateProbabilitySimulator</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="n">lgbm_clf</span><span class="p">,</span> <span class="n">sample</span><span class="o">=</span><span class="n">drilling_obs</span><span class="p">,</span> <span class="n">n_jobs</span><span class="o">=-</span><span class="mi">3</span><span class="p">)</span>
 
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Median: </span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">actual_distribution</span><span class="p">)</span><span class="si">:</span><span class="s2">.3g</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;lower bound: </span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">percentile</span><span class="p">(</span><span class="n">actual_distribution</span><span class="p">,</span> <span class="mf">2.5</span><span class="p">)</span><span class="si">:</span><span class="s2">.3g</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;upper bound: </span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">percentile</span><span class="p">(</span><span class="n">actual_distribution</span><span class="p">,</span> <span class="mf">97.5</span><span class="p">)</span><span class="si">:</span><span class="s2">.3g</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-</pre></div>
-</div>
-</div>
-<div class="nboutput docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-Median: -0.000683
-lower bound: -0.0558
-upper bound: 0.0525
-</pre></div></div>
-</div>
-<div class="nboutput nblast docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<img alt="../_images/tutorial_Model_simulation_deep_dive_44_1.png" src="../_images/tutorial_Model_simulation_deep_dive_44_1.png" />
-</div>
-</div>
-<p>In our case, the model’s deviation does not exceed 6% of the target.</p>
-<p>Now to convince ourselves that this indeed works, lets grab the fitted model and the test set for the first split in our cross fit and see if we can re-produce the number for the first split.</p>
-<div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[21]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">model_split_1</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">boot_crossfit</span><span class="o">.</span><span class="n">models</span><span class="p">())</span>
-<span class="n">train_split_1</span><span class="p">,</span> <span class="n">test_split_1</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">boot_crossfit</span><span class="o">.</span><span class="n">splits</span><span class="p">())</span>
-
-<span class="n">yhat_split_1</span> <span class="o">=</span> <span class="n">model_split_1</span><span class="o">.</span><span class="n">predict_proba</span><span class="p">(</span><span class="n">X</span><span class="o">=</span><span class="n">drilling_obs</span><span class="o">.</span><span class="n">features</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">test_split_1</span><span class="p">,</span> <span class="p">:])[</span><span class="mi">1</span><span class="p">]</span>
-
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;actual mean predicted uplift: </span><span class="si">{</span><span class="n">actual_distribution</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;reproduced actual mean predicted uplift: </span><span class="si">{</span><span class="n">yhat_split_1</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span> <span class="o">-</span> <span class="n">drilling_obs</span><span class="o">.</span><span class="n">target</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-</pre></div>
-</div>
-</div>
-<div class="nboutput nblast docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-actual mean predicted uplift: -0.023030198104474375
-reproduced actual mean predicted uplift: -0.023030198104474375
-</pre></div></div>
-</div>
-</div>
-<div class="section" id="Simulating-response">
-<h2>Simulating response<a class="headerlink" href="#Simulating-response" title="Permalink to this headline">¶</a></h2>
-<p>With the 1000 bootstrap splits in place and our preferred model trained on each each resampled training split, the last step is to perform prediction for the partitions of the selected feature. For each test set the selected feature is set equal to the value for a partition and the outcome predicted using the trained model for that split. The average value of the outcome is then calculated. This is repeated for each partition and in our example we have 19 partitions, so one bootstrap split will
-yield 19 values (one for each split). This is repeated for every bootstrap split, so with a 1000 splits, we end up with 1000 by 19 average predicted values. This means for each partition we have a distribution of a 1000 values from which we can summarize to describe the likely outcome (and associated variability) for a specific value of our feature.</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[22]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="c1"># first run the simulator</span>
+<span class="c1"># first run the simulator</span>
 <span class="n">rop_simulation</span> <span class="o">=</span> <span class="n">rop_simulator</span><span class="o">.</span><span class="n">simulate_feature</span><span class="p">(</span><span class="n">feature_name</span><span class="o">=</span><span class="n">SIM_FEATURE</span><span class="p">,</span> <span class="n">partitioner</span><span class="o">=</span><span class="n">rop_bins</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[23]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[19]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="c1"># now draw the output</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># now draw the output</span>
 <span class="n">SimulationDrawer</span><span class="p">()</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">rop_simulation</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="n">SIM_FEATURE</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -1191,265 +1078,55 @@ yield 19 values (one for each split). This is repeated for every bootstrap split
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/tutorial_Model_simulation_deep_dive_50_0.png" src="../_images/tutorial_Model_simulation_deep_dive_50_0.png" />
+<img alt="../_images/tutorial_Model_simulation_deep_dive_44_0.png" src="../_images/tutorial_Model_simulation_deep_dive_44_0.png" />
 </div>
 </div>
 <p>For each partition bin (grey bar under the x-axis) thanks to bootstrapping we have a distribution of 1000 values for each, and we can access these values as shown below.</p>
-<div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[24]:
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[20]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">rop_simulation</span><span class="o">.</span><span class="n">outputs</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># rop_simulation.outputs.head()</span>
 </pre></div>
 </div>
-</div>
-<div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[24]:
-</pre></div>
-</div>
-<div class="output_area rendered_html docutils container">
-<div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }
-</style>
-<table border="1" class="dataframe">
-  <thead>
-    <tr style="text-align: right;">
-      <th>partition</th>
-      <th>17.0</th>
-      <th>18.0</th>
-      <th>19.0</th>
-      <th>20.0</th>
-      <th>21.0</th>
-      <th>22.0</th>
-      <th>23.0</th>
-      <th>24.0</th>
-      <th>25.0</th>
-      <th>26.0</th>
-      <th>27.0</th>
-      <th>28.0</th>
-      <th>29.0</th>
-      <th>30.0</th>
-      <th>31.0</th>
-      <th>32.0</th>
-      <th>33.0</th>
-      <th>34.0</th>
-      <th>35.0</th>
-    </tr>
-    <tr>
-      <th>split</th>
-      <th></th>
-      <th></th>
-      <th></th>
-      <th></th>
-      <th></th>
-      <th></th>
-      <th></th>
-      <th></th>
-      <th></th>
-      <th></th>
-      <th></th>
-      <th></th>
-      <th></th>
-      <th></th>
-      <th></th>
-      <th></th>
-      <th></th>
-      <th></th>
-      <th></th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>0.049906</td>
-      <td>0.049906</td>
-      <td>0.166919</td>
-      <td>0.265232</td>
-      <td>0.312876</td>
-      <td>0.297162</td>
-      <td>0.299539</td>
-      <td>0.299052</td>
-      <td>0.335352</td>
-      <td>0.529027</td>
-      <td>0.538611</td>
-      <td>0.532143</td>
-      <td>0.586882</td>
-      <td>0.778060</td>
-      <td>0.750020</td>
-      <td>0.957752</td>
-      <td>0.994613</td>
-      <td>0.994652</td>
-      <td>0.994663</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>0.091842</td>
-      <td>0.091842</td>
-      <td>0.100337</td>
-      <td>0.193954</td>
-      <td>0.203056</td>
-      <td>0.252020</td>
-      <td>0.238959</td>
-      <td>0.263947</td>
-      <td>0.309629</td>
-      <td>0.498949</td>
-      <td>0.588171</td>
-      <td>0.559805</td>
-      <td>0.731027</td>
-      <td>0.679344</td>
-      <td>0.895259</td>
-      <td>0.897717</td>
-      <td>0.982798</td>
-      <td>0.982671</td>
-      <td>0.982671</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>0.009679</td>
-      <td>0.009679</td>
-      <td>0.024988</td>
-      <td>0.025052</td>
-      <td>0.123883</td>
-      <td>0.126408</td>
-      <td>0.209497</td>
-      <td>0.366908</td>
-      <td>0.366153</td>
-      <td>0.583650</td>
-      <td>0.593623</td>
-      <td>0.606231</td>
-      <td>0.619351</td>
-      <td>0.638837</td>
-      <td>0.691888</td>
-      <td>0.817875</td>
-      <td>0.994545</td>
-      <td>0.994545</td>
-      <td>0.994545</td>
-    </tr>
-    <tr>
-      <th>3</th>
-      <td>0.021690</td>
-      <td>0.122891</td>
-      <td>0.106262</td>
-      <td>0.106659</td>
-      <td>0.225007</td>
-      <td>0.267777</td>
-      <td>0.269421</td>
-      <td>0.423507</td>
-      <td>0.459069</td>
-      <td>0.656906</td>
-      <td>0.555915</td>
-      <td>0.561615</td>
-      <td>0.788436</td>
-      <td>0.826636</td>
-      <td>0.793199</td>
-      <td>0.986338</td>
-      <td>0.992405</td>
-      <td>0.992395</td>
-      <td>0.992393</td>
-    </tr>
-    <tr>
-      <th>4</th>
-      <td>0.021572</td>
-      <td>0.124259</td>
-      <td>0.124259</td>
-      <td>0.177597</td>
-      <td>0.263064</td>
-      <td>0.249085</td>
-      <td>0.223781</td>
-      <td>0.226017</td>
-      <td>0.413647</td>
-      <td>0.529550</td>
-      <td>0.569325</td>
-      <td>0.606052</td>
-      <td>0.714682</td>
-      <td>0.764587</td>
-      <td>0.771251</td>
-      <td>0.868054</td>
-      <td>0.987244</td>
-      <td>0.988662</td>
-      <td>0.988662</td>
-    </tr>
-  </tbody>
-</table>
-</div></div>
 </div>
 <p>Taking the bin centered at 23.0 as an example we can plot the distribution of the probability of the outcome as follows and show the median, 2.5th and 97.5th percentiles which are the values shown for this partition in the plot above.</p>
-<div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[25]:
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[21]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">SIM_VALUE</span> <span class="o">=</span> <span class="mf">23.0</span>
-<span class="n">ECDFDrawer</span><span class="p">()</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="n">rop_simulation</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="n">SIM_VALUE</span><span class="p">]</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Output at </span><span class="si">{</span><span class="n">SIM_FEATURE</span><span class="si">}</span><span class="s2">=</span><span class="si">{</span><span class="n">SIM_VALUE</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">))</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># SIM_VALUE = 23.0</span>
+<span class="c1"># ECDFDrawer().draw(rop_simulation.outputs[SIM_VALUE].rename(f&quot;Output at {SIM_FEATURE}={SIM_VALUE}&quot;))</span>
 </pre></div>
-</div>
-</div>
-<div class="nboutput nblast docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<img alt="../_images/tutorial_Model_simulation_deep_dive_54_0.png" src="../_images/tutorial_Model_simulation_deep_dive_54_0.png" />
 </div>
 </div>
 <p>For this partition we could also see that for the first split the average predicted probability of the outcome was 0.30.</p>
-<div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[26]:
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[22]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">rop_simulation</span><span class="o">.</span><span class="n">outputs</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">SIM_VALUE</span><span class="p">]</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># rop_simulation.outputs.loc[0, SIM_VALUE]</span>
 </pre></div>
 </div>
-</div>
-<div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[26]:
-</pre></div>
-</div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-0.29953861017735744
-</pre></div></div>
 </div>
 <p>To confirm our understanding of how the number was generated, we can take the test data and model from the first split generated as part of the bootstrap-crossfit and calculate it.</p>
-<div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[27]:
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[23]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">model_split_1</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">boot_crossfit</span><span class="o">.</span><span class="n">models</span><span class="p">())</span>
-<span class="p">(</span><span class="n">train_split_1</span><span class="p">,</span> <span class="n">test_split_1</span><span class="p">)</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">boot_crossfit</span><span class="o">.</span><span class="n">splits</span><span class="p">())</span>
-<span class="n">test_split_1_modified</span> <span class="o">=</span> <span class="n">drilling_obs</span><span class="o">.</span><span class="n">features</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">test_split_1</span><span class="p">]</span>
-<span class="n">test_split_1_modified</span><span class="p">[</span><span class="n">SIM_FEATURE</span><span class="p">]</span> <span class="o">=</span> <span class="n">SIM_VALUE</span>
-<span class="n">model_split_1</span><span class="o">.</span><span class="n">predict_proba</span><span class="p">(</span><span class="n">X</span><span class="o">=</span><span class="n">test_split_1_modified</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># model_split_1 = next(boot_crossfit.models())</span>
+<span class="c1"># (train_split_1, test_split_1) = next(boot_crossfit.splits())</span>
+<span class="c1"># test_split_1_modified = drilling_obs.features.loc[test_split_1]</span>
+<span class="c1"># test_split_1_modified[SIM_FEATURE] = SIM_VALUE</span>
+<span class="c1"># model_split_1.predict_proba(X=test_split_1_modified)[1].mean()</span>
 </pre></div>
 </div>
-</div>
-<div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[27]:
-</pre></div>
-</div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-0.29953861017735744
-</pre></div></div>
 </div>
 <p>As expected this single value among the 1000 generated for this partition is the average predicted probability of the outcome in the first bootstrap test set using the selected model trained on the first bootstrap resample.</p>
-</div>
-</div>
-<div class="section" id="Summary">
-<h1>Summary<a class="headerlink" href="#Summary" title="Permalink to this headline">¶</a></h1>
+</section>
+</section>
+<section id="Summary">
+<h1>Summary<a class="headerlink" href="#Summary" title="Permalink to this headline">#</a></h1>
 <p><strong>Partitioning</strong></p>
 <ol class="arabic simple">
 <li><p>Select the right partitioner for your type of feature: categorical, integer or continuous.</p></li>
@@ -1472,43 +1149,47 @@ yield 19 values (one for each split). This is repeated for every bootstrap split
 <ol class="arabic simple" start="7">
 <li><p>The bootstrap average predictions for each partition yields a distribution of expected values for the target for that partition.</p></li>
 </ol>
-</div>
-<div class="section" id="What-can-you-do-next?">
-<h1>What can you do next?<a class="headerlink" href="#What-can-you-do-next?" title="Permalink to this headline">¶</a></h1>
+</section>
+<section id="What-can-you-do-next?">
+<h1>What can you do next?<a class="headerlink" href="#What-can-you-do-next?" title="Permalink to this headline">#</a></h1>
 <ol class="arabic simple">
 <li><p>Try out using a different feature for simulation</p></li>
 <li><p>Create a different feature type and try using a different partitioner</p></li>
 <li><p>Create a model for a dataset with a continuous target and try out the <code class="docutils literal notranslate"><span class="pre">UnivariateTargetSimulator</span></code> and the <code class="docutils literal notranslate"><span class="pre">UnivariateUpliftSimulator</span></code>.</p></li>
 </ol>
+</section>
+
+
+              </div>
+              
+              
+              <!-- Previous / next buttons -->
+<div class='prev-next-area'>
 </div>
-
-
-              </div>
-              
-              
-              <div class='prev-next-bottom'>
-                
-    <a class='left-prev' id="prev-link" href="Classification_with_Facet.html" title="previous page">Classification with FACET: Prediabetes Study</a>
-    <a class='right-next' id="next-link" href="Scikit-learn_classifier_summaries_using_FACET.html" title="next page">Standard Scikit-learn Classification Summary with FACET</a>
-
-              </div>
               
           </main>
           
 
       </div>
     </div>
-
-    
-  <script src="../_static/js/index.d3f166471bb80abb5163.js"></script>
-
-
-    <footer class="footer mt-5 mt-md-0">
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
+<footer class="footer mt-5 mt-md-0">
   <div class="container">
-    <p>
-          &copy; Copyright 2022, Boston Consulting Group (BCG).<br/>
-        Created using <a href="http://sphinx-doc.org/">Sphinx</a> 3.5.4.<br/>
-    </p>
+    
+    <div class="footer-item">
+      <p class="copyright">
+    &copy; Copyright 2022, Boston Consulting Group (BCG).<br>
+</p>
+    </div>
+    
+    <div class="footer-item">
+      <p class="sphinx-version">
+Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.5.0.<br>
+</p>
+    </div>
+    
   </div>
 </footer>
   </body>

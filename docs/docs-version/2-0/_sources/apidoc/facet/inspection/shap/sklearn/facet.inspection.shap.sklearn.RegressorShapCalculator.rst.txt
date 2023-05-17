@@ -1,0 +1,49 @@
+facet.inspection.shap.sklearn.RegressorShapCalculator
+=====================================================
+
+.. currentmodule:: facet.inspection.shap.sklearn
+
+.. autoclass:: RegressorShapCalculator
+   :members:
+   :no-show-inheritance:
+   :inherited-members:
+   :special-members: __call__
+
+   
+   
+   .. rubric:: Method summary
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~RegressorShapCalculator.fit
+      ~RegressorShapCalculator.validate_features
+   
+   
+
+   
+   
+   .. rubric:: Attribute summary
+
+   .. autosummary::
+   
+      ~RegressorShapCalculator.IDX_FEATURE
+      ~RegressorShapCalculator.MULTI_OUTPUT_INDEX_NAME
+      ~RegressorShapCalculator.input_names
+      ~RegressorShapCalculator.is_fitted
+      ~RegressorShapCalculator.main_effects
+      ~RegressorShapCalculator.output_names
+      ~RegressorShapCalculator.shap_interaction_values
+      ~RegressorShapCalculator.shap_values
+      ~RegressorShapCalculator.n_jobs
+      ~RegressorShapCalculator.shared_memory
+      ~RegressorShapCalculator.pre_dispatch
+      ~RegressorShapCalculator.verbose
+      ~RegressorShapCalculator.model
+      ~RegressorShapCalculator.explainer_factory
+      ~RegressorShapCalculator.shap_
+      ~RegressorShapCalculator.feature_index_
+   
+   
+
+   .. rubric:: Definitions
