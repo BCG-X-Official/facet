@@ -200,7 +200,7 @@ class ShapCalculator(
     def shap_values(self) -> pd.DataFrame:
         r"""
         The SHAP values per observation and feature, with shape
-        :math:`(n_\mathrm{observations}, n_\mathrm{outputs} * n_\mathrm{features})`
+        :math:`(n_\mathrm{observations}, n_\mathrm{outputs} \cdot n_\mathrm{features})`
         """
 
         assert self.shap_ is not None, ASSERTION__CALCULATOR_IS_FITTED
@@ -214,8 +214,8 @@ class ShapCalculator(
     def shap_interaction_values(self) -> pd.DataFrame:
         r"""
         The SHAP interaction values per observation and feature pair, with shape
-        :math:`(n_\mathrm{observations} * n_\mathrm{features}, n_\mathrm{outputs} *
-        n_\mathrm{features})`
+        :math:`(n_\mathrm{observations} \cdot n_\mathrm{features}, n_\mathrm{outputs}
+        \cdot n_\mathrm{features})`
 
         :raise AttributeError: this SHAP calculator does not support interaction values
         """
@@ -231,7 +231,7 @@ class ShapCalculator(
         r"""
         The main effects per observation and featuren (i.e., the diagonals of the
         interaction matrices), with shape
-        :math:`(n_\mathrm{observations}, n_\mathrm{outputs} * n_\mathrm{features})`.
+        :math:`(n_\mathrm{observations}, n_\mathrm{outputs} \cdot n_\mathrm{features})`.
 
         :raise AttributeError: this SHAP calculator does not support interaction values
         """

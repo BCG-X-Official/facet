@@ -215,7 +215,7 @@ class RangePartitioner(
         as optional arguments.
         If no bounds are provided, the partitioner automatically chooses the lower
         and upper outlier thresholds based on the Tukey test, i.e.,
-        :math:`[- 1.5 * \mathit{iqr}, 1.5 * \mathit{iqr}]`
+        :math:`[- 1.5 \cdot \mathit{iqr}, 1.5 \cdot \mathit{iqr}]`
         where :math:`\mathit{iqr}` is the inter-quartile range.
 
         :param values: a sequence of observed values as the empirical basis for
