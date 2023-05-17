@@ -34,7 +34,7 @@ fully type-checked by |mypy|.
 ``facet.explanation``
 ^^^^^^^^^^^^^^^^^^^^^
 
-- REFACTOR: moved explainer factories from module :mod:`facet.inspection` to module
+- REFACTOR: moved explainer factories from module :mod:`facet.inspection` to new module
   :mod:`facet.explanation`.
 - API: new explainer factories :class:`.ExactExplainerFactory` and
   :class:`.PermutationExplainerFactory`, in addition to the
