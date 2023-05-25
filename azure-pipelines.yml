@@ -342,7 +342,15 @@ stages:
           - script: dir $(Build.SourcesDirectory)
 
           - script: |
-              conda install -y -c anaconda conda-build~=3.21 conda-verify~=3.4 toml~=0.10 flit~=3.6 packaging~=20.9
+              # install micromamba
+              curl -Ls https://micro.mamba.pm/api/micromamba/linux-64/latest | tar -xvj bin/micromamba
+              export MAMBA_ROOT_PREFIX=~/micromamba
+              eval "$(./bin/micromamba shell hook -s posix)"
+              
+              # create and activate a build environment, then install the tools we need
+              micromamba create -n build
+              micromamba activate build
+              micromamba install -y -c conda-forge boa~=0.14 toml~=0.10 flit~=3.6 packaging~=20.9
             displayName: 'Install conda-build, flit, toml'
             condition: eq(variables['BUILD_SYSTEM'], 'conda')
 
