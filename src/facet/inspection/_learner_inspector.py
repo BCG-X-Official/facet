@@ -86,7 +86,7 @@ class LearnerInspector(
 
     def __init__(
         self,
-        model: SupervisedLearnerPipelineDF[T_SupervisedLearnerDF],
+        model: T_SupervisedLearnerDF,
         *,
         explainer_factory: Optional[ExplainerFactory[NativeSupervisedLearner]] = None,
         shap_interaction: bool = True,
@@ -104,7 +104,13 @@ class LearnerInspector(
         if not model.is_fitted:
             raise ValueError("arg pipeline must be fitted")
 
-        final_estimator: T_SupervisedLearnerDF = model.final_estimator
+        final_estimator: SupervisedLearnerDF
+
+        if isinstance(model, SupervisedLearnerPipelineDF):
+            final_estimator = model.final_estimator
+        else:
+            final_estimator = model
+
         if is_classifier(final_estimator):
             try:
                 n_outputs = final_estimator.n_outputs_

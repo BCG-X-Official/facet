@@ -18,6 +18,14 @@ visualizations.
 FACET 2.0 requires :mod:`pytools` |nbsp| 2.0 and :mod:`sklearndf` |nbsp| 2.2, and is now
 fully type-checked by |mypy|.
 
+2.0.1
+~~~~~
+
+- API: class :class:`.LearnerInspector` now supports inspecting individual regressors
+  and classifiers; it is no longer necessary to wrap them into a
+  :class:`.RegressorPipelineDF` or :class:`.ClassifierPipelineDF` instance with empty
+  preprocessing
+
 
 2.0.0
 ~~~~~
