@@ -108,8 +108,13 @@ class LearnerInspector(
 
         if isinstance(model, SupervisedLearnerPipelineDF):
             final_estimator = model.final_estimator
-        else:
+        elif isinstance(model, SupervisedLearnerDF):
             final_estimator = model
+        else:
+            raise TypeError(
+                "arg model must be a SupervisedLearnerPipelineDF or a "
+                f"SupervisedLearnerDF, but is a {type(model).__name__}"
+            )
 
         if is_classifier(final_estimator):
             try:
