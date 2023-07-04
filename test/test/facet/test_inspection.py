@@ -446,7 +446,7 @@ def test_model_inspection_classifier_interaction(
     warnings.filterwarnings("ignore", message="You are accessing a training score")
 
     model_inspector = LearnerInspector(
-        model=iris_classifier_binary,
+        model=iris_classifier_binary.final_estimator,
         explainer_factory=TreeExplainerFactory(
             feature_perturbation="tree_path_dependent", uses_background_dataset=True
         ),
