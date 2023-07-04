@@ -102,7 +102,7 @@ class LearnerInspector(
         """
 
         if not model.is_fitted:
-            raise ValueError("arg pipeline must be fitted")
+            raise ValueError("arg model must be fitted")
 
         final_estimator: T_SupervisedLearnerDF = model.final_estimator
         if is_classifier(final_estimator):
@@ -119,7 +119,7 @@ class LearnerInspector(
                     )
         elif not is_regressor(final_estimator):
             raise TypeError(
-                "learner in arg pipeline must be a classifier or a regressor,"
+                "learner in arg model must be a classifier or a regressor,"
                 f"but is a {type(final_estimator).__name__}"
             )
 
