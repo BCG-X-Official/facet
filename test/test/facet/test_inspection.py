@@ -4,15 +4,19 @@ Model inspector tests.
 import logging
 import platform
 import warnings
-from typing import Any, Dict, List, Optional, Type, TypeVar, cast
+from typing import Any, Dict, List, Optional, Set, Type, TypeVar, Union, cast
 
 import numpy as np
 import pandas as pd
 import pytest
 from numpy.testing import assert_allclose
+from pandas._testing import assert_index_equal
 from pandas.testing import assert_frame_equal, assert_series_equal
+from sklearn.base import BaseEstimator
 from sklearn.datasets import make_classification
+from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import GridSearchCV
+from sklearn.pipeline import Pipeline
 
 from pytools.data import LinkageTree, Matrix
 from pytools.viz.dendrogram import DendrogramDrawer, DendrogramReportStyle
@@ -33,7 +37,7 @@ from facet.explanation import (
     TreeExplainerFactory,
 )
 from facet.explanation.base import ExplainerFactory
-from facet.inspection import FunctionInspector, LearnerInspector
+from facet.inspection import FunctionInspector, LearnerInspector, NativeLearnerInspector
 from facet.selection import LearnerSelector
 
 # noinspection PyMissingOrEmptyDocstring
@@ -80,20 +84,56 @@ def test_regressor_selector(
         (PermutationExplainerFactory, {}),
     ],
 )
+@pytest.mark.parametrize(  # type: ignore
+    argnames="native",
+    argvalues=(False, True),
+)
 def test_model_inspection(
     explainer_factory_cls: Type[ExplainerFactory[LGBMRegressorDF]],
     explainer_factory_args: Dict[str, Any],
     best_lgbm_model: RegressorPipelineDF[LGBMRegressorDF],
     sample: Sample,
     n_jobs: int,
+    native: bool,
 ) -> None:
     # test the ModelInspector with the given explainer factory:
 
-    inspector = LearnerInspector(
-        model=best_lgbm_model,
-        explainer_factory=explainer_factory_cls(**explainer_factory_args),
-        n_jobs=n_jobs,
-    ).fit(sample)
+    explainer_factory: ExplainerFactory[LGBMRegressorDF] = explainer_factory_cls(
+        **explainer_factory_args
+    )
+
+    inspector: Union[
+        LearnerInspector[RegressorPipelineDF[LGBMRegressorDF]],
+        NativeLearnerInspector[Pipeline],
+    ]
+
+    if native:
+        assert (
+            best_lgbm_model.preprocessing is not None
+        ), "preprocessing step must be defined"
+        # noinspection PyTypeChecker
+        inspector = NativeLearnerInspector(
+            model=(
+                # create and fit a native pipeline from the regressor pipeline
+                Pipeline(
+                    steps=[
+                        (
+                            "preprocessing",
+                            best_lgbm_model.preprocessing.native_estimator,
+                        ),
+                        ("regressor", best_lgbm_model.regressor.native_estimator),
+                    ]
+                ).fit(X=sample.features, y=sample.target)
+            ),
+            explainer_factory=explainer_factory,
+            n_jobs=n_jobs,
+        ).fit(sample)
+    else:
+        inspector = LearnerInspector(
+            model=best_lgbm_model,
+            explainer_factory=explainer_factory,
+            n_jobs=n_jobs,
+        ).fit(sample)
 
     shap_values: pd.DataFrame = inspector.shap_values()
 
@@ -106,9 +146,22 @@ def test_model_inspection(
     assert shap_values.columns.names == [Sample.IDX_FEATURE]
 
     # column index
-    assert set(shap_values.columns) == set(
-        inspector.model.final_estimator.feature_names_in_
-    )
+    regressor: BaseEstimator
+    if native:
+        regressor = inspector.model[-1]
+    else:
+        regressor = inspector.model.regressor
+
+    regressor_feature_names: Set[str]
+    if native:
+        regressor_feature_names = set(inspector.model[:-1].get_feature_names_out())
+    else:
+        regressor_feature_names = set(regressor.feature_names_in_)
+
+    assert set(shap_values.columns) == set(regressor_feature_names)
+
+    # check that the row order has been preserved
+    assert_index_equal(shap_values.index, sample.index)
 
     # check that the SHAP values add up to the predictions
     shap_totals = shap_values.sum(axis=1)
@@ -121,6 +174,7 @@ def test_model_inspection(
     assert (
         round((shap_minus_pred - shap_minus_pred.mean()).abs().mean(), 12) == 0.0
     ), "predictions matching total SHAP"
+
     # validate the linkage tree of the resulting inspector
 
     # if the inspector supports interaction values, test the redundancy linkage
@@ -438,23 +492,42 @@ def _validate_shap_values_against_predictions(
 
 
 # noinspection DuplicatedCode
+@pytest.mark.parametrize(  # type: ignore
+    argnames="native",
+    argvalues=(False, True),
+)
 def test_model_inspection_classifier_interaction(
     iris_classifier_binary: ClassifierPipelineDF[RandomForestClassifierDF],
     iris_sample_binary: Sample,
     n_jobs: int,
+    native: bool,
 ) -> None:
     warnings.filterwarnings("ignore", message="You are accessing a training score")
 
-    model_inspector = LearnerInspector(
-        model=iris_classifier_binary.final_estimator,
+    cls_inspector: Type[
+        Union[
+            LearnerInspector[RandomForestClassifierDF],
+            NativeLearnerInspector[RandomForestClassifier],
+        ]
+    ]
+    learner: Union[RandomForestClassifierDF, RandomForestClassifier]
+    if native:
+        cls_inspector = NativeLearnerInspector[RandomForestClassifier]
+        learner = iris_classifier_binary.final_estimator.native_estimator
+    else:
+        cls_inspector = LearnerInspector[RandomForestClassifierDF]
+        learner = iris_classifier_binary.final_estimator
+
+    model_inspector = cls_inspector(
+        model=learner,
         explainer_factory=TreeExplainerFactory(
             feature_perturbation="tree_path_dependent", uses_background_dataset=True
         ),
         n_jobs=n_jobs,
     ).fit(iris_sample_binary)
 
-    model_inspector_no_interaction = LearnerInspector(
-        model=iris_classifier_binary,
+    model_inspector_no_interaction = cls_inspector(
+        model=learner,
         shap_interaction=False,
         explainer_factory=TreeExplainerFactory(
             feature_perturbation="tree_path_dependent", uses_background_dataset=True
