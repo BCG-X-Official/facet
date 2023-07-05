@@ -185,7 +185,6 @@ distribution:
         }
 
     def _validate_parameter(self, name: str, value: ParameterSet) -> None:
-
         if name not in self._params:
             raise AttributeError(
                 f"unknown parameter name for "
@@ -222,7 +221,6 @@ distribution:
 
     def __getattr__(self, key: str) -> Any:
         if not key.startswith("_"):
-
             result: Union[ParameterSpace[Any], ParameterSet, None]
 
             result = self._children.get(key, None)
@@ -241,7 +239,6 @@ distribution:
     def _iter_parameters(
         self, path_prefix: List[str]
     ) -> Iterator[Tuple[List[str], ParameterSet]]:
-
         yield from (
             ([*path_prefix, name], value) for name, value in self._values.items()
         )
