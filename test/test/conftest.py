@@ -41,8 +41,9 @@ log = logging.getLogger(__name__)
 # print the FACET logo
 print(facet.__logo__)
 
-# disable SHAP debugging messages
+# disable 3rd party debugging messages
 logging.getLogger("shap").setLevel(logging.WARNING)
+logging.getLogger("numba").setLevel(logging.WARNING)
 
 # configure pandas text output
 
