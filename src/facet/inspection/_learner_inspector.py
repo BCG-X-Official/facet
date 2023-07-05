@@ -87,84 +87,11 @@ class _BaseLearnerInspector(
     learner: NativeSupervisedLearner
 
     # the SHAP calculator used by this inspector
-    _shap_calculator: Optional[LearnerShapCalculator[Any]] = None
-
-    @property
-    @abstractmethod
-    def native_learner(self) -> NativeSupervisedLearner:
-        """
-        The native learner to inspect.
-        """
-
-    @property
-    def feature_names(self) -> List[str]:
-        """[see superclass]"""
-        # noinspection PyUnresolvedReferences
-        return cast(
-            List[str],
-            # feature_names_in_ is a pandas index (sklearndf) or an ndarray (sklearn);
-            # we convert it to a list
-            self.learner.feature_names_in_.tolist(),
-        )
-
-    @property
-    @abstractmethod
-    def _learner_output_names(self) -> List[str]:
-        """
-        The names of the outputs of the learner.
-        """
-        pass
-
-    @property
-    def shap_calculator(self) -> LearnerShapCalculator[Any]:
-        """[see superclass]"""
-
-        if self._shap_calculator is not None:
-            return self._shap_calculator
-
-        native_learner = self.native_learner
-
-        shap_calculator_params: Dict[str, Any] = dict(
-            model=native_learner,
-            interaction_values=self.shap_interaction,
-            explainer_factory=self.explainer_factory,
-            n_jobs=self.n_jobs,
-            shared_memory=self.shared_memory,
-            pre_dispatch=self.pre_dispatch,
-            verbose=self.verbose,
-        )
-
-        shap_calculator: LearnerShapCalculator[Any]
-        if is_classifier(native_learner):
-            shap_calculator = ClassifierShapCalculator(**shap_calculator_params)
-        else:
-            shap_calculator = RegressorShapCalculator(
-                **shap_calculator_params, output_names=self._learner_output_names
-            )
-
-        self._shap_calculator = shap_calculator
-        return shap_calculator
-
-
-@inheritdoc(match="""[see superclass]""")
-class LearnerInspector(
-    _BaseLearnerInspector[T_SupervisedLearnerDF], Generic[T_SupervisedLearnerDF]
-):
-    """[see superclass]"""
-
-    # defined in superclass, repeated here for Sphinx:
-    model: T_SupervisedLearnerDF
-    shap_interaction: bool
-    n_jobs: Optional[int]
-    shared_memory: Optional[bool]
-    pre_dispatch: Optional[Union[str, int]]
-    verbose: Optional[int]
-    explainer_factory: ExplainerFactory[NativeSupervisedLearner]
-    learner: SupervisedLearnerDF
+    _shap_calculator: Optional[LearnerShapCalculator[Any]]
 
     def __init__(
         self,
-        model: T_SupervisedLearnerDF,
+        model: T_SupervisedLearner,
         *,
         explainer_factory: Optional[ExplainerFactory[NativeSupervisedLearner]] = None,
         shap_interaction: bool = True,
@@ -174,33 +101,20 @@ class LearnerInspector(
         verbose: Optional[int] = None,
     ) -> None:
         """
-        :param model: the learner or learner pipeline to inspect (typically, one of
-            a :class:`~sklearndf.pipeline.ClassifierPipelineDF`,
-            :class:`~sklearndf.pipeline.RegressorPipelineDF`,
-            :class:`~sklearndf.classification.ClassifierDF`, or
-            :class:`~sklearndf.regression.RegressorDF`)
+        :param model: the learner or learner pipeline to inspect
         :param explainer_factory: optional function that creates a shap Explainer
             (default: ``TreeExplainerFactory``)
         """
 
-        if not model.is_fitted:
+        fitted = self._is_model_fitted(model)
+        if not fitted:
             raise ValueError("arg model must be fitted")
 
-        learner: SupervisedLearnerDF
-
-        if isinstance(model, SupervisedLearnerPipelineDF):
-            learner = model.final_estimator
-        elif isinstance(model, SupervisedLearnerDF):
-            learner = model
-        else:
-            raise TypeError(
-                "arg model must be a SupervisedLearnerPipelineDF or a "
-                f"SupervisedLearnerDF, but is a {type(model).__name__}"
-            )
-        self.learner = learner
+        learner = self._get_learner(model)
 
         if is_classifier(learner):
             try:
+                # noinspection PyUnresolvedReferences
                 n_outputs = learner.n_outputs_
             except AttributeError:
                 pass
@@ -209,7 +123,7 @@ class LearnerInspector(
                     raise ValueError(
                         "only single-target classifiers (binary or multi-class) are "
                         "supported, but the given classifier has been fitted on "
-                        f"multiple targets: {', '.join(learner.output_names_)}"
+                        f"multiple targets: {', '.join(model.output_names_)}"
                     )
         elif not is_regressor(learner):
             raise TypeError(
@@ -245,11 +159,128 @@ class LearnerInspector(
         )
 
         self.explainer_factory = explainer_factory
+        self.learner = learner
         self._shap_calculator: Optional[LearnerShapCalculator[Any]] = None
 
     __init__.__doc__ = str(__init__.__doc__) + re.sub(
         r"(?m)^\s*:param model:\s+.*$", "", str(ModelInspector.__init__.__doc__)
     )
+
+    @property
+    @abstractmethod
+    def native_learner(self) -> NativeSupervisedLearner:
+        """
+        The native learner to inspect.
+        """
+
+    @property
+    def feature_names(self) -> List[str]:
+        """[see superclass]"""
+        # noinspection PyUnresolvedReferences
+        return cast(
+            List[str],
+            # feature_names_in_ is a pandas index (sklearndf) or an ndarray (sklearn);
+            # we convert it to a list
+            self.learner.feature_names_in_.tolist(),
+        )
+
+    @property
+    def shap_calculator(self) -> LearnerShapCalculator[Any]:
+        """[see superclass]"""
+
+        if self._shap_calculator is not None:
+            return self._shap_calculator
+
+        native_learner = self.native_learner
+
+        shap_calculator_params: Dict[str, Any] = dict(
+            model=native_learner,
+            interaction_values=self.shap_interaction,
+            explainer_factory=self.explainer_factory,
+            n_jobs=self.n_jobs,
+            shared_memory=self.shared_memory,
+            pre_dispatch=self.pre_dispatch,
+            verbose=self.verbose,
+        )
+
+        shap_calculator: LearnerShapCalculator[Any]
+        if is_classifier(native_learner):
+            shap_calculator = ClassifierShapCalculator(**shap_calculator_params)
+        else:
+            shap_calculator = RegressorShapCalculator(
+                **shap_calculator_params, output_names=self._learner_output_names
+            )
+
+        self._shap_calculator = shap_calculator
+        return shap_calculator
+
+    @property
+    @abstractmethod
+    def _learner_output_names(self) -> List[str]:
+        """
+        The names of the outputs of the learner.
+        """
+        pass
+
+    @staticmethod
+    @abstractmethod
+    def _is_model_fitted(model: T_SupervisedLearner) -> bool:
+        # return True if the model is fitted, False otherwise
+        pass
+
+    @staticmethod
+    @abstractmethod
+    def _get_learner(model: T_SupervisedLearner) -> NativeSupervisedLearner:
+        # get the learner class from the model, which may be a pipeline
+        # that includes additional preprocessing steps
+        pass
+
+
+@inheritdoc(match="""[see superclass]""")
+class LearnerInspector(
+    _BaseLearnerInspector[T_SupervisedLearnerDF], Generic[T_SupervisedLearnerDF]
+):
+    """[see superclass]"""
+
+    # defined in superclass, repeated here for Sphinx:
+    model: T_SupervisedLearnerDF
+    shap_interaction: bool
+    n_jobs: Optional[int]
+    shared_memory: Optional[bool]
+    pre_dispatch: Optional[Union[str, int]]
+    verbose: Optional[int]
+    explainer_factory: ExplainerFactory[NativeSupervisedLearner]
+    learner: SupervisedLearnerDF
+
+    @subsdoc(
+        pattern=r"(?m)^(\s*:param model:\s+.*)$",
+        replacement=r"""\1 (typically, one of
+    a :class:`~sklearndf.pipeline.ClassifierPipelineDF`,
+    :class:`~sklearndf.pipeline.RegressorPipelineDF`,
+    :class:`~sklearndf.classification.ClassifierDF`, or
+    :class:`~sklearndf.regression.RegressorDF`)""",
+        using=_BaseLearnerInspector.__init__,
+    )
+    def __init__(
+        self,
+        model: T_SupervisedLearnerDF,
+        *,
+        explainer_factory: Optional[ExplainerFactory[NativeSupervisedLearner]] = None,
+        shap_interaction: bool = True,
+        n_jobs: Optional[int] = None,
+        shared_memory: Optional[bool] = None,
+        pre_dispatch: Optional[Union[str, int]] = None,
+        verbose: Optional[int] = None,
+    ) -> None:
+        super().__init__(
+            model=model,
+            explainer_factory=explainer_factory,
+            shap_interaction=shap_interaction,
+            n_jobs=n_jobs,
+            shared_memory=shared_memory,
+            pre_dispatch=pre_dispatch,
+            verbose=verbose,
+        )
 
     @property
     def native_learner(self) -> NativeSupervisedLearner:
@@ -302,6 +333,22 @@ class LearnerInspector(
         self._shap_calculator = shap_calculator
         return shap_calculator
 
+    @staticmethod
+    def _is_model_fitted(model: T_SupervisedLearnerDF) -> bool:
+        return model.is_fitted
+
+    @staticmethod
+    def _get_learner(model: T_SupervisedLearnerDF) -> SupervisedLearnerDF:
+        if isinstance(model, SupervisedLearnerPipelineDF):
+            return cast(SupervisedLearnerDF, model.final_estimator)
+        elif isinstance(model, SupervisedLearnerDF):
+            return model
+        else:
+            raise TypeError(
+                "arg model must be a SupervisedLearnerPipelineDF or a "
+                f"SupervisedLearnerDF, but is a {type(model).__name__}"
+            )
+
 
 @inheritdoc(match="""[see superclass]""")
 class NativeLearnerInspector(
@@ -326,9 +373,12 @@ class NativeLearnerInspector(
     explainer_factory: ExplainerFactory[NativeSupervisedLearner]
     learner: NativeSupervisedLearner
 
-    # protected attributes
-    _preprocessing: Optional[Pipeline]
-
+    @subsdoc(
+        pattern=r"(?m)^(\s*:param model:\s+.*)$",
+        replacement=r"""\1 (either a scikit-learn :class:`~sklearn.pipeline.Pipeline`,
+        or a regressor or classifier that implements the scikit-learn API)""",
+        using=_BaseLearnerInspector.__init__,
+    )
     def __init__(
         self,
         model: T_SupervisedLearner,
@@ -340,83 +390,15 @@ class NativeLearnerInspector(
         pre_dispatch: Optional[Union[str, int]] = None,
         verbose: Optional[int] = None,
     ) -> None:
-        """
-        :param model: the scikit-learn learner to inspect; either a classifier,
-            a regressor, or a pipeline ending with a classifier or regressor
-        :param explainer_factory: optional function that creates a shap Explainer
-            (default: ``TreeExplainerFactory``)
-        """
-
-        if not is_fitted(model):
-            raise ValueError("arg model must be fitted")
-
-        preprocessing: Optional[Pipeline]
-        learner: NativeSupervisedLearner
-
-        if isinstance(model, Pipeline):
-            try:
-                preprocessing = model[:-1]
-                learner = model[-1]
-            except IndexError:
-                raise ValueError("arg model is an empty pipeline")
-        else:
-            preprocessing = None
-            learner = model
-
-        if is_classifier(learner):
-            try:
-                # noinspection PyUnresolvedReferences
-                n_outputs = learner.n_outputs_
-            except AttributeError:
-                pass
-            else:
-                if n_outputs > 1:
-                    raise ValueError(
-                        "only single-target classifiers (binary or multi-class) are "
-                        "supported, but the given classifier has been fitted on "
-                        f"multiple targets: {', '.join(model.output_names_)}"
-                    )
-        elif not is_regressor(learner):
-            raise TypeError(
-                "learner in arg model must be a classifier or a regressor,"
-                f"but is a {type(learner).__name__}"
-            )
-
-        if explainer_factory:
-            if not explainer_factory.explains_raw_output:
-                raise ValueError(
-                    "arg explainer_factory is not configured to explain raw output"
-                )
-        else:
-            explainer_factory = self.DEFAULT_EXPLAINER_FACTORY
-            assert explainer_factory.explains_raw_output
-
-        if shap_interaction:
-            if not explainer_factory.supports_shap_interaction_values:
-                log.warning(
-                    "ignoring arg shap_interaction=True: "
-                    f"explainers made by {explainer_factory!r} do not support "
-                    "SHAP interaction values"
-                )
-                shap_interaction = False
-
         super().__init__(
             model=model,
+            explainer_factory=explainer_factory,
             shap_interaction=shap_interaction,
             n_jobs=n_jobs,
             shared_memory=shared_memory,
             pre_dispatch=pre_dispatch,
             verbose=verbose,
         )
-
-        self.explainer_factory = explainer_factory
-        self.learner = learner
-        self._preprocessing = preprocessing
-        self._shap_calculator: Optional[LearnerShapCalculator[Any]] = None
-
-    __init__.__doc__ = str(__init__.__doc__) + re.sub(
-        r"(?m)^\s*:param model:\s+.*$", "", str(ModelInspector.__init__.__doc__)
-    )
 
     @property
     def native_learner(self) -> NativeSupervisedLearner:
@@ -436,15 +418,31 @@ class NativeLearnerInspector(
         self, features: Union[pd.DataFrame, pd.Series]
     ) -> pd.DataFrame:
         """[see superclass]"""
-        preprocessing = self._preprocessing
-        if preprocessing is None:
+        if self.learner is self.model:
+            # we have a single learner: do not preprocess
             return features
         else:
+            # we have a pipeline: preprocessing is the first part of the pipeline
+            preprocessing = self.model[:-1]
             return pd.DataFrame(
                 preprocessing.transform(features),
                 index=features.index,
                 columns=preprocessing.get_feature_names_out(),
             )
+
+    @staticmethod
+    def _is_model_fitted(model: T_SupervisedLearner) -> bool:
+        return is_fitted(model)
+
+    @staticmethod
+    def _get_learner(model: T_SupervisedLearner) -> NativeSupervisedLearner:
+        if isinstance(model, Pipeline):
+            try:
+                return model[-1]
+            except IndexError:
+                raise ValueError("arg model is an empty pipeline")
+        else:
+            return model
 
 
 __tracker.validate()
