@@ -102,7 +102,11 @@ class LearnerInspector(
         verbose: Optional[int] = None,
     ) -> None:
         """
-        :param model: the learner pipeline to inspect
+        :param model: the learner or learner pipeline to inspect (typically, one of
+            a :class:`~sklearndf.pipeline.ClassifierPipelineDF`,
+            :class:`~sklearndf.pipeline.RegressorPipelineDF`,
+            :class:`~sklearndf.classification.ClassifierDF`, or
+            :class:`~sklearndf.regression.RegressorDF`)
         :param explainer_factory: optional function that creates a shap Explainer
             (default: ``TreeExplainerFactory``)
         """
