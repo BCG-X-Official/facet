@@ -161,7 +161,6 @@ def test_binary_classifier_ranking(
         ClassifierPipelineDF[RandomForestClassifierDF], GridSearchCV
     ]
 ) -> None:
-
     expected_learner_scores = [0.938, 0.936, 0.936, 0.929]
 
     ranking = iris_classifier_selector_binary.summary_report()
@@ -185,7 +184,6 @@ def test_model_inspection_classifier_binary(
     iris_sample_binary: Sample,
     n_jobs: int,
 ) -> None:
-
     model_inspector = LearnerInspector(
         model=iris_classifier_binary,
         shap_interaction=False,
@@ -261,7 +259,9 @@ def test_model_inspection_classifier_binary_single_shap_output(n_jobs: int) -> N
 
 # noinspection DuplicatedCode
 def test_model_inspection_classifier_multi_class(
-    iris_inspector_multi_class: LearnerInspector[RandomForestClassifierDF],
+    iris_inspector_multi_class: LearnerInspector[
+        ClassifierPipelineDF[RandomForestClassifierDF]
+    ],
 ) -> None:
     iris_classifier = iris_inspector_multi_class.model
     iris_sample = iris_inspector_multi_class.sample_
@@ -382,7 +382,6 @@ def test_model_inspection_classifier_multi_class(
 def _validate_shap_values_against_predictions(
     shap_values: pd.DataFrame, model: ClassifierDF, sample: Sample
 ) -> None:
-
     # calculate the matching predictions, so we can check if the SHAP values add up
     # correctly
     predicted_probabilities: pd.DataFrame = model.predict_proba(sample.features)
@@ -447,7 +446,7 @@ def test_model_inspection_classifier_interaction(
     warnings.filterwarnings("ignore", message="You are accessing a training score")
 
     model_inspector = LearnerInspector(
-        model=iris_classifier_binary,
+        model=iris_classifier_binary.final_estimator,
         explainer_factory=TreeExplainerFactory(
             feature_perturbation="tree_path_dependent", uses_background_dataset=True
         ),
