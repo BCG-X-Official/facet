@@ -7,6 +7,7 @@ from typing import Any, Dict, Generic, Mapping, Optional, TypeVar
 
 import numpy as np
 import pandas as pd
+from packaging.version import Version
 from shap import Explainer, Explanation
 
 from pytools.api import AllTracker
@@ -26,14 +27,13 @@ __all__ = [
 # shap relies on the np.bool, np.int, and np.float types, which were deprecated in
 # numpy 1.20 and removed in numpy 1.24.
 #
-# We check if the types are defined and, if not, define them as an alias
-# for the corresponding type with a trailing underscore.
+# We define these types as an alias for the corresponding type with a trailing
+# underscore.
 
-
-for __attr in ("bool", "int", "float"):
-    if not hasattr(np, __attr):
+if Version(np.__version__) >= Version("1.20"):
+    for __attr in ("bool", "int", "float"):
         setattr(np, __attr, getattr(np, f"{__attr}_"))
-del __attr
+    del __attr
 
 
 #
