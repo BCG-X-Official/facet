@@ -30,7 +30,6 @@ def test_bootstrap_cv_init() -> None:
 
 
 def test_get_train_test_splits_as_indices() -> None:
-
     n_test_splits = 200
     test_x = np.arange(0, 1000, 1)
 

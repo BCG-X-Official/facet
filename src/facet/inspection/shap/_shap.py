@@ -290,7 +290,6 @@ class ShapCalculator(
         self.output_names_ = None
 
     def _make_explainer(self, features: pd.DataFrame) -> BaseExplainer:
-
         # prepare the background dataset
 
         background_dataset: Optional[pd.DataFrame]
