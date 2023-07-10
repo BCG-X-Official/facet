@@ -40,7 +40,6 @@ def test_learner_selector(
     sample: Sample,
     n_jobs: int,
 ) -> None:
-
     expected_scores = [
         0.669,
         0.649,
