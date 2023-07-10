@@ -12,7 +12,6 @@ import pytest
 from numpy.testing import assert_allclose
 from pandas._testing import assert_index_equal
 from pandas.testing import assert_frame_equal, assert_series_equal
-from sklearn.base import BaseEstimator
 from sklearn.datasets import make_classification
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import GridSearchCV
@@ -107,23 +106,49 @@ def test_model_inspection(
         NativeLearnerInspector[Pipeline],
     ]
 
+    regressor_feature_names: Set[str]  # column index names
+
     if native:
         assert (
             best_lgbm_model.preprocessing is not None
         ), "preprocessing step must be defined"
+
+        regressor = best_lgbm_model.regressor.native_estimator
+
+        if __sklearn_version__ < __sklearn_1_1__:
+            # scikit-learn 1.0.x does not support output feature names in simple
+            # imputers, so we cannot use this for preprocessing
+            log.warning(
+                f"scikit-learn {__sklearn_version__} does not support output "
+                "feature names in simple imputers, so we will test the native learner "
+                "inspector without preprocessing"
+            )
+            assert (
+                sample.features.notna().all().all()
+            ), "observations must not contain missing values"
+            model = regressor.fit(X=sample.features, y=sample.target)
+            regressor_feature_names = set(sample.feature_names)
+
+        else:
+            # scikit-learn 1.1.x supports output feature names in simple imputers,
+            # so we can use this for preprocessing
+            model = Pipeline(
+                # create a native pipeline from the regressor pipeline
+                steps=[
+                    (
+                        "preprocessing",
+                        best_lgbm_model.preprocessing.native_estimator,
+                    ),
+                    ("regressor", regressor),
+                ]
+            ).fit(X=sample.features, y=sample.target)
+            regressor_feature_names = set(model[:-1].get_feature_names_out())
+
         # noinspection PyTypeChecker
         inspector = NativeLearnerInspector(
             model=(
-                # create and fit a native pipeline from the regressor pipeline
-                Pipeline(
-                    steps=[
-                        (
-                            "preprocessing",
-                            best_lgbm_model.preprocessing.native_estimator,
-                        ),
-                        ("regressor", best_lgbm_model.regressor.native_estimator),
-                    ]
-                ).fit(X=sample.features, y=sample.target)
+                # fit the model on the sample
+                model.fit(X=sample.features, y=sample.target)
             ),
             explainer_factory=explainer_factory,
             n_jobs=n_jobs,
@@ -134,6 +159,7 @@ def test_model_inspection(
             explainer_factory=explainer_factory,
             n_jobs=n_jobs,
         ).fit(sample)
+        regressor_feature_names = set(best_lgbm_model.regressor.feature_names_in_)
 
     shap_values: pd.DataFrame = inspector.shap_values()
 
@@ -145,19 +171,7 @@ def test_model_inspection(
     assert shap_values.index.names == [Sample.IDX_OBSERVATION]
     assert shap_values.columns.names == [Sample.IDX_FEATURE]
 
-    # column index
-    regressor: BaseEstimator
-    if native:
-        regressor = inspector.model[-1]
-    else:
-        regressor = inspector.model.regressor
-
-    regressor_feature_names: Set[str]
-    if native:
-        regressor_feature_names = set(inspector.model[:-1].get_feature_names_out())
-    else:
-        regressor_feature_names = set(regressor.feature_names_in_)
-
+    # check that the column names are the same as the feature names
     assert set(shap_values.columns) == set(regressor_feature_names)
 
     # check that the row order has been preserved
