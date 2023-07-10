@@ -126,7 +126,7 @@ def test_model_inspection(
             assert (
                 sample.features.notna().all().all()
             ), "observations must not contain missing values"
-            model = regressor.fit(X=sample.features, y=sample.target)
+            model = regressor
             regressor_feature_names = set(sample.feature_names)
 
         else:
@@ -146,10 +146,7 @@ def test_model_inspection(
 
         # noinspection PyTypeChecker
         inspector = NativeLearnerInspector(
-            model=(
-                # fit the model on the sample
-                model.fit(X=sample.features, y=sample.target)
-            ),
+            model=model,
             explainer_factory=explainer_factory,
             n_jobs=n_jobs,
         ).fit(sample)
