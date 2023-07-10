@@ -303,36 +303,6 @@ class LearnerInspector(
             # we have a pipeline: preprocess features
             return self.model.preprocess(features)
 
-    @property
-    def shap_calculator(self) -> LearnerShapCalculator[Any]:
-        """[see superclass]"""
-
-        if self._shap_calculator is not None:
-            return self._shap_calculator
-
-        learner: SupervisedLearnerDF = self.learner
-
-        shap_calculator_params: Dict[str, Any] = dict(
-            model=self.learner.native_estimator,
-            interaction_values=self.shap_interaction,
-            explainer_factory=self.explainer_factory,
-            n_jobs=self.n_jobs,
-            shared_memory=self.shared_memory,
-            pre_dispatch=self.pre_dispatch,
-            verbose=self.verbose,
-        )
-
-        shap_calculator: LearnerShapCalculator[Any]
-        if is_classifier(learner):
-            shap_calculator = ClassifierShapCalculator(**shap_calculator_params)
-        else:
-            shap_calculator = RegressorShapCalculator(
-                **shap_calculator_params, output_names=learner.output_names_
-            )
-
-        self._shap_calculator = shap_calculator
-        return shap_calculator
-
     @staticmethod
     def _is_model_fitted(model: T_SupervisedLearnerDF) -> bool:
         return model.is_fitted
