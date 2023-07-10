@@ -205,7 +205,7 @@ class ShapCalculator(
 
         assert self.shap_ is not None, ASSERTION__CALCULATOR_IS_FITTED
         if self.interaction_values:
-            return self.shap_.groupby(level=0).sum()
+            return self.shap_.groupby(level=0, sort=False).sum()
         else:
             return self.shap_
 
