@@ -1,0 +1,558 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>facet.inspection.shap.sklearn._sklearn &#8212; facet  documentation</title>
+    
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../../../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+<link href="../../../../../_static/styles/pydata-sphinx-theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+
+    
+  <link rel="stylesheet"
+    href="../../../../../_static/vendor/fontawesome/5.13.0/css/all.min.css">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../../../../../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../../../../../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/css/gamma.css" />
+    
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
+
+    <script data-url_root="../../../../../" id="documentation_options" src="../../../../../_static/documentation_options.js"></script>
+    <script src="../../../../../_static/jquery.js"></script>
+    <script src="../../../../../_static/underscore.js"></script>
+    <script src="../../../../../_static/doctools.js"></script>
+    <script src="../../../../../_static/js/gamma.js"></script>
+    <script src="../../../../../_static/js/versions.js"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <link rel="index" title="Index" href="../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../search.html" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="docsearch:language" content="None">
+    
+
+    <!-- Google Analytics -->
+    
+  </head>
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="60">
+    
+    <div class="container-fluid" id="banner"></div>
+
+    
+    <nav class="navbar navbar-light navbar-expand-lg bg-light fixed-top bd-navbar" id="navbar-main"><div class="container-xl">
+
+  <div id="navbar-start">
+    
+    
+
+<a class="navbar-brand" href="../../../../../index.html">
+  <img src="../../../../../_static/Gamma_Facet_Logo_RGB_LB.svg" class="logo" alt="logo">
+</a>
+
+
+    
+  </div>
+
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar-collapsible" aria-controls="navbar-collapsible" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+
+  
+  <div id="navbar-collapsible" class="col-lg-9 collapse navbar-collapse">
+    <div id="navbar-center" class="mr-auto">
+      
+      <div class="navbar-center-item">
+        <ul id="navbar-main-elements" class="navbar-nav">
+    <li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="../../../../../_generated/getting_started.html">
+  Getting started
+ </a>
+</li>
+
+<li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="../../../../../apidoc/facet.html">
+  API reference
+ </a>
+</li>
+
+<li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="../../../../../tutorials.html">
+  Tutorials
+ </a>
+</li>
+
+<li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="../../../../../contribution_guide.html">
+  Development Guidelines
+ </a>
+</li>
+
+<li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="../../../../../faqs.html">
+  FAQ
+ </a>
+</li>
+
+<li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="../../../../../about_us.html">
+  About us
+ </a>
+</li>
+
+<li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="../../../../../_generated/release_notes.html">
+  Release Notes
+ </a>
+</li>
+
+    
+</ul>
+      </div>
+      
+    </div>
+
+    <div id="navbar-end">
+      
+      <div class="navbar-end-item">
+        <ul id="navbar-icon-links" class="navbar-nav" aria-label="Icon Links">
+      </ul>
+      </div>
+      
+    </div>
+  </div>
+</div>
+    </nav>
+    
+
+    <div class="container-xl">
+      <div class="row">
+          
+            
+            <!-- Only show if we have sidebars configured, else just a small margin  -->
+            <div class="col-12 col-md-3 bd-sidebar">
+              <div class="sidebar-start-items"><form class="bd-search d-flex align-items-center" action="../../../../../search.html" method="get">
+  <i class="icon fas fa-search"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
+</form><nav class="bd-links" id="bd-docs-nav" aria-label="Main navigation">
+  <div class="bd-toc-item active">
+    
+  </div>
+</nav>
+              </div>
+              <div class="sidebar-end-items">
+              </div>
+            </div>
+            
+          
+
+          
+          <div class="d-none d-xl-block col-xl-2 bd-toc">
+            
+          </div>
+          
+
+          
+          
+            
+          
+          <main class="col-12 col-md-9 col-xl-7 py-md-5 pl-md-5 pr-md-4 bd-content" role="main">
+              
+              <div>
+                
+  <h1>Source code for facet.inspection.shap.sklearn._sklearn</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Implementation of package ``facet.inspection.shap.learner``.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">from</span> <span class="nn">abc</span> <span class="kn">import</span> <span class="n">ABCMeta</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Generic</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">TypeVar</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">cast</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">numpy.typing</span> <span class="k">as</span> <span class="nn">npt</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">from</span> <span class="nn">sklearn.base</span> <span class="kn">import</span> <span class="n">ClassifierMixin</span><span class="p">,</span> <span class="n">RegressorMixin</span><span class="p">,</span> <span class="n">is_classifier</span><span class="p">,</span> <span class="n">is_regressor</span>
+
+<span class="kn">from</span> <span class="nn">pytools.api</span> <span class="kn">import</span> <span class="n">AllTracker</span><span class="p">,</span> <span class="n">inheritdoc</span><span class="p">,</span> <span class="n">subsdoc</span>
+
+<span class="kn">from</span> <span class="nn">...._types</span> <span class="kn">import</span> <span class="n">NativeSupervisedLearner</span>
+<span class="kn">from</span> <span class="nn">....explanation.base</span> <span class="kn">import</span> <span class="n">ExplainerFactory</span>
+<span class="kn">from</span> <span class="nn">..</span> <span class="kn">import</span> <span class="n">ShapCalculator</span>
+
+<span class="n">log</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s2">&quot;ClassifierShapCalculator&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;LearnerShapCalculator&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;RegressorShapCalculator&quot;</span><span class="p">,</span>
+<span class="p">]</span>
+
+<span class="c1">#</span>
+<span class="c1"># Type variables</span>
+<span class="c1">#</span>
+
+<span class="n">T_Classifier</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">&quot;T_Classifier&quot;</span><span class="p">,</span> <span class="n">bound</span><span class="o">=</span><span class="n">ClassifierMixin</span><span class="p">)</span>
+<span class="n">T_Learner</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">&quot;T_Learner&quot;</span><span class="p">,</span> <span class="n">bound</span><span class="o">=</span><span class="n">NativeSupervisedLearner</span><span class="p">)</span>
+<span class="n">T_Regressor</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">&quot;T_Regressor&quot;</span><span class="p">,</span> <span class="n">bound</span><span class="o">=</span><span class="n">RegressorMixin</span><span class="p">)</span>
+
+
+<span class="c1">#</span>
+<span class="c1"># Ensure all symbols introduced below are included in __all__</span>
+<span class="c1">#</span>
+
+<span class="n">__tracker</span> <span class="o">=</span> <span class="n">AllTracker</span><span class="p">(</span><span class="nb">globals</span><span class="p">())</span>
+
+
+<span class="c1">#</span>
+<span class="c1"># Class definitions</span>
+<span class="c1">#</span>
+
+
+<div class="viewcode-block" id="LearnerShapCalculator"><a class="viewcode-back" href="../../../../../apidoc/facet/inspection/shap/sklearn/facet.inspection.shap.sklearn.LearnerShapCalculator.html#facet.inspection.shap.sklearn.LearnerShapCalculator">[docs]</a><span class="k">class</span> <span class="nc">LearnerShapCalculator</span><span class="p">(</span>
+    <span class="n">ShapCalculator</span><span class="p">[</span><span class="n">T_Learner</span><span class="p">],</span> <span class="n">Generic</span><span class="p">[</span><span class="n">T_Learner</span><span class="p">],</span> <span class="n">metaclass</span><span class="o">=</span><span class="n">ABCMeta</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Base class for SHAP calculators based on :mod:`sklearndf` supervised learners.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># defined in superclass, repeated here for Sphinx:</span>
+    <span class="n">model</span><span class="p">:</span> <span class="n">T_Learner</span>
+    <span class="n">explainer_factory</span><span class="p">:</span> <span class="n">ExplainerFactory</span><span class="p">[</span><span class="n">T_Learner</span><span class="p">]</span>
+    <span class="n">shap_</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">]</span>
+    <span class="n">feature_index_</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">]</span>
+    <span class="n">n_jobs</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span>
+    <span class="n">shared_memory</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span>
+    <span class="n">pre_dispatch</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]</span>
+    <span class="n">verbose</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">input_names</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">cast</span><span class="p">(</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">feature_names_in_</span><span class="o">.</span><span class="n">tolist</span><span class="p">())</span>
+        <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+            <span class="c1"># the learner does not have a feature_names_in_ attribute,</span>
+            <span class="k">return</span> <span class="kc">None</span></div>
+
+
+<div class="viewcode-block" id="RegressorShapCalculator"><a class="viewcode-back" href="../../../../../apidoc/facet/inspection/shap/sklearn/facet.inspection.shap.sklearn.RegressorShapCalculator.html#facet.inspection.shap.sklearn.RegressorShapCalculator">[docs]</a><span class="nd">@inheritdoc</span><span class="p">(</span><span class="n">match</span><span class="o">=</span><span class="s2">&quot;&quot;&quot;[see superclass]&quot;&quot;&quot;</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">RegressorShapCalculator</span><span class="p">(</span>
+    <span class="n">LearnerShapCalculator</span><span class="p">[</span><span class="n">T_Regressor</span><span class="p">],</span> <span class="n">Generic</span><span class="p">[</span><span class="n">T_Regressor</span><span class="p">],</span> <span class="n">metaclass</span><span class="o">=</span><span class="n">ABCMeta</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculates SHAP (interaction) values for regression models.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># defined in superclass, repeated here for Sphinx:</span>
+    <span class="n">model</span><span class="p">:</span> <span class="n">T_Regressor</span>
+    <span class="n">explainer_factory</span><span class="p">:</span> <span class="n">ExplainerFactory</span><span class="p">[</span><span class="n">T_Regressor</span><span class="p">]</span>
+    <span class="n">shap_</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">]</span>
+    <span class="n">feature_index_</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">]</span>
+    <span class="n">n_jobs</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span>
+    <span class="n">shared_memory</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span>
+    <span class="n">pre_dispatch</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]</span>
+    <span class="n">verbose</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span>
+
+    <span class="nd">@subsdoc</span><span class="p">(</span>
+        <span class="n">pattern</span><span class="o">=</span><span class="sa">r</span><span class="s2">&quot;(?m)(^\s*)(:param model: .*$)&quot;</span><span class="p">,</span>
+        <span class="n">replacement</span><span class="o">=</span><span class="sa">r</span><span class="s2">&quot;\1\2\n&quot;</span>
+        <span class="sa">r</span><span class="s2">&quot;\1:param output_names: the names of the outputs of the regressor&quot;</span><span class="p">,</span>
+        <span class="n">using</span><span class="o">=</span><span class="n">LearnerShapCalculator</span><span class="o">.</span><span class="fm">__init__</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">model</span><span class="p">:</span> <span class="n">T_Regressor</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">output_names</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+        <span class="n">explainer_factory</span><span class="p">:</span> <span class="n">ExplainerFactory</span><span class="p">[</span><span class="n">T_Regressor</span><span class="p">],</span>
+        <span class="n">interaction_values</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
+        <span class="n">n_jobs</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">shared_memory</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">pre_dispatch</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">verbose</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;[see superclass]&quot;&quot;&quot;</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span>
+            <span class="n">explainer_factory</span><span class="o">=</span><span class="n">explainer_factory</span><span class="p">,</span>
+            <span class="n">interaction_values</span><span class="o">=</span><span class="n">interaction_values</span><span class="p">,</span>
+            <span class="n">n_jobs</span><span class="o">=</span><span class="n">n_jobs</span><span class="p">,</span>
+            <span class="n">shared_memory</span><span class="o">=</span><span class="n">shared_memory</span><span class="p">,</span>
+            <span class="n">pre_dispatch</span><span class="o">=</span><span class="n">pre_dispatch</span><span class="p">,</span>
+            <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">is_regressor</span><span class="p">(</span><span class="n">model</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;regressor SHAP calculator requires a regressor, &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;but got a </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">model</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">n_outputs</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">n_outputs_</span>
+        <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+            <span class="c1"># assume a single output if the learner lacks the n_outputs_ attribute</span>
+            <span class="n">n_outputs</span> <span class="o">=</span> <span class="mi">1</span>
+
+        <span class="k">if</span> <span class="n">n_outputs</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">output_names</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Number of output names (</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">output_names</span><span class="p">)</span><span class="si">}</span><span class="s2">) does not match the &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;number of outputs of the regressor (</span><span class="si">{</span><span class="n">n_outputs</span><span class="si">}</span><span class="s2">).&quot;</span>
+            <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_output_names</span> <span class="o">=</span> <span class="n">output_names</span>
+
+    <span class="c1">#: Multi-output SHAP values are determined by target.</span>
+    <span class="n">MULTI_OUTPUT_INDEX_NAME</span> <span class="o">=</span> <span class="s2">&quot;target&quot;</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">output_names</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;[see superclass]&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_output_names</span>
+
+    <span class="k">def</span> <span class="nf">_convert_shap_to_df</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">raw_shap_tensors</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float_</span><span class="p">]],</span>
+        <span class="n">observation_idx</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">,</span>
+        <span class="n">feature_idx</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">]:</span>
+        <span class="c1"># Convert shap tensors to data frames.</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_convert_raw_shap_to_df</span><span class="p">(</span>
+            <span class="n">raw_shap_tensors</span><span class="o">=</span><span class="n">raw_shap_tensors</span><span class="p">,</span>
+            <span class="n">observation_idx</span><span class="o">=</span><span class="n">observation_idx</span><span class="p">,</span>
+            <span class="n">feature_idx</span><span class="o">=</span><span class="n">feature_idx</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ClassifierShapCalculator"><a class="viewcode-back" href="../../../../../apidoc/facet/inspection/shap/sklearn/facet.inspection.shap.sklearn.ClassifierShapCalculator.html#facet.inspection.shap.sklearn.ClassifierShapCalculator">[docs]</a><span class="nd">@inheritdoc</span><span class="p">(</span><span class="n">match</span><span class="o">=</span><span class="s2">&quot;&quot;&quot;[see superclass]&quot;&quot;&quot;</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">ClassifierShapCalculator</span><span class="p">(</span>
+    <span class="n">LearnerShapCalculator</span><span class="p">[</span><span class="n">T_Classifier</span><span class="p">],</span> <span class="n">Generic</span><span class="p">[</span><span class="n">T_Classifier</span><span class="p">],</span> <span class="n">metaclass</span><span class="o">=</span><span class="n">ABCMeta</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculates SHAP (interaction) values for classification models.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1">#: Multi-output SHAP values are determined by class.</span>
+    <span class="n">MULTI_OUTPUT_INDEX_NAME</span> <span class="o">=</span> <span class="s2">&quot;class&quot;</span>
+
+    <span class="c1"># defined in superclass, repeated here for Sphinx:</span>
+    <span class="n">model</span><span class="p">:</span> <span class="n">T_Classifier</span>
+    <span class="n">explainer_factory</span><span class="p">:</span> <span class="n">ExplainerFactory</span><span class="p">[</span><span class="n">T_Classifier</span><span class="p">]</span>
+    <span class="n">shap_</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">]</span>
+    <span class="n">feature_index_</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">]</span>
+    <span class="n">n_jobs</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span>
+    <span class="n">shared_memory</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span>
+    <span class="n">pre_dispatch</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]</span>
+    <span class="n">verbose</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">model</span><span class="p">:</span> <span class="n">T_Classifier</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">explainer_factory</span><span class="p">:</span> <span class="n">ExplainerFactory</span><span class="p">[</span><span class="n">T_Classifier</span><span class="p">],</span>
+        <span class="n">interaction_values</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
+        <span class="n">n_jobs</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">shared_memory</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">pre_dispatch</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">verbose</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;[see superclass]&quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span>
+            <span class="n">explainer_factory</span><span class="o">=</span><span class="n">explainer_factory</span><span class="p">,</span>
+            <span class="n">interaction_values</span><span class="o">=</span><span class="n">interaction_values</span><span class="p">,</span>
+            <span class="n">n_jobs</span><span class="o">=</span><span class="n">n_jobs</span><span class="p">,</span>
+            <span class="n">shared_memory</span><span class="o">=</span><span class="n">shared_memory</span><span class="p">,</span>
+            <span class="n">pre_dispatch</span><span class="o">=</span><span class="n">pre_dispatch</span><span class="p">,</span>
+            <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">is_classifier</span><span class="p">(</span><span class="n">model</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;classifier SHAP calculator requires a classifier, &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;but got a </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">model</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_output_names</span> <span class="o">=</span> <span class="n">classifier_shap_output_names</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">output_names</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;[see superclass]&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_output_names</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">validate_learner</span><span class="p">(</span><span class="n">learner</span><span class="p">:</span> <span class="n">T_Classifier</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;[see superclass]&quot;&quot;&quot;</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">n_outputs_</span> <span class="o">=</span> <span class="n">learner</span><span class="o">.</span><span class="n">n_outputs_</span>
+        <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+            <span class="c1"># no n_outputs_ defined; we assume the classifier is not multi-target</span>
+            <span class="k">pass</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">n_outputs_</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="s2">&quot;classifier SHAP calculator does not support multi-output &quot;</span>
+                    <span class="s2">&quot;classifiers, but got a classifier with n_outputs_=&quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">n_outputs_</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_convert_shap_tensors_to_list</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">shap_tensors</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float_</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float_</span><span class="p">]]],</span>
+        <span class="n">n_outputs</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float_</span><span class="p">]]:</span>
+        <span class="k">if</span> <span class="n">n_outputs</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">shap_tensors</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">shap_tensors</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="c1"># in the binary classification case, we will proceed with SHAP values</span>
+            <span class="c1"># for class 0 only, since values for class 1 will just be the same</span>
+            <span class="c1"># values times (*-1)  (the opposite delta probability)</span>
+
+            <span class="c1"># to ensure the values are returned as expected above,</span>
+            <span class="c1"># and no information of class 1 is discarded, assert the</span>
+            <span class="c1"># following:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="n">shap_tensors</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="o">-</span><span class="n">shap_tensors</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
+                <span class="n">_raw_shap_tensor_totals</span> <span class="o">=</span> <span class="n">shap_tensors</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">shap_tensors</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+                <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                    <span class="s2">&quot;shap values of binary classifiers should add up to 0.0 &quot;</span>
+                    <span class="s2">&quot;for each observation and feature, but total shap values range &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;from </span><span class="si">{</span><span class="n">_raw_shap_tensor_totals</span><span class="o">.</span><span class="n">min</span><span class="p">()</span><span class="si">:</span><span class="s2">g</span><span class="si">}</span><span class="s2"> &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;to </span><span class="si">{</span><span class="n">_raw_shap_tensor_totals</span><span class="o">.</span><span class="n">max</span><span class="p">()</span><span class="si">:</span><span class="s2">g</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="p">)</span>
+
+            <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">_convert_shap_tensors_to_list</span><span class="p">(</span>
+                <span class="n">shap_tensors</span><span class="o">=</span><span class="n">shap_tensors</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">n_outputs</span><span class="o">=</span><span class="mi">1</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">_convert_shap_tensors_to_list</span><span class="p">(</span>
+                <span class="n">shap_tensors</span><span class="o">=</span><span class="n">shap_tensors</span><span class="p">,</span> <span class="n">n_outputs</span><span class="o">=</span><span class="n">n_outputs</span>
+            <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_convert_shap_to_df</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">raw_shap_tensors</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float_</span><span class="p">]],</span>
+        <span class="n">observation_idx</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">,</span>
+        <span class="n">feature_idx</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">]:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">interaction_values</span><span class="p">:</span>
+            <span class="c1"># return a list of data frame [(obs x features) x features],</span>
+            <span class="c1"># one for each of the outputs</span>
+
+            <span class="c1"># each row is indexed by an observation and a feature</span>
+            <span class="n">row_index</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">MultiIndex</span><span class="o">.</span><span class="n">from_product</span><span class="p">(</span>
+                <span class="n">iterables</span><span class="o">=</span><span class="p">(</span><span class="n">observation_idx</span><span class="p">,</span> <span class="n">feature_idx</span><span class="p">),</span>
+                <span class="n">names</span><span class="o">=</span><span class="p">(</span><span class="n">observation_idx</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">feature_idx</span><span class="o">.</span><span class="n">name</span><span class="p">),</span>
+            <span class="p">)</span>
+
+            <span class="k">return</span> <span class="p">[</span>
+                <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
+                    <span class="n">data</span><span class="o">=</span><span class="n">raw_shap_interaction_matrix</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span>
+                        <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">raw_shap_interaction_matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+                    <span class="p">),</span>
+                    <span class="n">index</span><span class="o">=</span><span class="n">row_index</span><span class="p">,</span>
+                    <span class="n">columns</span><span class="o">=</span><span class="n">feature_idx</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="k">for</span> <span class="n">raw_shap_interaction_matrix</span> <span class="ow">in</span> <span class="n">raw_shap_tensors</span>
+            <span class="p">]</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># return a list of data frame [obs x features], one for each of the outputs</span>
+
+            <span class="k">return</span> <span class="p">[</span>
+                <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
+                    <span class="n">data</span><span class="o">=</span><span class="n">raw_shap_matrix</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">observation_idx</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="n">feature_idx</span>
+                <span class="p">)</span>
+                <span class="k">for</span> <span class="n">raw_shap_matrix</span> <span class="ow">in</span> <span class="n">raw_shap_tensors</span>
+            <span class="p">]</span></div>
+
+
+<span class="n">__tracker</span><span class="o">.</span><span class="n">validate</span><span class="p">()</span>
+
+
+<span class="c1">#</span>
+<span class="c1"># auxiliary methods</span>
+<span class="c1">#</span>
+
+
+<span class="k">def</span> <span class="nf">classifier_shap_output_names</span><span class="p">(</span><span class="n">classifier</span><span class="p">:</span> <span class="n">ClassifierMixin</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Get the names of the SHAP outputs that will be generated for the given classifier.</span>
+
+<span class="sd">    For binary classifiers, the only output name is the name of the positive class.</span>
+<span class="sd">    For multi-class classifiers, the output names are the names of all classes.</span>
+
+<span class="sd">    The classifier must be fitted, and must have a ``classes_`` attribute.</span>
+
+<span class="sd">    :param classifier: a classifier</span>
+<span class="sd">    :return: the names of the SHAP outputs</span>
+<span class="sd">    :raises ValueError: if the classifier does not define the ``classes_`` attribute,</span>
+<span class="sd">        is multi-output, or has only a single class</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="c1"># noinspection PyUnresolvedReferences</span>
+        <span class="n">classes</span> <span class="o">=</span> <span class="n">classifier</span><span class="o">.</span><span class="n">classes_</span>
+    <span class="k">except</span> <span class="ne">AttributeError</span> <span class="k">as</span> <span class="n">cause</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;classifier must define classes_ attribute&quot;</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">cause</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">classes</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">&quot;classifier must be single-output, with classes_ as a numpy array&quot;</span>
+        <span class="p">)</span>
+
+    <span class="n">class_names</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">classes</span><span class="p">))</span>
+    <span class="n">n_classes</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">class_names</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">n_classes</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;cannot explain a model with single class </span><span class="si">{</span><span class="n">class_names</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">!r}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="k">elif</span> <span class="n">n_classes</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="c1"># for binary classifiers, we will generate only output for the second</span>
+        <span class="c1"># (positive) class as the probabilities for the second class are trivially</span>
+        <span class="c1"># linked to class 1</span>
+        <span class="k">return</span> <span class="n">class_names</span><span class="p">[:</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">class_names</span>
+</pre></div>
+
+              </div>
+              
+              
+              <!-- Previous / next buttons -->
+<div class='prev-next-area'>
+</div>
+              
+          </main>
+          
+
+      </div>
+    </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../../../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
+<footer class="footer mt-5 mt-md-0">
+  <div class="container">
+    
+    <div class="footer-item">
+      <p class="copyright">
+    &copy; Copyright 2022, Boston Consulting Group (BCG).<br>
+</p>
+    </div>
+    
+    <div class="footer-item">
+      <p class="sphinx-version">
+Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.5.0.<br>
+</p>
+    </div>
+    
+  </div>
+</footer>
+  </body>
+</html>

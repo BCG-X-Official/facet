@@ -1,0 +1,36 @@
+facet.selection.ParameterSpace
+==============================
+
+.. currentmodule:: facet.selection
+
+.. autoclass:: ParameterSpace
+   :members:
+   :no-show-inheritance:
+   :inherited-members:
+   :special-members: __call__
+
+   
+   
+   .. rubric:: Method summary
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~ParameterSpace.get_name
+      ~ParameterSpace.get_parameters
+      ~ParameterSpace.to_expression
+   
+   
+
+   
+   
+   .. rubric:: Attribute summary
+
+   .. autosummary::
+   
+      ~ParameterSpace.estimator
+      ~ParameterSpace.parameters
+   
+   
+
+   .. rubric:: Definitions

@@ -1,0 +1,367 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>facet.simulation._result &#8212; facet  documentation</title>
+    
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+
+    
+  <link rel="stylesheet"
+    href="../../../_static/vendor/fontawesome/5.13.0/css/all.min.css">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../../../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../../../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/css/gamma.css" />
+    
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
+
+    <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+    <script src="../../../_static/jquery.js"></script>
+    <script src="../../../_static/underscore.js"></script>
+    <script src="../../../_static/doctools.js"></script>
+    <script src="../../../_static/js/gamma.js"></script>
+    <script src="../../../_static/js/versions.js"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="docsearch:language" content="None">
+    
+
+    <!-- Google Analytics -->
+    
+  </head>
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="60">
+    
+    <div class="container-fluid" id="banner"></div>
+
+    
+    <nav class="navbar navbar-light navbar-expand-lg bg-light fixed-top bd-navbar" id="navbar-main"><div class="container-xl">
+
+  <div id="navbar-start">
+    
+    
+
+<a class="navbar-brand" href="../../../index.html">
+  <img src="../../../_static/Gamma_Facet_Logo_RGB_LB.svg" class="logo" alt="logo">
+</a>
+
+
+    
+  </div>
+
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar-collapsible" aria-controls="navbar-collapsible" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+
+  
+  <div id="navbar-collapsible" class="col-lg-9 collapse navbar-collapse">
+    <div id="navbar-center" class="mr-auto">
+      
+      <div class="navbar-center-item">
+        <ul id="navbar-main-elements" class="navbar-nav">
+    <li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="../../../_generated/getting_started.html">
+  Getting started
+ </a>
+</li>
+
+<li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="../../../apidoc/facet.html">
+  API reference
+ </a>
+</li>
+
+<li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="../../../tutorials.html">
+  Tutorials
+ </a>
+</li>
+
+<li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="../../../contribution_guide.html">
+  Development Guidelines
+ </a>
+</li>
+
+<li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="../../../faqs.html">
+  FAQ
+ </a>
+</li>
+
+<li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="../../../about_us.html">
+  About us
+ </a>
+</li>
+
+<li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="../../../_generated/release_notes.html">
+  Release Notes
+ </a>
+</li>
+
+    
+</ul>
+      </div>
+      
+    </div>
+
+    <div id="navbar-end">
+      
+      <div class="navbar-end-item">
+        <ul id="navbar-icon-links" class="navbar-nav" aria-label="Icon Links">
+      </ul>
+      </div>
+      
+    </div>
+  </div>
+</div>
+    </nav>
+    
+
+    <div class="container-xl">
+      <div class="row">
+          
+            
+            <!-- Only show if we have sidebars configured, else just a small margin  -->
+            <div class="col-12 col-md-3 bd-sidebar">
+              <div class="sidebar-start-items"><form class="bd-search d-flex align-items-center" action="../../../search.html" method="get">
+  <i class="icon fas fa-search"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
+</form><nav class="bd-links" id="bd-docs-nav" aria-label="Main navigation">
+  <div class="bd-toc-item active">
+    
+  </div>
+</nav>
+              </div>
+              <div class="sidebar-end-items">
+              </div>
+            </div>
+            
+          
+
+          
+          <div class="d-none d-xl-block col-xl-2 bd-toc">
+            
+          </div>
+          
+
+          
+          
+            
+          
+          <main class="col-12 col-md-9 col-xl-7 py-md-5 pl-md-5 pr-md-4 bd-content" role="main">
+              
+              <div>
+                
+  <h1>Source code for facet.simulation._result</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Core implementation of :mod:`facet.simulation`</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Generic</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">,</span> <span class="n">TypeVar</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">from</span> <span class="nn">scipy</span> <span class="kn">import</span> <span class="n">stats</span>
+
+<span class="kn">from</span> <span class="nn">pytools.api</span> <span class="kn">import</span> <span class="n">AllTracker</span>
+
+<span class="kn">from</span> <span class="nn">facet.data.partition</span> <span class="kn">import</span> <span class="n">Partitioner</span>
+
+<span class="n">log</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s2">&quot;UnivariateSimulationResult&quot;</span><span class="p">,</span>
+<span class="p">]</span>
+
+
+<span class="c1">#</span>
+<span class="c1"># Type variables</span>
+<span class="c1">#</span>
+
+<span class="n">T_Values</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">&quot;T_Values&quot;</span><span class="p">,</span> <span class="n">bound</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">generic</span><span class="p">)</span>
+
+
+<span class="c1">#</span>
+<span class="c1"># Ensure all symbols introduced below are included in __all__</span>
+<span class="c1">#</span>
+
+<span class="n">__tracker</span> <span class="o">=</span> <span class="n">AllTracker</span><span class="p">(</span><span class="nb">globals</span><span class="p">())</span>
+
+
+<div class="viewcode-block" id="UnivariateSimulationResult"><a class="viewcode-back" href="../../../apidoc/facet/simulation/facet.simulation.UnivariateSimulationResult.html#facet.simulation.UnivariateSimulationResult">[docs]</a><span class="k">class</span> <span class="nc">UnivariateSimulationResult</span><span class="p">(</span><span class="n">Generic</span><span class="p">[</span><span class="n">T_Values</span><span class="p">]):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Summary result of a univariate simulation.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1">#: The simulation result as a data frame, indexed by the central values of the</span>
+    <span class="c1">#: partitions for which the simulation was run, with the following columns:</span>
+    <span class="c1">#:</span>
+    <span class="c1">#: - :attr:`.COL_MEAN`: the mean predictions for the simulated values</span>
+    <span class="c1">#: - :attr:`.COL_SEM`: the standard errors of the mean predictions</span>
+    <span class="c1">#: - :attr:`.COL_LOWER_BOUND`: the lower bounds of the confidence intervals for the</span>
+    <span class="c1">#:   simulation outcomes, based on mean, standard error of the mean, and</span>
+    <span class="c1">#:   :attr:`confidence_level`</span>
+    <span class="c1">#: - :attr:`.COL_UPPER_BOUND`: the upper bounds of the confidence intervals for the</span>
+    <span class="c1">#:   simulation outcomes, based on mean, standard error of the mean, and</span>
+    <span class="c1">#:   :attr:`confidence_level`</span>
+    <span class="n">data</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
+
+    <span class="c1">#: The partitioner used to generate feature values to be simulated.</span>
+    <span class="n">partitioner</span><span class="p">:</span> <span class="n">Partitioner</span><span class="p">[</span><span class="n">T_Values</span><span class="p">]</span>
+
+    <span class="c1">#: Name of the simulated feature.</span>
+    <span class="n">feature_name</span><span class="p">:</span> <span class="nb">str</span>
+
+    <span class="c1">#: Name of the target for which outputs are simulated.</span>
+    <span class="n">output_name</span><span class="p">:</span> <span class="nb">str</span>
+
+    <span class="c1">#: The unit of the simulated outputs (e.g., uplift or class probability).</span>
+    <span class="n">output_unit</span><span class="p">:</span> <span class="nb">str</span>
+
+    <span class="c1">#: The average observed actual output, acting as the baseline of the simulation.</span>
+    <span class="n">baseline</span><span class="p">:</span> <span class="nb">float</span>
+
+    <span class="c1">#: The width :math:`\alpha` of the confidence interval</span>
+    <span class="c1">#: determined by bootstrapping, with :math:`0 &lt; \alpha &lt; 1`.</span>
+    <span class="n">confidence_level</span><span class="p">:</span> <span class="nb">float</span>
+
+    <span class="c1">#: The name of the column index of attribute :attr:`.output`, denoting partitions</span>
+    <span class="c1">#: represented by their central values or by a category.</span>
+    <span class="n">IDX_PARTITION</span> <span class="o">=</span> <span class="s2">&quot;partition&quot;</span>
+
+    <span class="c1">#: The name of a series of mean simulated values per partition.</span>
+    <span class="n">COL_MEAN</span> <span class="o">=</span> <span class="s2">&quot;mean&quot;</span>
+
+    <span class="c1">#: The name of a series of standard errors of mean simulated values per partition.</span>
+    <span class="n">COL_SEM</span> <span class="o">=</span> <span class="s2">&quot;sem&quot;</span>
+
+    <span class="c1">#: The name of a series of lower CI bounds of simulated values per partition.</span>
+    <span class="n">COL_LOWER_BOUND</span> <span class="o">=</span> <span class="s2">&quot;lower_bound&quot;</span>
+
+    <span class="c1">#: The name of a series of upper CI bounds of simulated values per partition.</span>
+    <span class="n">COL_UPPER_BOUND</span> <span class="o">=</span> <span class="s2">&quot;upper_bound&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">partitioner</span><span class="p">:</span> <span class="n">Partitioner</span><span class="p">[</span><span class="n">T_Values</span><span class="p">],</span>
+        <span class="n">mean</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span>
+        <span class="n">sem</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span>
+        <span class="n">feature_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">output_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">output_unit</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">baseline</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">confidence_level</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        :param partitioner: the partitioner used to generate feature values to be</span>
+<span class="sd">            simulated</span>
+<span class="sd">        :param mean: mean predictions for the values representing each partition</span>
+<span class="sd">        :param sem: standard errors of the mean predictions for the values representing</span>
+<span class="sd">            each partition</span>
+<span class="sd">        :param feature_name: name of the simulated feature</span>
+<span class="sd">        :param output_name: name of the target for which outputs are simulated</span>
+<span class="sd">        :param output_unit: the unit of the simulated outputs</span>
+<span class="sd">            (e.g., uplift or class probability)</span>
+<span class="sd">        :param baseline: the average observed actual output, acting as the baseline</span>
+<span class="sd">            of the simulation</span>
+<span class="sd">        :param confidence_level: the width of the confidence interval determined by</span>
+<span class="sd">            the standard error of the mean, ranging between 0.0 and 1.0 (exclusive)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">partitioner</span><span class="o">.</span><span class="n">is_fitted</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;arg partitioner must be fitted&quot;</span><span class="p">)</span>
+
+        <span class="n">n_partitions</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">partitioner</span><span class="o">.</span><span class="n">partitions_</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">seq</span><span class="p">,</span> <span class="n">seq_name</span> <span class="ow">in</span> <span class="p">[(</span><span class="n">mean</span><span class="p">,</span> <span class="s2">&quot;mean&quot;</span><span class="p">),</span> <span class="p">(</span><span class="n">sem</span><span class="p">,</span> <span class="s2">&quot;sem&quot;</span><span class="p">)]:</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">seq</span><span class="p">)</span> <span class="o">!=</span> <span class="n">n_partitions</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;length of arg </span><span class="si">{</span><span class="n">seq_name</span><span class="si">}</span><span class="s2"> must correspond to &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;the number of partitions (n=</span><span class="si">{</span><span class="n">n_partitions</span><span class="si">}</span><span class="s2">)&quot;</span>
+                <span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="mf">0.0</span> <span class="o">&lt;</span> <span class="n">confidence_level</span> <span class="o">&lt;</span> <span class="mf">1.0</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;arg confidence_level=</span><span class="si">{</span><span class="n">confidence_level</span><span class="si">}</span><span class="s2"> is not &quot;</span>
+                <span class="s2">&quot;in the range between 0.0 and 1.0 (exclusive)&quot;</span>
+            <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">partitioner</span> <span class="o">=</span> <span class="n">partitioner</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">feature_name</span> <span class="o">=</span> <span class="n">feature_name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">output_name</span> <span class="o">=</span> <span class="n">output_name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">output_unit</span> <span class="o">=</span> <span class="n">output_unit</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">baseline</span> <span class="o">=</span> <span class="n">baseline</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">confidence_level</span> <span class="o">=</span> <span class="n">confidence_level</span>
+
+        <span class="c1"># convert mean and sem to numpy arrays</span>
+        <span class="n">mean_arr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">mean</span><span class="p">)</span>
+        <span class="n">sem_arr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">sem</span><span class="p">)</span>
+
+        <span class="c1"># get the width of the confidence interval (this is a negative number)</span>
+        <span class="n">ci_width</span> <span class="o">=</span> <span class="n">stats</span><span class="o">.</span><span class="n">norm</span><span class="o">.</span><span class="n">ppf</span><span class="p">((</span><span class="mf">1.0</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">confidence_level</span><span class="p">)</span> <span class="o">/</span> <span class="mf">2.0</span><span class="p">)</span> <span class="o">*</span> <span class="n">sem_arr</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
+            <span class="n">data</span><span class="o">=</span><span class="p">{</span>
+                <span class="n">UnivariateSimulationResult</span><span class="o">.</span><span class="n">COL_MEAN</span><span class="p">:</span> <span class="n">mean_arr</span><span class="p">,</span>
+                <span class="n">UnivariateSimulationResult</span><span class="o">.</span><span class="n">COL_SEM</span><span class="p">:</span> <span class="n">sem_arr</span><span class="p">,</span>
+                <span class="n">UnivariateSimulationResult</span><span class="o">.</span><span class="n">COL_LOWER_BOUND</span><span class="p">:</span> <span class="n">mean_arr</span> <span class="o">+</span> <span class="n">ci_width</span><span class="p">,</span>
+                <span class="n">UnivariateSimulationResult</span><span class="o">.</span><span class="n">COL_UPPER_BOUND</span><span class="p">:</span> <span class="n">mean_arr</span> <span class="o">-</span> <span class="n">ci_width</span><span class="p">,</span>
+            <span class="p">},</span>
+            <span class="n">index</span><span class="o">=</span><span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">(</span>
+                <span class="n">partitioner</span><span class="o">.</span><span class="n">partitions_</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">UnivariateSimulationResult</span><span class="o">.</span><span class="n">IDX_PARTITION</span>
+            <span class="p">),</span>
+        <span class="p">)</span></div>
+</pre></div>
+
+              </div>
+              
+              
+              <!-- Previous / next buttons -->
+<div class='prev-next-area'>
+</div>
+              
+          </main>
+          
+
+      </div>
+    </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
+<footer class="footer mt-5 mt-md-0">
+  <div class="container">
+    
+    <div class="footer-item">
+      <p class="copyright">
+    &copy; Copyright 2022, Boston Consulting Group (BCG).<br>
+</p>
+    </div>
+    
+    <div class="footer-item">
+      <p class="sphinx-version">
+Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.5.0.<br>
+</p>
+    </div>
+    
+  </div>
+</footer>
+  </body>
+</html>

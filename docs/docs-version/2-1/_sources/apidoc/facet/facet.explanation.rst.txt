@@ -1,0 +1,53 @@
+facet.explanation
+=================
+
+.. automodule:: facet.explanation
+   :no-imported-members:
+
+   
+
+   
+   
+   =======
+   Classes
+   =======
+
+   .. autosummary::
+      :toctree: explanation
+      :template: custom-class-template.rst
+      :nosignatures:
+   
+      ExactExplainerFactory
+      FunctionExplainerFactory
+      KernelExplainerFactory
+      PermutationExplainerFactory
+      TreeExplainerFactory
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+
+
+
+==========
+Submodules
+==========
+.. autosummary::
+   :toctree: explanation
+   :template: custom-module-template.rst
+   :recursive:
+
+   facet.explanation.base
+   facet.explanation.parallel
+

@@ -1,0 +1,39 @@
+facet.explanation.parallel
+==========================
+
+.. automodule:: facet.explanation.parallel
+   :no-imported-members:
+
+   
+
+   
+   
+   =======
+   Classes
+   =======
+
+   .. autosummary::
+      :toctree: parallel
+      :template: custom-class-template.rst
+      :nosignatures:
+   
+      ExplainerJob
+      ExplainerQueue
+      ParallelExplainer
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+
+

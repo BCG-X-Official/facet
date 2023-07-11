@@ -1,0 +1,852 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>facet.explanation.parallel.ParallelExplainer &#8212; facet  documentation</title>
+    
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+<link href="../../../../_static/styles/pydata-sphinx-theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+
+    
+  <link rel="stylesheet"
+    href="../../../../_static/vendor/fontawesome/5.13.0/css/all.min.css">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../../../../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../../../../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+
+    <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/css/gamma.css" />
+    
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
+
+    <script data-url_root="../../../../" id="documentation_options" src="../../../../_static/documentation_options.js"></script>
+    <script src="../../../../_static/jquery.js"></script>
+    <script src="../../../../_static/underscore.js"></script>
+    <script src="../../../../_static/doctools.js"></script>
+    <script src="../../../../_static/js/gamma.js"></script>
+    <script src="../../../../_static/js/versions.js"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+    <link rel="next" title="facet.inspection" href="../../facet.inspection.html" />
+    <link rel="prev" title="facet.explanation.parallel.ExplainerQueue" href="facet.explanation.parallel.ExplainerQueue.html" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="docsearch:language" content="None">
+    
+
+    <!-- Google Analytics -->
+    
+  </head>
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="60">
+    
+    <div class="container-fluid" id="banner"></div>
+
+    
+    <nav class="navbar navbar-light navbar-expand-lg bg-light fixed-top bd-navbar" id="navbar-main"><div class="container-xl">
+
+  <div id="navbar-start">
+    
+    
+
+<a class="navbar-brand" href="../../../../index.html">
+  <img src="../../../../_static/Gamma_Facet_Logo_RGB_LB.svg" class="logo" alt="logo">
+</a>
+
+
+    
+  </div>
+
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar-collapsible" aria-controls="navbar-collapsible" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+
+  
+  <div id="navbar-collapsible" class="col-lg-9 collapse navbar-collapse">
+    <div id="navbar-center" class="mr-auto">
+      
+      <div class="navbar-center-item">
+        <ul id="navbar-main-elements" class="navbar-nav">
+    <li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="../../../../_generated/getting_started.html">
+  Getting started
+ </a>
+</li>
+
+<li class="toctree-l1 current active nav-item">
+ <a class="reference internal nav-link" href="../../../facet.html">
+  API reference
+ </a>
+</li>
+
+<li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="../../../../tutorials.html">
+  Tutorials
+ </a>
+</li>
+
+<li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="../../../../contribution_guide.html">
+  Development Guidelines
+ </a>
+</li>
+
+<li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="../../../../faqs.html">
+  FAQ
+ </a>
+</li>
+
+<li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="../../../../about_us.html">
+  About us
+ </a>
+</li>
+
+<li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="../../../../_generated/release_notes.html">
+  Release Notes
+ </a>
+</li>
+
+    
+</ul>
+      </div>
+      
+    </div>
+
+    <div id="navbar-end">
+      
+      <div class="navbar-end-item">
+        <ul id="navbar-icon-links" class="navbar-nav" aria-label="Icon Links">
+      </ul>
+      </div>
+      
+    </div>
+  </div>
+</div>
+    </nav>
+    
+
+    <div class="container-xl">
+      <div class="row">
+          
+            
+            <!-- Only show if we have sidebars configured, else just a small margin  -->
+            <div class="col-12 col-md-3 bd-sidebar">
+              <div class="sidebar-start-items"><form class="bd-search d-flex align-items-center" action="../../../../search.html" method="get">
+  <i class="icon fas fa-search"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
+</form><nav class="bd-links" id="bd-docs-nav" aria-label="Main navigation">
+  <div class="bd-toc-item active">
+    <ul class="current nav bd-sidenav">
+ <li class="toctree-l1 has-children">
+  <a class="reference internal" href="../../facet.data.html">
+   facet.data
+  </a>
+  <input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/>
+  <label for="toctree-checkbox-1">
+   <i class="fas fa-chevron-down">
+   </i>
+  </label>
+  <ul>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../../data/facet.data.Sample.html">
+     facet.data.Sample
+    </a>
+   </li>
+   <li class="toctree-l2 has-children">
+    <a class="reference internal" href="../../data/facet.data.partition.html">
+     facet.data.partition
+    </a>
+    <input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/>
+    <label for="toctree-checkbox-2">
+     <i class="fas fa-chevron-down">
+     </i>
+    </label>
+    <ul>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../data/partition/facet.data.partition.CategoryPartitioner.html">
+       facet.data.partition.CategoryPartitioner
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../data/partition/facet.data.partition.ContinuousRangePartitioner.html">
+       facet.data.partition.ContinuousRangePartitioner
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../data/partition/facet.data.partition.IntegerRangePartitioner.html">
+       facet.data.partition.IntegerRangePartitioner
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../data/partition/facet.data.partition.Partitioner.html">
+       facet.data.partition.Partitioner
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../data/partition/facet.data.partition.RangePartitioner.html">
+       facet.data.partition.RangePartitioner
+      </a>
+     </li>
+    </ul>
+   </li>
+  </ul>
+ </li>
+ <li class="toctree-l1 current active has-children">
+  <a class="reference internal" href="../../facet.explanation.html">
+   facet.explanation
+  </a>
+  <input checked="" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/>
+  <label for="toctree-checkbox-3">
+   <i class="fas fa-chevron-down">
+   </i>
+  </label>
+  <ul class="current">
+   <li class="toctree-l2">
+    <a class="reference internal" href="../facet.explanation.ExactExplainerFactory.html">
+     facet.explanation.ExactExplainerFactory
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../facet.explanation.FunctionExplainerFactory.html">
+     facet.explanation.FunctionExplainerFactory
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../facet.explanation.KernelExplainerFactory.html">
+     facet.explanation.KernelExplainerFactory
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../facet.explanation.PermutationExplainerFactory.html">
+     facet.explanation.PermutationExplainerFactory
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../facet.explanation.TreeExplainerFactory.html">
+     facet.explanation.TreeExplainerFactory
+    </a>
+   </li>
+   <li class="toctree-l2 has-children">
+    <a class="reference internal" href="../facet.explanation.base.html">
+     facet.explanation.base
+    </a>
+    <input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" type="checkbox"/>
+    <label for="toctree-checkbox-4">
+     <i class="fas fa-chevron-down">
+     </i>
+    </label>
+    <ul>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../base/facet.explanation.base.BaseExplainer.html">
+       facet.explanation.base.BaseExplainer
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../base/facet.explanation.base.ExplainerFactory.html">
+       facet.explanation.base.ExplainerFactory
+      </a>
+     </li>
+    </ul>
+   </li>
+   <li class="toctree-l2 current active has-children">
+    <a class="reference internal" href="../facet.explanation.parallel.html">
+     facet.explanation.parallel
+    </a>
+    <input checked="" class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" type="checkbox"/>
+    <label for="toctree-checkbox-5">
+     <i class="fas fa-chevron-down">
+     </i>
+    </label>
+    <ul class="current">
+     <li class="toctree-l3">
+      <a class="reference internal" href="facet.explanation.parallel.ExplainerJob.html">
+       facet.explanation.parallel.ExplainerJob
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="facet.explanation.parallel.ExplainerQueue.html">
+       facet.explanation.parallel.ExplainerQueue
+      </a>
+     </li>
+     <li class="toctree-l3 current active">
+      <a class="current reference internal" href="#">
+       facet.explanation.parallel.ParallelExplainer
+      </a>
+     </li>
+    </ul>
+   </li>
+  </ul>
+ </li>
+ <li class="toctree-l1 has-children">
+  <a class="reference internal" href="../../facet.inspection.html">
+   facet.inspection
+  </a>
+  <input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" type="checkbox"/>
+  <label for="toctree-checkbox-6">
+   <i class="fas fa-chevron-down">
+   </i>
+  </label>
+  <ul>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../../inspection/facet.inspection.FunctionInspector.html">
+     facet.inspection.FunctionInspector
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../../inspection/facet.inspection.LearnerInspector.html">
+     facet.inspection.LearnerInspector
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../../inspection/facet.inspection.NativeLearnerInspector.html">
+     facet.inspection.NativeLearnerInspector
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../../inspection/facet.inspection.ShapPlotData.html">
+     facet.inspection.ShapPlotData
+    </a>
+   </li>
+   <li class="toctree-l2 has-children">
+    <a class="reference internal" href="../../inspection/facet.inspection.base.html">
+     facet.inspection.base
+    </a>
+    <input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" type="checkbox"/>
+    <label for="toctree-checkbox-7">
+     <i class="fas fa-chevron-down">
+     </i>
+    </label>
+    <ul>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../inspection/base/facet.inspection.base.ModelInspector.html">
+       facet.inspection.base.ModelInspector
+      </a>
+     </li>
+    </ul>
+   </li>
+   <li class="toctree-l2 has-children">
+    <a class="reference internal" href="../../inspection/facet.inspection.shap.html">
+     facet.inspection.shap
+    </a>
+    <input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" type="checkbox"/>
+    <label for="toctree-checkbox-8">
+     <i class="fas fa-chevron-down">
+     </i>
+    </label>
+    <ul>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../inspection/shap/facet.inspection.shap.FunctionShapCalculator.html">
+       facet.inspection.shap.FunctionShapCalculator
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../inspection/shap/facet.inspection.shap.ShapCalculator.html">
+       facet.inspection.shap.ShapCalculator
+      </a>
+     </li>
+     <li class="toctree-l3 has-children">
+      <a class="reference internal" href="../../inspection/shap/facet.inspection.shap.sklearn.html">
+       facet.inspection.shap.sklearn
+      </a>
+      <input class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" type="checkbox"/>
+      <label for="toctree-checkbox-9">
+       <i class="fas fa-chevron-down">
+       </i>
+      </label>
+      <ul>
+       <li class="toctree-l4">
+        <a class="reference internal" href="../../inspection/shap/sklearn/facet.inspection.shap.sklearn.ClassifierShapCalculator.html">
+         facet.inspection.shap.sklearn.ClassifierShapCalculator
+        </a>
+       </li>
+       <li class="toctree-l4">
+        <a class="reference internal" href="../../inspection/shap/sklearn/facet.inspection.shap.sklearn.LearnerShapCalculator.html">
+         facet.inspection.shap.sklearn.LearnerShapCalculator
+        </a>
+       </li>
+       <li class="toctree-l4">
+        <a class="reference internal" href="../../inspection/shap/sklearn/facet.inspection.shap.sklearn.RegressorShapCalculator.html">
+         facet.inspection.shap.sklearn.RegressorShapCalculator
+        </a>
+       </li>
+      </ul>
+     </li>
+    </ul>
+   </li>
+  </ul>
+ </li>
+ <li class="toctree-l1 has-children">
+  <a class="reference internal" href="../../facet.selection.html">
+   facet.selection
+  </a>
+  <input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" type="checkbox"/>
+  <label for="toctree-checkbox-10">
+   <i class="fas fa-chevron-down">
+   </i>
+  </label>
+  <ul>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../../selection/facet.selection.LearnerSelector.html">
+     facet.selection.LearnerSelector
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../../selection/facet.selection.MultiEstimatorParameterSpace.html">
+     facet.selection.MultiEstimatorParameterSpace
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../../selection/facet.selection.ParameterSpace.html">
+     facet.selection.ParameterSpace
+    </a>
+   </li>
+   <li class="toctree-l2 has-children">
+    <a class="reference internal" href="../../selection/facet.selection.base.html">
+     facet.selection.base
+    </a>
+    <input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" type="checkbox"/>
+    <label for="toctree-checkbox-11">
+     <i class="fas fa-chevron-down">
+     </i>
+    </label>
+    <ul>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../selection/base/facet.selection.base.BaseParameterSpace.html">
+       facet.selection.base.BaseParameterSpace
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../selection/base/facet.selection.base.CandidateEstimatorDF.html">
+       facet.selection.base.CandidateEstimatorDF
+      </a>
+     </li>
+    </ul>
+   </li>
+  </ul>
+ </li>
+ <li class="toctree-l1 has-children">
+  <a class="reference internal" href="../../facet.simulation.html">
+   facet.simulation
+  </a>
+  <input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" type="checkbox"/>
+  <label for="toctree-checkbox-12">
+   <i class="fas fa-chevron-down">
+   </i>
+  </label>
+  <ul>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../../simulation/facet.simulation.UnivariateProbabilitySimulator.html">
+     facet.simulation.UnivariateProbabilitySimulator
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../../simulation/facet.simulation.UnivariateSimulationResult.html">
+     facet.simulation.UnivariateSimulationResult
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../../simulation/facet.simulation.UnivariateTargetSimulator.html">
+     facet.simulation.UnivariateTargetSimulator
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../../simulation/facet.simulation.UnivariateUpliftSimulator.html">
+     facet.simulation.UnivariateUpliftSimulator
+    </a>
+   </li>
+   <li class="toctree-l2 has-children">
+    <a class="reference internal" href="../../simulation/facet.simulation.base.html">
+     facet.simulation.base
+    </a>
+    <input class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" type="checkbox"/>
+    <label for="toctree-checkbox-13">
+     <i class="fas fa-chevron-down">
+     </i>
+    </label>
+    <ul>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../simulation/base/facet.simulation.base.BaseUnivariateSimulator.html">
+       facet.simulation.base.BaseUnivariateSimulator
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../simulation/base/facet.simulation.base.UnivariateRegressionSimulator.html">
+       facet.simulation.base.UnivariateRegressionSimulator
+      </a>
+     </li>
+    </ul>
+   </li>
+   <li class="toctree-l2 has-children">
+    <a class="reference internal" href="../../simulation/facet.simulation.viz.html">
+     facet.simulation.viz
+    </a>
+    <input class="toctree-checkbox" id="toctree-checkbox-14" name="toctree-checkbox-14" type="checkbox"/>
+    <label for="toctree-checkbox-14">
+     <i class="fas fa-chevron-down">
+     </i>
+    </label>
+    <ul>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../simulation/viz/facet.simulation.viz.SimulationDrawer.html">
+       facet.simulation.viz.SimulationDrawer
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../simulation/viz/facet.simulation.viz.SimulationMatplotStyle.html">
+       facet.simulation.viz.SimulationMatplotStyle
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../simulation/viz/facet.simulation.viz.SimulationReportStyle.html">
+       facet.simulation.viz.SimulationReportStyle
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../simulation/viz/facet.simulation.viz.SimulationStyle.html">
+       facet.simulation.viz.SimulationStyle
+      </a>
+     </li>
+    </ul>
+   </li>
+  </ul>
+ </li>
+ <li class="toctree-l1 has-children">
+  <a class="reference internal" href="../../facet.validation.html">
+   facet.validation
+  </a>
+  <input class="toctree-checkbox" id="toctree-checkbox-15" name="toctree-checkbox-15" type="checkbox"/>
+  <label for="toctree-checkbox-15">
+   <i class="fas fa-chevron-down">
+   </i>
+  </label>
+  <ul>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../../validation/facet.validation.BaseBootstrapCV.html">
+     facet.validation.BaseBootstrapCV
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../../validation/facet.validation.BootstrapCV.html">
+     facet.validation.BootstrapCV
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../../validation/facet.validation.StationaryBootstrapCV.html">
+     facet.validation.StationaryBootstrapCV
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../../validation/facet.validation.StratifiedBootstrapCV.html">
+     facet.validation.StratifiedBootstrapCV
+    </a>
+   </li>
+  </ul>
+ </li>
+</ul>
+
+  </div>
+</nav>
+              </div>
+              <div class="sidebar-end-items">
+              </div>
+            </div>
+            
+          
+
+          
+          <div class="d-none d-xl-block col-xl-2 bd-toc">
+            
+              
+              <div class="toc-item">
+                
+
+<nav id="bd-toc-nav">
+    
+</nav>
+              </div>
+              
+              <div class="toc-item">
+                
+              </div>
+              
+            
+          </div>
+          
+
+          
+          
+            
+          
+          <main class="col-12 col-md-9 col-xl-7 py-md-5 pl-md-5 pr-md-4 bd-content" role="main">
+              
+              <div>
+                
+  <section id="facet-explanation-parallel-parallelexplainer">
+<h1>facet.explanation.parallel.ParallelExplainer<a class="headerlink" href="#facet-explanation-parallel-parallelexplainer" title="Permalink to this headline">#</a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="facet.explanation.parallel.ParallelExplainer">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">facet.explanation.parallel.</span></span><span class="sig-name descname"><span class="pre">ParallelExplainer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">explainer</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_job_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_jobs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shared_memory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pre_dispatch</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/facet/explanation/parallel/_parallel.html#ParallelExplainer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#facet.explanation.parallel.ParallelExplainer" title="Permalink to this definition">#</a></dt>
+<dd><p>A wrapper class, turning an explainer into a parallelized version, explaining
+chunks of observations in parallel.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Bases</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://bcg-gamma.github.io/pytools/apidoc/pytools/parallelization/pytools.parallelization.ParallelizableMixin.html#pytools.parallelization.ParallelizableMixin" title="(in pytools v2.1.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ParallelizableMixin</span></code></a>, <a class="reference internal" href="../base/facet.explanation.base.BaseExplainer.html#facet.explanation.base.BaseExplainer" title="facet.explanation.base.BaseExplainer"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseExplainer</span></code></a></p>
+</dd>
+<dt class="field-even">Metaclasses</dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3.7/library/abc.html#abc.ABCMeta" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ABCMeta</span></code></a></p>
+</dd>
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>explainer</strong> (<a class="reference internal" href="../base/facet.explanation.base.BaseExplainer.html#facet.explanation.base.BaseExplainer" title="facet.explanation.base.BaseExplainer"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseExplainer</span></code></a>) – the explainer to be parallelized by this wrapper</p></li>
+<li><p><strong>max_job_size</strong> (<a class="reference external" href="https://docs.python.org/3.7/library/functions.html#int" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>) – the maximum number of observations to allocate to any of
+the explanation jobs running in parallel</p></li>
+<li><p><strong>n_jobs</strong> (<a class="reference external" href="https://docs.python.org/3.7/library/typing.html#typing.Optional" title="(in Python v3.7)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3.7/library/functions.html#int" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>]) – number of jobs to use in parallel;
+if <code class="docutils literal notranslate"><span class="pre">None</span></code>, use joblib default (default: <code class="docutils literal notranslate"><span class="pre">None</span></code>)</p></li>
+<li><p><strong>shared_memory</strong> (<a class="reference external" href="https://docs.python.org/3.7/library/typing.html#typing.Optional" title="(in Python v3.7)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3.7/library/functions.html#bool" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a>]) – if <code class="docutils literal notranslate"><span class="pre">True</span></code>, use threads in the parallel runs; if
+<code class="docutils literal notranslate"><span class="pre">False</span></code> or <code class="docutils literal notranslate"><span class="pre">None</span></code>, use multiprocessing (default: <code class="docutils literal notranslate"><span class="pre">None</span></code>)</p></li>
+<li><p><strong>pre_dispatch</strong> (<a class="reference external" href="https://docs.python.org/3.7/library/typing.html#typing.Union" title="(in Python v3.7)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code></a>[<a class="reference external" href="https://docs.python.org/3.7/library/functions.html#int" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>, <a class="reference external" href="https://docs.python.org/3.7/library/stdtypes.html#str" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3.7/library/constants.html#None" title="(in Python v3.7)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>]) – number of batches to pre-dispatch;
+if <code class="docutils literal notranslate"><span class="pre">None</span></code>, use joblib default (default: <code class="docutils literal notranslate"><span class="pre">None</span></code>)</p></li>
+<li><p><strong>verbose</strong> (<a class="reference external" href="https://docs.python.org/3.7/library/typing.html#typing.Optional" title="(in Python v3.7)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3.7/library/functions.html#int" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>]) – verbosity level used in the parallel computation;
+if <code class="docutils literal notranslate"><span class="pre">None</span></code>, use joblib default (default: <code class="docutils literal notranslate"><span class="pre">None</span></code>)</p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Method summary</p>
+<table class="autosummary longtable table autosummary">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#facet.explanation.parallel.ParallelExplainer.explain_row" title="facet.explanation.parallel.ParallelExplainer.explain_row"><code class="xref py py-obj docutils literal notranslate"><span class="pre">explain_row</span></code></a></p></td>
+<td><p>See <code class="xref py py-meth docutils literal notranslate"><span class="pre">shap.explainers.Explainer.explain_row()</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#facet.explanation.parallel.ParallelExplainer.load" title="facet.explanation.parallel.ParallelExplainer.load"><code class="xref py py-obj docutils literal notranslate"><span class="pre">load</span></code></a></p></td>
+<td><p>See <code class="xref py py-meth docutils literal notranslate"><span class="pre">shap.explainers.Explainer.load()</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#facet.explanation.parallel.ParallelExplainer.save" title="facet.explanation.parallel.ParallelExplainer.save"><code class="xref py py-obj docutils literal notranslate"><span class="pre">save</span></code></a></p></td>
+<td><p>See <code class="xref py py-meth docutils literal notranslate"><span class="pre">shap.explainers.Explainer.save()</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#facet.explanation.parallel.ParallelExplainer.shap_interaction_values" title="facet.explanation.parallel.ParallelExplainer.shap_interaction_values"><code class="xref py py-obj docutils literal notranslate"><span class="pre">shap_interaction_values</span></code></a></p></td>
+<td><p>Estimate the SHAP interaction values for a set of samples.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#facet.explanation.parallel.ParallelExplainer.shap_values" title="facet.explanation.parallel.ParallelExplainer.shap_values"><code class="xref py py-obj docutils literal notranslate"><span class="pre">shap_values</span></code></a></p></td>
+<td><p>Estimate the SHAP values for a set of samples.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#facet.explanation.parallel.ParallelExplainer.supports_model_with_masker" title="facet.explanation.parallel.ParallelExplainer.supports_model_with_masker"><code class="xref py py-obj docutils literal notranslate"><span class="pre">supports_model_with_masker</span></code></a></p></td>
+<td><p>See <code class="xref py py-meth docutils literal notranslate"><span class="pre">shap.explainers.Explainer.supports_model_with_masker()</span></code></p></td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Attribute summary</p>
+<table class="autosummary longtable table autosummary">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#facet.explanation.parallel.ParallelExplainer.supports_interaction" title="facet.explanation.parallel.ParallelExplainer.supports_interaction"><code class="xref py py-obj docutils literal notranslate"><span class="pre">supports_interaction</span></code></a></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">True</span></code> if the explainer supports interaction effects, <code class="docutils literal notranslate"><span class="pre">False</span></code> otherwise.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#facet.explanation.parallel.ParallelExplainer.explainer" title="facet.explanation.parallel.ParallelExplainer.explainer"><code class="xref py py-obj docutils literal notranslate"><span class="pre">explainer</span></code></a></p></td>
+<td><p>The explainer being parallelized by this wrapper</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#facet.explanation.parallel.ParallelExplainer.max_job_size" title="facet.explanation.parallel.ParallelExplainer.max_job_size"><code class="xref py py-obj docutils literal notranslate"><span class="pre">max_job_size</span></code></a></p></td>
+<td><p>the maximum number of observations to allocate to any of the explanation jobs running in parallel</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">n_jobs</span></code></p></td>
+<td><p>Number of jobs to use in parallel; if <code class="docutils literal notranslate"><span class="pre">None</span></code>, use joblib default.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">shared_memory</span></code></p></td>
+<td><p>If <code class="docutils literal notranslate"><span class="pre">True</span></code>, use threads in the parallel runs; if <code class="docutils literal notranslate"><span class="pre">False</span></code> or <code class="docutils literal notranslate"><span class="pre">None</span></code>, use multiprocessing.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">pre_dispatch</span></code></p></td>
+<td><p>Number of batches to pre-dispatch; if <code class="docutils literal notranslate"><span class="pre">None</span></code>, use joblib default.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">verbose</span></code></p></td>
+<td><p>Verbosity level used in the parallel computation; if <code class="docutils literal notranslate"><span class="pre">None</span></code>, use joblib default.</p></td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Definitions</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="facet.explanation.parallel.ParallelExplainer.__call__">
+<span class="sig-name descname"><span class="pre">__call__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/facet/explanation/parallel/_parallel.html#ParallelExplainer.__call__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#facet.explanation.parallel.ParallelExplainer.__call__" title="Permalink to this definition">#</a></dt>
+<dd><p>Forward the call to the wrapped explainer.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>args</strong> (<a class="reference external" href="https://docs.python.org/3.7/library/typing.html#typing.Any" title="(in Python v3.7)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code></a>) – positional arguments to be forwarded to the wrapped explainer</p></li>
+<li><p><strong>kwargs</strong> (<a class="reference external" href="https://docs.python.org/3.7/library/typing.html#typing.Any" title="(in Python v3.7)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code></a>) – keyword arguments to be forwarded to the wrapped explainer</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://shap.readthedocs.io/en/stable/generated/shap.Explanation.html#shap.Explanation" title="(in SHAP vlatest)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Explanation</span></code></a></p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>the explanation returned by the wrapped explainer</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="facet.explanation.parallel.ParallelExplainer.explain_row">
+<span class="sig-name descname"><span class="pre">explain_row</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">row_args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_evals</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">main_effects</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">error_bounds</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">silent</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#facet.explanation.parallel.ParallelExplainer.explain_row" title="Permalink to this definition">#</a></dt>
+<dd><p>See <code class="xref py py-meth docutils literal notranslate"><span class="pre">shap.explainers.Explainer.explain_row()</span></code></p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="facet.explanation.parallel.ParallelExplainer.load">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">load</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">in_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_loader=&lt;bound</span> <span class="pre">method</span> <span class="pre">Model.load</span> <span class="pre">of</span> <span class="pre">&lt;class</span> <span class="pre">'shap.models.Model'&gt;&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">masker_loader=&lt;bound</span> <span class="pre">method</span> <span class="pre">Serializable.load</span> <span class="pre">of</span> <span class="pre">&lt;class</span> <span class="pre">'shap.maskers.Masker'&gt;&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">instantiate=True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#facet.explanation.parallel.ParallelExplainer.load" title="Permalink to this definition">#</a></dt>
+<dd><p>See <code class="xref py py-meth docutils literal notranslate"><span class="pre">shap.explainers.Explainer.load()</span></code></p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="facet.explanation.parallel.ParallelExplainer.save">
+<span class="sig-name descname"><span class="pre">save</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">out_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_saver</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'.save'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">masker_saver</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'.save'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#facet.explanation.parallel.ParallelExplainer.save" title="Permalink to this definition">#</a></dt>
+<dd><p>See <code class="xref py py-meth docutils literal notranslate"><span class="pre">shap.explainers.Explainer.save()</span></code></p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="facet.explanation.parallel.ParallelExplainer.shap_interaction_values">
+<span class="sig-name descname"><span class="pre">shap_interaction_values</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/facet/explanation/parallel/_parallel.html#ParallelExplainer.shap_interaction_values"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#facet.explanation.parallel.ParallelExplainer.shap_interaction_values" title="Permalink to this definition">#</a></dt>
+<dd><p>Estimate the SHAP interaction values for a set of samples.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>X</strong> (<a class="reference external" href="https://docs.python.org/3.7/library/typing.html#typing.Union" title="(in Python v3.7)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code></a>[<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.25)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code></a>[<a class="reference external" href="https://docs.python.org/3.7/library/typing.html#typing.Any" title="(in Python v3.7)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code></a>, <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v1.25)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dtype</span></code></a>[<a class="reference external" href="https://docs.python.org/3.7/library/typing.html#typing.Any" title="(in Python v3.7)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code></a>]], <a class="reference external" href="https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v2.0.3)"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Pool</span></code>]) – matrix of samples (# samples x # features) on which to explain the
+model’s output</p></li>
+<li><p><strong>y</strong> (<a class="reference external" href="https://docs.python.org/3.7/library/typing.html#typing.Union" title="(in Python v3.7)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code></a>[<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.25)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code></a>[<a class="reference external" href="https://docs.python.org/3.7/library/typing.html#typing.Any" title="(in Python v3.7)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code></a>, <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v1.25)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dtype</span></code></a>[<a class="reference external" href="https://docs.python.org/3.7/library/typing.html#typing.Any" title="(in Python v3.7)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code></a>]], <a class="reference external" href="https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Series.html#pandas.Series" title="(in pandas v2.0.3)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Series</span></code></a>, <a class="reference external" href="https://docs.python.org/3.7/library/constants.html#None" title="(in Python v3.7)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>]) – array of label values for each sample, used when explaining loss
+functions (optional)</p></li>
+<li><p><strong>kwargs</strong> (<a class="reference external" href="https://docs.python.org/3.7/library/typing.html#typing.Any" title="(in Python v3.7)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code></a>) – additional arguments specific to the explainer implementation</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3.7/library/typing.html#typing.Union" title="(in Python v3.7)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code></a>[<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.25)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code></a>[<a class="reference external" href="https://docs.python.org/3.7/library/typing.html#typing.Any" title="(in Python v3.7)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code></a>, <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v1.25)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dtype</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">float64</span></code>]], <a class="reference external" href="https://docs.python.org/3.7/library/typing.html#typing.List" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a>[<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.25)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code></a>[<a class="reference external" href="https://docs.python.org/3.7/library/typing.html#typing.Any" title="(in Python v3.7)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code></a>, <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v1.25)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dtype</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">float64</span></code>]]]]</p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>SHAP values as an array of shape
+<span class="math notranslate nohighlight">\((n_\mathrm{observations}, n_\mathrm{features}, n_\mathrm{features})\)</span>;
+a list of such arrays in the case of a multi-output model</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="facet.explanation.parallel.ParallelExplainer.shap_values">
+<span class="sig-name descname"><span class="pre">shap_values</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/facet/explanation/parallel/_parallel.html#ParallelExplainer.shap_values"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#facet.explanation.parallel.ParallelExplainer.shap_values" title="Permalink to this definition">#</a></dt>
+<dd><p>Estimate the SHAP values for a set of samples.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>X</strong> (<a class="reference external" href="https://docs.python.org/3.7/library/typing.html#typing.Union" title="(in Python v3.7)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code></a>[<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.25)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code></a>[<a class="reference external" href="https://docs.python.org/3.7/library/typing.html#typing.Any" title="(in Python v3.7)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code></a>, <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v1.25)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dtype</span></code></a>[<a class="reference external" href="https://docs.python.org/3.7/library/typing.html#typing.Any" title="(in Python v3.7)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code></a>]], <a class="reference external" href="https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v2.0.3)"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Pool</span></code>]) – matrix of samples (# samples x # features) on which to explain the
+model’s output</p></li>
+<li><p><strong>y</strong> (<a class="reference external" href="https://docs.python.org/3.7/library/typing.html#typing.Union" title="(in Python v3.7)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code></a>[<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.25)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code></a>[<a class="reference external" href="https://docs.python.org/3.7/library/typing.html#typing.Any" title="(in Python v3.7)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code></a>, <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v1.25)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dtype</span></code></a>[<a class="reference external" href="https://docs.python.org/3.7/library/typing.html#typing.Any" title="(in Python v3.7)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code></a>]], <a class="reference external" href="https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Series.html#pandas.Series" title="(in pandas v2.0.3)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Series</span></code></a>, <a class="reference external" href="https://docs.python.org/3.7/library/constants.html#None" title="(in Python v3.7)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>]) – array of label values for each sample, used when explaining loss
+functions (optional)</p></li>
+<li><p><strong>kwargs</strong> (<a class="reference external" href="https://docs.python.org/3.7/library/typing.html#typing.Any" title="(in Python v3.7)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code></a>) – additional arguments specific to the explainer implementation</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3.7/library/typing.html#typing.Union" title="(in Python v3.7)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code></a>[<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.25)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code></a>[<a class="reference external" href="https://docs.python.org/3.7/library/typing.html#typing.Any" title="(in Python v3.7)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code></a>, <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v1.25)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dtype</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">float64</span></code>]], <a class="reference external" href="https://docs.python.org/3.7/library/typing.html#typing.List" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a>[<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.25)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code></a>[<a class="reference external" href="https://docs.python.org/3.7/library/typing.html#typing.Any" title="(in Python v3.7)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code></a>, <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v1.25)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dtype</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">float64</span></code>]]]]</p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>SHAP values as an array of shape <cite>(n_observations, n_features)</cite>;
+a list of such arrays in the case of a multi-output model</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="facet.explanation.parallel.ParallelExplainer.supports_model_with_masker">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">supports_model_with_masker</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">masker</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#facet.explanation.parallel.ParallelExplainer.supports_model_with_masker" title="Permalink to this definition">#</a></dt>
+<dd><p>See <code class="xref py py-meth docutils literal notranslate"><span class="pre">shap.explainers.Explainer.supports_model_with_masker()</span></code></p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="facet.explanation.parallel.ParallelExplainer.explainer">
+<span class="sig-name descname"><span class="pre">explainer</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="../base/facet.explanation.base.BaseExplainer.html#facet.explanation.base.BaseExplainer" title="facet.explanation.base._base.BaseExplainer"><span class="pre">facet.explanation.base.BaseExplainer</span></a></em><a class="headerlink" href="#facet.explanation.parallel.ParallelExplainer.explainer" title="Permalink to this definition">#</a></dt>
+<dd><p>The explainer being parallelized by this wrapper</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="facet.explanation.parallel.ParallelExplainer.max_job_size">
+<span class="sig-name descname"><span class="pre">max_job_size</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.7/library/functions.html#int" title="(in Python v3.7)"><span class="pre">int</span></a></em><a class="headerlink" href="#facet.explanation.parallel.ParallelExplainer.max_job_size" title="Permalink to this definition">#</a></dt>
+<dd><p>the maximum number of observations to allocate to any of the explanation jobs
+running in parallel</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="facet.explanation.parallel.ParallelExplainer.supports_interaction">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">supports_interaction</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.7/library/functions.html#bool" title="(in Python v3.7)"><span class="pre">bool</span></a></em><a class="headerlink" href="#facet.explanation.parallel.ParallelExplainer.supports_interaction" title="Permalink to this definition">#</a></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">True</span></code> if the explainer supports interaction effects, <code class="docutils literal notranslate"><span class="pre">False</span></code> otherwise.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.7/library/functions.html#bool" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+              </div>
+              
+              
+              <!-- Previous / next buttons -->
+<div class='prev-next-area'>
+    <a class='left-prev' id="prev-link" href="facet.explanation.parallel.ExplainerQueue.html" title="previous page">
+        <i class="fas fa-angle-left"></i>
+        <div class="prev-next-info">
+            <p class="prev-next-subtitle">previous</p>
+            <p class="prev-next-title">facet.explanation.parallel.ExplainerQueue</p>
+        </div>
+    </a>
+    <a class='right-next' id="next-link" href="../../facet.inspection.html" title="next page">
+    <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">facet.inspection</p>
+    </div>
+    <i class="fas fa-angle-right"></i>
+    </a>
+</div>
+              
+          </main>
+          
+
+      </div>
+    </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
+<footer class="footer mt-5 mt-md-0">
+  <div class="container">
+    
+    <div class="footer-item">
+      <p class="copyright">
+    &copy; Copyright 2022, Boston Consulting Group (BCG).<br>
+</p>
+    </div>
+    
+    <div class="footer-item">
+      <p class="sphinx-version">
+Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.5.0.<br>
+</p>
+    </div>
+    
+  </div>
+</footer>
+  </body>
+</html>

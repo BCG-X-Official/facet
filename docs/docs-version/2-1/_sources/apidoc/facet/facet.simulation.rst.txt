@@ -1,0 +1,52 @@
+facet.simulation
+================
+
+.. automodule:: facet.simulation
+   :no-imported-members:
+
+   
+
+   
+   
+   =======
+   Classes
+   =======
+
+   .. autosummary::
+      :toctree: simulation
+      :template: custom-class-template.rst
+      :nosignatures:
+   
+      UnivariateProbabilitySimulator
+      UnivariateSimulationResult
+      UnivariateTargetSimulator
+      UnivariateUpliftSimulator
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+
+
+
+==========
+Submodules
+==========
+.. autosummary::
+   :toctree: simulation
+   :template: custom-module-template.rst
+   :recursive:
+
+   facet.simulation.base
+   facet.simulation.viz
+

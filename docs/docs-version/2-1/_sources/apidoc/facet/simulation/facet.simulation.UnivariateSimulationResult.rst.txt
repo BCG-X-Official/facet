@@ -1,0 +1,37 @@
+facet.simulation.UnivariateSimulationResult
+===========================================
+
+.. currentmodule:: facet.simulation
+
+.. autoclass:: UnivariateSimulationResult
+   :members:
+   :no-show-inheritance:
+   :inherited-members:
+   :special-members: __call__
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Attribute summary
+
+   .. autosummary::
+   
+      ~UnivariateSimulationResult.COL_LOWER_BOUND
+      ~UnivariateSimulationResult.COL_MEAN
+      ~UnivariateSimulationResult.COL_SEM
+      ~UnivariateSimulationResult.COL_UPPER_BOUND
+      ~UnivariateSimulationResult.IDX_PARTITION
+      ~UnivariateSimulationResult.data
+      ~UnivariateSimulationResult.partitioner
+      ~UnivariateSimulationResult.feature_name
+      ~UnivariateSimulationResult.output_name
+      ~UnivariateSimulationResult.output_unit
+      ~UnivariateSimulationResult.baseline
+      ~UnivariateSimulationResult.confidence_level
+   
+   
+
+   .. rubric:: Definitions

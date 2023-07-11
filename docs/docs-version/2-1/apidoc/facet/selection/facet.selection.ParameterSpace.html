@@ -1,0 +1,818 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>facet.selection.ParameterSpace &#8212; facet  documentation</title>
+    
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+
+    
+  <link rel="stylesheet"
+    href="../../../_static/vendor/fontawesome/5.13.0/css/all.min.css">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../../../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../../../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/css/gamma.css" />
+    
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
+
+    <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+    <script src="../../../_static/jquery.js"></script>
+    <script src="../../../_static/underscore.js"></script>
+    <script src="../../../_static/doctools.js"></script>
+    <script src="../../../_static/js/gamma.js"></script>
+    <script src="../../../_static/js/versions.js"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="facet.selection.base" href="facet.selection.base.html" />
+    <link rel="prev" title="facet.selection.MultiEstimatorParameterSpace" href="facet.selection.MultiEstimatorParameterSpace.html" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="docsearch:language" content="None">
+    
+
+    <!-- Google Analytics -->
+    
+  </head>
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="60">
+    
+    <div class="container-fluid" id="banner"></div>
+
+    
+    <nav class="navbar navbar-light navbar-expand-lg bg-light fixed-top bd-navbar" id="navbar-main"><div class="container-xl">
+
+  <div id="navbar-start">
+    
+    
+
+<a class="navbar-brand" href="../../../index.html">
+  <img src="../../../_static/Gamma_Facet_Logo_RGB_LB.svg" class="logo" alt="logo">
+</a>
+
+
+    
+  </div>
+
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar-collapsible" aria-controls="navbar-collapsible" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+
+  
+  <div id="navbar-collapsible" class="col-lg-9 collapse navbar-collapse">
+    <div id="navbar-center" class="mr-auto">
+      
+      <div class="navbar-center-item">
+        <ul id="navbar-main-elements" class="navbar-nav">
+    <li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="../../../_generated/getting_started.html">
+  Getting started
+ </a>
+</li>
+
+<li class="toctree-l1 current active nav-item">
+ <a class="reference internal nav-link" href="../../facet.html">
+  API reference
+ </a>
+</li>
+
+<li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="../../../tutorials.html">
+  Tutorials
+ </a>
+</li>
+
+<li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="../../../contribution_guide.html">
+  Development Guidelines
+ </a>
+</li>
+
+<li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="../../../faqs.html">
+  FAQ
+ </a>
+</li>
+
+<li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="../../../about_us.html">
+  About us
+ </a>
+</li>
+
+<li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="../../../_generated/release_notes.html">
+  Release Notes
+ </a>
+</li>
+
+    
+</ul>
+      </div>
+      
+    </div>
+
+    <div id="navbar-end">
+      
+      <div class="navbar-end-item">
+        <ul id="navbar-icon-links" class="navbar-nav" aria-label="Icon Links">
+      </ul>
+      </div>
+      
+    </div>
+  </div>
+</div>
+    </nav>
+    
+
+    <div class="container-xl">
+      <div class="row">
+          
+            
+            <!-- Only show if we have sidebars configured, else just a small margin  -->
+            <div class="col-12 col-md-3 bd-sidebar">
+              <div class="sidebar-start-items"><form class="bd-search d-flex align-items-center" action="../../../search.html" method="get">
+  <i class="icon fas fa-search"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
+</form><nav class="bd-links" id="bd-docs-nav" aria-label="Main navigation">
+  <div class="bd-toc-item active">
+    <ul class="current nav bd-sidenav">
+ <li class="toctree-l1 has-children">
+  <a class="reference internal" href="../facet.data.html">
+   facet.data
+  </a>
+  <input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/>
+  <label for="toctree-checkbox-1">
+   <i class="fas fa-chevron-down">
+   </i>
+  </label>
+  <ul>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../data/facet.data.Sample.html">
+     facet.data.Sample
+    </a>
+   </li>
+   <li class="toctree-l2 has-children">
+    <a class="reference internal" href="../data/facet.data.partition.html">
+     facet.data.partition
+    </a>
+    <input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/>
+    <label for="toctree-checkbox-2">
+     <i class="fas fa-chevron-down">
+     </i>
+    </label>
+    <ul>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../data/partition/facet.data.partition.CategoryPartitioner.html">
+       facet.data.partition.CategoryPartitioner
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../data/partition/facet.data.partition.ContinuousRangePartitioner.html">
+       facet.data.partition.ContinuousRangePartitioner
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../data/partition/facet.data.partition.IntegerRangePartitioner.html">
+       facet.data.partition.IntegerRangePartitioner
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../data/partition/facet.data.partition.Partitioner.html">
+       facet.data.partition.Partitioner
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../data/partition/facet.data.partition.RangePartitioner.html">
+       facet.data.partition.RangePartitioner
+      </a>
+     </li>
+    </ul>
+   </li>
+  </ul>
+ </li>
+ <li class="toctree-l1 has-children">
+  <a class="reference internal" href="../facet.explanation.html">
+   facet.explanation
+  </a>
+  <input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/>
+  <label for="toctree-checkbox-3">
+   <i class="fas fa-chevron-down">
+   </i>
+  </label>
+  <ul>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../explanation/facet.explanation.ExactExplainerFactory.html">
+     facet.explanation.ExactExplainerFactory
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../explanation/facet.explanation.FunctionExplainerFactory.html">
+     facet.explanation.FunctionExplainerFactory
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../explanation/facet.explanation.KernelExplainerFactory.html">
+     facet.explanation.KernelExplainerFactory
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../explanation/facet.explanation.PermutationExplainerFactory.html">
+     facet.explanation.PermutationExplainerFactory
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../explanation/facet.explanation.TreeExplainerFactory.html">
+     facet.explanation.TreeExplainerFactory
+    </a>
+   </li>
+   <li class="toctree-l2 has-children">
+    <a class="reference internal" href="../explanation/facet.explanation.base.html">
+     facet.explanation.base
+    </a>
+    <input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" type="checkbox"/>
+    <label for="toctree-checkbox-4">
+     <i class="fas fa-chevron-down">
+     </i>
+    </label>
+    <ul>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../explanation/base/facet.explanation.base.BaseExplainer.html">
+       facet.explanation.base.BaseExplainer
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../explanation/base/facet.explanation.base.ExplainerFactory.html">
+       facet.explanation.base.ExplainerFactory
+      </a>
+     </li>
+    </ul>
+   </li>
+   <li class="toctree-l2 has-children">
+    <a class="reference internal" href="../explanation/facet.explanation.parallel.html">
+     facet.explanation.parallel
+    </a>
+    <input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" type="checkbox"/>
+    <label for="toctree-checkbox-5">
+     <i class="fas fa-chevron-down">
+     </i>
+    </label>
+    <ul>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../explanation/parallel/facet.explanation.parallel.ExplainerJob.html">
+       facet.explanation.parallel.ExplainerJob
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../explanation/parallel/facet.explanation.parallel.ExplainerQueue.html">
+       facet.explanation.parallel.ExplainerQueue
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../explanation/parallel/facet.explanation.parallel.ParallelExplainer.html">
+       facet.explanation.parallel.ParallelExplainer
+      </a>
+     </li>
+    </ul>
+   </li>
+  </ul>
+ </li>
+ <li class="toctree-l1 has-children">
+  <a class="reference internal" href="../facet.inspection.html">
+   facet.inspection
+  </a>
+  <input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" type="checkbox"/>
+  <label for="toctree-checkbox-6">
+   <i class="fas fa-chevron-down">
+   </i>
+  </label>
+  <ul>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../inspection/facet.inspection.FunctionInspector.html">
+     facet.inspection.FunctionInspector
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../inspection/facet.inspection.LearnerInspector.html">
+     facet.inspection.LearnerInspector
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../inspection/facet.inspection.NativeLearnerInspector.html">
+     facet.inspection.NativeLearnerInspector
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../inspection/facet.inspection.ShapPlotData.html">
+     facet.inspection.ShapPlotData
+    </a>
+   </li>
+   <li class="toctree-l2 has-children">
+    <a class="reference internal" href="../inspection/facet.inspection.base.html">
+     facet.inspection.base
+    </a>
+    <input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" type="checkbox"/>
+    <label for="toctree-checkbox-7">
+     <i class="fas fa-chevron-down">
+     </i>
+    </label>
+    <ul>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../inspection/base/facet.inspection.base.ModelInspector.html">
+       facet.inspection.base.ModelInspector
+      </a>
+     </li>
+    </ul>
+   </li>
+   <li class="toctree-l2 has-children">
+    <a class="reference internal" href="../inspection/facet.inspection.shap.html">
+     facet.inspection.shap
+    </a>
+    <input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" type="checkbox"/>
+    <label for="toctree-checkbox-8">
+     <i class="fas fa-chevron-down">
+     </i>
+    </label>
+    <ul>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../inspection/shap/facet.inspection.shap.FunctionShapCalculator.html">
+       facet.inspection.shap.FunctionShapCalculator
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../inspection/shap/facet.inspection.shap.ShapCalculator.html">
+       facet.inspection.shap.ShapCalculator
+      </a>
+     </li>
+     <li class="toctree-l3 has-children">
+      <a class="reference internal" href="../inspection/shap/facet.inspection.shap.sklearn.html">
+       facet.inspection.shap.sklearn
+      </a>
+      <input class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" type="checkbox"/>
+      <label for="toctree-checkbox-9">
+       <i class="fas fa-chevron-down">
+       </i>
+      </label>
+      <ul>
+       <li class="toctree-l4">
+        <a class="reference internal" href="../inspection/shap/sklearn/facet.inspection.shap.sklearn.ClassifierShapCalculator.html">
+         facet.inspection.shap.sklearn.ClassifierShapCalculator
+        </a>
+       </li>
+       <li class="toctree-l4">
+        <a class="reference internal" href="../inspection/shap/sklearn/facet.inspection.shap.sklearn.LearnerShapCalculator.html">
+         facet.inspection.shap.sklearn.LearnerShapCalculator
+        </a>
+       </li>
+       <li class="toctree-l4">
+        <a class="reference internal" href="../inspection/shap/sklearn/facet.inspection.shap.sklearn.RegressorShapCalculator.html">
+         facet.inspection.shap.sklearn.RegressorShapCalculator
+        </a>
+       </li>
+      </ul>
+     </li>
+    </ul>
+   </li>
+  </ul>
+ </li>
+ <li class="toctree-l1 current active has-children">
+  <a class="reference internal" href="../facet.selection.html">
+   facet.selection
+  </a>
+  <input checked="" class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" type="checkbox"/>
+  <label for="toctree-checkbox-10">
+   <i class="fas fa-chevron-down">
+   </i>
+  </label>
+  <ul class="current">
+   <li class="toctree-l2">
+    <a class="reference internal" href="facet.selection.LearnerSelector.html">
+     facet.selection.LearnerSelector
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="facet.selection.MultiEstimatorParameterSpace.html">
+     facet.selection.MultiEstimatorParameterSpace
+    </a>
+   </li>
+   <li class="toctree-l2 current active">
+    <a class="current reference internal" href="#">
+     facet.selection.ParameterSpace
+    </a>
+   </li>
+   <li class="toctree-l2 has-children">
+    <a class="reference internal" href="facet.selection.base.html">
+     facet.selection.base
+    </a>
+    <input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" type="checkbox"/>
+    <label for="toctree-checkbox-11">
+     <i class="fas fa-chevron-down">
+     </i>
+    </label>
+    <ul>
+     <li class="toctree-l3">
+      <a class="reference internal" href="base/facet.selection.base.BaseParameterSpace.html">
+       facet.selection.base.BaseParameterSpace
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="base/facet.selection.base.CandidateEstimatorDF.html">
+       facet.selection.base.CandidateEstimatorDF
+      </a>
+     </li>
+    </ul>
+   </li>
+  </ul>
+ </li>
+ <li class="toctree-l1 has-children">
+  <a class="reference internal" href="../facet.simulation.html">
+   facet.simulation
+  </a>
+  <input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" type="checkbox"/>
+  <label for="toctree-checkbox-12">
+   <i class="fas fa-chevron-down">
+   </i>
+  </label>
+  <ul>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../simulation/facet.simulation.UnivariateProbabilitySimulator.html">
+     facet.simulation.UnivariateProbabilitySimulator
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../simulation/facet.simulation.UnivariateSimulationResult.html">
+     facet.simulation.UnivariateSimulationResult
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../simulation/facet.simulation.UnivariateTargetSimulator.html">
+     facet.simulation.UnivariateTargetSimulator
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../simulation/facet.simulation.UnivariateUpliftSimulator.html">
+     facet.simulation.UnivariateUpliftSimulator
+    </a>
+   </li>
+   <li class="toctree-l2 has-children">
+    <a class="reference internal" href="../simulation/facet.simulation.base.html">
+     facet.simulation.base
+    </a>
+    <input class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" type="checkbox"/>
+    <label for="toctree-checkbox-13">
+     <i class="fas fa-chevron-down">
+     </i>
+    </label>
+    <ul>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../simulation/base/facet.simulation.base.BaseUnivariateSimulator.html">
+       facet.simulation.base.BaseUnivariateSimulator
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../simulation/base/facet.simulation.base.UnivariateRegressionSimulator.html">
+       facet.simulation.base.UnivariateRegressionSimulator
+      </a>
+     </li>
+    </ul>
+   </li>
+   <li class="toctree-l2 has-children">
+    <a class="reference internal" href="../simulation/facet.simulation.viz.html">
+     facet.simulation.viz
+    </a>
+    <input class="toctree-checkbox" id="toctree-checkbox-14" name="toctree-checkbox-14" type="checkbox"/>
+    <label for="toctree-checkbox-14">
+     <i class="fas fa-chevron-down">
+     </i>
+    </label>
+    <ul>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../simulation/viz/facet.simulation.viz.SimulationDrawer.html">
+       facet.simulation.viz.SimulationDrawer
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../simulation/viz/facet.simulation.viz.SimulationMatplotStyle.html">
+       facet.simulation.viz.SimulationMatplotStyle
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../simulation/viz/facet.simulation.viz.SimulationReportStyle.html">
+       facet.simulation.viz.SimulationReportStyle
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../simulation/viz/facet.simulation.viz.SimulationStyle.html">
+       facet.simulation.viz.SimulationStyle
+      </a>
+     </li>
+    </ul>
+   </li>
+  </ul>
+ </li>
+ <li class="toctree-l1 has-children">
+  <a class="reference internal" href="../facet.validation.html">
+   facet.validation
+  </a>
+  <input class="toctree-checkbox" id="toctree-checkbox-15" name="toctree-checkbox-15" type="checkbox"/>
+  <label for="toctree-checkbox-15">
+   <i class="fas fa-chevron-down">
+   </i>
+  </label>
+  <ul>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../validation/facet.validation.BaseBootstrapCV.html">
+     facet.validation.BaseBootstrapCV
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../validation/facet.validation.BootstrapCV.html">
+     facet.validation.BootstrapCV
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../validation/facet.validation.StationaryBootstrapCV.html">
+     facet.validation.StationaryBootstrapCV
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../validation/facet.validation.StratifiedBootstrapCV.html">
+     facet.validation.StratifiedBootstrapCV
+    </a>
+   </li>
+  </ul>
+ </li>
+</ul>
+
+  </div>
+</nav>
+              </div>
+              <div class="sidebar-end-items">
+              </div>
+            </div>
+            
+          
+
+          
+          <div class="d-none d-xl-block col-xl-2 bd-toc">
+            
+              
+              <div class="toc-item">
+                
+
+<nav id="bd-toc-nav">
+    
+</nav>
+              </div>
+              
+              <div class="toc-item">
+                
+              </div>
+              
+            
+          </div>
+          
+
+          
+          
+            
+          
+          <main class="col-12 col-md-9 col-xl-7 py-md-5 pl-md-5 pr-md-4 bd-content" role="main">
+              
+              <div>
+                
+  <section id="facet-selection-parameterspace">
+<h1>facet.selection.ParameterSpace<a class="headerlink" href="#facet-selection-parameterspace" title="Permalink to this headline">#</a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="facet.selection.ParameterSpace">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">facet.selection.</span></span><span class="sig-name descname"><span class="pre">ParameterSpace</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">estimator</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/facet/selection/_parameters.html#ParameterSpace"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#facet.selection.ParameterSpace" title="Permalink to this definition">#</a></dt>
+<dd><p>A set of parameter choices or distributions spanning a parameter space for
+optimizing the hyperparameters of a single estimator.</p>
+<p>Parameter spaces provide an easy approach to define and validate search spaces
+for hyperparameter tuning of ML pipelines using <cite>scikit-learn</cite>’s
+<a class="reference external" href="https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.GridSearchCV.html#sklearn.model_selection.GridSearchCV" title="(in scikit-learn v1.3)"><code class="xref py py-class docutils literal notranslate"><span class="pre">GridSearchCV</span></code></a> and
+<a class="reference external" href="https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.RandomizedSearchCV.html#sklearn.model_selection.RandomizedSearchCV" title="(in scikit-learn v1.3)"><code class="xref py py-class docutils literal notranslate"><span class="pre">RandomizedSearchCV</span></code></a>.</p>
+<p>Parameter choices (as lists) or distributions (from <a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/stats.html#module-scipy.stats" title="(in SciPy v1.11.1)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">scipy.stats</span></code></a>) can be
+set using attribute access, and will be validated for correct names and values.</p>
+<p>Example:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">ps</span> <span class="o">=</span> <span class="n">ParameterSpace</span><span class="p">(</span>
+    <span class="n">RegressorPipelineDF</span><span class="p">(</span>
+        <span class="n">regressor</span><span class="o">=</span><span class="n">RandomForestRegressorDF</span><span class="p">(</span><span class="n">random_state</span><span class="o">=</span><span class="mi">42</span><span class="p">),</span>
+        <span class="n">preprocessing</span><span class="o">=</span><span class="n">simple_preprocessor</span><span class="p">,</span>
+    <span class="p">),</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;random forest&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">ps</span><span class="o">.</span><span class="n">regressor</span><span class="o">.</span><span class="n">min_weight_fraction_leaf</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">loguniform</span><span class="p">(</span><span class="mf">0.01</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">)</span>
+<span class="n">ps</span><span class="o">.</span><span class="n">regressor</span><span class="o">.</span><span class="n">max_depth</span> <span class="o">=</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="mi">10</span><span class="p">]</span>
+
+<span class="n">cv</span> <span class="o">=</span> <span class="n">RandomizedSearchCV</span><span class="p">(</span>
+    <span class="n">estimator</span><span class="o">=</span><span class="n">ps</span><span class="o">.</span><span class="n">estimator</span><span class="p">,</span>
+    <span class="n">param_distributions</span><span class="o">=</span><span class="n">ps</span><span class="o">.</span><span class="n">parameters</span><span class="p">,</span>
+    <span class="c1"># ...</span>
+<span class="p">)</span>
+
+<span class="c1"># The following will raise an AttributeError for the unknown attribute xyz:</span>
+<span class="n">ps</span><span class="o">.</span><span class="n">regressor</span><span class="o">.</span><span class="n">xyz</span> <span class="o">=</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="mi">10</span><span class="p">]</span>
+
+<span class="c1"># the following will raise a TypeError because we do not assign a list or distribution:</span>
+<span class="n">ps</span><span class="o">.</span><span class="n">regressor</span><span class="o">.</span><span class="n">max_depth</span> <span class="o">=</span> <span class="mi">3</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Bases</dt>
+<dd class="field-odd"><p><a class="reference internal" href="base/facet.selection.base.BaseParameterSpace.html#facet.selection.base.BaseParameterSpace" title="facet.selection.base.BaseParameterSpace"><code class="xref py py-obj docutils literal notranslate"><span class="pre">BaseParameterSpace</span></code></a> [+T_Estimator_co]</p>
+</dd>
+<dt class="field-even">Generic types</dt>
+<dd class="field-even"><p>+T_Estimator_co(bound= <a class="reference external" href="https://bcg-gamma.github.io/sklearndf/apidoc/sklearndf/sklearndf.EstimatorDF.html#sklearndf.EstimatorDF" title="(in sklearndf v2.2.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">EstimatorDF</span></code></a>, <em>__covariant__=True</em>)</p>
+</dd>
+<dt class="field-odd">Metaclasses</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.7/library/abc.html#abc.ABCMeta" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ABCMeta</span></code></a></p>
+</dd>
+<dt class="field-even">Parameters</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>estimator</strong> (<a class="reference internal" href="#facet.selection.ParameterSpace" title="facet.selection.ParameterSpace"><code class="xref py py-class docutils literal notranslate"><span class="pre">ParameterSpace</span></code></a>) – the estimator to which to apply the parameters</p></li>
+<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3.7/library/typing.html#typing.Optional" title="(in Python v3.7)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3.7/library/stdtypes.html#str" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]) – a name for the estimator to be used in summary reports;
+defaults to the name of the estimator’s class, or the name of the final
+estimator’s class if arg <code class="docutils literal notranslate"><span class="pre">estimator</span></code> is a pipeline</p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Method summary</p>
+<table class="autosummary longtable table autosummary">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#facet.selection.ParameterSpace.get_name" title="facet.selection.ParameterSpace.get_name"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_name</span></code></a></p></td>
+<td><p>Get the name for this parameter space's estimator.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#facet.selection.ParameterSpace.get_parameters" title="facet.selection.ParameterSpace.get_parameters"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_parameters</span></code></a></p></td>
+<td><p>Generate a dictionary of parameter choices and distributions, compatible with <cite>scikit-learn</cite>'s CV search API (e.g., <a class="reference external" href="https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.GridSearchCV.html#sklearn.model_selection.GridSearchCV" title="(in scikit-learn v1.3)"><code class="xref py py-class docutils literal notranslate"><span class="pre">GridSearchCV</span></code></a> or <a class="reference external" href="https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.RandomizedSearchCV.html#sklearn.model_selection.RandomizedSearchCV" title="(in scikit-learn v1.3)"><code class="xref py py-class docutils literal notranslate"><span class="pre">RandomizedSearchCV</span></code></a>).</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#facet.selection.ParameterSpace.to_expression" title="facet.selection.ParameterSpace.to_expression"><code class="xref py py-obj docutils literal notranslate"><span class="pre">to_expression</span></code></a></p></td>
+<td><p>Render this object as an expression.</p></td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Attribute summary</p>
+<table class="autosummary longtable table autosummary">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#facet.selection.ParameterSpace.estimator" title="facet.selection.ParameterSpace.estimator"><code class="xref py py-obj docutils literal notranslate"><span class="pre">estimator</span></code></a></p></td>
+<td><p>The estimator associated with this parameter space.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#facet.selection.ParameterSpace.parameters" title="facet.selection.ParameterSpace.parameters"><code class="xref py py-obj docutils literal notranslate"><span class="pre">parameters</span></code></a></p></td>
+<td><p>The parameter choices (as lists) or distributions (from <a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/stats.html#module-scipy.stats" title="(in SciPy v1.11.1)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">scipy.stats</span></code></a>) that constitute this parameter space.</p></td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Definitions</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="facet.selection.ParameterSpace.get_name">
+<span class="sig-name descname"><span class="pre">get_name</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/facet/selection/_parameters.html#ParameterSpace.get_name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#facet.selection.ParameterSpace.get_name" title="Permalink to this definition">#</a></dt>
+<dd><p>Get the name for this parameter space’s estimator.</p>
+<p>If no name was passed to the constructor, determine the default name
+recursively as follows:</p>
+<ul class="simple">
+<li><p>for meta-estimators, this is the default name of the delegate estimator</p></li>
+<li><p>for pipelines, this is the default name of the final estimator</p></li>
+<li><p>for all other estimators, this is the name of the estimator’s class</p></li>
+</ul>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.7/library/stdtypes.html#str" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the name for this parameter space’s estimator</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="facet.selection.ParameterSpace.get_parameters">
+<span class="sig-name descname"><span class="pre">get_parameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">prefix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/facet/selection/_parameters.html#ParameterSpace.get_parameters"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#facet.selection.ParameterSpace.get_parameters" title="Permalink to this definition">#</a></dt>
+<dd><p>Generate a dictionary of parameter choices and distributions,
+compatible with <cite>scikit-learn</cite>’s CV search API
+(e.g., <a class="reference external" href="https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.GridSearchCV.html#sklearn.model_selection.GridSearchCV" title="(in scikit-learn v1.3)"><code class="xref py py-class docutils literal notranslate"><span class="pre">GridSearchCV</span></code></a> or
+<a class="reference external" href="https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.RandomizedSearchCV.html#sklearn.model_selection.RandomizedSearchCV" title="(in scikit-learn v1.3)"><code class="xref py py-class docutils literal notranslate"><span class="pre">RandomizedSearchCV</span></code></a>).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>prefix</strong> (<a class="reference external" href="https://docs.python.org/3.7/library/typing.html#typing.Optional" title="(in Python v3.7)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3.7/library/stdtypes.html#str" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]) – an optional prefix to prepend to all parameter names in the
+resulting dictionary, separated by two underscore characters (<code class="docutils literal notranslate"><span class="pre">__</span></code>) as
+per <cite>scikit-learn</cite>’s convention for hierarchical parameter names</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3.7/library/typing.html#typing.Dict" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code></a>[<a class="reference external" href="https://docs.python.org/3.7/library/stdtypes.html#str" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3.7/library/typing.html#typing.Union" title="(in Python v3.7)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code></a>[<a class="reference external" href="https://docs.python.org/3.7/library/typing.html#typing.List" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a>[<a class="reference external" href="https://docs.python.org/3.7/library/typing.html#typing.Any" title="(in Python v3.7)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code></a>], <a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.rv_continuous.html#scipy.stats.rv_continuous" title="(in SciPy v1.11.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">rv_continuous</span></code></a>, <a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.rv_discrete.html#scipy.stats.rv_discrete" title="(in SciPy v1.11.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">rv_discrete</span></code></a>]]</p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>a dictionary mapping parameter names to parameter
+choices (as lists) or distributions (from <a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/stats.html#module-scipy.stats" title="(in SciPy v1.11.1)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">scipy.stats</span></code></a>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="facet.selection.ParameterSpace.to_expression">
+<span class="sig-name descname"><span class="pre">to_expression</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/facet/selection/_parameters.html#ParameterSpace.to_expression"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#facet.selection.ParameterSpace.to_expression" title="Permalink to this definition">#</a></dt>
+<dd><p>Render this object as an expression.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://bcg-gamma.github.io/pytools/apidoc/pytools/expression/pytools.expression.Expression.html#pytools.expression.Expression" title="(in pytools v2.1.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Expression</span></code></a></p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the expression representing this object</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="facet.selection.ParameterSpace.estimator">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">estimator</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">base.T_Estimator</span></em><a class="headerlink" href="#facet.selection.ParameterSpace.estimator" title="Permalink to this definition">#</a></dt>
+<dd><p>The estimator associated with this parameter space.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.7/library/typing.html#typing.TypeVar" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">T_Estimator</span></code>, bound= <a class="reference external" href="https://bcg-gamma.github.io/sklearndf/apidoc/sklearndf/sklearndf.EstimatorDF.html#sklearndf.EstimatorDF" title="(in sklearndf v2.2.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">EstimatorDF</span></code></a>, covariant=True)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="facet.selection.ParameterSpace.parameters">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">parameters</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3.7/library/stdtypes.html#str" title="(in Python v3.7)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.rv_continuous.html#scipy.stats.rv_continuous" title="(in SciPy v1.11.1)"><span class="pre">scipy.stats.rv_continuous</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.rv_discrete.html#scipy.stats.rv_discrete" title="(in SciPy v1.11.1)"><span class="pre">scipy.stats.rv_discrete</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3.7/library/stdtypes.html#str" title="(in Python v3.7)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.rv_continuous.html#scipy.stats.rv_continuous" title="(in SciPy v1.11.1)"><span class="pre">scipy.stats.rv_continuous</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.rv_discrete.html#scipy.stats.rv_discrete" title="(in SciPy v1.11.1)"><span class="pre">scipy.stats.rv_discrete</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#facet.selection.ParameterSpace.parameters" title="Permalink to this definition">#</a></dt>
+<dd><p>The parameter choices (as lists) or distributions (from <a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/stats.html#module-scipy.stats" title="(in SciPy v1.11.1)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">scipy.stats</span></code></a>)
+that constitute this parameter space.</p>
+<p>This is a shortcut for calling method <a class="reference internal" href="#facet.selection.ParameterSpace.get_parameters" title="facet.selection.ParameterSpace.get_parameters"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_parameters()</span></code></a> with no
+arguments.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.7/library/typing.html#typing.Union" title="(in Python v3.7)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code></a>[<a class="reference external" href="https://docs.python.org/3.7/library/typing.html#typing.List" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a>[<a class="reference external" href="https://docs.python.org/3.7/library/typing.html#typing.Dict" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code></a>[<a class="reference external" href="https://docs.python.org/3.7/library/stdtypes.html#str" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3.7/library/typing.html#typing.Union" title="(in Python v3.7)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code></a>[<a class="reference external" href="https://docs.python.org/3.7/library/typing.html#typing.List" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a>[<a class="reference external" href="https://docs.python.org/3.7/library/typing.html#typing.Any" title="(in Python v3.7)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code></a>], <a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.rv_continuous.html#scipy.stats.rv_continuous" title="(in SciPy v1.11.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">rv_continuous</span></code></a>, <a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.rv_discrete.html#scipy.stats.rv_discrete" title="(in SciPy v1.11.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">rv_discrete</span></code></a>]]], <a class="reference external" href="https://docs.python.org/3.7/library/typing.html#typing.Dict" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code></a>[<a class="reference external" href="https://docs.python.org/3.7/library/stdtypes.html#str" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3.7/library/typing.html#typing.Union" title="(in Python v3.7)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code></a>[<a class="reference external" href="https://docs.python.org/3.7/library/typing.html#typing.List" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a>[<a class="reference external" href="https://docs.python.org/3.7/library/typing.html#typing.Any" title="(in Python v3.7)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code></a>], <a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.rv_continuous.html#scipy.stats.rv_continuous" title="(in SciPy v1.11.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">rv_continuous</span></code></a>, <a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.rv_discrete.html#scipy.stats.rv_discrete" title="(in SciPy v1.11.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">rv_discrete</span></code></a>]]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+              </div>
+              
+              
+              <!-- Previous / next buttons -->
+<div class='prev-next-area'>
+    <a class='left-prev' id="prev-link" href="facet.selection.MultiEstimatorParameterSpace.html" title="previous page">
+        <i class="fas fa-angle-left"></i>
+        <div class="prev-next-info">
+            <p class="prev-next-subtitle">previous</p>
+            <p class="prev-next-title">facet.selection.MultiEstimatorParameterSpace</p>
+        </div>
+    </a>
+    <a class='right-next' id="next-link" href="facet.selection.base.html" title="next page">
+    <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">facet.selection.base</p>
+    </div>
+    <i class="fas fa-angle-right"></i>
+    </a>
+</div>
+              
+          </main>
+          
+
+      </div>
+    </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
+<footer class="footer mt-5 mt-md-0">
+  <div class="container">
+    
+    <div class="footer-item">
+      <p class="copyright">
+    &copy; Copyright 2022, Boston Consulting Group (BCG).<br>
+</p>
+    </div>
+    
+    <div class="footer-item">
+      <p class="sphinx-version">
+Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.5.0.<br>
+</p>
+    </div>
+    
+  </div>
+</footer>
+  </body>
+</html>

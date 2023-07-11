@@ -1,0 +1,60 @@
+facet.selection.base.CandidateEstimatorDF
+=========================================
+
+.. currentmodule:: facet.selection.base
+
+.. autoclass:: CandidateEstimatorDF
+   :members:
+   :no-show-inheritance:
+   :inherited-members:
+   :special-members: __call__
+
+   
+   
+   .. rubric:: Method summary
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~CandidateEstimatorDF.clone
+      ~CandidateEstimatorDF.decision_function
+      ~CandidateEstimatorDF.fit
+      ~CandidateEstimatorDF.fit_transform
+      ~CandidateEstimatorDF.get_params
+      ~CandidateEstimatorDF.inverse_transform
+      ~CandidateEstimatorDF.predict
+      ~CandidateEstimatorDF.predict_log_proba
+      ~CandidateEstimatorDF.predict_proba
+      ~CandidateEstimatorDF.score
+      ~CandidateEstimatorDF.set_output
+      ~CandidateEstimatorDF.set_params
+      ~CandidateEstimatorDF.to_expression
+      ~CandidateEstimatorDF.transform
+   
+   
+
+   
+   
+   .. rubric:: Attribute summary
+
+   .. autosummary::
+   
+      ~CandidateEstimatorDF.COL_FEATURE
+      ~CandidateEstimatorDF.COL_FEATURE_ORIGINAL
+      ~CandidateEstimatorDF.PARAM_CANDIDATE
+      ~CandidateEstimatorDF.PARAM_CANDIDATE_NAME
+      ~CandidateEstimatorDF.classes_
+      ~CandidateEstimatorDF.feature_names_in_
+      ~CandidateEstimatorDF.feature_names_original_
+      ~CandidateEstimatorDF.feature_names_out_
+      ~CandidateEstimatorDF.is_fitted
+      ~CandidateEstimatorDF.n_features_in_
+      ~CandidateEstimatorDF.n_outputs_
+      ~CandidateEstimatorDF.native_estimator
+      ~CandidateEstimatorDF.output_names_
+      ~CandidateEstimatorDF.candidate
+      ~CandidateEstimatorDF.candidate_name
+   
+   
+
+   .. rubric:: Definitions

@@ -1,0 +1,625 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>facet.selection._parameters &#8212; facet  documentation</title>
+    
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+
+    
+  <link rel="stylesheet"
+    href="../../../_static/vendor/fontawesome/5.13.0/css/all.min.css">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../../../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../../../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/css/gamma.css" />
+    
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
+
+    <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+    <script src="../../../_static/jquery.js"></script>
+    <script src="../../../_static/underscore.js"></script>
+    <script src="../../../_static/doctools.js"></script>
+    <script src="../../../_static/js/gamma.js"></script>
+    <script src="../../../_static/js/versions.js"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="docsearch:language" content="None">
+    
+
+    <!-- Google Analytics -->
+    
+  </head>
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="60">
+    
+    <div class="container-fluid" id="banner"></div>
+
+    
+    <nav class="navbar navbar-light navbar-expand-lg bg-light fixed-top bd-navbar" id="navbar-main"><div class="container-xl">
+
+  <div id="navbar-start">
+    
+    
+
+<a class="navbar-brand" href="../../../index.html">
+  <img src="../../../_static/Gamma_Facet_Logo_RGB_LB.svg" class="logo" alt="logo">
+</a>
+
+
+    
+  </div>
+
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar-collapsible" aria-controls="navbar-collapsible" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+
+  
+  <div id="navbar-collapsible" class="col-lg-9 collapse navbar-collapse">
+    <div id="navbar-center" class="mr-auto">
+      
+      <div class="navbar-center-item">
+        <ul id="navbar-main-elements" class="navbar-nav">
+    <li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="../../../_generated/getting_started.html">
+  Getting started
+ </a>
+</li>
+
+<li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="../../../apidoc/facet.html">
+  API reference
+ </a>
+</li>
+
+<li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="../../../tutorials.html">
+  Tutorials
+ </a>
+</li>
+
+<li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="../../../contribution_guide.html">
+  Development Guidelines
+ </a>
+</li>
+
+<li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="../../../faqs.html">
+  FAQ
+ </a>
+</li>
+
+<li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="../../../about_us.html">
+  About us
+ </a>
+</li>
+
+<li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="../../../_generated/release_notes.html">
+  Release Notes
+ </a>
+</li>
+
+    
+</ul>
+      </div>
+      
+    </div>
+
+    <div id="navbar-end">
+      
+      <div class="navbar-end-item">
+        <ul id="navbar-icon-links" class="navbar-nav" aria-label="Icon Links">
+      </ul>
+      </div>
+      
+    </div>
+  </div>
+</div>
+    </nav>
+    
+
+    <div class="container-xl">
+      <div class="row">
+          
+            
+            <!-- Only show if we have sidebars configured, else just a small margin  -->
+            <div class="col-12 col-md-3 bd-sidebar">
+              <div class="sidebar-start-items"><form class="bd-search d-flex align-items-center" action="../../../search.html" method="get">
+  <i class="icon fas fa-search"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
+</form><nav class="bd-links" id="bd-docs-nav" aria-label="Main navigation">
+  <div class="bd-toc-item active">
+    
+  </div>
+</nav>
+              </div>
+              <div class="sidebar-end-items">
+              </div>
+            </div>
+            
+          
+
+          
+          <div class="d-none d-xl-block col-xl-2 bd-toc">
+            
+          </div>
+          
+
+          
+          
+            
+          
+          <main class="col-12 col-md-9 col-xl-7 py-md-5 pl-md-5 pr-md-4 bd-content" role="main">
+              
+              <div>
+                
+  <h1>Source code for facet.selection._parameters</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Core implementation of :mod:`facet.selection`</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">Any</span><span class="p">,</span>
+    <span class="n">Collection</span><span class="p">,</span>
+    <span class="n">Dict</span><span class="p">,</span>
+    <span class="n">Generic</span><span class="p">,</span>
+    <span class="n">Iterable</span><span class="p">,</span>
+    <span class="n">Iterator</span><span class="p">,</span>
+    <span class="n">List</span><span class="p">,</span>
+    <span class="n">Optional</span><span class="p">,</span>
+    <span class="n">Set</span><span class="p">,</span>
+    <span class="n">Tuple</span><span class="p">,</span>
+    <span class="n">Type</span><span class="p">,</span>
+    <span class="n">TypeVar</span><span class="p">,</span>
+    <span class="n">Union</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="kn">from</span> <span class="nn">scipy</span> <span class="kn">import</span> <span class="n">stats</span>
+<span class="kn">from</span> <span class="nn">sklearn.base</span> <span class="kn">import</span> <span class="n">BaseEstimator</span>
+<span class="kn">from</span> <span class="nn">typing_extensions</span> <span class="kn">import</span> <span class="n">TypeAlias</span>
+
+<span class="kn">from</span> <span class="nn">pytools.api</span> <span class="kn">import</span> <span class="n">AllTracker</span><span class="p">,</span> <span class="n">inheritdoc</span><span class="p">,</span> <span class="n">subsdoc</span><span class="p">,</span> <span class="n">to_list</span><span class="p">,</span> <span class="n">validate_element_types</span>
+<span class="kn">from</span> <span class="nn">pytools.expression</span> <span class="kn">import</span> <span class="n">Expression</span><span class="p">,</span> <span class="n">make_expression</span>
+<span class="kn">from</span> <span class="nn">pytools.expression.atomic</span> <span class="kn">import</span> <span class="n">Id</span>
+<span class="kn">from</span> <span class="nn">sklearndf</span> <span class="kn">import</span> <span class="n">EstimatorDF</span>
+<span class="kn">from</span> <span class="nn">sklearndf.pipeline</span> <span class="kn">import</span> <span class="n">LearnerPipelineDF</span><span class="p">,</span> <span class="n">PipelineDF</span>
+
+<span class="kn">from</span> <span class="nn">.base</span> <span class="kn">import</span> <span class="n">BaseParameterSpace</span><span class="p">,</span> <span class="n">CandidateEstimatorDF</span>
+
+<span class="n">log</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s2">&quot;MultiEstimatorParameterSpace&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;ParameterSpace&quot;</span><span class="p">,</span>
+<span class="p">]</span>
+
+
+<span class="c1">#</span>
+<span class="c1"># Type aliases</span>
+<span class="c1">#</span>
+
+<span class="n">ParameterSet</span><span class="p">:</span> <span class="n">TypeAlias</span> <span class="o">=</span> <span class="n">Union</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Any</span><span class="p">],</span> <span class="n">stats</span><span class="o">.</span><span class="n">rv_continuous</span><span class="p">,</span> <span class="n">stats</span><span class="o">.</span><span class="n">rv_discrete</span><span class="p">]</span>
+<span class="n">ParameterDict</span><span class="p">:</span> <span class="n">TypeAlias</span> <span class="o">=</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ParameterSet</span><span class="p">]</span>
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="n">rv_frozen</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span>
+        <span class="n">t</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">type</span><span class="p">(</span><span class="n">stats</span><span class="o">.</span><span class="n">uniform</span><span class="p">())</span><span class="o">.</span><span class="n">mro</span><span class="p">()</span> <span class="k">if</span> <span class="n">t</span><span class="o">.</span><span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;rv_frozen&quot;</span>
+    <span class="p">)</span>
+<span class="k">except</span> <span class="ne">StopIteration</span><span class="p">:</span>
+    <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+        <span class="s2">&quot;stats.uniform() should be based on class rv_frozen&quot;</span><span class="p">,</span> <span class="n">category</span><span class="o">=</span><span class="ne">UserWarning</span>
+    <span class="p">)</span>
+    <span class="n">rv_frozen</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
+
+
+<span class="c1">#</span>
+<span class="c1"># Type variables</span>
+<span class="c1">#</span>
+
+<span class="n">T_Estimator_co</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">&quot;T_Estimator_co&quot;</span><span class="p">,</span> <span class="n">covariant</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">bound</span><span class="o">=</span><span class="n">EstimatorDF</span><span class="p">)</span>
+
+<span class="c1">#</span>
+<span class="c1"># Ensure all symbols introduced below are included in __all__</span>
+<span class="c1">#</span>
+
+<span class="n">__tracker</span> <span class="o">=</span> <span class="n">AllTracker</span><span class="p">(</span><span class="nb">globals</span><span class="p">())</span>
+
+
+<span class="c1">#</span>
+<span class="c1"># Class definitions</span>
+<span class="c1">#</span>
+
+
+<div class="viewcode-block" id="ParameterSpace"><a class="viewcode-back" href="../../../apidoc/facet/selection/facet.selection.ParameterSpace.html#facet.selection.ParameterSpace">[docs]</a><span class="nd">@inheritdoc</span><span class="p">(</span><span class="n">match</span><span class="o">=</span><span class="s2">&quot;&quot;&quot;[see superclass]&quot;&quot;&quot;</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">ParameterSpace</span><span class="p">(</span><span class="n">BaseParameterSpace</span><span class="p">[</span><span class="n">T_Estimator_co</span><span class="p">],</span> <span class="n">Generic</span><span class="p">[</span><span class="n">T_Estimator_co</span><span class="p">]):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A set of parameter choices or distributions spanning a parameter space for</span>
+<span class="sd">    optimizing the hyperparameters of a single estimator.</span>
+
+<span class="sd">    Parameter spaces provide an easy approach to define and validate search spaces</span>
+<span class="sd">    for hyperparameter tuning of ML pipelines using `scikit-learn`&#39;s</span>
+<span class="sd">    :class:`~sklearn.model_selection.GridSearchCV` and</span>
+<span class="sd">    :class:`~sklearn.model_selection.RandomizedSearchCV`.</span>
+
+<span class="sd">    Parameter choices (as lists) or distributions (from :mod:`scipy.stats`) can be</span>
+<span class="sd">    set using attribute access, and will be validated for correct names and values.</span>
+
+<span class="sd">    Example:</span>
+
+<span class="sd">    .. code-block:: python</span>
+
+<span class="sd">        ps = ParameterSpace(</span>
+<span class="sd">            RegressorPipelineDF(</span>
+<span class="sd">                regressor=RandomForestRegressorDF(random_state=42),</span>
+<span class="sd">                preprocessing=simple_preprocessor,</span>
+<span class="sd">            ),</span>
+<span class="sd">            name=&quot;random forest&quot;,</span>
+<span class="sd">        )</span>
+<span class="sd">        ps.regressor.min_weight_fraction_leaf = scipy.stats.loguniform(0.01, 0.1)</span>
+<span class="sd">        ps.regressor.max_depth = [3, 4, 5, 7, 10]</span>
+
+<span class="sd">        cv = RandomizedSearchCV(</span>
+<span class="sd">            estimator=ps.estimator,</span>
+<span class="sd">            param_distributions=ps.parameters,</span>
+<span class="sd">            # ...</span>
+<span class="sd">        )</span>
+
+<span class="sd">        # The following will raise an AttributeError for the unknown attribute xyz:</span>
+<span class="sd">        ps.regressor.xyz = [3, 4, 5, 7, 10]</span>
+
+<span class="sd">        # the following will raise a TypeError because we do not assign a list or \</span>
+<span class="sd">distribution:</span>
+<span class="sd">        ps.regressor.max_depth = 3</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">estimator</span><span class="p">:</span> <span class="n">T_Estimator_co</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        :param estimator: the estimator to which to apply the parameters</span>
+<span class="sd">        :param name: a name for the estimator to be used in summary reports;</span>
+<span class="sd">            defaults to the name of the estimator&#39;s class, or the name of the final</span>
+<span class="sd">            estimator&#39;s class if arg ``estimator`` is a pipeline</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">estimator</span><span class="o">=</span><span class="n">estimator</span><span class="p">)</span>
+
+        <span class="n">params</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">name</span><span class="p">:</span> <span class="n">param</span>
+            <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">param</span> <span class="ow">in</span> <span class="n">estimator</span><span class="o">.</span><span class="n">get_params</span><span class="p">(</span><span class="n">deep</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+            <span class="k">if</span> <span class="s2">&quot;__&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">name</span>
+        <span class="p">}</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ParameterSpace</span><span class="p">[</span><span class="n">BaseEstimator</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">name</span><span class="p">:</span> <span class="n">ParameterSpace</span><span class="p">(</span><span class="n">estimator</span><span class="o">=</span><span class="n">value</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">params</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">BaseEstimator</span><span class="p">)</span>
+        <span class="p">}</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_name</span> <span class="o">=</span> <span class="n">name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_values</span><span class="p">:</span> <span class="n">ParameterDict</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_params</span><span class="p">:</span> <span class="n">Set</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">params</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+
+<div class="viewcode-block" id="ParameterSpace.get_name"><a class="viewcode-back" href="../../../apidoc/facet/selection/facet.selection.ParameterSpace.html#facet.selection.ParameterSpace.get_name">[docs]</a>    <span class="k">def</span> <span class="nf">get_name</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the name for this parameter space&#39;s estimator.</span>
+
+<span class="sd">        If no name was passed to the constructor, determine the default name</span>
+<span class="sd">        recursively as follows:</span>
+
+<span class="sd">        - for meta-estimators, this is the default name of the delegate estimator</span>
+<span class="sd">        - for pipelines, this is the default name of the final estimator</span>
+<span class="sd">        - for all other estimators, this is the name of the estimator&#39;s class</span>
+
+<span class="sd">        :return: the name for this parameter space&#39;s estimator</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">get_default_estimator_name</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_estimator</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_name</span></div>
+
+<div class="viewcode-block" id="ParameterSpace.get_parameters"><a class="viewcode-back" href="../../../apidoc/facet/selection/facet.selection.ParameterSpace.html#facet.selection.ParameterSpace.get_parameters">[docs]</a>    <span class="nd">@subsdoc</span><span class="p">(</span>
+        <span class="n">pattern</span><span class="o">=</span><span class="s2">&quot;or a list of such dictionaries, &quot;</span><span class="p">,</span>
+        <span class="n">replacement</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="nd">@subsdoc</span><span class="p">(</span>
+        <span class="n">pattern</span><span class="o">=</span><span class="s2">&quot;one or more dictionaries, each mapping&quot;</span><span class="p">,</span>
+        <span class="n">replacement</span><span class="o">=</span><span class="s2">&quot;a dictionary mapping&quot;</span><span class="p">,</span>
+        <span class="n">using</span><span class="o">=</span><span class="n">BaseParameterSpace</span><span class="o">.</span><span class="n">get_parameters</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">def</span> <span class="nf">get_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prefix</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ParameterDict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;[see superclass]&quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;__&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">name</span><span class="p">):</span> <span class="n">values</span>
+            <span class="k">for</span> <span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">values</span><span class="p">)</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_iter_parameters</span><span class="p">(</span>
+                <span class="n">path_prefix</span><span class="o">=</span><span class="p">[]</span> <span class="k">if</span> <span class="n">prefix</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="p">[</span><span class="n">prefix</span><span class="p">]</span>
+            <span class="p">)</span>
+        <span class="p">}</span></div>
+
+    <span class="k">def</span> <span class="nf">_validate_parameter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">ParameterSet</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_params</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;unknown parameter name for &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">estimator</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span>
+            <span class="nb">isinstance</span><span class="p">(</span>
+                <span class="n">value</span><span class="p">,</span>
+                <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="n">stats</span><span class="o">.</span><span class="n">rv_discrete</span><span class="p">,</span> <span class="n">stats</span><span class="o">.</span><span class="n">rv_continuous</span><span class="p">),</span>
+            <span class="p">)</span>
+            <span class="ow">or</span> <span class="nb">callable</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="s2">&quot;rvs&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">))</span>
+        <span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;expected list or distribution for parameter </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> but got: &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">value</span><span class="si">!r}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">name</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;_&quot;</span><span class="p">):</span>
+            <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_validate_parameter</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">:</span>
+                <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;parameter </span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s2"> overrides </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;attribute of same name&quot;</span><span class="p">,</span>
+                    <span class="n">stacklevel</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_values</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+
+    <span class="k">def</span> <span class="fm">__dir__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="p">{</span><span class="o">*</span><span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__dir__</span><span class="p">(),</span> <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">_params</span><span class="p">}</span>
+
+    <span class="k">def</span> <span class="fm">__getattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">key</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;_&quot;</span><span class="p">):</span>
+            <span class="n">result</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">ParameterSpace</span><span class="p">[</span><span class="n">Any</span><span class="p">],</span> <span class="n">ParameterSet</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span>
+
+            <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">result</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">result</span>
+
+            <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_values</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">result</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">result</span>
+
+        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__getattribute__</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">ParameterSet</span><span class="p">]]:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_iter_parameters</span><span class="p">([])</span>
+
+    <span class="k">def</span> <span class="nf">_iter_parameters</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">path_prefix</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">ParameterSet</span><span class="p">]]:</span>
+        <span class="k">yield from</span> <span class="p">(</span>
+            <span class="p">([</span><span class="o">*</span><span class="n">path_prefix</span><span class="p">,</span> <span class="n">name</span><span class="p">],</span> <span class="n">value</span><span class="p">)</span> <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_values</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+        <span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">child</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">yield from</span> <span class="n">child</span><span class="o">.</span><span class="n">_iter_parameters</span><span class="p">([</span><span class="o">*</span><span class="n">path_prefix</span><span class="p">,</span> <span class="n">name</span><span class="p">])</span>
+
+<div class="viewcode-block" id="ParameterSpace.to_expression"><a class="viewcode-back" href="../../../apidoc/facet/selection/facet.selection.ParameterSpace.html#facet.selection.ParameterSpace.to_expression">[docs]</a>    <span class="k">def</span> <span class="nf">to_expression</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Expression</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;[see superclass]&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_to_expression</span><span class="p">([])</span></div>
+
+    <span class="k">def</span> <span class="nf">_to_expression</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path_prefix</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="n">Expression</span><span class="p">:</span>
+        <span class="c1"># path_prefix: the path prefix to prepend to each parameter name</span>
+
+        <span class="k">def</span> <span class="nf">_values_to_expression</span><span class="p">(</span><span class="n">values</span><span class="p">:</span> <span class="n">ParameterSet</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Expression</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">rv_frozen</span><span class="p">):</span>
+                <span class="c1"># disabling type-checks: mypy cannot access the class signature</span>
+                <span class="c1"># of private class rv_frozen, which is obtained dynamically at runtime</span>
+                <span class="k">return</span> <span class="n">Id</span><span class="p">(</span><span class="n">values</span><span class="o">.</span><span class="n">dist</span><span class="o">.</span><span class="n">name</span><span class="p">)(</span><span class="o">*</span><span class="n">values</span><span class="o">.</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">values</span><span class="o">.</span><span class="n">kwds</span><span class="p">)</span>  <span class="c1"># type: ignore</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="p">(</span><span class="n">stats</span><span class="o">.</span><span class="n">rv_continuous</span><span class="p">,</span> <span class="n">stats</span><span class="o">.</span><span class="n">rv_discrete</span><span class="p">)):</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="n">Id</span><span class="p">(</span><span class="n">values</span><span class="o">.</span><span class="n">name</span><span class="p">)(</span><span class="n">values</span><span class="o">.</span><span class="n">a</span><span class="p">,</span> <span class="n">values</span><span class="o">.</span><span class="n">b</span><span class="p">)</span>
+                <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+                    <span class="k">pass</span>
+
+            <span class="k">return</span> <span class="n">make_expression</span><span class="p">(</span><span class="n">values</span><span class="p">)</span>
+
+        <span class="n">path_prefix_list</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">to_list</span><span class="p">(</span>
+            <span class="n">path_prefix</span><span class="p">,</span> <span class="n">element_type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">optional</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">arg_name</span><span class="o">=</span><span class="s2">&quot;path_prefix&quot;</span>
+        <span class="p">)</span>
+
+        <span class="n">parameters</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;.&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">path</span><span class="p">):</span> <span class="n">_values_to_expression</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">path</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_iter_parameters</span><span class="p">(</span><span class="n">path_prefix</span><span class="o">=</span><span class="n">path_prefix_list</span><span class="p">)</span>
+        <span class="p">}</span>
+
+        <span class="k">if</span> <span class="n">path_prefix_list</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">Id</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">))(</span>
+                <span class="o">**</span><span class="p">{</span><span class="s2">&quot;.&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">path_prefix_list</span><span class="p">):</span> <span class="bp">self</span><span class="o">.</span><span class="n">estimator</span><span class="p">},</span> <span class="o">**</span><span class="n">parameters</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">Id</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">))(</span><span class="bp">self</span><span class="o">.</span><span class="n">estimator</span><span class="p">,</span> <span class="o">**</span><span class="n">parameters</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="MultiEstimatorParameterSpace"><a class="viewcode-back" href="../../../apidoc/facet/selection/facet.selection.MultiEstimatorParameterSpace.html#facet.selection.MultiEstimatorParameterSpace">[docs]</a><span class="nd">@inheritdoc</span><span class="p">(</span><span class="n">match</span><span class="o">=</span><span class="s2">&quot;&quot;&quot;[see superclass]&quot;&quot;&quot;</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">MultiEstimatorParameterSpace</span><span class="p">(</span>
+    <span class="n">BaseParameterSpace</span><span class="p">[</span><span class="n">T_Estimator_co</span><span class="p">],</span> <span class="n">Generic</span><span class="p">[</span><span class="n">T_Estimator_co</span><span class="p">]</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A collection of parameter spaces, each representing a competing estimator from which</span>
+<span class="sd">    to select the best-performing candidate with optimal hyperparameters.</span>
+
+<span class="sd">    See :class:`.ParameterSpace` for details on setting up and using parameter spaces.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1">#: The parameter spaces constituting this multi-estimator parameter space.</span>
+    <span class="n">spaces</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">ParameterSpace</span><span class="p">[</span><span class="n">T_Estimator_co</span><span class="p">],</span> <span class="o">...</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">spaces</span><span class="p">:</span> <span class="n">ParameterSpace</span><span class="p">[</span><span class="n">T_Estimator_co</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        :param spaces: the parameter spaces from which to select the best estimator</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">validate_element_types</span><span class="p">(</span><span class="n">spaces</span><span class="p">,</span> <span class="n">expected_type</span><span class="o">=</span><span class="n">ParameterSpace</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;arg spaces&quot;</span><span class="p">)</span>
+        <span class="n">validate_spaces</span><span class="p">(</span><span class="n">spaces</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">spaces</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;no parameter space passed; need to pass at least one&quot;</span><span class="p">)</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">estimator</span><span class="o">=</span><span class="n">CandidateEstimatorDF</span><span class="p">())</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">spaces</span> <span class="o">=</span> <span class="n">spaces</span>
+
+<div class="viewcode-block" id="MultiEstimatorParameterSpace.get_parameters"><a class="viewcode-back" href="../../../apidoc/facet/selection/facet.selection.MultiEstimatorParameterSpace.html#facet.selection.MultiEstimatorParameterSpace.get_parameters">[docs]</a>    <span class="nd">@subsdoc</span><span class="p">(</span>
+        <span class="n">pattern</span><span class="o">=</span><span class="p">(</span>
+            <span class="sa">r</span><span class="s2">&quot;a dictionary of parameter choices and distributions,[\n\s]*&quot;</span>
+            <span class="sa">r</span><span class="s2">&quot;or a list of such dictionaries&quot;</span>
+        <span class="p">),</span>
+        <span class="n">replacement</span><span class="o">=</span><span class="s2">&quot;a list of dictionaries of parameter distributions&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="nd">@subsdoc</span><span class="p">(</span>
+        <span class="n">pattern</span><span class="o">=</span><span class="s2">&quot;one or more dictionaries,&quot;</span><span class="p">,</span>
+        <span class="n">replacement</span><span class="o">=</span><span class="s2">&quot;a list of dictionaries,&quot;</span><span class="p">,</span>
+        <span class="n">using</span><span class="o">=</span><span class="n">BaseParameterSpace</span><span class="o">.</span><span class="n">get_parameters</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">def</span> <span class="nf">get_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prefix</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">ParameterDict</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;[see superclass]&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">prefix</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">prefix</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+            <span class="n">candidate_prefixed</span> <span class="o">=</span> <span class="n">CandidateEstimatorDF</span><span class="o">.</span><span class="n">PARAM_CANDIDATE</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">prefix</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">prefix</span><span class="si">}</span><span class="s2">__&quot;</span>
+            <span class="n">candidate_prefixed</span> <span class="o">=</span> <span class="n">prefix</span> <span class="o">+</span> <span class="n">CandidateEstimatorDF</span><span class="o">.</span><span class="n">PARAM_CANDIDATE</span>
+
+        <span class="k">return</span> <span class="p">[</span>
+            <span class="p">{</span>
+                <span class="n">candidate_prefixed</span><span class="p">:</span> <span class="p">[</span><span class="n">space</span><span class="o">.</span><span class="n">estimator</span><span class="p">],</span>
+                <span class="n">prefix</span> <span class="o">+</span> <span class="n">CandidateEstimatorDF</span><span class="o">.</span><span class="n">PARAM_CANDIDATE_NAME</span><span class="p">:</span> <span class="p">[</span><span class="n">space</span><span class="o">.</span><span class="n">get_name</span><span class="p">()],</span>
+                <span class="o">**</span><span class="n">space</span><span class="o">.</span><span class="n">get_parameters</span><span class="p">(</span><span class="n">prefix</span><span class="o">=</span><span class="n">candidate_prefixed</span><span class="p">),</span>
+            <span class="p">}</span>
+            <span class="k">for</span> <span class="n">space</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">spaces</span>
+        <span class="p">]</span></div>
+
+<div class="viewcode-block" id="MultiEstimatorParameterSpace.to_expression"><a class="viewcode-back" href="../../../apidoc/facet/selection/facet.selection.MultiEstimatorParameterSpace.html#facet.selection.MultiEstimatorParameterSpace.to_expression">[docs]</a>    <span class="k">def</span> <span class="nf">to_expression</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Expression</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;[see superclass]&quot;&quot;&quot;</span>
+        <span class="c1"># noinspection PyProtectedMember</span>
+        <span class="k">return</span> <span class="n">Id</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">))(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">spaces</span><span class="p">)</span></div></div>
+
+
+<span class="n">__tracker</span><span class="o">.</span><span class="n">validate</span><span class="p">()</span>
+
+
+<span class="c1">#</span>
+<span class="c1"># auxiliary functions</span>
+<span class="c1">#</span>
+
+
+<span class="k">def</span> <span class="nf">ensure_subclass</span><span class="p">(</span>
+    <span class="n">estimator_type</span><span class="p">:</span> <span class="n">Type</span><span class="p">[</span><span class="n">T_Estimator_co</span><span class="p">],</span> <span class="n">expected_type</span><span class="p">:</span> <span class="n">Type</span><span class="p">[</span><span class="n">T_Estimator_co</span><span class="p">]</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Ensure that the given estimator type is a subclass of the expected estimator type.</span>
+
+<span class="sd">    :param estimator_type: the estimator type to validate</span>
+<span class="sd">    :param expected_type: the expected estimator type</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">issubclass</span><span class="p">(</span><span class="n">estimator_type</span><span class="p">,</span> <span class="n">expected_type</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;arg estimator_type must be a subclass of </span><span class="si">{</span><span class="n">expected_type</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2"> &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;but is: </span><span class="si">{</span><span class="n">estimator_type</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">validate_spaces</span><span class="p">(</span><span class="n">spaces</span><span class="p">:</span> <span class="n">Collection</span><span class="p">[</span><span class="n">ParameterSpace</span><span class="p">[</span><span class="n">T_Estimator_co</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Ensure that all parameter spaces use the same estimator type (typically regressors</span>
+<span class="sd">    or classifiers)</span>
+
+<span class="sd">    :param spaces: the parameter spaces to check</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">estimator_types</span><span class="p">:</span> <span class="n">Set</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="nb">getattr</span><span class="p">(</span><span class="n">space</span><span class="o">.</span><span class="n">estimator</span><span class="p">,</span> <span class="s2">&quot;_estimator_type&quot;</span><span class="p">)</span> <span class="k">for</span> <span class="n">space</span> <span class="ow">in</span> <span class="n">spaces</span>
+    <span class="p">}</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">estimator_types</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+            <span class="s2">&quot;all parameter spaces must use the same estimator type, &quot;</span>
+            <span class="s2">&quot;but got multiple types: &quot;</span> <span class="o">+</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">estimator_types</span><span class="p">))</span>
+        <span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">get_default_estimator_name</span><span class="p">(</span><span class="n">estimator</span><span class="p">:</span> <span class="n">EstimatorDF</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Get a default name of the estimator.</span>
+
+<span class="sd">    - for meta-estimators, this is the default name of the delegate estimator</span>
+<span class="sd">    - for pipelines, this is the default name of the final estimator</span>
+<span class="sd">    - for all other estimators, this is the name of the estimator&#39;s class</span>
+
+
+<span class="sd">    :param estimator: the estimator to get the default name for</span>
+<span class="sd">    :return: the default name</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">estimator</span><span class="p">,</span> <span class="n">CandidateEstimatorDF</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">estimator</span><span class="o">.</span><span class="n">candidate</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">return</span> <span class="nb">type</span><span class="p">(</span><span class="n">estimator</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">estimator</span> <span class="o">=</span> <span class="n">estimator</span><span class="o">.</span><span class="n">candidate</span>
+
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">estimator</span><span class="p">,</span> <span class="n">PipelineDF</span><span class="p">)</span> <span class="ow">and</span> <span class="n">estimator</span><span class="o">.</span><span class="n">steps</span><span class="p">:</span>
+            <span class="n">estimator</span> <span class="o">=</span> <span class="n">estimator</span><span class="o">.</span><span class="n">steps</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">estimator</span><span class="p">,</span> <span class="n">LearnerPipelineDF</span><span class="p">):</span>
+            <span class="n">estimator</span> <span class="o">=</span> <span class="n">estimator</span><span class="o">.</span><span class="n">final_estimator</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">type</span><span class="p">(</span><span class="n">estimator</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span>
+</pre></div>
+
+              </div>
+              
+              
+              <!-- Previous / next buttons -->
+<div class='prev-next-area'>
+</div>
+              
+          </main>
+          
+
+      </div>
+    </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
+<footer class="footer mt-5 mt-md-0">
+  <div class="container">
+    
+    <div class="footer-item">
+      <p class="copyright">
+    &copy; Copyright 2022, Boston Consulting Group (BCG).<br>
+</p>
+    </div>
+    
+    <div class="footer-item">
+      <p class="sphinx-version">
+Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.5.0.<br>
+</p>
+    </div>
+    
+  </div>
+</footer>
+  </body>
+</html>

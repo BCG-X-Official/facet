@@ -1,0 +1,52 @@
+facet.inspection
+================
+
+.. automodule:: facet.inspection
+   :no-imported-members:
+
+   
+
+   
+   
+   =======
+   Classes
+   =======
+
+   .. autosummary::
+      :toctree: inspection
+      :template: custom-class-template.rst
+      :nosignatures:
+   
+      FunctionInspector
+      LearnerInspector
+      NativeLearnerInspector
+      ShapPlotData
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+
+
+
+==========
+Submodules
+==========
+.. autosummary::
+   :toctree: inspection
+   :template: custom-module-template.rst
+   :recursive:
+
+   facet.inspection.base
+   facet.inspection.shap
+

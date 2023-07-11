@@ -1,0 +1,42 @@
+facet.simulation.UnivariateTargetSimulator
+==========================================
+
+.. currentmodule:: facet.simulation
+
+.. autoclass:: UnivariateTargetSimulator
+   :members:
+   :no-show-inheritance:
+   :inherited-members:
+   :special-members: __call__
+
+   
+   
+   .. rubric:: Method summary
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~UnivariateTargetSimulator.baseline
+      ~UnivariateTargetSimulator.expected_output
+      ~UnivariateTargetSimulator.simulate_feature
+   
+   
+
+   
+   
+   .. rubric:: Attribute summary
+
+   .. autosummary::
+   
+      ~UnivariateTargetSimulator.output_unit
+      ~UnivariateTargetSimulator.n_jobs
+      ~UnivariateTargetSimulator.shared_memory
+      ~UnivariateTargetSimulator.pre_dispatch
+      ~UnivariateTargetSimulator.verbose
+      ~UnivariateTargetSimulator.model
+      ~UnivariateTargetSimulator.sample
+      ~UnivariateTargetSimulator.confidence_level
+   
+   
+
+   .. rubric:: Definitions

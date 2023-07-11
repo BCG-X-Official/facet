@@ -1,0 +1,38 @@
+facet.explanation.base.BaseExplainer
+====================================
+
+.. currentmodule:: facet.explanation.base
+
+.. autoclass:: BaseExplainer
+   :members:
+   :no-show-inheritance:
+   :inherited-members:
+   :special-members: __call__
+
+   
+   
+   .. rubric:: Method summary
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~BaseExplainer.explain_row
+      ~BaseExplainer.load
+      ~BaseExplainer.save
+      ~BaseExplainer.shap_interaction_values
+      ~BaseExplainer.shap_values
+      ~BaseExplainer.supports_model_with_masker
+   
+   
+
+   
+   
+   .. rubric:: Attribute summary
+
+   .. autosummary::
+   
+      ~BaseExplainer.supports_interaction
+   
+   
+
+   .. rubric:: Definitions
