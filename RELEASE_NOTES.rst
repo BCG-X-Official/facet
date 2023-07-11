@@ -12,7 +12,7 @@ FACET 2.1
 FACET 2.1 introduces the :class:`.NativeLearnerInspector` for inspecting native
 *scikit-learn* models and pipelines.
 
-We still recommend using *sklearndf* models and learner pipelines and FACET's
+We still recommend using :mod:`sklearndf` models and learner pipelines along with FACET's
 :class:`.LearnerSelector` for hyperparameter tuning; however the new
 :class:`.NativeLearnerInspector` can be useful for inspecting models that have been
 trained using *scikit-learn* directly.
