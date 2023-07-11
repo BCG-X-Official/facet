@@ -440,7 +440,10 @@ def is_fitted(estimator: BaseEstimator) -> bool:
     # get all properties of the estimator (instances of class ``property``)
     fitted_properties = {
         name
-        for name, value in vars(type(estimator)).items()
+        for cls in reversed(type(estimator).mro())
+        # traverse the class hierarchy in reverse order, so that we add the
+        # properties of the most specific class last
+        for name, value in vars(cls).items()
         if (
             # we're only interested in properties that scikit-learn
             # sets when fitting a learner
