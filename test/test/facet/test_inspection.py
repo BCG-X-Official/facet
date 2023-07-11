@@ -4,15 +4,18 @@ Model inspector tests.
 import logging
 import platform
 import warnings
-from typing import Any, Dict, List, Optional, Type, TypeVar, cast
+from typing import Any, Dict, List, Optional, Set, Type, TypeVar, Union, cast
 
 import numpy as np
 import pandas as pd
 import pytest
 from numpy.testing import assert_allclose
+from pandas._testing import assert_index_equal
 from pandas.testing import assert_frame_equal, assert_series_equal
 from sklearn.datasets import make_classification
+from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import GridSearchCV
+from sklearn.pipeline import Pipeline
 
 from pytools.data import LinkageTree, Matrix
 from pytools.viz.dendrogram import DendrogramDrawer, DendrogramReportStyle
@@ -33,7 +36,7 @@ from facet.explanation import (
     TreeExplainerFactory,
 )
 from facet.explanation.base import ExplainerFactory
-from facet.inspection import FunctionInspector, LearnerInspector
+from facet.inspection import FunctionInspector, LearnerInspector, NativeLearnerInspector
 from facet.selection import LearnerSelector
 
 # noinspection PyMissingOrEmptyDocstring
@@ -80,20 +83,80 @@ def test_regressor_selector(
         (PermutationExplainerFactory, {}),
     ],
 )
+@pytest.mark.parametrize(  # type: ignore
+    argnames="native",
+    argvalues=(False, True),
+)
 def test_model_inspection(
     explainer_factory_cls: Type[ExplainerFactory[LGBMRegressorDF]],
     explainer_factory_args: Dict[str, Any],
     best_lgbm_model: RegressorPipelineDF[LGBMRegressorDF],
     sample: Sample,
     n_jobs: int,
+    native: bool,
 ) -> None:
     # test the ModelInspector with the given explainer factory:
 
-    inspector = LearnerInspector(
-        model=best_lgbm_model,
-        explainer_factory=explainer_factory_cls(**explainer_factory_args),
-        n_jobs=n_jobs,
-    ).fit(sample)
+    explainer_factory: ExplainerFactory[LGBMRegressorDF] = explainer_factory_cls(
+        **explainer_factory_args
+    )
+
+    inspector: Union[
+        LearnerInspector[RegressorPipelineDF[LGBMRegressorDF]],
+        NativeLearnerInspector[Pipeline],
+    ]
+
+    regressor_feature_names: Set[str]  # column index names
+
+    if native:
+        assert (
+            best_lgbm_model.preprocessing is not None
+        ), "preprocessing step must be defined"
+
+        regressor = best_lgbm_model.regressor.native_estimator
+
+        if __sklearn_version__ < __sklearn_1_1__:
+            # scikit-learn 1.0.x does not support output feature names in simple
+            # imputers, so we cannot use this for preprocessing
+            log.warning(
+                f"scikit-learn {__sklearn_version__} does not support output "
+                "feature names in simple imputers, so we will test the native learner "
+                "inspector without preprocessing"
+            )
+            assert (
+                sample.features.notna().all().all()
+            ), "observations must not contain missing values"
+            model = regressor
+            regressor_feature_names = set(sample.feature_names)
+
+        else:
+            # scikit-learn 1.1.x supports output feature names in simple imputers,
+            # so we can use this for preprocessing
+            model = Pipeline(
+                # create a native pipeline from the regressor pipeline
+                steps=[
+                    (
+                        "preprocessing",
+                        best_lgbm_model.preprocessing.native_estimator,
+                    ),
+                    ("regressor", regressor),
+                ]
+            ).fit(X=sample.features, y=sample.target)
+            regressor_feature_names = set(model[:-1].get_feature_names_out())
+
+        # noinspection PyTypeChecker
+        inspector = NativeLearnerInspector(
+            model=model,
+            explainer_factory=explainer_factory,
+            n_jobs=n_jobs,
+        ).fit(sample)
+    else:
+        inspector = LearnerInspector(
+            model=best_lgbm_model,
+            explainer_factory=explainer_factory,
+            n_jobs=n_jobs,
+        ).fit(sample)
+        regressor_feature_names = set(best_lgbm_model.regressor.feature_names_in_)
 
     shap_values: pd.DataFrame = inspector.shap_values()
 
@@ -105,10 +168,11 @@ def test_model_inspection(
     assert shap_values.index.names == [Sample.IDX_OBSERVATION]
     assert shap_values.columns.names == [Sample.IDX_FEATURE]
 
-    # column index
-    assert set(shap_values.columns) == set(
-        inspector.model.final_estimator.feature_names_in_
-    )
+    # check that the column names are the same as the feature names
+    assert set(shap_values.columns) == set(regressor_feature_names)
+
+    # check that the row order has been preserved
+    assert_index_equal(shap_values.index, sample.index)
 
     # check that the SHAP values add up to the predictions
     shap_totals = shap_values.sum(axis=1)
@@ -121,6 +185,7 @@ def test_model_inspection(
     assert (
         round((shap_minus_pred - shap_minus_pred.mean()).abs().mean(), 12) == 0.0
     ), "predictions matching total SHAP"
+
     # validate the linkage tree of the resulting inspector
 
     # if the inspector supports interaction values, test the redundancy linkage
@@ -161,7 +226,6 @@ def test_binary_classifier_ranking(
         ClassifierPipelineDF[RandomForestClassifierDF], GridSearchCV
     ]
 ) -> None:
-
     expected_learner_scores = [0.938, 0.936, 0.936, 0.929]
 
     ranking = iris_classifier_selector_binary.summary_report()
@@ -185,7 +249,6 @@ def test_model_inspection_classifier_binary(
     iris_sample_binary: Sample,
     n_jobs: int,
 ) -> None:
-
     model_inspector = LearnerInspector(
         model=iris_classifier_binary,
         shap_interaction=False,
@@ -261,7 +324,9 @@ def test_model_inspection_classifier_binary_single_shap_output(n_jobs: int) -> N
 
 # noinspection DuplicatedCode
 def test_model_inspection_classifier_multi_class(
-    iris_inspector_multi_class: LearnerInspector[RandomForestClassifierDF],
+    iris_inspector_multi_class: LearnerInspector[
+        ClassifierPipelineDF[RandomForestClassifierDF]
+    ],
 ) -> None:
     iris_classifier = iris_inspector_multi_class.model
     iris_sample = iris_inspector_multi_class.sample_
@@ -382,7 +447,6 @@ def test_model_inspection_classifier_multi_class(
 def _validate_shap_values_against_predictions(
     shap_values: pd.DataFrame, model: ClassifierDF, sample: Sample
 ) -> None:
-
     # calculate the matching predictions, so we can check if the SHAP values add up
     # correctly
     predicted_probabilities: pd.DataFrame = model.predict_proba(sample.features)
@@ -439,23 +503,42 @@ def _validate_shap_values_against_predictions(
 
 
 # noinspection DuplicatedCode
+@pytest.mark.parametrize(  # type: ignore
+    argnames="native",
+    argvalues=(False, True),
+)
 def test_model_inspection_classifier_interaction(
     iris_classifier_binary: ClassifierPipelineDF[RandomForestClassifierDF],
     iris_sample_binary: Sample,
     n_jobs: int,
+    native: bool,
 ) -> None:
     warnings.filterwarnings("ignore", message="You are accessing a training score")
 
-    model_inspector = LearnerInspector(
-        model=iris_classifier_binary,
+    cls_inspector: Type[
+        Union[
+            LearnerInspector[RandomForestClassifierDF],
+            NativeLearnerInspector[RandomForestClassifier],
+        ]
+    ]
+    learner: Union[RandomForestClassifierDF, RandomForestClassifier]
+    if native:
+        cls_inspector = NativeLearnerInspector[RandomForestClassifier]
+        learner = iris_classifier_binary.final_estimator.native_estimator
+    else:
+        cls_inspector = LearnerInspector[RandomForestClassifierDF]
+        learner = iris_classifier_binary.final_estimator
+
+    model_inspector = cls_inspector(
+        model=learner,
         explainer_factory=TreeExplainerFactory(
             feature_perturbation="tree_path_dependent", uses_background_dataset=True
         ),
         n_jobs=n_jobs,
     ).fit(iris_sample_binary)
 
-    model_inspector_no_interaction = LearnerInspector(
-        model=iris_classifier_binary,
+    model_inspector_no_interaction = cls_inspector(
+        model=learner,
         shap_interaction=False,
         explainer_factory=TreeExplainerFactory(
             feature_perturbation="tree_path_dependent", uses_background_dataset=True

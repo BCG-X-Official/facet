@@ -241,7 +241,6 @@ class ClassifierShapCalculator(
         shap_tensors: Union[npt.NDArray[np.float_], List[npt.NDArray[np.float_]]],
         n_outputs: int,
     ) -> List[npt.NDArray[np.float_]]:
-
         if n_outputs == 1 and isinstance(shap_tensors, list) and len(shap_tensors) == 2:
             # in the binary classification case, we will proceed with SHAP values
             # for class 0 only, since values for class 1 will just be the same
@@ -273,7 +272,6 @@ class ClassifierShapCalculator(
         observation_idx: pd.Index,
         feature_idx: pd.Index,
     ) -> List[pd.DataFrame]:
-
         if self.interaction_values:
             # return a list of data frame [(obs x features) x features],
             # one for each of the outputs

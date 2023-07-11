@@ -72,7 +72,6 @@ def uplift_simulator(
 def test_univariate_target_simulation(
     target_simulator: UnivariateTargetSimulator,
 ) -> None:
-
     parameterized_feature = "HouseAge"
     partitioner = ContinuousRangePartitioner(max_partitions=10)
 
@@ -135,7 +134,6 @@ def test_univariate_target_simulation(
 def test_univariate_target_subsample_simulation_80(
     model: RegressorPipelineDF[LGBMRegressorDF], subsample: Sample, n_jobs: int
 ) -> None:
-
     parameterized_feature = "HouseAge"
     partitioner = ContinuousRangePartitioner(max_partitions=10)
 
@@ -201,7 +199,6 @@ def test_univariate_target_subsample_simulation_80(
 def test_univariate_uplift_subsample_simulation_95(
     model: RegressorPipelineDF[LGBMRegressorDF], subsample: Sample, n_jobs: int
 ) -> None:
-
     parameterized_feature = "HouseAge"
     partitioner = ContinuousRangePartitioner(max_partitions=10)
 
@@ -266,7 +263,6 @@ def test_univariate_uplift_subsample_simulation_95(
 def test_univariate_uplift_simulation(
     uplift_simulator: UnivariateUpliftSimulator,
 ) -> None:
-
     parameterized_feature = "HouseAge"
     partitioner = ContinuousRangePartitioner(max_partitions=10)
 
@@ -329,7 +325,6 @@ def test_univariate_uplift_simulation(
 def test_univariate_uplift_subsample_simulation(
     model: RegressorPipelineDF[LGBMRegressorDF], subsample: Sample, n_jobs: int
 ) -> None:
-
     parameterized_feature = "HouseAge"
     partitioner = ContinuousRangePartitioner(max_partitions=10)
 

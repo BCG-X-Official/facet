@@ -1,10 +1,29 @@
-Release Notes
+\Release Notes
 =============
 
 .. |mypy| replace:: :external+mypy:doc:`mypy <index>`
 .. |shap| replace:: :external+shap:doc:`shap <index>`
 .. |nbsp| unicode:: 0xA0
    :trim:
+
+FACET 2.1
+---------
+
+FACET 2.1 introduces the :class:`.NativeLearnerInspector` for inspecting native
+*scikit-learn* models and pipelines.
+
+We still recommend using :mod:`sklearndf` models and learner pipelines along with FACET's
+:class:`.LearnerSelector` for hyperparameter tuning; however the new
+:class:`.NativeLearnerInspector` can be useful for inspecting models that have been
+trained using *scikit-learn* directly.
+
+2.1.0
+~~~~~
+
+- API: new :class:`.NativeLearnerInspector` class for inspecting native *scikit-learn*
+  regressors, classifiers, and pipelines with a regressor or classifier as the final
+  estimator
+
 
 FACET 2.0
 ---------
@@ -17,6 +36,14 @@ visualizations.
 
 FACET 2.0 requires :mod:`pytools` |nbsp| 2.0 and :mod:`sklearndf` |nbsp| 2.2, and is now
 fully type-checked by |mypy|.
+
+2.0.1
+~~~~~
+
+- API: class :class:`.LearnerInspector` now supports inspecting individual regressors
+  and classifiers; it is no longer necessary to wrap them into a
+  :class:`.RegressorPipelineDF` or :class:`.ClassifierPipelineDF` instance with empty
+  preprocessing
 
 
 2.0.0

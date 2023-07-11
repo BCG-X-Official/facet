@@ -21,6 +21,7 @@ requires = [
     "pandas            >=1.0",
     "scipy             ~=1.2",
     "shap              >=0.39",
+    "scikit-learn      ~=1.0",
     "sklearndf         ~=2.2",
     "typing_extensions ~=4.0",
 ]
@@ -85,14 +86,16 @@ typing_extensions = "~=4.0.0"
 # additional minimum requirements of sklearndf
 boruta            = "~=0.3.0"
 lightgbm          = "~=3.0.0"
-scikit-learn      = "~=0.24.2"
-xgboost           = "~=1.5"
+scikit-learn      = "~=1.0.2"
+xgboost           = "~=1.5.0"
 # additional minimum requirements of gamma-pytools
 joblib            = "~=0.14.1"
 typing_inspect    = "~=0.4.0"
 # additional minimum requirements of shap
 ipython           = "==7.0"
-numba             = "~=0.55"  # required to support numpy 1.21
+numba             = "~=0.55.2"  # required to support numpy 1.21
+# additional requirements for testing
+zipp              = "<3.16"     # required to support python 3.7
 
 [build.matrix.max]
 # direct requirements of gamma-facet
@@ -109,14 +112,14 @@ typing_extensions = "~=4.3"
 # additional maximum requirements of sklearndf
 boruta            = "~=0.3"
 lightgbm          = "~=3.3"
-scikit-learn      = "~=1.1"
+scikit-learn      = "~=1.2"
 xgboost           = "~=1.5"
 # additional maximum requirements of gamma-pytools
 joblib            = "~=1.1"
 typing_inspect    = "~=0.7"
 # additional maximum requirements of shap
 ipython           = ">=7"
-numba             = ">=0.55.2"  # required to support numpy 1.22
+numba             = "~=0.56"
 
 [tool.black]
 # quiet = "True"

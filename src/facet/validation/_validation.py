@@ -115,7 +115,6 @@ class BaseBootstrapCV(
                 test: npt.NDArray[np.int_] = indices[test_mask]
                 # make sure test is not empty, else sample another train set
                 if len(test) > 0:
-
                     yield train, test
                     break
 
@@ -254,7 +253,6 @@ class StationaryBootstrapCV(BaseBootstrapCV):
         random_state: np.random.RandomState,
         y: Union[npt.NDArray[Any], pd.Series, pd.DataFrame, None],
     ) -> npt.NDArray[np.int_]:
-
         mean_block_size = self.mean_block_size
         if mean_block_size < 1:
             # if mean block size was set as a percentage, calculate the actual mean

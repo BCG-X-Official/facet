@@ -344,6 +344,7 @@ class KernelExplainerFactory(FunctionExplainerFactory):
 # Exact explainer factory
 #
 
+
 # noinspection PyPep8Naming
 class _ExactExplainer(
     shap.explainers.Exact,  # type: ignore

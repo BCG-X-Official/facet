@@ -47,6 +47,8 @@ test:
     # additional requirements of shap
     - ipython        {{ environ.get('FACET_V_IPYTHON', '[False]') }}
     - numba          {{ environ.get('FACET_V_NUMBA', '[False]') }}
+    # additional requirements for testing
+    - zipp           {{ environ.get('FACET_V_ZIPP', '[False]') }}
   commands:
     - conda list
     - python -c 'import facet;
