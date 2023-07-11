@@ -42,6 +42,7 @@ facet.inspection.LearnerInspector
       ~LearnerInspector.DEFAULT_EXPLAINER_FACTORY
       ~LearnerInspector.feature_names
       ~LearnerInspector.is_fitted
+      ~LearnerInspector.native_learner
       ~LearnerInspector.output_names
       ~LearnerInspector.sample_
       ~LearnerInspector.shap_calculator
@@ -52,6 +53,7 @@ facet.inspection.LearnerInspector
       ~LearnerInspector.model
       ~LearnerInspector.shap_interaction
       ~LearnerInspector.explainer_factory
+      ~LearnerInspector.learner
    
    
 

@@ -37,7 +37,7 @@
     <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
-    <link rel="next" title="facet.inspection.ShapPlotData" href="facet.inspection.ShapPlotData.html" />
+    <link rel="next" title="facet.inspection.NativeLearnerInspector" href="facet.inspection.NativeLearnerInspector.html" />
     <link rel="prev" title="facet.inspection.FunctionInspector" href="facet.inspection.FunctionInspector.html" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="docsearch:language" content="None">
@@ -306,6 +306,11 @@
    <li class="toctree-l2 current active">
     <a class="current reference internal" href="#">
      facet.inspection.LearnerInspector
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="facet.inspection.NativeLearnerInspector.html">
+     facet.inspection.NativeLearnerInspector
     </a>
    </li>
    <li class="toctree-l2">
@@ -592,7 +597,7 @@
 <dl class="py class">
 <dt class="sig sig-object py" id="facet.inspection.LearnerInspector">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">facet.inspection.</span></span><span class="sig-name descname"><span class="pre">LearnerInspector</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">explainer_factory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shap_interaction</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_jobs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shared_memory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pre_dispatch</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/facet/inspection/_learner_inspector.html#LearnerInspector"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#facet.inspection.LearnerInspector" title="Permalink to this definition">#</a></dt>
-<dd><p>Explain a regressor or classifier based on SHAP values.</p>
+<dd><p>Explain an <a class="reference external" href="https://bcg-gamma.github.io/sklearndf/apidoc/sklearndf.html#module-sklearndf" title="(in sklearndf v2.2.1)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">sklearndf</span></code></a> regressor or classifier based on SHAP values.</p>
 <p>Focus is on explaining the overall model, but the inspector also delivers
 SHAP explanations of the individual observations.</p>
 <p>Available inspection methods are:</p>
@@ -620,18 +625,22 @@ dendrogram)</p></li>
 specified in the underlying training sample.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Bases</dt>
-<dd class="field-odd"><p><a class="reference internal" href="base/facet.inspection.base.ModelInspector.html#facet.inspection.base.ModelInspector" title="facet.inspection.base.ModelInspector"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ModelInspector</span></code></a> [~T_SupervisedLearnerDF]</p>
+<dd class="field-odd"><p><a class="reference internal" href="base/facet.inspection.base.ModelInspector.html#facet.inspection.base.ModelInspector" title="facet.inspection.base.ModelInspector"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ModelInspector</span></code></a> [~T_SupervisedLearner]</p>
 </dd>
 <dt class="field-even">Generic types</dt>
-<dd class="field-even"><p>~T_SupervisedLearnerDF(bound= <a class="reference external" href="https://bcg-gamma.github.io/sklearndf/apidoc/sklearndf/sklearndf.SupervisedLearnerDF.html#sklearndf.SupervisedLearnerDF" title="(in sklearndf v2.2.0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">SupervisedLearnerDF</span></code></a>)</p>
+<dd class="field-even"><p>~T_SupervisedLearnerDF(bound= <a class="reference external" href="https://bcg-gamma.github.io/sklearndf/apidoc/sklearndf/sklearndf.SupervisedLearnerDF.html#sklearndf.SupervisedLearnerDF" title="(in sklearndf v2.2.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">SupervisedLearnerDF</span></code></a>)</p>
 </dd>
 <dt class="field-odd">Metaclasses</dt>
 <dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.7/library/abc.html#abc.ABCMeta" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ABCMeta</span></code></a></p>
 </dd>
 <dt class="field-even">Parameters</dt>
 <dd class="field-even"><ul class="simple">
-<li><p><strong>model</strong> (<a class="reference external" href="https://bcg-gamma.github.io/sklearndf/apidoc/sklearndf/pipeline/sklearndf.pipeline.SupervisedLearnerPipelineDF.html#sklearndf.pipeline.SupervisedLearnerPipelineDF" title="(in sklearndf v2.2.0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">SupervisedLearnerPipelineDF</span></code></a>[<a class="reference external" href="https://docs.python.org/3.7/library/typing.html#typing.TypeVar" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">T_SupervisedLearnerDF</span></code>, bound= <a class="reference external" href="https://bcg-gamma.github.io/sklearndf/apidoc/sklearndf/sklearndf.SupervisedLearnerDF.html#sklearndf.SupervisedLearnerDF" title="(in sklearndf v2.2.0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">SupervisedLearnerDF</span></code></a>)]) – the learner pipeline to inspect</p></li>
-<li><p><strong>explainer_factory</strong> (<a class="reference external" href="https://docs.python.org/3.7/library/typing.html#typing.Optional" title="(in Python v3.7)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">ExplainerFactory</span></code>[<a class="reference external" href="https://docs.python.org/3.7/library/typing.html#typing.Union" title="(in Python v3.7)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code></a>[<a class="reference external" href="https://scikit-learn.org/stable/modules/generated/sklearn.base.RegressorMixin.html#sklearn.base.RegressorMixin" title="(in scikit-learn v1.2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">RegressorMixin</span></code></a>, <a class="reference external" href="https://scikit-learn.org/stable/modules/generated/sklearn.base.ClassifierMixin.html#sklearn.base.ClassifierMixin" title="(in scikit-learn v1.2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ClassifierMixin</span></code></a>]]]) – optional function that creates a shap Explainer
+<li><p><strong>model</strong> (<a class="reference internal" href="#facet.inspection.LearnerInspector" title="facet.inspection.LearnerInspector"><code class="xref py py-class docutils literal notranslate"><span class="pre">LearnerInspector</span></code></a>) – the learner or learner pipeline to inspect (typically, one of
+a <a class="reference external" href="https://bcg-gamma.github.io/sklearndf/apidoc/sklearndf/pipeline/sklearndf.pipeline.ClassifierPipelineDF.html#sklearndf.pipeline.ClassifierPipelineDF" title="(in sklearndf v2.2.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ClassifierPipelineDF</span></code></a>,
+<a class="reference external" href="https://bcg-gamma.github.io/sklearndf/apidoc/sklearndf/pipeline/sklearndf.pipeline.RegressorPipelineDF.html#sklearndf.pipeline.RegressorPipelineDF" title="(in sklearndf v2.2.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">RegressorPipelineDF</span></code></a>,
+<code class="xref py py-class docutils literal notranslate"><span class="pre">ClassifierDF</span></code>, or
+<code class="xref py py-class docutils literal notranslate"><span class="pre">RegressorDF</span></code>)</p></li>
+<li><p><strong>explainer_factory</strong> (<a class="reference external" href="https://docs.python.org/3.7/library/typing.html#typing.Optional" title="(in Python v3.7)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">ExplainerFactory</span></code>[<a class="reference external" href="https://docs.python.org/3.7/library/typing.html#typing.Union" title="(in Python v3.7)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code></a>[<a class="reference external" href="https://scikit-learn.org/stable/modules/generated/sklearn.base.RegressorMixin.html#sklearn.base.RegressorMixin" title="(in scikit-learn v1.3)"><code class="xref py py-class docutils literal notranslate"><span class="pre">RegressorMixin</span></code></a>, <a class="reference external" href="https://scikit-learn.org/stable/modules/generated/sklearn.base.ClassifierMixin.html#sklearn.base.ClassifierMixin" title="(in scikit-learn v1.3)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ClassifierMixin</span></code></a>]]]) – optional function that creates a shap Explainer
 (default: <code class="docutils literal notranslate"><span class="pre">TreeExplainerFactory</span></code>)</p></li>
 <li><p><strong>shap_interaction</strong> (<a class="reference external" href="https://docs.python.org/3.7/library/functions.html#bool" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a>) – if <code class="docutils literal notranslate"><span class="pre">True</span></code>, calculate SHAP interaction values, else
 only calculate SHAP contribution values;
@@ -642,7 +651,7 @@ redundancy
 if <code class="docutils literal notranslate"><span class="pre">None</span></code>, use joblib default (default: <code class="docutils literal notranslate"><span class="pre">None</span></code>)</p></li>
 <li><p><strong>shared_memory</strong> (<a class="reference external" href="https://docs.python.org/3.7/library/typing.html#typing.Optional" title="(in Python v3.7)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3.7/library/functions.html#bool" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a>]) – if <code class="docutils literal notranslate"><span class="pre">True</span></code>, use threads in the parallel runs; if
 <code class="docutils literal notranslate"><span class="pre">False</span></code> or <code class="docutils literal notranslate"><span class="pre">None</span></code>, use multiprocessing (default: <code class="docutils literal notranslate"><span class="pre">None</span></code>)</p></li>
-<li><p><strong>pre_dispatch</strong> (<a class="reference external" href="https://docs.python.org/3.7/library/typing.html#typing.Union" title="(in Python v3.7)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code></a>[<a class="reference external" href="https://docs.python.org/3.7/library/stdtypes.html#str" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3.7/library/functions.html#int" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>, <a class="reference external" href="https://docs.python.org/3.7/library/constants.html#None" title="(in Python v3.7)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>]) – number of batches to pre-dispatch;
+<li><p><strong>pre_dispatch</strong> (<a class="reference external" href="https://docs.python.org/3.7/library/typing.html#typing.Union" title="(in Python v3.7)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code></a>[<a class="reference external" href="https://docs.python.org/3.7/library/functions.html#int" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>, <a class="reference external" href="https://docs.python.org/3.7/library/stdtypes.html#str" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3.7/library/constants.html#None" title="(in Python v3.7)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>]) – number of batches to pre-dispatch;
 if <code class="docutils literal notranslate"><span class="pre">None</span></code>, use joblib default (default: <code class="docutils literal notranslate"><span class="pre">None</span></code>)</p></li>
 <li><p><strong>verbose</strong> (<a class="reference external" href="https://docs.python.org/3.7/library/typing.html#typing.Optional" title="(in Python v3.7)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3.7/library/functions.html#int" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>]) – verbosity level used in the parallel computation;
 if <code class="docutils literal notranslate"><span class="pre">None</span></code>, use joblib default (default: <code class="docutils literal notranslate"><span class="pre">None</span></code>)</p></li>
@@ -707,7 +716,7 @@ if <code class="docutils literal notranslate"><span class="pre">None</span></cod
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">COL_IMPORTANCE</span></code></p></td>
 <td><p>Name for feature importance series or column.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#facet.inspection.LearnerInspector.DEFAULT_EXPLAINER_FACTORY" title="facet.inspection.LearnerInspector.DEFAULT_EXPLAINER_FACTORY"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DEFAULT_EXPLAINER_FACTORY</span></code></a></p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">DEFAULT_EXPLAINER_FACTORY</span></code></p></td>
 <td><p>The default explainer factory used by this inspector.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#facet.inspection.LearnerInspector.feature_names" title="facet.inspection.LearnerInspector.feature_names"><code class="xref py py-obj docutils literal notranslate"><span class="pre">feature_names</span></code></a></p></td>
@@ -716,35 +725,41 @@ if <code class="docutils literal notranslate"><span class="pre">None</span></cod
 <tr class="row-even"><td><p><a class="reference internal" href="#facet.inspection.LearnerInspector.is_fitted" title="facet.inspection.LearnerInspector.is_fitted"><code class="xref py py-obj docutils literal notranslate"><span class="pre">is_fitted</span></code></a></p></td>
 <td><p>[see superclass]</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#facet.inspection.LearnerInspector.output_names" title="facet.inspection.LearnerInspector.output_names"><code class="xref py py-obj docutils literal notranslate"><span class="pre">output_names</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#facet.inspection.LearnerInspector.native_learner" title="facet.inspection.LearnerInspector.native_learner"><code class="xref py py-obj docutils literal notranslate"><span class="pre">native_learner</span></code></a></p></td>
+<td><p>The native learner to inspect.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#facet.inspection.LearnerInspector.output_names" title="facet.inspection.LearnerInspector.output_names"><code class="xref py py-obj docutils literal notranslate"><span class="pre">output_names</span></code></a></p></td>
 <td><p>The names of the outputs explained by this inspector.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#facet.inspection.LearnerInspector.sample_" title="facet.inspection.LearnerInspector.sample_"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample_</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#facet.inspection.LearnerInspector.sample_" title="facet.inspection.LearnerInspector.sample_"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample_</span></code></a></p></td>
 <td><p>The background sample used to fit this inspector.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#facet.inspection.LearnerInspector.shap_calculator" title="facet.inspection.LearnerInspector.shap_calculator"><code class="xref py py-obj docutils literal notranslate"><span class="pre">shap_calculator</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#facet.inspection.LearnerInspector.shap_calculator" title="facet.inspection.LearnerInspector.shap_calculator"><code class="xref py py-obj docutils literal notranslate"><span class="pre">shap_calculator</span></code></a></p></td>
 <td><p>The SHAP calculator used by this inspector.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">n_jobs</span></code></p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">n_jobs</span></code></p></td>
 <td><p>Number of jobs to use in parallel; if <code class="docutils literal notranslate"><span class="pre">None</span></code>, use joblib default.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">shared_memory</span></code></p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">shared_memory</span></code></p></td>
 <td><p>If <code class="docutils literal notranslate"><span class="pre">True</span></code>, use threads in the parallel runs; if <code class="docutils literal notranslate"><span class="pre">False</span></code> or <code class="docutils literal notranslate"><span class="pre">None</span></code>, use multiprocessing.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">pre_dispatch</span></code></p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">pre_dispatch</span></code></p></td>
 <td><p>Number of batches to pre-dispatch; if <code class="docutils literal notranslate"><span class="pre">None</span></code>, use joblib default.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">verbose</span></code></p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">verbose</span></code></p></td>
 <td><p>Verbosity level used in the parallel computation; if <code class="docutils literal notranslate"><span class="pre">None</span></code>, use joblib default.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">model</span></code></p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">model</span></code></p></td>
 <td><p>The model to inspect.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">shap_interaction</span></code></p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">shap_interaction</span></code></p></td>
 <td><p>If <code class="docutils literal notranslate"><span class="pre">True</span></code>, calculate SHAP interaction values, else only calculate SHAP contribution values.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#facet.inspection.LearnerInspector.explainer_factory" title="facet.inspection.LearnerInspector.explainer_factory"><code class="xref py py-obj docutils literal notranslate"><span class="pre">explainer_factory</span></code></a></p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">explainer_factory</span></code></p></td>
 <td><p>The factory instance used to create the explainer for the learner.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">learner</span></code></p></td>
+<td><p>the supervised learner to inspect; this is either identical with <code class="xref py py-attr docutils literal notranslate"><span class="pre">model</span></code>, or the final estimator of <code class="xref py py-attr docutils literal notranslate"><span class="pre">model</span></code> if <code class="xref py py-attr docutils literal notranslate"><span class="pre">model</span></code> is a pipeline</p></td>
 </tr>
 </tbody>
 </table>
@@ -759,7 +774,7 @@ associated features.</p>
 a list of linkage trees per target or class.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.7/library/typing.html#typing.Union" title="(in Python v3.7)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code></a>[<a class="reference external" href="https://bcg-gamma.github.io/pytools/apidoc/pytools/data/pytools.data.LinkageTree.html#pytools.data.LinkageTree" title="(in pytools v2.1.0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">LinkageTree</span></code></a>, <a class="reference external" href="https://docs.python.org/3.7/library/typing.html#typing.List" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a>[<a class="reference external" href="https://bcg-gamma.github.io/pytools/apidoc/pytools/data/pytools.data.LinkageTree.html#pytools.data.LinkageTree" title="(in pytools v2.1.0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">LinkageTree</span></code></a>]]</p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.7/library/typing.html#typing.Union" title="(in Python v3.7)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code></a>[<a class="reference external" href="https://bcg-gamma.github.io/pytools/apidoc/pytools/data/pytools.data.LinkageTree.html#pytools.data.LinkageTree" title="(in pytools v2.1.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">LinkageTree</span></code></a>, <a class="reference external" href="https://docs.python.org/3.7/library/typing.html#typing.List" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a>[<a class="reference external" href="https://bcg-gamma.github.io/pytools/apidoc/pytools/data/pytools.data.LinkageTree.html#pytools.data.LinkageTree" title="(in pytools v2.1.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">LinkageTree</span></code></a>]]</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>linkage tree of feature associations; list of linkage trees
@@ -801,7 +816,7 @@ such that association between adjacent rows and columns is maximised; if
 </ul>
 </dd>
 <dt class="field-even">Return type</dt>
-<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3.7/library/typing.html#typing.Union" title="(in Python v3.7)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code></a>[<a class="reference external" href="https://bcg-gamma.github.io/pytools/apidoc/pytools/data/pytools.data.Matrix.html#pytools.data.Matrix" title="(in pytools v2.1.0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Matrix</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">float64</span></code>], <a class="reference external" href="https://docs.python.org/3.7/library/typing.html#typing.List" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a>[<a class="reference external" href="https://bcg-gamma.github.io/pytools/apidoc/pytools/data/pytools.data.Matrix.html#pytools.data.Matrix" title="(in pytools v2.1.0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Matrix</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">float64</span></code>]]]</p>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3.7/library/typing.html#typing.Union" title="(in Python v3.7)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code></a>[<a class="reference external" href="https://bcg-gamma.github.io/pytools/apidoc/pytools/data/pytools.data.Matrix.html#pytools.data.Matrix" title="(in pytools v2.1.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Matrix</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">float64</span></code>], <a class="reference external" href="https://docs.python.org/3.7/library/typing.html#typing.List" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a>[<a class="reference external" href="https://bcg-gamma.github.io/pytools/apidoc/pytools/data/pytools.data.Matrix.html#pytools.data.Matrix" title="(in pytools v2.1.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Matrix</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">float64</span></code>]]]</p>
 </dd>
 <dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p>feature association matrix as a data frame of shape
@@ -824,7 +839,7 @@ are <code class="docutils literal notranslate"><span class="pre">rms</span></cod
 values)</p>
 </dd>
 <dt class="field-even">Return type</dt>
-<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3.7/library/typing.html#typing.Union" title="(in Python v3.7)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code></a>[<a class="reference external" href="https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Series.html#pandas.Series" title="(in pandas v2.0.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Series</span></code></a>, <a class="reference external" href="https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v2.0.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></a>]</p>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3.7/library/typing.html#typing.Union" title="(in Python v3.7)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code></a>[<a class="reference external" href="https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Series.html#pandas.Series" title="(in pandas v2.0.3)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Series</span></code></a>, <a class="reference external" href="https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v2.0.3)"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></a>]</p>
 </dd>
 <dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p>a series of length <cite>n_features</cite> for single-output models, or a
@@ -870,7 +885,7 @@ I_{} = \begin{pmatrix}
 a list with one matrix per output.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.7/library/typing.html#typing.Union" title="(in Python v3.7)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code></a>[<a class="reference external" href="https://bcg-gamma.github.io/pytools/apidoc/pytools/data/pytools.data.Matrix.html#pytools.data.Matrix" title="(in pytools v2.1.0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Matrix</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">float64</span></code>], <a class="reference external" href="https://docs.python.org/3.7/library/typing.html#typing.List" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a>[<a class="reference external" href="https://bcg-gamma.github.io/pytools/apidoc/pytools/data/pytools.data.Matrix.html#pytools.data.Matrix" title="(in pytools v2.1.0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Matrix</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">float64</span></code>]]]</p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.7/library/typing.html#typing.Union" title="(in Python v3.7)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code></a>[<a class="reference external" href="https://bcg-gamma.github.io/pytools/apidoc/pytools/data/pytools.data.Matrix.html#pytools.data.Matrix" title="(in pytools v2.1.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Matrix</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">float64</span></code>], <a class="reference external" href="https://docs.python.org/3.7/library/typing.html#typing.List" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a>[<a class="reference external" href="https://bcg-gamma.github.io/pytools/apidoc/pytools/data/pytools.data.Matrix.html#pytools.data.Matrix" title="(in pytools v2.1.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Matrix</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">float64</span></code>]]]</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>relative shap interaction values as a data frame of shape
@@ -889,7 +904,7 @@ redundant features.</p>
 a list of linkage trees per target or class.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.7/library/typing.html#typing.Union" title="(in Python v3.7)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code></a>[<a class="reference external" href="https://bcg-gamma.github.io/pytools/apidoc/pytools/data/pytools.data.LinkageTree.html#pytools.data.LinkageTree" title="(in pytools v2.1.0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">LinkageTree</span></code></a>, <a class="reference external" href="https://docs.python.org/3.7/library/typing.html#typing.List" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a>[<a class="reference external" href="https://bcg-gamma.github.io/pytools/apidoc/pytools/data/pytools.data.LinkageTree.html#pytools.data.LinkageTree" title="(in pytools v2.1.0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">LinkageTree</span></code></a>]]</p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.7/library/typing.html#typing.Union" title="(in Python v3.7)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code></a>[<a class="reference external" href="https://bcg-gamma.github.io/pytools/apidoc/pytools/data/pytools.data.LinkageTree.html#pytools.data.LinkageTree" title="(in pytools v2.1.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">LinkageTree</span></code></a>, <a class="reference external" href="https://docs.python.org/3.7/library/typing.html#typing.List" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a>[<a class="reference external" href="https://bcg-gamma.github.io/pytools/apidoc/pytools/data/pytools.data.LinkageTree.html#pytools.data.LinkageTree" title="(in pytools v2.1.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">LinkageTree</span></code></a>]]</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>linkage tree of feature redundancies; list of linkage trees
@@ -930,7 +945,7 @@ such that redundancy between adjacent rows and columns is maximised; if
 </ul>
 </dd>
 <dt class="field-even">Return type</dt>
-<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3.7/library/typing.html#typing.Union" title="(in Python v3.7)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code></a>[<a class="reference external" href="https://bcg-gamma.github.io/pytools/apidoc/pytools/data/pytools.data.Matrix.html#pytools.data.Matrix" title="(in pytools v2.1.0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Matrix</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">float64</span></code>], <a class="reference external" href="https://docs.python.org/3.7/library/typing.html#typing.List" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a>[<a class="reference external" href="https://bcg-gamma.github.io/pytools/apidoc/pytools/data/pytools.data.Matrix.html#pytools.data.Matrix" title="(in pytools v2.1.0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Matrix</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">float64</span></code>]]]</p>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3.7/library/typing.html#typing.Union" title="(in Python v3.7)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code></a>[<a class="reference external" href="https://bcg-gamma.github.io/pytools/apidoc/pytools/data/pytools.data.Matrix.html#pytools.data.Matrix" title="(in pytools v2.1.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Matrix</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">float64</span></code>], <a class="reference external" href="https://docs.python.org/3.7/library/typing.html#typing.List" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a>[<a class="reference external" href="https://bcg-gamma.github.io/pytools/apidoc/pytools/data/pytools.data.Matrix.html#pytools.data.Matrix" title="(in pytools v2.1.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Matrix</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">float64</span></code>]]]</p>
 </dd>
 <dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p>feature redundancy matrix as a data frame of shape
@@ -949,7 +964,7 @@ synergistic features.</p>
 a list of linkage trees per target or class.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.7/library/typing.html#typing.Union" title="(in Python v3.7)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code></a>[<a class="reference external" href="https://bcg-gamma.github.io/pytools/apidoc/pytools/data/pytools.data.LinkageTree.html#pytools.data.LinkageTree" title="(in pytools v2.1.0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">LinkageTree</span></code></a>, <a class="reference external" href="https://docs.python.org/3.7/library/typing.html#typing.List" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a>[<a class="reference external" href="https://bcg-gamma.github.io/pytools/apidoc/pytools/data/pytools.data.LinkageTree.html#pytools.data.LinkageTree" title="(in pytools v2.1.0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">LinkageTree</span></code></a>]]</p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.7/library/typing.html#typing.Union" title="(in Python v3.7)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code></a>[<a class="reference external" href="https://bcg-gamma.github.io/pytools/apidoc/pytools/data/pytools.data.LinkageTree.html#pytools.data.LinkageTree" title="(in pytools v2.1.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">LinkageTree</span></code></a>, <a class="reference external" href="https://docs.python.org/3.7/library/typing.html#typing.List" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a>[<a class="reference external" href="https://bcg-gamma.github.io/pytools/apidoc/pytools/data/pytools.data.LinkageTree.html#pytools.data.LinkageTree" title="(in pytools v2.1.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">LinkageTree</span></code></a>]]</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>linkage tree of feature synergies; list of linkage trees
@@ -990,7 +1005,7 @@ such that synergy between adjacent rows and columns is maximised; if
 </ul>
 </dd>
 <dt class="field-even">Return type</dt>
-<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3.7/library/typing.html#typing.Union" title="(in Python v3.7)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code></a>[<a class="reference external" href="https://bcg-gamma.github.io/pytools/apidoc/pytools/data/pytools.data.Matrix.html#pytools.data.Matrix" title="(in pytools v2.1.0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Matrix</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">float64</span></code>], <a class="reference external" href="https://docs.python.org/3.7/library/typing.html#typing.List" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a>[<a class="reference external" href="https://bcg-gamma.github.io/pytools/apidoc/pytools/data/pytools.data.Matrix.html#pytools.data.Matrix" title="(in pytools v2.1.0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Matrix</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">float64</span></code>]]]</p>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3.7/library/typing.html#typing.Union" title="(in Python v3.7)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code></a>[<a class="reference external" href="https://bcg-gamma.github.io/pytools/apidoc/pytools/data/pytools.data.Matrix.html#pytools.data.Matrix" title="(in pytools v2.1.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Matrix</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">float64</span></code>], <a class="reference external" href="https://docs.python.org/3.7/library/typing.html#typing.List" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a>[<a class="reference external" href="https://bcg-gamma.github.io/pytools/apidoc/pytools/data/pytools.data.Matrix.html#pytools.data.Matrix" title="(in pytools v2.1.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Matrix</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">float64</span></code>]]]</p>
 </dd>
 <dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p>feature synergy matrix as a data frame of shape
@@ -1032,10 +1047,10 @@ compatibility with <code class="xref py py-class docutils literal notranslate"><
 By default, returns the features unchanged.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>features</strong> (<a class="reference external" href="https://docs.python.org/3.7/library/typing.html#typing.Union" title="(in Python v3.7)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code></a>[<a class="reference external" href="https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v2.0.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></a>, <a class="reference external" href="https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Series.html#pandas.Series" title="(in pandas v2.0.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Series</span></code></a>]) – features to preprocess</p>
+<dd class="field-odd"><p><strong>features</strong> (<a class="reference external" href="https://docs.python.org/3.7/library/typing.html#typing.Union" title="(in Python v3.7)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code></a>[<a class="reference external" href="https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v2.0.3)"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></a>, <a class="reference external" href="https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Series.html#pandas.Series" title="(in pandas v2.0.3)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Series</span></code></a>]) – features to preprocess</p>
 </dd>
 <dt class="field-even">Return type</dt>
-<dd class="field-even"><p><a class="reference external" href="https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v2.0.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></a></p>
+<dd class="field-even"><p><a class="reference external" href="https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v2.0.3)"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></a></p>
 </dd>
 <dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p>preprocessed features</p>
@@ -1053,7 +1068,7 @@ observation and a feature (identified by a hierarchical index with two levels),
 and each column corresponds to a feature.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.7/library/typing.html#typing.Union" title="(in Python v3.7)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code></a>[<a class="reference external" href="https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v2.0.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></a>, <a class="reference external" href="https://docs.python.org/3.7/library/typing.html#typing.List" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a>[<a class="reference external" href="https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v2.0.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></a>]]</p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.7/library/typing.html#typing.Union" title="(in Python v3.7)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code></a>[<a class="reference external" href="https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v2.0.3)"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></a>, <a class="reference external" href="https://docs.python.org/3.7/library/typing.html#typing.List" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a>[<a class="reference external" href="https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v2.0.3)"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></a>]]</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>a data frame with SHAP interaction values</p>
@@ -1105,26 +1120,12 @@ splits for which SHAP values were calculated.</p>
 observation, and each column corresponds to a feature.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.7/library/typing.html#typing.Union" title="(in Python v3.7)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code></a>[<a class="reference external" href="https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v2.0.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></a>, <a class="reference external" href="https://docs.python.org/3.7/library/typing.html#typing.List" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a>[<a class="reference external" href="https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v2.0.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></a>]]</p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.7/library/typing.html#typing.Union" title="(in Python v3.7)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code></a>[<a class="reference external" href="https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v2.0.3)"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></a>, <a class="reference external" href="https://docs.python.org/3.7/library/typing.html#typing.List" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a>[<a class="reference external" href="https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v2.0.3)"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></a>]]</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>a data frame with SHAP values</p>
 </dd>
 </dl>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="facet.inspection.LearnerInspector.DEFAULT_EXPLAINER_FACTORY">
-<span class="sig-name descname"><span class="pre">DEFAULT_EXPLAINER_FACTORY</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">TreeExplainerFactory(model_output=None,</span> <span class="pre">feature_perturbation='tree_path_dependent',</span> <span class="pre">use_background_dataset=False)</span></em><a class="headerlink" href="#facet.inspection.LearnerInspector.DEFAULT_EXPLAINER_FACTORY" title="Permalink to this definition">#</a></dt>
-<dd><p>The default explainer factory used by this inspector.
-This is a tree explainer using the tree_path_dependent method for
-feature perturbation, so we can calculate SHAP interaction values.</p>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="facet.inspection.LearnerInspector.explainer_factory">
-<span class="sig-name descname"><span class="pre">explainer_factory</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="../explanation/base/facet.explanation.base.ExplainerFactory.html#facet.explanation.base.ExplainerFactory" title="facet.explanation.base._base.ExplainerFactory"><span class="pre">pytools.expression.ExplainerFactory</span></a><span class="p"><span class="pre">[</span></span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://scikit-learn.org/stable/modules/generated/sklearn.base.RegressorMixin.html#sklearn.base.RegressorMixin" title="(in scikit-learn v1.2)"><span class="pre">sklearn.base.RegressorMixin</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://scikit-learn.org/stable/modules/generated/sklearn.base.ClassifierMixin.html#sklearn.base.ClassifierMixin" title="(in scikit-learn v1.2)"><span class="pre">sklearn.base.ClassifierMixin</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#facet.inspection.LearnerInspector.explainer_factory" title="Permalink to this definition">#</a></dt>
-<dd><p>The factory instance used to create the explainer for the learner.</p>
 </dd></dl>
 
 <dl class="py property">
@@ -1150,6 +1151,17 @@ set has been preprocessed before calculating SHAP values.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.7/library/functions.html#bool" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="facet.inspection.LearnerInspector.native_learner">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">native_learner</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://scikit-learn.org/stable/modules/generated/sklearn.base.RegressorMixin.html#sklearn.base.RegressorMixin" title="(in scikit-learn v1.3)"><span class="pre">sklearn.base.RegressorMixin</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://scikit-learn.org/stable/modules/generated/sklearn.base.ClassifierMixin.html#sklearn.base.ClassifierMixin" title="(in scikit-learn v1.3)"><span class="pre">sklearn.base.ClassifierMixin</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#facet.inspection.LearnerInspector.native_learner" title="Permalink to this definition">#</a></dt>
+<dd><p>The native learner to inspect.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.7/library/typing.html#typing.Union" title="(in Python v3.7)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code></a>[<a class="reference external" href="https://scikit-learn.org/stable/modules/generated/sklearn.base.RegressorMixin.html#sklearn.base.RegressorMixin" title="(in scikit-learn v1.3)"><code class="xref py py-class docutils literal notranslate"><span class="pre">RegressorMixin</span></code></a>, <a class="reference external" href="https://scikit-learn.org/stable/modules/generated/sklearn.base.ClassifierMixin.html#sklearn.base.ClassifierMixin" title="(in scikit-learn v1.3)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ClassifierMixin</span></code></a>]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1209,10 +1221,10 @@ the negation of the SHAP values of the first class.</p>
             <p class="prev-next-title">facet.inspection.FunctionInspector</p>
         </div>
     </a>
-    <a class='right-next' id="next-link" href="facet.inspection.ShapPlotData.html" title="next page">
+    <a class='right-next' id="next-link" href="facet.inspection.NativeLearnerInspector.html" title="next page">
     <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">facet.inspection.ShapPlotData</p>
+        <p class="prev-next-title">facet.inspection.NativeLearnerInspector</p>
     </div>
     <i class="fas fa-angle-right"></i>
     </a>

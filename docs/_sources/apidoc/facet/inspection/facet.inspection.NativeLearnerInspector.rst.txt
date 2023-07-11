@@ -1,0 +1,60 @@
+facet.inspection.NativeLearnerInspector
+=======================================
+
+.. currentmodule:: facet.inspection
+
+.. autoclass:: NativeLearnerInspector
+   :members:
+   :no-show-inheritance:
+   :inherited-members:
+   :special-members: __call__
+
+   
+   
+   .. rubric:: Method summary
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~NativeLearnerInspector.feature_association_linkage
+      ~NativeLearnerInspector.feature_association_matrix
+      ~NativeLearnerInspector.feature_importance
+      ~NativeLearnerInspector.feature_interaction_matrix
+      ~NativeLearnerInspector.feature_redundancy_linkage
+      ~NativeLearnerInspector.feature_redundancy_matrix
+      ~NativeLearnerInspector.feature_synergy_linkage
+      ~NativeLearnerInspector.feature_synergy_matrix
+      ~NativeLearnerInspector.fit
+      ~NativeLearnerInspector.preprocess_features
+      ~NativeLearnerInspector.shap_interaction_values
+      ~NativeLearnerInspector.shap_plot_data
+      ~NativeLearnerInspector.shap_values
+   
+   
+
+   
+   
+   .. rubric:: Attribute summary
+
+   .. autosummary::
+   
+      ~NativeLearnerInspector.COL_IMPORTANCE
+      ~NativeLearnerInspector.DEFAULT_EXPLAINER_FACTORY
+      ~NativeLearnerInspector.feature_names
+      ~NativeLearnerInspector.is_fitted
+      ~NativeLearnerInspector.native_learner
+      ~NativeLearnerInspector.output_names
+      ~NativeLearnerInspector.sample_
+      ~NativeLearnerInspector.shap_calculator
+      ~NativeLearnerInspector.n_jobs
+      ~NativeLearnerInspector.shared_memory
+      ~NativeLearnerInspector.pre_dispatch
+      ~NativeLearnerInspector.verbose
+      ~NativeLearnerInspector.model
+      ~NativeLearnerInspector.shap_interaction
+      ~NativeLearnerInspector.explainer_factory
+      ~NativeLearnerInspector.learner
+   
+   
+
+   .. rubric:: Definitions

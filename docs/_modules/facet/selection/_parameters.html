@@ -354,7 +354,6 @@
         <span class="p">}</span></div>
 
     <span class="k">def</span> <span class="nf">_validate_parameter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">ParameterSet</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-
         <span class="k">if</span> <span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_params</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span>
                 <span class="sa">f</span><span class="s2">&quot;unknown parameter name for &quot;</span>
@@ -391,7 +390,6 @@
 
     <span class="k">def</span> <span class="fm">__getattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">key</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;_&quot;</span><span class="p">):</span>
-
             <span class="n">result</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">ParameterSpace</span><span class="p">[</span><span class="n">Any</span><span class="p">],</span> <span class="n">ParameterSet</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span>
 
             <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
@@ -410,7 +408,6 @@
     <span class="k">def</span> <span class="nf">_iter_parameters</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">path_prefix</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">ParameterSet</span><span class="p">]]:</span>
-
         <span class="k">yield from</span> <span class="p">(</span>
             <span class="p">([</span><span class="o">*</span><span class="n">path_prefix</span><span class="p">,</span> <span class="n">name</span><span class="p">],</span> <span class="n">value</span><span class="p">)</span> <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_values</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
         <span class="p">)</span>

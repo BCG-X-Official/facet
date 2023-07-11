@@ -19,6 +19,7 @@ facet.inspection
    
       FunctionInspector
       LearnerInspector
+      NativeLearnerInspector
       ShapPlotData
    
    
