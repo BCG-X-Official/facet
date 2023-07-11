@@ -94,7 +94,7 @@ typing_inspect    = "~=0.4.0"
 # additional minimum requirements of shap
 ipython           = "==7.0"
 numba             = "~=0.55.2"  # required to support numpy 1.21
-# additional minimum requirements
+# additional requirements for testing
 zipp              = "<3.16"     # required to support python 3.7
 
 [build.matrix.max]
