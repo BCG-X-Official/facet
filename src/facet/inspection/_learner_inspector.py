@@ -61,10 +61,6 @@ __tracker = AllTracker(globals())
     ),
     replacement="\n\n",
 )
-@subsdoc(
-    pattern="Explain a model based on SHAP",
-    replacement="Explain a regressor or classifier based on SHAP",
-)
 @inheritdoc(match="""[see superclass]""")
 class _BaseLearnerInspector(
     ModelInspector[T_SupervisedLearner], Generic[T_SupervisedLearner], metaclass=ABCMeta
@@ -236,6 +232,10 @@ class _BaseLearnerInspector(
         pass
 
 
+@subsdoc(
+    pattern=r"Explain a model",
+    replacement=r"Explain an :mod:`sklearndf` regressor or classifier",
+)
 @inheritdoc(match="""[see superclass]""")
 class LearnerInspector(
     _BaseLearnerInspector[T_SupervisedLearnerDF], Generic[T_SupervisedLearnerDF]
@@ -320,6 +320,10 @@ class LearnerInspector(
             )
 
 
+@subsdoc(
+    pattern=r"Explain a model",
+    replacement=r"Explain a native scikit-learn regressor or classifier",
+)
 @inheritdoc(match="""[see superclass]""")
 class NativeLearnerInspector(
     _BaseLearnerInspector[T_SupervisedLearner], Generic[T_SupervisedLearner]
