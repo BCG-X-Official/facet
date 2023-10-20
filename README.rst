@@ -49,7 +49,7 @@ FACET is composed of the following key components:
 |                 | tried and tested pipelining paradigm with new capabilities for model  |
 |                 | selection, inspection, and simulation.                                |
 |                 | FACET also introduces                                                 |
-|                 | `sklearndf <https://github.com/BCG-Gamma/sklearndf>`__                |
+|                 | `sklearndf <https://github.com/BCG-X-Official/sklearndf>`__                |
 |                 | [`documentation <https://bcg-gamma.github.io/sklearndf/index.html>`__]|
 |                 | an augmented version of *scikit-learn* with enhanced support for      |
 |                 | *pandas* data frames that ensures end-to-end traceability of features.|
@@ -412,7 +412,7 @@ FACET is stable and is being supported long-term.
 
 Contributions to FACET are welcome and appreciated.
 For any bug reports or feature requests/enhancements please use the appropriate
-`GitHub form <https://github.com/BCG-Gamma/facet/issues>`_, and if you wish to do so,
+`GitHub form <https://github.com/BCG-X-Official/facet/issues>`_, and if you wish to do so,
 please open a PR addressing the issue.
 
 We do ask that for any major changes please discuss these with us first via an issue or
@@ -426,7 +426,7 @@ License
 -------
 
 FACET is licensed under Apache 2.0 as described in the
-`LICENSE <https://github.com/BCG-Gamma/facet/blob/develop/LICENSE>`_ file.
+`LICENSE <https://github.com/BCG-X-Official/facet/blob/develop/LICENSE>`_ file.
 
 
 Acknowledgements
@@ -476,7 +476,7 @@ or have a look at
 .. |pypi| image:: https://badge.fury.io/py/gamma-facet.svg
     :target: https://pypi.org/project/gamma-facet/
 
-.. |azure_build| image:: https://dev.azure.com/gamma-facet/facet/_apis/build/status/BCG-Gamma.facet?repoName=BCG-Gamma%2Ffacet&branchName=develop
+.. |azure_build| image:: https://dev.azure.com/gamma-facet/facet/_apis/build/status/BCG-X-Official.facet?repoName=BCG-Gamma%2Ffacet&branchName=develop
    :target: https://dev.azure.com/gamma-facet/facet/_build?definitionId=7&_a=summary
 
 .. |azure_code_cov| image:: https://img.shields.io/azure-devops/coverage/gamma-facet/facet/7/2.0.x
