@@ -36,7 +36,7 @@ workflow, enhancing
 tried and tested pipelining paradigm with new capabilities for model
 selection, inspection, and simulation.
 FACET also introduces
-`sklearndf <https://github.com/BCG-Gamma/sklearndf>`__, an augmented
+`sklearndf <https://github.com/BCG-X-Official/sklearndf>`__, an augmented
 version of *scikit-learn* with enhanced support for *pandas* data
 frames that ensures end-to-end traceability of features.
 
@@ -51,7 +51,7 @@ License
 ---------------------------
 
 FACET is licensed under Apache 2.0 as described in the
-`LICENSE <https://github.com/BCG-Gamma/facet/blob/develop/LICENSE>`_ file.
+`LICENSE <https://github.com/BCG-X-Official/facet/blob/develop/LICENSE>`_ file.
 
 .. Begin-Badges
 
