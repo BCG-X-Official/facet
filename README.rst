@@ -8,7 +8,7 @@
     `scikit-learn`'s native hyperparameter searchers – and improves the styling of all
     visualizations.
 
-    See the `release notes <https://bcg-gamma.github.io/facet/docs-version/2-0/_generated/release_notes.html>`__
+    See the `release notes <https://bcg-x-official.github.io/facet/docs-version/2-0/_generated/release_notes.html>`__
     for more details.
 
 
@@ -50,7 +50,7 @@ FACET is composed of the following key components:
 |                 | selection, inspection, and simulation.                                |
 |                 | FACET also introduces                                                 |
 |                 | `sklearndf <https://github.com/BCG-X-Official/sklearndf>`__                |
-|                 | [`documentation <https://bcg-gamma.github.io/sklearndf/index.html>`__]|
+|                 | [`documentation <https://bcg-x-official.github.io/sklearndf/index.html>`__]|
 |                 | an augmented version of *scikit-learn* with enhanced support for      |
 |                 | *pandas* data frames that ensures end-to-end traceability of features.|
 +-----------------+-----------------------------------------------------------------------+
@@ -107,10 +107,10 @@ Quickstart
 The following quickstart guide provides a minimal example workflow to get you
 up and running with FACET.
 For additional tutorials and the API reference,
-see the `FACET documentation <https://bcg-gamma.github.io/facet/docs-version/2-0>`__.
+see the `FACET documentation <https://bcg-x-official.github.io/facet/docs-version/2-0>`__.
 
 Changes and additions to new versions are summarized in the
-`release notes <https://bcg-gamma.github.io/facet/docs-version/2-0/release_notes.html>`__.
+`release notes <https://bcg-x-official.github.io/facet/docs-version/2-0/release_notes.html>`__.
 
 
 Enhanced Machine Learning Workflow
@@ -349,7 +349,7 @@ removing `TCH`, and one of `TC` or `LDL` to further simplify the model and obtai
 reduced set of independent features.
 
 Please see the
-`API reference <https://bcg-gamma.github.io/facet/apidoc/facet.html>`__
+`API reference <https://bcg-x-official.github.io/facet/apidoc/facet.html>`__
 for more detail.
 
 
@@ -419,7 +419,7 @@ We do ask that for any major changes please discuss these with us first via an i
 using our team email: FacetTeam@bcg.com.
 
 For further information on contributing please see our
-`contribution guide <https://bcg-gamma.github.io/facet/contribution_guide.html>`__.
+`contribution guide <https://bcg-x-official.github.io/facet/contribution_guide.html>`__.
 
 
 License
@@ -446,7 +446,7 @@ BCG GAMMA
 ---------
 
 If you would like to know more about the team behind FACET please see the
-`about us <https://bcg-gamma.github.io/facet/about_us.html>`__ page.
+`about us <https://bcg-x-official.github.io/facet/about_us.html>`__ page.
 
 We are always on the lookout for passionate and talented data scientists to join the
 BCG GAMMA team. If you would like to know more you can find out about
@@ -489,7 +489,7 @@ or have a look at
    :target: https://github.com/psf/black
 
 .. |made_with_sphinx_doc| image:: https://img.shields.io/badge/Made%20with-Sphinx-1f425f.svg
-   :target: https://bcg-gamma.github.io/facet/index.html
+   :target: https://bcg-x-official.github.io/facet/index.html
 
 .. |license_badge| image:: https://img.shields.io/badge/License-Apache%202.0-olivegreen.svg
    :target: https://opensource.org/licenses/Apache-2.0

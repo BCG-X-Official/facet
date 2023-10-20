@@ -63,7 +63,7 @@ docs = [
 ]
 
 [tool.flit.metadata.urls]
-Documentation = "https://bcg-gamma.github.io/facet/"
+Documentation = "https://bcg-x-official.github.io/facet/"
 Repository = "https://github.com/BCG-X-Official/facet"
 
 [build]
