@@ -24,8 +24,8 @@ resources:
   repositories:
     - repository: pytools
       type: github
-      endpoint: BCG-Gamma
-      name: BCG-Gamma/pytools
+      endpoint: BCG-X-Official
+      name: BCG-X-Official/pytools
       ref: 2.1.x
 
 variables:
