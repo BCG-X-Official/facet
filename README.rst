@@ -476,7 +476,7 @@ or have a look at
 .. |pypi| image:: https://badge.fury.io/py/gamma-facet.svg
     :target: https://pypi.org/project/gamma-facet/
 
-.. |azure_build| image:: https://dev.azure.com/gamma-facet/facet/_apis/build/status/BCG-X-Official.facet?repoName=BCG-Gamma%2Ffacet&branchName=develop
+.. |azure_build| image:: https://dev.azure.com/gamma-facet/facet/_apis/build/status/BCG-X-Official.facet?repoName=BCG-X-Official%2Ffacet&branchName=develop
    :target: https://dev.azure.com/gamma-facet/facet/_build?definitionId=7&_a=summary
 
 .. |azure_code_cov| image:: https://img.shields.io/azure-devops/coverage/gamma-facet/facet/7/2.0.x
