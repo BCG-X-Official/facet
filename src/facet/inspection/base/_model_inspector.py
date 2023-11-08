@@ -49,8 +49,8 @@ __all__ = [
 # Type aliases
 #
 
-FloatArray: TypeAlias = npt.NDArray[np.float_]
-FloatMatrix: TypeAlias = Matrix[np.float_]
+FloatArray: TypeAlias = npt.NDArray[np.float64]
+FloatMatrix: TypeAlias = Matrix[np.float64]
 
 
 #

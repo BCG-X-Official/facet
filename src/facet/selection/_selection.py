@@ -400,7 +400,7 @@ class LearnerSelector(
 
         # add all columns that match any of the pre-defined patterns
 
-        cv_results_processed: Dict[str, Tuple[str, npt.NDArray[np.float_]]] = {}
+        cv_results_processed: Dict[str, Tuple[str, npt.NDArray[np.float64]]] = {}
 
         for pattern, repl in self._CV_RESULT_PATTERNS:
             cv_results_processed.update(

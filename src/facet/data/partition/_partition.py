@@ -33,7 +33,7 @@ T_Partitioner = TypeVar("T_Partitioner", bound="Partitioner[Any]")
 T_RangePartitioner = TypeVar("T_RangePartitioner", bound="RangePartitioner[Any, Any]")
 T_CategoryPartitioner = TypeVar("T_CategoryPartitioner", bound="CategoryPartitioner")
 T_Values = TypeVar("T_Values", bound=np.generic)
-T_Values_Numeric = TypeVar("T_Values_Numeric", np.int_, np.float_)
+T_Values_Numeric = TypeVar("T_Values_Numeric", np.int_, np.float64)
 T_Values_Scalar = TypeVar("T_Values_Scalar", int, float)
 
 
@@ -311,7 +311,7 @@ class RangePartitioner(
         pass
 
 
-class ContinuousRangePartitioner(RangePartitioner[np.float_, float]):
+class ContinuousRangePartitioner(RangePartitioner[np.float64, float]):
     """
     Partition numerical values in adjacent intervals of the same length.
 

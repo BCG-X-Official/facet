@@ -18,7 +18,7 @@ except ImportError:
 
 
 ArraysAny: TypeAlias = Union[npt.NDArray[Any], List[npt.NDArray[Any]]]
-ArraysFloat: TypeAlias = Union[npt.NDArray[np.float_], List[npt.NDArray[np.float_]]]
+ArraysFloat: TypeAlias = Union[npt.NDArray[np.float64], List[npt.NDArray[np.float64]]]
 CatboostPool = catboost.Pool
 XType: TypeAlias = Union[npt.NDArray[Any], pd.DataFrame, catboost.Pool]
 YType: TypeAlias = Union[npt.NDArray[Any], pd.Series, None]

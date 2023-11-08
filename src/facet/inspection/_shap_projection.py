@@ -111,7 +111,7 @@ class ShapProjector(FittableMixin[ShapCalculator[Any]], metaclass=ABCMeta):
         return self
 
     @fitted_only
-    def association(self, absolute: bool, symmetrical: bool) -> npt.NDArray[np.float_]:
+    def association(self, absolute: bool, symmetrical: bool) -> npt.NDArray[np.float64]:
         """
         The association matrix for all feature pairs.
 
@@ -130,7 +130,7 @@ class ShapProjector(FittableMixin[ShapCalculator[Any]], metaclass=ABCMeta):
         assert self.association_ is not None
         return self.association_.get_values(symmetrical=symmetrical, absolute=absolute)
 
-    def to_frames(self, matrix: npt.NDArray[np.float_]) -> List[pd.DataFrame]:
+    def to_frames(self, matrix: npt.NDArray[np.float64]) -> List[pd.DataFrame]:
         """
         Transforms one or more affinity matrices into a list of data frames.
 
@@ -241,7 +241,7 @@ class ShapInteractionVectorProjector(ShapProjector):
         self.redundancy_: Optional[AffinityMatrix] = None
 
     @fitted_only
-    def synergy(self, symmetrical: bool, absolute: bool) -> npt.NDArray[np.float_]:
+    def synergy(self, symmetrical: bool, absolute: bool) -> npt.NDArray[np.float64]:
         """
         The synergy matrix for all feature pairs.
 
@@ -261,7 +261,7 @@ class ShapInteractionVectorProjector(ShapProjector):
         return self.synergy_.get_values(symmetrical=symmetrical, absolute=absolute)
 
     @fitted_only
-    def redundancy(self, symmetrical: bool, absolute: bool) -> npt.NDArray[np.float_]:
+    def redundancy(self, symmetrical: bool, absolute: bool) -> npt.NDArray[np.float64]:
         """
         The redundancy matrix for all feature pairs.
 

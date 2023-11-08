@@ -71,7 +71,7 @@ class FunctionShapCalculator(ShapCalculator[T_ModelFunction], Generic[T_ModelFun
 
     def _convert_shap_to_df(
         self,
-        raw_shap_tensors: List[npt.NDArray[np.float_]],
+        raw_shap_tensors: List[npt.NDArray[np.float64]],
         observation_idx: pd.Index,
         feature_idx: pd.Index,
     ) -> List[pd.DataFrame]:
