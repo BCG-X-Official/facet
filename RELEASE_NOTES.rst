@@ -25,6 +25,8 @@ fully type-checked by |mypy|.
   and classifiers; it is no longer necessary to wrap them into a
   :class:`.RegressorPipelineDF` or :class:`.ClassifierPipelineDF` instance with empty
   preprocessing
+- FIX: replace a call to method ``get_text_heights()`` of :class:`matplotlib.axes.Axes`,
+  which is deprecated as of :mod:`matplotlib` |nbsp| 3.6
 
 
 2.0.0
