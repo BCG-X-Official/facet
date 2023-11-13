@@ -17,6 +17,12 @@ We still recommend using :mod:`sklearndf` models and learner pipelines along wit
 :class:`.NativeLearnerInspector` can be useful for inspecting models that have been
 trained using *scikit-learn* directly.
 
+2.1.1
+~~~~~
+
+This is a maintenance release to catch up with FACET |nbsp| 2.0.1.
+
+
 2.1.0
 ~~~~~
 
