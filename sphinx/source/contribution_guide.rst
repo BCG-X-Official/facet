@@ -296,7 +296,7 @@ The ``sphinx/source`` folder contains:
 
 
 The two key scripts are ``make.py`` and ``conf.py``. The base configuration for the
-these scripts can be found in `pytools/sphinx <https://github.com/BCG-Gamma/pytools/tree/develop/sphinx/base>`_.
+these scripts can be found in `pytools/sphinx <https://github.com/BCG-X-Official/pytools/tree/develop/sphinx/base>`_.
 The reason for this is to minimise code given the standardization of the documentation
 build across multiple packages.
 
@@ -452,7 +452,7 @@ The build process for the PyPI and conda distributions uses the following key
 files:
 
 - ``make.py``: generic Python script for package builds. Most configuration is imported
-  from pytools `make.py <https://github.com/BCG-Gamma/pytools/blob/develop/make.py>`__
+  from pytools `make.py <https://github.com/BCG-X-Official/pytools/blob/develop/make.py>`__
   which is a build script that wraps the package build, as well as exposing the matrix
   dependency definitions specified in the ``pyproject.toml`` as environment variables
 - ``pyproject.toml``: metadata for PyPI, build settings and package dependencies

@@ -76,6 +76,12 @@ class LearnerInspector(
     #: The factory instance used to create the explainer for the learner.
     explainer_factory: ExplainerFactory[NativeSupervisedLearner]
 
+    #: The learner being inspected.
+    #:
+    #: If the model is a pipeline, this is the final estimator in the pipeline;
+    #: otherwise, it is the model itself.
+    learner: SupervisedLearnerDF
+
     # defined in superclass, repeated here for Sphinx:
     model: T_SupervisedLearnerDF
     shap_interaction: bool
@@ -86,7 +92,7 @@ class LearnerInspector(
 
     def __init__(
         self,
-        model: SupervisedLearnerPipelineDF[T_SupervisedLearnerDF],
+        model: T_SupervisedLearnerDF,
         *,
         explainer_factory: Optional[ExplainerFactory[NativeSupervisedLearner]] = None,
         shap_interaction: bool = True,
@@ -96,18 +102,34 @@ class LearnerInspector(
         verbose: Optional[int] = None,
     ) -> None:
         """
-        :param model: the learner pipeline to inspect
+        :param model: the learner or learner pipeline to inspect (typically, one of
+            a :class:`~sklearndf.pipeline.ClassifierPipelineDF`,
+            :class:`~sklearndf.pipeline.RegressorPipelineDF`,
+            :class:`~sklearndf.classification.ClassifierDF`, or
+            :class:`~sklearndf.regression.RegressorDF`)
         :param explainer_factory: optional function that creates a shap Explainer
             (default: ``TreeExplainerFactory``)
         """
 
         if not model.is_fitted:
-            raise ValueError("arg pipeline must be fitted")
+            raise ValueError("arg model must be fitted")
 
-        final_estimator: T_SupervisedLearnerDF = model.final_estimator
-        if is_classifier(final_estimator):
+        learner: SupervisedLearnerDF
+
+        if isinstance(model, SupervisedLearnerPipelineDF):
+            learner = model.final_estimator
+        elif isinstance(model, SupervisedLearnerDF):
+            learner = model
+        else:
+            raise TypeError(
+                "arg model must be a SupervisedLearnerPipelineDF or a "
+                f"SupervisedLearnerDF, but is a {type(model).__name__}"
+            )
+        self.learner = learner
+
+        if is_classifier(learner):
             try:
-                n_outputs = final_estimator.n_outputs_
+                n_outputs = learner.n_outputs_
             except AttributeError:
                 pass
             else:
@@ -115,12 +137,12 @@ class LearnerInspector(
                     raise ValueError(
                         "only single-target classifiers (binary or multi-class) are "
                         "supported, but the given classifier has been fitted on "
-                        f"multiple targets: {', '.join(final_estimator.output_names_)}"
+                        f"multiple targets: {', '.join(learner.output_names_)}"
                     )
-        elif not is_regressor(final_estimator):
+        elif not is_regressor(learner):
             raise TypeError(
-                "learner in arg pipeline must be a classifier or a regressor,"
-                f"but is a {type(final_estimator).__name__}"
+                "learner in arg model must be a classifier or a regressor,"
+                f"but is a {type(learner).__name__}"
             )
 
         if explainer_factory:
@@ -162,14 +184,19 @@ class LearnerInspector(
         """[see superclass]"""
         return cast(
             List[str],
-            self.model.final_estimator.feature_names_in_.to_list(),
+            self.learner.feature_names_in_.to_list(),
         )
 
     def preprocess_features(
         self, features: Union[pd.DataFrame, pd.Series]
     ) -> pd.DataFrame:
         """[see superclass]"""
-        return self.model.preprocess(features)
+        if self.model is self.learner:
+            # we have a simple learner: no preprocessing needed
+            return features
+        else:
+            # we have a pipeline: preprocess features
+            return self.model.preprocess(features)
 
     @property
     def shap_calculator(self) -> LearnerShapCalculator[Any]:
@@ -178,10 +205,10 @@ class LearnerInspector(
         if self._shap_calculator is not None:
             return self._shap_calculator
 
-        learner: SupervisedLearnerDF = self.model.final_estimator
+        learner: SupervisedLearnerDF = self.learner
 
         shap_calculator_params: Dict[str, Any] = dict(
-            model=self.model.final_estimator.native_estimator,
+            model=self.learner.native_estimator,
             interaction_values=self.shap_interaction,
             explainer_factory=self.explainer_factory,
             n_jobs=self.n_jobs,

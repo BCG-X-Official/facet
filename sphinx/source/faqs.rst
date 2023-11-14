@@ -14,7 +14,7 @@ on `stackoverflow <https://stackoverflow.com/>`_.
 1. **What if I find a bug or have an idea for a new feature?**
 
     For bug reports or feature requests please use our
-    `GitHub issue tracker <https://github.com/BCG-Gamma/facet/issues>`_.
+    `GitHub issue tracker <https://github.com/BCG-X-Official/facet/issues>`_.
     For any other enquiries please feel free to contact us at FacetTeam@bcg.com.
 
 2. **How does FACET's novel algorithm calculate pairwise feature redundancy and synergy?**
