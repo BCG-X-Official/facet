@@ -52,6 +52,7 @@ facet.inspection.LearnerInspector
       ~LearnerInspector.model
       ~LearnerInspector.shap_interaction
       ~LearnerInspector.explainer_factory
+      ~LearnerInspector.learner
    
    
 

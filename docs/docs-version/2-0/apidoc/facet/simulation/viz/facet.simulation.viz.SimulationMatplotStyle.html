@@ -597,15 +597,15 @@ confidence intervals of the simulated target value.</p>
 simulated values.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Bases</dt>
-<dd class="field-odd"><p><a class="reference internal" href="facet.simulation.viz.SimulationStyle.html#facet.simulation.viz.SimulationStyle" title="facet.simulation.viz.SimulationStyle"><code class="xref py py-class docutils literal notranslate"><span class="pre">SimulationStyle</span></code></a>, <a class="reference external" href="https://bcg-gamma.github.io/pytools/apidoc/pytools/viz/pytools.viz.MatplotStyle.html#pytools.viz.MatplotStyle" title="(in pytools v2.1.0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">MatplotStyle</span></code></a></p>
+<dd class="field-odd"><p><a class="reference internal" href="facet.simulation.viz.SimulationStyle.html#facet.simulation.viz.SimulationStyle" title="facet.simulation.viz.SimulationStyle"><code class="xref py py-class docutils literal notranslate"><span class="pre">SimulationStyle</span></code></a>, <a class="reference external" href="https://bcg-x-official.github.io/pytools/apidoc/pytools/viz/pytools.viz.MatplotStyle.html#pytools.viz.MatplotStyle" title="(in pytools v2.1.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">MatplotStyle</span></code></a></p>
 </dd>
 <dt class="field-even">Metaclasses</dt>
 <dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3.7/library/abc.html#abc.ABCMeta" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ABCMeta</span></code></a></p>
 </dd>
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>ax</strong> (<a class="reference external" href="https://docs.python.org/3.7/library/typing.html#typing.Optional" title="(in Python v3.7)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.html#matplotlib.axes.Axes" title="(in Matplotlib v3.7.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Axes</span></code></a>]) – optional axes object to draw on; create a new figure if not specified</p></li>
-<li><p><strong>colors</strong> (<a class="reference external" href="https://docs.python.org/3.7/library/typing.html#typing.Optional" title="(in Python v3.7)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://bcg-gamma.github.io/pytools/apidoc/pytools/viz/color/pytools.viz.color.MatplotColorScheme.html#pytools.viz.color.MatplotColorScheme" title="(in pytools v2.1.0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">MatplotColorScheme</span></code></a>]) – the color scheme to be used by this drawing style
+<li><p><strong>ax</strong> (<a class="reference external" href="https://docs.python.org/3.7/library/typing.html#typing.Optional" title="(in Python v3.7)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.html#matplotlib.axes.Axes" title="(in Matplotlib v3.8.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Axes</span></code></a>]) – optional axes object to draw on; create a new figure if not specified</p></li>
+<li><p><strong>colors</strong> (<a class="reference external" href="https://docs.python.org/3.7/library/typing.html#typing.Optional" title="(in Python v3.7)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://bcg-x-official.github.io/pytools/apidoc/pytools/viz/color/pytools.viz.color.MatplotColorScheme.html#pytools.viz.color.MatplotColorScheme" title="(in pytools v2.1.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">MatplotColorScheme</span></code></a>]) – the color scheme to be used by this drawing style
 (default: <code class="xref py py-class docutils literal notranslate"><span class="pre">FacetLightColorScheme()</span></code>)</p></li>
 <li><p><strong>font_family</strong> (<a class="reference external" href="https://docs.python.org/3.7/library/typing.html#typing.Union" title="(in Python v3.7)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code></a>[<a class="reference external" href="https://docs.python.org/3.7/library/stdtypes.html#str" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3.7/library/typing.html#typing.Iterable" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Iterable</span></code></a>[<a class="reference external" href="https://docs.python.org/3.7/library/stdtypes.html#str" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>], <a class="reference external" href="https://docs.python.org/3.7/library/constants.html#None" title="(in Python v3.7)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>]) – name of one or more fonts to use for all text, in descending
 order of preference; defaults to a monospaced font if undefined, or if none
@@ -621,7 +621,7 @@ of the given fonts is available</p></li>
 </colgroup>
 <tbody>
 <tr class="row-odd"><td><p><a class="reference internal" href="#facet.simulation.viz.SimulationMatplotStyle.apply_color_scheme" title="facet.simulation.viz.SimulationMatplotStyle.apply_color_scheme"><code class="xref py py-obj docutils literal notranslate"><span class="pre">apply_color_scheme</span></code></a></p></td>
-<td><p>See <a class="reference external" href="https://bcg-gamma.github.io/pytools/apidoc/pytools/viz/pytools.viz.MatplotStyle.html#pytools.viz.MatplotStyle.apply_color_scheme" title="(in pytools v2.1.0)"><code class="xref py py-meth docutils literal notranslate"><span class="pre">pytools.viz.MatplotStyle.apply_color_scheme()</span></code></a></p></td>
+<td><p>See <a class="reference external" href="https://bcg-x-official.github.io/pytools/apidoc/pytools/viz/pytools.viz.MatplotStyle.html#pytools.viz.MatplotStyle.apply_color_scheme" title="(in pytools v2.1.1)"><code class="xref py py-meth docutils literal notranslate"><span class="pre">pytools.viz.MatplotStyle.apply_color_scheme()</span></code></a></p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#facet.simulation.viz.SimulationMatplotStyle.draw_histogram" title="facet.simulation.viz.SimulationMatplotStyle.draw_histogram"><code class="xref py py-obj docutils literal notranslate"><span class="pre">draw_histogram</span></code></a></p></td>
 <td><p>Draw the histogram of observed value counts per partition.</p></td>
@@ -630,19 +630,19 @@ of the given fonts is available</p></li>
 <td><p>Draw the simulation results as the mean simulated outputs with their confidence intervals.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#facet.simulation.viz.SimulationMatplotStyle.finalize_drawing" title="facet.simulation.viz.SimulationMatplotStyle.finalize_drawing"><code class="xref py py-obj docutils literal notranslate"><span class="pre">finalize_drawing</span></code></a></p></td>
-<td><p>See <a class="reference external" href="https://bcg-gamma.github.io/pytools/apidoc/pytools/viz/pytools.viz.MatplotStyle.html#pytools.viz.MatplotStyle.finalize_drawing" title="(in pytools v2.1.0)"><code class="xref py py-meth docutils literal notranslate"><span class="pre">pytools.viz.MatplotStyle.finalize_drawing()</span></code></a></p></td>
+<td><p>See <a class="reference external" href="https://bcg-x-official.github.io/pytools/apidoc/pytools/viz/pytools.viz.MatplotStyle.html#pytools.viz.MatplotStyle.finalize_drawing" title="(in pytools v2.1.1)"><code class="xref py py-meth docutils literal notranslate"><span class="pre">pytools.viz.MatplotStyle.finalize_drawing()</span></code></a></p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#facet.simulation.viz.SimulationMatplotStyle.get_default_style_name" title="facet.simulation.viz.SimulationMatplotStyle.get_default_style_name"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_default_style_name</span></code></a></p></td>
-<td><p>See <a class="reference external" href="https://bcg-gamma.github.io/pytools/apidoc/pytools/viz/pytools.viz.MatplotStyle.html#pytools.viz.MatplotStyle.get_default_style_name" title="(in pytools v2.1.0)"><code class="xref py py-meth docutils literal notranslate"><span class="pre">pytools.viz.MatplotStyle.get_default_style_name()</span></code></a></p></td>
+<td><p>See <a class="reference external" href="https://bcg-x-official.github.io/pytools/apidoc/pytools/viz/pytools.viz.MatplotStyle.html#pytools.viz.MatplotStyle.get_default_style_name" title="(in pytools v2.1.1)"><code class="xref py py-meth docutils literal notranslate"><span class="pre">pytools.viz.MatplotStyle.get_default_style_name()</span></code></a></p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#facet.simulation.viz.SimulationMatplotStyle.get_named_styles" title="facet.simulation.viz.SimulationMatplotStyle.get_named_styles"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_named_styles</span></code></a></p></td>
-<td><p>See <a class="reference external" href="https://bcg-gamma.github.io/pytools/apidoc/pytools/viz/pytools.viz.ColoredStyle.html#pytools.viz.ColoredStyle.get_named_styles" title="(in pytools v2.1.0)"><code class="xref py py-meth docutils literal notranslate"><span class="pre">pytools.viz.ColoredStyle.get_named_styles()</span></code></a></p></td>
+<td><p>See <a class="reference external" href="https://bcg-x-official.github.io/pytools/apidoc/pytools/viz/pytools.viz.ColoredStyle.html#pytools.viz.ColoredStyle.get_named_styles" title="(in pytools v2.1.1)"><code class="xref py py-meth docutils literal notranslate"><span class="pre">pytools.viz.ColoredStyle.get_named_styles()</span></code></a></p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#facet.simulation.viz.SimulationMatplotStyle.get_renderer" title="facet.simulation.viz.SimulationMatplotStyle.get_renderer"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_renderer</span></code></a></p></td>
-<td><p>See <a class="reference external" href="https://bcg-gamma.github.io/pytools/apidoc/pytools/viz/pytools.viz.MatplotStyle.html#pytools.viz.MatplotStyle.get_renderer" title="(in pytools v2.1.0)"><code class="xref py py-meth docutils literal notranslate"><span class="pre">pytools.viz.MatplotStyle.get_renderer()</span></code></a></p></td>
+<td><p>See <a class="reference external" href="https://bcg-x-official.github.io/pytools/apidoc/pytools/viz/pytools.viz.MatplotStyle.html#pytools.viz.MatplotStyle.get_renderer" title="(in pytools v2.1.1)"><code class="xref py py-meth docutils literal notranslate"><span class="pre">pytools.viz.MatplotStyle.get_renderer()</span></code></a></p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#facet.simulation.viz.SimulationMatplotStyle.start_drawing" title="facet.simulation.viz.SimulationMatplotStyle.start_drawing"><code class="xref py py-obj docutils literal notranslate"><span class="pre">start_drawing</span></code></a></p></td>
-<td><p>See <a class="reference external" href="https://bcg-gamma.github.io/pytools/apidoc/pytools/viz/pytools.viz.MatplotStyle.html#pytools.viz.MatplotStyle.start_drawing" title="(in pytools v2.1.0)"><code class="xref py py-meth docutils literal notranslate"><span class="pre">pytools.viz.MatplotStyle.start_drawing()</span></code></a></p></td>
+<td><p>See <a class="reference external" href="https://bcg-x-official.github.io/pytools/apidoc/pytools/viz/pytools.viz.MatplotStyle.html#pytools.viz.MatplotStyle.start_drawing" title="(in pytools v2.1.1)"><code class="xref py py-meth docutils literal notranslate"><span class="pre">pytools.viz.MatplotStyle.start_drawing()</span></code></a></p></td>
 </tr>
 </tbody>
 </table>
@@ -654,10 +654,10 @@ of the given fonts is available</p></li>
 </colgroup>
 <tbody>
 <tr class="row-odd"><td><p><a class="reference internal" href="#facet.simulation.viz.SimulationMatplotStyle.ax" title="facet.simulation.viz.SimulationMatplotStyle.ax"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ax</span></code></a></p></td>
-<td><p>See <a class="reference external" href="https://bcg-gamma.github.io/pytools/apidoc/pytools/viz/pytools.viz.MatplotStyle.html#pytools.viz.MatplotStyle.ax" title="(in pytools v2.1.0)"><code class="xref py py-attr docutils literal notranslate"><span class="pre">pytools.viz.MatplotStyle.ax</span></code></a></p></td>
+<td><p>See <a class="reference external" href="https://bcg-x-official.github.io/pytools/apidoc/pytools/viz/pytools.viz.MatplotStyle.html#pytools.viz.MatplotStyle.ax" title="(in pytools v2.1.1)"><code class="xref py py-attr docutils literal notranslate"><span class="pre">pytools.viz.MatplotStyle.ax</span></code></a></p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#facet.simulation.viz.SimulationMatplotStyle.colors" title="facet.simulation.viz.SimulationMatplotStyle.colors"><code class="xref py py-obj docutils literal notranslate"><span class="pre">colors</span></code></a></p></td>
-<td><p>See <a class="reference external" href="https://bcg-gamma.github.io/pytools/apidoc/pytools/viz/pytools.viz.ColoredStyle.html#pytools.viz.ColoredStyle.colors" title="(in pytools v2.1.0)"><code class="xref py py-attr docutils literal notranslate"><span class="pre">pytools.viz.ColoredStyle.colors</span></code></a></p></td>
+<td><p>See <a class="reference external" href="https://bcg-x-official.github.io/pytools/apidoc/pytools/viz/pytools.viz.ColoredStyle.html#pytools.viz.ColoredStyle.colors" title="(in pytools v2.1.1)"><code class="xref py py-attr docutils literal notranslate"><span class="pre">pytools.viz.ColoredStyle.colors</span></code></a></p></td>
 </tr>
 </tbody>
 </table>
@@ -665,7 +665,7 @@ of the given fonts is available</p></li>
 <dl class="py method">
 <dt class="sig sig-object py" id="facet.simulation.viz.SimulationMatplotStyle.apply_color_scheme">
 <span class="sig-name descname"><span class="pre">apply_color_scheme</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ax</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#facet.simulation.viz.SimulationMatplotStyle.apply_color_scheme" title="Permalink to this definition">#</a></dt>
-<dd><p>See <a class="reference external" href="https://bcg-gamma.github.io/pytools/apidoc/pytools/viz/pytools.viz.MatplotStyle.html#pytools.viz.MatplotStyle.apply_color_scheme" title="(in pytools v2.1.0)"><code class="xref py py-meth docutils literal notranslate"><span class="pre">pytools.viz.MatplotStyle.apply_color_scheme()</span></code></a></p>
+<dd><p>See <a class="reference external" href="https://bcg-x-official.github.io/pytools/apidoc/pytools/viz/pytools.viz.MatplotStyle.html#pytools.viz.MatplotStyle.apply_color_scheme" title="(in pytools v2.1.1)"><code class="xref py py-meth docutils literal notranslate"><span class="pre">pytools.viz.MatplotStyle.apply_color_scheme()</span></code></a></p>
 </dd></dl>
 
 <dl class="py method">
@@ -718,43 +718,43 @@ categorical; <code class="docutils literal notranslate"><span class="pre">False<
 <dl class="py method">
 <dt class="sig sig-object py" id="facet.simulation.viz.SimulationMatplotStyle.finalize_drawing">
 <span class="sig-name descname"><span class="pre">finalize_drawing</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#facet.simulation.viz.SimulationMatplotStyle.finalize_drawing" title="Permalink to this definition">#</a></dt>
-<dd><p>See <a class="reference external" href="https://bcg-gamma.github.io/pytools/apidoc/pytools/viz/pytools.viz.MatplotStyle.html#pytools.viz.MatplotStyle.finalize_drawing" title="(in pytools v2.1.0)"><code class="xref py py-meth docutils literal notranslate"><span class="pre">pytools.viz.MatplotStyle.finalize_drawing()</span></code></a></p>
+<dd><p>See <a class="reference external" href="https://bcg-x-official.github.io/pytools/apidoc/pytools/viz/pytools.viz.MatplotStyle.html#pytools.viz.MatplotStyle.finalize_drawing" title="(in pytools v2.1.1)"><code class="xref py py-meth docutils literal notranslate"><span class="pre">pytools.viz.MatplotStyle.finalize_drawing()</span></code></a></p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="facet.simulation.viz.SimulationMatplotStyle.get_default_style_name">
 <em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_default_style_name</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#facet.simulation.viz.SimulationMatplotStyle.get_default_style_name" title="Permalink to this definition">#</a></dt>
-<dd><p>See <a class="reference external" href="https://bcg-gamma.github.io/pytools/apidoc/pytools/viz/pytools.viz.MatplotStyle.html#pytools.viz.MatplotStyle.get_default_style_name" title="(in pytools v2.1.0)"><code class="xref py py-meth docutils literal notranslate"><span class="pre">pytools.viz.MatplotStyle.get_default_style_name()</span></code></a></p>
+<dd><p>See <a class="reference external" href="https://bcg-x-official.github.io/pytools/apidoc/pytools/viz/pytools.viz.MatplotStyle.html#pytools.viz.MatplotStyle.get_default_style_name" title="(in pytools v2.1.1)"><code class="xref py py-meth docutils literal notranslate"><span class="pre">pytools.viz.MatplotStyle.get_default_style_name()</span></code></a></p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="facet.simulation.viz.SimulationMatplotStyle.get_named_styles">
 <em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_named_styles</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#facet.simulation.viz.SimulationMatplotStyle.get_named_styles" title="Permalink to this definition">#</a></dt>
-<dd><p>See <a class="reference external" href="https://bcg-gamma.github.io/pytools/apidoc/pytools/viz/pytools.viz.ColoredStyle.html#pytools.viz.ColoredStyle.get_named_styles" title="(in pytools v2.1.0)"><code class="xref py py-meth docutils literal notranslate"><span class="pre">pytools.viz.ColoredStyle.get_named_styles()</span></code></a></p>
+<dd><p>See <a class="reference external" href="https://bcg-x-official.github.io/pytools/apidoc/pytools/viz/pytools.viz.ColoredStyle.html#pytools.viz.ColoredStyle.get_named_styles" title="(in pytools v2.1.1)"><code class="xref py py-meth docutils literal notranslate"><span class="pre">pytools.viz.ColoredStyle.get_named_styles()</span></code></a></p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="facet.simulation.viz.SimulationMatplotStyle.get_renderer">
 <span class="sig-name descname"><span class="pre">get_renderer</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#facet.simulation.viz.SimulationMatplotStyle.get_renderer" title="Permalink to this definition">#</a></dt>
-<dd><p>See <a class="reference external" href="https://bcg-gamma.github.io/pytools/apidoc/pytools/viz/pytools.viz.MatplotStyle.html#pytools.viz.MatplotStyle.get_renderer" title="(in pytools v2.1.0)"><code class="xref py py-meth docutils literal notranslate"><span class="pre">pytools.viz.MatplotStyle.get_renderer()</span></code></a></p>
+<dd><p>See <a class="reference external" href="https://bcg-x-official.github.io/pytools/apidoc/pytools/viz/pytools.viz.MatplotStyle.html#pytools.viz.MatplotStyle.get_renderer" title="(in pytools v2.1.1)"><code class="xref py py-meth docutils literal notranslate"><span class="pre">pytools.viz.MatplotStyle.get_renderer()</span></code></a></p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="facet.simulation.viz.SimulationMatplotStyle.start_drawing">
 <span class="sig-name descname"><span class="pre">start_drawing</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#facet.simulation.viz.SimulationMatplotStyle.start_drawing" title="Permalink to this definition">#</a></dt>
-<dd><p>See <a class="reference external" href="https://bcg-gamma.github.io/pytools/apidoc/pytools/viz/pytools.viz.MatplotStyle.html#pytools.viz.MatplotStyle.start_drawing" title="(in pytools v2.1.0)"><code class="xref py py-meth docutils literal notranslate"><span class="pre">pytools.viz.MatplotStyle.start_drawing()</span></code></a></p>
+<dd><p>See <a class="reference external" href="https://bcg-x-official.github.io/pytools/apidoc/pytools/viz/pytools.viz.MatplotStyle.html#pytools.viz.MatplotStyle.start_drawing" title="(in pytools v2.1.1)"><code class="xref py py-meth docutils literal notranslate"><span class="pre">pytools.viz.MatplotStyle.start_drawing()</span></code></a></p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="facet.simulation.viz.SimulationMatplotStyle.ax">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ax</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.html#matplotlib.axes.Axes" title="(in Matplotlib v3.7.1)"><span class="pre">matplotlib.axes.Axes</span></a></em><a class="headerlink" href="#facet.simulation.viz.SimulationMatplotStyle.ax" title="Permalink to this definition">#</a></dt>
-<dd><p>See <a class="reference external" href="https://bcg-gamma.github.io/pytools/apidoc/pytools/viz/pytools.viz.MatplotStyle.html#pytools.viz.MatplotStyle.ax" title="(in pytools v2.1.0)"><code class="xref py py-attr docutils literal notranslate"><span class="pre">pytools.viz.MatplotStyle.ax</span></code></a></p>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ax</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.html#matplotlib.axes.Axes" title="(in Matplotlib v3.8.1)"><span class="pre">matplotlib.axes.Axes</span></a></em><a class="headerlink" href="#facet.simulation.viz.SimulationMatplotStyle.ax" title="Permalink to this definition">#</a></dt>
+<dd><p>See <a class="reference external" href="https://bcg-x-official.github.io/pytools/apidoc/pytools/viz/pytools.viz.MatplotStyle.html#pytools.viz.MatplotStyle.ax" title="(in pytools v2.1.1)"><code class="xref py py-attr docutils literal notranslate"><span class="pre">pytools.viz.MatplotStyle.ax</span></code></a></p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="facet.simulation.viz.SimulationMatplotStyle.colors">
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">colors</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">pytools.viz.T_ColorScheme</span></em><a class="headerlink" href="#facet.simulation.viz.SimulationMatplotStyle.colors" title="Permalink to this definition">#</a></dt>
-<dd><p>See <a class="reference external" href="https://bcg-gamma.github.io/pytools/apidoc/pytools/viz/pytools.viz.ColoredStyle.html#pytools.viz.ColoredStyle.colors" title="(in pytools v2.1.0)"><code class="xref py py-attr docutils literal notranslate"><span class="pre">pytools.viz.ColoredStyle.colors</span></code></a></p>
+<dd><p>See <a class="reference external" href="https://bcg-x-official.github.io/pytools/apidoc/pytools/viz/pytools.viz.ColoredStyle.html#pytools.viz.ColoredStyle.colors" title="(in pytools v2.1.1)"><code class="xref py py-attr docutils literal notranslate"><span class="pre">pytools.viz.ColoredStyle.colors</span></code></a></p>
 </dd></dl>
 
 </dd></dl>

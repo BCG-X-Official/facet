@@ -245,6 +245,12 @@
     <span class="c1">#: The factory instance used to create the explainer for the learner.</span>
     <span class="n">explainer_factory</span><span class="p">:</span> <span class="n">ExplainerFactory</span><span class="p">[</span><span class="n">NativeSupervisedLearner</span><span class="p">]</span>
 
+    <span class="c1">#: The learner being inspected.</span>
+    <span class="c1">#:</span>
+    <span class="c1">#: If the model is a pipeline, this is the final estimator in the pipeline;</span>
+    <span class="c1">#: otherwise, it is the model itself.</span>
+    <span class="n">learner</span><span class="p">:</span> <span class="n">SupervisedLearnerDF</span>
+
     <span class="c1"># defined in superclass, repeated here for Sphinx:</span>
     <span class="n">model</span><span class="p">:</span> <span class="n">T_SupervisedLearnerDF</span>
     <span class="n">shap_interaction</span><span class="p">:</span> <span class="nb">bool</span>
@@ -255,7 +261,7 @@
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="n">model</span><span class="p">:</span> <span class="n">SupervisedLearnerPipelineDF</span><span class="p">[</span><span class="n">T_SupervisedLearnerDF</span><span class="p">],</span>
+        <span class="n">model</span><span class="p">:</span> <span class="n">T_SupervisedLearnerDF</span><span class="p">,</span>
         <span class="o">*</span><span class="p">,</span>
         <span class="n">explainer_factory</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ExplainerFactory</span><span class="p">[</span><span class="n">NativeSupervisedLearner</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">shap_interaction</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
@@ -265,18 +271,34 @@
         <span class="n">verbose</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        :param model: the learner pipeline to inspect</span>
+<span class="sd">        :param model: the learner or learner pipeline to inspect (typically, one of</span>
+<span class="sd">            a :class:`~sklearndf.pipeline.ClassifierPipelineDF`,</span>
+<span class="sd">            :class:`~sklearndf.pipeline.RegressorPipelineDF`,</span>
+<span class="sd">            :class:`~sklearndf.classification.ClassifierDF`, or</span>
+<span class="sd">            :class:`~sklearndf.regression.RegressorDF`)</span>
 <span class="sd">        :param explainer_factory: optional function that creates a shap Explainer</span>
 <span class="sd">            (default: ``TreeExplainerFactory``)</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="n">model</span><span class="o">.</span><span class="n">is_fitted</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;arg pipeline must be fitted&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;arg model must be fitted&quot;</span><span class="p">)</span>
 
-        <span class="n">final_estimator</span><span class="p">:</span> <span class="n">T_SupervisedLearnerDF</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">final_estimator</span>
-        <span class="k">if</span> <span class="n">is_classifier</span><span class="p">(</span><span class="n">final_estimator</span><span class="p">):</span>
+        <span class="n">learner</span><span class="p">:</span> <span class="n">SupervisedLearnerDF</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">SupervisedLearnerPipelineDF</span><span class="p">):</span>
+            <span class="n">learner</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">final_estimator</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">SupervisedLearnerDF</span><span class="p">):</span>
+            <span class="n">learner</span> <span class="o">=</span> <span class="n">model</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                <span class="s2">&quot;arg model must be a SupervisedLearnerPipelineDF or a &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;SupervisedLearnerDF, but is a </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">model</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">learner</span> <span class="o">=</span> <span class="n">learner</span>
+
+        <span class="k">if</span> <span class="n">is_classifier</span><span class="p">(</span><span class="n">learner</span><span class="p">):</span>
             <span class="k">try</span><span class="p">:</span>
-                <span class="n">n_outputs</span> <span class="o">=</span> <span class="n">final_estimator</span><span class="o">.</span><span class="n">n_outputs_</span>
+                <span class="n">n_outputs</span> <span class="o">=</span> <span class="n">learner</span><span class="o">.</span><span class="n">n_outputs_</span>
             <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
                 <span class="k">pass</span>
             <span class="k">else</span><span class="p">:</span>
@@ -284,12 +306,12 @@
                     <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
                         <span class="s2">&quot;only single-target classifiers (binary or multi-class) are &quot;</span>
                         <span class="s2">&quot;supported, but the given classifier has been fitted on &quot;</span>
-                        <span class="sa">f</span><span class="s2">&quot;multiple targets: </span><span class="si">{</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">final_estimator</span><span class="o">.</span><span class="n">output_names_</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+                        <span class="sa">f</span><span class="s2">&quot;multiple targets: </span><span class="si">{</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">learner</span><span class="o">.</span><span class="n">output_names_</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
                     <span class="p">)</span>
-        <span class="k">elif</span> <span class="ow">not</span> <span class="n">is_regressor</span><span class="p">(</span><span class="n">final_estimator</span><span class="p">):</span>
+        <span class="k">elif</span> <span class="ow">not</span> <span class="n">is_regressor</span><span class="p">(</span><span class="n">learner</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
-                <span class="s2">&quot;learner in arg pipeline must be a classifier or a regressor,&quot;</span>
-                <span class="sa">f</span><span class="s2">&quot;but is a </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">final_estimator</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="s2">&quot;learner in arg model must be a classifier or a regressor,&quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;but is a </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">learner</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&quot;</span>
             <span class="p">)</span>
 
         <span class="k">if</span> <span class="n">explainer_factory</span><span class="p">:</span>
@@ -331,14 +353,19 @@
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;[see superclass]&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">cast</span><span class="p">(</span>
             <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">final_estimator</span><span class="o">.</span><span class="n">feature_names_in_</span><span class="o">.</span><span class="n">to_list</span><span class="p">(),</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">learner</span><span class="o">.</span><span class="n">feature_names_in_</span><span class="o">.</span><span class="n">to_list</span><span class="p">(),</span>
         <span class="p">)</span>
 
 <div class="viewcode-block" id="LearnerInspector.preprocess_features"><a class="viewcode-back" href="../../../apidoc/facet/inspection/facet.inspection.LearnerInspector.html#facet.inspection.LearnerInspector.preprocess_features">[docs]</a>    <span class="k">def</span> <span class="nf">preprocess_features</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">features</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">]</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;[see superclass]&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">preprocess</span><span class="p">(</span><span class="n">features</span><span class="p">)</span></div>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="ow">is</span> <span class="bp">self</span><span class="o">.</span><span class="n">learner</span><span class="p">:</span>
+            <span class="c1"># we have a simple learner: no preprocessing needed</span>
+            <span class="k">return</span> <span class="n">features</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># we have a pipeline: preprocess features</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">preprocess</span><span class="p">(</span><span class="n">features</span><span class="p">)</span></div>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">shap_calculator</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LearnerShapCalculator</span><span class="p">[</span><span class="n">Any</span><span class="p">]:</span>
@@ -347,10 +374,10 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shap_calculator</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shap_calculator</span>
 
-        <span class="n">learner</span><span class="p">:</span> <span class="n">SupervisedLearnerDF</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">final_estimator</span>
+        <span class="n">learner</span><span class="p">:</span> <span class="n">SupervisedLearnerDF</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">learner</span>
 
         <span class="n">shap_calculator_params</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
-            <span class="n">model</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">final_estimator</span><span class="o">.</span><span class="n">native_estimator</span><span class="p">,</span>
+            <span class="n">model</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">learner</span><span class="o">.</span><span class="n">native_estimator</span><span class="p">,</span>
             <span class="n">interaction_values</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">shap_interaction</span><span class="p">,</span>
             <span class="n">explainer_factory</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">explainer_factory</span><span class="p">,</span>
             <span class="n">n_jobs</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">n_jobs</span><span class="p">,</span>

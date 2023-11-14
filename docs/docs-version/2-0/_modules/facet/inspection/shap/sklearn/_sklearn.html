@@ -410,7 +410,6 @@
         <span class="n">shap_tensors</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float_</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float_</span><span class="p">]]],</span>
         <span class="n">n_outputs</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float_</span><span class="p">]]:</span>
-
         <span class="k">if</span> <span class="n">n_outputs</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">shap_tensors</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">shap_tensors</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
             <span class="c1"># in the binary classification case, we will proceed with SHAP values</span>
             <span class="c1"># for class 0 only, since values for class 1 will just be the same</span>
@@ -442,7 +441,6 @@
         <span class="n">observation_idx</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">,</span>
         <span class="n">feature_idx</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">]:</span>
-
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">interaction_values</span><span class="p">:</span>
             <span class="c1"># return a list of data frame [(obs x features) x features],</span>
             <span class="c1"># one for each of the outputs</span>

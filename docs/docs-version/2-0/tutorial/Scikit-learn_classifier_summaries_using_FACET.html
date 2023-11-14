@@ -515,7 +515,7 @@ div.rendered_html tbody tr:hover {
   background: rgba(66, 165, 245, 0.2);
 }
 </style>
-<p><img alt="2feb8a1db7094b67a03221aec7b9810a" class="no-scaled-link" src="../_images/Gamma_Facet_Logo_RGB_LB.svg" width="500" /></p>
+<p><img alt="4f54a847f9eb4d44981892123f5af7d1" class="no-scaled-link" src="../_images/Gamma_Facet_Logo_RGB_LB.svg" width="500" /></p>
 <section id="Standard-Scikit-learn-Classification-Summary-with-FACET">
 <h1>Standard Scikit-learn Classification Summary with FACET<a class="headerlink" href="#Standard-Scikit-learn-Classification-Summary-with-FACET" title="Permalink to this headline">#</a></h1>
 <p>FACET is composed of the following key components:</p>
@@ -527,7 +527,7 @@ div.rendered_html tbody tr:hover {
 <p>FACET’s model simulation algorithms use ML models for <em>virtual experiments</em> to help identify scenarios that optimise predicted outcomes. To quantify the uncertainty in simulations, FACET utilises a range of bootstrapping algorithms including stationary and stratified bootstraps. For an example of FACET’s bootstrap simulations, see the getting started example below.</p>
 </li>
 <li><p><strong>Enhanced Machine Learning Workflow</strong></p>
-<p>FACET offers an efficient and transparent machine learning workflow, enhancing <a class="reference external" href="https://scikit-learn.org/stable/index.html">scikit-learn</a>’s tried and tested pipelining paradigm with new capabilities for model selection, inspection, and simulation. FACET also introduces <a class="reference external" href="https://github.com/BCG-Gamma/sklearndf">sklearndf</a>, an augmented version of <em>scikit-learn</em> with enhanced support for <em>pandas</em> dataframes that ensures end-to-end traceability of features.</p>
+<p>FACET offers an efficient and transparent machine learning workflow, enhancing <a class="reference external" href="https://scikit-learn.org/stable/index.html">scikit-learn</a>’s tried and tested pipelining paradigm with new capabilities for model selection, inspection, and simulation. FACET also introduces <a class="reference external" href="https://github.com/BCG-X-Official/sklearndf">sklearndf</a>, an augmented version of <em>scikit-learn</em> with enhanced support for <em>pandas</em> dataframes that ensures end-to-end traceability of features.</p>
 </li>
 </ul>
 <hr class="docutils" />
@@ -548,7 +548,7 @@ summary metrics and a ROC curve both with an assessment of error based on the cr
 <ol class="arabic simple">
 <li><p>Common packages (pandas, matplotlib, sklearn, etc.)</p></li>
 <li><p>Required FACET classes (i.e., selection)</p></li>
-<li><p>Other BCG GAMMA packages which simplify pipelining (sklearndf, see on <a class="reference external" href="https://github.com/orgs/BCG-Gamma/sklearndf/">GitHub</a>) when using FACET</p></li>
+<li><p>Other BCG GAMMA packages which simplify pipelining (sklearndf, see on <a class="reference external" href="https://github.com/orgs/BCG-X-Official/sklearndf/">GitHub</a>) when using FACET</p></li>
 </ol>
 <p><strong>Common package imports</strong></p>
 <div class="nbinput nblast docutils container">
@@ -590,7 +590,7 @@ summary metrics and a ROC curve both with an assessment of error based on the cr
 </div>
 </div>
 <p><strong>sklearndf imports</strong></p>
-<p>Instead of using the “regular” scikit-learn package, we are going to use sklearndf (see on <a class="reference external" href="https://github.com/orgs/BCG-Gamma/sklearndf/">GitHub</a>). sklearndf is an open source library designed to address a common issue with scikit-learn: the outputs of transformers are numpy arrays, even when the input is a data frame. However, to inspect a model it is essential to keep track of the feature names. sklearndf retains all the functionality available through scikit-learn plus the feature
+<p>Instead of using the “regular” scikit-learn package, we are going to use sklearndf (see on <a class="reference external" href="https://github.com/orgs/BCG-X-Official/sklearndf/">GitHub</a>). sklearndf is an open source library designed to address a common issue with scikit-learn: the outputs of transformers are numpy arrays, even when the input is a data frame. However, to inspect a model it is essential to keep track of the feature names. sklearndf retains all the functionality available through scikit-learn plus the feature
 traceability and usability associated with Pandas data frames. Additionally, the names of all your favourite scikit-learn functions are the same except for <code class="docutils literal notranslate"><span class="pre">DF</span></code> on the end. For example, the standard scikit-learn import:</p>
 <p><code class="docutils literal notranslate"><span class="pre">from</span> <span class="pre">sklearn.pipeline</span> <span class="pre">import</span> <span class="pre">Pipeline</span></code></p>
 <p>becomes:</p>
