@@ -655,6 +655,7 @@ stages:
 
                 cd $(System.DefaultWorkingDirectory)
                 echo "Checking out github-pages"
+                git fetch origin github-pages --depth=1
                 git checkout --track origin/github-pages
 
                 # make sure we have a docs directory
@@ -676,6 +677,7 @@ stages:
 
                 cd $(System.DefaultWorkingDirectory)
                 echo "Checking out $(branchName)"
+                git fetch origin $(branchName) --depth=1
                 git checkout $(branchName)
 
                 # install micromamba
