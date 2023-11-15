@@ -173,9 +173,10 @@
 
 <span class="kn">import</span> <span class="nn">logging</span>
 <span class="kn">from</span> <span class="nn">abc</span> <span class="kn">import</span> <span class="n">ABCMeta</span><span class="p">,</span> <span class="n">abstractmethod</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">,</span> <span class="n">TextIO</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">TypeVar</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">,</span> <span class="n">TextIO</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">TypeVar</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">cast</span>
 
 <span class="kn">from</span> <span class="nn">matplotlib.axes</span> <span class="kn">import</span> <span class="n">Axes</span>
+<span class="kn">from</span> <span class="nn">matplotlib.transforms</span> <span class="kn">import</span> <span class="n">Bbox</span>
 <span class="kn">from</span> <span class="nn">mpl_toolkits.axes_grid1</span> <span class="kn">import</span> <span class="n">make_axes_locatable</span>
 <span class="kn">from</span> <span class="nn">mpl_toolkits.axes_grid1.axes_divider</span> <span class="kn">import</span> <span class="n">AxesDivider</span>
 <span class="kn">from</span> <span class="nn">mpl_toolkits.axes_grid1.axes_size</span> <span class="kn">import</span> <span class="n">Scaled</span>
@@ -372,27 +373,44 @@
             <span class="n">y_min</span><span class="p">,</span> <span class="n">y_max</span> <span class="o">=</span> <span class="n">main_ax</span><span class="o">.</span><span class="n">get_ylim</span><span class="p">()</span>
             <span class="n">uplift_height</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">y_max</span> <span class="o">-</span> <span class="n">y_min</span><span class="p">)</span>
 
-            <span class="k">def</span> <span class="nf">_x_axis_height</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-                <span class="n">axis_below_size_pixels</span><span class="p">:</span> <span class="nb">float</span>
-                <span class="n">_</span><span class="p">,</span> <span class="n">axis_below_size_pixels</span> <span class="o">=</span> <span class="n">main_ax</span><span class="o">.</span><span class="n">get_xaxis</span><span class="p">()</span><span class="o">.</span><span class="n">get_text_heights</span><span class="p">(</span>
+            <span class="k">def</span> <span class="nf">_x_axis_height</span><span class="p">(</span><span class="n">padding</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+                <span class="c1"># get the lower bound of the x axis in data space: this is the upper</span>
+                <span class="c1"># bound of the space below the x axis</span>
+                <span class="n">x_axis_vertical_position</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">main_ax</span><span class="o">.</span><span class="n">get_ylim</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+
+                <span class="c1"># get the upper and lower vertical bound of the tick labels</span>
+                <span class="n">xaxis_tight_bbox</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Bbox</span><span class="p">]</span> <span class="o">=</span> <span class="n">main_ax</span><span class="o">.</span><span class="n">get_xaxis</span><span class="p">()</span><span class="o">.</span><span class="n">get_tightbbox</span><span class="p">(</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">get_renderer</span><span class="p">()</span>
                 <span class="p">)</span>
+                <span class="k">if</span> <span class="n">xaxis_tight_bbox</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="mf">0.0</span>
 
-                <span class="n">y0</span><span class="p">:</span> <span class="nb">float</span>
-                <span class="n">y1</span><span class="p">:</span> <span class="nb">float</span>
-                <span class="p">((</span><span class="n">_</span><span class="p">,</span> <span class="n">y0</span><span class="p">),</span> <span class="p">(</span><span class="n">_</span><span class="p">,</span> <span class="n">y1</span><span class="p">))</span> <span class="o">=</span> <span class="n">main_ax</span><span class="o">.</span><span class="n">transData</span><span class="o">.</span><span class="n">inverted</span><span class="p">()</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span>
-                    <span class="p">((</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span> <span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">axis_below_size_pixels</span><span class="p">))</span>
+                <span class="n">x_axis_labels_lower</span><span class="p">:</span> <span class="nb">float</span>
+                <span class="n">x_axis_labels_upper</span><span class="p">:</span> <span class="nb">float</span>
+                <span class="p">(</span>
+                    <span class="n">x_axis_labels_lower</span><span class="p">,</span>
+                    <span class="n">x_axis_labels_upper</span><span class="p">,</span>
+                <span class="p">)</span> <span class="o">=</span> <span class="n">main_ax</span><span class="o">.</span><span class="n">transData</span><span class="o">.</span><span class="n">inverted</span><span class="p">()</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span>
+                    <span class="n">xaxis_tight_bbox</span><span class="o">.</span><span class="n">get_points</span><span class="p">()</span>
+                <span class="p">)[</span>
+                    <span class="p">:,</span> <span class="mi">1</span>
+                <span class="p">]</span>
+
+                <span class="c1"># calculate the height, and pad it with the multiple of the tick</span>
+                <span class="c1"># label height provided in arg padding</span>
+                <span class="k">return</span> <span class="p">(</span>
+                    <span class="nb">max</span><span class="p">(</span><span class="n">x_axis_vertical_position</span> <span class="o">-</span> <span class="n">x_axis_labels_lower</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+                    <span class="o">+</span> <span class="p">(</span><span class="n">x_axis_labels_upper</span> <span class="o">-</span> <span class="n">x_axis_labels_lower</span><span class="p">)</span> <span class="o">*</span> <span class="n">padding</span>
                 <span class="p">)</span>
-                <span class="k">return</span> <span class="nb">abs</span><span class="p">(</span><span class="n">y1</span> <span class="o">-</span> <span class="n">y0</span><span class="p">)</span>
 
             <span class="c1"># calculate the height of the x axis in data space; add additional padding</span>
-            <span class="n">axis_below_size_data</span> <span class="o">=</span> <span class="n">_x_axis_height</span><span class="p">()</span> <span class="o">*</span> <span class="mf">1.2</span>
+            <span class="n">axis_below_size_data</span> <span class="o">=</span> <span class="n">_x_axis_height</span><span class="p">(</span><span class="n">padding</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
 
             <span class="c1"># create the axes divider, then use it to append the new sub-axes at the</span>
             <span class="c1"># bottom while leaving sufficient padding in-between to accommodate the</span>
             <span class="c1"># main axes&#39; x axis labels</span>
             <span class="n">divider</span><span class="p">:</span> <span class="n">AxesDivider</span> <span class="o">=</span> <span class="n">make_axes_locatable</span><span class="p">(</span><span class="n">main_ax</span><span class="p">)</span>
-            <span class="k">return</span> <span class="n">divider</span><span class="o">.</span><span class="n">append_axes</span><span class="p">(</span>
+            <span class="n">sub_axes</span><span class="p">:</span> <span class="n">Axes</span> <span class="o">=</span> <span class="n">divider</span><span class="o">.</span><span class="n">append_axes</span><span class="p">(</span>
                 <span class="n">position</span><span class="o">=</span><span class="s2">&quot;bottom&quot;</span><span class="p">,</span>
                 <span class="n">size</span><span class="o">=</span><span class="n">Scaled</span><span class="p">(</span>
                     <span class="n">uplift_height</span> <span class="o">*</span> <span class="n">SimulationMatplotStyle</span><span class="o">.</span><span class="n">__HISTOGRAM_SIZE_RATIO</span>
@@ -403,6 +421,7 @@
                     <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">SimulationMatplotStyle</span><span class="o">.</span><span class="n">__HISTOGRAM_SIZE_RATIO</span><span class="p">)</span>
                 <span class="p">),</span>
             <span class="p">)</span>
+            <span class="k">return</span> <span class="n">sub_axes</span>
 
         <span class="n">ax</span> <span class="o">=</span> <span class="n">_make_sub_axes</span><span class="p">()</span>
 
@@ -415,10 +434,10 @@
         <span class="c1"># reduce the horizontal margin such that half a bar is to the left of the</span>
         <span class="c1"># leftmost tick mark (but the tick mark stays aligned with the main</span>
         <span class="c1"># simulation chart)</span>
-        <span class="n">x_margin</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">margins</span><span class="p">()</span>
+        <span class="n">x_margin</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">cast</span><span class="p">(</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span> <span class="n">ax</span><span class="o">.</span><span class="n">margins</span><span class="p">())</span>
         <span class="n">ax</span><span class="o">.</span><span class="n">set_xmargin</span><span class="p">(</span>
             <span class="nb">max</span><span class="p">(</span>
-                <span class="mi">0</span><span class="p">,</span>
+                <span class="mf">0.0</span><span class="p">,</span>
                 <span class="p">(</span><span class="n">width_bars</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">-</span> <span class="n">x_margin</span> <span class="o">*</span> <span class="p">(</span><span class="n">n_partitions</span> <span class="o">-</span> <span class="mi">1</span><span class="p">))</span>
                 <span class="o">/</span> <span class="p">(</span><span class="n">width_bars</span> <span class="o">-</span> <span class="p">(</span><span class="n">n_partitions</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)),</span>
             <span class="p">)</span>
