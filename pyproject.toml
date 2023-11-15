@@ -8,7 +8,7 @@ exclude = [".idea", "tmp", "dist", ".tox", ".pytest_cache"]
 [tool.flit.metadata]
 module = "facet"
 author = "Boston Consulting Group (BCG)"
-home-page = "https://github.com/BCG-Gamma/facet"
+home-page = "https://github.com/BCG-X-Official/facet"
 description-file = "pypi_description.rst"
 dist-name = "gamma-facet"
 license = "Apache Software License v2.0"
@@ -64,8 +64,8 @@ docs = [
 ]
 
 [tool.flit.metadata.urls]
-Documentation = "https://bcg-gamma.github.io/facet/"
-Repository = "https://github.com/BCG-Gamma/facet"
+Documentation = "https://bcg-x-official.github.io/facet/"
+Repository = "https://github.com/BCG-X-Official/facet"
 
 [build]
 # comma-separated list of packages to be built from source in pip min builds

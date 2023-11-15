@@ -24,8 +24,8 @@ resources:
   repositories:
     - repository: pytools
       type: github
-      endpoint: BCG-Gamma
-      name: BCG-Gamma/pytools
+      endpoint: BCG-X-Official
+      name: BCG-X-Official/pytools
       ref: 2.1.x
 
 variables:
@@ -65,7 +65,7 @@ stages:
               versionSpec: '3.9'
             displayName: 'use Python 3.9'
           - script: |
-              python -m pip install black~=22.8
+              python -m pip install black~=23.10.1
               python -m black --check .
             displayName: 'Run black'
       - job:
@@ -655,6 +655,7 @@ stages:
 
                 cd $(System.DefaultWorkingDirectory)
                 echo "Checking out github-pages"
+                git fetch origin github-pages --depth=1
                 git checkout --track origin/github-pages
 
                 # make sure we have a docs directory
@@ -676,6 +677,7 @@ stages:
 
                 cd $(System.DefaultWorkingDirectory)
                 echo "Checking out $(branchName)"
+                git fetch origin $(branchName) --depth=1
                 git checkout $(branchName)
 
                 # install micromamba
