@@ -5,7 +5,7 @@ trigger:
 
 pr:
   # run the pipeline on pull requests to the following branches
-  - 2.0.x
+  - 2.1.x
   - release/*
 
 pool:
