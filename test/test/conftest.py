@@ -457,7 +457,8 @@ def fit_classifier_selector(
             # run tests where preprocessing changes feature names
             preprocessing=ColumnTransformerDF(
                 # we prefix all feature names with "pass__" except the last one
-                [("pass", "passthrough", sample.feature_names[:-1])]
+                [("pass", "passthrough", sample.feature_names[:-1])],
+                remainder="passthrough",
             ),
         )
     )

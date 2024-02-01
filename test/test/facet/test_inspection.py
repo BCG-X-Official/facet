@@ -45,6 +45,13 @@ log = logging.getLogger(__name__)
 
 T = TypeVar("T")
 
+IRIS_FEATURE_NAMES_PREPROCESSED = [
+    "pass__sepal length (cm)",
+    "pass__sepal width (cm)",
+    "pass__petal length (cm)",
+    "remainder__petal width (cm)",
+]
+
 
 def test_regressor_selector(
     regressor_selector: LearnerSelector[
@@ -343,7 +350,7 @@ def test_model_inspection_classifier_multi_class(
 
     feature_importance: pd.DataFrame = iris_inspector_multi_class.feature_importance()
     assert feature_importance.index.equals(
-        pd.Index(iris_sample.feature_names, name="feature")
+        pd.Index(IRIS_FEATURE_NAMES_PREPROCESSED, name="feature")
     )
     assert feature_importance.columns.equals(
         pd.Index(iris_inspector_multi_class.output_names, name="class")
@@ -515,22 +522,38 @@ def test_model_inspection_classifier_interaction(
 ) -> None:
     warnings.filterwarnings("ignore", message="You are accessing a training score")
 
+    assert (
+        iris_classifier_binary.preprocessing is not None
+    ), "preprocessing step must be defined"
+
     cls_inspector: Type[
         Union[
             LearnerInspector[RandomForestClassifierDF],
             NativeLearnerInspector[RandomForestClassifier],
         ]
     ]
-    learner: Union[RandomForestClassifierDF, RandomForestClassifier]
+    classifier: Union[ClassifierPipelineDF[RandomForestClassifierDF], Pipeline]
     if native:
         cls_inspector = NativeLearnerInspector[RandomForestClassifier]
-        learner = iris_classifier_binary.final_estimator.native_estimator
+        # create a native pipeline from the classifier pipeline
+        classifier = Pipeline(
+            steps=[
+                (
+                    "preprocessing",
+                    iris_classifier_binary.preprocessing.native_estimator,
+                ),
+                (
+                    "classifier",
+                    iris_classifier_binary.classifier.native_estimator,
+                ),
+            ]
+        )
     else:
         cls_inspector = LearnerInspector[RandomForestClassifierDF]
-        learner = iris_classifier_binary.final_estimator
+        classifier = iris_classifier_binary
 
     model_inspector = cls_inspector(
-        model=learner,
+        model=classifier,
         explainer_factory=TreeExplainerFactory(
             feature_perturbation="tree_path_dependent", uses_background_dataset=True
         ),
@@ -538,7 +561,7 @@ def test_model_inspection_classifier_interaction(
     ).fit(iris_sample_binary)
 
     model_inspector_no_interaction = cls_inspector(
-        model=learner,
+        model=classifier,
         shap_interaction=False,
         explainer_factory=TreeExplainerFactory(
             feature_perturbation="tree_path_dependent", uses_background_dataset=True
@@ -560,9 +583,8 @@ def test_model_inspection_classifier_interaction(
     ).abs().max().max() < 0.015
 
     # the column names of the shap value data frames are the feature names
-    feature_columns = iris_sample_binary.feature_names
-    assert shap_values.columns.to_list() == feature_columns
-    assert shap_interaction_values.columns.to_list() == feature_columns
+    assert shap_values.columns.to_list() == IRIS_FEATURE_NAMES_PREPROCESSED
+    assert shap_interaction_values.columns.to_list() == IRIS_FEATURE_NAMES_PREPROCESSED
 
     # the length of rows in shap_values should be equal to the number of observations
     assert len(shap_values) == len(iris_sample_binary)
@@ -570,7 +592,7 @@ def test_model_inspection_classifier_interaction(
     # the length of rows in shap_interaction_values should be equal to the number of
     # observations, times the number of features
     assert len(shap_interaction_values) == (
-        len(iris_sample_binary) * len(feature_columns)
+        len(iris_sample_binary) * len(IRIS_FEATURE_NAMES_PREPROCESSED)
     )
 
     # do the shap values add up to predictions minus a constant value?
