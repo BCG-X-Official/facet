@@ -840,11 +840,20 @@ def test_shap_plot_data(
     assert all(shap.shape == features_shape for shap in shap_values)
 
     shap_index = shap_plot_data.features.index
+    preprocessing = iris_inspector_multi_class.model.preprocessing
+    assert preprocessing is not None, "preprocessing step must be defined"
+
     assert_frame_equal(
-        shap_plot_data.features, iris_sample_multi_class.features.loc[shap_index]
+        # the shap plot data should contain the same observations as the
+        # preprocessed features in the sample
+        shap_plot_data.features,
+        preprocessing.transform(iris_sample_multi_class.features).loc[shap_index],
     )
     assert_series_equal(
-        shap_plot_data.target, iris_sample_multi_class.target.loc[shap_index]
+        # the shap plot data should contain the same target values as the
+        # sample
+        shap_plot_data.target,
+        iris_sample_multi_class.target.loc[shap_index],
     )
 
 
