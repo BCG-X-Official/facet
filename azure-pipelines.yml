@@ -1,6 +1,6 @@
 trigger:
   # run the pipeline on pushes to the following branches
-  - 2.1.x
+  - 2.0.x
   - release/*
 
 pr:
