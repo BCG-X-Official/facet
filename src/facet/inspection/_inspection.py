@@ -11,8 +11,6 @@ from typing_extensions import TypeAlias
 
 from pytools.api import AllTracker
 
-from ..data import Sample
-
 log = logging.getLogger(__name__)
 
 __all__ = [
@@ -46,15 +44,22 @@ class ShapPlotData:
     """
 
     def __init__(
-        self, shap_values: Union[FloatArray, List[FloatArray]], sample: Sample
+        self,
+        *,
+        shap_values: Union[FloatArray, List[FloatArray]],
+        features: pd.DataFrame,
+        target: Union[pd.Series, pd.DataFrame],
     ) -> None:
         """
         :param shap_values: the shap values for all observations and outputs
-        :param sample: (sub)sample of all observations for which SHAP values are
-            available; aligned with param ``shap_values``
+        :param features: features for which SHAP values are available;
+            aligned with param ``shap_values``
+        :param target: target values for all observations;
+            aligned with param ``shap_values``
         """
         self._shap_values = shap_values
-        self._sample = sample
+        self._features = features
+        self._target = target
 
     @property
     def shap_values(self) -> Union[FloatArray, List[FloatArray]]:
@@ -69,7 +74,7 @@ class ShapPlotData:
         """
         Matrix of feature values (number of observations by number of features).
         """
-        return self._sample.features
+        return self._features
 
     @property
     def target(self) -> Union[pd.Series, pd.DataFrame]:
@@ -78,7 +83,7 @@ class ShapPlotData:
         or matrix of target values for multi-output models
         (number of observations by number of outputs).
         """
-        return self._sample.target
+        return self._target
 
 
 __tracker.validate()
