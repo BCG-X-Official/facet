@@ -344,7 +344,7 @@ class ShapCalculator(
         feature_names = self.feature_index_
 
         # calculate the shap values, and ensure the result is a list of arrays
-        shap_values: List[npt.NDArray[np.float_]] = self._convert_shap_tensors_to_list(
+        shap_values: List[npt.NDArray[np.float64]] = self._convert_shap_tensors_to_list(
             shap_tensors=(
                 explainer.shap_interaction_values(X=features)
                 if self.interaction_values
@@ -379,10 +379,10 @@ class ShapCalculator(
     def _convert_shap_tensors_to_list(
         self,
         *,
-        shap_tensors: Union[npt.NDArray[np.float_], List[npt.NDArray[np.float_]]],
+        shap_tensors: Union[npt.NDArray[np.float64], List[npt.NDArray[np.float64]]],
         n_outputs: int,
-    ) -> List[npt.NDArray[np.float_]]:
-        def _validate_shap_tensor(_t: npt.NDArray[np.float_]) -> None:
+    ) -> List[npt.NDArray[np.float64]]:
+        def _validate_shap_tensor(_t: npt.NDArray[np.float64]) -> None:
             if np.isnan(np.sum(_t)):
                 raise AssertionError(
                     "Output of SHAP explainer includes NaN values. "
@@ -409,7 +409,7 @@ class ShapCalculator(
     @abstractmethod
     def _convert_shap_to_df(
         self,
-        raw_shap_tensors: List[npt.NDArray[np.float_]],
+        raw_shap_tensors: List[npt.NDArray[np.float64]],
         observation_idx: pd.Index,
         feature_idx: pd.Index,
     ) -> List[pd.DataFrame]:
@@ -425,7 +425,7 @@ class ShapCalculator(
 
     def _convert_raw_shap_to_df(
         self,
-        raw_shap_tensors: List[npt.NDArray[np.float_]],
+        raw_shap_tensors: List[npt.NDArray[np.float64]],
         observation_idx: pd.Index,
         feature_idx: pd.Index,
     ) -> List[pd.DataFrame]:

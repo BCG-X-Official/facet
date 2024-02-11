@@ -271,7 +271,7 @@ def test_model_inspection_classifier_binary(
 
     try:
         association_matrix = cast(
-            Matrix[np.float_],
+            Matrix[np.float64],
             model_inspector.feature_association_matrix(
                 clustered=True, symmetrical=True
             ),
@@ -365,7 +365,7 @@ def test_model_inspection_classifier_multi_class(
 
     try:
         synergy_matrix = cast(
-            List[Matrix[np.float_]],
+            List[Matrix[np.float64]],
             iris_inspector_multi_class.feature_synergy_matrix(clustered=False),
         )
 
@@ -387,7 +387,7 @@ def test_model_inspection_classifier_multi_class(
         )
 
         redundancy_matrix = cast(
-            List[Matrix[np.float_]],
+            List[Matrix[np.float64]],
             iris_inspector_multi_class.feature_redundancy_matrix(clustered=False),
         )
         assert_allclose(
@@ -408,7 +408,7 @@ def test_model_inspection_classifier_multi_class(
         )
 
         association_matrix = cast(
-            List[Matrix[np.float_]],
+            List[Matrix[np.float64]],
             iris_inspector_multi_class.feature_association_matrix(clustered=False),
         )
         assert_allclose(
@@ -587,7 +587,7 @@ def test_model_inspection_classifier_interaction(
     try:
         assert_allclose(
             cast(
-                Matrix[np.float_],
+                Matrix[np.float64],
                 model_inspector.feature_synergy_matrix(
                     clustered=False, symmetrical=True
                 ),
@@ -604,7 +604,7 @@ def test_model_inspection_classifier_interaction(
         )
         assert_allclose(
             cast(
-                Matrix[np.float_],
+                Matrix[np.float64],
                 model_inspector.feature_synergy_matrix(absolute=True, symmetrical=True),
             ).values,
             np.array(
@@ -620,7 +620,7 @@ def test_model_inspection_classifier_interaction(
 
         assert_allclose(
             cast(
-                Matrix[np.float_],
+                Matrix[np.float64],
                 model_inspector.feature_synergy_matrix(clustered=True),
             ).values,
             np.array(
@@ -636,7 +636,7 @@ def test_model_inspection_classifier_interaction(
 
         assert_allclose(
             cast(
-                Matrix[np.float_], model_inspector.feature_synergy_matrix(absolute=True)
+                Matrix[np.float64], model_inspector.feature_synergy_matrix(absolute=True)
             ).values,
             np.array(
                 [
@@ -651,7 +651,7 @@ def test_model_inspection_classifier_interaction(
 
         assert_allclose(
             cast(
-                Matrix[np.float_],
+                Matrix[np.float64],
                 model_inspector.feature_redundancy_matrix(
                     clustered=False, symmetrical=True
                 ),
@@ -668,7 +668,7 @@ def test_model_inspection_classifier_interaction(
         )
         assert_allclose(
             cast(
-                Matrix[np.float_],
+                Matrix[np.float64],
                 model_inspector.feature_redundancy_matrix(
                     absolute=True, symmetrical=True
                 ),
@@ -686,7 +686,7 @@ def test_model_inspection_classifier_interaction(
 
         assert_allclose(
             cast(
-                Matrix[np.float_],
+                Matrix[np.float64],
                 model_inspector.feature_redundancy_matrix(clustered=True),
             ).values,
             np.array(
@@ -702,7 +702,7 @@ def test_model_inspection_classifier_interaction(
 
         assert_allclose(
             cast(
-                Matrix[np.float_],
+                Matrix[np.float64],
                 model_inspector.feature_redundancy_matrix(absolute=True),
             ).values,
             np.array(
@@ -718,7 +718,7 @@ def test_model_inspection_classifier_interaction(
 
         assert_allclose(
             cast(
-                Matrix[np.float_],
+                Matrix[np.float64],
                 model_inspector.feature_association_matrix(
                     clustered=False, symmetrical=True
                 ),
@@ -736,7 +736,7 @@ def test_model_inspection_classifier_interaction(
 
         assert_allclose(
             cast(
-                Matrix[np.float_],
+                Matrix[np.float64],
                 model_inspector.feature_association_matrix(
                     absolute=True, symmetrical=True
                 ),
@@ -754,7 +754,7 @@ def test_model_inspection_classifier_interaction(
 
         assert_allclose(
             cast(
-                Matrix[np.float_],
+                Matrix[np.float64],
                 model_inspector.feature_association_matrix(clustered=True),
             ).values,
             np.array(
@@ -770,7 +770,7 @@ def test_model_inspection_classifier_interaction(
 
         assert_allclose(
             cast(
-                Matrix[np.float_],
+                Matrix[np.float64],
                 model_inspector.feature_association_matrix(absolute=True),
             ).values,
             np.array(

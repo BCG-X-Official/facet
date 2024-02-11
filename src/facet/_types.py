@@ -12,8 +12,8 @@ from typing_extensions import TypeAlias
 
 # a function representing a model to be inspected
 ModelFunction: TypeAlias = Callable[
-    [Union[pd.Series, pd.DataFrame, npt.NDArray[np.float_]]],
-    Union[pd.Series, npt.NDArray[np.float_], float],
+    [Union[pd.Series, pd.DataFrame, npt.NDArray[np.float64]]],
+    Union[pd.Series, npt.NDArray[np.float64], float],
 ]
 
 # a supervised learner in scikit-learn

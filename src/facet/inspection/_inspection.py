@@ -24,7 +24,7 @@ __all__ = [
 # Type aliases
 #
 
-FloatArray: TypeAlias = npt.NDArray[np.float_]
+FloatArray: TypeAlias = npt.NDArray[np.float64]
 
 
 #

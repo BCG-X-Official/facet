@@ -150,7 +150,7 @@ class RegressorShapCalculator(
 
     def _convert_shap_to_df(
         self,
-        raw_shap_tensors: List[npt.NDArray[np.float_]],
+        raw_shap_tensors: List[npt.NDArray[np.float64]],
         observation_idx: pd.Index,
         feature_idx: pd.Index,
     ) -> List[pd.DataFrame]:
@@ -238,9 +238,9 @@ class ClassifierShapCalculator(
     def _convert_shap_tensors_to_list(
         self,
         *,
-        shap_tensors: Union[npt.NDArray[np.float_], List[npt.NDArray[np.float_]]],
+        shap_tensors: Union[npt.NDArray[np.float64], List[npt.NDArray[np.float64]]],
         n_outputs: int,
-    ) -> List[npt.NDArray[np.float_]]:
+    ) -> List[npt.NDArray[np.float64]]:
         if n_outputs == 1 and isinstance(shap_tensors, list) and len(shap_tensors) == 2:
             # in the binary classification case, we will proceed with SHAP values
             # for class 0 only, since values for class 1 will just be the same
@@ -268,7 +268,7 @@ class ClassifierShapCalculator(
 
     def _convert_shap_to_df(
         self,
-        raw_shap_tensors: List[npt.NDArray[np.float_]],
+        raw_shap_tensors: List[npt.NDArray[np.float64]],
         observation_idx: pd.Index,
         feature_idx: pd.Index,
     ) -> List[pd.DataFrame]:

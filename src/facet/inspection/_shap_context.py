@@ -64,9 +64,9 @@ class AffinityMatrix:
     """
 
     # shape: (2, 2, n_outputs, n_features, n_features)
-    _matrices: npt.NDArray[np.float_]
+    _matrices: npt.NDArray[np.float64]
 
-    def __init__(self, matrices: npt.NDArray[np.float_]) -> None:
+    def __init__(self, matrices: npt.NDArray[np.float64]) -> None:
         shape = matrices.shape
         assert len(shape) == 5
         assert shape[:2] == (2, 2)
@@ -76,7 +76,7 @@ class AffinityMatrix:
 
     @staticmethod
     def from_relative_affinity(
-        affinity_rel_ij: npt.NDArray[np.float_], std_p_i: npt.NDArray[np.float_]
+        affinity_rel_ij: npt.NDArray[np.float64], std_p_i: npt.NDArray[np.float64]
     ) -> AffinityMatrix:
         """
         :param affinity_rel_ij: the affinity matrix from which to create all variations,
@@ -125,7 +125,7 @@ class AffinityMatrix:
             ).reshape((2, 2, *affinity_rel_ij.shape))
         )
 
-    def get_values(self, symmetrical: bool, absolute: bool) -> npt.NDArray[np.float_]:
+    def get_values(self, symmetrical: bool, absolute: bool) -> npt.NDArray[np.float64]:
         """
         Get the matrix matching the given criteria.
         :param symmetrical: if ``True``, get the symmetrical version of the matrix
@@ -133,7 +133,7 @@ class AffinityMatrix:
         :return: the affinity matrix
         """
         return cast(
-            npt.NDArray[np.float_], self._matrices[int(symmetrical), int(absolute)]
+            npt.NDArray[np.float64], self._matrices[int(symmetrical), int(absolute)]
         )
 
 
@@ -142,7 +142,7 @@ class AffinityMatrix:
 #
 
 
-def ensure_last_axis_is_fast(array: npt.NDArray[np.float_]) -> npt.NDArray[np.float_]:
+def ensure_last_axis_is_fast(array: npt.NDArray[np.float64]) -> npt.NDArray[np.float64]:
     """
     For future implementations, ensure that the last axis of the given array is `fast`
     to allow for `partial summation`.
@@ -159,7 +159,7 @@ def ensure_last_axis_is_fast(array: npt.NDArray[np.float_]) -> npt.NDArray[np.fl
     return array
 
 
-def sqrt(array: npt.NDArray[np.float_]) -> npt.NDArray[np.float_]:
+def sqrt(array: npt.NDArray[np.float64]) -> npt.NDArray[np.float64]:
     """
     Get the square root of each element in the given array.
 
@@ -174,7 +174,7 @@ def sqrt(array: npt.NDArray[np.float_]) -> npt.NDArray[np.float_]:
     return np.sqrt(np.clip(array, 0, None))
 
 
-def make_symmetric(m: npt.NDArray[np.float_]) -> npt.NDArray[np.float_]:
+def make_symmetric(m: npt.NDArray[np.float64]) -> npt.NDArray[np.float64]:
     """
     Enforce matrix symmetry by transposing the `feature x feature` matrix for each
     output and averaging it with the original matrix.
@@ -186,7 +186,7 @@ def make_symmetric(m: npt.NDArray[np.float_]) -> npt.NDArray[np.float_]:
     return (m + transpose(m)) / 2
 
 
-def transpose(m: npt.NDArray[np.float_], ndim: int = 3) -> npt.NDArray[np.float_]:
+def transpose(m: npt.NDArray[np.float64], ndim: int = 3) -> npt.NDArray[np.float64]:
     """
     Transpose the `feature x feature` matrix for each output.
 
@@ -206,7 +206,7 @@ def transpose(m: npt.NDArray[np.float_], ndim: int = 3) -> npt.NDArray[np.float_
     return m.swapaxes(1, 2)
 
 
-def diagonal(m: npt.NDArray[np.float_]) -> npt.NDArray[np.float_]:
+def diagonal(m: npt.NDArray[np.float64]) -> npt.NDArray[np.float64]:
     """
     Get the diagonal of the `feature x feature` matrix for each output.
 
@@ -219,7 +219,7 @@ def diagonal(m: npt.NDArray[np.float_]) -> npt.NDArray[np.float_]:
 
 
 def fill_diagonal(
-    m: npt.NDArray[np.float_], value: Union[float, npt.NDArray[np.float_]]
+    m: npt.NDArray[np.float64], value: Union[float, npt.NDArray[np.float64]]
 ) -> None:
     """
     In each `feature x feature` matrix for each output, fill the diagonal with the given
@@ -240,8 +240,8 @@ def fill_diagonal(
 
 
 def cov(
-    vectors: npt.NDArray[np.float_], weight: Optional[npt.NDArray[np.float_]]
-) -> npt.NDArray[np.float_]:
+    vectors: npt.NDArray[np.float64], weight: Optional[npt.NDArray[np.float64]]
+) -> npt.NDArray[np.float64]:
     """
     Calculate the covariance matrix of pairs of vectors along the observations axis and
     for each output, assuming all vectors are centered (µ=0).
@@ -267,16 +267,16 @@ def cov(
         weight_total = weight.sum()
 
     return cast(
-        npt.NDArray[np.float_],
+        npt.NDArray[np.float64],
         np.matmul(vectors_weighted, vectors.swapaxes(1, 2)) / weight_total,
     )
 
 
 def cov_broadcast(
-    vector_sequence: npt.NDArray[np.float_],
-    vector_grid: npt.NDArray[np.float_],
-    weight: Optional[npt.NDArray[np.float_]],
-) -> npt.NDArray[np.float_]:
+    vector_sequence: npt.NDArray[np.float64],
+    vector_grid: npt.NDArray[np.float64],
+    weight: Optional[npt.NDArray[np.float64]],
+) -> npt.NDArray[np.float64]:
     """
     Calculate the covariance matrix between a sequence of vectors and a grid of vectors
     along the observations axis and for each output, assuming all vectors are centered
@@ -311,7 +311,7 @@ def cov_broadcast(
         weight_total = weight.sum()
 
     return cast(
-        npt.NDArray[np.float_],
+        npt.NDArray[np.float64],
         np.einsum("...io,...ijo->...ij", vectors_weighted, vector_grid) / weight_total,
     )
 
@@ -323,29 +323,29 @@ class ShapContext:
 
     #: SHAP vectors
     #: with shape `(n_outputs, n_features, n_observations)`
-    p_i: npt.NDArray[np.float_]
+    p_i: npt.NDArray[np.float64]
 
     #: observation weights (optional),
     #: with shape `(n_observations)`
-    weight: Optional[npt.NDArray[np.float_]]
+    weight: Optional[npt.NDArray[np.float64]]
 
     #: Covariance matrix for p[i],
     #: with shape `(n_outputs, n_features, n_features)`
-    cov_p_i_p_j: npt.NDArray[np.float_]
+    cov_p_i_p_j: npt.NDArray[np.float64]
 
     #: Variances for p[i],
     #: with shape `(n_outputs, n_features, 1)`
-    var_p_i: npt.NDArray[np.float_]
+    var_p_i: npt.NDArray[np.float64]
 
     #: SHAP interaction vectors
     #: with shape `(n_outputs, n_features, n_features, n_observations)`
-    p_ij: Optional[npt.NDArray[np.float_]]
+    p_ij: Optional[npt.NDArray[np.float64]]
 
     def __init__(
         self,
-        p_i: npt.NDArray[np.float_],
-        p_ij: Optional[npt.NDArray[np.float_]],
-        weight: Optional[npt.NDArray[np.float_]],
+        p_i: npt.NDArray[np.float64],
+        p_ij: Optional[npt.NDArray[np.float64]],
+        weight: Optional[npt.NDArray[np.float64]],
     ) -> None:
         assert p_i.ndim == 3
         if weight is not None:
@@ -377,7 +377,7 @@ class ShapValueContext(ShapContext):
     ) -> None:
         shap_values: pd.DataFrame = shap_calculator.shap_values
 
-        def _p_i() -> npt.NDArray[np.float_]:
+        def _p_i() -> npt.NDArray[np.float64]:
             assert (
                 shap_calculator.feature_index_ is not None
             ), ASSERTION__CALCULATOR_IS_FITTED
@@ -395,7 +395,7 @@ class ShapValueContext(ShapContext):
                 )
             )
 
-        def _weight() -> Optional[npt.NDArray[np.float_]]:
+        def _weight() -> Optional[npt.NDArray[np.float64]]:
             # weights
             # shape: (n_observations)
             # return a 1d array of weights that aligns with the observations axis of the
@@ -403,7 +403,7 @@ class ShapValueContext(ShapContext):
 
             if sample_weight is not None:
                 return cast(
-                    npt.NDArray[np.float_],
+                    npt.NDArray[np.float64],
                     sample_weight.loc[shap_values.index.get_level_values(-1)].values,
                 )
             else:
@@ -440,7 +440,7 @@ class ShapInteractionValueContext(ShapContext):
         # shape: (n_observations)
         # return a 1d array of weights that aligns with the observations axis of the
         # SHAP values tensor (axis 1)
-        weight: Optional[npt.NDArray[np.float_]]
+        weight: Optional[npt.NDArray[np.float64]]
 
         if sample_weight is not None:
             _observation_indices = shap_values.index.get_level_values(
@@ -479,8 +479,8 @@ class ShapInteractionValueContext(ShapContext):
 
     @staticmethod
     def __get_orthogonalized_interaction_vectors(
-        p_ij: npt.NDArray[np.float_], weight: Optional[npt.NDArray[np.float_]]
-    ) -> npt.NDArray[np.float_]:
+        p_ij: npt.NDArray[np.float64], weight: Optional[npt.NDArray[np.float64]]
+    ) -> npt.NDArray[np.float64]:
         # p_ij: shape: (n_outputs, n_features, n_features, n_observations)
 
         assert p_ij.ndim == 4
