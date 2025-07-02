@@ -20,7 +20,7 @@ requires = [
     "packaging         >=20",
     "pandas            >=1.1",
     "scipy             ~=1.7",
-    "shap              >=0.39,<0.45", # todo: add support for breaking changes in v0.45
+    "shap              >=0.44,<0.45", # todo: add support for breaking changes in v0.45
     "scikit-learn      ~=1.0",
     "sklearndf         ~=2.2",
     "typing_extensions ~=4.0",
@@ -81,7 +81,7 @@ packaging         = "~=20.9"
 pandas            = "~=1.1.5"
 python            = ">=3.9.23,<3.10a"    # cannot use ~= due to conda bug
 scipy             = "~=1.7.3"
-shap              = "~=0.39.0"
+shap              = "~=0.44.0"
 sklearndf         = "~=2.2.0"
 typing_extensions = "~=4.0.0"
 # additional minimum requirements of sklearndf
@@ -94,7 +94,7 @@ joblib            = "~=1.0.0"
 typing_inspect    = "~=0.4.0"
 # additional minimum requirements of shap
 ipython           = "==7.0"
-numba             = "~=0.55.2"  # required to support numpy 1.21
+numba             = "~=0.58.1"  # required to support numpy 1.22
 
 [build.matrix.max]
 # direct requirements of gamma-facet
