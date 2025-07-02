@@ -18,8 +18,8 @@ requires = [
     "matplotlib        ~=3.3",
     "numpy             >=1.21,<2a",  # cannot use ~= due to conda bug
     "packaging         >=20",
-    "pandas            >=1.0",
-    "scipy             ~=1.2",
+    "pandas            >=1.1",
+    "scipy             ~=1.7",
     "shap              >=0.39,<0.45", # todo: add support for breaking changes in v0.45
     "scikit-learn      ~=1.0",
     "sklearndf         ~=2.2",
@@ -78,9 +78,9 @@ gamma-pytools     = "~=2.1.0"
 matplotlib        = "~=3.3.4"
 numpy             = "==1.21.6"  # cannot use ~= due to conda bug
 packaging         = "~=20.9"
-pandas            = "~=1.0.5"
+pandas            = "~=1.1.5"
 python            = ">=3.9.23,<3.10a"    # cannot use ~= due to conda bug
-scipy             = "~=1.4.1"
+scipy             = "~=1.7.3"
 shap              = "~=0.39.0"
 sklearndf         = "~=2.2.0"
 typing_extensions = "~=4.0.0"
