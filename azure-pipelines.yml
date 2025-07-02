@@ -225,7 +225,7 @@ stages:
               BUILD_SYSTEM: 'conda'
               PKG_DEPENDENCIES: 'max'
             minimum_dependencies_tox:
-              FACET_V_PYTHON_BUILD: '=3.7'
+              FACET_V_PYTHON_BUILD: '=3.9'
               BUILD_SYSTEM: 'tox'
               PKG_DEPENDENCIES: 'min'
             maximum_dependencies_tox:
@@ -253,7 +253,7 @@ stages:
               # create and activate a build environment, then install the tools we need
               micromamba create -n build
               micromamba activate build
-              micromamba install -y -c conda-forge boa~=0.14 toml~=0.10 flit~=3.6 packaging~=20.9
+              micromamba install -y -c conda-forge rattler-build~=0.44 toml~=0.10 flit~=3.6 packaging~=20.9
             displayName: 'Install conda-build, flit, toml'
             condition: eq(variables['BUILD_SYSTEM'], 'conda')
 
@@ -352,7 +352,7 @@ stages:
               # create and activate a build environment, then install the tools we need
               micromamba create -n build
               micromamba activate build
-              micromamba install -y -c conda-forge boa~=0.14 toml~=0.10 flit~=3.6 packaging~=20.9
+              micromamba install -y -c conda-forge rattler-build~=0.44 toml~=0.10 flit~=3.6 packaging~=20.9
             displayName: 'Install conda-build, flit, toml'
             condition: eq(variables['BUILD_SYSTEM'], 'conda')
 
