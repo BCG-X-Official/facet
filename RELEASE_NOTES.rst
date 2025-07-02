@@ -17,6 +17,12 @@ We still recommend using :mod:`sklearndf` models and learner pipelines along wit
 :class:`.NativeLearnerInspector` can be useful for inspecting models that have been
 trained using *scikit-learn* directly.
 
+2.1.1
+~~~~~
+
+This is a maintenance release to catch up with FACET |nbsp| 2.0.1.
+
+
 2.1.0
 ~~~~~
 
@@ -44,6 +50,8 @@ fully type-checked by |mypy|.
   and classifiers; it is no longer necessary to wrap them into a
   :class:`.RegressorPipelineDF` or :class:`.ClassifierPipelineDF` instance with empty
   preprocessing
+- FIX: replace a call to method ``get_text_heights()`` of :class:`matplotlib.axes.Axes`,
+  which is deprecated as of :mod:`matplotlib` |nbsp| 3.6
 
 
 2.0.0

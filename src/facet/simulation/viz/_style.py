@@ -4,9 +4,10 @@ Drawing styles for simulation results.
 
 import logging
 from abc import ABCMeta, abstractmethod
-from typing import Any, Sequence, TextIO, Tuple, TypeVar, Union
+from typing import Any, Optional, Sequence, TextIO, Tuple, TypeVar, Union, cast
 
 from matplotlib.axes import Axes
+from matplotlib.transforms import Bbox
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from mpl_toolkits.axes_grid1.axes_divider import AxesDivider
 from mpl_toolkits.axes_grid1.axes_size import Scaled
@@ -203,27 +204,44 @@ class SimulationMatplotStyle(MatplotStyle, SimulationStyle):
             y_min, y_max = main_ax.get_ylim()
             uplift_height = abs(y_max - y_min)
 
-            def _x_axis_height() -> float:
-                axis_below_size_pixels: float
-                _, axis_below_size_pixels = main_ax.get_xaxis().get_text_heights(
+            def _x_axis_height(padding: float) -> float:
+                # get the lower bound of the x axis in data space: this is the upper
+                # bound of the space below the x axis
+                x_axis_vertical_position: float = main_ax.get_ylim()[0]
+
+                # get the upper and lower vertical bound of the tick labels
+                xaxis_tight_bbox: Optional[Bbox] = main_ax.get_xaxis().get_tightbbox(
                     self.get_renderer()
                 )
+                if xaxis_tight_bbox is None:
+                    return 0.0
 
-                y0: float
-                y1: float
-                ((_, y0), (_, y1)) = main_ax.transData.inverted().transform(
-                    ((0.0, 0.0), (0.0, axis_below_size_pixels))
+                x_axis_labels_lower: float
+                x_axis_labels_upper: float
+                (
+                    x_axis_labels_lower,
+                    x_axis_labels_upper,
+                ) = main_ax.transData.inverted().transform(
+                    xaxis_tight_bbox.get_points()
+                )[
+                    :, 1
+                ]
+
+                # calculate the height, and pad it with the multiple of the tick
+                # label height provided in arg padding
+                return (
+                    max(x_axis_vertical_position - x_axis_labels_lower, 0)
+                    + (x_axis_labels_upper - x_axis_labels_lower) * padding
                 )
-                return abs(y1 - y0)
 
             # calculate the height of the x axis in data space; add additional padding
-            axis_below_size_data = _x_axis_height() * 1.2
+            axis_below_size_data = _x_axis_height(padding=0.5)
 
             # create the axes divider, then use it to append the new sub-axes at the
             # bottom while leaving sufficient padding in-between to accommodate the
             # main axes' x axis labels
             divider: AxesDivider = make_axes_locatable(main_ax)
-            return divider.append_axes(
+            sub_axes: Axes = divider.append_axes(
                 position="bottom",
                 size=Scaled(
                     uplift_height * SimulationMatplotStyle.__HISTOGRAM_SIZE_RATIO
@@ -234,6 +252,7 @@ class SimulationMatplotStyle(MatplotStyle, SimulationStyle):
                     * (1 + SimulationMatplotStyle.__HISTOGRAM_SIZE_RATIO)
                 ),
             )
+            return sub_axes
 
         ax = _make_sub_axes()
 
@@ -246,10 +265,10 @@ class SimulationMatplotStyle(MatplotStyle, SimulationStyle):
         # reduce the horizontal margin such that half a bar is to the left of the
         # leftmost tick mark (but the tick mark stays aligned with the main
         # simulation chart)
-        x_margin, _ = ax.margins()
+        x_margin, _ = cast(Tuple[float, float], ax.margins())
         ax.set_xmargin(
             max(
-                0,
+                0.0,
                 (width_bars / 2 - x_margin * (n_partitions - 1))
                 / (width_bars - (n_partitions - 1)),
             )

@@ -736,7 +736,8 @@ class ModelInspector(
 
         return ShapPlotData(
             shap_values=shap_values_numpy,
-            sample=sample,
+            features=self.preprocess_features(sample.features),
+            target=sample.target,
         )
 
     @property

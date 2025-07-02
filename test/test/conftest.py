@@ -453,7 +453,13 @@ def fit_classifier_selector(
     parameter_space = ParameterSpace(
         ClassifierPipelineDF(
             classifier=RandomForestClassifierDF(random_state=42),
-            preprocessing=None,
+            # this column transformer is a no-op, but we need it to
+            # run tests where preprocessing changes feature names
+            preprocessing=ColumnTransformerDF(
+                # we prefix all feature names with "pass__" except the last one
+                [("pass", "passthrough", sample.feature_names[:-1])],
+                remainder="passthrough",
+            ),
         )
     )
     parameter_space.classifier.n_estimators = [10, 50]
