@@ -19,7 +19,7 @@ from sklearn.pipeline import Pipeline
 
 from pytools.data import LinkageTree, Matrix
 from pytools.viz.dendrogram import DendrogramDrawer, DendrogramReportStyle
-from sklearndf import ClassifierDF, __sklearn_1_1__, __sklearn_version__
+from sklearndf import ClassifierDF
 from sklearndf.classification import (
     GradientBoostingClassifierDF,
     RandomForestClassifierDF,
@@ -56,13 +56,12 @@ IRIS_FEATURE_NAMES_PREPROCESSED = [
 def test_regressor_selector(
     regressor_selector: LearnerSelector[
         RegressorPipelineDF[LGBMRegressorDF], GridSearchCV
-    ]
+    ],
 ) -> None:
     scores_expected: List[float] = (
         [0.578, 0.530, 0.310, 0.308, 0.294, 0.226, 0.217, 0.217, 0.217, 0.217]
         if (
-            __sklearn_version__ < __sklearn_1_1__
-            or platform.machine() != "arm64"
+            platform.machine() != "arm64"
             or platform.system() != "Darwin"
         )
         # on M1 macs, we get different results starting with scikit-learn 1.1
@@ -122,34 +121,17 @@ def test_model_inspection(
 
         regressor = best_lgbm_model.regressor.native_estimator
 
-        if __sklearn_version__ < __sklearn_1_1__:
-            # scikit-learn 1.0.x does not support output feature names in simple
-            # imputers, so we cannot use this for preprocessing
-            log.warning(
-                f"scikit-learn {__sklearn_version__} does not support output "
-                "feature names in simple imputers, so we will test the native learner "
-                "inspector without preprocessing"
-            )
-            assert (
-                sample.features.notna().all().all()
-            ), "observations must not contain missing values"
-            model = regressor
-            regressor_feature_names = set(sample.feature_names)
-
-        else:
-            # scikit-learn 1.1.x supports output feature names in simple imputers,
-            # so we can use this for preprocessing
-            model = Pipeline(
-                # create a native pipeline from the regressor pipeline
-                steps=[
-                    (
-                        "preprocessing",
-                        best_lgbm_model.preprocessing.native_estimator,
-                    ),
-                    ("regressor", regressor),
-                ]
-            ).fit(X=sample.features, y=sample.target)
-            regressor_feature_names = set(model[:-1].get_feature_names_out())
+        model = Pipeline(
+            # create a native pipeline from the regressor pipeline
+            steps=[
+                (
+                    "preprocessing",
+                    best_lgbm_model.preprocessing.native_estimator,
+                ),
+                ("regressor", regressor),
+            ]
+        ).fit(X=sample.features, y=sample.target)
+        regressor_feature_names = set(model[:-1].get_feature_names_out())
 
         # noinspection PyTypeChecker
         inspector = NativeLearnerInspector(
@@ -231,7 +213,7 @@ def test_model_inspection(
 def test_binary_classifier_ranking(
     iris_classifier_selector_binary: LearnerSelector[
         ClassifierPipelineDF[RandomForestClassifierDF], GridSearchCV
-    ]
+    ],
 ) -> None:
     expected_learner_scores = [0.938, 0.936, 0.936, 0.929]
 
@@ -658,7 +640,8 @@ def test_model_inspection_classifier_interaction(
 
         assert_allclose(
             cast(
-                Matrix[np.float64], model_inspector.feature_synergy_matrix(absolute=True)
+                Matrix[np.float64],
+                model_inspector.feature_synergy_matrix(absolute=True),
             ).values,
             np.array(
                 [
