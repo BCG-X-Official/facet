@@ -70,9 +70,8 @@ class _TreeExplainer(
         self, X: XType, y: YType = None, check_additivity: bool = False, **kwargs: Any
     ) -> ArraysFloat:
         """[see superclass]"""
-        return cast(
-            ArraysFloat,
-            super().shap_values(X=X, y=y, check_additivity=check_additivity, **kwargs),
+        return (
+            super().shap_values(X=X, y=y, check_additivity=check_additivity, **kwargs)
         )
 
 
