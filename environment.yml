@@ -17,13 +17,14 @@ dependencies:
   - sklearndf         ~= 2.2
   - typing_extensions ~= 4.6
   - xlrd              ~= 2.0
+  - catboost          ~= 1.2
   # additional packages for notebooks etc.
   - pip     ~= 23.0
   - pip:
      - arfs ~= 1.1
   # test
-  - pytest     ~= 7.2.1
-  - pytest-cov ~= 2.12.1
+  - pytest     ~= 8.1
+  - pytest-cov ~= 4.1
   # sphinx
   - nbsphinx                 ~= 0.8.9
   - sphinx                   ~= 4.5.0

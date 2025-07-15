@@ -35,7 +35,7 @@ test:
     - facet.validation
     - facet.simulation
   requires:
-    - pytest ~= 7.1
+    - pytest ~= 8.1
     # we always need lightgbm for testing; version spec is optional
     - lightgbm       {{ environ.get('FACET_V_LIGHTGBM', '') }}
     # optional libraries of sklearndf, needed for testing
