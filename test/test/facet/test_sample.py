@@ -1,4 +1,4 @@
-from typing import Any, List, cast
+from typing import Any, cast
 
 import numpy as np
 import pandas as pd
@@ -143,8 +143,8 @@ def test_sample(california_df: pd.DataFrame, california_target: str) -> None:
     # global python environment variable PYTHONHASHSEED
     parallel = Parallel(n_jobs=-3)
 
-    def get_column(sample: Sample) -> List[Any]:
-        return cast(List[Any], sample.features.columns.to_list())
+    def get_column(sample: Sample) -> list[Any]:
+        return cast(list[Any], sample.features.columns.to_list())
 
     columns1, columns2 = parallel(delayed(get_column)(sample) for sample in [s, s])
     assert columns1 == columns2

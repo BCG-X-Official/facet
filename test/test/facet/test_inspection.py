@@ -5,7 +5,7 @@ Model inspector tests.
 import logging
 import platform
 import warnings
-from typing import Any, Dict, List, Optional, Set, Type, TypeVar, Union, cast
+from typing import Any, TypeVar, cast
 
 import numpy as np
 import pandas as pd
@@ -59,7 +59,7 @@ def test_regressor_selector(
         RegressorPipelineDF[LGBMRegressorDF], GridSearchCV
     ],
 ) -> None:
-    scores_expected: List[float] = (
+    scores_expected: list[float] = (
         [0.578, 0.530, 0.310, 0.308, 0.294, 0.226, 0.217, 0.217, 0.217, 0.217]
         if platform.machine() != "arm64" or platform.system() != "Darwin"
         # on M1 macs, we get different results starting with scikit-learn 1.1
@@ -92,8 +92,8 @@ def test_regressor_selector(
     argvalues=(False, True),
 )
 def test_model_inspection(
-    explainer_factory_cls: Type[ExplainerFactory[LGBMRegressorDF]],
-    explainer_factory_args: Dict[str, Any],
+    explainer_factory_cls: type[ExplainerFactory[LGBMRegressorDF]],
+    explainer_factory_args: dict[str, Any],
     best_lgbm_model: RegressorPipelineDF[LGBMRegressorDF],
     sample: Sample,
     n_jobs: int,
@@ -105,12 +105,12 @@ def test_model_inspection(
         **explainer_factory_args
     )
 
-    inspector: Union[
-        LearnerInspector[RegressorPipelineDF[LGBMRegressorDF]],
-        NativeLearnerInspector[Pipeline],
-    ]
+    inspector: (
+        LearnerInspector[RegressorPipelineDF[LGBMRegressorDF]]
+        | NativeLearnerInspector[Pipeline]
+    )
 
-    regressor_feature_names: Set[str]  # column index names
+    regressor_feature_names: set[str]  # column index names
 
     if native:
         assert (
@@ -352,7 +352,7 @@ def test_model_inspection_classifier_multi_class(
 
     try:
         synergy_matrix = cast(
-            List[Matrix[np.float64]],
+            list[Matrix[np.float64]],
             iris_inspector_multi_class.feature_synergy_matrix(clustered=False),
         )
 
@@ -374,7 +374,7 @@ def test_model_inspection_classifier_multi_class(
         )
 
         redundancy_matrix = cast(
-            List[Matrix[np.float64]],
+            list[Matrix[np.float64]],
             iris_inspector_multi_class.feature_redundancy_matrix(clustered=False),
         )
         assert_allclose(
@@ -395,7 +395,7 @@ def test_model_inspection_classifier_multi_class(
         )
 
         association_matrix = cast(
-            List[Matrix[np.float64]],
+            list[Matrix[np.float64]],
             iris_inspector_multi_class.feature_association_matrix(clustered=False),
         )
         assert_allclose(
@@ -419,7 +419,7 @@ def test_model_inspection_classifier_multi_class(
         raise
 
     linkage_trees = cast(
-        List[LinkageTree], iris_inspector_multi_class.feature_association_linkage()
+        list[LinkageTree], iris_inspector_multi_class.feature_association_linkage()
     )
 
     for output, linkage_tree in zip(
@@ -506,13 +506,13 @@ def test_model_inspection_classifier_interaction(
         iris_classifier_binary.preprocessing is not None
     ), "preprocessing step must be defined"
 
-    cls_inspector: Type[
-        Union[
-            LearnerInspector[RandomForestClassifierDF],
-            NativeLearnerInspector[RandomForestClassifier],
-        ]
+    cls_inspector: type[
+        (
+            LearnerInspector[RandomForestClassifierDF]
+            | NativeLearnerInspector[RandomForestClassifier]
+        )
     ]
-    classifier: Union[ClassifierPipelineDF[RandomForestClassifierDF], Pipeline]
+    classifier: ClassifierPipelineDF[RandomForestClassifierDF] | Pipeline
     if native:
         cls_inspector = NativeLearnerInspector[RandomForestClassifier]
         # create a native pipeline from the classifier pipeline
@@ -916,16 +916,16 @@ def print_expected_matrix(error: AssertionError, *, split: bool = False) -> None
 
     import re
 
-    array: Optional[re.Match[str]] = re.search(r"array\(([^)]+)\)", error.args[0])
+    array: re.Match[str] | None = re.search(r"array\(([^)]+)\)", error.args[0])
     if array is not None:
-        matrix: List[List[float]] = eval(
+        matrix: list[list[float]] = eval(
             array[1].replace(r"\n", "\n").replace("nan", "np.nan")
         )
 
         print_matrix(matrix, split=split)
 
 
-def print_matrix(matrix: List[List[float]], *, split: bool) -> None:
+def print_matrix(matrix: list[list[float]], *, split: bool) -> None:
     print("==== matrix assertion failed ====\nExpected Matrix:")
     print("[")
     for row in matrix:

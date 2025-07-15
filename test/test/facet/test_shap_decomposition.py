@@ -3,7 +3,6 @@ Test shap decomposition calculations
 """
 
 import logging
-from typing import Set
 
 import numpy as np
 
@@ -33,7 +32,7 @@ def test_feature_affinity_matrices(
         ).fit(sample)
     )
 
-    preprocessed_feature_names: Set[str] = set(
+    preprocessed_feature_names: set[str] = set(
         best_lgbm_model.final_estimator.feature_names_in_
     )
 

@@ -3,8 +3,9 @@ Running multiple explainers in parallel using a :class:`ParallelExplainer` insta
 """
 
 import logging
+from collections.abc import Callable, Iterable
 from multiprocessing.synchronize import Lock as LockType
-from typing import Any, Callable, Dict, Iterable, List, Optional, Union, cast
+from typing import Any, cast
 
 import numpy as np
 import numpy.typing as npt
@@ -52,7 +53,7 @@ class ExplainerJob(Job[ArraysAny]):
     y: YType
 
     #: additional arguments specific to the explanation method
-    kwargs: Dict[str, Any]
+    kwargs: dict[str, Any]
 
     # noinspection PyPep8Naming
     def __init__(
@@ -112,13 +113,13 @@ class ExplainerQueue(JobQueue[ArraysAny, ArraysAny]):
     X: npt.NDArray[Any]
 
     #: the target values of the observations to be explained
-    y: Optional[npt.NDArray[Any]]
+    y: npt.NDArray[Any] | None
 
     #: the maximum number of observations to allocate to each job
     max_job_size: int
 
     #: additional arguments specific to the explanation method
-    kwargs: Dict[str, Any]
+    kwargs: dict[str, Any]
 
     # noinspection PyPep8Naming
     def __init__(
@@ -174,7 +175,7 @@ class ExplainerQueue(JobQueue[ArraysAny, ArraysAny]):
             for start in range(0, n, job_size)
         )
 
-    def aggregate(self, job_results: List[ArraysAny]) -> ArraysAny:
+    def aggregate(self, job_results: list[ArraysAny]) -> ArraysAny:
         """[see superclass]"""
         if isinstance(job_results[0], np.ndarray):
             return np.vstack(job_results)
@@ -200,20 +201,20 @@ class ParallelExplainer(BaseExplainer, ParallelizableMixin):
     max_job_size: int
 
     # defined in superclass, repeated here for Sphinx:
-    n_jobs: Optional[int]
-    shared_memory: Optional[bool]
-    pre_dispatch: Optional[Union[str, int]]
-    verbose: Optional[int]
+    n_jobs: int | None
+    shared_memory: bool | None
+    pre_dispatch: str | int | None
+    verbose: int | None
 
     def __init__(
         self,
         explainer: BaseExplainer,
         *,
         max_job_size: int = 10,
-        n_jobs: Optional[int],
-        shared_memory: Optional[bool] = None,
-        pre_dispatch: Optional[Union[str, int]] = None,
-        verbose: Optional[int] = None,
+        n_jobs: int | None,
+        shared_memory: bool | None = None,
+        pre_dispatch: str | int | None = None,
+        verbose: int | None = None,
     ) -> None:
         """
         :param explainer: the explainer to be parallelized by this wrapper

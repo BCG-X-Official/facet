@@ -6,7 +6,7 @@ redundancy, and independence.
 
 import logging
 from abc import ABCMeta, abstractmethod
-from typing import Any, List, Optional, Tuple, TypeVar
+from typing import Any, TypeVar
 
 import numpy as np
 import numpy.typing as npt
@@ -69,8 +69,8 @@ class ShapProjector(FittableMixin[ShapCalculator[Any]], metaclass=ABCMeta):
 
     def __init__(self) -> None:
         super().__init__()
-        self.feature_index_: Optional[pd.Index] = None
-        self.association_: Optional[AffinityMatrix] = None
+        self.feature_index_: pd.Index | None = None
+        self.association_: AffinityMatrix | None = None
 
     @property
     def is_fitted(self) -> bool:
@@ -81,7 +81,7 @@ class ShapProjector(FittableMixin[ShapCalculator[Any]], metaclass=ABCMeta):
         self: T_Projector,
         shap_calculator: ShapCalculator[Any],
         *,
-        sample_weight: Optional[pd.Series] = None,
+        sample_weight: pd.Series | None = None,
         **fit_params: Any,
     ) -> T_Projector:
         """
@@ -131,7 +131,7 @@ class ShapProjector(FittableMixin[ShapCalculator[Any]], metaclass=ABCMeta):
         assert self.association_ is not None
         return self.association_.get_values(symmetrical=symmetrical, absolute=absolute)
 
-    def to_frames(self, matrix: npt.NDArray[np.float64]) -> List[pd.DataFrame]:
+    def to_frames(self, matrix: npt.NDArray[np.float64]) -> list[pd.DataFrame]:
         """
         Transforms one or more affinity matrices into a list of data frames.
 
@@ -162,7 +162,7 @@ class ShapProjector(FittableMixin[ShapCalculator[Any]], metaclass=ABCMeta):
 
     @abstractmethod
     def _get_context(
-        self, shap_calculator: ShapCalculator[Any], sample_weight: Optional[pd.Series]
+        self, shap_calculator: ShapCalculator[Any], sample_weight: pd.Series | None
     ) -> ShapContext:
         pass
 
@@ -209,7 +209,7 @@ class ShapVectorProjector(ShapProjector):
     """
 
     def _get_context(
-        self, shap_calculator: ShapCalculator[Any], sample_weight: Optional[pd.Series]
+        self, shap_calculator: ShapCalculator[Any], sample_weight: pd.Series | None
     ) -> ShapContext:
         return ShapValueContext(
             shap_calculator=shap_calculator, sample_weight=sample_weight
@@ -238,8 +238,8 @@ class ShapInteractionVectorProjector(ShapProjector):
     def __init__(self) -> None:
         super().__init__()
 
-        self.synergy_: Optional[AffinityMatrix] = None
-        self.redundancy_: Optional[AffinityMatrix] = None
+        self.synergy_: AffinityMatrix | None = None
+        self.redundancy_: AffinityMatrix | None = None
 
     @fitted_only
     def synergy(self, symmetrical: bool, absolute: bool) -> npt.NDArray[np.float64]:
@@ -282,7 +282,7 @@ class ShapInteractionVectorProjector(ShapProjector):
         return self.redundancy_.get_values(symmetrical=symmetrical, absolute=absolute)
 
     def _get_context(
-        self, shap_calculator: ShapCalculator[Any], sample_weight: Optional[pd.Series]
+        self, shap_calculator: ShapCalculator[Any], sample_weight: pd.Series | None
     ) -> ShapContext:
         return ShapInteractionValueContext(
             shap_calculator=shap_calculator, sample_weight=sample_weight
@@ -299,7 +299,7 @@ class ShapInteractionVectorProjector(ShapProjector):
     @staticmethod
     def _calculate_synergy_redundancy(
         context: ShapContext,
-    ) -> Tuple[AffinityMatrix, AffinityMatrix]:
+    ) -> tuple[AffinityMatrix, AffinityMatrix]:
         p_i = context.p_i
         var_p_i = context.var_p_i
         assert context.p_ij is not None, "Projector has interaction values enabled"

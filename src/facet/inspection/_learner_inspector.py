@@ -5,7 +5,7 @@ Implementation of :class:`.LearnerInspector`.
 import logging
 import re
 from abc import ABCMeta, abstractmethod
-from typing import Any, Dict, Generic, List, Optional, TypeVar, Union, cast
+from typing import Any, Generic, TypeVar, cast
 
 import pandas as pd
 from sklearn.base import BaseEstimator, is_classifier, is_regressor
@@ -39,7 +39,7 @@ __all__ = [
 
 T_SupervisedLearnerDF = TypeVar("T_SupervisedLearnerDF", bound=SupervisedLearnerDF)
 T_SupervisedLearner = TypeVar(
-    "T_SupervisedLearner", bound=Union[NativeSupervisedLearner, Pipeline]
+    "T_SupervisedLearner", bound=NativeSupervisedLearner | Pipeline
 )
 
 #
@@ -84,18 +84,18 @@ class _BaseLearnerInspector(
     learner: NativeSupervisedLearner
 
     # the SHAP calculator used by this inspector
-    _shap_calculator: Optional[LearnerShapCalculator[Any]]
+    _shap_calculator: LearnerShapCalculator[Any] | None
 
     def __init__(
         self,
         model: T_SupervisedLearner,
         *,
-        explainer_factory: Optional[ExplainerFactory[NativeSupervisedLearner]] = None,
+        explainer_factory: ExplainerFactory[NativeSupervisedLearner] | None = None,
         shap_interaction: bool = True,
-        n_jobs: Optional[int] = None,
-        shared_memory: Optional[bool] = None,
-        pre_dispatch: Optional[Union[str, int]] = None,
-        verbose: Optional[int] = None,
+        n_jobs: int | None = None,
+        shared_memory: bool | None = None,
+        pre_dispatch: str | int | None = None,
+        verbose: int | None = None,
     ) -> None:
         """
         :param model: the learner or learner pipeline to inspect
@@ -157,7 +157,7 @@ class _BaseLearnerInspector(
 
         self.explainer_factory = explainer_factory
         self.learner = learner
-        self._shap_calculator: Optional[LearnerShapCalculator[Any]] = None
+        self._shap_calculator: LearnerShapCalculator[Any] | None = None
 
     __init__.__doc__ = str(__init__.__doc__) + re.sub(
         r"(?m)^\s*:param model:\s+.*$", "", str(ModelInspector.__init__.__doc__)
@@ -171,11 +171,11 @@ class _BaseLearnerInspector(
         """
 
     @property
-    def feature_names(self) -> List[str]:
+    def feature_names(self) -> list[str]:
         """[see superclass]"""
         # noinspection PyUnresolvedReferences
         return cast(
-            List[str],
+            list[str],
             # feature_names_in_ is a pandas index (sklearndf) or an ndarray (sklearn);
             # we convert it to a list
             self.learner.feature_names_in_.tolist(),
@@ -190,7 +190,7 @@ class _BaseLearnerInspector(
 
         native_learner = self.native_learner
 
-        shap_calculator_params: Dict[str, Any] = dict(
+        shap_calculator_params: dict[str, Any] = dict(
             model=native_learner,
             interaction_values=self.shap_interaction,
             explainer_factory=self.explainer_factory,
@@ -213,7 +213,7 @@ class _BaseLearnerInspector(
 
     @property
     @abstractmethod
-    def _learner_output_names(self) -> List[str]:
+    def _learner_output_names(self) -> list[str]:
         """
         The names of the outputs of the learner.
         """
@@ -246,10 +246,10 @@ class LearnerInspector(
     # defined in superclass, repeated here for Sphinx:
     model: T_SupervisedLearnerDF
     shap_interaction: bool
-    n_jobs: Optional[int]
-    shared_memory: Optional[bool]
-    pre_dispatch: Optional[Union[str, int]]
-    verbose: Optional[int]
+    n_jobs: int | None
+    shared_memory: bool | None
+    pre_dispatch: str | int | None
+    verbose: int | None
     explainer_factory: ExplainerFactory[NativeSupervisedLearner]
     learner: SupervisedLearnerDF
 
@@ -266,12 +266,12 @@ class LearnerInspector(
         self,
         model: T_SupervisedLearnerDF,
         *,
-        explainer_factory: Optional[ExplainerFactory[NativeSupervisedLearner]] = None,
+        explainer_factory: ExplainerFactory[NativeSupervisedLearner] | None = None,
         shap_interaction: bool = True,
-        n_jobs: Optional[int] = None,
-        shared_memory: Optional[bool] = None,
-        pre_dispatch: Optional[Union[str, int]] = None,
-        verbose: Optional[int] = None,
+        n_jobs: int | None = None,
+        shared_memory: bool | None = None,
+        pre_dispatch: str | int | None = None,
+        verbose: int | None = None,
     ) -> None:
         super().__init__(
             model=model,
@@ -289,13 +289,11 @@ class LearnerInspector(
         return cast(NativeSupervisedLearner, self.learner.native_estimator)
 
     @property
-    def _learner_output_names(self) -> List[str]:
+    def _learner_output_names(self) -> list[str]:
         """[see superclass]"""
         return self.learner.output_names_
 
-    def preprocess_features(
-        self, features: Union[pd.DataFrame, pd.Series]
-    ) -> pd.DataFrame:
+    def preprocess_features(self, features: pd.DataFrame | pd.Series) -> pd.DataFrame:
         """[see superclass]"""
         if self.model is self.learner:
             # we have a simple learner: no preprocessing needed
@@ -341,10 +339,10 @@ class NativeLearnerInspector(
     # defined in superclass, repeated here for Sphinx:
     model: T_SupervisedLearner
     shap_interaction: bool
-    n_jobs: Optional[int]
-    shared_memory: Optional[bool]
-    pre_dispatch: Optional[Union[str, int]]
-    verbose: Optional[int]
+    n_jobs: int | None
+    shared_memory: bool | None
+    pre_dispatch: str | int | None
+    verbose: int | None
     explainer_factory: ExplainerFactory[NativeSupervisedLearner]
     learner: NativeSupervisedLearner
 
@@ -358,12 +356,12 @@ class NativeLearnerInspector(
         self,
         model: T_SupervisedLearner,
         *,
-        explainer_factory: Optional[ExplainerFactory[NativeSupervisedLearner]] = None,
+        explainer_factory: ExplainerFactory[NativeSupervisedLearner] | None = None,
         shap_interaction: bool = True,
-        n_jobs: Optional[int] = None,
-        shared_memory: Optional[bool] = None,
-        pre_dispatch: Optional[Union[str, int]] = None,
-        verbose: Optional[int] = None,
+        n_jobs: int | None = None,
+        shared_memory: bool | None = None,
+        pre_dispatch: str | int | None = None,
+        verbose: int | None = None,
     ) -> None:
         super().__init__(
             model=model,
@@ -380,7 +378,7 @@ class NativeLearnerInspector(
         return self.learner
 
     @property
-    def _learner_output_names(self) -> List[str]:
+    def _learner_output_names(self) -> list[str]:
         # we try to get the number of outputs from the learner; if that fails,
         # we assume that the learner was fitted on a single target
         n_outputs = getattr(self.learner, "n_outputs_", 1)
@@ -389,9 +387,7 @@ class NativeLearnerInspector(
         else:
             return [f"y_{i}" for i in range(n_outputs)]
 
-    def preprocess_features(
-        self, features: Union[pd.DataFrame, pd.Series]
-    ) -> pd.DataFrame:
+    def preprocess_features(self, features: pd.DataFrame | pd.Series) -> pd.DataFrame:
         """[see superclass]"""
         if self.learner is self.model:
             # we have a single learner: do not preprocess

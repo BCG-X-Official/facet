@@ -4,16 +4,11 @@ Core implementation of :mod:`facet.simulation.base`
 
 import logging
 from abc import ABCMeta, abstractmethod
+from collections.abc import Iterable, Sequence
 from typing import (
     Any,
     Generic,
-    Iterable,
-    Optional,
-    Sequence,
-    Tuple,
-    Type,
     TypeVar,
-    Union,
     cast,
 )
 
@@ -59,16 +54,16 @@ class BaseUnivariateSimulator(
     """
 
     # defined in superclass, repeated here for Sphinx
-    n_jobs: Optional[int]
+    n_jobs: int | None
 
     # defined in superclass, repeated here for Sphinx
-    shared_memory: Optional[bool]
+    shared_memory: bool | None
 
     # defined in superclass, repeated here for Sphinx
-    pre_dispatch: Optional[Union[str, int]]
+    pre_dispatch: str | int | None
 
     # defined in superclass, repeated here for Sphinx
-    verbose: Optional[int]
+    verbose: int | None
 
     #: The learner pipeline used to conduct simulations
     model: T_SupervisedLearnerDF
@@ -86,10 +81,10 @@ class BaseUnivariateSimulator(
         sample: Sample,
         *,
         confidence_level: float = 0.95,
-        n_jobs: Optional[int] = None,
-        shared_memory: Optional[bool] = None,
-        pre_dispatch: Optional[Union[str, int]] = None,
-        verbose: Optional[int] = None,
+        n_jobs: int | None = None,
+        shared_memory: bool | None = None,
+        pre_dispatch: str | int | None = None,
+        verbose: int | None = None,
     ) -> None:
         """
         :param model: a fitted learner to use for calculating simulated outputs
@@ -199,14 +194,14 @@ class BaseUnivariateSimulator(
 
     @staticmethod
     @abstractmethod
-    def _expected_learner_type() -> Type[T_SupervisedLearnerDF]:
+    def _expected_learner_type() -> type[T_SupervisedLearnerDF]:
         pass
 
     @staticmethod
     @abstractmethod
     def _simulate(
         model: T_SupervisedLearnerDF, x: pd.DataFrame, name: str, value: Any
-    ) -> Tuple[float, float]:
+    ) -> tuple[float, float]:
         pass
 
     @staticmethod
@@ -224,7 +219,7 @@ class BaseUnivariateSimulator(
         )
 
     @staticmethod
-    def _aggregate_simulation_results(predictions: pd.Series) -> Tuple[float, float]:
+    def _aggregate_simulation_results(predictions: pd.Series) -> tuple[float, float]:
         # generate summary stats for a series of predictions
         return predictions.mean(), predictions.sem()
 
@@ -232,7 +227,7 @@ class BaseUnivariateSimulator(
         self,
         feature_name: str,
         simulation_values: Sequence[T_Value],
-    ) -> Tuple[Sequence[float], Sequence[float]]:
+    ) -> tuple[Sequence[float], Sequence[float]]:
         """
         Run a simulation on a feature.
 
@@ -252,7 +247,7 @@ class BaseUnivariateSimulator(
         # and a sequence of standard errors of those means
         features = self.sample.features
 
-        outputs_mean_sem: Iterable[Tuple[float, float]] = JobRunner.from_parallelizable(
+        outputs_mean_sem: Iterable[tuple[float, float]] = JobRunner.from_parallelizable(
             self
         ).run_jobs(
             Job.delayed(self._simulate)(self.model, features, feature_name, value)
@@ -271,16 +266,16 @@ class UnivariateRegressionSimulator(
     """
 
     # defined in superclass, repeated here for Sphinx
-    n_jobs: Optional[int]
+    n_jobs: int | None
 
     # defined in superclass, repeated here for Sphinx
-    shared_memory: Optional[bool]
+    shared_memory: bool | None
 
     # defined in superclass, repeated here for Sphinx
-    pre_dispatch: Optional[Union[str, int]]
+    pre_dispatch: str | int | None
 
     # defined in superclass, repeated here for Sphinx
-    verbose: Optional[int]
+    verbose: int | None
 
     # defined in superclass, repeated here for Sphinx
     model: RegressorDF
@@ -300,13 +295,13 @@ class UnivariateRegressionSimulator(
         return cast(float, self.sample.target.mean())
 
     @staticmethod
-    def _expected_learner_type() -> Type[RegressorDF]:
+    def _expected_learner_type() -> type[RegressorDF]:
         return RegressorDF
 
     @staticmethod
     def _simulate(
         model: RegressorDF, x: pd.DataFrame, name: str, value: Any
-    ) -> Tuple[float, float]:
+    ) -> tuple[float, float]:
         predictions = model.predict(
             X=BaseUnivariateSimulator._set_constant_feature_value(x, name, value)
         )

@@ -3,7 +3,8 @@ Tests for module facet.selection
 """
 
 import logging
-from typing import Any, List, Mapping
+from collections.abc import Mapping
+from typing import Any
 
 import numpy as np
 import pandas as pd
@@ -37,7 +38,7 @@ log = logging.getLogger(__name__)
 
 
 def test_learner_selector(
-    regressor_parameters: List[ParameterSpace[RegressorPipelineDF[LGBMRegressorDF]]],
+    regressor_parameters: list[ParameterSpace[RegressorPipelineDF[LGBMRegressorDF]]],
     sample: Sample,
     n_jobs: int,
 ) -> None:
@@ -53,7 +54,7 @@ def test_learner_selector(
         0.448,
         0.448,
     ]
-    expected_learners: List[str] = [
+    expected_learners: list[str] = [
         cls.__name__
         for cls in (
             LinearRegressionDF,
@@ -349,7 +350,7 @@ def test_parameter_space(simple_preprocessor: TransformerDF) -> None:
 
 
 def test_model_selector_regression(
-    regressor_parameters: List[ParameterSpace[RegressorPipelineDF[LGBMRegressorDF]]],
+    regressor_parameters: list[ParameterSpace[RegressorPipelineDF[LGBMRegressorDF]]],
     sample: Sample,
     n_jobs: int,
 ) -> None:

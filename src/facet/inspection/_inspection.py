@@ -3,12 +3,11 @@ Core implementation of :mod:`facet.inspection`
 """
 
 import logging
-from typing import List, Union
+from typing import TypeAlias
 
 import numpy as np
 import numpy.typing as npt
 import pandas as pd
-from typing_extensions import TypeAlias
 
 from pytools.api import AllTracker
 
@@ -47,9 +46,9 @@ class ShapPlotData:
     def __init__(
         self,
         *,
-        shap_values: Union[FloatArray, List[FloatArray]],
+        shap_values: FloatArray | list[FloatArray],
         features: pd.DataFrame,
-        target: Union[pd.Series, pd.DataFrame],
+        target: pd.Series | pd.DataFrame,
     ) -> None:
         """
         :param shap_values: the shap values for all observations and outputs
@@ -63,7 +62,7 @@ class ShapPlotData:
         self._target = target
 
     @property
-    def shap_values(self) -> Union[FloatArray, List[FloatArray]]:
+    def shap_values(self) -> FloatArray | list[FloatArray]:
         """
         Matrix of SHAP values (number of observations by number of features)
         or list of shap value matrices for multi-output models.
@@ -78,7 +77,7 @@ class ShapPlotData:
         return self._features
 
     @property
-    def target(self) -> Union[pd.Series, pd.DataFrame]:
+    def target(self) -> pd.Series | pd.DataFrame:
         """
         Series of target values (number of observations)
         or matrix of target values for multi-output models

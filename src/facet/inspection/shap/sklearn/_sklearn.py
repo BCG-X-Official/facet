@@ -4,7 +4,7 @@ Implementation of package ``facet.inspection.shap.learner``.
 
 import logging
 from abc import ABCMeta
-from typing import Generic, List, Optional, TypeVar, Union, cast
+from typing import Generic, TypeVar, cast
 
 import numpy as np
 import numpy.typing as npt
@@ -56,17 +56,17 @@ class LearnerShapCalculator(
     # defined in superclass, repeated here for Sphinx:
     model: T_Learner
     explainer_factory: ExplainerFactory[T_Learner]
-    shap_: Optional[pd.DataFrame]
-    feature_index_: Optional[pd.Index]
-    n_jobs: Optional[int]
-    shared_memory: Optional[bool]
-    pre_dispatch: Optional[Union[str, int]]
-    verbose: Optional[int]
+    shap_: pd.DataFrame | None
+    feature_index_: pd.Index | None
+    n_jobs: int | None
+    shared_memory: bool | None
+    pre_dispatch: str | int | None
+    verbose: int | None
 
     @property
-    def input_names(self) -> Optional[List[str]]:
+    def input_names(self) -> list[str] | None:
         try:
-            return cast(List[str], self.model.feature_names_in_.tolist())
+            return cast(list[str], self.model.feature_names_in_.tolist())
         except AttributeError:
             # the learner does not have a feature_names_in_ attribute,
             return None
@@ -83,12 +83,12 @@ class RegressorShapCalculator(
     # defined in superclass, repeated here for Sphinx:
     model: T_Regressor
     explainer_factory: ExplainerFactory[T_Regressor]
-    shap_: Optional[pd.DataFrame]
-    feature_index_: Optional[pd.Index]
-    n_jobs: Optional[int]
-    shared_memory: Optional[bool]
-    pre_dispatch: Optional[Union[str, int]]
-    verbose: Optional[int]
+    shap_: pd.DataFrame | None
+    feature_index_: pd.Index | None
+    n_jobs: int | None
+    shared_memory: bool | None
+    pre_dispatch: str | int | None
+    verbose: int | None
 
     @subsdoc(
         pattern=r"(?m)(^\s*)(:param model: .*$)",
@@ -100,13 +100,13 @@ class RegressorShapCalculator(
         self,
         model: T_Regressor,
         *,
-        output_names: List[str],
+        output_names: list[str],
         explainer_factory: ExplainerFactory[T_Regressor],
         interaction_values: bool,
-        n_jobs: Optional[int] = None,
-        shared_memory: Optional[bool] = None,
-        pre_dispatch: Optional[Union[str, int]] = None,
-        verbose: Optional[int] = None,
+        n_jobs: int | None = None,
+        shared_memory: bool | None = None,
+        pre_dispatch: str | int | None = None,
+        verbose: int | None = None,
     ) -> None:
         """[see superclass]"""
 
@@ -144,16 +144,16 @@ class RegressorShapCalculator(
     MULTI_OUTPUT_INDEX_NAME = "target"
 
     @property
-    def output_names(self) -> List[str]:
+    def output_names(self) -> list[str]:
         """[see superclass]"""
         return self._output_names
 
     def _convert_shap_to_df(
         self,
-        raw_shap_tensors: List[npt.NDArray[np.float64]],
+        raw_shap_tensors: list[npt.NDArray[np.float64]],
         observation_idx: pd.Index,
         feature_idx: pd.Index,
-    ) -> List[pd.DataFrame]:
+    ) -> list[pd.DataFrame]:
         # Convert shap tensors to data frames.
 
         return self._convert_raw_shap_to_df(
@@ -177,12 +177,12 @@ class ClassifierShapCalculator(
     # defined in superclass, repeated here for Sphinx:
     model: T_Classifier
     explainer_factory: ExplainerFactory[T_Classifier]
-    shap_: Optional[pd.DataFrame]
-    feature_index_: Optional[pd.Index]
-    n_jobs: Optional[int]
-    shared_memory: Optional[bool]
-    pre_dispatch: Optional[Union[str, int]]
-    verbose: Optional[int]
+    shap_: pd.DataFrame | None
+    feature_index_: pd.Index | None
+    n_jobs: int | None
+    shared_memory: bool | None
+    pre_dispatch: str | int | None
+    verbose: int | None
 
     def __init__(
         self,
@@ -190,10 +190,10 @@ class ClassifierShapCalculator(
         *,
         explainer_factory: ExplainerFactory[T_Classifier],
         interaction_values: bool,
-        n_jobs: Optional[int] = None,
-        shared_memory: Optional[bool] = None,
-        pre_dispatch: Optional[Union[str, int]] = None,
-        verbose: Optional[int] = None,
+        n_jobs: int | None = None,
+        shared_memory: bool | None = None,
+        pre_dispatch: str | int | None = None,
+        verbose: int | None = None,
     ) -> None:
         """[see superclass]"""
         super().__init__(
@@ -214,7 +214,7 @@ class ClassifierShapCalculator(
         self._output_names = classifier_shap_output_names(model)
 
     @property
-    def output_names(self) -> List[str]:
+    def output_names(self) -> list[str]:
         """[see superclass]"""
         return self._output_names
 
@@ -238,9 +238,9 @@ class ClassifierShapCalculator(
     def _convert_shap_tensors_to_list(
         self,
         *,
-        shap_tensors: Union[npt.NDArray[np.float64], List[npt.NDArray[np.float64]]],
+        shap_tensors: npt.NDArray[np.float64] | list[npt.NDArray[np.float64]],
         n_outputs: int,
-    ) -> List[npt.NDArray[np.float64]]:
+    ) -> list[npt.NDArray[np.float64]]:
         if n_outputs == 1 and isinstance(shap_tensors, list) and len(shap_tensors) == 2:
             # in the binary classification case, we will proceed with SHAP values
             # for class 0 only, since values for class 1 will just be the same
@@ -268,10 +268,10 @@ class ClassifierShapCalculator(
 
     def _convert_shap_to_df(
         self,
-        raw_shap_tensors: List[npt.NDArray[np.float64]],
+        raw_shap_tensors: list[npt.NDArray[np.float64]],
         observation_idx: pd.Index,
         feature_idx: pd.Index,
-    ) -> List[pd.DataFrame]:
+    ) -> list[pd.DataFrame]:
         if self.interaction_values:
             # return a list of data frame [(obs x features) x features],
             # one for each of the outputs
@@ -312,7 +312,7 @@ __tracker.validate()
 #
 
 
-def classifier_shap_output_names(classifier: ClassifierMixin) -> List[str]:
+def classifier_shap_output_names(classifier: ClassifierMixin) -> list[str]:
     """
     Get the names of the SHAP outputs that will be generated for the given classifier.
 
@@ -337,7 +337,7 @@ def classifier_shap_output_names(classifier: ClassifierMixin) -> List[str]:
             "classifier must be single-output, with classes_ as a numpy array"
         )
 
-    class_names: List[str] = list(map(str, classes))
+    class_names: list[str] = list(map(str, classes))
     n_classes = len(class_names)
 
     if n_classes == 1:

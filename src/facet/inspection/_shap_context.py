@@ -7,7 +7,7 @@ redundancy, and independence.
 from __future__ import annotations
 
 import logging
-from typing import Any, Optional, Union, cast
+from typing import Any, cast
 
 import numpy as np
 import numpy.typing as npt
@@ -220,7 +220,7 @@ def diagonal(m: npt.NDArray[np.float64]) -> npt.NDArray[np.float64]:
 
 
 def fill_diagonal(
-    m: npt.NDArray[np.float64], value: Union[float, npt.NDArray[np.float64]]
+    m: npt.NDArray[np.float64], value: float | npt.NDArray[np.float64]
 ) -> None:
     """
     In each `feature x feature` matrix for each output, fill the diagonal with the given
@@ -241,7 +241,7 @@ def fill_diagonal(
 
 
 def cov(
-    vectors: npt.NDArray[np.float64], weight: Optional[npt.NDArray[np.float64]]
+    vectors: npt.NDArray[np.float64], weight: npt.NDArray[np.float64] | None
 ) -> npt.NDArray[np.float64]:
     """
     Calculate the covariance matrix of pairs of vectors along the observations axis and
@@ -276,7 +276,7 @@ def cov(
 def cov_broadcast(
     vector_sequence: npt.NDArray[np.float64],
     vector_grid: npt.NDArray[np.float64],
-    weight: Optional[npt.NDArray[np.float64]],
+    weight: npt.NDArray[np.float64] | None,
 ) -> npt.NDArray[np.float64]:
     """
     Calculate the covariance matrix between a sequence of vectors and a grid of vectors
@@ -328,7 +328,7 @@ class ShapContext:
 
     #: observation weights (optional),
     #: with shape `(n_observations)`
-    weight: Optional[npt.NDArray[np.float64]]
+    weight: npt.NDArray[np.float64] | None
 
     #: Covariance matrix for p[i],
     #: with shape `(n_outputs, n_features, n_features)`
@@ -340,13 +340,13 @@ class ShapContext:
 
     #: SHAP interaction vectors
     #: with shape `(n_outputs, n_features, n_features, n_observations)`
-    p_ij: Optional[npt.NDArray[np.float64]]
+    p_ij: npt.NDArray[np.float64] | None
 
     def __init__(
         self,
         p_i: npt.NDArray[np.float64],
-        p_ij: Optional[npt.NDArray[np.float64]],
-        weight: Optional[npt.NDArray[np.float64]],
+        p_ij: npt.NDArray[np.float64] | None,
+        weight: npt.NDArray[np.float64] | None,
     ) -> None:
         assert p_i.ndim == 3
         if weight is not None:
@@ -374,7 +374,7 @@ class ShapValueContext(ShapContext):
     """
 
     def __init__(
-        self, shap_calculator: ShapCalculator[Any], sample_weight: Optional[pd.Series]
+        self, shap_calculator: ShapCalculator[Any], sample_weight: pd.Series | None
     ) -> None:
         shap_values: pd.DataFrame = shap_calculator.shap_values
 
@@ -396,7 +396,7 @@ class ShapValueContext(ShapContext):
                 )
             )
 
-        def _weight() -> Optional[npt.NDArray[np.float64]]:
+        def _weight() -> npt.NDArray[np.float64] | None:
             # weights
             # shape: (n_observations)
             # return a 1d array of weights that aligns with the observations axis of the
@@ -419,7 +419,7 @@ class ShapInteractionValueContext(ShapContext):
     """
 
     def __init__(
-        self, shap_calculator: ShapCalculator[Any], sample_weight: Optional[pd.Series]
+        self, shap_calculator: ShapCalculator[Any], sample_weight: pd.Series | None
     ) -> None:
         shap_values: pd.DataFrame = shap_calculator.shap_interaction_values
 
@@ -441,7 +441,7 @@ class ShapInteractionValueContext(ShapContext):
         # shape: (n_observations)
         # return a 1d array of weights that aligns with the observations axis of the
         # SHAP values tensor (axis 1)
-        weight: Optional[npt.NDArray[np.float64]]
+        weight: npt.NDArray[np.float64] | None
 
         if sample_weight is not None:
             _observation_indices = shap_values.index.get_level_values(
@@ -480,7 +480,7 @@ class ShapInteractionValueContext(ShapContext):
 
     @staticmethod
     def __get_orthogonalized_interaction_vectors(
-        p_ij: npt.NDArray[np.float64], weight: Optional[npt.NDArray[np.float64]]
+        p_ij: npt.NDArray[np.float64], weight: npt.NDArray[np.float64] | None
     ) -> npt.NDArray[np.float64]:
         # p_ij: shape: (n_outputs, n_features, n_features, n_observations)
 

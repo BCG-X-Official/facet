@@ -3,7 +3,7 @@ Shap calculations for functions
 """
 
 import logging
-from typing import Generic, List, Optional, TypeVar, Union
+from typing import Generic, TypeVar
 
 import numpy as np
 import numpy.typing as npt
@@ -49,12 +49,12 @@ class FunctionShapCalculator(ShapCalculator[T_ModelFunction], Generic[T_ModelFun
     # defined in superclass, repeated here for Sphinx:
     model: T_ModelFunction
     explainer_factory: ExplainerFactory[T_ModelFunction]
-    shap_: Optional[pd.DataFrame]
-    feature_index_: Optional[pd.Index]
-    n_jobs: Optional[int]
-    shared_memory: Optional[bool]
-    pre_dispatch: Optional[Union[str, int]]
-    verbose: Optional[int]
+    shap_: pd.DataFrame | None
+    feature_index_: pd.Index | None
+    n_jobs: int | None
+    shared_memory: bool | None
+    pre_dispatch: str | int | None
+    verbose: int | None
 
     @property
     def input_names(self) -> None:
@@ -62,7 +62,7 @@ class FunctionShapCalculator(ShapCalculator[T_ModelFunction], Generic[T_ModelFun
         return None
 
     @property
-    def output_names(self) -> List[str]:
+    def output_names(self) -> list[str]:
         """[see superclass]"""
         try:
             return [self.model.__name__]
@@ -71,10 +71,10 @@ class FunctionShapCalculator(ShapCalculator[T_ModelFunction], Generic[T_ModelFun
 
     def _convert_shap_to_df(
         self,
-        raw_shap_tensors: List[npt.NDArray[np.float64]],
+        raw_shap_tensors: list[npt.NDArray[np.float64]],
         observation_idx: pd.Index,
         feature_idx: pd.Index,
-    ) -> List[pd.DataFrame]:
+    ) -> list[pd.DataFrame]:
         return self._convert_raw_shap_to_df(
             raw_shap_tensors=raw_shap_tensors,
             observation_idx=observation_idx,

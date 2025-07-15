@@ -4,7 +4,8 @@ Implementation of :class:`.LearnerInspector`.
 
 import logging
 import re
-from typing import Any, Generic, List, Optional, Sequence, TypeVar, Union
+from collections.abc import Sequence
+from typing import Any, Generic, TypeVar
 
 from pytools.api import AllTracker, as_list, inheritdoc, subsdoc
 
@@ -64,25 +65,25 @@ class FunctionInspector(ModelInspector[T_Function], Generic[T_Function]):
     # defined in superclass, repeated here for Sphinx:
     model: T_Function
     shap_interaction: bool
-    n_jobs: Optional[int]
-    shared_memory: Optional[bool]
-    pre_dispatch: Optional[Union[str, int]]
-    verbose: Optional[int]
+    n_jobs: int | None
+    shared_memory: bool | None
+    pre_dispatch: str | int | None
+    verbose: int | None
 
     # the feature names of the model function
-    _feature_names: List[str]
+    _feature_names: list[str]
 
     def __init__(
         self,
         model: T_Function,
         *,
         feature_names: Sequence[str],
-        explainer_factory: Optional[FunctionExplainerFactory] = None,
+        explainer_factory: FunctionExplainerFactory | None = None,
         shap_interaction: bool = True,
-        n_jobs: Optional[int] = None,
-        shared_memory: Optional[bool] = None,
-        pre_dispatch: Optional[Union[str, int]] = None,
-        verbose: Optional[int] = None,
+        n_jobs: int | None = None,
+        shared_memory: bool | None = None,
+        pre_dispatch: str | int | None = None,
+        verbose: int | None = None,
     ) -> None:
         """
         :param model: the model function to inspect, which takes a 2D array of
@@ -125,14 +126,14 @@ class FunctionInspector(ModelInspector[T_Function], Generic[T_Function]):
             feature_names, element_type=str, arg_name="feature_names"
         )
         self.explainer_factory = explainer_factory
-        self._shap_calculator: Optional[ShapCalculator[Any]] = None
+        self._shap_calculator: ShapCalculator[Any] | None = None
 
     __init__.__doc__ = str(__init__.__doc__) + re.sub(
         r"(?m)^\s*:param model:\s+.*$", "", str(ModelInspector.__init__.__doc__)
     )
 
     @property
-    def feature_names(self) -> List[str]:
+    def feature_names(self) -> list[str]:
         """[see superclass]"""
         return self._feature_names
 

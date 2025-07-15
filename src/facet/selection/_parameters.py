@@ -6,25 +6,11 @@ from __future__ import annotations
 
 import logging
 import warnings
-from typing import (
-    Any,
-    Collection,
-    Dict,
-    Generic,
-    Iterable,
-    Iterator,
-    List,
-    Optional,
-    Set,
-    Tuple,
-    Type,
-    TypeVar,
-    Union,
-)
+from collections.abc import Collection, Iterable, Iterator
+from typing import Any, Generic, TypeAlias, TypeVar
 
 from scipy import stats
 from sklearn.base import BaseEstimator
-from typing_extensions import TypeAlias
 
 from pytools.api import AllTracker, as_list, inheritdoc, subsdoc, validate_element_types
 from pytools.expression import Expression, make_expression
@@ -46,8 +32,8 @@ __all__ = [
 # Type aliases
 #
 
-ParameterSet: TypeAlias = Union[List[Any], stats.rv_continuous, stats.rv_discrete]
-ParameterDict: TypeAlias = Dict[str, ParameterSet]
+ParameterSet: TypeAlias = list[Any] | stats.rv_continuous | stats.rv_discrete
+ParameterDict: TypeAlias = dict[str, ParameterSet]
 
 try:
     rv_frozen = next(
@@ -121,7 +107,7 @@ distribution:
 
     """
 
-    def __init__(self, estimator: T_Estimator_co, name: Optional[str] = None) -> None:
+    def __init__(self, estimator: T_Estimator_co, name: str | None = None) -> None:
         """
         :param estimator: the estimator to which to apply the parameters
         :param name: a name for the estimator to be used in summary reports;
@@ -131,13 +117,13 @@ distribution:
 
         super().__init__(estimator=estimator)
 
-        params: Dict[str, Any] = {
+        params: dict[str, Any] = {
             name: param
             for name, param in estimator.get_params(deep=True).items()
             if "__" not in name
         }
 
-        self._children: Dict[str, ParameterSpace[BaseEstimator]] = {
+        self._children: dict[str, ParameterSpace[BaseEstimator]] = {
             name: ParameterSpace(estimator=value)
             for name, value in params.items()
             if isinstance(value, BaseEstimator)
@@ -145,7 +131,7 @@ distribution:
 
         self._name = name
         self._values: ParameterDict = {}
-        self._params: Set[str] = set(params.keys())
+        self._params: set[str] = set(params.keys())
 
     def get_name(self) -> str:
         """
@@ -175,7 +161,7 @@ distribution:
         replacement="a dictionary mapping",
         using=BaseParameterSpace.get_parameters,
     )
-    def get_parameters(self, prefix: Optional[str] = None) -> ParameterDict:
+    def get_parameters(self, prefix: str | None = None) -> ParameterDict:
         """[see superclass]"""
 
         return {
@@ -222,7 +208,7 @@ distribution:
 
     def __getattr__(self, key: str) -> Any:
         if not key.startswith("_"):
-            result: Union[ParameterSpace[Any], ParameterSet, None]
+            result: ParameterSpace[Any] | ParameterSet | None
 
             result = self._children.get(key, None)
             if result is not None:
@@ -234,12 +220,12 @@ distribution:
 
         return super().__getattribute__(key)
 
-    def __iter__(self) -> Iterator[Tuple[List[str], ParameterSet]]:
+    def __iter__(self) -> Iterator[tuple[list[str], ParameterSet]]:
         return self._iter_parameters([])
 
     def _iter_parameters(
-        self, path_prefix: List[str]
-    ) -> Iterator[Tuple[List[str], ParameterSet]]:
+        self, path_prefix: list[str]
+    ) -> Iterator[tuple[list[str], ParameterSet]]:
         yield from (
             ([*path_prefix, name], value) for name, value in self._values.items()
         )
@@ -251,7 +237,7 @@ distribution:
         """[see superclass]"""
         return self._to_expression([])
 
-    def _to_expression(self, path_prefix: Union[str, List[str]]) -> Expression:
+    def _to_expression(self, path_prefix: str | list[str]) -> Expression:
         # path_prefix: the path prefix to prepend to each parameter name
 
         def _values_to_expression(values: ParameterSet) -> Expression:
@@ -267,7 +253,7 @@ distribution:
 
             return make_expression(values)
 
-        path_prefix_list: List[str] = as_list(
+        path_prefix_list: list[str] = as_list(
             path_prefix, element_type=str, optional=True, arg_name="path_prefix"
         )
 
@@ -296,7 +282,7 @@ class MultiEstimatorParameterSpace(
     """
 
     #: The parameter spaces constituting this multi-estimator parameter space.
-    spaces: Tuple[ParameterSpace[T_Estimator_co], ...]
+    spaces: tuple[ParameterSpace[T_Estimator_co], ...]
 
     def __init__(self, *spaces: ParameterSpace[T_Estimator_co]) -> None:
         """
@@ -324,7 +310,7 @@ class MultiEstimatorParameterSpace(
         replacement="a list of dictionaries,",
         using=BaseParameterSpace.get_parameters,
     )
-    def get_parameters(self, prefix: Optional[str] = None) -> List[ParameterDict]:
+    def get_parameters(self, prefix: str | None = None) -> list[ParameterDict]:
         """[see superclass]"""
         if prefix is None:
             prefix = ""
@@ -357,7 +343,7 @@ __tracker.validate()
 
 
 def ensure_subclass(
-    estimator_type: Type[T_Estimator_co], expected_type: Type[T_Estimator_co]
+    estimator_type: type[T_Estimator_co], expected_type: type[T_Estimator_co]
 ) -> None:
     """
     Ensure that the given estimator type is a subclass of the expected estimator type.
@@ -380,7 +366,7 @@ def validate_spaces(spaces: Collection[ParameterSpace[T_Estimator_co]]) -> None:
     :param spaces: the parameter spaces to check
     """
 
-    estimator_types: Set[str] = {
+    estimator_types: set[str] = {
         getattr(space.estimator, "_estimator_type") for space in spaces
     }
 

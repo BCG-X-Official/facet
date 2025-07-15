@@ -1,5 +1,6 @@
 import logging
-from typing import Any, Dict, List, Mapping, Optional, Sequence, Tuple, cast
+from collections.abc import Mapping, Sequence
+from typing import Any, cast
 
 import numpy as np
 import numpy.typing as npt
@@ -95,7 +96,7 @@ def cv_stratified_bootstrap() -> BaseCrossValidator:
 @pytest.fixture  # type: ignore
 def regressor_parameters(
     simple_preprocessor: TransformerDF,
-) -> List[ParameterSpace[RegressorPipelineDF[RegressorDF]]]:
+) -> list[ParameterSpace[RegressorPipelineDF[RegressorDF]]]:
     random_state = {"random_state": 42}
 
     space_1 = ParameterSpace(
@@ -159,7 +160,7 @@ def regressor_parameters(
 @pytest.fixture  # type: ignore
 def regressor_selector(
     cv_kfold: KFold,
-    regressor_parameters: List[ParameterSpace[RegressorPipelineDF[RegressorDF]]],
+    regressor_parameters: list[ParameterSpace[RegressorPipelineDF[RegressorDF]]],
     sample: Sample,
     n_jobs: int,
 ) -> LearnerSelector[RegressorPipelineDF[RegressorDF], GridSearchCV]:
@@ -189,7 +190,7 @@ def best_lgbm_model(
     # we get the best model_evaluation which is a LGBM - for the sake of test
     # performance
     assert regressor_selector.searcher_ is not None
-    best_lgbm_params: Dict[str, Any] = (
+    best_lgbm_params: dict[str, Any] = (
         pd.DataFrame(regressor_selector.searcher_.cv_results_)
         .pipe(
             lambda df: df.loc[df.loc[:, "param_candidate_name"] == "LGBMRegressorDF", :]
@@ -216,7 +217,7 @@ def best_lgbm_model(
 def simple_preprocessor(sample: Sample) -> TransformerDF:
     features = sample.features
 
-    column_transforms: List[Tuple[str, Any, Any]] = []
+    column_transforms: list[tuple[str, Any, Any]] = []
 
     numeric_columns: pd.Index = features.select_dtypes(np.number).columns
     if numeric_columns is not None and len(numeric_columns) > 0:
@@ -329,8 +330,8 @@ def check_ranking(
     ranking: pd.DataFrame,
     is_classifier: bool,
     scores_expected: Sequence[float],
-    params_expected: Optional[Mapping[int, Mapping[str, Any]]],
-    candidate_names_expected: Optional[Sequence[str]] = None,
+    params_expected: Mapping[int, Mapping[str, Any]] | None,
+    candidate_names_expected: Sequence[str] | None = None,
 ) -> None:
     """
     Test helper to check rankings produced by learner rankers.
@@ -359,7 +360,7 @@ def check_ranking(
     if params_expected is not None:
         param_columns: pd.DataFrame = ranking.loc[:, (COL_PARAM, col_learner)]
         for rank, parameters_expected in params_expected.items():
-            parameters_actual: Dict[str, Any] = (
+            parameters_actual: dict[str, Any] = (
                 param_columns.iloc[rank, :].dropna().to_dict()
             )
             assert parameters_actual == parameters_expected, (
