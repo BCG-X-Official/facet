@@ -85,6 +85,11 @@ class SimulationDrawer(Drawer[UnivariateSimulationResult[Any], SimulationStyle])
             SimulationReportStyle,
         ]
 
+    @classmethod
+    def get_default_style(cls) -> Type[SimulationMatplotStyle]:
+        """[see superclass]"""
+        return SimulationMatplotStyle
+
     def _draw(self, result: UnivariateSimulationResult[Any]) -> None:
         # If the partitioning of the simulation is categorical, sort partitions in
         # ascending order of the mean output
