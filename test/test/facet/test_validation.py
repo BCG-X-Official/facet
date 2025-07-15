@@ -1,6 +1,7 @@
 """
 Tests for module facet.validation
 """
+
 import warnings
 from typing import List
 

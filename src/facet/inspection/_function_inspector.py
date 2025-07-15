@@ -1,6 +1,7 @@
 """
 Implementation of :class:`.LearnerInspector`.
 """
+
 import logging
 import re
 from typing import Any, Generic, List, Optional, Sequence, TypeVar, Union

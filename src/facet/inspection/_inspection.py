@@ -1,6 +1,7 @@
 """
 Core implementation of :mod:`facet.inspection`
 """
+
 import logging
 from typing import List, Union
 

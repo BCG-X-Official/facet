@@ -78,9 +78,9 @@ def test_sample(california_df: pd.DataFrame, california_target: str) -> None:
         assert california_target not in sample.feature_names
         assert len(sample.feature_names) == len(california_df.columns) - 1
 
-        assert type(sample.target) == pd.Series
-        assert type(sample.weight) == pd.Series
-        assert type(sample.features) == pd.DataFrame
+        assert type(sample.target) is pd.Series
+        assert type(sample.weight) is pd.Series
+        assert type(sample.features) is pd.DataFrame
 
         assert len(sample.target) == len(sample.features)
 

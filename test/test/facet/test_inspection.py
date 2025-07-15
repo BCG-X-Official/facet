@@ -1,6 +1,7 @@
 """
 Model inspector tests.
 """
+
 import logging
 import platform
 import warnings
@@ -60,10 +61,7 @@ def test_regressor_selector(
 ) -> None:
     scores_expected: List[float] = (
         [0.578, 0.530, 0.310, 0.308, 0.294, 0.226, 0.217, 0.217, 0.217, 0.217]
-        if (
-            platform.machine() != "arm64"
-            or platform.system() != "Darwin"
-        )
+        if platform.machine() != "arm64" or platform.system() != "Darwin"
         # on M1 macs, we get different results starting with scikit-learn 1.1
         else [0.579, 0.531, 0.311, 0.308, 0.246, 0.217, 0.217, 0.217, 0.217, 0.217]
     )

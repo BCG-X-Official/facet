@@ -3,6 +3,7 @@ Projection of SHAP contribution scores (i.e, SHAP importance) of all possible
 pairings of features onto the SHAP importance vector in partitions of for synergy,
 redundancy, and independence.
 """
+
 from __future__ import annotations
 
 import logging

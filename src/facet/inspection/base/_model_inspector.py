@@ -1,6 +1,7 @@
 """
 Implementation of :class:`.ModelInspector`.
 """
+
 import logging
 from abc import ABCMeta, abstractmethod
 from types import MethodType
@@ -864,9 +865,9 @@ class ModelInspector(
             )
 
         else:
-            feature_importance_iter: (
-                Iterable[Tuple[Any, pd.Series]]
-            ) = feature_importance.items()
+            feature_importance_iter: Iterable[Tuple[Any, pd.Series]] = (
+                feature_importance.items()
+            )
 
             return [
                 self.__linkage_tree_from_affinity_matrix_for_output(

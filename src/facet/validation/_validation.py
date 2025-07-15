@@ -1,6 +1,7 @@
 """
 Core implementation of :mod:`facet.validation`.
 """
+
 import warnings
 from abc import ABCMeta, abstractmethod
 from typing import Any, Generator, Optional, Tuple, Union, cast
@@ -80,7 +81,11 @@ class BaseBootstrapCV(
         X: Union[npt.NDArray[Any], pd.DataFrame],
         y: Union[npt.NDArray[Any], pd.Series, pd.DataFrame, None] = None,
         groups: Union[npt.NDArray[Any], pd.Series, pd.DataFrame, None] = None,
-    ) -> Generator[Tuple[npt.NDArray[np.int_], npt.NDArray[np.int_]], None, None,]:
+    ) -> Generator[
+        Tuple[npt.NDArray[np.int_], npt.NDArray[np.int_]],
+        None,
+        None,
+    ]:
         """
         Generate indices to split data into training and test set.
 

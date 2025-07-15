@@ -1,6 +1,7 @@
 """
 Implementation of :class:`.LearnerInspector`.
 """
+
 import logging
 import re
 from abc import ABCMeta, abstractmethod

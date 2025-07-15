@@ -1,6 +1,7 @@
 """
 Test shap decomposition calculations
 """
+
 import logging
 from typing import Set
 
@@ -22,16 +23,14 @@ def test_feature_affinity_matrices(
     sample: Sample,
     n_jobs: int,
 ) -> None:
-    regressor_inspector: LearnerInspector[
-        RegressorPipelineDF[LGBMRegressorDF]
-    ] = LearnerInspector(
-        model=best_lgbm_model,
-        explainer_factory=TreeExplainerFactory(
-            feature_perturbation="tree_path_dependent", uses_background_dataset=True
-        ),
-        n_jobs=n_jobs,
-    ).fit(
-        sample
+    regressor_inspector: LearnerInspector[RegressorPipelineDF[LGBMRegressorDF]] = (
+        LearnerInspector(
+            model=best_lgbm_model,
+            explainer_factory=TreeExplainerFactory(
+                feature_perturbation="tree_path_dependent", uses_background_dataset=True
+            ),
+            n_jobs=n_jobs,
+        ).fit(sample)
     )
 
     preprocessed_feature_names: Set[str] = set(

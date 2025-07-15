@@ -1,6 +1,7 @@
 """
 Core implementation of :mod:`facet.selection`
 """
+
 from __future__ import annotations
 
 import logging

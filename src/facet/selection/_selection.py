@@ -1,6 +1,7 @@
 """
 Core implementation of :mod:`facet.selection`
 """
+
 import inspect
 import itertools
 import logging
@@ -478,9 +479,9 @@ class LearnerSelector(
             return None
 
         elif isinstance(scoring, str):
-            scorer: Callable[
-                [BaseEstimator, pd.DataFrame, pd.Series], float
-            ] = get_scorer(scoring)
+            scorer: Callable[[BaseEstimator, pd.DataFrame, pd.Series], float] = (
+                get_scorer(scoring)
+            )
 
         # noinspection PyPep8Naming
         def _scorer_fn(estimator: EstimatorDF, X: pd.DataFrame, y: pd.Series) -> float:

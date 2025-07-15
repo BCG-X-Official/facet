@@ -1,6 +1,7 @@
 """
 Implements the base package.
 """
+
 import logging
 from abc import ABCMeta, abstractmethod
 from typing import Any, Dict, Generic, Mapping, Optional, TypeVar

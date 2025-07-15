@@ -1,6 +1,7 @@
 """
 Tests for module facet.selection
 """
+
 import logging
 from typing import Any, List, Mapping
 
@@ -118,17 +119,15 @@ def test_learner_selector(
         )
 
     # define the learner selector
-    ranker: LearnerSelector[
-        RegressorPipelineDF[LGBMRegressorDF], GridSearchCV
-    ] = LearnerSelector(
-        searcher_type=GridSearchCV,
-        parameter_space=regressor_parameters,
-        cv=cv,
-        scoring="r2",
-        n_jobs=n_jobs,
-        error_score="raise",
-    ).fit(
-        sample=sample
+    ranker: LearnerSelector[RegressorPipelineDF[LGBMRegressorDF], GridSearchCV] = (
+        LearnerSelector(
+            searcher_type=GridSearchCV,
+            parameter_space=regressor_parameters,
+            cv=cv,
+            scoring="r2",
+            n_jobs=n_jobs,
+            error_score="raise",
+        ).fit(sample=sample)
     )
 
     log.debug(f"\n{ranker.summary_report()}")
@@ -174,15 +173,13 @@ def test_model_selector_no_preprocessing(n_jobs: int) -> None:
     )
     test_sample: Sample = Sample(observations=test_data, target_name="target")
 
-    model_selector: LearnerSelector[
-        ClassifierPipelineDF[SVCDF], GridSearchCV
-    ] = LearnerSelector(
-        searcher_type=GridSearchCV,
-        parameter_space=parameter_space,
-        cv=cv,
-        n_jobs=n_jobs,
-    ).fit(
-        sample=test_sample
+    model_selector: LearnerSelector[ClassifierPipelineDF[SVCDF], GridSearchCV] = (
+        LearnerSelector(
+            searcher_type=GridSearchCV,
+            parameter_space=parameter_space,
+            cv=cv,
+            n_jobs=n_jobs,
+        ).fit(sample=test_sample)
     )
 
     summary_report = model_selector.summary_report()
@@ -368,16 +365,14 @@ def test_model_selector_regression(
     ):
         LearnerSelector(GridSearchCV, regressor_parameters, param_grid=None)
 
-    ranker: LearnerSelector[
-        RegressorPipelineDF[LGBMRegressorDF], GridSearchCV
-    ] = LearnerSelector(
-        GridSearchCV,
-        regressor_parameters,
-        scoring="r2",
-        cv=cv,
-        n_jobs=n_jobs,
-    ).fit(
-        sample=sample
+    ranker: LearnerSelector[RegressorPipelineDF[LGBMRegressorDF], GridSearchCV] = (
+        LearnerSelector(
+            GridSearchCV,
+            regressor_parameters,
+            scoring="r2",
+            cv=cv,
+            n_jobs=n_jobs,
+        ).fit(sample=sample)
     )
 
     assert isinstance(ranker.best_estimator_, RegressorPipelineDF)

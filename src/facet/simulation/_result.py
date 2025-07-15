@@ -2,7 +2,6 @@
 Core implementation of :mod:`facet.simulation`
 """
 
-
 import logging
 from typing import Generic, Sequence, TypeVar
 
