@@ -25,7 +25,7 @@ from scipy import stats
 from sklearn.base import BaseEstimator
 from typing_extensions import TypeAlias
 
-from pytools.api import AllTracker, inheritdoc, subsdoc, to_list, validate_element_types
+from pytools.api import AllTracker, as_list, inheritdoc, subsdoc, validate_element_types
 from pytools.expression import Expression, make_expression
 from pytools.expression.atomic import Id
 from sklearndf import EstimatorDF
@@ -266,7 +266,7 @@ distribution:
 
             return make_expression(values)
 
-        path_prefix_list: List[str] = to_list(
+        path_prefix_list: List[str] = as_list(
             path_prefix, element_type=str, optional=True, arg_name="path_prefix"
         )
 

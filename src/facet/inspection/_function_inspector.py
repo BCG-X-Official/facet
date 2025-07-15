@@ -5,7 +5,7 @@ import logging
 import re
 from typing import Any, Generic, List, Optional, Sequence, TypeVar, Union
 
-from pytools.api import AllTracker, inheritdoc, subsdoc, to_list
+from pytools.api import AllTracker, as_list, inheritdoc, subsdoc
 
 from .._types import ModelFunction
 from ..explanation import ExactExplainerFactory, FunctionExplainerFactory
@@ -120,7 +120,7 @@ class FunctionInspector(ModelInspector[T_Function], Generic[T_Function]):
         )
 
         self.model = model
-        self._feature_names = to_list(
+        self._feature_names = as_list(
             feature_names, element_type=str, arg_name="feature_names"
         )
         self.explainer_factory = explainer_factory

@@ -28,7 +28,7 @@ from sklearn.base import BaseEstimator
 from sklearn.metrics import get_scorer
 from sklearn.model_selection import BaseCrossValidator, GridSearchCV
 
-from pytools.api import AllTracker, inheritdoc, to_list
+from pytools.api import AllTracker, as_list, inheritdoc
 from pytools.fit import FittableMixin, fitted_only
 from pytools.parallelization import ParallelizableMixin
 from sklearndf import EstimatorDF
@@ -212,7 +212,7 @@ class LearnerSelector(
                     ParameterSpace[T_EstimatorDF],
                     MultiEstimatorParameterSpace[T_EstimatorDF],
                 ]
-            ] = to_list(
+            ] = as_list(
                 parameter_space,
                 element_type=(ParameterSpace, MultiEstimatorParameterSpace),
                 arg_name="parameter_space",

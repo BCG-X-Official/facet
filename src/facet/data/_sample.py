@@ -11,7 +11,7 @@ from typing import Any, Collection, Iterable, List, Optional, Sequence, Set, Uni
 import numpy as np
 import pandas as pd
 
-from pytools.api import AllTracker, to_list, to_set
+from pytools.api import AllTracker, as_list, as_set
 
 log = logging.getLogger(__name__)
 
@@ -100,7 +100,7 @@ class Sample:
 
         # process the target(s)
 
-        targets_list: List[str] = to_list(
+        targets_list: List[str] = as_list(
             target_name, element_type=str, arg_name="target_name"
         )
         _ensure_columns_exist(observations, column_type="target", columns=targets_list)
@@ -130,7 +130,7 @@ class Sample:
                 _feature_index = observations.columns.drop(labels=targets_list)
             features_list = _feature_index.to_list()
         else:
-            features_list = to_list(
+            features_list = as_list(
                 feature_names, element_type=str, arg_name="feature_names"
             )
             _ensure_columns_exist(
@@ -272,7 +272,7 @@ class Sample:
         :return: copy of this sample, containing only the features with the given names
         """
 
-        feature_names_list: List[str] = to_list(feature_names, element_type=str)
+        feature_names_list: List[str] = as_list(feature_names, element_type=str)
 
         if not set(feature_names_list).issubset(self._feature_names):
             raise ValueError(
@@ -297,7 +297,7 @@ class Sample:
         :param feature_names: name(s) of the features to be dropped
         :return: copy of this sample, excluding the features with the given names
         """
-        feature_names_set: Set[str] = to_set(feature_names, element_type=str)
+        feature_names_set: Set[str] = as_set(feature_names, element_type=str)
 
         unknown = feature_names_set.difference(self._feature_names)
         if unknown:
