@@ -26,7 +26,7 @@ def test_sample_init(california_df: pd.DataFrame, california_target: str) -> Non
     # 2. no valid target specified
     with pytest.raises(TypeError):
         # noinspection PyTypeChecker
-        Sample(observations=california_df, target_name=None)  # type: ignore
+        Sample(observations=california_df, target_name=None)
 
     # store list of feature columns:
     f_columns = list(california_df.columns)
@@ -78,9 +78,9 @@ def test_sample(california_df: pd.DataFrame, california_target: str) -> None:
         assert california_target not in sample.feature_names
         assert len(sample.feature_names) == len(california_df.columns) - 1
 
-        assert type(sample.target) is pd.Series
-        assert type(sample.weight) is pd.Series
-        assert type(sample.features) is pd.DataFrame
+        assert isinstance(sample.target, pd.Series)
+        assert isinstance(sample.weight, pd.Series)
+        assert isinstance(sample.features, pd.DataFrame)
 
         assert len(sample.target) == len(sample.features)
 
