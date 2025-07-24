@@ -94,6 +94,7 @@ stages:
               dependencies=(
                 numpy~=2.2
                 gamma-pytools~=3.0
+                sklearndf~=2.4
               )
               python -m pip install mypy "${dependencies[@]}"
               python -m mypy src --config-file pyproject.toml
