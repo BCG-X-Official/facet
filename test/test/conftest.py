@@ -1,6 +1,6 @@
 import logging
 from collections.abc import Mapping, Sequence
-from typing import Any, cast
+from typing import Any, TypeVar, cast
 
 import numpy as np
 import numpy.typing as npt
@@ -187,29 +187,22 @@ def best_lgbm_model(
     ],
     sample: Sample,
 ) -> RegressorPipelineDF[LGBMRegressorDF]:
-    # we get the best model_evaluation which is a LGBM - for the sake of test
-    # performance
-    assert regressor_selector.searcher_ is not None
-    best_lgbm_params: dict[str, Any] = (
-        pd.DataFrame(regressor_selector.searcher_.cv_results_)
-        .pipe(
-            lambda df: df.loc[df.loc[:, "param_candidate_name"] == "LGBMRegressorDF", :]
-        )
-        .pipe(lambda df: df.loc[df.loc[:, "rank_test_score"].idxmin(), "params"])
+    return get_best_model(
+        model_type=LGBMRegressorDF,
+        regressor_selector=regressor_selector,
+        sample=sample,
     )
 
-    len_param_candidate = len(PARAM_CANDIDATE__)
-    return (
-        cast(RegressorPipelineDF[LGBMRegressorDF], best_lgbm_params["candidate"])
-        .clone()
-        .set_params(
-            **{
-                param[len_param_candidate:]: value
-                for param, value in best_lgbm_params.items()
-                if param.startswith(PARAM_CANDIDATE__)
-            }
-        )
-        .fit(X=sample.features, y=sample.target)
+
+@pytest.fixture  # type: ignore
+def best_rf_model(
+    regressor_selector: LearnerSelector[RegressorPipelineDF[RegressorDF], GridSearchCV],
+    sample: Sample,
+) -> RegressorPipelineDF[RandomForestRegressorDF]:
+    return get_best_model(
+        model_type=RandomForestRegressorDF,
+        regressor_selector=regressor_selector,
+        sample=sample,
     )
 
 
@@ -445,6 +438,41 @@ def iris_inspector_multi_class(
 #
 # Utility functions
 #
+
+T_Model = TypeVar("T_Model", bound=RegressorDF)
+
+
+def get_best_model(
+    model_type: type[T_Model],
+    regressor_selector: LearnerSelector[RegressorPipelineDF[RegressorDF], GridSearchCV],
+    sample: Sample,
+) -> RegressorPipelineDF[T_Model]:
+    # we get the best model_evaluation which is a LGBM - for the sake of test
+    # performance
+    assert regressor_selector.searcher_ is not None
+    best_lgbm_params: dict[str, Any] = (
+        pd.DataFrame(regressor_selector.searcher_.cv_results_)
+        .pipe(
+            lambda df: df.loc[
+                df.loc[:, "param_candidate_name"] == model_type.__name__, :
+            ]
+        )
+        .pipe(lambda df: df.loc[df.loc[:, "rank_test_score"].idxmin(), "params"])
+    )
+
+    len_param_candidate = len(PARAM_CANDIDATE__)
+    return (
+        cast(RegressorPipelineDF[LGBMRegressorDF], best_lgbm_params["candidate"])
+        .clone()
+        .set_params(
+            **{
+                param[len_param_candidate:]: value
+                for param, value in best_lgbm_params.items()
+                if param.startswith(PARAM_CANDIDATE__)
+            }
+        )
+        .fit(X=sample.features, y=sample.target)
+    )
 
 
 def fit_classifier_selector(

@@ -20,7 +20,7 @@ from sklearn.pipeline import Pipeline
 
 from pytools.data import LinkageTree, Matrix
 from pytools.viz.dendrogram import DendrogramDrawer, DendrogramReportStyle
-from sklearndf import ClassifierDF
+from sklearndf import ClassifierDF, RegressorDF
 from sklearndf.classification import (
     GradientBoostingClassifierDF,
     RandomForestClassifierDF,
@@ -74,17 +74,29 @@ def test_regressor_selector(
 
 
 @pytest.mark.parametrize(  # type: ignore
-    argnames=("explainer_factory_cls", "explainer_factory_args"),
+    argnames=(
+        "explainer_factory_cls",
+        "explainer_factory_args",
+        "best_model_fixture",
+        "expected_cluster",
+    ),
     argvalues=[
         (
             TreeExplainerFactory,
             dict(
                 feature_perturbation="tree_path_dependent", uses_background_dataset=True
             ),
+            "best_lgbm_model",
+            {"Longitude", "Latitude"},
         ),
-        (KernelExplainerFactory, dict(link="identity", data_size_limit=8)),
-        (ExactExplainerFactory, {}),
-        (PermutationExplainerFactory, {}),
+        (
+            KernelExplainerFactory,
+            dict(link="identity", data_size_limit=8),
+            "best_rf_model",
+            {"AveRooms", "Latitude"},
+        ),
+        (ExactExplainerFactory, {}, "best_lgbm_model", {"Longitude", "Latitude"}),
+        (PermutationExplainerFactory, {}, "best_lgbm_model", {"Longitude", "Latitude"}),
     ],
 )
 @pytest.mark.parametrize(  # type: ignore
@@ -92,21 +104,24 @@ def test_regressor_selector(
     argvalues=(False, True),
 )
 def test_model_inspection(
-    explainer_factory_cls: type[ExplainerFactory[LGBMRegressorDF]],
+    explainer_factory_cls: type[ExplainerFactory[Any]],
     explainer_factory_args: dict[str, Any],
-    best_lgbm_model: RegressorPipelineDF[LGBMRegressorDF],
+    best_model_fixture: str,
+    expected_cluster: set[str],
+    request: pytest.FixtureRequest,
     sample: Sample,
     n_jobs: int,
     native: bool,
 ) -> None:
-    # test the ModelInspector with the given explainer factory:
+    # get the correct model fixture
+    best_model = request.getfixturevalue(best_model_fixture)
 
-    explainer_factory: ExplainerFactory[LGBMRegressorDF] = explainer_factory_cls(
+    explainer_factory: ExplainerFactory[RegressorDF] = explainer_factory_cls(
         **explainer_factory_args
     )
 
     inspector: (
-        LearnerInspector[RegressorPipelineDF[LGBMRegressorDF]]
+        LearnerInspector[RegressorPipelineDF[RegressorDF]]
         | NativeLearnerInspector[Pipeline]
     )
 
@@ -114,17 +129,17 @@ def test_model_inspection(
 
     if native:
         assert (
-            best_lgbm_model.preprocessing is not None
+            best_model.preprocessing is not None
         ), "preprocessing step must be defined"
 
-        regressor = best_lgbm_model.regressor.native_estimator
+        regressor = best_model.regressor.native_estimator
 
         model = Pipeline(
             # create a native pipeline from the regressor pipeline
             steps=[
                 (
                     "preprocessing",
-                    best_lgbm_model.preprocessing.native_estimator,
+                    best_model.preprocessing.native_estimator,
                 ),
                 ("regressor", regressor),
             ]
@@ -139,11 +154,11 @@ def test_model_inspection(
         ).fit(sample)
     else:
         inspector = LearnerInspector(
-            model=best_lgbm_model,
+            model=best_model,
             explainer_factory=explainer_factory,
             n_jobs=n_jobs,
         ).fit(sample)
-        regressor_feature_names = set(best_lgbm_model.regressor.feature_names_in_)
+        regressor_feature_names = set(best_model.regressor.feature_names_in_)
 
     shap_values: pd.DataFrame = inspector.shap_values()
 
@@ -197,9 +212,9 @@ def test_model_inspection(
     # check the child nodes are Longitude and Latitude
     children = linkage.children(cluster_nodes[0])
     assert children is not None, "a cluster node has children"
-    assert {child.name.split("__")[-1] for child in children} == (
-        {"Longitude", "Latitude"}
-    ), "the cluster is Longitude and Latitude features"
+    assert {
+        child.name.split("__")[-1] for child in children
+    } == expected_cluster, f"the cluster is {expected_cluster} features"
 
     print()
     DendrogramDrawer(style="text").draw(
