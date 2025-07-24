@@ -1,27 +1,27 @@
 name: facet-develop
 channels:
   - conda-forge
-  - bcg_gamma
+  - bcgx
 dependencies:
   # run
-  - gamma-pytools     ~= 2.1
-  - joblib            ~= 1.3
-  - lightgbm          ~= 3.3
-  - matplotlib        ~= 3.8
-  - numpy             ~= 1.26
-  - pandas            ~= 2.0
-  - python            ~= 3.11
-  - scikit-learn      ~= 1.2.2
-  - scipy             ~= 1.11
+  - gamma-pytools     ~= 3.0
+  - joblib            ~= 1.5
+  - lightgbm          ~= 4.6
+  - matplotlib        ~= 3.10
+  - numpy             ~= 2.2
+  - pandas            ~= 2.3
+  - python            ~= 3.13
+  - scikit-learn      ~= 1.7
+  - scipy             ~= 1.16
   - shap              ~= 0.44.0
-  - sklearndf         ~= 2.2
-  - typing_extensions ~= 4.6
-  - xlrd              ~= 2.0
+  - sklearndf         ~= 2.4
+  - typing_extensions ~= 4.14
+  - xlrd               = 2
   - catboost          ~= 1.2
   # additional packages for notebooks etc.
-  - pip     ~= 23.0
+  - pip >= 25
   - pip:
-     - arfs ~= 1.1
+     - arfs
   # test
   - pytest     ~= 8.1
   - pytest-cov ~= 4.1
