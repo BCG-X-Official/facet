@@ -141,3 +141,19 @@ exclude = '''
   )/
 )
 '''
+
+[tool.mypy]
+strict = true
+show_error_codes = true
+
+[[tool.mypy.overrides]]
+module = [
+    "catboost.*",
+    "matplotlib.*",
+    "mpl_toolkits.*",
+    "pandas.*",
+    "scipy.*",
+    "sklearn.*",
+    "shap.*"
+]
+ignore_missing_imports = true
