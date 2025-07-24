@@ -1,5 +1,4 @@
 repos:
-  # pyupgrade
   - repo: https://github.com/asottile/pyupgrade
     rev: v3.20.0
     hooks:
@@ -50,3 +49,4 @@ repos:
         additional_dependencies:
           - numpy~=2.2
           - gamma-pytools~=3.0
+          - sklearndf~=2.4
