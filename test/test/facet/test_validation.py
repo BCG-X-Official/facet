@@ -35,10 +35,10 @@ def test_get_train_test_splits_as_indices() -> None:
 
     my_cv = BootstrapCV(n_splits=n_test_splits, random_state=42)
 
-    def _generate_splits() -> list[npt.NDArray[np.int_]]:
+    def _generate_splits() -> list[npt.NDArray[np.int64]]:
         return [test_split for _, test_split in my_cv.split(X=test_x)]
 
-    test_splits: list[npt.NDArray[np.int_]] = _generate_splits()
+    test_splits: list[npt.NDArray[np.int64]] = _generate_splits()
 
     # assert we get right amount of splits
 
@@ -54,7 +54,7 @@ def test_get_train_test_splits_as_indices() -> None:
 
     # check that re-generating the split yields the same result
 
-    test_splits_2: list[npt.NDArray[np.int_]] = _generate_splits()
+    test_splits_2: list[npt.NDArray[np.int64]] = _generate_splits()
 
     assert len(test_splits) == len(
         test_splits_2
@@ -143,10 +143,10 @@ def test_stratified_bootstrap_cv() -> None:
     assert np.array_equal(train1, train2)
     assert np.array_equal(test1, test2)
 
-    def _generate_splits() -> list[npt.NDArray[np.int_]]:
+    def _generate_splits() -> list[npt.NDArray[np.int64]]:
         return [test_split for _, test_split in my_cv.split(X=test_x, y=test_groups)]
 
-    test_splits: list[npt.NDArray[np.int_]] = _generate_splits()
+    test_splits: list[npt.NDArray[np.int64]] = _generate_splits()
 
     # assert we get right amount of splits
 
@@ -173,7 +173,7 @@ def test_stratified_bootstrap_cv() -> None:
 
     # check that re-generating the split yields the same result
 
-    test_splits_2: list[npt.NDArray[np.int_]] = _generate_splits()
+    test_splits_2: list[npt.NDArray[np.int64]] = _generate_splits()
 
     assert len(test_splits) == len(
         test_splits_2

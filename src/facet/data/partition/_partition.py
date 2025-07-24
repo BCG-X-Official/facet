@@ -34,7 +34,7 @@ T_Partitioner = TypeVar("T_Partitioner", bound="Partitioner[Any]")
 T_RangePartitioner = TypeVar("T_RangePartitioner", bound="RangePartitioner[Any, Any]")
 T_CategoryPartitioner = TypeVar("T_CategoryPartitioner", bound="CategoryPartitioner")
 T_Values = TypeVar("T_Values", bound=np.generic)
-T_Values_Numeric = TypeVar("T_Values_Numeric", np.int_, np.float64)
+T_Values_Numeric = TypeVar("T_Values_Numeric", np.int64, np.float64)
 T_Values_Scalar = TypeVar("T_Values_Scalar", int, float)
 
 
@@ -70,7 +70,7 @@ class Partitioner(
     _partitions: Sequence[T_Values] | None
 
     #: The count of values allocated to each partition.
-    _frequencies: npt.NDArray[np.int_] | None
+    _frequencies: npt.NDArray[np.int64] | None
 
     def __init__(self, max_partitions: int | None = None) -> None:
         """
@@ -111,7 +111,7 @@ class Partitioner(
 
     @property
     @fitted_only
-    def frequencies_(self) -> npt.NDArray[np.int_]:
+    def frequencies_(self) -> npt.NDArray[np.int64]:
         """
         The count of values allocated to each partition.
         """
@@ -342,7 +342,7 @@ class ContinuousRangePartitioner(RangePartitioner[np.float64, float]):
         return self._step / 2
 
 
-class IntegerRangePartitioner(RangePartitioner[np.int_, int]):
+class IntegerRangePartitioner(RangePartitioner[np.int64, int]):
     """
     Partition integer values in adjacent intervals of the same length.
 

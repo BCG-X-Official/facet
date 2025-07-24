@@ -83,7 +83,7 @@ class BaseBootstrapCV(
         y: npt.NDArray[Any] | pd.Series | pd.DataFrame | None = None,
         groups: npt.NDArray[Any] | pd.Series | pd.DataFrame | None = None,
     ) -> Generator[
-        tuple[npt.NDArray[np.int_], npt.NDArray[np.int_]],
+        tuple[npt.NDArray[np.int64], npt.NDArray[np.int64]],
         None,
         None,
     ]:
@@ -110,15 +110,15 @@ class BaseBootstrapCV(
             warnings.warn(f"ignoring arg groups={groups!r}", stacklevel=2)
 
         rs = check_random_state(self.random_state)
-        indices: npt.NDArray[np.int_] = np.arange(n)
+        indices: npt.NDArray[np.int64] = np.arange(n)
         for _ in range(self.n_splits):
             while True:
-                train: npt.NDArray[np.int_] = self._select_train_indices(
+                train: npt.NDArray[np.int64] = self._select_train_indices(
                     n_samples=n, random_state=rs, y=y
                 )
                 test_mask: npt.NDArray[np.bool_] = np.ones(n, dtype=bool)
                 test_mask[train] = False
-                test: npt.NDArray[np.int_] = indices[test_mask]
+                test: npt.NDArray[np.int64] = indices[test_mask]
                 # make sure test is not empty, else sample another train set
                 if len(test) > 0:
                     yield train, test
@@ -130,7 +130,7 @@ class BaseBootstrapCV(
         n_samples: int,
         random_state: np.random.RandomState,
         y: npt.NDArray[Any] | pd.Series | pd.DataFrame | None,
-    ) -> npt.NDArray[np.int_]:
+    ) -> npt.NDArray[np.int64]:
         """
         :param n_samples: number of indices to sample
         :param random_state: random state object to be used for random sampling
@@ -164,7 +164,7 @@ class BootstrapCV(BaseBootstrapCV):
         n_samples: int,
         random_state: np.random.RandomState,
         y: npt.NDArray[Any] | pd.Series | pd.DataFrame | None,
-    ) -> npt.NDArray[np.int_]:
+    ) -> npt.NDArray[np.int64]:
         return random_state.randint(n_samples, size=n_samples)
 
 
@@ -186,7 +186,7 @@ class StratifiedBootstrapCV(BaseBootstrapCV):
         n_samples: int,
         random_state: np.random.RandomState,
         y: npt.NDArray[Any] | pd.Series | pd.DataFrame | None,
-    ) -> npt.NDArray[np.int_]:
+    ) -> npt.NDArray[np.int64]:
         if y is None:
             raise ValueError(
                 "no target variable specified in arg y as labels for stratification"
@@ -199,7 +199,7 @@ class StratifiedBootstrapCV(BaseBootstrapCV):
             )
 
         return cast(
-            npt.NDArray[np.int_],
+            npt.NDArray[np.int64],
             pd.Series(np.arange(len(y)))
             .groupby(by=y)
             .apply(
@@ -258,7 +258,7 @@ class StationaryBootstrapCV(BaseBootstrapCV):
         n_samples: int,
         random_state: np.random.RandomState,
         y: npt.NDArray[Any] | pd.Series | pd.DataFrame | None,
-    ) -> npt.NDArray[np.int_]:
+    ) -> npt.NDArray[np.int64]:
         mean_block_size = self.mean_block_size
         if mean_block_size < 1:
             # if mean block size was set as a percentage, calculate the actual mean
