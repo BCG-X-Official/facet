@@ -9,7 +9,6 @@ from typing import Any, Generic, TypeVar
 
 import numpy as np
 import pandas as pd
-from packaging.version import Version
 from shap import Explainer, Explanation
 
 from pytools.api import AllTracker
@@ -23,19 +22,6 @@ __all__ = [
     "BaseExplainer",
     "ExplainerFactory",
 ]
-
-
-# Apply a hack to address shap's incompatibility with numpy >= 1.24:
-# shap relies on the np.bool, np.int, and np.float types, which were deprecated in
-# numpy 1.20 and removed in numpy 1.24.
-#
-# We define these types as an alias for the corresponding type with a trailing
-# underscore.
-
-if Version(np.__version__) >= Version("1.20"):
-    for __attr in ("bool", "int", "float"):
-        setattr(np, __attr, getattr(np, f"{__attr}_"))
-    del __attr
 
 
 #
