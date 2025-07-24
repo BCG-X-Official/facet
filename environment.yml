@@ -13,7 +13,7 @@ dependencies:
   - python            ~= 3.13
   - scikit-learn      ~= 1.7
   - scipy             ~= 1.16
-  - shap              ~= 0.44.0
+  - shap              ~= 0.45
   - sklearndf         ~= 2.4
   - typing_extensions ~= 4.14
   - xlrd               = 2
