@@ -146,7 +146,7 @@ class ExplainerQueue(JobQueue[ArraysAny, ArraysAny]):
         """
         super().__init__()
 
-        if isinstance(X, CatboostPool):
+        if isinstance(X, CatboostPool):  # type: ignore[misc]
             raise NotImplementedError("CatBoost Pool is not supported")
         self.explainer = explainer
         self.X = X.values if isinstance(X, pd.DataFrame) else X
