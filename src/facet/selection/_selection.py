@@ -13,7 +13,6 @@ from typing import Any, Generic, TypeVar, cast
 import numpy as np
 import numpy.typing as npt
 import pandas as pd
-from sklearn.base import BaseEstimator
 from sklearn.metrics import get_scorer
 from sklearn.model_selection import BaseCrossValidator, GridSearchCV
 
@@ -456,10 +455,10 @@ class LearnerSelector(
 
     def _get_scorer(
         self,
-    ) -> Callable[[EstimatorDF, pd.DataFrame, pd.Series], float] | None:
+    ) -> Callable[..., float] | None:
         scoring = self.scoring
 
-        scorer: Callable[[BaseEstimator, pd.DataFrame, pd.Series], float]
+        scorer: Callable[..., float]
 
         if scoring is None:
             return None
@@ -473,7 +472,11 @@ class LearnerSelector(
 
         # noinspection PyPep8Naming
         def _scorer_fn(
-            estimator: EstimatorDF, X: pd.DataFrame, y: pd.Series, **kwargs: Any
+            estimator: EstimatorDF,
+            X: pd.DataFrame,
+            y: pd.Series,
+            sample_weight: pd.Series | None = None,
+            **kwargs: Any,
         ) -> float:
             while isinstance(estimator, CandidateEstimatorDF):
                 assert estimator.candidate is not None, "estimator candidate is set"
@@ -484,7 +487,17 @@ class LearnerSelector(
                     X = estimator.preprocessing.transform(X=X)
                 estimator = estimator.final_estimator
 
-            return scorer(estimator.native_estimator, X, y, **kwargs)
+            if sample_weight is None:
+                # if sample_weight is not provided, we pass None to the scorer
+                return scorer(estimator.native_estimator, X, y, **kwargs)
+            else:
+                return scorer(  # type: ignore[call-arg]
+                    estimator.native_estimator,
+                    X,
+                    y,
+                    sample_weight=sample_weight,
+                    **kwargs,
+                )
 
         return _scorer_fn
 
