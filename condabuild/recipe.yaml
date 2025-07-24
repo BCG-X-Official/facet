@@ -40,13 +40,11 @@ tests:
   - requirements:
       run:
         - python          ${{ env.get('FACET_V_PYTHON') }}
+        - pip
         - pytest          ~= 8.1
         # we always need lightgbm for testing; version spec is optional
         - lightgbm        ${{ env.get('FACET_V_LIGHTGBM', default='') }}
         # optional libraries of sklearndf, needed for testing
-        - if: env.exists('FACET_V_BORUTA')
-          then:
-            - boruta_py ${{ env.get('FACET_V_BORUTA') }}
         - if: env.exists('FACET_V_SCIKIT_LEARN')
           then:
             - scikit-learn ${{ env.get('FACET_V_SCIKIT_LEARN') }}
@@ -68,11 +66,14 @@ tests:
         - if: env.exists('FACET_V_ZIPP')
           then:
             - zipp ${{ env.get('FACET_V_ZIPP') }}
-    script:
-      - conda list
-      - python -c 'import facet; import os; assert facet.__version__ == os.environ["PKG_VERSION"]'
-      - cd "${FACET_PATH}/facet"
-      - pytest -vs test
+    script: |
+      if [[ -n "${FACET_V_BORUTA}" ]]; then
+        pip install "Boruta ${FACET_V_BORUTA}"
+      fi
+      conda list
+      python -c 'import facet; import os; assert facet.__version__ == os.environ["PKG_VERSION"]'
+      cd "${FACET_PATH}/facet"
+      pytest -vs test
 
 about:
   license: OSL-2.0
