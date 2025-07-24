@@ -87,9 +87,9 @@ class SimulationDrawer(Drawer[UnivariateSimulationResult[Any], SimulationStyle])
         ]
 
     @classmethod
-    def get_default_style(cls) -> type[SimulationMatplotStyle]:
+    def get_default_style(cls) -> SimulationMatplotStyle:
         """[see superclass]"""
-        return SimulationMatplotStyle
+        return SimulationMatplotStyle()
 
     def _draw(self, result: UnivariateSimulationResult[Any]) -> None:
         # If the partitioning of the simulation is categorical, sort partitions in
