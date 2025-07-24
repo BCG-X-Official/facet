@@ -6,6 +6,25 @@
 .. |nbsp| unicode:: 0xA0
    :trim:
 
+FACET 2.2
+---------
+
+FACET 2.2 is a maintenance release to catch up with the latest versions of
+:mod:`gamma-pytools`. :mod:`sklearndf`, |shap|, and :mod:`numpy`.
+
+2.2.0
+~~~~~
+
+- REFACTOR: add support for *pytools* |nbsp| 3.x and drop support for
+  *pytools* |nbsp| 2.x
+- REFACTOR: add support for breaking changes in |shap| |nbsp| 0.45, and
+  drop support for earlier versions
+- REFACTOR: add support for breaking changes in :mod:`numpy` |nbsp| 2.0,
+  maintaining support for :mod:`numpy` |nbsp| 1.23 and later
+- REFACTOR: add support for :mod:`sklearndf` |nbsp| 2.4, which now supports
+  *scikit-learn* |nbsp| 1.3 up to |nbsp| 1.7
+
+
 FACET 2.1
 ---------
 
