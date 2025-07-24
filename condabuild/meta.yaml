@@ -1,3 +1,8 @@
+#
+# This file is deprecated and replaced by recipe.yaml, for use with rattler.
+# Keeping it for reference.
+#
+
 package:
   name: gamma-facet
   version: {{ environ.get('FACET_BUILD_FACET_VERSION') }}
