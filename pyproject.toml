@@ -49,8 +49,7 @@ classifiers = [
 testing = [
     "pytest ~= 8.1",
     "pytest-cov ~= 4.1",
-    "lightgbm ~=3.2",
-    "xgboost ~= 1.5",
+    "lightgbm ~= 4.6",
 ]
 docs = [
     "sphinx ~= 4.5",
