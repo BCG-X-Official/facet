@@ -396,7 +396,13 @@ class ShapCalculator(
                 _validate_shap_tensor(shap_tensor)
         else:
             _validate_shap_tensor(shap_tensors)
-            shap_tensors = [shap_tensors]
+            if n_outputs == 1:
+                shap_tensors = [shap_tensors]
+            else:
+                print(f"shape of SHAP tensor: {shap_tensors.shape}; converting to list")
+                shap_tensors = [
+                    shap_tensors[..., i] for i in range(shap_tensors.shape[-1])
+                ]
 
         if n_outputs != len(shap_tensors):
             raise AssertionError(

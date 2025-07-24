@@ -241,7 +241,11 @@ class ClassifierShapCalculator(
         shap_tensors: npt.NDArray[np.float64] | list[npt.NDArray[np.float64]],
         n_outputs: int,
     ) -> list[npt.NDArray[np.float64]]:
-        if n_outputs == 1 and isinstance(shap_tensors, list) and len(shap_tensors) == 2:
+        if (
+            n_outputs == 1
+            and isinstance(shap_tensors, np.ndarray)
+            and shap_tensors.shape[-1] == 2
+        ):
             # in the binary classification case, we will proceed with SHAP values
             # for class 0 only, since values for class 1 will just be the same
             # values times (*-1)  (the opposite delta probability)
@@ -249,8 +253,8 @@ class ClassifierShapCalculator(
             # to ensure the values are returned as expected above,
             # and no information of class 1 is discarded, assert the
             # following:
-            if not np.allclose(shap_tensors[0], -shap_tensors[1]):
-                _raw_shap_tensor_totals = shap_tensors[0] + shap_tensors[1]
+            if not np.allclose(shap_tensors[..., 0], -shap_tensors[..., 1]):
+                _raw_shap_tensor_totals = shap_tensors[..., 0] + shap_tensors[..., 1]
                 log.warning(
                     "shap values of binary classifiers should add up to 0.0 "
                     "for each observation and feature, but total shap values range "
@@ -259,7 +263,7 @@ class ClassifierShapCalculator(
                 )
 
             return super()._convert_shap_tensors_to_list(
-                shap_tensors=shap_tensors[1], n_outputs=1
+                shap_tensors=shap_tensors[..., 1], n_outputs=1
             )
         else:
             return super()._convert_shap_tensors_to_list(
