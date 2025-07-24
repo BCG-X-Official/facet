@@ -101,7 +101,7 @@ def test_bootstrap_cv_with_sk_learn() -> None:
 
     parameters = {
         "criterion": ("gini", "entropy"),
-        "max_features": ["sqrt", "auto", "log2"],
+        "max_features": ["sqrt", "log2"],
     }
     cl2 = GridSearchCV(tree.DecisionTreeClassifier(), parameters, cv=my_cv)
     cl2.fit(iris.data, iris.target)
