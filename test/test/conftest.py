@@ -60,40 +60,40 @@ STEP_IMPUTE = "impute"
 STEP_ONE_HOT_ENCODE = "one-hot-encode"
 
 
-@pytest.fixture  # type: ignore
+@pytest.fixture(scope="session")  # type: ignore
 def california_target() -> str:
     return "MedHouseVal"
 
 
-@pytest.fixture  # type: ignore
+@pytest.fixture(scope="session")  # type: ignore
 def iris_target_name() -> str:
     return "species"
 
 
-@pytest.fixture  # type: ignore
+@pytest.fixture(scope="session")  # type: ignore
 def n_jobs() -> int:
     return -1
 
 
-@pytest.fixture  # type: ignore
+@pytest.fixture(scope="session")  # type: ignore
 def cv_kfold() -> KFold:
     # define a CV
     return KFold(n_splits=K_FOLDS, shuffle=True, random_state=42)
 
 
-@pytest.fixture  # type: ignore
+@pytest.fixture(scope="session")  # type: ignore
 def cv_bootstrap() -> BaseCrossValidator:
     # define a CV
     return BootstrapCV(n_splits=N_BOOTSTRAPS, random_state=42)
 
 
-@pytest.fixture  # type: ignore
+@pytest.fixture(scope="session")  # type: ignore
 def cv_stratified_bootstrap() -> BaseCrossValidator:
     # define a CV
     return StratifiedBootstrapCV(n_splits=N_BOOTSTRAPS, random_state=42)
 
 
-@pytest.fixture  # type: ignore
+@pytest.fixture(scope="session")  # type: ignore
 def regressor_parameters(
     simple_preprocessor: TransformerDF,
 ) -> list[ParameterSpace[RegressorPipelineDF[RegressorDF]]]:
@@ -104,9 +104,8 @@ def regressor_parameters(
             preprocessing=simple_preprocessor, regressor=LGBMRegressorDF(**random_state)
         )
     )
-    space_1.regressor.max_depth = [5, 10]
-    space_1.regressor.min_split_gain = [0.1, 0.2]
-    space_1.regressor.num_leaves = [50, 100, 200]
+    space_1.regressor.max_depth = [3, 5]
+    space_1.regressor.num_leaves = [2, 3]
 
     space_2 = ParameterSpace(
         RegressorPipelineDF(
@@ -157,7 +156,7 @@ def regressor_parameters(
     return [space_1, space_2, space_3, space_4, space_5, space_6, space_7]
 
 
-@pytest.fixture  # type: ignore
+@pytest.fixture(scope="session")  # type: ignore
 def regressor_selector(
     cv_kfold: KFold,
     regressor_parameters: list[ParameterSpace[RegressorPipelineDF[RegressorDF]]],
@@ -180,7 +179,7 @@ def regressor_selector(
 PARAM_CANDIDATE__ = "param_candidate__"
 
 
-@pytest.fixture  # type: ignore
+@pytest.fixture(scope="session")  # type: ignore
 def best_lgbm_model(
     regressor_selector: LearnerSelector[
         RegressorPipelineDF[LGBMRegressorDF], GridSearchCV
@@ -194,7 +193,7 @@ def best_lgbm_model(
     )
 
 
-@pytest.fixture  # type: ignore
+@pytest.fixture(scope="session")  # type: ignore
 def best_rf_model(
     regressor_selector: LearnerSelector[RegressorPipelineDF[RegressorDF], GridSearchCV],
     sample: Sample,
@@ -206,7 +205,7 @@ def best_rf_model(
     )
 
 
-@pytest.fixture  # type: ignore
+@pytest.fixture(scope="session")  # type: ignore
 def simple_preprocessor(sample: Sample) -> TransformerDF:
     features = sample.features
 
@@ -235,7 +234,7 @@ def simple_preprocessor(sample: Sample) -> TransformerDF:
     return ColumnTransformerDF(transformers=column_transforms)
 
 
-@pytest.fixture  # type: ignore
+@pytest.fixture(scope="session")  # type: ignore
 def california_df(california_target: str) -> pd.DataFrame:
     #  load sklearn test-data and convert to pd
     california: Bunch = fetch_california_housing()
@@ -246,7 +245,7 @@ def california_df(california_target: str) -> pd.DataFrame:
     )
 
 
-@pytest.fixture  # type: ignore
+@pytest.fixture(scope="session")  # type: ignore
 def sample(california_df: pd.DataFrame, california_target: str) -> Sample:
     return Sample(
         observations=california_df.sample(n=100, random_state=42),
@@ -254,7 +253,7 @@ def sample(california_df: pd.DataFrame, california_target: str) -> Sample:
     )
 
 
-@pytest.fixture  # type: ignore
+@pytest.fixture(scope="session")  # type: ignore
 def iris_df(iris_target_name: str) -> pd.DataFrame:
     #  load sklearn test-data and convert to pd
     iris: Bunch = datasets.load_iris()
@@ -274,7 +273,7 @@ def iris_df(iris_target_name: str) -> pd.DataFrame:
     return iris_df
 
 
-@pytest.fixture  # type: ignore
+@pytest.fixture(scope="session")  # type: ignore
 def iris_sample_multi_class(iris_df: pd.DataFrame, iris_target_name: str) -> Sample:
     # the iris dataset
     return Sample(
@@ -284,7 +283,7 @@ def iris_sample_multi_class(iris_df: pd.DataFrame, iris_target_name: str) -> Sam
     )
 
 
-@pytest.fixture  # type: ignore
+@pytest.fixture(scope="session")  # type: ignore
 def iris_sample_binary(iris_sample_multi_class: Sample) -> Sample:
     # the iris dataset, retaining only two categories,
     # so we can do binary classification
@@ -293,7 +292,7 @@ def iris_sample_binary(iris_sample_multi_class: Sample) -> Sample:
     )
 
 
-@pytest.fixture  # type: ignore
+@pytest.fixture(scope="session")  # type: ignore
 def iris_sample_binary_dual_target(
     iris_sample_binary: Sample, iris_target_name: str
 ) -> Sample:

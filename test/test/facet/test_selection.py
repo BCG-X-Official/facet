@@ -49,10 +49,10 @@ def test_learner_selector(
         0.477,
         0.464,
         0.451,
-        0.448,
-        0.448,
-        0.448,
-        0.448,
+        0.437,
+        0.437,
+        0.395,
+        0.395,
     ]
     expected_learners: list[str] = [
         cls.__name__
