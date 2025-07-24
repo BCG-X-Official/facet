@@ -459,16 +459,22 @@ class LearnerSelector(
     ) -> Callable[[EstimatorDF, pd.DataFrame, pd.Series], float] | None:
         scoring = self.scoring
 
+        scorer: Callable[[BaseEstimator, pd.DataFrame, pd.Series], float]
+
         if scoring is None:
             return None
 
-        elif isinstance(scoring, str):
-            scorer: Callable[[BaseEstimator, pd.DataFrame, pd.Series], float] = (
-                get_scorer(scoring)
-            )
+        elif callable(scoring):
+            scorer = scoring
+
+        else:
+            # if scoring is not callable, it must be a string
+            scorer = get_scorer(scoring)
 
         # noinspection PyPep8Naming
-        def _scorer_fn(estimator: EstimatorDF, X: pd.DataFrame, y: pd.Series) -> float:
+        def _scorer_fn(
+            estimator: EstimatorDF, X: pd.DataFrame, y: pd.Series, **kwargs: Any
+        ) -> float:
             while isinstance(estimator, CandidateEstimatorDF):
                 assert estimator.candidate is not None, "estimator candidate is set"
                 estimator = estimator.candidate
@@ -478,7 +484,7 @@ class LearnerSelector(
                     X = estimator.preprocessing.transform(X=X)
                 estimator = estimator.final_estimator
 
-            return scorer(estimator.native_estimator, X, y)
+            return scorer(estimator.native_estimator, X, y, **kwargs)
 
         return _scorer_fn
 
