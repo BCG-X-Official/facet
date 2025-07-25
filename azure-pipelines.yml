@@ -230,7 +230,7 @@ stages:
               BUILD_SYSTEM: 'conda'
               PKG_DEPENDENCIES: 'max'
             minimum_dependencies_tox:
-              FACET_V_PYTHON_BUILD: '=3.9'
+              FACET_V_PYTHON_BUILD: '=3.10'
               BUILD_SYSTEM: 'tox'
               PKG_DEPENDENCIES: 'min'
             maximum_dependencies_tox:
@@ -316,7 +316,7 @@ stages:
               BUILD_SYSTEM: 'conda'
               PKG_DEPENDENCIES: 'default'
             minimum_dependencies_conda:
-              FACET_V_PYTHON_BUILD: '=3.9'
+              FACET_V_PYTHON_BUILD: '=3.10'
               BUILD_SYSTEM: 'conda'
               PKG_DEPENDENCIES: 'min'
             maximum_dependencies_conda:
@@ -328,7 +328,7 @@ stages:
               BUILD_SYSTEM: 'tox'
               PKG_DEPENDENCIES: 'default'
             minimum_dependencies_tox:
-              FACET_V_PYTHON_BUILD: '=3.9'
+              FACET_V_PYTHON_BUILD: '=3.10'
               BUILD_SYSTEM: 'tox'
               PKG_DEPENDENCIES: 'min'
             maximum_dependencies_tox:
