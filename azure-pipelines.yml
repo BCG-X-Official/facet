@@ -590,7 +590,7 @@ stages:
             displayName: 'Publish to PyPi'
             condition: and(eq(variables['source_is_release_branch'], 'True'), eq(variables['conda_published'], 'True'))
             env:
-              FLIT_PASSWORD: $(pypi_sklearndf_uploads)
+              FLIT_PASSWORD: $(pypi_facet_uploads)
               FLIT_USERNAME: __token__
 
           - task: GitHubRelease@1
