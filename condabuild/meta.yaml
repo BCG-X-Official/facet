@@ -1,3 +1,8 @@
+#
+# This file is deprecated and replaced by recipe.yaml, for use with rattler.
+# Keeping it for reference.
+#
+
 package:
   name: gamma-facet
   version: {{ environ.get('FACET_BUILD_FACET_VERSION') }}
@@ -35,16 +40,20 @@ test:
     - facet.validation
     - facet.simulation
   requires:
-    - pytest=5.2.*
-    # additional requirements of sklearndf
-    - boruta_py      {{ environ.get('FACET_V_BORUTA') }}
-    - lightgbm       {{ environ.get('FACET_V_LIGHTGBM') }}
-    - scikit-learn   {{ environ.get('FACET_V_SCIKIT_LEARN') }}
+    - pytest ~= 8.1
+    # we always need lightgbm for testing; version spec is optional
+    - lightgbm       {{ environ.get('FACET_V_LIGHTGBM', '') }}
+    # optional libraries of sklearndf, needed for testing
+    - boruta_py      {{ environ.get('FACET_V_BORUTA', '[False]') }}
+    - scikit-learn   {{ environ.get('FACET_V_SCIKIT_LEARN', '[False]') }}
     # additional requirements of gamma-pytools
-    - joblib         {{ environ.get('FACET_V_JOBLIB') }}
-    - typing_inspect {{ environ.get('FACET_V_TYPING_INSPECT') }}
+    - joblib         {{ environ.get('FACET_V_JOBLIB', '[False]') }}
+    - typing_inspect {{ environ.get('FACET_V_TYPING_INSPECT', '[False]') }}
     # additional requirements of shap
-    - ipython        {{ environ.get('FACET_V_IPYTHON') }}
+    - ipython        {{ environ.get('FACET_V_IPYTHON', '[False]') }}
+    - numba          {{ environ.get('FACET_V_NUMBA', '[False]') }}
+    # additional requirements for testing
+    - zipp           {{ environ.get('FACET_V_ZIPP', '[False]') }}
   commands:
     - conda list
     - python -c 'import facet;
@@ -54,13 +63,13 @@ test:
     - pytest -vs test
 
 about:
-  home: https://github.com/BCG-Gamma/facet
+  home: https://github.com/BCG-X-Official/facet
   license: Apache Software License v2.0
   license_file: LICENSE
   description: |
     FACET is an open source library for human-explainable AI. It combines sophisticated
     model inspection and model-based simulation to enable better explanations of
     your supervised machine learning models.
-  dev_url: https://github.com/BCG-Gamma/facet
-  doc_url: https://bcg-gamma.github.io/facet/
-  doc_source_url: https://github.com/BCG-Gamma/facet/blob/develop/README.rst
+  dev_url: https://github.com/BCG-X-Official/facet
+  doc_url: https://bcg-x-official.github.io/facet/
+  doc_source_url: https://github.com/BCG-X-Official/facet/blob/develop/README.rst

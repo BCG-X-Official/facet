@@ -4,8 +4,9 @@ Core implementation of :mod:`facet.selection.base`
 
 import logging
 from abc import ABCMeta, abstractmethod
-from typing import Any, Dict, Generic, List, Optional, Sequence, TypeVar, Union
+from typing import Any, Generic, TypeVar
 
+import numpy.typing as npt
 import pandas as pd
 from scipy import stats
 
@@ -25,7 +26,7 @@ __all__ = [
 # Type constants
 #
 
-ParameterDict = Dict[str, Union[List[Any], stats.rv_continuous, stats.rv_discrete]]
+ParameterDict = dict[str, list[Any] | stats.rv_continuous | stats.rv_discrete]
 
 
 #
@@ -33,7 +34,7 @@ ParameterDict = Dict[str, Union[List[Any], stats.rv_continuous, stats.rv_discret
 #
 
 T_CandidateEstimatorDF = TypeVar("T_CandidateEstimatorDF", bound="CandidateEstimatorDF")
-T_Estimator = TypeVar("T_Estimator", bound=EstimatorDF)
+T_Estimator = TypeVar("T_Estimator", covariant=True, bound=EstimatorDF)
 
 
 #
@@ -50,7 +51,7 @@ __tracker = AllTracker(globals())
 
 class BaseParameterSpace(HasExpressionRepr, Generic[T_Estimator], metaclass=ABCMeta):
     """
-    A collection of parameters spanning a parameter space for hyper-parameter
+    A collection of parameters spanning a parameter space for hyperparameter
     optimization.
     """
 
@@ -70,7 +71,7 @@ class BaseParameterSpace(HasExpressionRepr, Generic[T_Estimator], metaclass=ABCM
         return self._estimator
 
     @property
-    def parameters(self) -> Union[List[ParameterDict], ParameterDict]:
+    def parameters(self) -> list[ParameterDict] | ParameterDict:
         """
         The parameter choices (as lists) or distributions (from :mod:`scipy.stats`)
         that constitute this parameter space.
@@ -82,8 +83,8 @@ class BaseParameterSpace(HasExpressionRepr, Generic[T_Estimator], metaclass=ABCM
 
     @abstractmethod
     def get_parameters(
-        self, prefix: Optional[str] = None
-    ) -> Union[List[ParameterDict], ParameterDict]:
+        self, prefix: str | None = None
+    ) -> list[ParameterDict] | ParameterDict:
         """
         Generate a dictionary of parameter choices and distributions,
         or a list of such dictionaries, compatible with `scikit-learn`'s CV search API
@@ -93,7 +94,7 @@ class BaseParameterSpace(HasExpressionRepr, Generic[T_Estimator], metaclass=ABCM
         :param prefix: an optional prefix to prepend to all parameter names in the
             resulting dictionary, separated by two underscore characters (``__``) as
             per `scikit-learn`'s convention for hierarchical parameter names
-        :return: a dictionary mapping parameter names to parameter
+        :return: one or more dictionaries, each mapping parameter names to parameter
             choices (as lists) or distributions (from :mod:`scipy.stats`)
         """
         pass
@@ -118,16 +119,16 @@ class CandidateEstimatorDF(ClassifierDF, RegressorDF, TransformerDF):
     PARAM_CANDIDATE_NAME = "candidate_name"
 
     #: The currently selected estimator candidate.
-    candidate: Optional[Union[ClassifierDF, RegressorDF, TransformerDF]]
+    candidate: ClassifierDF | RegressorDF | TransformerDF | None
 
     #: The name of the candidate, used for more readable summary reports
     #: of model tuning results.
-    candidate_name: Optional[str]
+    candidate_name: str | None
 
     def __init__(
         self,
-        candidate: Optional[Union[ClassifierDF, RegressorDF, TransformerDF]] = None,
-        candidate_name: Optional[str] = None,
+        candidate: ClassifierDF | RegressorDF | TransformerDF | None = None,
+        candidate_name: str | None = None,
     ) -> None:
         """
         :param candidate: the current estimator candidate; usually not specified on
@@ -141,7 +142,7 @@ class CandidateEstimatorDF(ClassifierDF, RegressorDF, TransformerDF):
         self.candidate = candidate
         self.candidate_name = candidate_name
 
-    def _get_candidate(self) -> Union[ClassifierDF, RegressorDF, TransformerDF]:
+    def _get_candidate(self) -> ClassifierDF | RegressorDF | TransformerDF:
         # get the estimator candidate; raise an attribute error if it has not been set
 
         if self.candidate is None:
@@ -149,51 +150,52 @@ class CandidateEstimatorDF(ClassifierDF, RegressorDF, TransformerDF):
         else:
             return self.candidate
 
-    @property
-    def classes_(self) -> Sequence[Any]:
-        """[see superclass]"""
-        return self._get_candidate().classes_
+    def _get_classes(self) -> npt.NDArray[Any] | list[npt.NDArray[Any]]:
+        return self._get_candidate()._get_classes()
 
     # noinspection PyPep8Naming
     def predict_proba(
-        self, X: pd.DataFrame, **predict_params: Any
-    ) -> Union[pd.DataFrame, List[pd.DataFrame]]:
+        self, X: pd.Series | pd.DataFrame, **predict_params: Any
+    ) -> pd.DataFrame | list[pd.DataFrame]:
         """[see superclass]"""
         return self._get_candidate().predict_proba(X, **predict_params)
 
     # noinspection PyPep8Naming
     def predict_log_proba(
-        self, X: pd.DataFrame, **predict_params: Any
-    ) -> Union[pd.DataFrame, List[pd.DataFrame]]:
+        self, X: pd.Series | pd.DataFrame, **predict_params: Any
+    ) -> pd.DataFrame | list[pd.DataFrame]:
         """[see superclass]"""
         return self._get_candidate().predict_log_proba(X, **predict_params)
 
     # noinspection PyPep8Naming
     def decision_function(
-        self, X: pd.DataFrame, **predict_params: Any
-    ) -> Union[pd.Series, pd.DataFrame]:
+        self, X: pd.Series | pd.DataFrame, **predict_params: Any
+    ) -> pd.Series | pd.DataFrame:
         """[see superclass]"""
         return self._get_candidate().decision_function(X, **predict_params)
 
     # noinspection PyPep8Naming
     def score(
-        self, X: pd.DataFrame, y: pd.Series, sample_weight: Optional[pd.Series] = None
+        self,
+        X: pd.Series | pd.DataFrame,
+        y: pd.Series,
+        sample_weight: pd.Series | None = None,
     ) -> float:
         """[see superclass]"""
         return self._get_candidate().score(X, y, sample_weight)
 
     # noinspection PyPep8Naming
     def predict(
-        self, X: pd.DataFrame, **predict_params: Any
-    ) -> Union[pd.Series, pd.DataFrame]:
+        self, X: pd.Series | pd.DataFrame, **predict_params: Any
+    ) -> pd.Series | pd.DataFrame:
         """[see superclass]"""
         return self._get_candidate().predict(X, **predict_params)
 
     # noinspection PyPep8Naming
     def fit(
         self: T_CandidateEstimatorDF,
-        X: pd.DataFrame,
-        y: Optional[Union[pd.Series, pd.DataFrame]] = None,
+        X: pd.Series | pd.DataFrame,
+        y: pd.Series | pd.DataFrame | None = None,
         **fit_params: Any,
     ) -> T_CandidateEstimatorDF:
         """[see superclass]"""
@@ -206,12 +208,12 @@ class CandidateEstimatorDF(ClassifierDF, RegressorDF, TransformerDF):
         return self.candidate is not None and self.candidate.is_fitted
 
     # noinspection PyPep8Naming
-    def inverse_transform(self, X: pd.DataFrame) -> pd.DataFrame:
+    def inverse_transform(self, X: pd.Series | pd.DataFrame) -> pd.DataFrame:
         """[see superclass]"""
         return self._get_candidate().inverse_transform(X)
 
     # noinspection PyPep8Naming
-    def transform(self, X: pd.DataFrame) -> pd.DataFrame:
+    def transform(self, X: pd.Series | pd.DataFrame) -> pd.DataFrame:
         """[see superclass]"""
         return self._get_candidate().transform(X)
 
@@ -222,6 +224,9 @@ class CandidateEstimatorDF(ClassifierDF, RegressorDF, TransformerDF):
 
     def _get_features_in(self) -> pd.Index:
         return self._get_candidate().feature_names_in_
+
+    def _get_outputs(self) -> list[str] | None:
+        return self._get_candidate()._get_outputs()
 
     def _get_n_outputs(self) -> int:
         return self._get_candidate().n_outputs_

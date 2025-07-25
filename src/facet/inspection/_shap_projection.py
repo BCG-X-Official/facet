@@ -3,20 +3,21 @@ Projection of SHAP contribution scores (i.e, SHAP importance) of all possible
 pairings of features onto the SHAP importance vector in partitions of for synergy,
 redundancy, and independence.
 """
+
 import logging
 from abc import ABCMeta, abstractmethod
-from typing import Optional, Tuple, TypeVar
+from typing import Any, TypeVar
 
 import numpy as np
+import numpy.typing as npt
+import pandas as pd
 
 from pytools.api import AllTracker, inheritdoc
+from pytools.fit import FittableMixin, fitted_only
 
-from ._shap import ShapCalculator
-from ._shap_global_explanation import (
+from ._shap_context import (
     AffinityMatrix,
     ShapContext,
-    ShapGlobalExplainer,
-    ShapInteractionGlobalExplainer,
     ShapInteractionValueContext,
     ShapValueContext,
     cov,
@@ -26,6 +27,7 @@ from ._shap_global_explanation import (
     sqrt,
     transpose,
 )
+from .shap import ShapCalculator
 
 log = logging.getLogger(__name__)
 
@@ -42,6 +44,7 @@ _PAIRWISE_PARTIAL_SUMMATION = False
 #
 
 T_Self = TypeVar("T_Self")
+T_Projector = TypeVar("T_Projector", bound="ShapProjector")
 
 #
 # Ensure all symbols introduced below are included in __all__
@@ -56,33 +59,111 @@ __tracker = AllTracker(globals())
 
 
 @inheritdoc(match="""[see superclass]""")
-class ShapProjector(ShapGlobalExplainer, metaclass=ABCMeta):
+class ShapProjector(FittableMixin[ShapCalculator[Any]], metaclass=ABCMeta):
     """
     Base class for global pairwise model explanations based on SHAP vector projection.
+
+    Derives feature association as a global metric of SHAP values for multiple
+    observations.
     """
 
     def __init__(self) -> None:
         super().__init__()
-        self.association_: Optional[AffinityMatrix] = None
+        self.feature_index_: pd.Index | None = None
+        self.association_: AffinityMatrix | None = None
 
-    def association(self, absolute: bool, symmetrical: bool) -> np.ndarray:
+    @property
+    def is_fitted(self) -> bool:
         """[see superclass]"""
+        return self.feature_index_ is not None
 
-        self.ensure_fitted()
+    def fit(  # type: ignore[override]
+        self: T_Projector,
+        shap_calculator: ShapCalculator[Any],
+        *,
+        sample_weight: pd.Series | None = None,
+        **fit_params: Any,
+    ) -> T_Projector:
+        """
+        Calculate the SHAP decomposition for the shap values produced by the
+        given SHAP calculator.
+
+        :param shap_calculator: the fitted calculator from which to get the shap values
+        :param sample_weight: optional sample weights to apply for the global
+            explanations; the index must match the index of the features used to
+            fit the SHAP calculator
+        """
+
+        self._reset_fit()
+
+        if len(fit_params) > 0:
+            raise ValueError(
+                f'unsupported fit parameters: {", ".join(fit_params.values())}'
+            )
+
+        self._calculate(
+            self._get_context(
+                shap_calculator=shap_calculator, sample_weight=sample_weight
+            )
+        )
+
+        self.feature_index_ = shap_calculator.feature_index_
+
+        return self
+
+    @fitted_only
+    def association(self, absolute: bool, symmetrical: bool) -> npt.NDArray[np.float64]:
+        """
+        The association matrix for all feature pairs.
+
+        Raises an error if this global explainer has not been fitted.
+
+        :param absolute: if ``False``, return relative association as a percentage of
+            total feature importance;
+            if ``True``, return absolute association as a portion of feature importance
+        :param symmetrical: if ``False``, return an asymmetrical matrix
+            quantifying unilateral association of the features represented by rows
+            with the features represented by columns;
+            if ``True``, return a symmetrical matrix quantifying mutual association
+        :returns: the matrix as an array of shape (n_outputs, n_features, n_features)
+        """
+
         assert self.association_ is not None
         return self.association_.get_values(symmetrical=symmetrical, absolute=absolute)
 
-    def _fit(self, shap_calculator: ShapCalculator) -> None:
-        self._reset_fit()
-        self._calculate(self._get_context(shap_calculator=shap_calculator))
+    def to_frames(self, matrix: npt.NDArray[np.float64]) -> list[pd.DataFrame]:
+        """
+        Transforms one or more affinity matrices into a list of data frames.
+
+        :param matrix: an array of shape `(n_outputs, n_features, n_features)`,
+            representing one or more affinity matrices
+        :return: a list of `n_outputs` data frames of shape `(n_features, n_features)`
+        """
+        assert self.feature_index_ is not None, "explainer is fitted"
+        index = self.feature_index_
+
+        n_features = len(index)
+        assert matrix.ndim == 3
+        assert matrix.shape[1:] == (n_features, n_features)
+
+        return [
+            pd.DataFrame(
+                m,
+                index=index,
+                columns=index,
+            )
+            for m in matrix
+        ]
 
     def _reset_fit(self) -> None:
         # revert status of this object to not fitted
-        super()._reset_fit()
+        self.feature_index_ = None
         self.association_ = None
 
     @abstractmethod
-    def _get_context(self, shap_calculator: ShapCalculator) -> ShapContext:
+    def _get_context(
+        self, shap_calculator: ShapCalculator[Any], sample_weight: pd.Series | None
+    ) -> ShapContext:
         pass
 
     @abstractmethod
@@ -127,17 +208,23 @@ class ShapVectorProjector(ShapProjector):
     onto a feature's main SHAP vector.
     """
 
-    def _get_context(self, shap_calculator: ShapCalculator) -> ShapContext:
-        return ShapValueContext(shap_calculator=shap_calculator)
+    def _get_context(
+        self, shap_calculator: ShapCalculator[Any], sample_weight: pd.Series | None
+    ) -> ShapContext:
+        return ShapValueContext(
+            shap_calculator=shap_calculator, sample_weight=sample_weight
+        )
 
     def _calculate(self, context: ShapContext) -> None:
         # calculate association matrices for each SHAP context, then aggregate
         self.association_ = self._calculate_association(context)
 
 
-@inheritdoc(match="""[see superclass]""")
-class ShapInteractionVectorProjector(ShapProjector, ShapInteractionGlobalExplainer):
+class ShapInteractionVectorProjector(ShapProjector):
     """
+    Derives feature association, synergy, and redundancy as a global metric of SHAP
+    interaction values for multiple observations.
+
     Decomposes SHAP interaction scores (i.e, SHAP importance) of all possible pairings
     of features into additive components for synergy, redundancy, and independence.
     This is achieved through scalar projection of redundancy and synergy vectors
@@ -151,25 +238,55 @@ class ShapInteractionVectorProjector(ShapProjector, ShapInteractionGlobalExplain
     def __init__(self) -> None:
         super().__init__()
 
-        self.synergy_: Optional[AffinityMatrix] = None
-        self.redundancy_: Optional[AffinityMatrix] = None
+        self.synergy_: AffinityMatrix | None = None
+        self.redundancy_: AffinityMatrix | None = None
 
-    def synergy(self, symmetrical: bool, absolute: bool) -> np.ndarray:
-        """[see superclass]"""
+    @fitted_only
+    def synergy(self, symmetrical: bool, absolute: bool) -> npt.NDArray[np.float64]:
+        """
+        The synergy matrix for all feature pairs.
 
-        self.ensure_fitted()
+        Raises an error if this global explainer has not been fitted.
+
+        :param absolute: if ``False``, return relative synergy as a percentage of
+            total feature importance;
+            if ``True``, return absolute synergy as a portion of feature importance
+        :param symmetrical: if ``False``, return an asymmetrical matrix
+            quantifying unilateral synergy of the features represented by rows
+            with the features represented by columns;
+            if ``True``, return a symmetrical matrix quantifying mutual synergy
+        :returns: the matrix as an array of shape (n_outputs, n_features, n_features)
+        """
+
         assert self.synergy_ is not None, "Projector is fitted"
         return self.synergy_.get_values(symmetrical=symmetrical, absolute=absolute)
 
-    def redundancy(self, symmetrical: bool, absolute: bool) -> np.ndarray:
-        """[see superclass]"""
+    @fitted_only
+    def redundancy(self, symmetrical: bool, absolute: bool) -> npt.NDArray[np.float64]:
+        """
+        The redundancy matrix for all feature pairs.
 
-        self.ensure_fitted()
+        Raises an error if this global explainer has not been fitted.
+
+        :param absolute: if ``False``, return relative redundancy as a percentage of
+            total feature importance;
+            if ``True``, return absolute redundancy as a portion of feature importance
+        :param symmetrical: if ``False``, return an asymmetrical matrix
+            quantifying unilateral redundancy of the features represented by rows
+            with the features represented by columns;
+            if ``True``, return a symmetrical matrix quantifying mutual redundancy
+        :returns: the matrix as an array of shape (n_outputs, n_features, n_features)
+        """
+
         assert self.redundancy_ is not None, "Projector is fitted"
         return self.redundancy_.get_values(symmetrical=symmetrical, absolute=absolute)
 
-    def _get_context(self, shap_calculator: ShapCalculator) -> ShapContext:
-        return ShapInteractionValueContext(shap_calculator=shap_calculator)
+    def _get_context(
+        self, shap_calculator: ShapCalculator[Any], sample_weight: pd.Series | None
+    ) -> ShapContext:
+        return ShapInteractionValueContext(
+            shap_calculator=shap_calculator, sample_weight=sample_weight
+        )
 
     def _calculate(self, context: ShapContext) -> None:
         # calculate association, synergy, and redundancy matrices for the SHAP context
@@ -182,7 +299,7 @@ class ShapInteractionVectorProjector(ShapProjector, ShapInteractionGlobalExplain
     @staticmethod
     def _calculate_synergy_redundancy(
         context: ShapContext,
-    ) -> Tuple[AffinityMatrix, AffinityMatrix]:
+    ) -> tuple[AffinityMatrix, AffinityMatrix]:
         p_i = context.p_i
         var_p_i = context.var_p_i
         assert context.p_ij is not None, "Projector has interaction values enabled"
@@ -283,10 +400,12 @@ class ShapInteractionVectorProjector(ShapProjector, ShapInteractionGlobalExplain
 
         # Calculate relative synergy and redundancy (ranging from 0.0 to 1.0),
         # as a symmetric and an asymmetric measure.
+        #
         # For the symmetric case, we ensure perfect symmetry by removing potential
-        # round-off errors
+        # round-off errors.
+        #
         # NOTE: we do not store independence, so technically it could be removed from
-        # the code above
+        # the code above.
 
         std_p_i = sqrt(var_p_i)
         return (

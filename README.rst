@@ -1,6 +1,4 @@
-.. image:: sphinx/source/_static/Gamma_Facet_Logo_RGB_LB.svg
-
-|
+.. image:: sphinx/source/_images/Gamma_Facet_Logo_RGB_LB.svg
 
 FACET is an open source library for human-explainable AI.
 It combines sophisticated model inspection and model-based simulation to enable better 
@@ -38,8 +36,8 @@ FACET is composed of the following key components:
 |                 | tried and tested pipelining paradigm with new capabilities for model  |
 |                 | selection, inspection, and simulation.                                |
 |                 | FACET also introduces                                                 |
-|                 | `sklearndf <https://github.com/BCG-Gamma/sklearndf>`__                |
-|                 | [`documentation <https://bcg-gamma.github.io/sklearndf/index.html>`__]|
+|                 | `sklearndf <https://github.com/BCG-X-Official/sklearndf>`__                |
+|                 | [`documentation <https://bcg-x-official.github.io/sklearndf/index.html>`__]|
 |                 | an augmented version of *scikit-learn* with enhanced support for      |
 |                 | *pandas* data frames that ensures end-to-end traceability of features.|
 +-----------------+-----------------------------------------------------------------------+
@@ -56,21 +54,37 @@ Installation
 ------------
 
 FACET supports both PyPI and Anaconda.
-
+We recommend to install FACET into a dedicated environment.
 
 Anaconda
 ~~~~~~~~
 
-.. code-block:: RST
+.. code-block:: sh
 
-    conda install gamma-facet -c bcg_gamma -c conda-forge
+    conda create -n facet
+    conda activate facet
+    conda install -c bcg_gamma -c conda-forge gamma-facet
 
 
 Pip
 ~~~
 
-.. code-block:: RST
+macOS and Linux:
+^^^^^^^^^^^^^^^^
 
+.. code-block:: sh
+
+    python -m venv facet
+    source facet/bin/activate
+    pip install gamma-facet
+
+Windows:
+^^^^^^^^
+
+.. code-block:: dosbatch
+
+    python -m venv facet
+    facet\Scripts\activate.bat
     pip install gamma-facet
 
 
@@ -80,10 +94,10 @@ Quickstart
 The following quickstart guide provides a minimal example workflow to get you
 up and running with FACET.
 For additional tutorials and the API reference,
-see the `FACET documentation <https://bcg-gamma.github.io/facet/>`__.
+see the `FACET documentation <https://bcg-x-official.github.io/facet/docs-version/2-0>`__.
 
 Changes and additions to new versions are summarized in the
-`release notes <https://bcg-gamma.github.io/facet/release_notes.html>`__.
+`release notes <https://bcg-x-official.github.io/facet/docs-version/2-0/release_notes.html>`__.
 
 
 Enhanced Machine Learning Workflow
@@ -103,13 +117,13 @@ In this quickstart we will train a Random Forest regressor using 10 repeated
 *sklearndf* we can create a *pandas* DataFrame compatible workflow. However,
 FACET provides additional enhancements to keep track of our feature matrix
 and target vector using a sample object (`Sample`) and easily compare
-hyperparameter configurations and even multiple learners with the `LearnerRanker`.
+hyperparameter configurations and even multiple learners with the `LearnerSelector`.
 
 .. code-block:: Python
 
     # standard imports
     import pandas as pd
-    from sklearn.model_selection import RepeatedKFold
+    from sklearn.model_selection import RepeatedKFold, GridSearchCV
 
     # some helpful imports from sklearndf
     from sklearndf.pipeline import RegressorPipelineDF
@@ -117,7 +131,7 @@ hyperparameter configurations and even multiple learners with the `LearnerRanker
 
     # relevant FACET imports
     from facet.data import Sample
-    from facet.selection import LearnerRanker, LearnerGrid
+    from facet.selection import LearnerSelector, ParameterSpace
 
     # declaring url with data
     data_url = 'https://web.stanford.edu/~hastie/Papers/LARS/diabetes.data'
@@ -144,29 +158,27 @@ hyperparameter configurations and even multiple learners with the `LearnerRanker
         regressor=RandomForestRegressorDF(n_estimators=200, random_state=42)
     )
 
-    # define grid of models which are "competing" against each other
-    rnd_forest_grid = [
-        LearnerGrid(
-            pipeline=rnd_forest_reg,
-            learner_parameters={
-                "min_samples_leaf": [8, 11, 15],
-                "max_depth": [4, 5, 6],
-            }
-        ),
-    ]
+    # define parameter space for models which are "competing" against each other
+    rnd_forest_ps = ParameterSpace(rnd_forest_reg)
+    rnd_forest_ps.regressor.min_samples_leaf = [8, 11, 15]
+    rnd_forest_ps.regressor.max_depth = [4, 5, 6]
 
     # create repeated k-fold CV iterator
     rkf_cv = RepeatedKFold(n_splits=5, n_repeats=10, random_state=42)
 
-    # rank your candidate models by performance (default is mean CV score - 2*SD)
-    ranker = LearnerRanker(
-        grids=rnd_forest_grid, cv=rkf_cv, n_jobs=-3
-    ).fit(sample=diabetes_sample)
+    # rank your candidate models by performance
+    selector = LearnerSelector(
+        searcher_type=GridSearchCV,
+        parameter_space=rnd_forest_ps,
+        cv=rkf_cv,
+        n_jobs=-3,
+        scoring="r2"
+    ).fit(diabetes_sample)
 
     # get summary report
-    ranker.summary_report()
+    selector.summary_report()
 
-.. image:: sphinx/source/_static/ranker_summary.png
+.. image:: sphinx/source/_images/ranker_summary.png
    :width: 600
 
 We can see based on this minimal workflow that a value of 11 for minimum
@@ -233,8 +245,10 @@ The key global metrics for each pair of features in a model are:
 
     # fit the model inspector
     from facet.inspection import LearnerInspector
-    inspector = LearnerInspector(n_jobs=-3)
-    inspector.fit(crossfit=ranker.best_model_crossfit_)
+    inspector = LearnerInspector(
+        pipeline=selector.best_estimator_,
+        n_jobs=-3
+    ).fit(diabetes_sample)
 
 **Synergy**
 
@@ -245,7 +259,7 @@ The key global metrics for each pair of features in a model are:
     synergy_matrix = inspector.feature_synergy_matrix()
     MatrixDrawer(style="matplot%").draw(synergy_matrix, title="Synergy Matrix")
 
-.. image:: sphinx/source/_static/synergy_matrix.png
+.. image:: sphinx/source/_images/synergy_matrix.png
     :width: 600
 
 For any feature pair (A, B), the first feature (A) is the row, and the second
@@ -273,7 +287,7 @@ to 27% synergy of `LDL` with `LTG` for predicting progression after one year.
     redundancy_matrix = inspector.feature_redundancy_matrix()
     MatrixDrawer(style="matplot%").draw(redundancy_matrix, title="Redundancy Matrix")
 
-.. image:: sphinx/source/_static/redundancy_matrix.png
+.. image:: sphinx/source/_images/redundancy_matrix.png
     :width: 600
 
 
@@ -312,7 +326,7 @@ Let's look at the example for redundancy.
     redundancy = inspector.feature_redundancy_linkage()
     DendrogramDrawer().draw(data=redundancy, title="Redundancy Dendrogram")
 
-.. image:: sphinx/source/_static/redundancy_dendrogram.png
+.. image:: sphinx/source/_images/redundancy_dendrogram.png
     :width: 600
 
 Based on the dendrogram we can see that the feature pairs (`LDL`, `TC`)
@@ -322,7 +336,7 @@ removing `TCH`, and one of `TC` or `LDL` to further simplify the model and obtai
 reduced set of independent features.
 
 Please see the
-`API reference <https://bcg-gamma.github.io/facet/apidoc/facet.html>`__
+`API reference <https://bcg-x-official.github.io/facet/apidoc/facet.html>`__
 for more detail.
 
 
@@ -337,22 +351,17 @@ we do the following for the simulation:
   of that partition.
 - For each partition, the simulator creates an artificial copy of the original sample
   assuming the variable to be simulated has the same value across all observations –
-  which is the value representing the partition. Using the best `LearnerCrossfit`
-  acquired from the ranker, the simulator now re-predicts all targets using the models
-  trained for all folds and determines the average uplift of the target variable
+  which is the value representing the partition. Using the best estimator
+  acquired from the selector, the simulator now re-predicts all targets using the models
+  trained for full sample and determines the uplift of the target variable
   resulting from this.
 - The FACET `SimulationDrawer` allows us to visualise the result; both in a
   *matplotlib* and a plain-text style.
-
-Finally, because FACET can use bootstrap cross validation, we can create a crossfit
-from our previous `LearnerRanker` best model to perform the simulation, so we can
-quantify the uncertainty by using bootstrap confidence intervals.
 
 .. code-block:: Python
 
     # FACET imports
     from facet.validation import BootstrapCV
-    from facet.crossfit import LearnerCrossfit
     from facet.simulation import UnivariateUpliftSimulator
     from facet.data.partition import ContinuousRangePartitioner
     from facet.simulation.viz import SimulationDrawer
@@ -360,16 +369,12 @@ quantify the uncertainty by using bootstrap confidence intervals.
     # create bootstrap CV iterator
     bscv = BootstrapCV(n_splits=1000, random_state=42)
 
-    # create a bootstrap CV crossfit for simulation using best model
-    boot_crossfit = LearnerCrossfit(
-        pipeline=ranker.best_model_,
-        cv=bscv,
-        n_jobs=-3,
-        verbose=False,
-    ).fit(sample=diabetes_sample)
-
     SIM_FEAT = "BMI"
-    simulator = UnivariateUpliftSimulator(crossfit=boot_crossfit, n_jobs=-3)
+    simulator = UnivariateUpliftSimulator(
+        model=selector.best_estimator_,
+        sample=diabetes_sample,
+        n_jobs=-3
+    )
 
     # split the simulation range into equal sized partitions
     partitioner = ContinuousRangePartitioner()
@@ -380,7 +385,7 @@ quantify the uncertainty by using bootstrap confidence intervals.
     # visualise results
     SimulationDrawer().draw(data=simulation, title=SIM_FEAT)
 
-.. image:: sphinx/source/_static/simulation_output.png
+.. image:: sphinx/source/_images/simulation_output.png
 
 We would conclude from the figure that higher values of `BMI` are associated with
 an increase in disease progression after one year, and that for a `BMI` of 28
@@ -394,21 +399,21 @@ FACET is stable and is being supported long-term.
 
 Contributions to FACET are welcome and appreciated.
 For any bug reports or feature requests/enhancements please use the appropriate
-`GitHub form <https://github.com/BCG-Gamma/facet/issues>`_, and if you wish to do so,
+`GitHub form <https://github.com/BCG-X-Official/facet/issues>`_, and if you wish to do so,
 please open a PR addressing the issue.
 
 We do ask that for any major changes please discuss these with us first via an issue or
 using our team email: FacetTeam@bcg.com.
 
 For further information on contributing please see our
-`contribution guide <https://bcg-gamma.github.io/facet/contribution_guide.html>`__.
+`contribution guide <https://bcg-x-official.github.io/facet/contribution_guide.html>`__.
 
 
 License
 -------
 
 FACET is licensed under Apache 2.0 as described in the
-`LICENSE <https://github.com/BCG-Gamma/facet/blob/develop/LICENSE>`_ file.
+`LICENSE <https://github.com/BCG-X-Official/facet/blob/develop/LICENSE>`_ file.
 
 
 Acknowledgements
@@ -428,7 +433,7 @@ BCG GAMMA
 ---------
 
 If you would like to know more about the team behind FACET please see the
-`about us <https://bcg-gamma.github.io/facet/about_us.html>`__ page.
+`about us <https://bcg-x-official.github.io/facet/about_us.html>`__ page.
 
 We are always on the lookout for passionate and talented data scientists to join the
 BCG GAMMA team. If you would like to know more you can find out about
@@ -436,15 +441,15 @@ BCG GAMMA team. If you would like to know more you can find out about
 or have a look at
 `career opportunities <https://www.bcg.com/en-gb/beyond-consulting/bcg-gamma/careers>`_.
 
-.. |pipe| image:: sphinx/source/_static/icons/pipe_icon.png
+.. |pipe| image:: sphinx/source/_images/icons/pipe_icon.png
    :width: 100px
    :class: facet_icon
 
-.. |inspect| image:: sphinx/source/_static/icons/inspect_icon.png
+.. |inspect| image:: sphinx/source/_images/icons/inspect_icon.png
    :width: 100px
    :class: facet_icon
 
-.. |sim| image:: sphinx/source/_static/icons/sim_icon.png
+.. |sim| image:: sphinx/source/_images/icons/sim_icon.png
    :width: 100px
    :class: facet_icon
 
@@ -458,7 +463,7 @@ or have a look at
 .. |pypi| image:: https://badge.fury.io/py/gamma-facet.svg
     :target: https://pypi.org/project/gamma-facet/
 
-.. |azure_build| image:: https://dev.azure.com/gamma-facet/facet/_apis/build/status/BCG-Gamma.facet?repoName=BCG-Gamma%2Ffacet&branchName=develop
+.. |azure_build| image:: https://dev.azure.com/gamma-facet/facet/_apis/build/status/BCG-X-Official.facet?repoName=BCG-X-Official%2Ffacet&branchName=develop
    :target: https://dev.azure.com/gamma-facet/facet/_build?definitionId=7&_a=summary
 
 .. |azure_code_cov| image:: https://img.shields.io/azure-devops/coverage/gamma-facet/facet/7/2.0.x
@@ -471,7 +476,7 @@ or have a look at
    :target: https://github.com/psf/black
 
 .. |made_with_sphinx_doc| image:: https://img.shields.io/badge/Made%20with-Sphinx-1f425f.svg
-   :target: https://bcg-gamma.github.io/facet/index.html
+   :target: https://bcg-x-official.github.io/facet/index.html
 
 .. |license_badge| image:: https://img.shields.io/badge/License-Apache%202.0-olivegreen.svg
    :target: https://opensource.org/licenses/Apache-2.0

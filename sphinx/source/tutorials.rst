@@ -53,26 +53,6 @@ the code for yourself by downloading the notebook
 
    tutorial/Classification_with_Facet
 
-.. _boot-sim-summary-tut:
-
-Simulation Tutorial: Feature Simulation on Drill Operations
-*************************************************************
-
-Introduce yourself to the FACET's simulation module. This tutorial aims to provide
-a step by step explanation about the simulation capabilities of FACET and
-is based on the introductory Water Drilling Tutorial above.
-
-Start exploring the tutorial below by clicking on the section links, deepen your
-understanding by reading the associated
-`GAMMAscope article <https://medium.com/bcggamma/gamma-facet-a-new-approach-for-universal-explanations-of-machine-learning-models-b566877e7812>`__, and
-download the notebook for yourself
-:download:`here <tutorial/Model_simulation_deep_dive.ipynb>`.
-
-
-.. toctree::
-    :maxdepth: 1
-
-    tutorial/Model_simulation_deep_dive
 
 .. _scikit-learn-summary-tut:
 
@@ -80,7 +60,7 @@ Generating Standard Scikit-learn Classifier Performance Summaries
 *******************************************************************
 
 Find quick clear examples of how to generate standard *scikit-learn* performance
-summaries for the best identified classifier from your FACET `LearnerRanker()`.
+summaries for the best identified classifier from your FACET `LearnerSelector()`.
 
 Start exploring the tutorial by clicking on the section links below, and run
 the code for yourself by downloading the notebook

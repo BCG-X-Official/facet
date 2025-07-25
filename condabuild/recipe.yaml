@@ -1,0 +1,87 @@
+schema_version: 1
+
+package:
+  name: gamma-facet
+  version: ${{ env.get('FACET_BUILD_FACET_VERSION') }}
+
+source:
+  path: ..
+
+build:
+  noarch: python
+  script: flit install --deps none
+
+requirements:
+  host:
+    - flit      =3
+    - numpy     ${{ env.get('FACET_V_NUMPY') }}
+    - pip       >=25
+    - python    =3.10
+  run:
+    - gamma-pytools   ${{ env.get('FACET_V_GAMMA_PYTOOLS') }}
+    - matplotlib-base ${{ env.get('FACET_V_MATPLOTLIB') }}
+    - numpy           ${{ env.get('FACET_V_NUMPY') }}
+    - packaging       ${{ env.get('FACET_V_PACKAGING') }}
+    - pandas          ${{ env.get('FACET_V_PANDAS') }}
+    - python          ${{ env.get('FACET_V_PYTHON') }}
+    - scipy           ${{ env.get('FACET_V_SCIPY') }}
+    - shap            ${{ env.get('FACET_V_SHAP') }}
+    - sklearndf       ${{ env.get('FACET_V_SKLEARNDF') }}
+
+tests:
+  - python:
+      imports:
+        - facet
+        - facet.data
+        - facet.inspection
+        - facet.selection
+        - facet.validation
+        - facet.simulation
+  - requirements:
+      run:
+        - python          ${{ env.get('FACET_V_PYTHON') }}
+        - pip
+        - pytest          ~= 8.1
+        # we always need lightgbm for testing; version spec is optional
+        - lightgbm        ${{ env.get('FACET_V_LIGHTGBM', default='') }}
+        # optional libraries of sklearndf, needed for testing
+        - if: env.exists('FACET_V_SCIKIT_LEARN')
+          then:
+            - scikit-learn ${{ env.get('FACET_V_SCIKIT_LEARN') }}
+        # additional requirements of gamma-pytools
+        - if: env.exists('FACET_V_JOBLIB')
+          then:
+            - joblib ${{ env.get('FACET_V_JOBLIB') }}
+        - if: env.exists('FACET_V_TYPING_INSPECT')
+          then:
+            - typing_inspect ${{ env.get('FACET_V_TYPING_INSPECT') }}
+        # additional requirements of shap
+        - if: env.exists('FACET_V_IPYTHON')
+          then:
+            - ipython ${{ env.get('FACET_V_IPYTHON') }}
+        - if: env.exists('FACET_V_NUMBA')
+          then:
+            - numba ${{ env.get('FACET_V_NUMBA') }}
+        # additional requirements for testing
+        - if: env.exists('FACET_V_ZIPP')
+          then:
+            - zipp ${{ env.get('FACET_V_ZIPP') }}
+    script: |
+      if [[ -n "${FACET_V_BORUTA}" ]]; then
+        pip install "Boruta ${FACET_V_BORUTA}"
+      fi
+      conda list
+      python -c 'import facet; import os; assert facet.__version__ == os.environ["PKG_VERSION"]'
+      cd "${FACET_PATH}/facet"
+      pytest -vs test
+
+about:
+  license: OSL-2.0
+  license_file: LICENSE
+  description: |
+    FACET is an open source library for human-explainable AI. It combines sophisticated
+    model inspection and model-based simulation to enable better explanations of
+    your supervised machine learning models.
+  homepage: https://github.com/BCG-X-Official/facet
+  repository: https://github.com/BCG-X-Official/facet
+  documentation: https://bcg-x-official.github.io/facet/

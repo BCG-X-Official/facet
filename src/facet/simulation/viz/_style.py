@@ -4,9 +4,11 @@ Drawing styles for simulation results.
 
 import logging
 from abc import ABCMeta, abstractmethod
-from typing import Any, Sequence, Tuple, TypeVar, Union
+from collections.abc import Sequence
+from typing import Any, TextIO, TypeVar, cast
 
 from matplotlib.axes import Axes
+from matplotlib.transforms import Bbox
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from mpl_toolkits.axes_grid1.axes_divider import AxesDivider
 from mpl_toolkits.axes_grid1.axes_size import Scaled
@@ -47,7 +49,7 @@ class SimulationStyle(DrawingStyle, metaclass=ABCMeta):
     def draw_uplift(
         self,
         feature_name: str,
-        output_name: Union[str, Sequence[str]],
+        output_name: str | Sequence[str],
         output_unit: str,
         outputs_mean: Sequence[float],
         outputs_lower_bound: Sequence[float],
@@ -95,7 +97,7 @@ class SimulationStyle(DrawingStyle, metaclass=ABCMeta):
         pass
 
     @staticmethod
-    def _legend(confidence_level: float) -> Tuple[str, ...]:
+    def _legend(confidence_level: float) -> tuple[str, ...]:
         # generate a triple with legend names for the min percentile, mean, and max
         # percentile
         tail_percentile = (100.0 - confidence_level * 100.0) / 2
@@ -126,7 +128,7 @@ class SimulationMatplotStyle(MatplotStyle, SimulationStyle):
     def draw_uplift(
         self,
         feature_name: str,
-        output_name: Union[str, Sequence[str]],
+        output_name: str | Sequence[str],
         output_unit: str,
         outputs_mean: Sequence[float],
         outputs_lower_bound: Sequence[float],
@@ -174,9 +176,8 @@ class SimulationMatplotStyle(MatplotStyle, SimulationStyle):
             bottom=True,
             labelrotation=45 if is_categorical_feature else 0,
         )
-        if is_categorical_feature or True:
-            ax.set_xticks(x)
-            ax.set_xticklabels(labels=partitions)
+        ax.set_xticks(x)
+        ax.set_xticklabels(labels=partitions)
 
         # remove the top and right spines
         for pos in ["top", "right"]:
@@ -204,23 +205,44 @@ class SimulationMatplotStyle(MatplotStyle, SimulationStyle):
             y_min, y_max = main_ax.get_ylim()
             uplift_height = abs(y_max - y_min)
 
-            def _x_axis_height() -> float:
-                _, axis_below_size_pixels = main_ax.get_xaxis().get_text_heights(
+            def _x_axis_height(padding: float) -> float:
+                # get the lower bound of the x axis in data space: this is the upper
+                # bound of the space below the x axis
+                x_axis_vertical_position: float = main_ax.get_ylim()[0]
+
+                # get the upper and lower vertical bound of the tick labels
+                xaxis_tight_bbox: Bbox | None = main_ax.get_xaxis().get_tightbbox(
                     self.get_renderer()
                 )
-                ((_, y0), (_, y1)) = main_ax.transData.inverted().transform(
-                    ((0, 0), (0, axis_below_size_pixels))
+                if xaxis_tight_bbox is None:
+                    return 0.0
+
+                x_axis_labels_lower: float
+                x_axis_labels_upper: float
+                (
+                    x_axis_labels_lower,
+                    x_axis_labels_upper,
+                ) = main_ax.transData.inverted().transform(
+                    xaxis_tight_bbox.get_points()
+                )[
+                    :, 1
+                ]
+
+                # calculate the height, and pad it with the multiple of the tick
+                # label height provided in arg padding
+                return (
+                    max(x_axis_vertical_position - x_axis_labels_lower, 0)
+                    + (x_axis_labels_upper - x_axis_labels_lower) * padding
                 )
-                return abs(y1 - y0)
 
             # calculate the height of the x axis in data space; add additional padding
-            axis_below_size_data = _x_axis_height() * 1.2
+            axis_below_size_data = _x_axis_height(padding=0.5)
 
             # create the axes divider, then use it to append the new sub-axes at the
             # bottom while leaving sufficient padding in-between to accommodate the
             # main axes' x axis labels
             divider: AxesDivider = make_axes_locatable(main_ax)
-            return divider.append_axes(
+            sub_axes: Axes = divider.append_axes(
                 position="bottom",
                 size=Scaled(
                     uplift_height * SimulationMatplotStyle.__HISTOGRAM_SIZE_RATIO
@@ -231,6 +253,7 @@ class SimulationMatplotStyle(MatplotStyle, SimulationStyle):
                     * (1 + SimulationMatplotStyle.__HISTOGRAM_SIZE_RATIO)
                 ),
             )
+            return sub_axes
 
         ax = _make_sub_axes()
 
@@ -243,10 +266,10 @@ class SimulationMatplotStyle(MatplotStyle, SimulationStyle):
         # reduce the horizontal margin such that half a bar is to the left of the
         # leftmost tick mark (but the tick mark stays aligned with the main
         # simulation chart)
-        x_margin, _ = ax.margins()
+        x_margin, _ = cast(tuple[float, float], ax.margins())
         ax.set_xmargin(
             max(
-                0,
+                0.0,
                 (width_bars / 2 - x_margin * (n_partitions - 1))
                 / (width_bars - (n_partitions - 1)),
             )
@@ -293,6 +316,12 @@ class SimulationReportStyle(SimulationStyle, TextStyle):
     Renders simulation results as a text report.
     """
 
+    # defined in superclass, repeated here for Sphinx
+    out: TextIO
+
+    # defined in superclass, repeated here for Sphinx
+    width: int
+
     # general format wih sufficient space for potential sign and "e" notation
     __NUM_PRECISION = 3
     __NUM_WIDTH = __NUM_PRECISION + 6
@@ -311,13 +340,13 @@ class SimulationReportStyle(SimulationStyle, TextStyle):
     __FREQUENCY_FORMAT = f"{__FREQUENCY_WIDTH}g"
 
     @staticmethod
-    def _num_format(heading: str):
+    def _num_format(heading: str) -> str:
         return f"> {len(heading)}.{SimulationReportStyle.__NUM_PRECISION}g"
 
     def draw_uplift(
         self,
         feature_name: str,
-        output_name: Union[str, Sequence[str]],
+        output_name: str | Sequence[str],
         output_unit: str,
         outputs_mean: Sequence[float],
         outputs_lower_bound: Sequence[float],

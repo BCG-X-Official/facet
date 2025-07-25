@@ -1,9 +1,10 @@
 """
 Implementation of the sample balancer.
 """
+
 import abc
 from abc import ABCMeta
-from typing import Any, Dict, List, Optional, Union
+from typing import Any
 
 import numpy as np
 import pandas as pd
@@ -45,9 +46,9 @@ class SampleBalancer(metaclass=ABCMeta):
         *,
         oversample: bool = True,
         undersample: bool = True,
-        random_state: Optional[
-            Union[int, np.random.Generator, np.random.BitGenerator]
-        ] = None,
+        random_state: None | (
+            int | np.random.Generator | np.random.BitGenerator
+        ) = None,
     ) -> None:
         """
         :param oversample: Whether to use oversampling.
@@ -76,7 +77,7 @@ class SampleBalancer(metaclass=ABCMeta):
             series with sample weights for each observation
         :return: the balanced sample
         """
-        if isinstance(sample.target_name, List):
+        if isinstance(sample.target_name, list):
             raise ValueError(
                 "sample to balance should be single target, but has multiple"
             )
@@ -119,15 +120,17 @@ class SampleBalancer(metaclass=ABCMeta):
 
                 return _observation_idx.iloc[idx_target]
 
-            observations_by_label: Dict[Any, pd.Series] = dict(
+            observations_by_label: dict[Any, pd.Series] = dict(
                 tuple(observation_idx.groupby(sample.target.values))
             )
 
             new_observation_idx_sr = pd.concat(
                 [
-                    _sample(observations_by_label[label], factor)
-                    if not round(factor, 6) == 1.0
-                    else observation_idx[sample.target == label]
+                    (
+                        _sample(observations_by_label[label], factor)
+                        if not round(factor, 6) == 1.0
+                        else observation_idx[sample.target == label]
+                    )
                     for label, factor in (self._sampling_factors.iteritems())
                 ],
                 axis=0,
@@ -255,7 +258,7 @@ class UniformSampleBalancer(SampleBalancer):
         balance_pct: float = 0.5,
         oversample: bool = True,
         undersample: bool = True,
-        random_state: Optional[int] = None,
+        random_state: int | None = None,
     ) -> None:
         """
         :param balance_pct: Share of observations to be uniformly rebalanced. Expected
@@ -318,10 +321,10 @@ class TargetFrequencySampleBalancer(SampleBalancer):
     def __init__(
         self,
         *,
-        target_frequencies: Dict[Any, float],
+        target_frequencies: dict[Any, float],
         oversample: bool = True,
         undersample: bool = True,
-        random_state: Optional[int] = None,
+        random_state: int | None = None,
     ) -> None:
         """
         :param target_frequencies: Dictionary assigning desired target frequencies to

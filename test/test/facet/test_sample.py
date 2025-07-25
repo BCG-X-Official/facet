@@ -1,3 +1,5 @@
+from typing import Any, cast
+
 import numpy as np
 import pandas as pd
 import pytest
@@ -7,43 +9,45 @@ from pandas.testing import assert_frame_equal
 from facet.data import Sample
 
 
-def test_sample_init(boston_df: pd.DataFrame, boston_target: str) -> None:
+def test_sample_init(california_df: pd.DataFrame, california_target: str) -> None:
     # check handling of various invalid inputs
 
     # 1. sample parameter
     # 1.1 None
     with pytest.raises(ValueError):
         # noinspection PyTypeChecker
-        Sample(observations=None, target_name=boston_target)
+        Sample(observations=None, target_name=california_target)
 
     # 1.2 not a DF
     with pytest.raises(ValueError):
         # noinspection PyTypeChecker
-        Sample(observations=[], target_name=boston_target)
+        Sample(observations=[], target_name=california_target)
 
-    # 2. no features and no target specified
+    # 2. no valid target specified
     with pytest.raises(TypeError):
-        # noinspection PyTypeChecker
-        Sample(observations=boston_df, target_name=None)
+        Sample(
+            observations=california_df,
+            target_name=None,  # type: ignore[arg-type]
+        )
 
     # store list of feature columns:
-    f_columns = list(boston_df.columns)
-    f_columns.remove(boston_target)
+    f_columns = list(california_df.columns)
+    f_columns.remove(california_target)
 
     # 2.1 invalid feature column specified
     with pytest.raises(KeyError):
         f_columns_invalid = f_columns.copy()
         f_columns_invalid.append("doesnt_exist")
         Sample(
-            observations=boston_df,
+            observations=california_df,
             feature_names=f_columns_invalid,
-            target_name=boston_target,
+            target_name=california_target,
         )
 
     # 2.2 invalid target column specified
     with pytest.raises(KeyError):
         Sample(
-            observations=boston_df,
+            observations=california_df,
             feature_names=f_columns,
             target_name="doesnt_exist",
         )
@@ -51,43 +55,44 @@ def test_sample_init(boston_df: pd.DataFrame, boston_target: str) -> None:
     # 3. column is target and also feature
     with pytest.raises(KeyError):
         f_columns_invalid = f_columns.copy()
-        f_columns_invalid.append(boston_target)
+        f_columns_invalid.append(california_target)
         Sample(
-            observations=boston_df,
+            observations=california_df,
             feature_names=f_columns_invalid,
-            target_name=boston_target,
+            target_name=california_target,
         )
 
     # 4. weight column is not defined
     with pytest.raises(KeyError):
         Sample(
-            observations=boston_df,
-            target_name=boston_target,
+            observations=california_df,
+            target_name=california_target,
             weight_name="doesnt_exist",
         )
 
 
-def test_sample(boston_df: pd.DataFrame, boston_target: str) -> None:
+def test_sample(california_df: pd.DataFrame, california_target: str) -> None:
     # define various assertions we want to test:
-    def run_assertions(sample: Sample):
-        assert sample.target.name == boston_target
-        assert sample.weight.name == boston_target
-        assert boston_target not in sample.feature_names
-        assert len(sample.feature_names) == len(boston_df.columns) - 1
+    def run_assertions(sample: Sample) -> None:
+        assert sample.target.name == california_target
+        assert sample.weight is not None
+        assert sample.weight.name == california_target
+        assert california_target not in sample.feature_names
+        assert len(sample.feature_names) == len(california_df.columns) - 1
 
-        assert type(sample.target) == pd.Series
-        assert type(sample.weight) == pd.Series
-        assert type(sample.features) == pd.DataFrame
+        assert isinstance(sample.target, pd.Series)
+        assert isinstance(sample.weight, pd.Series)
+        assert isinstance(sample.features, pd.DataFrame)
 
         assert len(sample.target) == len(sample.features)
 
     # test explicit setting of all fields
-    feature_columns = list(boston_df.drop(columns=boston_target).columns)
+    feature_columns = list(california_df.drop(columns=california_target).columns)
     s = Sample(
-        observations=boston_df,
-        target_name=boston_target,
+        observations=california_df,
+        target_name=california_target,
         feature_names=feature_columns,
-        weight_name=boston_target,
+        weight_name=california_target,
     )
 
     # _rank_learners the checks on s:
@@ -95,7 +100,9 @@ def test_sample(boston_df: pd.DataFrame, boston_target: str) -> None:
 
     # test implicit setting of features by only giving the target
     s2 = Sample(
-        observations=boston_df, target_name=boston_target, weight_name=boston_target
+        observations=california_df,
+        target_name=california_target,
+        weight_name=california_target,
     )
 
     # _rank_learners the checks on s2:
@@ -103,7 +110,7 @@ def test_sample(boston_df: pd.DataFrame, boston_target: str) -> None:
 
     # test numerical features
     features_numerical = s.features.select_dtypes(np.number).columns
-    assert "LSTAT" in features_numerical
+    assert "HouseAge" in features_numerical
 
     # test categorical features
     features_non_numerical = s.features.select_dtypes(object).columns
@@ -120,7 +127,7 @@ def test_sample(boston_df: pd.DataFrame, boston_target: str) -> None:
     )
 
     # test length
-    assert len(s) == len(boston_df)
+    assert len(s) == len(california_df)
 
     # test select_observations
     sub = s2.resample(iloc=[0, 1, 2, 3])
@@ -138,8 +145,21 @@ def test_sample(boston_df: pd.DataFrame, boston_target: str) -> None:
     # global python environment variable PYTHONHASHSEED
     parallel = Parallel(n_jobs=-3)
 
-    def get_column(sample: Sample):
-        return list(sample.features.columns)
+    def get_column(sample: Sample) -> list[Any]:
+        return cast(list[Any], sample.features.columns.to_list())
 
     columns1, columns2 = parallel(delayed(get_column)(sample) for sample in [s, s])
     assert columns1 == columns2
+
+    # creating a sample with non-string column names raises an exception
+    with pytest.raises(
+        TypeError,
+        match=(
+            "^all column names in arg observations must be strings, "
+            "but included: int$"
+        ),
+    ):
+        Sample(
+            california_df.set_axis([*california_df.columns[1:], 1], axis=1),
+            target_name=california_target,
+        )

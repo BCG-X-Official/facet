@@ -1,5 +1,7 @@
-""" Test facet.data.SampleBalancer"""
+"""Test facet.data.SampleBalancer"""
+
 import logging
+from collections.abc import Iterator
 
 import numpy as np
 import pandas as pd
@@ -16,13 +18,13 @@ from facet.data import (
 log = logging.getLogger(__name__)
 
 
-@pytest.fixture(scope="module", autouse=True)
-def set_numpy_seed() -> None:
+@pytest.fixture(scope="module", autouse=True)  # type: ignore[misc]
+def set_numpy_seed() -> Iterator[None]:
     np.random.seed(42)
     yield
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="module")  # type: ignore[misc]
 def binary_target() -> Sample:
     return Sample(
         observations=pd.DataFrame(
@@ -37,7 +39,7 @@ def binary_target() -> Sample:
     )
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="module")  # type: ignore[misc]
 def multiclass_target() -> Sample:
     return Sample(
         observations=pd.DataFrame(
@@ -77,7 +79,9 @@ def test_init_argument_validation() -> None:
         match="target frequency value for label a should be float but is a str",
     ):
         # noinspection PyTypeChecker
-        TargetFrequencySampleBalancer(target_frequencies={"a": "a"})
+        TargetFrequencySampleBalancer(
+            target_frequencies={"a": "a"}  # type: ignore[dict-item]
+        )
 
 
 def test_frequency_validation(multiclass_target: Sample) -> None:

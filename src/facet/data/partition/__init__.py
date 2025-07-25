@@ -6,4 +6,5 @@ as inputs for simulations.
 - Categorical partitions are the categories themselves.
 
 """
+
 from ._partition import *

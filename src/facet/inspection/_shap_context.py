@@ -3,25 +3,25 @@ Projection of SHAP contribution scores (i.e, SHAP importance) of all possible
 pairings of features onto the SHAP importance vector in partitions of for synergy,
 redundancy, and independence.
 """
+
+from __future__ import annotations
+
 import logging
-from abc import ABCMeta, abstractmethod
-from typing import Any, List, Optional, TypeVar, Union
+from typing import Any, cast
 
 import numpy as np
+import numpy.typing as npt
 import pandas as pd
 
-from pytools.api import AllTracker, inheritdoc
-from pytools.fit import FittableMixin
+from pytools.api import AllTracker
 
-from ._shap import ShapCalculator
+from .shap import ShapCalculator
 
 log = logging.getLogger(__name__)
 
 __all__ = [
     "AffinityMatrix",
     "ShapContext",
-    "ShapGlobalExplainer",
-    "ShapInteractionGlobalExplainer",
     "ShapInteractionValueContext",
     "ShapValueContext",
     "cov",
@@ -40,12 +40,11 @@ __all__ = [
 #: (sequential) summation will be negligible in practice
 _PAIRWISE_PARTIAL_SUMMATION = False
 
-#
-# Type variables
-#
 
-T_ShapGlobalExplainer = TypeVar("T_ShapGlobalExplainer", bound="ShapGlobalExplainer")
-T_ShapCalculator = TypeVar("T_ShapCalculator", bound=ShapCalculator)
+#
+# Constants
+#
+ASSERTION__CALCULATOR_IS_FITTED = "calculator is fitted"
 
 
 #
@@ -66,9 +65,9 @@ class AffinityMatrix:
     """
 
     # shape: (2, 2, n_outputs, n_features, n_features)
-    _matrices: np.ndarray
+    _matrices: npt.NDArray[np.float64]
 
-    def __init__(self, matrices: np.ndarray) -> None:
+    def __init__(self, matrices: npt.NDArray[np.float64]) -> None:
         shape = matrices.shape
         assert len(shape) == 5
         assert shape[:2] == (2, 2)
@@ -78,8 +77,8 @@ class AffinityMatrix:
 
     @staticmethod
     def from_relative_affinity(
-        affinity_rel_ij: np.ndarray, std_p_i: np.ndarray
-    ) -> "AffinityMatrix":
+        affinity_rel_ij: npt.NDArray[np.float64], std_p_i: npt.NDArray[np.float64]
+    ) -> AffinityMatrix:
         """
         :param affinity_rel_ij: the affinity matrix from which to create all variations,
             shaped `(n_outputs, n_features, n_features)`
@@ -127,150 +126,16 @@ class AffinityMatrix:
             ).reshape((2, 2, *affinity_rel_ij.shape))
         )
 
-    def get_values(self, symmetrical: bool, absolute: bool) -> np.ndarray:
+    def get_values(self, symmetrical: bool, absolute: bool) -> npt.NDArray[np.float64]:
         """
         Get the matrix matching the given criteria.
         :param symmetrical: if ``True``, get the symmetrical version of the matrix
         :param absolute: if ``True``, get the absolute version of the matrix
         :return: the affinity matrix
         """
-        return self._matrices[int(symmetrical), int(absolute)]
-
-
-@inheritdoc(match="""[see superclass]""")
-class ShapGlobalExplainer(FittableMixin[ShapCalculator], metaclass=ABCMeta):
-    """
-    Derives feature association as a global metric of SHAP values for multiple
-    observations.
-    """
-
-    def __init__(self) -> None:
-        super().__init__()
-        self.feature_index_: Optional[pd.Index] = None
-
-    @property
-    def is_fitted(self) -> bool:
-        """[see superclass]"""
-        return self.feature_index_ is not None
-
-    def fit(  # type: ignore[override]
-        # todo: remove 'type: ignore' once mypy correctly infers return type
-        self: T_ShapGlobalExplainer,
-        shap_calculator: ShapCalculator,
-        **fit_params: Any,
-    ) -> T_ShapGlobalExplainer:
-        """
-        Calculate the SHAP decomposition for the shap values produced by the
-        given SHAP calculator.
-
-        :param shap_calculator: the fitted calculator from which to get the shap values
-        """
-
-        try:
-            if len(fit_params) > 0:
-                raise ValueError(
-                    f'unsupported fit parameters: {", ".join(fit_params.values())}'
-                )
-
-            self._fit(shap_calculator=shap_calculator)
-
-            self.feature_index_ = shap_calculator.feature_index_
-
-        except Exception:
-            # reset fit in case we get an exception along the way
-            self._reset_fit()
-            raise
-
-        return self
-
-    @abstractmethod
-    def association(self, absolute: bool, symmetrical: bool) -> np.ndarray:
-        """
-        The association matrix for all feature pairs.
-
-        Raises an error if this global explainer has not been fitted.
-
-        :param absolute: if ``False``, return relative association as a percentage of
-            total feature importance;
-            if ``True``, return absolute association as a portion of feature importance
-        :param symmetrical: if ``False``, return an asymmetrical matrix
-            quantifying unilateral association of the features represented by rows
-            with the features represented by columns;
-            if ``True``, return a symmetrical matrix quantifying mutual association
-        :returns: the matrix as an array of shape (n_outputs, n_features, n_features)
-        """
-
-    def to_frames(self, matrix: np.ndarray) -> List[pd.DataFrame]:
-        """
-        Transforms one or more affinity matrices into a list of data frames.
-
-        :param matrix: an array of shape `(n_outputs, n_features, n_features)`,
-            representing one or more affinity matrices
-        :return: a list of `n_outputs` data frames of shape `(n_features, n_features)`
-        """
-        assert self.feature_index_ is not None, "explainer is fitted"
-        index = self.feature_index_
-
-        n_features = len(index)
-        assert matrix.ndim == 3
-        assert matrix.shape[1:] == (n_features, n_features)
-
-        return [
-            pd.DataFrame(
-                m,
-                index=index,
-                columns=index,
-            )
-            for m in matrix
-        ]
-
-    @abstractmethod
-    def _fit(self, shap_calculator: ShapCalculator) -> None:
-        pass
-
-    def _reset_fit(self) -> None:
-        self.feature_index_ = None
-
-
-class ShapInteractionGlobalExplainer(ShapGlobalExplainer, metaclass=ABCMeta):
-    """
-    Derives feature association, synergy, and redundancy as a global metric of SHAP
-    interaction values for multiple observations.
-    """
-
-    @abstractmethod
-    def synergy(self, symmetrical: bool, absolute: bool) -> np.ndarray:
-        """
-        The synergy matrix for all feature pairs.
-
-        Raises an error if this global explainer has not been fitted.
-
-        :param absolute: if ``False``, return relative synergy as a percentage of
-            total feature importance;
-            if ``True``, return absolute synergy as a portion of feature importance
-        :param symmetrical: if ``False``, return an asymmetrical matrix
-            quantifying unilateral synergy of the features represented by rows
-            with the features represented by columns;
-            if ``True``, return a symmetrical matrix quantifying mutual synergy
-        :returns: the matrix as an array of shape (n_outputs, n_features, n_features)
-        """
-
-    @abstractmethod
-    def redundancy(self, symmetrical: bool, absolute: bool) -> np.ndarray:
-        """
-        The redundancy matrix for all feature pairs.
-
-        Raises an error if this global explainer has not been fitted.
-
-        :param absolute: if ``False``, return relative redundancy as a percentage of
-            total feature importance;
-            if ``True``, return absolute redundancy as a portion of feature importance
-        :param symmetrical: if ``False``, return an asymmetrical matrix
-            quantifying unilateral redundancy of the features represented by rows
-            with the features represented by columns;
-            if ``True``, return a symmetrical matrix quantifying mutual redundancy
-        :returns: the matrix as an array of shape (n_outputs, n_features, n_features)
-        """
+        return cast(
+            npt.NDArray[np.float64], self._matrices[int(symmetrical), int(absolute)]
+        )
 
 
 #
@@ -278,7 +143,7 @@ class ShapInteractionGlobalExplainer(ShapGlobalExplainer, metaclass=ABCMeta):
 #
 
 
-def ensure_last_axis_is_fast(array: np.ndarray) -> np.ndarray:
+def ensure_last_axis_is_fast(array: npt.NDArray[np.float64]) -> npt.NDArray[np.float64]:
     """
     For future implementations, ensure that the last axis of the given array is `fast`
     to allow for `partial summation`.
@@ -295,7 +160,7 @@ def ensure_last_axis_is_fast(array: np.ndarray) -> np.ndarray:
     return array
 
 
-def sqrt(array: np.ndarray) -> np.ndarray:
+def sqrt(array: npt.NDArray[np.float64]) -> npt.NDArray[np.float64]:
     """
     Get the square root of each element in the given array.
 
@@ -310,7 +175,7 @@ def sqrt(array: np.ndarray) -> np.ndarray:
     return np.sqrt(np.clip(array, 0, None))
 
 
-def make_symmetric(m: np.ndarray) -> np.ndarray:
+def make_symmetric(m: npt.NDArray[np.float64]) -> npt.NDArray[np.float64]:
     """
     Enforce matrix symmetry by transposing the `feature x feature` matrix for each
     output and averaging it with the original matrix.
@@ -322,7 +187,7 @@ def make_symmetric(m: np.ndarray) -> np.ndarray:
     return (m + transpose(m)) / 2
 
 
-def transpose(m: np.ndarray, ndim: int = 3) -> np.ndarray:
+def transpose(m: npt.NDArray[np.float64], ndim: int = 3) -> npt.NDArray[np.float64]:
     """
     Transpose the `feature x feature` matrix for each output.
 
@@ -342,7 +207,7 @@ def transpose(m: np.ndarray, ndim: int = 3) -> np.ndarray:
     return m.swapaxes(1, 2)
 
 
-def diagonal(m: np.ndarray) -> np.ndarray:
+def diagonal(m: npt.NDArray[np.float64]) -> npt.NDArray[np.float64]:
     """
     Get the diagonal of the `feature x feature` matrix for each output.
 
@@ -354,9 +219,11 @@ def diagonal(m: np.ndarray) -> np.ndarray:
     return m.diagonal(axis1=1, axis2=2)
 
 
-def fill_diagonal(m: np.ndarray, value: Union[float, np.ndarray]) -> None:
+def fill_diagonal(
+    m: npt.NDArray[np.float64], value: float | npt.NDArray[np.float64]
+) -> None:
     """
-    Fill the diagonal of the `feature x feature` matrix for each output with the given
+    In each `feature x feature` matrix for each output, fill the diagonal with the given
     value.
 
     :param m: array of shape `(n_outputs, n_features, n_features)`
@@ -373,7 +240,9 @@ def fill_diagonal(m: np.ndarray, value: Union[float, np.ndarray]) -> None:
             np.fill_diagonal(m_i, value, wrap=True)
 
 
-def cov(vectors: np.ndarray, weight: Optional[np.ndarray]) -> np.ndarray:
+def cov(
+    vectors: npt.NDArray[np.float64], weight: npt.NDArray[np.float64] | None
+) -> npt.NDArray[np.float64]:
     """
     Calculate the covariance matrix of pairs of vectors along the observations axis and
     for each output, assuming all vectors are centered (µ=0).
@@ -398,12 +267,17 @@ def cov(vectors: np.ndarray, weight: Optional[np.ndarray]) -> np.ndarray:
         vectors_weighted = vectors * weight.reshape((1, 1, -1))
         weight_total = weight.sum()
 
-    return np.matmul(vectors_weighted, vectors.swapaxes(1, 2)) / weight_total
+    return cast(
+        npt.NDArray[np.float64],
+        np.matmul(vectors_weighted, vectors.swapaxes(1, 2)) / weight_total,
+    )
 
 
 def cov_broadcast(
-    vector_sequence: np.ndarray, vector_grid: np.ndarray, weight: Optional[np.ndarray]
-) -> np.ndarray:
+    vector_sequence: npt.NDArray[np.float64],
+    vector_grid: npt.NDArray[np.float64],
+    weight: npt.NDArray[np.float64] | None,
+) -> npt.NDArray[np.float64]:
     """
     Calculate the covariance matrix between a sequence of vectors and a grid of vectors
     along the observations axis and for each output, assuming all vectors are centered
@@ -437,41 +311,42 @@ def cov_broadcast(
         vectors_weighted = vector_sequence * weight.reshape((1, 1, -1))
         weight_total = weight.sum()
 
-    return (
-        np.einsum("...io,...ijo->...ij", vectors_weighted, vector_grid) / weight_total
+    return cast(
+        npt.NDArray[np.float64],
+        np.einsum("...io,...ijo->...ij", vectors_weighted, vector_grid) / weight_total,
     )
 
 
-class ShapContext(metaclass=ABCMeta):
+class ShapContext:
     """
     Contextual data for global SHAP calculations.
     """
 
-    #: SHAP vectors,
+    #: SHAP vectors
     #: with shape `(n_outputs, n_features, n_observations)`
-    p_i: np.ndarray
+    p_i: npt.NDArray[np.float64]
 
     #: observation weights (optional),
     #: with shape `(n_observations)`
-    weight: Optional[np.ndarray]
+    weight: npt.NDArray[np.float64] | None
 
     #: Covariance matrix for p[i],
     #: with shape `(n_outputs, n_features, n_features)`
-    cov_p_i_p_j: np.ndarray
+    cov_p_i_p_j: npt.NDArray[np.float64]
 
     #: Variances for p[i],
     #: with shape `(n_outputs, n_features, 1)`
-    var_p_i: np.ndarray
+    var_p_i: npt.NDArray[np.float64]
 
-    #: SHAP interaction vectors,
+    #: SHAP interaction vectors
     #: with shape `(n_outputs, n_features, n_features, n_observations)`
-    p_ij: Optional[np.ndarray]
+    p_ij: npt.NDArray[np.float64] | None
 
     def __init__(
         self,
-        p_i: np.ndarray,
-        p_ij: Optional[np.ndarray],
-        weight: Optional[np.ndarray],
+        p_i: npt.NDArray[np.float64],
+        p_ij: npt.NDArray[np.float64] | None,
+        weight: npt.NDArray[np.float64] | None,
     ) -> None:
         assert p_i.ndim == 3
         if weight is not None:
@@ -498,19 +373,20 @@ class ShapValueContext(ShapContext):
     Contextual data for global SHAP calculations based on SHAP values.
     """
 
-    def __init__(self, shap_calculator: ShapCalculator) -> None:
-        shap_values: pd.DataFrame = shap_calculator.get_shap_values()
+    def __init__(
+        self, shap_calculator: ShapCalculator[Any], sample_weight: pd.Series | None
+    ) -> None:
+        shap_values: pd.DataFrame = shap_calculator.shap_values
 
-        def _p_i() -> np.ndarray:
+        def _p_i() -> npt.NDArray[np.float64]:
             assert (
-                shap_calculator.output_names_ is not None
-                and shap_calculator.feature_index_ is not None
-            ), "calculator is fitted"
-            n_outputs: int = len(shap_calculator.output_names_)
+                shap_calculator.feature_index_ is not None
+            ), ASSERTION__CALCULATOR_IS_FITTED
+            n_outputs: int = len(shap_calculator.output_names)
             n_features: int = len(shap_calculator.feature_index_)
             n_observations: int = len(shap_values)
 
-            # p[i] = p_i
+            # p[i]
             # shape: (n_outputs, n_features, n_observations)
             # the vector of shap values for every output and feature
             return ensure_last_axis_is_fast(
@@ -520,15 +396,17 @@ class ShapValueContext(ShapContext):
                 )
             )
 
-        def _weight() -> Optional[np.ndarray]:
+        def _weight() -> npt.NDArray[np.float64] | None:
             # weights
             # shape: (n_observations)
             # return a 1d array of weights that aligns with the observations axis of the
             # SHAP values tensor (axis 1)
-            assert shap_calculator.sample_ is not None and "calculator is fitted"
-            _weight_sr = shap_calculator.sample_.weight
-            if _weight_sr is not None:
-                return _weight_sr.loc[shap_values.index.get_level_values(-1)].values
+
+            if sample_weight is not None:
+                return cast(
+                    npt.NDArray[np.float64],
+                    sample_weight.loc[shap_values.index.get_level_values(-1)].values,
+                )
             else:
                 return None
 
@@ -540,15 +418,16 @@ class ShapInteractionValueContext(ShapContext):
     Contextual data for global SHAP calculations based on SHAP interaction values.
     """
 
-    def __init__(self, shap_calculator: ShapCalculator) -> None:
-        shap_values: pd.DataFrame = shap_calculator.get_shap_interaction_values()
+    def __init__(
+        self, shap_calculator: ShapCalculator[Any], sample_weight: pd.Series | None
+    ) -> None:
+        shap_values: pd.DataFrame = shap_calculator.shap_interaction_values
 
         assert (
-            shap_calculator.output_names_ is not None
-            and shap_calculator.feature_index_ is not None
-        ), "calculator is fitted"
+            shap_calculator.feature_index_ is not None
+        ), ASSERTION__CALCULATOR_IS_FITTED
         n_features: int = len(shap_calculator.feature_index_)
-        n_outputs: int = len(shap_calculator.output_names_)
+        n_outputs: int = len(shap_calculator.output_names)
         n_observations: int = len(shap_values) // n_features
 
         assert shap_values.shape == (
@@ -562,15 +441,14 @@ class ShapInteractionValueContext(ShapContext):
         # shape: (n_observations)
         # return a 1d array of weights that aligns with the observations axis of the
         # SHAP values tensor (axis 1)
-        weight: Optional[np.ndarray]
-        assert shap_calculator.sample_ is not None and "calculator is fitted"
-        _weight_sr = shap_calculator.sample_.weight
-        if _weight_sr is not None:
+        weight: npt.NDArray[np.float64] | None
+
+        if sample_weight is not None:
             _observation_indices = shap_values.index.get_level_values(
                 -2
             ).values.reshape((n_observations, n_features))[:, 0]
             weight = ensure_last_axis_is_fast(
-                _weight_sr.loc[_observation_indices].values
+                sample_weight.loc[_observation_indices].values
             )
         else:
             weight = None
@@ -578,8 +456,8 @@ class ShapInteractionValueContext(ShapContext):
         # p[i, j]
         # shape: (n_outputs, n_features, n_features, n_observations)
         # the vector of interaction values for every output and feature pairing
-        # for improved numerical precision, we ensure the last axis is the fast axis
-        # i.e. stride size equals item size (see documentation for numpy.sum)
+        # for improved numerical precision, we ensure the last axis is the fast axis,
+        # i.e., stride size equals item size (see documentation for numpy.sum)
         p_ij = ensure_last_axis_is_fast(
             np.transpose(
                 shap_values.values.reshape(
@@ -591,6 +469,7 @@ class ShapInteractionValueContext(ShapContext):
 
         # p[i]
         # shape: (n_outputs, n_features, n_observations)
+        # the vector of shap values for every output and feature
         super().__init__(
             p_i=ensure_last_axis_is_fast(p_ij.sum(axis=2)),
             p_ij=ensure_last_axis_is_fast(
@@ -601,8 +480,8 @@ class ShapInteractionValueContext(ShapContext):
 
     @staticmethod
     def __get_orthogonalized_interaction_vectors(
-        p_ij: np.ndarray, weight: Optional[np.ndarray]
-    ) -> np.ndarray:
+        p_ij: npt.NDArray[np.float64], weight: npt.NDArray[np.float64] | None
+    ) -> npt.NDArray[np.float64]:
         # p_ij: shape: (n_outputs, n_features, n_features, n_observations)
 
         assert p_ij.ndim == 4
@@ -647,9 +526,9 @@ class ShapInteractionValueContext(ShapContext):
 
         _denominator = cov_p_ii_p_jj**2 - var_p_ii * var_p_jj
 
-        # The denominator is <= 0 due to the Cauchy-Schwarz inequality.
+        # The denominator is ≤ 0 due to the Cauchy-Schwarz inequality.
         # It is 0 only if the variance of p_ii or p_jj are zero (i.e., no main effect).
-        # In that fringe case, the nominator will also be zero and we set the adjustment
+        # In that edge case, the nominator will also be zero, and we set the adjustment
         # factor to 0 (intuitively, there is nothing to adjust in a zero-length vector)
         adjustment_factors_ij = np.zeros(_nominator.shape)
         # todo: prevent catastrophic cancellation where nominator/denominator are ~0.0

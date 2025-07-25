@@ -1,15 +1,14 @@
 """
 Tests for module facet.validation
 """
+
 import warnings
-from typing import List
 
 import numpy as np
+import numpy.typing as npt
 import pytest
 from sklearn import datasets, svm, tree
 from sklearn.model_selection import GridSearchCV
-
-from sklearndf import __sklearn_0_22__, __sklearn_version__
 
 from facet.validation import BootstrapCV, StratifiedBootstrapCV
 
@@ -31,16 +30,15 @@ def test_bootstrap_cv_init() -> None:
 
 
 def test_get_train_test_splits_as_indices() -> None:
-
     n_test_splits = 200
     test_x = np.arange(0, 1000, 1)
 
     my_cv = BootstrapCV(n_splits=n_test_splits, random_state=42)
 
-    def _generate_splits() -> List[np.ndarray]:
+    def _generate_splits() -> list[npt.NDArray[np.int64]]:
         return [test_split for _, test_split in my_cv.split(X=test_x)]
 
-    test_splits: List[np.ndarray] = _generate_splits()
+    test_splits: list[npt.NDArray[np.int64]] = _generate_splits()
 
     # assert we get right amount of splits
 
@@ -56,7 +54,7 @@ def test_get_train_test_splits_as_indices() -> None:
 
     # check that re-generating the split yields the same result
 
-    test_splits_2: List[np.ndarray] = _generate_splits()
+    test_splits_2: list[npt.NDArray[np.int64]] = _generate_splits()
 
     assert len(test_splits) == len(
         test_splits_2
@@ -87,10 +85,7 @@ def test_bootstrap_cv_with_sk_learn() -> None:
 
     # use the defined my_cv bootstrap CV within GridSearchCV
 
-    if __sklearn_version__ < __sklearn_0_22__:
-        clf = GridSearchCV(svc, parameters, cv=my_cv, iid=False)
-    else:
-        clf = GridSearchCV(svc, parameters, cv=my_cv)
+    clf = GridSearchCV(svc, parameters, cv=my_cv)
     clf.fit(iris.data, iris.target)
 
     # test if the number of received splits is correct
@@ -106,7 +101,7 @@ def test_bootstrap_cv_with_sk_learn() -> None:
 
     parameters = {
         "criterion": ("gini", "entropy"),
-        "max_features": ["sqrt", "auto", "log2"],
+        "max_features": ["sqrt", "log2"],
     }
     cl2 = GridSearchCV(tree.DecisionTreeClassifier(), parameters, cv=my_cv)
     cl2.fit(iris.data, iris.target)
@@ -137,9 +132,10 @@ def test_stratified_bootstrap_cv() -> None:
     ):
         next(my_cv.split(X=test_x, groups=test_groups))
 
-    with pytest.warns(None) as checker:
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
+        warnings.simplefilter("default", category=DeprecationWarning)
         train1, test1 = next(my_cv.split(X=test_x, y=test_groups))
-    assert len(checker) == 0
 
     with pytest.warns(UserWarning, match=r"^ignoring arg groups=array\(\["):
         train2, test2 = next(my_cv.split(X=test_x, y=test_groups, groups=test_groups))
@@ -147,10 +143,10 @@ def test_stratified_bootstrap_cv() -> None:
     assert np.array_equal(train1, train2)
     assert np.array_equal(test1, test2)
 
-    def _generate_splits() -> List[np.ndarray]:
+    def _generate_splits() -> list[npt.NDArray[np.int64]]:
         return [test_split for _, test_split in my_cv.split(X=test_x, y=test_groups)]
 
-    test_splits: List[np.ndarray] = _generate_splits()
+    test_splits: list[npt.NDArray[np.int64]] = _generate_splits()
 
     # assert we get right amount of splits
 
@@ -177,7 +173,7 @@ def test_stratified_bootstrap_cv() -> None:
 
     # check that re-generating the split yields the same result
 
-    test_splits_2: List[np.ndarray] = _generate_splits()
+    test_splits_2: list[npt.NDArray[np.int64]] = _generate_splits()
 
     assert len(test_splits) == len(
         test_splits_2

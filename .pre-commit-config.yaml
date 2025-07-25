@@ -1,40 +1,52 @@
 repos:
+  - repo: https://github.com/asottile/pyupgrade
+    rev: v3.20.0
+    hooks:
+      - id: pyupgrade
+        args: [--py310-plus]
+
   - repo: https://github.com/PyCQA/isort
-    rev: 5.5.4
+    rev: 6.0.1
     hooks:
       - id: isort
 
   - repo: https://github.com/psf/black
-    rev: 22.3.0
+    rev: 25.1.0
     hooks:
       - id: black
-        language_version: python3
+        language: python
+        language_version: python39
 
-  - repo: https://gitlab.com/pycqa/flake8
-    rev: 3.9.0
+  - repo: https://github.com/pycqa/flake8
+    rev: 7.3.0
     hooks:
       - id: flake8
         name: flake8
         entry: flake8 --config tox.ini
-        language: python_venv
+        language: python
+        language_version: python39
         additional_dependencies:
-          - flake8-comprehensions ~= 3.10
+          - flake8-comprehensions ~= 3.16
         types: [ python ]
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v3.2.0
+    rev: v5.0.0
     hooks:
       - id: check-added-large-files
       - id: check-json
+      - id: check-xml
       - id: check-yaml
+        language: python
+        exclude: condabuild/meta.yaml
 
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v0.931
+    rev: v1.17.0
     hooks:
       - id: mypy
-        files: src|sphinx
+        files: src|sphinx|test
+        language: python
+        language_version: python310
         additional_dependencies:
-          - numpy~=1.22
-          - mypy~=0.940
-          - gamma-pytools>=2.0.dev8,<3a
-          - sklearndf>=2.0.dev3,<3a
+          - numpy~=2.2
+          - gamma-pytools~=3.0
+          - sklearndf~=2.4
