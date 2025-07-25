@@ -85,7 +85,7 @@ def test_category_partitioning() -> None:
     np.random.seed(42)
     for _ in range(10):
         values = np.random.randint(
-            low=0, high=10, size=np.random.randint(low=100, high=200), dtype=np.int_
+            low=0, high=10, size=np.random.randint(low=100, high=200), dtype=np.int64
         )
         cp = CategoryPartitioner(max_partitions=4).fit(values=values)
         # test correct number of partitions

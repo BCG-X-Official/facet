@@ -6,7 +6,8 @@ import logging
 import math
 import operator as op
 from abc import ABCMeta, abstractmethod
-from typing import Any, Generic, Optional, Sequence, Tuple, TypeVar, Union, cast
+from collections.abc import Sequence
+from typing import Any, Generic, TypeVar, cast
 
 import numpy as np
 import numpy.typing as npt
@@ -33,7 +34,7 @@ T_Partitioner = TypeVar("T_Partitioner", bound="Partitioner[Any]")
 T_RangePartitioner = TypeVar("T_RangePartitioner", bound="RangePartitioner[Any, Any]")
 T_CategoryPartitioner = TypeVar("T_CategoryPartitioner", bound="CategoryPartitioner")
 T_Values = TypeVar("T_Values", bound=np.generic)
-T_Values_Numeric = TypeVar("T_Values_Numeric", np.int_, np.float_)
+T_Values_Numeric = TypeVar("T_Values_Numeric", np.int64, np.float64)
 T_Values_Scalar = TypeVar("T_Values_Scalar", int, float)
 
 
@@ -66,12 +67,12 @@ class Partitioner(
     DEFAULT_MAX_PARTITIONS = 20
 
     #: The values representing the partitions.
-    _partitions: Optional[Sequence[T_Values]]
+    _partitions: Sequence[T_Values] | None
 
     #: The count of values allocated to each partition.
-    _frequencies: Optional[npt.NDArray[np.int_]]
+    _frequencies: npt.NDArray[np.int64] | None
 
-    def __init__(self, max_partitions: Optional[int] = None) -> None:
+    def __init__(self, max_partitions: int | None = None) -> None:
         """
         :param max_partitions: the maximum number of partitions to generate; must
             be at least 2 (default: {DEFAULT_MAX_PARTITIONS})
@@ -110,7 +111,7 @@ class Partitioner(
 
     @property
     @fitted_only
-    def frequencies_(self) -> npt.NDArray[np.int_]:
+    def frequencies_(self) -> npt.NDArray[np.int64]:
         """
         The count of values allocated to each partition.
         """
@@ -159,15 +160,15 @@ class RangePartitioner(
     Abstract base class of partitioners for numerical ranges.
     """
 
-    def __init__(self, max_partitions: Optional[int] = None) -> None:
+    def __init__(self, max_partitions: int | None = None) -> None:
         """[see superclass]"""
 
         super().__init__(max_partitions)
 
-        self._step: Optional[T_Values_Scalar] = None
-        self._partition_bounds: Optional[
-            Sequence[Tuple[T_Values_Scalar, T_Values_Scalar]]
-        ] = None
+        self._step: T_Values_Scalar | None = None
+        self._partition_bounds: None | (
+            Sequence[tuple[T_Values_Scalar, T_Values_Scalar]]
+        ) = None
 
     @property
     def is_categorical(self) -> bool:
@@ -178,7 +179,7 @@ class RangePartitioner(
 
     @property
     @fitted_only
-    def partition_bounds_(self) -> Sequence[Tuple[T_Values_Scalar, T_Values_Scalar]]:
+    def partition_bounds_(self) -> Sequence[tuple[T_Values_Scalar, T_Values_Scalar]]:
         """
         Return the endpoints of the intervals that delineate each partition.
 
@@ -204,8 +205,8 @@ class RangePartitioner(
         self: T_RangePartitioner,
         values: npt.NDArray[T_Values_Numeric],
         *,
-        lower_bound: Union[T_Values_Numeric, float, int, None] = None,
-        upper_bound: Union[T_Values_Numeric, float, int, None] = None,
+        lower_bound: T_Values_Numeric | float | int | None = None,
+        upper_bound: T_Values_Numeric | float | int | None = None,
         **fit_params: Any,
     ) -> T_RangePartitioner:
         r"""
@@ -311,7 +312,7 @@ class RangePartitioner(
         pass
 
 
-class ContinuousRangePartitioner(RangePartitioner[np.float_, float]):
+class ContinuousRangePartitioner(RangePartitioner[np.float64, float]):
     """
     Partition numerical values in adjacent intervals of the same length.
 
@@ -341,7 +342,7 @@ class ContinuousRangePartitioner(RangePartitioner[np.float_, float]):
         return self._step / 2
 
 
-class IntegerRangePartitioner(RangePartitioner[np.int_, int]):
+class IntegerRangePartitioner(RangePartitioner[np.int64, int]):
     """
     Partition integer values in adjacent intervals of the same length.
 

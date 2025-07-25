@@ -1,17 +1,15 @@
 """
 Core implementation of :mod:`facet.inspection`
 """
+
 import logging
-from typing import List, Union
+from typing import TypeAlias
 
 import numpy as np
 import numpy.typing as npt
 import pandas as pd
-from typing_extensions import TypeAlias
 
 from pytools.api import AllTracker
-
-from ..data import Sample
 
 log = logging.getLogger(__name__)
 
@@ -24,7 +22,7 @@ __all__ = [
 # Type aliases
 #
 
-FloatArray: TypeAlias = npt.NDArray[np.float_]
+FloatArray: TypeAlias = npt.NDArray[np.float64]
 
 
 #
@@ -46,18 +44,25 @@ class ShapPlotData:
     """
 
     def __init__(
-        self, shap_values: Union[FloatArray, List[FloatArray]], sample: Sample
+        self,
+        *,
+        shap_values: FloatArray | list[FloatArray],
+        features: pd.DataFrame,
+        target: pd.Series | pd.DataFrame,
     ) -> None:
         """
         :param shap_values: the shap values for all observations and outputs
-        :param sample: (sub)sample of all observations for which SHAP values are
-            available; aligned with param ``shap_values``
+        :param features: features for which SHAP values are available;
+            aligned with param ``shap_values``
+        :param target: target values for all observations;
+            aligned with param ``shap_values``
         """
         self._shap_values = shap_values
-        self._sample = sample
+        self._features = features
+        self._target = target
 
     @property
-    def shap_values(self) -> Union[FloatArray, List[FloatArray]]:
+    def shap_values(self) -> FloatArray | list[FloatArray]:
         """
         Matrix of SHAP values (number of observations by number of features)
         or list of shap value matrices for multi-output models.
@@ -69,16 +74,16 @@ class ShapPlotData:
         """
         Matrix of feature values (number of observations by number of features).
         """
-        return self._sample.features
+        return self._features
 
     @property
-    def target(self) -> Union[pd.Series, pd.DataFrame]:
+    def target(self) -> pd.Series | pd.DataFrame:
         """
         Series of target values (number of observations)
         or matrix of target values for multi-output models
         (number of observations by number of outputs).
         """
-        return self._sample.target
+        return self._target
 
 
 __tracker.validate()

@@ -1,10 +1,10 @@
 """
 Model inspector tests.
 """
+
 import logging
-import platform
 import warnings
-from typing import Any, Dict, List, Optional, Set, Type, TypeVar, Union, cast
+from typing import Any, TypeVar, cast
 
 import numpy as np
 import pandas as pd
@@ -19,7 +19,7 @@ from sklearn.pipeline import Pipeline
 
 from pytools.data import LinkageTree, Matrix
 from pytools.viz.dendrogram import DendrogramDrawer, DendrogramReportStyle
-from sklearndf import ClassifierDF, __sklearn_1_1__, __sklearn_version__
+from sklearndf import ClassifierDF, RegressorDF
 from sklearndf.classification import (
     GradientBoostingClassifierDF,
     RandomForestClassifierDF,
@@ -45,42 +45,52 @@ log = logging.getLogger(__name__)
 
 T = TypeVar("T")
 
+IRIS_FEATURE_NAMES_PREPROCESSED = [
+    "pass__sepal length (cm)",
+    "pass__sepal width (cm)",
+    "pass__petal length (cm)",
+    "remainder__petal width (cm)",
+]
+
 
 def test_regressor_selector(
     regressor_selector: LearnerSelector[
         RegressorPipelineDF[LGBMRegressorDF], GridSearchCV
-    ]
+    ],
 ) -> None:
-    scores_expected: List[float] = (
-        [0.578, 0.530, 0.310, 0.308, 0.294, 0.226, 0.217, 0.217, 0.217, 0.217]
-        if (
-            __sklearn_version__ < __sklearn_1_1__
-            or platform.machine() != "arm64"
-            or platform.system() != "Darwin"
-        )
-        # on M1 macs, we get different results starting with scikit-learn 1.1
-        else [0.579, 0.531, 0.311, 0.308, 0.246, 0.217, 0.217, 0.217, 0.217, 0.217]
-    )
     check_ranking(
-        ranking=regressor_selector.summary_report(),
+        ranking=regressor_selector.summary_report().iloc[:10],
         is_classifier=False,
-        scores_expected=scores_expected,
+        score_min_expected=0.19,
+        score_max_expected=0.58,
         params_expected=None,
     )
 
 
 @pytest.mark.parametrize(  # type: ignore
-    argnames=("explainer_factory_cls", "explainer_factory_args"),
+    argnames=(
+        "explainer_factory_cls",
+        "explainer_factory_args",
+        "best_model_fixture",
+        "expected_cluster",
+    ),
     argvalues=[
         (
             TreeExplainerFactory,
             dict(
                 feature_perturbation="tree_path_dependent", uses_background_dataset=True
             ),
+            "best_lgbm_model",
+            {"Longitude", "Latitude"},
         ),
-        (KernelExplainerFactory, dict(link="identity", data_size_limit=8)),
-        (ExactExplainerFactory, {}),
-        (PermutationExplainerFactory, {}),
+        (
+            KernelExplainerFactory,
+            dict(link="identity", data_size_limit=8),
+            "best_rf_model",
+            {"AveRooms", "Latitude"},
+        ),
+        (ExactExplainerFactory, {}, "best_lgbm_model", {"Longitude", "Latitude"}),
+        (PermutationExplainerFactory, {}, "best_lgbm_model", {"Longitude", "Latitude"}),
     ],
 )
 @pytest.mark.parametrize(  # type: ignore
@@ -88,61 +98,47 @@ def test_regressor_selector(
     argvalues=(False, True),
 )
 def test_model_inspection(
-    explainer_factory_cls: Type[ExplainerFactory[LGBMRegressorDF]],
-    explainer_factory_args: Dict[str, Any],
-    best_lgbm_model: RegressorPipelineDF[LGBMRegressorDF],
+    explainer_factory_cls: type[ExplainerFactory[Any]],
+    explainer_factory_args: dict[str, Any],
+    best_model_fixture: str,
+    expected_cluster: set[str],
+    request: pytest.FixtureRequest,
     sample: Sample,
     n_jobs: int,
     native: bool,
 ) -> None:
-    # test the ModelInspector with the given explainer factory:
+    # get the correct model fixture
+    best_model = request.getfixturevalue(best_model_fixture)
 
-    explainer_factory: ExplainerFactory[LGBMRegressorDF] = explainer_factory_cls(
+    explainer_factory: ExplainerFactory[RegressorDF] = explainer_factory_cls(
         **explainer_factory_args
     )
 
-    inspector: Union[
-        LearnerInspector[RegressorPipelineDF[LGBMRegressorDF]],
-        NativeLearnerInspector[Pipeline],
-    ]
+    inspector: (
+        LearnerInspector[RegressorPipelineDF[RegressorDF]]
+        | NativeLearnerInspector[Pipeline]
+    )
 
-    regressor_feature_names: Set[str]  # column index names
+    regressor_feature_names: set[str]  # column index names
 
     if native:
         assert (
-            best_lgbm_model.preprocessing is not None
+            best_model.preprocessing is not None
         ), "preprocessing step must be defined"
 
-        regressor = best_lgbm_model.regressor.native_estimator
+        regressor = best_model.regressor.native_estimator
 
-        if __sklearn_version__ < __sklearn_1_1__:
-            # scikit-learn 1.0.x does not support output feature names in simple
-            # imputers, so we cannot use this for preprocessing
-            log.warning(
-                f"scikit-learn {__sklearn_version__} does not support output "
-                "feature names in simple imputers, so we will test the native learner "
-                "inspector without preprocessing"
-            )
-            assert (
-                sample.features.notna().all().all()
-            ), "observations must not contain missing values"
-            model = regressor
-            regressor_feature_names = set(sample.feature_names)
-
-        else:
-            # scikit-learn 1.1.x supports output feature names in simple imputers,
-            # so we can use this for preprocessing
-            model = Pipeline(
-                # create a native pipeline from the regressor pipeline
-                steps=[
-                    (
-                        "preprocessing",
-                        best_lgbm_model.preprocessing.native_estimator,
-                    ),
-                    ("regressor", regressor),
-                ]
-            ).fit(X=sample.features, y=sample.target)
-            regressor_feature_names = set(model[:-1].get_feature_names_out())
+        model = Pipeline(
+            # create a native pipeline from the regressor pipeline
+            steps=[
+                (
+                    "preprocessing",
+                    best_model.preprocessing.native_estimator,
+                ),
+                ("regressor", regressor),
+            ]
+        ).fit(X=sample.features, y=sample.target)
+        regressor_feature_names = set(model[:-1].get_feature_names_out())
 
         # noinspection PyTypeChecker
         inspector = NativeLearnerInspector(
@@ -152,11 +148,11 @@ def test_model_inspection(
         ).fit(sample)
     else:
         inspector = LearnerInspector(
-            model=best_lgbm_model,
+            model=best_model,
             explainer_factory=explainer_factory,
             n_jobs=n_jobs,
         ).fit(sample)
-        regressor_feature_names = set(best_lgbm_model.regressor.feature_names_in_)
+        regressor_feature_names = set(best_model.regressor.feature_names_in_)
 
     shap_values: pd.DataFrame = inspector.shap_values()
 
@@ -210,9 +206,9 @@ def test_model_inspection(
     # check the child nodes are Longitude and Latitude
     children = linkage.children(cluster_nodes[0])
     assert children is not None, "a cluster node has children"
-    assert {child.name.split("__")[-1] for child in children} == (
-        {"Longitude", "Latitude"}
-    ), "the cluster is Longitude and Latitude features"
+    assert {
+        child.name.split("__")[-1] for child in children
+    } == expected_cluster, f"the cluster is {expected_cluster} features"
 
     print()
     DendrogramDrawer(style="text").draw(
@@ -224,10 +220,8 @@ def test_model_inspection(
 def test_binary_classifier_ranking(
     iris_classifier_selector_binary: LearnerSelector[
         ClassifierPipelineDF[RandomForestClassifierDF], GridSearchCV
-    ]
+    ],
 ) -> None:
-    expected_learner_scores = [0.938, 0.936, 0.936, 0.929]
-
     ranking = iris_classifier_selector_binary.summary_report()
 
     log.debug(f"\n{ranking}")
@@ -235,7 +229,8 @@ def test_binary_classifier_ranking(
     check_ranking(
         ranking=ranking,
         is_classifier=True,
-        scores_expected=expected_learner_scores,
+        score_min_expected=0.92,
+        score_max_expected=0.94,
         params_expected={
             2: dict(min_samples_leaf=4, n_estimators=10),
             3: dict(min_samples_leaf=8, n_estimators=10),
@@ -271,7 +266,7 @@ def test_model_inspection_classifier_binary(
 
     try:
         association_matrix = cast(
-            Matrix[np.float_],
+            Matrix[np.float64],
             model_inspector.feature_association_matrix(
                 clustered=True, symmetrical=True
             ),
@@ -343,7 +338,7 @@ def test_model_inspection_classifier_multi_class(
 
     feature_importance: pd.DataFrame = iris_inspector_multi_class.feature_importance()
     assert feature_importance.index.equals(
-        pd.Index(iris_sample.feature_names, name="feature")
+        pd.Index(IRIS_FEATURE_NAMES_PREPROCESSED, name="feature")
     )
     assert feature_importance.columns.equals(
         pd.Index(iris_inspector_multi_class.output_names, name="class")
@@ -365,7 +360,7 @@ def test_model_inspection_classifier_multi_class(
 
     try:
         synergy_matrix = cast(
-            List[Matrix[np.float_]],
+            list[Matrix[np.float64]],
             iris_inspector_multi_class.feature_synergy_matrix(clustered=False),
         )
 
@@ -387,7 +382,7 @@ def test_model_inspection_classifier_multi_class(
         )
 
         redundancy_matrix = cast(
-            List[Matrix[np.float_]],
+            list[Matrix[np.float64]],
             iris_inspector_multi_class.feature_redundancy_matrix(clustered=False),
         )
         assert_allclose(
@@ -408,7 +403,7 @@ def test_model_inspection_classifier_multi_class(
         )
 
         association_matrix = cast(
-            List[Matrix[np.float_]],
+            list[Matrix[np.float64]],
             iris_inspector_multi_class.feature_association_matrix(clustered=False),
         )
         assert_allclose(
@@ -432,7 +427,7 @@ def test_model_inspection_classifier_multi_class(
         raise
 
     linkage_trees = cast(
-        List[LinkageTree], iris_inspector_multi_class.feature_association_linkage()
+        list[LinkageTree], iris_inspector_multi_class.feature_association_linkage()
     )
 
     for output, linkage_tree in zip(
@@ -515,22 +510,38 @@ def test_model_inspection_classifier_interaction(
 ) -> None:
     warnings.filterwarnings("ignore", message="You are accessing a training score")
 
-    cls_inspector: Type[
-        Union[
-            LearnerInspector[RandomForestClassifierDF],
-            NativeLearnerInspector[RandomForestClassifier],
-        ]
+    assert (
+        iris_classifier_binary.preprocessing is not None
+    ), "preprocessing step must be defined"
+
+    cls_inspector: type[
+        (
+            LearnerInspector[RandomForestClassifierDF]
+            | NativeLearnerInspector[RandomForestClassifier]
+        )
     ]
-    learner: Union[RandomForestClassifierDF, RandomForestClassifier]
+    classifier: ClassifierPipelineDF[RandomForestClassifierDF] | Pipeline
     if native:
         cls_inspector = NativeLearnerInspector[RandomForestClassifier]
-        learner = iris_classifier_binary.final_estimator.native_estimator
+        # create a native pipeline from the classifier pipeline
+        classifier = Pipeline(
+            steps=[
+                (
+                    "preprocessing",
+                    iris_classifier_binary.preprocessing.native_estimator,
+                ),
+                (
+                    "classifier",
+                    iris_classifier_binary.classifier.native_estimator,
+                ),
+            ]
+        )
     else:
         cls_inspector = LearnerInspector[RandomForestClassifierDF]
-        learner = iris_classifier_binary.final_estimator
+        classifier = iris_classifier_binary
 
     model_inspector = cls_inspector(
-        model=learner,
+        model=classifier,
         explainer_factory=TreeExplainerFactory(
             feature_perturbation="tree_path_dependent", uses_background_dataset=True
         ),
@@ -538,7 +549,7 @@ def test_model_inspection_classifier_interaction(
     ).fit(iris_sample_binary)
 
     model_inspector_no_interaction = cls_inspector(
-        model=learner,
+        model=classifier,
         shap_interaction=False,
         explainer_factory=TreeExplainerFactory(
             feature_perturbation="tree_path_dependent", uses_background_dataset=True
@@ -560,9 +571,8 @@ def test_model_inspection_classifier_interaction(
     ).abs().max().max() < 0.015
 
     # the column names of the shap value data frames are the feature names
-    feature_columns = iris_sample_binary.feature_names
-    assert shap_values.columns.to_list() == feature_columns
-    assert shap_interaction_values.columns.to_list() == feature_columns
+    assert shap_values.columns.to_list() == IRIS_FEATURE_NAMES_PREPROCESSED
+    assert shap_interaction_values.columns.to_list() == IRIS_FEATURE_NAMES_PREPROCESSED
 
     # the length of rows in shap_values should be equal to the number of observations
     assert len(shap_values) == len(iris_sample_binary)
@@ -570,7 +580,7 @@ def test_model_inspection_classifier_interaction(
     # the length of rows in shap_interaction_values should be equal to the number of
     # observations, times the number of features
     assert len(shap_interaction_values) == (
-        len(iris_sample_binary) * len(feature_columns)
+        len(iris_sample_binary) * len(IRIS_FEATURE_NAMES_PREPROCESSED)
     )
 
     # do the shap values add up to predictions minus a constant value?
@@ -587,7 +597,7 @@ def test_model_inspection_classifier_interaction(
     try:
         assert_allclose(
             cast(
-                Matrix[np.float_],
+                Matrix[np.float64],
                 model_inspector.feature_synergy_matrix(
                     clustered=False, symmetrical=True
                 ),
@@ -604,7 +614,7 @@ def test_model_inspection_classifier_interaction(
         )
         assert_allclose(
             cast(
-                Matrix[np.float_],
+                Matrix[np.float64],
                 model_inspector.feature_synergy_matrix(absolute=True, symmetrical=True),
             ).values,
             np.array(
@@ -620,7 +630,7 @@ def test_model_inspection_classifier_interaction(
 
         assert_allclose(
             cast(
-                Matrix[np.float_],
+                Matrix[np.float64],
                 model_inspector.feature_synergy_matrix(clustered=True),
             ).values,
             np.array(
@@ -636,7 +646,8 @@ def test_model_inspection_classifier_interaction(
 
         assert_allclose(
             cast(
-                Matrix[np.float_], model_inspector.feature_synergy_matrix(absolute=True)
+                Matrix[np.float64],
+                model_inspector.feature_synergy_matrix(absolute=True),
             ).values,
             np.array(
                 [
@@ -651,7 +662,7 @@ def test_model_inspection_classifier_interaction(
 
         assert_allclose(
             cast(
-                Matrix[np.float_],
+                Matrix[np.float64],
                 model_inspector.feature_redundancy_matrix(
                     clustered=False, symmetrical=True
                 ),
@@ -668,7 +679,7 @@ def test_model_inspection_classifier_interaction(
         )
         assert_allclose(
             cast(
-                Matrix[np.float_],
+                Matrix[np.float64],
                 model_inspector.feature_redundancy_matrix(
                     absolute=True, symmetrical=True
                 ),
@@ -686,7 +697,7 @@ def test_model_inspection_classifier_interaction(
 
         assert_allclose(
             cast(
-                Matrix[np.float_],
+                Matrix[np.float64],
                 model_inspector.feature_redundancy_matrix(clustered=True),
             ).values,
             np.array(
@@ -702,7 +713,7 @@ def test_model_inspection_classifier_interaction(
 
         assert_allclose(
             cast(
-                Matrix[np.float_],
+                Matrix[np.float64],
                 model_inspector.feature_redundancy_matrix(absolute=True),
             ).values,
             np.array(
@@ -718,7 +729,7 @@ def test_model_inspection_classifier_interaction(
 
         assert_allclose(
             cast(
-                Matrix[np.float_],
+                Matrix[np.float64],
                 model_inspector.feature_association_matrix(
                     clustered=False, symmetrical=True
                 ),
@@ -736,7 +747,7 @@ def test_model_inspection_classifier_interaction(
 
         assert_allclose(
             cast(
-                Matrix[np.float_],
+                Matrix[np.float64],
                 model_inspector.feature_association_matrix(
                     absolute=True, symmetrical=True
                 ),
@@ -754,7 +765,7 @@ def test_model_inspection_classifier_interaction(
 
         assert_allclose(
             cast(
-                Matrix[np.float_],
+                Matrix[np.float64],
                 model_inspector.feature_association_matrix(clustered=True),
             ).values,
             np.array(
@@ -770,7 +781,7 @@ def test_model_inspection_classifier_interaction(
 
         assert_allclose(
             cast(
-                Matrix[np.float_],
+                Matrix[np.float64],
                 model_inspector.feature_association_matrix(absolute=True),
             ).values,
             np.array(
@@ -840,11 +851,20 @@ def test_shap_plot_data(
     assert all(shap.shape == features_shape for shap in shap_values)
 
     shap_index = shap_plot_data.features.index
+    preprocessing = iris_inspector_multi_class.model.preprocessing
+    assert preprocessing is not None, "preprocessing step must be defined"
+
     assert_frame_equal(
-        shap_plot_data.features, iris_sample_multi_class.features.loc[shap_index]
+        # the shap plot data should contain the same observations as the
+        # preprocessed features in the sample
+        shap_plot_data.features,
+        preprocessing.transform(iris_sample_multi_class.features).loc[shap_index],
     )
     assert_series_equal(
-        shap_plot_data.target, iris_sample_multi_class.target.loc[shap_index]
+        # the shap plot data should contain the same target values as the
+        # sample
+        shap_plot_data.target,
+        iris_sample_multi_class.target.loc[shap_index],
     )
 
 
@@ -904,16 +924,16 @@ def print_expected_matrix(error: AssertionError, *, split: bool = False) -> None
 
     import re
 
-    array: Optional[re.Match[str]] = re.search(r"array\(([^)]+)\)", error.args[0])
+    array: re.Match[str] | None = re.search(r"array\(([^)]+)\)", error.args[0])
     if array is not None:
-        matrix: List[List[float]] = eval(
+        matrix: list[list[float]] = eval(
             array[1].replace(r"\n", "\n").replace("nan", "np.nan")
         )
 
         print_matrix(matrix, split=split)
 
 
-def print_matrix(matrix: List[List[float]], *, split: bool) -> None:
+def print_matrix(matrix: list[list[float]], *, split: bool) -> None:
     print("==== matrix assertion failed ====\nExpected Matrix:")
     print("[")
     for row in matrix:

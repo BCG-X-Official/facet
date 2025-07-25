@@ -5,7 +5,7 @@ Factories for SHAP explainers from the ``shap`` package.
 import functools
 import logging
 from abc import ABCMeta, abstractmethod
-from typing import Any, Dict, Optional, Union, cast
+from typing import Any, cast
 
 import numpy as np
 import pandas as pd
@@ -70,9 +70,8 @@ class _TreeExplainer(
         self, X: XType, y: YType = None, check_additivity: bool = False, **kwargs: Any
     ) -> ArraysFloat:
         """[see superclass]"""
-        return cast(
-            ArraysFloat,
-            super().shap_values(X=X, y=y, check_additivity=check_additivity, **kwargs),
+        return super().shap_values(
+            X=X, y=y, check_additivity=check_additivity, **kwargs
         )
 
 
@@ -83,13 +82,13 @@ class TreeExplainerFactory(ExplainerFactory[NativeSupervisedLearner]):
     """
 
     # defined in superclass, repeated here for Sphinx
-    explainer_kwargs: Dict[str, Any]
+    explainer_kwargs: dict[str, Any]
 
     def __init__(
         self,
         *,
-        model_output: Optional[str] = None,
-        feature_perturbation: Optional[str] = None,
+        model_output: str | None = None,
+        feature_perturbation: str | None = None,
         uses_background_dataset: bool = True,
         **explainer_kwargs: Any,
     ) -> None:
@@ -133,7 +132,7 @@ class TreeExplainerFactory(ExplainerFactory[NativeSupervisedLearner]):
         return self._uses_background_dataset
 
     def make_explainer(
-        self, model: NativeSupervisedLearner, data: Optional[pd.DataFrame] = None
+        self, model: NativeSupervisedLearner, data: pd.DataFrame | None = None
     ) -> BaseExplainer:
         """[see superclass]"""
 
@@ -169,7 +168,7 @@ class TreeExplainerFactory(ExplainerFactory[NativeSupervisedLearner]):
 
 @inheritdoc(match="""[see superclass]""")
 class FunctionExplainerFactory(
-    ExplainerFactory[Union[NativeSupervisedLearner, ModelFunction]], metaclass=ABCMeta
+    ExplainerFactory[NativeSupervisedLearner | ModelFunction], metaclass=ABCMeta
 ):
     """
     A factory constructing :class:`~shap.Explainer` instances that use Python functions
@@ -177,7 +176,7 @@ class FunctionExplainerFactory(
     """
 
     # defined in superclass, repeated here for Sphinx
-    explainer_kwargs: Dict[str, Any]
+    explainer_kwargs: dict[str, Any]
 
     @property
     def uses_background_dataset(self) -> bool:
@@ -186,8 +185,8 @@ class FunctionExplainerFactory(
 
     def make_explainer(
         self,
-        model: Union[NativeSupervisedLearner, ModelFunction],
-        data: Optional[pd.DataFrame],
+        model: NativeSupervisedLearner | ModelFunction,
+        data: pd.DataFrame | None,
     ) -> BaseExplainer:
         """[see superclass]"""
         self._validate_background_dataset(data=data)
@@ -218,7 +217,7 @@ class FunctionExplainerFactory(
 
     @abstractmethod
     def make_explainer_from_function(
-        self, model_fn: ModelFunction, data: Optional[pd.DataFrame]
+        self, model_fn: ModelFunction, data: pd.DataFrame | None
     ) -> BaseExplainer:
         """
         Construct an explainer from a function.
@@ -267,14 +266,14 @@ class KernelExplainerFactory(FunctionExplainerFactory):
     """
 
     # defined in superclass, repeated here for Sphinx
-    explainer_kwargs: Dict[str, Any]
+    explainer_kwargs: dict[str, Any]
 
     def __init__(
         self,
         *,
-        link: Optional[str] = None,
-        l1_reg: Optional[str] = "num_features(10)",
-        data_size_limit: Optional[int] = 100,
+        link: str | None = None,
+        l1_reg: str | None = "num_features(10)",
+        data_size_limit: int | None = 100,
         **explainer_kwargs: Any,
     ) -> None:
         """
@@ -305,7 +304,7 @@ class KernelExplainerFactory(FunctionExplainerFactory):
         return False
 
     def make_explainer_from_function(
-        self, model_fn: ModelFunction, data: Optional[pd.DataFrame]
+        self, model_fn: ModelFunction, data: pd.DataFrame | None
     ) -> BaseExplainer:
         """[see superclass]"""
 
@@ -366,7 +365,7 @@ class ExactExplainerFactory(FunctionExplainerFactory):
     """
 
     # defined in superclass, repeated here for Sphinx
-    explainer_kwargs: Dict[str, Any]
+    explainer_kwargs: dict[str, Any]
 
     @property
     def explains_raw_output(self) -> bool:
@@ -379,7 +378,7 @@ class ExactExplainerFactory(FunctionExplainerFactory):
         return True
 
     def make_explainer_from_function(
-        self, model_fn: ModelFunction, data: Optional[pd.DataFrame]
+        self, model_fn: ModelFunction, data: pd.DataFrame | None
     ) -> BaseExplainer:
         """[see superclass]"""
         self._validate_background_dataset(data=data)
@@ -425,7 +424,7 @@ class PermutationExplainerFactory(FunctionExplainerFactory):
     """
 
     # defined in superclass, repeated here for Sphinx
-    explainer_kwargs: Dict[str, Any]
+    explainer_kwargs: dict[str, Any]
 
     @property
     def explains_raw_output(self) -> bool:
@@ -440,7 +439,7 @@ class PermutationExplainerFactory(FunctionExplainerFactory):
     def make_explainer_from_function(
         self,
         model_fn: ModelFunction,
-        data: Optional[pd.DataFrame],
+        data: pd.DataFrame | None,
     ) -> BaseExplainer:
         """[see superclass]"""
         self._validate_background_dataset(data=data)

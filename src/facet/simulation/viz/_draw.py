@@ -2,7 +2,8 @@
 Visualizations of simulation results.
 """
 
-from typing import Any, Iterable, Optional, Type, TypeVar, Union, cast
+from collections.abc import Iterable
+from typing import Any, TypeVar, cast
 
 import pandas as pd
 
@@ -49,7 +50,7 @@ class SimulationDrawer(Drawer[UnivariateSimulationResult[Any], SimulationStyle])
 
     def __init__(
         self,
-        style: Optional[Union[SimulationStyle, str]] = None,
+        style: SimulationStyle | str | None = None,
         histogram: bool = True,
     ) -> None:
         """
@@ -63,7 +64,7 @@ class SimulationDrawer(Drawer[UnivariateSimulationResult[Any], SimulationStyle])
     __init__.__doc__ = cast(str, Drawer.__init__.__doc__) + cast(str, __init__.__doc__)
 
     def draw(
-        self, data: UnivariateSimulationResult[Any], *, title: Optional[str] = None
+        self, data: UnivariateSimulationResult[Any], *, title: str | None = None
     ) -> None:
         """
         Draw the simulation chart.
@@ -77,13 +78,18 @@ class SimulationDrawer(Drawer[UnivariateSimulationResult[Any], SimulationStyle])
         super().draw(data=data, title=title)
 
     @classmethod
-    def get_style_classes(cls) -> Iterable[Type[SimulationStyle]]:
+    def get_style_classes(cls) -> Iterable[type[SimulationStyle]]:
         """[see superclass]"""
 
         return [
             SimulationMatplotStyle,
             SimulationReportStyle,
         ]
+
+    @classmethod
+    def get_default_style(cls) -> SimulationMatplotStyle:
+        """[see superclass]"""
+        return SimulationMatplotStyle()
 
     def _draw(self, result: UnivariateSimulationResult[Any]) -> None:
         # If the partitioning of the simulation is categorical, sort partitions in

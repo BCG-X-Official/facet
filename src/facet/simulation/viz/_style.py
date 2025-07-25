@@ -4,7 +4,8 @@ Drawing styles for simulation results.
 
 import logging
 from abc import ABCMeta, abstractmethod
-from typing import Any, Optional, Sequence, TextIO, Tuple, TypeVar, Union, cast
+from collections.abc import Sequence
+from typing import Any, TextIO, TypeVar, cast
 
 from matplotlib.axes import Axes
 from matplotlib.transforms import Bbox
@@ -48,7 +49,7 @@ class SimulationStyle(DrawingStyle, metaclass=ABCMeta):
     def draw_uplift(
         self,
         feature_name: str,
-        output_name: Union[str, Sequence[str]],
+        output_name: str | Sequence[str],
         output_unit: str,
         outputs_mean: Sequence[float],
         outputs_lower_bound: Sequence[float],
@@ -96,7 +97,7 @@ class SimulationStyle(DrawingStyle, metaclass=ABCMeta):
         pass
 
     @staticmethod
-    def _legend(confidence_level: float) -> Tuple[str, ...]:
+    def _legend(confidence_level: float) -> tuple[str, ...]:
         # generate a triple with legend names for the min percentile, mean, and max
         # percentile
         tail_percentile = (100.0 - confidence_level * 100.0) / 2
@@ -127,7 +128,7 @@ class SimulationMatplotStyle(MatplotStyle, SimulationStyle):
     def draw_uplift(
         self,
         feature_name: str,
-        output_name: Union[str, Sequence[str]],
+        output_name: str | Sequence[str],
         output_unit: str,
         outputs_mean: Sequence[float],
         outputs_lower_bound: Sequence[float],
@@ -210,7 +211,7 @@ class SimulationMatplotStyle(MatplotStyle, SimulationStyle):
                 x_axis_vertical_position: float = main_ax.get_ylim()[0]
 
                 # get the upper and lower vertical bound of the tick labels
-                xaxis_tight_bbox: Optional[Bbox] = main_ax.get_xaxis().get_tightbbox(
+                xaxis_tight_bbox: Bbox | None = main_ax.get_xaxis().get_tightbbox(
                     self.get_renderer()
                 )
                 if xaxis_tight_bbox is None:
@@ -265,7 +266,7 @@ class SimulationMatplotStyle(MatplotStyle, SimulationStyle):
         # reduce the horizontal margin such that half a bar is to the left of the
         # leftmost tick mark (but the tick mark stays aligned with the main
         # simulation chart)
-        x_margin, _ = cast(Tuple[float, float], ax.margins())
+        x_margin, _ = cast(tuple[float, float], ax.margins())
         ax.set_xmargin(
             max(
                 0.0,
@@ -345,7 +346,7 @@ class SimulationReportStyle(SimulationStyle, TextStyle):
     def draw_uplift(
         self,
         feature_name: str,
-        output_name: Union[str, Sequence[str]],
+        output_name: str | Sequence[str],
         output_unit: str,
         outputs_mean: Sequence[float],
         outputs_lower_bound: Sequence[float],
