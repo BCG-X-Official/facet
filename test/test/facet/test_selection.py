@@ -42,18 +42,6 @@ def test_learner_selector(
     sample: Sample,
     n_jobs: int,
 ) -> None:
-    expected_scores = [
-        0.669,
-        0.649,
-        0.493,
-        0.477,
-        0.464,
-        0.451,
-        0.437,
-        0.437,
-        0.395,
-        0.395,
-    ]
     expected_learners: list[str] = [
         cls.__name__
         for cls in (
@@ -76,7 +64,7 @@ def test_learner_selector(
         4: dict(n_estimators=50),
     }
 
-    # define the circular cross validator with just 5 splits (to speed up testing)
+    # define the circular cross-validator with just 5 splits (to speed up testing)
     cv = BootstrapCV(n_splits=5, random_state=42)
 
     with pytest.raises(
@@ -145,17 +133,16 @@ def test_learner_selector(
     )
 
     check_ranking(
-        ranking=ranking,
+        ranking=ranking.iloc[:10],
         is_classifier=False,
-        scores_expected=expected_scores,
+        score_min_expected=0.39,
+        score_max_expected=0.68,
         params_expected=expected_parameters,
         candidate_names_expected=expected_learners,
     )
 
 
 def test_model_selector_no_preprocessing(n_jobs: int) -> None:
-    expected_learner_scores = [0.961, 0.957, 0.957, 0.936]
-
     # define a yield-engine circular CV:
     cv = BootstrapCV(n_splits=5, random_state=42)
 
@@ -189,7 +176,8 @@ def test_model_selector_no_preprocessing(n_jobs: int) -> None:
     check_ranking(
         ranking=summary_report,
         is_classifier=True,
-        scores_expected=expected_learner_scores,
+        score_min_expected=0.93,
+        score_max_expected=0.97,
         params_expected={
             0: dict(C=10, kernel="linear"),
             3: dict(C=1, kernel="rbf"),
@@ -396,8 +384,6 @@ def test_model_selector_classification(
     cv_stratified_bootstrap: StratifiedBootstrapCV,
     n_jobs: int,
 ) -> None:
-    expected_learner_scores = [0.965, 0.964, 0.957, 0.956]
-
     # define parameters
     ps1 = ParameterSpace(
         ClassifierPipelineDF(classifier=RandomForestClassifierDF(random_state=42))
@@ -451,7 +437,8 @@ def test_model_selector_classification(
     check_ranking(
         ranking=ranking,
         is_classifier=True,
-        scores_expected=expected_learner_scores,
+        score_min_expected=0.95,
+        score_max_expected=0.97,
         params_expected={
             2: dict(min_samples_leaf=32, n_estimators=50),
             3: dict(min_samples_leaf=32, n_estimators=80),

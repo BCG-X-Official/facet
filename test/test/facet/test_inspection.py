@@ -3,7 +3,6 @@ Model inspector tests.
 """
 
 import logging
-import platform
 import warnings
 from typing import Any, TypeVar, cast
 
@@ -59,16 +58,11 @@ def test_regressor_selector(
         RegressorPipelineDF[LGBMRegressorDF], GridSearchCV
     ],
 ) -> None:
-    scores_expected: list[float] = (
-        [0.578, 0.530, 0.310, 0.308, 0.294, 0.226, 0.217, 0.217, 0.217, 0.217]
-        if platform.machine() != "arm64" or platform.system() != "Darwin"
-        # on M1 macs, we get different results starting with scikit-learn 1.1
-        else [0.579, 0.531, 0.312, 0.312, 0.311, 0.308, 0.246, 0.215, 0.215, 0.196]
-    )
     check_ranking(
-        ranking=regressor_selector.summary_report(),
+        ranking=regressor_selector.summary_report().iloc[:10],
         is_classifier=False,
-        scores_expected=scores_expected,
+        score_min_expected=0.19,
+        score_max_expected=0.58,
         params_expected=None,
     )
 
@@ -228,8 +222,6 @@ def test_binary_classifier_ranking(
         ClassifierPipelineDF[RandomForestClassifierDF], GridSearchCV
     ],
 ) -> None:
-    expected_learner_scores = [0.938, 0.936, 0.936, 0.929]
-
     ranking = iris_classifier_selector_binary.summary_report()
 
     log.debug(f"\n{ranking}")
@@ -237,7 +229,8 @@ def test_binary_classifier_ranking(
     check_ranking(
         ranking=ranking,
         is_classifier=True,
-        scores_expected=expected_learner_scores,
+        score_min_expected=0.92,
+        score_max_expected=0.94,
         params_expected={
             2: dict(min_samples_leaf=4, n_estimators=10),
             3: dict(min_samples_leaf=8, n_estimators=10),

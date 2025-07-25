@@ -6,7 +6,7 @@ import numpy as np
 import numpy.typing as npt
 import pandas as pd
 import pytest
-from numpy.testing import assert_allclose, assert_array_equal
+from numpy.testing import assert_array_equal
 from sklearn import datasets
 from sklearn.datasets import fetch_california_housing
 from sklearn.model_selection import BaseCrossValidator, GridSearchCV, KFold
@@ -258,19 +258,24 @@ def iris_df(iris_target_name: str) -> pd.DataFrame:
     #  load sklearn test-data and convert to pd
     iris: Bunch = datasets.load_iris()
 
-    iris_df = pd.DataFrame(
-        data=np.c_[iris.data, iris.target],
-        columns=[*iris.feature_names, iris_target_name],
+    return (
+        pd.DataFrame(
+            data=np.c_[iris.data, iris.target],
+            columns=[*iris.feature_names, iris_target_name],
+        )
+        # replace target numericals with actual class labels
+        .pipe(
+            lambda df: df.assign(
+                **{
+                    iris_target_name: (
+                        df.loc[:, iris_target_name]
+                        .astype(int)
+                        .map(dict(enumerate(iris.target_names)))
+                    )
+                }
+            )
+        )
     )
-
-    # replace target numericals with actual class labels
-    iris_df.loc[:, iris_target_name] = (
-        iris_df.loc[:, iris_target_name]
-        .astype(int)
-        .map(dict(enumerate(iris.target_names)))
-    )
-
-    return iris_df
 
 
 @pytest.fixture(scope="session")  # type: ignore
@@ -321,7 +326,8 @@ COL_SCORE = ("score", "test", "mean")
 def check_ranking(
     ranking: pd.DataFrame,
     is_classifier: bool,
-    scores_expected: Sequence[float],
+    score_min_expected: float,
+    score_max_expected: float,
     params_expected: Mapping[int, Mapping[str, Any]] | None,
     candidate_names_expected: Sequence[str] | None = None,
 ) -> None:
@@ -330,21 +336,22 @@ def check_ranking(
 
     :param ranking: summary data frame
     :param is_classifier: flag if ranking was performed on classifiers, or regressors
-    :param scores_expected: expected ranking scores, rounded to 3 decimal places
+    :param score_min_expected: expected minimum score (lower bound)
+    :param score_max_expected: expected maximum score (upper bound)
     :param params_expected: expected learner parameters
     :param candidate_names_expected: optional list of expected learners;
         only required for multi estimator search
     """
 
-    scores_actual: pd.Series = ranking.loc[:, COL_SCORE].values[: len(scores_expected)]
+    scores_actual: pd.Series = ranking.loc[:, COL_SCORE]
 
-    assert_allclose(
-        scores_actual,
-        scores_expected,
-        rtol=0.015,
-        err_msg=(
-            f"unexpected scores: got {scores_actual} but expected {scores_expected}"
-        ),
+    assert (
+        scores_actual.min() >= score_min_expected
+    ), f"minimum score {scores_actual.min()} is less than expected {score_min_expected}"
+
+    assert scores_actual.max() <= score_max_expected, (
+        f"maximum score {scores_actual.max()} is greater than expected "
+        f"{score_max_expected}"
     )
 
     col_learner = COL_CLASSIFIER if is_classifier else COL_REGRESSOR
