@@ -54,8 +54,8 @@ stages:
         steps:
           - task: UsePythonVersion@0
             inputs:
-              versionSpec: '3.9'
-            displayName: 'use Python 3.9'
+              versionSpec: '3.12'
+            displayName: 'use Python 3.12'
           - script: |
               python -m pip install isort~=6.0
               python -m isort --check --diff .
@@ -65,8 +65,8 @@ stages:
         steps:
           - task: UsePythonVersion@0
             inputs:
-              versionSpec: '3.9'
-            displayName: 'use Python 3.9'
+              versionSpec: '3.12'
+            displayName: 'use Python 3.12'
           - script: |
               python -m pip install black~=25.1.0
               python -m black --check .
@@ -76,8 +76,8 @@ stages:
         steps:
           - task: UsePythonVersion@0
             inputs:
-              versionSpec: '3.9'
-            displayName: 'use Python 3.9'
+              versionSpec: '3.12'
+            displayName: 'use Python 3.12'
           - script: |
               python -m pip install flake8~=7.3 flake8-comprehensions~=3.16
               python -m flake8 --config tox.ini -v .
@@ -153,8 +153,8 @@ stages:
         steps:
           - task: UsePythonVersion@0
             inputs:
-              versionSpec: '3.9'
-            displayName: 'use Python 3.9'
+              versionSpec: '3.12'
+            displayName: 'use Python 3.12'
 
           - checkout: self
 
@@ -448,8 +448,8 @@ stages:
         steps:
           - task: UsePythonVersion@0
             inputs:
-              versionSpec: '3.9'
-            displayName: 'use Python 3.9'
+              versionSpec: '3.12'
+            displayName: 'use Python 3.12'
 
           - checkout: pytools
           - checkout: self
@@ -513,8 +513,8 @@ stages:
         steps:
           - task: UsePythonVersion@0
             inputs:
-              versionSpec: '3.9'
-            displayName: 'use Python 3.9'
+              versionSpec: '3.12'
+            displayName: 'use Python 3.12'
 
           - checkout: pytools
           - checkout: self
@@ -651,8 +651,8 @@ stages:
         steps:
           - task: UsePythonVersion@0
             inputs:
-              versionSpec: '3.9'
-            displayName: 'use Python 3.9'
+              versionSpec: '3.12'
+            displayName: 'use Python 3.12'
 
           - task: InstallSSHKey@0
             inputs:
