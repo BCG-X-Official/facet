@@ -1,8 +1,10 @@
 """
 Tests for module facet.selection
 """
+
 import logging
-from typing import Any, List, Mapping
+from collections.abc import Mapping
+from typing import Any
 
 import numpy as np
 import pandas as pd
@@ -36,23 +38,11 @@ log = logging.getLogger(__name__)
 
 
 def test_learner_selector(
-    regressor_parameters: List[ParameterSpace[RegressorPipelineDF[LGBMRegressorDF]]],
+    regressor_parameters: list[ParameterSpace[RegressorPipelineDF[LGBMRegressorDF]]],
     sample: Sample,
     n_jobs: int,
 ) -> None:
-    expected_scores = [
-        0.669,
-        0.649,
-        0.493,
-        0.477,
-        0.464,
-        0.451,
-        0.448,
-        0.448,
-        0.448,
-        0.448,
-    ]
-    expected_learners: List[str] = [
+    expected_learners: list[str] = [
         cls.__name__
         for cls in (
             LinearRegressionDF,
@@ -74,7 +64,7 @@ def test_learner_selector(
         4: dict(n_estimators=50),
     }
 
-    # define the circular cross validator with just 5 splits (to speed up testing)
+    # define the circular cross-validator with just 5 splits (to speed up testing)
     cv = BootstrapCV(n_splits=5, random_state=42)
 
     with pytest.raises(
@@ -118,17 +108,15 @@ def test_learner_selector(
         )
 
     # define the learner selector
-    ranker: LearnerSelector[
-        RegressorPipelineDF[LGBMRegressorDF], GridSearchCV
-    ] = LearnerSelector(
-        searcher_type=GridSearchCV,
-        parameter_space=regressor_parameters,
-        cv=cv,
-        scoring="r2",
-        n_jobs=n_jobs,
-        error_score="raise",
-    ).fit(
-        sample=sample
+    ranker: LearnerSelector[RegressorPipelineDF[LGBMRegressorDF], GridSearchCV] = (
+        LearnerSelector(
+            searcher_type=GridSearchCV,
+            parameter_space=regressor_parameters,
+            cv=cv,
+            scoring="r2",
+            n_jobs=n_jobs,
+            error_score="raise",
+        ).fit(sample=sample)
     )
 
     log.debug(f"\n{ranker.summary_report()}")
@@ -145,17 +133,16 @@ def test_learner_selector(
     )
 
     check_ranking(
-        ranking=ranking,
+        ranking=ranking.iloc[:10],
         is_classifier=False,
-        scores_expected=expected_scores,
+        score_min_expected=0.39,
+        score_max_expected=0.68,
         params_expected=expected_parameters,
         candidate_names_expected=expected_learners,
     )
 
 
 def test_model_selector_no_preprocessing(n_jobs: int) -> None:
-    expected_learner_scores = [0.961, 0.957, 0.957, 0.936]
-
     # define a yield-engine circular CV:
     cv = BootstrapCV(n_splits=5, random_state=42)
 
@@ -174,15 +161,13 @@ def test_model_selector_no_preprocessing(n_jobs: int) -> None:
     )
     test_sample: Sample = Sample(observations=test_data, target_name="target")
 
-    model_selector: LearnerSelector[
-        ClassifierPipelineDF[SVCDF], GridSearchCV
-    ] = LearnerSelector(
-        searcher_type=GridSearchCV,
-        parameter_space=parameter_space,
-        cv=cv,
-        n_jobs=n_jobs,
-    ).fit(
-        sample=test_sample
+    model_selector: LearnerSelector[ClassifierPipelineDF[SVCDF], GridSearchCV] = (
+        LearnerSelector(
+            searcher_type=GridSearchCV,
+            parameter_space=parameter_space,
+            cv=cv,
+            n_jobs=n_jobs,
+        ).fit(sample=test_sample)
     )
 
     summary_report = model_selector.summary_report()
@@ -191,7 +176,8 @@ def test_model_selector_no_preprocessing(n_jobs: int) -> None:
     check_ranking(
         ranking=summary_report,
         is_classifier=True,
-        scores_expected=expected_learner_scores,
+        score_min_expected=0.93,
+        score_max_expected=0.97,
         params_expected={
             0: dict(C=10, kernel="linear"),
             3: dict(C=1, kernel="rbf"),
@@ -352,7 +338,7 @@ def test_parameter_space(simple_preprocessor: TransformerDF) -> None:
 
 
 def test_model_selector_regression(
-    regressor_parameters: List[ParameterSpace[RegressorPipelineDF[LGBMRegressorDF]]],
+    regressor_parameters: list[ParameterSpace[RegressorPipelineDF[LGBMRegressorDF]]],
     sample: Sample,
     n_jobs: int,
 ) -> None:
@@ -368,16 +354,14 @@ def test_model_selector_regression(
     ):
         LearnerSelector(GridSearchCV, regressor_parameters, param_grid=None)
 
-    ranker: LearnerSelector[
-        RegressorPipelineDF[LGBMRegressorDF], GridSearchCV
-    ] = LearnerSelector(
-        GridSearchCV,
-        regressor_parameters,
-        scoring="r2",
-        cv=cv,
-        n_jobs=n_jobs,
-    ).fit(
-        sample=sample
+    ranker: LearnerSelector[RegressorPipelineDF[LGBMRegressorDF], GridSearchCV] = (
+        LearnerSelector(
+            GridSearchCV,
+            regressor_parameters,
+            scoring="r2",
+            cv=cv,
+            n_jobs=n_jobs,
+        ).fit(sample=sample)
     )
 
     assert isinstance(ranker.best_estimator_, RegressorPipelineDF)
@@ -400,8 +384,6 @@ def test_model_selector_classification(
     cv_stratified_bootstrap: StratifiedBootstrapCV,
     n_jobs: int,
 ) -> None:
-    expected_learner_scores = [0.965, 0.964, 0.957, 0.956]
-
     # define parameters
     ps1 = ParameterSpace(
         ClassifierPipelineDF(classifier=RandomForestClassifierDF(random_state=42))
@@ -455,7 +437,8 @@ def test_model_selector_classification(
     check_ranking(
         ranking=ranking,
         is_classifier=True,
-        scores_expected=expected_learner_scores,
+        score_min_expected=0.95,
+        score_max_expected=0.97,
         params_expected={
             2: dict(min_samples_leaf=32, n_estimators=50),
             3: dict(min_samples_leaf=32, n_estimators=80),

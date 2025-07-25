@@ -5,8 +5,7 @@ This is the class and function reference of FACET for advanced model selection,
 inspection, and simulation.
 """
 
-
-__version__ = "2.1.2"
+__version__ = "2.2rc0"
 
 __logo__ = (
     r"""

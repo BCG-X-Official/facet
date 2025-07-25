@@ -1,4 +1,4 @@
-from typing import Any, List, cast
+from typing import Any, cast
 
 import numpy as np
 import pandas as pd
@@ -25,8 +25,10 @@ def test_sample_init(california_df: pd.DataFrame, california_target: str) -> Non
 
     # 2. no valid target specified
     with pytest.raises(TypeError):
-        # noinspection PyTypeChecker
-        Sample(observations=california_df, target_name=None)  # type: ignore
+        Sample(
+            observations=california_df,
+            target_name=None,  # type: ignore[arg-type]
+        )
 
     # store list of feature columns:
     f_columns = list(california_df.columns)
@@ -78,9 +80,9 @@ def test_sample(california_df: pd.DataFrame, california_target: str) -> None:
         assert california_target not in sample.feature_names
         assert len(sample.feature_names) == len(california_df.columns) - 1
 
-        assert type(sample.target) == pd.Series
-        assert type(sample.weight) == pd.Series
-        assert type(sample.features) == pd.DataFrame
+        assert isinstance(sample.target, pd.Series)
+        assert isinstance(sample.weight, pd.Series)
+        assert isinstance(sample.features, pd.DataFrame)
 
         assert len(sample.target) == len(sample.features)
 
@@ -143,8 +145,8 @@ def test_sample(california_df: pd.DataFrame, california_target: str) -> None:
     # global python environment variable PYTHONHASHSEED
     parallel = Parallel(n_jobs=-3)
 
-    def get_column(sample: Sample) -> List[Any]:
-        return cast(List[Any], sample.features.columns.to_list())
+    def get_column(sample: Sample) -> list[Any]:
+        return cast(list[Any], sample.features.columns.to_list())
 
     columns1, columns2 = parallel(delayed(get_column)(sample) for sample in [s, s])
     assert columns1 == columns2

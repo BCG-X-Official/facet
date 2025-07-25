@@ -3,7 +3,7 @@ Core implementation of :mod:`facet.simulation`
 """
 
 import logging
-from typing import Any, Optional, Tuple, Type, TypeVar, Union, cast
+from typing import Any, TypeVar, cast
 
 import numpy as np
 import pandas as pd
@@ -72,16 +72,16 @@ class UnivariateProbabilitySimulator(BaseUnivariateSimulator[ClassifierDF]):
     """
 
     # defined in superclass, repeated here for Sphinx
-    n_jobs: Optional[int]
+    n_jobs: int | None
 
     # defined in superclass, repeated here for Sphinx
-    shared_memory: Optional[bool]
+    shared_memory: bool | None
 
     # defined in superclass, repeated here for Sphinx
-    pre_dispatch: Optional[Union[str, int]]
+    pre_dispatch: str | int | None
 
     # defined in superclass, repeated here for Sphinx
-    verbose: Optional[int]
+    verbose: int | None
 
     # defined in superclass, repeated here for Sphinx
     model: ClassifierDF
@@ -126,13 +126,13 @@ class UnivariateProbabilitySimulator(BaseUnivariateSimulator[ClassifierDF]):
             return "positive class"
 
     @staticmethod
-    def _expected_learner_type() -> Type[ClassifierDF]:
+    def _expected_learner_type() -> type[ClassifierDF]:
         return ClassifierDF
 
     @staticmethod
     def _simulate(
         model: ClassifierDF, x: pd.DataFrame, name: str, value: Any
-    ) -> Tuple[float, float]:
+    ) -> tuple[float, float]:
         probabilities: pd.DataFrame = model.predict_proba(
             BaseUnivariateSimulator._set_constant_feature_value(x, name, value)
         )
@@ -168,16 +168,16 @@ class UnivariateTargetSimulator(UnivariateRegressionSimulator):
     """
 
     # defined in superclass, repeated here for Sphinx
-    n_jobs: Optional[int]
+    n_jobs: int | None
 
     # defined in superclass, repeated here for Sphinx
-    shared_memory: Optional[bool]
+    shared_memory: bool | None
 
     # defined in superclass, repeated here for Sphinx
-    pre_dispatch: Optional[Union[str, int]]
+    pre_dispatch: str | int | None
 
     # defined in superclass, repeated here for Sphinx
-    verbose: Optional[int]
+    verbose: int | None
 
     # defined in superclass, repeated here for Sphinx
     model: RegressorDF
@@ -222,16 +222,16 @@ class UnivariateUpliftSimulator(UnivariateRegressionSimulator):
     """
 
     # defined in superclass, repeated here for Sphinx
-    n_jobs: Optional[int]
+    n_jobs: int | None
 
     # defined in superclass, repeated here for Sphinx
-    shared_memory: Optional[bool]
+    shared_memory: bool | None
 
     # defined in superclass, repeated here for Sphinx
-    pre_dispatch: Optional[Union[str, int]]
+    pre_dispatch: str | int | None
 
     # defined in superclass, repeated here for Sphinx
-    verbose: Optional[int]
+    verbose: int | None
 
     # defined in superclass, repeated here for Sphinx
     model: RegressorDF

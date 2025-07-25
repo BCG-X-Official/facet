@@ -4,7 +4,7 @@ Core implementation of :mod:`facet.selection.base`
 
 import logging
 from abc import ABCMeta, abstractmethod
-from typing import Any, Dict, Generic, List, Optional, TypeVar, Union, cast
+from typing import Any, Generic, TypeVar
 
 import numpy.typing as npt
 import pandas as pd
@@ -26,7 +26,7 @@ __all__ = [
 # Type constants
 #
 
-ParameterDict = Dict[str, Union[List[Any], stats.rv_continuous, stats.rv_discrete]]
+ParameterDict = dict[str, list[Any] | stats.rv_continuous | stats.rv_discrete]
 
 
 #
@@ -71,7 +71,7 @@ class BaseParameterSpace(HasExpressionRepr, Generic[T_Estimator], metaclass=ABCM
         return self._estimator
 
     @property
-    def parameters(self) -> Union[List[ParameterDict], ParameterDict]:
+    def parameters(self) -> list[ParameterDict] | ParameterDict:
         """
         The parameter choices (as lists) or distributions (from :mod:`scipy.stats`)
         that constitute this parameter space.
@@ -83,8 +83,8 @@ class BaseParameterSpace(HasExpressionRepr, Generic[T_Estimator], metaclass=ABCM
 
     @abstractmethod
     def get_parameters(
-        self, prefix: Optional[str] = None
-    ) -> Union[List[ParameterDict], ParameterDict]:
+        self, prefix: str | None = None
+    ) -> list[ParameterDict] | ParameterDict:
         """
         Generate a dictionary of parameter choices and distributions,
         or a list of such dictionaries, compatible with `scikit-learn`'s CV search API
@@ -119,16 +119,16 @@ class CandidateEstimatorDF(ClassifierDF, RegressorDF, TransformerDF):
     PARAM_CANDIDATE_NAME = "candidate_name"
 
     #: The currently selected estimator candidate.
-    candidate: Optional[Union[ClassifierDF, RegressorDF, TransformerDF]]
+    candidate: ClassifierDF | RegressorDF | TransformerDF | None
 
     #: The name of the candidate, used for more readable summary reports
     #: of model tuning results.
-    candidate_name: Optional[str]
+    candidate_name: str | None
 
     def __init__(
         self,
-        candidate: Optional[Union[ClassifierDF, RegressorDF, TransformerDF]] = None,
-        candidate_name: Optional[str] = None,
+        candidate: ClassifierDF | RegressorDF | TransformerDF | None = None,
+        candidate_name: str | None = None,
     ) -> None:
         """
         :param candidate: the current estimator candidate; usually not specified on
@@ -142,7 +142,7 @@ class CandidateEstimatorDF(ClassifierDF, RegressorDF, TransformerDF):
         self.candidate = candidate
         self.candidate_name = candidate_name
 
-    def _get_candidate(self) -> Union[ClassifierDF, RegressorDF, TransformerDF]:
+    def _get_candidate(self) -> ClassifierDF | RegressorDF | TransformerDF:
         # get the estimator candidate; raise an attribute error if it has not been set
 
         if self.candidate is None:
@@ -150,55 +150,52 @@ class CandidateEstimatorDF(ClassifierDF, RegressorDF, TransformerDF):
         else:
             return self.candidate
 
-    def _get_classes(self) -> Union[npt.NDArray[Any], List[npt.NDArray[Any]]]:
-        return cast(
-            Union[npt.NDArray[Any], List[npt.NDArray[Any]]],
-            self._get_candidate()._get_classes(),
-        )
+    def _get_classes(self) -> npt.NDArray[Any] | list[npt.NDArray[Any]]:
+        return self._get_candidate()._get_classes()
 
     # noinspection PyPep8Naming
     def predict_proba(
-        self, X: Union[pd.Series, pd.DataFrame], **predict_params: Any
-    ) -> Union[pd.DataFrame, List[pd.DataFrame]]:
+        self, X: pd.Series | pd.DataFrame, **predict_params: Any
+    ) -> pd.DataFrame | list[pd.DataFrame]:
         """[see superclass]"""
         return self._get_candidate().predict_proba(X, **predict_params)
 
     # noinspection PyPep8Naming
     def predict_log_proba(
-        self, X: Union[pd.Series, pd.DataFrame], **predict_params: Any
-    ) -> Union[pd.DataFrame, List[pd.DataFrame]]:
+        self, X: pd.Series | pd.DataFrame, **predict_params: Any
+    ) -> pd.DataFrame | list[pd.DataFrame]:
         """[see superclass]"""
         return self._get_candidate().predict_log_proba(X, **predict_params)
 
     # noinspection PyPep8Naming
     def decision_function(
-        self, X: Union[pd.Series, pd.DataFrame], **predict_params: Any
-    ) -> Union[pd.Series, pd.DataFrame]:
+        self, X: pd.Series | pd.DataFrame, **predict_params: Any
+    ) -> pd.Series | pd.DataFrame:
         """[see superclass]"""
         return self._get_candidate().decision_function(X, **predict_params)
 
     # noinspection PyPep8Naming
     def score(
         self,
-        X: Union[pd.Series, pd.DataFrame],
+        X: pd.Series | pd.DataFrame,
         y: pd.Series,
-        sample_weight: Optional[pd.Series] = None,
+        sample_weight: pd.Series | None = None,
     ) -> float:
         """[see superclass]"""
         return self._get_candidate().score(X, y, sample_weight)
 
     # noinspection PyPep8Naming
     def predict(
-        self, X: Union[pd.Series, pd.DataFrame], **predict_params: Any
-    ) -> Union[pd.Series, pd.DataFrame]:
+        self, X: pd.Series | pd.DataFrame, **predict_params: Any
+    ) -> pd.Series | pd.DataFrame:
         """[see superclass]"""
         return self._get_candidate().predict(X, **predict_params)
 
     # noinspection PyPep8Naming
     def fit(
         self: T_CandidateEstimatorDF,
-        X: Union[pd.Series, pd.DataFrame],
-        y: Optional[Union[pd.Series, pd.DataFrame]] = None,
+        X: pd.Series | pd.DataFrame,
+        y: pd.Series | pd.DataFrame | None = None,
         **fit_params: Any,
     ) -> T_CandidateEstimatorDF:
         """[see superclass]"""
@@ -211,12 +208,12 @@ class CandidateEstimatorDF(ClassifierDF, RegressorDF, TransformerDF):
         return self.candidate is not None and self.candidate.is_fitted
 
     # noinspection PyPep8Naming
-    def inverse_transform(self, X: Union[pd.Series, pd.DataFrame]) -> pd.DataFrame:
+    def inverse_transform(self, X: pd.Series | pd.DataFrame) -> pd.DataFrame:
         """[see superclass]"""
         return self._get_candidate().inverse_transform(X)
 
     # noinspection PyPep8Naming
-    def transform(self, X: Union[pd.Series, pd.DataFrame]) -> pd.DataFrame:
+    def transform(self, X: pd.Series | pd.DataFrame) -> pd.DataFrame:
         """[see superclass]"""
         return self._get_candidate().transform(X)
 
@@ -228,7 +225,7 @@ class CandidateEstimatorDF(ClassifierDF, RegressorDF, TransformerDF):
     def _get_features_in(self) -> pd.Index:
         return self._get_candidate().feature_names_in_
 
-    def _get_outputs(self) -> Optional[List[str]]:
+    def _get_outputs(self) -> list[str] | None:
         return self._get_candidate()._get_outputs()
 
     def _get_n_outputs(self) -> int:

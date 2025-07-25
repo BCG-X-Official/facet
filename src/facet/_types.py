@@ -2,19 +2,19 @@
 Type aliases for common use in the ``facet`` package
 """
 
-from typing import Callable, Union
+from collections.abc import Callable
+from typing import TypeAlias
 
 import numpy as np
 import numpy.typing as npt
 import pandas as pd
 from sklearn.base import ClassifierMixin, RegressorMixin
-from typing_extensions import TypeAlias
 
 # a function representing a model to be inspected
 ModelFunction: TypeAlias = Callable[
-    [Union[pd.Series, pd.DataFrame, npt.NDArray[np.float_]]],
-    Union[pd.Series, npt.NDArray[np.float_], float],
+    [pd.Series | pd.DataFrame | npt.NDArray[np.float64]],
+    pd.Series | npt.NDArray[np.float64] | float,
 ]
 
 # a supervised learner in scikit-learn
-NativeSupervisedLearner: TypeAlias = Union[RegressorMixin, ClassifierMixin]
+NativeSupervisedLearner: TypeAlias = RegressorMixin | ClassifierMixin

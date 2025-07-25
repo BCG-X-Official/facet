@@ -1,13 +1,14 @@
 """
 Implements the base package.
 """
+
 import logging
 from abc import ABCMeta, abstractmethod
-from typing import Any, Dict, Generic, Mapping, Optional, TypeVar
+from collections.abc import Mapping
+from typing import Any, Generic, TypeVar
 
 import numpy as np
 import pandas as pd
-from packaging.version import Version
 from shap import Explainer, Explanation
 
 from pytools.api import AllTracker
@@ -21,19 +22,6 @@ __all__ = [
     "BaseExplainer",
     "ExplainerFactory",
 ]
-
-
-# Apply a hack to address shap's incompatibility with numpy >= 1.24:
-# shap relies on the np.bool, np.int, and np.float types, which were deprecated in
-# numpy 1.20 and removed in numpy 1.24.
-#
-# We define these types as an alias for the corresponding type with a trailing
-# underscore.
-
-if Version(np.__version__) >= Version("1.20"):
-    for __attr in ("bool", "int", "float"):
-        setattr(np, __attr, getattr(np, f"{__attr}_"))
-    del __attr
 
 
 #
@@ -170,7 +158,7 @@ class ExplainerFactory(HasExpressionRepr, Generic[T_Model], metaclass=ABCMeta):
     """
 
     #: Additional keyword arguments to be passed to the explainer constructor.
-    explainer_kwargs: Dict[str, Any]
+    explainer_kwargs: dict[str, Any]
 
     def __init__(self, **explainer_kwargs: Any) -> None:
         """
@@ -206,7 +194,7 @@ class ExplainerFactory(HasExpressionRepr, Generic[T_Model], metaclass=ABCMeta):
 
     @abstractmethod
     def make_explainer(
-        self, model: T_Model, data: Optional[pd.DataFrame]
+        self, model: T_Model, data: pd.DataFrame | None
     ) -> BaseExplainer:
         """
         Construct a new :class:`~shap.Explainer` to compute shap values.
@@ -217,10 +205,10 @@ class ExplainerFactory(HasExpressionRepr, Generic[T_Model], metaclass=ABCMeta):
         """
 
     @staticmethod
-    def _remove_null_kwargs(kwargs: Mapping[str, Any]) -> Dict[str, Any]:
+    def _remove_null_kwargs(kwargs: Mapping[str, Any]) -> dict[str, Any]:
         return {k: v for k, v in kwargs.items() if v is not None}
 
-    def _validate_background_dataset(self, data: Optional[pd.DataFrame]) -> None:
+    def _validate_background_dataset(self, data: pd.DataFrame | None) -> None:
         if data is None and self.uses_background_dataset:
             raise ValueError(
                 "a background dataset is required to make an explainer with this "

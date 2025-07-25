@@ -2,9 +2,9 @@
 Core implementation of :mod:`facet.simulation`
 """
 
-
 import logging
-from typing import Generic, Sequence, TypeVar
+from collections.abc import Sequence
+from typing import Generic, TypeVar
 
 import numpy as np
 import pandas as pd

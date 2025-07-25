@@ -1,34 +1,22 @@
 """
 Core implementation of :mod:`facet.selection`
 """
+
 import inspect
 import itertools
 import logging
 import re
-from typing import (
-    Any,
-    Callable,
-    Dict,
-    Generic,
-    Iterable,
-    List,
-    Optional,
-    Pattern,
-    Sequence,
-    Tuple,
-    TypeVar,
-    Union,
-    cast,
-)
+from collections.abc import Callable, Iterable, Sequence
+from re import Pattern
+from typing import Any, Generic, TypeVar, cast
 
 import numpy as np
 import numpy.typing as npt
 import pandas as pd
-from sklearn.base import BaseEstimator
 from sklearn.metrics import get_scorer
 from sklearn.model_selection import BaseCrossValidator, GridSearchCV
 
-from pytools.api import AllTracker, inheritdoc, to_list
+from pytools.api import AllTracker, as_list, inheritdoc
 from pytools.fit import FittableMixin, fitted_only
 from pytools.parallelization import ParallelizableMixin
 from sklearndf import EstimatorDF
@@ -89,41 +77,37 @@ class LearnerSelector(
     """
 
     # defined in superclass, repeated here for Sphinx
-    n_jobs: Optional[int]
+    n_jobs: int | None
 
     # defined in superclass, repeated here for Sphinx
-    shared_memory: Optional[bool]
+    shared_memory: bool | None
 
     # defined in superclass, repeated here for Sphinx
-    pre_dispatch: Optional[Union[str, int]]
+    pre_dispatch: str | int | None
 
     # defined in superclass, repeated here for Sphinx
-    verbose: Optional[int]
+    verbose: int | None
 
     #: A cross-validation searcher class, or any other callable
     #: that instantiates a cross-validation searcher, wrapped in
     #: a tuple to avoid confusion with methods
-    searcher_type: Tuple[Callable[..., T_SearchCV]]
+    searcher_type: tuple[Callable[..., T_SearchCV]]
 
     #: The parameter space to search.
     parameter_space: BaseParameterSpace[T_EstimatorDF]
 
     #: The cross-validator to be used by the searcher.
-    cv: Optional[BaseCrossValidator]
+    cv: BaseCrossValidator | None
 
     #: The scoring function (by name, or as a callable) to be used by the searcher
     #: (optional; use learner's default scorer if not specified here)
-    scoring: Union[
-        str,
-        Callable[[EstimatorDF, pd.Series, pd.Series], float],
-        None,
-    ]
+    scoring: str | Callable[[EstimatorDF, pd.Series, pd.Series], float] | None
 
     #: Additional parameters to be passed on to the searcher.
-    searcher_params: Dict[str, Any]
+    searcher_params: dict[str, Any]
 
     #: The searcher used to fit this LearnerSelector; ``None`` if not fitted.
-    searcher_: Optional[T_SearchCV]
+    searcher_: T_SearchCV | None
 
     # regular expressions and replacement patterns for selecting and renaming
     # relevant columns from scikit-learn's cv_result_ table
@@ -136,7 +120,7 @@ class LearnerSelector(
         (r"(rank|mean|std)_(\w+)_(\w+)", r"\3__\2__\1"),
     ]
 
-    _CV_RESULT_PATTERNS: List[Tuple[Pattern[str], str]] = [
+    _CV_RESULT_PATTERNS: list[tuple[Pattern[str], str]] = [
         (re.compile(pattern), repl) for pattern, repl in _CV_RESULT_COLUMNS
     ]
 
@@ -160,24 +144,24 @@ class LearnerSelector(
     def __init__(
         self,
         searcher_type: Callable[..., T_SearchCV],
-        parameter_space: Union[
-            ParameterSpace[T_EstimatorDF],
-            MultiEstimatorParameterSpace[T_EstimatorDF],
-            Iterable[ParameterSpace[T_EstimatorDF]],
-        ],
-        cv: Optional[BaseCrossValidator] = None,
-        scoring: Union[
-            str,
-            Callable[
+        parameter_space: (
+            ParameterSpace[T_EstimatorDF]
+            | MultiEstimatorParameterSpace[T_EstimatorDF]
+            | Iterable[ParameterSpace[T_EstimatorDF]]
+        ),
+        cv: BaseCrossValidator | None = None,
+        scoring: (
+            str
+            | Callable[
                 [EstimatorDF, pd.Series, pd.Series],
                 float,
-            ],
-            None,
-        ] = None,
-        n_jobs: Optional[int] = None,
-        shared_memory: Optional[bool] = None,
-        pre_dispatch: Optional[Union[str, int]] = None,
-        verbose: Optional[int] = None,
+            ]
+            | None
+        ) = None,
+        n_jobs: int | None = None,
+        shared_memory: bool | None = None,
+        pre_dispatch: str | int | None = None,
+        verbose: int | None = None,
         **searcher_params: Any,
     ) -> None:
         """
@@ -207,12 +191,12 @@ class LearnerSelector(
 
         self.searcher_type = (searcher_type,)
         if not isinstance(parameter_space, BaseParameterSpace):
-            parameter_spaces: List[
-                Union[
-                    ParameterSpace[T_EstimatorDF],
-                    MultiEstimatorParameterSpace[T_EstimatorDF],
-                ]
-            ] = to_list(
+            parameter_spaces: list[
+                (
+                    ParameterSpace[T_EstimatorDF]
+                    | MultiEstimatorParameterSpace[T_EstimatorDF]
+                )
+            ] = as_list(
                 parameter_space,
                 element_type=(ParameterSpace, MultiEstimatorParameterSpace),
                 arg_name="parameter_space",
@@ -221,7 +205,7 @@ class LearnerSelector(
                 parameter_space = parameter_spaces[0]
             else:
                 parameter_space = MultiEstimatorParameterSpace(
-                    *cast(List[ParameterSpace[T_EstimatorDF]], parameter_spaces)
+                    *cast(list[ParameterSpace[T_EstimatorDF]], parameter_spaces)
                 )
 
         self.parameter_space = parameter_space
@@ -303,7 +287,7 @@ class LearnerSelector(
         # todo: remove 'type: ignore' once mypy correctly infers return type
         self: T_LearnerSelector,
         sample: Sample,
-        groups: Union[pd.Series, npt.NDArray[Any], Sequence[Any], None] = None,
+        groups: pd.Series | npt.NDArray[Any] | Sequence[Any] | None = None,
         **fit_params: Any,
     ) -> T_LearnerSelector:
         """
@@ -351,7 +335,7 @@ class LearnerSelector(
         return self
 
     @fitted_only
-    def summary_report(self, *, sort_by: Optional[str] = None) -> pd.DataFrame:
+    def summary_report(self, *, sort_by: str | None = None) -> pd.DataFrame:
         """
         Create a summary table of the scores achieved by all learners in the grid
         search, sorted by ranking score in descending order.
@@ -368,7 +352,7 @@ class LearnerSelector(
         assert self.searcher_ is not None, "Ranker is fitted"
 
         # get the raw CV results
-        cv_results: Dict[str, Any] = self.searcher_.cv_results_
+        cv_results: dict[str, Any] = self.searcher_.cv_results_
 
         if isinstance(self.parameter_space.estimator, CandidateEstimatorDF):
             # our estimator is a candidate estimator, so we need to unpack the
@@ -386,7 +370,7 @@ class LearnerSelector(
         pattern: Pattern[str]
         repl: str
 
-        def _process(name: str) -> Optional[str]:
+        def _process(name: str) -> str | None:
             # process the name of the original cv_results_ record
             # to achieve a better table format
 
@@ -400,7 +384,7 @@ class LearnerSelector(
 
         # add all columns that match any of the pre-defined patterns
 
-        cv_results_processed: Dict[str, Tuple[str, npt.NDArray[np.float_]]] = {}
+        cv_results_processed: dict[str, tuple[str, npt.NDArray[np.float64]]] = {}
 
         for pattern, repl in self._CV_RESULT_PATTERNS:
             cv_results_processed.update(
@@ -418,7 +402,7 @@ class LearnerSelector(
 
         # add the sorting column as the leftmost column of the report
 
-        sort_column_processed: Optional[str]
+        sort_column_processed: str | None
 
         sort_column_processed, _ = cv_results_processed.get(sort_by, None)
         if sort_column_processed is None:
@@ -451,7 +435,7 @@ class LearnerSelector(
         # make this object not fitted
         self.searcher_ = None
 
-    def _get_searcher_parameters(self) -> Dict[str, Any]:
+    def _get_searcher_parameters(self) -> dict[str, Any]:
         # make a dict of all parameters to be passed to the searcher
         return {
             **{
@@ -471,19 +455,29 @@ class LearnerSelector(
 
     def _get_scorer(
         self,
-    ) -> Optional[Callable[[EstimatorDF, pd.DataFrame, pd.Series], float]]:
+    ) -> Callable[..., float] | None:
         scoring = self.scoring
+
+        scorer: Callable[..., float]
 
         if scoring is None:
             return None
 
-        elif isinstance(scoring, str):
-            scorer: Callable[
-                [BaseEstimator, pd.DataFrame, pd.Series], float
-            ] = get_scorer(scoring)
+        elif callable(scoring):
+            scorer = scoring
+
+        else:
+            # if scoring is not callable, it must be a string
+            scorer = get_scorer(scoring)
 
         # noinspection PyPep8Naming
-        def _scorer_fn(estimator: EstimatorDF, X: pd.DataFrame, y: pd.Series) -> float:
+        def _scorer_fn(
+            estimator: EstimatorDF,
+            X: pd.DataFrame,
+            y: pd.Series,
+            sample_weight: pd.Series | None = None,
+            **kwargs: Any,
+        ) -> float:
             while isinstance(estimator, CandidateEstimatorDF):
                 assert estimator.candidate is not None, "estimator candidate is set"
                 estimator = estimator.candidate
@@ -493,7 +487,17 @@ class LearnerSelector(
                     X = estimator.preprocessing.transform(X=X)
                 estimator = estimator.final_estimator
 
-            return scorer(estimator.native_estimator, X, y)
+            if sample_weight is None:
+                # if sample_weight is not provided, we pass None to the scorer
+                return scorer(estimator.native_estimator, X, y, **kwargs)
+            else:
+                return scorer(  # type: ignore[call-arg]
+                    estimator.native_estimator,
+                    X,
+                    y,
+                    sample_weight=sample_weight,
+                    **kwargs,
+                )
 
         return _scorer_fn
 

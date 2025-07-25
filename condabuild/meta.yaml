@@ -1,3 +1,8 @@
+#
+# This file is deprecated and replaced by recipe.yaml, for use with rattler.
+# Keeping it for reference.
+#
+
 package:
   name: gamma-facet
   version: {{ environ.get('FACET_BUILD_FACET_VERSION') }}
@@ -35,7 +40,7 @@ test:
     - facet.validation
     - facet.simulation
   requires:
-    - pytest ~= 7.1
+    - pytest ~= 8.1
     # we always need lightgbm for testing; version spec is optional
     - lightgbm       {{ environ.get('FACET_V_LIGHTGBM', '') }}
     # optional libraries of sklearndf, needed for testing

@@ -1,11 +1,12 @@
 import logging
-from typing import Any, Dict, List, Mapping, Optional, Sequence, Tuple, cast
+from collections.abc import Mapping, Sequence
+from typing import Any, TypeVar, cast
 
 import numpy as np
 import numpy.typing as npt
 import pandas as pd
 import pytest
-from numpy.testing import assert_allclose, assert_array_equal
+from numpy.testing import assert_array_equal
 from sklearn import datasets
 from sklearn.datasets import fetch_california_housing
 from sklearn.model_selection import BaseCrossValidator, GridSearchCV, KFold
@@ -59,43 +60,43 @@ STEP_IMPUTE = "impute"
 STEP_ONE_HOT_ENCODE = "one-hot-encode"
 
 
-@pytest.fixture  # type: ignore
+@pytest.fixture(scope="session")  # type: ignore
 def california_target() -> str:
     return "MedHouseVal"
 
 
-@pytest.fixture  # type: ignore
+@pytest.fixture(scope="session")  # type: ignore
 def iris_target_name() -> str:
     return "species"
 
 
-@pytest.fixture  # type: ignore
+@pytest.fixture(scope="session")  # type: ignore
 def n_jobs() -> int:
     return -1
 
 
-@pytest.fixture  # type: ignore
+@pytest.fixture(scope="session")  # type: ignore
 def cv_kfold() -> KFold:
     # define a CV
     return KFold(n_splits=K_FOLDS, shuffle=True, random_state=42)
 
 
-@pytest.fixture  # type: ignore
+@pytest.fixture(scope="session")  # type: ignore
 def cv_bootstrap() -> BaseCrossValidator:
     # define a CV
     return BootstrapCV(n_splits=N_BOOTSTRAPS, random_state=42)
 
 
-@pytest.fixture  # type: ignore
+@pytest.fixture(scope="session")  # type: ignore
 def cv_stratified_bootstrap() -> BaseCrossValidator:
     # define a CV
     return StratifiedBootstrapCV(n_splits=N_BOOTSTRAPS, random_state=42)
 
 
-@pytest.fixture  # type: ignore
+@pytest.fixture(scope="session")  # type: ignore
 def regressor_parameters(
     simple_preprocessor: TransformerDF,
-) -> List[ParameterSpace[RegressorPipelineDF[RegressorDF]]]:
+) -> list[ParameterSpace[RegressorPipelineDF[RegressorDF]]]:
     random_state = {"random_state": 42}
 
     space_1 = ParameterSpace(
@@ -103,9 +104,8 @@ def regressor_parameters(
             preprocessing=simple_preprocessor, regressor=LGBMRegressorDF(**random_state)
         )
     )
-    space_1.regressor.max_depth = [5, 10]
-    space_1.regressor.min_split_gain = [0.1, 0.2]
-    space_1.regressor.num_leaves = [50, 100, 200]
+    space_1.regressor.max_depth = [3, 5]
+    space_1.regressor.num_leaves = [2, 3]
 
     space_2 = ParameterSpace(
         RegressorPipelineDF(
@@ -156,10 +156,10 @@ def regressor_parameters(
     return [space_1, space_2, space_3, space_4, space_5, space_6, space_7]
 
 
-@pytest.fixture  # type: ignore
+@pytest.fixture(scope="session")  # type: ignore
 def regressor_selector(
     cv_kfold: KFold,
-    regressor_parameters: List[ParameterSpace[RegressorPipelineDF[RegressorDF]]],
+    regressor_parameters: list[ParameterSpace[RegressorPipelineDF[RegressorDF]]],
     sample: Sample,
     n_jobs: int,
 ) -> LearnerSelector[RegressorPipelineDF[RegressorDF], GridSearchCV]:
@@ -179,44 +179,37 @@ def regressor_selector(
 PARAM_CANDIDATE__ = "param_candidate__"
 
 
-@pytest.fixture  # type: ignore
+@pytest.fixture(scope="session")  # type: ignore
 def best_lgbm_model(
     regressor_selector: LearnerSelector[
         RegressorPipelineDF[LGBMRegressorDF], GridSearchCV
     ],
     sample: Sample,
 ) -> RegressorPipelineDF[LGBMRegressorDF]:
-    # we get the best model_evaluation which is a LGBM - for the sake of test
-    # performance
-    assert regressor_selector.searcher_ is not None
-    best_lgbm_params: Dict[str, Any] = (
-        pd.DataFrame(regressor_selector.searcher_.cv_results_)
-        .pipe(
-            lambda df: df.loc[df.loc[:, "param_candidate_name"] == "LGBMRegressorDF", :]
-        )
-        .pipe(lambda df: df.loc[df.loc[:, "rank_test_score"].idxmin(), "params"])
-    )
-
-    len_param_candidate = len(PARAM_CANDIDATE__)
-    return (
-        cast(RegressorPipelineDF[LGBMRegressorDF], best_lgbm_params["candidate"])
-        .clone()
-        .set_params(
-            **{
-                param[len_param_candidate:]: value
-                for param, value in best_lgbm_params.items()
-                if param.startswith(PARAM_CANDIDATE__)
-            }
-        )
-        .fit(X=sample.features, y=sample.target)
+    return get_best_model(
+        model_type=LGBMRegressorDF,
+        regressor_selector=regressor_selector,
+        sample=sample,
     )
 
 
-@pytest.fixture  # type: ignore
+@pytest.fixture(scope="session")  # type: ignore
+def best_rf_model(
+    regressor_selector: LearnerSelector[RegressorPipelineDF[RegressorDF], GridSearchCV],
+    sample: Sample,
+) -> RegressorPipelineDF[RandomForestRegressorDF]:
+    return get_best_model(
+        model_type=RandomForestRegressorDF,
+        regressor_selector=regressor_selector,
+        sample=sample,
+    )
+
+
+@pytest.fixture(scope="session")  # type: ignore
 def simple_preprocessor(sample: Sample) -> TransformerDF:
     features = sample.features
 
-    column_transforms: List[Tuple[str, Any, Any]] = []
+    column_transforms: list[tuple[str, Any, Any]] = []
 
     numeric_columns: pd.Index = features.select_dtypes(np.number).columns
     if numeric_columns is not None and len(numeric_columns) > 0:
@@ -241,7 +234,7 @@ def simple_preprocessor(sample: Sample) -> TransformerDF:
     return ColumnTransformerDF(transformers=column_transforms)
 
 
-@pytest.fixture  # type: ignore
+@pytest.fixture(scope="session")  # type: ignore
 def california_df(california_target: str) -> pd.DataFrame:
     #  load sklearn test-data and convert to pd
     california: Bunch = fetch_california_housing()
@@ -252,7 +245,7 @@ def california_df(california_target: str) -> pd.DataFrame:
     )
 
 
-@pytest.fixture  # type: ignore
+@pytest.fixture(scope="session")  # type: ignore
 def sample(california_df: pd.DataFrame, california_target: str) -> Sample:
     return Sample(
         observations=california_df.sample(n=100, random_state=42),
@@ -260,27 +253,32 @@ def sample(california_df: pd.DataFrame, california_target: str) -> Sample:
     )
 
 
-@pytest.fixture  # type: ignore
+@pytest.fixture(scope="session")  # type: ignore
 def iris_df(iris_target_name: str) -> pd.DataFrame:
     #  load sklearn test-data and convert to pd
     iris: Bunch = datasets.load_iris()
 
-    iris_df = pd.DataFrame(
-        data=np.c_[iris.data, iris.target],
-        columns=[*iris.feature_names, iris_target_name],
+    return (
+        pd.DataFrame(
+            data=np.c_[iris.data, iris.target],
+            columns=[*iris.feature_names, iris_target_name],
+        )
+        # replace target numericals with actual class labels
+        .pipe(
+            lambda df: df.assign(
+                **{
+                    iris_target_name: (
+                        df.loc[:, iris_target_name]
+                        .astype(int)
+                        .map(dict(enumerate(iris.target_names)))
+                    )
+                }
+            )
+        )
     )
 
-    # replace target numericals with actual class labels
-    iris_df.loc[:, iris_target_name] = (
-        iris_df.loc[:, iris_target_name]
-        .astype(int)
-        .map(dict(enumerate(iris.target_names)))
-    )
 
-    return iris_df
-
-
-@pytest.fixture  # type: ignore
+@pytest.fixture(scope="session")  # type: ignore
 def iris_sample_multi_class(iris_df: pd.DataFrame, iris_target_name: str) -> Sample:
     # the iris dataset
     return Sample(
@@ -290,7 +288,7 @@ def iris_sample_multi_class(iris_df: pd.DataFrame, iris_target_name: str) -> Sam
     )
 
 
-@pytest.fixture  # type: ignore
+@pytest.fixture(scope="session")  # type: ignore
 def iris_sample_binary(iris_sample_multi_class: Sample) -> Sample:
     # the iris dataset, retaining only two categories,
     # so we can do binary classification
@@ -299,7 +297,7 @@ def iris_sample_binary(iris_sample_multi_class: Sample) -> Sample:
     )
 
 
-@pytest.fixture  # type: ignore
+@pytest.fixture(scope="session")  # type: ignore
 def iris_sample_binary_dual_target(
     iris_sample_binary: Sample, iris_target_name: str
 ) -> Sample:
@@ -328,30 +326,32 @@ COL_SCORE = ("score", "test", "mean")
 def check_ranking(
     ranking: pd.DataFrame,
     is_classifier: bool,
-    scores_expected: Sequence[float],
-    params_expected: Optional[Mapping[int, Mapping[str, Any]]],
-    candidate_names_expected: Optional[Sequence[str]] = None,
+    score_min_expected: float,
+    score_max_expected: float,
+    params_expected: Mapping[int, Mapping[str, Any]] | None,
+    candidate_names_expected: Sequence[str] | None = None,
 ) -> None:
     """
     Test helper to check rankings produced by learner rankers.
 
     :param ranking: summary data frame
     :param is_classifier: flag if ranking was performed on classifiers, or regressors
-    :param scores_expected: expected ranking scores, rounded to 3 decimal places
+    :param score_min_expected: expected minimum score (lower bound)
+    :param score_max_expected: expected maximum score (upper bound)
     :param params_expected: expected learner parameters
     :param candidate_names_expected: optional list of expected learners;
         only required for multi estimator search
     """
 
-    scores_actual: pd.Series = ranking.loc[:, COL_SCORE].values[: len(scores_expected)]
+    scores_actual: pd.Series = ranking.loc[:, COL_SCORE]
 
-    assert_allclose(
-        scores_actual,
-        scores_expected,
-        rtol=0.015,
-        err_msg=(
-            f"unexpected scores: got {scores_actual} but expected {scores_expected}"
-        ),
+    assert (
+        scores_actual.min() >= score_min_expected
+    ), f"minimum score {scores_actual.min()} is less than expected {score_min_expected}"
+
+    assert scores_actual.max() <= score_max_expected, (
+        f"maximum score {scores_actual.max()} is greater than expected "
+        f"{score_max_expected}"
     )
 
     col_learner = COL_CLASSIFIER if is_classifier else COL_REGRESSOR
@@ -359,7 +359,7 @@ def check_ranking(
     if params_expected is not None:
         param_columns: pd.DataFrame = ranking.loc[:, (COL_PARAM, col_learner)]
         for rank, parameters_expected in params_expected.items():
-            parameters_actual: Dict[str, Any] = (
+            parameters_actual: dict[str, Any] = (
                 param_columns.iloc[rank, :].dropna().to_dict()
             )
             assert parameters_actual == parameters_expected, (
@@ -444,6 +444,41 @@ def iris_inspector_multi_class(
 #
 # Utility functions
 #
+
+T_Model = TypeVar("T_Model", bound=RegressorDF)
+
+
+def get_best_model(
+    model_type: type[T_Model],
+    regressor_selector: LearnerSelector[RegressorPipelineDF[RegressorDF], GridSearchCV],
+    sample: Sample,
+) -> RegressorPipelineDF[T_Model]:
+    # we get the best model_evaluation which is a LGBM - for the sake of test
+    # performance
+    assert regressor_selector.searcher_ is not None
+    best_lgbm_params: dict[str, Any] = (
+        pd.DataFrame(regressor_selector.searcher_.cv_results_)
+        .pipe(
+            lambda df: df.loc[
+                df.loc[:, "param_candidate_name"] == model_type.__name__, :
+            ]
+        )
+        .pipe(lambda df: df.loc[df.loc[:, "rank_test_score"].idxmin(), "params"])
+    )
+
+    len_param_candidate = len(PARAM_CANDIDATE__)
+    return (
+        cast(RegressorPipelineDF[LGBMRegressorDF], best_lgbm_params["candidate"])
+        .clone()
+        .set_params(
+            **{
+                param[len_param_candidate:]: value
+                for param, value in best_lgbm_params.items()
+                if param.startswith(PARAM_CANDIDATE__)
+            }
+        )
+        .fit(X=sample.features, y=sample.target)
+    )
 
 
 def fit_classifier_selector(

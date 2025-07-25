@@ -4,7 +4,7 @@ Implementation of package ``facet.inspection.shap``.
 
 import logging
 from abc import ABCMeta, abstractmethod
-from typing import Any, Generic, List, Optional, TypeVar, Union, cast
+from typing import Any, Generic, TypeVar, cast
 
 import numpy as np
 import numpy.typing as npt
@@ -78,16 +78,16 @@ class ShapCalculator(
     explainer_factory: ExplainerFactory[T_Model]
 
     #: The SHAP values for all observations this calculator has been fitted to.
-    shap_: Optional[pd.DataFrame]
+    shap_: pd.DataFrame | None
 
     #: The names of the features for which SHAP values were calculated.
-    feature_index_: Optional[pd.Index]
+    feature_index_: pd.Index | None
 
     # defined in superclass, repeated here for Sphinx:
-    n_jobs: Optional[int]
-    shared_memory: Optional[bool]
-    pre_dispatch: Optional[Union[str, int]]
-    verbose: Optional[int]
+    n_jobs: int | None
+    shared_memory: bool | None
+    pre_dispatch: str | int | None
+    verbose: int | None
 
     def __init__(
         self,
@@ -95,10 +95,10 @@ class ShapCalculator(
         *,
         explainer_factory: ExplainerFactory[T_Model],
         interaction_values: bool,
-        n_jobs: Optional[int] = None,
-        shared_memory: Optional[bool] = None,
-        pre_dispatch: Optional[Union[str, int]] = None,
-        verbose: Optional[int] = None,
+        n_jobs: int | None = None,
+        shared_memory: bool | None = None,
+        pre_dispatch: str | int | None = None,
+        verbose: int | None = None,
     ) -> None:
         """
         :param model: the model for which to calculate SHAP values
@@ -118,8 +118,8 @@ class ShapCalculator(
         self.interaction_values = interaction_values
 
         # the following attributes are set in fit()
-        self.shap_: Optional[pd.DataFrame] = None
-        self.feature_index_: Optional[pd.Index] = None
+        self.shap_: pd.DataFrame | None = None
+        self.feature_index_: pd.Index | None = None
 
     __init__.__doc__ = cast(str, __init__.__doc__) + cast(
         str, ParallelizableMixin.__init__.__doc__
@@ -127,7 +127,7 @@ class ShapCalculator(
 
     @property
     @abstractmethod
-    def input_names(self) -> Optional[List[str]]:
+    def input_names(self) -> list[str] | None:
         """
         The names of the inputs explained by this SHAP calculator, or ``None`` if
         no names are defined.
@@ -135,7 +135,7 @@ class ShapCalculator(
 
     @property
     @abstractmethod
-    def output_names(self) -> List[str]:
+    def output_names(self) -> list[str]:
         """
         The names of the outputs explained by this SHAP calculator.
         """
@@ -292,7 +292,7 @@ class ShapCalculator(
     def _make_explainer(self, features: pd.DataFrame) -> BaseExplainer:
         # prepare the background dataset
 
-        background_dataset: Optional[pd.DataFrame]
+        background_dataset: pd.DataFrame | None
 
         if self.explainer_factory.uses_background_dataset:
             background_dataset = features
@@ -344,7 +344,7 @@ class ShapCalculator(
         feature_names = self.feature_index_
 
         # calculate the shap values, and ensure the result is a list of arrays
-        shap_values: List[npt.NDArray[np.float_]] = self._convert_shap_tensors_to_list(
+        shap_values: list[npt.NDArray[np.float64]] = self._convert_shap_tensors_to_list(
             shap_tensors=(
                 explainer.shap_interaction_values(X=features)
                 if self.interaction_values
@@ -357,7 +357,7 @@ class ShapCalculator(
         # we have a regressor or a classifier, implemented by method
         # shap_matrix_for_split_to_df_fn)
 
-        shap_values_df_per_output: List[pd.DataFrame] = self._convert_shap_to_df(
+        shap_values_df_per_output: list[pd.DataFrame] = self._convert_shap_to_df(
             raw_shap_tensors=shap_values,
             observation_idx=features.index,
             feature_idx=feature_names,
@@ -379,10 +379,10 @@ class ShapCalculator(
     def _convert_shap_tensors_to_list(
         self,
         *,
-        shap_tensors: Union[npt.NDArray[np.float_], List[npt.NDArray[np.float_]]],
+        shap_tensors: npt.NDArray[np.float64] | list[npt.NDArray[np.float64]],
         n_outputs: int,
-    ) -> List[npt.NDArray[np.float_]]:
-        def _validate_shap_tensor(_t: npt.NDArray[np.float_]) -> None:
+    ) -> list[npt.NDArray[np.float64]]:
+        def _validate_shap_tensor(_t: npt.NDArray[np.float64]) -> None:
             if np.isnan(np.sum(_t)):
                 raise AssertionError(
                     "Output of SHAP explainer includes NaN values. "
@@ -396,7 +396,13 @@ class ShapCalculator(
                 _validate_shap_tensor(shap_tensor)
         else:
             _validate_shap_tensor(shap_tensors)
-            shap_tensors = [shap_tensors]
+            if n_outputs == 1:
+                shap_tensors = [shap_tensors]
+            else:
+                print(f"shape of SHAP tensor: {shap_tensors.shape}; converting to list")
+                shap_tensors = [
+                    shap_tensors[..., i] for i in range(shap_tensors.shape[-1])
+                ]
 
         if n_outputs != len(shap_tensors):
             raise AssertionError(
@@ -409,10 +415,10 @@ class ShapCalculator(
     @abstractmethod
     def _convert_shap_to_df(
         self,
-        raw_shap_tensors: List[npt.NDArray[np.float_]],
+        raw_shap_tensors: list[npt.NDArray[np.float64]],
         observation_idx: pd.Index,
         feature_idx: pd.Index,
-    ) -> List[pd.DataFrame]:
+    ) -> list[pd.DataFrame]:
         """
         Convert the SHAP tensors for a single split to a data frame.
 
@@ -425,10 +431,10 @@ class ShapCalculator(
 
     def _convert_raw_shap_to_df(
         self,
-        raw_shap_tensors: List[npt.NDArray[np.float_]],
+        raw_shap_tensors: list[npt.NDArray[np.float64]],
         observation_idx: pd.Index,
         feature_idx: pd.Index,
-    ) -> List[pd.DataFrame]:
+    ) -> list[pd.DataFrame]:
         # Convert "raw output" shap tensors to data frames.
         # This is typically the output obtained for regressors, or generic functions.
         if self.interaction_values:

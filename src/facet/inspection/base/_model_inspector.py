@@ -1,28 +1,18 @@
 """
 Implementation of :class:`.ModelInspector`.
 """
+
 import logging
 from abc import ABCMeta, abstractmethod
+from collections.abc import Callable, Iterable
 from types import MethodType
-from typing import (
-    Any,
-    Callable,
-    Generic,
-    Iterable,
-    List,
-    Optional,
-    Tuple,
-    TypeVar,
-    Union,
-    cast,
-)
+from typing import Any, Generic, TypeAlias, TypeVar, cast
 
 import numpy as np
 import numpy.typing as npt
 import pandas as pd
 from scipy.cluster import hierarchy
 from scipy.spatial import distance
-from typing_extensions import TypeAlias
 
 from pytools.api import AllTracker
 from pytools.data import LinkageTree, Matrix
@@ -49,8 +39,8 @@ __all__ = [
 # Type aliases
 #
 
-FloatArray: TypeAlias = npt.NDArray[np.float_]
-FloatMatrix: TypeAlias = Matrix[np.float_]
+FloatArray: TypeAlias = npt.NDArray[np.float64]
+FloatMatrix: TypeAlias = Matrix[np.float64]
 
 
 #
@@ -122,16 +112,16 @@ class ModelInspector(
     """
 
     # defined in superclass, repeated here for Sphinx
-    n_jobs: Optional[int]
+    n_jobs: int | None
 
     # defined in superclass, repeated here for Sphinx
-    shared_memory: Optional[bool]
+    shared_memory: bool | None
 
     # defined in superclass, repeated here for Sphinx
-    pre_dispatch: Optional[Union[str, int]]
+    pre_dispatch: str | int | None
 
     # defined in superclass, repeated here for Sphinx
-    verbose: Optional[int]
+    verbose: int | None
 
     #: The model to inspect.
     model: T_Model
@@ -149,10 +139,10 @@ class ModelInspector(
         model: T_Model,
         *,
         shap_interaction: bool = True,
-        n_jobs: Optional[int] = None,
-        shared_memory: Optional[bool] = None,
-        pre_dispatch: Optional[Union[str, int]] = None,
-        verbose: Optional[int] = None,
+        n_jobs: int | None = None,
+        shared_memory: bool | None = None,
+        pre_dispatch: str | int | None = None,
+        verbose: int | None = None,
     ) -> None:
         """
         :param model: the model to inspect
@@ -172,16 +162,14 @@ class ModelInspector(
         self.model = model
         self.shap_interaction = shap_interaction
 
-        self._shap_projector: Optional[ShapProjector] = None
-        self._sample: Optional[Sample] = None
+        self._shap_projector: ShapProjector | None = None
+        self._sample: Sample | None = None
 
     __init__.__doc__ = cast(str, __init__.__doc__) + cast(
         str, ParallelizableMixin.__init__.__doc__
     )
 
-    def preprocess_features(
-        self, features: Union[pd.DataFrame, pd.Series]
-    ) -> pd.DataFrame:
+    def preprocess_features(self, features: pd.DataFrame | pd.Series) -> pd.DataFrame:
         """
         Preprocess the features prior to calculating SHAP values.
 
@@ -244,7 +232,7 @@ class ModelInspector(
 
     @property
     @abstractmethod
-    def feature_names(self) -> List[str]:
+    def feature_names(self) -> list[str]:
         """
         The feature names of the model being inspected.
 
@@ -256,7 +244,7 @@ class ModelInspector(
         pass
 
     @property
-    def output_names(self) -> List[str]:
+    def output_names(self) -> list[str]:
         """
         The names of the outputs explained by this inspector.
 
@@ -271,7 +259,7 @@ class ModelInspector(
         return self.shap_calculator.output_names
 
     @fitted_only
-    def shap_values(self) -> Union[pd.DataFrame, List[pd.DataFrame]]:
+    def shap_values(self) -> pd.DataFrame | list[pd.DataFrame]:
         """
         Calculate the SHAP values for all observations and features.
 
@@ -284,7 +272,7 @@ class ModelInspector(
         return self.__split_multi_output_df(self.shap_calculator.shap_values)
 
     @fitted_only
-    def shap_interaction_values(self) -> Union[pd.DataFrame, List[pd.DataFrame]]:
+    def shap_interaction_values(self) -> pd.DataFrame | list[pd.DataFrame]:
         """
         Calculate the SHAP interaction values for all observations and pairs of
         features.
@@ -300,9 +288,7 @@ class ModelInspector(
         )
 
     @fitted_only
-    def feature_importance(
-        self, *, method: str = "rms"
-    ) -> Union[pd.Series, pd.DataFrame]:
+    def feature_importance(self, *, method: str = "rms") -> pd.Series | pd.DataFrame:
         # noinspection GrazieInspection
         """
         Calculate the relative importance of each feature based on SHAP values.
@@ -324,7 +310,7 @@ class ModelInspector(
             raise ValueError(f'arg method="{method}" must be one of {methods}')
 
         shap_matrix: pd.DataFrame = self.shap_calculator.shap_values
-        weight: Optional[pd.Series] = self.sample_.weight
+        weight: pd.Series | None = self.sample_.weight
 
         abs_importance: pd.Series
         if method == "rms":
@@ -361,7 +347,7 @@ class ModelInspector(
         absolute: bool = False,
         symmetrical: bool = False,
         clustered: bool = True,
-    ) -> Union[FloatMatrix, List[FloatMatrix]]:
+    ) -> FloatMatrix | list[FloatMatrix]:
         """
         Calculate the feature synergy matrix.
 
@@ -409,7 +395,7 @@ class ModelInspector(
         absolute: bool = False,
         symmetrical: bool = False,
         clustered: bool = True,
-    ) -> Union[FloatMatrix, List[FloatMatrix]]:
+    ) -> FloatMatrix | list[FloatMatrix]:
         """
         Calculate the feature redundancy matrix.
 
@@ -457,7 +443,7 @@ class ModelInspector(
         absolute: bool = False,
         symmetrical: bool = False,
         clustered: bool = True,
-    ) -> Union[FloatMatrix, List[FloatMatrix]]:
+    ) -> FloatMatrix | list[FloatMatrix]:
         """
         Calculate the feature association matrix.
 
@@ -502,7 +488,7 @@ class ModelInspector(
         )
 
     @fitted_only
-    def feature_synergy_linkage(self) -> Union[LinkageTree, List[LinkageTree]]:
+    def feature_synergy_linkage(self) -> LinkageTree | list[LinkageTree]:
         """
         Calculate a linkage tree based on the :meth:`.feature_synergy_matrix`.
 
@@ -528,7 +514,7 @@ class ModelInspector(
         )
 
     @fitted_only
-    def feature_redundancy_linkage(self) -> Union[LinkageTree, List[LinkageTree]]:
+    def feature_redundancy_linkage(self) -> LinkageTree | list[LinkageTree]:
         """
         Calculate a linkage tree based on the :meth:`.feature_redundancy_matrix`.
 
@@ -554,7 +540,7 @@ class ModelInspector(
         )
 
     @fitted_only
-    def feature_association_linkage(self) -> Union[LinkageTree, List[LinkageTree]]:
+    def feature_association_linkage(self) -> LinkageTree | list[LinkageTree]:
         """
         Calculate a linkage tree based on the :meth:`.feature_association_matrix`.
 
@@ -581,7 +567,7 @@ class ModelInspector(
         )
 
     @fitted_only
-    def feature_interaction_matrix(self) -> Union[FloatMatrix, List[FloatMatrix]]:
+    def feature_interaction_matrix(self) -> FloatMatrix | list[FloatMatrix]:
         """
         Calculate relative shap interaction values for all feature pairings.
 
@@ -649,7 +635,7 @@ class ModelInspector(
 
         # get the observation weights with shape
         # (n_observations, n_outputs, n_features, n_features)
-        weight: Optional[FloatArray]
+        weight: FloatArray | None
         _weight_sr = self.sample_.weight
         if _weight_sr is not None:
             # if sample weights are defined, convert them to an array
@@ -718,10 +704,10 @@ class ModelInspector(
         :return: consolidated SHAP and feature values for use shap plots
         """
 
-        shap_values: Union[pd.DataFrame, List[pd.DataFrame]] = self.shap_values()
+        shap_values: pd.DataFrame | list[pd.DataFrame] = self.shap_values()
 
-        output_names: List[str] = self.output_names
-        shap_values_numpy: Union[FloatArray, List[FloatArray]]
+        output_names: list[str] = self.output_names
+        shap_values_numpy: FloatArray | list[FloatArray]
         included_observations: pd.Index
 
         if len(output_names) > 1:
@@ -749,7 +735,7 @@ class ModelInspector(
 
     def __arrays_to_matrix(
         self, matrix: FloatArray, value_label: str
-    ) -> Union[FloatMatrix, List[FloatMatrix]]:
+    ) -> FloatMatrix | list[FloatMatrix]:
         # transform a matrix of shape (n_outputs, n_features, n_features)
         # to a data frame
 
@@ -784,13 +770,13 @@ class ModelInspector(
         absolute: bool,
         symmetrical: bool,
         clustered: bool,
-    ) -> Union[FloatMatrix, List[FloatMatrix]]:
+    ) -> FloatMatrix | list[FloatMatrix]:
         affinity_matrices = explainer_fn(symmetrical=symmetrical, absolute=absolute)
 
         explainer: ShapProjector = cast(
             ShapProjector, cast(MethodType, explainer_fn).__self__
         )
-        affinity_matrices_df: List[pd.DataFrame] = explainer.to_frames(
+        affinity_matrices_df: list[pd.DataFrame] = explainer.to_frames(
             affinity_matrices
         )
 
@@ -811,9 +797,9 @@ class ModelInspector(
 
     @staticmethod
     def __sort_affinity_matrices(
-        affinity_matrices: List[pd.DataFrame],
+        affinity_matrices: list[pd.DataFrame],
         symmetrical_affinity_matrices: FloatArray,
-    ) -> List[pd.DataFrame]:
+    ) -> list[pd.DataFrame]:
         # abbreviate a very long function name to stay within the permitted line length
         fn_linkage = ModelInspector.__linkage_matrix_from_affinity_matrix_for_output
 
@@ -831,7 +817,7 @@ class ModelInspector(
     @staticmethod
     def __split_multi_output_df(
         multi_output_df: pd.DataFrame,
-    ) -> Union[pd.DataFrame, List[pd.DataFrame]]:
+    ) -> pd.DataFrame | list[pd.DataFrame]:
         # Split a multi-output data frame into a list of single-output data frames.
         # Return single-output data frames as is.
         # Multi-output data frames are grouped by level 0 in the column index.
@@ -847,7 +833,7 @@ class ModelInspector(
 
     def __linkages_from_affinity_matrices(
         self, feature_affinity_matrix: FloatArray
-    ) -> Union[LinkageTree, List[LinkageTree]]:
+    ) -> LinkageTree | list[LinkageTree]:
         # calculate the linkage trees for all outputs in a feature distance matrix;
         # matrix has shape (n_outputs, n_features, n_features) with values ranging from
         # (1 = closest, 0 = most distant)
@@ -864,9 +850,9 @@ class ModelInspector(
             )
 
         else:
-            feature_importance_iter: (
-                Iterable[Tuple[Any, pd.Series]]
-            ) = feature_importance.items()
+            feature_importance_iter: Iterable[tuple[Any, pd.Series]] = (
+                feature_importance.items()
+            )
 
             return [
                 self.__linkage_tree_from_affinity_matrix_for_output(
@@ -944,9 +930,9 @@ class ModelInspector(
 
     def __isolate_single_frame(
         self,
-        frames: List[pd.DataFrame],
+        frames: list[pd.DataFrame],
         affinity_metric: str,
-    ) -> Union[FloatMatrix, List[FloatMatrix]]:
+    ) -> FloatMatrix | list[FloatMatrix]:
         feature_importance = self.feature_importance()
 
         if len(frames) == 1:
@@ -990,7 +976,7 @@ class ModelInspector(
         *,
         affinity_metric: str,
         feature_importance: pd.Series,
-        feature_importance_category: Optional[str] = None,
+        feature_importance_category: str | None = None,
     ) -> FloatMatrix:
         return Matrix.from_frame(
             frame,
