@@ -1,0 +1,40 @@
+facet.validation
+================
+
+.. automodule:: facet.validation
+   :no-imported-members:
+
+   
+
+   
+   
+   =======
+   Classes
+   =======
+
+   .. autosummary::
+      :toctree: validation
+      :template: custom-class-template.rst
+      :nosignatures:
+   
+      BaseBootstrapCV
+      BootstrapCV
+      StationaryBootstrapCV
+      StratifiedBootstrapCV
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+
+

@@ -1,0 +1,42 @@
+facet.simulation.base.BaseUnivariateSimulator
+=============================================
+
+.. currentmodule:: facet.simulation.base
+
+.. autoclass:: BaseUnivariateSimulator
+   :members:
+   :no-show-inheritance:
+   :inherited-members:
+   :special-members: __call__
+
+   
+   
+   .. rubric:: Method summary
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~BaseUnivariateSimulator.baseline
+      ~BaseUnivariateSimulator.expected_output
+      ~BaseUnivariateSimulator.simulate_feature
+   
+   
+
+   
+   
+   .. rubric:: Attribute summary
+
+   .. autosummary::
+   
+      ~BaseUnivariateSimulator.output_unit
+      ~BaseUnivariateSimulator.n_jobs
+      ~BaseUnivariateSimulator.shared_memory
+      ~BaseUnivariateSimulator.pre_dispatch
+      ~BaseUnivariateSimulator.verbose
+      ~BaseUnivariateSimulator.model
+      ~BaseUnivariateSimulator.sample
+      ~BaseUnivariateSimulator.confidence_level
+   
+   
+
+   .. rubric:: Definitions

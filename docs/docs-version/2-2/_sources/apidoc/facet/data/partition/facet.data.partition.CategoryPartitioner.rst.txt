@@ -1,0 +1,38 @@
+facet.data.partition.CategoryPartitioner
+========================================
+
+.. currentmodule:: facet.data.partition
+
+.. autoclass:: CategoryPartitioner
+   :members:
+   :no-show-inheritance:
+   :inherited-members:
+   :special-members: __call__
+
+   
+   
+   .. rubric:: Method summary
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~CategoryPartitioner.fit
+   
+   
+
+   
+   
+   .. rubric:: Attribute summary
+
+   .. autosummary::
+   
+      ~CategoryPartitioner.DEFAULT_MAX_PARTITIONS
+      ~CategoryPartitioner.frequencies_
+      ~CategoryPartitioner.is_categorical
+      ~CategoryPartitioner.is_fitted
+      ~CategoryPartitioner.max_partitions
+      ~CategoryPartitioner.partitions_
+   
+   
+
+   .. rubric:: Definitions

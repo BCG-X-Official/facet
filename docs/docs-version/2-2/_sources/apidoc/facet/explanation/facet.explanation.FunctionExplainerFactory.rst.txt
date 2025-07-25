@@ -1,0 +1,38 @@
+facet.explanation.FunctionExplainerFactory
+==========================================
+
+.. currentmodule:: facet.explanation
+
+.. autoclass:: FunctionExplainerFactory
+   :members:
+   :no-show-inheritance:
+   :inherited-members:
+   :special-members: __call__
+
+   
+   
+   .. rubric:: Method summary
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~FunctionExplainerFactory.make_explainer
+      ~FunctionExplainerFactory.make_explainer_from_function
+      ~FunctionExplainerFactory.to_expression
+   
+   
+
+   
+   
+   .. rubric:: Attribute summary
+
+   .. autosummary::
+   
+      ~FunctionExplainerFactory.explains_raw_output
+      ~FunctionExplainerFactory.supports_shap_interaction_values
+      ~FunctionExplainerFactory.uses_background_dataset
+      ~FunctionExplainerFactory.explainer_kwargs
+   
+   
+
+   .. rubric:: Definitions

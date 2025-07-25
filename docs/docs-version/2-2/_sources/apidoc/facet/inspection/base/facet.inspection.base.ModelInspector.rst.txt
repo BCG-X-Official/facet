@@ -1,0 +1,56 @@
+facet.inspection.base.ModelInspector
+====================================
+
+.. currentmodule:: facet.inspection.base
+
+.. autoclass:: ModelInspector
+   :members:
+   :no-show-inheritance:
+   :inherited-members:
+   :special-members: __call__
+
+   
+   
+   .. rubric:: Method summary
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~ModelInspector.feature_association_linkage
+      ~ModelInspector.feature_association_matrix
+      ~ModelInspector.feature_importance
+      ~ModelInspector.feature_interaction_matrix
+      ~ModelInspector.feature_redundancy_linkage
+      ~ModelInspector.feature_redundancy_matrix
+      ~ModelInspector.feature_synergy_linkage
+      ~ModelInspector.feature_synergy_matrix
+      ~ModelInspector.fit
+      ~ModelInspector.preprocess_features
+      ~ModelInspector.shap_interaction_values
+      ~ModelInspector.shap_plot_data
+      ~ModelInspector.shap_values
+   
+   
+
+   
+   
+   .. rubric:: Attribute summary
+
+   .. autosummary::
+   
+      ~ModelInspector.COL_IMPORTANCE
+      ~ModelInspector.feature_names
+      ~ModelInspector.is_fitted
+      ~ModelInspector.output_names
+      ~ModelInspector.sample_
+      ~ModelInspector.shap_calculator
+      ~ModelInspector.n_jobs
+      ~ModelInspector.shared_memory
+      ~ModelInspector.pre_dispatch
+      ~ModelInspector.verbose
+      ~ModelInspector.model
+      ~ModelInspector.shap_interaction
+   
+   
+
+   .. rubric:: Definitions

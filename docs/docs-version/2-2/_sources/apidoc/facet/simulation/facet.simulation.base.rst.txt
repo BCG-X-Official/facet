@@ -1,0 +1,38 @@
+facet.simulation.base
+=====================
+
+.. automodule:: facet.simulation.base
+   :no-imported-members:
+
+   
+
+   
+   
+   =======
+   Classes
+   =======
+
+   .. autosummary::
+      :toctree: base
+      :template: custom-class-template.rst
+      :nosignatures:
+   
+      BaseUnivariateSimulator
+      UnivariateRegressionSimulator
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+
+

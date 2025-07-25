@@ -1,0 +1,37 @@
+facet.inspection.base
+=====================
+
+.. automodule:: facet.inspection.base
+   :no-imported-members:
+
+   
+
+   
+   
+   =======
+   Classes
+   =======
+
+   .. autosummary::
+      :toctree: base
+      :template: custom-class-template.rst
+      :nosignatures:
+   
+      ModelInspector
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+
+

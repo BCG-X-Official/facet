@@ -1,0 +1,49 @@
+facet.inspection.shap.ShapCalculator
+====================================
+
+.. currentmodule:: facet.inspection.shap
+
+.. autoclass:: ShapCalculator
+   :members:
+   :no-show-inheritance:
+   :inherited-members:
+   :special-members: __call__
+
+   
+   
+   .. rubric:: Method summary
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~ShapCalculator.fit
+      ~ShapCalculator.validate_features
+   
+   
+
+   
+   
+   .. rubric:: Attribute summary
+
+   .. autosummary::
+   
+      ~ShapCalculator.IDX_FEATURE
+      ~ShapCalculator.MULTI_OUTPUT_INDEX_NAME
+      ~ShapCalculator.input_names
+      ~ShapCalculator.is_fitted
+      ~ShapCalculator.main_effects
+      ~ShapCalculator.output_names
+      ~ShapCalculator.shap_interaction_values
+      ~ShapCalculator.shap_values
+      ~ShapCalculator.n_jobs
+      ~ShapCalculator.shared_memory
+      ~ShapCalculator.pre_dispatch
+      ~ShapCalculator.verbose
+      ~ShapCalculator.model
+      ~ShapCalculator.explainer_factory
+      ~ShapCalculator.shap_
+      ~ShapCalculator.feature_index_
+   
+   
+
+   .. rubric:: Definitions

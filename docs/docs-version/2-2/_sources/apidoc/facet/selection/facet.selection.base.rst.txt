@@ -1,0 +1,38 @@
+facet.selection.base
+====================
+
+.. automodule:: facet.selection.base
+   :no-imported-members:
+
+   
+
+   
+   
+   =======
+   Classes
+   =======
+
+   .. autosummary::
+      :toctree: base
+      :template: custom-class-template.rst
+      :nosignatures:
+   
+      BaseParameterSpace
+      CandidateEstimatorDF
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+
+

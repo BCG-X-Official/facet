@@ -1,0 +1,35 @@
+facet.selection.base.BaseParameterSpace
+=======================================
+
+.. currentmodule:: facet.selection.base
+
+.. autoclass:: BaseParameterSpace
+   :members:
+   :no-show-inheritance:
+   :inherited-members:
+   :special-members: __call__
+
+   
+   
+   .. rubric:: Method summary
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~BaseParameterSpace.get_parameters
+      ~BaseParameterSpace.to_expression
+   
+   
+
+   
+   
+   .. rubric:: Attribute summary
+
+   .. autosummary::
+   
+      ~BaseParameterSpace.estimator
+      ~BaseParameterSpace.parameters
+   
+   
+
+   .. rubric:: Definitions

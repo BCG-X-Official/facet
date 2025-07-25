@@ -1,0 +1,38 @@
+facet.explanation.KernelExplainerFactory
+========================================
+
+.. currentmodule:: facet.explanation
+
+.. autoclass:: KernelExplainerFactory
+   :members:
+   :no-show-inheritance:
+   :inherited-members:
+   :special-members: __call__
+
+   
+   
+   .. rubric:: Method summary
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~KernelExplainerFactory.make_explainer
+      ~KernelExplainerFactory.make_explainer_from_function
+      ~KernelExplainerFactory.to_expression
+   
+   
+
+   
+   
+   .. rubric:: Attribute summary
+
+   .. autosummary::
+   
+      ~KernelExplainerFactory.explains_raw_output
+      ~KernelExplainerFactory.supports_shap_interaction_values
+      ~KernelExplainerFactory.uses_background_dataset
+      ~KernelExplainerFactory.explainer_kwargs
+   
+   
+
+   .. rubric:: Definitions

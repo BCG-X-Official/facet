@@ -1,0 +1,58 @@
+facet.inspection.FunctionInspector
+==================================
+
+.. currentmodule:: facet.inspection
+
+.. autoclass:: FunctionInspector
+   :members:
+   :no-show-inheritance:
+   :inherited-members:
+   :special-members: __call__
+
+   
+   
+   .. rubric:: Method summary
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~FunctionInspector.feature_association_linkage
+      ~FunctionInspector.feature_association_matrix
+      ~FunctionInspector.feature_importance
+      ~FunctionInspector.feature_interaction_matrix
+      ~FunctionInspector.feature_redundancy_linkage
+      ~FunctionInspector.feature_redundancy_matrix
+      ~FunctionInspector.feature_synergy_linkage
+      ~FunctionInspector.feature_synergy_matrix
+      ~FunctionInspector.fit
+      ~FunctionInspector.preprocess_features
+      ~FunctionInspector.shap_interaction_values
+      ~FunctionInspector.shap_plot_data
+      ~FunctionInspector.shap_values
+   
+   
+
+   
+   
+   .. rubric:: Attribute summary
+
+   .. autosummary::
+   
+      ~FunctionInspector.COL_IMPORTANCE
+      ~FunctionInspector.DEFAULT_EXPLAINER_FACTORY
+      ~FunctionInspector.feature_names
+      ~FunctionInspector.is_fitted
+      ~FunctionInspector.output_names
+      ~FunctionInspector.sample_
+      ~FunctionInspector.shap_calculator
+      ~FunctionInspector.n_jobs
+      ~FunctionInspector.shared_memory
+      ~FunctionInspector.pre_dispatch
+      ~FunctionInspector.verbose
+      ~FunctionInspector.model
+      ~FunctionInspector.shap_interaction
+      ~FunctionInspector.explainer_factory
+   
+   
+
+   .. rubric:: Definitions

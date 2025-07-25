@@ -1,0 +1,50 @@
+facet.inspection.shap.sklearn.ClassifierShapCalculator
+======================================================
+
+.. currentmodule:: facet.inspection.shap.sklearn
+
+.. autoclass:: ClassifierShapCalculator
+   :members:
+   :no-show-inheritance:
+   :inherited-members:
+   :special-members: __call__
+
+   
+   
+   .. rubric:: Method summary
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~ClassifierShapCalculator.fit
+      ~ClassifierShapCalculator.validate_features
+      ~ClassifierShapCalculator.validate_learner
+   
+   
+
+   
+   
+   .. rubric:: Attribute summary
+
+   .. autosummary::
+   
+      ~ClassifierShapCalculator.IDX_FEATURE
+      ~ClassifierShapCalculator.MULTI_OUTPUT_INDEX_NAME
+      ~ClassifierShapCalculator.input_names
+      ~ClassifierShapCalculator.is_fitted
+      ~ClassifierShapCalculator.main_effects
+      ~ClassifierShapCalculator.output_names
+      ~ClassifierShapCalculator.shap_interaction_values
+      ~ClassifierShapCalculator.shap_values
+      ~ClassifierShapCalculator.n_jobs
+      ~ClassifierShapCalculator.shared_memory
+      ~ClassifierShapCalculator.pre_dispatch
+      ~ClassifierShapCalculator.verbose
+      ~ClassifierShapCalculator.model
+      ~ClassifierShapCalculator.explainer_factory
+      ~ClassifierShapCalculator.shap_
+      ~ClassifierShapCalculator.feature_index_
+   
+   
+
+   .. rubric:: Definitions

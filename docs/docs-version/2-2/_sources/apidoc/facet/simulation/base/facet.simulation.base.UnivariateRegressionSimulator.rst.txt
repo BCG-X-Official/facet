@@ -1,0 +1,42 @@
+facet.simulation.base.UnivariateRegressionSimulator
+===================================================
+
+.. currentmodule:: facet.simulation.base
+
+.. autoclass:: UnivariateRegressionSimulator
+   :members:
+   :no-show-inheritance:
+   :inherited-members:
+   :special-members: __call__
+
+   
+   
+   .. rubric:: Method summary
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~UnivariateRegressionSimulator.baseline
+      ~UnivariateRegressionSimulator.expected_output
+      ~UnivariateRegressionSimulator.simulate_feature
+   
+   
+
+   
+   
+   .. rubric:: Attribute summary
+
+   .. autosummary::
+   
+      ~UnivariateRegressionSimulator.output_unit
+      ~UnivariateRegressionSimulator.n_jobs
+      ~UnivariateRegressionSimulator.shared_memory
+      ~UnivariateRegressionSimulator.pre_dispatch
+      ~UnivariateRegressionSimulator.verbose
+      ~UnivariateRegressionSimulator.model
+      ~UnivariateRegressionSimulator.sample
+      ~UnivariateRegressionSimulator.confidence_level
+   
+   
+
+   .. rubric:: Definitions

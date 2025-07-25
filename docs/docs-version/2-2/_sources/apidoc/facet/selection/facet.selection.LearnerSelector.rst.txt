@@ -1,0 +1,45 @@
+facet.selection.LearnerSelector
+===============================
+
+.. currentmodule:: facet.selection
+
+.. autoclass:: LearnerSelector
+   :members:
+   :no-show-inheritance:
+   :inherited-members:
+   :special-members: __call__
+
+   
+   
+   .. rubric:: Method summary
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~LearnerSelector.fit
+      ~LearnerSelector.summary_report
+   
+   
+
+   
+   
+   .. rubric:: Attribute summary
+
+   .. autosummary::
+   
+      ~LearnerSelector.best_estimator_
+      ~LearnerSelector.is_fitted
+      ~LearnerSelector.n_jobs
+      ~LearnerSelector.shared_memory
+      ~LearnerSelector.pre_dispatch
+      ~LearnerSelector.verbose
+      ~LearnerSelector.searcher_type
+      ~LearnerSelector.parameter_space
+      ~LearnerSelector.cv
+      ~LearnerSelector.scoring
+      ~LearnerSelector.searcher_params
+      ~LearnerSelector.searcher_
+   
+   
+
+   .. rubric:: Definitions
