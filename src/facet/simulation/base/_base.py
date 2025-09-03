@@ -14,6 +14,7 @@ from typing import (
 
 import numpy as np
 import pandas as pd
+from pandas.core.dtypes.base import ExtensionDtype
 
 from pytools.api import AllTracker
 from pytools.parallelization import Job, JobRunner, ParallelizableMixin
@@ -208,12 +209,21 @@ class BaseUnivariateSimulator(
     def _set_constant_feature_value(
         x: pd.DataFrame, feature_name: str, value: Any
     ) -> pd.DataFrame:
+        dtype_pandas: ExtensionDtype | np.dtype[Any] = x.loc[:, feature_name].dtype
+        if isinstance(dtype_pandas, pd.CategoricalDtype):
+            # noinspection PyUnresolvedReferences
+            dtype_numpy = dtype_pandas.categories.dtype
+        elif isinstance(dtype_pandas, ExtensionDtype):
+            # Fallback for other extension dtypes
+            dtype_numpy = np.object_
+        else:
+            dtype_numpy = dtype_pandas
         return x.assign(
             **{
                 feature_name: np.full(
                     shape=len(x),
                     fill_value=value,
-                    dtype=x.loc[:, feature_name].dtype,
+                    dtype=dtype_numpy,
                 )
             }
         )

@@ -4,7 +4,7 @@ Tests for module facet.selection
 
 import logging
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, cast
 
 import numpy as np
 import pandas as pd
@@ -24,6 +24,7 @@ from sklearndf.regression import (
     RandomForestRegressorDF,
 )
 from sklearndf.regression.extra import LGBMRegressorDF
+from sklearndf.transformation import ColumnTransformerDF
 
 from ..conftest import check_ranking
 from facet.data import Sample
@@ -258,23 +259,20 @@ def test_parameter_space(simple_preprocessor: TransformerDF) -> None:
     # test
 
     def regressor_repr(model: Id) -> Expression:
+        transformers = cast(ColumnTransformerDF, simple_preprocessor).transformers
         return Id.RegressorPipelineDF(
             preprocessing=Id.ColumnTransformerDF(
                 transformers=[
                     (
                         "impute",
                         Id.SimpleImputerDF(strategy="median"),
-                        [
-                            "MedInc",
-                            "HouseAge",
-                            "AveRooms",
-                            "AveBedrms",
-                            "Population",
-                            "AveOccup",
-                            "Latitude",
-                            "Longitude",
-                        ],
-                    )
+                        transformers[0][2],
+                    ),
+                    (
+                        "one-hot-encode",
+                        Id.OneHotEncoderDF(handle_unknown="ignore"),
+                        transformers[1][2],
+                    ),
                 ]
             ),
             regressor=model(random_state=42),
