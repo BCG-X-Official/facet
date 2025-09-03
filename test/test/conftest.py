@@ -8,6 +8,7 @@ import pandas as pd
 import pytest
 from numpy.testing import assert_array_equal
 from sklearn import datasets
+from sklearn.compose import make_column_selector
 from sklearn.datasets import fetch_california_housing
 from sklearn.model_selection import BaseCrossValidator, GridSearchCV, KFold
 from sklearn.utils import Bunch
@@ -206,32 +207,21 @@ def best_rf_model(
 
 
 @pytest.fixture(scope="session")  # type: ignore
-def simple_preprocessor(sample: Sample) -> TransformerDF:
-    features = sample.features
+def simple_preprocessor() -> TransformerDF:
+    numeric_selector = make_column_selector(dtype_include=np.number)
+    categorical_selector = make_column_selector(dtype_exclude=np.number)
 
-    column_transforms: list[tuple[str, Any, Any]] = []
-
-    numeric_columns: pd.Index = features.select_dtypes(np.number).columns
-    if numeric_columns is not None and len(numeric_columns) > 0:
-        column_transforms.append(
-            (
-                STEP_IMPUTE,
-                SimpleImputerDF(strategy="median"),
-                list(map(str, numeric_columns)),
-            )
-        )
-
-    category_columns = features.select_dtypes(object).columns
-    if category_columns is not None and len(category_columns) > 0:
-        column_transforms.append(
+    # Column selectors are evaluated lazily during fit, so this stays generic.
+    return ColumnTransformerDF(
+        transformers=[
+            (STEP_IMPUTE, SimpleImputerDF(strategy="median"), numeric_selector),
             (
                 STEP_ONE_HOT_ENCODE,
                 OneHotEncoderDF(handle_unknown="ignore"),
-                list(map(str, category_columns)),
-            )
-        )
-
-    return ColumnTransformerDF(transformers=column_transforms)
+                categorical_selector,
+            ),
+        ],
+    )
 
 
 @pytest.fixture(scope="session")  # type: ignore

@@ -13,7 +13,7 @@ from sklearndf.pipeline import ClassifierPipelineDF, RegressorPipelineDF
 from sklearndf.regression.extra import LGBMRegressorDF
 
 from facet.data import Sample
-from facet.data.partition import ContinuousRangePartitioner
+from facet.data.partition import CategoryPartitioner, ContinuousRangePartitioner
 from facet.simulation import (
     UnivariateProbabilitySimulator,
     UnivariateSimulationResult,
@@ -27,7 +27,7 @@ log = logging.getLogger(__name__)
 N_SPLITS = 10
 
 
-@pytest.fixture  # type: ignore
+@pytest.fixture(scope="session")  # type: ignore
 def model(
     sample: Sample, simple_preprocessor: TransformerDF
 ) -> RegressorPipelineDF[LGBMRegressorDF]:
@@ -40,7 +40,7 @@ def model(
     ).fit(X=sample.features, y=sample.target)
 
 
-@pytest.fixture  # type: ignore
+@pytest.fixture(scope="session")  # type: ignore
 def subsample(sample: Sample) -> Sample:
     return sample.subsample(
         iloc=(
@@ -51,7 +51,7 @@ def subsample(sample: Sample) -> Sample:
     )
 
 
-@pytest.fixture  # type: ignore
+@pytest.fixture(scope="session")  # type: ignore
 def target_simulator(
     model: RegressorPipelineDF[LGBMRegressorDF], sample: Sample, n_jobs: int
 ) -> UnivariateTargetSimulator:
@@ -60,7 +60,7 @@ def target_simulator(
     )
 
 
-@pytest.fixture  # type: ignore
+@pytest.fixture(scope="session")  # type: ignore
 def uplift_simulator(
     model: RegressorPipelineDF[LGBMRegressorDF], sample: Sample, n_jobs: int
 ) -> UnivariateUpliftSimulator:
@@ -439,3 +439,46 @@ def test_univariate_probability_simulation(
     )
 
     SimulationDrawer(style="text").draw(data=simulation_result)
+
+
+def test_categorical_simulation(
+    model: RegressorPipelineDF[LGBMRegressorDF], sample: Sample
+) -> None:
+    parameterized_feature = "HouseAge"
+
+    # Create a categorical feature from HouseAge, by discretizing it into quantile bins
+    col_continuous = sample.features.loc[:, parameterized_feature]
+    col_categorical = pd.qcut(
+        col_continuous, q=4, duplicates="drop", labels=list("ABCD")
+    )
+    sample = Sample(
+        observations=sample._observations.assign(
+            **{col_categorical.name: col_categorical}
+        ),
+        feature_names=sample.feature_names,
+        target_name=sample.target_name,
+    )
+    model = model.clone().fit(X=sample.features, y=sample.target)
+
+    partitioner = CategoryPartitioner(max_partitions=10)
+
+    target_simulator = UnivariateTargetSimulator(
+        model=model, sample=sample, confidence_level=0.95, n_jobs=1, verbose=50
+    )
+    simulation_result: UnivariateSimulationResult[np.float64] = (
+        target_simulator.simulate_feature(
+            feature_name=parameterized_feature,
+            partitioner=partitioner,
+        )
+    )
+
+    index = pd.Index(["C", "B", "A", "D"], dtype="object", name="partition")
+
+    assert_series_equal(
+        simulation_result.data.loc[:, UnivariateSimulationResult.COL_MEAN],
+        pd.Series(
+            [2.03967, 2.03967, 1.59631, 2.26765],
+            name=UnivariateSimulationResult.COL_MEAN,
+            index=index,
+        ),
+    )

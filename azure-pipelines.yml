@@ -21,7 +21,7 @@ schedules:
     displayName: Nightly full build
     branches:
       include:
-        - 2.3.x
+        - 2.2.x
 
 resources:
   repositories:
@@ -32,13 +32,40 @@ resources:
       ref: 3.0.x
 
 variables:
-  ${{ if not(startsWith(variables['Build.SourceBranch'], 'refs/pull/')) }}:
-    branchName: $[ replace(variables['Build.SourceBranch'], 'refs/heads/', '') ]
-  ${{ if startsWith(variables['Build.SourceBranch'], 'refs/pull/') }}:
-    branchName: $[ replace(variables['System.PullRequest.SourceBranch'], 'refs/heads/', '') ]
-  source_is_release_branch: $[ startsWith(variables['branchName'], 'release/') ]
-  source_is_develop_branch: $[ startsWith(variables['branchName'], 'dev/') ]
+  # Short branch name for convenience (works for PRs & non-PRs)
+  branchName: $[ coalesce(
+      replace(variables['System.PullRequest.SourceBranch'], 'refs/heads/', ''),
+      replace(variables['Build.SourceBranch'], 'refs/heads/', '')
+    ) ]
+
+  # Detect release from either full ref (non-PR) or PR source (short or full)
+  source_is_release_branch: $[ or(
+      startsWith(variables['Build.SourceBranch'], 'refs/heads/release/'),
+      and(
+        startsWith(variables['Build.SourceBranch'], 'refs/pull/'),
+        or(
+          startsWith(variables['System.PullRequest.SourceBranch'], 'refs/heads/release/'),
+          startsWith(variables['System.PullRequest.SourceBranch'], 'release/')
+        )
+      )
+    ) ]
+
+  # Detect dev from either full ref (non-PR) or PR source (short or full)
+  source_is_develop_branch: $[ or(
+      startsWith(variables['Build.SourceBranch'], 'refs/heads/dev/'),
+      and(
+        startsWith(variables['Build.SourceBranch'], 'refs/pull/'),
+        or(
+          startsWith(variables['System.PullRequest.SourceBranch'], 'refs/heads/dev/'),
+          startsWith(variables['System.PullRequest.SourceBranch'], 'dev/')
+        )
+      )
+    ) ]
+
+  # Scheduled?
   is_scheduled: $[ eq(variables['Build.Reason'], 'Schedule') ]
+
+  # Static variables
   project_name: facet
   project_root: $(project_name)
   package_name: gamma-facet
@@ -553,7 +580,8 @@ stages:
               cd $(System.DefaultWorkingDirectory)
               eval "$(conda shell.bash hook)"
               conda install -y -c conda-forge --override-channels anaconda-client
-              anaconda login --username "${CONDA_USERNAME}" --password "${CONDA_PASSWORD}"
+
+              anaconda login --at anaconda.org --username "${CONDA_USERNAME}" --password "${CONDA_PASSWORD}" --hostname "$(hostname)-${BUILD_BUILDID:-$$}"
               
               # Check for .conda files first (rattler-build), then .tar.bz2 (conda-build)
               if ls $(System.ArtifactsDirectory)/conda_default/conda/noarch/$(package_name)-*.conda 1> /dev/null 2>&1; then
@@ -567,7 +595,7 @@ stages:
                 exit 1
               fi
               
-              anaconda logout
+              anaconda logout --at anaconda.org
               # set +x to prevent Azure from randomly appending a \' of the ## statement
               set +x
               echo "##vso[task.setvariable variable=conda_published]True"
