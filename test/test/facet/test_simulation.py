@@ -448,12 +448,12 @@ def test_categorical_simulation(
 
     # Create a categorical feature from HouseAge, by discretizing it into quantile bins
     col_continuous = sample.features.loc[:, parameterized_feature]
-    col_categorial = pd.qcut(
+    col_categorical = pd.qcut(
         col_continuous, q=4, duplicates="drop", labels=list("ABCD")
     )
     sample = Sample(
         observations=sample._observations.assign(
-            **{col_categorial.name: col_categorial}
+            **{col_categorical.name: col_categorical}
         ),
         feature_names=sample.feature_names,
         target_name=sample.target_name,
