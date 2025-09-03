@@ -65,7 +65,8 @@ variables:
   # Scheduled?
   is_scheduled: $[ eq(variables['Build.Reason'], 'Schedule') ]
 
-  # Static variables  project_name: facet
+  # Static variables
+  project_name: facet
   project_root: $(project_name)
   package_name: gamma-facet
   sshPublicKey: $(sshPublicKey_facet)
