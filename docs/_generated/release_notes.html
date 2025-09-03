@@ -43,7 +43,7 @@
     <script src="../_static/doctools.js?v=9a2dae69"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/js/gamma.js?v=6cc5c158"></script>
-    <script src="../_static/js/versions.js?v=01045294"></script>
+    <script src="../_static/js/versions.js?v=e7773209"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = '_generated/release_notes';</script>
     <link rel="index" title="Index" href="../genindex.html" />
@@ -51,7 +51,7 @@
     <link rel="prev" title="About us" href="../about_us.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2.2.0" />
+  <meta name="docsearch:version" content="2.2.1" />
   </head>
   
   
@@ -378,9 +378,17 @@
 <section id="facet-2-2">
 <h2>FACET 2.2<a class="headerlink" href="#facet-2-2" title="Link to this heading">#</a></h2>
 <p>FACET 2.2 is a maintenance release to catch up with the latest versions of
-<code class="xref py py-mod docutils literal notranslate"><span class="pre">gamma-pytools</span></code>. <a class="reference external" href="https://bcg-x-official.github.io/sklearndf/apidoc/sklearndf.html#module-sklearndf" title="(in sklearndf v2.4.0)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">sklearndf</span></code></a>, <a class="reference external" href="https://shap.readthedocs.io/en/stable/index.html" title="(in SHAP vlatest)"><span class="xref std std-doc">shap</span></a>, and <a class="reference external" href="https://numpy.org/doc/stable/reference/index.html#module-numpy" title="(in NumPy v2.3)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">numpy</span></code></a>.</p>
+<code class="xref py py-mod docutils literal notranslate"><span class="pre">gamma-pytools</span></code>. <a class="reference external" href="https://bcg-x-official.github.io/sklearndf/apidoc/sklearndf.html#module-sklearndf" title="(in sklearndf v2.4.2)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">sklearndf</span></code></a>, <a class="reference external" href="https://shap.readthedocs.io/en/stable/index.html" title="(in SHAP vlatest)"><span class="xref std std-doc">shap</span></a>, and <a class="reference external" href="https://numpy.org/doc/stable/reference/index.html#module-numpy" title="(in NumPy v2.3)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">numpy</span></code></a>.</p>
 <section id="id2">
-<h3>2.2.0<a class="headerlink" href="#id2" title="Link to this heading">#</a></h3>
+<h3>2.2.1<a class="headerlink" href="#id2" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>FIX: using a <a class="reference external" href="https://pandas.pydata.org/pandas-docs/stable/index.html#module-pandas" title="(in pandas v2.3.2)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pandas</span></code></a> categorical dtype or other extension dtypes for a simulated
+feature in in simulations no longer raises an exception; the simulator now detects
+such dtypes and applies a corresponding <a class="reference external" href="https://numpy.org/doc/stable/reference/index.html#module-numpy" title="(in NumPy v2.3)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">numpy</span></code></a> dtype instead</p></li>
+</ul>
+</section>
+<section id="id3">
+<h3>2.2.0<a class="headerlink" href="#id3" title="Link to this heading">#</a></h3>
 <ul class="simple">
 <li><p>REFACTOR: add support for <em>pytools</em> 3.x and drop support for
 <em>pytools</em> 2.x</p></li>
@@ -388,7 +396,7 @@
 drop support for earlier versions</p></li>
 <li><p>REFACTOR: add support for breaking changes in <a class="reference external" href="https://numpy.org/doc/stable/reference/index.html#module-numpy" title="(in NumPy v2.3)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">numpy</span></code></a> 2.0,
 maintaining support for <a class="reference external" href="https://numpy.org/doc/stable/reference/index.html#module-numpy" title="(in NumPy v2.3)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">numpy</span></code></a> 1.23 and later</p></li>
-<li><p>REFACTOR: add support for <a class="reference external" href="https://bcg-x-official.github.io/sklearndf/apidoc/sklearndf.html#module-sklearndf" title="(in sklearndf v2.4.0)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">sklearndf</span></code></a> 2.4, which now supports
+<li><p>REFACTOR: add support for <a class="reference external" href="https://bcg-x-official.github.io/sklearndf/apidoc/sklearndf.html#module-sklearndf" title="(in sklearndf v2.4.2)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">sklearndf</span></code></a> 2.4, which now supports
 <em>scikit-learn</em> 1.3 up to 1.7</p></li>
 </ul>
 </section>
@@ -397,16 +405,16 @@ maintaining support for <a class="reference external" href="https://numpy.org/do
 <h2>FACET 2.1<a class="headerlink" href="#facet-2-1" title="Link to this heading">#</a></h2>
 <p>FACET 2.1 introduces the <a class="reference internal" href="../apidoc/facet/inspection/facet.inspection.NativeLearnerInspector.html#facet.inspection.NativeLearnerInspector" title="facet.inspection.NativeLearnerInspector"><code class="xref py py-class docutils literal notranslate"><span class="pre">NativeLearnerInspector</span></code></a> for inspecting native
 <em>scikit-learn</em> models and pipelines.</p>
-<p>We still recommend using <a class="reference external" href="https://bcg-x-official.github.io/sklearndf/apidoc/sklearndf.html#module-sklearndf" title="(in sklearndf v2.4.0)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">sklearndf</span></code></a> models and learner pipelines along with FACET’s
+<p>We still recommend using <a class="reference external" href="https://bcg-x-official.github.io/sklearndf/apidoc/sklearndf.html#module-sklearndf" title="(in sklearndf v2.4.2)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">sklearndf</span></code></a> models and learner pipelines along with FACET’s
 <a class="reference internal" href="../apidoc/facet/selection/facet.selection.LearnerSelector.html#facet.selection.LearnerSelector" title="facet.selection.LearnerSelector"><code class="xref py py-class docutils literal notranslate"><span class="pre">LearnerSelector</span></code></a> for hyperparameter tuning; however the new
 <a class="reference internal" href="../apidoc/facet/inspection/facet.inspection.NativeLearnerInspector.html#facet.inspection.NativeLearnerInspector" title="facet.inspection.NativeLearnerInspector"><code class="xref py py-class docutils literal notranslate"><span class="pre">NativeLearnerInspector</span></code></a> can be useful for inspecting models that have been
 trained using <em>scikit-learn</em> directly.</p>
-<section id="id3">
-<h3>2.1.1<a class="headerlink" href="#id3" title="Link to this heading">#</a></h3>
+<section id="id4">
+<h3>2.1.1<a class="headerlink" href="#id4" title="Link to this heading">#</a></h3>
 <p>This is a maintenance release to catch up with FACET 2.0.1.</p>
 </section>
-<section id="id4">
-<h3>2.1.0<a class="headerlink" href="#id4" title="Link to this heading">#</a></h3>
+<section id="id5">
+<h3>2.1.0<a class="headerlink" href="#id5" title="Link to this heading">#</a></h3>
 <ul class="simple">
 <li><p>API: new <a class="reference internal" href="../apidoc/facet/inspection/facet.inspection.NativeLearnerInspector.html#facet.inspection.NativeLearnerInspector" title="facet.inspection.NativeLearnerInspector"><code class="xref py py-class docutils literal notranslate"><span class="pre">NativeLearnerInspector</span></code></a> class for inspecting native <em>scikit-learn</em>
 regressors, classifiers, and pipelines with a regressor or classifier as the final
@@ -421,21 +429,21 @@ inspection by up to a factor of 50 in many practical applications, introduces a 
 more flexible and user-friendly API for hyperparameter tuning – with support for
 <cite>scikit-learn</cite>’s native hyperparameter searchers – and improves the styling of all
 visualizations.</p>
-<p>FACET 2.0 requires <a class="reference external" href="https://bcg-x-official.github.io/pytools/apidoc/pytools.html#module-pytools" title="(in pytools v3.0.2)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pytools</span></code></a> 2.0 and <a class="reference external" href="https://bcg-x-official.github.io/sklearndf/apidoc/sklearndf.html#module-sklearndf" title="(in sklearndf v2.4.0)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">sklearndf</span></code></a> 2.2, and is now
-fully type-checked by <a class="reference external" href="https://mypy.readthedocs.io/en/latest/index.html" title="(in mypy v1.18.0+dev.a56adc82f7dd747f400bb9267ec32b73d22de64e)"><span class="xref std std-doc">mypy</span></a>.</p>
-<section id="id5">
-<h3>2.0.1<a class="headerlink" href="#id5" title="Link to this heading">#</a></h3>
+<p>FACET 2.0 requires <a class="reference external" href="https://bcg-x-official.github.io/pytools/apidoc/pytools.html#module-pytools" title="(in pytools v3.0.2)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pytools</span></code></a> 2.0 and <a class="reference external" href="https://bcg-x-official.github.io/sklearndf/apidoc/sklearndf.html#module-sklearndf" title="(in sklearndf v2.4.2)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">sklearndf</span></code></a> 2.2, and is now
+fully type-checked by <a class="reference external" href="https://mypy.readthedocs.io/en/latest/index.html" title="(in mypy v1.18.0+dev.39427835ea4ab9e5735e7e5956063026d1bcc4bb)"><span class="xref std std-doc">mypy</span></a>.</p>
+<section id="id6">
+<h3>2.0.1<a class="headerlink" href="#id6" title="Link to this heading">#</a></h3>
 <ul class="simple">
 <li><p>API: class <a class="reference internal" href="../apidoc/facet/inspection/facet.inspection.LearnerInspector.html#facet.inspection.LearnerInspector" title="facet.inspection.LearnerInspector"><code class="xref py py-class docutils literal notranslate"><span class="pre">LearnerInspector</span></code></a> now supports inspecting individual regressors
 and classifiers; it is no longer necessary to wrap them into a
 <code class="xref py py-class docutils literal notranslate"><span class="pre">RegressorPipelineDF</span></code> or <code class="xref py py-class docutils literal notranslate"><span class="pre">ClassifierPipelineDF</span></code> instance with empty
 preprocessing</p></li>
-<li><p>FIX: replace a call to method <code class="docutils literal notranslate"><span class="pre">get_text_heights()</span></code> of <a class="reference external" href="https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.html#matplotlib.axes.Axes" title="(in Matplotlib v3.10.3)"><code class="xref py py-class docutils literal notranslate"><span class="pre">matplotlib.axes.Axes</span></code></a>,
-which is deprecated as of <a class="reference external" href="https://matplotlib.org/stable/index.html#module-matplotlib" title="(in Matplotlib v3.10.3)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">matplotlib</span></code></a> 3.6</p></li>
+<li><p>FIX: replace a call to method <code class="docutils literal notranslate"><span class="pre">get_text_heights()</span></code> of <a class="reference external" href="https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.html#matplotlib.axes.Axes" title="(in Matplotlib v3.10.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">matplotlib.axes.Axes</span></code></a>,
+which is deprecated as of <a class="reference external" href="https://matplotlib.org/stable/index.html#module-matplotlib" title="(in Matplotlib v3.10.6)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">matplotlib</span></code></a> 3.6</p></li>
 </ul>
 </section>
-<section id="id6">
-<h3>2.0.0<a class="headerlink" href="#id6" title="Link to this heading">#</a></h3>
+<section id="id7">
+<h3>2.0.0<a class="headerlink" href="#id7" title="Link to this heading">#</a></h3>
 <section id="facet-data">
 <h4><code class="docutils literal notranslate"><span class="pre">facet.data</span></code><a class="headerlink" href="#facet-data" title="Link to this heading">#</a></h4>
 <ul class="simple">
@@ -531,29 +539,29 @@ It also introduces the ability to run simulations on a subsample of the data use
 fit the underlying crossfit.
 One example where this can be useful is to use only a recent period of a time series as
 the baseline of a simulation.</p>
-<section id="id7">
-<h3>1.2.3<a class="headerlink" href="#id7" title="Link to this heading">#</a></h3>
+<section id="id8">
+<h3>1.2.3<a class="headerlink" href="#id8" title="Link to this heading">#</a></h3>
 <ul class="simple">
 <li><p>BUILD: pin down <em>matplotlib</em> version to &lt; 3.6 and <em>scipy</em> version to &lt; 1.9 to ensure
 compatibility with <em>pytools</em> 1.2 and <em>sklearndf</em> 1.2</p></li>
 </ul>
 </section>
-<section id="id8">
-<h3>1.2.2<a class="headerlink" href="#id8" title="Link to this heading">#</a></h3>
+<section id="id9">
+<h3>1.2.2<a class="headerlink" href="#id9" title="Link to this heading">#</a></h3>
 <ul class="simple">
 <li><p>catch up with FACET 1.1.2</p></li>
 </ul>
 </section>
-<section id="id9">
-<h3>1.2.1<a class="headerlink" href="#id9" title="Link to this heading">#</a></h3>
+<section id="id10">
+<h3>1.2.1<a class="headerlink" href="#id10" title="Link to this heading">#</a></h3>
 <ul class="simple">
 <li><p>FIX: fix a bug in <a class="reference internal" href="../apidoc/facet/simulation/facet.simulation.UnivariateProbabilitySimulator.html#facet.simulation.UnivariateProbabilitySimulator" title="facet.simulation.UnivariateProbabilitySimulator"><code class="xref py py-class docutils literal notranslate"><span class="pre">UnivariateProbabilitySimulator</span></code></a> that was introduced in
 FACET 1.2.0</p></li>
 <li><p>catch up with FACET 1.1.1</p></li>
 </ul>
 </section>
-<section id="id10">
-<h3>1.2.0<a class="headerlink" href="#id10" title="Link to this heading">#</a></h3>
+<section id="id11">
+<h3>1.2.0<a class="headerlink" href="#id11" title="Link to this heading">#</a></h3>
 <ul class="simple">
 <li><p>BUILD: added support for <em>sklearndf</em> 1.2 and <em>scikit-learn</em> 0.24</p></li>
 <li><p>API: new optional parameter <code class="docutils literal notranslate"><span class="pre">subsample</span></code> in method
@@ -567,8 +575,8 @@ sample)</p></li>
 <h2>FACET 1.1<a class="headerlink" href="#facet-1-1" title="Link to this heading">#</a></h2>
 <p>FACET 1.1 refines and enhances the association/synergy/redundancy calculations
 provided by the <a class="reference internal" href="../apidoc/facet/inspection/facet.inspection.LearnerInspector.html#facet.inspection.LearnerInspector" title="facet.inspection.LearnerInspector"><code class="xref py py-class docutils literal notranslate"><span class="pre">LearnerInspector</span></code></a>.</p>
-<section id="id11">
-<h3>1.1.2<a class="headerlink" href="#id11" title="Link to this heading">#</a></h3>
+<section id="id12">
+<h3>1.1.2<a class="headerlink" href="#id12" title="Link to this heading">#</a></h3>
 <ul class="simple">
 <li><p>DOC: use a downloadable dataset in the <cite>getting started</cite> notebook</p></li>
 <li><p>FIX: import <a class="reference external" href="https://catboost.ai/en/docs/">catboost</a> if present, else create a local
@@ -578,15 +586,15 @@ on the full dataset in a <code class="docutils literal notranslate"><span class=
 <li><p>BUILD: relax package dependencies to support any <cite>numpy</cite> version 1.`x` from 1.16</p></li>
 </ul>
 </section>
-<section id="id12">
-<h3>1.1.1<a class="headerlink" href="#id12" title="Link to this heading">#</a></h3>
+<section id="id13">
+<h3>1.1.1<a class="headerlink" href="#id13" title="Link to this heading">#</a></h3>
 <ul class="simple">
 <li><p>DOC: add reference to FACET research paper on the project landing page</p></li>
 <li><p>FIX: correctly count positive class frequency in UnivariateProbabilitySimulator</p></li>
 </ul>
 </section>
-<section id="id13">
-<h3>1.1.0<a class="headerlink" href="#id13" title="Link to this heading">#</a></h3>
+<section id="id14">
+<h3>1.1.0<a class="headerlink" href="#id14" title="Link to this heading">#</a></h3>
 <ul class="simple">
 <li><p>API: SHAP interaction vectors can (in part) also be influenced by redundancy among
 features. This can inflate quantifications of synergy, especially in cases where two
@@ -607,16 +615,16 @@ new <a class="reference external" href="https://bcg-x-official.github.io/pytools
 </section>
 <section id="facet-1-0">
 <h2>FACET 1.0<a class="headerlink" href="#facet-1-0" title="Link to this heading">#</a></h2>
-<section id="id14">
-<h3>1.0.3<a class="headerlink" href="#id14" title="Link to this heading">#</a></h3>
+<section id="id15">
+<h3>1.0.3<a class="headerlink" href="#id15" title="Link to this heading">#</a></h3>
 <ul class="simple">
 <li><p>FIX: restrict package requirements to <em>gamma-pytools</em> 1.0 and
 <em>sklearndf</em> 1.0, since FACET 1.0 is not compatible with
 <em>gamma-pytools</em> 1.1</p></li>
 </ul>
 </section>
-<section id="id15">
-<h3>1.0.2<a class="headerlink" href="#id15" title="Link to this heading">#</a></h3>
+<section id="id16">
+<h3>1.0.2<a class="headerlink" href="#id16" title="Link to this heading">#</a></h3>
 <p>This is a maintenance release focusing on enhancements to the CI/CD pipeline and bug
 fixes.</p>
 <ul class="simple">
@@ -627,8 +635,8 @@ fixes.</p>
 <li><p>BUILD: updates and changes to the CI/CD pipeline</p></li>
 </ul>
 </section>
-<section id="id16">
-<h3>1.0.1<a class="headerlink" href="#id16" title="Link to this heading">#</a></h3>
+<section id="id17">
+<h3>1.0.1<a class="headerlink" href="#id17" title="Link to this heading">#</a></h3>
 <p>Initial release.</p>
 </section>
 </section>
@@ -673,17 +681,18 @@ fixes.</p>
   <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#facet-2-2">FACET 2.2</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id2">2.2.0</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id2">2.2.1</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id3">2.2.0</a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#facet-2-1">FACET 2.1</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id3">2.1.1</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id4">2.1.0</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id4">2.1.1</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id5">2.1.0</a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#facet-2-0">FACET 2.0</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id5">2.0.1</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id6">2.0.0</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id6">2.0.1</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id7">2.0.0</a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#facet-data"><code class="docutils literal notranslate"><span class="pre">facet.data</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#facet-explanation"><code class="docutils literal notranslate"><span class="pre">facet.explanation</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#facet-inspection"><code class="docutils literal notranslate"><span class="pre">facet.inspection</span></code></a></li>
@@ -696,22 +705,22 @@ fixes.</p>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#facet-1-2">FACET 1.2</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id7">1.2.3</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id8">1.2.2</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id9">1.2.1</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id10">1.2.0</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id8">1.2.3</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id9">1.2.2</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id10">1.2.1</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id11">1.2.0</a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#facet-1-1">FACET 1.1</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id11">1.1.2</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id12">1.1.1</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id13">1.1.0</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id12">1.1.2</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id13">1.1.1</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id14">1.1.0</a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#facet-1-0">FACET 1.0</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id14">1.0.3</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id15">1.0.2</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id16">1.0.1</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id15">1.0.3</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id16">1.0.2</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id17">1.0.1</a></li>
 </ul>
 </li>
 </ul>

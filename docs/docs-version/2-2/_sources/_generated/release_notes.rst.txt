@@ -14,6 +14,14 @@ FACET 2.2
 FACET 2.2 is a maintenance release to catch up with the latest versions of
 :mod:`gamma-pytools`. :mod:`sklearndf`, |shap|, and :mod:`numpy`.
 
+2.2.1
+~~~~~
+
+- FIX: using a :mod:`pandas` categorical dtype or other extension dtypes for a simulated
+  feature in in simulations no longer raises an exception; the simulator now detects
+  such dtypes and applies a corresponding :mod:`numpy` dtype instead
+
+
 2.2.0
 ~~~~~
 

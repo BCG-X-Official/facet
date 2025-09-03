@@ -43,7 +43,7 @@
     <script src="../../../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../../_static/js/gamma.js?v=6cc5c158"></script>
-    <script src="../../../../_static/js/versions.js?v=01045294"></script>
+    <script src="../../../../_static/js/versions.js?v=e7773209"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
     <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
@@ -54,7 +54,7 @@
     <link rel="prev" title="facet.inspection.base" href="../facet.inspection.base.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2.2.0" />
+  <meta name="docsearch:version" content="2.2.1" />
   </head>
   
   
@@ -705,7 +705,7 @@ are <code class="docutils literal notranslate"><span class="pre">rms</span></cod
 values)</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Series.html#pandas.Series" title="(in pandas v2.3.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Series</span></code></a> | <a class="reference external" href="https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v2.3.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></a></span></p>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Series.html#pandas.Series" title="(in pandas v2.3.2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Series</span></code></a> | <a class="reference external" href="https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v2.3.2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></a></span></p>
 </dd>
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>a series of length <cite>n_features</cite> for single-output models, or a
@@ -913,10 +913,10 @@ compatibility with <code class="xref py py-class docutils literal notranslate"><
 By default, returns the features unchanged.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>features</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3.7/library/typing.html#typing.Union" title="(in Python v3.7)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code></a>[<a class="reference external" href="https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v2.3.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></a>, <a class="reference external" href="https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Series.html#pandas.Series" title="(in pandas v2.3.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Series</span></code></a>]</span>) – features to preprocess</p>
+<dd class="field-odd"><p><strong>features</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3.7/library/typing.html#typing.Union" title="(in Python v3.7)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code></a>[<a class="reference external" href="https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v2.3.2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></a>, <a class="reference external" href="https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Series.html#pandas.Series" title="(in pandas v2.3.2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Series</span></code></a>]</span>) – features to preprocess</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v2.3.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></a></span></p>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v2.3.2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></a></span></p>
 </dd>
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>preprocessed features</p>
@@ -934,7 +934,7 @@ observation and a feature (identified by a hierarchical index with two levels),
 and each column corresponds to a feature.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v2.3.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></a> | <a class="reference external" href="https://docs.python.org/3.7/library/stdtypes.html#list" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference external" href="https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v2.3.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></a>]</span></p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v2.3.2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></a> | <a class="reference external" href="https://docs.python.org/3.7/library/stdtypes.html#list" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference external" href="https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v2.3.2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></a>]</span></p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>a data frame with SHAP interaction values</p>
@@ -986,7 +986,7 @@ splits for which SHAP values were calculated.</p>
 observation, and each column corresponds to a feature.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v2.3.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></a> | <a class="reference external" href="https://docs.python.org/3.7/library/stdtypes.html#list" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference external" href="https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v2.3.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></a>]</span></p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v2.3.2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></a> | <a class="reference external" href="https://docs.python.org/3.7/library/stdtypes.html#list" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference external" href="https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v2.3.2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></a>]</span></p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>a data frame with SHAP values</p>
