@@ -21,7 +21,7 @@ schedules:
     displayName: Nightly full build
     branches:
       include:
-        - 2.3.x
+        - 2.2.x
 
 resources:
   repositories:
