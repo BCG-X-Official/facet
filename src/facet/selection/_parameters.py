@@ -7,12 +7,20 @@ from __future__ import annotations
 import logging
 import warnings
 from collections.abc import Collection, Iterable, Iterator
-from typing import Any, Generic, TypeAlias, TypeVar
+from typing import Any, Generic, TypeAlias, TypeVar, final
 
 from scipy import stats
 from sklearn.base import BaseEstimator
 
-from pytools.api import AllTracker, as_list, inheritdoc, subsdoc, validate_element_types
+from pytools.api import (
+    AllTracker,
+    appenddoc,
+    as_list,
+    deprecated,
+    inheritdoc,
+    subsdoc,
+    validate_element_types,
+)
 from pytools.expression import Expression, make_expression
 from pytools.expression.atomic import Id
 from sklearndf import EstimatorDF
@@ -50,7 +58,7 @@ except StopIteration:
 # Type variables
 #
 
-T_Estimator_co = TypeVar("T_Estimator_co", covariant=True, bound=EstimatorDF)
+T_Estimator_co = TypeVar("T_Estimator_co", covariant=True, bound=BaseEstimator)
 
 #
 # Ensure all symbols introduced below are included in __all__
@@ -133,7 +141,7 @@ distribution:
         self._values: ParameterDict = {}
         self._params: set[str] = set(params.keys())
 
-    def get_name(self) -> str:
+    def get_name_(self) -> str:
         """
         Get the name for this parameter space's estimator.
 
@@ -152,6 +160,17 @@ distribution:
         else:
             return self._name
 
+    @final
+    @deprecated(message="will be removed in v2.3.0; use 'get_name_' instead")
+    @appenddoc(to=get_name_, prepend=True)
+    def get_name(self) -> str:
+        """
+        .. warning::
+
+            Deprecated: will be removed in v2.3.0; use :meth:`.get_name_` instead.
+        """
+        return self.get_name_()
+
     @subsdoc(
         pattern="or a list of such dictionaries, ",
         replacement="",
@@ -159,9 +178,9 @@ distribution:
     @subsdoc(
         pattern="one or more dictionaries, each mapping",
         replacement="a dictionary mapping",
-        using=BaseParameterSpace.get_parameters,
+        using=BaseParameterSpace.get_parameters_,
     )
-    def get_parameters(self, prefix: str | None = None) -> ParameterDict:
+    def get_parameters_(self, prefix: str | None = None) -> ParameterDict:
         """[see superclass]"""
 
         return {
@@ -174,8 +193,7 @@ distribution:
     def _validate_parameter(self, name: str, value: ParameterSet) -> None:
         if name not in self._params:
             raise AttributeError(
-                f"unknown parameter name for "
-                f"{type(self.estimator).__name__}: {name}"
+                f"unknown parameter name for {type(self.estimator_).__name__}: {name}"
             )
 
         if not (
@@ -186,28 +204,24 @@ distribution:
             or callable(getattr(value, "rvs", None))
         ):
             raise TypeError(
-                f"expected list or distribution for parameter {name} but got: "
-                f"{value!r}"
+                f"expected list or distribution for parameter {name} but got: {value!r}"
             )
 
     def __setattr__(self, name: str, value: Any) -> None:
-        if name.startswith("_"):
+        if name.startswith("_") or name.endswith("_"):
             super().__setattr__(name, value)
         else:
             self._validate_parameter(name, value)
-            if name in self.__dict__:
-                warnings.warn(
-                    f"parameter {name!r} overrides {type(self).__name__}"
-                    f"attribute of same name",
-                    stacklevel=-1,
-                )
             self._values[name] = value
 
     def __dir__(self) -> Iterable[str]:
         return {*super().__dir__(), *self._params}
 
-    def __getattr__(self, key: str) -> Any:
-        if not key.startswith("_"):
+    def __getattribute__(self, key: str) -> Any:
+        if not (key.startswith("_") or key.endswith("_")):
+            # We have a public attribute access, without trailing underscore,
+            # so we first check if this refers to a child parameter space
+            # or a parameter value
             result: ParameterSpace[Any] | ParameterSet | None
 
             result = self._children.get(key, None)
@@ -218,6 +232,7 @@ distribution:
             if result is not None:
                 return result
 
+        # Fall back to normal attribute access
         return super().__getattribute__(key)
 
     def __iter__(self) -> Iterator[tuple[list[str], ParameterSet]]:
@@ -233,7 +248,7 @@ distribution:
         for name, child in self._children.items():
             yield from child._iter_parameters([*path_prefix, name])
 
-    def to_expression(self) -> Expression:
+    def to_expression_(self) -> Expression:
         """[see superclass]"""
         return self._to_expression([])
 
@@ -264,10 +279,10 @@ distribution:
 
         if path_prefix_list:
             return Id(type(self))(
-                **{".".join(path_prefix_list): self.estimator}, **parameters
+                **{".".join(path_prefix_list): self.estimator_}, **parameters
             )
         else:
-            return Id(type(self))(self.estimator, **parameters)
+            return Id(type(self))(self.estimator_, **parameters)
 
 
 @inheritdoc(match="""[see superclass]""")
@@ -308,9 +323,9 @@ class MultiEstimatorParameterSpace(
     @subsdoc(
         pattern="one or more dictionaries,",
         replacement="a list of dictionaries,",
-        using=BaseParameterSpace.get_parameters,
+        using=BaseParameterSpace.get_parameters_,
     )
-    def get_parameters(self, prefix: str | None = None) -> list[ParameterDict]:
+    def get_parameters_(self, prefix: str | None = None) -> list[ParameterDict]:
         """[see superclass]"""
         if prefix is None:
             prefix = ""
@@ -321,14 +336,14 @@ class MultiEstimatorParameterSpace(
 
         return [
             {
-                candidate_prefixed: [space.estimator],
-                prefix + CandidateEstimatorDF.PARAM_CANDIDATE_NAME: [space.get_name()],
-                **space.get_parameters(prefix=candidate_prefixed),
+                candidate_prefixed: [space.estimator_],
+                prefix + CandidateEstimatorDF.PARAM_CANDIDATE_NAME: [space.get_name_()],
+                **space.get_parameters_(prefix=candidate_prefixed),
             }
             for space in self.spaces
         ]
 
-    def to_expression(self) -> Expression:
+    def to_expression_(self) -> Expression:
         """[see superclass]"""
         # noinspection PyProtectedMember
         return Id(type(self))(*self.spaces)
@@ -367,7 +382,7 @@ def validate_spaces(spaces: Collection[ParameterSpace[T_Estimator_co]]) -> None:
     """
 
     estimator_types: set[str] = {
-        getattr(space.estimator, "_estimator_type") for space in spaces
+        getattr(space.estimator_, "_estimator_type") for space in spaces
     }
 
     if len(estimator_types) > 1:
@@ -392,9 +407,11 @@ def get_default_estimator_name(estimator: EstimatorDF) -> str:
 
     while True:
         if isinstance(estimator, CandidateEstimatorDF):
+            # noinspection PyUnresolvedReferences
             if estimator.candidate is None:
                 return type(estimator).__name__
             else:
+                # noinspection PyUnresolvedReferences
                 estimator = estimator.candidate
 
         elif isinstance(estimator, PipelineDF) and estimator.steps:
