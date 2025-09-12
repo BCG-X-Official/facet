@@ -10,7 +10,7 @@ import numpy.typing as npt
 import pandas as pd
 from scipy import stats
 
-from pytools.api import AllTracker, appenddoc, deprecated, inheritdoc
+from pytools.api import AllTracker, inheritdoc
 from pytools.expression import Expression, HasExpressionRepr
 from sklearndf import ClassifierDF, EstimatorDF, RegressorDF, TransformerDF
 
@@ -70,18 +70,6 @@ class BaseParameterSpace(HasExpressionRepr, Generic[T_Estimator], metaclass=ABCM
         """
         return self._estimator
 
-    @final
-    @property
-    @deprecated(message="will be removed in v2.3.0; use 'estimator_' instead")
-    def estimator(self) -> T_Estimator:
-        """
-        .. warning::
-
-            Deprecated: will be removed in v2.3.0; use :attr:`.estimator_` instead.
-
-        """
-        return self.estimator_
-
     @property
     def parameters_(self) -> list[ParameterDict] | ParameterDict:
         """
@@ -92,18 +80,6 @@ class BaseParameterSpace(HasExpressionRepr, Generic[T_Estimator], metaclass=ABCM
         arguments.
         """
         return self.get_parameters_()
-
-    @final
-    @property
-    @deprecated(message="will be removed in v2.3.0; use 'parameters_' instead")
-    def parameters(self) -> list[ParameterDict] | ParameterDict:
-        """
-        .. warning::
-
-            Deprecated: will be removed in v2.3.0; use :attr:`.parameters_` instead.
-
-        """
-        return self.parameters_
 
     @abstractmethod
     def get_parameters_(
@@ -122,20 +98,6 @@ class BaseParameterSpace(HasExpressionRepr, Generic[T_Estimator], metaclass=ABCM
             choices (as lists) or distributions (from :mod:`scipy.stats`)
         """
         pass
-
-    @final
-    @deprecated(message="will be removed in v2.3.0; use 'get_parameters_' instead")
-    @appenddoc(to=get_parameters_, prepend=True)
-    def get_parameters(
-        self, prefix: str | None = None
-    ) -> list[ParameterDict] | ParameterDict:
-        """
-        .. warning::
-
-            Deprecated: will be removed in v2.3.0; use :meth:`.get_parameters_` instead.
-
-        """
-        return self.get_parameters_(prefix)
 
     @final
     def to_expression(self) -> Expression:

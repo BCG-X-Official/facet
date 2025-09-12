@@ -7,20 +7,12 @@ from __future__ import annotations
 import logging
 import warnings
 from collections.abc import Collection, Iterable, Iterator
-from typing import Any, Generic, TypeAlias, TypeVar, final
+from typing import Any, Generic, TypeAlias, TypeVar
 
 from scipy import stats
 from sklearn.base import BaseEstimator
 
-from pytools.api import (
-    AllTracker,
-    appenddoc,
-    as_list,
-    deprecated,
-    inheritdoc,
-    subsdoc,
-    validate_element_types,
-)
+from pytools.api import AllTracker, as_list, inheritdoc, subsdoc, validate_element_types
 from pytools.expression import Expression, make_expression
 from pytools.expression.atomic import Id
 from sklearndf import EstimatorDF
@@ -159,17 +151,6 @@ distribution:
             return get_default_estimator_name(self._estimator)
         else:
             return self._name
-
-    @final
-    @deprecated(message="will be removed in v2.3.0; use 'get_name_' instead")
-    @appenddoc(to=get_name_, prepend=True)
-    def get_name(self) -> str:
-        """
-        .. warning::
-
-            Deprecated: will be removed in v2.3.0; use :meth:`.get_name_` instead.
-        """
-        return self.get_name_()
 
     @subsdoc(
         pattern="or a list of such dictionaries, ",
