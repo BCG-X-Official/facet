@@ -4,14 +4,14 @@ Core implementation of :mod:`facet.selection.base`
 
 import logging
 from abc import ABCMeta, abstractmethod
-from typing import Any, Generic, TypeVar
+from typing import Any, Generic, TypeVar, final
 
 import numpy.typing as npt
 import pandas as pd
 from scipy import stats
 
-from pytools.api import AllTracker, inheritdoc
-from pytools.expression import HasExpressionRepr
+from pytools.api import AllTracker, appenddoc, deprecated, inheritdoc
+from pytools.expression import Expression, HasExpressionRepr
 from sklearndf import ClassifierDF, EstimatorDF, RegressorDF, TransformerDF
 
 log = logging.getLogger(__name__)
@@ -36,7 +36,6 @@ ParameterDict = dict[str, list[Any] | stats.rv_continuous | stats.rv_discrete]
 T_CandidateEstimatorDF = TypeVar("T_CandidateEstimatorDF", bound="CandidateEstimatorDF")
 T_Estimator = TypeVar("T_Estimator", covariant=True, bound=EstimatorDF)
 
-
 #
 # Ensure all symbols introduced below are included in __all__
 #
@@ -49,6 +48,7 @@ __tracker = AllTracker(globals())
 #
 
 
+@inheritdoc(match="""[see superclass]""")
 class BaseParameterSpace(HasExpressionRepr, Generic[T_Estimator], metaclass=ABCMeta):
     """
     A collection of parameters spanning a parameter space for hyperparameter
@@ -64,14 +64,26 @@ class BaseParameterSpace(HasExpressionRepr, Generic[T_Estimator], metaclass=ABCM
         self._estimator = estimator
 
     @property
-    def estimator(self) -> T_Estimator:
+    def estimator_(self) -> T_Estimator:
         """
         The estimator associated with this parameter space.
         """
         return self._estimator
 
+    @final
     @property
-    def parameters(self) -> list[ParameterDict] | ParameterDict:
+    @deprecated(message="will be removed in v2.3.0; use 'estimator_' instead")
+    def estimator(self) -> T_Estimator:
+        """
+        .. warning::
+
+            Deprecated: will be removed in v2.3.0; use :attr:`.estimator_` instead.
+
+        """
+        return self.estimator_
+
+    @property
+    def parameters_(self) -> list[ParameterDict] | ParameterDict:
         """
         The parameter choices (as lists) or distributions (from :mod:`scipy.stats`)
         that constitute this parameter space.
@@ -79,10 +91,22 @@ class BaseParameterSpace(HasExpressionRepr, Generic[T_Estimator], metaclass=ABCM
         This is a shortcut for calling method :meth:`.get_parameters` with no
         arguments.
         """
-        return self.get_parameters()
+        return self.get_parameters_()
+
+    @final
+    @property
+    @deprecated(message="will be removed in v2.3.0; use 'parameters_' instead")
+    def parameters(self) -> list[ParameterDict] | ParameterDict:
+        """
+        .. warning::
+
+            Deprecated: will be removed in v2.3.0; use :attr:`.parameters_` instead.
+
+        """
+        return self.parameters_
 
     @abstractmethod
-    def get_parameters(
+    def get_parameters_(
         self, prefix: str | None = None
     ) -> list[ParameterDict] | ParameterDict:
         """
@@ -98,6 +122,36 @@ class BaseParameterSpace(HasExpressionRepr, Generic[T_Estimator], metaclass=ABCM
             choices (as lists) or distributions (from :mod:`scipy.stats`)
         """
         pass
+
+    @final
+    @deprecated(message="will be removed in v2.3.0; use 'get_parameters_' instead")
+    @appenddoc(to=get_parameters_, prepend=True)
+    def get_parameters(
+        self, prefix: str | None = None
+    ) -> list[ParameterDict] | ParameterDict:
+        """
+        .. warning::
+
+            Deprecated: will be removed in v2.3.0; use :meth:`.get_parameters_` instead.
+
+        """
+        return self.get_parameters_(prefix)
+
+    @final
+    def to_expression(self) -> Expression:
+        """[see superclass]"""
+        return self.to_expression_()
+
+    @abstractmethod
+    def to_expression_(self) -> Expression:
+        """
+        Create an expression representing this parameter space.
+
+        :return: an expression representing this parameter space
+        """
+
+    def __repr__(self) -> str:
+        return repr(self.to_expression_())
 
 
 @inheritdoc(match="""[see superclass]""")

@@ -275,6 +275,7 @@ class LearnerSelector(
             best_estimator = searcher.best_estimator_
             while isinstance(best_estimator, CandidateEstimatorDF):
                 # unpack the candidate estimator
+                # noinspection PyUnresolvedReferences
                 best_estimator = best_estimator.candidate
             return best_estimator
 
@@ -323,8 +324,8 @@ class LearnerSelector(
         parameter_space = self.parameter_space
         (searcher_type,) = self.searcher_type
         searcher = self.searcher_ = searcher_type(
-            parameter_space.estimator,
-            parameter_space.parameters,
+            parameter_space.estimator_,
+            parameter_space.parameters_,
             **self._get_searcher_parameters(),
         )
         if sample.weight is not None:
@@ -354,7 +355,7 @@ class LearnerSelector(
         # get the raw CV results
         cv_results: dict[str, Any] = self.searcher_.cv_results_
 
-        if isinstance(self.parameter_space.estimator, CandidateEstimatorDF):
+        if isinstance(self.parameter_space.estimator_, CandidateEstimatorDF):
             # our estimator is a candidate estimator, so we need to unpack the
             # candidate's parameter names
             cv_results = {
@@ -470,7 +471,7 @@ class LearnerSelector(
             # if scoring is not callable, it must be a string
             scorer = get_scorer(scoring)
 
-        # noinspection PyPep8Naming
+        # noinspection PyPep8Naming,PyUnresolvedReferences
         def _scorer_fn(
             estimator: EstimatorDF,
             X: pd.DataFrame,
