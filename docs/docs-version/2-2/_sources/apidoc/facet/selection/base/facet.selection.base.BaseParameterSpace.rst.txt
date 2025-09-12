@@ -17,7 +17,9 @@ facet.selection.base.BaseParameterSpace
       :nosignatures:
    
       ~BaseParameterSpace.get_parameters
+      ~BaseParameterSpace.get_parameters_
       ~BaseParameterSpace.to_expression
+      ~BaseParameterSpace.to_expression_
    
    
 
@@ -28,7 +30,9 @@ facet.selection.base.BaseParameterSpace
    .. autosummary::
    
       ~BaseParameterSpace.estimator
+      ~BaseParameterSpace.estimator_
       ~BaseParameterSpace.parameters
+      ~BaseParameterSpace.parameters_
    
    
 

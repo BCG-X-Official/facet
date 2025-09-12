@@ -17,7 +17,9 @@ facet.selection.MultiEstimatorParameterSpace
       :nosignatures:
    
       ~MultiEstimatorParameterSpace.get_parameters
+      ~MultiEstimatorParameterSpace.get_parameters_
       ~MultiEstimatorParameterSpace.to_expression
+      ~MultiEstimatorParameterSpace.to_expression_
    
    
 
@@ -28,7 +30,9 @@ facet.selection.MultiEstimatorParameterSpace
    .. autosummary::
    
       ~MultiEstimatorParameterSpace.estimator
+      ~MultiEstimatorParameterSpace.estimator_
       ~MultiEstimatorParameterSpace.parameters
+      ~MultiEstimatorParameterSpace.parameters_
       ~MultiEstimatorParameterSpace.spaces
    
    

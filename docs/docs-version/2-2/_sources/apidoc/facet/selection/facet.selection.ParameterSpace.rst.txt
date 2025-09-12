@@ -17,8 +17,11 @@ facet.selection.ParameterSpace
       :nosignatures:
    
       ~ParameterSpace.get_name
+      ~ParameterSpace.get_name_
       ~ParameterSpace.get_parameters
+      ~ParameterSpace.get_parameters_
       ~ParameterSpace.to_expression
+      ~ParameterSpace.to_expression_
    
    
 
@@ -29,7 +32,9 @@ facet.selection.ParameterSpace
    .. autosummary::
    
       ~ParameterSpace.estimator
+      ~ParameterSpace.estimator_
       ~ParameterSpace.parameters
+      ~ParameterSpace.parameters_
    
    
 
