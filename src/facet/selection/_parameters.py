@@ -396,7 +396,7 @@ def get_default_estimator_name(estimator: EstimatorDF) -> str:
                 estimator = estimator.candidate
 
         elif isinstance(estimator, PipelineDF) and estimator.steps:
-            estimator = estimator.steps[-1]
+            estimator = estimator.steps[-1][1]
 
         elif isinstance(estimator, LearnerPipelineDF):
             estimator = estimator.final_estimator
