@@ -12,6 +12,17 @@ FACET 2.2
 FACET 2.2 is a maintenance release to catch up with the latest versions of
 :mod:`gamma-pytools`. :mod:`sklearndf`, |shap|, and :mod:`numpy`.
 
+2.2.2
+~~~~~
+
+- FIX: Instances of :class:`.ParameterSpace` did not allow setting parameters whose
+  names clash with methods and properties of :class:`.ParameterSpace`.
+  To fix this, we renamed all methods and properties to include a trailing underscore.
+  The original methods and properties are still available but deprecated. They will be
+  removed in FACET 2.3, and estimator parameters with clashing names will override
+  the corresponding deprecated methods and properties of :class:`.ParameterSpace`.
+
+
 2.2.1
 ~~~~~
 

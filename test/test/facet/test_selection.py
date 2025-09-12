@@ -16,7 +16,11 @@ from sklearn.model_selection import GridSearchCV
 from pytools.expression import Expression, freeze
 from pytools.expression.atomic import Id
 from sklearndf import TransformerDF
-from sklearndf.classification import SVCDF, RandomForestClassifierDF
+from sklearndf.classification import (
+    SVCDF,
+    CalibratedClassifierCVDF,
+    RandomForestClassifierDF,
+)
 from sklearndf.pipeline import ClassifierPipelineDF, RegressorPipelineDF
 from sklearndf.regression import (
     AdaBoostRegressorDF,
@@ -298,9 +302,9 @@ def test_parameter_space(simple_preprocessor: TransformerDF) -> None:
         )
     )
 
-    assert mps.estimator.candidate is None
+    assert mps.estimator_.candidate is None
 
-    assert mps.parameters == [
+    assert mps.parameters_ == [
         {
             "candidate": [pipeline_1],
             "candidate_name": [ps_1_name],
@@ -333,6 +337,44 @@ def test_parameter_space(simple_preprocessor: TransformerDF) -> None:
             "my_prefix__candidate__regressor__min_child_samples": randint_1_32,
         },
     ]
+
+
+def test_parameter_space_attribute_overrides() -> None:
+    # check that reserved names can be overridden as parameters
+    classifier = CalibratedClassifierCVDF(SVCDF())
+    # noinspection PyTypeChecker
+    ps = ParameterSpace(classifier)
+
+    # calibrated classifier has an 'estimator' parameter
+    assert isinstance(ps.estimator, ParameterSpace)
+    ps.estimator.degree = [3, 4]
+    assert ps.estimator_ is classifier
+    assert ps.estimator.degree == [3, 4]
+
+    # but we don't override `estimator_`
+    assert ps.estimator_ is classifier
+
+    # we don't override `get_name` because it's not a parameter of the classifier
+    with pytest.deprecated_call(
+        match=(
+            r"^Call to deprecated function ParameterSpace.get_name: "
+            r"will be removed in v2.3.0; use 'get_name_' instead$"
+        )
+    ):
+        name = ps.get_name()
+    assert name == "CalibratedClassifierCVDF"
+
+    # and we don't override `parameters` because it's not a parameter of the classifier
+    assert ps.parameters_ == {"estimator__degree": [3, 4]}
+
+    # and we also have the new, non-deprecated `get_parameters_` method
+    with pytest.deprecated_call(
+        match=(
+            r"^Call to deprecated function BaseParameterSpace.parameters: "
+            r"will be removed in v2.3.0; use 'parameters_' instead$"
+        )
+    ):
+        assert ps.parameters == ps.parameters_
 
 
 def test_model_selector_regression(
