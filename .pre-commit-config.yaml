@@ -30,7 +30,7 @@ repos:
         types: [ python ]
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v5.0.0
+    rev: v6.0.0
     hooks:
       - id: check-added-large-files
       - id: check-json
@@ -40,7 +40,7 @@ repos:
         exclude: condabuild/meta.yaml
 
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.17.0
+    rev: v1.18.1
     hooks:
       - id: mypy
         files: src|sphinx|test
