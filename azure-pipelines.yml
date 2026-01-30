@@ -1,11 +1,11 @@
 trigger:
   # run the pipeline on pushes to the following branches
-  - 2.2.x
+  - 2.3.x
   - release/*
 
 pr:
   # run the pipeline on pull requests to the following branches
-  - 2.2.x
+  - 2.3.x
   - release/*
 
 pool:
