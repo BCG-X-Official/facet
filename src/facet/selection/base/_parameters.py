@@ -76,7 +76,7 @@ class BaseParameterSpace(HasExpressionRepr, Generic[T_Estimator], metaclass=ABCM
         The parameter choices (as lists) or distributions (from :mod:`scipy.stats`)
         that constitute this parameter space.
 
-        This is a shortcut for calling method :meth:`.get_parameters` with no
+        This is a shortcut for calling method :meth:`.get_parameters_` with no
         arguments.
         """
         return self.get_parameters_()
