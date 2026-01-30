@@ -1,21 +1,21 @@
 repos:
   - repo: https://github.com/asottile/pyupgrade
-    rev: v3.20.0
+    rev: v3.21.2
     hooks:
       - id: pyupgrade
         args: [--py310-plus]
 
   - repo: https://github.com/PyCQA/isort
-    rev: 6.0.1
+    rev: 7.0.0
     hooks:
       - id: isort
 
   - repo: https://github.com/psf/black
-    rev: 25.1.0
+    rev: 26.1.0
     hooks:
       - id: black
         language: python
-        language_version: python39
+        language_version: python310
 
   - repo: https://github.com/pycqa/flake8
     rev: 7.3.0
@@ -24,7 +24,7 @@ repos:
         name: flake8
         entry: flake8 --config tox.ini
         language: python
-        language_version: python39
+        language_version: python310
         additional_dependencies:
           - flake8-comprehensions ~= 3.16
         types: [ python ]
@@ -40,7 +40,7 @@ repos:
         exclude: condabuild/meta.yaml
 
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.18.1
+    rev: v1.19.1
     hooks:
       - id: mypy
         files: src|sphinx|test
