@@ -15,7 +15,6 @@ repos:
     hooks:
       - id: black
         language: python
-        language_version: python310
 
   - repo: https://github.com/pycqa/flake8
     rev: 7.3.0
@@ -24,7 +23,6 @@ repos:
         name: flake8
         entry: flake8 --config tox.ini
         language: python
-        language_version: python310
         additional_dependencies:
           - flake8-comprehensions ~= 3.16
         types: [ python ]
@@ -45,7 +43,6 @@ repos:
       - id: mypy
         files: src|sphinx|test
         language: python
-        language_version: python310
         additional_dependencies:
           - numpy~=2.2
           - gamma-pytools~=3.0
