@@ -6,6 +6,16 @@
 .. |nbsp| unicode:: 0xA0
    :trim:
 
+FACET 2.3
+---------
+
+2.3.0
+~~~~~
+
+- REFACTOR: Remove :class:`.ParameterSpace` properties and methods deprecated in
+  FACET|nbsp|2.2
+
+
 FACET 2.2
 ---------
 
@@ -19,7 +29,7 @@ FACET 2.2 is a maintenance release to catch up with the latest versions of
   names clash with methods and properties of :class:`.ParameterSpace`.
   To fix this, we renamed all methods and properties to include a trailing underscore.
   The original methods and properties are still available but deprecated. They will be
-  removed in FACET 2.3, and estimator parameters with clashing names will override
+  removed in FACET|nbsp|2.3, and estimator parameters with clashing names will override
   the corresponding deprecated methods and properties of :class:`.ParameterSpace`.
 
 

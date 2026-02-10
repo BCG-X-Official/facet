@@ -1,11 +1,11 @@
 trigger:
   # run the pipeline on pushes to the following branches
-  - 2.2.x
+  - 2.3.x
   - release/*
 
 pr:
   # run the pipeline on pull requests to the following branches
-  - 2.2.x
+  - 2.3.x
   - release/*
 
 pool:
@@ -95,7 +95,7 @@ stages:
               versionSpec: '3.12'
             displayName: 'use Python 3.12'
           - script: |
-              python -m pip install black~=25.1.0
+              python -m pip install black~=26.1.0
               python -m black --check .
             displayName: 'Run black'
       - job:

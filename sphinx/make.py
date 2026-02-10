@@ -2,6 +2,7 @@
 """
 Make sphinx documentation using the pytools make utility
 """
+
 import os
 from urllib import request
 
