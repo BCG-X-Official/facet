@@ -84,7 +84,7 @@ stages:
               versionSpec: '3.12'
             displayName: 'use Python 3.12'
           - script: |
-              python -m pip install isort~=6.0
+              python -m pip install isort~=10.0.0b1
               python -m isort --check --diff .
             displayName: 'Run isort'
       - job:
@@ -95,7 +95,7 @@ stages:
               versionSpec: '3.12'
             displayName: 'use Python 3.12'
           - script: |
-              python -m pip install black~=26.1.0
+              python -m pip install black~=26.10.1
               python -m black --check .
             displayName: 'Run black'
       - job:
@@ -106,7 +106,7 @@ stages:
               versionSpec: '3.12'
             displayName: 'use Python 3.12'
           - script: |
-              python -m pip install flake8~=7.3 flake8-comprehensions~=3.16
+              python -m pip install flake8~=7.4 flake8-comprehensions~=3.16
               python -m flake8 --config tox.ini -v .
             displayName: 'Run flake8'
       - job:
@@ -123,7 +123,7 @@ stages:
                 gamma-pytools~=3.0
                 sklearndf~=2.4
               )
-              python -m pip install mypy "${dependencies[@]}"
+              python -m pip install "mypy~=2.4" "${dependencies[@]}"
               python -m mypy src --config-file pyproject.toml
             displayName: 'Run mypy'
 
@@ -291,7 +291,7 @@ stages:
 
           - script: |
               python -m pip install "toml~=0.10"
-              python -m pip install "flit~=3.7"
+              python -m pip install "flit~=3.7" "flit_core>=2,<4"
               flit --version
               python -m pip install "tox~=3.25"
               tox --version
@@ -390,9 +390,9 @@ stages:
 
           - script: |
               python -m pip install "toml==0.10.*"
-              python -m pip install "flit==3.0.*"
+              python -m pip install "flit~=3.7" "flit_core>=2,<4"
               flit --version
-              python -m pip install "tox==3.20.*"
+              python -m pip install "tox~=3.25"
               tox --version
             displayName: 'Install tox, flit & toml'
             condition: eq(variables['BUILD_SYSTEM'], 'tox')
@@ -578,11 +578,26 @@ stages:
           - script: |
               set -eux
               cd $(System.DefaultWorkingDirectory)
-              eval "$(conda shell.bash hook)"
-              conda install -y -c conda-forge --override-channels anaconda-client
+              # the hosted ubuntu image does not provide conda, so use pip
+              python -m pip install anaconda-client
 
-              anaconda login --at anaconda.org --username "${CONDA_USERNAME}" --password "${CONDA_PASSWORD}" --hostname "$(hostname)-${BUILD_BUILDID:-$$}"
-              
+              # authenticate with the API token in ANACONDA_API_TOKEN; username/password
+              # login is deprecated, and falls back to an interactive prompt if it fails
+              # check the token before uploading: whoami reports an invalid token as
+              # "Anonymous User" without failing, and needs --at to not ask for the site
+              # (not traced, to keep the account details out of the log)
+              set +x
+              whoami_out=$(anaconda --at anaconda.org whoami 2>&1) || {
+                echo "anaconda whoami failed"
+                exit 1
+              }
+              if echo "${whoami_out}" | grep -q "Anonymous User"; then
+                echo "anaconda.org rejected the API token"
+                exit 1
+              fi
+              echo "authenticated with anaconda.org"
+              set -x
+
               # Check for .conda files first (rattler-build), then .tar.bz2 (conda-build)
               if ls $(System.ArtifactsDirectory)/conda_default/conda/noarch/$(package_name)-*.conda 1> /dev/null 2>&1; then
                 anaconda upload --user bcgx --force $(System.ArtifactsDirectory)/conda_default/conda/noarch/$(package_name)-*.conda
@@ -594,22 +609,23 @@ stages:
                 echo "No conda packages found!"
                 exit 1
               fi
-              
-              anaconda logout --at anaconda.org
+
               # set +x to prevent Azure from randomly appending a \' of the ## statement
               set +x
               echo "##vso[task.setvariable variable=conda_published]True"
             displayName: 'Publish to Anaconda'
-
+            # fail fast instead of waiting for input that will never arrive
+            timeoutInMinutes: 15
             condition: eq(variables['source_is_release_branch'], 'True')
             env:
-              CONDA_PASSWORD: $(anaconda_pw)
-              CONDA_USERNAME: $(anaconda_user)
+              ANACONDA_API_TOKEN: $(anaconda_token)
 
           - script: |
               set -eux
               cd $(System.DefaultWorkingDirectory)/$(project_root)
-              pip install flit
+              # flit does not limit flit_core, and flit_core 4 rejects the
+              # [tool.flit.metadata] table, so pin it as in pyproject.toml
+              pip install "flit~=3.7" "flit_core>=2,<4"
               flit install -s
               flit publish
               # set +x to prevent Azure from randomly appending a \' of the ## statement
