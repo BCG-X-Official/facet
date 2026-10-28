@@ -21,7 +21,7 @@ schedules:
     displayName: Nightly full build
     branches:
       include:
-        - 2.2.x
+        - 2.3.x
 
 resources:
   repositories:
@@ -392,7 +392,7 @@ stages:
             condition: eq(variables['BUILD_SYSTEM'], 'conda')
 
           - script: |
-              python -m pip install "toml==0.10.*"
+              python -m pip install "toml~=0.10"
               python -m pip install "flit~=3.7" "flit_core>=2,<4"
               flit --version
               python -m pip install "tox~=3.25"
