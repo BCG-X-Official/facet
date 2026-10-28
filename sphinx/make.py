@@ -6,7 +6,7 @@ Make sphinx documentation using the pytools make utility
 import os
 from urllib import request
 
-BRANCH = "2.1.x"
+BRANCH = "3.0.x"
 
 
 if __name__ == "__main__":
