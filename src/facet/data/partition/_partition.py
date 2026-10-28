@@ -409,7 +409,7 @@ class CategoryPartitioner(Partitioner[Any]):
         partitions, frequencies = np.unique(values, return_counts=True)
         order_descending = np.flip(np.argsort(frequencies))[: self.max_partitions]
 
-        self._partitions = partitions[order_descending]
+        self._partitions = list(partitions[order_descending])
         self._frequencies = frequencies[order_descending]
 
         return self
