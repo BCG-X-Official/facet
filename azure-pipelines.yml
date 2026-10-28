@@ -122,12 +122,12 @@ stages:
                 numpy~=2.2
                 gamma-pytools~=3.0
                 sklearndf~=2.4
+                pytest
+                packaging
               )
               python -m pip install "mypy~=2.4" "${dependencies[@]}"
-              # same scope and flags as the mypy pre-commit hook (the hook adds the
-              # two flags by default)
-              python -m mypy src/ test/ sphinx/ --config-file pyproject.toml \
-                --ignore-missing-imports --scripts-are-modules
+              # same scope and settings as the mypy pre-commit hook
+              python -m mypy src/ test/ sphinx/ --config-file pyproject.toml
             displayName: 'Run mypy'
 
   # detect whether the build config (pyproject.toml) was changed -> then we must run a build test

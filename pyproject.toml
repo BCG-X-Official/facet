@@ -144,10 +144,14 @@ exclude = '''
 [tool.mypy]
 strict = true
 show_error_codes = true
+# sphinx/base is downloaded at docs build time, and is not part of the checkout
+exclude = ["sphinx/base/"]
 
 [[tool.mypy.overrides]]
 module = [
     "catboost.*",
+    "conf_base",  # provided by sphinx/base at docs build time
+    "joblib.*",
     "matplotlib.*",
     "mpl_toolkits.*",
     "pandas.*",

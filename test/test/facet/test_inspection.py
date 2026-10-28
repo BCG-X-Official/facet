@@ -67,7 +67,7 @@ def test_regressor_selector(
     )
 
 
-@pytest.mark.parametrize(  # type: ignore
+@pytest.mark.parametrize(
     argnames=(
         "explainer_factory_cls",
         "explainer_factory_args",
@@ -93,7 +93,7 @@ def test_regressor_selector(
         (PermutationExplainerFactory, {}, "best_lgbm_model", {"Longitude", "Latitude"}),
     ],
 )
-@pytest.mark.parametrize(  # type: ignore
+@pytest.mark.parametrize(
     argnames="native",
     argvalues=(False, True),
 )
@@ -498,7 +498,7 @@ def _validate_shap_values_against_predictions(
 
 
 # noinspection DuplicatedCode
-@pytest.mark.parametrize(  # type: ignore
+@pytest.mark.parametrize(
     argnames="native",
     argvalues=(False, True),
 )

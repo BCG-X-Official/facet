@@ -61,40 +61,40 @@ STEP_IMPUTE = "impute"
 STEP_ONE_HOT_ENCODE = "one-hot-encode"
 
 
-@pytest.fixture(scope="session")  # type: ignore
+@pytest.fixture(scope="session")
 def california_target() -> str:
     return "MedHouseVal"
 
 
-@pytest.fixture(scope="session")  # type: ignore
+@pytest.fixture(scope="session")
 def iris_target_name() -> str:
     return "species"
 
 
-@pytest.fixture(scope="session")  # type: ignore
+@pytest.fixture(scope="session")
 def n_jobs() -> int:
     return -1
 
 
-@pytest.fixture(scope="session")  # type: ignore
+@pytest.fixture(scope="session")
 def cv_kfold() -> KFold:
     # define a CV
     return KFold(n_splits=K_FOLDS, shuffle=True, random_state=42)
 
 
-@pytest.fixture(scope="session")  # type: ignore
+@pytest.fixture(scope="session")
 def cv_bootstrap() -> BaseCrossValidator:
     # define a CV
     return BootstrapCV(n_splits=N_BOOTSTRAPS, random_state=42)
 
 
-@pytest.fixture(scope="session")  # type: ignore
+@pytest.fixture(scope="session")
 def cv_stratified_bootstrap() -> BaseCrossValidator:
     # define a CV
     return StratifiedBootstrapCV(n_splits=N_BOOTSTRAPS, random_state=42)
 
 
-@pytest.fixture(scope="session")  # type: ignore
+@pytest.fixture(scope="session")
 def regressor_parameters(
     simple_preprocessor: TransformerDF,
 ) -> list[ParameterSpace[RegressorPipelineDF[RegressorDF]]]:
@@ -157,7 +157,7 @@ def regressor_parameters(
     return [space_1, space_2, space_3, space_4, space_5, space_6, space_7]
 
 
-@pytest.fixture(scope="session")  # type: ignore
+@pytest.fixture(scope="session")
 def regressor_selector(
     cv_kfold: KFold,
     regressor_parameters: list[ParameterSpace[RegressorPipelineDF[RegressorDF]]],
@@ -180,7 +180,7 @@ def regressor_selector(
 PARAM_CANDIDATE__ = "param_candidate__"
 
 
-@pytest.fixture(scope="session")  # type: ignore
+@pytest.fixture(scope="session")
 def best_lgbm_model(
     regressor_selector: LearnerSelector[
         RegressorPipelineDF[LGBMRegressorDF], GridSearchCV
@@ -194,7 +194,7 @@ def best_lgbm_model(
     )
 
 
-@pytest.fixture(scope="session")  # type: ignore
+@pytest.fixture(scope="session")
 def best_rf_model(
     regressor_selector: LearnerSelector[RegressorPipelineDF[RegressorDF], GridSearchCV],
     sample: Sample,
@@ -206,7 +206,7 @@ def best_rf_model(
     )
 
 
-@pytest.fixture(scope="session")  # type: ignore
+@pytest.fixture(scope="session")
 def simple_preprocessor() -> TransformerDF:
     numeric_selector = make_column_selector(dtype_include=np.number)
     categorical_selector = make_column_selector(dtype_exclude=np.number)
@@ -224,7 +224,7 @@ def simple_preprocessor() -> TransformerDF:
     )
 
 
-@pytest.fixture(scope="session")  # type: ignore
+@pytest.fixture(scope="session")
 def california_df(california_target: str) -> pd.DataFrame:
     #  load sklearn test-data and convert to pd
     california: Bunch = fetch_california_housing()
@@ -235,7 +235,7 @@ def california_df(california_target: str) -> pd.DataFrame:
     )
 
 
-@pytest.fixture(scope="session")  # type: ignore
+@pytest.fixture(scope="session")
 def sample(california_df: pd.DataFrame, california_target: str) -> Sample:
     return Sample(
         observations=california_df.sample(n=100, random_state=42),
@@ -243,7 +243,7 @@ def sample(california_df: pd.DataFrame, california_target: str) -> Sample:
     )
 
 
-@pytest.fixture(scope="session")  # type: ignore
+@pytest.fixture(scope="session")
 def iris_df(iris_target_name: str) -> pd.DataFrame:
     #  load sklearn test-data and convert to pd
     iris: Bunch = datasets.load_iris()
@@ -268,7 +268,7 @@ def iris_df(iris_target_name: str) -> pd.DataFrame:
     )
 
 
-@pytest.fixture(scope="session")  # type: ignore
+@pytest.fixture(scope="session")
 def iris_sample_multi_class(iris_df: pd.DataFrame, iris_target_name: str) -> Sample:
     # the iris dataset
     return Sample(
@@ -278,7 +278,7 @@ def iris_sample_multi_class(iris_df: pd.DataFrame, iris_target_name: str) -> Sam
     )
 
 
-@pytest.fixture(scope="session")  # type: ignore
+@pytest.fixture(scope="session")
 def iris_sample_binary(iris_sample_multi_class: Sample) -> Sample:
     # the iris dataset, retaining only two categories,
     # so we can do binary classification
@@ -287,7 +287,7 @@ def iris_sample_binary(iris_sample_multi_class: Sample) -> Sample:
     )
 
 
-@pytest.fixture(scope="session")  # type: ignore
+@pytest.fixture(scope="session")
 def iris_sample_binary_dual_target(
     iris_sample_binary: Sample, iris_target_name: str
 ) -> Sample:
@@ -371,7 +371,7 @@ def check_ranking(
         )
 
 
-@pytest.fixture  # type: ignore
+@pytest.fixture
 def iris_classifier_selector_binary(
     iris_sample_binary: Sample,
     cv_stratified_bootstrap: StratifiedBootstrapCV,
@@ -382,7 +382,7 @@ def iris_classifier_selector_binary(
     )
 
 
-@pytest.fixture  # type: ignore
+@pytest.fixture
 def iris_classifier_selector_multi_class(
     iris_sample_multi_class: Sample,
     cv_stratified_bootstrap: StratifiedBootstrapCV,
@@ -393,7 +393,7 @@ def iris_classifier_selector_multi_class(
     )
 
 
-@pytest.fixture  # type: ignore
+@pytest.fixture
 def iris_classifier_selector_dual_target(
     iris_sample_binary_dual_target: Sample, cv_bootstrap: BootstrapCV, n_jobs: int
 ) -> LearnerSelector[ClassifierPipelineDF[RandomForestClassifierDF], GridSearchCV]:
@@ -402,7 +402,7 @@ def iris_classifier_selector_dual_target(
     )
 
 
-@pytest.fixture  # type: ignore
+@pytest.fixture
 def iris_classifier_binary(
     iris_classifier_selector_binary: LearnerSelector[
         ClassifierPipelineDF[RandomForestClassifierDF], GridSearchCV
@@ -411,7 +411,7 @@ def iris_classifier_binary(
     return iris_classifier_selector_binary.best_estimator_
 
 
-@pytest.fixture  # type: ignore
+@pytest.fixture
 def iris_classifier_multi_class(
     iris_classifier_selector_multi_class: LearnerSelector[
         ClassifierPipelineDF[RandomForestClassifierDF], GridSearchCV
@@ -420,7 +420,7 @@ def iris_classifier_multi_class(
     return iris_classifier_selector_multi_class.best_estimator_
 
 
-@pytest.fixture  # type: ignore
+@pytest.fixture
 def iris_inspector_multi_class(
     iris_classifier_multi_class: ClassifierPipelineDF[RandomForestClassifierDF],
     iris_sample_multi_class: Sample,

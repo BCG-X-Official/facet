@@ -27,7 +27,7 @@ log = logging.getLogger(__name__)
 N_SPLITS = 10
 
 
-@pytest.fixture(scope="session")  # type: ignore
+@pytest.fixture(scope="session")
 def model(
     sample: Sample, simple_preprocessor: TransformerDF
 ) -> RegressorPipelineDF[LGBMRegressorDF]:
@@ -40,7 +40,7 @@ def model(
     ).fit(X=sample.features, y=sample.target)
 
 
-@pytest.fixture(scope="session")  # type: ignore
+@pytest.fixture(scope="session")
 def subsample(sample: Sample) -> Sample:
     return sample.subsample(
         iloc=(
@@ -51,7 +51,7 @@ def subsample(sample: Sample) -> Sample:
     )
 
 
-@pytest.fixture(scope="session")  # type: ignore
+@pytest.fixture(scope="session")
 def target_simulator(
     model: RegressorPipelineDF[LGBMRegressorDF], sample: Sample, n_jobs: int
 ) -> UnivariateTargetSimulator:
@@ -60,7 +60,7 @@ def target_simulator(
     )
 
 
-@pytest.fixture(scope="session")  # type: ignore
+@pytest.fixture(scope="session")
 def uplift_simulator(
     model: RegressorPipelineDF[LGBMRegressorDF], sample: Sample, n_jobs: int
 ) -> UnivariateUpliftSimulator:

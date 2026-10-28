@@ -45,9 +45,14 @@ repos:
     rev: v2.4.0
     hooks:
       - id: mypy
-        files: src|sphinx|test
+        entry: mypy src/ test/ sphinx/
+        args: [--config-file, pyproject.toml]
+        files: \.pyi?$
         language: python
+        pass_filenames: false
         additional_dependencies:
           - numpy~=2.2
           - gamma-pytools~=3.0
           - sklearndf~=2.4
+          - pytest
+          - packaging
