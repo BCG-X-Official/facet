@@ -81,8 +81,8 @@ stages:
         steps:
           - task: UsePythonVersion@0
             inputs:
-              versionSpec: '3.12'
-            displayName: 'use Python 3.12'
+              versionSpec: '3.14'
+            displayName: 'use Python 3.14'
           - script: |
               python -m pip install isort~=10.0.0b1
               python -m isort --check --diff .
@@ -92,8 +92,8 @@ stages:
         steps:
           - task: UsePythonVersion@0
             inputs:
-              versionSpec: '3.12'
-            displayName: 'use Python 3.12'
+              versionSpec: '3.14'
+            displayName: 'use Python 3.14'
           - script: |
               python -m pip install black~=26.10.1
               python -m black --check .
@@ -103,8 +103,8 @@ stages:
         steps:
           - task: UsePythonVersion@0
             inputs:
-              versionSpec: '3.12'
-            displayName: 'use Python 3.12'
+              versionSpec: '3.14'
+            displayName: 'use Python 3.14'
           - script: |
               python -m pip install flake8~=7.4 flake8-comprehensions~=3.16
               python -m flake8 --config tox.ini -v .
@@ -114,8 +114,8 @@ stages:
         steps:
           - task: UsePythonVersion@0
             inputs:
-              versionSpec: '3.10'
-            displayName: 'use Python 3.10'
+              versionSpec: '3.14'
+            displayName: 'use Python 3.14'
           - script: |
               # package dependencies for mypy
               dependencies=(
@@ -124,7 +124,10 @@ stages:
                 sklearndf~=2.4
               )
               python -m pip install "mypy~=2.4" "${dependencies[@]}"
-              python -m mypy src --config-file pyproject.toml
+              # same scope and flags as the mypy pre-commit hook (the hook adds the
+              # two flags by default)
+              python -m mypy src/ test/ sphinx/ --config-file pyproject.toml \
+                --ignore-missing-imports --scripts-are-modules
             displayName: 'Run mypy'
 
   # detect whether the build config (pyproject.toml) was changed -> then we must run a build test
